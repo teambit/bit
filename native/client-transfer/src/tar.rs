@@ -56,19 +56,20 @@ pub fn pack(items: &[ObjectItem], max_bytes: usize) -> io::Result<Vec<u8>> {
 }
 
 fn outbound_name(item: &ObjectItem) -> io::Result<String> {
-    if !is_hash(&item.hash) || item.compressed.len() > MAX_OBJECT_BYTES {
+    let hash = item.hash.trim();
+    if !is_hash(hash) || item.compressed.len() > MAX_OBJECT_BYTES {
         return Err(invalid("remote push object identity or bytes"));
     }
-    match &item.scope {
+    match item.scope.as_deref().map(str::trim) {
         Some(scope)
             if !scope.is_empty()
                 && scope
                     .bytes()
                     .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte)) =>
         {
-            Ok(format!("{scope}/{}", item.hash))
+            Ok(format!("{scope}/{hash}"))
         }
-        None => Ok(item.hash.clone()),
+        None => Ok(hash.to_owned()),
         _ => Err(invalid("remote push scope")),
     }
 }
@@ -152,11 +153,12 @@ fn require_end(start: Option<Value>, ended: bool) -> io::Result<()> {
 }
 
 fn item(name: &str, compressed: Vec<u8>) -> io::Result<ObjectItem> {
-    let (scope, hash) = match name.split_once('/') {
-        Some((scope, hash)) => (Some(scope.to_string()), hash),
-        None => (None, name),
+    let trimmed = name.trim();
+    let (scope, hash) = match trimmed.split_once('/') {
+        Some((scope, hash)) => (Some(scope.trim().to_string()), hash.trim()),
+        None => (None, trimmed),
     };
-    if !is_hash(hash) {
+    if !is_hash(hash) || scope.as_deref().is_some_and(str::is_empty) {
         return Err(invalid(&format!("invalid object ref: {name:?}")));
     }
     Ok(ObjectItem { hash: hash.to_string(), compressed, scope })
@@ -167,7 +169,7 @@ pub(crate) fn truthy(value: &Value) -> bool {
         Value::Null => false,
         Value::Bool(value) => *value,
         Value::Number(value) => value.as_f64() != Some(0.0),
-        Value::String(value) => !value.is_empty(),
+        Value::String(value) => !value.trim().is_empty(),
         Value::Array(_) | Value::Object(_) => true,
     }
 }

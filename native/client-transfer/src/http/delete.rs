@@ -185,7 +185,14 @@ fn status_error(bytes: &[u8], url: &str, status: reqwest::StatusCode) -> io::Err
     let error = if parsed["error"]["code"].is_null() { &parsed } else { &parsed["error"] };
     let message = error["message"]
         .as_str()
-        .or_else(|| parsed["message"].as_str())
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+        .or_else(|| {
+            parsed["message"]
+                .as_str()
+                .map(str::trim)
+                .filter(|msg| !msg.is_empty())
+        })
         .map_or_else(|| fallback.clone(), str::to_owned);
     remote_error(error["code"].as_u64(), error, url, message)
 }

@@ -54,7 +54,11 @@ pub(in crate::workspace::engine) fn prepare(
         command_import::prepare_lane(&request.root, &request.global_remotes_file)?
     };
     let id = selection(request, &mut import)?;
-    if let Some(host) = &request.remote_host {
+    if let Some(host) = request.remote_host
+        .as_deref()
+        .map(str::trim)
+        .filter(|host| !host.is_empty())
+    {
         import.remote_host(&id.scope, host)?;
     }
     let lane = import.load_lane(&id)?.ok_or_else(|| invalid("lane history local Lane absent"))?;
@@ -102,7 +106,11 @@ fn selection(
     request: &Prepare,
     import: &mut command_import::PreparedImport,
 ) -> io::Result<lane::Id> {
-    let id = if let Some(name) = &request.lane {
+    let id = if let Some(name) = request.lane
+        .as_deref()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    {
         import.resolve_lane(name)?
     } else {
         if request.bare_scope {
@@ -134,7 +142,7 @@ fn local_history(request: &Prepare, hash: &str) -> io::Result<Value> {
 }
 
 fn validate_history(value: &Value, hash: &str) -> io::Result<()> {
-    if value["laneHash"] != hash {
+    if value["laneHash"].as_str().map(str::trim) != Some(hash.trim()) {
         return Err(invalid("lane history identity"));
     }
     let rows = value["history"]
@@ -142,11 +150,11 @@ fn validate_history(value: &Value, hash: &str) -> io::Result<()> {
         .filter(|rows| rows.len() <= 4096)
         .ok_or_else(|| invalid("lane history entries"))?;
     for (id, row) in rows {
-        if id.is_empty()
+        if id.trim().is_empty()
             || !row["log"].is_object()
             || row["log"]["date"]
                 .as_str()
-                .and_then(|text| text.parse::<i64>().ok())
+                .and_then(|text| text.trim().parse::<i64>().ok())
                 .is_none()
             || !row["components"].is_array()
         {
@@ -162,7 +170,7 @@ pub(in crate::workspace::engine) fn apply(
 ) -> io::Result<(usize, Value)> {
     let mut retained =
         state.histories.inspection.take().ok_or_else(|| invalid("lane history owner absent"))?;
-    if retained.token != request.token {
+    if retained.token != request.token.trim() {
         state.histories.inspection = Some(retained);
         return Err(invalid("lane history owner changed"));
     }

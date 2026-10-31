@@ -12,7 +12,8 @@ pub(super) fn graph(
     workspace: &Replacer,
     environment: &str,
 ) -> io::Result<Option<String>> {
-    let importer = if component.directory.is_empty() { "." } else { component.directory };
+    let directory = component.directory.trim();
+    let importer = if directory.is_empty() { "." } else { directory };
     if lockfile["importers"].get(importer).is_none() {
         return Ok(None);
     }
@@ -36,15 +37,18 @@ pub(super) fn graph(
 }
 
 fn environment_root<'a>(lockfile: &Value, environment: &'a str, package: &str) -> Option<&'a str> {
+    let environment = environment.trim();
     let environment = if lockfile["importers"].get(environment).is_none() {
         environment
             .split('@')
             .next()
             .unwrap_or(environment)
+            .trim()
     } else {
         environment
     };
-    let version = lockfile["importers"][environment]["dependencies"][package]["version"].as_str()?;
+    let version =
+        lockfile["importers"][environment]["dependencies"][package]["version"].as_str()?.trim();
     lockfile["snapshots"]
         .get(format!("{package}@{version}"))
         .is_some_and(Value::is_object)
@@ -108,7 +112,7 @@ fn importer_roots(importer: &Value) -> Vec<String> {
         .filter_map(|(name, dependency)| {
             dependency["version"]
                 .as_str()
-                .and_then(|version| convert::ref_to_relative(version, name))
+                .and_then(|version| convert::ref_to_relative(version.trim(), name))
         })
         .collect()
 }

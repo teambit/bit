@@ -94,7 +94,10 @@ fn membership(lane: &Value) -> io::Result<HashSet<String>> {
     {
         let (id, _) = row
             .as_str()
+            .map(str::trim)
             .and_then(|row| row.rsplit_once('@'))
+            .map(|(id, ver)| (id.trim(), ver.trim()))
+            .filter(|(id, _)| !id.is_empty())
             .ok_or_else(|| invalid("lane candidate hidden identity"))?;
         ids.insert(id.to_owned());
     }
@@ -143,17 +146,30 @@ fn matching_member_id(row: &Value, membership: &HashSet<String>) -> io::Result<O
 fn identity(id: &Value) -> io::Result<String> {
     if let Some((scope, name)) = id
         .as_str()
-        .map(|raw| raw.split('@').next().unwrap_or(raw))
+        .map(str::trim)
+        .map(|raw| {
+            raw.split('@')
+                .next()
+                .unwrap_or(raw)
+                .trim()
+        })
         .and_then(|bare| bare.split_once('/'))
-        .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
     {
         return Ok(format!("{scope}/{name}"));
     }
-    Ok(format!(
-        "{}/{}",
-        id["scope"].as_str().ok_or_else(|| invalid("lane candidate scope"))?,
-        id["name"].as_str().ok_or_else(|| invalid("lane candidate name"))?,
-    ))
+    let scope = id["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("lane candidate scope"))?;
+    let name = id["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("lane candidate name"))?;
+    Ok(format!("{scope}/{name}"))
 }
 
 fn context(root: &Path) -> io::Result<BitmapState> {

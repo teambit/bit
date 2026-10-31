@@ -20,7 +20,11 @@ pub(super) fn deleted(
 ) -> io::Result<Vec<String>> {
     hashes
         .iter()
-        .map(|hash| description(hash, &objects[hash]))
+        .map(|hash| {
+            let object =
+                objects.get(hash).ok_or_else(|| unsupported("verbose deleted object missing"))?;
+            description(hash, object)
+        })
         .collect()
 }
 fn description(hash: &str, object: &Object) -> io::Result<String> {

@@ -70,8 +70,7 @@ impl Retained {
     }
     pub(super) fn keep_controls(&mut self, proofs: &[Value]) -> io::Result<()> {
         for proof in proofs {
-            let path = proof["path"]
-                .as_str()
+            let path = trimmed_str(&proof["path"])
                 .ok_or_else(|| io::Error::other("identity control proof path"))?;
             self.controls.insert(path.into(), proof.clone());
         }
@@ -115,17 +114,15 @@ impl Retained {
             .ok_or_else(|| io::Error::other("identity callback source budget"))?;
         let rows = capture.captured.clone();
         for row in &rows {
-            let identity = row["identity"]
-                .as_str()
-                .or_else(|| row["id"].as_str())
-                .ok_or_else(|| io::Error::other("retained component identity"))?;
+            let identity =
+                row_id(row).ok_or_else(|| io::Error::other("retained component identity"))?;
             self.rows.insert(identity.into(), row.clone());
         }
         // Even unchanged callback sources carry a root descriptor which later
         // native comparisons validate. Its directory must outlive those facts.
         if rows
             .iter()
-            .any(|row| row["sourceOverlayRoot"].is_string())
+            .any(|row| trimmed_str(&row["sourceOverlayRoot"]).is_some())
         {
             self.captures.push(capture);
         }
@@ -134,9 +131,14 @@ impl Retained {
 }
 
 fn row_id(row: &Value) -> Option<&str> {
-    row["identity"]
+    trimmed_str(&row["identity"]).or_else(|| trimmed_str(&row["id"]))
+}
+
+fn trimmed_str(value: &Value) -> Option<&str> {
+    value
         .as_str()
-        .or_else(|| row["id"].as_str())
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 fn overlay_bytes(capture: &Capture) -> io::Result<u64> {
@@ -148,9 +150,8 @@ fn overlay_bytes(capture: &Capture) -> io::Result<u64> {
             .flat_map(|files| files.values())
         {
             let path =
-                path.as_str().ok_or_else(|| io::Error::other("identity callback source path"))?;
-            let root = row["sourceOverlayRoot"]
-                .as_str()
+                trimmed_str(path).ok_or_else(|| io::Error::other("identity callback source path"))?;
+            let root = trimmed_str(&row["sourceOverlayRoot"])
                 .ok_or_else(|| io::Error::other("identity callback source root"))?;
             let metadata = fs::symlink_metadata(path)?;
             if !Path::new(path).starts_with(root) || !metadata.is_file() {

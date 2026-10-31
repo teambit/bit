@@ -297,7 +297,10 @@ fn in_workspace(loaded: &Loaded, id: &ComponentId) -> bool {
 
 /// `scope/name` (the scope may contain dots, the name slashes).
 pub fn parse_id(id: &str) -> ComponentId {
-    let (scope, name) = id.split_once('/').unwrap_or(("", id));
+    let id = id.trim();
+    let (scope, name) = id
+        .split_once('/')
+        .map_or(("", id), |(scope, name)| (scope.trim(), name.trim()));
     ComponentId {
         scope: (!scope.is_empty()).then(|| scope.to_string()),
         default_scope: None,
@@ -390,11 +393,19 @@ fn remote_filter(session: &Session<'_>, loaded: &Loaded) -> io::Result<RemoteFil
         local_remotes: scope.remotes
             .keys()
             .chain(global.keys())
-            .cloned()
+            .map(|remote| remote.trim().to_string())
+            .filter(|remote| !remote.is_empty())
             .collect(),
         registry_scopes: loaded.engine.registry.registries.scopes
             .keys()
-            .map(|scope| scope.trim_start_matches('@').to_string())
+            .map(|scope| {
+                scope
+                    .trim()
+                    .trim_start_matches('@')
+                    .trim()
+                    .to_string()
+            })
+            .filter(|scope| !scope.is_empty())
             .collect(),
     })
 }

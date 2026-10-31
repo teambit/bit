@@ -51,7 +51,7 @@ fn semver_entry(input: &Value) -> io::Result<()> {
 }
 fn semver_comparator(input: &Value) -> io::Result<()> {
     fields(input, &["operator", "version"])?;
-    let operator = text(input, "operator")?;
+    let operator = text(input, "operator")?.trim();
     if !["", "=", ">", ">=", "<", "<="].contains(&operator) {
         return Err(invalid("semver operator"));
     }
@@ -170,7 +170,8 @@ fn undefined_keys(entry: &Value) -> io::Result<()> {
     {
         let key = key
             .as_str()
-            .filter(|key| key.len() <= 4096)
+            .map(str::trim)
+            .filter(|key| !key.is_empty() && key.len() <= 4096)
             .ok_or_else(|| invalid("undefined data key"))?;
         if entry["data"].get(key).is_some() || !seen.insert(key) {
             return Err(invalid("overlapping undefined data key"));

@@ -27,8 +27,11 @@ pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
         return Err(invalid());
     }
     let history = value["history"].as_object().ok_or_else(invalid)?;
+    if history.len() > 4096 {
+        return Err(invalid());
+    }
     for (id, entry) in history {
-        if id.is_empty()
+        if id.trim().is_empty()
             || !entry["log"].is_object()
             || entry["log"]["date"]
                 .as_str()

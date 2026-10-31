@@ -206,14 +206,15 @@ impl Resolver<'_> {
 }
 
 fn package_name(specifier: &str) -> io::Result<String> {
+    let specifier = specifier.trim();
     let parts: Vec<_> = specifier.split('/').collect();
     let name = if specifier.starts_with('@') {
-        if parts.len() < 2 {
+        if parts.len() < 2 || parts[0].trim().len() <= 1 || parts[1].trim().is_empty() {
             return Err(invalid("dependency scoped package name"));
         }
-        format!("{}/{}", parts[0], parts[1])
+        format!("{}/{}", parts[0].trim(), parts[1].trim())
     } else {
-        parts[0].to_owned()
+        parts[0].trim().to_owned()
     };
     if name.is_empty() || name.contains('\\') {
         return Err(invalid("dependency package name"));

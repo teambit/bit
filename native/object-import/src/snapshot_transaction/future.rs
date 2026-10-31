@@ -70,6 +70,7 @@ fn choice<'a>(
     if params.persist
         && let Some(next) = component.next_version
             .as_deref()
+            .map(str::trim)
             .filter(|text| !text.is_empty())
     {
         return raw(next, 1.0, component.next_pre_release.as_deref(), semver);
@@ -82,6 +83,7 @@ fn choice<'a>(
     }
     if let Some(entered) = component.entered_version
         .as_deref()
+        .map(str::trim)
         .filter(|text| !text.is_empty())
     {
         return raw(entered, 1.0, None, semver);

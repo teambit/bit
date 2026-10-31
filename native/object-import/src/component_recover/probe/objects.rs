@@ -129,19 +129,25 @@ pub(crate) fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Opt
 }
 fn matching_model(body: &[u8], id: &str) -> io::Result<Option<Value>> {
     let value: Value = crate::parse_jsonc(body)?;
-    let bare = id.split('@').next().unwrap_or(id);
+    let id = id.trim();
+    let bare = id
+        .split('@')
+        .next()
+        .unwrap_or(id)
+        .trim();
     let (target_scope, target_name) = bare
         .split_once('/')
-        .unwrap_or(("", bare));
-    let model_scope = value["scope"].as_str().unwrap_or_default();
-    let matches = value["name"].as_str() == Some(target_name)
+        .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
+    let model_scope = value["scope"].as_str().map_or("", str::trim);
+    let matches = value["name"].as_str().map(str::trim) == Some(target_name)
         && (model_scope == target_scope || model_scope.is_empty());
     Ok(matches.then_some(value))
 }
 pub(crate) fn version_hash(model: &Value, id: &str) -> io::Result<String> {
     let version = id
+        .trim()
         .rsplit_once('@')
-        .map(|(_, version)| version)
+        .map(|(_, version)| version.trim())
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"));
     let hash = version
         .map(|version| {

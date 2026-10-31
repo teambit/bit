@@ -99,14 +99,15 @@ fn from_overrides(
     lifecycle: Lifecycle,
     package: &str,
 ) -> Option<String> {
+    let package = package.trim();
     if inputs.env_own
         .iter()
-        .any(|name| name == package)
+        .any(|name| name.trim() == package)
         && workspace.bitmap_id(id).is_some()
     {
         return None;
     }
-    let found = inputs.deps[field_index(lifecycle)].get(package)?;
+    let found = inputs.deps[field_index(lifecycle)].get(package)?.trim();
     if found == overrides::REMOVE {
         return None;
     }
@@ -114,6 +115,7 @@ fn from_overrides(
 }
 
 fn from_merge_config(merge_config: &FieldMaps, package: &str) -> Option<String> {
+    let package = package.trim();
     let found = merge_config
         .iter()
         .filter_map(|field| field.get(package))
@@ -122,12 +124,13 @@ fn from_merge_config(merge_config: &FieldMaps, package: &str) -> Option<String> 
 }
 
 fn in_fields(fields: &FieldMaps, name: &str) -> bool {
+    let name = name.trim();
     fields
         .iter()
         .any(|field| {
             field
                 .get(name)
-                .is_some_and(|version| !version.is_empty())
+                .is_some_and(|version| !version.trim().is_empty())
         })
 }
 

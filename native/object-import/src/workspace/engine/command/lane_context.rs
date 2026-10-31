@@ -119,6 +119,8 @@ pub(super) fn current_id(bitmap: &Value, scope: &Value) -> io::Result<Id> {
         Id {
             scope: scope["name"]
                 .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
                 .ok_or_else(|| invalid("command lane local scope"))?
                 .into(),
             name: "main".into(),
@@ -144,21 +146,14 @@ pub(super) fn validate_additions(
         .as_array()
         .map_or(&[][..], Vec::as_slice);
     for row in lane.iter().chain(scope).chain(stash) {
-        let relative = row["rootDir"].as_str().ok_or_else(|| invalid("lane addition directory"))?;
-        let added = context["lane"]["addedTargets"]
-            .as_array()
-            .is_some_and(|targets| {
-                targets
-                    .iter()
-                    .any(|target| target["directory"] == relative)
-            })
-            || scope
-                .iter()
-                .any(|candidate| candidate["rootDir"] == relative)
-            || stash
-                .iter()
-                .any(|candidate| candidate["rootDir"] == relative);
-        if added && directory_metadata(&root.join(relative))?.is_some() {
+        let relative = row["rootDir"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .ok_or_else(|| invalid("lane addition directory"))?;
+        if is_added_directory(context, scope, stash, relative)
+            && directory_metadata(&root.join(relative))?.is_some()
+        {
             return Err(invalid("lane new destination already exists"));
         }
         let mut path = root.to_path_buf();
@@ -172,6 +167,22 @@ pub(super) fn validate_additions(
         }
     }
     Ok(())
+}
+
+fn is_added_directory(context: &Value, scope: &[Value], stash: &[Value], relative: &str) -> bool {
+    context["lane"]["addedTargets"]
+        .as_array()
+        .is_some_and(|targets| {
+            targets
+                .iter()
+                .any(|target| target["directory"] == relative)
+        })
+        || scope
+            .iter()
+            .any(|candidate| candidate["rootDir"] == relative)
+        || stash
+            .iter()
+            .any(|candidate| candidate["rootDir"] == relative)
 }
 
 fn directory_metadata(path: &std::path::Path) -> io::Result<Option<std::fs::Metadata>> {

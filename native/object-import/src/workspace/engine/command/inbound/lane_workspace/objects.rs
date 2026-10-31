@@ -43,8 +43,14 @@ fn capture_remotes(
         let main = roots
             .iter()
             .filter(|target| {
-                let identity =
-                    format!("{}/{}", target.scope.as_deref().unwrap_or_default(), target.name);
+                let identity = target.scope
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|scope| !scope.is_empty())
+                    .map_or_else(
+                        || target.name.clone(),
+                        |scope| format!("{scope}/{}", target.name),
+                    );
                 !entries
                     .iter()
                     .any(|entry| entry.identity == identity)

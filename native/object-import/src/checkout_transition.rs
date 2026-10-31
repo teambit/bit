@@ -79,6 +79,9 @@ pub(crate) fn order(
     indexed: bool,
     state: &mut State,
 ) -> io::Result<Value> {
+    if token.trim().is_empty() {
+        return Err(invalid("stale merge order plan"));
+    }
     let plan = state.plans.plans.get_mut(token).ok_or_else(|| invalid("stale merge order plan"))?;
     if order.len() != plan.merge_rows.len()
         || order

@@ -62,19 +62,12 @@ pub(super) fn lane(fields: &Value) -> io::Result<Value> {
     let Value::Array(components) = get(fields, "components") else {
         return Err(invalid("lane components required"));
     };
+    if components.len() > 65536 {
+        return Err(invalid("lane components limit"));
+    }
     let components = components
         .iter()
-        .map(|row| {
-            object(row)?;
-            let mut component = Value::Object(vec![
-                ("id".encode_utf16().collect(), choose(get(row, "id"), &["scope", "name"], false)?),
-                ("head".encode_utf16().collect(), get(row, "head").clone()),
-            ]);
-            if get(row, "isDeleted").truthy()? {
-                insert(&mut component, "isDeleted", get(row, "isDeleted").clone());
-            }
-            Ok(component)
-        })
+        .map(lane_component_row)
         .collect::<io::Result<Vec<_>>>()?;
     let mut output = Vec::new();
     for name in [
@@ -98,6 +91,18 @@ pub(super) fn lane(fields: &Value) -> io::Result<Value> {
         }
     }
     Ok(Value::Object(output))
+}
+
+fn lane_component_row(row: &Value) -> io::Result<Value> {
+    object(row)?;
+    let mut component = Value::Object(vec![
+        ("id".encode_utf16().collect(), choose(get(row, "id"), &["scope", "name"], false)?),
+        ("head".encode_utf16().collect(), get(row, "head").clone()),
+    ]);
+    if get(row, "isDeleted").truthy()? {
+        insert(&mut component, "isDeleted", get(row, "isDeleted").clone());
+    }
+    Ok(component)
 }
 
 fn readme(fields: &Value) -> io::Result<Value> {

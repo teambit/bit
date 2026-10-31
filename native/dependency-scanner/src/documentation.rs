@@ -46,6 +46,10 @@ pub fn proves_empty_docs(source: &[u8], relative_path: &str) -> bool {
 }
 
 fn source_type(path: &str) -> Option<SourceType> {
+    let path = path.trim();
+    if path.is_empty() {
+        return None;
+    }
     if path.ends_with(".js.snap") {
         return Some(SourceType::cjs());
     }

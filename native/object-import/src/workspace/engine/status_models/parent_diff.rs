@@ -77,9 +77,10 @@ fn model(
         false,
         overlay,
     )?;
+    let target_identity = request.identity.trim();
     snapshot.models
         .into_iter()
-        .find(|model| super::comparison::model_id(model) == request.identity)
+        .find(|model| super::comparison::model_id(model) == target_identity)
         .ok_or_else(|| invalid("version parent model absent"))
 }
 
@@ -96,19 +97,24 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
         .into_iter()
         .flatten()
     {
-        let reference = reference.as_str().ok_or_else(|| invalid("version parent tag ref"))?;
+        let reference = reference
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("version parent tag ref"))?;
         merge_history::hash(reference)?;
-        tags.entry(reference.to_string()).or_insert_with(|| tag.clone());
+        tags.entry(reference.to_string())
+            .or_insert_with(|| tag.trim().to_owned());
     }
     for (tag, reference) in model["orphanedVersions"]
         .as_object()
         .into_iter()
         .flatten()
     {
-        if let Some(reference) = reference.as_str()
+        if let Some(reference) = reference.as_str().map(str::trim)
             && merge_history::hash(reference).is_ok()
         {
-            tags.entry(reference.to_string()).or_insert_with(|| tag.clone());
+            tags.entry(reference.to_string())
+                .or_insert_with(|| tag.trim().to_owned());
         }
     }
     Ok(tags)
@@ -125,7 +131,10 @@ fn first_parent(version: &Value) -> io::Result<Option<String>> {
     parents
         .first()
         .map(|parent| {
-            let reference = parent.as_str().ok_or_else(|| invalid("version parent ref"))?;
+            let reference = parent
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("version parent ref"))?;
             merge_history::hash(reference)?;
             Ok(reference.to_string())
         })
@@ -138,10 +147,15 @@ fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
         let mut entries = files
             .iter()
             .map(|file| {
-                let path =
-                    file["relativePath"].as_str().ok_or_else(|| invalid("version parent path"))?;
-                let hash =
-                    file["file"].as_str().ok_or_else(|| invalid("version parent file ref"))?;
+                let path = file["relativePath"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|path| !path.is_empty())
+                    .ok_or_else(|| invalid("version parent path"))?;
+                let hash = file["file"]
+                    .as_str()
+                    .map(str::trim)
+                    .ok_or_else(|| invalid("version parent file ref"))?;
                 merge_history::hash(hash)?;
                 Ok(format!("{path}:{hash}"))
             })

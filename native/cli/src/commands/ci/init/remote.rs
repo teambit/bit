@@ -16,7 +16,7 @@ impl Repository {
 fn server() -> Option<Url> {
     env::var("GITHUB_SERVER_URL")
         .ok()
-        .and_then(|value| Url::parse(&value).ok())
+        .and_then(|value| Url::parse(super::trim(&value)).ok())
 }
 fn capture(value: &str, pattern: &str, group: usize) -> Option<String> {
     let found = regress::Regex::with_flags(pattern, "i").ok()?.find(value)?;
@@ -50,7 +50,10 @@ pub(super) fn repository(remote: &str) -> Option<Repository> {
         format!(r"(?:^|@){escaped}[:/]([^/]+/[^/]+?)(?:\.git)?$")
     };
     let repo = capture(remote, &pattern, 1)?;
-    let (owner, name) = repo.split_once('/')?;
+    let (owner, name) = repo
+        .split_once('/')
+        .map(|(owner, name)| (owner.trim(), name.trim()))
+        .filter(|(owner, name)| !owner.is_empty() && !name.is_empty())?;
     Some(Repository { owner: owner.into(), name: name.into(), host })
 }
 pub(super) fn local(remote: &str) -> bool {
@@ -116,7 +119,7 @@ pub(super) fn api(host: &str) -> Result<String, String> {
         return Ok("https://api.github.com".into());
     };
     let server_host = server.host_str().unwrap_or("github.com");
-    if server_host == "github.com" || host != server_host {
+    if server_host == "github.com" || !host.trim().eq_ignore_ascii_case(server_host) {
         return Ok("https://api.github.com".into());
     }
     if !matches!(server.scheme(), "http" | "https") {
@@ -124,6 +127,7 @@ pub(super) fn api(host: &str) -> Result<String, String> {
     }
     let Some(raw) = env::var("GITHUB_API_URL")
         .ok()
+        .map(|value| super::trim(&value).to_owned())
         .filter(|value| !value.is_empty())
     else {
         return Ok(format!("{}/api/v3", server.origin().ascii_serialization()));

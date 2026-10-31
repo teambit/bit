@@ -150,10 +150,11 @@ pub(in crate::commands::ws_config) fn writer_matches(
     writer_id: &str,
     writers: Option<&[String]>,
 ) -> bool {
+    let writer_id = writer_id.trim();
     writers.is_none_or(|filter| {
         filter
             .iter()
-            .any(|item| item == writer_id)
+            .any(|item| item.trim() == writer_id)
     })
 }
 
@@ -178,8 +179,10 @@ pub(in crate::commands::ws_config) fn collect_active_component_dirs(ws: &Workspa
     ws.active()
         .map(|(_, comp)| {
             comp.root_dir
+                .trim()
                 .trim_start_matches("./")
                 .trim_matches('/')
+                .trim()
                 .to_owned()
         })
         .filter(|dir| !dir.is_empty())

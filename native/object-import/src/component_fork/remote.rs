@@ -30,9 +30,11 @@ impl RemoteCapture {
             .block_on(async {
                 for id in ids {
                     let scope = id
+                        .trim()
                         .split_once('/')
-                        .ok_or_else(|| unsupported("fork remote scoped identity"))?
-                        .0;
+                        .map(|(scope, _)| scope.trim())
+                        .filter(|scope| !scope.is_empty())
+                        .ok_or_else(|| unsupported("fork remote scoped identity"))?;
                     let (version, files, identity, objects) =
                         match remotes.resolve(scope, network).await? {
                             Remote::File(path) => objects::file(&path, id, &mut capture.observed)
@@ -168,14 +170,19 @@ impl RemoteCapture {
 fn groups(ids: &[String]) -> io::Result<Vec<(String, Vec<String>)>> {
     let mut groups: Vec<(String, Vec<String>)> = Vec::new();
     for id in ids {
-        let scope = id.split_once('/').ok_or_else(|| unsupported("fork remote scoped identity"))?.0;
+        let id_trimmed = id.trim();
+        let scope = id_trimmed
+            .split_once('/')
+            .map(|(scope, _)| scope.trim())
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| unsupported("fork remote scoped identity"))?;
         if let Some((_, rows)) = groups
             .iter_mut()
             .find(|(name, _)| name == scope)
         {
-            rows.push(id.clone());
+            rows.push(id_trimmed.to_owned());
         } else {
-            groups.push((scope.into(), vec![id.clone()]));
+            groups.push((scope.into(), vec![id_trimmed.to_owned()]));
         }
     }
     Ok(groups)

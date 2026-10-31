@@ -125,7 +125,7 @@ pub fn apply_error_prefix(error: &io::Error) -> io::Result<()> {
 fn validate(writes: &[Write]) -> io::Result<()> {
     let mut previous: std::collections::HashMap<&Path, &[u8]> = std::collections::HashMap::new();
     for write in writes {
-        if write.path.is_symlink() {
+        if !write.path.is_absolute() || write.path.is_symlink() {
             return Err(invalid("lane reset population symlink"));
         }
         let actual = match previous.get(write.path.as_path()) {

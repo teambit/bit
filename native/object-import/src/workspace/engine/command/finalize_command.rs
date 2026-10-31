@@ -3,7 +3,7 @@ use serde_json::{Value, json};
 use std::io;
 pub(super) fn run(input: &Finalize, state: &mut State) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command finalize owner absent"))?;
-    if record.token != input.token {
+    if input.token.trim().is_empty() || record.token != input.token {
         return Err(invalid("command finalize token"));
     }
     let mut prepared =

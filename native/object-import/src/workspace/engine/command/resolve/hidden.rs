@@ -155,24 +155,26 @@ fn enrich_packages(version: &mut Value) -> io::Result<()> {
 fn enrich_package(dependency: &mut Value, entries: &[Value]) -> io::Result<()> {
     if dependency["packageName"]
         .as_str()
-        .is_some_and(|name| !name.is_empty())
+        .is_some_and(|name| !name.trim().is_empty())
     {
         return Ok(());
     }
     let identity = selection::identity(&dependency["id"])?;
     let version = dependency["id"]["version"]
         .as_str()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
         .or_else(|| {
             dependency["id"]
                 .as_str()
-                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
+                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver.trim()))
+                .filter(|version| !version.is_empty())
         })
-        .filter(|version| !version.is_empty())
         .ok_or_else(|| invalid("resolve hidden dependency version"))?;
     let id = format!("{identity}@{version}");
     if let Some(name) = entries
         .iter()
-        .find(|entry| entry["id"] == id)
+        .find(|entry| entry["id"].as_str().map(str::trim) == Some(id.as_str()))
         .and_then(|entry| entry.get("packageName"))
     {
         dependency["packageName"] = name.clone();

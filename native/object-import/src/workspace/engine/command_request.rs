@@ -52,17 +52,35 @@ fn overlay_reads(
         Request::WorkspaceDiff(input) => super::status_models::workspace_diff::read_overlay(
             &input,
             pool,
-            command::inbound::overlay(&snapshots.command, input.import_token.as_deref())?,
+            command::inbound::overlay(
+                &snapshots.command,
+                input.import_token
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|token| !token.is_empty()),
+            )?,
         ),
         Request::VersionDiff(input) => super::status_models::version_diff::read_overlay(
             &input,
             pool,
-            command::inbound::overlay(&snapshots.command, input.import_token.as_deref())?,
+            command::inbound::overlay(
+                &snapshots.command,
+                input.import_token
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|token| !token.is_empty()),
+            )?,
         ),
         Request::VersionParentChain(input) => super::status_models::parent_diff::read_overlay(
             &input,
             pool,
-            command::inbound::overlay(&snapshots.command, input.import_token.as_deref())?,
+            command::inbound::overlay(
+                &snapshots.command,
+                input.import_token
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|token| !token.is_empty()),
+            )?,
         ),
         Request::StatusLaneUpdates(input) => {
             pool.install(|| command::inbound::lane_updates(&input, &snapshots.command, pool))

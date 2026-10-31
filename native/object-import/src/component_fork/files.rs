@@ -34,6 +34,7 @@ pub(super) fn prepare(
             .as_str()
             .or_else(|| file["relativePath"].as_str())
             .or_else(|| file["path"].as_str())
+            .map(str::trim)
             .ok_or_else(|| unsupported("fork source relative path"))?;
         relative_path(relative)?;
         let path = source_path(root, source, relative, observed)?;
@@ -81,19 +82,8 @@ pub(super) fn source_path(
     relative: &str,
     observed: &mut Observed,
 ) -> io::Result<PathBuf> {
-    if let Some(overlay) = source["sourceOverlays"][relative].as_str() {
-        let private = Path::new(
-            source["sourceOverlayRoot"]
-                .as_str()
-                .ok_or_else(|| unsupported("fork callback source root"))?,
-        );
-        let path = Path::new(overlay);
-        private_root(private, path, "bit-native-callback-")?;
-        observed.ancestors(
-            private,
-            path.parent().ok_or_else(|| unsupported("fork source parent"))?,
-        )?;
-        return Ok(path.into());
+    if let Some(path) = overlay_source_path(source, relative, observed)? {
+        return Ok(path);
     }
     let directory = source["sourceDirectory"]
         .as_str()
@@ -117,6 +107,30 @@ pub(super) fn source_path(
         path.parent().ok_or_else(|| unsupported("fork source parent"))?,
     )?;
     Ok(path)
+}
+fn overlay_source_path(
+    source: &Value,
+    relative: &str,
+    observed: &mut Observed,
+) -> io::Result<Option<PathBuf>> {
+    let Some(overlay) = source["sourceOverlays"][relative]
+        .as_str()
+        .map(str::trim)
+        .filter(|overlay| !overlay.is_empty())
+    else {
+        return Ok(None);
+    };
+    let private = Path::new(
+        source["sourceOverlayRoot"]
+            .as_str()
+            .map(str::trim)
+            .filter(|root| !root.is_empty())
+            .ok_or_else(|| unsupported("fork callback source root"))?,
+    );
+    let path = Path::new(overlay);
+    private_root(private, path, "bit-native-callback-")?;
+    observed.ancestors(private, path.parent().ok_or_else(|| unsupported("fork source parent"))?)?;
+    Ok(Some(path.into()))
 }
 fn private_root(root: &Path, path: &Path, prefix: &str) -> io::Result<()> {
     if !path.starts_with(root)

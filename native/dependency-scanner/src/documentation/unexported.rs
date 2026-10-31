@@ -7,6 +7,9 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{Visit, walk};
 
 pub(super) fn proven(program: &Program<'_>) -> bool {
+    if program.body.is_empty() {
+        return true;
+    }
     let mut proof = Proof { accepted: true, depth: 0, nodes: 0 };
     proof.visit_program(program);
     proof.accepted

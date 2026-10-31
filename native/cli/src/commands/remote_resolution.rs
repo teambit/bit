@@ -81,10 +81,11 @@ impl Session {
         let (remotes, custom) = self.plan()?;
         let pending = scopes
             .iter()
-            .filter(|scope| !self.overrides.contains_key(*scope))
+            .map(|scope| scope.trim())
+            .filter(|scope| !scope.is_empty() && !self.overrides.contains_key(*scope))
             .filter_map(|scope| match remotes.configured(scope) {
                 Ok(Some(_)) => None,
-                Ok(None) if custom => Some(Ok(scope.clone())),
+                Ok(None) if custom => Some(Ok(scope.to_owned())),
                 Ok(None) => None,
                 Err(error) => Some(Err(error)),
             })
@@ -114,7 +115,7 @@ impl Session {
             .unwrap_or(Value::Null);
         let custom = scope["resolverPath"]
             .as_str()
-            .is_some_and(|path| !path.is_empty());
+            .is_some_and(|path| !path.trim().is_empty());
         Ok((Remotes::load(&scope, &config_dir, &global)?, custom))
     }
 
@@ -136,6 +137,8 @@ impl Session {
         }
         let url = receipt["host"]
             .as_str()
+            .map(str::trim)
+            .filter(|url| !url.is_empty())
             .ok_or_else(|| io::Error::other("remote resolver host receipt"))?;
         bit_client_transfer::remotes::Remote::from_host(url)?;
         self.overrides.insert(scope.to_owned(), url.to_owned());

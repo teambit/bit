@@ -103,6 +103,8 @@ fn numeric_coercible(value: &Value) -> bool {
     value.is_number()
         || value
             .as_str()
+            .map(str::trim)
+            .filter(|text| !text.is_empty())
             .is_some_and(|text| text.parse::<f64>().is_ok())
 }
 fn identifier_valid(identifier: &str) -> io::Result<()> {
@@ -162,7 +164,7 @@ pub(super) fn format(version: &Value) -> io::Result<String> {
 
 fn part_text(value: &Value) -> io::Result<String> {
     if let Some(text) = value.as_str() {
-        return Ok(text.to_owned());
+        return Ok(text.trim().to_owned());
     }
     value
         .as_u64()

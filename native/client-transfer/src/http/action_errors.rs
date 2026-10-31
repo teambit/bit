@@ -13,13 +13,19 @@ pub(super) async fn throw_for_action_status(response: Response) -> io::Result<Re
     let url = response.url().to_string();
     let parsed: Value = response.json().await.unwrap_or(Value::Null);
     let error = if parsed["error"]["code"].is_null() { &parsed } else { &parsed["error"] };
-    let message = error["message"]
-        .as_str()
-        .or_else(|| parsed["message"].as_str())
+    let message = non_empty_str(&error["message"])
+        .or_else(|| non_empty_str(&parsed["message"]))
         .unwrap_or("unknown error")
         .to_owned();
     let code = error["code"].as_u64();
     Err(action_error(code, error, &url, message))
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 fn action_error(code: Option<u64>, error: &Value, url: &str, message: String) -> io::Error {
@@ -27,25 +33,20 @@ fn action_error(code: Option<u64>, error: &Value, url: &str, message: String) ->
         Some(127..=130) => remote_error(code, error, url, message),
         Some(131) => io::Error::other(ActionConflict(error.clone())),
         Some(135) => io::Error::other(ActionNotFound(
-            error["name"]
-                .as_str()
-                .unwrap_or(&message)
-                .to_owned(),
+            non_empty_str(&error["name"]).unwrap_or(&message).to_owned(),
         )),
         Some(136) => io::Error::other(format!(
             "fatal: another client started exporting to the same scopes as yours within the exact same millisecond ({}), please try again.",
-            error["clientId"].as_str().unwrap_or(&message),
+            non_empty_str(&error["clientId"]).unwrap_or(&message),
         )),
         Some(137) => io::Error::other(format!(
             "fatal: the server is busy by other exports. total exports (including yours) in the queue: {},\nthe current export-id in queue is \"{}\".\nin a few minutes, bit.cloud will try to complete the export for you.\nif the remote scopes are not updated, please contact support.\n",
             error["queueSize"],
-            error["currentExportId"].as_str().unwrap_or("undefined"),
+            non_empty_str(&error["currentExportId"]).unwrap_or("undefined"),
         )),
         Some(138) => {
-            let lane = error["laneName"].as_str().unwrap_or("undefined");
-            let suffix = error["scopeName"]
-                .as_str()
-                .filter(|name| !name.is_empty())
+            let lane = non_empty_str(&error["laneName"]).unwrap_or("undefined");
+            let suffix = non_empty_str(&error["scopeName"])
                 .map_or_else(
                     || format!(" locally. Please try with scope name, e.g. my-org.my-scope/{lane}"),
                     |scope| format!(r#" in scope "{scope}""#),
@@ -114,9 +115,8 @@ pub(super) async fn throw_for_status(response: Response) -> io::Result<Response>
     let parsed: Value = response.json().await.unwrap_or(Value::Null);
     let error =
         if parsed["error"]["code"].is_null() { parsed.clone() } else { parsed["error"].clone() };
-    let message = error["message"]
-        .as_str()
-        .or_else(|| parsed["message"].as_str())
+    let message = non_empty_str(&error["message"])
+        .or_else(|| non_empty_str(&parsed["message"]))
         .map(str::to_string);
     let message = message.unwrap_or_else(|| {
         if crate::tar::truthy(&error) { "unknown error".to_owned() } else { fallback }
@@ -130,7 +130,8 @@ pub(super) fn remote_error(
     url: &str,
     message: String,
 ) -> io::Error {
-    let text = |key: &str| error[key].as_str().map_or_else(|| message.clone(), str::to_string);
+    let text =
+        |key: &str| non_empty_str(&error[key]).map_or_else(|| message.clone(), str::to_string);
     match code {
         Some(127) => io::Error::new(
             io::ErrorKind::NotFound,

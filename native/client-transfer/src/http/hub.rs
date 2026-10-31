@@ -39,13 +39,13 @@ impl Network {
         origin: &str,
         mut observe: impl FnMut(&str),
     ) -> io::Result<HubReply> {
-        let endpoint = format!("{url}/api/put");
-        let options = json!({"origin":origin}).to_string();
+        let endpoint = format!("{}/api/put", url.trim().trim_end_matches('/'));
+        let options = json!({"origin":origin.trim()}).to_string();
         let mut messages = Vec::new();
         let request = self
             .headers(self.client.post(&endpoint), "write")?
             .header("push-options", &options)
-            .header("x-objects-hash", objects_hash)
+            .header("x-objects-hash", objects_hash.trim())
             .body(archive);
         for attempt in 0..=3 {
             let request =
@@ -137,6 +137,7 @@ fn line(bytes: &[u8], end: &mut Value, messages: &mut Vec<String>) -> io::Result
     let row: Value = serde_json::from_slice(bytes).map_err(io::Error::other)?;
     let message = row["message"]
         .as_str()
+        .map(str::trim)
         .filter(|message| !message.is_empty())
         .map(str::to_owned)
         .or_else(|| messages.last().cloned())
@@ -158,7 +159,12 @@ fn finish(
         return Err(io::Error::other(r#"HTTP results are missing "data" property"#));
     }
     if crate::tar::truthy(&end["data"]["isError"]) {
-        return Err(unexpected(end["message"].as_str().unwrap_or_default()));
+        return Err(unexpected(
+            end["message"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default(),
+        ));
     }
     if !status.is_success() {
         return Err(unexpected(&format!(

@@ -58,7 +58,7 @@ fn project(raw: &Value, directory: &Path, main: &str) -> Option<Value> {
         {
             continue;
         }
-        if path.starts_with(directory.to_str()?) {
+        if Path::new(path).starts_with(directory) {
             files.push(json!({"path":relative(directory, Path::new(path)),"data":data}));
         }
     }
@@ -114,12 +114,13 @@ pub(super) struct Coverage {
 }
 impl Coverage {
     pub(super) fn prepare(root: &Path, directory: &str) -> io::Result<Self> {
+        let directory = directory.trim();
         let bitmap = bit_install::workspace::Bitmap::load(root, None)?;
         let entry = bitmap.entries
             .iter()
-            .find(|entry| entry.root_dir == directory)
+            .find(|entry| entry.root_dir.trim() == directory)
             .ok_or_else(|| io::Error::other("tester coverage component"))?;
-        Ok(Self { directory: directory.to_owned(), main: entry.main_file.clone() })
+        Ok(Self { directory: directory.to_owned(), main: entry.main_file.trim().to_owned() })
     }
     pub(super) fn collect(&self, root: &Path, result: &mut Value) {
         if result.get("results").is_none() {

@@ -75,12 +75,13 @@ fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> Stri
 }
 fn enterprise_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
     let api = remote::api(&repository.host);
-    let url = format!(
-        "{}/repos/{}/{}/dispatches",
-        api.as_deref().unwrap_or("<GitHub API URL>"),
-        repository.owner,
-        repository.name,
-    );
+    let base = api
+        .as_deref()
+        .ok()
+        .map(str::trim)
+        .filter(|url| !url.is_empty())
+        .unwrap_or("<GitHub API URL>");
+    let url = format!("{base}/repos/{}/{}/dispatches", repository.owner, repository.name);
     let mut lines = vec![
         format!(r#"On bit.cloud, add an "Export succeeded" webhook to {}:"#, input.target.scope),
         format!("  URL      {}", chalk.cyan(&url)),

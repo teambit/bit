@@ -11,7 +11,10 @@ pub(super) struct Tree {
     observed: crate::component_tracking::observe::Observed,
 }
 pub(super) fn prepare(plan: &mut Plan) -> io::Result<()> {
-    if plan.identity.exported || plan.identity.source_directory == plan.identity.target_directory {
+    if plan.identity.exported
+        || plan.identity.source_directory.trim().is_empty()
+        || plan.identity.source_directory == plan.identity.target_directory
+    {
         return Ok(());
     }
     let mut tree = Tree { directories: BTreeMap::new(), observed: Observed::default() };

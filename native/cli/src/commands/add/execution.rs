@@ -72,25 +72,31 @@ fn components(plan: &Plan, projection: &Projection) -> Vec<WorkspaceComponent> {
     plan.components()
         .iter()
         .filter(|row| {
-            (row["rootDir"].is_string() || row["directory"].is_string())
+            (non_empty_str(&row["rootDir"]).is_some() || non_empty_str(&row["directory"]).is_some())
                 && row["files"]
                     .as_array()
                     .is_some_and(|files| !files.is_empty())
         })
         .filter_map(|row| {
-            let identity = row["identity"]
-                .as_str()
-                .or_else(|| row["id"].as_str())?;
+            let identity = non_empty_str(&row["identity"]).or_else(|| non_empty_str(&row["id"]))?;
             let bare = identity
                 .split('@')
                 .next()
-                .unwrap_or(identity);
+                .unwrap_or(identity)
+                .trim();
             projection.workspace.components
                 .iter()
                 .find(|component| component.id.to_string_without_version() == bare)
                 .cloned()
         })
         .collect()
+}
+
+fn non_empty_str(value: &serde_json::Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 fn validate(prepared: &mut Prepared, capture: &capture::Capture) -> io::Result<()> {
     prepared.engine.validate_read_set(

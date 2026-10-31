@@ -79,9 +79,12 @@ impl Stores {
             _ => None,
         };
         let Some(value) = value else { return Ok(()) };
-        let key = &options.values[0];
+        let key = options.values[0].trim();
         let origin = options.origin
-            .clone()
+            .as_deref()
+            .map(str::trim)
+            .filter(|origin| !origin.is_empty())
+            .map(str::to_owned)
             .or_else(|| {
                 if value.is_some() {
                     Some("global".to_owned())

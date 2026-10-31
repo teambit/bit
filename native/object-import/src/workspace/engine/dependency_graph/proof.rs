@@ -97,7 +97,7 @@ fn verify_one(proof: &Proof) -> io::Result<usize> {
     Ok(content.as_ref().map_or(0, Vec::len))
 }
 fn verify_metadata(proof: &Proof, expected: &Metadata) -> io::Result<usize> {
-    if expected.kind == "symlink" {
+    if expected.kind.trim() == "symlink" {
         if proof.hash.is_some()
             || proof.exists.is_some()
             || expected.real_path.is_none()

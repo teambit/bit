@@ -91,6 +91,8 @@ fn match_pkg(
     lifecycle: &str,
 ) -> Result<Option<(String, String)>, Failure> {
     let (name, req_ver) = split_pkg_to_name_and_ver(raw_pkg);
+    let name = name.trim();
+    let req_ver = req_ver.map(str::trim);
     if name.is_empty() || req_ver.is_some_and(|ver| ver.contains('@')) {
         return Err(Failure::User(format!(
             r#"invalid package "{raw_pkg}" syntax, expected "package[@version]""#,
@@ -102,7 +104,10 @@ fn match_pkg(
     {
         return Ok(Some((dep.package_name.clone(), dep.version.clone())));
     }
-    if missing.iter().any(|item| item == name) {
+    if missing
+        .iter()
+        .any(|item| item.trim() == name)
+    {
         let ver = req_ver
             .filter(|ver| !ver.is_empty())
             .unwrap_or("latest");

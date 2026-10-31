@@ -24,7 +24,7 @@ impl Retained {
     ) -> io::Result<String> {
         let Some((key, row)) = rows
             .iter()
-            .find(|(_, row)| row["rootDir"] == directory)
+            .find(|(_, row)| trimmed_str(&row["rootDir"]) == Some(directory.as_str()))
         else {
             return Ok(directory);
         };
@@ -36,7 +36,7 @@ impl Retained {
         let candidate = format!("{owner}/{directory}");
         let nested = rows
             .values()
-            .filter_map(|row| row["rootDir"].as_str())
+            .filter_map(|row| trimmed_str(&row["rootDir"]))
             .any(|tracked| {
                 tracked.starts_with(&format!("{candidate}/"))
                     || candidate.starts_with(&format!("{tracked}/"))
@@ -44,14 +44,10 @@ impl Retained {
         if nested || unavailable(root, &candidate, rows, &mut self.observed)?.is_some() {
             return Ok(directory);
         }
-        let used_scope = row["scope"]
-            .as_str()
-            .filter(|scope| !scope.is_empty())
+        let used_scope = trimmed_str(&row["scope"])
             .ok_or_else(|| super::invalid("inbound owner collision with unscoped component"))?;
-        let version = row["version"]
-            .as_str()
-            .filter(|version| !version.is_empty())
-            .map_or(String::new(), |version| format!("@{version}"));
+        let version =
+            trimmed_str(&row["version"]).map_or(String::new(), |version| format!("@{version}"));
         let (_, used_name) = crate::reset_lane::bitmap::row_identity(key, row);
         self.warnings.push(format!(
             r#""{directory}" is already used by {}/{}{version}, importing {scope}/{} into "{candidate}" instead"#,
@@ -69,7 +65,7 @@ pub(super) fn prepare_into(
 ) -> io::Result<()> {
     let mut taken: HashSet<String> = rows
         .values()
-        .filter_map(|row| row["rootDir"].as_str().map(str::to_owned))
+        .filter_map(|row| trimmed_str(&row["rootDir"]).map(str::to_owned))
         .collect();
     taken.extend(directories.iter().cloned());
     for directory in directories {
@@ -99,6 +95,13 @@ pub(super) fn prepare_into(
     Ok(())
 }
 
+fn trimmed_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn unavailable(
     root: &Path,
     directory: &str,
@@ -107,14 +110,14 @@ fn unavailable(
 ) -> io::Result<Option<String>> {
     if let Some((key, row)) = rows
         .iter()
-        .find(|(_, row)| row["rootDir"] == directory)
+        .find(|(_, row)| trimmed_str(&row["rootDir"]) == Some(directory))
     {
         let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
         return Ok(Some(format!(
             "it is already used by {}/{}@{}",
             row_scope.unwrap_or_default(),
             row_name,
-            row["version"].as_str().unwrap_or_default(),
+            trimmed_str(&row["version"]).unwrap_or_default(),
         )));
     }
     let path = root.join(directory);

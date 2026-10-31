@@ -36,8 +36,10 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
             return Err(invalid("duplicate inspection diff model path"));
         }
     }
-    let bodies =
-        read::load(&request.objects_directory, &request.model_files, super::MAX_BYTES - total)?;
+    let remaining = super::MAX_BYTES
+        .checked_sub(total)
+        .ok_or_else(|| invalid("inspection diff path/budget"))?;
+    let bodies = read::load(&request.objects_directory, &request.model_files, remaining)?;
     let by_path: HashMap<_, _> = current
         .iter()
         .map(|file| (&file.relative_path, file))

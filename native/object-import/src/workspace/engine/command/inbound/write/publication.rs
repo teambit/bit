@@ -197,7 +197,7 @@ impl History {
     }
     fn first_metadata(&self) -> Vec<u8> {
         let mut expected = self.metadata_before.clone().unwrap_or_default();
-        expected.extend_from_slice(format!("{} import\n", self.file_id).as_bytes());
+        expected.extend_from_slice(format!("{} import\n", self.file_id.trim()).as_bytes());
         expected
     }
     fn append_metadata(&self) -> io::Result<()> {
@@ -205,7 +205,7 @@ impl History {
             .append(true)
             .create(true)
             .open(&self.metadata)?;
-        writeln!(metadata, "{} import", self.file_id)?;
+        writeln!(metadata, "{} import", self.file_id.trim())?;
         metadata.sync_all()
     }
     pub(super) fn rollback(&self) {

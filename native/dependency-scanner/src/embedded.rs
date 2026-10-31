@@ -9,6 +9,9 @@ pub(crate) fn process(input: &str, pool: &ThreadPool) -> Result<Value, serde_jso
     if request.version != 1 || request.files.len() > limits::BATCH_FILES {
         return Ok(invalid_request("unsupported scanner request"));
     }
+    if request.files.is_empty() {
+        return Ok(json!({"version":1,"id":request.id,"files":[]}));
+    }
     let remaining = AtomicUsize::new(8 * 1024 * 1024);
     let files: Vec<Option<Value>> = pool.install(|| {
         request.files

@@ -5,7 +5,11 @@ mod json_color;
 use super::{Chalk, GLOBAL_HELP, inline_json_value, run_cmd};
 
 pub(super) fn app_run_help_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
-    let name = *argv.first()?;
+    let name = argv
+        .first()
+        .copied()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())?;
     let ["run" | "c", rest @ ..] = &argv[1..] else {
         return None;
     };
@@ -13,7 +17,11 @@ pub(super) fn app_run_help_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
 }
 
 pub(super) fn app_help_output(argv: &[&str], chalk: Chalk) -> Option<String> {
-    let name = *argv.first()?;
+    let name = argv
+        .first()
+        .copied()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())?;
     match &argv[1..] {
         ["--help" | "-h"] => Some(app_command_help(name, chalk)),
         ["list", "--help" | "-h"] => Some(list_command_help(name, chalk)),

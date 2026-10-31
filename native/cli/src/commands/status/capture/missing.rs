@@ -23,7 +23,12 @@ pub(super) fn status_pending(
     target: &Value,
     captured: &mut Capture,
 ) -> io::Result<bool> {
-    if target["scoped"] != true || target["version"].as_str().is_none_or(str::is_empty) {
+    if target["scoped"] != true
+        || target["version"]
+            .as_str()
+            .map(str::trim)
+            .is_none_or(str::is_empty)
+    {
         return Ok(false);
     }
     let identity = text(target.get("identity"))?;
@@ -140,8 +145,16 @@ pub(super) fn main_file(
     files: &[String],
     captured: &mut Capture,
 ) -> io::Result<bool> {
-    let main = target.get("mainFile").and_then(Value::as_str);
-    if main.is_some_and(|main| files.iter().any(|file| file == main)) {
+    let main = target
+        .get("mainFile")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|main| !main.is_empty());
+    if main.is_some_and(|main| {
+        files
+            .iter()
+            .any(|file| file.trim() == main)
+    }) {
         return Ok(false);
     }
     if enabled

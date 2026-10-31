@@ -111,19 +111,22 @@ pub(super) fn read_allowed_envs(ws_jsonc: &Value) -> Vec<String> {
     };
     arr.iter()
         .filter_map(Value::as_str)
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .map(str::to_owned)
         .collect()
 }
 
 pub(super) fn is_env_allowed(env_id: &str, allowed_envs: &[String]) -> bool {
+    let env_id = env_id.trim();
     allowed_envs
         .iter()
         .any(|allowed| {
+            let allowed = allowed.trim();
             if env_id == allowed {
                 return true;
             }
-            if !allowed.contains('@') {
+            if !allowed.is_empty() && !allowed.contains('@') {
                 let prefix = format!("{allowed}@");
                 if env_id.starts_with(&prefix) {
                     return true;

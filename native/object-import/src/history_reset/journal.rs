@@ -98,12 +98,13 @@ impl State {
     }
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
+        let token = request.token.trim().to_owned();
         let mut record = self.records
-            .get(&request.token)
+            .get(&token)
             .cloned()
             .ok_or_else(|| invalid("stale reset owner"))?;
         if record.revision != request.revision
-            || record.phases.get(record.cursor).copied() != Some(request.phase.as_str())
+            || record.phases.get(record.cursor).copied() != Some(request.phase.trim())
         {
             return Err(invalid("stale reset receipt"));
         }
@@ -112,8 +113,8 @@ impl State {
         }
         record.advance(request.next_count)?;
         self.complete_child(&record)?;
-        let output = record.output(&request.token);
-        self.records.insert(request.token, record);
+        let output = record.output(&token);
+        self.records.insert(token, record);
         Ok(output)
     }
     fn complete_child(&mut self, record: &Record) -> io::Result<()> {
@@ -194,7 +195,7 @@ impl State {
     }
 }
 fn phases(request: &Begin) -> io::Result<Vec<&'static str>> {
-    match request.mode.as_str() {
+    match request.mode.trim() {
         "real" => {
             let mut phases = vec!["captureLane", "candidates"];
             if request.pattern {

@@ -14,7 +14,10 @@ fn convert(value: &serde_json::Value) -> io::Result<Value> {
         serde_json::Value::Null => Value::Null,
         serde_json::Value::Bool(value) => Value::Boolean(*value),
         serde_json::Value::Number(value) => {
-            let number = value.as_f64().ok_or_else(|| io::Error::other("JSON number"))?;
+            let number = value
+                .as_f64()
+                .filter(|number| number.is_finite())
+                .ok_or_else(|| io::Error::other("JSON number"))?;
             Value::Number(format!("{:016x}", number.to_bits()))
         }
         serde_json::Value::String(value) => Value::text(value),

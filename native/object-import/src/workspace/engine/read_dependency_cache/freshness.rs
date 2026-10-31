@@ -13,6 +13,9 @@ pub(super) fn stale(
     timestamp: f64,
     pool: &rayon::ThreadPool,
 ) -> io::Result<bool> {
+    if !timestamp.is_finite() || timestamp < 0.0 {
+        return Err(invalid("dependency cache timestamp"));
+    }
     let directories = directories(root)?;
     pool.install(|| {
         directories

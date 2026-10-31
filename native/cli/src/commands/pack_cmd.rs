@@ -103,7 +103,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "-j" | "--json" | "--json=true" => options.json = true,
             "--json=false" => options.json = false,
             "-d" | "--out-dir" => {
-                let val = iter.next()?;
+                let val = iter.next()?.trim();
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;
                 options.out_dir = Some(val.to_owned());
             }
@@ -131,13 +131,15 @@ fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
         .strip_prefix("--out-dir=")
         .or_else(|| arg.strip_prefix("-d="))
     {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.out_dir = Some(val.to_owned());
-    } else if !arg.starts_with('-') && !arg.is_empty() {
+    } else if !arg.starts_with('-') && !arg.trim().is_empty() {
+        let trimmed = arg.trim();
         if options.comp_id.is_empty() {
-            arg.clone_into(&mut options.comp_id);
+            trimmed.clone_into(&mut options.comp_id);
         } else if options.scope_path.is_none() {
-            options.scope_path = Some(arg.to_owned());
+            options.scope_path = Some(trimmed.to_owned());
         } else {
             return None;
         }

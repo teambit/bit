@@ -30,7 +30,10 @@ pub(super) fn apply(request: &Request) -> io::Result<(usize, Value)> {
 fn ignored(request: &Request, plan: &mut Plan) {
     for field in 0..2 {
         plan.components[field].retain(|index| {
-            let name = request.entries[*index].package_name.as_deref();
+            let name = request.entries[*index].package_name
+                .as_deref()
+                .map(str::trim)
+                .filter(|name| !name.is_empty());
             !name.is_some_and(|name| request.ignore(field, name, &mut plan.removed))
         });
     }

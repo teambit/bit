@@ -11,7 +11,7 @@ type Captured = (Value, Vec<(String, Vec<u8>)>, String, Vec<(String, Vec<u8>)>);
 pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Result<Captured> {
     let index: Value = crate::parse_jsonc(&required(observed, &scope.join("index.json"))?)?;
     let row = model_row(&index, id)?;
-    let hash = row["hash"].as_str().ok_or_else(|| unsupported("fork remote model hash"))?;
+    let hash = trimmed_str(&row["hash"]).ok_or_else(|| unsupported("fork remote model hash"))?;
     let mut compressed = vec![(hash.to_owned(), retain(scope, hash, observed)?)];
     let (kind, model) = crate::read_scope_object(scope, hash)?.ok_or_else(|| missing(id))?;
     if kind != "Component" {
@@ -23,7 +23,7 @@ pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Resul
     if kind != "Version" {
         return Err(unsupported("fork remote version type"));
     }
-    let mut total = 0;
+    let mut total = 0usize;
     let mut files = Vec::new();
     for row in source_rows(&version)? {
         let (path, hash) = source(row)?;
@@ -31,7 +31,7 @@ pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Resul
         let bytes = crate::checkout::repository::source(
             &scope.join("objects"),
             crate::merge_history::hash(hash)?,
-            32 * 1024 * 1024 - total,
+            (32 * 1024 * 1024usize).saturating_sub(total),
             &mut 0,
         )?;
         total += bytes.len();
@@ -39,21 +39,32 @@ pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Resul
     }
     Ok((version, files, version_id(&model, id, &hash), compressed))
 }
+fn trimmed_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
 fn model_row<'a>(index: &'a Value, id: &str) -> io::Result<&'a Value> {
-    let bare = id.split('@').next().unwrap_or(id);
+    let bare = id
+        .trim()
+        .split('@')
+        .next()
+        .unwrap_or(id)
+        .trim();
     let (target_scope, target_name) = bare
         .split_once('/')
-        .unwrap_or(("", bare));
+        .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     index["components"]
         .as_array()
         .or_else(|| index.as_array())
         .and_then(|rows| {
             rows.iter()
                 .find(|row| {
-                    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+                    let row_scope = trimmed_str(&row["id"]["scope"]).unwrap_or_default();
                     row["isSymlink"] != true
-                        && (row["id"].as_str() == Some(bare)
-                            || (row["id"]["name"].as_str() == Some(target_name)
+                        && (trimmed_str(&row["id"]) == Some(bare)
+                            || (trimmed_str(&row["id"]["name"]) == Some(target_name)
                                 && (row_scope == target_scope || row_scope.is_empty())))
                 })
         })
@@ -105,7 +116,7 @@ fn source_rows(version: &Value) -> io::Result<&[Value]> {
 }
 fn source(row: &Value) -> io::Result<(&str, &str)> {
     let path =
-        row["relativePath"].as_str().ok_or_else(|| unsupported("fork remote source path"))?;
+        trimmed_str(&row["relativePath"]).ok_or_else(|| unsupported("fork remote source path"))?;
     if path.is_empty()
         || Path::new(path)
             .components()
@@ -113,9 +124,8 @@ fn source(row: &Value) -> io::Result<(&str, &str)> {
     {
         return Err(unsupported("fork unsafe remote source path"));
     }
-    let file_hash = row["file"]
-        .as_str()
-        .or_else(|| row["hash"].as_str())
+    let file_hash = trimmed_str(&row["file"])
+        .or_else(|| trimmed_str(&row["hash"]))
         .ok_or_else(|| unsupported("fork remote source hash"))?;
     Ok((path, file_hash))
 }
@@ -132,19 +142,20 @@ fn retain(scope: &Path, hash: &str, observed: &mut Observed) -> io::Result<Vec<u
     required(observed, &path)
 }
 fn version_id(model: &Value, id: &str, hash: &str) -> String {
-    if let Some((_, version)) = id.rsplit_once('@')
-        && !version.is_empty()
-        && !matches!(version, "latest" | "head")
-    {
-        return version.into();
+    let hash = hash.trim();
+    if let Some((_, version)) = id.trim().rsplit_once('@') {
+        let version = version.trim();
+        if !version.is_empty() && !matches!(version, "latest" | "head") {
+            return version.into();
+        }
     }
     model["versions"]
         .as_object()
         .into_iter()
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter())
-        .find(|(_, value)| value.as_str() == Some(hash))
-        .map_or_else(|| hash.into(), |(tag, _)| tag.clone())
+        .find(|(_, value)| trimmed_str(value) == Some(hash))
+        .map_or_else(|| hash.into(), |(tag, _)| tag.trim().to_owned())
 }
 pub(super) fn configs(version: &Value) -> io::Result<Value> {
     let mut configs = json!({});

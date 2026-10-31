@@ -185,23 +185,25 @@ impl<'a> IndexState<'a> {
     fn add_existing(&mut self, category: &'a str, entries: &'a [IndexEntry]) {
         for (index, entry) in entries.iter().enumerate() {
             self.found
-                .entry(&entry.hash)
+                .entry(entry.hash.trim())
                 .or_insert((category, index, &entry.id));
         }
     }
     fn apply(&mut self, offset: usize, object: &'a IndexObject) -> Option<()> {
-        if !matches!(object.category.as_str(), "component" | "lane") {
+        let obj_category = object.category.trim();
+        let obj_hash = object.hash.trim();
+        if obj_hash.is_empty() || !matches!(obj_category, "component" | "lane") {
             return None;
         }
-        let Some((category, index, id)) = self.found.get(object.hash.as_str()).copied() else {
-            let side = usize::from(object.category == "lane");
+        let Some((category, index, id)) = self.found.get(obj_hash).copied() else {
+            let side = usize::from(obj_category == "lane");
             let index = self.counts[side];
             self.counts[side] += 1;
-            self.found.insert(&object.hash, (&object.category, index, &object.id));
+            self.found.insert(obj_hash, (obj_category, index, &object.id));
             self.actions.push(json!(["add", offset, index]));
             return Some(());
         };
-        if object.category != "lane" {
+        if obj_category != "lane" {
             return Some(());
         }
         if category != "lane" {
@@ -209,7 +211,7 @@ impl<'a> IndexState<'a> {
         }
         if *id != object.id {
             self.actions.push(json!(["rename", offset, index]));
-            self.found.insert(&object.hash, ("lane", index, &object.id));
+            self.found.insert(obj_hash, ("lane", index, &object.id));
         }
         Some(())
     }

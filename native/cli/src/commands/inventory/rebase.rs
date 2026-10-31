@@ -9,7 +9,7 @@ pub fn pattern(pattern: &str, dir: &str) -> String {
     };
     let anchored = body
         .char_indices()
-        .any(|(index, char)| char == '/' && index + 1 < body.len());
+        .any(|(index, character)| character == '/' && index + 1 < body.len());
     // A trailing slash means "directories only"; the join drops it, so it is put back.
     let dir_only = if body.ends_with('/') { "/" } else { "" };
     let base = if anchored {

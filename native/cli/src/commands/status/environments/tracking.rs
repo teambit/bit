@@ -71,6 +71,10 @@ impl Environments {
         root: &Path,
         env: &str,
     ) -> io::Result<Value> {
+        let env = env.trim();
+        if env.is_empty() {
+            return Err(io::Error::other("tracking environment id is empty"));
+        }
         self.host(root)?
             .call("trackingEnvConfig", &json!({"env":env}))
     }

@@ -22,7 +22,11 @@ pub(super) fn planned(
     plan: &Value,
 ) -> Value {
     let mut params = snapshot(root, request, workflow);
-    if let Some(identity) = plan["autoAddedWorkspaceRoot"].as_str() {
+    if let Some(identity) = plan["autoAddedWorkspaceRoot"]
+        .as_str()
+        .map(str::trim)
+        .filter(|identity| !identity.is_empty())
+    {
         params["autoAddedWorkspaceRoot"] = json!(identity);
     }
     params
@@ -75,8 +79,14 @@ fn tag(params: &mut Value, options: &Value) {
     }
     if let Some(path) = options["versionsFile"]
         .as_str()
-        .or_else(|| options["versionsFile"]["path"].as_str())
+        .map(str::trim)
         .filter(|path| !path.is_empty())
+        .or_else(|| {
+            options["versionsFile"]["path"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+        })
     {
         params["versionsFile"] = json!(path);
     }

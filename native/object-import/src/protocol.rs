@@ -69,9 +69,9 @@ fn serve_workspace(
     reader: &mut impl Read,
     writer: &mut impl Write,
 ) -> io::Result<bool> {
-    match magic {
-        value if value == *b"BWM1" => crate::workspace::serve(reader, writer)?,
-        value if value == *b"BWP1" => crate::workspace::actions::serve(reader, writer)?,
+    match &magic {
+        b"BWM1" => crate::workspace::serve(reader, writer)?,
+        b"BWP1" => crate::workspace::actions::serve(reader, writer)?,
         _ => return Ok(false),
     }
     Ok(true)

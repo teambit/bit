@@ -258,7 +258,7 @@ fn apply_checkout_mode(
     if record.request.operation != input::Operation::Checkout {
         return Ok(());
     }
-    match record.request.options.to.as_deref() {
+    match record.request.options.to.as_deref().map(str::trim) {
         Some("head") => bitmap.make_available_on_main(&record.context),
         Some("reset") => {
             let identities = planned.materials
@@ -267,7 +267,8 @@ fn apply_checkout_mode(
                     material.output["id"]
                         .as_str()
                         .and_then(|id| id.rsplit_once('@'))
-                        .map(|(identity, _)| identity.to_owned())
+                        .map(|(identity, _)| identity.trim().to_owned())
+                        .filter(|identity| !identity.is_empty())
                         .ok_or_else(|| invalid("reset written configuration identity"))
                 })
                 .collect::<io::Result<Vec<_>>>()?;
@@ -284,7 +285,8 @@ fn bitmap_update(
     let identity = material.output["id"]
         .as_str()
         .and_then(|id| id.rsplit_once('@'))
-        .map(|(identity, _)| identity)
+        .map(|(identity, _)| identity.trim())
+        .filter(|identity| !identity.is_empty())
         .ok_or_else(|| invalid("command bitmap identity"))?;
     let main_file = if material.keep_ours {
         record.targets
@@ -294,6 +296,8 @@ fn bitmap_update(
     } else {
         material.version["mainFile"].as_str()
     }
+    .map(str::trim)
+    .filter(|file| !file.is_empty())
     .ok_or_else(|| invalid("command bitmap main file"))?;
     Ok(bitmap::Update {
         identity: identity.to_owned(),

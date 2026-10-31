@@ -31,7 +31,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native watch grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("CI watch delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -61,8 +61,17 @@ fn emit_watch_err(cwd: &Path, args: &[OsString], import: bool, err: String) -> i
     })
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 pub(super) fn check_types_error(options: &Options) -> Option<String> {
-    let val = options.check_types.as_deref()?;
+    let val = options.check_types.as_deref()?.trim();
     if val.is_empty() || val == "file" || val == "project" {
         None
     } else {
@@ -131,17 +140,17 @@ fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
 
 fn take_optional_check_types(args: &[&str], idx: &mut usize) -> String {
     if let Some(&next) = args.get(*idx + 1)
-        && !next.starts_with('-')
+        && !next.trim().starts_with('-')
     {
         *idx += 1;
-        next.to_owned()
+        next.trim().to_owned()
     } else {
         String::new()
     }
 }
 
 fn take_required_trigger(args: &[&str], idx: &mut usize) -> Option<String> {
-    let next = *args.get(*idx + 1)?;
+    let next = args.get(*idx + 1)?.trim();
     if next.is_empty() || next.starts_with('-') {
         return None;
     }
@@ -154,9 +163,9 @@ fn apply_inline(arg: &str, options: &mut Options) -> Option<()> {
         .strip_prefix("--check-types=")
         .or_else(|| arg.strip_prefix("-t="))
     {
-        options.check_types = Some(val.to_owned());
+        options.check_types = Some(val.trim().to_owned());
     } else {
-        let val = arg.strip_prefix("--trigger=")?;
+        let val = arg.strip_prefix("--trigger=")?.trim();
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.trigger = Some(val.to_owned());
     }

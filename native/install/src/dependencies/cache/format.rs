@@ -59,11 +59,17 @@ fn dependency(dependency: &LegacyDependency) -> Value {
     let mut value = Map::new();
     value.insert("id".to_owned(), Value::Object(id));
     value.insert("relativePaths".to_owned(), Value::Array(Vec::new()));
-    if let Some(name) = &dependency.package_name {
-        value.insert("packageName".to_owned(), Value::String(name.clone()));
+    if let Some(name) = dependency.package_name
+        .as_deref()
+        .filter(|name| !name.is_empty())
+    {
+        value.insert("packageName".to_owned(), Value::String(name.to_owned()));
     }
-    if let Some(range) = &dependency.version_range {
-        value.insert("versionRange".to_owned(), Value::String(range.clone()));
+    if let Some(range) = dependency.version_range
+        .as_deref()
+        .filter(|range| !range.is_empty())
+    {
+        value.insert("versionRange".to_owned(), Value::String(range.to_owned()));
     }
     Value::Object(value)
 }

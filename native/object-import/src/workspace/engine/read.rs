@@ -42,6 +42,9 @@ pub(super) fn read_with_budget<Record: Send>(
     maximum: usize,
     record: impl Fn(&Path, Vec<u8>) -> Record + Sync,
 ) -> io::Result<Vec<Record>> {
+    if files.is_empty() {
+        return Ok(Vec::new());
+    }
     count(files.len())?;
     if files.len() >= 32
         && pool.current_num_threads() > 1

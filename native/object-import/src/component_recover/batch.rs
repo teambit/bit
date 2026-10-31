@@ -75,7 +75,7 @@ impl Batch {
             let exported = key.is_none_or(|key| {
                 self.bitmap[key]["scope"]
                     .as_str()
-                    .is_some_and(|scope| !scope.is_empty())
+                    .is_some_and(|scope| !scope.trim().is_empty())
             });
             if exported && repository::model(self, selection::bare(&id))?.is_none() {
                 ids.push(id);

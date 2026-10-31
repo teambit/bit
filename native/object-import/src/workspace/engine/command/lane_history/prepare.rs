@@ -11,6 +11,9 @@ pub(in crate::workspace::engine) fn run(
     input: Prepare,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
+    if input.id.trim().is_empty() {
+        return Err(invalid("history id is empty"));
+    }
     if state.record.is_some() || state.histories.checkout.is_some() {
         return Err(invalid("history owner active"));
     }

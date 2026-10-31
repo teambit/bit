@@ -49,6 +49,9 @@ impl PreparedImport {
         root: &Path,
         targets: &[Target],
     ) -> io::Result<()> {
+        if targets.len() > 4096 {
+            return Err(super::invalid("import lane dependency target limit"));
+        }
         if targets.is_empty() {
             return Ok(());
         }

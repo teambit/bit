@@ -202,7 +202,11 @@ fn current_file(file: &Value, directory: &std::path::Path, index: usize) -> io::
     Ok(output)
 }
 fn text<'a>(value: &'a Value, field: &str) -> io::Result<&'a str> {
-    value[field].as_str().ok_or_else(|| invalid("merge string field"))
+    value[field]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("merge string field"))
 }
 
 fn translate_current(input: &mut Value, directory: &std::path::Path) -> io::Result<()> {

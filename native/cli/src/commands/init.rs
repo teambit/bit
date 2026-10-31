@@ -124,11 +124,23 @@ fn defaults(options: &mut options::Options) -> io::Result<()> {
         ("default_directory", &mut options.defaults.directory),
     ] {
         if target.is_none() {
-            *target = bit_workspace_config::environment_value(key)
-                .or_else(|| global[key].as_str().map(str::to_owned));
+            *target = default_option_value(&global, key);
         }
     }
     Ok(())
+}
+
+fn default_option_value(global: &serde_json::Value, key: &str) -> Option<String> {
+    bit_workspace_config::environment_value(key)
+        .map(|val| val.trim().to_owned())
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            global[key]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .map(str::to_owned)
+        })
 }
 
 fn failure(args: &[OsString], error: &str) -> io::Result<Outcome> {
@@ -151,7 +163,10 @@ fn validation_error(options: &options::Options) -> Option<String> {
             "cannot use both --reset and --reset-hard, please use only one of them".to_owned(),
         );
     }
-    let name = options.defaults.scope.as_deref()?;
+    let name = options.defaults.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())?;
     let parts: Vec<_> = name.split('.').collect();
     let valid = parts.len() <= 2
         && parts

@@ -64,7 +64,7 @@ fn apply_single_ws_update(doc: &mut Document, upd: &ResolvedUpdate) {
                 doc,
                 &[
                     "teambit.workspace/variants",
-                    pattern,
+                    pattern.trim(),
                     DEP_RESOLVER_ID,
                     "policy",
                     &upd.field,
@@ -149,6 +149,7 @@ fn apply_bitmap_entry_updates(
     bitmap_updates: &[(&str, &ResolvedUpdate)],
 ) {
     for &(comp_name, upd) in bitmap_updates {
+        let comp_name = comp_name.trim();
         let Some(entry) = bitmap.entries
             .iter()
             .find(|ent| {

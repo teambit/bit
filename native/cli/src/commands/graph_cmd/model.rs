@@ -29,12 +29,15 @@ pub(crate) struct CompGraph {
 
 impl CompGraph {
     pub(crate) fn add_node(&mut self, id: String) {
-        if !self.nodes.contains(&id) {
+        if !id.trim().is_empty() && !self.nodes.contains(&id) {
             self.nodes.push(id);
         }
     }
 
     pub(crate) fn add_edge(&mut self, source_id: String, target_id: String, attr: &str) {
+        if source_id.trim().is_empty() || target_id.trim().is_empty() {
+            return;
+        }
         self.add_node(source_id.clone());
         self.add_node(target_id.clone());
         let edge_id = format!("{source_id}->{target_id}");
@@ -66,8 +69,13 @@ impl CompGraph {
         let mut reachable = HashSet::new();
         let mut queue = VecDeque::new();
         for seeder in seeders {
-            if self.nodes.contains(seeder) && reachable.insert(seeder.clone()) {
-                queue.push_back(seeder.clone());
+            let trimmed = seeder.trim();
+            if self.nodes
+                .iter()
+                .any(|node| node == trimmed)
+                && reachable.insert(trimmed.to_owned())
+            {
+                queue.push_back(trimmed.to_owned());
             }
         }
         while let Some(curr) = queue.pop_front() {
@@ -83,7 +91,7 @@ impl CompGraph {
     pub(super) fn filter_local_only(&mut self, local_ids: &[String]) {
         let allowed: HashSet<&str> = local_ids
             .iter()
-            .map(String::as_str)
+            .map(|id| id.trim())
             .collect();
         self.nodes.retain(|node| allowed.contains(node.as_str()));
         self.edges.retain(|edge| {

@@ -19,6 +19,9 @@ pub(super) fn apply(plan: Plan) -> io::Result<()> {
     Ok(())
 }
 fn remove(path: &Path) -> io::Result<()> {
+    if path.as_os_str().is_empty() {
+        return Ok(());
+    }
     match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {
             fs::remove_dir_all(path)

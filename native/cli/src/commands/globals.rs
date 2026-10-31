@@ -69,7 +69,10 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
 }
 
 pub(in crate::commands) fn resolve_capsules_dir(cwd: &Path) -> io::Result<String> {
-    if let Some(from_env) = environment_value(CAPSULES_KEY) {
+    if let Some(from_env) = environment_value(CAPSULES_KEY)
+        .map(|val| val.trim().to_owned())
+        .filter(|val| !val.is_empty())
+    {
         return Ok(from_env);
     }
     let global = read_global_config(&global_config_dir())?;
@@ -85,6 +88,7 @@ pub(in crate::commands) fn resolve_capsules_dir(cwd: &Path) -> io::Result<String
     if let Some(configured) = combined
         .get(CAPSULES_KEY)
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|val| !val.is_empty())
     {
         return Ok(configured.to_owned());

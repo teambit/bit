@@ -103,6 +103,9 @@ impl Plan {
         Ok(())
     }
     pub fn commit_bitmap(&self, file_id: &str) -> io::Result<()> {
+        if file_id.trim().is_empty() {
+            return Err(invalid("fork bitmap file id is empty"));
+        }
         if !self.materialized {
             return Err(invalid("fork sources have not been materialized"));
         }

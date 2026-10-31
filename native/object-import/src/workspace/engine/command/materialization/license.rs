@@ -14,7 +14,7 @@ pub(super) fn prepare(input: &Input<'_>, license: Option<&str>) -> io::Result<Op
     let Some(contents) = license else { return Ok(None) };
     let path = input.root.join(&input.current.target.directory).join("LICENSE");
     validate_destination(&path, input.root)?;
-    if contents.len() > 4 * 1024 * 1024 {
+    if contents.len() > 4 * 1024 * 1024 || contents.contains('\0') {
         return Err(invalid("command license byte budget"));
     }
     Ok(Some(Prepared { path, contents: contents.to_owned() }))

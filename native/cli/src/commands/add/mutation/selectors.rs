@@ -48,7 +48,11 @@ impl ProjectedLinker {
         let mut selected = grammar::ordinary(&targets, &parts)?;
         for branch in parts.iter().filter(|part| Self::state_pattern(part)) {
             let mut pool = targets.clone();
-            for criterion in branch.split(" AND ").map(str::trim) {
+            for criterion in branch
+                .split(" AND ")
+                .map(str::trim)
+                .filter(|criterion| !criterion.is_empty())
+            {
                 pool = self.criterion(&request, pool, criterion)?;
             }
             grammar::union(&mut selected, pool);

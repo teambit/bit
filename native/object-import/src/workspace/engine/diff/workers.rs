@@ -13,6 +13,9 @@ pub(super) fn execute(
     color: bool,
     output: &AtomicUsize,
 ) -> io::Result<Vec<FileDiff>> {
+    if files.is_empty() {
+        return Ok(Vec::new());
+    }
     let next = AtomicUsize::new(0);
     let workers = rayon::current_num_threads().min(4);
     let batches: Vec<_> = (0..workers)

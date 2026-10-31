@@ -49,6 +49,8 @@ pub(super) fn read_importer_manifest(root: &Path, importer_id: &str) -> (String,
     let name = parsed
         .as_ref()
         .and_then(|val| val["name"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .map_or_else(
             || {
                 if importer_id == "." {
@@ -62,6 +64,7 @@ pub(super) fn read_importer_manifest(root: &Path, importer_id: &str) -> (String,
     let version = parsed
         .as_ref()
         .and_then(|val| val["version"].as_str())
+        .map(str::trim)
         .unwrap_or_default()
         .to_owned();
     (name, version)
@@ -111,6 +114,8 @@ pub(super) fn compare_versions(left: &str, right: &str) -> std::cmp::Ordering {
 }
 
 pub(super) fn format_name_ver(name: &str, version: &str) -> String {
+    let name = name.trim();
+    let version = version.trim();
     if version.is_empty() { name.to_owned() } else { format!("{name}@{version}") }
 }
 

@@ -90,10 +90,12 @@ fn load_pair(
 }
 
 fn target_versions(request: &Request) -> Vec<Target> {
-    [request.from_version.as_str(), request.to_version.as_str()]
+    let identity = request.identity.trim();
+    let to_version = request.to_version.trim();
+    [request.from_version.trim(), to_version]
         .into_iter()
-        .filter(|version| !request.no_parent || *version == request.to_version.as_str())
-        .map(|version| Target { identity: request.identity.clone(), version: version.to_string() })
+        .filter(|version| !request.no_parent || *version == to_version)
+        .map(|version| Target { identity: identity.to_string(), version: version.to_string() })
         .collect()
 }
 
@@ -162,8 +164,11 @@ fn sources(
             if path.len() > 32768 || path.contains('\0') || !seen.insert(path) {
                 return Err(invalid("version diff duplicate or invalid path"));
             }
-            let reference =
-                file["file"].as_str().ok_or_else(|| invalid("version diff source ref"))?;
+            let reference = file["file"]
+                .as_str()
+                .map(str::trim)
+                .filter(|reference| !reference.is_empty())
+                .ok_or_else(|| invalid("version diff source ref"))?;
             if let Some(source) = overlay.and_then(|overlay| overlay.source(reference)) {
                 raw.reserve(source.len())?;
                 overlay.expect("source belongs to overlay").trace_source(reference)?;

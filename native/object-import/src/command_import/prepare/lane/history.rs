@@ -15,7 +15,10 @@ impl PreparedImport {
     ) -> io::Result<()> {
         let remotes = self.environment.remotes.clone();
         let directory = super::super::remote::raw_remote(self, &remotes, &id.scope)?;
-        let hash = match hash {
+        let hash = match hash
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+        {
             Some(hash) => hash.to_owned(),
             None => remote_lane_hash(self, &directory, id)?,
         };

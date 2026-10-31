@@ -310,7 +310,8 @@ fn no_space(text: &str) -> bool {
 
 /// `[^/\s]+\/[^/\s]+`.
 fn lane_name(text: &str) -> bool {
-    text.split_once('/')
+    text.trim()
+        .split_once('/')
         .is_some_and(|(scope, name)| no_space(scope) && no_space(name) && !name.contains('/'))
 }
 
@@ -358,8 +359,9 @@ fn import_message(row: &Import) -> String {
 
 /// `id.replace(/@[^@]+$/, '')`.
 fn without_version(id: &str) -> &str {
+    let id = id.trim();
     match id.rfind('@') {
-        Some(index) if index + 1 < id.len() => &id[..index],
+        Some(index) if index + 1 < id.len() => id[..index].trim(),
         _ => id,
     }
 }

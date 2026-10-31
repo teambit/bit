@@ -14,6 +14,9 @@ impl Budget {
     }
 
     pub(crate) fn reserve(&self, bytes: usize) -> io::Result<()> {
+        if bytes == 0 {
+            return Ok(());
+        }
         self.0
             .try_update(Ordering::Relaxed, Ordering::Relaxed, |remaining| {
                 remaining.checked_sub(bytes)

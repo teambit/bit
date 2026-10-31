@@ -106,38 +106,49 @@ fn reset_new(value: &mut Value, lane_only: bool) -> io::Result<()> {
         if lane_only && row["isAvailableOnCurrentLane"] != false {
             continue;
         }
-        let key_id = key.rsplit_once('@').map_or(key.as_str(), |(id, _)| id);
-        let key_scope = key_id.split_once('/').map(|(scope, _)| scope);
-        let scope = row["scope"]
-            .as_str()
-            .filter(|scope| !scope.is_empty())
-            .or_else(|| {
-                row["defaultScope"]
-                    .as_str()
-                    .filter(|scope| !scope.is_empty())
-            })
-            .or(key_scope)
-            .map(str::to_owned);
-        let name = row["name"]
-            .as_str()
-            .filter(|name| !name.is_empty())
-            .unwrap_or_else(|| {
-                scope
-                    .as_deref()
-                    .and_then(|scope_str| key_id.strip_prefix(&format!("{scope_str}/")))
-                    .unwrap_or(key_id)
-            })
-            .to_owned();
-        let mut fresh = json!({"name":name,"scope":"","version":"","rootDir":row["rootDir"],"mainFile":row["mainFile"]});
-        if let Some(scope) = scope {
-            fresh["defaultScope"] = json!(scope);
-        }
-        *row = fresh;
+        *row = reset_component_row(key, row);
     }
     if lane_only {
         rows.shift_remove("_bit_lane");
     }
     Ok(())
+}
+
+fn reset_component_row(key: &str, row: &Value) -> Value {
+    let trimmed_key = key.trim();
+    let key_id = trimmed_key.rsplit_once('@').map_or(trimmed_key, |(id, _)| id.trim());
+    let key_scope = key_id
+        .split_once('/')
+        .map(|(scope, _)| scope.trim())
+        .filter(|scope| !scope.is_empty());
+    let scope = row["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        })
+        .or(key_scope)
+        .map(str::to_owned);
+    let name = row["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| {
+            scope
+                .as_deref()
+                .and_then(|scope_str| key_id.strip_prefix(&format!("{scope_str}/")))
+                .map_or(key_id, str::trim)
+        })
+        .to_owned();
+    let mut fresh = json!({"name":name,"scope":"","version":"","rootDir":row["rootDir"],"mainFile":row["mainFile"]});
+    if let Some(scope) = scope {
+        fresh["defaultScope"] = json!(scope);
+    }
+    fresh
 }
 
 fn package(plan: &mut Plan, options: &Options) -> io::Result<()> {

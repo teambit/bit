@@ -89,7 +89,7 @@ impl Compiler {
 
     /// `make_regex(pattern, negative)`.
     fn make_regex(&mut self, pattern: &str, negative: bool) -> Result<String, UnsupportedPattern> {
-        if PROTOTYPE_KEYS.contains(&pattern) {
+        if pattern.contains('\0') || PROTOTYPE_KEYS.contains(&pattern) {
             return Err(UnsupportedPattern(pattern.to_string()));
         }
         if let Some(source) = self.cache.get(pattern) {

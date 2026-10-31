@@ -27,7 +27,10 @@ pub(super) fn bootstrap(
     preflight(root, home, request, preview)?;
     let pattern = request.options["pattern"]
         .as_str()
-        .filter(|pattern| !crate::commands::diff::selection::stateful(pattern));
+        .map(str::trim)
+        .filter(|pattern| {
+            !pattern.is_empty() && !crate::commands::diff::selection::stateful(pattern)
+        });
     let (_, environments) =
         environments::read_context(engine, root, home, false, pattern, startup)?;
     Ok(Some(environments.for_checkout()))

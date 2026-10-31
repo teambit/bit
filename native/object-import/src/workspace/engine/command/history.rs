@@ -59,6 +59,8 @@ impl State {
     }
     pub(super) fn rebase(&mut self, versions: &[(String, String, Value)]) -> io::Result<()> {
         for (identity, hash, version) in versions {
+            let identity = identity.trim();
+            let hash = hash.trim();
             let Some(history) = self.values.get_mut(identity) else {
                 continue;
             };
@@ -67,10 +69,10 @@ impl State {
                 .ok_or_else(|| invalid("command history versions"))?;
             if let Some(row) = rows
                 .iter_mut()
-                .find(|row| row["hash"] == *hash)
+                .find(|row| row["hash"].as_str().map(str::trim) == Some(hash))
             {
                 apply_rebased_version(row, version);
-                self.changed.insert(identity.clone());
+                self.changed.insert(identity.to_owned());
             }
         }
         Ok(())
@@ -157,6 +159,8 @@ fn ancestors(
                 parents
                     .iter()
                     .filter_map(Value::as_str)
+                    .map(str::trim)
+                    .filter(|parent| !parent.is_empty())
                     .map(str::to_owned),
             );
         }

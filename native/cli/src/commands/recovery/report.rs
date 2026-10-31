@@ -110,6 +110,7 @@ pub(super) fn consume_trailing_recovery<'a>(
     pattern: &mut Option<String>,
 ) -> Option<()> {
     for value in iter {
+        let value = value.trim();
         (kind == Kind::Component && pattern.is_none() && valid_pattern(value)).then_some(())?;
         *pattern = Some(value.to_string());
     }
@@ -117,6 +118,7 @@ pub(super) fn consume_trailing_recovery<'a>(
 }
 
 pub(super) fn valid_pattern(pattern: &str) -> bool {
+    let pattern = pattern.trim();
     !pattern.is_empty()
         && pattern.len() <= 256
         && !pattern.starts_with('-')

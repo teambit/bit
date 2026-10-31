@@ -89,7 +89,8 @@ fn qualifies(changed: &Value, dependency: &Value, semver: &Value) -> io::Result<
 }
 pub(super) fn identity(id: &Value) -> io::Result<String> {
     if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        let raw = raw.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
         if bare.is_empty() {
             return Err(invalid("autotag identity"));
         }
@@ -97,12 +98,13 @@ pub(super) fn identity(id: &Value) -> io::Result<String> {
     }
     let name = id["name"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("autotag identity"))?;
     match id.get("scope") {
         None | Some(Value::Null) => Ok(name.to_owned()),
-        Some(Value::String(scope)) if scope.is_empty() => Ok(name.to_owned()),
-        Some(Value::String(scope)) => Ok(format!("{scope}/{name}")),
+        Some(Value::String(scope)) if scope.trim().is_empty() => Ok(name.to_owned()),
+        Some(Value::String(scope)) => Ok(format!("{}/{name}", scope.trim())),
         _ => Err(invalid("autotag scope")),
     }
 }

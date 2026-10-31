@@ -3,6 +3,9 @@ use std::io;
 use super::writer::Writer;
 
 pub(super) fn write(writer: &mut Writer, units: &[u16]) -> io::Result<()> {
+    if units.is_empty() {
+        return writer.bytes(b"\"\"");
+    }
     writer.bytes(b"\"")?;
     let mut units = units.iter().copied().peekable();
     while let Some(unit) = units.next() {

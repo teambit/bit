@@ -26,7 +26,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native debug-load grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("CI debug-load delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -95,8 +95,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             | "--re-load=false" => {}
             "-j" | "-rj" | "-jr" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
-                id = Some(val.to_owned());
+            val if !val.trim().starts_with('-') && !val.trim().is_empty() && id.is_none() => {
+                id = Some(val.trim().to_owned());
             }
             _ => return None,
         }
@@ -105,17 +105,27 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(Options { id: id?, json })
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn consume_aspect_plus_deps(args: &[&str], idx: &mut usize) -> Option<bool> {
     match args[*idx] {
         "-p" | "--aspect-plus-deps" => {
             *idx += 1;
-            let val = *args.get(*idx)?;
+            let val = args.get(*idx)?.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(true)
         }
         arg if let Some(val) = arg
             .strip_prefix("--aspect-plus-deps=")
             .or_else(|| arg.strip_prefix("-p=")) =>
         {
+            let val = val.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(true)
         }
         _ => Some(false),
@@ -126,6 +136,7 @@ pub(super) fn check_missing_workspace_component(
     root: &Path,
     raw_id: &str,
 ) -> Result<Option<String>, String> {
+    let raw_id = raw_id.trim();
     if raw_id.starts_with('@') || raw_id.starts_with("teambit.") {
         return Ok(None);
     }

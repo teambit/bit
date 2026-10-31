@@ -77,7 +77,7 @@ impl Version {
             .map(References::convert)
             .transpose()?;
         Ok(collection::Version {
-            hash: crate::merge_history::hash(&self.hash)?,
+            hash: crate::merge_history::hash(self.hash.trim())?,
             locally_changed: self.locally_changed,
             expected,
         })
@@ -89,18 +89,20 @@ impl References {
         Ok(collection::References {
             sources: self.sources
                 .iter()
-                .map(|text| crate::merge_history::hash(text))
+                .map(|text| crate::merge_history::hash(text.trim()))
                 .collect::<std::io::Result<_>>()?,
             artifacts: self.artifacts
                 .iter()
-                .map(|text| crate::merge_history::hash(text))
+                .map(|text| crate::merge_history::hash(text.trim()))
                 .collect::<std::io::Result<_>>()?,
             edges: self.edges
                 .as_deref()
+                .map(str::trim)
                 .map(crate::merge_history::hash)
                 .transpose()?,
             graph: self.graph
                 .as_deref()
+                .map(str::trim)
                 .map(crate::merge_history::hash)
                 .transpose()?,
         })
@@ -150,7 +152,8 @@ pub(super) struct Archive {
 
 pub(super) fn hexadecimal(text: &str) -> std::io::Result<Vec<u8>> {
     let text = text.trim();
-    if !text.len().is_multiple_of(2)
+    if text.is_empty()
+        || !text.len().is_multiple_of(2)
         || text.len() > super::super::MAX_BYTES * 2
         || !text.bytes().all(|byte| byte.is_ascii_hexdigit())
     {

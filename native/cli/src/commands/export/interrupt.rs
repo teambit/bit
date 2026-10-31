@@ -29,13 +29,10 @@ impl Guard {
         }
         let disabled = env::var("BIT_DISABLE_SPINNER")
             .is_ok_and(|value| {
-                matches!(
-                    value
-                        .trim()
-                        .to_ascii_lowercase()
-                        .as_str(),
-                    "true" | "1" | "yes" | "y" | "on",
-                )
+                let trimmed = value.trim();
+                ["true", "1", "yes", "y", "on"]
+                    .iter()
+                    .any(|truthy| trimmed.eq_ignore_ascii_case(truthy))
             });
         ENABLED.store(!quiet && !disabled, Ordering::Release);
         COLOR.store(

@@ -110,7 +110,15 @@ fn main_targets(context: &Value) -> io::Result<Vec<Value>> {
     let known = array(context.get("models"), "models")?
         .iter()
         .filter_map(|model| {
-            Some(format!("{}/{}", model["scope"].as_str()?, model["name"].as_str()?))
+            let scope = model["scope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())?;
+            let name = model["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())?;
+            Some(format!("{scope}/{name}"))
         })
         .collect::<HashSet<_>>();
     Ok(array(context.get("targets"), "targets")?
@@ -119,10 +127,10 @@ fn main_targets(context: &Value) -> io::Result<Vec<Value>> {
             target["locallyRemoved"] != true
                 && target["version"]
                     .as_str()
-                    .is_some_and(|version| !version.is_empty())
+                    .is_some_and(|version| !version.trim().is_empty())
                 && target["identity"]
                     .as_str()
-                    .is_some_and(|id| known.contains(id))
+                    .is_some_and(|id| known.contains(id.trim()))
         })
         .map(|target| json!({"identity":target["identity"],"version":target["version"]}))
         .collect::<Vec<_>>())
@@ -164,15 +172,18 @@ pub(super) fn prepare_forked(
 fn forked_lane_id(context: &Value) -> Option<String> {
     if let Some(id) = context["forkedFrom"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
     {
         return Some(id.to_owned());
     }
     let scope = context["forkedFrom"]["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())?;
     let name = context["forkedFrom"]["name"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())?;
     Some(format!("{scope}/{name}"))
 }

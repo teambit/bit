@@ -214,9 +214,11 @@ impl Batch {
             .and_then(|rows| {
                 rows.values()
                     .find(|row| {
-                        row["name"] == plan.identity.target_name
-                            && row["scope"] == ""
-                            && row["rootDir"] == plan.identity.target_directory
+                        row["name"].as_str().map(str::trim)
+                            == Some(plan.identity.target_name.trim())
+                            && row["scope"].as_str().map(str::trim) == Some("")
+                            && row["rootDir"].as_str().map(str::trim)
+                                == Some(plan.identity.target_directory.trim())
                     })
             })
             .ok_or_else(|| invalid("scope rename added component"))?;

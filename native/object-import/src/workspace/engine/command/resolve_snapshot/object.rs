@@ -91,7 +91,7 @@ fn metadata(
 }
 
 fn auto_message(version: &mut Value) {
-    let message = version["log"]["message"].as_str().unwrap_or_default();
+    let message = version["log"]["message"].as_str().map_or("", str::trim);
     version["log"]["message"] = if message.is_empty() {
         json!("bump dependencies versions")
     } else {
@@ -114,13 +114,19 @@ fn empty_builder(version: &mut Value) -> io::Result<()> {
 }
 
 fn origin(version: &mut Value, material: &Material, lane: Option<&Value>) -> io::Result<()> {
-    let (scope, name) =
-        material.identity.split_once('/').ok_or_else(|| invalid("resolve identity"))?;
+    let (scope, name) = material.identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("resolve identity"))?;
     version["origin"] = json!({"id":{"scope":scope,"name":name}});
     if let Some(lane) = lane {
         if let Some((lane_scope, lane_name)) = lane["id"]
             .as_str()
-            .and_then(|raw| raw.split_once('/'))
+            .and_then(|raw| raw.trim().split_once('/'))
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         {
             version["origin"]["lane"] =
                 json!({"scope": lane_scope, "name": lane_name, "hash": lane["hash"]});

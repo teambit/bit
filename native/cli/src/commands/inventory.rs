@@ -101,6 +101,10 @@ impl Inventory {
         mut begin: Value,
         finish_kind: &str,
     ) -> io::Result<Value> {
+        let finish_kind = finish_kind.trim();
+        if finish_kind.is_empty() {
+            return Err(io::Error::other("inventory scan finish kind is empty"));
+        }
         begin["rootPolicy"] = self.root_policy();
         let scan: Scan = engine.request(&begin)?;
         let nested: Vec<String> = scan.nested

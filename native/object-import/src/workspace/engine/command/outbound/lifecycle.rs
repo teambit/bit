@@ -9,7 +9,7 @@ pub(in crate::workspace::engine) fn apply(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.outbound.as_mut().ok_or_else(|| invalid("outbound owner missing"))?;
-    if retained.token != input.token || retained.transfer.ids.is_some() {
+    if retained.token != input.token.trim() || retained.transfer.ids.is_some() {
         return Err(invalid("outbound owner token"));
     }
     if retained.transfer.failed.is_some() {
@@ -124,7 +124,7 @@ pub(in crate::workspace::engine) fn stage(
     let retained = state.outbound.as_mut().ok_or_else(|| invalid("outbound owner missing"))?;
     let ids = retained.transfer.ids
         .as_ref()
-        .filter(|_| retained.token == input.token)
+        .filter(|_| retained.token == input.token.trim())
         .ok_or_else(|| invalid("outbound stage owner token"))?;
     let updated = match retained.publication.as_mut() {
         Some(Publication::Main(plan)) => plan.stage(ids)?,
@@ -164,7 +164,7 @@ pub(in crate::workspace::engine) fn finalize(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let mut retained = state.outbound.take().ok_or_else(|| invalid("outbound owner missing"))?;
-    if retained.token != input.token {
+    if retained.token != input.token.trim() {
         return Err(invalid("outbound owner token"));
     }
     let exported_ids =

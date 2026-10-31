@@ -127,7 +127,9 @@ pub(super) fn canonical_workspace(root: &Path, react_service: bool) -> io::Resul
     if !raw["require"].is_null()
         && raw["require"] != false
         && raw["require"] != json!([])
-        && raw["require"] != ""
+        && !raw["require"]
+            .as_str()
+            .is_some_and(|req| req.trim().is_empty())
     {
         return Ok(true);
     }
@@ -161,7 +163,7 @@ fn scope_has_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::
 pub(super) fn deps_graph_enabled(root: &Path) -> io::Result<bool> {
     let features = if let Some(features) = env::var("BIT_FEATURES")
         .ok()
-        .filter(|features| !features.is_empty())
+        .filter(|features| !features.trim().is_empty())
     {
         Some(features)
     } else {

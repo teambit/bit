@@ -17,7 +17,9 @@ pub(in crate::workspace::engine::command) fn import(
         .iter()
         .map(|target| {
             let identity = target.scope
-                .as_ref()
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
                 .map_or_else(|| target.name.clone(), |scope| format!("{scope}/{}", target.name));
             format!("{identity}@{}", target.version)
         })

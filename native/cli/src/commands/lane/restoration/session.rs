@@ -79,7 +79,17 @@ impl Session {
     fn phases(&self) -> io::Result<Vec<Value>> {
         let phases = self.selection["phases"]
             .as_array()
-            .filter(|phases| !phases.is_empty() && phases.len() <= 2)
+            .filter(|phases| {
+                !phases.is_empty()
+                    && phases.len() <= 2
+                    && phases
+                        .iter()
+                        .all(|phase| {
+                            phase["phase"]
+                                .as_str()
+                                .is_some_and(|name| !name.trim().is_empty())
+                        })
+            })
             .ok_or_else(|| io::Error::other("lane history phases"))?;
         Ok(phases.clone())
     }

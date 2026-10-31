@@ -58,7 +58,7 @@ fn roots(value: &Value) -> io::Result<HashSet<&str>> {
 }
 fn root(component: &Value) -> io::Result<&str> {
     let root = match component.get("rootDir") {
-        Some(Value::String(root)) if !root.is_empty() => root.as_str(),
+        Some(Value::String(root)) if !root.trim().is_empty() => root.trim(),
         Some(Value::Null | Value::String(_)) | None => ".",
         _ => return Err(invalid("bitmap root type")),
     };
@@ -81,18 +81,26 @@ fn identity(key: &str, component: &Value) -> io::Result<()> {
     if !identifier(name, true) {
         return Err(invalid("bitmap component name"));
     }
-    if scope == "" || scope.is_null() {
+    if scope
+        .as_str()
+        .is_some_and(|val| val.trim().is_empty())
+        || scope.is_null()
+    {
         component["defaultScope"]
             .as_str()
+            .map(str::trim)
             .filter(|scope| scope_text(scope))
             .ok_or_else(|| invalid("bitmap missing default scope"))?;
     } else {
         scope
             .as_str()
+            .map(str::trim)
             .filter(|scope| scope_text(scope))
             .ok_or_else(|| invalid("bitmap scope"))?;
-        let version =
-            component["version"].as_str().ok_or_else(|| invalid("bitmap scoped version"))?;
+        let version = component["version"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("bitmap scoped version"))?;
         if !version_text(version) {
             return Err(invalid("bitmap version"));
         }

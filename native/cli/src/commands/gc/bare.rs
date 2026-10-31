@@ -97,7 +97,10 @@ fn inventory_report(
     };
     let local = objects
         .values()
-        .filter(|object| object.kind == "Component" && object.value["scope"] == name)
+        .filter(|object| {
+            object.kind == "Component"
+                && object.value["scope"].as_str().map(str::trim) == Some(name.trim())
+        })
         .count();
     let components = count("Component");
     let lanes = count("Lane");
@@ -112,7 +115,10 @@ fn inventory_report(
             components + lanes + count("ScopeMeta")
         ),
         format!("[*] total {local} refs of ModelComponent of this scope"),
-        format!("[*] total {} refs of ModelComponent of other scopes", components - local),
+        format!(
+            "[*] total {} refs of ModelComponent of other scopes",
+            components.saturating_sub(local),
+        ),
         format!("[*] total {lanes} refs of Lane"),
         format!(
             "[*] total {} refs in the trash, total {trashed_lanes} lanes in the trash",

@@ -16,11 +16,10 @@ pub(super) fn build_component_json_obj(
     map.insert("name".into(), Value::String(name));
     map.insert("versions".into(), map_ref_dict(raw.get("versions"))?);
     map.insert("orphanedVersions".into(), map_ref_dict(raw.get("orphanedVersions"))?);
-    let lang = raw["lang"].as_str().unwrap_or("javascript");
+    let lang = non_empty_str(&raw["lang"]).unwrap_or("javascript");
     map.insert("lang".into(), Value::String(lang.to_owned()));
     map.insert("deprecated".into(), Value::Bool(raw["deprecated"].as_bool().unwrap_or(false)));
-    let binding_prefix = raw["bindingPrefix"]
-        .as_str()
+    let binding_prefix = non_empty_str(&raw["bindingPrefix"])
         .map_or_else(|| format!("@{}", scope.split('.').next().unwrap_or(scope)), str::to_owned);
     map.insert("bindingPrefix".into(), Value::String(binding_prefix));
     map.insert(
@@ -35,12 +34,12 @@ pub(super) fn build_component_json_obj(
             .cloned()
             .unwrap_or_else(|| json!([])),
     );
-    if let Some(head) = raw["head"].as_str() {
+    let head = non_empty_str(&raw["head"]);
+    if let Some(head) = head {
         map.insert("head".into(), json!({"hash": head}));
     }
-    let schema = raw["schema"]
-        .as_str()
-        .unwrap_or_else(|| if raw["head"].is_string() { "1.0.0" } else { "0.0.0" });
+    let schema = non_empty_str(&raw["schema"])
+        .unwrap_or_else(|| if head.is_some() { "1.0.0" } else { "0.0.0" });
     map.insert("schema".into(), Value::String(schema.to_owned()));
     map.insert("detachedHeads".into(), build_detached_heads(raw.get("detachedHeads"))?);
     if json_extra {
@@ -50,13 +49,31 @@ pub(super) fn build_component_json_obj(
     Some(Value::Object(map))
 }
 
+fn non_empty_str(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
+fn split_scope_name(val: &Value) -> Option<(&str, &str)> {
+    let (scope, name) = if let Some(raw) = non_empty_str(val) {
+        raw.rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .split_once('/')?
+    } else {
+        (non_empty_str(&val["scope"])?, non_empty_str(&val["name"])?)
+    };
+    let (scope, name) = (scope.trim(), name.trim());
+    (!scope.is_empty() && !name.is_empty()).then_some((scope, name))
+}
+
 fn map_ref_dict(val: Option<&Value>) -> Option<Value> {
     let mut out = Map::new();
     let Some(obj) = val.and_then(Value::as_object) else {
         return Some(Value::Object(out));
     };
     for (key, hash_val) in obj {
-        out.insert(key.clone(), json!({"hash": hash_val.as_str()?}));
+        out.insert(key.clone(), json!({"hash": non_empty_str(hash_val)?}));
     }
     Some(Value::Object(out))
 }
@@ -66,19 +83,19 @@ fn build_detached_heads(val: Option<&Value>) -> Option<Value> {
     let heads = match val.and_then(|inner| inner["heads"].as_array()) {
         Some(arr) => arr
             .iter()
-            .map(|item| Some(json!({"hash": item.as_str()?})))
+            .map(|item| Some(json!({"hash": non_empty_str(item)?})))
             .collect::<Option<Vec<_>>>()?,
         None => Vec::new(),
     };
     let deleted = match val.and_then(|inner| inner["deleted"].as_array()) {
         Some(arr) => arr
             .iter()
-            .map(|item| Some(json!({"hash": item.as_str()?})))
+            .map(|item| Some(json!({"hash": non_empty_str(item)?})))
             .collect::<Option<Vec<_>>>()?,
         None => Vec::new(),
     };
     map.insert("heads".into(), Value::Array(heads));
-    if let Some(curr) = val.and_then(|inner| inner["current"].as_str()) {
+    if let Some(curr) = val.and_then(|inner| non_empty_str(&inner["current"])) {
         map.insert("current".into(), json!({"hash": curr}));
     }
     map.insert("deleted".into(), Value::Array(deleted));
@@ -111,18 +128,11 @@ pub(super) fn build_lane_json_obj(
         .get("forkedFrom")
         .filter(|val| !val.is_null())
     {
-        let (ff_scope, ff_name) = if let Some(raw_ff) = ff.as_str() {
-            raw_ff
-                .rsplit_once('@')
-                .map_or(raw_ff, |(bare, _)| bare)
-                .split_once('/')?
-        } else {
-            (ff["scope"].as_str()?, ff["name"].as_str()?)
-        };
+        let (ff_scope, ff_name) = split_scope_name(ff)?;
         map.insert("forkedFrom".into(), json!({ "name": ff_name, "scope": ff_scope }));
     }
     map.insert("_hash".into(), Value::String(hash.to_owned()));
-    let schema = raw["schema"].as_str().unwrap_or("0.0.0");
+    let schema = non_empty_str(&raw["schema"]).unwrap_or("0.0.0");
     map.insert("schema".into(), Value::String(schema.to_owned()));
     if json_extra {
         map.insert("hash".into(), Value::String(hash.to_owned()));
@@ -135,13 +145,7 @@ fn build_lane_components_json(val: Option<&Value>) -> Option<Vec<Value>> {
     let Some(arr) = val.and_then(Value::as_array) else { return Some(Vec::new()) };
     let mut out = Vec::with_capacity(arr.len());
     for item in arr {
-        let (scope, name) = if let Some(raw) = item["id"].as_str() {
-            raw.rsplit_once('@')
-                .map_or(raw, |(bare, _)| bare)
-                .split_once('/')?
-        } else {
-            (item["id"]["scope"].as_str()?, item["id"]["name"].as_str()?)
-        };
+        let (scope, name) = split_scope_name(&item["id"])?;
         let mut comp = Map::new();
         comp.insert(
             "id".into(),
@@ -153,7 +157,7 @@ fn build_lane_components_json(val: Option<&Value>) -> Option<Vec<Value>> {
                 }
             }),
         );
-        comp.insert("head".into(), json!({ "hash": item["head"].as_str()? }));
+        comp.insert("head".into(), json!({ "hash": non_empty_str(&item["head"])? }));
         if let Some(del) = item
             .get("isDeleted")
             .filter(|val| !val.is_null())

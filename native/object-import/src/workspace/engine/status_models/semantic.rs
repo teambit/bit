@@ -139,12 +139,14 @@ fn identity(value: &Value) -> io::Result<Value> {
 }
 
 fn identity_from_str(text: &str) -> io::Result<Value> {
+    let text = text.trim();
     let (bare, ver) = text
         .rsplit_once('@')
-        .map_or((text, None), |(bare, ver)| (bare, Some(ver)));
+        .map_or((text, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
     let (scope, name) = bare
         .split_once('/')
-        .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .ok_or_else(|| invalid("status Version dependency scope"))?;
     let mut out = json!({"scope":scope,"name":name});
     if let Some(ver) = ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")) {

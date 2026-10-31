@@ -9,9 +9,10 @@ pub(super) fn update(
     hidden: bool,
     removed: bool,
 ) -> io::Result<()> {
+    let identity = identity.trim();
+    let head = head.trim();
     crate::merge_history::hash(head)?;
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("lane component identity"))?;
+    let (scope, name) = parse_scoped_identity(identity, "lane component identity")?;
     if hidden {
         if lane.get("updateDependents").is_none() {
             lane["updateDependents"] = json!([]);
@@ -22,10 +23,10 @@ pub(super) fn update(
         entries.retain(|entry| {
             entry
                 .as_str()
-                .and_then(|value| value.rsplit_once('@'))
-                .is_none_or(|(value, _)| value != identity)
+                .and_then(|value| value.trim().rsplit_once('@'))
+                .is_none_or(|(value, _)| value.trim() != identity)
         });
-        entries.push(json!(format!("{identity}@{head}")));
+        entries.push(json!(format!("{scope}/{name}@{head}")));
         return Ok(());
     }
     let entries = lane["components"].as_array_mut().ok_or_else(|| invalid("lane components"))?;
@@ -48,6 +49,17 @@ pub(super) fn update(
     Ok(())
 }
 
+fn parse_scoped_identity<'a>(
+    identity: &'a str,
+    err_msg: &'static str,
+) -> io::Result<(&'a str, &'a str)> {
+    identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid(err_msg))
+}
+
 pub(super) fn history(
     lane: &Value,
     hash: &str,
@@ -57,6 +69,7 @@ pub(super) fn history(
 ) -> io::Result<Value> {
     let key = receipt["historyKey"]
         .as_str()
+        .map(str::trim)
         .filter(|key| !key.is_empty() && key.len() <= 128)
         .ok_or_else(|| invalid("lane history allocation"))?;
     let log = history_log(receipt, message)?;
@@ -97,7 +110,7 @@ fn history_log(receipt: &Value, message: &str) -> io::Result<serde_json::Map<Str
     if log
         .get("date")
         .and_then(Value::as_str)
-        .is_none()
+        .is_none_or(|date| date.trim().is_empty())
     {
         return Err(invalid("lane history date"));
     }
@@ -109,7 +122,11 @@ fn component_id(entry: &Value) -> io::Result<String> {
     let (scope, name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(entry)
             .ok_or_else(|| invalid("lane history component id"))?;
-    let head = entry["head"].as_str().ok_or_else(|| invalid("lane history component head"))?;
+    let head = entry["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .ok_or_else(|| invalid("lane history component head"))?;
     Ok(format!("{scope}/{name}@{head}"))
 }
 
@@ -127,19 +144,19 @@ pub(super) fn snapshot_update(
     hidden: bool,
     removed: bool,
 ) -> io::Result<()> {
+    let identity = identity.trim();
     let was_hidden = lane["updateDependents"]
         .as_array()
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| {
                     row.as_str()
-                        .and_then(|id| id.rsplit_once('@'))
-                        .is_some_and(|(id, _)| id == identity)
+                        .and_then(|id| id.trim().rsplit_once('@'))
+                        .is_some_and(|(id, _)| id.trim() == identity)
                 })
         });
     if hidden {
-        let (scope, name) =
-            identity.split_once('/').ok_or_else(|| invalid("lane snapshot identity"))?;
+        let (scope, name) = parse_scoped_identity(identity, "lane snapshot identity")?;
         lane["components"]
             .as_array_mut()
             .ok_or_else(|| invalid("lane snapshot components"))?

@@ -44,7 +44,12 @@ pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Resu
 }
 
 fn saved_edges(version: &Value, repository: &mut Repository) -> io::Result<Value> {
-    Ok(match version.get("flattenedEdgesRef").and_then(Value::as_str) {
+    let reference = version
+        .get("flattenedEdgesRef")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|reference| !reference.is_empty());
+    Ok(match reference {
         Some(reference) => repository.source_json(reference)?,
         None => version
             .get("flattenedEdges")

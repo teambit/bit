@@ -110,7 +110,11 @@ impl EngineCall {
             root: self.settings.root.clone(),
             root_components: self.settings.layout.root_components,
             forced_harmony: self.plan.forced_harmony_version.is_some(),
-            never_build: self.settings.policy.scripts.never_build_package_names.clone(),
+            never_build: self.settings.policy.scripts.never_build_package_names
+                .iter()
+                .map(|name| name.trim().to_owned())
+                .filter(|name| !name.is_empty())
+                .collect(),
             raw_manifests: projects
                 .iter()
                 .map(|project| (normalize(&project.dir), Value::Object(project.manifest.clone())))

@@ -22,7 +22,7 @@ pub(super) fn apply(
         let wanted = if kind == "deletedConflictStatus" { "deletedConflictFiles" } else { kind };
         for row in plan.merge_rows
             .iter()
-            .filter(|row| row["kind"].as_str() == Some(wanted))
+            .filter(|row| row["kind"].as_str().map(str::trim) == Some(wanted))
         {
             let path = path(plan, row)?;
             if let Some(error) = effect(kind, plan, row, &path, files, status)? {
@@ -106,7 +106,9 @@ fn add(
     files: &mut Vec<File>,
     status: &mut Map<String, Value>,
 ) -> io::Result<()> {
-    if row["kind"] == "deletedConflictFiles" && row["bodyPlanIndex"].as_u64().is_none() {
+    if row["kind"].as_str().map(str::trim) == Some("deletedConflictFiles")
+        && row["bodyPlanIndex"].as_u64().is_none()
+    {
         return Ok(());
     }
     if files

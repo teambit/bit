@@ -71,6 +71,12 @@ impl Session {
 
 /// The manifest of the project at `root`.
 fn root_manifest(projects: &[Project], root: &Path) -> io::Result<PackageManifest> {
+    if projects.is_empty() {
+        return Err(io::Error::other(format!(
+            "the install plan has no projects for {}",
+            root.display(),
+        )));
+    }
     let root = normalize(root);
     let project = projects
         .iter()

@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{graph, projection::Component, selection};
 use crate::workspace::engine::command::{
     invalid, repository::Repository, resolve_snapshot::Material,
@@ -17,10 +20,15 @@ pub(super) fn capture(
     let workspace = current
         .iter()
         .map(|row| {
-            let identity =
-                row["identity"].as_str().ok_or_else(|| invalid("issue workspace identity"))?;
-            let version =
-                row["version"].as_str().ok_or_else(|| invalid("issue workspace version"))?;
+            let identity = row["identity"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .ok_or_else(|| invalid("issue workspace identity"))?;
+            let version = row["version"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("issue workspace version"))?;
             Ok(if version.is_empty() {
                 identity.to_owned()
             } else {
@@ -56,6 +64,8 @@ fn component_dependencies(state: &Value, output: &mut Vec<String>) -> io::Result
             let id = state["entries"]
                 .get(index)
                 .and_then(|row| row["identity"].as_str())
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
                 .ok_or_else(|| invalid("issue dependency identity"))?;
             output.push(id.to_owned());
         }
@@ -98,13 +108,18 @@ fn external(
 }
 
 fn load_external_edges(identity: &str, repository: &mut Repository) -> io::Result<Vec<Value>> {
-    let (name, version) =
-        identity.rsplit_once('@').ok_or_else(|| invalid("issue external version"))?;
+    let (name, version) = identity
+        .trim()
+        .rsplit_once('@')
+        .map(|(name, version)| (name.trim(), version.trim()))
+        .ok_or_else(|| invalid("issue external version"))?;
     if version.is_empty() {
         return Err(invalid("issue external version"));
     }
-    let (scope, component) =
-        name.split_once('/').ok_or_else(|| invalid("issue external identity"))?;
+    let (scope, component) = name
+        .split_once('/')
+        .map(|(scope, comp)| (scope.trim(), comp.trim()))
+        .ok_or_else(|| invalid("issue external identity"))?;
     let source = json!({"scope":scope,"name":component,"version":version});
     selection::identity(&source)?;
     let model = repository
@@ -123,13 +138,18 @@ fn load_external_edges(identity: &str, repository: &mut Repository) -> io::Resul
 }
 
 fn absent_or_ordinary_model(identity: &str, repository: &mut Repository) -> io::Result<()> {
-    let (name, version) =
-        identity.rsplit_once('@').ok_or_else(|| invalid("issue external version"))?;
+    let (name, version) = identity
+        .trim()
+        .rsplit_once('@')
+        .map(|(name, version)| (name.trim(), version.trim()))
+        .ok_or_else(|| invalid("issue external version"))?;
     if version.is_empty() {
         return Err(invalid("issue external version"));
     }
-    let (scope, component) =
-        name.split_once('/').ok_or_else(|| invalid("issue external identity"))?;
+    let (scope, component) = name
+        .split_once('/')
+        .map(|(scope, comp)| (scope.trim(), comp.trim()))
+        .ok_or_else(|| invalid("issue external identity"))?;
     selection::identity(&json!({"scope":scope,"name":component}))?;
     match repository.read(&crate::workspace::engine::hash(name.as_bytes()), "Component") {
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
@@ -142,7 +162,11 @@ fn validate_ordinary_model(model: &Value, repository: &mut Repository) -> io::Re
     if model["deprecated"] == true {
         return Err(invalid("issue external model requires canonical callbacks"));
     }
-    if let Some(head) = model["head"].as_str() {
+    if let Some(head) = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    {
         let head_version = repository.read(head, "Version")?;
         validate_ordinary_version(&head_version)?;
     }
@@ -170,6 +194,3 @@ fn validate_ordinary_version(version: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

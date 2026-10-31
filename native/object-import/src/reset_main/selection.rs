@@ -19,7 +19,11 @@ pub struct Selection {
 /// recorded detached head stays separate from the main parent chain.
 pub fn select(component: &Value, objects: &Path, head_only: bool) -> io::Result<Selection> {
     let local = local_refs(component)?;
-    let head = component["head"].as_str().ok_or_else(|| invalid("reset head absent"))?;
+    let head = component["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .ok_or_else(|| invalid("reset head absent"))?;
     if !local.contains_key(head) {
         return Err(invalid("reset head is exported"));
     }
@@ -47,7 +51,8 @@ fn local_refs(component: &Value) -> io::Result<HashMap<String, String>> {
             .get(label)
             .or_else(|| orphaned.and_then(|map| map.get(label)))
             .and_then(Value::as_str)
-            .unwrap_or(label);
+            .unwrap_or(label)
+            .trim();
         crate::merge_history::hash(hash)?;
         if local.insert(hash.to_owned(), label.to_owned()).is_some() {
             return Err(invalid("reset duplicate local hash"));
@@ -88,7 +93,11 @@ fn parent(objects: &Path, reference: &str) -> io::Result<Option<String>> {
     match parents.as_slice() {
         [] => Ok(None),
         [parent] => {
-            let parent = parent.as_str().ok_or_else(|| invalid("reset parent ref"))?;
+            let parent = parent
+                .as_str()
+                .map(str::trim)
+                .filter(|parent| !parent.is_empty())
+                .ok_or_else(|| invalid("reset parent ref"))?;
             crate::merge_history::hash(parent)?;
             Ok(Some(parent.to_owned()))
         }

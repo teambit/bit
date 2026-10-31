@@ -124,12 +124,13 @@ pub(super) fn read(input: Value) -> io::Result<Value> {
     Ok(json!({"load":load}))
 }
 fn eligible(request: &Select, hash: &str) -> io::Result<bool> {
-    if !request.lane || request.lane_head.as_deref() == Some(hash) {
+    let hash = hash.trim();
+    if !request.lane || request.lane_head.as_deref().map(str::trim) == Some(hash) {
         return Ok(true);
     }
     let row = request.metadata
         .iter()
-        .find(|row| row.hash == hash)
+        .find(|row| row.hash.trim() == hash)
         .ok_or_else(|| invalid("history reset lane metadata missing"))?;
     Ok(!row.missing && (row.origin_lane || row.squashed || row.unrelated))
 }
@@ -146,7 +147,7 @@ fn label(index: &crate::tag_index::TagIndex, hash: &str, cached: &mut Option<Str
 fn refs(values: &[String]) -> io::Result<()> {
     bound(values.len())?;
     for hash in values {
-        crate::merge_history::hash(hash)?;
+        crate::merge_history::hash(hash.trim())?;
     }
     Ok(())
 }

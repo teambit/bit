@@ -90,6 +90,10 @@ impl ProjectedLinker {
         method: &str,
         params: &Value,
     ) -> io::Result<Value> {
+        let method = method.trim();
+        if method.is_empty() {
+            return Err(io::Error::other("identity provider method is empty"));
+        }
         let result = self.environment
             .as_mut()
             .ok_or_else(|| io::Error::other("identity provider session unavailable"))?

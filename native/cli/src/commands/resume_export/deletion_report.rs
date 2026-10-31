@@ -7,7 +7,7 @@ use std::io;
 pub(super) fn failed_lines(failed: &IndexMap<String, String>) -> Vec<String> {
     failed
         .iter()
-        .map(|(name, message)| format!("{name} - {message}"))
+        .map(|(name, message)| format!("{name} - {}", message.trim()))
         .collect()
 }
 

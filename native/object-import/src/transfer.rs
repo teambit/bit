@@ -178,6 +178,8 @@ fn release(state: &mut State, input: &serde_json::Value) -> io::Result<serde_jso
     let token = input
         .get("token")
         .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|token| !token.is_empty())
         .ok_or_else(|| invalid("missing transfer release token"))?;
     let collection = state.collections.remove(token).is_some();
     let plan = state.plans.remove(token).is_some();

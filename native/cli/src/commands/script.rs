@@ -134,8 +134,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-l" | "--list" | "--list=true" => list = true,
             "--list=false" => list = false,
-            val if !val.starts_with('-') && !val.is_empty() && script_name.is_none() => {
-                script_name = Some(val.to_owned());
+            val if !val.starts_with('-') && !val.trim().is_empty() && script_name.is_none() => {
+                script_name = Some(val.trim().to_owned());
             }
             _ => return None,
         }
@@ -164,9 +164,10 @@ pub(super) fn active_component_count(bitmap: &Value) -> usize {
         .map_or(0, |rows| {
             rows.iter()
                 .filter(|(key, row)| {
+                    let key = key.trim();
                     !key.starts_with('$')
-                        && *key != "_bit_lane"
-                        && *key != "version"
+                        && key != "_bit_lane"
+                        && key != "version"
                         && row.is_object()
                         && row["isAvailableOnCurrentLane"] != false
                         && !super::update_cmd::aspect_entry(

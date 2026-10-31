@@ -74,9 +74,11 @@ fn project_file(mut file: Value, options: &Options) -> io::Result<Value> {
 }
 
 fn matches_file(path: &str, filter: &str) -> bool {
+    let path = path.trim();
     let path = path.strip_prefix("./").unwrap_or(path);
+    let filter = filter.trim();
     let filter = filter.strip_prefix("./").unwrap_or(filter);
-    path == filter || path.ends_with(&format!("/{filter}"))
+    !filter.is_empty() && (path == filter || path.ends_with(&format!("/{filter}")))
 }
 
 fn counts(diff: &str) -> (usize, usize) {

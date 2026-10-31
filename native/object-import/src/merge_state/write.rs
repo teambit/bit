@@ -51,6 +51,10 @@ fn apply_metadata(file: &fs::File, metadata: &fs::Metadata) -> io::Result<()> {
 /// Check the same held-file identity rules as `commit` before a larger plan
 /// starts publishing unrelated files. Opening here never truncates the file.
 pub(crate) fn validate_existing(path: &Path) -> io::Result<()> {
+    let name = path.to_str().ok_or_else(|| invalid("non-UTF8 merge state path"))?;
+    if !path.is_absolute() || name.len() > 32768 || name.contains('\0') {
+        return Err(invalid("invalid merge state path"));
+    }
     let metadata = fs::symlink_metadata(path)?;
     if !metadata.is_file() {
         return Err(invalid("unsupported merge state file"));

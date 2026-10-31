@@ -19,6 +19,9 @@ const FILES: [(&str, &str); 7] = [
 ];
 impl Assets {
     pub(super) fn prepare(package: &Path) -> io::Result<Self> {
+        if package.as_os_str().is_empty() {
+            return Err(io::Error::other("tester package path is empty"));
+        }
         let prefix = format!(
             "const installation = require('node:module').createRequire({});\n",
             serde_json::to_string(package)?,

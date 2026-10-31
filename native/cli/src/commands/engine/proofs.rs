@@ -15,6 +15,9 @@ impl Engine {
         proofs: &[Value],
         stale: &str,
     ) -> io::Result<()> {
+        if proofs.is_empty() {
+            return Ok(());
+        }
         let mut seen = HashSet::new();
         let unique = proofs
             .iter()

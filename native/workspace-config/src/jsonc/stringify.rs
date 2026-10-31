@@ -5,8 +5,8 @@ use super::node::{Comment, Comments, Node, Object};
 const INDENT: &str = "  ";
 
 /// Whitespace as JavaScript's `String.prototype.trim` sees it.
-fn is_js_whitespace(char: char) -> bool {
-    char.is_whitespace() || char == '\u{feff}'
+fn is_js_whitespace(character: char) -> bool {
+    (character.is_whitespace() && character != '\u{0085}') || character == '\u{feff}'
 }
 
 fn trim_end(value: &str) -> &str {

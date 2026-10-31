@@ -70,9 +70,10 @@ impl Plan {
 }
 impl Request {
     pub(super) fn ignore(&self, field: usize, name: &str, removed: &mut [Vec<String>; 3]) -> bool {
+        let trimmed = name.trim();
         let ignored = self.ignored[field]
             .iter()
-            .any(|entry| entry == name);
+            .any(|entry| entry.trim() == trimmed);
         if ignored {
             removed[field].push(name.to_owned());
         }
@@ -128,7 +129,7 @@ impl Request {
         if self.entries
             .iter()
             .any(|entry| {
-                entry.identity.is_empty()
+                entry.identity.trim().is_empty()
                     || entry.package_name
                         .as_deref()
                         .is_some_and(|key| !name(key))
@@ -140,6 +141,7 @@ impl Request {
     }
 }
 pub(super) fn name(value: &str) -> bool {
+    let value = value.trim();
     !value.is_empty()
         && !value.contains('\0')
         && !matches!(
@@ -162,6 +164,7 @@ pub(super) fn name(value: &str) -> bool {
 pub(in crate::workspace::engine) fn version(map: &Packages, name: &str) -> Option<String> {
     map.get(name)
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .map(str::to_owned)
 }

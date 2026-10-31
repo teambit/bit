@@ -75,7 +75,9 @@ impl Engine {
         if body.len() > MAX_REQUEST {
             return Err(io::Error::other("status input limit"));
         }
-        self.next_id += 1;
+        self.next_id = self.next_id
+            .checked_add(1)
+            .ok_or_else(|| io::Error::other("engine request id limit"))?;
         let mut frame = Vec::with_capacity(12 + body.len());
         frame.extend_from_slice(b"BWS1");
         frame.extend_from_slice(&self.next_id.to_be_bytes());

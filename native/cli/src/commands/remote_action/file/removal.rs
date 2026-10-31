@@ -2,6 +2,9 @@
 use std::{fs, io, path::Path};
 
 pub(super) fn remove(path: &Path) -> io::Result<()> {
+    if path.as_os_str().is_empty() {
+        return Ok(());
+    }
     match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.is_dir() => return remove_directory(path),
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),

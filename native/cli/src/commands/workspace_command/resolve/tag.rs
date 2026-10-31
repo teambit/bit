@@ -96,11 +96,12 @@ fn ordinary_selection(context: &Value, entered: &str, index: usize) -> io::Resul
 
 /// `pattern[@version]`, the version a semver version or a release type.
 fn split(text: &str) -> io::Result<(&str, Option<&str>)> {
-    let mut parts = text.split('@');
+    let mut parts = text.trim().split('@');
     let pattern = parts
         .next()
+        .map(str::trim)
         .filter(|pattern| !pattern.is_empty());
-    let version = parts.next();
+    let version = parts.next().map(str::trim);
     let (Some(pattern), None) = (pattern, parts.next()) else {
         return Err(decline("tag pattern version"));
     };
@@ -164,13 +165,13 @@ pub fn planned_versions(result: &Value, identities: &[String]) -> io::Result<Vec
     for id in ids {
         let (identity, version) =
             text(Some(id))?.rsplit_once('@').ok_or_else(|| decline("native tag version"))?;
-        versions.insert(identity, version);
+        versions.insert(identity.trim(), version.trim());
     }
     identities
         .iter()
         .map(|identity| {
             versions
-                .get(identity.as_str())
+                .get(identity.trim())
                 .map(|version| (*version).to_string())
                 .ok_or_else(|| decline("native tag version"))
         })

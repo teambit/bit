@@ -15,10 +15,11 @@ pub(crate) fn colors(args: &[OsString]) -> bool {
     if !std::io::stdout().is_terminal() {
         return false;
     }
-    if cfg!(windows) || env::var_os("COLORTERM").is_some() {
+    if cfg!(windows) || env::var_os("COLORTERM").is_some_and(|val| !val.is_empty()) {
         return true;
     }
     let term = env::var("TERM").unwrap_or_default();
+    let term = term.trim();
     if term == "dumb" {
         return false;
     }
@@ -171,7 +172,7 @@ fn row(cells: &[String], widths: &[usize], colors: bool, head: bool) -> String {
 /// `string(str, index)`: one space either side, padded on the right to the
 /// column's width.
 fn pad(text: &str, width: usize) -> String {
-    let inner = width - 2;
+    let inner = width.saturating_sub(2);
     let length = strlen(text);
     let padding = inner.saturating_sub(length);
     format!(" {text}{} ", " ".repeat(padding))

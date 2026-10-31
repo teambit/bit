@@ -21,6 +21,9 @@ struct OriginMarker<'a> {
 }
 
 pub(super) fn write_root_metadata(capsules_root: &Path, base_dir: &str) -> io::Result<()> {
+    if capsules_root.as_os_str().is_empty() || base_dir.trim().is_empty() {
+        return Err(io::Error::other("capsule root metadata path is empty"));
+    }
     fs::create_dir_all(capsules_root)?;
     let package = capsules_root.join("package.json");
     if !package.exists() {

@@ -321,6 +321,7 @@ impl Acknowledgement {
 }
 
 fn safe_segment(segment: &str) -> io::Result<()> {
+    let segment = segment.trim();
     if segment.is_empty()
         || segment == "."
         || segment == ".."
@@ -336,11 +337,12 @@ fn safe_segment(segment: &str) -> io::Result<()> {
 fn refs_path(root: &Path, scope: &str, name: &str) -> PathBuf {
     crate::scope_path(root)
         .join("refs/remotes")
-        .join(scope)
-        .join(name)
+        .join(scope.trim())
+        .join(name.trim())
 }
 
 fn object_bytes(root: &Path, hash: &str) -> io::Result<Vec<u8>> {
+    let hash = hash.trim();
     if hash.len() != 40 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(invalid("outbound lane object hash"));
     }

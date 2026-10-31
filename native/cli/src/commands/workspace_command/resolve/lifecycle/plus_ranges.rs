@@ -59,34 +59,39 @@ fn targets<'a>(session: &'a Session<'_>, plan: &'a Value) -> Vec<(String, &'a Va
     targets
 }
 
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn plan_identity(value: &Value) -> Option<String> {
-    if let Some(raw) = value
-        .as_str()
-        .or_else(|| value["id"].as_str())
-    {
-        return Some(
-            raw.split('@')
-                .next()
-                .unwrap_or(raw)
-                .to_owned(),
-        );
+    if let Some(raw) = non_empty_str(value).or_else(|| non_empty_str(&value["id"])) {
+        let bare = raw
+            .split('@')
+            .next()
+            .unwrap_or(raw)
+            .trim();
+        return (!bare.is_empty()).then(|| bare.to_owned());
     }
-    let name = value["name"]
-        .as_str()
-        .filter(|name| !name.is_empty())?;
+    let name = non_empty_str(&value["name"])?;
     Some(
-        value["scope"]
-            .as_str()
-            .filter(|scope| !scope.is_empty())
+        non_empty_str(&value["scope"])
             .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")),
     )
 }
 
 fn row_identity(row: &Value) -> Option<&str> {
-    row["identity"]
-        .as_str()
-        .or_else(|| row["id"].as_str())
-        .map(|raw| raw.split('@').next().unwrap_or(raw))
+    non_empty_str(&row["identity"])
+        .or_else(|| non_empty_str(&row["id"]))
+        .map(|raw| {
+            raw.split('@')
+                .next()
+                .unwrap_or(raw)
+                .trim()
+        })
+        .filter(|bare| !bare.is_empty())
 }
 
 fn component_usages(
@@ -135,18 +140,16 @@ fn environment(root: &Path, component: &Value) -> io::Result<Option<Value>> {
         .into_iter()
         .flatten()
         .filter_map(|file| {
-            file.as_str()
-                .or_else(|| file["relativePath"].as_str())
-                .or_else(|| file["path"].as_str())
+            non_empty_str(file)
+                .or_else(|| non_empty_str(&file["relativePath"]))
+                .or_else(|| non_empty_str(&file["path"]))
         })
         .find(|file| matches!(*file, "env.jsonc" | "env.json"));
     let Some(file) = file else { return Ok(None) };
-    let directory = component["directory"]
-        .as_str()
-        .or_else(|| component["rootDir"].as_str())
+    let directory = non_empty_str(&component["directory"])
+        .or_else(|| non_empty_str(&component["rootDir"]))
         .unwrap_or_default();
-    let path = component["sourceOverlays"][file]
-        .as_str()
+    let path = non_empty_str(&component["sourceOverlays"][file])
         .map_or_else(|| root.join(directory).join(file), std::path::PathBuf::from);
     Ok(bit_object_import::parse_jsonc(&fs::read(path)?).ok())
 }
@@ -155,12 +158,16 @@ fn enabled() -> io::Result<bool> {
         bit_install::config::load_global_config(&bit_workspace_config::global_config_dir())?;
     let features = env::var("BIT_FEATURES")
         .ok()
-        .filter(|value| !value.is_empty())
-        .or_else(|| env::var("BIT_CONFIG_FEATURES").ok())
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| {
+            env::var("BIT_CONFIG_FEATURES")
+                .ok()
+                .filter(|value| !value.trim().is_empty())
+        })
         .or_else(|| {
             global
                 .get("features")
-                .and_then(Value::as_str)
+                .and_then(non_empty_str)
                 .map(str::to_owned)
         });
     Ok(features.is_some_and(|features| {

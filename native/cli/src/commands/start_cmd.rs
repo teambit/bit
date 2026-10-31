@@ -30,7 +30,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native start grammar".into()));
     }
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("CI start delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -68,8 +68,18 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn consume_trailing_start_pattern(rest: &[&str], pattern: &mut Option<String>) -> Option<()> {
     for &val in rest {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
             .then_some(())?;
     }
@@ -118,10 +128,10 @@ fn apply_start_token(args: &[&str], idx: &mut usize, options: &mut Options) -> O
 
 fn take_optional_arg(args: &[&str], idx: &mut usize) -> String {
     if let Some(&next) = args.get(*idx + 1)
-        && !next.starts_with('-')
+        && !next.trim().starts_with('-')
     {
         *idx += 1;
-        next.to_owned()
+        next.trim().to_owned()
     } else {
         String::new()
     }
@@ -132,15 +142,18 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
         .strip_prefix("--port=")
         .or_else(|| arg.strip_prefix("-p="))
     {
-        options.port = Some(val.to_owned());
+        options.port = Some(val.trim().to_owned());
     } else if let Some(val) = arg
         .strip_prefix("--ui-root-name=")
         .or_else(|| arg.strip_prefix("-u="))
     {
-        options.ui_root_name = Some(val.to_owned());
+        options.ui_root_name = Some(val.trim().to_owned());
     } else if apply_combined_short(arg, options) {
-    } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
-        options.pattern = Some(arg.to_owned());
+    } else if !arg.trim().starts_with('-')
+        && !arg.trim().is_empty()
+        && options.pattern.is_none()
+    {
+        options.pattern = Some(arg.trim().to_owned());
     } else {
         return None;
     }

@@ -147,13 +147,14 @@ pub(super) fn load(request: &Load) -> io::Result<Value> {
     Ok(data)
 }
 pub(super) fn subset(versions: &[Version], from: &str, stop: &[String]) -> Vec<String> {
+    let from = from.trim();
     let mut index = HashMap::new();
     for version in versions {
-        index.entry(version.hash.as_str()).or_insert(version);
+        index.entry(version.hash.trim()).or_insert(version);
     }
     let stop: HashSet<_> = stop
         .iter()
-        .map(String::as_str)
+        .map(|item| item.trim())
         .collect();
     if stop.contains(from) {
         return Vec::new();

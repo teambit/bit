@@ -99,14 +99,15 @@ impl Reader {
         Ok(result["comparisons"][0]["codeModified"].as_bool())
     }
     fn model(&self, identity: &str) -> Option<&Value> {
+        let identity = identity.trim();
         self.context["models"]
             .as_array()?
             .iter()
             .find(|model| {
                 format!(
                     "{}/{}",
-                    model["scope"].as_str().unwrap_or_default(),
-                    model["name"].as_str().unwrap_or_default(),
+                    model["scope"].as_str().map_or("", str::trim),
+                    model["name"].as_str().map_or("", str::trim),
                 ) == identity
             })
     }
@@ -175,6 +176,7 @@ fn eligible(root: &Path, row: &Value) -> bool {
             .exists()
 }
 fn pending(context: &Value, identity: &str) -> bool {
+    let identity = identity.trim();
     context["unmerged"]
         .as_array()
         .into_iter()
@@ -182,12 +184,18 @@ fn pending(context: &Value, identity: &str) -> bool {
         .any(|entry| {
             entry["id"]
                 .as_str()
-                .map(|raw| raw.split('@').next().unwrap_or(raw))
+                .map(|raw| {
+                    raw.trim()
+                        .split('@')
+                        .next()
+                        .unwrap_or(raw)
+                        .trim()
+                })
                 == Some(identity)
                 || format!(
                     "{}/{}",
-                    entry["id"]["scope"].as_str().unwrap_or_default(),
-                    entry["id"]["name"].as_str().unwrap_or_default(),
+                    entry["id"]["scope"].as_str().map_or("", str::trim),
+                    entry["id"]["name"].as_str().map_or("", str::trim),
                 ) == identity
         })
 }

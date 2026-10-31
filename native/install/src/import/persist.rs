@@ -176,6 +176,7 @@ fn merge_received(
         let head = origin["head"]
             .as_str()
             .or_else(|| origin["head"]["hash"].as_str())
+            .map(str::trim)
             .filter(|value| !value.is_empty())
             .map(str::to_string);
         return Ok((merged, head));
@@ -191,5 +192,5 @@ fn component_field<'a>(value: &'a Value, field: &str) -> &'a str {
     value[field]
         .as_str()
         .or_else(|| value["id"][field].as_str())
-        .unwrap_or_default()
+        .map_or("", str::trim)
 }

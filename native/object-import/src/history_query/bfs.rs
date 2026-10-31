@@ -124,8 +124,9 @@ fn validate(request: &Request) -> io::Result<()> {
         crate::merge_history::hash(hash)?;
     }
     for tag in request.labels.tags.iter().chain(&request.labels.orphaned) {
-        crate::merge_history::hash(&tag.hash)?;
-        if tag.label.is_empty() || tag.label.len() > 32768 || tag.label.contains('\0') {
+        crate::merge_history::hash(tag.hash.trim())?;
+        let label = tag.label.trim();
+        if label.is_empty() || label.len() > 32768 || tag.label.contains('\0') {
             return Err(invalid("history query tag"));
         }
     }
@@ -294,10 +295,10 @@ fn parse(mut input: Value) -> io::Result<Request> {
     let stops = fields.stop_at.iter().cloned().collect();
     let mut index = crate::tag_index::TagIndex::default();
     for tag in &labels.orphaned {
-        index.insert(&tag.hash, &tag.label, false);
+        index.insert(tag.hash.trim(), tag.label.trim(), false);
     }
     for tag in &labels.tags {
-        index.insert(&tag.hash, &tag.label, true);
+        index.insert(tag.hash.trim(), tag.label.trim(), true);
     }
     Ok(Request { fields, labels, overlays, stops, index })
 }

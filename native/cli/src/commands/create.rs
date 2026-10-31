@@ -72,15 +72,16 @@ pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), St
         ));
     }
     for raw_name in &options.component_names {
-        let (_parsed_scope, parsed_name) = parse_scope_from_component_id_str(raw_name);
+        let (_parsed_scope, parsed_name) = parse_scope_from_component_id_str(raw_name.trim());
         let full_name = match options.namespace
             .as_deref()
+            .map(str::trim)
             .filter(|ns| !ns.is_empty())
         {
             Some(ns) => format!("{ns}/{parsed_name}"),
             None => parsed_name.to_owned(),
         };
-        if full_name == options.template_name {
+        if full_name == options.template_name.trim() {
             let pascal = pascal_case(&options.template_name);
             return Err(format!(
                 "unable to create a component with the same name as the template \"{}\", please use a different name.\nthe reason is that after refactoring, the code will have this invalid class: \"class {pascal} extends {pascal} {{}}\"",
@@ -164,6 +165,7 @@ fn apply_create_token<'a>(
 }
 
 fn take_value(val: &str) -> Option<String> {
+    let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
 

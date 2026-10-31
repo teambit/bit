@@ -66,7 +66,7 @@ fn directories(paths: &[String], policy: &mut Matcher) -> Vec<(String, String)> 
 }
 pub(in crate::workspace::engine) fn own(root: &Path) -> io::Result<Vec<String>> {
     let bit = root.join(".bitignore");
-    if fs::metadata(&bit).is_ok() {
+    if fs::symlink_metadata(&bit).is_ok_and(|metadata| metadata.is_file()) {
         read(&bit, false)
     } else {
         read(&root.join(".gitignore"), true)

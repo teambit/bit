@@ -134,6 +134,7 @@ impl EffectiveConfig {
     /// `getConfig(key)`. An empty environment variable does not count, as in JavaScript.
     #[must_use]
     pub fn get(&self, key: &str) -> Option<String> {
+        let key = key.trim();
         if key.is_empty() {
             return None;
         }
@@ -145,7 +146,7 @@ impl EffectiveConfig {
 
     /// `getConfigBoolean`: `"true"`/`"false"`; anything else is an error.
     pub fn get_bool(&self, key: &str) -> io::Result<Option<bool>> {
-        match self.get(key).as_deref() {
+        match self.get(key).as_deref().map(str::trim) {
             None => Ok(None),
             Some("true") => Ok(Some(true)),
             Some("false") => Ok(Some(false)),
@@ -192,6 +193,9 @@ impl EffectiveConfig {
     /// `getCloudDomain()`.
     #[must_use]
     pub fn cloud_domain(&self) -> String {
-        self.get(keys::CLOUD_DOMAIN).unwrap_or_else(|| keys::DEFAULT_CLOUD_DOMAIN.to_owned())
+        self.get(keys::CLOUD_DOMAIN)
+            .map(|domain| domain.trim().to_owned())
+            .filter(|domain| !domain.is_empty())
+            .unwrap_or_else(|| keys::DEFAULT_CLOUD_DOMAIN.to_owned())
     }
 }

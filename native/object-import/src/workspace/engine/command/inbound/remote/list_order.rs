@@ -26,6 +26,9 @@ pub(super) async fn main(
 }
 
 pub(super) fn file_order(rows: &mut [Listed]) {
+    if rows.len() <= 1 {
+        return;
+    }
     rows.sort_by(|left, right| {
         left.name
             .to_uppercase()

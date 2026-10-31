@@ -95,9 +95,12 @@ fn duplicates(directories: &[String]) -> Vec<String> {
 fn owner_directory(target: &Target, directory: &str, all: &[String]) -> Option<String> {
     let owner = target.scope
         .as_deref()
+        .map(str::trim)
         .filter(|scope| scope.contains('.'))?
         .split('.')
-        .next()?;
+        .next()
+        .map(str::trim)
+        .filter(|owner| !owner.is_empty())?;
     let owned = format!("{owner}/{directory}");
     (!directory.starts_with(owner) && !all.contains(&owned)).then_some(owned)
 }
@@ -167,9 +170,11 @@ pub(super) fn default_directory(root: &Path) -> io::Result<String> {
     let workspace = super::super::config::configuration(root)?;
     let template = match workspace.get("defaultDirectory") {
         None => "components/{name}",
-        Some(value) => {
-            value.as_str().ok_or_else(|| invalid("inbound workspace default directory"))?
-        }
+        Some(value) => value
+            .as_str()
+            .map(str::trim)
+            .filter(|template| !template.is_empty())
+            .ok_or_else(|| invalid("inbound workspace default directory"))?,
     };
     Ok(if template.contains("{name}") {
         template.to_owned()

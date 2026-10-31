@@ -70,6 +70,9 @@ fn local(
     results: &mut Results,
 ) -> io::Result<()> {
     let (scope, id) = source;
+    if scope.trim().is_empty() || id.trim().is_empty() {
+        return Err(io::Error::other("fork source identity is empty"));
+    }
     let bitmap = bitmap(root)?;
     let captured = linker.capture(root, &bitmap, &[id.to_owned()])?;
     print!("{}", linker.take_stdout());

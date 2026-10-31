@@ -152,7 +152,11 @@ fn graphs(result: &mut Vec<Descriptor>, refs: &References, scope: Option<&str>, 
 }
 
 fn reference(hash: [u8; 20], scope: Option<&str>, seconds: u32) -> Descriptor {
-    Descriptor { hash, scope: scope.map(str::to_owned), seconds, body: Body::Repository }
+    let scope = scope
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .map(str::to_owned);
+    Descriptor { hash, scope, seconds, body: Body::Repository }
 }
 
 fn snapshot(hash: [u8; 20], bytes: Vec<u8>, scope: Option<&str>, seconds: u32) -> Descriptor {

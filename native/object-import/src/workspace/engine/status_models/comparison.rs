@@ -104,8 +104,14 @@ pub(in crate::workspace::engine) fn compare(
 }
 
 pub(super) fn model_id(model: &Value) -> String {
-    let scope = model["scope"].as_str().unwrap_or_default();
-    let name = model["name"].as_str().unwrap_or_default();
+    let scope = model["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    let name = model["name"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
     if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 
@@ -113,23 +119,27 @@ pub(super) fn lookup_model<'a>(
     models: &HashMap<String, &'a Value>,
     identity: &str,
 ) -> Option<&'a Value> {
+    let identity = identity.trim();
     models
         .get(identity)
         .or_else(|| {
             identity
                 .split_once('/')
-                .and_then(|(_, name)| models.get(name))
+                .and_then(|(_, name)| models.get(name.trim()))
         })
         .copied()
 }
 
 pub(in crate::workspace::engine) fn model_matches_identity(model: &Value, identity: &str) -> bool {
+    let identity = identity.trim();
     let current = model_id(model);
     current == identity
-        || (model["scope"].as_str().is_none_or(str::is_empty)
+        || (model["scope"]
+            .as_str()
+            .is_none_or(|scope| scope.trim().is_empty())
             && identity
                 .split_once('/')
-                .is_some_and(|(_, name)| name == current))
+                .is_some_and(|(_, name)| name.trim() == current))
 }
 
 pub(in crate::workspace::engine) fn resolved_model_id<'a>(
@@ -137,10 +147,13 @@ pub(in crate::workspace::engine) fn resolved_model_id<'a>(
     targets: impl IntoIterator<Item = &'a str>,
 ) -> String {
     let current = model_id(model);
-    if model["scope"].as_str().is_none_or(str::is_empty)
+    if model["scope"]
+        .as_str()
+        .is_none_or(|scope| scope.trim().is_empty())
         && let Some(matched) = targets
             .into_iter()
-            .find(|id| id.split_once('/').map_or(*id, |(_, bare)| bare) == current)
+            .map(str::trim)
+            .find(|id| id.split_once('/').map_or(*id, |(_, bare)| bare.trim()) == current)
     {
         return matched.to_owned();
     }

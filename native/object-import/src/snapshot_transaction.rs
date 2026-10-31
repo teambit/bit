@@ -95,7 +95,8 @@ fn serialize(input: &Value, state: &mut State) -> io::Result<Value> {
 fn commit(input: Value, state: &State) -> io::Result<Value> {
     let request: wire::Commit = serde_json::from_value(input).map_err(io::Error::other)?;
     path(&request.objects_directory)?;
-    let plan = state.plans.get(&request.token).ok_or_else(|| invalid("stale snapshot token"))?;
+    let plan =
+        state.plans.get(request.token.trim()).ok_or_else(|| invalid("stale snapshot token"))?;
     let owner = request.owner.map(|owner| (owner.uid, owner.gid));
     let store = crate::store::Store::new(request.objects_directory, owner)?;
     let mut written = Vec::new();
@@ -171,7 +172,11 @@ fn version_identity(input: Value) -> io::Result<Value> {
 pub fn next_published_version(parts: &Value) -> io::Result<String> {
     let prerelease =
         parts["prerelease"].as_array().ok_or_else(|| invalid("registry semver parts"))?;
-    let identifier = prerelease.first().and_then(Value::as_str);
+    let identifier = prerelease
+        .first()
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|id| !id.is_empty());
     let release = if prerelease.is_empty() { "patch" } else { "prerelease" };
     increment::format(&increment::increment(parts, release, identifier)?)
 }

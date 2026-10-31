@@ -28,7 +28,10 @@ pub(in crate::workspace::engine::command) fn history_remote_at(
     };
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(async {
-        let remote = match remote_host {
+        let remote = match remote_host
+            .map(str::trim)
+            .filter(|host| !host.is_empty())
+        {
             Some(host) => Remote::from_host(host)?,
             None => remotes.resolve(&id.scope, &network).await?,
         };

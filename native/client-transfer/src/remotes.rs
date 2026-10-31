@@ -31,13 +31,14 @@ pub enum Remote {
 impl Remote {
     /// `connect()` in `network-lib.ts`.
     pub fn from_host(host: &str) -> io::Result<Self> {
+        let host = host.trim();
         if host.starts_with("ssh://") || host.starts_with("bit://") {
             return Err(invalid(
                 "ssh protocol is not supported anymore, please use http or fs protocols",
             ));
         }
         if let Some(path) = host.strip_prefix("file://") {
-            return Ok(Self::File(PathBuf::from(path)));
+            return Ok(Self::File(PathBuf::from(path.trim())));
         }
         if host.starts_with("http://") || host.starts_with("https://") {
             return Ok(Self::Http(host.trim_end_matches('/').to_string()));
@@ -176,12 +177,19 @@ pub fn global_remotes(dir: &Path) -> io::Result<IndexMap<String, String>> {
 #[must_use]
 pub fn symphony_url(global: &GlobalConfig) -> String {
     let global = crate::config::effective(global.clone(), &Value::Null, &Value::Null);
-    if let Some(url) = global.get(CFG_SYMPHONY_URL).and_then(Value::as_str) {
+    if let Some(url) = global
+        .get(CFG_SYMPHONY_URL)
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|url| !url.is_empty())
+    {
         return if url.starts_with("http") { url.to_string() } else { format!("https://{url}") };
     }
     let domain = global
         .get(CFG_CLOUD_DOMAIN)
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|domain| !domain.is_empty())
         .unwrap_or(DEFAULT_CLOUD_DOMAIN);
     let host = if domain == DEFAULT_CLOUD_DOMAIN {
         format!("api.v2.{domain}")

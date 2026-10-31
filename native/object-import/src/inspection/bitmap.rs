@@ -61,7 +61,7 @@ fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(value) => *value,
-        Value::String(value) => !value.is_empty(),
+        Value::String(value) => !value.trim().is_empty(),
         Value::Number(value) => value.as_f64() != Some(0.0),
         _ => true,
     }
@@ -171,7 +171,10 @@ pub(crate) fn render_workspace(value: &Value) -> io::Result<Vec<u8>> {
     let schema = rows.get("$schema-version").ok_or_else(|| invalid("workspace bitmap schema"))?;
     let mut keys = rows
         .keys()
-        .filter(|key| !key.starts_with('$') && *key != "_bit_lane")
+        .filter(|key| {
+            let trimmed = key.trim();
+            !trimmed.is_empty() && !trimmed.starts_with('$') && trimmed != "_bit_lane"
+        })
         .collect::<Vec<_>>();
     keys.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     let mut output = Map::new();

@@ -89,27 +89,24 @@ fn aspect_text(input: &Value, row: &Value) -> io::Result<String> {
 
 fn aspect_identity(row: &Value) -> io::Result<String> {
     for field in ["id", "extensionId", "name"] {
-        if let Some(id) = row[field]
-            .as_str()
-            .filter(|id| !id.is_empty())
-        {
+        if let Some(id) = trimmed_str(&row[field]) {
             return Ok(id.to_owned());
         }
-        if let Some(name) = row[field]["name"]
-            .as_str()
-            .filter(|name| !name.is_empty())
-        {
-            let base = row[field]["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
+        if let Some(name) = trimmed_str(&row[field]["name"]) {
+            let base = trimmed_str(&row[field]["scope"])
                 .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
-            return Ok(row[field]["version"]
-                .as_str()
-                .filter(|version| !version.is_empty())
+            return Ok(trimmed_str(&row[field]["version"])
                 .map_or_else(|| base.clone(), |version| format!("{base}@{version}")));
         }
     }
     Err(invalid("command config conflict identity"))
+}
+
+fn trimmed_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 fn dependency(input: &Value, id: &str, conflict: &Value) -> io::Result<String> {
@@ -154,7 +151,7 @@ fn basic(input: &Value, id: &str, conflict: &Value) -> io::Result<String> {
 }
 
 fn label<'a>(input: &'a Value, field: &str) -> io::Result<&'a str> {
-    input[field].as_str().ok_or_else(|| invalid("command config conflict label"))
+    trimmed_str(&input[field]).ok_or_else(|| invalid("command config conflict label"))
 }
 
 fn concatenate(mut conflicts: Vec<String>) -> String {

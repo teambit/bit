@@ -230,10 +230,14 @@ fn workspace_ids(record: &Record) -> io::Result<Value> {
 }
 
 fn workspace_id(target: &Value) -> io::Result<Value> {
-    let identity =
-        target["identity"].as_str().ok_or_else(|| invalid("command workspace identity"))?;
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|identity| !identity.is_empty())
+        .ok_or_else(|| invalid("command workspace identity"))?;
     let version = target["version"]
         .as_str()
+        .map(str::trim)
         .filter(|version| !version.is_empty());
     let legacy =
         version.map_or_else(|| identity.to_owned(), |version| format!("{identity}@{version}"));
@@ -317,6 +321,8 @@ fn projected_targets(policy: &Prepared, context: &Value) -> io::Result<Vec<Value
 }
 
 pub(super) fn package_name(identity: &str, prefix: &str) -> String {
+    let identity = identity.trim();
+    let prefix = prefix.trim();
     let mut name = identity.replace('/', ".");
     let owner = format!("{}.", prefix.trim_start_matches('@'));
     if prefix != "@bit" && name.starts_with(&owner) {

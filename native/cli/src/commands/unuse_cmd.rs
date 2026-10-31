@@ -59,7 +59,8 @@ fn parse_target(args: &[OsString]) -> Option<String> {
     let [target] = filtered.as_slice() else {
         return None;
     };
-    Some((*target).to_owned())
+    let target = target.trim();
+    (!target.is_empty()).then(|| target.to_owned())
 }
 
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
@@ -109,7 +110,10 @@ fn clean_generator_envs(document: &mut Document, target: &str, resolved_id: &str
     if let Some(Value::Array(envs)) = document.get(&[&gen_key, "envs"]) {
         let filtered: Vec<Value> = envs
             .into_iter()
-            .filter(|env| env.as_str() != Some(target) && env.as_str() != Some(resolved_id))
+            .filter(|env| {
+                let env_str = env.as_str().map(str::trim);
+                env_str != Some(target) && env_str != Some(resolved_id)
+            })
             .collect();
         document.set(&[&gen_key, "envs"], &Value::Array(filtered));
     }
@@ -167,7 +171,10 @@ fn is_in_generator_envs(doc_val: &Value, target: &str, resolved_id: &str) -> boo
         .and_then(|(_, cfg)| cfg["envs"].as_array())
         .is_some_and(|envs| {
             envs.iter()
-                .any(|env| env.as_str() == Some(target) || env.as_str() == Some(resolved_id))
+                .any(|env| {
+                    let env_str = env.as_str().map(str::trim);
+                    env_str == Some(target) || env_str == Some(resolved_id)
+                })
         })
 }
 

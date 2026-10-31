@@ -104,7 +104,7 @@ pub(in crate::workspace::engine) fn plan(
 ) -> io::Result<(usize, Value)> {
     let mut retained =
         snapshots.command.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
-    if retained.record.token != input.token {
+    if retained.record.token != input.token.trim() {
         return Err(invalid("recovery token changed"));
     }
     proof::verify(&input.dependency_read_set)?;
@@ -136,9 +136,10 @@ pub(in crate::workspace::engine) fn apply(
     input: &Apply,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
-    super::bitmap::validate_history_file_id(&input.file_id)?;
+    let file_id = input.file_id.trim();
+    super::bitmap::validate_history_file_id(file_id)?;
     let mut retained = state.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
-    if retained.record.token != input.token {
+    if retained.record.token != input.token.trim() {
         return Err(invalid("recovery token changed"));
     }
     if let Some(result) = publication::failed_checkout(input, &retained)? {
@@ -150,7 +151,7 @@ pub(in crate::workspace::engine) fn apply(
         return Ok((retained.record.targets.len(), json!({"applied":true,"result":result})));
     }
     proof::verify(&input.dependency_read_set)?;
-    let checkout = reset::publish(&retained.record, &mut prepared, &input.file_id);
+    let checkout = reset::publish(&retained.record, &mut prepared, file_id);
     match (retained.operation, checkout) {
         (Operation::ComponentAbort, result) => {
             result?;

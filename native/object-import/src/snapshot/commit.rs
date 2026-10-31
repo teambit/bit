@@ -144,6 +144,7 @@ fn validate_body(object: &Object, body: &[u8]) -> io::Result<()> {
     Ok(())
 }
 fn decode(body: &str, maximum: usize) -> io::Result<Vec<u8>> {
+    let body = body.trim();
     if !body.len().is_multiple_of(2) || body.len() / 2 > maximum {
         return Err(invalid("snapshot body hex limit"));
     }
@@ -153,6 +154,7 @@ fn decode(body: &str, maximum: usize) -> io::Result<Vec<u8>> {
             let digit = |byte| match byte {
                 b'0'..=b'9' => Ok(byte - b'0'),
                 b'a'..=b'f' => Ok(byte - b'a' + 10),
+                b'A'..=b'F' => Ok(byte - b'A' + 10),
                 _ => Err(invalid("snapshot invalid body hex")),
             };
             Ok(digit(pair[0])? * 16 + digit(pair[1])?)

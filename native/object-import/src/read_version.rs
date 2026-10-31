@@ -50,8 +50,9 @@ impl<'a> Reader<'a> {
         }
         let hash = merge_history::hash(reference)?;
         let before = self.compressed;
-        let object =
-            repository::read(self.directory, hash, MAX_BYTES - self.raw, &mut self.compressed)?;
+        let budget =
+            MAX_BYTES.checked_sub(self.raw).ok_or_else(|| invalid("Version read byte limit"))?;
+        let object = repository::read(self.directory, hash, budget, &mut self.compressed)?;
         self.raw += object.len();
         self.records += 1;
         let (size, body) = repository::split(&object, hash, "Version")?;

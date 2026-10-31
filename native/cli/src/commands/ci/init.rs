@@ -63,6 +63,8 @@ fn prepare(root: &Path) -> io::Result<Option<Plan>> {
                 })
         })
         .and_then(|(_, config)| config["defaultScope"].as_str())
+        .map(trim)
+        .filter(|scope| !scope.is_empty())
         .map(str::to_owned);
     Ok(Some(Plan {
         root: root.to_owned(),

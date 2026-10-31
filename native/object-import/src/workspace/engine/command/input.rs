@@ -112,6 +112,7 @@ pub(super) struct Flags {
     pub(super) workspace_only: bool,
     #[serde(default, rename = "verbose")]
     _verbose: bool,
+    #[serde(default)]
     pub(super) skip_dependency_installation: bool,
 }
 impl std::ops::Deref for Options {

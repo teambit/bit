@@ -63,7 +63,7 @@ pub(super) fn run_create_in_bare_scope(
     let error = match args.ids.first() {
         None => "undefined is not iterable (cannot read property Symbol(Symbol.iterator))".into(),
         Some(id) if safe_unscoped_id(id) => {
-            format!("scope.getParsedId, the component {id} must include a scope-name")
+            format!("scope.getParsedId, the component {} must include a scope-name", id.trim())
         }
         _ => return Ok(Outcome::Declined("capsule create scoped ID delegated".into())),
     };
@@ -71,6 +71,7 @@ pub(super) fn run_create_in_bare_scope(
 }
 
 fn safe_unscoped_id(id: &str) -> bool {
+    let id = id.trim();
     !id.is_empty()
         && id
             .bytes()
@@ -132,8 +133,17 @@ fn supports_named_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
     }
 }
 
+fn ci_enabled() -> bool {
+    std::env::var_os("CI")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn run_outside_failure(chalk: Chalk, label: &str, json: bool, error: &str) -> io::Result<Outcome> {
-    if std::env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("capsule CI error stack delegated".into()));
     }
     let output = workspace_command::loader_output(chalk, json);
@@ -144,7 +154,7 @@ fn run_outside_failure(chalk: Chalk, label: &str, json: bool, error: &str) -> io
 }
 
 fn run_list_outside_scope(chalk: Chalk, subcommand: &Subcommand) -> io::Result<Outcome> {
-    if std::env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("capsule list CI error stack delegated".into()));
     }
     let json = matches!(subcommand, Subcommand::List { json: true, .. });

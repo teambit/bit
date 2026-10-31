@@ -102,6 +102,8 @@ fn controls(root: &Path, targets: &mut [Value], added: &[Value]) -> io::Result<O
     for target in targets {
         let directory = target["directory"]
             .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
             .ok_or_else(|| io::Error::other("tracking target directory"))?
             .to_owned();
         let config = optional_json(&root.join(&directory).join("component.json"))?;
@@ -162,7 +164,14 @@ fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
         .or_else(|| row["id"].as_str())
-        .map(|id| id.split('@').next().unwrap_or(id))
+        .map(str::trim)
+        .map(|id| {
+            id.split('@')
+                .next()
+                .unwrap_or(id)
+                .trim()
+        })
+        .filter(|id| !id.is_empty())
 }
 fn optional_json(path: &Path) -> io::Result<Value> {
     match std::fs::read(path) {

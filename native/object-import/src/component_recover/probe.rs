@@ -12,6 +12,9 @@ pub fn probe_remote(
     remotes: &Remotes,
     network: &Network,
 ) -> io::Result<BTreeMap<String, bool>> {
+    if ids.is_empty() {
+        return Ok(BTreeMap::new());
+    }
     if ids.len() > 4096 {
         return Err(super::batch::unsupported("recovery remote probe component budget"));
     }

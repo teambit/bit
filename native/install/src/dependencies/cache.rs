@@ -46,7 +46,11 @@ pub fn read(
     if bit_object_import::dependency_cache_stale(&component.dir, &files, timestamp, pool)? {
         return Ok(None);
     }
-    let data: Value = match entry["data"].as_str() {
+    let data: Value = match entry["data"]
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+    {
         Some(text) => bit_object_import::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?,
         None => return Ok(None),
     };
@@ -58,6 +62,7 @@ fn key(component: &WorkspaceComponent) -> String {
     let id = component.id.to_string_without_version();
     match component.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
     {
         Some(version) => format!("{id}@{version}"),

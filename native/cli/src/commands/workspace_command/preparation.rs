@@ -99,7 +99,8 @@ fn load_docs(
         .filter(|target| {
             target["directory"]
                 .as_str()
-                .is_some_and(|directory| root.join(directory).is_dir())
+                .map(str::trim)
+                .is_some_and(|directory| !directory.is_empty() && root.join(directory).is_dir())
         })
         .map(|target| super::text(target.get("identity")).map(str::to_owned))
         .collect::<io::Result<Vec<_>>>()?;
@@ -315,7 +316,8 @@ fn options(
 ) -> capture::CaptureOptions {
     capture::CaptureOptions {
         verify: request.verify_fresh,
-        missing_checkout_reset: request.operation == "checkout" && request.to == Some("reset"),
+        missing_checkout_reset: request.operation == "checkout"
+            && request.to.map(str::trim) == Some("reset"),
         environments,
         ..Default::default()
     }

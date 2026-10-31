@@ -38,6 +38,10 @@ fn candidates(
     pattern: &str,
     observed: &mut Observed,
 ) -> io::Result<Vec<PathBuf>> {
+    let pattern = pattern.trim();
+    if pattern.is_empty() {
+        return Ok(Vec::new());
+    }
     let absolute = normalize(&cwd.join(pattern));
     if magic(pattern) {
         expand(root, &absolute, observed)

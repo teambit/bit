@@ -45,6 +45,9 @@ pub(in crate::commands) fn recover_scope_import(
     output: &Output,
 ) -> io::Result<()> {
     for id in ids {
+        if id.trim().is_empty() {
+            return Err(io::Error::other("recover scope import id is empty"));
+        }
         let mut options = import_options(std::slice::from_ref(id), false, false);
         options.objects_only = true;
         options.write.override_existing = false;

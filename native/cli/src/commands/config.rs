@@ -57,6 +57,7 @@ fn execute(
     output.stop();
     if let Err(error) = written {
         writeln!(io::stderr(), "{error}")?;
+        io::stderr().flush()?;
         return Ok(ExitCode::FAILURE);
     }
     if options.json {
@@ -64,5 +65,6 @@ fn execute(
     } else {
         writeln!(io::stdout(), "{text}")?;
     }
+    io::stdout().flush()?;
     Ok(ExitCode::SUCCESS)
 }

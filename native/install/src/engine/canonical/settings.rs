@@ -70,7 +70,11 @@ fn apply_registry(settings: &mut EngineSettings, request: &Request<'_>) -> Optio
     let default = request.network.registry_map
         .get("default")?
         .as_str()?
+        .trim()
         .to_string();
+    if default.is_empty() {
+        return None;
+    }
     let mut registries = Registries {
         default: Registry { uri: default, ..Registry::default() },
         ..Registries::default()
@@ -79,13 +83,14 @@ fn apply_registry(settings: &mut EngineSettings, request: &Request<'_>) -> Optio
         if key == "default" {
             continue;
         }
-        let scope = key.strip_prefix('@')?;
-        if scope.is_empty() {
+        let scope = key.trim().strip_prefix('@')?.trim();
+        let uri = value.as_str()?.trim();
+        if scope.is_empty() || uri.is_empty() {
             return None;
         }
         registries.scopes.insert(
             scope.to_string(),
-            Registry { uri: value.as_str()?.to_string(), ..Registry::default() },
+            Registry { uri: uri.to_string(), ..Registry::default() },
         );
     }
     settings.registry.registries = registries;
@@ -273,6 +278,8 @@ fn install_plan(request: &Request<'_>) -> Option<InstallPlan> {
                 project.manifest
                     .get("name")?
                     .as_str()
+                    .map(str::trim)
+                    .filter(|name| !name.is_empty())
                     .map(str::to_string)
             })
             .collect::<indexmap::IndexSet<_>>()

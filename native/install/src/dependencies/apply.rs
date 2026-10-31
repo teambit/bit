@@ -38,18 +38,25 @@ fn remove_ignored_components(deps: &FieldMaps, detected: &mut Detected) {
     for lifecycle in [Lifecycle::Runtime, Lifecycle::Dev] {
         let ignore = ignored(deps, lifecycle);
         detected.components[field_index(lifecycle)].retain(|dependency| {
-            !dependency.package_name
-                .as_ref()
-                .is_some_and(|name| ignore.contains(name))
+            dependency.package_name
+                .as_deref()
+                .is_none_or(|name| !is_ignored_name(&ignore, name))
         });
     }
     let runtime = ignored(deps, Lifecycle::Runtime);
     let dev = ignored(deps, Lifecycle::Dev);
     for entry in &mut detected.missing {
         let ignore = if entry.is_dev { &dev } else { &runtime };
-        entry.packages.retain(|name| !ignore.contains(name));
+        entry.packages.retain(|name| !is_ignored_name(ignore, name));
     }
     detected.missing.retain(|entry| !entry.packages.is_empty());
+}
+
+fn is_ignored_name(ignore: &[String], name: &str) -> bool {
+    let target = name.trim();
+    ignore
+        .iter()
+        .any(|ignored| ignored.trim() == target)
 }
 
 fn remove_ignored_packages(deps: &FieldMaps, detected: &mut Detected) {
@@ -117,9 +124,9 @@ fn apply_workspace_policy(workspace: &Workspace<'_>, detected: &mut Detected) {
             }
         }
         detected.components[field].retain(|dependency| {
-            !dependency.package_name
-                .as_ref()
-                .is_some_and(|name| peers.contains_key(name))
+            dependency.package_name
+                .as_deref()
+                .is_none_or(|name| !peers.contains_key(name.trim()))
         });
     }
     detected.components[PEER].extend(moved);
@@ -156,6 +163,9 @@ fn make_legacy_peer(detected: &mut Detected) {
     let dev = detected.packages[DEV].shift_remove(LEGACY);
     if let Some(version) = runtime.or(dev) {
         let trimmed = version.trim();
+        if trimmed.is_empty() {
+            return;
+        }
         let peer_range = if trimmed.starts_with(['^', '~', '>', '<', '=', '*']) {
             trimmed.to_owned()
         } else {

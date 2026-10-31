@@ -44,6 +44,8 @@ pub(super) fn plan(input: &Prepare, pending: &[Pending]) -> io::Result<Option<Pl
         cloud_domain: global
             .get("cloud_domain")
             .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|domain| !domain.is_empty())
             .unwrap_or("bit.cloud")
             .to_owned(),
     }))
@@ -164,6 +166,8 @@ fn strings(value: &Value) -> io::Result<Vec<String>> {
         .map(|value| {
             value
                 .as_str()
+                .map(str::trim)
+                .filter(|identity| !identity.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("outbound hub acknowledgement identity"))
         })

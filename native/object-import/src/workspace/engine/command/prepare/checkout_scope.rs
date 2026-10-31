@@ -23,10 +23,14 @@ fn candidates(request: &Prepare) -> io::Result<Vec<Candidate>> {
     request.options.scope.scope_candidates
         .iter()
         .map(|text| {
-            let (identity, version) =
-                text.rsplit_once('@').ok_or_else(|| invalid("checkout scope candidate version"))?;
+            let (identity, version) = text
+                .trim()
+                .rsplit_once('@')
+                .map(|(identity, version)| (identity.trim(), version.trim()))
+                .ok_or_else(|| invalid("checkout scope candidate version"))?;
             let (scope, name) = identity
                 .split_once('/')
+                .map(|(scope, name)| (scope.trim(), name.trim()))
                 .ok_or_else(|| invalid("checkout scope candidate identity"))?;
             if scope.is_empty()
                 || name.is_empty()
@@ -168,13 +172,15 @@ pub(super) fn extend_model_targets(context: &Value, targets: &mut Vec<Value>) {
 }
 
 fn version_ref(model: &Value, version: &str) -> io::Result<String> {
+    let version = version.trim();
     let reference = if matches!(version, "" | "latest" | "head") {
-        model["head"].as_str()
+        model["head"].as_str().map(str::trim)
     } else {
         model["orphanedVersions"]
             .get(version)
             .or_else(|| model["versions"].get(version))
             .and_then(Value::as_str)
+            .map(str::trim)
             .or_else(|| (crate::merge_history::hash(version).is_ok()).then_some(version))
     }
     .ok_or_else(|| invalid("checkout scope listed version absent"))?;

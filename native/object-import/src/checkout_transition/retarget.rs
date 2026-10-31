@@ -31,11 +31,10 @@ pub(super) fn apply_with_overlay(
         .values()
         .map(|plan| plan.bodies.len())
         .sum::<usize>();
-    let previous =
-        state.plans.get(&request.token).ok_or_else(|| invalid("stale merge template plan"))?;
+    let token = request.token.trim();
+    let previous = state.plans.get(token).ok_or_else(|| invalid("stale merge template plan"))?;
     let contents = load(&request, retained, previous, overlay)?;
-    let plan =
-        state.plans.get_mut(&request.token).ok_or_else(|| invalid("stale merge template plan"))?;
+    let plan = state.plans.get_mut(token).ok_or_else(|| invalid("stale merge template plan"))?;
     let directory = request.snapshot_directory;
     if !directory.is_absolute()
         || !std::fs::symlink_metadata(&directory)?.is_dir()
@@ -113,7 +112,7 @@ fn load(
     let mut compressed = 0;
     if request.target.files
         .iter()
-        .all(|file| cached.contains_key(file.hash.as_str()))
+        .all(|file| cached.contains_key(file.hash.trim()))
     {
         // Public target cloning has already observed its Sources. Reuse verified
         // operation-owned bytes while still checking the complete Version manifest.
@@ -126,11 +125,11 @@ fn load(
         return request.target.files
             .iter()
             .map(|file| {
-                let body = cached[file.hash.as_str()];
-                total += body.len();
-                if total > 32 * 1024 * 1024 {
-                    return Err(invalid("checkout prepared raw limit"));
-                }
+                let body = cached[file.hash.trim()];
+                total = total
+                    .checked_add(body.len())
+                    .filter(|total| *total <= 32 * 1024 * 1024)
+                    .ok_or_else(|| invalid("checkout prepared raw limit"))?;
                 Ok(body.to_vec())
             })
             .collect();
@@ -144,13 +143,14 @@ fn load(
     )
 }
 fn check_budget(body_count: usize, retained: usize, added: &[plan::Body]) -> io::Result<()> {
-    if body_count + added.len() > 4096
+    let added_bytes = added
+        .iter()
+        .map(|body| body.contents.len())
+        .sum::<usize>();
+    if body_count.saturating_add(added.len()) > 4096
         || retained
-            + added
-                .iter()
-                .map(|body| body.contents.len())
-                .sum::<usize>()
-            > 32 * 1024 * 1024
+            .checked_add(added_bytes)
+            .is_none_or(|total| total > 32 * 1024 * 1024)
     {
         return Err(invalid("merge template owner budget"));
     }
@@ -166,7 +166,7 @@ fn statuses(plan: &plan::Plan, target: &[wire::Manifest]) -> Vec<Value> {
         .map(|file| {
             let same = current
                 .get(file.relative_path.as_str())
-                .is_some_and(|current| current.raw_hash == file.hash);
+                .is_some_and(|current| current.raw_hash.trim() == file.hash.trim());
             json!({"relativePath":file.relative_path,"status":if same {"unchanged"}else{"updated"}})
         })
         .collect()

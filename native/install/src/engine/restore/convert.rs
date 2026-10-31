@@ -122,12 +122,14 @@ fn retain_neighbours(edges: &mut [Value], keep: impl Fn(&Value) -> bool) {
 pub(super) fn edge_id(edge: &Value) -> &str {
     edge.get("id")
         .and_then(Value::as_str)
-        .unwrap_or_default()
+        .map_or("", str::trim)
 }
 
 fn edge_pkg_id(edge: &Value) -> &str {
     edge.pointer("/attr/pkgId")
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|pkg_id| !pkg_id.is_empty())
         .unwrap_or_else(|| edge_id(edge))
 }
 
@@ -135,7 +137,7 @@ fn neighbour_id(neighbour: &Value) -> &str {
     neighbour
         .get("id")
         .and_then(Value::as_str)
-        .unwrap_or_default()
+        .map_or("", str::trim)
 }
 
 fn neighbours(edge: &Value) -> &[Value] {
@@ -303,12 +305,21 @@ fn importer(root_edge: &Value, project: &Project) -> Map<String, Value> {
 }
 
 fn direct_dependency_ref(root_edge: &Value, name: &str, specifier: &str) -> Option<String> {
+    let name = name.trim();
+    let specifier = specifier.trim();
     let wanted_id = format!("{name}@{specifier}");
     let found = neighbours(root_edge)
         .iter()
         .find(|dep| {
-            dep.get("name").and_then(Value::as_str) == Some(name)
-                && (dep.get("specifier").and_then(Value::as_str) == Some(specifier)
+            dep.get("name")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                == Some(name)
+                && (dep
+                    .get("specifier")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    == Some(specifier)
                     || remove_suffix(neighbour_id(dep)) == wanted_id)
         })?;
     Some(parse(neighbour_id(found)).to_ref())

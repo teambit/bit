@@ -45,10 +45,13 @@ pub(crate) fn valid_range(range: &str) -> Option<String> {
 
 /// `semver.satisfies(version, range)` of semver 7.
 pub(crate) fn satisfies(version: &str, range: &str) -> bool {
-    Range::parse(range, Flavor::V7).is_ok_and(|range| range.test_str(version))
+    !version.trim().is_empty()
+        && Range::parse(range, Flavor::V7).is_ok_and(|range| range.test_str(version))
 }
 
 /// `semver.satisfies(version, range, { includePrerelease: true })` of semver 7.
 pub(crate) fn satisfies_including_prerelease(version: &str, range: &str) -> bool {
-    Range::parse(range, Flavor::V7).is_ok_and(|range| range.test_str_including_prerelease(version))
+    !version.trim().is_empty()
+        && Range::parse(range, Flavor::V7)
+            .is_ok_and(|range| range.test_str_including_prerelease(version))
 }

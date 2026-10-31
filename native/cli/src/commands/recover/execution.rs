@@ -15,6 +15,9 @@ pub(super) fn execute(
     linker: &mut ProjectedLinker,
     output: &Output,
 ) -> io::Result<Report> {
+    if options.pattern.trim().is_empty() {
+        return Err(io::Error::other("recover pattern is empty"));
+    }
     if options.pattern.contains(['*', '?']) {
         // ComponentList.getFromFileSystem enters Consumer.loadMany even when
         // every selected row is removed; its invalidation precedes that split.

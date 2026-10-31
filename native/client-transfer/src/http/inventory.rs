@@ -53,7 +53,7 @@ impl Network {
             "query": query,
             "variables": list_variables(namespaces, include_deleted),
         });
-        let endpoint = format!("{url}/graphql");
+        let endpoint = format!("{}/graphql", url.trim().trim_end_matches('/'));
         let response = self.graphql_bounded(&endpoint, &body).await?;
         if include_deleted && unknown_include_deleted(&response) {
             let fallback = self
@@ -78,7 +78,7 @@ impl Network {
     /// `Http.latestVersions`: GraphQL returns ids in the remote's own order.
     pub async fn latest_versions(&self, url: &str, ids: &[String]) -> io::Result<Vec<String>> {
         let response = self.graphql_bounded(
-            &format!("{url}/graphql"),
+            &format!("{}/graphql", url.trim().trim_end_matches('/')),
             &json!({
                 "query": LATEST_VERSIONS_QUERY,
                 "variables": {"ids": ids},
@@ -92,6 +92,8 @@ impl Network {
             .iter()
             .map(|id| {
                 id.as_str()
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
                     .map(str::to_owned)
                     .ok_or_else(|| invalid("remote latest version id"))
             })
@@ -109,7 +111,7 @@ impl Network {
         while let Some(chunk) =
             self.cancellation.run(response.chunk()).await?.map_err(|error| network_error(&error))?
         {
-            if chunk.len() > MAX_GRAPHQL_BYTES - bytes.len() {
+            if chunk.len() > MAX_GRAPHQL_BYTES.saturating_sub(bytes.len()) {
                 return Err(invalid("remote GraphQL response limit"));
             }
             bytes.extend_from_slice(&chunk);
@@ -120,7 +122,10 @@ impl Network {
 
 fn list_variables(namespaces: Option<&str>, include_deleted: bool) -> Value {
     let mut variables = Map::new();
-    if let Some(namespaces) = namespaces {
+    if let Some(namespaces) = namespaces
+        .map(str::trim)
+        .filter(|ns| !ns.is_empty())
+    {
         variables.insert("namespaces".to_owned(), json!([namespaces]));
     }
     if include_deleted {

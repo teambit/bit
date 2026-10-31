@@ -107,8 +107,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "-c" | "--compare" | "--compare=true" => options.compare = true,
             "--compare=false" => options.compare = false,
             short if apply_short_bundle(short, &mut options) => {}
-            val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
-                id = Some(val.to_owned());
+            val if !val.starts_with('-') && !val.trim().is_empty() && id.is_none() => {
+                id = Some(val.trim().to_owned());
             }
             _ => return None,
         }
@@ -122,6 +122,7 @@ fn consume_trailing_show_id<'a>(
     id: &mut Option<String>,
 ) -> Option<()> {
     for val in iter {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-') && id.replace(val.to_owned()).is_none())
             .then_some(())?;
     }

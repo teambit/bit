@@ -33,6 +33,9 @@ impl Prepared {
             expected.insert(destination.clone(), bytes.clone());
         }
         for (hash, bytes) in self.main_objects() {
+            if hash.len() < 3 {
+                continue;
+            }
             expected.insert(
                 crate::scope_path(&self.root)
                     .join("objects")

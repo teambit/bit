@@ -31,7 +31,7 @@ pub(in crate::commands) fn workflow<'a>(
 ) -> Option<(resolve::workflow::Workflow, Vec<&'a str>)> {
     let count = args
         .iter()
-        .filter(|arg| matches!(**arg, "--build" | "--build=true" | "--build=false"))
+        .filter(|arg| matches!(arg.trim(), "--build" | "--build=true" | "--build=false"))
         .count();
     if count > 1 {
         return None;
@@ -39,12 +39,12 @@ pub(in crate::commands) fn workflow<'a>(
     let mut workflow = resolve::workflow::Workflow::default();
     workflow.build = args
         .iter()
-        .any(|arg| matches!(*arg, "--build" | "--build=true"));
+        .any(|arg| matches!(arg.trim(), "--build" | "--build=true"));
     Some((
         workflow,
         args.iter()
             .copied()
-            .filter(|arg| !matches!(*arg, "--build" | "--build=true" | "--build=false"))
+            .filter(|arg| !matches!(arg.trim(), "--build" | "--build=true" | "--build=false"))
             .collect(),
     ))
 }

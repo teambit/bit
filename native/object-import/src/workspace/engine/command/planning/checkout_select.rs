@@ -55,20 +55,26 @@ pub(super) fn select(
 }
 
 fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
-    let (scope, name) = identity.split_once('/')?;
+    let (scope, name) = identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))?;
     context["lane"]["current"]["value"]["components"]
         .as_array()?
         .iter()
         .find(|row| {
             super::super::inbound::remote::file_list::row_id_parts(row)
                 .is_some_and(|(row_scope, row_name)| {
-                    row_name == name
+                    row_name.trim() == name
                         && row_scope
+                            .map(str::trim)
                             .filter(|val| !val.is_empty())
                             .is_none_or(|val| val == scope)
                 })
         })
         .and_then(|row| row["head"].as_str())
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
 }
 
 fn modification(
@@ -135,13 +141,14 @@ fn switch_modification(
 }
 
 fn tracked_head(record: &Record, captured: &capture::Captured) -> Option<Value> {
+    let target_identity = captured.target.identity.trim();
     let tracked = record.request.operation == input::Operation::Checkout
-        && record.request.options.to.as_deref() == Some("head")
+        && record.request.options.to.as_deref().map(str::trim) == Some("head")
         && record.context["lane"]["trackedTargets"]
             .as_array()?
             .iter()
-            .any(|row| row["identity"] == captured.target.identity);
-    let head = tracked.then(|| lane_head(&record.context, &captured.target.identity))??;
+            .any(|row| row["identity"].as_str().map(str::trim) == Some(target_identity));
+    let head = tracked.then(|| lane_head(&record.context, target_identity))??;
     Some(json!({"kind":"target","version":head,"merge":false}))
 }
 

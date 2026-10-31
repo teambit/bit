@@ -80,6 +80,12 @@ fn validate(request: &wire::Prepare) -> io::Result<()> {
     if request.target.files.len() > 4096
         || request.current.len() > 4096
         || !request.objects_directory.is_absolute()
+        || request.target.files
+            .iter()
+            .any(|file| file.relative_path.trim().is_empty())
+        || request.current
+            .iter()
+            .any(|file| file.relative_path.trim().is_empty())
     {
         return Err(invalid("checkout prepare path/count limit"));
     }

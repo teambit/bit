@@ -41,20 +41,20 @@ pub(super) fn tokenize(text: &str) -> io::Result<Vec<Token>> {
     Ok(tokens)
 }
 
-fn is_line_terminator(char: char) -> bool {
-    matches!(char, '\n' | '\r' | '\u{2028}' | '\u{2029}')
+fn is_line_terminator(character: char) -> bool {
+    matches!(character, '\n' | '\r' | '\u{2028}' | '\u{2029}')
 }
 
 impl Lexer<'_> {
-    fn bump_line(&mut self, char: char) {
-        if char == '\r'
+    fn bump_line(&mut self, character: char) {
+        if character == '\r'
             && self.chars
                 .peek()
                 .is_some_and(|(_, next)| *next == '\n')
         {
             return;
         }
-        if is_line_terminator(char) {
+        if is_line_terminator(character) {
             self.line += 1;
         }
     }

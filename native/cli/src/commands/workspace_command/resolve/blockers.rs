@@ -130,18 +130,12 @@ pub(super) fn validate(rows: &[Value], selected: &[String], ignored: &Value) -> 
         {
             continue;
         }
-        let blockers = array(row.get("issues"), "snapshot component issues")?
-            .iter()
-            .filter(|issue| {
-                issue["isTagBlocker"] == true
-                    && !ignored.contains(issue["type"].as_str().unwrap_or_default())
-            })
-            .cloned()
-            .collect::<Vec<_>>();
+        let blockers = component_blockers(row, &ignored)?;
         if !blockers.is_empty() {
+            let display_id = non_empty_field(row, "displayId").unwrap_or(id);
             components.push(format!(
                 "{}\n       {}\n",
-                chalk.underline(&chalk.cyan(row["displayId"].as_str().unwrap_or(id))),
+                chalk.underline(&chalk.cyan(display_id)),
                 issue_output(&blockers, chalk),
             ));
         }
@@ -155,6 +149,24 @@ pub(super) fn validate(rows: &[Value], selected: &[String], ignored: &Value) -> 
     )))
 }
 
+fn component_blockers(row: &Value, ignored: &HashSet<&str>) -> io::Result<Vec<Value>> {
+    Ok(array(row.get("issues"), "snapshot component issues")?
+        .iter()
+        .filter(|issue| {
+            issue["isTagBlocker"] == true
+                && !ignored.contains(issue["type"].as_str().map_or("", str::trim))
+        })
+        .cloned()
+        .collect())
+}
+
+fn non_empty_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
+    value[key]
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn display_ids(rows: &mut [Value], context: &Value) {
     for row in rows {
         let target = context["targets"]
@@ -162,14 +174,11 @@ fn display_ids(rows: &mut [Value], context: &Value) {
             .into_iter()
             .flatten()
             .find(|target| target["identity"] == row["id"] || target["id"] == row["id"]);
-        if let Some(version) = target
-            .and_then(|target| {
-                target["version"]
-                    .as_str()
-                    .or_else(|| target["head"].as_str())
-            })
-            .filter(|version| !version.is_empty())
-            && let Some(id) = row["id"].as_str()
+        let version = target.and_then(|target| {
+            non_empty_field(target, "version").or_else(|| non_empty_field(target, "head"))
+        });
+        if let Some(version) = version
+            && let Some(id) = non_empty_field(row, "id")
         {
             row["displayId"] = serde_json::json!(format!("{id}@{version}"));
         }

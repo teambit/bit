@@ -139,22 +139,26 @@ impl State {
     pub(super) fn begin(&mut self, input: Value) -> io::Result<Value> {
         let request: Begin = serde_json::from_value(input).map_err(io::Error::other)?;
         bound(request.count)?;
-        if !["status", "apply", "lane"].contains(&request.mode.as_str())
-            || self.records.len() >= 4096
-        {
+        let mode = request.mode.trim().to_owned();
+        if !["status", "apply", "lane"].contains(&mode.as_str()) || self.records.len() >= 4096 {
             return Err(invalid("merge journal mode or limit"));
         }
-        if let Some(parent) = &request.parent_token {
+        let parent_token = request.parent_token
+            .as_deref()
+            .map(str::trim)
+            .filter(|parent| !parent.is_empty())
+            .map(str::to_owned);
+        if let Some(parent) = &parent_token {
             self.live(parent)?;
         }
         let mut record = Record {
-            mode: request.mode,
+            mode,
             cursor: 0,
             index: 0,
             batch: request.count,
             plans: 0,
             revision: 0,
-            parent: request.parent_token,
+            parent: parent_token,
         };
         if record.mode == "status" && request.import_main != Some(true) {
             record.cursor = 1;
@@ -171,9 +175,10 @@ impl State {
     }
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
-        let mut record = self.live(&request.token)?.clone();
+        let token = request.token.trim().to_owned();
+        let mut record = self.live(&token)?.clone();
         if record.revision != request.revision
-            || record.phase() != request.phase
+            || record.phase() != request.phase.trim()
             || record.index != request.index
             || record.count() != request.completed
         {
@@ -182,8 +187,8 @@ impl State {
         record.advance(request.next_count)?;
         record.revision =
             record.revision.checked_add(1).ok_or_else(|| invalid("merge revision overflow"))?;
-        let output = record.output(&request.token);
-        self.records.insert(request.token, record);
+        let output = record.output(&token);
+        self.records.insert(token, record);
         Ok(output)
     }
     fn live(&self, token: &str) -> io::Result<&Record> {

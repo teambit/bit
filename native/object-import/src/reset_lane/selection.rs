@@ -50,6 +50,8 @@ fn hashes(distance: &Value) -> io::Result<Vec<String>> {
         .iter()
         .map(|hash| {
             hash.as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("lane reset divergence hash"))
         })
@@ -60,7 +62,13 @@ fn add_detached(repository: &Repository, local: &mut Vec<String>) -> io::Result<
     if repository.model["detachedHeads"]["heads"].as_array().is_none_or(Vec::is_empty) {
         return Ok(());
     }
-    let Some(head) = repository.model["head"].as_str() else { return Ok(()) };
+    let Some(head) = repository.model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
+        return Ok(());
+    };
     let distance = distance(repository, head)?;
     for hash in hashes(&distance)? {
         if !local.contains(&hash) {

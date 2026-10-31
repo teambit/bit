@@ -255,7 +255,11 @@ async fn add_missing_deps(
 
 /// Root dependencies, linked root dependencies and the components' package names.
 fn provided_by_root(calculated: &Calculated, links: &DependencyMap) -> HashSet<String> {
-    let mut provided: HashSet<String> = links.keys().cloned().collect();
+    let mut provided: HashSet<String> = links
+        .keys()
+        .map(|key| key.trim().to_string())
+        .filter(|key| !key.is_empty())
+        .collect();
     let projects = &calculated.outcome.plan.projects;
     if let Some(root) = projects.first() {
         for field in ["dependencies", "devDependencies"] {
@@ -265,7 +269,9 @@ fn provided_by_root(calculated: &Calculated, links: &DependencyMap) -> HashSet<S
     let names = projects
         .iter()
         .skip(1)
-        .filter_map(|project| project.manifest.get("name").and_then(Value::as_str));
+        .filter_map(|project| project.manifest.get("name").and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|name| !name.is_empty());
     provided.extend(names.map(ToString::to_string));
     provided
 }
@@ -273,7 +279,13 @@ fn provided_by_root(calculated: &Calculated, links: &DependencyMap) -> HashSet<S
 fn dependency_names(field: Option<&Value>) -> Vec<String> {
     field
         .and_then(Value::as_object)
-        .map(|object| object.keys().cloned().collect())
+        .map(|object| {
+            object
+                .keys()
+                .map(|key| key.trim().to_string())
+                .filter(|key| !key.is_empty())
+                .collect()
+        })
         .unwrap_or_default()
 }
 

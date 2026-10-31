@@ -179,7 +179,10 @@ async fn resolve_cloud_username(session: &Session<'_>, loaded: &mut Loaded) {
     if !loaded.engine.registry.cloud_user_agent {
         return;
     }
-    let username = engine::cloud_username(&loaded.global, engine::CLOUD_LOOKUP_TIMEOUT).await;
+    let username = engine::cloud_username(&loaded.global, engine::CLOUD_LOOKUP_TIMEOUT)
+        .await
+        .map(|user| user.trim().to_owned())
+        .filter(|user| !user.is_empty());
     if let Some(username) = &username {
         engine::apply_cloud_username(&mut loaded.engine, username);
     }
@@ -219,7 +222,7 @@ async fn add_missing_peers(session: &Session<'_>, loaded: Loaded) -> io::Result<
     }
     let packages: Vec<String> = missing
         .iter()
-        .map(|(name, range)| format!("{name}@{range}"))
+        .map(|(name, range)| format!("{}@{}", name.trim(), range.trim()))
         .collect();
     // `_addPackages(missingPeerPackages, options)`: `lifecycleType || 'runtime'`.
     packages::add(session, &loaded, &packages, session.options.lifecycle()).await?;

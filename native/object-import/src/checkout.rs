@@ -124,9 +124,10 @@ pub(crate) fn path(reader: &mut impl Read) -> io::Result<PathBuf> {
     }
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
-    let name = String::from_utf8(bytes).map_err(|_| invalid("checkout path is not UTF-8"))?;
-    let path = PathBuf::from(&name);
-    if !path.is_absolute() || name.contains('\0') {
+    let raw = String::from_utf8(bytes).map_err(|_| invalid("checkout path is not UTF-8"))?;
+    let name = raw.trim();
+    let path = PathBuf::from(name);
+    if !path.is_absolute() || raw.contains('\0') {
         return Err(invalid("checkout path must be absolute and contain no NUL"));
     }
     Ok(path)

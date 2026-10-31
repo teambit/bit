@@ -12,6 +12,9 @@ pub fn read_global_config_with(
     directory: &Path,
     parse_error: impl FnOnce(&Path, serde_json::Error) -> io::Error,
 ) -> io::Result<Value> {
+    if directory.as_os_str().is_empty() {
+        return Ok(Value::Object(Map::new()));
+    }
     let path = directory.join("config.json");
     let text = match fs::read_to_string(&path) {
         Ok(text) => text,

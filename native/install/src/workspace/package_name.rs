@@ -8,7 +8,13 @@ const PKG_ASPECT: &str = "teambit.pkg/pkg";
 /// `getBindingPrefixByDefaultScope`: `@<owner>`, the part of the scope before the first dot.
 #[must_use]
 pub fn binding_prefix_by_default_scope(scope: &str) -> String {
-    format!("@{}", scope.split('.').next().unwrap_or(scope))
+    let trimmed = scope.trim();
+    let owner = trimmed
+        .split('.')
+        .next()
+        .filter(|part| !part.is_empty())
+        .unwrap_or("undefined");
+    format!("@{owner}")
 }
 
 /// `parseScope`: `owner.scope` → (owner, scope).

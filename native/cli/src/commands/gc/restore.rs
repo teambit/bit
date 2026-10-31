@@ -46,7 +46,7 @@ pub(super) fn preflight(scope: &Path) -> io::Result<()> {
             "Windows recovery identity and error parity requires the published runtime",
         ));
     }
-    if std::env::var_os("CI").is_none_or(|value| value.is_empty()) {
+    if !ci_enabled() {
         return Ok(());
     }
     let mut candidates = find_restoring_leftovers(scope);
@@ -168,4 +168,13 @@ pub(super) fn workspace_index(root: &Path, scope: &Path) -> io::Result<Option<Ve
         return Err(io::Error::other("configured workspace startup callbacks"));
     }
     bare::restore_index(scope)
+}
+
+fn ci_enabled() -> bool {
+    std::env::var_os("CI")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
 }

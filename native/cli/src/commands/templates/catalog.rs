@@ -264,6 +264,9 @@ pub(super) fn select_templates(
     show_all: bool,
     aspect: Option<&str>,
 ) -> Vec<TemplateDescriptor> {
+    let aspect = aspect
+        .map(str::trim)
+        .filter(|id| !id.is_empty());
     let source = if inside_workspace { COMPONENT_TEMPLATES } else { WORKSPACE_TEMPLATES };
     source
         .iter()
@@ -340,6 +343,7 @@ fn format_aspect_group(aspect_id: &str, items: &[TemplateDescriptor], chalk: Cha
 }
 
 pub(super) fn friendly_aspect_name(aspect_id: &str) -> String {
+    let aspect_id = aspect_id.trim();
     if !aspect_id.starts_with("teambit.") {
         return aspect_id.to_owned();
     }

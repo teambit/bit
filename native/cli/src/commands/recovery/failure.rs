@@ -23,8 +23,8 @@ pub(super) fn preflight(request: &Value) -> io::Result<()> {
 #[derive(Debug)]
 struct Restored(Value);
 impl fmt::Display for Restored {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("restored lane checkout failure")
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("restored lane checkout failure")
     }
 }
 impl std::error::Error for Restored {}

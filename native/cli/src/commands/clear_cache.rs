@@ -97,13 +97,14 @@ fn apply_token(tokens: &[&str], index: &mut usize, remote: &mut Option<String>) 
         "--no-color" | "--no-color=true" | "--no-color=false" => Some(()),
         "-r" | "--remote" => {
             *index += 1;
-            let value = *tokens.get(*index)?;
+            let value = tokens.get(*index)?.trim();
             (!value.is_empty() && !value.starts_with('-')).then(|| *remote = Some(value.to_owned()))
         }
         token => {
             let value = token
                 .strip_prefix("--remote=")
-                .or_else(|| token.strip_prefix("-r="))?;
+                .or_else(|| token.strip_prefix("-r="))?
+                .trim();
             (!value.is_empty() && !value.starts_with('-')).then(|| *remote = Some(value.to_owned()))
         }
     }
@@ -158,7 +159,7 @@ fn is_truthy(value: &Value) -> bool {
     match value {
         Value::Null | Value::Bool(false) => false,
         Value::Number(num) => num.as_f64() != Some(0.0),
-        Value::String(text) => !text.is_empty(),
+        Value::String(text) => !text.trim().is_empty(),
         Value::Bool(true) | Value::Array(_) | Value::Object(_) => true,
     }
 }

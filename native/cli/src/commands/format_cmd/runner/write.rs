@@ -71,7 +71,10 @@ pub(super) fn publish(inputs: &[Value], outputs: &[Value]) -> io::Result<Option<
 fn path(input: &Value) -> io::Result<&Path> {
     input["absolutePath"]
         .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .map(Path::new)
+        .filter(|path| path.is_absolute())
         .ok_or_else(|| invalid("formatter source path"))
 }
 

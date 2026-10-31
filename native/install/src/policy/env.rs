@@ -101,8 +101,15 @@ fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<Policy
         })?;
     let name = item
         .get("name")
-        .or_else(|| item.get("packageName"))
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .or_else(|| {
+            item.get("packageName")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+        })
         .unwrap_or_default();
     let flag = |field: &str| item.get(field).is_some_and(truthy);
     Ok(PolicyEntry {
@@ -112,7 +119,7 @@ fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<Policy
         workspace_singleton: flag("workspaceSingleton"),
         r#override: flag("override"),
         source: Some(options.source.to_owned()),
-        ..entries::entry(name, version, options.lifecycle)
+        ..entries::entry(name, version.trim(), options.lifecycle)
     })
 }
 
@@ -135,8 +142,16 @@ pub fn merge_manifests(parent: &Value, child: &Value) -> Value {
             .collect();
         merged.extend(children);
         merged.retain(|entry| {
-            entry.get("version").and_then(Value::as_str) != Some("-")
-                && entry.get("supportedRange").and_then(Value::as_str) != Some("-")
+            entry
+                .get("version")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                != Some("-")
+                && entry
+                    .get("supportedRange")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    != Some("-")
         });
         policy.insert(key.to_owned(), Value::Array(merged));
     }

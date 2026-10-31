@@ -49,8 +49,9 @@ pub(super) fn command_error(
 
 /// Format `MissingBitMapComponent` when a literal component pattern is absent from `.bitmap`.
 fn missing_component_error(root: &Path, options: &options::Options) -> Option<String> {
-    let pattern = options.pattern.as_deref()?;
-    if selection::stateful(pattern)
+    let pattern = options.pattern.as_deref()?.trim();
+    if pattern.is_empty()
+        || selection::stateful(pattern)
         || pattern.contains(['*', ',', '!', '?', '[', ']', '{', '}', '$', ' ', '@'])
     {
         return None;
@@ -135,7 +136,11 @@ fn validate_target_versions(
 
 /// Check whether `version` is a 40-char hash or a known tag in `versions` / `orphanedVersions`.
 fn has_model_version(component_model: &Value, version: &str) -> bool {
-    (version == "latest" && component_model["head"].is_string())
+    let version = version.trim();
+    let has_head = component_model["head"]
+        .as_str()
+        .is_some_and(|head| !head.trim().is_empty());
+    (version == "latest" && has_head)
         || (version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()))
         || component_model["versions"].get(version).is_some()
         || component_model["orphanedVersions"].get(version).is_some()
@@ -143,7 +148,7 @@ fn has_model_version(component_model: &Value, version: &str) -> bool {
 
 /// Look up the scope model for `target` in `context["models"]`.
 pub(super) fn model<'c>(context: &'c Value, target: &Value) -> Option<&'c Value> {
-    let identity = target.get("identity")?.as_str()?;
+    let identity = target.get("identity")?.as_str()?.trim();
     context
         .get("models")?
         .as_array()?
@@ -156,10 +161,14 @@ fn model_identity(entry: &Value) -> String {
     let scope = entry
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .unwrap_or("undefined");
     let name = entry
         .get("name")
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .unwrap_or("undefined");
     format!("{scope}/{name}")
 }

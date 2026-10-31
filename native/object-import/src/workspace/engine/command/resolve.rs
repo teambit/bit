@@ -83,7 +83,18 @@ struct Selection {
 }
 impl Selection {
     fn unique(identities: Vec<String>) -> Self {
-        Self { load_count: identities.len(), identities }
+        let mut unique = Vec::with_capacity(identities.len());
+        for id in identities {
+            let trimmed = id.trim();
+            if !trimmed.is_empty()
+                && !unique
+                    .iter()
+                    .any(|existing| existing == trimmed)
+            {
+                unique.push(trimmed.to_owned());
+            }
+        }
+        Self { load_count: unique.len(), identities: unique }
     }
 }
 

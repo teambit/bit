@@ -51,8 +51,7 @@ pub(super) fn names(
 ) -> (String, String) {
     let stored = model
         .and_then(|model| model.get("bindingPrefix"))
-        .and_then(Value::as_str)
-        .filter(|prefix| !prefix.is_empty());
+        .and_then(non_empty_str);
     let prefix = stored.map_or_else(|| default_prefix(identity), str::to_string);
     (prefix, configured_package_name(identity, stored, extensions))
 }
@@ -78,40 +77,37 @@ fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[V
 }
 
 pub(super) fn extension_identity(id: &Value) -> String {
-    if let Some(text) = id
-        .as_str()
-        .or_else(|| id["id"].as_str())
-    {
+    if let Some(text) = non_empty_str(id).or_else(|| non_empty_str(&id["id"])) {
         return strip_latest_or_head(text).to_string();
     }
     let id_obj = id
         .get("id")
         .filter(|sub| sub.is_object())
         .unwrap_or(id);
-    let raw_name = id_obj["name"]
-        .as_str()
-        .or_else(|| id["name"].as_str())
+    let raw_name = non_empty_str(&id_obj["name"])
+        .or_else(|| non_empty_str(&id["name"]))
         .unwrap_or_default();
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
-    let version = id_obj["version"]
-        .as_str()
-        .or_else(|| id["version"].as_str())
-        .or_else(|| id_obj["head"].as_str())
-        .or_else(|| id["head"].as_str())
-        .filter(|version| !version.is_empty())
+        .map_or((raw_name, None), |(base, ver)| (base.trim(), Some(ver.trim())));
+    let version = non_empty_str(&id_obj["version"])
+        .or_else(|| non_empty_str(&id["version"]))
+        .or_else(|| non_empty_str(&id_obj["head"]))
+        .or_else(|| non_empty_str(&id["head"]))
         .or(inline_ver)
         .filter(|version| !matches!(*version, "" | "latest" | "head"))
         .map_or_else(String::new, |version| format!("@{version}"));
-    match id_obj["scope"]
-        .as_str()
-        .or_else(|| id["scope"].as_str())
-        .filter(|scope| !scope.is_empty())
-    {
+    match non_empty_str(&id_obj["scope"]).or_else(|| non_empty_str(&id["scope"])) {
         Some(scope) => format!("{scope}/{name}{version}"),
         None => format!("{name}{version}"),
     }
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 pub(super) fn identity(value: Option<&Value>) -> io::Result<String> {
@@ -149,16 +145,18 @@ fn resolve_dep_version_suffix(
         .or_else(|| nullish(outer.get("head")));
     let version = match raw_version {
         None => inline_ver
-            .filter(|ver| !matches!(*ver, "latest" | "head"))
+            .map(str::trim)
+            .filter(|ver| !matches!(*ver, "" | "latest" | "head"))
             .unwrap_or(""),
-        Some(Value::String(version)) if matches!(version.as_str(), "" | "latest" | "head") => "",
-        Some(Value::String(version)) => version,
+        Some(Value::String(version)) if matches!(version.trim(), "" | "latest" | "head") => "",
+        Some(Value::String(version)) => version.trim(),
         Some(_) => return Err(decline("status dependency version")),
     };
     Ok(if version.is_empty() { String::new() } else { format!("@{version}") })
 }
 
 fn strip_latest_or_head(text: &str) -> &str {
+    let text = text.trim();
     text.strip_suffix("@latest")
         .or_else(|| text.strip_suffix("@head"))
         .unwrap_or(text)

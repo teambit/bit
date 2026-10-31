@@ -89,6 +89,7 @@ impl Merge<'_> {
         }
         let version = self.results.version
             .as_deref()
+            .map(str::trim)
             .filter(|version| !version.is_empty())
             .map_or_else(String::new, |version| {
                 format!(" from version {}", self.chalk().bold(version))
@@ -102,7 +103,7 @@ impl Merge<'_> {
     fn skipped_removed(&self) -> String {
         let items: Vec<String> = self.results.skipped
             .iter()
-            .filter(|(_, message)| message == REMOVED)
+            .filter(|(_, message)| message.trim() == REMOVED)
             .map(|(id, _)| {
                 Formatter::item_with(&self.chalk().bold(&id.display()), &self.format.warn_symbol())
             })

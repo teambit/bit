@@ -22,6 +22,9 @@ fn encode(value: &Value, output: &mut String, root: bool) -> io::Result<()> {
         }
         Value::Null => output.push_str("Null"),
         Value::Array(values) => {
+            if values.len() > 65536 {
+                return Err(super::invalid("linter configuration array limit"));
+            }
             let _ = write!(output, "array:{}:", values.len());
             for value in values {
                 encode(value, output, false)?;

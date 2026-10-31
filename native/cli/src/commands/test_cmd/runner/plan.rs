@@ -121,10 +121,14 @@ impl Plan {
         result: &serde_json::Value,
     ) {
         if text && !self.settings.summary && result.get("error").is_some() {
+            let err_msg = result["errorMessage"]
+                .as_str()
+                .map(str::trim)
+                .filter(|msg| !msg.is_empty())
+                .unwrap_or("undefined");
             output.failure(&format!(
-                r#"service "tester" of env "{}" has failed. error: {}"#,
+                r#"service "tester" of env "{}" has failed. error: {err_msg}"#,
                 self.loaded.progress.environment,
-                result["errorMessage"].as_str().unwrap_or("undefined"),
             ));
         }
     }
@@ -187,7 +191,11 @@ impl Plan {
 }
 fn validate_sources(files: &[serde_json::Value]) -> io::Result<()> {
     for file in files {
-        let path = file["absolutePath"].as_str().ok_or_else(|| invalid("tester source path"))?;
+        let path = file["absolutePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("tester source path"))?;
         if fs::read_to_string(path)? != file["source"].as_str().unwrap_or_default() {
             return Err(invalid("tester source changed during preparation"));
         }

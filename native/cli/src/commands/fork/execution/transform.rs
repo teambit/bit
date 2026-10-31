@@ -17,7 +17,7 @@ pub(super) fn source(
     linker: &mut ProjectedLinker,
 ) -> io::Result<()> {
     let source =
-        row["identity"].as_str().ok_or_else(|| io::Error::other("fork source identity"))?;
+        non_empty_str(&row["identity"]).ok_or_else(|| io::Error::other("fork source identity"))?;
     let target = plan.target_identity().to_owned();
     let inputs = plan.ast_inputs();
     let outputs = ast(
@@ -44,10 +44,10 @@ pub(super) fn local(
     let state = inventory::read(root)?;
     let target = inventory::selected(&state, target)
         .ok_or_else(|| io::Error::other("fork target inventory"))?;
-    let old =
-        facts["packageName"].as_str().ok_or_else(|| io::Error::other("fork original package"))?;
-    let new =
-        target["packageName"].as_str().ok_or_else(|| io::Error::other("fork target package"))?;
+    let old = non_empty_str(&facts["packageName"])
+        .ok_or_else(|| io::Error::other("fork original package"))?;
+    let new = non_empty_str(&target["packageName"])
+        .ok_or_else(|| io::Error::other("fork target package"))?;
     let rows = load(root, linker, output)?;
     Refactor::prepare(root, &rows, &[(old.into(), new.into())], true, false)?.apply()
 }
@@ -65,17 +65,22 @@ pub(super) fn multiple(
     }
     Ok(())
 }
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn replacements(root: &Path, results: &Results) -> io::Result<Vec<(String, String)>> {
     let state = inventory::read(root)?;
     let mut pairs = Vec::new();
     for (id, facts) in results.ids.iter().zip(&results.facts) {
         let target =
             inventory::selected(&state, id).ok_or_else(|| io::Error::other("fork batch target"))?;
-        let source_pkg = facts["packageName"]
-            .as_str()
+        let source_pkg = non_empty_str(&facts["packageName"])
             .ok_or_else(|| io::Error::other("fork source package name"))?;
-        let target_pkg = target["packageName"]
-            .as_str()
+        let target_pkg = non_empty_str(&target["packageName"])
             .ok_or_else(|| io::Error::other("fork target package name"))?;
         pairs.push((source_pkg.to_owned(), target_pkg.to_owned()));
         pairs.push((source_identity(&facts["sourceId"])?, id.clone()));
@@ -83,14 +88,15 @@ fn replacements(root: &Path, results: &Results) -> io::Result<Vec<(String, Strin
     Ok(pairs)
 }
 fn source_identity(source: &Value) -> io::Result<String> {
-    if let Some(raw) = source.as_str() {
-        return Ok(raw
-            .rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
-            .to_owned());
+    if let Some(raw) = non_empty_str(source) {
+        let bare = raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim());
+        if !bare.is_empty() {
+            return Ok(bare.to_owned());
+        }
     }
-    let scope = source["scope"].as_str().ok_or_else(|| io::Error::other("fork source scope"))?;
-    let name = source["name"].as_str().ok_or_else(|| io::Error::other("fork source name"))?;
+    let scope =
+        non_empty_str(&source["scope"]).ok_or_else(|| io::Error::other("fork source scope"))?;
+    let name = non_empty_str(&source["name"]).ok_or_else(|| io::Error::other("fork source name"))?;
     Ok(format!("{scope}/{name}"))
 }
 fn apply_replacements(
@@ -123,15 +129,14 @@ fn load(
     let state = inventory::read(root)?;
     let ids = state["components"]
         .as_array()
-        .unwrap()
+        .ok_or_else(|| io::Error::other("fork inventory components"))?
         .iter()
         .map(|row| {
-            row["identity"]
-                .as_str()
-                .unwrap()
-                .to_owned()
+            non_empty_str(&row["identity"])
+                .map(str::to_owned)
+                .ok_or_else(|| io::Error::other("fork inventory component identity"))
         })
-        .collect::<Vec<_>>();
+        .collect::<io::Result<Vec<_>>>()?;
     output.status(&format!("loading {} component(s)", ids.len()));
     let rows = linker.capture_cached(root, &bitmap, &ids)?;
     print!("{}", linker.take_stdout());

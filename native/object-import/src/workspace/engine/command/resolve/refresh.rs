@@ -57,7 +57,8 @@ pub(super) fn validate(input: &Validate, state: &mut State) -> io::Result<(usize
 }
 
 fn pending(retained: &Retained, token: &str) -> io::Result<()> {
-    if retained.record.token != token
+    if token.trim().is_empty()
+        || retained.record.token != token
         || retained.materials.is_empty()
         || !matches!(retained.finalized, publication::Phase::Pending(_))
     {

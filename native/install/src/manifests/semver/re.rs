@@ -152,5 +152,9 @@ pub(super) fn split_whitespace(text: &str) -> Vec<&str> {
 
 /// `text.trim().split(/\s+/).join(' ')`.
 pub(super) fn collapse_whitespace(text: &str) -> String {
-    split_whitespace(text.trim()).join(" ")
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+    split_whitespace(trimmed).join(" ")
 }

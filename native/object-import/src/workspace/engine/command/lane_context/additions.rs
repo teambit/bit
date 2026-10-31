@@ -56,10 +56,10 @@ fn relocate_nested<'a>(
     addition: &mut Value,
     rows: &(impl Iterator<Item = &'a Value> + Clone),
 ) -> io::Result<()> {
-    let directory = addition["rootDir"].as_str().ok_or_else(|| invalid("switch destination"))?;
+    let directory = trimmed_str(&addition["rootDir"]).ok_or_else(|| invalid("switch destination"))?;
     let parent = (*rows)
         .clone()
-        .filter_map(|row| row["rootDir"].as_str())
+        .filter_map(|row| trimmed_str(&row["rootDir"]))
         .find(|root| directory.starts_with(&format!("{root}/")));
     let Some(parent) = parent else { return Ok(()) };
     let suffix = directory
@@ -81,10 +81,17 @@ pub(in crate::workspace::engine::command) fn targets(
     selected: &[Value],
 ) -> Vec<Value> {
     additions.iter().filter_map(|addition| {
-        let identity = format!("{}/{}", addition["scope"].as_str()?, addition["name"].as_str()?);
-        selected.iter().find(|target| target["identity"] == identity && target["currentIdPresent"] == false && target["bitmapPresent"] == false)?;
+        let identity = format!("{}/{}", trimmed_str(&addition["scope"])?, trimmed_str(&addition["name"])?);
+        selected.iter().find(|target| trimmed_str(&target["identity"]) == Some(identity.as_str()) && target["currentIdPresent"] == false && target["bitmapPresent"] == false)?;
         Some(json!({"identity":identity,"version":addition["version"],"directory":addition["rootDir"],"mainFile":addition["mainFile"],"config":null,"packageJson":null}))
     }).collect()
+}
+
+fn trimmed_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 fn prepare_one(
@@ -94,9 +101,12 @@ fn prepare_one(
     target: &Value,
 ) -> io::Result<Value> {
     let identity =
-        target["identity"].as_str().ok_or_else(|| invalid("lane destination identity"))?;
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("lane destination scope"))?;
+        trimmed_str(&target["identity"]).ok_or_else(|| invalid("lane destination identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("lane destination scope"))?;
     let existing = rows
         .iter()
         .find(|(key, row)| {
@@ -107,26 +117,29 @@ fn prepare_one(
         })
         .map(|(_, row)| row);
     let directory = match existing {
-        Some(row) => row["rootDir"]
-            .as_str()
+        Some(row) => trimmed_str(&row["rootDir"])
             .ok_or_else(|| invalid("lane destination tracked root"))?
             .to_owned(),
         None => directory(settings, scope, name)?,
     };
-    let head = target["head"].as_str().ok_or_else(|| invalid("lane destination version"))?;
+    let head = trimmed_str(&target["head"]).ok_or_else(|| invalid("lane destination version"))?;
     let version = imported.lane_version(head)?;
     crate::workspace::engine::status_models::harmony::validate(&version)?;
-    let main = version["mainFile"].as_str().ok_or_else(|| invalid("lane destination main file"))?;
+    let main =
+        trimmed_str(&version["mainFile"]).ok_or_else(|| invalid("lane destination main file"))?;
     crate::checkout::plan::relative_path(main)?;
     Ok(json!({"name":name,"scope":scope,"version":head,"mainFile":main,"rootDir":directory}))
 }
 fn validate_overlap<'a>(addition: &Value, rows: impl Iterator<Item = &'a Value>) -> io::Result<()> {
-    let directory = addition["rootDir"].as_str().unwrap();
+    let directory =
+        trimmed_str(&addition["rootDir"]).ok_or_else(|| invalid("lane destination root"))?;
+    let addition_scope = trimmed_str(&addition["scope"]);
+    let addition_name = trimmed_str(&addition["name"]);
     for row in rows {
-        if effective_scope(row) == addition["scope"].as_str() && row["name"] == addition["name"] {
+        if effective_scope(row) == addition_scope && trimmed_str(&row["name"]) == addition_name {
             continue;
         }
-        if let Some(other) = row["rootDir"].as_str()
+        if let Some(other) = trimmed_str(&row["rootDir"])
             && (directory == other
                 || directory.starts_with(&format!("{other}/"))
                 || other.starts_with(&format!("{directory}/")))
@@ -140,8 +153,7 @@ fn validate_overlap<'a>(addition: &Value, rows: impl Iterator<Item = &'a Value>)
 fn directory(settings: &Value, scope_id: &str, name: &str) -> io::Result<String> {
     let pattern = settings
         .get("defaultDirectory")
-        .and_then(Value::as_str)
-        .filter(|value| !value.is_empty())
+        .and_then(trimmed_str)
         .unwrap_or("components/{name}");
     let pattern =
         if pattern.contains("{name}") { pattern.to_owned() } else { format!("{pattern}/{{name}}") };

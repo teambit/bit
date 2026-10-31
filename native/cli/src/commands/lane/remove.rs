@@ -57,7 +57,7 @@ fn outside_workspace_remove(cwd: &std::path::Path, args: &[OsString]) -> io::Res
         .ok()
         .flatten()
         .is_none()
-        && env::var_os("CI").is_none_or(|val| val.is_empty())
+        && !ci_enabled()
     {
         return workspace_command::execute_failure_scope(
             cwd,
@@ -69,6 +69,15 @@ fn outside_workspace_remove(cwd: &std::path::Path, args: &[OsString]) -> io::Res
         );
     }
     Ok(Outcome::Declined("not inside a workspace".into()))
+}
+
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
 }
 
 fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
@@ -90,12 +99,12 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
             "--silent=false" => silent = false,
             "-r" | "--remote" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
-            name if !name.starts_with('-')
-                && !name.is_empty()
-                && name.len() <= 256
+            name if !name.trim().starts_with('-')
+                && !name.trim().is_empty()
+                && name.trim().len() <= 256
                 && names.len() < 32 =>
             {
-                names.push(name.to_owned());
+                names.push(name.trim().to_owned());
             }
             short => apply_remove_short_bundle(short, &mut force, &mut silent, &mut remote)?,
         }
@@ -108,6 +117,7 @@ fn consume_trailing_remove_names<'a>(
     names: &mut Vec<String>,
 ) -> Option<()> {
     for name in iter {
+        let name = name.trim();
         (!name.is_empty() && !name.starts_with('-') && name.len() <= 256 && names.len() < 32)
             .then_some(())?;
         names.push(name.to_owned());
@@ -141,16 +151,7 @@ fn select(names: &[String], lanes: &[list::LaneData], force: bool) -> io::Result
         .map(|name| {
             let matched = lanes
                 .iter()
-                .filter(|lane| {
-                    !lane.is_main()
-                        && (lane.id["name"] == *name
-                            || lane.alias.as_deref() == Some(name)
-                            || format!(
-                                "{}/{}",
-                                lane.id["scope"].as_str().unwrap_or_default(),
-                                lane.id["name"].as_str().unwrap_or_default(),
-                            ) == *name)
-                })
+                .filter(|lane| matches_lane(lane, name.trim()))
                 .collect::<Vec<_>>();
             let [lane] = matched.as_slice() else {
                 return Err(io::Error::other("lane name is missing or ambiguous"));
@@ -160,9 +161,32 @@ fn select(names: &[String], lanes: &[list::LaneData], force: bool) -> io::Result
             }
             Ok(format!(
                 "{}/{}",
-                lane.id["scope"].as_str().unwrap_or_default(),
-                lane.id["name"].as_str().unwrap_or_default(),
+                lane.id["scope"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default(),
+                lane.id["name"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default(),
             ))
         })
         .collect()
+}
+
+fn matches_lane(lane: &list::LaneData, target: &str) -> bool {
+    if lane.is_main() {
+        return false;
+    }
+    let scope = lane.id["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    let lane_name = lane.id["name"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    lane_name == target
+        || lane.alias.as_deref().map(str::trim) == Some(target)
+        || format!("{scope}/{lane_name}") == target
 }

@@ -68,8 +68,10 @@ fn update(
 fn hidden_identity(value: &Value) -> Option<&str> {
     value
         .as_str()?
+        .trim()
         .rsplit_once('@')
-        .map(|(identity, _)| identity)
+        .map(|(identity, _)| identity.trim())
+        .filter(|identity| !identity.is_empty())
 }
 
 fn remove_hidden(lane: &mut Value, identity: &str) -> io::Result<()> {
@@ -177,7 +179,7 @@ fn history_log(receipt: &Value) -> io::Result<Value> {
     if log["date"].as_str().is_none() {
         return Err(invalid("resolve lane history log"));
     }
-    let message = receipt["log"]["message"].as_str().unwrap_or_default();
+    let message = receipt["log"]["message"].as_str().map_or("", str::trim);
     log["message"] =
         if message.is_empty() { json!("snap") } else { json!(format!("snap ({message})")) };
     Ok(log)

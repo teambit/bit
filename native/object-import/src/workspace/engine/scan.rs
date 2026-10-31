@@ -87,7 +87,7 @@ impl Scan<'_> {
         }
         path(&file)?;
         self.queued_bytes += file.as_os_str().len();
-        if self.queued_bytes > MAX_RAW {
+        if self.queued_bytes > MAX_RAW || self.directories.len() >= 65536 {
             return Err(invalid("workspace scan queued path bytes limit"));
         }
         self.directories.push(file);

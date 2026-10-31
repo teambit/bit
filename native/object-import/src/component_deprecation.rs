@@ -36,7 +36,12 @@ impl Plan {
             .ok_or_else(|| invalid("component bitmap missing"))?;
         let bitmap = crate::parse_jsonc(&before)?;
         let selected = selection::select(&bitmap, pattern)?;
-        let replacement = replacement.filter(|value| !value.is_empty());
+        let replacement = replacement
+            .map(str::trim)
+            .filter(|value| !value.is_empty());
+        let range = range
+            .map(str::trim)
+            .filter(|value| !value.is_empty());
         if replacement.is_some() && selected.len() > 1 {
             return Err(invalid(format!(
                 "--new-id sets a single replacement component, but the pattern \"{pattern}\" matched {} components.\nrun the command per-component to use --new-id, or remove it to deprecate them all",

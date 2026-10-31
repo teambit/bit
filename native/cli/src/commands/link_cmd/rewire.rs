@@ -274,7 +274,7 @@ fn parse_quoted(input: &str) -> Option<String> {
         .filter(|&ch| ch == '\'' || ch == '"')?;
     let rest = &input[quote.len_utf8()..];
     let end = rest.find(quote)?;
-    let value = &rest[..end];
+    let value = rest[..end].trim();
     (!value.is_empty() && !value.contains('\n')).then(|| value.to_owned())
 }
 

@@ -122,11 +122,13 @@ fn validate(request: &Detect) -> io::Result<()> {
         }
     }
     for file in &request.detection.dev_files {
-        if file.is_empty()
-            || std::path::Path::new(file).is_absolute()
-            || file
+        let trimmed = file.trim();
+        if trimmed.is_empty()
+            || trimmed.contains('\\')
+            || std::path::Path::new(trimmed).is_absolute()
+            || trimmed
                 .split('/')
-                .any(|part| matches!(part, ".." | "."))
+                .any(|part| matches!(part, "" | "." | ".."))
         {
             return Err(invalid("fresh dependency dev file"));
         }
@@ -156,7 +158,11 @@ fn validate_packages(request: &Detect) -> io::Result<()> {
     {
         if packages
             .values()
-            .any(|value| value.as_str().is_none_or(str::is_empty))
+            .any(|value| {
+                value
+                    .as_str()
+                    .is_none_or(|text| text.trim().is_empty())
+            })
         {
             return Err(invalid("fresh dependency version map requires canonical fallback"));
         }

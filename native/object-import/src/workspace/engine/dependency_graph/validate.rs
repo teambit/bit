@@ -41,6 +41,7 @@ fn custom(request: &Request) -> io::Result<()> {
         path(Path::new(file))?;
         if !request.files.contains(&Path::new(file).to_owned())
             || custom.dependencies.len() > MAX_FILES
+            || custom.lookups.len() > MAX_FILES
         {
             return Err(invalid("custom detector boundary"));
         }

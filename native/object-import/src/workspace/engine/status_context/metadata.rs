@@ -29,8 +29,11 @@ pub(super) fn component(
     budget: &Budget,
     recovery: bool,
 ) -> io::Result<Value> {
-    let directory =
-        target["directory"].as_str().ok_or_else(|| invalid("status context directory"))?;
+    let directory = target["directory"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| invalid("status context directory"))?;
     let path = root.join(directory);
     match fs::symlink_metadata(&path) {
         Ok(metadata) if !metadata.is_dir() => {
@@ -42,7 +45,13 @@ pub(super) fn component(
     let component = optional(&path.join("component.json"), budget)?;
     configuration(&component, recovery)?;
     if !component.is_null()
-        && !component_id_matches(&component, target["identity"].as_str().unwrap_or_default())
+        && !component_id_matches(
+            &component,
+            target["identity"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default(),
+        )
     {
         return Err(invalid("status context component config identity"));
     }
@@ -55,18 +64,25 @@ fn component_id_matches(component: &Value, target_identity: &str) -> bool {
     let id = &component["componentId"];
     if let Some(id_str) = id.as_str() {
         let bare = id_str
+            .trim()
             .split('@')
             .next()
-            .unwrap_or(id_str);
+            .unwrap_or(id_str)
+            .trim();
         return bare == target_identity;
     }
-    let name = id["name"].as_str().unwrap_or_default();
+    let name = id["name"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
     let scope = id["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .or_else(|| {
             id["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         })
         .unwrap_or_default();
@@ -99,8 +115,9 @@ fn configuration(config: &Value, recovery: bool) -> io::Result<()> {
     Ok(())
 }
 fn bare_aspect_id(name: &str) -> &str {
+    let name = name.trim();
     match name.split_once('@') {
-        Some((bare, _)) if !bare.is_empty() => bare,
+        Some((bare, _)) if !bare.trim().is_empty() => bare.trim(),
         _ => name,
     }
 }
@@ -167,7 +184,10 @@ fn empty_core(name: &str, value: &Value) -> bool {
 
 pub(super) fn scope(scope: &Value) -> io::Result<()> {
     scope.as_object().ok_or_else(|| invalid("status context scope"))?;
-    if scope["name"].as_str().is_none_or(str::is_empty) {
+    if scope["name"]
+        .as_str()
+        .is_none_or(|name| name.trim().is_empty())
+    {
         return Err(invalid("status context scope configuration requires canonical lifecycle"));
     }
     Ok(())

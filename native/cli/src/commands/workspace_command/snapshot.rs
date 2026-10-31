@@ -190,9 +190,11 @@ fn squash_logs(receipt: &mut Value, context: &Value) -> io::Result<()> {
     let (Some(name), Some(scope)) = (
         other["name"]
             .as_str()
+            .map(str::trim)
             .filter(|name| !name.is_empty()),
         other["scope"]
             .as_str()
+            .map(str::trim)
             .filter(|scope| !scope.is_empty()),
     ) else {
         return Err(decline("command lane identity receipt"));
@@ -205,8 +207,9 @@ fn squash_logs(receipt: &mut Value, context: &Value) -> io::Result<()> {
     {
         let identity = text(version.get("identity"))?;
         let own_scope = identity
+            .trim()
             .split_once('/')
-            .map(|(scope, _)| scope)
+            .map(|(scope, _)| scope.trim())
             .filter(|scope| !scope.is_empty());
         let own_scope = own_scope.ok_or_else(|| decline("command lane component identity"))?;
         let lane_scope = if name == "main" { own_scope } else { scope };
@@ -290,5 +293,7 @@ fn depends_on(capture: &Capture, needs_snap: &[String]) -> bool {
 /// `<scope>/<name>` of a dependency's id.
 fn dependency_identity(dependency: &Value) -> Option<String> {
     let id = &dependency["id"];
-    Some(format!("{}/{}", id["scope"].as_str()?, id["name"].as_str()?))
+    let scope = id["scope"].as_str()?.trim();
+    let name = id["name"].as_str()?.trim();
+    (!scope.is_empty() && !name.is_empty()).then(|| format!("{scope}/{name}"))
 }

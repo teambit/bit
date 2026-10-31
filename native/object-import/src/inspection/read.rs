@@ -179,9 +179,12 @@ pub(super) fn relative(path: &str) -> io::Result<()> {
 }
 
 fn verify_expected(expected: Option<&str>, actual: &str) -> io::Result<()> {
-    if let Some(expected) = expected {
+    if let Some(expected) = expected
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
         crate::merge_history::hash(expected)?;
-        if expected != actual {
+        if expected != actual.trim() {
             return Err(invalid("inspection expected snapshot differs"));
         }
     }

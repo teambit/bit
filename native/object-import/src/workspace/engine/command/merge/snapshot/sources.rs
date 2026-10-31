@@ -23,12 +23,12 @@ pub(super) fn prepare(
     files.sort_by(|a, b| {
         a["relativePath"]
             .as_str()
-            .unwrap()
+            .unwrap_or_default()
             .encode_utf16()
             .cmp(
                 b["relativePath"]
                     .as_str()
-                    .unwrap()
+                    .unwrap_or_default()
                     .encode_utf16(),
             )
     });
@@ -103,9 +103,18 @@ fn source(version: &Value, file: &Value, budget: &Budget) -> io::Result<(Value, 
     if source.get("spoolOffset").is_some() {
         return Err(invalid("command snap packed body unsupported"));
     }
-    let path = source["spoolPath"].as_str().ok_or_else(|| invalid("command snap source path"))?;
+    let path = source["spoolPath"]
+        .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .ok_or_else(|| invalid("command snap source path"))?;
+    let relative_path = file["relativePath"]
+        .as_str()
+        .map(str::trim)
+        .filter(|rel| !rel.is_empty())
+        .ok_or_else(|| invalid("command snap relative path"))?;
     let bytes = budget.read(fs::File::open(path)?)?;
-    if digest(&bytes) != source["spoolHash"] {
+    if source["spoolHash"].as_str().map(str::trim) != Some(digest(&bytes).as_str()) {
         return Err(invalid("command snap source proof"));
     }
     let bytes = if bytes.starts_with(&[239, 187, 191]) { bytes[3..].to_vec() } else { bytes };
@@ -120,7 +129,7 @@ fn source(version: &Value, file: &Value, budget: &Budget) -> io::Result<(Value, 
         .and_then(|row| row.get("test"))
         .cloned()
         .unwrap_or(json!(false));
-    let row = json!({"file":identity,"relativePath":file["relativePath"],"name":file["relativePath"].as_str().unwrap().rsplit('/').next(),"test":test});
+    let row = json!({"file":identity,"relativePath":relative_path,"name":relative_path.rsplit('/').next(),"test":test});
     let object = json!({"type":"Source","hash":identity,"source":{"path":path,"hash":source["spoolHash"],"sourceHash":identity,"normalization":"workspace"}});
     Ok((row, object))
 }
@@ -131,6 +140,7 @@ fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> i
     }
     let old = version["flattenedEdgesRef"]
         .as_str()
+        .map(str::trim)
         .ok_or_else(|| invalid("command snap flattened graph"))?;
     crate::merge_history::hash(old)?;
     proof::read(
@@ -152,6 +162,7 @@ fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> i
 }
 
 fn rekey(rows: &mut [Value], identity: &str, hash: &str) {
+    let identity = identity.trim();
     let pending = rows
         .iter()
         .any(|row| row["source"]["version"] == super::PENDING_GRAPH_VERSION);
@@ -159,8 +170,14 @@ fn rekey(rows: &mut [Value], identity: &str, hash: &str) {
         let source = &mut row["source"];
         if format!(
             "{}/{}",
-            source["scope"].as_str().unwrap_or_default(),
-            source["name"].as_str().unwrap_or_default(),
+            source["scope"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default(),
+            source["name"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default(),
         ) == identity
             && (!pending || source["version"] == super::PENDING_GRAPH_VERSION)
         {

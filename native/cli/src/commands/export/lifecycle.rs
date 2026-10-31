@@ -75,13 +75,7 @@ impl Lifecycle {
                         "exportFileAction",
                         &json!({"path":path,"name":name,"options":options}),
                     )?;
-                    if response["ok"] == true {
-                        Ok(response["value"].clone())
-                    } else {
-                        Err(io::Error::other(
-                            response["message"].as_str().unwrap_or("file action failed"),
-                        ))
-                    }
+                    file_action_response(&response)
                 })
             })
     }
@@ -168,5 +162,19 @@ fn external_resolver(root: &Path) -> io::Result<bool> {
     )?)?;
     Ok(config["resolverPath"]
         .as_str()
-        .is_some_and(|path| !path.is_empty()))
+        .is_some_and(|path| !path.trim().is_empty()))
+}
+
+fn file_action_response(response: &Value) -> io::Result<Value> {
+    if response["ok"] == true {
+        Ok(response["value"].clone())
+    } else {
+        Err(io::Error::other(
+            response["message"]
+                .as_str()
+                .map(str::trim)
+                .filter(|msg| !msg.is_empty())
+                .unwrap_or("file action failed"),
+        ))
+    }
 }

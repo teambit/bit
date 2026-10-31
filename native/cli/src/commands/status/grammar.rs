@@ -46,8 +46,11 @@ pub fn dependency(values: &Value) -> Value {
     visit(values, &mut strings);
     let mut result = Map::new();
     for text in strings {
-        if result.contains_key(text) {
+        if result.contains_key(text) || text.encode_utf16().count() > 4096 {
             continue;
+        }
+        if result.len() >= 16384 {
+            break;
         }
         let coerced = npm::coerce(text).map(|version| version.version);
         let entry = json!({

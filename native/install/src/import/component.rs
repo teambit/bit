@@ -58,7 +58,11 @@ fn tags(versions: &Value) -> Vec<[String; 2]> {
         .as_object()
         .into_iter()
         .flatten()
-        .filter_map(|(tag, hash)| Some([tag.clone(), hash.as_str()?.to_string()]))
+        .filter_map(|(tag, hash)| {
+            let tag = tag.trim();
+            let hash = hash.as_str()?.trim();
+            (!tag.is_empty() && !hash.is_empty()).then(|| [tag.to_string(), hash.to_string()])
+        })
         .collect()
 }
 
@@ -67,7 +71,12 @@ fn detached(component: &Value, key: &str) -> Vec<String> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|hash| hash.as_str().map(str::to_string))
+        .filter_map(|hash| {
+            hash.as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .map(str::to_string)
+        })
         .collect()
 }
 
@@ -264,7 +273,14 @@ fn last_modified(version: &Value) -> Option<&str> {
         .as_array()
         .and_then(|modified| modified.last())
         .and_then(|entry| entry["date"].as_str())
-        .or_else(|| version["log"]["date"].as_str())
+        .map(str::trim)
+        .filter(|date| !date.is_empty())
+        .or_else(|| {
+            version["log"]["date"]
+                .as_str()
+                .map(str::trim)
+                .filter(|date| !date.is_empty())
+        })
 }
 
 /// `mergeVersionObject`: keep the existing Version when it was modified later.

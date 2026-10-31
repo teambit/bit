@@ -69,7 +69,10 @@ fn row(
     reader: &mut read_version::Reader<'_>,
     cache: &mut Cache,
 ) -> io::Result<Value> {
-    let hash = log["hash"].as_str().ok_or_else(|| invalid("file history hash"))?;
+    let hash = log["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("file history hash"))?;
     let current_version = version(reader, &mut cache.versions, hash)?;
     let current_hash = file_hash(&current_version, file)?;
     let contents = current_hash
@@ -81,7 +84,10 @@ fn row(
         .map_or(&[][..], Vec::as_slice)
         .iter()
         .map(|parent| {
-            let parent = parent.as_str().ok_or_else(|| invalid("file history parent"))?;
+            let parent = parent
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("file history parent"))?;
             let parent_version = version(reader, &mut cache.versions, parent)?;
             file_hash(&parent_version, file)
         })
@@ -104,7 +110,7 @@ fn row(
 
 fn validate_file(file: &str) -> io::Result<()> {
     let path = Path::new(file);
-    if file.is_empty()
+    if file.trim().is_empty()
         || file.len() > 32768
         || file.contains('\\')
         || path
@@ -137,7 +143,10 @@ fn file_hash(version: &Value, path: &str) -> io::Result<Option<String>> {
             if selected.is_some() {
                 return Err(invalid("file history duplicate file"));
             }
-            let hash = file["file"].as_str().ok_or_else(|| invalid("file history source"))?;
+            let hash = file["file"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("file history source"))?;
             merge_history::hash(hash)?;
             selected = Some(hash.to_string());
         }

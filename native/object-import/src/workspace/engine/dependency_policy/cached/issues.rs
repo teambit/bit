@@ -9,7 +9,11 @@ pub(super) fn missing(issues: &Value) -> io::Result<Vec<Value>> {
     let mut seen = HashSet::new();
     let mut missing = Vec::new();
     for issue in rows(issues)? {
-        let name = issue["type"].as_str().ok_or_else(|| invalid("status cached issue name"))?;
+        let name = issue["type"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("status cached issue name"))?;
         if !seen.insert(name) {
             return Err(invalid("status duplicate cached issue"));
         }

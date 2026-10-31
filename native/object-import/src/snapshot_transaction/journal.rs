@@ -78,6 +78,9 @@ impl State {
         if self.journals.len() >= 4096 {
             return Err(invalid("snapshot active journal limit"));
         }
+        if token.trim().is_empty() {
+            return Err(invalid("snapshot journal token"));
+        }
         let phases = if repository {
             REPOSITORY
         } else if request.soft {
@@ -100,9 +103,9 @@ impl State {
     }
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
-        let journal = self.journals
-            .get_mut(&request.token)
-            .ok_or_else(|| invalid("missing snapshot journal"))?;
+        let token = request.token.trim();
+        let journal =
+            self.journals.get_mut(token).ok_or_else(|| invalid("missing snapshot journal"))?;
         journal.verify(&request)?;
         journal.revision = journal.revision
             .checked_add(1)
@@ -115,7 +118,7 @@ impl State {
             journal.output()
         };
         if journal.terminal || journal.kind() == "done" {
-            self.journals.remove(&request.token);
+            self.journals.remove(token);
         }
         Ok(output)
     }
@@ -136,7 +139,7 @@ impl Journal {
     fn verify(&self, request: &Receipt) -> io::Result<()> {
         if self.terminal
             || self.kind() == "done"
-            || request.token != self.token
+            || request.token.trim() != self.token
             || request.revision != self.revision
         {
             return Err(invalid("stale snapshot journal receipt"));

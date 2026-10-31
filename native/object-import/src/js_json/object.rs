@@ -3,6 +3,9 @@ use std::{collections::HashSet, io};
 use super::{Value, invalid};
 
 pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &Value)>> {
+    if fields.is_empty() {
+        return Ok(Vec::new());
+    }
     let mut seen = HashSet::new();
     let mut indices = Vec::new();
     let mut names = Vec::new();

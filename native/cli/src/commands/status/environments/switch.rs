@@ -24,6 +24,9 @@ impl Environments {
         capture: &Capture,
         identity: &str,
     ) -> io::Result<Value> {
+        if identity.trim().is_empty() {
+            return Err(decline("switch callback identity"));
+        }
         let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;
         callbacks::switch_one(host, context, capture, identity)
             .map_err(|error| self.callback_failure(capture, error))
@@ -35,6 +38,9 @@ impl Environments {
         capture: &Capture,
         identity: &str,
     ) -> io::Result<()> {
+        if identity.trim().is_empty() {
+            return Err(decline("switch callback identity"));
+        }
         let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;
         callbacks::switch_stage_row(host, context, capture, identity)
             .map_err(|error| self.callback_failure(capture, error))

@@ -124,15 +124,19 @@ fn add_variants(
 }
 
 fn component_id(target: &Value) -> io::Result<ComponentId> {
-    let identity = text(target.get("identity"))?;
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| decline("projection scoped component"))?;
+    let identity = text(target.get("identity"))?.trim();
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| decline("projection scoped component"))?;
     Ok(ComponentId {
         scope: Some(scope.to_string()),
         default_scope: None,
         name: name.to_string(),
         version: target["version"]
             .as_str()
+            .map(str::trim)
             .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
             .map(str::to_string),
     })
@@ -154,11 +158,15 @@ fn row(entry: aspects::AspectEntry) -> io::Result<Value> {
 }
 
 pub(super) fn extension_id(id: &str) -> io::Result<Value> {
+    let id = id.trim();
     let (identity, version) = id
         .rsplit_once('@')
-        .map_or((id, None), |(id, version)| (id, Some(version)));
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| decline("projection extension scope"))?;
+        .map_or((id, None), |(id, version)| (id.trim(), Some(version.trim())));
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| decline("projection extension scope"))?;
     let mut value = json!({"scope":scope,"name":name});
     if let Some(version) =
         version.filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))

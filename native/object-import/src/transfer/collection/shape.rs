@@ -26,7 +26,10 @@ fn prepare(value: &Value, artifacts: bool) -> io::Result<Value> {
     if let Some(parents) = array(value, "parents")? {
         for parent in parents {
             crate::merge_history::hash(
-                parent.as_str().ok_or_else(|| invalid("unsupported Version parent"))?,
+                parent
+                    .as_str()
+                    .map(str::trim)
+                    .ok_or_else(|| invalid("unsupported Version parent"))?,
             )?;
         }
     }
@@ -111,10 +114,15 @@ fn segment(text: &str, slash: bool) -> bool {
 }
 
 fn string_id(text: &str) -> io::Result<()> {
-    let id = text.split('@').next().unwrap_or("");
+    let text = text.trim();
+    let id = text
+        .split('@')
+        .next()
+        .unwrap_or("")
+        .trim();
     let (scope, name) =
         id.split_once('/').ok_or_else(|| invalid("unsupported flattened identity"))?;
-    if !segment(scope, false) || !segment(name, true) || text.len() > 8192 {
+    if !segment(scope.trim(), false) || !segment(name.trim(), true) || text.len() > 8192 {
         return Err(invalid("unsupported flattened identity"));
     }
     Ok(())

@@ -71,7 +71,11 @@ fn validate_override(input: &Prepare) -> io::Result<()> {
     Ok(())
 }
 fn validate_merge(input: &Prepare) -> io::Result<()> {
-    let Some(strategy) = input.options.resolution.merge_strategy.as_deref() else {
+    let Some(strategy) = input.options.resolution.merge_strategy
+        .as_deref()
+        .map(str::trim)
+        .filter(|strategy| !strategy.is_empty())
+    else {
         return Ok(());
     };
     if input.operation != "import"
@@ -145,12 +149,14 @@ fn valid_write_mode(input: &Prepare) -> bool {
 }
 
 fn is_unscoped_match(key: &str, row: &Value, raw_id: &str) -> bool {
+    let key = key.trim();
+    let raw_id = raw_id.trim();
     if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
         return false;
     }
     let has_scope = row["scope"]
         .as_str()
-        .is_some_and(|scope| !scope.is_empty());
+        .is_some_and(|scope| !scope.trim().is_empty());
     !has_scope && (key == raw_id || crate::reset_lane::bitmap::row_identity(key, row).1 == raw_id)
 }
 

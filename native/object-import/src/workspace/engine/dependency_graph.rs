@@ -114,7 +114,8 @@ fn capture_view(
     validate::validate(request)?;
     let builtins: HashSet<_> = request.builtins
         .iter()
-        .map(String::as_str)
+        .map(|item| item.trim())
+        .filter(|item| !item.is_empty())
         .collect();
     let mut pending = request.files.clone();
     let mut capture = Capture::default();
@@ -183,8 +184,9 @@ impl Capture {
 fn retain(scanned: Vec<Row>, rows: &mut HashMap<String, Row>, pending: &mut Vec<PathBuf>) {
     for row in scanned {
         for dependency in &row.path_map.dependencies {
-            if !dependency.resolved_dep.contains("node_modules") {
-                pending.push(PathBuf::from(&dependency.resolved_dep));
+            let resolved_dep = dependency.resolved_dep.trim();
+            if !resolved_dep.is_empty() && !resolved_dep.contains("node_modules") {
+                pending.push(PathBuf::from(resolved_dep));
             }
         }
         rows.insert(row.path_map.file.clone(), row);

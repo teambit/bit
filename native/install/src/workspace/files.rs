@@ -195,6 +195,7 @@ fn keep_workspace_map_file(mut filtered: Vec<String>, paths: &[String]) -> Vec<S
 /// `dir`, any other matches at any depth below it.
 #[must_use]
 pub fn rebase_ignore_pattern(pattern: &str, dir: &str) -> String {
+    let dir = dir.trim();
     let (negated, body) = pattern
         .strip_prefix('!')
         .map_or((false, pattern), |body| (true, body));
@@ -234,11 +235,12 @@ fn join_linux(parts: &[&str]) -> String {
 /// under `dir`. The workspace root does not follow symbolic links; other
 /// component dirs do.
 fn scan(root: &Path, dir: &str, exclude_dirs: &[String]) -> io::Result<Vec<String>> {
+    let dir = dir.trim();
     let workspace_root = dir == WORKSPACE_ROOT_DIR;
     let start = if workspace_root { String::new() } else { dir.trim_end_matches('/').to_owned() };
     let excluded: Vec<String> = exclude_dirs
         .iter()
-        .map(|dir| format!("{}/", dir.trim_end_matches('/')))
+        .map(|dir| format!("{}/", dir.trim().trim_end_matches('/')))
         .collect();
     let mut scan = Scan { root, workspace_root, start: start.clone(), excluded, files: Vec::new() };
     scan.walk(&start, 0)?;

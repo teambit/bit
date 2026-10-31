@@ -59,7 +59,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             ),
         );
     };
-    if !root.join(".bitmap").try_exists()? {
+    if !root.join(".bitmap").try_exists()? || !root.join("workspace.jsonc").try_exists()? {
         if diagnostics::ci() {
             return Ok(Outcome::Declined(
                 "CI startup diagnostics require the published stack".to_owned(),

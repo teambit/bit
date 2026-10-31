@@ -255,7 +255,9 @@ fn accumulate_stats(event: &LogEvent) {
     let Ok(mut slot) = stats_slot().lock() else { return };
     let Some(stats) = slot.as_mut() else { return };
     match &log.message {
-        StatsMessage::Added { added, .. } => stats.added += *added,
-        StatsMessage::Removed { removed, .. } => stats.removed += *removed,
+        StatsMessage::Added { added, .. } => stats.added = stats.added.saturating_add(*added),
+        StatsMessage::Removed { removed, .. } => {
+            stats.removed = stats.removed.saturating_add(*removed);
+        }
     }
 }

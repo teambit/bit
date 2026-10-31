@@ -3,10 +3,12 @@ use std::io;
 
 /// `NodeModuleLinker.createPackageJson` for an unlinked component using the default Node env.
 pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) -> io::Result<Value> {
-    let (scope, name) =
-        input.identity.split_once('/').ok_or_else(|| invalid("tag package identity"))?;
-    let main_file =
-        input.version["mainFile"].as_str().ok_or_else(|| invalid("tag package main file"))?;
+    let (scope, name) = parse_package_identity(input.identity)?;
+    let main_file = input.version["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .filter(|file| !file.is_empty())
+        .ok_or_else(|| invalid("tag package main file"))?;
     let (main, types) = if snapshot {
         package_paths(input.version, main_file).unwrap_or_else(|_| (main_file.to_owned(), None))
     } else {
@@ -38,6 +40,15 @@ pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) ->
     fields.insert("_bit_local".into(), value!(true));
     fields.insert("source".into(), value!(main_file));
     Ok(Value::Object(fields))
+}
+
+fn parse_package_identity(identity: &str) -> io::Result<(&str, &str)> {
+    identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("tag package identity"))
 }
 
 fn insert_dependency_fields(fields: &mut Map<String, Value>, version: &Value) {
@@ -81,7 +92,7 @@ fn truthy(value: Option<&Value>) -> bool {
         Some(Value::Number(number)) => number
             .as_f64()
             .is_some_and(|number| number != 0.0),
-        Some(Value::String(text)) => !text.is_empty(),
+        Some(Value::String(text)) => !text.trim().is_empty(),
         Some(_) => true,
     }
 }
@@ -140,6 +151,8 @@ fn package_paths(version: &Value, main_file: &str) -> io::Result<(String, Option
     let main = changes
         .get("main")
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|main| !main.is_empty())
         .ok_or_else(|| invalid("tag package main"))?;
     if changes
         .get("types")
@@ -150,6 +163,8 @@ fn package_paths(version: &Value, main_file: &str) -> io::Result<(String, Option
     let types = changes
         .get("types")
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|types| !types.is_empty())
         .map(replace);
     let main = replace(main);
     validate_generated_paths(&main, types.as_deref())?;

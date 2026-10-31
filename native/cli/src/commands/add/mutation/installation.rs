@@ -42,7 +42,11 @@ impl ProjectedLinker {
             .ok_or_else(|| {
                 io::Error::other("identity installation facts were not prepared before workers")
             })?;
-        info.file_id = crate::commands::workspace_command::file_id();
+        let file_id = crate::commands::workspace_command::file_id();
+        if file_id.trim().is_empty() {
+            return Err(io::Error::other("identity installation file id is empty"));
+        }
+        info.file_id = file_id;
         let host = self.environment
             .take()
             .and_then(Environments::into_tracking_host)

@@ -18,13 +18,22 @@ pub(super) fn preflight(
     args: &[OsString],
     options: &Options,
 ) -> Option<io::Result<Outcome>> {
-    if std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return None;
     }
     if options.remote.is_some() && (options.local_scope || options.scope.is_some()) {
         return Some(emit_error(cwd, root, args, options.json, REMOTE_LOCAL_CONFLICT_ERR));
     }
     None
+}
+
+fn ci_enabled() -> bool {
+    std::env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
 }
 
 fn emit_error(

@@ -30,6 +30,9 @@ impl Step {
     }
 
     pub fn apply(&self, text: &str, anchored: bool) -> String {
+        if text.is_empty() {
+            return String::new();
+        }
         js_replace(text, &self.regex, self.global, |found| (self.replacement)(found, anchored))
     }
 }

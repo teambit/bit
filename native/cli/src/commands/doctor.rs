@@ -93,9 +93,10 @@ fn colored_unknown(options: &Options, chalk: Chalk) -> bool {
         && options.name
             .as_deref()
             .is_some_and(|name| {
+                let trimmed = name.trim();
                 !catalog::DIAGNOSES
                     .iter()
-                    .any(|diagnosis| diagnosis.name == name)
+                    .any(|diagnosis| diagnosis.name == trimmed)
             })
 }
 fn produce(
@@ -140,10 +141,11 @@ fn examine(
     output: &bit_install::output::Output,
 ) -> io::Result<Vec<Value>> {
     if let Some(name) = &options.name {
+        let trimmed = name.trim();
         let diagnosis = catalog::DIAGNOSES
             .iter()
-            .find(|diagnosis| diagnosis.name == name)
-            .ok_or_else(|| io::Error::other(format!("error: diagnosis {name} not found")))?;
+            .find(|diagnosis| diagnosis.name == trimmed)
+            .ok_or_else(|| io::Error::other(format!("error: diagnosis {trimmed} not found")))?;
         return Ok(vec![checks::examine(diagnosis, context)?]);
     }
     let mut results = Vec::new();

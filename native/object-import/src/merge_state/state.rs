@@ -39,7 +39,14 @@ pub(super) struct Identity {
 }
 impl Identity {
     fn matches(&self, entry: &Value) -> bool {
-        identity(entry).is_ok_and(|other| other.name == self.name && other.scope == self.scope)
+        let self_scope = self.scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty());
+        identity(entry)
+            .is_ok_and(|other| {
+                other.name == self.name.trim() && other.scope.as_deref() == self_scope
+            })
     }
 }
 impl State {
@@ -51,6 +58,7 @@ impl State {
         Ok(self.identity())
     }
     pub(super) fn verify(&self, token: &str, revision: u32) -> io::Result<()> {
+        let token = token.trim();
         hash(token)?;
         if self.token.as_deref() != Some(token) || self.revision != revision {
             return Err(invalid("stale merge state"));
@@ -125,8 +133,13 @@ impl State {
 }
 fn identity(entry: &Value) -> io::Result<Identity> {
     let id = entry.get("id").ok_or_else(|| invalid("missing unmerged identity"))?;
-    let identity = if let Some(raw) = id.as_str() {
-        let raw = raw.split('@').next().unwrap_or(raw);
+    let mut identity = if let Some(raw) = id.as_str() {
+        let raw = raw
+            .trim()
+            .split('@')
+            .next()
+            .unwrap_or(raw)
+            .trim();
         let (scope, name) = raw
             .split_once('/')
             .map_or((None, raw), |(scope, name)| (Some(scope.to_owned()), name));
@@ -134,6 +147,10 @@ fn identity(entry: &Value) -> io::Result<Identity> {
     } else {
         serde_json::from_value(id.clone()).map_err(io::Error::other)?
     };
+    identity.name = identity.name.trim().to_owned();
+    identity.scope = identity.scope
+        .map(|scope| scope.trim().to_owned())
+        .filter(|scope| !scope.is_empty());
     if identity.name.is_empty() || identity.name.contains('\0') {
         return Err(invalid("invalid unmerged name"));
     }
@@ -150,6 +167,7 @@ fn validate(entries: &[Value]) -> io::Result<()> {
         let head = entry
             .get("head")
             .and_then(Value::as_str)
+            .map(str::trim)
             .ok_or_else(|| invalid("missing unmerged head"))?;
         hash(head)?;
         if entry

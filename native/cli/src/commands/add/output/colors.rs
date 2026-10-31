@@ -46,6 +46,7 @@ fn message_color(message: &str, chalk: Chalk) -> Option<String> {
     if let Some(files) = message
         .strip_prefix(NO_FILES)
         .and_then(|suffix| suffix.strip_prefix(IGNORED))
+        .filter(|files| !files.is_empty())
     {
         return Some(format!(
             "{}{}",

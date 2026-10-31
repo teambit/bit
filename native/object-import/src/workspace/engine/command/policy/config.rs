@@ -35,7 +35,11 @@ fn merged_config(input: &Value, result: &Value) -> io::Result<Value> {
     for row in projection::array(&result["configRows"])? {
         let Some(value) = row.get("merged") else { continue };
         let config = resolve(input, value)?;
-        let id = row["id"].as_str().ok_or_else(|| invalid("command merged config identity"))?;
+        let id = row["id"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("command merged config identity"))?;
         if !config.is_null() && config != false {
             merged.insert(id.to_owned(), config);
         }
@@ -47,7 +51,10 @@ pub(super) fn resolve(input: &Value, value: &Value) -> io::Result<Value> {
     if let Some(value) = value.get("value") {
         return Ok(value.clone());
     }
-    let side = value["source"]["side"].as_str().ok_or_else(|| invalid("command config source"))?;
+    let side = value["source"]["side"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("command config source"))?;
     let index = value["source"]["index"]
         .as_u64()
         .ok_or_else(|| invalid("command config source index"))? as usize;
@@ -145,7 +152,11 @@ fn selected_policy(value: &Value, forced: bool) -> io::Result<Value> {
         if (row["force"] == true) != forced {
             continue;
         }
-        let name = row["name"].as_str().ok_or_else(|| invalid("command policy name"))?;
+        let name = row["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("command policy name"))?;
         if !row["version"].is_string() {
             return Err(invalid("command policy version"));
         }

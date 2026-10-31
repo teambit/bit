@@ -20,10 +20,12 @@ const ID_FIELDS: [&str; 4] =
 
 /// `diffMetadata(left, right)`: `None` when nothing differs.
 pub fn diff(left: &Side, right: &Side, chalk: Chalk) -> io::Result<Option<Vec<Value>>> {
-    if left.version.is_empty() || right.version.is_empty() {
+    let left_ver = left.version.trim();
+    let right_ver = right.version.trim();
+    if left_ver.is_empty() || right_ver.is_empty() {
         return Err(decline("diffBetweenComponentsObjects component does not have a version"));
     }
-    let labels = Labels::new(&left.version, &right.version);
+    let labels = Labels::new(left_ver, right_ver);
     let mut all = fields(left, right, &labels, chalk)?;
     all.extend(extension_configs(left, right, &labels, chalk)?);
     all.extend(dependency_fields(left, right, &labels, chalk)?);
@@ -131,7 +133,7 @@ fn print_value(value: &Value) -> io::Result<String> {
 
 /// `prettifyFieldName`: `mainFile` becomes `Main File`.
 fn prettify(field: &str) -> String {
-    let mut chars = field.chars();
+    let mut chars = field.trim().chars();
     let first: String = chars
         .next()
         .map(|character| character.to_uppercase().collect())

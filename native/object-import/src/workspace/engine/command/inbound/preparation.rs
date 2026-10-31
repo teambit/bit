@@ -44,8 +44,11 @@ pub(super) fn prepare_workspace(
         return Ok(None);
     }
     let options = write_options(input, import.post_write_bitmap_history());
-    write::prepare(&input.root, targets, import, input.bitmap_history_file_id.as_deref(), options)
-        .map(Some)
+    let file_id = input.bitmap_history_file_id
+        .as_deref()
+        .map(str::trim)
+        .filter(|id| !id.is_empty());
+    write::prepare(&input.root, targets, import, file_id, options).map(Some)
 }
 
 fn prepare_import(
@@ -154,12 +157,19 @@ pub(super) fn write_options(
 ) -> write::Options<'_> {
     write::Options {
         override_existing: input.options.resolution.override_existing,
-        path: input.options.resolution.path.as_deref(),
-        merge_strategy: input.options.resolution.merge_strategy.as_deref(),
+        path: input.options.resolution.path
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty()),
+        merge_strategy: input.options.resolution.merge_strategy
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty()),
         track_only: input.options.resolution.adoption.track_only,
         write_to_empty_dir: input.options.resolution.adoption.write_to_empty_dir,
         write_deps: input.options.resolution.adoption.write_deps
             .as_deref()
+            .map(str::trim)
             .filter(|value| !value.is_empty()),
         post_write_bitmap_history,
     }

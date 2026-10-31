@@ -36,7 +36,7 @@ impl Matcher {
                 {
                     return Err(invalid("inventory requires ASCII ignore expressions"));
                 }
-                if rule.source.len() > 32768 {
+                if rule.source.is_empty() || rule.source.len() > 32768 {
                     return Err(invalid("inventory ignore expression limit"));
                 }
                 let regex = Regex::with_flags(&rule.source, "i").map_err(io::Error::other)?;

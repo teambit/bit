@@ -50,9 +50,11 @@ pub(super) fn load_with_overlay(
     Ok(output)
 }
 fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
-    crate::merge_history::hash(&file.raw_hash)?;
-    crate::merge_history::hash(&file.snapshot_hash)?;
-    let maximum = 32 * 1024 * 1024 - *total;
+    let raw_hash = file.raw_hash.trim();
+    let snapshot_hash = file.snapshot_hash.trim();
+    crate::merge_history::hash(raw_hash)?;
+    crate::merge_history::hash(snapshot_hash)?;
+    let maximum = (32 * 1024 * 1024usize).saturating_sub(*total);
     let input = fs::File::open(&file.path)?;
     let length = input.metadata()?.len();
     if length > maximum as u64 {
@@ -62,7 +64,7 @@ fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
     input
         .take((maximum + 1) as u64)
         .read_to_end(&mut raw)?;
-    if raw.len() > maximum || digest(&raw) != file.raw_hash {
+    if raw.len() > maximum || digest(&raw) != raw_hash {
         return Err(invalid("checkout current disk snapshot differs"));
     }
     *total += raw.len();
@@ -70,10 +72,11 @@ fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
 }
 
 fn read_shared(file: &wire::Current, budget: &Budget) -> io::Result<(Loaded, usize)> {
-    crate::merge_history::hash(&file.raw_hash)?;
-    crate::merge_history::hash(&file.snapshot_hash)?;
+    let raw_hash = file.raw_hash.trim();
+    crate::merge_history::hash(raw_hash)?;
+    crate::merge_history::hash(file.snapshot_hash.trim())?;
     let raw = budget.read(fs::File::open(&file.path)?)?;
-    if digest(&raw) != file.raw_hash {
+    if digest(&raw) != raw_hash {
         return Err(invalid("checkout current disk snapshot differs"));
     }
     let length = raw.len();
@@ -87,7 +90,7 @@ fn canonical(file: &wire::Current, mut raw: Vec<u8>) -> io::Result<Loaded> {
     if file.bitmap {
         raw = crate::inspection::normalize_bitmap(&raw)?;
     }
-    if digest(&raw) != file.snapshot_hash {
+    if digest(&raw) != file.snapshot_hash.trim() {
         return Err(invalid("checkout canonical snapshot differs"));
     }
     let normalized = crate::checkout::eol::normalize(raw.clone(), false);
@@ -105,7 +108,8 @@ fn read_source(
     compressed: &mut usize,
     overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Loaded> {
-    if file.bitmap || file.raw_hash != hash || file.snapshot_hash != hash {
+    let hash = hash.trim();
+    if file.bitmap || file.raw_hash.trim() != hash || file.snapshot_hash.trim() != hash {
         return Err(invalid("checkout current Source snapshot identity"));
     }
     let raw = super::sources::body(directory, hash, total, compressed, overlay)?;
@@ -141,20 +145,21 @@ fn retained(
     snapshots: Option<&crate::workspace::snapshots::State>,
     total: &mut usize,
 ) -> io::Result<Loaded> {
+    let raw_hash = file.raw_hash.trim();
+    let snapshot_hash = file.snapshot_hash.trim();
+    let maximum = (32 * 1024 * 1024usize).saturating_sub(*total);
     let snapshot = snapshots
-        .and_then(|state| state.get(token, &file.path, &file.raw_hash))
-        .filter(|snapshot| {
-            file.source_hash.is_none() && snapshot.raw_bytes <= 32 * 1024 * 1024 - *total
-        })
+        .and_then(|state| state.get(token, &file.path, raw_hash))
+        .filter(|snapshot| file.source_hash.is_none() && snapshot.raw_bytes <= maximum)
         .ok_or_else(|| invalid("checkout retained workspace observation"))?;
     let raw = if file.bitmap {
         let bytes = crate::inspection::normalize_bitmap(&snapshot.contents)?;
-        if digest(&bytes) != file.snapshot_hash {
+        if digest(&bytes) != snapshot_hash {
             return Err(invalid("checkout retained bitmap identity"));
         }
         bytes
     } else {
-        if snapshot.snapshot_hash != file.snapshot_hash {
+        if snapshot.snapshot_hash.trim() != snapshot_hash {
             return Err(invalid("checkout retained workspace identity"));
         }
         snapshot.contents.to_vec()

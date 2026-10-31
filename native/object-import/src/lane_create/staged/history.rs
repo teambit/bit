@@ -10,8 +10,16 @@ pub(super) fn prepare(
     model: &Value,
     heads: &[String],
 ) -> io::Result<()> {
-    let scope = model["scope"].as_str().ok_or_else(invalid)?;
-    let name = model["name"].as_str().ok_or_else(invalid)?;
+    let scope = model["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(invalid)?;
+    let name = model["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(invalid)?;
     let hash = format!("{:x}", Sha1::digest(format!("{scope}/{name}:VersionHistory").as_bytes()));
     let path = directory
         .join(&hash[..2])

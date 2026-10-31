@@ -291,7 +291,16 @@ pub(crate) fn begin(input: Value) -> io::Result<Value> {
     Ok(result)
 }
 fn index_value(index: &mut crate::tag_index::TagIndex, value: &Value, normal: bool) {
-    if let (Some(hash), Some(label)) = (value["hash"].as_str(), value["label"].as_str()) {
+    if let (Some(hash), Some(label)) = (
+        value["hash"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty()),
+        value["label"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty()),
+    ) {
         index.insert(hash, label, normal);
     }
 }
@@ -307,7 +316,7 @@ fn annotate(result: &mut Value, index: &crate::tag_index::TagIndex, cached: &mut
 }
 
 fn annotate_row(row: &mut Value, index: &crate::tag_index::TagIndex, cached: &mut Option<String>) {
-    let Some(hash) = row["hash"].as_str() else {
+    let Some(hash) = row["hash"].as_str().map(str::trim) else {
         return;
     };
     let Some((label, normal)) = index.get(hash) else {

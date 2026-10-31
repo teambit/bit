@@ -44,8 +44,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Err(outcome) => return Ok(outcome),
     };
     if let Err(error) = preflight(&root, &options)
-        && (error.kind() != io::ErrorKind::InvalidInput
-            || env::var_os("CI").is_some_and(|value| !value.is_empty()))
+        && (error.kind() != io::ErrorKind::InvalidInput || ci_enabled())
     {
         return Ok(Outcome::Declined(format!("delete: {error}")));
     }
@@ -65,7 +64,7 @@ fn resolve_delete_root(
         return resolve_workspace_delete(root, args, options);
     }
     if !options.silent {
-        if !preparation::can_prompt_user() && env::var_os("CI").is_none_or(|val| val.is_empty()) {
+        if !preparation::can_prompt_user() && !ci_enabled() {
             return workspace_command::execute_failure_scope(
                 &cwd,
                 args,
@@ -81,14 +80,21 @@ fn resolve_delete_root(
     workspace_command::workspace_or_fail(args, "delete")
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn resolve_workspace_delete(
     root: std::path::PathBuf,
     args: &[OsString],
     options: &options::Options<'_>,
 ) -> io::Result<Result<std::path::PathBuf, Outcome>> {
-    if !super::installation::Installer::needs_canonical(&root)
-        && env::var_os("CI").is_none_or(|val| val.is_empty())
-    {
+    if !super::installation::Installer::needs_canonical(&root) && !ci_enabled() {
         if let Err(err) =
             preparation::validate_pre_prompt(&root, options.lane, options.update_main, false)
         {

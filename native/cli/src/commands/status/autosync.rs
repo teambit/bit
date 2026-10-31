@@ -102,18 +102,8 @@ fn synchronize(
 }
 
 fn git_head(root: &Path) -> Option<String> {
-    let git = root.join(".git");
-    if git.is_dir()
-        && let Ok(head) = fs::read_to_string(git.join("HEAD"))
-    {
-        let head = head.trim();
-        if let Some(reference) = head.strip_prefix("ref: ") {
-            if let Ok(value) = fs::read_to_string(git.join(reference)) {
-                return Some(value.trim().to_owned());
-            }
-        } else {
-            return Some(head.to_owned());
-        }
+    if let Some(head) = git_dir_head(&root.join(".git")) {
+        return Some(head);
     }
     let executable = crate::commands::diff::git::executable(root).ok()?;
     let output = Command::new(executable)
@@ -126,6 +116,25 @@ fn git_head(root: &Path) -> Option<String> {
         .then(|| String::from_utf8_lossy(&output.stdout).trim().to_owned())
 }
 
+fn git_dir_head(git: &Path) -> Option<String> {
+    if !git.is_dir() {
+        return None;
+    }
+    let head = fs::read_to_string(git.join("HEAD")).ok()?;
+    let head = head.trim();
+    if let Some(reference) = head.strip_prefix("ref:") {
+        let reference = reference.trim();
+        if reference.is_empty() {
+            return None;
+        }
+        let value = fs::read_to_string(git.join(reference)).ok()?;
+        let value = value.trim();
+        (!value.is_empty()).then(|| value.to_owned())
+    } else {
+        (!head.is_empty()).then(|| head.to_owned())
+    }
+}
+
 fn lookup_ids(bitmap: &Bitmap) -> Vec<String> {
     bitmap.entries
         .iter()
@@ -133,14 +142,21 @@ fn lookup_ids(bitmap: &Bitmap) -> Vec<String> {
         .filter_map(|entry| {
             entry.id.scope
                 .as_deref()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
-                .or(entry.id.default_scope.as_deref())
+                .or_else(|| {
+                    entry.id.default_scope
+                        .as_deref()
+                        .map(str::trim)
+                        .filter(|scope| !scope.is_empty())
+                })
                 .map(|scope| {
                     let version = entry.id.version
                         .as_deref()
+                        .map(str::trim)
                         .filter(|version| !version.is_empty())
                         .map_or_else(String::new, |version| format!("@{version}"));
-                    format!("{scope}/{}{version}", entry.id.name)
+                    format!("{scope}/{}{version}", entry.id.name.trim())
                 })
         })
         .collect()

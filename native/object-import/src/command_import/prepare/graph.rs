@@ -12,6 +12,9 @@ impl PreparedImport {
         Ok(())
     }
     pub(crate) fn missing_graph_versions(&mut self, targets: &[Target]) -> io::Result<Vec<Target>> {
+        if targets.len() > 4096 {
+            return Err(super::invalid("import graph target limit"));
+        }
         let directory = self.environment.local_directory.clone();
         let mut missing = Vec::new();
         for target in targets {

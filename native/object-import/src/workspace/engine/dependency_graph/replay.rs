@@ -35,7 +35,11 @@ pub(super) fn finish(
         Replay { visited: request.visited.clone().unwrap_or_default(), ..Replay::default() };
     let mut tree = Map::new();
     for root in &request.files {
-        let root = root.to_str().ok_or_else(|| invalid("dependency graph root encoding"))?;
+        let root = root
+            .to_str()
+            .map(str::trim)
+            .filter(|root| !root.is_empty())
+            .ok_or_else(|| invalid("dependency graph root encoding"))?;
         if tree.contains_key(root)
             || budget
                 .metadata(std::path::Path::new(root))?

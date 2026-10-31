@@ -85,6 +85,8 @@ fn merge_matches(matches: Vec<MatchedVariant<'_>>) -> VariantConfig {
             result.default_scope = item.config
                 .get("defaultScope")
                 .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
                 .map(str::to_owned);
         }
         if result.propagate {
@@ -132,7 +134,7 @@ fn is_match_item(root_dir: &str, name: &str, item: &str) -> io::Result<ItemMatch
     }
     let (excluded, item) = item
         .strip_prefix('!')
-        .map_or((false, item), |rest| (true, rest));
+        .map_or((false, item), |rest| (true, rest.trim()));
     let found = if item.starts_with('{') {
         namespace_match(name, item)
     } else {

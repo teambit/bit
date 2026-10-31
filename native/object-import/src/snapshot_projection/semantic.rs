@@ -97,6 +97,9 @@ fn dependencies(value: &Value) -> io::Result<Value> {
 fn component_id(value: &Value) -> io::Result<String> {
     object(value)?;
     let name = text(get(value, "name"))?;
+    if name.trim().is_empty() {
+        return Err(invalid("dependency component name required"));
+    }
     let scope = get(value, "scope");
     let mut id = if scope.truthy()? { format!("{}/{name}", text(scope)?) } else { name };
     let version = get(value, "version");

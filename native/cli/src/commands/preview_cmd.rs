@@ -124,7 +124,7 @@ pub(super) fn parse_generate_options(args: &[&str]) -> Option<GenerateOptions> {
             }
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-n" | "--name" => {
-                let val = iter.next()?;
+                let val = iter.next()?.trim();
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;
                 options.name = Some(val.to_owned());
             }
@@ -132,11 +132,15 @@ pub(super) fn parse_generate_options(args: &[&str]) -> Option<GenerateOptions> {
                 .strip_prefix("--name=")
                 .or_else(|| val.strip_prefix("-n=")) =>
             {
+                let name = name.trim();
                 (!name.is_empty() && !name.starts_with('-')).then_some(())?;
                 options.name = Some(name.to_owned());
             }
-            val if !val.starts_with('-') && !val.is_empty() && options.pattern.is_none() => {
-                options.pattern = Some(val.to_owned());
+            val if !val.starts_with('-')
+                && !val.trim().is_empty()
+                && options.pattern.is_none() =>
+            {
+                options.pattern = Some(val.trim().to_owned());
             }
             _ => return None,
         }
@@ -189,5 +193,6 @@ pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {
 }
 
 fn parse_optional_port(port: &str) -> Option<Option<u16>> {
+    let port = port.trim();
     if port.is_empty() { Some(None) } else { port.parse::<u16>().ok().map(Some) }
 }

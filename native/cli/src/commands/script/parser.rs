@@ -220,7 +220,8 @@ fn parse_single_entry(raw_entry: &str) -> Option<ParsedScript> {
     let raw_key = cleaned[..colon_idx].trim();
     let raw_val = cleaned[colon_idx + 1..].trim();
     let name = unquote_string(raw_key).unwrap_or_else(|| raw_key.to_owned());
-    if name.is_empty() {
+    let name = name.trim().to_owned();
+    if name.is_empty() || raw_val.is_empty() {
         return None;
     }
     let handler = match unquote_string(raw_val) {

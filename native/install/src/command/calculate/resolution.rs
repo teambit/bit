@@ -34,6 +34,9 @@ pub(super) async fn resolve_initialized(
     components: &[WorkspaceComponent],
     cache_initialized: bool,
 ) -> io::Result<Resolved> {
+    if loaded.workspace.scope_path.as_os_str().is_empty() {
+        return Err(io::Error::other("workspace scope path is empty"));
+    }
     let objects = ScopeObjects::new(&loaded.workspace.scope_path);
     let env_policies = policy::load_env_policies(&session.root, components, session.host).await?;
     let workspace_policy = workspace_policy(loaded)?;

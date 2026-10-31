@@ -307,10 +307,14 @@ fn versioned(target: &Value) -> String {
     let identity = target
         .get("identity")
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
         .unwrap_or("undefined");
     let version = target
         .get("version")
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
         .unwrap_or("undefined");
     format!("{identity}@{version}")
 }

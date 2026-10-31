@@ -64,6 +64,9 @@ pub fn is_dev_file(file: &str) -> bool {
 }
 
 fn matches(file: &str, regexes: &[Regex]) -> bool {
+    if file.is_empty() {
+        return false;
+    }
     let normalized = if cfg!(windows) { file.replace('\\', "/") } else { file.to_string() };
     let mut segments: Vec<&str> = normalized.split('/').collect();
     // `matchOne` accepts one trailing empty segment once the pattern is consumed.

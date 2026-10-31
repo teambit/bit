@@ -80,8 +80,8 @@ pub(super) fn plan(input: &Value) -> io::Result<(Value, Conflict)> {
     ))
 }
 pub(super) fn commit(input: &Value, pending: &mut Option<Conflict>) -> io::Result<Value> {
-    let token = text(input, "token")?;
-    let path = PathBuf::from(text(input, "path")?);
+    let token = text(input, "token")?.trim();
+    let path = PathBuf::from(text(input, "path")?.trim());
     let state = pending.as_ref().ok_or_else(|| invalid("no config conflict plan"))?;
     if state.token != token || state.path != path {
         return Err(invalid("stale config conflict plan"));
@@ -125,12 +125,20 @@ pub(super) fn render(contents: &str, conflicts: &Value) -> io::Result<String> {
     Ok(result)
 }
 fn replace(contents: &mut String, entry: &Value) -> io::Result<()> {
-    let name = text(entry, "name")?;
-    let version = text(entry, "version")?;
+    let name = text(entry, "name")?.trim();
+    let version = text(entry, "version")?.trim();
     let mut parts = version.split("::");
     parts.next();
-    let current = parts.next().ok_or_else(|| invalid("config conflict current"))?;
-    let other = parts.next().ok_or_else(|| invalid("config conflict other"))?;
+    let current = parts
+        .next()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("config conflict current"))?;
+    let other = parts
+        .next()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("config conflict other"))?;
     let original = format!(r#""{name}": "{current}""#);
     if !contents.contains(&original) {
         return Err(invalid("config dependency substring missing"));

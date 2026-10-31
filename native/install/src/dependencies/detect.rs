@@ -265,6 +265,7 @@ fn types_package(
 /// `packageToDefinetlyTyped`.
 #[must_use]
 pub fn definitely_typed(name: &str) -> String {
+    let name = name.trim();
     let escaped = name
         .strip_prefix('@')
         .and_then(|rest| rest.split_once('/'))
@@ -355,5 +356,6 @@ fn add_relative(subject: &Subject<'_>, detected: &mut Detected, id: ComponentId,
 /// `isEqualWithoutVersion`.
 #[must_use]
 pub fn same(left: &ComponentId, right: &ComponentId) -> bool {
-    left.name == right.name && left.effective_scope() == right.effective_scope()
+    left.name.trim() == right.name.trim()
+        && left.effective_scope().map(str::trim) == right.effective_scope().map(str::trim)
 }

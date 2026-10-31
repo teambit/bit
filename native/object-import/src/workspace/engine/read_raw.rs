@@ -43,10 +43,10 @@ fn prepare(
     snapshots: Option<&mut crate::workspace::snapshots::State>,
 ) -> io::Result<Output> {
     let mut files = read::read_with(files, pool, record)?;
-    let mut bytes = 0;
+    let mut bytes: usize = 0;
     for file in &mut files {
         file.offset = bytes;
-        bytes += file.bytes;
+        bytes = bytes.checked_add(file.bytes).ok_or_else(|| invalid("workspace output limit"))?;
     }
     retain(&mut files, snapshots);
     let response = Response {

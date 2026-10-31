@@ -68,7 +68,7 @@ pub(super) fn issue_progress(
     if loads.is_empty() {
         return Ok(());
     }
-    let split = if resolving { 2.min(loads.len()) } else { loads.len() - 1 };
+    let split = if resolving { 2.min(loads.len()) } else { loads.len().saturating_sub(1) };
     let (before, after) = loads.split_at(split);
     let mut tail = prefix.clone();
     tail["loads"] = json!(after);
@@ -133,7 +133,10 @@ pub(super) fn packages(
         .any(|plan| {
             plan["identity"]
                 .as_str()
-                .is_some_and(|id| capture::snapshot_data(&session.capture, id).is_some())
+                .map(str::trim)
+                .is_some_and(|id| {
+                    !id.is_empty() && capture::snapshot_data(&session.capture, id).is_some()
+                })
         })
     {
         return Ok(());

@@ -43,6 +43,9 @@ impl CanonicalInstall {
         build_scripts_path: String,
         output: Option<OutputSink>,
     ) -> io::Result<EngineResult> {
+        if build_scripts_path.trim().is_empty() {
+            return Err(io::Error::other("retained build scripts PATH is empty"));
+        }
         let environment = self.payload["environment"]
             .as_object_mut()
             .ok_or_else(|| io::Error::other("retained Host environment unavailable"))?;

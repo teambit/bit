@@ -127,7 +127,12 @@ pub(super) fn validate_licenses(
 
 fn license_scopes(context: &Value) -> io::Result<std::collections::HashSet<&str>> {
     let mut scopes = std::collections::HashSet::new();
-    scopes.insert(context["scope"]["name"].as_str().ok_or_else(|| invalid("command scope name"))?);
+    let scope_name = context["scope"]["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("command scope name"))?;
+    scopes.insert(scope_name);
     let visible = context["targets"].as_array().ok_or_else(|| invalid("command target scopes"))?;
     let lane = context["lane"]["targets"]
         .as_array()
@@ -144,9 +149,16 @@ fn license_scopes(context: &Value) -> io::Result<std::collections::HashSet<&str>
         .chain(scope)
         .chain(stash)
     {
-        let identity =
-            target["identity"].as_str().ok_or_else(|| invalid("command target identity"))?;
-        scopes.insert(identity.split_once('/').ok_or_else(|| invalid("command scoped target"))?.0);
+        let identity = target["identity"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("command target identity"))?;
+        let target_scope = identity
+            .split_once('/')
+            .map(|(scope_part, _)| scope_part.trim())
+            .filter(|scope_part| !scope_part.is_empty())
+            .ok_or_else(|| invalid("command scoped target"))?;
+        scopes.insert(target_scope);
     }
     Ok(scopes)
 }

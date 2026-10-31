@@ -41,6 +41,9 @@ impl State {
         snapshots: &crate::workspace::snapshots::State,
         overlay: Option<&crate::command_import::Overlay>,
     ) -> io::Result<Vec<Value>> {
+        if inputs.len() > 4096 {
+            return Err(invalid("command merge body count limit"));
+        }
         if self.journal["directive"]["phase"] != "importGap" {
             return Err(invalid("command merge status incomplete"));
         }

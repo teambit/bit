@@ -46,6 +46,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
 }
 
 fn push_export_id(options: &mut Options, item: &str) -> Option<()> {
+    let item = item.trim();
     if !(is_pattern(item) || valid_id(item)) || options.ids.len() >= 4096 {
         return None;
     }
@@ -73,6 +74,7 @@ fn apply_export_arg<'a>(
 }
 
 fn set_resume_id(options: &mut Options, client_id: &str) -> Option<()> {
+    let client_id = client_id.trim();
     if options.resume.is_some() || !valid_client_id(client_id) {
         return None;
     }

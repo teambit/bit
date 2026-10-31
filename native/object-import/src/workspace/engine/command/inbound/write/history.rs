@@ -3,7 +3,10 @@ use super::{History, existing, invalid, safe_destination};
 use std::{fs, io, path::Path};
 
 pub(super) fn prepare(root: &Path, file_id: Option<&str>) -> io::Result<History> {
-    let file_id = file_id.ok_or_else(|| invalid("inbound bitmap history id"))?;
+    let file_id = file_id
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("inbound bitmap history id"))?;
     super::super::super::bitmap::validate_history_file_id(file_id)?;
     let backup = crate::scope_path(root)
         .join("bitmap-history")

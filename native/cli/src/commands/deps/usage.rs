@@ -46,6 +46,7 @@ pub(super) fn prepare_usage(
     depth: Option<usize>,
     chalk: Chalk,
 ) -> Result<String, Failure> {
+    let dep_name = dep_name.trim();
     if !is_component_id(dep_name) {
         return find_usages_in_lockfile(root, dep_name, depth, chalk);
     }
@@ -293,7 +294,13 @@ fn package_matches_query(
 }
 
 fn version_matches_query(version: &str, query_ver: Option<&str>) -> bool {
-    let Some(req) = query_ver else { return true };
+    let Some(req) = query_ver
+        .map(str::trim)
+        .filter(|req| !req.is_empty())
+    else {
+        return true;
+    };
+    let version = version.trim();
     if version == req {
         return true;
     }

@@ -80,9 +80,19 @@ fn update_map(updates: &[Value]) -> io::Result<Map<String, Value>> {
             .as_array()
             .filter(|row| row.len() == 3)
             .ok_or_else(|| invalid("command workspace policy update row"))?;
-        let name = row[0].as_str().ok_or_else(|| invalid("command policy name"))?;
-        let before = row[1].as_str().ok_or_else(|| invalid("command policy old version"))?;
-        let after = row[2].as_str().ok_or_else(|| invalid("command policy new version"))?;
+        let name = row[0]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("command policy name"))?;
+        let before = row[1]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("command policy old version"))?;
+        let after = row[2]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("command policy new version"))?;
         if mapped
             .insert(name.to_owned(), json!([before, after]))
             .is_some()

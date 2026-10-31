@@ -34,10 +34,11 @@ impl Registries {
     /// `{ default: uri, '@scope': uri }` (`Registries.toMap`).
     #[must_use]
     pub fn to_map(&self) -> IndexMap<String, String> {
-        let default = if self.default.uri.is_empty() { NPM_REGISTRY } else { &self.default.uri };
+        let default_uri = self.default.uri.trim();
+        let default = if default_uri.is_empty() { NPM_REGISTRY } else { default_uri };
         let mut map = IndexMap::from([("default".to_string(), default.to_string())]);
         for (name, registry) in &self.scopes {
-            map.insert(format!("@{name}"), registry.uri.clone());
+            map.insert(format!("@{}", name.trim()), registry.uri.trim().to_string());
         }
         map
     }
@@ -48,16 +49,19 @@ impl Registries {
     pub fn auth_header_by_uri(&self) -> IndexMap<String, String> {
         let mut result = IndexMap::new();
         for registry in self.scopes.values() {
-            if !registry.uri.is_empty() && !registry.auth_header_value.is_empty() {
-                result.insert(nerf_dart(&registry.uri), registry.auth_header_value.clone());
+            let uri = registry.uri.trim();
+            let auth = registry.auth_header_value.trim();
+            if !uri.is_empty() && !auth.is_empty() {
+                result.insert(nerf_dart(uri), auth.to_string());
             }
         }
-        let default = &self.default;
-        if !default.auth_header_value.is_empty() {
-            if !default.uri.is_empty() {
-                result.insert(nerf_dart(&default.uri), default.auth_header_value.clone());
+        let default_uri = self.default.uri.trim();
+        let default_auth = self.default.auth_header_value.trim();
+        if !default_auth.is_empty() {
+            if !default_uri.is_empty() {
+                result.insert(nerf_dart(default_uri), default_auth.to_string());
             }
-            result.insert(String::new(), default.auth_header_value.clone());
+            result.insert(String::new(), default_auth.to_string());
         }
         result
     }
@@ -172,5 +176,6 @@ pub(super) fn global_string<'a>(global: &'a GlobalConfig, key: &str) -> Option<&
     global
         .get(key)
         .and_then(serde_json::Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
 }

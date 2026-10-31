@@ -67,6 +67,7 @@ impl Reader {
             .ok_or_else(|| invalid("fresh unidentified package"))?;
         let name = manifest["name"]
             .as_str()
+            .map(str::trim)
             .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("fresh package name"))?
             .to_owned();
@@ -185,7 +186,7 @@ fn dependent(package: &Value) -> io::Result<Option<String>> {
 fn optional(value: Option<&Value>) -> io::Result<Option<String>> {
     match value {
         None | Some(Value::Null) => Ok(None),
-        Some(Value::String(value)) => Ok(Some(value.clone())),
+        Some(Value::String(value)) => Ok(Some(value.trim().to_owned())),
         _ => Err(invalid("fresh package version shape")),
     }
 }

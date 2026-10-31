@@ -64,6 +64,7 @@ impl LocalBatch {
         Ok(self)
     }
     pub fn validate(&self, file_id: &str) -> io::Result<()> {
+        super::validate_file_id(file_id)?;
         if fs::read(self.root.join(".bitmap"))? != self.before {
             return Err(invalid("component bitmap changed before removal"));
         }
@@ -82,7 +83,7 @@ impl LocalBatch {
         for model in &self.models {
             model.validate_before_commit(file_id)?;
         }
-        super::validate_file_id(file_id)
+        Ok(())
     }
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         self.validate(file_id)?;

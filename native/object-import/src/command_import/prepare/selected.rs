@@ -15,15 +15,7 @@ impl PreparedImport {
         if targets.len() > 4096 {
             return Err(invalid("import unexported count"));
         }
-        let external = targets
-            .iter()
-            .filter(|target| {
-                target.scope
-                    .as_deref()
-                    .is_some_and(|scope| scope != self.environment.local_scope)
-            })
-            .cloned()
-            .collect::<Vec<_>>();
+        let external = self.external_targets(targets);
         if external.is_empty() {
             return Ok(());
         }
@@ -50,6 +42,20 @@ impl PreparedImport {
             receive(self, &directory, &target, &incoming, &hash, false)?;
         }
         self.validate()
+    }
+    fn external_targets(&self, targets: &[Target]) -> Vec<Target> {
+        targets
+            .iter()
+            .filter(|target| {
+                target.scope
+                    .as_deref()
+                    .map(str::trim)
+                    .is_some_and(|scope| {
+                        !scope.is_empty() && scope != self.environment.local_scope
+                    })
+            })
+            .cloned()
+            .collect()
     }
     fn sync_remotes(&mut self, global_remotes_file: &Path) -> io::Result<Value> {
         let global = self.capture.json(global_remotes_file)?;

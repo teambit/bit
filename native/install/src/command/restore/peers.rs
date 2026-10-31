@@ -217,21 +217,22 @@ fn compare(left: &str, right: &str) -> std::cmp::Ordering {
 pub fn parse_package_id(package: &str) -> Option<(String, String)> {
     let base = without_peer_suffix(package);
     let at = base.rfind('@').filter(|at| *at > 0)?;
-    let (name, version) = (&base[..at], &base[at + 1..]);
+    let (name, version) = (base[..at].trim(), base[at + 1..].trim());
     (!name.is_empty() && !version.is_empty()).then(|| (name.to_owned(), version.to_owned()))
 }
 
 /// `getVersionFromNodeId`: a valid or coerced semver.
 pub fn version_of(node: &str) -> Option<String> {
     let base = without_peer_suffix(node);
-    let version = &base[base.rfind('@')? + 1..];
+    let version = base[base.rfind('@')? + 1..].trim();
     if SemVer::parse(version).is_ok() { Some(version.to_owned()) } else { semver::coerce(version) }
 }
 
 /// `nodeIdWithoutPeerSuffix`.
 pub fn without_peer_suffix(node: &str) -> &str {
+    let node = node.trim();
     node.find('(')
-        .map_or(node, |start| &node[..start])
+        .map_or(node, |start| node[..start].trim())
 }
 
 /// `splitPeerIds`: the top-level parenthesized segments.
