@@ -129,9 +129,10 @@ fn npm_bit_dep_id(root: &Path, raw_spec: &str) -> Option<String> {
 }
 
 fn resolve_seeder_id(ws: &Workspace, raw_id: &str) -> Result<String, Failure> {
+    let raw_id = raw_id.trim();
     let (bare, explicit_ver) = raw_id
         .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+        .map_or((raw_id, None), |(id, ver)| (id.trim(), Some(ver.trim())));
     let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     let Some((entry, _)) = ws
         .active()

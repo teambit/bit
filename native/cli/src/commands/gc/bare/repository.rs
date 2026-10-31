@@ -88,7 +88,7 @@ pub(super) fn model<'objects>(
     objects: &'objects BTreeMap<String, Object>,
     id: &str,
 ) -> io::Result<Option<&'objects Object>> {
-    let Some(object) = objects.get(&digest(id)) else { return Ok(None) };
+    let Some(object) = objects.get(&digest(id.trim())) else { return Ok(None) };
     if object.kind == "Symlink" {
         let id = format!("{}/{}", text(&object.value["realScope"])?, text(&object.value["name"])?);
         let target = objects

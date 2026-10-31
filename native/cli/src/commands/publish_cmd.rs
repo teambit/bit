@@ -272,8 +272,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 dry_run = true;
                 json = true;
             }
-            val if !val.starts_with('-') && !val.is_empty() && pattern.is_none() => {
-                pattern = Some(val.to_owned());
+            val if !val.trim().starts_with('-') && !val.trim().is_empty() && pattern.is_none() => {
+                pattern = Some(val.trim().to_owned());
             }
             _ => return None,
         }

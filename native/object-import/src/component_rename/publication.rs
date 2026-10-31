@@ -42,11 +42,7 @@ pub(super) fn finish_original(
     if !plan.identity.exported {
         return Ok(());
     }
-    let reason = if plan.options.deprecate {
-        format!("deprecate {}", plan.identity.source_id())
-    } else {
-        "delete".into()
-    };
+    let reason = retirement_reason(plan);
     let mut bitmap = plan.controls.initial.clone();
     let (key, _) = super::identity::selected(&bitmap, &plan.identity.source)?;
     let key = key.to_owned();
@@ -67,5 +63,13 @@ fn remove(path: &Path) -> io::Result<()> {
         Ok(_) => fs::remove_file(path),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
         Err(error) => Err(error),
+    }
+}
+
+fn retirement_reason(plan: &Plan) -> String {
+    if plan.options.deprecate {
+        format!("deprecate {}", plan.identity.source_id())
+    } else {
+        "delete".into()
     }
 }

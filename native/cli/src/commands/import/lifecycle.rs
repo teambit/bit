@@ -194,13 +194,15 @@ fn graph_dependencies(
     for row in rows {
         let row_id = row["identity"]
             .as_str()
-            .or_else(|| row["id"].as_str());
+            .or_else(|| row["id"].as_str())
+            .map(str::trim);
         let matches = facts
             .iter()
             .filter(|fact| {
                 fact["identity"]
                     .as_str()
                     .or_else(|| fact["id"].as_str())
+                    .map(str::trim)
                     == row_id
             })
             .collect::<Vec<_>>();

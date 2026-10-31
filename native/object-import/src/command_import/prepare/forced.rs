@@ -9,10 +9,7 @@ pub(super) fn finish(plan: &mut PreparedImport, roots: &[&Target]) -> io::Result
         .collect::<io::Result<HashSet<_>>>()?;
     let phase =
         plan.progress.last_mut().ok_or_else(|| invalid("import forced dependency phase"))?;
-    if !phase.ids
-        .iter()
-        .any(|id| identities.contains(without_version(id)))
-    {
+    if !has_matching_phase_id(&phase.ids, &identities) {
         return Ok(());
     }
     phase.ids.retain(|id| identities.contains(without_version(id)));
@@ -54,6 +51,11 @@ fn collect_forced_dependencies(
         }
     }
     Ok(dependencies)
+}
+
+fn has_matching_phase_id(ids: &[String], identities: &HashSet<String>) -> bool {
+    ids.iter()
+        .any(|id| identities.contains(without_version(id)))
 }
 
 fn without_version(id: &str) -> &str {

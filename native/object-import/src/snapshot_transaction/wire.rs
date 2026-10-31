@@ -42,9 +42,18 @@ pub(super) struct Repository {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Commit {
+    #[serde(deserialize_with = "deserialize_token")]
     pub(super) token: String,
     pub(super) objects_directory: PathBuf,
     pub(super) owner: Option<Owner>,
+}
+
+fn deserialize_token<'de, Deser>(deserializer: Deser) -> Result<String, Deser::Error>
+where
+    Deser: serde::Deserializer<'de>,
+{
+    let token = String::deserialize(deserializer)?;
+    Ok(token.trim_end_matches('\0').to_owned())
 }
 
 #[derive(Deserialize)]

@@ -54,7 +54,7 @@ fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outc
     let Some(err_msg) = options::validate_error(raw_args) else {
         return Ok(Outcome::Declined("outside the native merge grammar".into()));
     };
-    if std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if is_ci_environment() {
         return Ok(Outcome::Declined("outside the native merge grammar".into()));
     }
     let cwd = std::env::current_dir()?;
@@ -71,4 +71,8 @@ fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outc
         "",
         io::Error::other(err_msg),
     )
+}
+
+fn is_ci_environment() -> bool {
+    std::env::var_os("CI").is_some_and(|val| !val.is_empty())
 }

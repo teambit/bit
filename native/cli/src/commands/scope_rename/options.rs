@@ -32,8 +32,9 @@ fn consume_trailing_names<'a>(
     names: &mut Vec<&'a str>,
 ) -> Option<()> {
     for rest in iter {
-        (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
-        names.push(rest);
+        let trimmed = rest.trim();
+        (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+        names.push(trimmed);
     }
     Some(())
 }
@@ -44,8 +45,9 @@ fn apply_arg<'a>(
     options: &mut Options,
     names: &mut Vec<&'a str>,
 ) -> Option<()> {
-    if !arg.starts_with('-') && !arg.is_empty() {
-        names.push(arg);
+    let trimmed = arg.trim();
+    if !trimmed.starts_with('-') && !trimmed.is_empty() {
+        names.push(trimmed);
         return Some(());
     }
     match arg {

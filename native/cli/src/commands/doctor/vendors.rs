@@ -11,7 +11,7 @@ pub(super) fn version(command: &str, argument: &str, clean_stderr: bool) -> Opti
     {
         return None;
     }
-    let text = String::from_utf8_lossy(strip_final_newline(&output.stdout)).into_owned();
+    let text = String::from_utf8_lossy(strip_final_newline(&output.stdout)).trim().to_owned();
     (!text.is_empty()).then_some(text)
 }
 fn strip_final_newline(mut bytes: &[u8]) -> &[u8] {

@@ -54,10 +54,17 @@ fn owner(root: &Path, bitmap: &Bitmap, path: &Path) -> io::Result<String> {
 pub(super) fn tests(component: &Component, patterns: &[String]) -> io::Result<Vec<PathBuf>> {
     let mut paths = Vec::new();
     for file in &component.files {
-        let relative = file["filePath"].as_str().ok_or_else(|| invalid("tester relative file"))?;
+        let relative = file["filePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("tester relative file"))?;
         if glob::match_patterns(relative, patterns) {
-            let absolute =
-                file["absolutePath"].as_str().ok_or_else(|| invalid("tester absolute file"))?;
+            let absolute = file["absolutePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+                .ok_or_else(|| invalid("tester absolute file"))?;
             paths.push(paths::normalized(Path::new(absolute)));
         }
     }

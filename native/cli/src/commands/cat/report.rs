@@ -99,6 +99,7 @@ fn text_config(config: &Value) -> io::Result<String> {
     let mut lines = Vec::new();
     if let Some(env) = config["env"]
         .as_str()
+        .map(str::trim)
         .filter(|env| !env.is_empty())
     {
         lines.push(format!("env: {env}"));

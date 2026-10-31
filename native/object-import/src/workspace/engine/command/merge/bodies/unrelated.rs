@@ -14,7 +14,7 @@ impl Prepared {
             hidden: current.hidden,
             output,
             version,
-            version_name: current.target.version.clone(),
+            version_name: current.target.version.trim().to_owned(),
             files,
             conflict_paths: Vec::new(),
             destinations: Destinations { request: json!({"files":[]}), removals: Vec::new() },

@@ -102,7 +102,7 @@ fn load_docs(
                 .map(str::trim)
                 .is_some_and(|directory| !directory.is_empty() && root.join(directory).is_dir())
         })
-        .map(|target| super::text(target.get("identity")).map(str::to_owned))
+        .map(|target| super::text(target.get("identity")).map(|id| id.trim().to_owned()))
         .collect::<io::Result<Vec<_>>>()?;
     if identities.is_empty() {
         return Ok(None);

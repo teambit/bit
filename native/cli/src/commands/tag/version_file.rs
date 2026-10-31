@@ -14,7 +14,7 @@ pub(super) struct Captured {
 }
 
 pub(super) fn read(root: &Path, entered: &str) -> io::Result<Captured> {
-    let path = root.join(entered);
+    let path = root.join(entered.trim());
     let metadata = fs::metadata(&path)?;
     if !metadata.is_file() || metadata.len() > 1024 * 1024 {
         return Err(decline("versions file ordinary byte budget"));

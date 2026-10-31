@@ -97,7 +97,10 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
     let Target::Entry(cli) = discovery::find()? else {
         return Ok(Err("the Node.js CLI is only reachable as a wrapper".to_string()));
     };
-    if cli.bit_dir.is_none() {
+    if cli.bit_dir
+        .as_ref()
+        .is_none_or(|dir| dir.as_os_str().is_empty())
+    {
         return Ok(Err("the entry is not inside an @teambit/bit package".to_string()));
     }
     let cwd = env::current_dir()?;

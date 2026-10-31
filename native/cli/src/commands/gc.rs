@@ -160,7 +160,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 }
 
 fn apply_gc_arg(opts: &mut Options, arg: &str, next: Option<&str>) -> Option<usize> {
-    if let Some(val) = arg.strip_prefix("--keep-versions=") {
+    if let Some(val) = arg.strip_prefix("--keep-versions=").map(str::trim) {
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         opts.keep_versions = Some(val.to_owned());
         return Some(1);

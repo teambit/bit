@@ -39,7 +39,8 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
 }
 
 fn valid_alias_token(token: &str) -> bool {
-    !token.is_empty() && !token.starts_with('-') && token.len() <= 1024
+    let trimmed = token.trim();
+    !trimmed.is_empty() && !trimmed.starts_with('-') && trimmed.len() <= 1024
 }
 
 fn run_in_workspace(

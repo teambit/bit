@@ -85,9 +85,18 @@ fn id(row: &Component) -> Value {
 fn key(id: &Value) -> String {
     format!(
         "{}/{}@{}",
-        id["scope"].as_str().unwrap_or_default(),
-        id["name"].as_str().unwrap_or_default(),
-        id["version"].as_str().unwrap_or_default(),
+        id["scope"]
+            .as_str()
+            .map(str::trim)
+            .unwrap_or_default(),
+        id["name"]
+            .as_str()
+            .map(str::trim)
+            .unwrap_or_default(),
+        id["version"]
+            .as_str()
+            .map(str::trim)
+            .unwrap_or_default(),
     )
 }
 fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {

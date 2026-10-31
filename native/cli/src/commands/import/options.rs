@@ -130,10 +130,11 @@ fn take_path<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
 }
 
 fn set_bounded_option(slot: &mut Option<String>, value: &str) -> Option<()> {
-    if slot.is_some() || value.is_empty() || value.starts_with('-') || value.len() > 4096 {
+    let trimmed = value.trim();
+    if slot.is_some() || trimmed.is_empty() || trimmed.starts_with('-') || trimmed.len() > 4096 {
         return None;
     }
-    *slot = Some(value.to_owned());
+    *slot = Some(trimmed.to_owned());
     Some(())
 }
 

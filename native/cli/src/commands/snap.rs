@@ -118,7 +118,10 @@ fn prepare(
         kind: resolve::Kind::Snap,
         options: request_options,
         selection: resolve::Selection::Snap {
-            pattern: options.pattern.as_deref(),
+            pattern: options.pattern
+                .as_deref()
+                .map(str::trim)
+                .filter(|pat| !pat.is_empty()),
             unmerged: options.unmerged,
         },
     };

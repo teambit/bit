@@ -180,7 +180,10 @@ fn has_spec_files(components: &[(&BitmapEntry, &WorkspaceComponent)]) -> bool {
         .any(|(_, comp)| {
             comp.files
                 .iter()
-                .any(|file| file.contains(".spec.") || file.contains(".test."))
+                .any(|file| {
+                    let trimmed = file.trim();
+                    trimmed.contains(".spec.") || trimmed.contains(".test.")
+                })
         })
 }
 

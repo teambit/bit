@@ -65,17 +65,20 @@ fn row_id(row: &serde_json::Value) -> io::Result<String> {
     if let Some(id) = row["id"]
         .as_str()
         .or_else(|| row["identity"].as_str())
+        .map(str::trim)
         .filter(|id| !id.is_empty())
     {
         return Ok(id.to_owned());
     }
     if let Some(name) = row["id"]["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
     {
         return Ok(
             match row["id"]["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
             {
                 Some(scope) => format!("{scope}/{name}"),
@@ -83,5 +86,5 @@ fn row_id(row: &serde_json::Value) -> io::Result<String> {
             },
         );
     }
-    text(row.get("id")).map(str::to_owned)
+    text(row.get("id")).map(|id| id.trim().to_owned())
 }

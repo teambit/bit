@@ -6,15 +6,7 @@ pub(super) fn validate(value: &Value) -> io::Result<()> {
     let Some(entries) = value.get("extensions").and_then(Value::as_array) else {
         return Ok(());
     };
-    let Some(builder) = entries
-        .iter()
-        .find(|entry| {
-            crate::workspace::engine::client_status::config::is_extension_aspect(
-                entry,
-                "teambit.pipelines/builder",
-            )
-        })
-    else {
+    let Some(builder) = find_builder_extension(entries) else {
         return Ok(());
     };
     let Some(artifacts) = builder
@@ -68,4 +60,15 @@ fn validate_file(file: &Value) -> io::Result<()> {
         return Err(invalid("history query artifact metadata"));
     }
     Ok(())
+}
+
+fn find_builder_extension(entries: &[Value]) -> Option<&Value> {
+    entries
+        .iter()
+        .find(|entry| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                entry,
+                "teambit.pipelines/builder",
+            )
+        })
 }

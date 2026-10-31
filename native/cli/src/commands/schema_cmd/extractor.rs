@@ -306,6 +306,7 @@ fn extract_first_file_hash(files_val: &Value) -> Option<String> {
         .as_str()
         .or_else(|| first["ref"]["hash"].as_str())
         .or_else(|| first["file"].as_str())
+        .map(str::trim)
         .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
 }

@@ -58,6 +58,7 @@ impl Options {
         if let Some(val) = arg
             .strip_prefix("--remote=")
             .or_else(|| arg.strip_prefix("-r="))
+            .map(str::trim)
         {
             if val.is_empty() || val.starts_with('-') {
                 return false;
@@ -70,6 +71,7 @@ impl Options {
             .or_else(|| arg.strip_prefix("-s="))
             .or_else(|| arg.strip_prefix("--archive="))
             .or_else(|| arg.strip_prefix("-a="))
+            .map(str::trim)
         else {
             return false;
         };

@@ -49,6 +49,9 @@ fn environment_root<'a>(lockfile: &Value, environment: &'a str, package: &str) -
     };
     let version =
         lockfile["importers"][environment]["dependencies"][package]["version"].as_str()?.trim();
+    if version.is_empty() {
+        return None;
+    }
     lockfile["snapshots"]
         .get(format!("{package}@{version}"))
         .is_some_and(Value::is_object)

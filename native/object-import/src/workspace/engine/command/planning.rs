@@ -79,7 +79,8 @@ fn checkout_captured(
         checkout_lane::prepare(record, &mut plan, snapshots)?;
     }
     checkout_scope::prepare_if_enabled(record, &mut plan, snapshots)?;
-    if let Some(to) = record.request.options.to.as_deref()
+    if let Some(to) = record.request.options.to.as_deref().map(str::trim)
+        && !to.is_empty()
         && !matches!(to, "head" | "latest" | "reset" | "main")
         && !to.starts_with("head~")
     {

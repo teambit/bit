@@ -157,12 +157,14 @@ fn resolve_single_target_env(
     raw: &str,
     from_list: bool,
 ) -> Result<TargetEnv, Failure> {
+    let raw = raw.trim();
     let (_, bare) = resolve_aspect_identity(root, bitmap, raw)?;
     let ws_entry = bitmap.entries
         .iter()
         .find(|entry| entry.owns_its_dir() && entry.id.to_string_without_version() == bare);
     if let Some((_, ver)) = raw
         .rsplit_once('@')
+        .map(|(prefix, ver)| (prefix, ver.trim()))
         .filter(|(_, ver)| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
     {
         return Ok(TargetEnv {

@@ -232,23 +232,8 @@ pub(super) fn prepare_set(
     chalk: Chalk,
 ) -> Result<(BitmapMutation, Vec<String>, Value), Failure> {
     let matched = selection::resolve_pattern_entries(&mutation.root, bitmap, spec.pattern, chalk)?;
-    let field = if spec.dev {
-        "devDependencies"
-    } else if spec.peer {
-        "peerDependencies"
-    } else {
-        "dependencies"
-    };
-    let mut pkg_map = Map::new();
-    for (name, ver) in spec.packages {
-        let entry_val = if spec.optional {
-            json!({ "optional": true, "version": ver })
-        } else {
-            Value::String(ver.clone())
-        };
-        pkg_map.insert(name.clone(), entry_val);
-    }
-    let added_packages = Value::Object(pkg_map);
+    let field = set_policy_field(spec);
+    let added_packages = build_added_packages(spec)?;
     let cfg = json!({ "policy": { field: &added_packages } });
     let mut changed_comps = Vec::with_capacity(matched.len());
     for entry in matched {
@@ -257,6 +242,32 @@ pub(super) fn prepare_set(
     }
     mutation.reason = format!("deps-set ({})", spec.pattern);
     Ok((mutation, changed_comps, added_packages))
+}
+
+fn set_policy_field(spec: &SetSpec<'_>) -> &'static str {
+    if spec.dev {
+        "devDependencies"
+    } else if spec.peer {
+        "peerDependencies"
+    } else {
+        "dependencies"
+    }
+}
+
+fn build_added_packages(spec: &SetSpec<'_>) -> Result<Value, Failure> {
+    let mut pkg_map = Map::new();
+    for (name, ver) in spec.packages {
+        if name.trim().is_empty() || ver.trim().is_empty() {
+            return Err(Failure::Declined("deps set package name or version is empty".into()));
+        }
+        let entry_val = if spec.optional {
+            json!({ "optional": true, "version": ver })
+        } else {
+            Value::String(ver.clone())
+        };
+        pkg_map.insert(name.clone(), entry_val);
+    }
+    Ok(Value::Object(pkg_map))
 }
 
 pub(super) fn prepare_list_action(

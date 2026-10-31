@@ -53,22 +53,13 @@ fn remove(document: &mut Document, identity: &str) -> bool {
     let value = document.value();
     let existing = value
         .as_object()
-        .and_then(|values| {
-            values
-                .keys()
-                .find(|key| key.as_str() == identity || key.starts_with(&format!("{identity}@")))
-        })
+        .and_then(|values| values.keys().find(|key| matches_aspect_identity(key, identity)))
         .cloned();
     let mut changed = existing.is_some_and(|key| document.remove(&[&key]));
     let gen_key = value
         .as_object()
         .and_then(|values| {
-            values
-                .keys()
-                .find(|key| {
-                    key.as_str() == "teambit.generator/generator"
-                        || key.starts_with("teambit.generator/generator@")
-                })
+            values.keys().find(|key| matches_aspect_identity(key, "teambit.generator/generator"))
         })
         .cloned()
         .unwrap_or_else(|| "teambit.generator/generator".to_owned());
@@ -77,14 +68,15 @@ fn remove(document: &mut Document, identity: &str) -> bool {
         .and_then(|value| value.as_array().cloned())
         && let Some(index) = envs
             .iter()
-            .position(|env| {
-                env.as_str()
-                    .is_some_and(|val| val == identity || val.starts_with(&format!("{identity}@")))
-            })
+            .position(|env| env.as_str().is_some_and(|val| matches_aspect_identity(val, identity)))
     {
         envs.remove(index);
         document.set(&[&gen_key, "envs"], &serde_json::Value::Array(envs));
         changed = true;
     }
     changed
+}
+
+fn matches_aspect_identity(candidate: &str, identity: &str) -> bool {
+    candidate == identity || candidate.starts_with(&format!("{identity}@"))
 }

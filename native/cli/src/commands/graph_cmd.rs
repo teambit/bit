@@ -125,7 +125,7 @@ fn finish_scope_graph(scope: &Path, args: &[OsString], options: &Options) -> io:
 
 pub(super) fn fast_graph_error(cwd: &Path, options: &Options) -> Option<&'static str> {
     if let Some(remote_name) = &options.remote {
-        if remote_name.is_empty() && options.id.is_none() {
+        if remote_name.trim().is_empty() && options.id.is_none() {
             return Some(MISSING_REMOTE_OR_ID_ERR);
         }
         return None;

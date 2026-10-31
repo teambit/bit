@@ -68,8 +68,11 @@ impl LaneSelection {
         let keep = targets
             .iter()
             .map(|target| {
-                let identity =
-                    target["identity"].as_str().ok_or_else(|| invalid("switch identity"))?;
+                let identity = target["identity"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
+                    .ok_or_else(|| invalid("switch identity"))?;
                 let has_main = repository::model(context, identity)?
                     .is_some_and(|model| model["head"].as_str().is_some());
                 if !has_main

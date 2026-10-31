@@ -140,6 +140,7 @@ fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
 
 fn take_optional_check_types(args: &[&str], idx: &mut usize) -> String {
     if let Some(&next) = args.get(*idx + 1)
+        && !next.trim().is_empty()
         && !next.trim().starts_with('-')
     {
         *idx += 1;

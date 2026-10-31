@@ -201,16 +201,20 @@ fn other_lane(context: &Value) -> io::Result<String> {
     let other = &context["lane"]["otherId"];
     if let Some((scope, name)) = other
         .as_str()
+        .map(str::trim)
         .and_then(|value| value.split_once('/'))
+        .map(|(scope, name)| (scope.trim(), name.trim()))
         .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
     {
         return Ok(format!("{scope}/{name}"));
     }
     let name = other["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty());
     let scope = other["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty());
     match (scope, name) {
         (Some(scope), Some(name)) => Ok(format!("{scope}/{name}")),

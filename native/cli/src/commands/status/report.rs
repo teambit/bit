@@ -219,7 +219,7 @@ fn lane_supported(result: &Value) -> io::Result<()> {
 fn ids<'r>(result: &'r Value, field: &str) -> io::Result<Vec<&'r str>> {
     array(result.get(field), field)?
         .iter()
-        .map(|id| text(Some(id)))
+        .map(|id| text(Some(id)).map(str::trim))
         .collect()
 }
 

@@ -203,7 +203,9 @@ fn read_latest_model_version(scope_dir: &Path, hash: &str) -> Option<String> {
     if kind != "Component" {
         return None;
     }
-    let head = model["head"].as_str()?;
+    let head = model["head"]
+        .as_str()
+        .filter(|head| !head.trim().is_empty())?;
     if let Some(tag) = crate::commands::show_cmd::remote_show::find_tag_for_hash(&model, head) {
         return Some(tag);
     }

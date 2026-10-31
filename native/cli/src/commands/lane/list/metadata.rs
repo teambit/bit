@@ -18,10 +18,17 @@ impl Tracking {
 
     /// `getLocalTrackedLaneByRemoteName(name, scope)`.
     pub(in crate::commands::lane) fn alias(&self, name: &str, scope: &str) -> Option<String> {
+        let name = name.trim();
+        let scope = scope.trim();
         self.0
             .iter()
-            .find(|row| row["remoteLane"] == name && row["remoteScope"] == scope)
+            .find(|row| {
+                row["remoteLane"].as_str().map(str::trim) == Some(name)
+                    && row["remoteScope"].as_str().map(str::trim) == Some(scope)
+            })
             .and_then(|row| row["localLane"].as_str())
+            .map(str::trim)
+            .filter(|local| !local.is_empty())
             .map(str::to_string)
     }
 }

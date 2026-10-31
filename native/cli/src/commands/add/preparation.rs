@@ -65,7 +65,11 @@ fn environment_options(
     startup: &mut Startup,
 ) -> io::Result<Tracking> {
     let mut tracking = options.tracking.clone();
-    if let Some(env) = &options.env {
+    if let Some(env) = options.env
+        .as_deref()
+        .map(str::trim)
+        .filter(|env| !env.is_empty())
+    {
         startup.committed = true;
         let facts = environments.tracking_env_config(root, env)?;
         tracking.config = build_env_tracking_config(&facts)?;

@@ -57,7 +57,7 @@ pub fn path_with(dir: &Path, path: Option<OsString>) -> OsString {
         return dir.as_os_str().to_os_string();
     };
     if env::split_paths(&path)
-        .next()
+        .find(|entry| !entry.as_os_str().is_empty())
         .is_some_and(|first| first == dir)
     {
         return path;

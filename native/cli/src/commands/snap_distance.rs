@@ -34,7 +34,8 @@ struct Options {
 }
 
 fn is_hex40(text: &str) -> bool {
-    text.len() == 40 && text.bytes().all(|byte| byte.is_ascii_hexdigit())
+    let trimmed = text.trim();
+    trimmed.len() == 40 && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 fn parse_options(args: &[&str]) -> Option<Options> {

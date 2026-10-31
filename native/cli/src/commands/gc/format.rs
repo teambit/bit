@@ -203,7 +203,11 @@ fn build_hints(formatter: &Formatter, result: &GcResult) -> Vec<String> {
         let verb = if result.flags.backup { "move" } else { "remove" };
         hints.push(formatter.hint(&format!("re-run without --dry-run to {verb} them")));
     }
-    if let Some(backup_dir) = &result.flags.backup_dir {
+    if let Some(backup_dir) = result.flags.backup_dir
+        .as_deref()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+    {
         hints.push(formatter.hint(&format!(
             "objects were moved to {backup_dir}. no disk space was freed until it is removed.",
         )));

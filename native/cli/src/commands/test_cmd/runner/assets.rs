@@ -19,26 +19,17 @@ const FILES: [(&str, &str); 7] = [
 ];
 impl Assets {
     pub(super) fn prepare(package: &Path) -> io::Result<Self> {
-        if package.as_os_str().is_empty() {
+        if package.as_os_str().is_empty()
+            || package
+                .to_string_lossy()
+                .trim()
+                .is_empty()
+        {
             return Err(io::Error::other("tester package path is empty"));
         }
-        let prefix = format!(
-            "const installation = require('node:module').createRequire({});\n",
-            serde_json::to_string(package)?,
-        );
-        let payloads: Vec<_> = FILES
-            .iter()
-            .map(|(name, source)| (*name, format!("{prefix}{source}")))
-            .collect();
-        let mut hash = Sha1::new();
-        for (name, source) in &payloads {
-            hash.update(name.as_bytes());
-            hash.update([0]);
-            hash.update(source.as_bytes());
-            hash.update([0]);
-        }
+        let payloads = build_payloads(package)?;
         let parent = bit_workspace_config::cache_root().join("native-tools/jest");
-        let root = parent.join(format!("{:x}", hash.finalize()));
+        let root = parent.join(payload_hash(&payloads));
         if root.try_exists()? {
             validate(&root, &payloads)?;
             return Ok(Self { root });
@@ -56,6 +47,28 @@ impl Assets {
         validate(&root, &payloads)?;
         Ok(Self { root })
     }
+}
+
+fn build_payloads(package: &Path) -> io::Result<Vec<(&'static str, String)>> {
+    let prefix = format!(
+        "const installation = require('node:module').createRequire({});\n",
+        serde_json::to_string(package)?,
+    );
+    Ok(FILES
+        .iter()
+        .map(|(name, source)| (*name, format!("{prefix}{source}")))
+        .collect())
+}
+
+fn payload_hash(payloads: &[(&str, String)]) -> String {
+    let mut hash = Sha1::new();
+    for (name, source) in payloads {
+        hash.update(name.as_bytes());
+        hash.update([0]);
+        hash.update(source.as_bytes());
+        hash.update([0]);
+    }
+    format!("{:x}", hash.finalize())
 }
 fn validate(root: &Path, files: &[(&str, String)]) -> io::Result<()> {
     if !fs::symlink_metadata(root)?.file_type().is_dir() {

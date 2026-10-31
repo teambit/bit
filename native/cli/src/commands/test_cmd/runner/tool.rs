@@ -77,8 +77,10 @@ impl Quiet {
         let Target::Entry(cli) = discovery::find()? else {
             return Err(invalid("tester tool installation"));
         };
-        let package =
-            cli.bit_dir.ok_or_else(|| invalid("tester package root"))?.join("package.json");
+        let package = cli.bit_dir
+            .filter(|dir| !dir.as_os_str().is_empty())
+            .ok_or_else(|| invalid("tester package root"))?
+            .join("package.json");
         let assets = Assets::prepare(&package)?;
         let errors = tempfile::tempfile()?;
         let mut child = Command::new(cli.node)

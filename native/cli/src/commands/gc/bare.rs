@@ -72,7 +72,7 @@ fn prepare(scope: &Path, options: &Options) -> io::Result<Plan> {
     let components = deleted
         .iter()
         .filter_map(|hash| {
-            let object = &objects[hash];
+            let object = objects.get(hash)?;
             (object.kind == "Component").then(|| identity(&object.value))
         })
         .collect::<io::Result<Vec<_>>>()?;

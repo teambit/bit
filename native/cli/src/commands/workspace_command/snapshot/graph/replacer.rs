@@ -47,7 +47,10 @@ impl Replacer {
                 format!("{}@{version}", component.package_name),
             );
             let (scope, name) = component.identity
+                .trim()
                 .split_once('/')
+                .map(|(scope, name)| (scope.trim(), name.trim()))
+                .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
                 .ok_or_else(|| decline("dependency graph component id"))?;
             ids.insert(component.package_name.to_string(), (name.to_string(), scope.to_string()));
             escaped.push(escape(component.package_name));

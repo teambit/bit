@@ -19,7 +19,9 @@ pub(super) fn failure(
     }
     workspace_command::checkout_lifecycle::before(startup)?;
     let callback = downcast_callback(&error);
-    if let Some(callback) = callback {
+    if let Some(callback) = callback
+        && !callback.startup.is_empty()
+    {
         print!("{}", callback.startup);
     }
     let captured = callback.map_or_else(String::new, |callback| callback.output.clone());

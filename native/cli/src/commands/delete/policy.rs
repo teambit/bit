@@ -70,19 +70,23 @@ fn range(document: &Document, tag: &str) -> io::Result<String> {
     if version.is_prerelease() {
         return Ok(tag.to_owned());
     }
+    let prefix = resolve_save_prefix(document)?;
+    let range = format!("{prefix}{tag}");
+    Range::parse(&range).map_err(io::Error::other)?;
+    Ok(range)
+}
+
+fn resolve_save_prefix(document: &Document) -> io::Result<String> {
     let prefix = document
         .get(&[RESOLVER, "savePrefix"])
         .or_else(|| {
             crate::commands::update_cmd::aspect_entry(&document.value(), RESOLVER)
                 .and_then(|(_, resolver)| resolver.get("savePrefix").cloned())
         });
-    let prefix = match &prefix {
-        None | Some(Value::Null) => "^",
-        Some(Value::String(prefix)) if prefix.is_empty() => "^",
-        Some(Value::String(prefix)) => prefix.as_str(),
-        _ => return Err(io::Error::other("unsupported save prefix")),
-    };
-    let range = format!("{prefix}{tag}");
-    Range::parse(&range).map_err(io::Error::other)?;
-    Ok(range)
+    match prefix {
+        None | Some(Value::Null) => Ok("^".to_owned()),
+        Some(Value::String(prefix)) if prefix.is_empty() => Ok("^".to_owned()),
+        Some(Value::String(prefix)) => Ok(prefix),
+        _ => Err(io::Error::other("unsupported save prefix")),
+    }
 }

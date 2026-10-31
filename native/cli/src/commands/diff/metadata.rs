@@ -65,6 +65,7 @@ struct Labels {
 impl Labels {
     /// `labelLeft`/`labelRight`: `<version> original`/`modified` when the versions are the same.
     fn new(left: &str, right: &str) -> Self {
+        let (left, right) = (left.trim(), right.trim());
         if left == right {
             Self { left: format!("{left} original"), right: format!("{right} modified") }
         } else {

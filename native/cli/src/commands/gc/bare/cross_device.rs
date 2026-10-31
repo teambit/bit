@@ -14,6 +14,9 @@ pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
 }
 fn copy_link(source: &Path, target: &Path) -> io::Result<()> {
     let link = fs::read_link(source).map_err(|error| failure(error, "readlink", source))?;
+    if link.as_os_str().is_empty() {
+        return Err(failure(io::Error::from(io::ErrorKind::InvalidInput), "readlink", source));
+    }
     create_symlink(&link, target).map_err(|error| paired_failure(error, "symlink", &link, target))
 }
 

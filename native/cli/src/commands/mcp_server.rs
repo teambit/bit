@@ -164,7 +164,8 @@ fn apply_setup_arg(
 }
 
 pub(super) fn editor_display_name(editor: &str) -> &str {
-    match editor.to_ascii_lowercase().as_str() {
+    let trimmed = editor.trim();
+    match trimmed.to_ascii_lowercase().as_str() {
         "vscode" => "VS Code",
         "cursor" => "Cursor",
         "windsurf" => "Windsurf",
@@ -173,7 +174,7 @@ pub(super) fn editor_display_name(editor: &str) -> &str {
         "claude-code" => "Claude Code",
         "codex" => "Codex",
         "copilot" => "GitHub Copilot",
-        _ => editor,
+        _ => trimmed,
     }
 }
 

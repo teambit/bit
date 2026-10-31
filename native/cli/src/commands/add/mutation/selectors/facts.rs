@@ -11,7 +11,11 @@ pub(in crate::commands::add::mutation) struct Facts {
 impl Facts {
     pub(in crate::commands::add::mutation) fn keep(&mut self, capture: &Capture) {
         for row in &capture.comparisons {
-            let Some(id) = row["identity"].as_str() else {
+            let Some(id) = row["identity"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+            else {
                 continue;
             };
             let mut row = row.clone();

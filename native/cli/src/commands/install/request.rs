@@ -133,7 +133,11 @@ pub(super) fn color_enabled(tty: bool) -> bool {
 }
 
 fn parse_force_color(force: &str) -> bool {
-    let trimmed = force.trim();
+    let trimmed = force
+        .trim()
+        .trim_matches('"')
+        .trim_matches('\'')
+        .trim();
     !trimmed.eq_ignore_ascii_case("0") && !trimmed.eq_ignore_ascii_case("false")
 }
 

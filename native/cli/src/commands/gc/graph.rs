@@ -231,14 +231,16 @@ impl GcGraph {
 
 pub(super) fn comp_value_key(comp: &Value) -> String {
     if let Some(id_str) = comp.as_str() {
-        return id_str
+        let trimmed = id_str.trim();
+        return trimmed
             .split('@')
             .next()
-            .unwrap_or(id_str)
+            .unwrap_or(trimmed)
+            .trim()
             .to_owned();
     }
-    let scope = comp["scope"].as_str().unwrap_or("");
-    let name = comp["name"].as_str().unwrap_or("");
+    let scope = comp["scope"].as_str().map_or("", str::trim);
+    let name = comp["name"].as_str().map_or("", str::trim);
     if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 

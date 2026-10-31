@@ -20,12 +20,20 @@ pub(super) fn source(
         non_empty_str(&row["identity"]).ok_or_else(|| io::Error::other("fork source identity"))?;
     let target = plan.target_identity().to_owned();
     let inputs = plan.ast_inputs();
+    let source_short = source
+        .rsplit('/')
+        .next()
+        .unwrap_or(source);
+    let target_short = target
+        .rsplit('/')
+        .next()
+        .unwrap_or(target.as_str());
     let outputs = ast(
         root,
         linker,
         &inputs,
         &[(source.into(), target.clone())],
-        Some((source.rsplit('/').next().unwrap(), target.rsplit('/').next().unwrap())),
+        Some((source_short, target_short)),
         !options.preserve && row["refactorVariables"] != false,
     )?;
     for (path, bytes) in outputs {

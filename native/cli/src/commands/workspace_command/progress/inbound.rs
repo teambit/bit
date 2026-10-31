@@ -55,7 +55,12 @@ impl Progress {
         main: bool,
         started: Instant,
     ) -> io::Result<()> {
-        if groups.iter().sum::<usize>() != self.imports.len() {
+        if groups
+            .iter()
+            .copied()
+            .try_fold(0usize, usize::checked_add)
+            != Some(self.imports.len())
+        {
             return Err(decline("native inbound lane groups"));
         }
         output.status("fetching objects...");

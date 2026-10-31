@@ -24,6 +24,7 @@ pub(super) fn entries_with_default(
             continue;
         }
         let (raw_scope, name) = row_scope_and_name(key, row);
+        validate_entry_name(name)?;
         let current = if raw_scope.is_empty() { default_scope } else { raw_scope };
         let Some(target_scope) = scope(current, options) else { continue };
         entries.push(crate::component_rename::Options {
@@ -65,6 +66,13 @@ fn row_scope_and_name<'a>(key: &'a str, row: &'a Value) -> (&'a str, &'a str) {
         .filter(|value| !value.is_empty())
         .unwrap_or(fallback_name);
     (current, name)
+}
+
+fn validate_entry_name(name: &str) -> io::Result<()> {
+    if name.trim().is_empty() {
+        return Err(io::Error::other("scope rename component name is empty"));
+    }
+    Ok(())
 }
 
 pub(super) fn validate_scope(scope: &str) -> io::Result<()> {

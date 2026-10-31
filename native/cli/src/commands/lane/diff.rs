@@ -280,7 +280,7 @@ fn diff_component(
         if truthy(file.get("same")) {
             continue;
         }
-        let path = text(file.get("relativePath"))?;
+        let path = validated_relative_path(file)?;
         let path = if cfg!(windows) { path.replace('/', r"\") } else { path.to_owned() };
         let raw = text(file.get("rawDiff"))?;
         let raw = raw
@@ -298,4 +298,12 @@ fn diff_component(
     let separator = "-".repeat(title.len());
     let header = chalk.cyan(&format!("{separator}\n{title}\n{separator}"));
     Ok(Some(format!("{header}\n{}\n", file_diffs.join("\n"))))
+}
+
+fn validated_relative_path(file: &Value) -> io::Result<&str> {
+    let path = text(file.get("relativePath"))?;
+    if path.trim().is_empty() {
+        return Err(io::Error::other("lane diff relativePath is empty"));
+    }
+    Ok(path)
 }

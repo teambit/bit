@@ -210,7 +210,7 @@ fn is_entry_internal(
         .get("config")
         .and_then(|cfg| super::update_cmd::aspect_entry(cfg, INTERNALIZE_ASPECT_ID))
     {
-        if cfg.as_str() == Some("-") {
+        if cfg.is_null() || cfg.as_str() == Some("-") {
             return Ok(false);
         }
         return Ok(cfg["internal"].as_bool().unwrap_or(false));

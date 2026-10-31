@@ -51,6 +51,8 @@ pub(super) fn pinned_dependencies(version: &Value) -> HashSet<String> {
         .into_iter()
         .flatten()
         .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|dep| !dep.is_empty())
         .map(str::to_owned)
         .collect()
 }

@@ -39,9 +39,12 @@ fn run_create_outside_scope(chalk: Chalk, argv: &[&str], args: &CreateArgs) -> i
     if !supports_create_outside(argv, args) {
         return Ok(Outcome::Declined("capsule create outside scope delegated".into()));
     }
+    let has_base_dir = args.base_dir
+        .as_deref()
+        .is_some_and(|dir| !dir.trim().is_empty());
     let error = if args.ids.is_empty() {
         "undefined is not iterable (cannot read property Symbol(Symbol.iterator))"
-    } else if args.base_dir.is_some() || args.use_hash {
+    } else if has_base_dir || args.use_hash {
         "Cannot read properties of undefined (reading 'resolveMultipleComponentIds')"
     } else {
         "Cannot read properties of undefined (reading 'shouldUseHashForCapsules')"

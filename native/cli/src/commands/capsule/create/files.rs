@@ -249,7 +249,7 @@ fn take_exports(metadata: &mut Map<String, Value>) -> Option<Option<Value>> {
     match metadata.remove("exports") {
         None => Some(None),
         Some(value @ Value::Object(_)) => Some(Some(value)),
-        Some(Value::String(value)) if !value.is_empty() => Some(Some(Value::String(value))),
+        Some(Value::String(value)) if !value.trim().is_empty() => Some(Some(Value::String(value))),
         _ => None,
     }
 }
@@ -257,7 +257,7 @@ fn take_exports(metadata: &mut Map<String, Value>) -> Option<Option<Value>> {
 fn take_nonempty_string(metadata: &mut Map<String, Value>, key: &str) -> Option<Option<String>> {
     match metadata.remove(key) {
         None => Some(None),
-        Some(Value::String(value)) if !value.is_empty() => Some(Some(value)),
+        Some(Value::String(value)) if !value.trim().is_empty() => Some(Some(value)),
         _ => None,
     }
 }

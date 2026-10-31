@@ -57,10 +57,11 @@ fn consume_trailing_scope_path<'a>(
     scope_path: &mut Option<String>,
 ) -> Option<()> {
     for rest in iter {
-        if rest.is_empty() || rest.starts_with('-') || scope_path.is_some() {
+        let trimmed = rest.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') || scope_path.is_some() {
             return None;
         }
-        *scope_path = Some(rest.to_owned());
+        *scope_path = Some(trimmed.to_owned());
     }
     Some(())
 }

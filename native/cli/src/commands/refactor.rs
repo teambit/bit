@@ -311,11 +311,15 @@ fn extract_version_package_name(ver_val: &Value) -> Option<String> {
 }
 
 fn is_valid_scoped_package_name(name: &str) -> bool {
+    let name = name.trim();
     name.starts_with('@')
-        && name.contains('/')
         && name.len() <= 214
         && !name.contains('\\')
         && !name.contains("..")
+        && name
+            .strip_prefix('@')
+            .and_then(|rest| rest.split_once('/'))
+            .is_some_and(|(scope, pkg)| !scope.is_empty() && !pkg.is_empty())
 }
 
 fn load_scope_index_components(scope_dir: &Path) -> Option<Vec<Value>> {

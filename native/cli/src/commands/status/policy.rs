@@ -79,6 +79,8 @@ impl Policy {
         Ok(array(self.input["resolution"]["sources"].get("bitmap"), "bitmap sources")?
             .iter()
             .filter_map(Value::as_str)
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
             .map(|id| {
                 id.rfind('@')
                     .map_or(id, |sep| &id[..sep])

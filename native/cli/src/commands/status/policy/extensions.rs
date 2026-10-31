@@ -96,7 +96,7 @@ fn replacement_id(value: &Value) -> bool {
         .is_some_and(|id| {
             id.get("name")
                 .and_then(Value::as_str)
-                .is_some_and(|name| !name.is_empty())
+                .is_some_and(|name| !name.trim().is_empty())
                 && id
                     .iter()
                     .all(|(key, value)| {

@@ -63,25 +63,28 @@ fn run_workspace(
 }
 
 fn report(plan: &Plan, format: &Formatter) -> io::Result<String> {
-    let mut sections = vec![];
-    for component in plan.changes() {
-        let id =
-            component["id"].as_str().ok_or_else(|| io::Error::other("move component identity"))?;
-        let mut lines = vec![format.title(&format!("moved component {id}"))];
-        for change in
-            component["changes"].as_array().ok_or_else(|| io::Error::other("move paths"))?
-        {
-            let from =
-                change["from"].as_str().ok_or_else(|| io::Error::other("move source path"))?;
-            let to =
-                change["to"].as_str().ok_or_else(|| io::Error::other("move destination path"))?;
-            lines.push(format.item(&format!(
-                "from {} to {}",
-                format.chalk.bold(from),
-                format.chalk.bold(to),
-            )));
-        }
-        sections.push(lines.join("\n"));
-    }
+    let sections = plan
+        .changes()
+        .iter()
+        .map(|component| format_component_move_section(component, format))
+        .collect::<io::Result<Vec<_>>>()?;
     Ok(Formatter::join(&sections))
+}
+
+fn format_component_move_section(
+    component: &serde_json::Value,
+    format: &Formatter,
+) -> io::Result<String> {
+    let id = component["id"].as_str().ok_or_else(|| io::Error::other("move component identity"))?;
+    let mut lines = vec![format.title(&format!("moved component {id}"))];
+    for change in component["changes"].as_array().ok_or_else(|| io::Error::other("move paths"))? {
+        let from = change["from"].as_str().ok_or_else(|| io::Error::other("move source path"))?;
+        let to = change["to"].as_str().ok_or_else(|| io::Error::other("move destination path"))?;
+        lines.push(format.item(&format!(
+            "from {} to {}",
+            format.chalk.bold(from),
+            format.chalk.bold(to),
+        )));
+    }
+    Ok(lines.join("\n"))
 }

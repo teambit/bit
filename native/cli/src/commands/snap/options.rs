@@ -50,7 +50,7 @@ fn canonical_flag(raw: &str) -> &str {
 
 /// A bounded workspace pattern, including state predicates.
 fn pattern(text: &str) -> bool {
-    !text.is_empty() && text.len() <= 4096 && !text.contains('\0')
+    !text.trim().is_empty() && text.len() <= 4096 && !text.contains('\0')
 }
 
 impl Options {

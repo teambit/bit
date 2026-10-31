@@ -50,10 +50,11 @@ fn prepare(
         source: source["identity"]
             .as_str()
             .or_else(|| source["id"].as_str())
+            .map(str::trim)
             .unwrap_or_default()
             .to_owned(),
         target: options.target.clone(),
-        scope: Some(scope.into()),
+        scope: Some(scope.trim().into()),
         path: if remote_multiple { None } else { options.path.clone() },
         remote,
         preserve: options.flags.preserve && !options.multiple(),

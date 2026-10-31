@@ -151,6 +151,7 @@ fn workspace_default_scope(workspace: &Value) -> Result<String, Failure> {
     }
     ws["defaultScope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .map(str::to_owned)
         .ok_or_else(|| Failure::Declined("missing defaultScope".to_owned()))

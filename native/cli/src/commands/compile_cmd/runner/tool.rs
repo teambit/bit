@@ -7,6 +7,9 @@ use std::{
 };
 
 pub(super) fn compile(files: &[Value]) -> io::Result<Vec<Value>> {
+    if files.is_empty() {
+        return Ok(Vec::new());
+    }
     let Target::Entry(cli) = discovery::find()? else {
         return Err(io::Error::other("compiler tool installation"));
     };

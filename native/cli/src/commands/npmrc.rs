@@ -45,5 +45,6 @@ fn parse_subcommand(args: &[OsString]) -> Option<String> {
     let [subcommand] = filtered.as_slice() else {
         return None;
     };
-    Some((*subcommand).to_owned())
+    let trimmed = subcommand.trim();
+    (!trimmed.is_empty()).then(|| trimmed.to_owned())
 }

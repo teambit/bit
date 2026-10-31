@@ -152,7 +152,7 @@ pub(super) fn prepare_forked(
         .filter(|target| {
             target["version"]
                 .as_str()
-                .is_some_and(|version| !version.is_empty())
+                .is_some_and(|version| !version.trim().is_empty())
         })
         .map(|target| json!({"identity":target["identity"],"version":target["version"]}))
         .collect::<Vec<_>>();

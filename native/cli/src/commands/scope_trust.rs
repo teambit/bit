@@ -108,7 +108,10 @@ fn parse_action(tokens: &[String]) -> Result<Action, Failure> {
 }
 
 fn require_pattern(action: &str, pattern: Option<String>) -> Result<String, Failure> {
-    let Some(pattern) = pattern.filter(|value| !value.is_empty()) else {
+    let Some(pattern) = pattern
+        .map(|value| value.trim().to_owned())
+        .filter(|value| !value.is_empty())
+    else {
         return Err(Failure::User(format!(
             r#""{action}" requires a pattern. example: bit scope trust {action} acme.frontend"#,
         )));

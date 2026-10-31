@@ -76,9 +76,15 @@ fn local(
     let bitmap = bitmap(root)?;
     let captured = linker.capture(root, &bitmap, &[id.to_owned()])?;
     print!("{}", linker.take_stdout());
+    let id = id.trim();
     let mut source = captured
         .into_iter()
-        .find(|row| row["identity"] == id)
+        .find(|row| {
+            row["identity"]
+                .as_str()
+                .or_else(|| row["id"].as_str())
+                .is_some_and(|candidate| candidate.trim() == id)
+        })
         .ok_or_else(|| io::Error::other("fork captured source missing"))?;
     let state = inventory::read(root)?;
     let inventory = inventory::selected(&state, id)

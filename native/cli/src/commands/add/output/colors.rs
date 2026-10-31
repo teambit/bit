@@ -35,9 +35,10 @@ pub(super) fn native_io(error: io::Error, chalk: Chalk) -> io::Error {
     io::Error::new(error.kind(), Colored { message: chalk.red(&message), source: error })
 }
 fn filesystem_message(message: &str) -> bool {
-    message.starts_with("ENOTDIR: not a directory, mkdir '")
-        || message.starts_with("EISDIR: illegal operation on a directory, rename '")
-        || message.starts_with("EPERM: operation not permitted,")
+    let trimmed = message.trim_start();
+    trimmed.starts_with("ENOTDIR: not a directory, mkdir '")
+        || trimmed.starts_with("EISDIR: illegal operation on a directory, rename '")
+        || trimmed.starts_with("EPERM: operation not permitted,")
 }
 fn message_color(message: &str, chalk: Chalk) -> Option<String> {
     if message == NO_FILES {

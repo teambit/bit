@@ -93,7 +93,12 @@ impl Plan {
             relative.to_string_lossy().into_owned()
         };
         report::Target {
-            scope: self.scope.clone().unwrap_or_else(|| "<scope>".into()),
+            scope: self.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .unwrap_or("<scope>")
+                .to_owned(),
             repository: origin.as_deref().and_then(remote::repository),
             origin,
             branch,

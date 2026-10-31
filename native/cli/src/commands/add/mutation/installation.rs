@@ -10,6 +10,9 @@ impl ProjectedLinker {
         root: &Path,
         args: &[OsString],
     ) -> io::Result<Self> {
+        if root.as_os_str().is_empty() {
+            return Err(io::Error::other("identity installation workspace root is empty"));
+        }
         Installer::validate_workspace(root)?;
         let mut environment = Environments::for_tracking().for_checkout();
         let (info, stdout) = environment.identity_installation_info(root, args)?;

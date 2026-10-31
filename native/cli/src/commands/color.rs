@@ -94,7 +94,7 @@ impl Chalk {
     /// after its existing close codes (innermost first), close and reopen
     /// around every line break.
     fn apply(self, styles: &[Style], text: &str) -> String {
-        if !self.enabled || text.is_empty() {
+        if !self.enabled || text.is_empty() || styles.is_empty() {
             return text.to_string();
         }
         let open: String = styles

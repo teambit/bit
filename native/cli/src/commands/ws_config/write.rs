@@ -344,6 +344,7 @@ fn is_user_authored(file_path: &Path, marker: &str) -> bool {
 }
 
 fn relative_to_cache(rel_dir: &str, target_name: &str) -> String {
+    let rel_dir = rel_dir.trim();
     if rel_dir == "." || rel_dir.is_empty() {
         return format!("./node_modules/.cache/{target_name}");
     }
@@ -351,5 +352,8 @@ fn relative_to_cache(rel_dir: &str, target_name: &str) -> String {
         .split('/')
         .filter(|seg| !seg.is_empty() && *seg != ".")
         .count();
+    if depth == 0 {
+        return format!("./node_modules/.cache/{target_name}");
+    }
     format!("./{}/node_modules/.cache/{target_name}", vec![".."; depth].join("/"))
 }

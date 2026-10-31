@@ -30,7 +30,7 @@ pub fn no_fs_cache(root: &Path) -> bool {
 
 fn mentions_no_fs_cache(value: &str) -> bool {
     value
-        .split([',', ';', ' ', '\t'])
+        .split([',', ';', ' ', '\t', '\n', '\r'])
         .any(|feature| feature.trim().eq_ignore_ascii_case(NO_FS_CACHE))
 }
 

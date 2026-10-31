@@ -54,7 +54,8 @@ pub(super) fn prepare_usage(
 }
 
 fn is_component_id(dep_name: &str) -> bool {
-    dep_name.contains('/') && !dep_name.starts_with('@')
+    let trimmed = dep_name.trim();
+    !trimmed.is_empty() && trimmed.contains('/') && !trimmed.starts_with('@')
 }
 
 fn find_usages_in_workspace(

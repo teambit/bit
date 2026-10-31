@@ -25,7 +25,11 @@ pub(super) fn prepare(path: &Path) -> io::Result<Option<PathBuf>> {
     if let Some(scope) = &scope {
         let Ok(bytes) = fs::read(scope.join("scope.json")) else { return Ok(None) };
         let Ok(json) = bit_object_import::parse_jsonc(&bytes) else { return Ok(None) };
-        if json["name"].as_str().is_none_or(str::is_empty) || !scope.join("objects").is_dir() {
+        if json["name"]
+            .as_str()
+            .is_none_or(|name| name.trim().is_empty())
+            || !scope.join("objects").is_dir()
+        {
             return Ok(None);
         }
     }

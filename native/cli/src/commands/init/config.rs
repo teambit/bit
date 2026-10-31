@@ -10,13 +10,18 @@ const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 pub(super) fn create(root: &Path, modules: &Path, options: &Options) -> io::Result<Vec<u8>> {
     let mut document = template(modules)?;
     let name = options.defaults.name
-        .clone()
-        .unwrap_or_else(|| {
-            root.file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .into_owned()
-        });
+        .as_deref()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .map_or_else(
+            || {
+                root.file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .into_owned()
+            },
+            str::to_owned,
+        );
     document.set(&[WORKSPACE, "name"], &json!(name));
     if let Some(value) = &options.defaults.directory {
         document.set(&[WORKSPACE, "defaultDirectory"], &json!(value));

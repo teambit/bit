@@ -252,10 +252,10 @@ fn update_bitmap_default_scope(
 fn has_version(key: &str, row: &Value) -> bool {
     row["version"]
         .as_str()
-        .is_some_and(|version| !version.is_empty())
+        .is_some_and(|version| !version.trim().is_empty())
         || key
             .rsplit_once('@')
-            .is_some_and(|(_, version)| !version.is_empty())
+            .is_some_and(|(_, version)| !version.trim().is_empty())
 }
 
 fn prepare_component_scope(

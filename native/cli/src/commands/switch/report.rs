@@ -42,7 +42,11 @@ fn build(results: &Results, options: &Options, formatter: &Formatter, minimal: b
         let items: Vec<String> = results.skipped
             .iter()
             .map(|(id, message)| {
-                formatter.item(&format!("{} - {message}", formatter.chalk.bold(&id.display())))
+                formatter.item(&format!(
+                    "{} - {}",
+                    formatter.chalk.bold(&id.display()),
+                    message.trim(),
+                ))
             })
             .collect();
         formatter.section("switch skipped", "", &items)

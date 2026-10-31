@@ -355,6 +355,9 @@ pub(super) fn prepare_lane_import(
 }
 
 pub(super) fn apply_status_refresh(engine: &mut Engine, token: &Value) -> io::Result<()> {
+    if token.is_null() {
+        return Err(io::Error::other("status main refresh missing token"));
+    }
     let applied: Value = engine.request(&json!({"kind":"commandInboundApply","token":token}))?;
     if applied["applied"] != true || applied["token"] != *token {
         return Err(io::Error::other("status main refresh publication"));

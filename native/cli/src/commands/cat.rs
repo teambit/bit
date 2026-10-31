@@ -185,7 +185,7 @@ fn prepare(root: &Path, options: &Options<'_>) -> Result<Prepared, Failure> {
     let (requested, explicit) = raw
         .rsplit_once('@')
         .map_or((raw, None), |(id, version)| (id, Some(version)));
-    if requested.is_empty() || explicit == Some("") {
+    if requested.trim().is_empty() || explicit.is_some_and(|ver| ver.trim().is_empty()) {
         return Err(decline("cat identity or version").into());
     }
     let entry = selected_entry(root, requested)?;

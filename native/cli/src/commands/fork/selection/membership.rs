@@ -29,12 +29,14 @@ fn equal(left: &str, right: &str, pool: &[Value]) -> bool {
     bare(left) == bare(right) && version(left, pool) == version(right, pool)
 }
 fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
-    let explicit = id.split_once('@').map(|(_, version)| version);
+    let bare_id = bare(id);
+    let explicit = id.rsplit_once('@').map(|(_, version)| version.trim());
     explicit
         .or_else(|| {
             pool.iter()
-                .find(|row| row["identity"] == id)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(bare_id))
                 .and_then(|row| row["version"].as_str())
+                .map(str::trim)
         })
         .filter(|candidate| is_concrete_version(candidate))
 }

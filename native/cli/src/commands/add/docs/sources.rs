@@ -36,6 +36,8 @@ pub(super) fn observe(root: &Path, components: &[Value]) -> io::Result<BTreeMap<
         let directory = component["directory"]
             .as_str()
             .or_else(|| component["rootDir"].as_str())
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
             .ok_or_else(|| io::Error::other("tracking docs directory"))?;
         for file in
             component["files"].as_array().ok_or_else(|| io::Error::other("tracking docs files"))?
@@ -47,6 +49,8 @@ pub(super) fn observe(root: &Path, components: &[Value]) -> io::Result<BTreeMap<
                 .as_str()
                 .or_else(|| file["path"].as_str())
                 .or_else(|| file.as_str())
+                .map(str::trim)
+                .filter(|rel| !rel.is_empty())
                 .ok_or_else(|| io::Error::other("tracking docs relative path"))?;
             let path = root.join(directory).join(relative);
             let source = read_source(&path, &mut remaining)?;

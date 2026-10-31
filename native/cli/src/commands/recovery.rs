@@ -94,7 +94,10 @@ fn apply_component_flag(arg: &str, opts: &mut Options, abort: &mut bool) -> Opti
         *abort = true;
         return Some(());
     }
-    (opts.pattern.is_none() && valid_pattern(arg)).then(|| opts.pattern = Some(arg.to_string()))
+    let trimmed = arg.trim();
+    (opts.pattern.is_none() && valid_pattern(trimmed)).then(|| {
+        opts.pattern = Some(trimmed.to_string());
+    })
 }
 
 fn apply_lane_flag(arg: &str, opts: &mut Options) -> Option<()> {

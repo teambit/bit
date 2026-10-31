@@ -132,7 +132,7 @@ pub fn hydrate(value: &Value) -> io::Result<Results> {
     }
     let version = match map.get("version") {
         None => None,
-        Some(version) => Some(text(Some(version))?.to_string()),
+        Some(version) => Some(text(Some(version))?.trim().to_string()),
     };
     let conflicts = match map.get("leftUnresolvedConflicts") {
         None => false,

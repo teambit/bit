@@ -50,6 +50,7 @@ fn remote_id_str(value: &Value) -> Option<String> {
         .as_str()
         .or_else(|| value["id"].as_str())
         .or_else(|| value["identity"].as_str())
+        .map(str::trim)
         .filter(|id| !id.is_empty())
     {
         return Some(id.to_owned());

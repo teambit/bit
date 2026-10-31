@@ -123,7 +123,11 @@ fn render(value: &Value, chalk: Chalk) -> io::Result<String> {
             format!(
                 "{} failed: {}",
                 formatter.error_symbol(),
-                result["err"]["message"].as_str().unwrap_or("undefined"),
+                result["err"]["message"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|msg| !msg.is_empty())
+                    .unwrap_or("undefined"),
             )
         } else if let Some(added) = result["added"].as_array() {
             format!("added {} hashes", added.len())

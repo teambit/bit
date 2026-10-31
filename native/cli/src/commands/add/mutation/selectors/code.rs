@@ -106,12 +106,19 @@ fn source_proofs(root: &Path, targets: &[Value]) -> io::Result<Vec<Value>> {
     targets
         .iter()
         .flat_map(|row| {
-            let directory = root.join(row["directory"].as_str().unwrap_or_default());
+            let directory = root.join(
+                row["directory"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default(),
+            );
             row["files"]
                 .as_array()
                 .into_iter()
                 .flatten()
                 .filter_map(Value::as_str)
+                .map(str::trim)
+                .filter(|file| !file.is_empty())
                 .map(move |file| directory.join(file))
         })
         .map(|path| controls::refresh(&path))

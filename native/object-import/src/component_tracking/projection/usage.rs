@@ -19,13 +19,13 @@ pub(super) fn filter(
             ))
         })
         .collect::<Vec<_>>();
+    let candidate_scope = candidate.scope.as_str();
+    let candidate_name = candidate.name.as_str();
     candidate.files.retain(|file| {
         let owner = owned
             .iter()
             .find(|(name, root, row)| {
-                (name != &candidate.name || rows::scope(row) != Some(candidate.scope.as_str()))
-                    && root != "."
-                    && file.starts_with(&format!("{root}/"))
+                is_owned_by_other((candidate_scope, candidate_name), name, root, row, file)
             });
         if let Some((name, _, row)) = owner {
             warning(&mut plan.warnings, name, row, file);
@@ -60,4 +60,16 @@ fn warning(warnings: &mut Value, name: &str, row: &Value, file: &str) {
         .as_array_mut()
         .unwrap()
         .push(json!(file));
+}
+
+fn is_owned_by_other(
+    (candidate_scope, candidate_name): (&str, &str),
+    name: &str,
+    root: &str,
+    row: &Value,
+    file: &str,
+) -> bool {
+    (name != candidate_name || rows::scope(row) != Some(candidate_scope))
+        && root != "."
+        && file.starts_with(&format!("{root}/"))
 }

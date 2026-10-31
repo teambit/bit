@@ -20,9 +20,10 @@ pub fn split(pattern: &str) -> Vec<String> {
         .split(',')
         .map(|part| part.trim().to_string())
         .collect();
-    if patterns
-        .iter()
-        .all(|part| part.starts_with('!'))
+    if !patterns.is_empty()
+        && patterns
+            .iter()
+            .all(|part| part.starts_with('!'))
     {
         patterns.insert(0, "**".to_string());
     }

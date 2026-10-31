@@ -17,10 +17,13 @@ pub(super) fn document(
     if current.is_object() {
         copy_current(&mut scope, &current);
     } else {
-        if let Some(group) = group.filter(|group| !group.is_empty()) {
+        if let Some(group) = group
+            .map(str::trim)
+            .filter(|group| !group.is_empty())
+        {
             scope["groupName"] = json!(group);
         }
-        scope["version"] = json!(version);
+        scope["version"] = json!(version.trim());
         scope["lanes"] = json!({"current":"main","tracking":[],"new":[]});
     }
     bit_workspace_config::render_scope_json(&scope)

@@ -45,6 +45,7 @@ fn refs(value: &Value) -> Option<Vec<&str>> {
 }
 
 fn valid_hash(hash: &str) -> Option<&str> {
+    let hash = hash.trim();
     (hash.len() == 40
         && hash
             .bytes()

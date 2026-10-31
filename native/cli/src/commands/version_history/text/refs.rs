@@ -38,10 +38,16 @@ fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>
         .iter()
         .find(|row| {
             crate::commands::version_history::build::row_scope_and_name(row)
-                == Some((scope, component))
+                == Some((scope.trim(), component.trim()))
         });
     match row {
-        Some(row) => Some(Some(row["head"].as_str()?.to_owned())),
+        Some(row) => Some(Some(
+            row["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())?
+                .to_owned(),
+        )),
         None => Some(None),
     }
 }

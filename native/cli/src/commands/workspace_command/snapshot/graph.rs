@@ -72,6 +72,8 @@ fn roots_dir(root: &Path) -> io::Result<std::path::PathBuf> {
             .then_some(val)
         })
         .and_then(|workspace| workspace["rootComponentsDirectory"].as_str())
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
         .unwrap_or("node_modules");
     Ok(root.join(root_directory).join(".bit_roots"))
 }

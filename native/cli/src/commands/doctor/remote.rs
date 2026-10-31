@@ -35,30 +35,46 @@ pub(super) fn prepare(context: &Context, options: &Options) -> io::Result<Option
         .transpose()?
         .unwrap_or(Value::Null);
     let global = global(context);
-    let package_dir =
-        context.cli.bit_dir.as_ref().ok_or_else(|| io::Error::other("missing Bit package"))?;
-    let package: Value =
-        bit_object_import::parse_jsonc(&fs::read(package_dir.join("package.json"))?)?;
-    let network = Network::new(
-        &global,
-        package["version"].as_str().unwrap_or_default(),
-        scope["name"].as_str(),
-        None,
-    )?;
-    let resolver = Resolver::configured(
-        &scope,
-        context.cli.node.clone(),
-        package_dir.clone(),
-        scope["name"].as_str().unwrap_or_default(),
-        &global,
-    );
-    let remotes = Remotes::load(&scope, &global_config_dir(), &global)?.with_resolver(resolver);
+    let (remotes, network) = build_remotes_and_network(context, &scope, &global)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     let remote = runtime.block_on(remotes.resolve(name, &network))?;
     if let Remote::File(path) = &remote {
         preflight(context, options, path)?;
     }
     Ok(Some(Plan { remote, network, name: name.to_owned() }))
+}
+
+fn build_remotes_and_network(
+    context: &Context,
+    scope: &Value,
+    global: &GlobalConfig,
+) -> io::Result<(Remotes, Network)> {
+    let package_dir =
+        context.cli.bit_dir.as_ref().ok_or_else(|| io::Error::other("missing Bit package"))?;
+    let package: Value =
+        bit_object_import::parse_jsonc(&fs::read(package_dir.join("package.json"))?)?;
+    let scope_name = scope["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    let network = Network::new(
+        global,
+        package["version"]
+            .as_str()
+            .map(str::trim)
+            .unwrap_or_default(),
+        scope_name,
+        None,
+    )?;
+    let resolver = Resolver::configured(
+        scope,
+        context.cli.node.clone(),
+        package_dir.clone(),
+        scope_name.unwrap_or_default(),
+        global,
+    );
+    let remotes = Remotes::load(scope, &global_config_dir(), global)?.with_resolver(resolver);
+    Ok((remotes, network))
 }
 
 fn global(context: &Context) -> GlobalConfig {

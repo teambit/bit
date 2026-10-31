@@ -112,7 +112,8 @@ fn validate_selection(targets: &[Value], ids: Option<&[String]>) -> io::Result<(
     if let Some(ids) = ids {
         let mut seen = HashSet::new();
         for id in ids {
-            if !seen.insert(id)
+            if id.trim().is_empty()
+                || !seen.insert(id)
                 || !targets
                     .iter()
                     .any(|target| target["identity"] == *id)

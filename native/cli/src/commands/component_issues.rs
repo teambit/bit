@@ -211,7 +211,7 @@ fn parse(args: &[&str]) -> Option<bool> {
     let mut json = false;
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
-        match arg {
+        match arg.trim() {
             "--" => return iter.next().is_none().then_some(json),
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,

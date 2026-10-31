@@ -8,7 +8,7 @@ pub(super) fn target(
     metadata: &fs::Metadata,
     existing: Option<&fs::Metadata>,
 ) -> io::Result<()> {
-    if source == target {
+    if source.as_os_str().is_empty() || target.as_os_str().is_empty() || source == target {
         return Err(io::Error::other("Source and destination must not be the same."));
     }
     if let Some(existing) = existing {

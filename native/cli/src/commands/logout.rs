@@ -73,7 +73,8 @@ fn clear_auth_config(global_dir: &Path) -> io::Result<()> {
     let removed_token = obj.remove("user.token").is_some();
     let removed_name = obj.remove("user.name").is_some();
     if removed_token || removed_name {
-        let bytes = serde_json::to_vec_pretty(&val)?;
+        let mut bytes = serde_json::to_vec_pretty(&val)?;
+        bytes.push(b'\n');
         fs::write(&path, bytes)?;
     }
     Ok(())

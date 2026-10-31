@@ -291,9 +291,11 @@ fn row(identity: String, bitmap: &[bitmap::Entry], models: &[Model]) -> Row {
 fn model(value: &Value) -> io::Result<Model> {
     let scope = value["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty());
     let name = value["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty());
     let (Some(scope), Some(name)) = (scope, name) else {
         return Err(decline("model without a scope"));

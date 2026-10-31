@@ -30,7 +30,11 @@ pub(super) fn app_help_output(argv: &[&str], chalk: Chalk) -> Option<String> {
 }
 
 pub(super) fn unsupported_flag_help(argv: &[&str], chalk: Chalk) -> Option<String> {
-    let name = *argv.first()?;
+    let name = argv
+        .first()
+        .copied()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())?;
     match &argv[1..] {
         ["run" | "c", flag @ ("--ssr" | "--json" | "--no-color")] => {
             return Some(run_flag_help(name, flag, chalk));

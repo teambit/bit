@@ -181,6 +181,9 @@ pub(super) fn resolve_verified_env(
     raw_env: &str,
 ) -> Result<(String, String), Failure> {
     let bare_env = raw_env.rsplit_once('@').map_or(raw_env, |(bare, _)| bare);
+    if bare_env.trim().is_empty() {
+        return Err(Failure::Declined("empty env identifier".into()));
+    }
     if CORE_ENVS.contains(&bare_env) {
         return Ok((bare_env.to_owned(), bare_env.to_owned()));
     }

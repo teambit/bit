@@ -65,25 +65,26 @@ fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
         .iter()
         .map(|row| automatic_row(row, &selected_names, labels))
         .collect::<io::Result<Vec<_>>>()?;
-    let pinned = pinned_dependents(map.get("dependentsWithPinnedDeps"))?;
-    let warnings = warnings(map.get("warnings"), labels)?;
     let versioned = Versioned {
         labels,
         selected,
         added,
         removed,
         automatic,
-        pinned,
-        warnings,
-        summary: (
-            map.get("laneName")
-                .and_then(Value::as_str)
-                .map(str::to_string),
-            total,
-        ),
+        pinned: pinned_dependents(map.get("dependentsWithPinnedDeps"))?,
+        warnings: warnings(map.get("warnings"), labels)?,
+        summary: (lane_name(map), total),
     };
     versioned.validate_overlaps()?;
     Ok(versioned)
+}
+
+fn lane_name(map: &serde_json::Map<String, Value>) -> Option<String> {
+    map.get("laneName")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|lane| !lane.is_empty())
+        .map(str::to_string)
 }
 
 fn pinned_dependents(value: Option<&Value>) -> io::Result<Vec<(Id, Vec<String>)>> {

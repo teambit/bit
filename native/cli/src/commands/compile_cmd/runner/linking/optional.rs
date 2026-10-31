@@ -33,10 +33,12 @@ pub(super) fn apply(
     Ok(())
 }
 fn optional(entries: &[PolicyEntry], name: &str) -> bool {
-    entries
-        .iter()
-        .find(|entry| entry.name == name)
-        .is_some_and(|entry| entry.optional)
+    let name = name.trim();
+    !name.is_empty()
+        && entries
+            .iter()
+            .find(|entry| entry.name == name)
+            .is_some_and(|entry| entry.optional)
 }
 fn append(
     list: &mut ComponentDependencies,

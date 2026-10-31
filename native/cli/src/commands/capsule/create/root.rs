@@ -29,8 +29,9 @@ fn consume_trailing_capsule_ids<'a>(
     ids: &mut Vec<String>,
 ) -> Option<()> {
     for trailing in args {
-        (!trailing.is_empty() && !trailing.starts_with('-')).then_some(())?;
-        ids.push(trailing.to_owned());
+        let trimmed = trailing.trim();
+        (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+        ids.push(trimmed.to_owned());
     }
     Some(())
 }

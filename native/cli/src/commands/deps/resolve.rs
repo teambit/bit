@@ -62,6 +62,7 @@ impl Identity<'_> {
 }
 
 pub(super) fn split_pkg_to_name_and_ver(raw: &str) -> (&str, Option<&str>) {
+    let raw = raw.trim();
     if let Some(rest) = raw.strip_prefix('@') {
         match rest.find('@') {
             Some(idx) => (&raw[..=idx], Some(&raw[idx + 2..])),

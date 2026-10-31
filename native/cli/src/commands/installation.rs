@@ -182,8 +182,10 @@ impl Installer {
             let ids: Vec<(String, String)> = ids
                 .iter()
                 .filter_map(|id| {
-                    let (name, version) = id.rsplit_once('@')?;
-                    Some((name.to_string(), version.to_string()))
+                    let (name, version) = id.trim().rsplit_once('@')?;
+                    (!name.is_empty() && !version.is_empty()).then(|| {
+                        (name.to_string(), version.to_string())
+                    })
                 })
                 .collect();
             bit_install::stored_graphs(root, &ids)?

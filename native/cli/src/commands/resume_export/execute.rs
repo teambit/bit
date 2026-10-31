@@ -97,7 +97,10 @@ async fn persist_one(plan: &Plan, name: &str, client_id: &str) -> io::Result<Val
     for _ in 0..3 {
         match plan.action("ExportPersist", &json!({"clientId":client_id})).await {
             Ok(value) => return Ok(value),
-            Err(last) => error = last.to_string(),
+            Err(last) => last
+                .to_string()
+                .trim()
+                .clone_into(&mut error),
         }
     }
     Err(io::Error::other(format!(

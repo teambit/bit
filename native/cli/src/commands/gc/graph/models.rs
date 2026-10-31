@@ -44,7 +44,9 @@ impl Models {
         self.identities.contains_key(key)
     }
     pub(super) fn get(&self, scope: Option<&str>, name: &str) -> Option<&Value> {
+        let name = name.trim();
         let key = scope
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
             .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
         self.lookup(&key)

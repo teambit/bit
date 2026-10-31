@@ -76,8 +76,14 @@ impl Inventory {
                 .collect()
         };
         let ignored_root: &[&str] = if options.track_all_files { &[] } else { IGNORE_ROOT_ONLY };
-        let patterns = options.patterns.iter().map(String::as_str);
-        let ignored_files = options.ignored_files.iter().map(String::as_str);
+        let patterns = options.patterns
+            .iter()
+            .map(|pattern| pattern.trim())
+            .filter(|pattern| !pattern.is_empty());
+        let ignored_files = options.ignored_files
+            .iter()
+            .map(|ignored| ignored.trim())
+            .filter(|ignored| !ignored.is_empty());
         let mut root = Ignore::new();
         root.add(
             patterns

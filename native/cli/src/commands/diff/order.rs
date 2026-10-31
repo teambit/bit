@@ -91,6 +91,7 @@ fn enumerate(
 pub(super) fn walk_order(left: &str, right: &str) -> std::cmp::Ordering {
     let split = |path: &str| -> (Vec<String>, String) {
         let mut parts: Vec<String> = path
+            .trim()
             .split(['/', '\\'])
             .filter(|segment| !segment.is_empty() && *segment != ".")
             .map(str::to_string)

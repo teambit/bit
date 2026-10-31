@@ -286,6 +286,8 @@ fn parse_remote_component_ids(result: &Value) -> Result<Vec<String>, Failure> {
         .map(|row| {
             row["id"]
                 .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| Failure::Declined("remote list component id".to_owned()))
         })

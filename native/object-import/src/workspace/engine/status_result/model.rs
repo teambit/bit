@@ -132,7 +132,10 @@ fn local_labels(model: &Value, history: &Value) -> io::Result<Vec<String>> {
     }
     refs.drain(..)
         .map(|value| {
-            let hash = value.as_str().ok_or_else(|| invalid("status local ref"))?;
+            let hash = value
+                .as_str()
+                .filter(|hash| !hash.trim().is_empty())
+                .ok_or_else(|| invalid("status local ref"))?;
             Ok(tags.get(hash).map_or_else(|| hash.to_owned(), |(label, _)| label.to_owned()))
         })
         .collect()

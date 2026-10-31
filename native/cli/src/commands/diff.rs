@@ -322,11 +322,11 @@ fn diff_target(root: &Path, row: &Value, from_version: Option<&str>) -> io::Resu
         .iter()
         .map(|file| text(Some(file)).map(str::to_string))
         .collect::<io::Result<_>>()?;
-    files = order::captured(
-        &root.join(text(object.get("directory"))?),
-        &files,
-        object.get("sourceOverlays"),
-    )?;
+    let directory = text(object.get("directory"))?;
+    if directory.trim().is_empty() {
+        return Err(decline("diff target directory is empty"));
+    }
+    files = order::captured(&root.join(directory), &files, object.get("sourceOverlays"))?;
     object.insert("files".into(), json!(files));
     Ok(row)
 }

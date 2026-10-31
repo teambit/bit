@@ -59,12 +59,16 @@ impl LaneData {
 
     /// `laneIdStr`: main's name, or `scope/name` with a differing alias.
     pub(super) fn label(&self) -> String {
-        let name = self.id["name"].as_str().unwrap_or_default();
+        let name = self.id["name"].as_str().map_or("", str::trim);
         if self.is_main() {
             return name.to_string();
         }
-        let id = format!("{}/{name}", self.id["scope"].as_str().unwrap_or_default());
-        match &self.alias {
+        let id = format!("{}/{name}", self.id["scope"].as_str().map_or("", str::trim));
+        match self.alias
+            .as_deref()
+            .map(str::trim)
+            .filter(|alias| !alias.is_empty())
+        {
             Some(alias) => format!("{id} ({alias})"),
             None => id,
         }

@@ -41,10 +41,12 @@ pub(super) fn components(
 ) -> Vec<WorkspaceComponent> {
     identities
         .iter()
+        .map(|identity| identity.trim())
+        .filter(|identity| !identity.is_empty())
         .filter_map(|identity| {
             projection.workspace.components
                 .iter()
-                .find(|component| component.id.to_string_without_version() == *identity)
+                .find(|component| component.id.to_string_without_version() == identity)
                 .cloned()
         })
         .collect()

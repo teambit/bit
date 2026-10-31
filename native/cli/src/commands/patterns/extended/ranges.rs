@@ -6,6 +6,9 @@ use std::io;
 const LIMIT: usize = 4096;
 
 pub(super) fn expand(pattern: &str) -> io::Result<Vec<String>> {
+    if pattern.len() > LIMIT {
+        return Err(decline("component pattern expansion limit"));
+    }
     let Some((open, close, range)) = sequence(pattern)? else {
         return Ok(vec![pattern.to_string()]);
     };

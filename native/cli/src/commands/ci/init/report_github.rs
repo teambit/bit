@@ -28,10 +28,11 @@ pub(super) fn steps(input: &Report, repository: &Repository, chalk: Chalk) -> Ve
 }
 fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<String> {
     let repo = shell_word(&repository.display());
-    let api = if repository.host == "github.com" {
+    let host = repository.host.trim();
+    let api = if host == "github.com" {
         "gh api".into()
     } else {
-        format!("gh api --hostname {}", shell_word(&repository.host))
+        format!("gh api --hostname {}", shell_word(host))
     };
     let permissions = shell_word(&format!(
         "repos/{}/{}/actions/permissions/workflow",

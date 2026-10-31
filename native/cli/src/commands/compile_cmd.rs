@@ -103,6 +103,7 @@ pub(super) fn validate_compile_selectors(root: &Path, options: &Options) -> Opti
 }
 
 fn validate_one_selector(selector: &str, bitmap: &Bitmap, index_rows: &[Value]) -> Option<String> {
+    let selector = selector.trim();
     if selector.starts_with('@') {
         return None;
     }

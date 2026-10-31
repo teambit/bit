@@ -54,8 +54,12 @@ fn read_local_remotes(root: &Path) -> HashMap<String, PathBuf> {
     remotes
         .iter()
         .filter_map(|(name, val)| {
-            let path_str = val.as_str()?.strip_prefix("file://")?;
-            Some((name.clone(), PathBuf::from(path_str)))
+            let path_str = val
+                .as_str()?
+                .trim()
+                .strip_prefix("file://")?
+                .trim();
+            (!path_str.is_empty()).then(|| (name.clone(), PathBuf::from(path_str)))
         })
         .collect()
 }

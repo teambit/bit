@@ -107,5 +107,13 @@ fn valid_merge_mode(
 }
 
 fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {
-    path.is_none() || !objects_only && ids.len() == 1 && !has_wildcard(&ids[0])
+    match path {
+        None => true,
+        Some(target_path) => {
+            !target_path.trim().is_empty()
+                && !objects_only
+                && ids.len() == 1
+                && !has_wildcard(&ids[0])
+        }
+    }
 }

@@ -224,8 +224,13 @@ fn eject_one_component(
 fn bitmap_row_version<'a>(key: &'a str, row: &'a Value) -> &'a str {
     row["version"]
         .as_str()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
-        .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver.trim())
+                .filter(|ver| !ver.is_empty())
+        })
         .unwrap_or_default()
 }
 

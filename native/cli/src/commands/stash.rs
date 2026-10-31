@@ -110,17 +110,19 @@ fn load_options(rows: &[Value]) -> io::Result<Value> {
 
 fn stash_id_parts(id: &Value) -> io::Result<(Option<&str>, &str)> {
     if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        let raw = raw.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
         return Ok(match bare.split_once('/') {
-            Some((scope, name)) => (Some(scope).filter(|val| !val.is_empty()), name),
+            Some((scope, name)) => (Some(scope.trim()).filter(|val| !val.is_empty()), name.trim()),
             None => (None, bare),
         });
     }
     Ok((
         id["scope"]
             .as_str()
+            .map(str::trim)
             .filter(|value| !value.is_empty()),
-        text(id.get("name"))?,
+        text(id.get("name"))?.trim(),
     ))
 }
 

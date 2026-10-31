@@ -20,10 +20,7 @@ pub(super) fn select(
         if !seen.insert(id.clone()) || !unresolved.contains(id) {
             return Err(invalid("resolve selection is not pending"));
         }
-        if !targets
-            .iter()
-            .any(|target| target["identity"] == *id)
-        {
+        if !has_target_identity(targets, id) {
             return Err(invalid("resolve selected component unavailable"));
         }
     }
@@ -56,6 +53,12 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
         return Err(invalid("resolve identity"));
     }
     Ok(format!("{scope}/{name}"))
+}
+
+fn has_target_identity(targets: &[Value], id: &str) -> bool {
+    targets
+        .iter()
+        .any(|target| target["identity"] == id)
 }
 
 #[cfg(test)]

@@ -17,10 +17,7 @@ pub(super) fn plain(name: &str, value: &Value) -> io::Result<Value> {
             }
         }
         "teambit.envs/envs" => {
-            validate_single(&config, "env", |val| {
-                val.as_str()
-                    .is_some_and(|env| env.split('@').next() == Some("teambit.harmony/node"))
-            })?;
+            validate_single(&config, "env", is_harmony_node_env)?;
         }
         "teambit.component/deprecation" => {
             validate_single(&config, "deprecate", Value::is_boolean)?;
@@ -71,4 +68,10 @@ fn validate_policy(value: &Value) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+fn is_harmony_node_env(value: &Value) -> bool {
+    value
+        .as_str()
+        .is_some_and(|env| env.split('@').next() == Some("teambit.harmony/node"))
 }

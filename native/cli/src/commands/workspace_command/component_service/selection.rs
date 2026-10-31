@@ -18,12 +18,14 @@ pub(super) fn exact(targets: &[Value], selectors: &[String]) -> io::Result<Vec<V
     Ok(selected)
 }
 fn matches(row: &Value, selector: &str) -> bool {
+    let selector = selector.trim();
     let (name, version) = selector
         .rsplit_once('@')
-        .map_or((selector, None), |(name, version)| (name, Some(version)));
+        .map_or((selector, None), |(name, version)| (name.trim(), Some(version.trim())));
     let row_version = row["version"]
         .as_str()
-        .or_else(|| row["head"].as_str());
+        .or_else(|| row["head"].as_str())
+        .map(str::trim);
     if version.is_some_and(|version| row_version != Some(version)) {
         return false;
     }

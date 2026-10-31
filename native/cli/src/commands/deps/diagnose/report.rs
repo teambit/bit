@@ -126,9 +126,10 @@ fn count_copies(entries: &[String]) -> HashMap<String, usize> {
 fn package_name(entry: &str) -> Option<String> {
     if let Some((scope, rest)) = entry.split_once('+')
         && scope.starts_with('@')
+        && scope.len() > 1
     {
         let (name, _) = rest.split_once('@')?;
-        return Some(format!("{scope}/{name}"));
+        return (!name.is_empty()).then(|| format!("{scope}/{name}"));
     }
     let (name, _) = entry.split_once('@')?;
     (!name.is_empty()).then(|| name.to_owned())

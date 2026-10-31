@@ -113,7 +113,11 @@ fn counts<'a>(values: impl Iterator<Item = &'a str>) -> Vec<(&'a str, usize)> {
 /// `findMostCommonVersion`: ties go to the higher version.
 fn most_common_version<'a>(versions: impl Iterator<Item = &'a str>) -> io::Result<(String, usize)> {
     let mut best = ("0.0.0".to_string(), 0);
-    for (version, count) in counts(versions) {
+    for (version, count) in counts(
+        versions
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty()),
+    ) {
         if count > best.1 || (count == best.1 && gt(version, &best.0)?) {
             best = (version.to_string(), count);
         }

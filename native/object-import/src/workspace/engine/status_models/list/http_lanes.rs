@@ -27,6 +27,7 @@ pub(in crate::workspace::engine) struct Request {
 
 pub(in crate::workspace::engine) fn read(request: &Request) -> io::Result<(usize, Value)> {
     super::super::super::path(&request.root)?;
+    validate_bit_version(&request.bit_version)?;
     if request.bare_scope {
         validate_bare_scope(&request.root)?;
     }
@@ -146,4 +147,11 @@ fn read_bare_index(root: &Path) -> io::Result<Value> {
 
 pub(super) fn read_json_file(path: &Path) -> io::Result<Value> {
     crate::parse_jsonc(&Budget::new(4 * 1024 * 1024).read(File::open(path)?)?)
+}
+
+fn validate_bit_version(bit_version: &str) -> io::Result<()> {
+    if bit_version.trim().is_empty() {
+        return Err(invalid("remote lane bit version is empty"));
+    }
+    Ok(())
 }

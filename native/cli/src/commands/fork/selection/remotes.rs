@@ -76,6 +76,7 @@ fn row_identity(row: &Value) -> io::Result<String> {
     if let Some(id) = row["id"]
         .as_str()
         .or_else(|| row["identity"].as_str())
+        .map(str::trim)
         .filter(|id| !id.is_empty())
     {
         return Ok(id.to_owned());
@@ -83,11 +84,13 @@ fn row_identity(row: &Value) -> io::Result<String> {
     let name = row["id"]["name"]
         .as_str()
         .or_else(|| row["name"].as_str())
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("fork remote identity"))?;
     Ok(row["id"]["scope"]
         .as_str()
         .or_else(|| row["scope"].as_str())
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")))
 }

@@ -55,7 +55,7 @@ fn run_log(args: &[OsString]) -> io::Result<Outcome> {
     let content = match fs::read_to_string(&log_path) {
         Ok(content) => content,
         Err(err) => {
-            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
                 return Ok(Outcome::Declined("debug.log is missing or unreadable".to_owned()));
             }
             let history =

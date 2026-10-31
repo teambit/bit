@@ -78,9 +78,11 @@ fn prepare_checkout_import(
     }
     let local_target = request.options.to
         .as_deref()
+        .map(str::trim)
         .is_some_and(|to| {
-            request.options.revert && to == "main"
-                || !matches!(to, "head" | "latest" | "main") && !to.starts_with("head~")
+            !to.is_empty()
+                && (request.options.revert && to == "main"
+                    || !matches!(to, "head" | "latest" | "main") && !to.starts_with("head~"))
         });
     if local_target {
         let cached = command_import::prepare_cached(&request.root, &request.global_remotes_file)?;

@@ -117,6 +117,8 @@ pub(super) fn can_use_builtin_workspace_templates(
         return false;
     };
     if let Some(aspect) = aspect_filter
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
         && !core_ids
             .iter()
             .any(|core| core == aspect)

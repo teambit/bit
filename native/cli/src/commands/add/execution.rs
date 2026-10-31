@@ -22,8 +22,10 @@ pub(super) fn run(
     chalk: Chalk,
     output: &bit_install::output::Output,
 ) -> io::Result<Report> {
-    if let Some(error) = &prepared.projection.load_error {
-        return Err(io::Error::other(error.clone()));
+    if let Some(error) = prepared.projection.load_error.as_deref().map(str::trim)
+        && !error.is_empty()
+    {
+        return Err(io::Error::other(error.to_owned()));
     }
     prepared.plan.validate()?;
     let Some(mut capture) = prepared.capture.take() else {

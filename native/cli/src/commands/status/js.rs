@@ -122,7 +122,9 @@ fn base_target_identity(target: &Value) -> io::Result<String> {
 /// `identity.split('@')[0]`.
 pub fn without_version(identity: &str) -> &str {
     identity
+        .trim()
         .split('@')
         .next()
         .unwrap_or_default()
+        .trim()
 }

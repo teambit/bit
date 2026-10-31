@@ -50,7 +50,7 @@ pub(super) fn find_key(
 ) -> io::Result<String> {
     let mut found = None;
     for (key, row) in fields {
-        if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+        if !is_component_bitmap_row(key, row) {
             continue;
         }
         let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
@@ -62,6 +62,10 @@ pub(super) fn find_key(
         }
     }
     found.ok_or_else(|| invalid("reset bitmap identity absent"))
+}
+
+fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
+    !key.starts_with('$') && key != "_bit_lane" && key != "version" && row.is_object()
 }
 
 fn validate_row(row: &Value) -> io::Result<()> {

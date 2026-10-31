@@ -13,15 +13,17 @@ pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
 }
 
 fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
+    let map = doc.as_object()?;
+    map.get(id).or_else(|| find_versioned_aspect(map, id))
+}
+
+fn find_versioned_aspect<'a>(
+    map: &'a serde_json::Map<String, Value>,
+    id: &str,
+) -> Option<&'a Value> {
     let prefix = format!("{id}@");
-    doc.as_object()
-        .and_then(|map| {
-            map.get(id)
-                .or_else(|| {
-                    map.iter()
-                        .find_map(|(key, val)| key.starts_with(&prefix).then_some(val))
-                })
-        })
+    map.iter()
+        .find_map(|(key, val)| key.starts_with(&prefix).then_some(val))
 }
 
 /// Apply global aspect settings to an already retained workspace document.

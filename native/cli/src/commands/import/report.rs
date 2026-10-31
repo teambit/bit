@@ -141,9 +141,10 @@ fn conflict_paths(value: Option<&Value>) -> io::Result<Vec<String>> {
         Some(Value::Object(files)) if files.len() <= 4096 => Ok(files
             .iter()
             .filter_map(|(path, status)| {
-                (status == "manual" && !path.is_empty() && path.len() <= 4096).then_some(
-                    path.clone(),
-                )
+                let trimmed = path.trim();
+                (status == "manual" && !trimmed.is_empty() && trimmed.len() <= 4096).then(|| {
+                    trimmed.to_owned()
+                })
             })
             .collect()),
         _ => Err(decline("native inbound details")),

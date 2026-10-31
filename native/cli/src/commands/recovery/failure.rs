@@ -9,9 +9,10 @@ pub(super) fn preflight(request: &Value) -> io::Result<()> {
     let result = engine.request::<Value>(request);
     match result {
         Ok(prepared) => {
-            if array(prepared.get("captureTargets"), "recovery capture targets")?.len()
-                != array(prepared.get("targets"), "recovery targets")?.len()
-            {
+            let capture_targets =
+                array(prepared.get("captureTargets"), "recovery capture targets")?;
+            let targets = array(prepared.get("targets"), "recovery targets")?;
+            if capture_targets.len() != targets.len() || capture_targets.len() > 4096 {
                 return Err(decline("recovery missing component root"));
             }
             Ok(())

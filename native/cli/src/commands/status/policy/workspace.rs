@@ -35,10 +35,8 @@ pub(super) fn read(context: &Value) -> io::Result<Workspace> {
 fn root_policy(policy: &Value) -> io::Result<[Map<String, Value>; 2]> {
     for field in ["dependencies", "peerDependencies"] {
         let Some(values) = nullish(policy.get(field)) else { continue };
-        for value in object(values)?.values() {
-            if !value.is_string() && !value.get("version").is_some_and(Value::is_string) {
-                return Err(decline("status root dependency policy version"));
-            }
+        if !object(values)?.values().all(is_valid_policy_version_entry) {
+            return Err(decline("status root dependency policy version"));
         }
     }
     let entries = bit_install::policy::entries::from_workspace_config(policy);
@@ -60,4 +58,8 @@ fn configured_policy(context: &Value) -> io::Result<Value> {
     let empty = Value::Object(Map::new());
     let policy = object(policy.unwrap_or(&empty))?;
     Ok(Value::Object(policy.clone()))
+}
+
+fn is_valid_policy_version_entry(value: &Value) -> bool {
+    value.is_string() || value.get("version").is_some_and(Value::is_string)
 }

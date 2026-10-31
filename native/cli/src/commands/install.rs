@@ -288,7 +288,9 @@ impl bit_install::Host for JsHost {
         }
         match &receipt?["error"] {
             Value::Null => Ok(true),
-            Value::String(message) => Err(io::Error::other(message.clone())),
+            Value::String(message) if !message.trim().is_empty() => {
+                Err(io::Error::other(message.clone()))
+            }
             _ => Err(io::Error::other("history installation class receipt")),
         }
     }

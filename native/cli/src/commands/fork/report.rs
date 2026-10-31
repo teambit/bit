@@ -18,18 +18,15 @@ pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report 
     Report { data: sections.join("\n\n"), code: 0, details: None }
 }
 fn summary(options: &Options, ids: &[String], chalk: Chalk) -> String {
+    let source = options.source.trim();
     if options.scope_fork {
         let scope = target_scope(options, ids);
-        format!("forked {} into {}", chalk.bold(&options.source), chalk.bold(scope))
+        format!("forked {} into {}", chalk.bold(source), chalk.bold(scope))
     } else if options.multiple() {
-        format!(
-            "forked {} component(s) matching pattern {}",
-            ids.len(),
-            chalk.bold(&options.source),
-        )
+        format!("forked {} component(s) matching pattern {}", ids.len(), chalk.bold(source))
     } else {
-        let first_id = ids.first().map_or("", String::as_str);
-        format!("forked {} from {}", chalk.bold(first_id), chalk.bold(&options.source))
+        let first_id = ids.first().map_or("", |id| id.trim());
+        format!("forked {} from {}", chalk.bold(first_id), chalk.bold(source))
     }
 }
 fn target_scope<'a>(options: &'a Options, ids: &'a [String]) -> &'a str {

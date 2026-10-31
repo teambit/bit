@@ -236,7 +236,11 @@ fn seed_history_entry(graph: &mut GcGraph, entry: &Value) {
     for field in ["components", "deleted", "updateDependents"] {
         let Some(arr) = entry[field].as_array() else { continue };
         for item_str in arr.iter().filter_map(Value::as_str) {
-            if let Some((_, ver)) = item_str.rsplit_once('@') {
+            if let Some((_, ver)) = item_str
+                .rsplit_once('@')
+                .map(|(prefix, ver)| (prefix, ver.trim()))
+                .filter(|(_, ver)| !ver.is_empty())
+            {
                 graph.add_root(ver);
             }
         }

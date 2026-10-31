@@ -125,7 +125,7 @@ pub(super) fn stage_soft_history(
 ) -> io::Result<()> {
     let status: Value =
         engine.request(&json!({"kind":"statusContext","root":root,"home":home,"history":true}))?;
-    if status["models"] != context["models"] {
+    if !status["models"].is_array() || status["models"] != context["models"] {
         return Err(decline("soft tag history models changed"));
     }
     context["pendingHistory"] =

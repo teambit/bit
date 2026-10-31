@@ -186,7 +186,7 @@ fn apply_merge_inline<'a>(
         return None;
     }
     if BOOLEAN.contains(&flag) {
-        let bool_val = match val {
+        let bool_val = match val.trim() {
             "true" => true,
             "false" => false,
             _ => return None,
@@ -194,8 +194,9 @@ fn apply_merge_inline<'a>(
         flags.push((flag, json!(bool_val)));
         return Some(0);
     }
-    if VALUED.contains(&flag) && !val.is_empty() && !val.starts_with('-') {
-        flags.push((flag, json!(val)));
+    let trimmed = val.trim();
+    if VALUED.contains(&flag) && !trimmed.is_empty() && !trimmed.starts_with('-') {
+        flags.push((flag, json!(trimmed)));
         return Some(0);
     }
     None

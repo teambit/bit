@@ -44,6 +44,7 @@ pub(super) fn remove(directories: &[PathBuf]) -> io::Result<()> {
     Ok(())
 }
 pub(super) fn publish(files: &[Emitted], batch_size: usize) -> io::Result<()> {
+    let batch_size = batch_size.max(1);
     for batch in files.chunks(batch_size) {
         let opened = open_batch(batch)?;
         for (file, mut opened) in batch.iter().zip(opened) {

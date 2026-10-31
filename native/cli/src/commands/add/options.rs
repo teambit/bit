@@ -101,6 +101,7 @@ fn string_option<'a>(options: &'a mut Options, arg: &str) -> Option<&'a mut Opti
 }
 fn value(args: &mut std::slice::Iter<'_, &str>) -> Option<String> {
     args.next()
+        .copied()
         .filter(|arg| !arg.is_empty() && !arg.starts_with('-'))
-        .map(|value| (*value).to_owned())
+        .map(str::to_owned)
 }

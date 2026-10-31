@@ -20,6 +20,10 @@ pub(super) fn transform(
     plan: &mut Plan,
     linker: &mut ProjectedLinker,
 ) -> io::Result<()> {
+    let inputs = plan.ast_inputs();
+    if inputs.is_empty() {
+        return Ok(());
+    }
     let path = std::env::temp_dir()
         .join(format!(
             "bit-rename-ast-{}-{}",
@@ -28,7 +32,6 @@ pub(super) fn transform(
         ));
     fs::create_dir(&path)?;
     let spool = Spool(path);
-    let inputs = plan.ast_inputs();
     let mut rows = Vec::new();
     for (index, (path, bytes)) in inputs.iter().enumerate() {
         let stored = spool.0.join(index.to_string());

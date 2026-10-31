@@ -220,6 +220,7 @@ fn prepare_entry(
     let existing = load_existing_comp_json(&abs_path, ctx.opts.override_existing)?;
     let scope = entry.id.scope
         .as_deref()
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .unwrap_or(ctx.default_scope);
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
@@ -237,9 +238,10 @@ fn render_ejected_file(
     opts: &Options,
     extensions: &Value,
 ) -> Result<EjectedFile, Failure> {
-    let mut comp_id = json!({ "scope": scope, "name": entry.id.name });
+    let mut comp_id = json!({ "scope": scope, "name": entry.id.name.trim() });
     if let Some(ver) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
     {
         comp_id["version"] = json!(ver);

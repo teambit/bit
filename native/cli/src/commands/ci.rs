@@ -89,8 +89,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     match &subcommand {
         Subcommand::Pr(opts) => run_pr(&root, args, opts),
         Subcommand::Merge(opts) => {
-            if let Some(strategy) = &opts.auto_merge_resolve
-                && !matches!(strategy.as_str(), "ours" | "theirs" | "manual")
+            if let Some(strategy) = opts.auto_merge_resolve.as_deref().map(str::trim)
+                && !matches!(strategy, "ours" | "theirs" | "manual")
             {
                 return emit_subcommand_error(&root, args, &subcommand, INVALID_MERGE_RESOLVE_ERR);
             }

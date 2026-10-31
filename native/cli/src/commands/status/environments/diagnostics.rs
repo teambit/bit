@@ -10,7 +10,7 @@ pub(in crate::commands::status) fn issues(
     target: &Value,
     dependencies: &mut Value,
 ) -> io::Result<()> {
-    let identity = text(target.get("identity"))?;
+    let identity = validated_identity(target)?;
     load_failures(context, identity, dependencies)?;
     let facts = &context["environmentFacts"][identity];
     if facts["multiple"]
@@ -90,4 +90,12 @@ fn append_issue(dependencies: &mut Value, kind: &str, data: &Value) -> io::Resul
         .ok_or_else(|| decline("environment issues"))?
         .push(json!({"type":kind,"data":data.to_string()}));
     Ok(())
+}
+
+fn validated_identity(target: &Value) -> io::Result<&str> {
+    let identity = text(target.get("identity"))?;
+    if identity.trim().is_empty() {
+        return Err(decline("environment target identity is empty"));
+    }
+    Ok(identity)
 }

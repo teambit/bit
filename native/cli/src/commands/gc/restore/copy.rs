@@ -73,6 +73,9 @@ fn copy_file(source: &Path, target: &Path, overwrite: bool) -> io::Result<()> {
 #[cfg(unix)]
 fn copy_restore_link(source: &Path, target: &Path) -> io::Result<()> {
     let link = fs::read_link(source).map_err(|error| failure(error, "readlink", source))?;
+    if link.as_os_str().is_empty() {
+        return Err(failure(io::Error::from(io::ErrorKind::InvalidInput), "readlink", source));
+    }
     if existing(target)?.is_some_and(|metadata| metadata.file_type().is_symlink()) {
         link_target(&link, target)?;
         fs::remove_file(target).map_err(|error| failure(error, "unlink", target))?;

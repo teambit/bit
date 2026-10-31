@@ -64,6 +64,7 @@ pub fn is_dev_file(file: &str) -> bool {
 }
 
 fn matches(file: &str, regexes: &[Regex]) -> bool {
+    let file = file.trim();
     if file.is_empty() {
         return false;
     }

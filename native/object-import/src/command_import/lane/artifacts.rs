@@ -51,6 +51,10 @@ fn artifact_refs(version: &Value) -> io::Result<Vec<String>> {
     else {
         return Ok(Vec::new());
     };
+    collect_builder_references(artifacts)
+}
+
+fn collect_builder_references(artifacts: &Value) -> io::Result<Vec<String>> {
     let mut references = Vec::new();
     for artifact in artifacts.as_array().ok_or_else(|| invalid("lane builder artifacts"))? {
         for file in artifact["files"].as_array().ok_or_else(|| invalid("lane artifact files"))? {

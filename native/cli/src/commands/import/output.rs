@@ -50,7 +50,10 @@ pub(super) fn selection(
         }
     }
     for warning in &selection.warnings {
-        output.warning(warning);
+        let trimmed = warning.trim();
+        if !trimmed.is_empty() {
+            output.warning(trimmed);
+        }
     }
 }
 

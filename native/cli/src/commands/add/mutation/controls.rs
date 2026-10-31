@@ -44,6 +44,7 @@ fn proof_path(proof: &Value) -> Option<&str> {
         .as_str()
         .or_else(|| proof["path"].as_str())
         .or_else(|| proof["filePath"].as_str())
+        .map(str::trim)
         .filter(|path| !path.is_empty())
 }
 

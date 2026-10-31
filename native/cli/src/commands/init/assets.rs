@@ -32,7 +32,7 @@ fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
     Some(relative)
 }
 fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)>> {
-    let name = match options.agent.as_deref() {
+    let name = match options.agent.as_deref().map(str::trim) {
         None | Some("") => "AGENTS.md",
         Some("claude") => "CLAUDE.md",
         Some("cursor") => ".cursor/rules/bit.mdc",

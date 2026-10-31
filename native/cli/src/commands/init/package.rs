@@ -13,5 +13,5 @@ fn decode_original(original: Option<&[u8]>) -> io::Result<&str> {
         .map(std::str::from_utf8)
         .transpose()
         .map_err(io::Error::other)
-        .map(Option::unwrap_or_default)
+        .map(|text| text.map_or("", |raw| raw.strip_prefix('\u{feff}').unwrap_or(raw)))
 }

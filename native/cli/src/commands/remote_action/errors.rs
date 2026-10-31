@@ -92,16 +92,19 @@ fn deleted_flag(value: &Value) -> bool {
 fn id(value: &Value, chalk: Chalk) -> String {
     if let Some(raw) = value["id"]
         .as_str()
+        .map(str::trim)
         .filter(|raw| !raw.is_empty())
     {
         return chalk.bold(raw);
     }
     if let Some(name) = value["id"]["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
     {
         let formatted = match value["id"]["scope"]
             .as_str()
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
         {
             Some(scope) => format!("{scope}/{name}"),

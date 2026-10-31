@@ -61,6 +61,7 @@ impl Listed {
         let text = |key: &str| {
             id[key]
                 .as_str()
+                .map(str::trim)
                 .filter(|text| !text.is_empty())
                 .map(str::to_string)
         };

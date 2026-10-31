@@ -143,6 +143,9 @@ fn select_all(root: &Path, bitmap: &Value, identities: &[String]) -> io::Result<
     let mut keys = HashSet::new();
     let mut selected = Vec::new();
     for identity in identities {
+        if identity.trim().is_empty() {
+            return Err(invalid("stash removal identity is empty"));
+        }
         let (key, row) = rows
             .iter()
             .find(|(key, row)| row_matches_identity(key, row, identity))

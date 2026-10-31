@@ -48,7 +48,7 @@ fn populate(
     name: &str,
 ) -> io::Result<()> {
     add_config(merger, target.get("componentConfig"), core, Origin::BitmapFile, true)?;
-    let identity = text(target.get("identity"))?;
+    let identity = text(target.get("identity"))?.trim();
     add_config(
         merger,
         context["pendingConfigurations"][identity].get("config"),

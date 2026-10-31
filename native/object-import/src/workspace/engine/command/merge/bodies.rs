@@ -54,7 +54,7 @@ impl Conflict {
         if plan["hasConflicts"] != true {
             return Self::Resolved;
         }
-        match input.options.strategy.as_deref() {
+        match input.options.strategy.as_deref().map(str::trim) {
             Some("ours") => Self::Ours,
             Some("manual") => Self::Manual,
             _ => Self::Resolved,

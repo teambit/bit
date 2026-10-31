@@ -87,5 +87,10 @@ impl Links {
 }
 
 fn matches_component_identity(identity: &str, component: &WorkspaceComponent) -> bool {
-    identity.split('@').next() == Some(component.id.to_string_without_version().as_str())
+    identity
+        .trim()
+        .split('@')
+        .next()
+        .map(str::trim)
+        == Some(component.id.to_string_without_version().as_str())
 }

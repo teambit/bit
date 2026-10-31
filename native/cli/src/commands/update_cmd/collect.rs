@@ -204,7 +204,8 @@ fn policy_field_entries(field_val: &Value) -> Vec<(String, String)> {
         .filter_map(|(name, val)| {
             let range = val
                 .as_str()
-                .or_else(|| val.get("version").and_then(Value::as_str))?;
+                .or_else(|| val.get("version").and_then(Value::as_str))?
+                .trim();
             (range != "-" && !range.is_empty()).then(|| (name.clone(), range.to_owned()))
         })
         .collect()

@@ -33,6 +33,7 @@ fn prefixed_ranges(entry: &Value, dependencies: &[Value]) -> io::Result<Vec<Valu
         .as_str()
         .or_else(|| entry["value"].as_str())
         .or_else(|| entry["version"].as_str())
+        .map(str::trim)
         .ok_or_else(|| decline("checkout policy entry version"))?;
     let Some(prefix) = version.chars().next() else { return Ok(Vec::new()) };
     let target_name = entry

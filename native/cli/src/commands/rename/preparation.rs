@@ -94,7 +94,10 @@ fn packages(workspace: &Workspace, options: &Options, facts: &mut Value) -> io::
     id.scope = None;
     id.version = None;
     id.default_scope = options.scope
-        .clone()
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .map(str::to_owned)
         .or_else(|| component.id.effective_scope().map(str::to_owned));
     facts["targetPackage"] =
         json!(bit_install::workspace::component_package_name(&id, None, &component.config));

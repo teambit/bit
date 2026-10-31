@@ -48,15 +48,15 @@ fn numeric_segment(value: &str) -> bool {
 }
 
 fn identifiers(value: &str, numeric_strict: bool) -> bool {
-    value
-        .split('.')
-        .all(|segment| {
-            !segment.is_empty()
-                && segment
-                    .bytes()
-                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
-                && (!numeric_strict
-                    || !segment.bytes().all(|byte| byte.is_ascii_digit())
-                    || numeric_segment(segment))
-        })
+    value.split('.').all(|segment| valid_identifier_segment(segment, numeric_strict))
+}
+
+fn valid_identifier_segment(segment: &str, numeric_strict: bool) -> bool {
+    !segment.is_empty()
+        && segment
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+        && (!numeric_strict
+            || !segment.bytes().all(|byte| byte.is_ascii_digit())
+            || numeric_segment(segment))
 }

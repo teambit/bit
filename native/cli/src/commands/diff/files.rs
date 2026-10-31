@@ -19,6 +19,7 @@ use std::{
 /// `formatFileDiff(fileDiff, labelA, labelB, name)`: the diff from its
 /// `--- ` line, with both file headers relabelled.
 pub fn format(diff: &str, label_a: &str, label_b: &str, name: &str) -> String {
+    let name = name.trim();
     let Some(start) = diff
         .find("--- ")
         .filter(|start| *start >= 1)

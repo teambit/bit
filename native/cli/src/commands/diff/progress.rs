@@ -44,7 +44,7 @@ fn exported_target(root: &Path, result: &Value) -> bool {
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|row| row["id"].as_str())
+        .filter_map(|row| row["id"].as_str().map(str::trim))
         .any(|id| exported.iter().any(|known| known == id))
 }
 

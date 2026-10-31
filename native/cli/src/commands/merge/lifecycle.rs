@@ -136,7 +136,10 @@ fn execute(
             .is_some_and(|rows| {
                 rows.iter()
                     .any(|row| row["hasConflicts"] == true)
-            });
+            })
+        || planned.plan["result"]["workspaceConfigUpdateResult"]["workspaceDepsConflicts"]
+            .as_object()
+            .is_some_and(|map| !map.is_empty());
     if !conflicts
         && let Some(info) = installation
         && let Err(error) = install_retained(root, &mut planned, info)

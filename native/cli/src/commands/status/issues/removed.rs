@@ -34,6 +34,8 @@ fn missing_packages(rows: &[Value]) -> HashSet<&str> {
                 .flatten()
         })
         .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
         .collect()
 }
 

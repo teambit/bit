@@ -309,7 +309,10 @@ fn normalize_scope_dep_resolver_policy(cleaned: &mut Map<String, Value>) {
 fn collect_forced_policy_entries(arr: &[Value]) -> Map<String, Value> {
     arr.iter()
         .filter(|item| item["force"].as_bool() == Some(true))
-        .filter_map(|item| Some((item["name"].as_str()?.to_owned(), item.get("version")?.clone())))
+        .filter_map(|item| {
+            let name = item["name"].as_str()?.trim();
+            (!name.is_empty()).then_some((name.to_owned(), item.get("version")?.clone()))
+        })
         .collect()
 }
 

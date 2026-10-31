@@ -148,6 +148,9 @@ fn hint(package: &str) -> String {
 
 impl EnvRoot {
     fn add_root(&mut self, name: &str, version: &str, overrides: bool) {
+        if name.trim().is_empty() || version.trim().is_empty() {
+            return;
+        }
         self.peers.insert(name.to_string(), version.to_string());
         if overrides && !bit_object_import::plus_version::is_plus(version) {
             self.overrides.insert(name.to_string(), version.to_string());

@@ -103,15 +103,21 @@ fn source_rows<'a>(component: &Value, raw: &'a Value) -> &'a Value {
         let scope = id["_legacy"]["scope"]
             .as_str()
             .or_else(|| id["_scope"].as_str())
-            .or_else(|| id["scope"].as_str());
+            .or_else(|| id["scope"].as_str())
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty());
         let name = id["_legacy"]["name"]
             .as_str()
-            .or_else(|| id["name"].as_str());
+            .or_else(|| id["name"].as_str())
+            .map(str::trim)
+            .filter(|name| !name.is_empty());
         scope
             .zip(name)
             .map(|(scope, name)| format!("{scope}/{name}"))
     };
     id.as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
         .or(owned.as_deref())
         .and_then(|identity| raw["componentRows"].get(identity))
         .unwrap_or_else(|| &raw["results"]["testResults"])

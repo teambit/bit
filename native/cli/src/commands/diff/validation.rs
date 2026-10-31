@@ -65,9 +65,12 @@ fn missing_component_error(root: &Path, options: &options::Options) -> Option<St
     let exists = map.entries
         .iter()
         .any(|entry| {
-            entry.root_dir == directory
-                || entry.identity == pattern
-                || entry.identity
+            let entry_dir = inventory::normalize(&entry.root_dir);
+            let entry_dir = entry_dir.strip_prefix("./").unwrap_or(&entry_dir);
+            let entry_id = entry.identity.trim();
+            entry_dir == directory
+                || entry_id == pattern
+                || entry_id
                     .split_once('/')
                     .is_some_and(|(_, name)| name == pattern)
         });

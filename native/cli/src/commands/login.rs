@@ -132,5 +132,6 @@ fn apply_inline_login_arg(arg: &str, options: &mut Options) -> Option<()> {
 }
 
 fn take_val(val: &str) -> Option<String> {
-    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }

@@ -89,10 +89,12 @@ pub fn plan_snapshot(
     if let Selection::Tag { tag_options, .. } = &request.selection
         && workflow.editor
             .as_deref()
+            .map(str::trim)
             .is_some_and(|editor| !editor.is_empty())
         && (tag_options["persist"] == true
             || request.options["message"]
                 .as_str()
+                .map(str::trim)
                 .is_some_and(|message| !message.is_empty()))
     {
         return Err(decline("tag editor options require canonical validation"));

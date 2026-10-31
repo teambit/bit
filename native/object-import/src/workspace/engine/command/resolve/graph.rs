@@ -167,8 +167,10 @@ fn mark_dependency(
 }
 
 fn pending(identity: &str) -> io::Result<Value> {
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("resolve graph identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .filter(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+        .ok_or_else(|| invalid("resolve graph identity"))?;
     Ok(json!({"scope":scope,"name":name,"version":format!("__bit_pending_snapshot__:{identity}")}))
 }
 fn is_pending(id: &Value) -> bool {
@@ -178,11 +180,11 @@ fn is_pending(id: &Value) -> bool {
 }
 
 pub(super) fn key(id: &Value) -> io::Result<String> {
-    Ok(format!(
-        "{}@{}",
-        super::selection::identity(id)?,
-        id["version"].as_str().ok_or_else(|| invalid("resolve graph version"))?,
-    ))
+    let version = id["version"]
+        .as_str()
+        .filter(|ver| !ver.trim().is_empty())
+        .ok_or_else(|| invalid("resolve graph version"))?;
+    Ok(format!("{}@{version}", super::selection::identity(id)?))
 }
 pub(super) fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     let mut edges = Vec::new();

@@ -71,12 +71,7 @@ fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bo
     {
         return Err(invalid("export bitmap lifecycle"));
     }
-    if row["scope"]
-        .as_str()
-        .unwrap_or_default()
-        .is_empty()
-        && (row["defaultScope"].is_null() || row["defaultScope"] == scope)
-    {
+    if can_promote_default_scope(row, scope) {
         let fields = row.as_object_mut().ok_or_else(|| invalid("export bitmap entry"))?;
         fields.insert("scope".into(), Value::String(scope.to_owned()));
         fields.shift_remove("defaultScope");
@@ -86,4 +81,12 @@ fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bo
         return Err(invalid("export bitmap lifecycle"));
     }
     Ok(false)
+}
+
+fn can_promote_default_scope(row: &Value, scope: &str) -> bool {
+    row["scope"]
+        .as_str()
+        .unwrap_or_default()
+        .is_empty()
+        && (row["defaultScope"].is_null() || row["defaultScope"] == scope)
 }

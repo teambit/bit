@@ -52,28 +52,22 @@ fn copy_sources(
     captured: (&RemoteCapture, &[String]),
 ) -> io::Result<()> {
     let (captured, ids) = captured;
-    let loaded_ids = captured
-        .sources()
-        .iter()
-        .map(|row| {
-            format!(
-                "{}@{}",
-                row["identity"].as_str().unwrap_or_default(),
-                row["version"].as_str().unwrap_or_default(),
-            )
-        })
-        .collect::<Vec<_>>();
+    let loaded_ids = loaded_source_ids(captured);
     linker.call(
         root,
         "forkRemoteHydrate",
         &json!({"objects":captured.objects(),"ids":loaded_ids}),
     )?;
     for id in ids {
-        let identity = id.split('@').next().unwrap_or(id);
+        let identity = id
+            .split('@')
+            .next()
+            .unwrap_or(id)
+            .trim();
         let row = captured
             .sources()
             .iter()
-            .find(|row| row["identity"] == identity)
+            .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
             .ok_or_else(|| io::Error::other("fork captured selection missing"))?;
         let mut source = row.clone();
         let facts = source_facts(root, linker, &mut source, true)?;
@@ -82,6 +76,8 @@ fn copy_sources(
         results.old_packages.push(
             facts["packageName"]
                 .as_str()
+                .map(str::trim)
+                .filter(|pkg| !pkg.is_empty())
                 .ok_or_else(|| io::Error::other("fork source package"))?
                 .to_owned(),
         );
@@ -89,4 +85,18 @@ fn copy_sources(
         results.ids.push(target);
     }
     Ok(())
+}
+
+fn loaded_source_ids(captured: &RemoteCapture) -> Vec<String> {
+    captured
+        .sources()
+        .iter()
+        .map(|row| {
+            format!(
+                "{}@{}",
+                row["identity"].as_str().map_or("", str::trim),
+                row["version"].as_str().map_or("", str::trim),
+            )
+        })
+        .collect()
 }

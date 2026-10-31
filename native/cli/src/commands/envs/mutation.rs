@@ -283,7 +283,7 @@ fn find_model_env(root: &Path, entry: &BitmapEntry) -> Result<Option<String>, Fa
                 .as_str()
                 .or_else(|| ext["data"]["id"].as_str())
         })
-        .filter(|env| !env.is_empty() && *env != "-")
+        .filter(|env| !env.trim().is_empty() && *env != "-")
         .map(str::to_owned))
 }
 

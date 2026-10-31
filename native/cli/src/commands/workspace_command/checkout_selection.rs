@@ -188,7 +188,7 @@ fn source_proofs(root: &Path, capture: &Capture) -> io::Result<Vec<Value>> {
                 component["directory"]
                     .as_str()
                     .or_else(|| component["rootDir"].as_str())
-                    .unwrap_or_default(),
+                    .map_or("", str::trim),
             );
             component["files"]
                 .as_array()
@@ -198,6 +198,8 @@ fn source_proofs(root: &Path, capture: &Capture) -> io::Result<Vec<Value>> {
                     file.as_str()
                         .or_else(|| file["relativePath"].as_str())
                         .or_else(|| file["path"].as_str())
+                        .map(str::trim)
+                        .filter(|path| !path.is_empty())
                 })
                 .map(move |file| directory.join(file))
         })

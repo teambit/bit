@@ -73,7 +73,11 @@ fn map_ref_dict(val: Option<&Value>) -> Option<Value> {
         return Some(Value::Object(out));
     };
     for (key, hash_val) in obj {
-        out.insert(key.clone(), json!({"hash": non_empty_str(hash_val)?}));
+        let trimmed_key = key.trim();
+        if trimmed_key.is_empty() {
+            continue;
+        }
+        out.insert(trimmed_key.to_owned(), json!({"hash": non_empty_str(hash_val)?}));
     }
     Some(Value::Object(out))
 }

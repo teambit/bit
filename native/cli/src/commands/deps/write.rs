@@ -86,14 +86,20 @@ fn push_policy_rows(policy_val: &Value, rows: &mut Vec<CandidateRow>) {
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
         let Some(entries) = policy_val[field].as_object() else { continue };
         for (name, val) in entries {
+            let name = name.trim();
             let Some(ver) = val
                 .as_str()
                 .or_else(|| val["version"].as_str())
+                .map(str::trim)
             else {
                 continue;
             };
-            if ver != "-" {
-                rows.push(CandidateRow { name: name.clone(), range: ver.to_owned(), root: false });
+            if !name.is_empty() && !ver.is_empty() && ver != "-" {
+                rows.push(CandidateRow {
+                    name: name.to_owned(),
+                    range: ver.to_owned(),
+                    root: false,
+                });
             }
         }
     }

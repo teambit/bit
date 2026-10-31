@@ -130,16 +130,24 @@ fn candidate_row(scope: &std::path::Path, row: &Value) -> Option<Option<(String,
 
 pub(in crate::commands) fn row_scope_and_name(row: &Value) -> Option<(&str, &str)> {
     if let Some(raw) = row["id"].as_str() {
-        let bare = raw.split('@').next().unwrap_or(raw);
+        let bare = raw
+            .trim()
+            .split('@')
+            .next()
+            .unwrap_or_default()
+            .trim();
         let (scope, name) = bare.split_once('/')?;
+        let (scope, name) = (scope.trim(), name.trim());
         return (!scope.is_empty() && !name.is_empty()).then_some((scope, name));
     }
     Some((
         row["id"]["scope"]
             .as_str()
+            .map(str::trim)
             .filter(|val| !val.is_empty())?,
         row["id"]["name"]
             .as_str()
+            .map(str::trim)
             .filter(|val| !val.is_empty())?,
     ))
 }

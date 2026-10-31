@@ -262,7 +262,10 @@ fn resolve_tar_destination(
 ) -> (String, PathBuf) {
     let tar_name =
         format!("{}-{}-{}.tgz", comp.scope_name, comp.comp_name.replace('/', "-"), comp.version);
-    let dir_str = out_dir.unwrap_or(".");
+    let dir_str = out_dir
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .unwrap_or(".");
     let out_base =
         if Path::new(dir_str).is_absolute() { PathBuf::from(dir_str) } else { cwd.join(dir_str) };
     (tar_name.clone(), out_base.join(tar_name))

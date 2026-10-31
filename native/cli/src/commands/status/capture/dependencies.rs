@@ -124,7 +124,11 @@ impl Scan<'_> {
         }
         let facts = self.facts.as_ref().ok_or_else(|| decline("status facts"))?;
         let detection = fresh::Detection { root: self.root, context: self.context, facts };
-        let custom = if target["directory"] == "." || target["rootDir"] == "." {
+        let is_root_dir = target["directory"]
+            .as_str()
+            .or_else(|| target["rootDir"].as_str())
+            .is_some_and(|dir| dir.trim() == ".");
+        let custom = if is_root_dir {
             Value::Null
         } else {
             self.environments.detectors(self.root, self.context, target, files)?

@@ -333,5 +333,6 @@ fn apply_combined_short(token: &str, options: &mut Options) -> bool {
 }
 
 fn take_test_val(val: &str) -> Option<String> {
+    let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }

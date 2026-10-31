@@ -114,6 +114,7 @@ fn git_head(root: &Path) -> Option<String> {
     output.status
         .success()
         .then(|| String::from_utf8_lossy(&output.stdout).trim().to_owned())
+        .filter(|head| !head.is_empty())
 }
 
 fn git_dir_head(git: &Path) -> Option<String> {

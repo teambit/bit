@@ -83,6 +83,8 @@ fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
         .or_else(|| row["id"].as_str())
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
 }
 pub(super) fn no_matches(pattern: &str) -> io::Error {
     io::Error::new(

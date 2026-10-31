@@ -32,14 +32,7 @@ impl Selection {
         let before = fs::read(root.join("workspace.jsonc"))?;
         let bitmap = fs::read(root.join(".bitmap"))?;
         let workspace = crate::parse_jsonc(&before)?;
-        let key = workspace
-            .as_object()
-            .and_then(|rows| {
-                rows.keys()
-                    .find(|key| key.split('@').next() == Some("teambit.workspace/workspace"))
-            })
-            .cloned()
-            .unwrap_or_else(|| "teambit.workspace/workspace".into());
+        let key = workspace_aspect_key(&workspace);
         let default = workspace[&key]["defaultScope"].as_str().unwrap_or_default();
         let entries =
             selection::entries_with_default(&crate::parse_jsonc(&bitmap)?, default, options)?;
@@ -85,4 +78,15 @@ impl Selection {
         }
         Ok(())
     }
+}
+
+fn workspace_aspect_key(workspace: &Value) -> String {
+    workspace
+        .as_object()
+        .and_then(|rows| {
+            rows.keys()
+                .find(|key| key.split('@').next() == Some("teambit.workspace/workspace"))
+        })
+        .cloned()
+        .unwrap_or_else(|| "teambit.workspace/workspace".into())
 }

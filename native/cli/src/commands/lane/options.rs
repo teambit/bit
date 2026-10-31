@@ -262,6 +262,7 @@ fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
 
 /// `/^[a-z0-9_.-]+(?:\/[a-z0-9_.-]+)?$/`.
 fn lane_name(name: &str) -> bool {
+    let name = name.trim();
     let part = |part: &str| {
         !part.is_empty()
             && part

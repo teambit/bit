@@ -61,6 +61,7 @@ impl Progress {
         let skip_dependencies_graph = value["skipDependenciesGraph"] == true;
         let version_notice = value["versionNotice"]
             .as_str()
+            .filter(|notice| !notice.trim().is_empty())
             .unwrap_or_default()
             .to_string();
         Ok(Some(Self {

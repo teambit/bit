@@ -13,6 +13,9 @@ pub(super) fn attribute(value: &str) -> String {
         .replace('\r', "&#xD;")
 }
 pub(super) fn strip_ansi(value: &str) -> String {
+    if !value.contains(['\x1b', '\u{9b}']) {
+        return value.to_owned();
+    }
     static ANSI: LazyLock<regex::Regex> = LazyLock::new(|| {
         regex::Regex::new(concat!(
             r"[\x{1B}\x{9B}][\[\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z[0-9]\/#&.:=?%@~_]+)*|",

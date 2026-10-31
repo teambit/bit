@@ -38,7 +38,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => execute(root.as_deref(), args, options.command, chalk, &prepared),
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("remote: {reason}"))),
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|value| {
+                    let text = value.to_string_lossy();
+                    let trimmed = text.trim();
+                    !trimmed.is_empty()
+                        && !trimmed.eq_ignore_ascii_case("0")
+                        && !trimmed.eq_ignore_ascii_case("false")
+                })
+            {
                 return Ok(Outcome::Declined("CI remote error stack".to_owned()));
             }
             execute_error(root.as_deref(), args, options.command, chalk, &message)

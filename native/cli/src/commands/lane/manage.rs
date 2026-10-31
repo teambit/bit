@@ -87,7 +87,8 @@ fn apply_lane_target_arg<'a>(
 }
 
 fn set_unique<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
-    !val.is_empty() && slot.replace(val).is_none()
+    let trimmed = val.trim();
+    !trimmed.is_empty() && slot.replace(trimmed).is_none()
 }
 
 pub(super) fn remove_readme(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {

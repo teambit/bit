@@ -56,13 +56,7 @@ pub(super) fn peer_identities(dependencies: &Value) -> io::Result<Vec<String>> {
     let peers = array(lifecycles.get(2), "peer dependencies")?;
     peers
         .iter()
-        .map(|index| {
-            let entry = index
-                .as_u64()
-                .and_then(|index| entries.get(index as usize));
-            let entry = entry.ok_or_else(|| decline("status dependency entry"))?;
-            text(entry.get("identity")).map(str::to_string)
-        })
+        .map(|index| entry_identity_at(entries, index))
         .collect()
 }
 
@@ -73,14 +67,18 @@ pub(super) fn dependency_identities(dependencies: &Value) -> io::Result<Vec<Stri
     let mut identities = Vec::new();
     for indices in array(state.get("components"), "dependency lifecycles")? {
         for index in array(Some(indices), "dependency indices")? {
-            let entry = index
-                .as_u64()
-                .and_then(|index| entries.get(index as usize));
-            let entry = entry.ok_or_else(|| decline("status dependency entry"))?;
-            identities.push(text(entry.get("identity"))?.to_string());
+            identities.push(entry_identity_at(entries, index)?);
         }
     }
     Ok(identities)
+}
+
+fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
+    let entry = index
+        .as_u64()
+        .and_then(|offset| entries.get(offset as usize))
+        .ok_or_else(|| decline("status dependency entry"))?;
+    text(entry.get("identity")).map(str::to_string)
 }
 
 /// The identity without its `@version`.

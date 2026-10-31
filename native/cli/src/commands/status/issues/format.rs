@@ -28,6 +28,7 @@ fn item_text(value: &Value) -> io::Result<&str> {
             .get("message")
             .or_else(|| object.get("id"))
             .or_else(|| object.get("name"))
+            .or_else(|| object.get("componentId"))
             .and_then(Value::as_str)
     {
         return Ok(found);

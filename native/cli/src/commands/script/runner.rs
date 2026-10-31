@@ -293,7 +293,7 @@ fn execute_shell_command(root: &Path, command_str: &str, chalk: Chalk) -> String
         }
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            let err_msg = if stderr.is_empty() { "unknown error" } else { stderr.as_ref() };
+            let err_msg = if stderr.trim().is_empty() { "unknown error" } else { stderr.as_ref() };
             chalk.red(&format!("Error executing script: {err_msg}"))
         }
         Err(err) => chalk.red(&format!("Error executing script: {err}")),

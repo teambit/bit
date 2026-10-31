@@ -115,6 +115,7 @@ fn preflight(
     };
     let source_id = source["identity"]
         .as_str()
+        .or_else(|| source["id"].as_str())
         .map(str::trim)
         .filter(|id| !id.is_empty())
         .ok_or_else(|| io::Error::other("fork source identity"))?;

@@ -90,26 +90,40 @@ impl Engine {
             return Err(io::Error::other("status output limit"));
         }
         let response: Response = serde_json::from_slice(&bytes)?;
-        let failed = response.failed.is_some_and(|failed| !failed.is_null() && failed != false);
-        let skipped = response.skipped.is_some_and(|skipped| !skipped.is_empty());
+        let failed = response.failed
+            .as_ref()
+            .is_some_and(|failed| !failed.is_null() && *failed != false);
+        let skipped = response.skipped
+            .as_ref()
+            .is_some_and(|skipped| !skipped.is_empty());
         if response.version != 1 || response.id != self.next_id || failed || skipped {
-            if response.canonical_error == Some(true)
-                && let Some(message) = response.error
-            {
-                return Err(io::Error::other(CanonicalError {
-                    message,
-                    progress: response.data.get("progress").cloned(),
-                }));
-            }
-            let kind = input
-                .get("kind")
-                .and_then(Value::as_str)
-                .unwrap_or("request");
-            let reason = response.error.map_or_else(String::new, |error| format!(": {error}"));
-            return Err(io::Error::other(format!("the engine declined {kind}{reason}")));
+            return Err(response_error(input, response));
         }
         serde_json::from_value(response.data).map_err(io::Error::other)
     }
+}
+
+fn response_error(input: &Value, response: Response) -> io::Error {
+    if response.canonical_error == Some(true)
+        && let Some(message) = response.error
+    {
+        return io::Error::other(CanonicalError {
+            message,
+            progress: response.data.get("progress").cloned(),
+        });
+    }
+    let kind = input
+        .get("kind")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|kind| !kind.is_empty())
+        .unwrap_or("request");
+    let reason = response.error
+        .as_deref()
+        .map(str::trim)
+        .filter(|error| !error.is_empty())
+        .map_or_else(String::new, |error| format!(": {error}"));
+    io::Error::other(format!("the engine declined {kind}{reason}"))
 }
 
 #[derive(Debug)]

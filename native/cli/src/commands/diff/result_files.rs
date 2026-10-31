@@ -11,6 +11,7 @@ pub(super) fn files_diff(
     left_version: &str,
     right_version: &str,
 ) -> io::Result<Vec<Value>> {
+    let (left_version, right_version) = (left_version.trim(), right_version.trim());
     let labels = if left_version == right_version {
         (format!("{left_version} original"), format!("{right_version} modified"))
     } else {

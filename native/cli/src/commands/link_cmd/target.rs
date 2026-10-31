@@ -157,6 +157,7 @@ fn add_env_peers(env_id: &str, peers: &mut Vec<String>) {
 }
 
 fn push_unique(list: &mut Vec<String>, item: &str) {
+    let item = item.trim();
     if !item.is_empty()
         && !list
             .iter()

@@ -54,15 +54,19 @@ fn remove_file(path: &Path) -> io::Result<()> {
     }
 }
 fn remove_object(scope: &Path, hash: &str) -> io::Result<()> {
+    let trimmed = hash.trim();
+    if trimmed.len() < 3 {
+        return Err(io::Error::other("gc invalid object hash"));
+    }
     let path = scope
         .join("objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
+        .join(&trimmed[..2])
+        .join(&trimmed[2..]);
     match fs::remove_file(&path) {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
         result => result.map_err(|error| failure(error, "unlink", &path))?,
     }
-    let parent = path.parent().unwrap();
+    let Some(parent) = path.parent() else { return Ok(()) };
     let entries = match fs::read_dir(parent) {
         Ok(entries) => entries,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),

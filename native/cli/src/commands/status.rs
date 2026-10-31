@@ -257,13 +257,14 @@ fn active_components(
 
 fn current_lane_id(context: &Value) -> io::Result<String> {
     if let Some(id) = context.get("currentLaneId") {
-        return Ok(text(Some(id))?.to_string());
+        return Ok(text(Some(id))?.trim().to_string());
     }
     let scope = text(
         context
             .get("scope")
             .and_then(|scope| scope.get("name")),
-    )?;
+    )?
+    .trim();
     Ok(format!("{scope}/main"))
 }
 

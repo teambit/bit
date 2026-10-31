@@ -185,7 +185,10 @@ fn json_results(options: &Options, results: &[Value], saved: Option<&str>) -> io
         value["savedFilePath"] = json!(saved);
     }
     if options.name.is_some() {
-        value["examineResult"] = results[0].clone();
+        value["examineResult"] = results
+            .first()
+            .cloned()
+            .unwrap_or(Value::Null);
     } else {
         value["examineResults"] = json!(results);
     }

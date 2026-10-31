@@ -33,7 +33,10 @@ impl Status<'_> {
 
     /// `getWorkspaceIssuesOutput()`.
     pub(super) fn workspace_issues(&self) -> io::Result<String> {
-        let issues = ids(self.result, "workspaceIssues")?;
+        let issues: Vec<&str> = ids(self.result, "workspaceIssues")?
+            .into_iter()
+            .filter(|issue| !issue.is_empty())
+            .collect();
         if issues.is_empty() {
             return Ok(String::new());
         }

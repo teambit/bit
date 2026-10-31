@@ -37,6 +37,9 @@ impl WorkspaceSnapshot {
     }
 
     fn restore(&self, root: &Path) {
+        if root.as_os_str().is_empty() {
+            return;
+        }
         let scope_dir = bit_object_import::scope_path(root);
         if let Some(bytes) = &self.bitmap {
             let _ = fs::write(root.join(".bitmap"), bytes);

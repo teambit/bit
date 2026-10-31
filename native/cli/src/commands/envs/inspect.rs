@@ -138,9 +138,10 @@ fn find_target_component<'a>(
     ws: &'a Workspace,
     query: &str,
 ) -> Result<(&'a BitmapEntry, &'a WorkspaceComponent), Failure> {
+    let query = query.trim();
     let (bare, explicit_ver) = query
         .rsplit_once('@')
-        .map_or((query, None), |(bare, ver)| (bare, Some(ver)));
+        .map_or((query, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
     let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     if let Some((entry, comp)) = ws
         .active()

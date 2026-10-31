@@ -59,8 +59,13 @@ impl Config {
 fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<Value>> {
     let mut expanded = Vec::new();
     for pattern in patterns {
-        let value = pattern.as_str().ok_or_else(|| invalid("linter pattern"))?;
+        let value = pattern
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .ok_or_else(|| invalid("linter pattern"))?;
         for directory in directories {
+            let directory = directory.trim();
             expanded.push(json!(format!("../../{directory}/{value}")));
         }
     }

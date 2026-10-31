@@ -19,12 +19,13 @@ pub(super) fn error(args: &[&str], list: bool) -> Option<String> {
 }
 
 fn unknown_names(flag: &str, list: bool) -> Option<&'static [&'static str]> {
-    let name = flag.split_once('=').map_or(flag, |(prefix, _)| prefix);
+    let trimmed = flag.trim();
+    let name = trimmed.split_once('=').map_or(trimmed, |(prefix, _)| prefix);
     match name {
         "--no-color" => Some(&["no-color", "noColor"]),
         "--json" if !list => Some(&["json"]),
         "-j" if !list => Some(&["j"]),
-        _ if list && is_json_flag(flag) => Some(&[]),
+        _ if list && is_json_flag(trimmed) => Some(&[]),
         _ => None,
     }
 }

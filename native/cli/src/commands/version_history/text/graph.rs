@@ -18,7 +18,10 @@ impl Graph {
         let mut graph = Self { nodes: Vec::new(), indices: HashMap::new() };
         let mut seen_rows = HashSet::new();
         for row in rows {
-            let hash = row["hash"].as_str().map(str::trim)?;
+            let hash = row["hash"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())?;
             if !seen_rows.insert(hash) {
                 return None;
             }

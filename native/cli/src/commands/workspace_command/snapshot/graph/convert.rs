@@ -346,7 +346,8 @@ fn package_name(dep_path: &str) -> Option<&str> {
 
 /// `refToRelative(reference, pkgName)` of `@pnpm/deps.path`.
 pub fn ref_to_relative(reference: &str, name: &str) -> Option<String> {
-    if reference.starts_with("link:") {
+    let reference = reference.trim();
+    if reference.is_empty() || reference.starts_with("link:") {
         return None;
     }
     if reference.starts_with('@') {

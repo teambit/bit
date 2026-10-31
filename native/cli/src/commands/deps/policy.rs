@@ -122,7 +122,7 @@ impl WorkspaceDepsContext {
         deps: &mut Vec<ResolvedDep>,
     ) {
         let (pkg_name, ver, lifecycle) = spec;
-        if identity.is_self(pkg_name) {
+        if pkg_name.trim().is_empty() || ver.trim().is_empty() || identity.is_self(pkg_name) {
             return;
         }
         if ver == "-" {

@@ -18,6 +18,8 @@ pub(in crate::commands) fn parse(
     let directory = target["directory"]
         .as_str()
         .or_else(|| target["rootDir"].as_str())
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
         .ok_or_else(|| io::Error::other("compiler parser directory"))?;
     let mut inputs = Vec::new();
     for file in files {

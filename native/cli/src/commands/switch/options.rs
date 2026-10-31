@@ -60,6 +60,7 @@ fn consume_trailing_lanes<'a>(
     Some(())
 }
 fn lane(options: &mut Options, value: &str) -> Option<()> {
+    let value = value.trim();
     if !options.lane.is_empty() || !valid_lane(value) {
         return None;
     }

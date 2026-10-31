@@ -23,6 +23,7 @@ fn removed_section(format: &Formatter, ids: &[String], location: &str) -> String
     if items.is_empty() {
         return String::new();
     }
+    let location = location.trim();
     format!(
         "{}\n{}",
         format.success_summary(&format!(

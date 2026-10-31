@@ -228,7 +228,10 @@ fn apply_inline_or_app(arg: &str, options: &mut Options) -> Option<()> {
         .or_else(|| arg.strip_prefix("-a="))
     {
         options.args = Some(val.to_owned());
-    } else if !arg.starts_with('-') && !arg.is_empty() && options.app_name.is_none() {
+    } else if !arg.starts_with('-')
+        && !arg.trim().is_empty()
+        && options.app_name.is_none()
+    {
         options.app_name = Some(arg.to_owned());
     } else {
         return None;

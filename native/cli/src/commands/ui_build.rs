@@ -23,7 +23,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native ui-build grammar".into()));
     }
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
         return Ok(Outcome::Declined("CI ui-build delegated".into()));
     }
     let cwd = env::current_dir()?;

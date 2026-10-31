@@ -210,6 +210,8 @@ fn render_progress(
     if let Some(warning) = startup.build_progress
         .as_ref()
         .and_then(|progress| progress["switchRemoteWarning"].as_str())
+        .map(str::trim)
+        .filter(|warning| !warning.is_empty())
     {
         output.warning(warning);
     }

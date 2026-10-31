@@ -147,6 +147,7 @@ fn package_name<'c>(capture: &'c Capture, identity: &str) -> io::Result<&'c str>
     capture.components
         .iter()
         .find(|component| without_version(&component.identity) == identity)
-        .map(|component| component.package_name.as_str())
+        .map(|component| component.package_name.trim())
+        .filter(|name| !name.is_empty())
         .ok_or_else(|| decline("command snapshot component"))
 }

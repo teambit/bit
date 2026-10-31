@@ -64,9 +64,11 @@ pub(super) fn pairs(entries: &Entries) -> io::Result<Vec<(String, String)>> {
         .map(|facts| {
             let source = facts["sourcePackage"]
                 .as_str()
+                .filter(|pkg| !pkg.trim().is_empty())
                 .ok_or_else(|| io::Error::other("scope rename source package"))?;
             let target = facts["targetPackage"]
                 .as_str()
+                .filter(|pkg| !pkg.trim().is_empty())
                 .ok_or_else(|| io::Error::other("scope rename target package"))?;
             Ok((source.into(), target.into()))
         })

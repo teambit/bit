@@ -33,7 +33,11 @@ impl Engine {
         for frame in frames {
             let result: Value =
                 self.request(&json!({"kind":"dependencyFreshValidate","readSet":unique[frame]}))?;
-            if result["fresh"] != true {
+            let is_fresh = result["fresh"] == true
+                || result["fresh"]
+                    .as_str()
+                    .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"));
+            if !is_fresh {
                 return Err(io::Error::other(stale.to_owned()));
             }
         }

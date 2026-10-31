@@ -56,6 +56,7 @@ impl Context {
     pub fn setting<'a>(&'a self, key: &str, default: &'a str) -> &'a str {
         self.config[key]
             .as_str()
+            .map(str::trim)
             .filter(|text| !text.is_empty())
             .unwrap_or(default)
     }

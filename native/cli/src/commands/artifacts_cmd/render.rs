@@ -74,6 +74,7 @@ fn is_safe_artifact_path(relative_path: &str) -> bool {
 
 fn sanitize_component_dir(identity: &str) -> String {
     identity
+        .trim()
         .chars()
         .map(|ch| {
             if matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {

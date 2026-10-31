@@ -121,6 +121,9 @@ fn prepare(
     startup: &mut super::status::autosync::Startup,
     environment: Option<Environments>,
 ) -> io::Result<PreparedCheckout> {
+    if options.to.trim().is_empty() {
+        return Err(io::Error::other("checkout target version is empty"));
+    }
     let request = Request {
         operation: "checkout",
         options: options.request(),

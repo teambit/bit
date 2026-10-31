@@ -58,6 +58,7 @@ fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
         raw.rsplit_once('@')
             .map_or(raw, |(bare, _)| bare)
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("linter report scope"))?
     } else {
@@ -65,11 +66,13 @@ fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
             .as_str()
             .or_else(|| id["_scope"].as_str())
             .or_else(|| id["scope"].as_str())
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
             .ok_or_else(|| invalid("linter report scope"))?;
         let name = id["_legacy"]["name"]
             .as_str()
             .or_else(|| id["name"].as_str())
+            .map(str::trim)
             .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("linter report name"))?;
         (scope, name)

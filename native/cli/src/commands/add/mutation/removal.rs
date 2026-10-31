@@ -39,9 +39,11 @@ impl ProjectedLinker {
                 row["identity"]
                     .as_str()
                     .or_else(|| row["id"].as_str())
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
                     .map(|id| {
                         id.rsplit_once('@')
-                            .map_or(id, |(base, _)| base)
+                            .map_or(id, |(base, _)| base.trim())
                             .to_owned()
                     })
             })

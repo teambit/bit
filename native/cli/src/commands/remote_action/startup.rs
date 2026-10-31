@@ -73,6 +73,7 @@ fn config_supported(config: &Value, core: &[String]) -> bool {
     entries
         .keys()
         .all(|key| {
+            let key = key.trim();
             key != "require"
                 && (!key.contains('/')
                     || core

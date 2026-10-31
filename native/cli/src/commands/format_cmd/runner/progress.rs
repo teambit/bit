@@ -20,7 +20,7 @@ impl Progress {
         output.status(&format!("formatting components (total: {})", self.identities.len()));
     }
     pub fn component(&self, output: &Output, index: usize) {
-        let Some(identity) = self.identities.get(index) else {
+        let Some(identity) = self.identities.get(index).map(|id| id.trim()) else {
             return;
         };
         output.status(&format!(

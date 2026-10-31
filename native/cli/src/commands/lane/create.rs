@@ -85,10 +85,11 @@ fn apply_create_inline<'a>(options: &mut Options<'a>, flag: &'a str) -> Option<b
 }
 
 fn set_once<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
-    if slot.is_some() || val.is_empty() || val.starts_with('-') {
+    let trimmed = val.trim();
+    if slot.is_some() || trimmed.is_empty() || trimmed.starts_with('-') {
         return false;
     }
-    *slot = Some(val);
+    *slot = Some(trimmed);
     true
 }
 

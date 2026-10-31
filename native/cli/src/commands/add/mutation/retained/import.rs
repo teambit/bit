@@ -88,6 +88,8 @@ impl Retained {
 fn content_path(proof: &Value) -> io::Result<&Path> {
     proof["path"]
         .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .map(Path::new)
         .filter(|path| path.is_absolute())
         .ok_or_else(|| invalid("import content proof path"))

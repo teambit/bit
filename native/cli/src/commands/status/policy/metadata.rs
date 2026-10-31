@@ -20,7 +20,10 @@ pub fn current_metadata(target: &Value, policy: &Policy, output: &Value) -> io::
         .map(|indices| metadata_dependencies(indices, entries))
         .collect::<io::Result<Vec<_>>>()?;
     let mut metadata = Map::new();
-    if let Some(main) = target.get("mainFile") {
+    if let Some(main) = target
+        .get("mainFile")
+        .filter(|val| !val.is_null())
+    {
         metadata.insert("mainFile".into(), main.clone());
     }
     for (index, field) in ["dependencies", "devDependencies"].into_iter().enumerate() {

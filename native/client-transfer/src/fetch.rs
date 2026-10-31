@@ -45,9 +45,16 @@ pub struct Selection {
 }
 
 impl FetchOptions {
+    fn normalize_lane_id(lane_id: Option<String>) -> Option<String> {
+        lane_id
+            .map(|id| id.trim().to_owned())
+            .filter(|id| !id.is_empty())
+    }
+
     /// `importWithoutDeps` with `fetchHeadIfLocalIsBehind` (`getExternalManyWithoutDeps`).
     #[must_use]
     pub fn latest(lane_id: Option<String>, delta: bool) -> Self {
+        let lane_id = Self::normalize_lane_id(lane_id);
         Self {
             kind: "component",
             fetch_schema: FETCH_SCHEMA,
@@ -69,6 +76,7 @@ impl FetchOptions {
     /// `importWithoutDeps` with the defaults: the given versions only.
     #[must_use]
     pub fn without_dependencies(lane_id: Option<String>) -> Self {
+        let lane_id = Self::normalize_lane_id(lane_id);
         Self {
             kind: "component",
             fetch_schema: FETCH_SCHEMA,
@@ -81,6 +89,7 @@ impl FetchOptions {
     /// `getExternalMany`: versions with their dependencies.
     #[must_use]
     pub fn with_dependencies(lane_id: Option<String>, only_if_built: bool) -> Self {
+        let lane_id = Self::normalize_lane_id(lane_id);
         Self {
             kind: "component",
             fetch_schema: FETCH_SCHEMA,

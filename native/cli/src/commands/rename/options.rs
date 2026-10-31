@@ -66,8 +66,8 @@ fn apply_inline_or_positional(
         .or_else(|| argument.strip_prefix("-p="))
     {
         options.path = Some(take_val(val)?);
-    } else if !argument.starts_with('-') && !argument.is_empty() {
-        positions.push(argument.to_owned());
+    } else if !argument.trim().starts_with('-') && !argument.trim().is_empty() {
+        positions.push(argument.trim().to_owned());
     } else {
         return None;
     }
@@ -75,5 +75,6 @@ fn apply_inline_or_positional(
 }
 
 fn take_val(val: &str) -> Option<String> {
-    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }

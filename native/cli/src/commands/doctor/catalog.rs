@@ -67,8 +67,12 @@ fn is_valid(bare: &Value) -> bool {
         .find_map(|key| bare.get(key))
         .is_some_and(|value| {
             value.as_bool().unwrap_or(false)
+                || value.as_u64() == Some(1)
                 || value
                     .as_str()
-                    .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"))
+                    .is_some_and(|text| {
+                        let trimmed = text.trim();
+                        trimmed.eq_ignore_ascii_case("true") || trimmed == "1"
+                    })
         })
 }

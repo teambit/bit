@@ -87,6 +87,7 @@ fn check_component_types(
     details: &mut Vec<String>,
 ) {
     for rel_file in &comp.files {
+        let rel_file = rel_file.trim();
         if !is_ts_source(rel_file) {
             continue;
         }

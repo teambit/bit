@@ -77,6 +77,12 @@ impl Session {
     }
 
     fn phases(&self) -> io::Result<Vec<Value>> {
+        if self.selection["historyToken"]
+            .as_str()
+            .is_none_or(|token| token.trim().is_empty())
+        {
+            return Err(io::Error::other("lane history token"));
+        }
         let phases = self.selection["phases"]
             .as_array()
             .filter(|phases| {

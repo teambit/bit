@@ -45,19 +45,23 @@ fn component(component: &Value) -> Option<Value> {
     }
     let id = &component["componentId"];
     let identity = if let Some(raw) = id.as_str() {
-        raw.split('@')
+        raw.trim()
+            .split('@')
             .next()
-            .unwrap_or(raw)
+            .unwrap_or_default()
+            .trim()
             .to_owned()
     } else {
         let scope = id["_legacy"]["scope"]
             .as_str()
             .or_else(|| id["_scope"].as_str())
             .or_else(|| id["scope"].as_str())
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())?;
         let name = id["_legacy"]["name"]
             .as_str()
             .or_else(|| id["name"].as_str())
+            .map(str::trim)
             .filter(|name| !name.is_empty())?;
         format!("{scope}/{name}")
     };

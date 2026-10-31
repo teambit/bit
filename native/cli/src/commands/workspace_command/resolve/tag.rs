@@ -139,7 +139,9 @@ pub fn entered_versions(selections: Option<&Value>) -> Vec<String> {
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
-        .filter_map(|row| row["version"].as_str().map(str::to_string))
+        .filter_map(|row| row["version"].as_str().map(str::trim))
+        .filter(|version| !version.is_empty())
+        .map(str::to_string)
         .collect()
 }
 

@@ -198,8 +198,12 @@ fn find_model_ext_data(model_exts: &[Value], bare_id: &str) -> Option<Value> {
         .iter()
         .find_map(|ext| {
             let name = ext_id_str(ext)?;
-            (aspect_id_without_version(&name) == bare_id)
-                .then(|| ext.get("data").cloned())
+            (aspect_id_without_version(name.trim()) == bare_id)
+                .then(|| {
+                    ext.get("data")
+                        .filter(|val| !val.is_null())
+                        .cloned()
+                })
                 .flatten()
         })
 }

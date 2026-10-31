@@ -96,9 +96,9 @@ fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
         return true;
     }
     let (flag, val) = match arg.split_once('=') {
-        Some((flag, "true")) => (flag, true),
-        Some((flag, "false")) => (flag, false),
-        None => (arg, true),
+        Some((flag, val)) if val.trim().eq_ignore_ascii_case("true") => (flag.trim(), true),
+        Some((flag, val)) if val.trim().eq_ignore_ascii_case("false") => (flag.trim(), false),
+        None => (arg.trim(), true),
         _ => return false,
     };
     let slot = match flag {

@@ -76,5 +76,14 @@ pub(super) struct Destination {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Token {
+    #[serde(deserialize_with = "deserialize_token")]
     pub(super) token: String,
+}
+
+fn deserialize_token<'de, Deser>(deserializer: Deser) -> Result<String, Deser::Error>
+where
+    Deser: serde::Deserializer<'de>,
+{
+    let token = String::deserialize(deserializer)?;
+    Ok(token.trim_end_matches('\0').to_owned())
 }

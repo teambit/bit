@@ -127,7 +127,7 @@ fn push(output: &mut Value, field: &str, value: Value) {
         .push(value);
 }
 fn validate(request: &Request) -> io::Result<()> {
-    if request.current_lane_id.split_once('/').is_none()
+    if !valid_lane_id(&request.current_lane_id)
         || request.targets.len() > 4096
         || request.models.len() > 4096
         || request.histories.len() != request.models.len()
@@ -179,6 +179,12 @@ fn models(request: &Request) -> io::Result<()> {
         return Err(invalid("status missing imported model requires canonical errors"));
     }
     Ok(())
+}
+
+fn valid_lane_id(lane_id: &str) -> bool {
+    lane_id
+        .split_once('/')
+        .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
 }
 
 fn grammar(request: &Request, target: &Target) -> io::Result<()> {

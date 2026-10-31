@@ -76,12 +76,12 @@ pub(super) fn parse_flags(rest: &[&str]) -> Option<PruneArgs> {
             "--json=false" => parsed.json = false,
             "--older-than" => {
                 let next = *iter.next()?;
-                (!next.is_empty() && !next.starts_with('-')).then_some(())?;
+                (!next.trim().is_empty() && !next.starts_with('-')).then_some(())?;
                 parsed.older_than = Some(next.to_owned());
             }
             value if value.starts_with("--older-than=") => {
                 let val = &value["--older-than=".len()..];
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                (!val.trim().is_empty() && !val.starts_with('-')).then_some(())?;
                 parsed.older_than = Some(val.to_owned());
             }
             _ => return None,

@@ -373,7 +373,10 @@ fn capitalize_word(word: &str) -> String {
 fn unique_envs_by_frequency(items: &[TemplateDescriptor]) -> Vec<&'static str> {
     let mut counts: Vec<(&'static str, usize)> = Vec::new();
     for tpl in items {
-        let Some(env_id) = tpl.env else {
+        let Some(env_id) = tpl.env
+            .map(str::trim)
+            .filter(|env| !env.is_empty())
+        else {
             continue;
         };
         if let Some((_, count)) = counts

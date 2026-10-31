@@ -118,7 +118,11 @@ fn write_session(
     io::stdout()
         .lock()
         .write_all(session.output().as_bytes())?;
-    if let Some(warning) = session.warning() {
+    if let Some(warning) = session
+        .warning()
+        .map(str::trim)
+        .filter(|warn| !warn.is_empty())
+    {
         output.console(&Chalk::detect(args).red(warning));
     }
     Ok(())

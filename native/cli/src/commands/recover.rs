@@ -40,5 +40,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 fn needs_installation(options: &options::Options, preview: &Batch) -> bool {
     !options.skip_installation
-        && (!preview.import_ids().is_empty() || !preview.probe_ids().is_empty())
+        && (preview
+            .import_ids()
+            .iter()
+            .any(|id| !id.trim().is_empty())
+            || preview
+                .probe_ids()
+                .iter()
+                .any(|id| !id.trim().is_empty()))
 }

@@ -77,6 +77,7 @@ impl Environments {
         context: &Value,
         targets: &[Value],
     ) -> io::Result<()> {
+        validate_service_root(root)?;
         let core = core_ids()?;
         let aspects = root_aspects(context, &core);
         for target in targets {
@@ -101,4 +102,11 @@ impl Environments {
             Self::require_service(root, context, array(context.get("targets"), "service targets")?)
         }
     }
+}
+
+fn validate_service_root(root: &Path) -> io::Result<()> {
+    if root.as_os_str().is_empty() {
+        return Err(io::Error::other("component service workspace root is empty"));
+    }
+    Ok(())
 }

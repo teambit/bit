@@ -29,6 +29,7 @@ pub(super) enum Issue {
 
 impl Issue {
     pub(super) fn parse(name: &str) -> io::Result<Self> {
+        let name = name.trim();
         Ok(match name {
             "MissingManuallyConfiguredPackages" => Self::MissingManual,
             "MissingPackagesDependenciesOnFs" => Self::MissingPackages,

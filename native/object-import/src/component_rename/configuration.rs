@@ -125,8 +125,12 @@ fn copied_config(facts: &Value) -> io::Result<serde_json::Map<String, Value>> {
     Ok(config)
 }
 fn copy_config(config: &mut serde_json::Map<String, Value>, name: &str, value: &Value) {
+    let name = name.trim();
     let bare = name.split('@').next().unwrap_or(name);
-    if !matches!(bare, "teambit.pkg/pkg" | "teambit.component/renaming") && !value.is_null() {
+    if !bare.is_empty()
+        && !matches!(bare, "teambit.pkg/pkg" | "teambit.component/renaming")
+        && !value.is_null()
+    {
         config.insert(name.into(), value.clone());
     }
 }

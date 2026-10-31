@@ -49,6 +49,8 @@ fn selected_files(files: &[Value], options: &Options) -> Vec<Value> {
         .filter(|file| {
             file["filePath"]
                 .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
                 .is_some_and(|path| {
                     options.output.files.iter().any(|filter| matches_file(path, filter))
                 })

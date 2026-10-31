@@ -26,8 +26,11 @@ pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> 
 }
 fn validate_sources(root: &Path, directory: &Path, component: &Component) -> io::Result<()> {
     for file in &component.files {
-        let path =
-            file["absolutePath"].as_str().ok_or_else(|| invalid("tester component source"))?;
+        let path = file["absolutePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("tester component source"))?;
         let path = super::super::paths::normalized(Path::new(path));
         if !path.starts_with(directory) {
             return Err(invalid("tester component source ownership"));

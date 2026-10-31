@@ -47,6 +47,8 @@ fn file(row: &Value) -> io::Result<Value> {
         .as_str()
         .or_else(|| row["name"].as_str())
         .or_else(|| row["file"].as_str())
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .ok_or_else(|| invalid("test file path"))?;
     let name = Path::new(path)
         .file_name()

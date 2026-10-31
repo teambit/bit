@@ -166,7 +166,11 @@ fn external_resolver(root: &Path) -> io::Result<bool> {
 }
 
 fn file_action_response(response: &Value) -> io::Result<Value> {
-    if response["ok"] == true {
+    let is_ok = response["ok"] == true
+        || response["ok"]
+            .as_str()
+            .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"));
+    if is_ok {
         Ok(response["value"].clone())
     } else {
         Err(io::Error::other(

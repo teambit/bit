@@ -46,6 +46,9 @@ fn remove_leaf(path: &Path) -> io::Result<()> {
 }
 
 fn empty(path: &Path) -> io::Result<()> {
+    if path.as_os_str().is_empty() {
+        return Ok(());
+    }
     fs::create_dir_all(path)?;
     for entry in fs::read_dir(path)? {
         remove(&entry?.path())?;

@@ -234,8 +234,8 @@ fn needs_snap(plan: &Value, snap_failed: bool) -> io::Result<Vec<String>> {
         .ok_or_else(|| decline("command snapshot receipt"))?
         .iter()
         .map(|identity| {
-            let identity = text(Some(identity))?;
-            if identity.len() > 4096 {
+            let identity = text(Some(identity))?.trim();
+            if identity.is_empty() || identity.len() > 4096 {
                 return Err(decline("command snapshot identity"));
             }
             Ok(identity.to_string())

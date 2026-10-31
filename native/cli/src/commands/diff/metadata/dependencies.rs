@@ -65,7 +65,7 @@ pub(super) fn package_dependencies(
 }
 
 fn pkg_version(map: &Map<String, Value>, name: &str) -> io::Result<Option<String>> {
-    map.get(name)
+    map.get(name.trim())
         .map(|value| text(Some(value)).map(|ver| ver.trim().to_string()))
         .transpose()
         .map(|opt| opt.filter(|ver| !ver.is_empty()))

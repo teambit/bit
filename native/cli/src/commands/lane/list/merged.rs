@@ -29,5 +29,5 @@ fn lane_name(id: &serde_json::Value) -> &str {
             id.as_str()
                 .map(|raw| raw.rsplit_once('/').map_or(raw, |(_, name)| name))
         })
-        .unwrap_or_default()
+        .map_or("", str::trim)
 }

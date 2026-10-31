@@ -55,7 +55,10 @@ pub(super) fn results(
     format!("{}\n\n{}\n{full}\n{written}", metadata(meta), table(&rows))
 }
 fn text(value: &Value) -> &str {
-    value.as_str().unwrap_or_default()
+    value
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default()
 }
 fn metadata(meta: &Value) -> String {
     let version = |key: &str| {

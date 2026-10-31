@@ -12,7 +12,10 @@ impl Environments {
         root: &Path,
         ids: &[String],
     ) -> io::Result<String> {
-        if ids.is_empty() {
+        if ids
+            .iter()
+            .all(|id| id.trim().is_empty())
+        {
             return Ok(String::new());
         }
         let host = self.host(root)?;

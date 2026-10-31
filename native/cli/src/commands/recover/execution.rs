@@ -73,7 +73,7 @@ fn report(options: &Options<'_>, plan: &Batch, args: &[OsString]) -> io::Result<
     if ids.is_empty() {
         return Err(io::Error::other(format!(
             r#"no soft-deleted components found matching pattern "{}""#,
-            options.pattern,
+            options.pattern.trim(),
         )));
     }
     let format = Formatter::new(Chalk::detect(args));

@@ -121,7 +121,7 @@ impl Merge<'_> {
     fn other_skipped(&self) -> Vec<&(crate::commands::ids::Id, String)> {
         self.results.skipped
             .iter()
-            .filter(|(_, message)| message != REMOVED)
+            .filter(|(_, message)| message.trim() != REMOVED)
             .collect()
     }
 

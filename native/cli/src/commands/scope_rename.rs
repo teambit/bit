@@ -143,5 +143,6 @@ fn handle_outside_workspace(
 
 fn decline_preflight(error: &io::Error) -> bool {
     error.kind() != io::ErrorKind::InvalidInput
+        || error.to_string().trim().is_empty()
         || env::var_os("CI").is_some_and(|value| !value.is_empty())
 }

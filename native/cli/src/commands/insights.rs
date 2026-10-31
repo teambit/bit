@@ -93,10 +93,11 @@ fn consume_trailing_insight_names<'a>(
     names: &mut Vec<String>,
 ) -> Option<()> {
     for rest in iter {
-        if rest.is_empty() || rest.starts_with('-') {
+        let trimmed = rest.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') {
             return None;
         }
-        names.push(rest.to_owned());
+        names.push(trimmed.to_owned());
     }
     Some(())
 }

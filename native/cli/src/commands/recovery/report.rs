@@ -70,7 +70,7 @@ fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
 fn lane_restored_summary(items: &[Value], format: &Formatter) -> io::Result<String> {
     let restored = items
         .iter()
-        .map(|item| text(Some(item)).map(|item| format.item(item)))
+        .map(|item| text(Some(item)).map(|item| format.item(item.trim())))
         .collect::<io::Result<Vec<_>>>()?;
     Ok(format!(
         "{}\n{}",

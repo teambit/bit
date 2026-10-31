@@ -80,6 +80,7 @@ fn hidden_head(hidden: &Value, scope: &str, name: &str) -> Option<Option<String>
 }
 
 fn identifier(value: &str) -> Option<&str> {
+    let value = value.trim();
     (!value.is_empty()
         && value
             .bytes()

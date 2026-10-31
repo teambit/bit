@@ -39,8 +39,10 @@ impl Host for Builtin {
 }
 
 fn is_supported_builtin_env(env_id: &str) -> bool {
-    matches!(
-        bit_install::config::aspect_id_without_version(env_id.trim()),
-        "teambit.harmony/node" | "teambit.react/react",
-    )
+    let trimmed = env_id.trim();
+    !trimmed.is_empty()
+        && matches!(
+            bit_install::config::aspect_id_without_version(trimmed),
+            "teambit.harmony/node" | "teambit.react/react",
+        )
 }

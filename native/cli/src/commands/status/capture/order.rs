@@ -29,5 +29,9 @@ fn snapshot_file_path(file: &Value) -> io::Result<String> {
         file.get("relativePath")
             .or_else(|| file.get("path"))
     };
-    text(value).map(str::to_owned)
+    let path = text(value)?.trim();
+    if path.is_empty() {
+        return Err(decline("snapshot file path"));
+    }
+    Ok(path.to_owned())
 }

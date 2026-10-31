@@ -27,7 +27,7 @@ pub(super) fn try_run(args: &[OsString], argv: &[&str]) -> io::Result<Option<Out
 
 fn presentation(argv: &[&str]) -> Option<(ExitCode, Option<&'static str>)> {
     let (id, flags) = match argv {
-        [id, rest @ ..] if !id.trim().is_empty() && !id.starts_with('-') => (true, rest),
+        [id, rest @ ..] if !id.trim().is_empty() && !id.trim().starts_with('-') => (true, rest),
         rest => (false, rest),
     };
     let (help, flags) = match flags {

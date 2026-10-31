@@ -21,6 +21,7 @@ pub fn root_locale() -> bool {
         .find_map(|name| {
             env::var(name)
                 .ok()
+                .map(|value| value.trim().to_owned())
                 .filter(|value| !value.is_empty())
         })
         .unwrap_or_default();

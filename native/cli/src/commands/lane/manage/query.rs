@@ -188,7 +188,8 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
 }
 
 fn non_flag(val: &str) -> Option<&str> {
-    (!val.is_empty() && !val.starts_with('-')).then_some(val)
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(trimmed)
 }
 
 fn unscoped_lane_error(scope_dir: &Path, name: &str) -> Option<String> {

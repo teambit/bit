@@ -172,9 +172,11 @@ pub(super) fn format_pack_report(
 ) -> String {
     let warnings = join_yellow_array(&payload["warnings"], chalk);
     let errors = join_yellow_array(&payload["errors"], chalk);
-    let id_str = payload["id"].as_str().unwrap_or_default();
+    let id_str = payload["id"].as_str().map_or("", str::trim);
     let tar_line = payload["metadata"]["tarPath"]
         .as_str()
+        .map(str::trim)
+        .filter(|tar_path| !tar_path.is_empty())
         .map(|tar_path| chalk.green(&format!("tar path for component {id_str}: {tar_path}")))
         .unwrap_or_default();
     format!("{warnings}\n{errors}\n{tar_line}")

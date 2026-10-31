@@ -193,10 +193,11 @@ fn apply_validate_combined_short(arg: &str, options: &mut Options) -> bool {
 
 fn apply_validate_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--skip-tasks=") {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.skip_tasks = Some(val.to_owned());
-    } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
-        options.pattern = Some(arg.to_owned());
+    } else if !arg.starts_with('-') && !arg.trim().is_empty() && options.pattern.is_none() {
+        options.pattern = Some(arg.trim().to_owned());
     } else {
         return None;
     }

@@ -36,7 +36,12 @@ const TRANSPORT_KEYS: &[&str] = &[
 /// `BIT_CONFIG_*` overrides workspace settings, then scope settings, then global settings.
 #[must_use]
 pub fn effective(global: GlobalConfig, scope: &Value, workspace: &Value) -> GlobalConfig {
-    layers(global, scope, workspace, |key| std::env::var(key).ok())
+    layers(global, scope, workspace, |key| {
+        std::env::var(key)
+            .ok()
+            .map(|val| val.trim().to_owned())
+            .filter(|val| !val.is_empty())
+    })
 }
 
 fn layers(

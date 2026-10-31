@@ -107,22 +107,26 @@ fn model_scope_and_name(model: &Value, row: &Value) -> (String, String) {
         });
     let scope = model["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .or_else(|| {
             row["id"]["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         })
-        .unwrap_or(id_scope);
+        .unwrap_or_else(|| id_scope.trim());
     let name = model["name"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .or_else(|| {
             row["id"]["name"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         })
-        .unwrap_or(id_name);
+        .unwrap_or_else(|| id_name.trim());
     (scope.to_owned(), name.to_owned())
 }
 

@@ -62,11 +62,19 @@ pub(super) fn safe_parents(root: &Path, object: &Path) -> Option<bool> {
 
 #[cfg(unix)]
 fn parse_group_gid(bytes: &[u8], name: &str) -> Option<u32> {
+    let name = name.trim();
+    if name.is_empty() {
+        return None;
+    }
     let contents = std::str::from_utf8(bytes).ok()?;
     let line = contents
         .lines()
         .find(|line| line.split(':').next() == Some(name))?;
-    line.split(':').nth(2)?.parse().ok()
+    line.split(':')
+        .nth(2)?
+        .trim()
+        .parse()
+        .ok()
 }
 
 #[cfg(not(unix))]

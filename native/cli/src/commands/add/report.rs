@@ -53,6 +53,7 @@ fn component_id(component: &Value) -> io::Result<String> {
     if let Some(id) = component["id"]
         .as_str()
         .or_else(|| component["identity"].as_str())
+        .map(str::trim)
         .filter(|id| !id.is_empty())
     {
         return Ok(id.to_owned());

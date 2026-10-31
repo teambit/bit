@@ -61,6 +61,9 @@ impl Environments {
         result: &Value,
         identity: &str,
     ) -> io::Result<()> {
+        if identity.trim().is_empty() {
+            return Err(decline("switch callback identity"));
+        }
         callbacks::switch_accept(capture, result, identity)
             .map_err(|error| self.callback_failure(capture, error))
     }

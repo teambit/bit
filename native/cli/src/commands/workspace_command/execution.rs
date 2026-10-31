@@ -232,7 +232,10 @@ pub(in crate::commands) fn loader_output(chalk: Chalk, quiet: bool) -> Output {
 
 /// `runReportHandler`: the report and a newline; details are kept for `bit details`.
 fn print(report: &Report, command: &str, newline: bool) -> io::Result<()> {
-    if let Some(details) = &report.details {
+    if let Some(details) = report.details
+        .as_deref()
+        .filter(|text| !text.is_empty())
+    {
         let _ = persist_details(details, command);
     }
     let mut stdout = io::stdout().lock();

@@ -27,7 +27,7 @@ pub(super) struct Plan {
 }
 
 pub(super) fn supports_file(name: &str) -> bool {
-    file::supports(name)
+    file::supports(name.trim())
 }
 
 enum Target {

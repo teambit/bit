@@ -21,13 +21,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        if is_ci_active() {
             return Ok(Outcome::Declined("not inside a workspace".into()));
         }
         return workspace_command::execute_failure_scope(
             &cwd,
             args,
-            if undo { "undeprecate" } else { "deprecate" },
+            command_name(undo),
             false,
             "",
             io::Error::other("Cannot read properties of undefined (reading 'idsByPattern')"),
@@ -43,8 +43,7 @@ fn run_workspace(
 ) -> io::Result<Outcome> {
     if let Err(error) =
         Plan::prepare(root, options.pattern, options.replacement, options.range, undo)
-        && (error.kind() != io::ErrorKind::InvalidInput
-            || env::var_os("CI").is_some_and(|value| !value.is_empty()))
+        && (error.kind() != io::ErrorKind::InvalidInput || is_ci_active())
     {
         return Ok(Outcome::Declined(format!("deprecation: {error}")));
     }
@@ -52,24 +51,27 @@ fn run_workspace(
     print!("{}", linker.take_stdout());
     let prepared = Plan::prepare(root, options.pattern, options.replacement, options.range, undo);
     let formatter = Formatter::new(Chalk::detect(args));
-    workspace_command::execute_then(
-        root,
-        args,
-        if undo { "undeprecate" } else { "deprecate" },
-        |_output| {
-            let plan = prepared?;
-            let report = Report {
-                data: report::render(&plan, options, undo, &formatter),
-                code: 0,
-                details: None,
-            };
-            let bitmap = plan.original_bitmap()?;
-            for id in plan.hydration_ids() {
-                linker.capture(root, &bitmap, std::slice::from_ref(id))?;
-                print!("{}", linker.take_stdout());
-            }
-            plan.commit(&workspace_command::file_id())?;
-            Ok(report)
-        },
-    )
+    workspace_command::execute_then(root, args, command_name(undo), |_output| {
+        let plan = prepared?;
+        let report = Report {
+            data: report::render(&plan, options, undo, &formatter),
+            code: 0,
+            details: None,
+        };
+        let bitmap = plan.original_bitmap()?;
+        for id in plan.hydration_ids() {
+            linker.capture(root, &bitmap, std::slice::from_ref(id))?;
+            print!("{}", linker.take_stdout());
+        }
+        plan.commit(&workspace_command::file_id())?;
+        Ok(report)
+    })
+}
+
+const fn command_name(undo: bool) -> &'static str {
+    if undo { "undeprecate" } else { "deprecate" }
+}
+
+fn is_ci_active() -> bool {
+    env::var_os("CI").is_some_and(|value| !value.is_empty())
 }

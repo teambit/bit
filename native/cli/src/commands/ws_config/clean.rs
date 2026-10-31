@@ -154,7 +154,7 @@ pub(in crate::commands::ws_config) fn writer_matches(
     writers.is_none_or(|filter| {
         filter
             .iter()
-            .any(|item| item.trim() == writer_id)
+            .any(|item| item.trim().eq_ignore_ascii_case(writer_id))
     })
 }
 

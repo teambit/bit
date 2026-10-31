@@ -108,7 +108,10 @@ fn run_in_workspace(
 }
 
 fn validate_build_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option<String> {
-    let pat = options.pattern.as_deref()?;
+    let pat = options.pattern
+        .as_deref()
+        .map(str::trim)
+        .filter(|pat| !pat.is_empty())?;
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
     if is_bitmap_auto_sync(&ws_config) {
         return None;

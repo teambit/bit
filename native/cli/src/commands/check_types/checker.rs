@@ -215,7 +215,7 @@ fn is_bool_literal(expr: &str) -> bool {
 }
 
 fn is_number_literal(expr: &str) -> bool {
-    !expr.is_empty() && expr.parse::<f64>().is_ok()
+    !expr.is_empty() && expr.parse::<f64>().is_ok_and(f64::is_finite)
 }
 
 fn build_report(

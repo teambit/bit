@@ -164,7 +164,8 @@ impl Reader {
 fn eligible(root: &Path, row: &Value) -> bool {
     let Some(directory) = row["rootDir"]
         .as_str()
-        .filter(|directory| *directory != ".")
+        .map(str::trim)
+        .filter(|directory| !directory.is_empty() && *directory != ".")
     else {
         return false;
     };

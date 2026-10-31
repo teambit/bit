@@ -229,7 +229,8 @@ fn model_env(model: &ModelData) -> Option<&'static str> {
     let id = envs
         .next()?
         .pointer("/data/id")?
-        .as_str()?;
+        .as_str()
+        .filter(|id| !id.trim().is_empty())?;
     if envs.next().is_some() {
         return None;
     }

@@ -81,12 +81,24 @@ fn hashes(objects: &Path) -> io::Result<Vec<String>> {
 }
 
 fn component(value: &Value, hash: &str) -> io::Result<Value> {
-    let name = value["name"].as_str().ok_or_else(|| io::Error::other("init component name"))?;
-    Ok(json!({"id":{"scope":value["scope"].as_str(),"name":name},"isSymlink":false,"hash":hash}))
+    let name = value["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| io::Error::other("init component name"))?;
+    let scope = value["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
+    Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":false,"hash":hash}))
 }
 
 fn lane(value: &Value, hash: &str) -> io::Result<Value> {
-    let name = value["name"].as_str().ok_or_else(|| io::Error::other("init lane name"))?;
+    let name = value["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| io::Error::other("init lane name"))?;
     let mut id = json!({"name":name});
     if let Some(scope) = value.get("scope") {
         id["scope"] = scope.clone();

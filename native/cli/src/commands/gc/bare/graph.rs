@@ -235,7 +235,11 @@ fn lane_entries(lane: &Value) -> io::Result<Vec<(String, String)>> {
     Ok(result)
 }
 fn flattened(scope: &Path, version: &Value) -> io::Result<Vec<String>> {
-    if let Some(hash) = version["flattenedDependenciesRef"].as_str() {
+    if let Some(hash) = version["flattenedDependenciesRef"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+    {
         let (_, bytes) = bit_object_import::read_raw_scope_object(scope, hash)?
             .ok_or_else(|| unsupported("flattened dependency object missing"))?;
         return flattened_values(&bit_object_import::parse_jsonc(&bytes)?);

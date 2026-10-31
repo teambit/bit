@@ -102,6 +102,7 @@ fn resolve_main_version(models: &[Value], id: &str) -> io::Result<String> {
         })?;
     let head_hash = model["head"]
         .as_str()
+        .filter(|hash| !hash.trim().is_empty())
         .ok_or_else(|| {
             io::Error::other(format!(r#"unable to eject "{id}" as it has no main version"#))
         })?;

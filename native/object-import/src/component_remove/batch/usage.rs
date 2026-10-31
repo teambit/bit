@@ -19,21 +19,25 @@ pub(in crate::component_remove) fn validate(
         let Some(extensions) = component["extensions"].as_array() else {
             return Err(invalid("stash removal component aspects"));
         };
-        if let Some(used) = identities
-            .iter()
-            .find(|removed| {
-                extensions
-                    .iter()
-                    .filter_map(extension_id)
-                    .any(|id| *removed == &id)
-            })
-        {
+        if let Some(used) = used_removed_aspect(identities, extensions) {
             return Err(io::Error::other(format!(
                 "Unable to remove {used}.\nThis component is 1) an aspect 2) is used by other components, such as \"{identity}\" 3) it's a new component so it can't be installed as a package.\nRemoving this component from the workspace will disrupt the functionality of other components that depend on it, and resolving these issues may not be straightforward.\nIf you understand the risks and wish to proceed with the removal, please use the --force flag.\n",
             )));
         }
     }
     Ok(())
+}
+
+fn used_removed_aspect<'a>(identities: &'a [String], extensions: &[Value]) -> Option<&'a str> {
+    identities
+        .iter()
+        .find(|removed| {
+            extensions
+                .iter()
+                .filter_map(extension_id)
+                .any(|id| *removed == &id)
+        })
+        .map(String::as_str)
 }
 fn extension_id(value: &Value) -> Option<String> {
     if let Some(id) = value

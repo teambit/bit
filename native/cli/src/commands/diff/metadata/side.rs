@@ -25,7 +25,7 @@ pub struct Side {
 
 impl Side {
     pub fn with_version(mut self, version: &str) -> Self {
-        self.version = version.to_string();
+        self.version = version.trim().to_string();
         self
     }
 }

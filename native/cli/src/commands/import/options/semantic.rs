@@ -14,7 +14,10 @@ fn directories(options: &Options) -> Option<&'static str> {
     if options.write.override_existing {
         return Some("--override and --write-to-empty-dir cannot be used together");
     }
-    options.write.path.as_ref().map(|_| "--path and --write-to-empty-dir cannot be used together")
+    options.write.path
+        .as_deref()
+        .filter(|path| !path.trim().is_empty())
+        .map(|_| "--path and --write-to-empty-dir cannot be used together")
 }
 fn missing_ids(options: &Options) -> Option<&'static str> {
     if !options.ids.is_empty() {

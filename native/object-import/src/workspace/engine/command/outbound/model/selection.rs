@@ -36,11 +36,19 @@ fn head_only(model: &Value) -> io::Result<Staged> {
         [version] => *version,
         _ => return Err(invalid("outbound ambiguous head-only tags")),
     };
+    validate_label(version)?;
     Ok(Staged {
         head: head.to_owned(),
         hashes: vec![head.to_owned()],
         labels: vec![version.to_owned()],
     })
+}
+
+fn validate_label(label: &str) -> io::Result<()> {
+    if label.trim().is_empty() {
+        return Err(invalid("outbound empty Version label"));
+    }
+    Ok(())
 }
 
 pub(super) fn has_staged(model: &Value) -> bool {

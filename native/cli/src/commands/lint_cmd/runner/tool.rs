@@ -57,6 +57,7 @@ impl Session {
 
     pub(super) fn run(&mut self) -> io::Result<Value> {
         self.input.write_all(b"true\n")?;
+        self.input.flush()?;
         let value = self.read()?;
         if !self.child.wait()?.success() || !self.stderr()?.is_empty() {
             return Err(invalid("linter external tool failed"));

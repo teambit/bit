@@ -75,6 +75,7 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
 }
 
 fn validate_target_error(flags: &Map<String, Value>, to: &str) -> Option<&'static str> {
+    let to = to.trim();
     if flags.get("--workspace-only") == Some(&Value::Bool(true)) && to != "head" {
         return Some(
             r#"--workspace-only is only relevant when running "bit checkout head" on a lane"#,

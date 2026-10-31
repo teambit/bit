@@ -31,7 +31,7 @@ fn log_field<'a>(row: &'a Value, field: &str) -> &'a str {
                 .and_then(|key| row.get(key))
                 .and_then(Value::as_str)
         })
-        .unwrap_or_default()
+        .map_or("", str::trim)
 }
 
 pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {

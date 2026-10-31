@@ -76,6 +76,7 @@ pub(super) fn valid_revert_version(to: &str) -> bool {
 
 /// `head`, `latest`, `reset`, `main`, `head~N`, a snap hash or a semver tag.
 pub(super) fn valid_to(to: &str) -> bool {
+    let to = to.trim();
     if matches!(to, "head" | "latest" | "reset" | "main") {
         return true;
     }

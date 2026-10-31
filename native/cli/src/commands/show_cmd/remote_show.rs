@@ -122,7 +122,12 @@ fn lookup_global_remote(scope_name: &str) -> Option<String> {
 }
 
 fn local_scope_from_url(url: &str) -> Option<PathBuf> {
-    if url.starts_with("http://") || url.starts_with("https://") || url.starts_with("ssh://") {
+    let url = url.trim();
+    if url.is_empty()
+        || url.starts_with("http://")
+        || url.starts_with("https://")
+        || url.starts_with("ssh://")
+    {
         return None;
     }
     let path = PathBuf::from(url.strip_prefix("file://").unwrap_or(url));

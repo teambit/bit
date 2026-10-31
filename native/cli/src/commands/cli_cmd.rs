@@ -33,12 +33,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Ok(cli) = NodeCli::find() else {
         return Ok(Outcome::Declined("unable to locate Bit CLI package version".into()));
     };
-    if cli.version.is_empty() {
+    let version = cli.version.trim();
+    if version.is_empty() {
         return Ok(Outcome::Declined("empty Bit CLI version".into()));
     }
     let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
     let mut stdout = io::stdout().lock();
-    writeln!(stdout, "{}", render_docs_frontmatter(&cli.version))?;
+    writeln!(stdout, "{}", render_docs_frontmatter(version))?;
     stdout.flush()?;
     if let Some(history) = history {
         history.end(true);

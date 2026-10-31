@@ -266,7 +266,7 @@ fn validate_graph_targets(context: &Value, plan: &Value, params: &Value) -> io::
 fn strings(value: &Value) -> io::Result<Vec<String>> {
     array(Some(value), "snapshot callback selection")?
         .iter()
-        .map(|value| text(Some(value)).map(str::to_owned))
+        .map(|value| text(Some(value)).map(|raw| raw.trim().to_owned()))
         .collect()
 }
 

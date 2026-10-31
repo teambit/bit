@@ -30,24 +30,25 @@ impl History {
     /// load the consumer after `CLIParser.parse()`, writing only the completion
     /// entry on `end`.
     pub fn unstarted(root: &Path, args: &[OsString]) -> Self {
-        let command = args
-            .iter()
-            .map(|arg| arg.to_string_lossy())
-            .collect::<Vec<_>>()
-            .join(" ");
-        Self { file: workspace::scope_path(root).join("command-history"), command }
+        Self {
+            file: workspace::scope_path(root).join("command-history"),
+            command: Self::format_command(args),
+        }
     }
 
     /// Record a command using the actual consumer scope directory.
     pub fn start_scope(scope: &Path, args: &[OsString]) -> Self {
-        let command = args
-            .iter()
-            .map(|arg| arg.to_string_lossy())
-            .collect::<Vec<_>>()
-            .join(" ");
-        let history = Self { file: scope.join("command-history"), command };
+        let history =
+            Self { file: scope.join("command-history"), command: Self::format_command(args) };
         history.write("started");
         history
+    }
+
+    fn format_command(args: &[OsString]) -> String {
+        args.iter()
+            .map(|arg| arg.to_string_lossy())
+            .collect::<Vec<_>>()
+            .join(" ")
     }
 
     pub fn end(&self, succeeded: bool) {

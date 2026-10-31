@@ -44,7 +44,7 @@ pub(super) fn outputs(compiled: &[Compiled]) -> io::Result<()> {
     for row in compiled {
         let mut paths = HashSet::new();
         for file in &row.files {
-            if !paths.insert(&file.path) {
+            if file.path.as_os_str().is_empty() || !paths.insert(&file.path) {
                 return Err(io::Error::other("compiler colliding outputs"));
             }
         }

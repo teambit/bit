@@ -28,17 +28,21 @@ pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Re
 fn exported_lane(entry: &Value) -> Option<Value> {
     if let Some((scope, name)) = entry
         .as_str()
-        .and_then(|lane| lane.split_once('/'))
+        .and_then(|lane| lane.trim().split_once('/'))
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
     {
         return Some(json!({"scope":scope,"name":name}));
     }
     let scope = entry["scope"]
         .as_str()
         .or_else(|| entry["id"]["scope"].as_str())
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())?;
     let name = entry["name"]
         .as_str()
         .or_else(|| entry["id"]["name"].as_str())
+        .map(str::trim)
         .filter(|name| !name.is_empty())?;
     Some(json!({"scope":scope,"name":name}))
 }

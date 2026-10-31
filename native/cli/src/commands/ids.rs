@@ -78,6 +78,8 @@ impl Id {
     pub fn has_version(&self) -> bool {
         self.version
             .as_deref()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
             .is_some_and(|version| !matches!(version, "latest" | "head"))
     }
 

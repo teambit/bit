@@ -82,7 +82,8 @@ impl Policy {
         match flag {
             "--ignore-issues" => {
                 self.ignore_issues = Some(
-                    next.filter(|value| !value.is_empty() && !value.starts_with('-'))?
+                    next.map(str::trim)
+                        .filter(|value| !value.is_empty() && !value.starts_with('-'))?
                         .to_string(),
                 );
                 return Some(1);
@@ -98,6 +99,7 @@ impl Policy {
 
     fn inline_flag(&mut self, flag: &str, val: &str) -> Option<()> {
         if flag == "--ignore-issues" {
+            let val = val.trim();
             if val.is_empty() || val.starts_with('-') {
                 return None;
             }

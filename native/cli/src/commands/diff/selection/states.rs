@@ -209,15 +209,25 @@ impl State<'_> {
     }
 
     fn model<'a>(&'a self, target: &Value) -> Option<&'a Value> {
+        let target_id = target["identity"]
+            .as_str()
+            .map(str::trim)
+            .unwrap_or_default();
         self.context["models"]
             .as_array()?
             .iter()
             .find(|model| {
                 format!(
                     "{}/{}",
-                    model["scope"].as_str().unwrap_or_default(),
-                    model["name"].as_str().unwrap_or_default(),
-                ) == target["identity"].as_str().unwrap_or_default()
+                    model["scope"]
+                        .as_str()
+                        .map(str::trim)
+                        .unwrap_or_default(),
+                    model["name"]
+                        .as_str()
+                        .map(str::trim)
+                        .unwrap_or_default(),
+                ) == target_id
             })
     }
 

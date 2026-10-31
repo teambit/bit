@@ -132,12 +132,21 @@ fn defaults(options: &mut options::Options) -> io::Result<()> {
 
 fn default_option_value(global: &serde_json::Value, key: &str) -> Option<String> {
     bit_workspace_config::environment_value(key)
-        .map(|val| val.trim().to_owned())
+        .map(|val| {
+            val.trim()
+                .trim_matches(['"', '\''])
+                .trim()
+                .to_owned()
+        })
         .filter(|val| !val.is_empty())
         .or_else(|| {
             global[key]
                 .as_str()
-                .map(str::trim)
+                .map(|val| {
+                    val.trim()
+                        .trim_matches(['"', '\''])
+                        .trim()
+                })
                 .filter(|val| !val.is_empty())
                 .map(str::to_owned)
         })

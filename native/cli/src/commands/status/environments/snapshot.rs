@@ -73,18 +73,18 @@ fn source_callbacks(
         json!({"kind":"inventoryBegin","root":location,"workspace":root,"excludeDirs":excludes}),
         "inventoryFinish",
     )?;
-    Ok(array(manifest.get("files"), "snapshot source names")?
-        .iter()
-        .any(|file| {
-            file["relativePath"]
-                .as_str()
-                .is_some_and(|name| {
-                    name.contains(".docs.")
-                        || name.contains(".composition.")
-                        || name.contains(".compositions.")
-                        || name.contains(".bit-app.")
-                        || name.contains(".node-app.")
-                        || name.contains(".react-app.")
-                })
-        }))
+    Ok(array(manifest.get("files"), "snapshot source names")?.iter().any(is_callback_source_file))
+}
+
+fn is_callback_source_file(file: &Value) -> bool {
+    file["relativePath"]
+        .as_str()
+        .is_some_and(|name| {
+            name.contains(".docs.")
+                || name.contains(".composition.")
+                || name.contains(".compositions.")
+                || name.contains(".bit-app.")
+                || name.contains(".node-app.")
+                || name.contains(".react-app.")
+        })
 }

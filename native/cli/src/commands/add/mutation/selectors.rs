@@ -15,7 +15,8 @@ use std::{io, path::Path};
 
 impl ProjectedLinker {
     pub(in crate::commands) fn state_pattern(pattern: &str) -> bool {
-        selection::stateful(pattern)
+        let trimmed = pattern.trim();
+        !trimmed.is_empty() && selection::stateful(trimmed)
     }
     /// Prove native context eligibility before any configured provider starts.
     pub(in crate::commands) fn preflight_selection(root: &Path, bitmap: &Value) -> io::Result<()> {

@@ -165,7 +165,10 @@ fn failure(
 
 fn validate_sources(files: &[Value]) -> io::Result<()> {
     for file in files {
-        let path = file["absolutePath"].as_str().ok_or_else(|| invalid("linter file path"))?;
+        let path = file["absolutePath"]
+            .as_str()
+            .filter(|path| !path.trim().is_empty())
+            .ok_or_else(|| invalid("linter file path"))?;
         if fs::read_to_string(path)? != file["source"].as_str().unwrap_or_default() {
             return Err(invalid("linter source changed"));
         }

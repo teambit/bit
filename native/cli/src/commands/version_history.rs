@@ -103,13 +103,14 @@ fn apply_build_inline_or_id(
 }
 
 fn set_once(slot: &mut Option<String>, val: &str) -> Option<()> {
+    let val = val.trim();
     (slot.is_none() && !val.is_empty() && !val.starts_with('-')).then_some(())?;
     *slot = Some(val.to_owned());
     Some(())
 }
 
 fn next_non_flag<'a>(arguments: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
-    let val = arguments.next()?;
+    let val = arguments.next()?.trim();
     (!val.is_empty() && !val.starts_with('-')).then_some(val)
 }
 

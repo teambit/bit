@@ -70,7 +70,10 @@ pub(in crate::commands) fn bootstrap_inherited(
     let mut engine = Engine::new()?;
     let pattern = request.options["pattern"]
         .as_str()
-        .filter(|pattern| !crate::commands::diff::selection::stateful(pattern));
+        .map(str::trim)
+        .filter(|pattern| {
+            !pattern.is_empty() && !crate::commands::diff::selection::stateful(pattern)
+        });
     let (_, environment) = environments::read_inherited_context(
         &mut engine,
         root,

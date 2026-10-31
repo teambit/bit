@@ -5,12 +5,11 @@ pub(super) fn note(file: &str) -> &'static str {
     let extension = std::path::Path::new(file.trim())
         .extension()
         .and_then(std::ffi::OsStr::to_str)
-        .unwrap_or_default()
-        .to_ascii_lowercase();
+        .map_or("", str::trim);
     if !extension.is_empty()
         && EXTENSIONS
             .lines()
-            .any(|candidate| candidate.trim() == extension)
+            .any(|candidate| candidate.trim().eq_ignore_ascii_case(extension))
     {
         "binary files cannot be merged. please pick the version to keep manually"
     } else {

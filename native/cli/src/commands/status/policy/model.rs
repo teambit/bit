@@ -107,7 +107,8 @@ fn validate_unscoped_model(target: &Value, model: &Value) -> io::Result<()> {
 }
 
 fn is_hash(text: &str) -> bool {
-    text.len() == 40 && text.bytes().all(|b| b.is_ascii_hexdigit())
+    let trimmed = text.trim();
+    trimmed.len() == 40 && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 /// `validateHarmonyVersion`.

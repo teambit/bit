@@ -367,8 +367,10 @@ fn resolve_target_dir(cwd: &Path, target_arg: &str) -> PathBuf {
 
 fn resolve_workspace_name(root: &Path, ws_config: &WorkspaceConfig) -> String {
     ws_config.workspace.name
-        .clone()
+        .as_deref()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
+        .map(str::to_owned)
         .or_else(|| {
             root.file_name()
                 .map(|name| name.to_string_lossy().into_owned())

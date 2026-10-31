@@ -45,7 +45,12 @@ fn lane(value: &Value, hash: &str) -> io::Result<Value> {
     if let Some(scope) = value
         .get("scope")
         .or_else(|| value["id"].get("scope"))
-        .filter(|scope| !scope.is_null() && scope.as_str() != Some(""))
+        .filter(|scope| {
+            !scope.is_null()
+                && !scope
+                    .as_str()
+                    .is_some_and(|text| text.trim().is_empty())
+        })
     {
         id["scope"] = scope.clone();
     }

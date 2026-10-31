@@ -139,14 +139,16 @@ fn load_bare_scope_candidates(
 }
 
 fn parse_index_row_id(row: &Value) -> Option<(&str, &str)> {
-    if let Some(id_str) = row["id"].as_str() {
+    let (scope, name) = if let Some(id_str) = row["id"].as_str() {
         let bare = id_str
             .split('@')
             .next()
             .unwrap_or(id_str);
-        return bare.split_once('/');
-    }
-    Some((row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?))
+        bare.split_once('/')?
+    } else {
+        (row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?)
+    };
+    (!scope.trim().is_empty() && !name.trim().is_empty()).then_some((scope, name))
 }
 
 pub(super) fn filter_artifacts(

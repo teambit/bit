@@ -19,9 +19,17 @@ pub(in crate::commands) fn overlay(
         };
         component.files = serde_json::from_value(row["files"].clone())?;
         if let Some(version) = row.get("trackingVersion") {
-            component.id.version = version.as_str().map(str::to_owned);
+            component.id.version = version
+                .as_str()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+                .map(str::to_owned);
         }
-        if let Some(main) = row["current"]["mainFile"].as_str() {
+        if let Some(main) = row["current"]["mainFile"]
+            .as_str()
+            .map(str::trim)
+            .filter(|main| !main.is_empty())
+        {
             main.clone_into(&mut component.main_file);
         }
         let extensions = row["current"]["extensions"]

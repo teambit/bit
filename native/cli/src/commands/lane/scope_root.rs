@@ -87,6 +87,8 @@ pub(in crate::commands) fn diagnose_component_lookup_error(
         return None;
     }
     if let Some((scope, name)) = bare_id.split_once('/') {
+        let scope = scope.trim();
+        let name = name.trim();
         if scope.is_empty() || name.is_empty() || name.contains('/') {
             return None;
         }

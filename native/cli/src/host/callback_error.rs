@@ -9,7 +9,13 @@ pub(crate) struct CallbackError {
 }
 
 impl CallbackError {
-    pub(crate) fn wrap(cause: io::Error, startup: String, output: String) -> io::Error {
+    pub(crate) fn wrap(cause: io::Error, mut startup: String, mut output: String) -> io::Error {
+        while startup.ends_with('\0') {
+            startup.pop();
+        }
+        while output.ends_with('\0') {
+            output.pop();
+        }
         io::Error::other(Self { startup, output, cause })
     }
 }

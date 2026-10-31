@@ -220,7 +220,14 @@ fn extract_remotes(remotes: Option<&Value>) -> Result<Map<String, Value>, Failur
     let object = remotes
         .as_object()
         .ok_or_else(|| Failure::Declined("remotes is not an object".to_owned()))?;
-    if object.contains_key("__proto__") || !object.values().all(Value::is_string) {
+    if object.contains_key("__proto__")
+        || !object
+            .values()
+            .all(|val| {
+                val.as_str()
+                    .is_some_and(|url| !url.trim().is_empty())
+            })
+    {
         return Err(Failure::Declined("unsupported remote entry".to_owned()));
     }
     Ok(object.clone())

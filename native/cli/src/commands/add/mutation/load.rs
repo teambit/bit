@@ -105,8 +105,10 @@ fn project(
         environments.project_tracking(root, bitmap, &projection.components)
     };
     stdout.push_str(&result.map_err(|error| environments.failure(error))?);
-    if let Some(error) = &projection.load_error {
-        return Err(io::Error::other(error.clone()));
+    if let Some(error) = projection.load_error.as_deref().map(str::trim)
+        && !error.is_empty()
+    {
+        return Err(io::Error::other(error.to_owned()));
     }
     docs::load(root, &mut environments, &projection.loading_components())?;
     Ok(environments)

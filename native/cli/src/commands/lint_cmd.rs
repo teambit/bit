@@ -73,7 +73,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 pub(super) fn bare_scope_error(pattern: Option<&str>, changed: bool) -> &'static str {
-    if pattern.is_some_and(|pat| !pat.is_empty()) {
+    if pattern.is_some_and(|pat| !pat.trim().is_empty()) {
         "Cannot read properties of undefined (reading 'idsByPattern')"
     } else if changed {
         "Cannot read properties of undefined (reading 'getNewAndModifiedIds')"

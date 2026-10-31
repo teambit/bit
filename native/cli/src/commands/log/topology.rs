@@ -90,6 +90,7 @@ fn resolve_from_scope_index(root: &Path, id: &str) -> io::Result<Option<String>>
 }
 
 fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
+    let target = target.trim();
     let (scope, name) = if let Some(id_str) = row["id"].as_str() {
         let bare = id_str
             .split('@')
@@ -100,6 +101,8 @@ fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
     } else {
         (row["id"]["scope"].as_str().unwrap_or_default(), row["id"]["name"].as_str()?)
     };
+    let scope = scope.trim();
+    let name = name.trim();
     let full = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
     (name == target || full == target).then_some(full)
 }

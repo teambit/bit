@@ -247,8 +247,9 @@ fn consume_trailing_schema_args<'a>(
     positional: &mut Vec<&'a str>,
 ) -> Option<()> {
     for val in iter {
-        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-        positional.push(val);
+        let trimmed = val.trim();
+        (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+        positional.push(trimmed);
     }
     Some(())
 }

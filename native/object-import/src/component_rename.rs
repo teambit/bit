@@ -210,7 +210,7 @@ impl Plan {
     }
     /// Accept bounded transformed spool bytes before any workspace mutation.
     pub fn transformed(&mut self, path: &Path, bytes: Vec<u8>) -> io::Result<()> {
-        if bytes.len() > 32 * 1024 * 1024 {
+        if path.as_os_str().is_empty() || bytes.len() > 32 * 1024 * 1024 {
             return Err(unsupported("rename transformed source limit"));
         }
         let file = self.files

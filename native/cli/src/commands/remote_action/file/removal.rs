@@ -62,6 +62,7 @@ fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
         io::ErrorKind::IsADirectory => ("EISDIR", "illegal operation on a directory"),
         io::ErrorKind::DirectoryNotEmpty => ("ENOTEMPTY", "directory not empty"),
         io::ErrorKind::InvalidFilename => ("ENAMETOOLONG", "name too long"),
+        io::ErrorKind::AlreadyExists => ("EEXIST", "file already exists"),
         _ => return error,
     };
     io::Error::new(error.kind(), format!("{code}: {message}, {operation} '{}'", path.display()))

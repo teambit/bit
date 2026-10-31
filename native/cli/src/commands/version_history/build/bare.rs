@@ -213,10 +213,16 @@ fn valid_lane_id(lane_id: &Value) -> bool {
     lane_id
         .as_str()
         .is_some_and(|raw| {
-            raw.split_once('/')
-                .is_some_and(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            raw.trim()
+                .split_once('/')
+                .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
         })
-        || (lane_id["name"].is_string() && lane_id["scope"].is_string())
+        || (lane_id["name"]
+            .as_str()
+            .is_some_and(|name| !name.trim().is_empty())
+            && lane_id["scope"]
+                .as_str()
+                .is_some_and(|scope| !scope.trim().is_empty()))
 }
 
 fn object_path(root: &Path, hash: &str) -> Option<PathBuf> {

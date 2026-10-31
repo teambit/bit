@@ -45,18 +45,20 @@ fn root_owner(
             r#"unable to track the workspace root, it is already tracked by "{scope}/{owner}""#,
         )));
     }
-    if directory != "."
-        && row["mainFile"]
-            .as_str()
-            .is_some_and(|main| {
-                main.to_lowercase()
-                    .starts_with(&format!("{}/", directory.to_lowercase()))
-            })
-    {
+    if directory != "." && contains_root_main_file(row, directory) {
         return Err(error(format!(
             r#"unable to add "{directory}" as "{added_scope}/{name}", it contains "{}", the main file of the workspace-root component "{scope}/{owner}". set a different main file for it first: bit add . --main workspace.jsonc"#,
             row["mainFile"].as_str().unwrap_or_default(),
         )));
     }
     Ok(())
+}
+
+fn contains_root_main_file(row: &Value, directory: &str) -> bool {
+    row["mainFile"]
+        .as_str()
+        .is_some_and(|main| {
+            main.to_lowercase()
+                .starts_with(&format!("{}/", directory.to_lowercase()))
+        })
 }

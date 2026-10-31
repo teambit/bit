@@ -200,6 +200,7 @@ fn collect_candidate(
             .ok_or_else(|| invalid("checkout inactive lane row requires canonical writer"))?;
         let directory = target["directory"]
             .as_str()
+            .filter(|dir| !dir.trim().is_empty())
             .ok_or_else(|| invalid("checkout tracked lane directory"))?;
         if missing_root(&candidates.root.join(directory))? {
             result.prospective.push(json!({"identity":entry.identity,"head":entry.head,

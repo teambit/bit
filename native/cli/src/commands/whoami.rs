@@ -65,12 +65,12 @@ fn apply_whoami_arg<'a>(
         return Some(());
     }
     if str_arg == "--token" {
-        let next_arg = iter.next()?.to_str()?;
+        let next_arg = iter.next()?.to_str()?.trim();
         (!next_arg.is_empty() && !next_arg.starts_with('-')).then_some(())?;
         *token = Some(next_arg.to_owned());
         return Some(());
     }
-    let tok = str_arg.strip_prefix("--token=")?;
+    let tok = str_arg.strip_prefix("--token=")?.trim();
     (!tok.is_empty() && !tok.starts_with('-')).then_some(())?;
     *token = Some(tok.to_owned());
     Some(())

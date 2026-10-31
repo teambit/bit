@@ -158,11 +158,13 @@ fn enabled() -> io::Result<bool> {
         bit_install::config::load_global_config(&bit_workspace_config::global_config_dir())?;
     let features = env::var("BIT_FEATURES")
         .ok()
-        .filter(|value| !value.trim().is_empty())
+        .map(|value| value.trim().to_owned())
+        .filter(|value| !value.is_empty())
         .or_else(|| {
             env::var("BIT_CONFIG_FEATURES")
                 .ok()
-                .filter(|value| !value.trim().is_empty())
+                .map(|value| value.trim().to_owned())
+                .filter(|value| !value.is_empty())
         })
         .or_else(|| {
             global

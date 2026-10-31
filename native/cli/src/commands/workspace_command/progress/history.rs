@@ -23,7 +23,7 @@ impl Progress {
         {
             return Err(decline("lane history pending import receipt"));
         }
-        if performed == Some(true) && completed == Some(false) {
+        if performed == Some(true) && completed == Some(false) && !row.ids.is_empty() {
             output.restart(&import_message(&row));
         }
         Ok(())

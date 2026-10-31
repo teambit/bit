@@ -102,7 +102,7 @@ fn apply_non_space_arg(value: &str, options: &mut Options) -> Option<()> {
 }
 
 fn required<'a>(args: &mut impl Iterator<Item = Option<&'a str>>) -> Option<String> {
-    let val = args.next()??;
+    let val = args.next()??.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
 

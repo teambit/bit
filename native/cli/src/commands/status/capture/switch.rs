@@ -190,11 +190,17 @@ fn restore_target_order(targets: &[Value], capture: &mut Capture) -> io::Result<
 }
 
 fn row_identity(row: &Value) -> io::Result<&str> {
-    if let Some(value) = row.as_str() {
-        return Ok(value);
+    let identity = if let Some(value) = row.as_str() {
+        value.trim()
+    } else {
+        text(
+            row.get("identity")
+                .or_else(|| row.get("id")),
+        )?
+        .trim()
+    };
+    if identity.is_empty() {
+        return Err(decline("switch callback target identity"));
     }
-    text(
-        row.get("identity")
-            .or_else(|| row.get("id")),
-    )
+    Ok(identity)
 }

@@ -26,7 +26,10 @@ pub(in crate::commands) fn message(
     environment: &str,
     error: &Value,
 ) -> io::Result<String> {
-    let code = error["code"].as_str().ok_or_else(|| invalid("service error code"))?;
+    let code = error["code"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("service error code"))?;
     let description = match code {
         "EACCES" => "permission denied",
         "ENOENT" => "no such file or directory",
@@ -40,10 +43,12 @@ pub(in crate::commands) fn message(
     let path = error["path"]
         .as_str()
         .or_else(|| error["filePath"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("service error path"))?;
     let syscall = error["syscall"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("service error syscall"))?;
     Ok(format!(

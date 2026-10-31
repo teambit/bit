@@ -147,7 +147,10 @@ fn formatted_id(row: &Row, chalk: Chalk) -> String {
     if !row.lane_readme_of.is_empty() {
         id.push('\n');
         for lane in &row.lane_readme_of {
-            id.push_str(&chalk.yellow(&format!("[Lane Readme]: {lane}\n")));
+            let lane = lane.trim();
+            if !lane.is_empty() {
+                id.push_str(&chalk.yellow(&format!("[Lane Readme]: {lane}\n")));
+            }
         }
     }
     id

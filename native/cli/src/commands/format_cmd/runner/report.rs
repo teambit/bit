@@ -52,10 +52,12 @@ fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<Stri
 
 fn component_scope_and_name(id: &Value) -> io::Result<(&str, &str)> {
     if let Some(raw) = id.as_str() {
-        return raw
+        let trimmed = raw.trim();
+        return trimmed
             .rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
+            .map_or(trimmed, |(bare, _)| bare.trim())
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("formatter scope"));
     }
@@ -63,11 +65,13 @@ fn component_scope_and_name(id: &Value) -> io::Result<(&str, &str)> {
         .as_str()
         .or_else(|| id["_scope"].as_str())
         .or_else(|| id["scope"].as_str())
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("formatter scope"))?;
     let name = id["_legacy"]["name"]
         .as_str()
         .or_else(|| id["name"].as_str())
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("formatter name"))?;
     Ok((scope, name))

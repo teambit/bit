@@ -161,7 +161,7 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
 }
 
 fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
-    let Some(flags) = arg.strip_prefix('-') else {
+    let Some(flags) = arg.trim().strip_prefix('-') else {
         return false;
     };
     if flags.len() < 2

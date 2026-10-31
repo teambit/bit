@@ -68,7 +68,12 @@ impl<'r> Status<'r> {
         let Some(id) = self.result.get("forkedLaneId").and_then(serde_json::Value::as_str) else {
             return Ok(String::new());
         };
-        let (_, name) = id.split_once('/').ok_or_else(|| io::Error::other("forked lane id"))?;
+        let id = id.trim();
+        let (_, name) = id
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| io::Error::other("forked lane id"))?;
         let description = format!(
             "(use \"bit lane merge {id}\" to merge the changes\nuse \"bit fetch {id} --lanes\" to update {name} locally)",
         );

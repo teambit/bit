@@ -256,7 +256,7 @@ fn ignored(context: &Value) -> io::Result<HashSet<&str>> {
     };
     array(Some(names), "ignoreIssues")?
         .iter()
-        .map(|name| text(Some(name)))
+        .map(|name| text(Some(name)).map(str::trim))
         .collect()
 }
 

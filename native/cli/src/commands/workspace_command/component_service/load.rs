@@ -222,6 +222,7 @@ fn workspace(root: &Path) -> io::Result<(Workspace, String, String)> {
         }
     }
     let name = config.workspace.name
+        .map(|name| name.trim().to_owned())
         .filter(|name| !name.is_empty())
         .unwrap_or_else(|| {
             root.file_name()

@@ -186,11 +186,12 @@ pub(super) fn is_unscoped_unknown(root: &Path, bare: &str) -> bool {
 
 fn find_extension_key(value: &Value, id: &str) -> Option<String> {
     let obj = value.as_object()?;
+    let id = id.trim();
     if obj.contains_key(id) {
         return Some(id.to_owned());
     }
     let prefix = format!("{id}@");
     obj.keys()
-        .find(|key| key.starts_with(&prefix))
+        .find(|key| key.trim() == id || key.trim().starts_with(&prefix))
         .cloned()
 }

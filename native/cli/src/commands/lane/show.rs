@@ -201,6 +201,8 @@ fn select_lane(
 }
 
 fn matches_http_lane(row: &Value, scope: &str, target: &str) -> bool {
+    let target = target.trim();
+    let scope = scope.trim();
     let row_name = row["id"]["name"]
         .as_str()
         .or_else(|| {
@@ -208,7 +210,7 @@ fn matches_http_lane(row: &Value, scope: &str, target: &str) -> bool {
                 .as_str()
                 .map(|raw| raw.split_once('/').map_or(raw, |(_, nm)| nm))
         })
-        .unwrap_or_default();
+        .map_or("", str::trim);
     row_name == target || format!("{scope}/{row_name}") == target
 }
 

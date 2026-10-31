@@ -47,8 +47,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--delete=false" => delete = false,
             "--force" | "--force=true" => force = true,
             "--force=false" => force = false,
-            val if !val.starts_with('-') && !val.is_empty() => {
-                push_resume_arg(val, &mut export_id, &mut remotes);
+            val if !val.starts_with('-') && !val.trim().is_empty() => {
+                push_resume_arg(val.trim(), &mut export_id, &mut remotes);
             }
             _ => return None,
         }
@@ -63,10 +63,11 @@ fn consume_trailing_resume_args<'a>(
     remotes: &mut Vec<String>,
 ) -> Option<()> {
     for rest in iter {
-        if rest.is_empty() || rest.starts_with('-') {
+        let trimmed = rest.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') {
             return None;
         }
-        push_resume_arg(rest, export_id, remotes);
+        push_resume_arg(trimmed, export_id, remotes);
     }
     Some(())
 }

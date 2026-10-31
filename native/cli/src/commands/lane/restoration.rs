@@ -19,7 +19,7 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        if is_ci_active() {
             return Ok(Outcome::Declined("not inside a workspace".into()));
         }
         let msg = format!(r#"unable to checkout history "{}" while on main"#, options.id);
@@ -83,4 +83,8 @@ fn failure(
     } else {
         workspace_command::execute_then(root, args, options.command(), work)
     }
+}
+
+fn is_ci_active() -> bool {
+    env::var_os("CI").is_some_and(|val| !val.is_empty())
 }

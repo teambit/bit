@@ -21,9 +21,11 @@ pub(super) fn deleted(
     hashes
         .iter()
         .map(|hash| {
-            let object =
-                objects.get(hash).ok_or_else(|| unsupported("verbose deleted object missing"))?;
-            description(hash, object)
+            let trimmed = hash.trim();
+            let object = objects
+                .get(trimmed)
+                .ok_or_else(|| unsupported("verbose deleted object missing"))?;
+            description(trimmed, object)
         })
         .collect()
 }

@@ -91,9 +91,8 @@ pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {
 }
 
 pub(super) fn with_alias(current: Value, tracking: &Tracking) -> io::Result<(Value, String)> {
-    let name = text(current.get("name"))?;
-    let alias = tracking
-        .alias(name, text(current.get("scope"))?)
-        .unwrap_or_else(|| name.to_string());
+    let name = text(current.get("name"))?.trim();
+    let scope = text(current.get("scope"))?.trim();
+    let alias = tracking.alias(name, scope).unwrap_or_else(|| name.to_string());
     Ok((current, alias))
 }

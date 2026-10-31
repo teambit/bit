@@ -84,7 +84,10 @@ fn compare(current: &str, latest: &str) -> bool {
 }
 fn clean_version(ver: &str) -> &str {
     ver.trim()
+        .trim_matches(['"', '\''])
+        .trim()
         .trim_start_matches(['v', 'V'])
+        .trim()
 }
 fn environments(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> {
     let mut broken = Vec::new();

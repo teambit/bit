@@ -137,12 +137,12 @@ fn merged(components: &[Component], projected: &[Value]) -> io::Result<Vec<Compo
 fn projected_component(row: &Value, identity: &str, ignored: Vec<String>) -> io::Result<Component> {
     let dependencies = array(row.get("dependencies"), "issue target dependencies")?
         .iter()
-        .map(|id| text(Some(id)).map(str::to_string))
+        .map(|id| text(Some(id)).map(|raw| raw.trim().to_string()))
         .collect::<io::Result<_>>()?;
     Ok(Component {
         ignored,
         identity: identity.to_string(),
-        package_name: text(row.get("packageName"))?.to_string(),
+        package_name: text(row.get("packageName"))?.trim().to_string(),
         dependencies,
         issues: row
             .get("issues")

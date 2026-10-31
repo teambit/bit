@@ -57,7 +57,9 @@ fn supported_writes(
     }
     let mut offset = 0usize;
     for component in components {
-        let end = offset.saturating_add(component.files.len());
+        let Some(end) = offset.checked_add(component.files.len()) else {
+            return false;
+        };
         let (Some(in_rows), Some(out_rows)) = (inputs.get(offset..end), files.get(offset..end))
         else {
             return false;

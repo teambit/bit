@@ -66,6 +66,9 @@ fn collect_debug_report(
     component: &str,
     chalk: Chalk,
 ) -> Result<DebugReport, Failure> {
+    if component.trim().is_empty() {
+        return Err(Failure::Declined("debug aspect component is empty".into()));
+    }
     let ctx = BitmapContext::load(root, chalk)?;
     let (ws_config, ws) =
         resolve_workspace_components(root).map_err(|err| Failure::Declined(err.to_string()))?;

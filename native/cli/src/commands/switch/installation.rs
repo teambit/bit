@@ -63,7 +63,11 @@ fn compiler_error(value: &serde_json::Value) -> io::Result<Option<String>> {
     }
     if let Some(message) = value
         .as_object()
-        .and_then(|object| object.get("message"))
+        .and_then(|object| {
+            object
+                .get("message")
+                .or_else(|| object.get("error"))
+        })
         .and_then(serde_json::Value::as_str)
     {
         let trimmed = message.trim();

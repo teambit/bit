@@ -179,7 +179,7 @@ fn quick_report(summary: &Summary, chalk: Chalk) -> String {
 
 fn home_dir() -> Option<std::path::PathBuf> {
     let home = if cfg!(windows) { env::var_os("USERPROFILE") } else { env::var_os("HOME") };
-    home.filter(|home| !home.is_empty())
+    home.filter(|home| !home.to_string_lossy().trim().is_empty())
         .map(Into::into)
 }
 

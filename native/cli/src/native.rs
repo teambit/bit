@@ -26,7 +26,7 @@ pub enum Outcome {
 
 /// `Some(code)` when a native command handled `args`.
 pub fn run(args: &[OsString]) -> io::Result<Option<ExitCode>> {
-    if env::var_os("BIT_NATIVE").is_some_and(|value| value == "off") {
+    if env::var_os("BIT_NATIVE").is_some_and(|value| value.eq_ignore_ascii_case("off")) {
         trace::log("BIT_NATIVE=off: delegating every command");
         return Ok(None);
     }

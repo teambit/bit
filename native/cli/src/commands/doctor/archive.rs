@@ -129,14 +129,15 @@ fn previous_archive(name: &str) -> bool {
         .is_some_and(|stamp| !stamp.is_empty() && stamp.bytes().all(|byte| byte.is_ascii_digit()))
 }
 pub(super) fn filename(path: &Path, timestamp: i64) -> PathBuf {
-    if path.as_os_str().is_empty() || path == Path::new(".") {
+    let trimmed = path.to_str().map_or(path, |raw| Path::new(raw.trim()));
+    if trimmed.as_os_str().is_empty() || trimmed == Path::new(".") {
         return PathBuf::from(format!("doctor-results-{timestamp}.tar"));
     }
-    let lowered = path.to_string_lossy().to_ascii_lowercase();
+    let lowered = trimmed.to_string_lossy().to_ascii_lowercase();
     if lowered.ends_with(".tar") || lowered.ends_with(".tar.gz") {
-        return path.to_path_buf();
+        return trimmed.to_path_buf();
     }
-    path.with_extension("tar")
+    trimmed.with_extension("tar")
 }
 
 fn debug_log(builder: &mut tar::Builder<fs::File>) -> io::Result<()> {

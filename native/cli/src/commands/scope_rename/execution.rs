@@ -39,17 +39,7 @@ pub(super) fn run(
     entries.batch.finish(&workspace_command::file_id())?;
     let ids = phases::ids(&entries.batch)?;
     if !ids.is_empty() {
-        linker.link_retained(root, entries.batch.bitmap(), &ids, false, chalk)?;
-        print!("{}", linker.take_stdout());
-        if !options.owner && !options.skip_install {
-            install(root, linker)?;
-        }
-        linker.call(
-            root,
-            "renameTooling",
-            &json!({"action":"compile","ids":ids,"progress":!options.owner}),
-        )?;
-        print!("{}", linker.take_stdout());
+        finish_linked_tooling(root, &entries.batch, &ids, options, linker, chalk)?;
     }
     output.stop();
     Ok(Report {
@@ -86,6 +76,28 @@ fn install(root: &Path, linker: &mut ProjectedLinker) -> io::Result<()> {
             &json!({"action":"installFailure","message":error.to_string()}),
         )?;
     }
+    print!("{}", linker.take_stdout());
+    Ok(())
+}
+
+fn finish_linked_tooling(
+    root: &Path,
+    batch: &Batch,
+    ids: &[String],
+    options: &Options,
+    linker: &mut ProjectedLinker,
+    chalk: Chalk,
+) -> io::Result<()> {
+    linker.link_retained(root, batch.bitmap(), ids, false, chalk)?;
+    print!("{}", linker.take_stdout());
+    if !options.owner && !options.skip_install {
+        install(root, linker)?;
+    }
+    linker.call(
+        root,
+        "renameTooling",
+        &json!({"action":"compile","ids":ids,"progress":!options.owner}),
+    )?;
     print!("{}", linker.take_stdout());
     Ok(())
 }

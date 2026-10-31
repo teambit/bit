@@ -17,7 +17,8 @@ impl Environments {
             return Err(decline("component service dependency parser"));
         }
         let directory = root.join(text(target.get("directory"))?);
-        let mut parsed = self.host(root)?.call("parseDependencies",&json!({"files":files.iter().map(|file|directory.join(file)).collect::<Vec<_>>(),"exclude":custom.as_object().map(|custom|custom.keys().collect::<Vec<_>>()).unwrap_or_default()}))?;
+        let file_paths = target_file_paths(&directory, files);
+        let mut parsed = self.host(root)?.call("parseDependencies",&json!({"files":file_paths,"exclude":custom.as_object().map(|custom|custom.keys().collect::<Vec<_>>()).unwrap_or_default()}))?;
         if let Some(custom) = custom.as_object() {
             parsed
                 .as_object_mut()
@@ -50,6 +51,14 @@ impl Environments {
             return Ok(Value::Null);
         }
         let directory = root.join(text(target.get("directory"))?);
-        self.host(root)?.call("detectDependencies", &json!({"envId":env,"files":files.iter().map(|file|directory.join(file)).collect::<Vec<_>>(),"componentDir":directory,"aspectIds":context["environmentFacts"][identity]["aspectIds"]}))
+        let file_paths = target_file_paths(&directory, files);
+        self.host(root)?.call("detectDependencies", &json!({"envId":env,"files":file_paths,"componentDir":directory,"aspectIds":context["environmentFacts"][identity]["aspectIds"]}))
     }
+}
+
+fn target_file_paths(directory: &Path, files: &[String]) -> Vec<std::path::PathBuf> {
+    files
+        .iter()
+        .map(|file| directory.join(file))
+        .collect()
 }

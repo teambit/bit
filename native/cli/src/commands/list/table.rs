@@ -15,7 +15,9 @@ pub(crate) fn colors(args: &[OsString]) -> bool {
     if !std::io::stdout().is_terminal() {
         return false;
     }
-    if cfg!(windows) || env::var_os("COLORTERM").is_some_and(|val| !val.is_empty()) {
+    if cfg!(windows)
+        || env::var_os("COLORTERM").is_some_and(|val| !val.to_string_lossy().trim().is_empty())
+    {
         return true;
     }
     let term = env::var("TERM").unwrap_or_default();

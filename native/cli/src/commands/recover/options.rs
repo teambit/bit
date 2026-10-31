@@ -22,8 +22,8 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
                 options.skip_config = true;
             }
             "--skip-write-config-files=false" => options.skip_config = false,
-            value if !value.starts_with('-') && options.pattern.is_empty() => {
-                options.pattern = value;
+            value if !value.trim().starts_with('-') && options.pattern.is_empty() => {
+                options.pattern = value.trim();
             }
             _ => return None,
         }
@@ -36,10 +36,11 @@ fn consume_trailing_pattern<'a>(
     pattern: &mut &'a str,
 ) -> Option<()> {
     for rest in iter {
-        if rest.is_empty() || rest.starts_with('-') || !pattern.is_empty() {
+        let trimmed = rest.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') || !pattern.is_empty() {
             return None;
         }
-        *pattern = rest;
+        *pattern = trimmed;
     }
     Some(())
 }

@@ -9,13 +9,7 @@ pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Resul
     let mut output = Vec::new();
     for model in context["models"].as_array().ok_or_else(|| invalid("resolve issue models"))? {
         let identity = model_identity(context, model)?;
-        let lane_head = context["lane"]["targets"]
-            .as_array()
-            .and_then(|rows| {
-                rows.iter()
-                    .find(|row| row["identity"] == identity)
-            })
-            .and_then(|row| row["currentHead"].as_str());
+        let lane_head = find_lane_head(context, &identity);
         let mut heads = Vec::new();
         for hash in [model["head"].as_str(), lane_head].into_iter().flatten() {
             if heads
@@ -67,6 +61,14 @@ fn model_identity(context: &Value, model: &Value) -> io::Result<String> {
         return Ok(format!("{scope}/{name}"));
     }
     super::selection::identity(model)
+}
+
+fn find_lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
+    context["lane"]["targets"]
+        .as_array()?
+        .iter()
+        .find(|row| row["identity"] == identity)?["currentHead"]
+        .as_str()
 }
 
 #[cfg(test)]

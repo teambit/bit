@@ -7,7 +7,15 @@ use std::io;
 pub(super) fn failed_lines(failed: &IndexMap<String, String>) -> Vec<String> {
     failed
         .iter()
-        .map(|(name, message)| format!("{name} - {}", message.trim()))
+        .map(|(name, message)| {
+            let trimmed_name = name.trim();
+            let trimmed_msg = message.trim();
+            if trimmed_msg.is_empty() {
+                trimmed_name.to_owned()
+            } else {
+                format!("{trimmed_name} - {trimmed_msg}")
+            }
+        })
         .collect()
 }
 

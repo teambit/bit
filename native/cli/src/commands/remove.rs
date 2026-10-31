@@ -110,6 +110,9 @@ fn metadata(
 }
 
 fn preflight(root: &Path, options: &options::Options<'_>) -> io::Result<()> {
+    if options.pattern.trim().is_empty() {
+        return Err(io::Error::other("remove pattern is empty"));
+    }
     if add::ProjectedLinker::state_pattern(options.pattern) {
         return add::ProjectedLinker::preflight_selection(root, &preparation::bitmap(root)?);
     }

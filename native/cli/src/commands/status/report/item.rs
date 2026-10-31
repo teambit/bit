@@ -121,7 +121,8 @@ impl Status<'_> {
 
 /// `isHash`: 40 hexadecimal characters.
 fn is_hash(version: &str) -> bool {
-    version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit())
+    let trimmed = version.trim();
+    trimmed.len() == 40 && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 /// `ExternalEnvWithoutVersion.formatSolution` overrides the static solution.

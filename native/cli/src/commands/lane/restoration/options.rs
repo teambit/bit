@@ -46,8 +46,11 @@ impl Options {
                 self.skip_install = true;
                 self.json = true;
             }
-            id if !id.starts_with('-') && !id.is_empty() && self.id.is_empty() => {
-                self.id = id.into();
+            id if !id.trim().starts_with('-')
+                && !id.trim().is_empty()
+                && self.id.is_empty() =>
+            {
+                self.id = id.trim().into();
             }
             _ => return None,
         }

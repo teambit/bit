@@ -41,6 +41,9 @@ fn object(
     output: &mut String,
     root: bool,
 ) -> io::Result<()> {
+    if values.len() > 65536 {
+        return Err(super::invalid("linter configuration object limit"));
+    }
     let _ = write!(
         output,
         "object:{}:string:9:prototype:Undefined,string:9:__proto__:",

@@ -123,7 +123,7 @@ impl Answers {
                 self.unknown.push(name);
             }
             Err(error) => {
-                self.failed.insert(name, error.to_string());
+                self.failed.insert(name, error.to_string().trim().to_owned());
             }
         }
     }

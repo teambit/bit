@@ -144,6 +144,7 @@ impl Options {
 
     /// The one pattern, without state selectors.
     fn positional(&mut self, text: &str) -> Option<()> {
+        let text = text.trim();
         let state = text
             .split(',')
             .any(|part| part.trim().starts_with('$') || part.contains(" AND "));

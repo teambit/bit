@@ -16,11 +16,11 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
         .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect();
     let (command, rest) = filtered.split_first()?;
-    match *command {
+    match command.trim() {
         "save" | "s" => save(rest),
         "list" if matches!(rest, [] | ["--"]) => Some(Options::List),
         "load" | "pop" => load(rest),
-        sub if !sub.starts_with('-') && rest.is_empty() => {
+        sub if !sub.is_empty() && !sub.starts_with('-') && rest.is_empty() => {
             Some(Options::Unrecognized(sub.to_owned()))
         }
         _ => None,

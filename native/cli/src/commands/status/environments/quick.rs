@@ -20,7 +20,10 @@ pub(in crate::commands) fn run(
     startup.committed = true;
     let host = environments.host(root)?;
     let result = host.call("dependencyPolicies", &json!({"extensionIds":aspects}));
-    startup.stdout.push_str(&host.take_stdout());
+    let stdout = host.take_stdout();
+    if !stdout.is_empty() {
+        startup.stdout.push_str(&stdout);
+    }
     result.map(|_| ())
 }
 

@@ -77,8 +77,10 @@ fn candidate(
     id: &Value,
     selected: Option<&Value>,
 ) -> io::Result<Option<Value>> {
-    let (identity, version) =
-        text(Some(id))?.rsplit_once('@').ok_or_else(|| decline("registry component version"))?;
+    let (identity, version) = text(Some(id))?
+        .rsplit_once('@')
+        .filter(|(identity, version)| !identity.trim().is_empty() && !version.trim().is_empty())
+        .ok_or_else(|| decline("registry component version"))?;
     if explicit(session, identity, selected) {
         return Ok(None);
     }

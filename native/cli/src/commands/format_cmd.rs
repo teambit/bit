@@ -96,8 +96,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 options.changed = true;
                 options.json = true;
             }
-            val if !val.starts_with('-') && !val.is_empty() && options.pattern.is_none() => {
-                options.pattern = Some(val.to_owned());
+            val if !val.starts_with('-')
+                && !val.trim().is_empty()
+                && options.pattern.is_none() =>
+            {
+                options.pattern = Some(val.trim().to_owned());
             }
             _ => return None,
         }
@@ -110,8 +113,11 @@ fn consume_trailing_format_pattern<'a>(
     pattern: &mut Option<String>,
 ) -> Option<()> {
     for val in iter {
-        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
-            .then_some(())?;
+        let trimmed = val.trim();
+        (!trimmed.is_empty()
+            && !trimmed.starts_with('-')
+            && pattern.replace(trimmed.to_owned()).is_none())
+        .then_some(())?;
     }
     Some(())
 }

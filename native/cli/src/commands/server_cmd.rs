@@ -56,7 +56,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 if let Some(&next) = args.get(idx + 1)
                     && !next.starts_with('-')
                 {
-                    options.port = Some(next.parse::<u16>().ok()?);
+                    options.port = Some(next.trim().parse::<u16>().ok()?);
                     idx += 1;
                 }
             }
@@ -64,7 +64,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 .strip_prefix("--port=")
                 .or_else(|| val.strip_prefix("-p=")) =>
             {
-                options.port = Some(port.parse::<u16>().ok()?);
+                options.port = Some(port.trim().parse::<u16>().ok()?);
             }
             _ => return None,
         }

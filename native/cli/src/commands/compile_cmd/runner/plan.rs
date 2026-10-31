@@ -14,7 +14,7 @@ impl Plan {
         if options.generate_types || (options.json && options.components.is_empty()) {
             return Err(io::Error::other("compiler options require another service"));
         }
-        let batch_size = limits::batch_size(root)?;
+        let batch_size = validated_batch_size(root)?;
         let selection = selection(options);
         let mut loaded = Loaded::prepare(root, &selection)?;
         if !options.components.is_empty() {
@@ -84,6 +84,14 @@ fn validate_order(root: &Path, compiled: &[Compiled], options: &Options) -> io::
         }
     }
     Ok(())
+}
+
+fn validated_batch_size(root: &Path) -> io::Result<usize> {
+    let batch_size = limits::batch_size(root)?;
+    if batch_size == 0 {
+        return Err(io::Error::other("compiler batch size must be positive"));
+    }
+    Ok(batch_size)
 }
 
 fn selection(options: &Options) -> Selection {

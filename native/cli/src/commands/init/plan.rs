@@ -167,7 +167,10 @@ pub(super) fn backup_bytes(
 }
 
 fn resolve(cwd: &Path, requested: Option<&str>) -> PathBuf {
-    let absolute = requested.map_or_else(|| cwd.to_owned(), |path| cwd.join(path));
+    let absolute = requested
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map_or_else(|| cwd.to_owned(), |path| cwd.join(path));
     let mut resolved = PathBuf::new();
     for component in absolute.components() {
         match component {

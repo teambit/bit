@@ -148,7 +148,8 @@ pub(super) struct Versions {
 
 impl Versions {
     fn add(&mut self, version: &str) {
-        if self.seen.insert(version.to_string()) {
+        let version = version.trim();
+        if !version.is_empty() && self.seen.insert(version.to_string()) {
             self.list.push(version.to_string());
         }
     }

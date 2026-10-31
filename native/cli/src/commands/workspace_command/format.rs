@@ -41,7 +41,7 @@ impl Formatter {
         if items.is_empty() {
             return String::new();
         }
-        let mut lines = vec![self.title(&format!("{title} ({})", items.len()))];
+        let mut lines = vec![self.title(&format!("{} ({})", title.trim(), items.len()))];
         if !description.trim().is_empty() {
             let indented: Vec<String> = description
                 .lines()

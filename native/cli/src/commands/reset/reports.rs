@@ -81,6 +81,8 @@ pub(super) fn never_exported_report(args: &[OsString], labels: &[String]) -> Rep
     let formatter = Formatter::new(Chalk::detect(args));
     let items = labels
         .iter()
+        .map(|label| label.trim())
+        .filter(|label| !label.is_empty())
         .map(|label| formatter.item(label))
         .collect::<Vec<_>>();
     let count = items.len();

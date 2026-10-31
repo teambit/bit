@@ -159,6 +159,8 @@ fn target_identities(targets: &[Value]) -> Vec<String> {
             target["identity"]
                 .as_str()
                 .or_else(|| target["id"].as_str())
+                .map(str::trim)
+                .filter(|identity| !identity.is_empty())
                 .map(str::to_owned)
         })
         .collect()

@@ -222,6 +222,7 @@ impl NodeCli {
         let version = manifest
             .get("version")
             .and_then(Value::as_str)
+            .map(str::trim)
             .filter(|version| !version.is_empty());
         let version = version.ok_or_else(|| decline("the Node.js CLI's version"))?.to_string();
         let node = absolute_node(&cli.node).ok_or_else(|| decline("the Node.js executable"))?;

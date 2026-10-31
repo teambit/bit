@@ -7,9 +7,10 @@ use bit_install::config::{
 use std::{io, path::Path};
 
 pub(in crate::commands) fn executable(root: &Path) -> io::Result<String> {
-    let workspace_root = crate::workspace::root(root);
+    let workspace_root =
+        (!root.as_os_str().is_empty()).then(|| crate::workspace::root(root)).flatten();
     let root = workspace_root.as_deref().unwrap_or(root);
-    if !root.join("workspace.jsonc").is_file() {
+    if root.as_os_str().is_empty() || !root.join("workspace.jsonc").is_file() {
         return Ok(normalize_git_executable(std::env::var("BIT_CONFIG_GIT_PATH").ok()));
     }
     let global = load_global_config(&cache_root().join("config"))?;

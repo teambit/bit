@@ -161,7 +161,11 @@ fn apply_latest_versions(rows: &mut [Row], values: &[Value]) -> io::Result<()> {
 fn remote_scopes(ids: &[String]) -> io::Result<Vec<String>> {
     let mut scopes = Vec::new();
     for id in ids {
-        let scope = id.split_once('/').ok_or_else(|| decline("remote version scope"))?.0;
+        let scope = id
+            .split_once('/')
+            .map(|(scope, _)| scope.trim())
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| decline("remote version scope"))?;
         if !scopes.iter().any(|seen| seen == scope) {
             scopes.push(scope.to_owned());
         }

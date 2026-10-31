@@ -31,7 +31,16 @@ fn default_workspace_scope(workspace: &Value) -> Option<&str> {
 
 fn list(engine: &mut Engine, root: &Path, scope: &str) -> io::Result<Vec<Value>> {
     let cli = NodeCli::find()?;
-    let listed:Value=engine.request(&json!({"kind":"commandInboundList","root":root,"globalConfigDir":cache_root().join("config"),"nodeExecutable":cli.node,"bitDir":cli.bit_dir,"bitVersion":cli.version,"patterns":[format!("{scope}/**")],"laneOnly":false}))?;
+    let listed: Value = engine.request(&json!({
+        "kind": "commandInboundList",
+        "root": root,
+        "globalConfigDir": cache_root().join("config"),
+        "nodeExecutable": cli.node,
+        "bitDir": cli.bit_dir,
+        "bitVersion": cli.version,
+        "patterns": [format!("{}/**", scope.trim())],
+        "laneOnly": false,
+    }))?;
     Ok(array(listed["lists"][0].get("components"), "checkout scope components")?
         .iter()
         .map(|component| component["id"].clone())

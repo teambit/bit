@@ -62,7 +62,10 @@ pub(in crate::commands::aspect) fn collect_get_entries(
     let raw_origins = collect_raw_origins(&inspect_ctx, entry)?;
     let mut merged = merge_origins(entry, &inspect_ctx.ws_ids, raw_origins);
     ensure_default_env_aspects(&mut merged, find_ws_comp(&ws.components, entry));
-    if let Some(target) = aspect_filter {
+    if let Some(target) = aspect_filter
+        .map(str::trim)
+        .filter(|target| !target.is_empty())
+    {
         let bare = aspect_id_without_version(target);
         merged.retain(|item| item.id == target || aspect_id_without_version(&item.id) == bare);
     }

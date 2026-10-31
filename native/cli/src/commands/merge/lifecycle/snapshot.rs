@@ -75,12 +75,12 @@ fn snap_results(resolved: &Planned) -> io::Result<Value> {
         array(resolved.plan["result"].get("resolvedComponents"), "merge resolved components")?
             .iter()
             .map(|row| {
-                let identity = text(row.get("id"))?;
+                let identity = text(row.get("id"))?.trim();
                 let version = versions
                     .iter()
-                    .find(|version| version["identity"] == identity)
+                    .find(|version| version["identity"].as_str().map(str::trim) == Some(identity))
                     .ok_or_else(|| io::Error::other("merge allocated identity absent"))?;
-                Ok(json!({"id":format!("{identity}@{}",text(version.get("hash"))?)}))
+                Ok(json!({"id":format!("{identity}@{}",text(version.get("hash"))?.trim())}))
             })
             .collect::<io::Result<Vec<_>>>()?;
     Ok(

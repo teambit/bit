@@ -71,6 +71,7 @@ pub(super) fn read_importer_manifest(root: &Path, importer_id: &str) -> (String,
 }
 
 pub(super) fn resolve_display_name(root: &Path, pkg_name: &str) -> String {
+    let pkg_name = pkg_name.trim();
     let pkg_json = root
         .join("node_modules")
         .join(pkg_name)

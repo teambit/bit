@@ -25,8 +25,11 @@ pub(super) fn render(data: &str, raw: &Value) -> io::Result<String> {
     Ok(result)
 }
 fn suite(output: &mut String, component: &Value, raw: &Value) -> io::Result<()> {
-    let identity =
-        component["componentId"].as_str().ok_or_else(|| io::Error::other("JUnit identity"))?;
+    let identity = component["componentId"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| io::Error::other("JUnit identity"))?;
     let cases = cases::collect(component, raw)?;
     write!(output, r#"  <testsuite name="{}""#, xml::attribute(identity)).unwrap();
     if let Some(start) = component["results"]["start"]

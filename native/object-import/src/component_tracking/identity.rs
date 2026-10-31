@@ -87,6 +87,7 @@ pub(super) fn scope(
     if let Some(scope) = options.scope
         .as_deref()
         .or_else(|| facts["defaultScopes"][directory].as_str())
+        .filter(|scope| !scope.trim().is_empty())
     {
         return Ok(scope.into());
     }

@@ -215,12 +215,15 @@ fn inspect(
 
 fn select(value: &Value, options: &Options<'_>) -> io::Result<Vec<(String, Value)>> {
     let rows = sorted(value)?;
-    if let Some(id) = options.id {
-        let (_, row) = rows
+    if let Some(id) = options.id
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    {
+        let (matched_key, row) = rows
             .iter()
-            .find(|(key, _)| *key == id)
+            .find(|(key, _)| key.trim() == id)
             .ok_or_else(invalid)?;
-        return Ok(vec![(id.into(), (*row).clone())]);
+        return Ok(vec![((*matched_key).into(), (*row).clone())]);
     }
     Ok(rows
         .into_iter()

@@ -72,6 +72,8 @@ fn lane_id(lane: &Value) -> io::Result<Value> {
     } else {
         (id["scope"].as_str().unwrap_or_default(), id["name"].as_str().unwrap_or_default())
     };
+    let scope = scope.trim();
+    let name = name.trim();
     if scope.is_empty() || name.is_empty() {
         return Err(decline("bitmap lane id"));
     }
@@ -81,6 +83,7 @@ fn lane_id(lane: &Value) -> io::Result<Value> {
 fn text<'a>(value: &'a Value, field: &str) -> Option<&'a str> {
     value[field]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
 }
 

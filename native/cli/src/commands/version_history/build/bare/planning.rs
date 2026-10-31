@@ -108,9 +108,17 @@ fn pattern_candidates(root: &Path) -> Option<(Vec<Candidate>, Proofs)> {
 }
 
 fn candidate_from_row(root: &Path, row: &Value, proofs: &mut Proofs) -> Option<Option<Candidate>> {
-    let model_hash = row["hash"].as_str()?.to_owned();
+    let model_hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())?
+        .to_owned();
     let model = read(root, &model_hash, "Component", proofs)?;
-    let Some(head) = model["head"].as_str() else {
+    let Some(head) = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
         return Some(None);
     };
     let (scope_str, name_str) = super::super::row_scope_and_name(row)?;

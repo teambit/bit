@@ -208,9 +208,11 @@ fn strings(value: &Value) -> Vec<String> {
     match value {
         Value::Array(items) => items
             .iter()
-            .filter_map(|item| item.as_str().map(str::to_owned))
+            .filter_map(Value::as_str)
+            .filter(|item| !item.trim().is_empty())
+            .map(str::to_owned)
             .collect(),
-        Value::String(text) => vec![text.clone()],
+        Value::String(text) if !text.trim().is_empty() => vec![text.clone()],
         _ => Vec::new(),
     }
 }

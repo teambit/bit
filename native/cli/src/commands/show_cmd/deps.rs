@@ -295,7 +295,8 @@ fn lookup_package_version(
         if let Some(ver) = ws_policy
             .as_str()
             .or_else(|| ws_policy["version"].as_str())
-            .filter(|ver| *ver != "-")
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty() && *ver != "-")
         {
             return Some(ver.to_owned());
         }
@@ -307,7 +308,10 @@ fn lookup_package_version(
             .join("package.json");
         if let Ok(bytes) = fs::read(pkg_json_path)
             && let Ok(parsed) = bit_object_import::parse_jsonc(&bytes)
-            && let Some(ver) = parsed["version"].as_str()
+            && let Some(ver) = parsed["version"]
+                .as_str()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
         {
             return Some(ver.to_owned());
         }

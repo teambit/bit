@@ -21,7 +21,9 @@ pub(super) fn prepare(root: &Path, components: &[Value]) -> io::Result<Vec<CatDo
                     let path = file
                         .as_str()
                         .or_else(|| file["relativePath"].as_str())
-                        .or_else(|| file["path"].as_str());
+                        .or_else(|| file["path"].as_str())
+                        .map(str::trim)
+                        .filter(|path| !path.is_empty());
                     match path {
                         Some(path) => json!({"relativePath":path,"test":file["test"] == true}),
                         None => json!({"relativePath":file,"test":false}),

@@ -50,8 +50,12 @@ fn project(raw: &Value, directory: &Path, main: &str) -> Option<Value> {
     let rows = raw.as_object()?;
     let mut files = Vec::new();
     for (path, metrics) in rows {
+        let path = path.trim();
+        if path.is_empty() {
+            continue;
+        }
         let data = metrics_data(metrics)?;
-        if Path::new(path).file_name() == Path::new(main).file_name()
+        if Path::new(path).file_name() == Path::new(main.trim()).file_name()
             && METRICS
                 .iter()
                 .all(|metric| metrics[metric]["pct"].as_f64() == Some(0.0))

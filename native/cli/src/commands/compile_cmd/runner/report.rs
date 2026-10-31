@@ -62,10 +62,11 @@ fn text(
 }
 
 fn item(row: &Compiled, verbose: bool, formatter: &Formatter) -> String {
+    let identity = row.identity.trim();
     let mut line = if row.errors.is_empty() {
-        formatter.item(&row.identity)
+        formatter.item(identity)
     } else {
-        Formatter::item_with(&format!("{} ... failed", row.identity), &formatter.error_symbol())
+        Formatter::item_with(&format!("{identity} ... failed"), &formatter.error_symbol())
     };
     if verbose && !row.files.is_empty() {
         line.push('\n');

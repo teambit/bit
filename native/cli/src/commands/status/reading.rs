@@ -130,11 +130,11 @@ fn status_issues(
     for row in array(response.get("external"), "external status graph")? {
         graph.push(Component {
             ignored: Vec::new(),
-            identity: text(row.get("identity"))?.to_owned(),
+            identity: text(row.get("identity"))?.trim().to_owned(),
             package_name: String::new(),
             dependencies: array(row.get("dependencies"), "external dependencies")?
                 .iter()
-                .map(|id| text(Some(id)).map(str::to_owned))
+                .map(|id| text(Some(id)).map(|val| val.trim().to_owned()))
                 .collect::<io::Result<_>>()?,
             issues: Value::Null,
         });

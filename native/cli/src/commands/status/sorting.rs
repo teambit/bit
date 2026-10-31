@@ -80,21 +80,23 @@ fn permutation(result: &Value, count: usize) -> io::Result<Vec<usize>> {
 
 fn sort_id(row: &Value) -> io::Result<String> {
     if let Value::String(id) = row {
-        return Ok(id.clone());
+        return Ok(id.trim().to_owned());
     }
     if let Some(id) = row
         .get("id")
         .or_else(|| row.get("identity"))
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         return Ok(id.to_owned());
     }
     let object = row["id"].as_object().ok_or_else(|| decline("status expected a string"))?;
-    let name = text(object.get("name"))?;
+    let name = text(object.get("name"))?.trim();
     match object
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     {
         Some(scope) => Ok(format!("{scope}/{name}")),

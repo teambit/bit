@@ -30,10 +30,11 @@ fn consume_trailing_id<'a>(
     id: &mut Option<&'a str>,
 ) -> Option<()> {
     for rest in iter {
-        if rest.is_empty() || rest.starts_with('-') || id.is_some() {
+        let trimmed = rest.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') || id.is_some() {
             return None;
         }
-        *id = Some(rest);
+        *id = Some(trimmed);
     }
     Some(())
 }
@@ -44,8 +45,9 @@ fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
     {
         return Some(());
     }
-    if !arg.starts_with('-') && !arg.is_empty() && options.id.is_none() {
-        options.id = Some(arg);
+    let trimmed = arg.trim();
+    if !trimmed.starts_with('-') && !trimmed.is_empty() && options.id.is_none() {
+        options.id = Some(trimmed);
         return Some(());
     }
     let (flag, val) = match arg.split_once('=') {

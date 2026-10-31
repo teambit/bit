@@ -8,7 +8,10 @@ use std::{
 #[cfg(unix)]
 pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
     use std::os::unix::fs::MetadataExt;
-    let bucket = source.parent()?.file_name()?;
+    let bucket = source
+        .parent()?
+        .file_name()
+        .filter(|name| !name.is_empty())?;
     let trash = root.join("trash");
     let parent = trash.join(bucket);
     let device = fs::metadata(source).ok()?.dev();

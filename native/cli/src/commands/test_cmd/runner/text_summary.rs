@@ -194,6 +194,8 @@ fn no_tests_section(value: &Value, chalk: Chalk, verbose: bool, sections: &mut V
     let mut names = ids
         .iter()
         .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .collect::<Vec<_>>();
     names.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     let hint = if verbose {

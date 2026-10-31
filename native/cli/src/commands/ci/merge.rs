@@ -45,7 +45,8 @@ pub(super) fn parse_merge(rest: &[&str]) -> Option<MergeOptions> {
 }
 
 fn non_flag_val(val: &str) -> Option<String> {
-    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }
 
 fn apply_merge_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> Option<usize> {

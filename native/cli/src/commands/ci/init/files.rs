@@ -41,6 +41,8 @@ fn write_workflow(path: &Path, content: &str) -> io::Result<()> {
     fs::write(path, content).map_err(|error| failure(error, "open", path))
 }
 fn render(raw: &str, marker: &str, branch: &str, workspace_dir: &str) -> String {
+    let branch = branch.trim();
+    let workspace_dir = workspace_dir.trim();
     let quoted = |value: &str| format!("'{}'", value.replace('\'', "''"));
     let replacement = marker.replacen("main", &quoted(branch), 1);
     // JavaScript template literals normalize source CRLF, including Windows checkouts.

@@ -157,10 +157,17 @@ fn read_merge_strategy(root: &Path) -> io::Result<String> {
     let rows = parsed.as_object().ok_or_else(|| io::Error::other("workspace.jsonc object"))?;
     let key = rows
         .keys()
-        .find(|key| key.split('@').next() == Some("teambit.git/git"))
+        .find(|key| {
+            key.trim()
+                .split('@')
+                .next()
+                .map(str::trim)
+                == Some("teambit.git/git")
+        })
         .map_or("teambit.git/git", String::as_str);
     Ok(parsed[key]["mergeStrategy"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .unwrap_or("manual")
         .to_owned())

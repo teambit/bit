@@ -131,8 +131,16 @@ impl Session {
             self.output.push_str(&host.take_stdout());
         }
         let receipt = result?;
-        if let Some(error) = receipt.get("error") {
-            let message = error["message"].as_str().unwrap_or("remote resolver failed");
+        if let Some(error) = receipt
+            .get("error")
+            .filter(|err| !err.is_null())
+        {
+            let message = error["message"]
+                .as_str()
+                .or_else(|| error.as_str())
+                .map(str::trim)
+                .filter(|msg| !msg.is_empty())
+                .unwrap_or("remote resolver failed");
             return Err(io::Error::other(message.to_owned()));
         }
         let url = receipt["host"]

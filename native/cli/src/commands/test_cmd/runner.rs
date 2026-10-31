@@ -71,9 +71,7 @@ fn format_execution(
 ) -> io::Result<workspace_command::results::Report> {
     let mut report = execution.report;
     if !options.json && execution.empty {
-        report.data = crate::commands::color::Chalk::detect(args).dim(
-            "no components found to test.\nuse \"--unmodified\" flag to test all components or specify the ids to test.\notherwise, only new and modified components will be tested",
-        );
+        report.data = empty_test_message(args);
     } else if !options.json && !execution.terminated {
         let value = serde_json::from_str(&report.data)?;
         report.data = text_summary::format_report(
@@ -86,6 +84,12 @@ fn format_execution(
     }
     Ok(report)
 }
+fn empty_test_message(args: &[OsString]) -> String {
+    crate::commands::color::Chalk::detect(args).dim(
+        "no components found to test.\nuse \"--unmodified\" flag to test all components or specify the ids to test.\notherwise, only new and modified components will be tested",
+    )
+}
+
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
 }

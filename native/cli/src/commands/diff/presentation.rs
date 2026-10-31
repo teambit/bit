@@ -89,6 +89,7 @@ pub(super) fn one(
 }
 
 fn find_captured_target<'a>(capture: &'a Capture, identity: &str) -> Option<&'a Value> {
+    let identity = identity.trim();
     let bare = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
     capture.captured
         .iter()

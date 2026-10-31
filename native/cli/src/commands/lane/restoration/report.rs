@@ -35,10 +35,18 @@ pub(super) fn render(result: &Value, options: &Options, chalk: Chalk) -> io::Res
         Some(&title),
     )?;
     let mut sections = vec![report.data];
-    if let Some(error) = result["installationError"].as_str() {
+    if let Some(error) = result["installationError"]
+        .as_str()
+        .map(str::trim)
+        .filter(|err| !err.is_empty())
+    {
         sections.push(crate::commands::installation::error_report(chalk, error));
     }
-    if let Some(error) = result["compilationError"].as_str() {
+    if let Some(error) = result["compilationError"]
+        .as_str()
+        .map(str::trim)
+        .filter(|err| !err.is_empty())
+    {
         let formatter = Formatter::new(chalk);
         sections.push(format!("{} {}\nThe following error was thrown by the compiler\n{}\nPlease fix the issue and run \"bit compile\"",
             formatter.error_symbol(), formatter.title("Compilation Error"), chalk.red(error)));

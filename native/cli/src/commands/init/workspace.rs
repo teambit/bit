@@ -145,7 +145,11 @@ fn reset_component_row(key: &str, row: &Value) -> Value {
         })
         .to_owned();
     let mut fresh = json!({"name":name,"scope":"","version":"","rootDir":row["rootDir"],"mainFile":row["mainFile"]});
-    if let Some(scope) = scope {
+    if let Some(scope) = scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+    {
         fresh["defaultScope"] = json!(scope);
     }
     fresh

@@ -25,6 +25,7 @@ pub(super) fn read(
         host.call("dependencyPolicies", &json!({"extensionIds":configured}))?
     };
     let (env_id, multiple) = selected_env(host, reader, component)?;
+    validate_selected_env(&env_id)?;
     let manifest = reader.resolved(&env_id)?;
     let provider = provider_facts(host, &env_id, manifest.as_ref(), needs_issues)?;
     Ok(json!({"envId":env_id,"envPolicy":provider.env_policy,
@@ -79,6 +80,13 @@ fn provider_fact(provider: &Value, name: &str) -> io::Result<Value> {
         .get(name)
         .cloned()
         .ok_or_else(|| io::Error::other(format!("provider facts omitted {name}")))
+}
+
+fn validate_selected_env(env_id: &str) -> io::Result<()> {
+    if env_id.trim().is_empty() {
+        return Err(io::Error::other("selected environment id is empty"));
+    }
+    Ok(())
 }
 
 fn selected_env(

@@ -241,10 +241,12 @@ fn parse_update(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn is_valid_update_env_id(env_id: &str) -> bool {
+    let env_id = env_id.trim();
     let bare = env_id
         .split('@')
         .next()
-        .unwrap_or(env_id);
+        .unwrap_or(env_id)
+        .trim();
     !bare.is_empty() && !env_id.starts_with('-') && is_supported_pattern(bare)
 }
 

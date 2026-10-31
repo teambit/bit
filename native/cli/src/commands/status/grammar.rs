@@ -20,7 +20,7 @@ pub fn snapshot<'v>(values: impl IntoIterator<Item = &'v str>) -> Option<Value> 
 }
 
 fn snapshot_entry(text: &str) -> Value {
-    let Some(version) = npm::parse(text) else { return json!({}) };
+    let Some(version) = npm::parse(text.trim()) else { return json!({}) };
     let prerelease: Vec<Value> = version.prerelease
         .iter()
         .map(|id| match id {

@@ -51,10 +51,10 @@ pub(in crate::commands) fn format_title(
 }
 
 fn deprecated_all(options: &Options, report: String) -> String {
-    if options.all && matches!(options.to.as_str(), "head" | "latest") {
+    let target = options.to.trim();
+    if options.all && matches!(target, "head" | "latest") {
         format!(
-            "  \"--all\" is deprecated for \"bit checkout {}\", please omit it.\n{report}",
-            options.to,
+            "  \"--all\" is deprecated for \"bit checkout {target}\", please omit it.\n{report}",
         )
     } else {
         report

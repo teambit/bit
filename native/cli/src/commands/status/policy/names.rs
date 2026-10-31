@@ -5,6 +5,7 @@ use super::{Map, Value, component, decline, io, nullish, text};
 /// `@<owner>` of `owner.scope/name`.
 pub(super) fn default_prefix(identity: &str) -> String {
     let owner = identity
+        .trim()
         .split('.')
         .next()
         .unwrap_or_default();

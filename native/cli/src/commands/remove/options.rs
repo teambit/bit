@@ -28,8 +28,12 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--force=false" => options.force = false,
             "-t" | "--track" | "--track=true" => options.track = true,
             "--track=false" => options.track = false,
-            value if !value.starts_with('-') && !value.is_empty() && pattern.is_none() => {
-                pattern = Some(value);
+            value
+                if !value.trim().starts_with('-')
+                    && !value.trim().is_empty()
+                    && pattern.is_none() =>
+            {
+                pattern = Some(value.trim());
             }
             value => apply_short_bundle(value, &mut silent, &mut options)?,
         }

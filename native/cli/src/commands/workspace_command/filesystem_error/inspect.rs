@@ -15,7 +15,10 @@ pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
     {
         fields.push(format!("{key}: {}", chalk.green(&quote(value))));
     }
-    if let Some(destination) = &error.destination {
+    if let Some(destination) = error.destination
+        .as_deref()
+        .filter(|dest| !dest.is_empty())
+    {
         fields.push(format!("dest: {}", chalk.green(&quote(destination))));
     }
     format!("[Error: {}] {{\n  {}\n}}", error.description(), fields.join(",\n  "))

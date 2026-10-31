@@ -25,7 +25,8 @@ pub(super) fn default_branch(root: &Path) -> (String, bool) {
         return (branch, false);
     }
     let current = run(root, &["branch", "--show-current"]).unwrap_or_default();
-    (if matches!(current.as_str(), "main" | "master") { current } else { "main".into() }, true)
+    let trimmed = current.trim();
+    (if matches!(trimmed, "main" | "master") { trimmed.to_owned() } else { "main".into() }, true)
 }
 fn detected_branch(root: &Path) -> Option<String> {
     let symbolic = run(root, &["symbolic-ref", "refs/remotes/origin/HEAD"]);

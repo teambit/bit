@@ -106,7 +106,8 @@ impl ProjectedLinker {
     ) -> io::Result<()> {
         let identities = ids
             .iter()
-            .map(|id| strip_version(id))
+            .map(|id| strip_version(id.trim()))
+            .filter(|id| !id.is_empty())
             .collect::<Vec<_>>();
         let (_, projection) = super::load::projected(
             root,

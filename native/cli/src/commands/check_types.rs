@@ -95,6 +95,9 @@ fn emit_empty_check_types(
 }
 
 pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
+    if root.as_os_str().is_empty() {
+        return Ok(false);
+    }
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
     if super::build_cmd::is_bitmap_auto_sync(&ws_config) {
         return Ok(false);

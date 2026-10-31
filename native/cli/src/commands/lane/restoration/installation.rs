@@ -69,6 +69,7 @@ fn compiler_error(value: &Value) -> io::Result<Option<String>> {
         }
         Value::Object(map) => Ok(map
             .get("message")
+            .or_else(|| map.get("msg"))
             .and_then(Value::as_str)
             .map(str::trim)
             .filter(|msg| !msg.is_empty())

@@ -224,7 +224,7 @@ fn supported_entries(policy: &Map<String, Value>) -> bool {
 
 fn valid_entry<'a>(field: &str, name: &'a str, value: &Value, seen: &mut HashSet<&'a str>) -> bool {
     let Some(version) = manual_version(value) else { return false };
-    if !seen.insert(name) || version.is_empty() {
+    if name.trim().is_empty() || !seen.insert(name) || version.trim().is_empty() {
         return false;
     }
     if NODE_DEV

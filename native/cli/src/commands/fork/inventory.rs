@@ -26,9 +26,10 @@ pub(super) fn read(root: &Path) -> io::Result<Value> {
     Ok(json!({"bitmap":bitmap,"components":components,"workspace":context["workspace"]}))
 }
 pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Value> {
+    let source = source.trim();
     let (bare, explicit_ver) = source
         .rsplit_once('@')
-        .map_or((source, None), |(id, ver)| (id, Some(ver)));
+        .map_or((source, None), |(id, ver)| (id.trim(), Some(ver.trim())));
     inventory["components"]
         .as_array()?
         .iter()
@@ -36,13 +37,14 @@ pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Val
 }
 
 fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bool {
-    let id_matches = row["identity"] == bare
-        || row["identity"]
-            .as_str()
-            .and_then(|id| id.split_once('/').map(|(_, name)| name))
-            == Some(bare);
+    let row_id = row["identity"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    let id_matches =
+        row_id == bare || row_id.split_once('/').map(|(_, name)| name.trim()) == Some(bare);
     let ver_matches = explicit_ver.is_none_or(|ver| {
-        matches!(ver, "latest" | "head") || row["version"].as_str() == Some(ver)
+        matches!(ver, "latest" | "head") || row["version"].as_str().map(str::trim) == Some(ver)
     });
     id_matches && ver_matches
 }
@@ -52,6 +54,8 @@ pub(super) fn default_scope(inventory: &Value) -> io::Result<String> {
         "teambit.workspace/workspace",
     )
     .and_then(|(_, ws)| ws["defaultScope"].as_str())
+    .map(str::trim)
+    .filter(|scope| !scope.is_empty())
     .map(str::to_owned)
     .ok_or_else(|| io::Error::other("fork workspace defaultScope"))
 }

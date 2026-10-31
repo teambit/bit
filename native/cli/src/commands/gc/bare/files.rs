@@ -117,6 +117,9 @@ pub(in crate::commands::gc) fn batch<Item: Sync>(
     items: &[Item],
     work: impl Fn(&Item) -> io::Result<()> + Sync,
 ) -> io::Result<()> {
+    if items.is_empty() {
+        return Ok(());
+    }
     let (send, receive) = std::sync::mpsc::channel();
     std::thread::scope(|threads| {
         for item in items {

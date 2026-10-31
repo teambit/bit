@@ -7,7 +7,11 @@ pub(super) fn normalized(path: &Path) -> PathBuf {
         match component {
             std::path::Component::CurDir => {}
             std::path::Component::ParentDir => {
-                result.pop();
+                if result.as_os_str().is_empty() || result.ends_with("..") {
+                    result.push("..");
+                } else {
+                    result.pop();
+                }
             }
             other => result.push(other),
         }

@@ -32,7 +32,12 @@ pub(super) fn prepare(
             .as_deref()
             .or_else(|| target["version"].as_str())
             .or_else(|| target["head"].as_str());
-        for version in [from, options.versions.to.as_deref()].into_iter().flatten() {
+        for version in [from, options.versions.to.as_deref()]
+            .into_iter()
+            .flatten()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+        {
             ids.push(format!("{identity}@{version}"));
         }
     }

@@ -24,7 +24,7 @@ pub(super) enum Issue {
 
 impl Issue {
     pub(super) fn parse(name: &str) -> io::Result<Self> {
-        Ok(match name {
+        Ok(match name.trim() {
             "UntrackedDependencies" => Self::Untracked,
             "RelativeComponents" => Self::Relative,
             "RelativeComponentsAuthored" => Self::RelativeAuthored,

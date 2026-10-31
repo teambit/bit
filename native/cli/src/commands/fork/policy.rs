@@ -42,8 +42,10 @@ fn build_policy(
             .map(str::trim)
             .filter(|id| !id.is_empty())
             .ok_or_else(|| io::Error::other("fork dependency identity"))?;
-        let field =
-            if entry["lifecycleType"] == "peer" { "peerDependencies" } else { "dependencies" };
+        let is_peer = entry["lifecycleType"]
+            .as_str()
+            .is_some_and(|kind| kind.trim() == "peer");
+        let field = if is_peer { "peerDependencies" } else { "dependencies" };
         policy
             .get_mut(field)
             .and_then(Value::as_object_mut)

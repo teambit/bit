@@ -42,7 +42,9 @@ fn prompt(preview: &Value, chalk: Chalk) -> io::Result<String> {
     let directories = array(preview.get("restoredItems"), "recovery restoration items")?
         .iter()
         .filter_map(Value::as_str)
-        .find_map(|item| item.strip_prefix("deleted components directories: "));
+        .find_map(|item| item.strip_prefix("deleted components directories: "))
+        .map(str::trim)
+        .filter(|dirs| !dirs.is_empty());
     let directories = directories.map_or_else(String::new, |dirs| {
         format!("\nThe following directories introduced by the merge will be deleted: {dirs}")
     });

@@ -91,12 +91,20 @@ fn row_scope_and_name(row: &Value) -> (&str, &str) {
     )
 }
 fn text(value: &Value) -> io::Result<&str> {
-    value.as_str().ok_or_else(|| io::Error::other("invalid scope index"))
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .ok_or_else(|| io::Error::other("invalid scope index"))
 }
 fn identity(model: &Value) -> String {
-    let name = model["name"].as_str().unwrap_or_default();
+    let name = model["name"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
     model["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .map_or_else(|| name.into(), |scope| format!("{scope}/{name}"))
 }

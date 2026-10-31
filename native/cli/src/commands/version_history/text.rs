@@ -113,6 +113,7 @@ fn pointer_text(pointers: &[&str], chalk: Chalk) -> String {
 }
 
 pub(in crate::commands) fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a str> {
+    let hash = hash.trim();
     for key in ["versions", "orphanedVersions"] {
         let Some(map) = model.get(key).and_then(Value::as_object) else {
             continue;
@@ -120,7 +121,7 @@ pub(in crate::commands) fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a 
         if let Some((tag, _)) = map
             .iter()
             .rev()
-            .find(|(_, value)| value.as_str() == Some(hash))
+            .find(|(_, value)| value.as_str().map(str::trim) == Some(hash))
         {
             return Some(tag.as_str());
         }

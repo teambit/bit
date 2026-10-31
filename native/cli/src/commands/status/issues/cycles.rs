@@ -42,8 +42,8 @@ pub fn cyclic(components: &[Component]) -> HashSet<&str> {
 
 fn strip_version(id: &str) -> &str {
     match id.rfind('@') {
-        Some(index) if index > 0 && !id[index + 1..].contains('/') => &id[..index],
-        _ => id,
+        Some(index) if index > 0 && !id[index + 1..].contains('/') => id[..index].trim(),
+        _ => id.trim(),
     }
 }
 

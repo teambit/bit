@@ -102,6 +102,7 @@ pub(in crate::commands) fn update_in_comp_json(
     target_aspect_id: &str,
     cfg_val: &Value,
 ) -> Result<CompJsonEdit, Failure> {
+    validate_aspect_target(target_aspect_id)?;
     let content = fs::read_to_string(&path)?;
     let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
     let root_obj = parsed
@@ -180,6 +181,13 @@ fn remove_bitmap_config_key(row: &mut Value, bare_aspect: &str) -> Result<bool, 
         row_obj.remove("config");
     }
     Ok(true)
+}
+
+fn validate_aspect_target(target_aspect_id: &str) -> Result<(), Failure> {
+    if target_aspect_id.trim().is_empty() {
+        return Err(Failure::Declined("target aspect id is empty".into()));
+    }
+    Ok(())
 }
 
 pub(in crate::commands) fn serialize_json_preserving_newline(

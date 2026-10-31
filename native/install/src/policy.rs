@@ -47,16 +47,7 @@ pub fn component_policy(
     own_env_policy: Option<&EnvPolicy>,
     registry: &[slots::Registration],
 ) -> Vec<PolicyEntry> {
-    let config = component.config
-        .get(DEPENDENCY_RESOLVER)
-        .or_else(|| {
-            component.config
-                .iter()
-                .find_map(|(key, value)| {
-                    (crate::config::aspect_id_without_version(key) == DEPENDENCY_RESOLVER)
-                        .then_some(value)
-                })
-        })
+    let config = component_resolver_config(component)
         .and_then(|config| config.get("policy"))
         .map(|policy| {
             entries::from_variant_config(
@@ -80,4 +71,17 @@ pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String,
         manifest[index].insert(entry.name.clone(), scope::snap_to_semver(&entry.version));
     }
     manifest
+}
+
+fn component_resolver_config(component: &WorkspaceComponent) -> Option<&Value> {
+    component.config
+        .get(DEPENDENCY_RESOLVER)
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(key, value)| {
+                    (crate::config::aspect_id_without_version(key) == DEPENDENCY_RESOLVER)
+                        .then_some(value)
+                })
+        })
 }

@@ -303,7 +303,8 @@ fn apply_simulate_inline(arg: &str, lane: &mut Option<String>) -> Option<()> {
 }
 
 fn valid_ripple_val(val: &str) -> Option<&str> {
-    (!val.is_empty() && !val.starts_with('-')).then_some(val)
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(trimmed)
 }
 
 fn parse_no_arg_job_op(sub: &str, rest: &[&str]) -> Option<Subcommand> {

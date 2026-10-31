@@ -48,10 +48,7 @@ fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String>
 fn unknown_variant_harmony_aspect(obj: &serde_json::Map<String, Value>) -> Option<String> {
     let variants = obj
         .iter()
-        .find(|(key, _)| {
-            key.as_str() == "teambit.workspace/variants"
-                || key.starts_with("teambit.workspace/variants@")
-        })?
+        .find(|(key, _)| is_variants_aspect_key(key))?
         .1
         .as_object()?;
     let core: Vec<String> = serde_json::from_str(include_str!(
@@ -79,4 +76,8 @@ fn is_unknown_harmony_aspect(aspect_key: &str, core: &[String]) -> bool {
             .iter()
             .any(|core_id| core_id == bare)
         && !matches!(bare, "teambit.harmony/bit-custom-aspect" | "teambit.harmony/harmony")
+}
+
+fn is_variants_aspect_key(key: &str) -> bool {
+    key == "teambit.workspace/variants" || key.starts_with("teambit.workspace/variants@")
 }

@@ -153,10 +153,11 @@ fn consume_trailing_preview_pattern<'a>(
     pattern: &mut Option<String>,
 ) -> Option<()> {
     for rest in iter {
-        if rest.is_empty() || rest.starts_with('-') || pattern.is_some() {
+        let trimmed = rest.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') || pattern.is_some() {
             return None;
         }
-        *pattern = Some(rest.to_owned());
+        *pattern = Some(trimmed.to_owned());
     }
     Some(())
 }

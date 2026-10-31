@@ -315,7 +315,7 @@ fn parse_quoted_literal(input: &str) -> Option<String> {
     let rest = &input[quote.len_utf8()..];
     let end = rest.find(quote)?;
     let val = &rest[..end];
-    if val.is_empty() || val.contains("${") {
+    if val.trim().is_empty() || val.contains("${") {
         return None;
     }
     Some(val.to_owned())

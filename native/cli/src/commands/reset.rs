@@ -62,11 +62,11 @@ fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
         "--silent=false" | "--all=false" => options.silent = false,
         arg if is_combined_reset_short(arg) => apply_combined_reset_short(arg, options),
         arg if !arg.starts_with('-')
-            && !arg.is_empty()
+            && !arg.trim().is_empty()
             && options.pattern.is_none()
             && arg.len() <= 4096 =>
         {
-            options.pattern = Some(arg);
+            options.pattern = Some(arg.trim());
         }
         _ => return None,
     }

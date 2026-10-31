@@ -21,7 +21,7 @@ pub(super) fn callbacks(
 ) -> io::Result<()> {
     let selected = array(Some(selected), "snapshot issue selection")?
         .iter()
-        .map(|id| text(Some(id)).map(str::to_owned))
+        .map(|id| text(Some(id)).map(|raw| raw.trim().to_owned()))
         .collect::<io::Result<Vec<_>>>()?;
     let result = callback_batch(resolved, rows, &selected, ignored, resolving);
     if let Some(startup) = startup.as_mut() {

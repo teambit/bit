@@ -85,7 +85,8 @@ fn bare_scope_has_no_envs(scope_path: &Path) -> bool {
     let Ok(parsed) = parse_jsonc(&bytes) else {
         return false;
     };
-    read_allowed_envs(&parsed["config"]).is_empty()
+    let config = if parsed["config"].is_object() { &parsed["config"] } else { &parsed };
+    read_allowed_envs(config).is_empty()
 }
 
 fn missing_script_outcome(args: &[OsString]) -> io::Result<Outcome> {

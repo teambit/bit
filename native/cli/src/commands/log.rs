@@ -200,7 +200,7 @@ fn normalize_author(normalized: &mut Map<String, Value>) {
         if normalized
             .get(key)
             .and_then(Value::as_str)
-            .is_none_or(str::is_empty)
+            .is_none_or(|val| val.trim().is_empty())
         {
             normalized.insert(key.into(), json!("unknown"));
         }

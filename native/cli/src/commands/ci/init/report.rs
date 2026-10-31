@@ -80,8 +80,8 @@ fn heading(
         "{} {} for {}, mirrored to {target} {}",
         chalk.green(symbol),
         chalk.bold_white("Scaffolded bit ci sync"),
-        chalk.cyan(&report.target.scope),
-        chalk.dim(&format!("(default branch: {})", report.target.branch))
+        chalk.cyan(report.target.scope.trim()),
+        chalk.dim(&format!("(default branch: {})", report.target.branch.trim())),
     )];
     lines.extend(header_warnings(report, chalk, redacted, inert));
     lines.join("\n")

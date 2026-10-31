@@ -377,7 +377,7 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
 }
 
 pub(in crate::commands) fn is_supported_pattern(pattern: &str) -> bool {
-    !pattern.is_empty()
+    !pattern.trim().is_empty()
         && !pattern.starts_with(['-', '@'])
         && !pattern.contains(['$', ':'])
         && !pattern.contains(" AND ")

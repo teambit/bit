@@ -38,11 +38,7 @@ fn membership(bitmap: &Value, settings: &Value) -> io::Result<HashSet<String>> {
         .as_object()
         .ok_or_else(|| invalid("history bitmap"))?
         .iter()
-        .filter(|(key, row)| {
-            !key.starts_with('$')
-                && !matches!(key.as_str(), "_bit_lane" | "version")
-                && row.is_object()
-        })
+        .filter(|(key, row)| is_component_bitmap_row(key, row))
         .filter_map(|(key, row)| {
             let (scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
             scope
@@ -89,4 +85,8 @@ fn target(row: &Value) -> io::Result<(String, String)> {
         return Err(invalid("history empty version"));
     }
     Ok((identity.to_owned(), version.to_owned()))
+}
+
+fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
+    !key.starts_with('$') && !matches!(key, "_bit_lane" | "version") && row.is_object()
 }

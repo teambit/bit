@@ -87,10 +87,11 @@ impl Prepared {
         if !self.deferred && self.observed != observe(&self.root, &self.components)? {
             return Err(io::Error::other("prepared documentation sources changed"));
         }
+        if !self.write_cache {
+            return Ok(());
+        }
         for (path, bytes) in self.entries {
-            if self.write_cache {
-                bit_install::dependencies::cache::put(&self.directory, &path, &bytes)?;
-            }
+            bit_install::dependencies::cache::put(&self.directory, &path, &bytes)?;
         }
         Ok(())
     }

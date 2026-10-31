@@ -52,8 +52,10 @@ fn render(name: &str, diff: &str) -> io::Result<String> {
 fn label<'a>(line: Option<&'a str>, prefix: &str, suffix: &str) -> io::Result<&'a str> {
     let label = line
         .and_then(|line| line.strip_prefix(prefix))
+        .map(str::trim)
+        .filter(|label| !label.is_empty())
         .ok_or_else(|| decline("dependency diff label"))?;
-    Ok(label.strip_suffix(suffix).unwrap_or(label))
+    Ok(label.strip_suffix(suffix).map_or(label, str::trim))
 }
 
 fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {

@@ -9,8 +9,9 @@ pub(super) struct Repository {
 }
 impl Repository {
     pub(super) fn display(&self) -> String {
-        let repo = format!("{}/{}", self.owner, self.name);
-        if self.host == "github.com" { repo } else { format!("{}/{repo}", self.host) }
+        let repo = format!("{}/{}", self.owner.trim(), self.name.trim());
+        let host = self.host.trim();
+        if host == "github.com" { repo } else { format!("{host}/{repo}") }
     }
 }
 fn server() -> Option<Url> {

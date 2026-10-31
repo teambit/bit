@@ -148,11 +148,12 @@ fn format_component_links(
 }
 
 fn format_regular_component_link(chalk: Chalk, item: &ComponentLinkItem) -> String {
-    if item.bound.is_empty() {
+    let pkg = item.package_name.trim();
+    if item.bound.is_empty() || pkg.is_empty() {
         return String::new();
     }
-    let target = format!("./node_modules/{}", item.package_name);
-    format_link_row(chalk, &item.id, &target)
+    let target = format!("./node_modules/{pkg}");
+    format_link_row(chalk, item.id.trim(), &target)
 }
 
 fn format_verbose_component_link(chalk: Chalk, item: &ComponentLinkItem) -> String {

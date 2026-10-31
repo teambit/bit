@@ -68,16 +68,19 @@ fn source_path(source: &Value) -> io::Result<PathBuf> {
     if let Some(path) = source["absolutePath"]
         .as_str()
         .or_else(|| source["path"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         return Ok(PathBuf::from(path));
     }
     let directory = source["directory"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| io::Error::other("compiler source path"))?;
     let relative = source["relativePath"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| io::Error::other("compiler source path"))?;
     Ok(Path::new(directory).join(relative))

@@ -35,7 +35,7 @@ pub fn snapshot_hydrate(
 
 /// Per-component aspect data returned by hydrated snapshot callbacks.
 pub fn snapshot_data<'a>(capture: &'a Capture, identity: &str) -> Option<&'a Value> {
-    capture.cache.callbacks.snapshot_data.get(identity)
+    capture.cache.callbacks.snapshot_data.get(identity.trim())
 }
 
 /// Validate the native capture before invoking the selected components' pre-snap slots.

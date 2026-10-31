@@ -345,11 +345,13 @@ fn default_directory_template(root: &Path) -> io::Result<String> {
     let ws = bit_object_import::parse_jsonc(&bytes)?;
     let template = crate::commands::update_cmd::aspect_entry(&ws, "teambit.workspace/workspace")
         .and_then(|(_, entry)| entry["defaultDirectory"].as_str())
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
         .unwrap_or("components/{name}");
     Ok(if template.contains("{name}") {
         template.to_owned()
     } else {
-        format!("{template}/{{name}}")
+        format!("{}/{{name}}", template.trim_end_matches('/'))
     })
 }
 

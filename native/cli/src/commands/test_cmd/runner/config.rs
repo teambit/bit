@@ -94,7 +94,7 @@ fn patterns(root: &Path, selected: &Component) -> io::Result<Patterns> {
     let workspace = Workspace::load(root, &config, &core).map_err(io::Error::other)?;
     let (_, component) = workspace
         .active()
-        .find(|(entry, _)| entry.root_dir == selected.directory)
+        .find(|(entry, _)| entry.root_dir.trim() == selected.directory.trim())
         .ok_or_else(|| invalid("tester component patterns"))?;
     let configured = DevPatternConfig::from_aspects(&|id| raw.get(id).cloned());
     let mut patterns = dev_patterns(component, &configured, &EnvDevPatterns::default());

@@ -87,7 +87,7 @@ fn apply_token<'a>(
         "--comp-summary" | "--comp-summary=true" => options.comp_summary = true,
         "--comp-summary=false" => options.comp_summary = false,
         "--target" => {
-            let val = iter.next()?;
+            let val = iter.next()?.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             options.target = Some(val.to_owned());
         }
@@ -101,10 +101,11 @@ fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
         return Some(());
     }
     if let Some(val) = arg.strip_prefix("--target=") {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.target = Some(val.to_owned());
-    } else if !arg.starts_with('-') && !arg.is_empty() {
-        options.ids.push(arg.to_owned());
+    } else if !arg.trim().starts_with('-') && !arg.trim().is_empty() {
+        options.ids.push(arg.trim().to_owned());
     } else {
         return None;
     }

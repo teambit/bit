@@ -56,11 +56,7 @@ pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io
     let existing = std::mem::take(rows);
     let mut restored = Some(row);
     for (existing_key, value) in existing {
-        if restored.is_some()
-            && (existing_key.starts_with('$')
-                || existing_key == "_bit_lane"
-                || existing_key.as_str() > key)
-        {
+        if restored.is_some() && should_insert_before(&existing_key, key) {
             rows.insert(
                 key.to_owned(),
                 restored.take().ok_or_else(|| invalid("lane reset restored row"))?,
@@ -72,4 +68,8 @@ pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io
         rows.insert(key.to_owned(), row);
     }
     Ok(())
+}
+
+fn should_insert_before(existing_key: &str, key: &str) -> bool {
+    existing_key.starts_with('$') || existing_key == "_bit_lane" || existing_key > key
 }

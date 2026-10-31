@@ -130,6 +130,7 @@ fn consume_trailing_show_id<'a>(
 }
 
 fn apply_short_bundle(arg: &str, options: &mut Options) -> bool {
+    let arg = arg.trim();
     if !arg.starts_with('-')
         || arg.starts_with("--")
         || arg.len() <= 2

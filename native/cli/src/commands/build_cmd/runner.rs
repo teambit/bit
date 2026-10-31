@@ -28,7 +28,7 @@ const DEPLOY_TASKS: &[&str] =
 
 pub(super) fn run_list_tasks(root: &Path, args: &[OsString], target: &str) -> io::Result<Outcome> {
     let formatter = Formatter::new(Chalk::detect(args));
-    let comp_id = if target.is_empty() { "workspace" } else { target };
+    let comp_id = if target.trim().is_empty() { "workspace" } else { target };
     let mut lines = vec![
         formatter.title("Task List"),
         format!("id:    {comp_id}"),

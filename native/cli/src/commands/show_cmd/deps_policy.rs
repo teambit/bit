@@ -299,9 +299,12 @@ fn apply_single_policy_entry(
             let opt = default_opt || val["optional"].as_bool().unwrap_or(false);
             Some((ver, opt))
         });
-    let Some((ver, optional)) = ver_opt else {
+    let Some((ver, optional)) = ver_opt.map(|(ver, opt)| (ver.trim(), opt)) else {
         return;
     };
+    if ver.is_empty() {
+        return;
+    }
     if ver == "-" {
         remove_dep(deps, pkg_name);
         return;

@@ -31,8 +31,10 @@ impl Plan {
         let components = loaded.components()?;
         if !components.is_empty()
             && settings.environment
-                .as_ref()
-                .is_some_and(|env| env != &loaded.progress.environment)
+                .as_deref()
+                .map(str::trim)
+                .filter(|env| !env.is_empty())
+                .is_some_and(|env| env != loaded.progress.environment.trim())
         {
             return Err(invalid("tester environment selection"));
         }

@@ -180,9 +180,11 @@ pub(super) fn report_summary(
 fn belongs(root: &Path, component: &Component, row: &Value) -> bool {
     row["testFilePath"]
         .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .is_some_and(|name| {
             super::paths::normalized(Path::new(name))
-                .starts_with(super::paths::normalized(&root.join(&component.directory)))
+                .starts_with(super::paths::normalized(&root.join(component.directory.trim())))
         })
 }
 fn combine(target: &mut Value, source: &Value) {

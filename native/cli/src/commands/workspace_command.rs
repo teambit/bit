@@ -275,9 +275,9 @@ fn defer_merge_snapshot(engine: &mut Engine, token: &str, plan: &mut Value) -> i
     let deferred: Value =
         engine.request(&json!({"kind":"commandMergeDeferSnapshot","token":token}))?;
     plan["mergeSnapshotSeeds"] = deferred["identities"].clone();
-    plan.as_object_mut()
-        .unwrap()
-        .remove("needsSnap");
+    if let Some(plan_obj) = plan.as_object_mut() {
+        plan_obj.remove("needsSnap");
+    }
     Ok(())
 }
 

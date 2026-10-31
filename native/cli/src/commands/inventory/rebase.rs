@@ -27,8 +27,8 @@ pub fn pattern(pattern: &str, dir: &str) -> String {
 pub fn join_linux(parts: &[&str]) -> String {
     let joined = parts
         .iter()
+        .map(|part| part.trim())
         .filter(|part| !part.is_empty())
-        .copied()
         .collect::<Vec<_>>()
         .join("/");
     let joined = if cfg!(windows) { joined.replace('\\', "/") } else { joined };

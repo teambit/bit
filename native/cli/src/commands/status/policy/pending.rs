@@ -54,6 +54,7 @@ impl Inputs {
 }
 
 fn configuration(merge: &MergeConfig, rows: &[Value], identity: &str) -> io::Result<Option<Value>> {
+    let identity = identity.trim();
     let current = merge
         .raw_component(identity)?
         .unwrap_or_else(|| json!({}));

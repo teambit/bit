@@ -50,13 +50,7 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
     }
     let normalized = if cfg!(windows) { input.replace('\\', "/") } else { input.to_string() };
     let requested = normalized.strip_prefix("./").unwrap_or(&normalized);
-    let path = Path::new(requested);
-    if requested.is_empty()
-        || requested.contains('\\')
-        || path
-            .components()
-            .any(|part| !matches!(part, Component::Normal(_)))
-    {
+    if !is_valid_relative_file_path(requested) {
         return Err(decline("file history path"));
     }
     let bitmap = bitmap::read(root)?;
@@ -82,4 +76,12 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
         file: relative.to_string(),
         lane: bitmap.lane,
     })
+}
+
+fn is_valid_relative_file_path(requested: &str) -> bool {
+    !requested.is_empty()
+        && !requested.contains('\\')
+        && Path::new(requested)
+            .components()
+            .all(|part| matches!(part, Component::Normal(_)))
 }

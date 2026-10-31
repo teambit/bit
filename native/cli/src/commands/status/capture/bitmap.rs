@@ -32,7 +32,7 @@ pub(super) fn record_remote(
     captured: &mut Capture,
 ) -> io::Result<()> {
     if enabled && extensions.iter().any(is_remotely_removed_extension) {
-        captured.remotely_removed.push(text(target.get("identity"))?.to_string());
+        captured.remotely_removed.push(text(target.get("identity"))?.trim().to_string());
     }
     Ok(())
 }

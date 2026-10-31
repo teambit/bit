@@ -54,15 +54,19 @@ pub(in crate::workspace::engine::command) fn targets(
         .clone();
     visible.remove("_bit_lane");
     visible.retain(|key, row| {
-        key.starts_with('$') || key == "version" || row["isAvailableOnCurrentLane"] != false
+        is_metadata_bitmap_key(key) || row["isAvailableOnCurrentLane"] != false
     });
     for (key, row) in &mut visible {
-        if key.starts_with('$') || key == "version" {
+        if is_metadata_bitmap_key(key) {
             continue;
         }
         clear_visibility(row)?;
     }
     config::context_bitmap_targets(&Value::Object(visible), settings)
+}
+
+fn is_metadata_bitmap_key(key: &str) -> bool {
+    key.starts_with('$') || key == "version"
 }
 
 /// A lane switch also selects hidden bitmap entries when the destination

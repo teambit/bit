@@ -97,10 +97,10 @@ pub(super) fn valid_options(args: &[&str]) -> bool {
 pub(super) fn is_zsh_shell() -> bool {
     env::var("SHELL")
         .ok()
-        .is_some_and(|val| val.contains("zsh"))
+        .is_some_and(|val| val.trim().contains("zsh"))
         || env::var("ZSH_NAME")
             .ok()
-            .is_some_and(|val| val.contains("zsh"))
+            .is_some_and(|val| val.trim().contains("zsh"))
 }
 
 pub(super) const fn render_completion_script(zsh: bool) -> &'static str {

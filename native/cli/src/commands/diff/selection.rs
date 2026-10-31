@@ -61,6 +61,7 @@ fn field<'v>(target: &'v Value, key: &str) -> &'v str {
     target
         .get(key)
         .and_then(Value::as_str)
+        .map(str::trim)
         .unwrap_or_default()
 }
 

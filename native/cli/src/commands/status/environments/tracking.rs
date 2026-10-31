@@ -44,6 +44,10 @@ impl Environments {
         method: &str,
         params: &Value,
     ) -> io::Result<(Value, String)> {
+        let method = method.trim();
+        if method.is_empty() {
+            return Err(io::Error::other("identity callback method is empty"));
+        }
         let result = self.host(root)?.call(method, params);
         match result {
             Ok(value) => Ok((value, self.host(root)?.take_stdout())),

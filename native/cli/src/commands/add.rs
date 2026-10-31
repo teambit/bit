@@ -97,8 +97,9 @@ fn run_workspace(
     };
     workspace_command::checkout_lifecycle::before(&startup)?;
     let execute = |output: &bit_install::output::Output| {
-        if !prepared.plan.components().is_empty() {
-            output.status(&format!("loading {} component(s)", prepared.plan.components().len()));
+        let component_count = prepared.plan.components().len();
+        if component_count > 0 {
+            output.status(&format!("loading {component_count} component(s)"));
         }
         workspace_command::checkout_lifecycle::loaded(&startup);
         execution::run(root, prepared, options.json, Chalk::detect(args), output)

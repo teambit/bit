@@ -21,16 +21,7 @@ pub(super) fn render(
     progress: &Progress,
 ) -> io::Result<()> {
     output.status("fetching status");
-    for index in 0..loads {
-        output.status(&format!("loading {loaded} component(s)"));
-        if index == 0 {
-            output.raw(&progress.load_stdout);
-        }
-    }
-    if loads == 0 {
-        output.raw(&progress.load_stdout);
-    }
-    output.raw(&progress.issue_stdout);
+    render_loads(output, loaded, loads, progress);
     if progress.main_count > 0 {
         let reason = "main components of the current lane to check for updates";
         output.status(&format!("importing {} components {reason}", progress.main_count));
@@ -52,6 +43,21 @@ pub(super) fn render(
         output.status(&format!("successfully imported {} objects {reason}", progress.forked_count));
     }
     Ok(())
+}
+
+fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progress) {
+    for index in 0..loads {
+        output.status(&format!("loading {loaded} component(s)"));
+        if index == 0 && !progress.load_stdout.is_empty() {
+            output.raw(&progress.load_stdout);
+        }
+    }
+    if loads == 0 && !progress.load_stdout.is_empty() {
+        output.raw(&progress.load_stdout);
+    }
+    if !progress.issue_stdout.is_empty() {
+        output.raw(&progress.issue_stdout);
+    }
 }
 
 fn forked_lane_reason(forked_id: Option<&str>) -> String {

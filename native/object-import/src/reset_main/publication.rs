@@ -15,12 +15,7 @@ pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
         plan.input.head_only,
         plan.input.force,
     )?;
-    if fresh.object != plan.object
-        || fresh.bitmap != plan.bitmap
-        || fresh.index != plan.index
-        || fresh.history != plan.history
-        || fresh.controls != plan.controls
-    {
+    if !plan_inputs_unchanged(&fresh, plan) {
         return Err(invalid("reset workspace changed during preparation"));
     }
     write_object(&plan.input.root, &plan.object)?;
@@ -67,4 +62,12 @@ pub(crate) fn validate_file_id(file_id: &str) -> io::Result<()> {
         return Err(invalid("reset bitmap history receipt"));
     }
     Ok(())
+}
+
+fn plan_inputs_unchanged(fresh: &Plan, plan: &Plan) -> bool {
+    fresh.object == plan.object
+        && fresh.bitmap == plan.bitmap
+        && fresh.index == plan.index
+        && fresh.history == plan.history
+        && fresh.controls == plan.controls
 }

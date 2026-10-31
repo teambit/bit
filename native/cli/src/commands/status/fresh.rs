@@ -50,7 +50,7 @@ impl Pending {
             return Err(decline("command dependency cache receipt"));
         };
         Ok(Self {
-            identity: text(cache.get("identity"))?.to_string(),
+            identity: text(cache.get("identity"))?.trim().to_string(),
             raw_data: raw_data.to_string(),
             cacheable,
             read_set: read_set.clone(),

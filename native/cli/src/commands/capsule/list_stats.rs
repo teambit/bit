@@ -66,7 +66,7 @@ pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
             value
                 .get("originPath")
                 .and_then(Value::as_str)
-                .is_some()
+                .is_some_and(|origin_path| !origin_path.trim().is_empty())
                 && value
                     .get("kind")
                     .and_then(Value::as_str)

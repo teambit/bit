@@ -72,13 +72,7 @@ fn plans(receipt: &Value) -> io::Result<Vec<Plan>> {
             &plan.target,
             &plan.version_data,
         )?;
-        if plan.component.config
-            .iter()
-            .any(|(key, val)| {
-                bit_install::config::aspect_id_without_version(key) == "teambit.pkg/pkg"
-                    && val["packageJson"]["name"].is_string()
-            })
-        {
+        if has_custom_pkg_name(&plan.component.config) {
             plan.component.package_name = bit_install::workspace::component_package_name(
                 &plan.component.id,
                 plan.version_data["bindingPrefix"].as_str(),
@@ -87,4 +81,13 @@ fn plans(receipt: &Value) -> io::Result<Vec<Plan>> {
         }
     }
     Ok(plans)
+}
+
+fn has_custom_pkg_name(config: &serde_json::Map<String, Value>) -> bool {
+    config
+        .iter()
+        .any(|(key, val)| {
+            bit_install::config::aspect_id_without_version(key) == "teambit.pkg/pkg"
+                && val["packageJson"]["name"].is_string()
+        })
 }

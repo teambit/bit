@@ -78,12 +78,16 @@ impl Save {
 fn identities(value: &Value) -> io::Result<Vec<String>> {
     array(Some(value), "stash identities")?
         .iter()
-        .map(|id| text(Some(id)).map(str::to_owned))
+        .map(|id| text(Some(id)).map(|raw| raw.trim().to_owned()))
         .collect()
 }
 
 fn check(value: &Value, token: &str) -> io::Result<()> {
-    if value["token"] == token { Ok(()) } else { Err(decline("stash receipt token")) }
+    if value["token"].as_str().map(str::trim) == Some(token.trim()) {
+        Ok(())
+    } else {
+        Err(decline("stash receipt token"))
+    }
 }
 
 impl super::Planned {

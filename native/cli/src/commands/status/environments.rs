@@ -279,6 +279,8 @@ fn stored_env(context: &Value, target: &Value) -> String {
                 })
         })
         .and_then(|env| env["data"]["id"].as_str())
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
         .unwrap_or("teambit.harmony/node")
         .to_owned()
 }

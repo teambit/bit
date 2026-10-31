@@ -42,17 +42,21 @@ impl CacheWrites {
     }
 
     pub(in crate::commands::status) fn retain_callback_stdout(&self, output: &str) {
-        self.callbacks.load_stdout
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .push_str(output);
+        if !output.is_empty() {
+            self.callbacks.load_stdout
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .push_str(output);
+        }
     }
 
     pub(in crate::commands::status) fn retain_callback_startup(&self, output: &str) {
-        self.callbacks.startup_stdout
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .push_str(output);
+        if !output.is_empty() {
+            self.callbacks.startup_stdout
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .push_str(output);
+        }
     }
 }
 

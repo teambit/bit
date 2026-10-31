@@ -164,7 +164,14 @@ fn historical_versions(rows: &[Value]) -> io::Result<Vec<String>> {
         .map(|row| {
             row["log"]["tag"]
                 .as_str()
-                .or_else(|| row["log"]["hash"].as_str())
+                .map(str::trim)
+                .filter(|tag| !tag.is_empty())
+                .or_else(|| {
+                    row["log"]["hash"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|hash| !hash.is_empty())
+                })
                 .map(str::to_string)
                 .ok_or_else(|| decline("log-file historical version"))
         })

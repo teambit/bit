@@ -360,8 +360,9 @@ fn is_supported_component(entry: &BitmapEntry, component: &WorkspaceComponent) -
 }
 
 fn resolve_main_file(entry: &BitmapEntry, component: &WorkspaceComponent) -> String {
-    if !entry.main_file.is_empty() {
-        return entry.main_file.clone();
+    let trimmed = entry.main_file.trim();
+    if !trimmed.is_empty() {
+        return trimmed.to_owned();
     }
     for candidate in ["index.ts", "index.tsx", "index.js", "index.jsx"] {
         if component.files

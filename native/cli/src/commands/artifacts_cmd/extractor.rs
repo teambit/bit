@@ -111,10 +111,11 @@ fn resolve_targets(
     pattern: &str,
     formatter: &Formatter,
 ) -> Result<Vec<TargetComponent>, Failure> {
-    if !pattern.contains(['*', ',', '!', '$', ':']) {
-        return resolve_literal_target(scope_dir, bitmap, pattern);
+    let trimmed = pattern.trim();
+    if !trimmed.contains(['*', ',', '!', '$', ':']) {
+        return resolve_literal_target(scope_dir, bitmap, trimmed);
     }
-    let entries = selection::resolve_pattern_entries(root, bitmap, pattern, formatter.chalk)?;
+    let entries = selection::resolve_pattern_entries(root, bitmap, trimmed, formatter.chalk)?;
     Ok(entries
         .into_iter()
         .map(target_from_bitmap_entry)

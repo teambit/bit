@@ -86,6 +86,7 @@ fn head(model: &Value) -> io::Result<&str> {
 }
 
 pub(in crate::workspace::engine::command) fn label(model: &Value, hash: &str) -> String {
+    let hash = hash.trim();
     for field in ["versions", "orphanedVersions"] {
         if let Some(tags) = model[field].as_object()
             && let Some((tag, _)) = tags

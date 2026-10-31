@@ -116,7 +116,7 @@ fn filter_pattern(
 fn pattern_set<'a>(known: &[String], pattern: &'a [String]) -> io::Result<HashSet<&'a String>> {
     let mut seen = HashSet::new();
     for identity in pattern {
-        if !seen.insert(identity) || !known.contains(identity) {
+        if identity.trim().is_empty() || !seen.insert(identity) || !known.contains(identity) {
             return Err(invalid("snap pattern identity"));
         }
     }

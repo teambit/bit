@@ -16,9 +16,10 @@ impl Projection {
         self.selected
             .iter()
             .filter_map(|target| {
+                let target_id = row_identity(target)?;
                 self.components
                     .iter()
-                    .find(|component| component["identity"] == target["identity"])
+                    .find(|component| row_identity(component) == Some(target_id))
                     .cloned()
             })
             .collect()

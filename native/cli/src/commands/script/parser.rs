@@ -332,9 +332,10 @@ fn render_log_arg(arg: &str, component_count: usize) -> Option<String> {
 }
 
 fn eval_template_expr(expr: &str, component_count: usize) -> String {
-    if expr.contains("components") && expr.contains("length") {
+    let trimmed = expr.trim();
+    if trimmed.contains("components") && trimmed.contains("length") {
         component_count.to_string()
     } else {
-        expr.to_owned()
+        trimmed.to_owned()
     }
 }

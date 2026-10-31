@@ -106,7 +106,11 @@ fn hit(cache: &Path, path: &Path, mtime: f64, enabled: bool) -> io::Result<Optio
     if !enabled {
         return Ok(None);
     }
-    let key = path.to_str().ok_or_else(|| invalid("docs cache source key"))?;
+    let key = path
+        .to_str()
+        .map(str::trim)
+        .filter(|key| !key.is_empty())
+        .ok_or_else(|| invalid("docs cache source key"))?;
     let Some(entry) = bit_object_import::read_dependency_cache(cache, key)? else {
         return Ok(None);
     };

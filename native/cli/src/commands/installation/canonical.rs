@@ -174,7 +174,17 @@ pub(super) fn deps_graph_enabled(root: &Path) -> io::Result<bool> {
     };
     Ok(features.is_some_and(|features| {
         features
+            .trim()
+            .trim_matches('"')
+            .trim_matches('\'')
             .split(',')
-            .any(|feature| feature.trim() == "deps-graph")
+            .any(|feature| {
+                feature
+                    .trim()
+                    .trim_matches('"')
+                    .trim_matches('\'')
+                    .trim()
+                    == "deps-graph"
+            })
     }))
 }

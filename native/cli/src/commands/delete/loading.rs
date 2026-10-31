@@ -49,15 +49,7 @@ fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io:
         .filter(|name| !name.is_empty())
         .unwrap_or(fallback_name);
     let version = row["version"].as_str().unwrap_or_default();
-    let scope = row["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| {
-            row["defaultScope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-        })
-        .unwrap_or(fallback_scope);
+    let scope = row_scope_or_default(row, fallback_scope);
     let id = format!(
         "{}{}{name}{}",
         scope,
@@ -69,4 +61,16 @@ fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io:
         chalk.bold(main),
         chalk.bold(&id),
     ))
+}
+
+fn row_scope_or_default<'a>(row: &'a Value, fallback_scope: &'a str) -> &'a str {
+    row["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+        })
+        .unwrap_or(fallback_scope)
 }

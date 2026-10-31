@@ -178,14 +178,7 @@ fn planned_tasks(version: &mut Value, allocation: &Value) -> io::Result<()> {
     };
     let rows = tasks.as_array().ok_or_else(|| invalid("snapshot planned task list"))?;
     for task in rows {
-        if !task["taskId"].is_string()
-            || !task["taskName"].is_string()
-            || task
-                .get("taskDescription")
-                .is_some_and(|description| !description.is_string())
-        {
-            return Err(invalid("snapshot planned task descriptor"));
-        }
+        validate_planned_task(task)?;
     }
     let extensions =
         version["extensions"].as_array_mut().ok_or_else(|| invalid("snapshot extensions"))?;
@@ -198,6 +191,20 @@ fn planned_tasks(version: &mut Value, allocation: &Value) -> io::Result<()> {
         builder["data"] = json!({"plannedTasks": tasks});
     } else {
         extensions.push(json!({"name": BUILDER, "config": {}, "data": {"plannedTasks": tasks}}));
+    }
+    Ok(())
+}
+
+fn validate_planned_task(task: &Value) -> io::Result<()> {
+    let valid_id = task["taskId"]
+        .as_str()
+        .is_some_and(|id| !id.trim().is_empty());
+    let valid_name = task["taskName"]
+        .as_str()
+        .is_some_and(|name| !name.trim().is_empty());
+    let valid_desc = task.get("taskDescription").is_none_or(Value::is_string);
+    if !valid_id || !valid_name || !valid_desc {
+        return Err(invalid("snapshot planned task descriptor"));
     }
     Ok(())
 }

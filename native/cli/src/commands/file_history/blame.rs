@@ -216,11 +216,14 @@ fn cells(
                 hash[..hash.len().min(9)].to_string(),
                 row["tag"]
                     .as_str()
+                    .map(str::trim)
                     .unwrap_or_default()
                     .to_string(),
                 text(row.get("username"))?.to_string(),
                 row["date"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|date| !date.is_empty())
                     .unwrap_or("<N/A>")
                     .to_string(),
                 message.to_string(),

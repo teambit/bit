@@ -128,7 +128,8 @@ impl Workflow {
             }
             "--skip-tasks" => {
                 self.pipeline.skip_tasks = Some(
-                    next.filter(|value| !value.is_empty() && !value.starts_with('-'))?
+                    next.map(str::trim)
+                        .filter(|value| !value.is_empty() && !value.starts_with('-'))?
                         .to_string(),
                 );
                 return Some(1);

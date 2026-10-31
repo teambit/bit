@@ -69,7 +69,7 @@ impl Settings {
             }
             match token {
                 "--scope" | "-s" => {
-                    arguments.next().ok_or_else(|| invalid("tester scope"))?;
+                    non_empty_arg(&mut arguments, "tester scope")?;
                 }
                 "--env" | "-e" => {
                     self.environment = Some(non_empty_arg(&mut arguments, "tester environment")?);

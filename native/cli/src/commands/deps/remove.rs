@@ -30,7 +30,8 @@ pub(super) fn prepare_remove(
     spec: &RemoveSpec<'_>,
     chalk: Chalk,
 ) -> Result<(BitmapMutation, RemovedByComp, bool), Failure> {
-    let matched = selection::resolve_pattern_entries(&mutation.root, bitmap, spec.pattern, chalk)?;
+    let pattern = spec.pattern.trim();
+    let matched = selection::resolve_pattern_entries(&mutation.root, bitmap, pattern, chalk)?;
     let ctx = WorkspaceDepsContext::load(&mutation.root)?;
     let dep_field = if spec.dev {
         "devDependencies"

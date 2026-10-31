@@ -29,7 +29,10 @@ impl Guard {
         }
         let disabled = env::var("BIT_DISABLE_SPINNER")
             .is_ok_and(|value| {
-                let trimmed = value.trim();
+                let trimmed = value
+                    .trim()
+                    .trim_matches(['"', '\''])
+                    .trim();
                 ["true", "1", "yes", "y", "on"]
                     .iter()
                     .any(|truthy| trimmed.eq_ignore_ascii_case(truthy))

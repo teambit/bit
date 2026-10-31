@@ -37,12 +37,7 @@ pub(super) fn overlaid(
             .ok_or_else(|| unsupported("rename callback source root"))?,
     );
     let path = Path::new(path);
-    if !path.starts_with(root)
-        || root
-            .file_name()
-            .and_then(|name| name.to_str())
-            .is_none_or(|name| !name.starts_with("bit-native-callback-"))
-    {
+    if !is_private_callback_root(root, path) {
         return Err(unsupported("rename callback source outside private root"));
     }
     let temporary = std::env::temp_dir().canonicalize()?;
@@ -59,4 +54,12 @@ pub(super) fn overlaid(
         path.parent().ok_or_else(|| unsupported("rename callback source path"))?,
     )?;
     super::super::required(&mut plan.observed, path)
+}
+
+fn is_private_callback_root(root: &Path, path: &Path) -> bool {
+    path.starts_with(root)
+        && root
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.starts_with("bit-native-callback-"))
 }

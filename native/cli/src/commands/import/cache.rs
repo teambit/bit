@@ -36,7 +36,9 @@ pub(super) fn prepare(
     }
     if context["currentLaneId"]
         .as_str()
-        .is_none_or(|lane| lane.ends_with("/main"))
+        .map(str::trim)
+        .filter(|lane| !lane.is_empty())
+        .is_none_or(|lane| lane == "main" || lane.ends_with("/main"))
     {
         let docs = documentation(root, &targets)?;
         return Ok(Some(Prepared { engine, context, capture: None, docs }));

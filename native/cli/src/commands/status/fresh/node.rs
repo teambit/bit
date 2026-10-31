@@ -117,19 +117,26 @@ fn resolve_package(from: &Path, name: &str) -> Option<PathBuf> {
 
 fn builtin_names(modules: &[String]) -> Vec<String> {
     let mut names: Vec<String> = Vec::new();
-    for module in modules {
-        let forms = if module.starts_with("node:") {
-            vec![module.clone()]
-        } else {
-            vec![module.clone(), format!("node:{module}")]
-        };
-        for form in forms {
-            if !names.contains(&form) {
-                names.push(form);
-            }
+    for raw_module in modules {
+        let module = raw_module.trim();
+        if !module.is_empty() {
+            push_module_forms(&mut names, module);
         }
     }
     names
+}
+
+fn push_module_forms(names: &mut Vec<String>, module: &str) {
+    let forms = if module.starts_with("node:") {
+        vec![module.to_owned()]
+    } else {
+        vec![module.to_owned(), format!("node:{module}")]
+    };
+    for form in forms {
+        if !names.contains(&form) {
+            names.push(form);
+        }
+    }
 }
 
 fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {

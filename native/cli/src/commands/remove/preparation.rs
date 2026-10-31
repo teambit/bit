@@ -125,7 +125,14 @@ fn row_identity(key: &str, row: &Value) -> Option<String> {
 fn main_exists(root: &Path, row: &Value) -> bool {
     row["rootDir"]
         .as_str()
-        .zip(row["mainFile"].as_str())
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .zip(
+            row["mainFile"]
+                .as_str()
+                .map(str::trim)
+                .filter(|main| !main.is_empty()),
+        )
         .is_some_and(|(directory, main)| {
             root.join(directory)
                 .join(main)

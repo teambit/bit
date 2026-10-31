@@ -59,6 +59,9 @@ fn initial_scope(
     generated: bool,
     existing: Option<String>,
 ) -> io::Result<String> {
+    let existing = existing
+        .map(|scope| scope.trim().to_owned())
+        .filter(|scope| !scope.is_empty());
     let result = existing.map_or_else(|| identity::scope(facts, directory, name, options), Ok);
     match result {
         Err(error)

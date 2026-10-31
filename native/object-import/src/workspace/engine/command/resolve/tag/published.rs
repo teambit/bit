@@ -18,17 +18,7 @@ pub(in crate::workspace::engine) fn apply(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.resolve.as_mut().ok_or_else(|| invalid("tag owner absent"))?;
-    if retained.record.token != input.token
-        || retained.tag
-            .as_ref()
-            .is_none_or(|options| {
-                options.soft
-                    || options.exact_version.is_some()
-                    || options.versions_file.is_some()
-            })
-        || retained.snap.as_ref().is_none_or(|options| !options.policy.skip_published_versions)
-        || !matches!(retained.finalized, publication::Phase::Pending(_))
-    {
+    if !can_apply_overrides(retained, &input.token) {
         return Err(invalid("tag registry override state"));
     }
     let replacements = update(retained, input)?;
@@ -73,4 +63,17 @@ fn replace_ids(value: &mut Value, replacements: &HashMap<String, String>) {
         }
         _ => {}
     }
+}
+
+fn can_apply_overrides(retained: &Retained, token: &str) -> bool {
+    retained.record.token == token
+        && retained.tag
+            .as_ref()
+            .is_some_and(|options| {
+                !options.soft
+                    && options.exact_version.is_none()
+                    && options.versions_file.is_none()
+            })
+        && retained.snap.as_ref().is_some_and(|options| options.policy.skip_published_versions)
+        && matches!(retained.finalized, publication::Phase::Pending(_))
 }

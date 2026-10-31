@@ -28,7 +28,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
 }
 
 fn elapsed_millis(started: &Instant) -> io::Result<u64> {
-    u64::try_from(started.elapsed().as_millis()).map_err(io::Error::other)
+    Ok(u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX))
 }
 
 fn invalid(message: &str) -> io::Error {

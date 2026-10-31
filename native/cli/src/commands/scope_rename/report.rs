@@ -17,9 +17,9 @@ pub(super) fn render(
         let plan = batch.plan(index)?;
         affected.push(format.item(&format!(
             "{} {}-> {}",
-            plan.identity.source,
+            plan.identity.source.trim(),
             if plan.identity.exported { "(deprecated) " } else { "" },
-            plan.identity.target,
+            plan.identity.target.trim(),
         )));
     }
     let changed = refactored

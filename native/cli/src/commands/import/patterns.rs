@@ -107,15 +107,17 @@ fn component_id(component: &Value) -> io::Result<String> {
         .get("id")
         .or_else(|| component.get("identity"))
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         id.to_owned()
     } else {
         let object = component["id"].as_object().ok_or_else(|| decline("remote list id"))?;
-        let name = text(object.get("name"))?;
+        let name = text(object.get("name"))?.trim();
         match object
             .get("scope")
             .and_then(Value::as_str)
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
         {
             Some(scope) => format!("{scope}/{name}"),
@@ -130,6 +132,7 @@ fn component_id(component: &Value) -> io::Result<String> {
         .or_else(|| component.get("head"))
         .or_else(|| component["id"].get("version"))
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| decline("remote list id"))?;
     Ok(format!("{base}@{version}"))

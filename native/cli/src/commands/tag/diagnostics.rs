@@ -180,15 +180,18 @@ fn requested_exact_version<'a>(
     options: &'a Options,
 ) -> Option<&'a str> {
     if options.mode == Mode::Persist {
-        return target["nextVersion"]["version"].as_str();
+        return target["nextVersion"]["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty());
     }
     for pattern in &options.selection.patterns {
         if let Some((base, ver)) = pattern.rsplit_once('@')
             && !base.is_empty()
-            && !ver.is_empty()
+            && !ver.trim().is_empty()
             && matches_single_pattern(identity, name, base)
         {
-            return Some(ver);
+            return Some(ver.trim());
         }
     }
     options.release.exact_version.as_deref()

@@ -334,7 +334,8 @@ impl Scan<'_> {
             array(self.context.get("targets"), "targets")?
                 .iter()
                 .filter_map(|row| row.get("directory").and_then(Value::as_str))
-                .filter(|dir| *dir != ".")
+                .map(str::trim)
+                .filter(|dir| !dir.is_empty() && *dir != ".")
                 .map(|dir| self.root.join(dir))
                 .collect()
         } else {

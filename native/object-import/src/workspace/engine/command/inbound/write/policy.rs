@@ -69,7 +69,10 @@ impl super::Prepared {
         self.write_deps.is_some()
     }
     pub(in super::super) fn dependency_target(&self) -> io::Result<&str> {
-        self.write_deps.as_deref().ok_or_else(|| invalid("inbound dependency target absent"))
+        self.write_deps
+            .as_deref()
+            .filter(|target| !target.trim().is_empty())
+            .ok_or_else(|| invalid("inbound dependency target absent"))
     }
     pub(in super::super) fn root(&self) -> &Path {
         &self.root

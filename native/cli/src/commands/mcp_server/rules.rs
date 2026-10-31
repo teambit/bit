@@ -52,7 +52,7 @@ pub(super) fn parse_rules(rest: &[&str]) -> Option<RulesOptions> {
             "--consumer-project=false" => consumer_project = false,
             "--force-standard" | "--force-standard=true" => force_standard = true,
             "--force-standard=false" => force_standard = false,
-            val if !val.starts_with('-') && !val.is_empty() && editor.is_none() => {
+            val if !val.starts_with('-') && !val.trim().is_empty() && editor.is_none() => {
                 editor = Some(val.to_owned());
             }
             _ => return None,

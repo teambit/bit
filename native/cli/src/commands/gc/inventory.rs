@@ -241,6 +241,7 @@ fn parse_one_remote_lane_file(
     for item in items {
         let Some(head) = item["head"]
             .as_str()
+            .map(str::trim)
             .filter(|val| !val.is_empty())
         else {
             continue;

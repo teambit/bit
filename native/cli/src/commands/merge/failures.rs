@@ -36,6 +36,7 @@ fn row_identity(row: &Value) -> Option<String> {
     if let Some(identity) = row["id"]
         .as_str()
         .or_else(|| row["identity"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         return Some(identity.to_owned());
@@ -44,10 +45,12 @@ fn row_identity(row: &Value) -> Option<String> {
     let name = object
         .get("name")?
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())?;
     let base = match object
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         Some(scope) => format!("{scope}/{name}"),
@@ -56,6 +59,7 @@ fn row_identity(row: &Value) -> Option<String> {
     match object
         .get("version")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         Some(version) => Some(format!("{base}@{version}")),

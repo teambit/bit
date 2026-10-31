@@ -27,7 +27,8 @@ pub(in crate::commands) fn restrict(root: &Path, capture: &mut Capture) {
 }
 
 fn identity(value: &str) -> &str {
-    value.split_once('@').map_or(value, |(identity, _)| identity)
+    let trimmed = value.trim();
+    trimmed.split_once('@').map_or(trimmed, |(identity, _)| identity.trim())
 }
 
 pub(super) struct Manifests(Vec<(PathBuf, Option<String>)>);

@@ -160,7 +160,10 @@ fn sources_for_entry(
     for origin in raw_origins {
         append_origin_sources(&mut out, origin, &ictx.ws_ids, &self_id);
     }
-    let env_id = comp.map_or("teambit.harmony/node", |item| item.env_id.as_str());
+    let env_id = comp
+        .map(|item| item.env_id.as_str())
+        .filter(|id| !id.trim().is_empty())
+        .unwrap_or("teambit.harmony/node");
     for default_aspect in [env_id, ENVS_ASPECT] {
         let default_bare = aspect_id_without_version(default_aspect);
         if !out

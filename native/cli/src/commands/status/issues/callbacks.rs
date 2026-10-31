@@ -26,7 +26,7 @@ pub(super) fn merge(
         .iter()
         .filter_map(|row| row.get("callbackObject"))
     {
-        let kind = text(object.get("type"))?;
+        let kind = text(object.get("type"))?.trim();
         if ignored.contains(kind) {
             continue;
         }

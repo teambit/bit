@@ -125,7 +125,7 @@ fn component_not_found(directory: &str) -> Value {
 }
 
 fn record_status_invalid(target: &Value, error: Value, captured: &mut Capture) -> io::Result<()> {
-    let identity = text(target.get("identity"))?;
+    let identity = text(target.get("identity"))?.trim();
     captured.invalid.insert(identity.to_owned(), error);
     captured.components.push(Component {
         ignored: Vec::new(),

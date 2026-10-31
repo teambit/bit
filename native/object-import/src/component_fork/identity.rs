@@ -113,7 +113,9 @@ pub(super) fn source_id<'a>(
         .split('@')
         .next()
         .unwrap_or_default();
-    id.split_once('/').ok_or_else(|| unsupported("fork requires scoped source identity"))
+    id.split_once('/')
+        .filter(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+        .ok_or_else(|| unsupported("fork requires scoped source identity"))
 }
 pub(super) fn leaf(name: &str) -> &str {
     name.rsplit('/').next().unwrap_or(name)

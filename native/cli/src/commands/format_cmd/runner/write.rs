@@ -35,7 +35,11 @@ pub(super) fn publish_components(
     for (index, component) in components.iter().enumerate() {
         progress.component(output, index);
         let end = offset + component.files.len();
-        if let Some(error) = publish(&inputs[offset..end], &outputs[offset..end])? {
+        let (Some(in_slice), Some(out_slice)) = (inputs.get(offset..end), outputs.get(offset..end))
+        else {
+            return Err(invalid("formatter file slice bounds"));
+        };
+        if let Some(error) = publish(in_slice, out_slice)? {
             return Ok(Some(error));
         }
         offset = end;

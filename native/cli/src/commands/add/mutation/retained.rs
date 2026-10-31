@@ -53,8 +53,9 @@ impl Retained {
     pub(super) fn missing(&self, identities: &[String]) -> Vec<String> {
         identities
             .iter()
-            .filter(|identity| !self.rows.contains_key(*identity))
-            .cloned()
+            .map(|identity| identity.trim())
+            .filter(|identity| !identity.is_empty() && !self.rows.contains_key(*identity))
+            .map(str::to_owned)
             .collect()
     }
     pub(super) fn rows(&self, identities: &[String]) -> io::Result<Vec<Value>> {

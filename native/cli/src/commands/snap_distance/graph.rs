@@ -159,11 +159,19 @@ pub(super) fn load_version_history_with_local_versions(
     };
     let mut known: HashSet<String> = versions
         .iter()
-        .filter_map(|ver| ver["hash"].as_str().map(str::to_owned))
+        .filter_map(|ver| {
+            ver["hash"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+                .map(str::to_owned)
+        })
         .collect();
     let mut stack: Vec<String> = heads
         .iter()
-        .map(|&head| head.to_owned())
+        .map(|&head| head.trim())
+        .filter(|head| !head.is_empty())
+        .map(str::to_owned)
         .collect();
     while let Some(hash) = stack.pop() {
         if known.contains(&hash) {

@@ -16,17 +16,14 @@ pub(super) struct Request<'a> {
 }
 
 pub(super) fn read(request: Request<'_>) -> io::Result<Vec<Value>> {
-    let Request {
+    let engine = request.engine;
+    let identities = selected_identities(
         engine,
-        root,
-        context,
-        capture,
-        selected,
-        pattern,
-        requested_version,
-        chalk,
-    } = request;
-    let identities = selected_identities(engine, root, selected, capture, pattern)?;
+        request.root,
+        request.selected,
+        request.capture,
+        request.pattern,
+    )?;
     identities
         .iter()
         .map(|target| {
@@ -35,11 +32,21 @@ pub(super) fn read(request: Request<'_>) -> io::Result<Vec<Value>> {
                     .get("identity")
                     .or_else(|| target.get("id")),
             )?;
-            let target_version = requested_version
+            let target_version = request.requested_version
                 .or_else(|| target["version"].as_str())
                 .or_else(|| target["head"].as_str())
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
                 .ok_or_else(|| decline("parent diff target has no version"))?;
-            one_parent(engine, root, context, capture, identity, target_version, chalk)
+            one_parent(
+                engine,
+                request.root,
+                request.context,
+                request.capture,
+                identity,
+                target_version,
+                request.chalk,
+            )
         })
         .collect()
 }

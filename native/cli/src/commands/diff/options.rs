@@ -96,13 +96,14 @@ fn push_positional(options: &mut Options, arg: &str) -> Option<()> {
 }
 
 fn file_list(value: &str) -> Option<Vec<String>> {
-    let files: Vec<String> = value
+    let trimmed = value.trim();
+    let files: Vec<String> = trimmed
         .split(',')
         .map(str::trim)
         .filter(|path| !path.is_empty())
         .map(str::to_string)
         .collect();
-    (!files.is_empty() && !value.starts_with('-')).then_some(files)
+    (!files.is_empty() && !trimmed.starts_with('-')).then_some(files)
 }
 
 fn set_boolean(options: &mut Options, flag: &str) -> bool {

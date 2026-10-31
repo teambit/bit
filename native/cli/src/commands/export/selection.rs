@@ -57,6 +57,7 @@ fn candidate_ids(candidates: &Value) -> io::Result<Vec<String>> {
             row.as_str()
                 .or_else(|| row["id"].as_str())
                 .or_else(|| row["identity"].as_str())
+                .map(str::trim)
                 .filter(|value| !value.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| io::Error::other("outbound candidate ID"))

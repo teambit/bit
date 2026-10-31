@@ -150,6 +150,9 @@ fn apply_bitmap_entry_updates(
 ) {
     for &(comp_name, upd) in bitmap_updates {
         let comp_name = comp_name.trim();
+        if comp_name.is_empty() {
+            continue;
+        }
         let Some(entry) = bitmap.entries
             .iter()
             .find(|ent| {

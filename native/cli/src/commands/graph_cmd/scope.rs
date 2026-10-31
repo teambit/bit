@@ -107,6 +107,7 @@ fn validate_bare_scope(scope_dir: &Path) -> Result<String, Failure> {
         bit_object_import::parse_jsonc(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
     val["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .map(str::to_owned)
         .ok_or_else(|| Failure::Declined("missing scope name".into()))

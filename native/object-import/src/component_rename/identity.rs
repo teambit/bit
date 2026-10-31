@@ -28,8 +28,10 @@ pub(super) fn prepare(
         .is_some_and(|scope| !scope.is_empty());
     let source_version = extract_source_version(key, source);
     staged(source_version.as_deref(), source_scope, source_name, exported)?;
-    let source_directory =
-        source["rootDir"].as_str().ok_or_else(|| unsupported("rename component root"))?;
+    let source_directory = source["rootDir"]
+        .as_str()
+        .filter(|dir| !dir.trim().is_empty())
+        .ok_or_else(|| unsupported("rename component root"))?;
     let target_directory = directory(workspace, target_scope, options, source_directory, exported)?;
     if !preflight {
         destination(root, source_directory, &target_directory)?;

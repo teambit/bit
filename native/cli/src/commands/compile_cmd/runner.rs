@@ -34,6 +34,9 @@ pub(super) fn try_run(
     args: &[OsString],
     options: &Options,
 ) -> io::Result<Option<Outcome>> {
+    if root.as_os_str().is_empty() {
+        return Ok(None);
+    }
     let started = Instant::now();
     let mut plan = match plan::Plan::prepare(root, options) {
         Ok(plan) => plan,

@@ -212,5 +212,6 @@ fn apply_short_new_flags(token: &str, current_dir: &mut bool) -> Option<()> {
 }
 
 fn take_new_val(val: &str) -> Option<String> {
-    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }

@@ -50,7 +50,9 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
         .and_then(|count| usize::try_from(count).ok())
         .ok_or_else(|| decline("native outbound component count"))?;
     let lane = match value.get("lane") {
-        Some(Value::String(lane)) if !lane.is_empty() && lane.contains('/') => Some(lane.clone()),
+        Some(Value::String(lane)) if !lane.trim().is_empty() && lane.trim().contains('/') => {
+            Some(lane.trim().to_owned())
+        }
         Some(Value::Null) | None => None,
         _ => return Err(decline("native outbound lane identity")),
     };

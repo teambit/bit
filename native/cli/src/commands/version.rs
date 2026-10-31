@@ -22,10 +22,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Ok(cli) = NodeCli::find() else {
         return Ok(Outcome::Declined("unable to locate Bit CLI package version".to_owned()));
     };
-    if cli.version.is_empty() {
+    let version = cli.version.trim();
+    if version.is_empty() {
         return Ok(Outcome::Declined("empty Bit CLI version".to_owned()));
     }
-    let text = render_version(&cli.version, json)?;
+    let text = render_version(version, json)?;
     let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
     if json {
         write!(io::stdout(), "{text}")?;

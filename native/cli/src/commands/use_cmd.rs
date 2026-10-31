@@ -59,7 +59,8 @@ fn parse_target(args: &[OsString]) -> Option<String> {
     let [target] = filtered.as_slice() else {
         return None;
     };
-    Some((*target).to_owned())
+    let target = target.trim();
+    (!target.is_empty()).then(|| target.to_owned())
 }
 
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {

@@ -60,9 +60,11 @@ fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {
 fn format_header(meta: &Value, formatter: &Formatter, chalk: Chalk) -> String {
     let timestamp = meta["timestamp"]
         .as_str()
+        .map(str::trim)
         .filter(|ts| !ts.is_empty() && chrono::DateTime::parse_from_rfc3339(ts).is_ok());
     if let Some(command) = meta["command"]
         .as_str()
+        .map(str::trim)
         .filter(|cmd| !cmd.is_empty())
     {
         let title = formatter.title(&format!(r#"details from "bit {command}""#));

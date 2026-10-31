@@ -70,6 +70,7 @@ fn read_context_with(
     startup: &mut crate::commands::status::autosync::Startup,
     setup: ContextSetup,
 ) -> io::Result<(Value, Environments)> {
+    validate_context_paths(root, home)?;
     crate::commands::status::autosync::run(engine, root, startup)?;
     let request = json!({"kind":"statusContext","root":root,"home":home,"history":history});
     let mut context: Value = engine.request(&request)?;
@@ -201,6 +202,13 @@ fn should_record_snapshot(
                         .iter()
                         .any(|aspect| bit_install::policy::split_version(aspect).0 == bare_env)
             })
+}
+
+fn validate_context_paths(root: &Path, home: &Path) -> io::Result<()> {
+    if root.as_os_str().is_empty() || home.as_os_str().is_empty() {
+        return Err(io::Error::other("environment context root or home path is empty"));
+    }
+    Ok(())
 }
 
 fn used_extensions(components: &[WorkspaceComponent]) -> Vec<Value> {

@@ -107,7 +107,11 @@ impl Options {
         if !raw.starts_with("--") {
             return None;
         }
-        let val = match trimmed {
+        let val = match trimmed
+            .trim_matches('"')
+            .trim_matches('\'')
+            .trim()
+        {
             "true" => true,
             "false" => false,
             _ => return None,

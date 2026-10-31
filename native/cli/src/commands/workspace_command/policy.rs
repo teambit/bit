@@ -175,7 +175,7 @@ fn targets(value: &Value, context: &Value) -> io::Result<Vec<Value>> {
                 });
         let files = row.get("files").and_then(Value::as_array);
         let files_ok =
-            files.is_some_and(|files| files.len() <= 4096 && files.iter().all(Value::is_string));
+            files.is_some_and(|files| files.len() <= 4096 && files.iter().all(non_empty_file));
         if identity.is_none() || seen.contains(&identity) || !known || !files_ok {
             return Err(decline("command dependency target receipt"));
         }
@@ -184,10 +184,15 @@ fn targets(value: &Value, context: &Value) -> io::Result<Vec<Value>> {
     Ok(rows.clone())
 }
 
+fn non_empty_file(file: &Value) -> bool {
+    file.as_str()
+        .is_some_and(|path| !path.trim().is_empty())
+}
+
 fn files(row: &Value) -> io::Result<Vec<String>> {
     array(row.get("files"), "target files")?
         .iter()
-        .map(|file| text(Some(file)).map(str::to_string))
+        .map(|file| text(Some(file)).map(|path| path.trim().to_string()))
         .collect()
 }
 

@@ -117,8 +117,9 @@ fn deduplicate_preserve_order(items: &[String]) -> Vec<String> {
     let mut seen = std::collections::HashSet::new();
     let mut result = Vec::new();
     for item in items {
-        if seen.insert(item.clone()) {
-            result.push(item.clone());
+        let trimmed = item.trim();
+        if !trimmed.is_empty() && seen.insert(trimmed.to_owned()) {
+            result.push(trimmed.to_owned());
         }
     }
     result

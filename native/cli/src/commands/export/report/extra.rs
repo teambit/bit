@@ -17,6 +17,7 @@ fn entry_text(entry: &Value) -> Option<&str> {
         .or_else(|| entry["id"].as_str())
         .or_else(|| entry["identity"].as_str())
         .or_else(|| entry["url"].as_str())
+        .map(str::trim)
         .filter(|text| !text.is_empty())
 }
 

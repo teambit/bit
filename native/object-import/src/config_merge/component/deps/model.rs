@@ -53,7 +53,11 @@ impl<'a, 'b> State<'a, 'b> {
                 .map(|entry| &entry["configJson"])
     }
     pub(super) fn add_policy(&mut self, dep: &Value) -> io::Result<()> {
-        let name = dep["dependencyId"].as_str().ok_or_else(|| invalid("policy name"))?;
+        let name = dep["dependencyId"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("policy name"))?;
         let version = dep["value"]["version"].as_str().ok_or_else(|| invalid("policy version"))?;
         if let Some(component) = self.component_for_package(name)
             && self.engine.local(

@@ -106,7 +106,14 @@ fn refreshed(
         let identity = row["identity"]
             .as_str()
             .or_else(|| row["id"].as_str())
-            .map(|id| id.split('@').next().unwrap_or(id));
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .map(|id| {
+                id.split('@')
+                    .next()
+                    .unwrap_or(id)
+                    .trim()
+            });
         let component = components
             .iter()
             .find(|component| Some(component.id.to_string_without_version().as_str()) == identity)

@@ -347,12 +347,14 @@ impl Options {
     /// Return the first `<pattern>@<version>` suffix that is not a valid semver string.
     pub fn invalid_pattern_version(&self) -> Option<&str> {
         for pattern in &self.selection.patterns {
-            if let Some((base, ver)) = pattern.rsplit_once('@')
-                && !base.is_empty()
-                && !ver.is_empty()
-                && node_semver::npm::valid(ver).is_none()
-            {
-                return Some(ver);
+            if let Some((base, ver)) = pattern.rsplit_once('@') {
+                let ver = ver.trim();
+                if !base.trim().is_empty()
+                    && !ver.is_empty()
+                    && node_semver::npm::valid(ver).is_none()
+                {
+                    return Some(ver);
+                }
             }
         }
         None

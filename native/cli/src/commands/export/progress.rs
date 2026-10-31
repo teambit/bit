@@ -114,5 +114,9 @@ fn is_ci_enabled(value: Option<&std::ffi::OsStr>) -> bool {
         return false;
     };
     let trimmed = text.trim();
-    !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+    !trimmed.is_empty()
+        && !trimmed.eq_ignore_ascii_case("false")
+        && !trimmed.eq_ignore_ascii_case("no")
+        && !trimmed.eq_ignore_ascii_case("off")
+        && trimmed != "0"
 }

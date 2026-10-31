@@ -17,7 +17,8 @@ impl Scan<'_> {
             target
                 .get("directory")
                 .or_else(|| target.get("rootDir")),
-        )?;
+        )?
+        .trim();
         if self.behavior.missing_status_invalid
             && missing::status_invalid(self.root, target, directory, captured)?
         {

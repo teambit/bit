@@ -69,7 +69,7 @@ pub(super) fn conflicted(result: &Value, lane: bool) -> io::Result<Vec<String>> 
                     .or_else(|| row.get("id"))
                     .or_else(|| row.get("componentId")),
             )
-            .map(str::to_owned)
+            .map(|id| id.trim().to_owned())
         })
         .collect()
 }

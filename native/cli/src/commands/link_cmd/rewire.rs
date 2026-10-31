@@ -184,6 +184,9 @@ fn strip_extension(path_str: &str) -> String {
 }
 
 pub(super) fn replace_package_name(source: &str, old_name: &str, new_name: &str) -> String {
+    if old_name.is_empty() || new_name.is_empty() || old_name == new_name {
+        return source.to_owned();
+    }
     let mut updated = source.to_owned();
     for quote in ['\'', '"'] {
         for tilde in ["", "~"] {

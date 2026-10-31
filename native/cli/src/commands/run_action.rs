@@ -78,10 +78,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     }
     let action_name = filtered[0].trim();
     let remote = filtered[1].trim();
-    if action_name.is_empty() || remote.is_empty() {
+    let raw_payload = filtered[2].trim();
+    if action_name.is_empty() || remote.is_empty() || raw_payload.is_empty() {
         return None;
     }
-    let payload = serde_json::from_str::<Value>(filtered[2]).ok()?;
+    let payload = serde_json::from_str::<Value>(raw_payload).ok()?;
     Some(Options { action_name: action_name.to_owned(), remote: remote.to_owned(), payload })
 }
 

@@ -350,7 +350,9 @@ fn levels(flags: &Flags) -> Option<(String, Option<String>, Option<String>)> {
         .unwrap_or("patch");
     let pre_release_id = flags
         .string("--prerelease-id")
-        .or_else(|| pre_release.and_then(Value::as_str));
+        .or_else(|| pre_release.and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|id| !id.is_empty());
     Some((
         release_type.to_string(),
         auto_tag.map(str::to_string),

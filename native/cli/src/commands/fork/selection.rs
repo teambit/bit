@@ -10,7 +10,11 @@ pub(super) struct Selected {
     pub target_scope: String,
 }
 pub(super) fn select(root: &Path, options: &Options, state: &Value) -> io::Result<Selected> {
-    let scope = options.scope.clone().map_or_else(|| inventory::default_scope(state), Ok)?;
+    let scope = options.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .map_or_else(|| inventory::default_scope(state), |scope| Ok(scope.to_owned()))?;
     if !options.multiple() {
         return Ok(single(options, state, scope));
     }

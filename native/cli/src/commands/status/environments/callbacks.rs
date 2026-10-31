@@ -262,8 +262,8 @@ fn dependencies(
             .any(|value| value.as_str() == Some(id))
     });
     for id in array(row.get("dependencyIdentities"), "callback dependency identities")? {
-        let id = text(Some(id))?.to_owned();
-        if !component.dependencies.contains(&id) {
+        let id = text(Some(id))?.trim().to_owned();
+        if !id.is_empty() && !component.dependencies.contains(&id) {
             component.dependencies.push(id);
         }
     }

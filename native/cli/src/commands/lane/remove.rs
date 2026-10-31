@@ -16,10 +16,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
         return Ok(Outcome::Declined("outside the native local lane remove grammar".into()));
     };
     if remote {
-        if names
-            .iter()
-            .any(|name| !name.contains('/'))
-        {
+        if !all_scoped_remote_lanes(&names) {
             return Ok(Outcome::Declined("remote lane ID requires its scope".into()));
         }
         return crate::commands::delete::hard::lanes(args, &names, force);
@@ -50,6 +47,16 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
         details: None,
     };
     workspace_command::execute_with(&root, args, "remove", &report, |_| plan.commit())
+}
+
+fn all_scoped_remote_lanes(names: &[String]) -> bool {
+    names
+        .iter()
+        .all(|name| {
+            name.trim()
+                .split_once('/')
+                .is_some_and(|(scope, lane)| !scope.trim().is_empty() && !lane.trim().is_empty())
+        })
 }
 
 fn outside_workspace_remove(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Outcome> {

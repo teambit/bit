@@ -120,9 +120,9 @@ fn packages(issue: &Value) -> io::Result<Vec<String>> {
         .map_err(|_| decline("native command snap issue packages"))?;
     let names = array(Some(&data), "snap issue packages")?
         .iter()
-        .map(|name| text(Some(name)).map(str::to_string))
+        .map(|name| text(Some(name)).map(|raw| raw.trim().to_string()))
         .collect::<io::Result<Vec<_>>>()?;
-    if names.is_empty() {
+    if names.is_empty() || names.iter().any(String::is_empty) {
         return Err(decline("native command snap issue packages"));
     }
     Ok(names)

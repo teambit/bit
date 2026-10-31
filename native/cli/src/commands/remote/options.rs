@@ -25,9 +25,7 @@ impl Options {
             .collect::<Option<Vec<_>>>()?;
         let tokens = tokens
             .into_iter()
-            .filter(|token| {
-                !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false")
-            })
+            .filter(|token| !is_no_color_flag(token))
             .collect::<Vec<_>>();
         let (command, rest) = split_subcommand(&tokens)?;
         let (global, values) = parse_flags_and_values(rest)?;
@@ -83,6 +81,10 @@ fn consume_trailing_values<'a>(
         values.push(rest);
     }
     Some(())
+}
+
+fn is_no_color_flag(token: &str) -> bool {
+    matches!(token, "--no-color" | "--no-color=true" | "--no-color=false")
 }
 
 fn valid_target(value: &str) -> bool {

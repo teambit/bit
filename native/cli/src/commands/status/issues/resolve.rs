@@ -70,9 +70,11 @@ fn ordinary_model(
 fn model_identity(context: &Value, model: &Value) -> Option<String> {
     let name = model["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())?;
     if let Some(scope) = model["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     {
         return Some(format!("{scope}/{name}"));

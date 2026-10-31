@@ -159,7 +159,13 @@ fn default_link(bvm: &Path) -> String {
     fs::read(bvm.join("config").join("config.json"))
         .ok()
         .and_then(|bytes| bit_workspace_config::parse_jsonc(&bytes).ok())
-        .and_then(|config| config["DEFAULT_LINK"].as_str().map(str::to_owned))
+        .and_then(|config| {
+            config["DEFAULT_LINK"]
+                .as_str()
+                .map(str::trim)
+                .filter(|link| !link.is_empty())
+                .map(str::to_owned)
+        })
         .unwrap_or_else(|| "bit".to_string())
 }
 

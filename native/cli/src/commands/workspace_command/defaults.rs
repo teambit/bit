@@ -120,7 +120,11 @@ fn slot_data() -> Value {
 
 /// `/\.(?:bit-app|node-app|react-app)\.[^/]+$/`.
 pub(super) fn app_file(file: &str) -> bool {
-    let name = file.rsplit('/').next().unwrap_or(file);
+    let file = file.trim();
+    let name = file
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(file);
     [".bit-app.", ".node-app.", ".react-app."]
         .iter()
         .any(|marker| {
