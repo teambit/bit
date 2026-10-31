@@ -85,6 +85,15 @@ fn selected_env(
         host.call("environmentIds", &json!({"ids":component.config.keys().collect::<Vec<_>>()}))?;
     let explicit = component.config
         .get("teambit.envs/envs")
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(key, val)| {
+                    (bit_install::policy::split_version(key).0 == "teambit.envs/envs").then_some(
+                        val,
+                    )
+                })
+        })
         .and_then(|config| config["env"].as_str());
     let selected = explicit
         .map_or_else(
@@ -124,8 +133,13 @@ fn non_loaded_workspace_env<'a>(
                 .any(|other| {
                     other.id.to_string_without_version() == base
                         && (other.is_env
-                            || other.env_id == "teambit.envs/env"
-                            || other.config.contains_key("teambit.envs/env"))
+                            || bit_install::policy::split_version(&other.env_id).0
+                                == "teambit.envs/env"
+                            || other.config
+                                .keys()
+                                .any(|key| {
+                                    bit_install::policy::split_version(key).0 == "teambit.envs/env"
+                                }))
                         && !other.dir.join("dist").exists()
                 })
         })

@@ -37,7 +37,7 @@ pub struct AspectEntry {
 impl AspectEntry {
     /// The id `mergeConfigs` compares, ignoring versions.
     fn merge_key(&self) -> (bool, &str) {
-        (self.core, if self.core { &self.id } else { aspect_id_without_version(&self.id) })
+        (self.core, aspect_id_without_version(&self.id))
     }
 
     fn is_removed(&self) -> bool {
@@ -66,11 +66,16 @@ pub fn from_config_object(config: &Map<String, Value>, core_ids: &[String]) -> V
     config
         .iter()
         .filter(|(id, _)| !id.starts_with("file:"))
-        .map(|(id, config)| AspectEntry {
-            id: id.clone(),
-            core: core_ids.iter().any(|core| core == id),
-            config: config.clone(),
-            data: Value::Object(Map::new()),
+        .map(|(id, config)| {
+            let bare = aspect_id_without_version(id);
+            AspectEntry {
+                id: id.clone(),
+                core: core_ids
+                    .iter()
+                    .any(|core| core == id || core == bare),
+                config: config.clone(),
+                data: Value::Object(Map::new()),
+            }
         })
         .collect()
 }
@@ -202,7 +207,7 @@ impl<'a> Merger<'a> {
     fn filter_envs(&mut self, entries: Vec<AspectEntry>) -> Vec<AspectEntry> {
         let envs_entry = entries
             .iter()
-            .find(|entry| entry.id == ENVS_ASPECT);
+            .find(|entry| aspect_id_without_version(&entry.id) == ENVS_ASPECT);
         let env = envs_entry.and_then(|entry| {
             entry
                 .env_config()
@@ -221,7 +226,12 @@ impl<'a> Merger<'a> {
     #[must_use]
     pub fn finish(self) -> Vec<AspectEntry> {
         let mut merged = merge_lists(self.lists);
-        merged.retain(|entry| !self.removed.contains(&entry.id));
+        merged.retain(|entry| {
+            let bare = aspect_id_without_version(&entry.id);
+            !self.removed
+                .iter()
+                .any(|rem| rem == &entry.id || aspect_id_without_version(rem) == bare)
+        });
         merged
     }
 }
@@ -251,7 +261,7 @@ fn drop_envs(mut entries: Vec<AspectEntry>, env: Option<&str>) -> Vec<AspectEntr
         !is_env && !is_core_env(&entry.id)
     });
     for entry in &mut entries {
-        if entry.id == ENVS_ASPECT
+        if aspect_id_without_version(&entry.id) == ENVS_ASPECT
             && let Value::Object(config) = &mut entry.config
         {
             config.remove("env");
@@ -261,7 +271,7 @@ fn drop_envs(mut entries: Vec<AspectEntry>, env: Option<&str>) -> Vec<AspectEntr
 }
 
 fn is_core_env(id: &str) -> bool {
-    CORE_ENVS.contains(&id)
+    CORE_ENVS.contains(&aspect_id_without_version(id))
 }
 
 /// The merged aspects as `{ id: config }`, without Bit's internal `__specific` field.
@@ -286,7 +296,7 @@ pub fn to_config(entries: &[AspectEntry]) -> Map<String, Value> {
 pub fn env_id(entries: &[AspectEntry]) -> String {
     let configured = entries
         .iter()
-        .find(|entry| entry.id == ENVS_ASPECT)
+        .find(|entry| aspect_id_without_version(&entry.id) == ENVS_ASPECT)
         .and_then(AspectEntry::env_config);
     if let Some(env) = configured {
         if is_core_env(env) {

@@ -101,7 +101,12 @@ fn add_variants(
     if !propagate {
         return Ok(false);
     }
-    let Some(config) = nullish(context["workspace"].get(VARIANTS)) else { return Ok(true) };
+    let Some(config) = nullish(
+        crate::commands::update_cmd::aspect_entry(&context["workspace"], VARIANTS)
+            .map(|(_, val)| val),
+    ) else {
+        return Ok(true);
+    };
     let variants = object(config)?
         .iter()
         .map(|(pattern, value)| Ok((pattern.clone(), object(value)?.clone())))
@@ -132,8 +137,9 @@ fn component_id(target: &Value) -> io::Result<ComponentId> {
 
 fn row(entry: aspects::AspectEntry) -> io::Result<Value> {
     if entry.core {
-        let mut value = json!({"name":entry.id,"config":entry.config});
-        if entry.id == "teambit.envs/envs" {
+        let bare = bit_install::config::aspect_id_without_version(&entry.id);
+        let mut value = json!({"name":bare,"config":entry.config});
+        if bare == "teambit.envs/envs" {
             value["data"] = entry.data;
         }
         return Ok(value);

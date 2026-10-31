@@ -53,9 +53,9 @@ pub(crate) fn removed_lane_row(
     let staged = rows
         .iter()
         .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name);
-    let Some(staged) =
-        staged.filter(|row| row["config"]["teambit.component/remove"]["removed"] == true)
-    else {
+    let Some(staged) = staged.filter(|row| {
+        crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
+    }) else {
         return Ok(None);
     };
     let map =

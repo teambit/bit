@@ -23,14 +23,24 @@ pub(super) fn supported(
         && component.config
             .keys()
             .all(|id| {
-                core.contains(id)
-                    && (!bit_install::policy::is_core_env(id) || id == "teambit.react/react")
+                let bare = bit_install::policy::split_version(id).0;
+                (core.contains(id) || core.iter().any(|item| item == bare))
+                    && (!bit_install::policy::is_core_env(id) || bare == "teambit.react/react")
             })
 }
 
 pub(super) fn facts(component: &WorkspaceComponent, issues: bool) -> Value {
     let explicit = component.config
         .get("teambit.envs/envs")
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(key, val)| {
+                    (bit_install::policy::split_version(key).0 == "teambit.envs/envs").then_some(
+                        val,
+                    )
+                })
+        })
         .and_then(|config| config["env"].as_str())
         .is_some();
     let multiple = if explicit {

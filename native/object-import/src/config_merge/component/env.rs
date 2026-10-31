@@ -16,7 +16,11 @@ fn one(engine: &mut Engine<'_>, side: &str) -> io::Result<Value> {
     let list = array(engine.input, side)?;
     let extension = list
         .iter()
-        .find(|entry| entry["name"] == "teambit.envs/envs")
+        .find(|entry| {
+            entry["name"]
+                .as_str()
+                .is_some_and(|name| name.split('@').next() == Some("teambit.envs/envs"))
+        })
         .ok_or_else(|| invalid("missing env extension"))?;
     let id = extension["config"]["env"]
         .as_str()

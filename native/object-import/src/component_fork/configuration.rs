@@ -87,7 +87,11 @@ fn copy_configs(output: &mut Value, configs: &Value) -> io::Result<()> {
     Ok(())
 }
 fn insert_config(output: &mut Value, key: &str, config: &Value) {
-    if !matches!(key, "teambit.pkg/pkg" | "teambit.component/renaming")
+    let bare = match key.split_once('@') {
+        Some((prefix, _)) if !prefix.is_empty() => prefix,
+        _ => key,
+    };
+    if !matches!(bare, "teambit.pkg/pkg" | "teambit.component/renaming")
         && bit_workspace_config::truthy(config)
     {
         output[key] = config.clone();

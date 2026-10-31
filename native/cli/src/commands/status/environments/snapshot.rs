@@ -25,7 +25,7 @@ pub(super) fn configured(engine: &mut Engine, root: &Path, context: &Value) -> i
             .iter()
             .any(|(id, config)| {
                 !matches!(
-                    id.as_str(),
+                    bit_install::policy::split_version(id).0,
                     "teambit.envs/envs"
                         | "teambit.harmony/node"
                         | "teambit.dependencies/dependency-resolver"

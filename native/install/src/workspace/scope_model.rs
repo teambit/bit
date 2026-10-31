@@ -124,12 +124,17 @@ fn uses_env_of_envs(extension: &Value) -> bool {
         })
         .and_then(Value::as_str)
         .unwrap_or_default();
-    aspect_id_without_version(name) == ENV_OF_ENVS
-        || (name == ENVS_ASPECT
+    let bare = aspect_id_without_version(name);
+    bare == ENV_OF_ENVS
+        || (bare == ENVS_ASPECT
             && [extension.get("config"), extension.get("data")]
                 .into_iter()
                 .flatten()
-                .any(|data| data.get("env").and_then(Value::as_str) == Some(ENV_OF_ENVS)))
+                .any(|data| {
+                    data.get("env")
+                        .and_then(Value::as_str)
+                        .is_some_and(|env| aspect_id_without_version(env) == ENV_OF_ENVS)
+                }))
 }
 
 /// Reads models and Versions from a scope's `objects` directory.

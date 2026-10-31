@@ -175,9 +175,12 @@ impl Checks<'_> {
     /// `{ id, issues }` of one component.
     fn missing_dists(&self, component: &Component, target: &Value) -> io::Result<bool> {
         let projected = super::policy::environment_target(self.context, target)?;
-        let env = projected["config"]["extensions"]["teambit.envs/envs"]["env"]
-            .as_str()
-            .unwrap_or("teambit.harmony/node");
+        let env = crate::commands::update_cmd::aspect_entry(
+            &projected["config"]["extensions"],
+            "teambit.envs/envs",
+        )
+        .and_then(|(_, val)| val["env"].as_str())
+        .unwrap_or("teambit.harmony/node");
         let module = runtime_module_path(self.root, component, self.root_components, env);
         let compiler =
             &self.context["environmentFacts"][without_version(&component.identity)]["compiler"];

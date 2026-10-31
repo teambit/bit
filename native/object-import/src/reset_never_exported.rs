@@ -75,6 +75,8 @@ impl Plan {
 
 fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<SelectedRow>> {
     if key.starts_with('$')
+        || key == "_bit_lane"
+        || key == "version"
         || !row.is_object()
         || row["scope"]
             .as_str()
@@ -83,11 +85,17 @@ fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<Selected
         return Ok(None);
     }
     if row["isAvailableOnCurrentLane"] == false
-        || row["config"]["teambit.component/remove"]["removed"] == true
+        || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
     {
         return Err(invalid("never-exported unavailable component"));
     }
-    let name = row["name"].as_str().ok_or_else(|| invalid("never-exported name"))?;
+    let name = row["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .unwrap_or_else(|| key.split('@').next().unwrap_or(key));
+    if name.is_empty() {
+        return Err(invalid("never-exported name"));
+    }
     let scope =
         row["defaultScope"].as_str().ok_or_else(|| invalid("never-exported default scope"))?;
     let version = row["version"].as_str().unwrap_or_default();

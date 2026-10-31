@@ -260,6 +260,13 @@ fn merge_props(env: Option<&Value>, component: &WorkspaceComponent) -> Value {
     let mut merged = Map::new();
     let config = component.config
         .get(PKG_ASPECT)
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(key, value)| {
+                    (crate::config::aspect_id_without_version(key) == PKG_ASPECT).then_some(value)
+                })
+        })
         .and_then(|pkg| pkg.get("packageJson"));
     for props in [env, config].into_iter().flatten() {
         let Value::Object(props) = props else { continue };

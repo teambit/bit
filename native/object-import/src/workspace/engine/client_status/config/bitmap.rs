@@ -155,10 +155,23 @@ pub(in crate::workspace::engine) fn inactive_targets(
                 .filter(|(key, _)| !matches!(key.as_str(), "$schema-version" | "_bit_lane")),
         )
         .filter(|(_, (_, entry))| entry["isAvailableOnCurrentLane"] == false)
-        .map(|(target, (_, entry))| {
-            (target.id, entry["config"]["teambit.component/remove"]["removed"] == true)
-        })
+        .map(|(target, (_, entry))| (target.id, is_config_removed(&entry["config"])))
         .collect())
+}
+
+pub(crate) fn is_config_removed(config: &Value) -> bool {
+    config
+        .as_object()
+        .and_then(|cfg| {
+            cfg.get("teambit.component/remove")
+                .or_else(|| {
+                    cfg.iter()
+                        .find_map(|(key, value)| {
+                            key.starts_with("teambit.component/remove@").then_some(value)
+                        })
+                })
+        })
+        .is_some_and(|rem| rem["removed"] == true)
 }
 fn component_config(config: &Value) -> bool {
     config
@@ -183,7 +196,11 @@ fn aspect_fields(name: &str, value: &Value, fields: &serde_json::Map<String, Val
     if fields.is_empty() {
         return true;
     }
-    match name {
+    let bare = match name.split_once('@') {
+        Some((prefix, _)) if !prefix.is_empty() => prefix,
+        _ => name,
+    };
+    match bare {
         "teambit.dependencies/dependency-resolver" => true,
         "teambit.component/deprecation" => deprecation_config(fields),
         "teambit.component/remove" => removal_config(value, fields),
@@ -345,7 +362,7 @@ pub(in crate::workspace::engine) fn context_bitmap_targets(
             "localOnly":entry["localOnly"] == true,
             "softTagged":entry.get("nextVersion").is_some_and(|value| !value.is_null()),
             "componentConfig":entry.get("config").cloned().unwrap_or(Value::Null),
-            "locallyRemoved":entry["config"]["teambit.component/remove"]["removed"] == true})
+            "locallyRemoved":is_config_removed(&entry["config"])})
         })
         .collect())
 }

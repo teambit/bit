@@ -1,3 +1,4 @@
+pub(crate) use bitmap::is_config_removed;
 pub(in crate::workspace::engine) use bitmap::{
     context_bitmap_targets, context_targets, inactive_targets, targets,
 };

@@ -243,8 +243,8 @@ impl State<'_> {
 
     fn internal(&self, target: &Value) -> bool {
         let aspect = "teambit.component/internalize";
-        target["componentConfig"][aspect]["internal"]
-            .as_bool()
+        crate::commands::update_cmd::aspect_entry(&target["componentConfig"], aspect)
+            .and_then(|(_, val)| val["internal"].as_bool())
             .unwrap_or_else(|| self.head(target, aspect)["internal"] == true)
     }
 
@@ -284,7 +284,10 @@ impl State<'_> {
         let identity = text(target.get("identity"))?;
         let env = self.environment_facts[identity]["envId"]
             .as_str()
-            .or_else(|| config["teambit.envs/envs"]["env"].as_str())
+            .or_else(|| {
+                crate::commands::update_cmd::aspect_entry(config, "teambit.envs/envs")
+                    .and_then(|(_, val)| val["env"].as_str())
+            })
             .unwrap_or("teambit.harmony/node");
         let resolved = config
             .as_object()

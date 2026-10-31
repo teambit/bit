@@ -133,8 +133,16 @@ fn deletion_mode(row: &Value) -> io::Result<bool> {
     if config.len() != 1 {
         return Err(invalid("component delete config"));
     }
-    let remove = config["teambit.component/remove"]
-        .as_object()
+    let remove = config
+        .get("teambit.component/remove")
+        .or_else(|| {
+            config
+                .iter()
+                .find_map(|(key, value)| {
+                    key.starts_with("teambit.component/remove@").then_some(value)
+                })
+        })
+        .and_then(Value::as_object)
         .ok_or_else(|| invalid("component delete config"))?;
     match (remove.get("removed"), remove.get("range"), remove.get("snaps"), remove.len()) {
         (Some(Value::Bool(true)), None, None, 1) => Ok(true),

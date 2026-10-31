@@ -162,9 +162,10 @@ fn sources_for_entry(
     }
     let env_id = comp.map_or("teambit.harmony/node", |item| item.env_id.as_str());
     for default_aspect in [env_id, ENVS_ASPECT] {
+        let default_bare = aspect_id_without_version(default_aspect);
         if !out
             .iter()
-            .any(|existing| existing.aspect_name == default_aspect)
+            .any(|existing| aspect_id_without_version(&existing.aspect_name) == default_bare)
         {
             out.push(AspectSourceItem {
                 aspect_name: default_aspect.to_owned(),

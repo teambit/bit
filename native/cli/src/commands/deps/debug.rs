@@ -104,8 +104,9 @@ fn validate_simple_component(
         || component.config
             .iter()
             .any(|(key, value)| {
-                key != "teambit.envs/envs"
-                    && (key != "teambit.react/react"
+                let bare = bit_install::config::aspect_id_without_version(key);
+                bare != "teambit.envs/envs"
+                    && (bare != "teambit.react/react"
                         || value
                             .as_object()
                             .is_none_or(|map| !map.is_empty()))
@@ -135,7 +136,19 @@ fn validate_simple_component(
 fn manual_policy(entry: &BitmapEntry) -> Result<ManualPolicy, Failure> {
     let Some(config) = entry.config
         .as_ref()
-        .and_then(|config| config.get(DEPENDENCY_RESOLVER_ASPECT))
+        .and_then(|config| {
+            config
+                .get(DEPENDENCY_RESOLVER_ASPECT)
+                .or_else(|| {
+                    config
+                        .iter()
+                        .find_map(|(key, val)| {
+                            (bit_install::config::aspect_id_without_version(key)
+                                == DEPENDENCY_RESOLVER_ASPECT)
+                                .then_some(val)
+                        })
+                })
+        })
     else {
         return Ok(ManualPolicy::default());
     };
@@ -171,13 +184,17 @@ fn validate_manual_component(
     entry: &BitmapEntry,
     component: &bit_install::model::WorkspaceComponent,
 ) -> Result<(), Failure> {
-    let unsupported_context = component.env_id != "teambit.harmony/node"
+    let unsupported_context = bit_install::config::aspect_id_without_version(&component.env_id)
+        != "teambit.harmony/node"
         || !ctx.ws_config.variants.is_empty()
         || !empty_policy(&ctx.ws_config.dependency_resolver.policy)
         || component.has_package_json;
     let extra_config = component.config
         .keys()
-        .any(|key| key != "teambit.envs/envs" && key != DEPENDENCY_RESOLVER_ASPECT);
+        .any(|key| {
+            let bare = bit_install::config::aspect_id_without_version(key);
+            bare != "teambit.envs/envs" && bare != DEPENDENCY_RESOLVER_ASPECT
+        });
     let has_imports = component.files
         .iter()
         .any(|rel_file| !scanned_specifiers(&component.dir, rel_file).is_empty());
@@ -190,7 +207,9 @@ fn validate_manual_component(
     }
     let mut without_manual = entry.clone();
     if let Some(config) = &mut without_manual.config {
-        config.remove(DEPENDENCY_RESOLVER_ASPECT);
+        config.retain(|key, _| {
+            bit_install::config::aspect_id_without_version(key) != DEPENDENCY_RESOLVER_ASPECT
+        });
     }
     let (deps, _) = ctx.collect_component_deps(&without_manual, component, None);
     if !deps.is_empty() {
@@ -200,7 +219,7 @@ fn validate_manual_component(
 }
 
 fn builtin_env_deps(env_id: &str) -> Result<(Deps, Deps, Deps), Failure> {
-    match env_id {
+    match bit_install::config::aspect_id_without_version(env_id) {
         "teambit.harmony/node" => Ok((&[], NODE_DEV, &[])),
         "teambit.react/react" => Ok((REACT_RUNTIME, REACT_DEV, REACT_PEER)),
         _ => Err(Failure::Declined("custom env deps debug delegated".into())),

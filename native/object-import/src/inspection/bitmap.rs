@@ -29,7 +29,18 @@ fn removed(entry: &Map<String, Value>) -> bool {
     entry.get("isAvailableOnCurrentLane") == Some(&Value::Bool(false))
         || entry
             .get("config")
-            .and_then(|config| config.get("teambit.component/remove"))
+            .and_then(Value::as_object)
+            .and_then(|config| {
+                config
+                    .get("teambit.component/remove")
+                    .or_else(|| {
+                        config
+                            .iter()
+                            .find_map(|(key, value)| {
+                                key.starts_with("teambit.component/remove@").then_some(value)
+                            })
+                    })
+            })
             .is_some_and(|remove| {
                 remove.as_str() != Some("-") && remove.get("removed").is_some_and(truthy)
             })

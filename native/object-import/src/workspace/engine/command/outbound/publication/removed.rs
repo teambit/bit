@@ -9,7 +9,9 @@ pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
         return Err(invalid("outbound removal configuration bounds"));
     }
     rows.iter()
-        .filter(|row| row["config"]["teambit.component/remove"]["removed"] == true)
+        .filter(|row| {
+            crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
+        })
         .map(|row| {
             let scope =
                 row["id"]["scope"].as_str().ok_or_else(|| invalid("outbound removal scope"))?;

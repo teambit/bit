@@ -168,7 +168,7 @@ pub(super) fn ensure_default_env_aspects(
     }
     if let Some(envs_entry) = merged
         .iter_mut()
-        .find(|item| item.id == ENVS_ASPECT)
+        .find(|item| aspect_id_without_version(&item.id) == ENVS_ASPECT)
     {
         if envs_entry.data.get("id").is_none() {
             envs_entry.data = json!({ "id": env_bare });

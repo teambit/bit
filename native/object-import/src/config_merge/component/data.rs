@@ -11,7 +11,9 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
     }
     for (index, current) in array(engine.input, "current")?.iter().enumerate() {
         let id = current["stringId"].as_str().ok_or_else(|| invalid("data id"))?;
-        if ["teambit.dependencies/dependency-resolver", "teambit.pipelines/builder"].contains(&id) {
+        let bare = id.split('@').next().unwrap_or(id);
+        if ["teambit.dependencies/dependency-resolver", "teambit.pipelines/builder"].contains(&bare)
+        {
             continue;
         }
         let query = current["idWithoutVersion"].as_str().ok_or_else(|| invalid("data query"))?;

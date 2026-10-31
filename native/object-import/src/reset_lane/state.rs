@@ -33,7 +33,7 @@ impl BitmapState {
             });
         };
         let rows = document.as_object().ok_or_else(|| invalid("lane reset bitmap"))?;
-        if rows[&key]["config"]["teambit.component/remove"]["removed"] == true
+        if crate::workspace::engine::client_status::config::is_config_removed(&rows[&key]["config"])
             || rows[&key]["isAvailableOnCurrentLane"] == false
         {
             return Err(invalid("lane reset unavailable component"));

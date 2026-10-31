@@ -68,9 +68,11 @@ fn observation(input: &Input<'_>, observe: &str) -> io::Result<Value> {
         "mainHead" => {
             Ok(json!({"present":input.model.is_some_and(|model| model["head"].is_string())}))
         }
-        "locallyRemoved" => Ok(
-            json!({"removed":input.target["bitmapConfig"]["teambit.component/remove"]["removed"] == true}),
-        ),
+        "locallyRemoved" => Ok(json!({
+            "removed": crate::workspace::engine::client_status::config::is_config_removed(
+                &input.target["bitmapConfig"],
+            ),
+        })),
         "removedMain" => Ok(json!({"removeOnMain":remove_on_main(input.current)})),
         "removedDivergence" => Ok(
             json!({"otherLanePresent":input.lane.is_some_and(|lane| !lane["other"].is_null()),"error":input.distance["noCommon"]==true,"targetAhead":input.distance["targetOnly"].as_array().is_some_and(|rows| !rows.is_empty())}),

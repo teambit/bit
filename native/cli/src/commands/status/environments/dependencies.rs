@@ -38,12 +38,13 @@ impl Environments {
         let env = context["environmentFacts"][identity]["envId"]
             .as_str()
             .unwrap_or("teambit.harmony/node");
+        let bare_env = bit_install::policy::split_version(env).0;
         if self.builtin_services != super::builtin::Services::Disabled
-            && env == "teambit.react/react"
+            && bare_env == "teambit.react/react"
         {
             return Ok(Value::Null);
         }
-        if (env == "teambit.harmony/node" && context["environmentFacts"][identity].is_null())
+        if (bare_env == "teambit.harmony/node" && context["environmentFacts"][identity].is_null())
             || context["environmentFacts"][identity]["nonLoaded"] == true
         {
             return Ok(Value::Null);

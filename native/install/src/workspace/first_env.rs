@@ -57,9 +57,14 @@ fn first_env(
 
 /// `teambit.envs/envs` names the env, or the default env is configured itself.
 fn has_configured_env(component: &WorkspaceComponent) -> bool {
-    component.config.contains_key(DEFAULT_ENV)
+    component.config
+        .keys()
+        .any(|key| aspect_id_without_version(key) == DEFAULT_ENV)
         || component.config
-            .get(ENVS_ASPECT)
+            .iter()
+            .find_map(|(key, value)| {
+                (aspect_id_without_version(key) == ENVS_ASPECT).then_some(value)
+            })
             .and_then(|config| config.get("env"))
             .is_some()
 }

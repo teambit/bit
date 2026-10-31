@@ -43,9 +43,10 @@ fn projected_extension(extension: &Value) -> io::Result<Value> {
 }
 
 fn model_extension(extension: &Value, name: &str) -> io::Result<Value> {
-    if !CORES.contains(&name)
-        && !bit_install::workspace::CORE_ENVS.contains(&name)
-        && !core_aspect(name)
+    let bare = bit_install::config::aspect_id_without_version(name);
+    if !CORES.contains(&bare)
+        && !bit_install::workspace::CORE_ENVS.contains(&bare)
+        && !core_aspect(bare)
     {
         return Err(decline("status configured model extension"));
     }
@@ -55,11 +56,11 @@ fn model_extension(extension: &Value, name: &str) -> io::Result<Value> {
         Some(config) => object(config)?.clone(),
     };
     config.remove("__specific");
-    validate_config(name, &config)?;
+    validate_config(bare, &config)?;
     let config = stored_config
         .cloned()
         .unwrap_or_else(|| json!({}));
-    Ok(json!({ "name": name, "config": config }))
+    Ok(json!({ "name": bare, "config": config }))
 }
 
 fn validate_config(name: &str, config: &Map<String, Value>) -> io::Result<()> {

@@ -234,10 +234,12 @@ fn component(root: &Path, context: &Value, target: &Value) -> io::Result<Workspa
         .as_object()
         .cloned()
         .unwrap_or_default();
-    let env_id = config
-        .get("teambit.envs/envs")
-        .and_then(|config| config["env"].as_str())
-        .map_or_else(|| stored_env(context, &target), str::to_owned);
+    let env_id = crate::commands::update_cmd::aspect_entry(
+        &target["config"]["extensions"],
+        "teambit.envs/envs",
+    )
+    .and_then(|(_, cfg)| cfg["env"].as_str())
+    .map_or_else(|| stored_env(context, &target), str::to_owned);
     let identity = text(target.get("identity"))?;
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| decline("environment component identity"))?;

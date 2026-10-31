@@ -73,8 +73,11 @@ fn plans(receipt: &Value) -> io::Result<Vec<Plan>> {
             &plan.version_data,
         )?;
         if plan.component.config
-            .get("teambit.pkg/pkg")
-            .is_some_and(|config| config["packageJson"]["name"].is_string())
+            .iter()
+            .any(|(key, val)| {
+                bit_install::config::aspect_id_without_version(key) == "teambit.pkg/pkg"
+                    && val["packageJson"]["name"].is_string()
+            })
         {
             plan.component.package_name = bit_install::workspace::component_package_name(
                 &plan.component.id,

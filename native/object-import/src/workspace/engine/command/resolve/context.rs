@@ -146,7 +146,7 @@ fn filter_pending_tag_targets(request: &Prepare, context: &mut Value) -> io::Res
             .ok_or_else(|| invalid("snapshot targets"))?
             .retain(|target| {
                 target["locallyRemoved"] != true
-                    && target["bitmapConfig"]["teambit.component/remove"]["removed"] != true
+                    && !config::is_config_removed(&target["bitmapConfig"])
             });
     }
     Ok(())
@@ -324,15 +324,14 @@ fn validate_snapshot_config(config: &Value) -> io::Result<()> {
 }
 
 fn validate_pending_config(config: &Value) -> io::Result<()> {
-    if !config.is_object() {
-        return Err(invalid("resolve merged configuration"));
-    }
-    for (name, value) in config.as_object().unwrap() {
-        let dependency_policy = name == "teambit.dependencies/dependency-resolver"
+    let rows = config.as_object().ok_or_else(|| invalid("resolve merged configuration"))?;
+    for (name, value) in rows {
+        let bare = name.split('@').next().unwrap_or(name);
+        let dependency_policy = bare == "teambit.dependencies/dependency-resolver"
             && value
                 .as_object()
                 .is_some_and(|row| row.keys().all(|key| key == "policy"));
-        let removal = name == "teambit.component/remove"
+        let removal = bare == "teambit.component/remove"
             && value
                 .as_object()
                 .is_some_and(|row| row.len() == 1 && row.get("removed") == Some(&json!(true)));

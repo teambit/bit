@@ -113,6 +113,11 @@ fn identifier(row: &Value) -> io::Result<String> {
 fn strip_local_env(extensions: &mut Map<String, Value>, record: &Record) {
     let Some(env) = extensions
         .get("teambit.envs/envs")
+        .or_else(|| {
+            extensions
+                .iter()
+                .find_map(|(key, value)| key.starts_with("teambit.envs/envs@").then_some(value))
+        })
         .and_then(|value| value["env"].as_str())
     else {
         return;

@@ -7,7 +7,7 @@ pub(super) fn plain(name: &str, value: &Value) -> io::Result<Value> {
         .cloned()
         .ok_or_else(|| invalid("reset aspect config"))?;
     config.remove("__specific");
-    match name {
+    match name.split('@').next().unwrap_or(name) {
         "teambit.dependencies/dependency-resolver" => {
             if config.keys().any(|key| key != "policy") {
                 return Err(invalid("reset resolver config"));
@@ -17,7 +17,10 @@ pub(super) fn plain(name: &str, value: &Value) -> io::Result<Value> {
             }
         }
         "teambit.envs/envs" => {
-            validate_single(&config, "env", |value| value == "teambit.harmony/node")?;
+            validate_single(&config, "env", |val| {
+                val.as_str()
+                    .is_some_and(|env| env.split('@').next() == Some("teambit.harmony/node"))
+            })?;
         }
         "teambit.component/deprecation" => {
             validate_single(&config, "deprecate", Value::is_boolean)?;

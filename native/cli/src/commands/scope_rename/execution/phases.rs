@@ -147,13 +147,16 @@ fn bitmap_ids(bitmap: &Value) -> io::Result<Vec<String>> {
         .collect())
 }
 fn row_id(key: &str, row: &Value) -> Option<String> {
-    if row["config"]["teambit.component/remove"]["removed"] == true
-        || row["isAvailableOnCurrentLane"] == false
-    {
+    let removed =
+        crate::commands::update_cmd::aspect_entry(&row["config"], "teambit.component/remove")
+            .is_some_and(|(_, val)| val["removed"] == true);
+    if removed || row["isAvailableOnCurrentLane"] == false {
         return None;
     }
     row["rootDir"].as_str()?;
-    let name = row["name"].as_str().unwrap_or(key);
+    let name = row["name"]
+        .as_str()
+        .unwrap_or_else(|| key.split('@').next().unwrap_or(key));
     let scope = row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())

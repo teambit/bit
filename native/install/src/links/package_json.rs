@@ -122,7 +122,17 @@ fn apply_dependency_resolver(
     let (optional, peers_meta) = optional_manifest(dependencies);
     manifest.insert("optionalDependencies".into(), Value::Object(optional));
     manifest.insert("peerDependenciesMeta".into(), Value::Object(peers_meta));
-    let config = component.config.get(DEPENDENCY_RESOLVER).unwrap_or(&Value::Null);
+    let config = component.config
+        .get(DEPENDENCY_RESOLVER)
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(key, value)| {
+                    (crate::config::aspect_id_without_version(key) == DEPENDENCY_RESOLVER)
+                        .then_some(value)
+                })
+        })
+        .unwrap_or(&Value::Null);
     if !truthy(config.get("peer")) {
         return;
     }

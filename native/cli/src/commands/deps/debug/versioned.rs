@@ -271,7 +271,7 @@ fn model_env(model: &ModelData) -> Option<&'static str> {
     if envs.next().is_some() {
         return None;
     }
-    match id {
+    match bit_install::config::aspect_id_without_version(id) {
         "teambit.harmony/node" => Some("teambit.harmony/node"),
         "teambit.react/react" => Some("teambit.react/react"),
         _ => None,
@@ -307,10 +307,21 @@ fn allowed_config(extension: &Value, env_id: &str, manual: Option<&ManualPolicy>
         return true;
     }
     if env_id == "teambit.react/react" {
-        match extension["name"].as_str() {
+        match extension["name"].as_str().map(bit_install::config::aspect_id_without_version) {
             Some("teambit.react/react") => return config == &json!({"__specific": true}),
             Some("teambit.envs/envs") => {
-                return config == &json!({"env": env_id, "__specific": true});
+                return config
+                    .as_object()
+                    .is_some_and(|map| {
+                        map.len() == 2
+                            && map.get("__specific") == Some(&json!(true))
+                            && map
+                                .get("env")
+                                .and_then(Value::as_str)
+                                .is_some_and(|env| {
+                                    bit_install::config::aspect_id_without_version(env) == env_id
+                                })
+                    });
             }
             _ => {}
         }

@@ -64,7 +64,18 @@ impl BitmapEntry {
     pub fn is_removed(&self) -> bool {
         let Some(remove) = self.config
             .as_ref()
-            .and_then(|config| config.get(REMOVE_ASPECT))
+            .and_then(|config| {
+                config
+                    .get(REMOVE_ASPECT)
+                    .or_else(|| {
+                        config
+                            .iter()
+                            .find_map(|(key, value)| {
+                                (crate::config::aspect_id_without_version(key) == REMOVE_ASPECT)
+                                    .then_some(value)
+                            })
+                    })
+            })
         else {
             return false;
         };

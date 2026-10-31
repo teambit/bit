@@ -213,7 +213,8 @@ fn workspace(root: &Path) -> io::Result<(Workspace, String, String)> {
         .map_or("teambit.harmony/node", |(_, component)| component.env_id.as_str())
         .to_owned();
     for (_, component) in workspace.active() {
-        if !matches!(component.env_id.as_str(), "teambit.harmony/node" | "teambit.react/react")
+        let bare_env = bit_install::config::aspect_id_without_version(&component.env_id);
+        if !matches!(bare_env, "teambit.harmony/node" | "teambit.react/react")
             || component.is_env
             || component.env_id != environment
         {

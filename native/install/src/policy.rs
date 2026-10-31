@@ -49,6 +49,14 @@ pub fn component_policy(
 ) -> Vec<PolicyEntry> {
     let config = component.config
         .get(DEPENDENCY_RESOLVER)
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(key, value)| {
+                    (crate::config::aspect_id_without_version(key) == DEPENDENCY_RESOLVER)
+                        .then_some(value)
+                })
+        })
         .and_then(|config| config.get("policy"))
         .map(|policy| {
             entries::from_variant_config(

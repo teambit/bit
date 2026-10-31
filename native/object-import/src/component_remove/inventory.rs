@@ -13,9 +13,7 @@ pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Re
         .into_iter()
         .flat_map(|rows| rows.values())
         .filter(|row| row["isAvailableOnCurrentLane"] != false)
-        .filter(|row| {
-            !bit_workspace_config::truthy(&row["config"]["teambit.component/remove"]["removed"])
-        })
+        .filter(|row| !is_removed_row(row))
         .filter_map(|row| row["rootDir"].as_str())
         .filter(|other| {
             *other != directory && (directory == "." || other.starts_with(&format!("{directory}/")))
@@ -24,4 +22,19 @@ pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Re
         .chain(std::iter::once(crate::scope_path(root)))
         .collect::<Vec<_>>();
     Ok(!inventory::tracking_scan(&root.join(directory), &excluded, directory == ".")?.is_empty())
+}
+
+fn is_removed_row(row: &Value) -> bool {
+    row["config"]
+        .as_object()
+        .and_then(|cfg| {
+            cfg.get("teambit.component/remove")
+                .or_else(|| {
+                    cfg.iter()
+                        .find_map(|(key, value)| {
+                            key.starts_with("teambit.component/remove@").then_some(value)
+                        })
+                })
+        })
+        .is_some_and(|rem| bit_workspace_config::truthy(&rem["removed"]))
 }

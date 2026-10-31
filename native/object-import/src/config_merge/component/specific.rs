@@ -27,12 +27,19 @@ fn incoming<'a>(input: &'a Value, row: &Value) -> io::Result<Option<&'a Value>> 
             .map(Some)
             .ok_or_else(|| invalid("specific config source"));
     }
-    if row["id"] != "teambit.envs/envs" {
+    if row["id"]
+        .as_str()
+        .is_none_or(|id| id.split('@').next() != Some("teambit.envs/envs"))
+    {
         return Ok(None);
     }
     Ok(array(input, "other")?
         .iter()
-        .find(|entry| entry["name"] == "teambit.envs/envs"))
+        .find(|entry| {
+            entry["name"]
+                .as_str()
+                .is_some_and(|name| name.split('@').next() == Some("teambit.envs/envs"))
+        }))
 }
 
 fn preserve(merged: &mut Value, entry: &Value) {

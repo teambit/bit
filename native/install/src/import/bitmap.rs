@@ -88,7 +88,7 @@ pub fn read(root: &Path) -> io::Result<Bitmap> {
     let entries = document.as_object().ok_or_else(|| invalid("invalid .bitmap"))?;
     let mut bitmap = Bitmap { lane: entries.get(LANE_KEY).and_then(lane), ..Bitmap::default() };
     for (key, entry) in entries {
-        if key.starts_with('$') || key == LANE_KEY {
+        if key.starts_with('$') || key == LANE_KEY || key == "version" {
             continue;
         }
         let Some(id) = exported_id(key, entry) else { continue };
@@ -101,12 +101,24 @@ pub fn read(root: &Path) -> io::Result<Bitmap> {
 }
 
 fn exported_id(key: &str, entry: &Value) -> Option<Id> {
-    let scope = entry["scope"]
+    let bare = key.split('@').next().unwrap_or(key);
+    let (scope, name) = if let Some(scope) = entry["scope"]
         .as_str()
-        .filter(|scope| !scope.is_empty())?;
-    let name = entry["name"].as_str().unwrap_or(key);
+        .filter(|val| !val.is_empty())
+    {
+        (scope, entry["name"].as_str().unwrap_or(bare))
+    } else if entry.get("scope").is_none() {
+        let (key_scope, key_name) = bare.split_once('/')?;
+        if key_scope.is_empty() || key_name.is_empty() {
+            return None;
+        }
+        (key_scope, entry["name"].as_str().unwrap_or(key_name))
+    } else {
+        return None;
+    };
     let version = entry["version"]
         .as_str()
+        .or_else(|| key.split_once('@').map(|(_, ver)| ver))
         .filter(|version| !version.is_empty() && *version != "latest");
     Some(Id {
         scope: scope.to_string(),

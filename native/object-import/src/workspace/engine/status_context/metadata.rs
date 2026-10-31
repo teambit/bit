@@ -74,11 +74,18 @@ fn configuration(config: &Value, recovery: bool) -> io::Result<()> {
     }
     Ok(())
 }
+fn bare_aspect_id(name: &str) -> &str {
+    match name.split_once('@') {
+        Some((bare, _)) if !bare.is_empty() => bare,
+        _ => name,
+    }
+}
 fn extension_configuration(name: &str, value: &Value, recovery: bool) -> io::Result<()> {
-    if recovery && empty_core(name, value) {
+    let bare = bare_aspect_id(name);
+    if recovery && empty_core(bare, value) {
         return Ok(());
     }
-    if name == "teambit.envs/envs" {
+    if bare == "teambit.envs/envs" {
         let config =
             value.as_object().ok_or_else(|| invalid("status environment configuration"))?;
         if config
@@ -89,10 +96,10 @@ fn extension_configuration(name: &str, value: &Value, recovery: bool) -> io::Res
         }
         return Ok(());
     }
-    if value.as_object().is_some_and(serde_json::Map::is_empty) && name.contains('/') {
+    if value.as_object().is_some_and(serde_json::Map::is_empty) && bare.contains('/') {
         return Ok(());
     }
-    if name == "teambit.component/issues" {
+    if bare == "teambit.component/issues" {
         return issue_configuration(value);
     }
     value.as_object().ok_or_else(|| invalid("status context aspect configuration"))?;
@@ -121,7 +128,7 @@ fn issue_configuration(value: &Value) -> io::Result<()> {
 
 fn empty_core(name: &str, value: &Value) -> bool {
     matches!(
-        name,
+        bare_aspect_id(name),
         "teambit.envs/envs"
             | "teambit.component/dev-files"
             | "teambit.semantics/schema"

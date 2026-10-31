@@ -30,7 +30,16 @@ fn tracked(
     model: Option<&Value>,
 ) -> io::Result<(Action, Vec<super::File>)> {
     if row["config"]
-        .get(REMOVE)
+        .as_object()
+        .and_then(|cfg| {
+            cfg.get(REMOVE)
+                .or_else(|| {
+                    cfg.iter()
+                        .find_map(|(key, value)| {
+                            key.starts_with("teambit.component/remove@").then_some(value)
+                        })
+                })
+        })
         .is_some_and(|value| !value.is_null() && value != &Value::Bool(false))
     {
         let version = model
@@ -79,7 +88,7 @@ pub(super) fn update(bitmap: &mut Value, item: &Item) -> io::Result<()> {
     let row = bitmap[&key].as_object_mut().ok_or_else(|| invalid("recovery bitmap row"))?;
     if matches!(item.action, Action::WriteFromScope | Action::DeleteConfigAndImport) {
         if let Some(config) = row.get_mut("config").and_then(Value::as_object_mut) {
-            config.remove(REMOVE);
+            config.retain(|key, _| key != REMOVE && !key.starts_with("teambit.component/remove@"));
             if config.is_empty() {
                 row.remove("config");
             }

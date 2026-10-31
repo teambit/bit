@@ -264,12 +264,15 @@ fn refactor_bitmap(plan: &Plan) -> io::Result<Cow<'_, Value>> {
     }
 }
 fn listed_identity(key: &str, row: &Value) -> Option<String> {
-    if row["config"]["teambit.component/remove"]["removed"] == true
-        || row["isAvailableOnCurrentLane"] == false
-    {
+    let removed =
+        crate::commands::update_cmd::aspect_entry(&row["config"], "teambit.component/remove")
+            .is_some_and(|(_, val)| val["removed"] == true);
+    if removed || row["isAvailableOnCurrentLane"] == false {
         return None;
     }
-    let name = row["name"].as_str().unwrap_or(key);
+    let name = row["name"]
+        .as_str()
+        .unwrap_or_else(|| key.split('@').next().unwrap_or(key));
     let scope = row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
