@@ -24,13 +24,12 @@ impl Refreshes {
         lanes: bool,
     ) -> io::Result<Self> {
         let current = text(result.get("currentLaneId"))?.trim();
-        let main = if lanes && !current.ends_with("/main") {
-            prepare(engine, root, context, result, current)?
-        } else {
-            None
-        };
+        let is_main = current.is_empty() || current == "main" || current.ends_with("/main");
+        let main =
+            if lanes && !is_main { prepare(engine, root, context, result, current)? } else { None };
         let forked = if lanes {
             forked_lane_id(context)
+                .filter(|id| id != current)
                 .map(|id| prepare_forked(root, context, result, current, &id))
                 .transpose()?
         } else {

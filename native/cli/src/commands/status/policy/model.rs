@@ -9,13 +9,13 @@ pub(in crate::commands::status) fn model_of<'c>(
     identity: &str,
 ) -> Option<&'c Value> {
     let models = context.get("models").and_then(Value::as_array)?;
-    let trimmed_id = identity.trim();
-    if trimmed_id.is_empty() {
+    let bare_id = crate::commands::status::js::without_version(identity);
+    let (target_scope, target_name) = bare_id
+        .split_once('/')
+        .map_or(("", bare_id), |(scope, name)| (scope.trim(), name.trim()));
+    if target_name.is_empty() {
         return None;
     }
-    let (_, target_name) = trimmed_id
-        .split_once('/')
-        .map_or(("", trimmed_id), |(scope, name)| (scope.trim(), name.trim()));
     models
         .iter()
         .find(|model| {
@@ -29,7 +29,7 @@ pub(in crate::commands::status) fn model_of<'c>(
                 .and_then(Value::as_str)
                 .map(str::trim)
                 .unwrap_or_default();
-            format!("{scope}/{name}") == trimmed_id || (scope.is_empty() && name == target_name)
+            name == target_name && (scope == target_scope || scope.is_empty())
         })
 }
 

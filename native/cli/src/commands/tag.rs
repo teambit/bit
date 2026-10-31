@@ -57,7 +57,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     workflow.configure(&root, &argv[1..], resolve::Kind::Tag)?;
     if let Some(err_msg) = editor_conflict(&options, &workflow)
-        && env::var_os("CI").is_none_or(|val| val.is_empty())
+        && !is_ci()
     {
         return pre_status_failure(&root, args, &options, &workflow, err_msg);
     }
@@ -67,6 +67,17 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_workspace(&root, args, &options, &workflow, &policy)
 }
 
+fn is_ci() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn fallback_parse_error(
     args: &[OsString],
     raw_args: &[&str],
@@ -74,7 +85,7 @@ fn fallback_parse_error(
     workflow: &mut resolve::workflow::Workflow,
 ) -> io::Result<Outcome> {
     if let Some((warn, err_msg)) = options::validate_error(command_args, workflow.editor.is_some())
-        && env::var_os("CI").is_none_or(|val| val.is_empty())
+        && !is_ci()
     {
         return emit_validate_error(args, warn, &err_msg);
     }

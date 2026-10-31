@@ -205,6 +205,13 @@ impl Issue {
 }
 
 fn missing_packages_to_string(data: &Value) -> io::Result<String> {
+    if let Some(files) = data.as_object() {
+        return files
+            .iter()
+            .map(|(file, packages)| Ok(format!("{SPACE}{file} -> {}", list_or_text(packages)?)))
+            .collect::<io::Result<Vec<_>>>()
+            .map(|rows| rows.join("\n"));
+    }
     let rows = array(Some(data), "missing packages")?
         .iter()
         .map(|row| {

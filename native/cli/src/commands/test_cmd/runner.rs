@@ -73,9 +73,13 @@ fn format_execution(
     started: Instant,
 ) -> io::Result<workspace_command::results::Report> {
     let mut report = execution.report;
-    if !options.json && execution.empty {
+    if options.json {
+        if execution.empty || report.data.trim().is_empty() {
+            "[]".clone_into(&mut report.data);
+        }
+    } else if execution.empty {
         report.data = empty_test_message(args);
-    } else if !options.json && !execution.terminated {
+    } else if !execution.terminated {
         if report.data.trim().is_empty() {
             return Err(invalid("empty tester report data"));
         }

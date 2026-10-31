@@ -167,9 +167,10 @@ impl<'r> Status<'r> {
             .iter()
             .map(|row| {
                 let id = text(
-                    row.get("id")
-                        .or_else(|| row.get("identity")),
-                )?;
+                    super::super::js::nullish(row.get("id"))
+                        .or_else(|| super::super::js::nullish(row.get("identity"))),
+                )?
+                .trim();
                 Ok((id, self.version(id)?.unwrap_or_default(), row))
             })
             .collect::<io::Result<Vec<_>>>()?;
@@ -199,12 +200,13 @@ impl<'r> Status<'r> {
             .iter()
             .map(|row| {
                 let identity = text(
-                    row.get("id")
-                        .or_else(|| row.get("identity")),
-                )?;
+                    super::super::js::nullish(row.get("id"))
+                        .or_else(|| super::super::js::nullish(row.get("identity"))),
+                )?
+                .trim();
                 let versions = array(row.get("versions"), "staged versions")?
                     .iter()
-                    .map(|version| text(Some(version)).map(str::to_string))
+                    .map(|version| text(Some(version)).map(|ver| ver.trim().to_string()))
                     .collect::<io::Result<Vec<_>>>()?;
                 Ok(self.item((identity, None), false, Some(&versions), false))
             })

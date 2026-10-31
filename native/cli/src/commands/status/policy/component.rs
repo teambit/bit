@@ -36,20 +36,22 @@ impl Policy {
         }
         let facts = &context["environmentFacts"][identity];
         let default = default_environment();
-        let raw = facts.get("envPolicy").unwrap_or(&default);
+        let raw = nullish(facts.get("envPolicy")).unwrap_or(&default);
         let mut entries = environment(raw)?;
-        if let Some(own) = facts.get("envOwnPolicy") {
-            entries.extend(variant(own, Some(true))?);
-        }
+        let env_own = match nullish(facts.get("envOwnPolicy")) {
+            Some(own) => {
+                let own_entries = variant(own, Some(true))?;
+                let map = manifest(&own_entries);
+                entries.extend(own_entries);
+                map
+            }
+            None => Map::new(),
+        };
         entries.extend(registered(facts)?);
         let config = extensions.iter().find(|entry| matches_aspect(entry, RESOLVER));
         if let Some(policy) = nullish(config.and_then(|entry| entry["config"].get("policy"))) {
             entries.extend(variant(policy, None)?);
         }
-        let env_own = match facts.get("envOwnPolicy") {
-            Some(policy) => manifest(&variant(policy, Some(true))?),
-            None => Map::new(),
-        };
         Ok(Self::project(merge(entries), env_own))
     }
 

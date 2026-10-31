@@ -148,37 +148,39 @@ fn workspace_default_scope(root: &Path) -> Option<String> {
 fn existing_version_error(context: &Value, options: &Options) -> Option<io::Error> {
     let targets = context["targets"].as_array()?;
     let models = context["models"].as_array()?;
-    for target in targets {
-        let identity = target["identity"]
-            .as_str()
-            .map(str::trim)
-            .filter(|id| !id.is_empty())?;
-        let name = target["name"]
-            .as_str()
-            .map(str::trim)
-            .filter(|n| !n.is_empty())
-            .unwrap_or(identity);
-        if !matches_patterns(identity, name, &options.selection.patterns) {
-            continue;
-        }
-        let exact = requested_exact_version(target, identity, name, options)?;
-        let model = models
-            .iter()
-            .find(|model| {
-                format!(
-                    "{}/{}",
-                    model["scope"].as_str().map_or("", str::trim),
-                    model["name"].as_str().map_or("", str::trim),
-                ) == identity
-            })?;
-        if model["versions"].get(exact).is_some() || model["orphanedVersions"].get(exact).is_some()
-        {
-            return Some(io::Error::other(format!(
-                "error: version {exact} already exists for {identity}",
-            )));
-        }
+    targets.iter().find_map(|target| target_existing_version_error(target, models, options))
+}
+
+fn target_existing_version_error(
+    target: &Value,
+    models: &[Value],
+    options: &Options,
+) -> Option<io::Error> {
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())?;
+    let name = target["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+        .unwrap_or(identity);
+    if !matches_patterns(identity, name, &options.selection.patterns) {
+        return None;
     }
-    None
+    let exact = requested_exact_version(target, identity, name, options)?;
+    let model = models
+        .iter()
+        .find(|model| {
+            format!(
+                "{}/{}",
+                model["scope"].as_str().map_or("", str::trim),
+                model["name"].as_str().map_or("", str::trim),
+            ) == identity
+        })?;
+    (model["versions"].get(exact).is_some() || model["orphanedVersions"].get(exact).is_some()).then(
+        || io::Error::other(format!("error: version {exact} already exists for {identity}")),
+    )
 }
 
 fn requested_exact_version<'a>(

@@ -31,8 +31,11 @@ impl Assets {
         let parent = bit_workspace_config::cache_root().join("native-tools/jest");
         let root = parent.join(payload_hash(&payloads));
         if root.try_exists()? {
-            validate(&root, &payloads)?;
-            return Ok(Self { root });
+            if validate(&root, &payloads).is_ok() {
+                return Ok(Self { root });
+            }
+            let _ = fs::remove_dir_all(&root);
+            let _ = fs::remove_file(&root);
         }
         fs::create_dir_all(&parent)?;
         let staging = tempfile::Builder::new().prefix("assets-").tempdir_in(&parent)?;

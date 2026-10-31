@@ -66,8 +66,10 @@ fn run_log(args: &[OsString]) -> io::Result<Outcome> {
             {
                 return Ok(Outcome::Declined("debug.log is missing or unreadable".to_owned()));
             }
-            let history =
-                workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
+            let history = env::current_dir()
+                .ok()
+                .and_then(|cwd| workspace::root(&cwd))
+                .map(|root| History::start(&root, args));
             if let Some(history) = history {
                 history.end(false);
             }
@@ -79,7 +81,10 @@ fn run_log(args: &[OsString]) -> io::Result<Outcome> {
             return Ok(Outcome::Exit(ExitCode::FAILURE));
         }
     };
-    let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
+    let history = env::current_dir()
+        .ok()
+        .and_then(|cwd| workspace::root(&cwd))
+        .map(|root| History::start(&root, args));
     writeln!(io::stdout(), "{content}")?;
     if let Some(history) = history {
         history.end(true);
@@ -88,7 +93,10 @@ fn run_log(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Outcome> {
-    let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
+    let history = env::current_dir()
+        .ok()
+        .and_then(|cwd| workspace::root(&cwd))
+        .map(|root| History::start(&root, args));
     let output = workspace_command::loader_output(chalk, false);
     output.restart(r#"running command "system"..."#);
     output.stop();

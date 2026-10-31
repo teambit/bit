@@ -11,11 +11,12 @@ impl Status<'_> {
         ids(self.result, "mergePendingComponents")?
             .iter()
             .map(|identity| {
+                let bare = crate::commands::status::js::without_version(identity);
                 let history = self
                     .models
                     .histories
                     .iter()
-                    .find(|row| history_identity(row) == Some(identity.trim()))
+                    .find(|row| history_identity(row).map(crate::commands::status::js::without_version) == Some(bare))
                     .ok_or_else(|| decline("status report history"))?;
                 let count = |side: &str| {
                     array(history["merge"].get(side), "merge distance").map(<[Value]>::len)

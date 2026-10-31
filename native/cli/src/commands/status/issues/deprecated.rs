@@ -31,13 +31,15 @@ fn deprecated(context: &Value, full_id: &str) -> io::Result<bool> {
     let target = array(context.get("targets"), "deprecation targets")?
         .iter()
         .find(|target| target["identity"].as_str().map(str::trim) == Some(identity));
-    if let Some(value) = target
-        .and_then(|target| {
-            crate::commands::update_cmd::aspect_entry(&target["componentConfig"], DEPRECATION)
-        })
-        .and_then(|(_, cfg)| cfg["deprecate"].as_bool())
-    {
-        return Ok(value);
+    if let Some((_, cfg)) = target.and_then(|target| {
+        crate::commands::update_cmd::aspect_entry(&target["componentConfig"], DEPRECATION)
+    }) {
+        if cfg.as_str() == Some("-") {
+            return Ok(false);
+        }
+        if let Some(value) = cfg["deprecate"].as_bool() {
+            return Ok(value);
+        }
     }
     array(context.get("models"), "deprecation models")?;
     let Some(model) = crate::commands::status::policy::model_of(context, identity) else {

@@ -222,16 +222,22 @@ impl Options {
         self.adoption.pattern
             .as_ref()
             .is_none_or(|pattern| {
-                !pattern.contains(['$', '&'])
+                let parts = crate::commands::patterns::split(pattern);
+                !parts.is_empty()
+                    && !pattern.contains(['$', '&'])
                     && !pattern.contains(" AND ")
-                    && crate::commands::patterns::split(pattern)
+                    && parts
                         .iter()
                         .all(|part| {
                             let glob = part
                                 .split('@')
                                 .next()
-                                .unwrap_or_default();
-                            let glob = glob.strip_prefix('!').unwrap_or(glob);
+                                .unwrap_or_default()
+                                .trim();
+                            let glob = glob
+                                .strip_prefix('!')
+                                .unwrap_or(glob)
+                                .trim();
                             !glob.is_empty()
                                 && !glob.starts_with('#')
                                 && !glob.contains(['{', '}', '(', ')', '+', '!', '\\'])

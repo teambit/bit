@@ -79,9 +79,10 @@ fn visit<'v>(value: &'v Value, strings: &mut Vec<&'v str>) {
 pub fn config_inputs(values: &Value) -> Option<Value> {
     let mut strings = Vec::new();
     visit(values, &mut strings);
+    let mut seen = std::collections::HashSet::with_capacity(strings.len());
     let mut unique: Vec<&str> = Vec::new();
     for text in strings {
-        if !unique.contains(&text) {
+        if seen.insert(text) {
             unique.push(text);
         }
     }

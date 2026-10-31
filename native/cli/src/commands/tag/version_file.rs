@@ -48,14 +48,19 @@ fn parse(content: &str) -> io::Result<Value> {
         let (identity, version) =
             line.split_once(':').ok_or_else(|| decline("versions file line format"))?;
         let (identity, version) = (identity.trim(), version.trim());
+        if version.is_empty() || version.chars().any(char::is_whitespace) {
+            return Err(decline("versions file line format"));
+        }
         if identity == "DEFAULT" {
-            if version.is_empty() {
-                return Err(decline("DEFAULT version cannot be empty"));
-            }
             default = Some(version);
             continue;
         }
-        if identity.is_empty() || version.is_empty() || identity.chars().any(char::is_whitespace) {
+        if identity.is_empty()
+            || identity.chars().any(char::is_whitespace)
+            || identity
+                .split('/')
+                .any(|part| part.trim().is_empty())
+        {
             return Err(decline("versions file line format"));
         }
         entries.push(json!({"identity":identity,"version":version}));

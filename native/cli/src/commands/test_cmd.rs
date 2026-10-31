@@ -103,7 +103,15 @@ pub(super) fn classify_workspace(
     if let Some(err) = validate_user_patterns(cwd, root, &options.user_pattern, &active_entries) {
         return Ok(Some(FastOutcome::Error(err)));
     }
-    if env::var_os("CI").is_none_or(|val| val.is_empty())
+    let in_ci = env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+        });
+    if !in_ci
         && options.user_pattern
             .iter()
             .all(|entry| !cwd.join(entry).is_file())

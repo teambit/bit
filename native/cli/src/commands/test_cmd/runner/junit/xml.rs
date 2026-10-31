@@ -31,8 +31,6 @@ pub(super) fn strip_ansi(value: &str) -> String {
 const fn is_allowed_xml_char(character: char) -> bool {
     matches!(character, '\t' | '\n' | '\r')
         || (character >= ' '
-            && !matches!(
-                character,
-                '\u{7f}'..='\u{9f}' | '\u{fdd0}'..='\u{fdef}' | '\u{fffe}' | '\u{ffff}',
-            ))
+            && !matches!(character, '\u{7f}'..='\u{9f}' | '\u{fdd0}'..='\u{fdef}')
+            && (character as u32) & 0xfffe != 0xfffe)
 }

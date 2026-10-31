@@ -67,7 +67,7 @@ impl Node {
     /// The Node binary, resolved through `PATH` when discovery left it bare.
     fn binary(&self) -> io::Result<PathBuf> {
         let node = &self.cli.node;
-        if node.is_absolute() {
+        if node.is_absolute() || (node.components().count() > 1 && node.is_file()) {
             return Ok(node.clone());
         }
         let names: &[&str] = if cfg!(windows) { &["node.exe", "node"] } else { &["node"] };

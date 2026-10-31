@@ -43,12 +43,15 @@ pub(super) fn report(raw: &Value, identity: &str) -> io::Result<Report> {
     })
 }
 fn file(row: &Value) -> io::Result<Value> {
-    let path = row["testFilePath"]
-        .as_str()
-        .or_else(|| row["name"].as_str())
-        .or_else(|| row["file"].as_str())
-        .map(str::trim)
-        .filter(|path| !path.is_empty())
+    let non_empty = |key: &str| {
+        row[key]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+    };
+    let path = non_empty("testFilePath")
+        .or_else(|| non_empty("name"))
+        .or_else(|| non_empty("file"))
         .ok_or_else(|| invalid("test file path"))?;
     let name = Path::new(path)
         .file_name()

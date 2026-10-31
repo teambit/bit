@@ -28,8 +28,9 @@ impl Checks<'_> {
 fn missing_packages(rows: &[Value]) -> HashSet<&str> {
     rows.iter()
         .flat_map(|row| {
-            row["missingPackages"]
-                .as_array()
+            row.get("missingPackages")
+                .or_else(|| row.get("packages"))
+                .and_then(Value::as_array)
                 .into_iter()
                 .flatten()
         })

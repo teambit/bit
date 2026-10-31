@@ -92,6 +92,9 @@ impl Status<'_> {
     /// The staged versions: all with `--verbose`, otherwise the tags and
     /// the number of snaps.
     pub(super) fn local_versions(&self, versions: &[String]) -> String {
+        if versions.is_empty() {
+            return String::new();
+        }
         if self.flags.verbose {
             return format!(" - versions: {}", versions.join(", "));
         }

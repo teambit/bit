@@ -27,33 +27,27 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
         return Err(decline("native switch report shape"));
     }
     let formatter = Formatter::new(chalk);
+    let branch_warning = result["gitBranchWarning"]
+        .as_str()
+        .map(str::trim)
+        .filter(|warning| !warning.is_empty())
+        .map(|warning| chalk.yellow(&format!("Warning: {warning}")))
+        .unwrap_or_default();
     let skipped_minimal = !results.skipped.is_empty() && !options.verbose;
-    let data = build(&results, options, &formatter, skipped_minimal);
-    let details = skipped_minimal.then(|| build(&results, options, &formatter, false));
+    let data = build(&results, options, &formatter, &branch_warning, skipped_minimal);
+    let details =
+        skipped_minimal.then(|| build(&results, options, &formatter, &branch_warning, false));
     Ok(Report { data, code: 0, details })
 }
 
-fn build(results: &Results, options: &Options, formatter: &Formatter, minimal: bool) -> String {
-    let failure = if results.skipped.is_empty() {
-        String::new()
-    } else if minimal {
-        formatter.details_hint(&format!(
-            "full list of {} skipped component(s)",
-            results.skipped.len(),
-        ))
-    } else {
-        let items: Vec<String> = results.skipped
-            .iter()
-            .map(|(id, message)| {
-                formatter.item(&format!(
-                    "{} - {}",
-                    formatter.chalk.bold(&id.display()),
-                    message.trim(),
-                ))
-            })
-            .collect();
-        formatter.section("switch skipped", "", &items)
-    };
+fn build(
+    results: &Results,
+    options: &Options,
+    formatter: &Formatter,
+    branch_warning: &str,
+    minimal: bool,
+) -> String {
+    let failure = format_skipped(&results.skipped, formatter, minimal);
     let lane_name = options.lane.trim();
     let lane_success = formatter.success_summary(&format!(
         r#"successfully set "{}" as the active lane"#,
@@ -69,5 +63,29 @@ fn build(results: &Results, options: &Options, formatter: &Formatter, minimal: b
         ));
         join_lines(&[title, results.apply_version_report(formatter, true, false), lane_success])
     };
-    Formatter::join(&[failure, success])
+    Formatter::join(&[failure, success, branch_warning.to_owned()])
+}
+
+fn format_skipped(
+    skipped: &[(crate::commands::ids::Id, String)],
+    formatter: &Formatter,
+    minimal: bool,
+) -> String {
+    if skipped.is_empty() {
+        String::new()
+    } else if minimal {
+        formatter.details_hint(&format!("full list of {} skipped component(s)", skipped.len()))
+    } else {
+        let items: Vec<String> = skipped
+            .iter()
+            .map(|(id, message)| {
+                formatter.item(&format!(
+                    "{} - {}",
+                    formatter.chalk.bold(&id.display()),
+                    message.trim(),
+                ))
+            })
+            .collect();
+        formatter.section("switch skipped", "", &items)
+    }
 }

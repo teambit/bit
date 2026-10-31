@@ -54,7 +54,7 @@ pub fn group_files(files: &[String], group: Group) -> Vec<String> {
     files
         .iter()
         .map(String::as_str)
-        .map(str::trim)
+        .map(|file| file.trim().trim_start_matches("./"))
         .filter(|file| matches(file, group.names()))
         .map(str::to_owned)
         .collect()

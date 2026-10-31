@@ -239,9 +239,9 @@ fn load_failures(data: &Value) -> io::Result<String> {
         .map(|entry| {
             Ok(format!(
                 "{SPACE}{} (during {}) -> {}",
-                text(entry.get("failedId"))?,
-                text(entry.get("phase"))?,
-                text(entry.get("error"))?,
+                text(entry.get("failedId"))?.trim(),
+                text(entry.get("phase"))?.trim(),
+                text(entry.get("error"))?.trim(),
             ))
         })
         .collect::<io::Result<Vec<_>>>()

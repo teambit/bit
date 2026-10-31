@@ -86,13 +86,13 @@ fn sort_id(row: &Value) -> io::Result<String> {
         }
         return Ok(trimmed.to_owned());
     }
-    if let Some(id) = row
-        .get("id")
-        .or_else(|| row.get("identity"))
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-    {
+    let str_field = |key: &str| {
+        row.get(key)
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+    };
+    if let Some(id) = str_field("id").or_else(|| str_field("identity")) {
         return Ok(id.to_owned());
     }
     let object = row["id"].as_object().ok_or_else(|| decline("status expected a string"))?;

@@ -2,7 +2,67 @@
 //! found with Tarjan's algorithm.
 
 use super::Component;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+};
+
+pub(super) fn filter_graph_for_cycles(
+    root: &Path,
+    components: &[Component],
+    graph: &[Component],
+) -> Vec<Component> {
+    let workspace_ids: HashSet<&str> = components
+        .iter()
+        .map(|component| component.identity.as_str())
+        .collect();
+    let unresolved: HashSet<&str> = components
+        .iter()
+        .filter(|component| has_unresolved_deps(root, component))
+        .map(|component| component.identity.as_str())
+        .collect();
+    graph
+        .iter()
+        .map(|component| {
+            if workspace_ids.contains(component.identity.as_str()) {
+                return component.clone();
+            }
+            let mut ext = component.clone();
+            ext.dependencies.retain(|dep| {
+                !workspace_ids.contains(dep.as_str()) || unresolved.contains(dep.as_str())
+            });
+            ext
+        })
+        .collect()
+}
+
+fn has_unresolved_deps(root: &Path, component: &Component) -> bool {
+    if !component.package_name.is_empty()
+        && !root
+            .join("node_modules")
+            .join(&component.package_name)
+            .exists()
+    {
+        return true;
+    }
+    component.issues
+        .as_array()
+        .is_some_and(|rows| {
+            rows.iter()
+                .any(|row| {
+                    matches!(
+                        row["type"].as_str(),
+                        Some(
+                            "MissingPackagesDependenciesOnFs"
+                                | "MissingDependenciesOnFs"
+                                | "UntrackedDependencies"
+                                | "ParseErrors"
+                                | "ResolveErrors",
+                        ),
+                    )
+                })
+        })
+}
 
 /// Components in a dependency cycle, self-dependencies included: the
 /// members of strongly connected components larger than one node.
@@ -42,7 +102,10 @@ pub fn cyclic(components: &[Component]) -> HashSet<&str> {
         .iter()
         .filter(|scc| scc.len() > 1 || edges[scc[0]].contains(&scc[0]))
         .flatten()
-        .map(|&node| components[node].identity.as_str())
+        .flat_map(|&node| {
+            let raw = components[node].identity.as_str();
+            [raw, raw.trim()]
+        })
         .collect()
 }
 

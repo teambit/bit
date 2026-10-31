@@ -83,45 +83,54 @@ impl Policy {
             .iter()
             .filter_map(Value::as_str)
             .map(str::trim)
-            .filter(|id| !id.is_empty())
             .map(|id| {
                 id.rfind('@')
-                    .map_or(id, |sep| &id[..sep])
+                    .map_or(id, |sep| id[..sep].trim())
             })
+            .filter(|id| !id.is_empty())
             .collect())
     }
 
     fn pinned_dependencies(&self, dependencies: &Value) -> io::Result<Vec<String>> {
         let workspace_ids = self.workspace_base_ids()?;
-        let state = &dependencies["state"];
-        let entries = array(state.get("entries"), "dependency entries")?;
+        let entries = array(dependencies["state"].get("entries"), "dependency entries")?;
         let mut pinned = Vec::new();
-        for indices in array(state.get("components"), "dependency lifecycles")? {
+        for indices in array(dependencies["state"].get("components"), "dependency lifecycles")? {
             for index in array(Some(indices), "dependency indices")? {
                 let entry = index
                     .as_u64()
-                    .and_then(|index| entries.get(index as usize))
+                    .and_then(|offset| entries.get(offset as usize))
                     .ok_or_else(|| decline("status dependency entry"))?;
-                if entry.get("versionFromConfig") != Some(&Value::Bool(true)) {
-                    continue;
+                if let Some(formatted) = format_pinned_entry(entry, &workspace_ids)? {
+                    pinned.push(formatted);
                 }
-                let identity = text(entry.get("identity"))?;
-                let (base_id, version) = identity
-                    .rsplit_once('@')
-                    .unwrap_or((identity, ""));
-                if !workspace_ids.contains(base_id) {
-                    continue;
-                }
-                let package = entry
-                    .get("packageName")
-                    .and_then(Value::as_str)
-                    .filter(|pkg| !pkg.is_empty())
-                    .unwrap_or(base_id);
-                pinned.push(format!("{package}@{version}"));
             }
         }
         Ok(pinned)
     }
+}
+
+fn format_pinned_entry(
+    entry: &Value,
+    workspace_ids: &std::collections::HashSet<&str>,
+) -> io::Result<Option<String>> {
+    if entry.get("versionFromConfig") != Some(&Value::Bool(true)) {
+        return Ok(None);
+    }
+    let identity = text(entry.get("identity"))?.trim();
+    let (base_id, version) = identity
+        .rsplit_once('@')
+        .map_or((identity, ""), |(base, ver)| (base.trim(), ver.trim()));
+    if !workspace_ids.contains(base_id) {
+        return Ok(None);
+    }
+    let package = entry
+        .get("packageName")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
+        .unwrap_or(base_id);
+    Ok(Some(format!("{package}@{version}")))
 }
 
 pub fn status_policy(context: &Value, target: &Value) -> io::Result<Policy> {

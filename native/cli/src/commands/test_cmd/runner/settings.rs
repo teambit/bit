@@ -86,7 +86,8 @@ impl Settings {
 
     fn apply_bool_flag(&mut self, token: &str) -> bool {
         match token {
-            "--no-color" | "--no-color=true" | "--no-color=false" | "--json" | "--json=true"
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" | "--json" | "--json=true"
             | "--json=false" | "-j" | "--verbose" | "--verbose=true" | "--verbose=false"
             | "--all" | "--all=true" | "--all=false" | "-a" | "--watch=false" | "--debug=false" => {
             }

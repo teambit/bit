@@ -37,9 +37,9 @@ pub fn status_extensions(target: &Value) -> io::Result<Vec<Value>> {
 }
 
 fn projected_extension(extension: &Value) -> io::Result<Value> {
-    if extension.get("extensionId").is_some()
-        || extension.get("legacyId").is_some()
-        || extension.get("id").is_some()
+    if nullish(extension.get("extensionId")).is_some()
+        || nullish(extension.get("legacyId")).is_some()
+        || nullish(extension.get("id")).is_some()
     {
         return Ok(extension.clone());
     }

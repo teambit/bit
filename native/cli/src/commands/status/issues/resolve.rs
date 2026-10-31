@@ -91,7 +91,11 @@ fn model_identity(context: &Value, model: &Value) -> Option<String> {
                 .map(str::to_owned)
         })
         .or_else(|| {
-            let scope = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
+            let (_, ws) = crate::commands::update_cmd::aspect_entry(
+                &context["workspace"],
+                "teambit.workspace/workspace",
+            )?;
+            let scope = ws["defaultScope"]
                 .as_str()
                 .map(str::trim)
                 .filter(|scope| !scope.is_empty())?;

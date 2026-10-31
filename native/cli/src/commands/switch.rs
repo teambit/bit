@@ -342,13 +342,17 @@ impl RemoteImport {
         let components =
             value["components"].as_u64().ok_or_else(|| decline("switch import components"))?;
         let objects = value["objects"].as_u64().ok_or_else(|| decline("switch import objects"))?;
-        let reason = match value.get("reason") {
-            Some(Value::Null) => None,
-            other => Some(text(other)?.trim().to_string()),
+        let reason = match super::status::js::nullish(value.get("reason")) {
+            None => None,
+            Some(other) => Some(text(Some(other))?.trim().to_string()),
         };
         if reason
             .as_deref()
-            .is_some_and(|reason| !reason.starts_with("for fetching lane "))
+            .is_some_and(|reason| {
+                reason
+                    .strip_prefix("for fetching lane ")
+                    .is_none_or(|lane| lane.trim().is_empty())
+            })
         {
             return Err(decline("native switch remote import reason"));
         }

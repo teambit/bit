@@ -49,29 +49,38 @@ fn component(component: &Value) -> Option<Value> {
         return None;
     }
     let id = &component["componentId"];
-    let identity = if let Some(raw) = id.as_str() {
-        raw.trim()
+    let identity = component_identity(id)?;
+    let has_error = errors
+        || files
+            .iter()
+            .any(|file| {
+                file.get("error")
+                    .is_some_and(|err| !err.is_null())
+            });
+    Some(json!({"id":identity,"passed":sum(files,"pass"),"failed":sum(files,"failed"),
+        "pending":sum(files,"pending"),"hasError":has_error}))
+}
+
+fn non_empty_str(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
+fn component_identity(id: &Value) -> Option<String> {
+    if let Some(raw) = non_empty_str(id) {
+        let bare = raw
             .split('@')
             .next()
             .unwrap_or_default()
-            .trim()
-            .to_owned()
-    } else {
-        let scope = id["_legacy"]["scope"]
-            .as_str()
-            .or_else(|| id["_scope"].as_str())
-            .or_else(|| id["scope"].as_str())
-            .map(str::trim)
-            .filter(|scope| !scope.is_empty())?;
-        let name = id["_legacy"]["name"]
-            .as_str()
-            .or_else(|| id["name"].as_str())
-            .map(str::trim)
-            .filter(|name| !name.is_empty())?;
-        format!("{scope}/{name}")
-    };
-    Some(json!({"id":identity,"passed":sum(files,"pass"),"failed":sum(files,"failed"),
-        "pending":sum(files,"pending"),"hasError":errors||files.iter().any(|file|file.get("error").is_some())}))
+            .trim();
+        return (!bare.is_empty()).then(|| bare.to_owned());
+    }
+    let scope = non_empty_str(&id["_legacy"]["scope"])
+        .or_else(|| non_empty_str(&id["_scope"]))
+        .or_else(|| non_empty_str(&id["scope"]))?;
+    let name = non_empty_str(&id["_legacy"]["name"]).or_else(|| non_empty_str(&id["name"]))?;
+    Some(format!("{scope}/{name}"))
 }
 
 fn sum(rows: &[Value], field: &str) -> u64 {

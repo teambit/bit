@@ -28,10 +28,10 @@ pub(super) fn request(
     Ok(combined.filter(|_| has_tests))
 }
 fn validate_patterns(root: &Path, component: &Component, request: &Value) -> io::Result<()> {
-    let prefix = root
-        .join(component.directory.trim())
+    let prefix = super::paths::normalized(&root.join(component.directory.trim()))
         .to_string_lossy()
         .replace('\\', "/");
+    let prefix = prefix.trim_end_matches('/');
     let patterns = request["config"]["testMatch"]
         .as_array()
         .ok_or_else(|| invalid("tester match patterns"))?;
@@ -42,8 +42,9 @@ fn validate_patterns(root: &Path, component: &Component, request: &Value) -> io:
             .filter(|pat| !pat.is_empty())
             .ok_or_else(|| invalid("tester match pattern"))?
             .replace('\\', "/");
+        let pattern = pattern.strip_prefix('!').map_or(pattern.as_str(), str::trim);
         let relative = pattern
-            .strip_prefix(&prefix)
+            .strip_prefix(prefix)
             .and_then(|value| value.strip_prefix('/'))
             .ok_or_else(|| invalid("tester unconfined multi-component pattern"))?;
         if relative

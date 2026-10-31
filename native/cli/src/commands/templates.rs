@@ -61,7 +61,7 @@ fn run_outside_workspace(
     chalk: Chalk,
 ) -> io::Result<Outcome> {
     if let Some(aspect) = &options.aspect
-        && !WORKSPACE_STARTER_ASPECTS.contains(&aspect.as_str())
+        && !WORKSPACE_STARTER_ASPECTS.contains(&aspect_id_without_version(aspect))
     {
         return Ok(Outcome::Declined("templates outside workspace aspect delegated".into()));
     }

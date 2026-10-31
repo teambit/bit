@@ -20,11 +20,18 @@ pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Select
         return Err(invalid("tester mixed file selection"));
     }
     let cwd = env::current_dir()?;
-    let paths: Vec<_> = values
-        .iter()
-        .map(|value| paths::normalized(&cwd.join(value.trim())))
-        .collect();
-    let bitmap = Bitmap::load(root, None)?;
+    let mut paths = Vec::new();
+    for value in values {
+        let normalized = paths::normalized(&cwd.join(value.trim()));
+        if !paths.contains(&normalized) {
+            paths.push(normalized);
+        }
+    }
+    let default_scope = bit_install::config::WorkspaceConfig::load(root)
+        .ok()
+        .and_then(|cfg| cfg.workspace.default_scope)
+        .filter(|scope| !scope.trim().is_empty());
+    let bitmap = Bitmap::load(root, default_scope.as_deref())?;
     let mut identities = Vec::new();
     for path in &paths {
         let identity = owner(root, &bitmap, path)?;

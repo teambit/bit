@@ -47,11 +47,13 @@ pub(super) fn render(
 
 fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progress) {
     let mut printed_load_stdout = false;
-    for _ in 0..loads {
-        output.status(&format!("loading {loaded} component(s)"));
-        if !printed_load_stdout && !progress.load_stdout.is_empty() {
-            output.raw(&progress.load_stdout);
-            printed_load_stdout = true;
+    if loaded > 0 {
+        for _ in 0..loads {
+            output.status(&format!("loading {loaded} component(s)"));
+            if !printed_load_stdout && !progress.load_stdout.is_empty() {
+                output.raw(&progress.load_stdout);
+                printed_load_stdout = true;
+            }
         }
     }
     if !printed_load_stdout && !progress.load_stdout.is_empty() {
@@ -63,10 +65,16 @@ fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progres
 }
 
 fn forked_lane_reason(forked_id: Option<&str>) -> String {
-    match forked_id
-        .map(|id| id.trim().trim_matches('/'))
-        .filter(|id| !id.is_empty())
-    {
+    let normalized = forked_id
+        .map(|id| {
+            id.split('/')
+                .map(str::trim)
+                .filter(|part| !part.is_empty())
+                .collect::<Vec<_>>()
+                .join("/")
+        })
+        .filter(|id| !id.is_empty());
+    match normalized {
         Some(id) => format!("for fetching lane {id}"),
         None => "for fetching lane".to_owned(),
     }

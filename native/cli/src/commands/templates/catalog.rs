@@ -265,8 +265,7 @@ pub(super) fn select_templates(
     aspect: Option<&str>,
 ) -> Vec<TemplateDescriptor> {
     let aspect = aspect
-        .map(str::trim)
-        .map(|id| id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim()))
+        .map(bit_install::config::aspect_id_without_version)
         .filter(|id| !id.is_empty());
     let source = if inside_workspace { COMPONENT_TEMPLATES } else { WORKSPACE_TEMPLATES };
     source

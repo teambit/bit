@@ -11,18 +11,18 @@ pub(super) fn directory(path: &Path) -> io::Result<()> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(failure(error, "lstat", path)),
     };
-    if !metadata.is_dir() {
-        return match fs::remove_file(path) {
-            Ok(()) => Ok(()),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-            Err(error) => Err(failure(error, "unlink", path)),
-        };
+    if !metadata.is_dir() || metadata.file_type().is_symlink() {
+        return ignore_not_found(fs::remove_file(path), "unlink", path);
     }
     remove_directory_entries(path)?;
-    match fs::remove_dir(path) {
+    ignore_not_found(fs::remove_dir(path), "rmdir", path)
+}
+
+fn ignore_not_found(result: io::Result<()>, op: &'static str, path: &Path) -> io::Result<()> {
+    match result {
         Ok(()) => Ok(()),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-        Err(error) => Err(failure(error, "rmdir", path)),
+        Err(error) => Err(failure(error, op, path)),
     }
 }
 

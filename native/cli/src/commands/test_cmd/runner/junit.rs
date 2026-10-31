@@ -24,14 +24,28 @@ pub(super) fn render(data: &str, raw: &Value) -> io::Result<String> {
     result.push_str("</testsuites>");
     Ok(result)
 }
-fn suite(output: &mut String, component: &Value, raw: &Value) -> io::Result<()> {
-    let identity = component["componentId"]
-        .as_str()
+fn non_empty_str(val: &Value) -> Option<&str> {
+    val.as_str()
         .map(str::trim)
-        .filter(|id| !id.is_empty())
+        .filter(|text| !text.is_empty())
+}
+
+fn component_identity(id: &Value) -> Option<String> {
+    if let Some(raw) = non_empty_str(id) {
+        return Some(raw.to_owned());
+    }
+    let scope = non_empty_str(&id["_legacy"]["scope"])
+        .or_else(|| non_empty_str(&id["_scope"]))
+        .or_else(|| non_empty_str(&id["scope"]))?;
+    let name = non_empty_str(&id["_legacy"]["name"]).or_else(|| non_empty_str(&id["name"]))?;
+    Some(format!("{scope}/{name}"))
+}
+
+fn suite(output: &mut String, component: &Value, raw: &Value) -> io::Result<()> {
+    let identity = component_identity(&component["componentId"])
         .ok_or_else(|| io::Error::other("JUnit identity"))?;
     let cases = cases::collect(component, raw)?;
-    write!(output, r#"  <testsuite name="{}""#, xml::attribute(identity)).unwrap();
+    write!(output, r#"  <testsuite name="{}""#, xml::attribute(&identity)).unwrap();
     if let Some(start) = component["results"]["start"]
         .as_i64()
         .filter(|start| *start != 0)

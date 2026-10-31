@@ -47,7 +47,7 @@ fn root_policy(policy: &Value) -> io::Result<[Map<String, Value>; 2]> {
     Ok(manifest.map(|field| {
         field
             .into_iter()
-            .map(|(name, version)| (name, json!(version)))
+            .map(|(name, version)| (name.trim().to_owned(), json!(version.trim())))
             .collect()
     }))
 }
@@ -64,8 +64,12 @@ fn configured_policy(context: &Value) -> io::Result<Value> {
 }
 
 fn is_valid_policy_version_entry(value: &Value) -> bool {
-    value
-        .as_str()
-        .or_else(|| value.get("version").and_then(Value::as_str))
-        .is_some_and(|ver| !ver.trim().is_empty())
+    let valid_preserve = value
+        .get("preserve")
+        .is_none_or(|preserve| preserve.is_null() || preserve.is_boolean());
+    valid_preserve
+        && value
+            .as_str()
+            .or_else(|| value.get("version").and_then(Value::as_str))
+            .is_some_and(|ver| !ver.trim().is_empty())
 }

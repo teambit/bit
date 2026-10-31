@@ -86,7 +86,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
 /// return the parsed options (with a placeholder version) and the invalid `--ver` value.
 pub fn invalid_ver(args: &[&str]) -> Option<(Options, String)> {
     let mut flags = read(args)?;
-    let ver = flags.string("--ver")?.to_owned();
+    let ver = flags.string("--ver")?.trim().to_owned();
     if node_semver::npm::valid(&ver).is_some() {
         return None;
     }

@@ -72,7 +72,8 @@ fn projected_extensions(policy: &Policy, output: &Value) -> io::Result<Value> {
 /// Peer component metadata for the published `ConsumerComponent` adapter.
 pub fn peer_metadata(state: &Value) -> io::Result<Value> {
     let entries = array(state.get("entries"), "peer dependency entries")?;
-    metadata_dependencies(&state["components"][2], entries)
+    let lifecycles = array(state.get("components"), "dependency lifecycles")?;
+    metadata_dependencies(lifecycles.get(2).unwrap_or(&Value::Null), entries)
 }
 
 fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value> {
@@ -89,7 +90,12 @@ fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value
             row.insert("id".into(), identity_object(text(entry.get("identity"))?)?);
             row.insert("relativePaths".into(), json!([]));
             for field in ["packageName", "versionRange"] {
-                if truthy(entry.get(field)) {
+                let value = entry.get(field);
+                if truthy(value)
+                    && value
+                        .and_then(Value::as_str)
+                        .is_none_or(|val| !val.trim().is_empty())
+                {
                     row.insert(field.into(), entry[field].clone());
                 }
             }

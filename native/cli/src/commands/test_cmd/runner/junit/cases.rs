@@ -67,7 +67,10 @@ pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
             .map(str::trim)
             .filter(|file_name| !file_name.is_empty())
             .ok_or_else(|| io::Error::other("JUnit filename"))?;
-        if file.get("error").is_some() {
+        if file
+            .get("error")
+            .is_some_and(|err| !err.is_null())
+        {
             cases.push(Case {
                 file: name.to_owned(),
                 name: name.to_owned(),

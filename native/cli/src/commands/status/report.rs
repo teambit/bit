@@ -247,16 +247,25 @@ fn model_heads<'r>(
         if let (Some(scope), Some(name), Some(head)) = (
             model["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty()),
-            model["name"].as_str(),
-            model["head"].as_str(),
+            model["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty()),
+            model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty()),
         ) {
             heads.insert(format!("{scope}/{name}"), head);
         }
     }
     for &identity in versions.keys() {
-        if let Some(head) =
-            super::policy::model_of(context, identity).and_then(|model| model["head"].as_str())
+        if let Some(head) = super::policy::model_of(context, identity)
+            .and_then(|model| model["head"].as_str())
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
         {
             heads.entry(identity.to_owned()).or_insert(head);
         }
@@ -266,8 +275,8 @@ fn model_heads<'r>(
 
 impl<'r> Status<'r> {
     fn lane(&self) -> io::Result<Option<&'r str>> {
-        let lane = text(self.result.get("currentLaneId"))?;
-        Ok((!lane.ends_with("/main")).then_some(lane))
+        let lane = text(self.result.get("currentLaneId"))?.trim();
+        Ok((!lane.is_empty() && lane != "main" && !lane.ends_with("/main")).then_some(lane))
     }
 
     fn new(
@@ -278,9 +287,9 @@ impl<'r> Status<'r> {
     ) -> io::Result<Self> {
         let mut versions = HashMap::new();
         for target in array(context.get("targets"), "targets")? {
-            let version = text(target.get("version"))?;
+            let version = text(target.get("version"))?.trim();
             versions.insert(
-                text(target.get("identity"))?,
+                text(target.get("identity"))?.trim(),
                 Some(version).filter(|version| !version.is_empty()),
             );
         }
@@ -299,7 +308,7 @@ impl<'r> Status<'r> {
             troubleshooting: std::cell::Cell::new(false),
         };
         for row in array(result.get("componentsWithIssues"), "issues")? {
-            let identity = text(row.get("id"))?;
+            let identity = text(row.get("id"))?.trim();
             let version = status.version(identity)?;
             let issues = array(row.get("issues"), "issues")?;
             status.with_issues.push(WithIssues { identity, version, issues });

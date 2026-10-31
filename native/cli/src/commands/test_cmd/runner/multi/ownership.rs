@@ -9,6 +9,7 @@ pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> 
     {
         return Err(invalid("tester empty component directory"));
     }
+    let root = super::super::paths::normalized(root);
     let roots: Vec<_> = components
         .iter()
         .map(|component| super::super::paths::normalized(&root.join(component.directory.trim())))
@@ -24,9 +25,9 @@ pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> 
         {
             return Err(invalid("tester overlapping component roots"));
         }
-        check(root, directory)?;
+        check(&root, directory)?;
         reject_symlinks(directory)?;
-        validate_sources(root, directory, &components[index])?;
+        validate_sources(&root, directory, &components[index])?;
     }
     Ok(())
 }

@@ -34,15 +34,16 @@ impl Status<'_> {
                 let mut message = format!("{from} is ahead by {} snaps", target.len());
                 if self.flags.verbose
                     && !array(row["divergeData"].get("snapsOnSourceOnly"), "lane snaps")?.is_empty()
+                    && let Some(common) = row["divergeData"]
+                        .get("commonSnapBeforeDiverge")
+                        .and_then(|value| value.get("hash").or(Some(value)))
+                        .and_then(serde_json::Value::as_str)
+                        .map(str::trim)
+                        .filter(|hash| !hash.is_empty())
                 {
-                    let common = text(
-                        row["divergeData"]
-                            .get("commonSnapBeforeDiverge")
-                            .and_then(|value| value.get("hash").or(Some(value))),
-                    )?
-                    .trim();
+                    let short: String = common.chars().take(9).collect();
                     message.push_str(" (diverged since ");
-                    message.push_str(&common[..common.len().min(9)]);
+                    message.push_str(&short);
                     message.push(')');
                 }
                 let forked = array(self.result.get("updatesFromForked"), "forked updates")?;

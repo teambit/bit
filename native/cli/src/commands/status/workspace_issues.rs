@@ -48,7 +48,12 @@ fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String>
         .keys()
         .find(|key| {
             let trimmed = key.trim();
-            trimmed != "$schema" && !trimmed.contains('/')
+            trimmed != "$schema"
+                && !trimmed
+                    .split_once('/')
+                    .is_some_and(|(scope, name)| {
+                        !scope.trim().is_empty() && !name.trim().is_empty()
+                    })
         })?;
     Some(format!(r#"unable to parse the component-id "{key}" from the workspace.jsonc file"#))
 }

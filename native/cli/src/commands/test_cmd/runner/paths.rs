@@ -2,11 +2,11 @@
 use std::path::{Path, PathBuf};
 
 pub(super) fn normalized(path: &Path) -> PathBuf {
-    if path.as_os_str().is_empty()
-        || path
-            .to_str()
-            .is_some_and(|text| text.trim().is_empty())
-    {
+    let path = match path.to_str() {
+        Some(text) => Path::new(text.trim()),
+        None => path,
+    };
+    if path.as_os_str().is_empty() {
         return PathBuf::new();
     }
     let mut result = PathBuf::new();

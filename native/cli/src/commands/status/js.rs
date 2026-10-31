@@ -86,13 +86,9 @@ pub fn full_identity(target: &Value) -> io::Result<String> {
     if identity.contains('@') {
         return Ok(identity);
     }
-    match target
-        .get("version")
-        .or_else(|| target.get("head"))
-        .or_else(|| target["id"].get("version"))
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|version| !version.is_empty())
+    match non_empty_str(target.get("version"))
+        .or_else(|| non_empty_str(target.get("head")))
+        .or_else(|| non_empty_str(target["id"].get("version")))
     {
         Some(version) => Ok(format!("{identity}@{version}")),
         None => Ok(identity),
@@ -100,12 +96,8 @@ pub fn full_identity(target: &Value) -> io::Result<String> {
 }
 
 fn base_target_identity(target: &Value) -> io::Result<String> {
-    if let Some(identity) = target
-        .get("identity")
-        .or_else(|| target.get("id"))
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
+    if let Some(identity) =
+        non_empty_str(target.get("identity")).or_else(|| non_empty_str(target.get("id")))
     {
         return Ok(identity.to_owned());
     }
@@ -114,15 +106,17 @@ fn base_target_identity(target: &Value) -> io::Result<String> {
     if name.is_empty() {
         return Err(decline("status expected a string"));
     }
-    match object
-        .get("scope")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|scope| !scope.is_empty())
-    {
+    match non_empty_str(object.get("scope")) {
         Some(scope) => Ok(format!("{scope}/{name}")),
         None => Ok(name.to_owned()),
     }
+}
+
+fn non_empty_str(value: Option<&Value>) -> Option<&str> {
+    value
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 /// `identity.split('@')[0]`.

@@ -107,7 +107,7 @@ pub(super) fn collect_graph(
             .get("workspace")
             .and_then(|workspace| workspace.get(RESOLVER)),
     );
-    let filtered_graph = filter_graph_for_cycles(root, components, graph);
+    let filtered_graph = cycles::filter_graph_for_cycles(root, components, graph);
     let circular = if context["ignoreCircularDependencies"] == true {
         HashSet::new()
     } else {
@@ -127,35 +127,6 @@ pub(super) fn collect_graph(
         .map(|component| checks.issues(component))
         .collect::<io::Result<Vec<_>>>()
         .map(Some)
-}
-
-fn filter_graph_for_cycles(
-    root: &Path,
-    components: &[Component],
-    graph: &[Component],
-) -> Vec<Component> {
-    let workspace_ids: HashSet<&str> = components
-        .iter()
-        .map(|component| component.identity.as_str())
-        .collect();
-    let unresolved: HashSet<&str> = components
-        .iter()
-        .filter(|component| has_unresolved_deps(root, component))
-        .map(|component| component.identity.as_str())
-        .collect();
-    graph
-        .iter()
-        .map(|component| {
-            if workspace_ids.contains(component.identity.as_str()) {
-                return component.clone();
-            }
-            let mut ext = component.clone();
-            ext.dependencies.retain(|dep| {
-                !workspace_ids.contains(dep.as_str()) || unresolved.contains(dep.as_str())
-            });
-            ext
-        })
-        .collect()
 }
 
 /// What the per-component checks share.
@@ -199,38 +170,57 @@ impl Checks<'_> {
             .iter()
             .find(|row| row.get("identity").and_then(Value::as_str) == Some(identity))
             .ok_or_else(|| decline("status issue target missing"))?;
-        let nested = text(target.get("directory"))? != ".";
+        let dir = text(
+            target
+                .get("directory")
+                .or_else(|| target.get("rootDir")),
+        )?
+        .trim()
+        .trim_start_matches("./")
+        .trim_end_matches('/');
         let mut ignored = self.ignored.clone();
         for name in &component.ignored {
             Issue::parse(name)?;
             ignored.insert(name.as_str());
         }
         let mut issues = deserialize(&component.issues, &ignored)?;
-        let linked = self.root
-            .join("node_modules")
-            .join(&component.package_name)
-            .exists();
-        if nested && !linked {
-            set(&mut issues, Issue::MissingLinks, json!(true));
+        self.append_computed_issues(component, target, !dir.is_empty() && dir != ".", &mut issues)?;
+        issue_object(identity, &issues, &ignored, component)
+    }
+
+    fn append_computed_issues(
+        &self,
+        component: &Component,
+        target: &Value,
+        nested: bool,
+        issues: &mut Vec<(Issue, Value)>,
+    ) -> io::Result<()> {
+        if nested
+            && !self.root
+                .join("node_modules")
+                .join(&component.package_name)
+                .exists()
+        {
+            set(issues, Issue::MissingLinks, json!(true));
         }
         if self.missing_dists(component, target)? {
-            set(&mut issues, Issue::MissingDists, json!(true));
+            set(issues, Issue::MissingDists, json!(true));
         }
         if nested && self.packages.contains(component.package_name.as_str()) {
-            set(&mut issues, Issue::Duplicate, json!(component.package_name));
+            set(issues, Issue::Duplicate, json!(component.package_name));
         }
         if self.circular.contains(component.identity.as_str()) {
-            set(&mut issues, Issue::Circular, json!(true));
+            set(issues, Issue::Circular, json!(true));
         }
-        let removed = self.removed_dependencies(component, &issues)?;
-        if !removed.is_empty() {
-            set(&mut issues, Issue::RemovedDependencies, json!(removed));
+        for (kind, entries) in [
+            (Issue::RemovedDependencies, self.removed_dependencies(component, issues)?),
+            (Issue::DeprecatedDependencies, self.deprecated_dependencies(component)?),
+        ] {
+            if !entries.is_empty() {
+                set(issues, kind, json!(entries));
+            }
         }
-        let deprecated = self.deprecated_dependencies(component)?;
-        if !deprecated.is_empty() {
-            set(&mut issues, Issue::DeprecatedDependencies, json!(deprecated));
-        }
-        issue_object(identity, &issues, &ignored, component)
+        Ok(())
     }
 }
 
@@ -359,32 +349,4 @@ fn set(issues: &mut Vec<(Issue, Value)>, kind: Issue, data: Value) {
         Some((_, existing)) => *existing = data,
         None => issues.push((kind, data)),
     }
-}
-
-fn has_unresolved_deps(root: &Path, component: &Component) -> bool {
-    if !component.package_name.is_empty()
-        && !root
-            .join("node_modules")
-            .join(&component.package_name)
-            .exists()
-    {
-        return true;
-    }
-    component.issues
-        .as_array()
-        .is_some_and(|rows| {
-            rows.iter()
-                .any(|row| {
-                    matches!(
-                        row["type"].as_str(),
-                        Some(
-                            "MissingPackagesDependenciesOnFs"
-                                | "MissingDependenciesOnFs"
-                                | "UntrackedDependencies"
-                                | "ParseErrors"
-                                | "ResolveErrors",
-                        ),
-                    )
-                })
-        })
 }

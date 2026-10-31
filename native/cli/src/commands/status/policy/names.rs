@@ -62,6 +62,7 @@ pub(super) fn names(
 }
 
 fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[Value]) -> String {
+    let identity = super::super::js::without_version(identity);
     let Some(pkg) =
         extensions.iter().find(|entry| component::matches_aspect(entry, "teambit.pkg/pkg"))
     else {
@@ -69,9 +70,9 @@ fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[V
     };
     let (scope, name) = identity
         .split_once('/')
-        .unwrap_or(("", identity));
+        .map_or(("", identity), |(scope, name)| (scope.trim(), name.trim()));
     let id = bit_install::model::ComponentId {
-        scope: Some(scope.to_string()),
+        scope: (!scope.is_empty()).then(|| scope.to_string()),
         default_scope: None,
         name: name.to_string(),
         version: None,

@@ -125,21 +125,27 @@ fn add_variants(
 }
 
 fn component_id(target: &Value) -> io::Result<ComponentId> {
-    let identity = text(target.get("identity"))?.trim();
+    let raw = text(target.get("identity"))?.trim();
+    let (identity, inline_ver) = raw
+        .rsplit_once('@')
+        .map_or((raw, None), |(id, ver)| (id.trim(), Some(ver.trim())));
     let (scope, name) = identity
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
         .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .ok_or_else(|| decline("projection scoped component"))?;
+    let version = target["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .or(inline_ver)
+        .filter(|ver| !ver.is_empty() && *ver != "latest" && *ver != "head")
+        .map(str::to_string);
     Ok(ComponentId {
         scope: Some(scope.to_string()),
         default_scope: None,
         name: name.to_string(),
-        version: target["version"]
-            .as_str()
-            .map(str::trim)
-            .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
-            .map(str::to_string),
+        version,
     })
 }
 

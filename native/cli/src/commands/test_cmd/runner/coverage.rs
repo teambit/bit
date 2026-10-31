@@ -49,23 +49,26 @@ fn read_many(root: &Path, components: &[Coverage]) -> io::Result<Vec<Value>> {
 
 fn project(raw: &Value, directory: &Path, main: &str) -> Option<Value> {
     let rows = raw.as_object()?;
+    let directory = super::paths::normalized(directory);
     let mut files = Vec::new();
     for (path, metrics) in rows {
         let path = path.trim();
-        if path.is_empty() {
+        if path.is_empty() || path == "total" {
+            continue;
+        }
+        let normalized_path = super::paths::normalized(Path::new(path));
+        if !normalized_path.starts_with(&directory) {
             continue;
         }
         let data = metrics_data(metrics)?;
-        if Path::new(path).file_name() == Path::new(main.trim()).file_name()
+        if normalized_path.file_name() == Path::new(main.trim()).file_name()
             && METRICS
                 .iter()
                 .all(|metric| metrics[metric]["pct"].as_f64() == Some(0.0))
         {
             continue;
         }
-        if Path::new(path).starts_with(directory) {
-            files.push(json!({"path":relative(directory, Path::new(path)),"data":data}));
-        }
+        files.push(json!({"path":relative(&directory, &normalized_path),"data":data}));
     }
     let total = totals(&files)?;
     Some(json!({"files":files,"total":total}))

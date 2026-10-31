@@ -110,5 +110,10 @@ fn absolute_pattern(directory: &Path, pattern: &str) -> String {
     let (prefix, relative) = pattern
         .strip_prefix('!')
         .map_or(("", pattern), |value| ("!", value.trim()));
-    format!("{prefix}{}", directory.join(relative).display())
+    let relative = relative.trim_start_matches("./").trim_start_matches('/');
+    let joined = directory
+        .join(relative)
+        .to_string_lossy()
+        .replace('\\', "/");
+    format!("{prefix}{joined}")
 }

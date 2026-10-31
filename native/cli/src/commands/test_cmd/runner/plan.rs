@@ -29,15 +29,7 @@ impl Plan {
         let settings = Settings::parse(root, args, options)?;
         let loaded = Loaded::prepare(root, &settings.selection)?;
         let components = loaded.components()?;
-        if !components.is_empty()
-            && settings.environment
-                .as_deref()
-                .map(str::trim)
-                .filter(|env| !env.is_empty())
-                .is_some_and(|env| env != loaded.progress.environment.trim())
-        {
-            return Err(invalid("tester environment selection"));
-        }
+        validate_environment(&components, &settings, &loaded.progress.environment)?;
         let request = if components.len() > 1 {
             multi::request(root, &components, &loaded.progress.environment, &settings)?
         } else {
@@ -50,10 +42,12 @@ impl Plan {
                 .flatten()
         };
         let streamed = !options.json && !settings.summary && request.is_some();
-        let runnable = if streamed {
-            count_runnable(root, &components, &loaded.progress.environment, &settings)?
-        } else {
+        let runnable = if !streamed {
             0
+        } else if components.len() <= 1 {
+            usize::from(request.is_some())
+        } else {
+            count_runnable(root, &components, &loaded.progress.environment, &settings)?
         };
         validate_streaming(streamed, &loaded)?;
         let tool = request
@@ -246,6 +240,27 @@ fn validate_streaming(streamed: bool, loaded: &Loaded) -> io::Result<()> {
                 .any(|id| !collate::supported(id)))
     {
         return Err(invalid("tester text collation"));
+    }
+    Ok(())
+}
+
+fn validate_environment(
+    components: &[Component],
+    settings: &Settings,
+    environment: &str,
+) -> io::Result<()> {
+    let loaded_env = environment.trim();
+    if !components.is_empty()
+        && settings.environment
+            .as_deref()
+            .map(str::trim)
+            .filter(|env| !env.is_empty())
+            .is_some_and(|env| {
+                env != loaded_env
+                    && bit_install::config::aspect_id_without_version(loaded_env) != env
+            })
+    {
+        return Err(invalid("tester environment selection"));
     }
     Ok(())
 }
