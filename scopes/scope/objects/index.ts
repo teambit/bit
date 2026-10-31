@@ -18,6 +18,8 @@ export { BitObjectList } from './objects/bit-object-list';
 export { LaneComponent, Log as LaneLog, LaneReadmeComponent } from './models/lane';
 export {
   DependenciesGraph,
+  parseDependenciesGraphNodeId,
+  splitDependenciesGraphPeerIds,
   type PackagesMap,
   type PackageAttributes,
   type DependencyEdge,
