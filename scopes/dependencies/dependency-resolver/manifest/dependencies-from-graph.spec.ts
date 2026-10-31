@@ -114,6 +114,30 @@ describe('applyDependenciesGraph', () => {
     expect(applied.envPeers['@types/node']).to.equal('18.16.1');
   });
 
+  it('keeps a package declared both as required and as optional optional, the way pnpm reads it', () => {
+    const applied = applyDependenciesGraph({
+      graph,
+      declared: { dependencies: { fsevents: '^2.0.0' }, optionalDependencies: { fsevents: '^2.0.0' } },
+      envPeers: {},
+      exclude: new Set(),
+    });
+    expect(applied.optionalDependencies).to.eql({ fsevents: '2.3.3' });
+    expect(applied.dependencies).not.to.have.property('fsevents');
+  });
+
+  it("gives an env peer the env's pin when the component's own peer declaration rejects the graph's version", () => {
+    // The peer moved from ^17 to ^19 after the graph was saved.
+    const peerOnly = graphWithDirectDeps([{ id: 'react@18.3.1', name: 'react', specifier: '*', lifecycle: 'runtime' }]);
+    const applied = applyDependenciesGraph({
+      graph: peerOnly,
+      declared: { peerDependencies: { react: '^19.0.0' } },
+      envPeers: { react: '19.1.0' },
+      exclude: new Set(),
+    });
+    expect(applied.dependencies).not.to.have.property('react');
+    expect(applied.envPeers.react).to.equal('19.1.0');
+  });
+
   it('takes a declared dependency the root edge lacks from the highest accepted version the graph holds', () => {
     const hoisted = graphWithDirectDeps([], ['core-js@2.6.12', 'core-js@3.8.3', 'core-js@3.50.0', 'core-js@4.0.0']);
     const applied = applyDependenciesGraph({

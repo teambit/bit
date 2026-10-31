@@ -11,7 +11,12 @@ export type GraphAppliedDependencies = {
   envPeers: LifecycleDependenciesManifest;
 };
 
-const MANIFEST_GROUPS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
+/**
+ * The groups a manifest declares dependencies in, in the order pnpm reads a
+ * name declared in several: an optional declaration overrides a required
+ * one, and a required one a dev one.
+ */
+const MANIFEST_GROUPS = ['optionalDependencies', 'dependencies', 'devDependencies'] as const;
 
 /**
  * The versions the graph resolved the component's direct dependencies and
@@ -60,7 +65,10 @@ function highestHeldVersion(graph: DependenciesGraph, name: string, spec: string
   for (const pkgId of graph.packages.keys()) {
     const parsed = parseDependenciesGraphNodeId(pkgId);
     if (!parsed || parsed.name !== name || !declarationAccepts(spec, parsed.version)) continue;
-    if (highest == null || (semver.valid(parsed.version) && semver.valid(highest) && semver.gt(parsed.version, highest))) {
+    if (
+      highest == null ||
+      (semver.valid(parsed.version) && semver.valid(highest) && semver.gt(parsed.version, highest))
+    ) {
       highest = parsed.version;
     }
   }
@@ -136,7 +144,11 @@ export function applyDependenciesGraph({
     // records: the lifecycle of the workspace's own declaration.
     const group =
       MANIFEST_GROUPS.find((candidate) => declared[candidate]?.[name] != null) ??
-      (neighbour.lifecycle === 'dev' ? 'devDependencies' : neighbour.optional ? 'optionalDependencies' : 'dependencies');
+      (neighbour.lifecycle === 'dev'
+        ? 'devDependencies'
+        : neighbour.optional
+          ? 'optionalDependencies'
+          : 'dependencies');
     result[group][name] = parsed.version;
     placed.add(name);
   }
@@ -166,9 +178,18 @@ export function applyDependenciesGraph({
       placed.add(name);
     }
   }
+  // An env peer the component also declares as a peer takes the graph's
+  // version only while that declaration accepts it, just as the declared peer
+  // above would have.
   for (const [name, spec] of Object.entries(envPeers)) {
     if (placed.has(name)) continue;
-    result.envPeers[name] = (!exclude.has(name) && versions.get(name)) || spec;
+    const version = versions.get(name);
+    const graphVersionHolds =
+      version != null &&
+      !exclude.has(name) &&
+      !contradicted.has(name) &&
+      declarationAccepts(declared.peerDependencies?.[name], version);
+    result.envPeers[name] = graphVersionHolds ? version : spec;
   }
   return result;
 }

@@ -1093,8 +1093,12 @@ export class IsolatorMain {
         }
         continue;
       }
-      const extensionGraph = await legacyScope.getDependenciesGraphByComponentId(dependency.componentId);
-      if (extensionGraph == null || extensionGraph.isEmpty()) {
+      // One read of the extension's Version gives both its graph and the
+      // dependencies to walk next, so the walk never attaches a graph it
+      // cannot then follow.
+      const version = await this.loadVersionObject(dependency.componentId, legacyScope);
+      const extensionGraph = await version?.loadDependenciesGraph(legacyScope.objects);
+      if (version == null || extensionGraph == null || extensionGraph.isEmpty()) {
         this.logger.debug(
           `isolator: no dependencies graph for ${dependency.componentId.toString()}, a dependency of ${dependentId} its graph lacks`
         );
@@ -1109,7 +1113,7 @@ export class IsolatorMain {
       }
       if (expanded.has(pkgId)) continue;
       expanded.add(pkgId);
-      const nestedDependencies = await this.getRuntimeComponentDependencies(dependency.componentId, legacyScope);
+      const nestedDependencies = this.getRuntimeComponentDependencies(version);
       await this.attachComponentDependencyGraphs(
         dependency.componentId.toString(),
         nestedDependencies,
@@ -1122,17 +1126,22 @@ export class IsolatorMain {
   }
 
   /**
-   * The component dependencies an installed package of `id` declares, read
-   * from its stored Version: loading the component itself could import and
-   * load envs, which isolation avoids for an extension it only installs.
+   * The stored Version of an extension the isolation installs: read from the
+   * scope rather than loading the component, which could import and load
+   * envs. An extension the scope lacks has no graph to attach, as when its
+   * graph lookup finds none.
    */
-  private async getRuntimeComponentDependencies(id: ComponentID, legacyScope: Scope): Promise<ComponentDependency[]> {
-    let version: Version;
+  private async loadVersionObject(id: ComponentID, legacyScope: Scope): Promise<Version | undefined> {
     try {
-      version = await legacyScope.getVersionInstance(id);
-    } catch {
-      return [];
+      return await legacyScope.getVersionInstance(id);
+    } catch (err: any) {
+      this.logger.debug(`isolator: unable to read the Version of ${id.toString()}: ${err?.message}`);
+      return undefined;
     }
+  }
+
+  /** The runtime component dependencies an installed package of `version` declares. */
+  private getRuntimeComponentDependencies(version: Version): ComponentDependency[] {
     const serialized = version.extensions.findCoreExtension(DependencyResolverAspect.id)?.data?.dependencies ?? [];
     return this.dependencyResolver
       .getDependenciesFromSerializedDependencies(serialized)
