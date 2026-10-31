@@ -145,10 +145,7 @@ fn select_all(root: &Path, bitmap: &Value, identities: &[String]) -> io::Result<
     for identity in identities {
         let (key, row) = rows
             .iter()
-            .find(|(key, row)| {
-                let scope = row["defaultScope"].as_str().unwrap_or_default();
-                **key == *identity || format!("{scope}/{key}") == *identity
-            })
+            .find(|(key, row)| row_matches_identity(key, row, identity))
             .ok_or_else(|| invalid("component not tracked"))?;
         if !keys.insert(key) {
             return Err(invalid("duplicate stash removal component"));
@@ -156,6 +153,18 @@ fn select_all(root: &Path, bitmap: &Value, identities: &[String]) -> io::Result<
         selected.push(select(root, bitmap, key, row)?);
     }
     Ok(selected)
+}
+
+fn row_matches_identity(key: &str, row: &Value, identity: &str) -> bool {
+    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
+        return false;
+    }
+    let (scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let full = match scope {
+        Some(sc) => format!("{sc}/{name}"),
+        None => name.to_owned(),
+    };
+    key == identity || name == identity || full == identity
 }
 fn select(root: &Path, bitmap: &Value, key: &str, row: &Value) -> io::Result<Selected> {
     let mut shape = row.clone();

@@ -34,6 +34,40 @@ pub(super) fn set_in_comp_json(
     Ok(CompJsonEdit { path, bytes })
 }
 
+pub(super) fn apply_set_to_entry(
+    bitmap_val: &mut Value,
+    entry: &BitmapEntry,
+    resolved_aspect_id: &str,
+    bare_aspect: &str,
+    config: &Value,
+    merge: bool,
+) -> Result<bool, Failure> {
+    let row = find_bitmap_row_mut(bitmap_val, entry)?;
+    let row_obj =
+        row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
+    let cfg_val = row_obj
+        .entry("config")
+        .or_insert_with(|| json!({}));
+    let cfg_obj =
+        cfg_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
+    let target_key = find_matching_aspect_key(cfg_obj, bare_aspect)
+        .unwrap_or_else(|| resolved_aspect_id.to_owned());
+    let current = cfg_obj.get(&target_key);
+    if current == Some(config) {
+        return Ok(false);
+    }
+    let new_cfg = match (merge, current) {
+        (true, Some(existing)) if existing.is_object() && config.is_object() => {
+            let mut merged = existing.clone();
+            deep_merge(&mut merged, config);
+            merged
+        }
+        _ => config.clone(),
+    };
+    cfg_obj.insert(target_key, new_cfg);
+    Ok(true)
+}
+
 pub(super) fn unset_in_comp_json(
     path: PathBuf,
     bare_aspect: &str,

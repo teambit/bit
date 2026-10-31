@@ -159,34 +159,14 @@ fn readme_row_matches(
     readme_scope: Option<&str>,
 ) -> bool {
     if key.starts_with('$')
-        || key == "version"
-        || key == "_bit_lane"
+        || matches!(key, "version" | "_bit_lane")
         || !value.is_object()
         || value["isAvailableOnCurrentLane"] == false
+        || crate::workspace::engine::client_status::config::is_config_removed(&value["config"])
     {
         return false;
     }
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
-    let row_name = value["name"]
-        .as_str()
-        .filter(|name| !name.is_empty())
-        .unwrap_or(key_id);
-    let row_scope = value["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| {
-            value["defaultScope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-        });
-    let name_ok = row_name == readme_name
-        || key_id == readme_name
-        || readme_scope.is_some_and(|scope| key_id == format!("{scope}/{readme_name}"));
-    let scope_ok = readme_scope.is_none()
-        || row_scope == readme_scope
-        || (row_scope.is_none()
-            && readme_scope.is_some_and(|scope| {
-                key_id == format!("{scope}/{readme_name}") || key_id == readme_name
-            }));
-    name_ok && scope_ok
+    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, value);
+    row_name == readme_name
+        && (readme_scope.is_none() || row_scope.is_none() || row_scope == readme_scope)
 }

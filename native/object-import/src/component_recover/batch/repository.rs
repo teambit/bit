@@ -60,7 +60,12 @@ pub(super) fn lane(batch: &mut Batch) -> io::Result<Option<Value>> {
         return Ok(None);
     }
     let index = index(batch)?;
-    let rows = index["lanes"].as_array().ok_or_else(|| invalid("recovery lane index"))?;
+    let empty = Vec::new();
+    let rows = if index.is_array() {
+        &empty
+    } else {
+        index["lanes"].as_array().ok_or_else(|| invalid("recovery lane index"))?
+    };
     let row = rows
         .iter()
         .find(|row| row["id"] == id)

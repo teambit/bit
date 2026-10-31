@@ -186,7 +186,7 @@ fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
         })
 }
 
-fn snap_row_matches(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
+fn snap_row_matches(key: &str, row: &Value, scope: &str, name: &str, _full: &str) -> bool {
     if key.starts_with('$')
         || matches!(key, "_bit_lane" | "version")
         || !row.is_object()
@@ -195,15 +195,6 @@ fn snap_row_matches(key: &str, row: &Value, scope: &str, name: &str, full: &str)
     {
         return false;
     }
-    let bare = key.rsplit_once('@').map_or(key, |(id, _)| id);
-    let name_ok = row["name"] == name || bare == name || bare == full;
-    let row_scope = row["scope"]
-        .as_str()
-        .filter(|scope_str| !scope_str.is_empty())
-        .or_else(|| {
-            row["defaultScope"]
-                .as_str()
-                .filter(|scope_str| !scope_str.is_empty())
-        });
-    name_ok && (row_scope == Some(scope) || (row_scope.is_none() && (bare == full || bare == name)))
+    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+    row_name == name && row_scope.is_none_or(|sc| sc == scope)
 }

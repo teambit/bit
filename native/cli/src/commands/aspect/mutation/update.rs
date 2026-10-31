@@ -222,9 +222,41 @@ pub(in crate::commands) fn find_component_aspect(
     entry: &BitmapEntry,
     bare_aspect: &str,
 ) -> Option<(Option<String>, Value)> {
+    if is_aspect_minus_in_bitmap(bitmap_val, entry, bare_aspect)
+        || is_aspect_minus_in_comp_json(root, entry, bare_aspect)
+    {
+        return None;
+    }
     find_aspect_in_bitmap(bitmap_val, entry, bare_aspect)
         .or_else(|| find_aspect_in_comp_json(root, entry, bare_aspect))
         .or_else(|| find_aspect_in_scope_version(root, entry, bare_aspect))
+}
+
+fn is_aspect_minus_in_bitmap(bitmap_val: &Value, entry: &BitmapEntry, bare_aspect: &str) -> bool {
+    find_bitmap_row_ref(bitmap_val, entry)
+        .ok()
+        .and_then(|row| row["config"].as_object())
+        .and_then(|map| {
+            let key = find_matching_aspect_key(map, bare_aspect)?;
+            map.get(&key)?.as_str()
+        })
+        == Some("-")
+}
+
+fn is_aspect_minus_in_comp_json(root: &Path, entry: &BitmapEntry, bare_aspect: &str) -> bool {
+    (!entry.root_dir.is_empty())
+        .then(|| root.join(&entry.root_dir).join("component.json"))
+        .and_then(|path| fs::read(path).ok())
+        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+        .and_then(|parsed| {
+            let map = parsed["extensions"].as_object()?;
+            let key = find_matching_aspect_key(map, bare_aspect)?;
+            map.get(&key)?
+                .as_str()
+                .map(str::to_owned)
+        })
+        .as_deref()
+        == Some("-")
 }
 
 fn find_aspect_in_bitmap(
@@ -293,7 +325,9 @@ fn extension_version(ext: &Value) -> Option<String> {
         .or_else(|| {
             let raw = ext["extensionId"]
                 .as_str()
-                .or_else(|| ext["name"].as_str())?;
+                .or_else(|| ext["name"].as_str())
+                .or_else(|| ext["legacyId"].as_str())
+                .or_else(|| ext["extensionId"]["name"].as_str())?;
             raw.rsplit_once('@').map(|(_, ver)| ver)
         })?;
     (!ver.is_empty()).then(|| ver.to_owned())
@@ -302,6 +336,7 @@ fn extension_version(ext: &Value) -> Option<String> {
 fn extension_bare_id(ext: &Value) -> Option<String> {
     if let Some(name) = ext["name"]
         .as_str()
+        .or_else(|| ext["legacyId"].as_str())
         .or_else(|| ext["extensionId"].as_str())
     {
         return Some(bit_install::config::aspect_id_without_version(name).to_owned());

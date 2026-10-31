@@ -42,7 +42,8 @@ pub(super) fn key(bitmap: &Value, id: &str) -> io::Result<Option<String>> {
         .filter(|(key, row)| {
             identity(key, row)
                 .is_some_and(|full| {
-                    self::bare(&full) == bare || row["name"] == bare || self::bare(key) == bare
+                    let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
+                    self::bare(&full) == bare || name == bare || self::bare(key) == bare
                 })
         })
         .collect();

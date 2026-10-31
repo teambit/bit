@@ -10,31 +10,39 @@ pub(super) fn supported_row<'a>(
     kind: RowKind,
 ) -> io::Result<(&'a str, &'a str)> {
     let scope = scope(row)?;
-    let fallback_name = key
-        .strip_prefix(scope)
-        .and_then(|rest| rest.strip_prefix('/'))
-        .unwrap_or(key);
-    let name = row["name"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .unwrap_or(fallback_name);
-    let identity =
-        (key == name || key == format!("{scope}/{name}")) && valid_name(name) && valid_scope(scope);
+    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
+    let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let identity = (key_id == name || key_id == format!("{scope}/{name}"))
+        && valid_name(name)
+        && valid_scope(scope);
     let local = if matches!(kind, RowKind::Imported | RowKind::ExportedLane) {
         row["scope"] == scope && row.get("defaultScope").is_none()
     } else {
-        row["scope"].as_str().is_some_and(str::is_empty)
+        row["scope"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty()
     };
-    let version = row["version"].as_str();
-    let supported = if kind == RowKind::New {
-        version == Some("")
-    } else {
-        version.is_some_and(|value| !value.is_empty())
-    };
-    if !identity || !local || !supported || !supported_row_shape(row, kind) {
+    if !identity
+        || !local
+        || !has_supported_version(key, row, kind)
+        || !supported_row_shape(row, kind)
+    {
         return Err(invalid("component is outside the supported local state"));
     }
     Ok((name, scope))
+}
+
+fn has_supported_version(key: &str, row: &Value, kind: RowKind) -> bool {
+    let version = row["version"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver)
+                .filter(|val| !val.is_empty())
+        });
+    if kind == RowKind::New { version.is_none() } else { version.is_some() }
 }
 
 fn scope(row: &Value) -> io::Result<&str> {

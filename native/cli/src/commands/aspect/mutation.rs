@@ -10,7 +10,7 @@ mod comp_json;
 mod update;
 
 use self::{
-    comp_json::{set_in_comp_json, unset_in_bitmap_row, unset_in_comp_json},
+    comp_json::{apply_set_to_entry, set_in_comp_json, unset_in_bitmap_row, unset_in_comp_json},
     update::{UpdatePlan, prepare_update},
 };
 use super::{
@@ -23,7 +23,7 @@ use crate::commands::{
     workspace_command::{self, format::Formatter, results::Report},
 };
 use bit_install::workspace::{Bitmap, BitmapEntry};
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Value};
 use std::{
     fs, io,
     path::{Path, PathBuf},
@@ -114,6 +114,12 @@ pub(super) fn prepare(
     }
 }
 
+fn comp_json_file(root: &Path, entry: &BitmapEntry) -> Option<PathBuf> {
+    (!entry.root_dir.is_empty())
+        .then(|| root.join(&entry.root_dir).join("component.json"))
+        .filter(|path| path.is_file())
+}
+
 fn prepare_set(
     mut ctx: BitmapContext,
     pattern: &str,
@@ -122,16 +128,13 @@ fn prepare_set(
     merge: bool,
 ) -> Result<Prepared, Failure> {
     let matched = selection::resolve_pattern_entries(&ctx.root, &ctx.bitmap, pattern, ctx.chalk)?;
+    let (resolved_aspect_id, bare_aspect) =
+        resolve_aspect_identity(&ctx.root, &ctx.bitmap, aspect_id)?;
     let mut ids = Vec::with_capacity(matched.len());
     let mut bitmap_changed = false;
     let mut comp_json_edits = Vec::new();
     for entry in matched {
-        let comp_json_path = (!entry.root_dir.is_empty())
-            .then(|| ctx.root.join(&entry.root_dir).join("component.json"))
-            .filter(|path| path.is_file());
-        if let Some(path) = comp_json_path {
-            let (resolved_aspect_id, bare_aspect) =
-                resolve_aspect_identity(&ctx.root, &ctx.bitmap, aspect_id)?;
+        if let Some(path) = comp_json_file(&ctx.root, entry) {
             comp_json_edits.push(set_in_comp_json(
                 path,
                 &resolved_aspect_id,
@@ -139,7 +142,14 @@ fn prepare_set(
                 config,
                 merge,
             )?);
-        } else if apply_set_to_entry(&mut ctx.bitmap_val, entry, aspect_id, config, merge)? {
+        } else if apply_set_to_entry(
+            &mut ctx.bitmap_val,
+            entry,
+            &resolved_aspect_id,
+            &bare_aspect,
+            config,
+            merge,
+        )? {
             bitmap_changed = true;
         }
         ids.push(selection::entry_full_id(entry));
@@ -148,7 +158,7 @@ fn prepare_set(
         pattern: pattern.to_owned(),
         batch: MutationBatch {
             root: ctx.root,
-            aspect_id: aspect_id.to_owned(),
+            aspect_id: resolved_aspect_id,
             ids,
             bitmap_before: ctx.bitmap_before,
             bitmap_val: ctx.bitmap_val,
@@ -156,39 +166,6 @@ fn prepare_set(
             comp_json_edits,
         },
     })
-}
-
-fn apply_set_to_entry(
-    bitmap_val: &mut Value,
-    entry: &BitmapEntry,
-    aspect_id: &str,
-    config: &Value,
-    merge: bool,
-) -> Result<bool, Failure> {
-    let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let current = row
-        .get("config")
-        .and_then(|cfg| cfg.get(aspect_id));
-    if current == Some(config) {
-        return Ok(false);
-    }
-    let new_cfg = match (merge, current) {
-        (true, Some(existing)) if existing.is_object() => {
-            let mut merged = existing.clone();
-            deep_merge(&mut merged, config);
-            merged
-        }
-        _ => config.clone(),
-    };
-    let row_obj =
-        row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
-    let cfg_val = row_obj
-        .entry("config")
-        .or_insert_with(|| json!({}));
-    let cfg_obj =
-        cfg_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
-    cfg_obj.insert(aspect_id.to_owned(), new_cfg);
-    Ok(true)
 }
 
 fn prepare_unset(
@@ -208,10 +185,7 @@ fn prepare_unset(
         let Some(exist) = entries.into_iter().next() else {
             continue;
         };
-        let comp_json_path = (!entry.root_dir.is_empty())
-            .then(|| ctx.root.join(&entry.root_dir).join("component.json"))
-            .filter(|path| path.is_file());
-        if let Some(path) = comp_json_path {
+        if let Some(path) = comp_json_file(&ctx.root, entry) {
             comp_json_edits.push(unset_in_comp_json(path, &bare_aspect, &exist.id)?);
         } else {
             unset_in_bitmap_row(&mut ctx.bitmap_val, entry, &bare_aspect, &exist.id)?;
@@ -308,8 +282,19 @@ pub(in crate::commands) fn find_bitmap_row_ref<'a>(
 }
 
 fn row_matches_entry(key: &str, row: &Value, entry: &BitmapEntry) -> bool {
-    (!entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()))
-        || crate::commands::update_cmd::bitmap_row_name(key, row) == entry.id.name
+    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
+        return false;
+    }
+    if !entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()) {
+        return true;
+    }
+    let (row_scope, row_name) = crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
+    let entry_scope = entry.id.scope
+        .as_deref()
+        .or(entry.id.default_scope.as_deref())
+        .unwrap_or_default();
+    row_name == entry.id.name
+        && (row_scope.is_empty() || entry_scope.is_empty() || row_scope == entry_scope)
 }
 
 pub(in crate::commands) fn deep_merge(target: &mut Value, source: &Value) {

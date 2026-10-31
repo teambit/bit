@@ -281,8 +281,19 @@ fn find_bitmap_row_mut<'a>(
 }
 
 fn row_matches_entry(key: &str, row: &Value, entry: &BitmapEntry) -> bool {
-    (!entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()))
-        || super::update_cmd::bitmap_row_name(key, row) == entry.id.name
+    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
+        return false;
+    }
+    if !entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()) {
+        return true;
+    }
+    let (row_scope, row_name) = super::update_cmd::bitmap_row_scope_and_name(key, row);
+    let entry_scope = entry.id.scope
+        .as_deref()
+        .or(entry.id.default_scope.as_deref())
+        .unwrap_or_default();
+    row_name == entry.id.name
+        && (row_scope.is_empty() || entry_scope.is_empty() || row_scope == entry_scope)
 }
 
 impl Prepared {

@@ -39,6 +39,7 @@ fn extension_id(value: &Value) -> Option<String> {
     if let Some(id) = value
         .as_str()
         .or_else(|| value["name"].as_str())
+        .or_else(|| value["legacyId"].as_str())
         .or_else(|| value["extensionId"].as_str())
     {
         return Some(id.split('@').next()?.to_owned());
@@ -46,5 +47,6 @@ fn extension_id(value: &Value) -> Option<String> {
     let id = value
         .get("extensionId")
         .or_else(|| value.get("id"))?;
-    Some(format!("{}/{}", id["scope"].as_str()?, id["name"].as_str()?))
+    let name = id["name"].as_str()?.split('@').next()?;
+    Some(format!("{}/{name}", id["scope"].as_str()?))
 }

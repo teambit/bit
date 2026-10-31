@@ -77,7 +77,10 @@ fn remove(document: &mut Document, identity: &str) -> bool {
         .and_then(|value| value.as_array().cloned())
         && let Some(index) = envs
             .iter()
-            .position(|env| env == identity)
+            .position(|env| {
+                env.as_str()
+                    .is_some_and(|val| val == identity || val.starts_with(&format!("{identity}@")))
+            })
     {
         envs.remove(index);
         document.set(&[&gen_key, "envs"], &serde_json::Value::Array(envs));

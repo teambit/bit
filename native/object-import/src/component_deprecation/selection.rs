@@ -44,8 +44,9 @@ pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
         .find_map(|(key, row)| {
             let full = identity(key, row)?;
             let full = full.split('@').next()?;
+            let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
             let key_bare = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
-            (full == id || row["name"] == id || key_bare == id).then_some(key.as_str())
+            (full == id || name == id || key_bare == id).then_some(key.as_str())
         })
         .ok_or_else(|| invalid(format!("component {id} was not found")))
 }
@@ -63,7 +64,9 @@ pub(crate) fn select(bitmap: &Value, pattern: &str) -> io::Result<Vec<String>> {
         .collect::<Vec<_>>();
     let mut result = vec![];
     for (key, row) in rows {
-        if row["isAvailableOnCurrentLane"] == false {
+        if row["isAvailableOnCurrentLane"] == false
+            || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
+        {
             continue;
         }
         let Some(id) = identity(key, row) else { continue };
@@ -87,11 +90,7 @@ fn validate_pattern(pattern: &str) -> io::Result<()> {
 }
 fn matches_parts(key: &str, row: &Value, id: &str, parts: &[&str]) -> bool {
     let bare = id.split('@').next().unwrap_or(id);
-    let key_bare = key.rsplit_once('@').map_or(key, |(prefix, _)| prefix);
-    let name = row["name"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .unwrap_or(key_bare);
+    let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
     let matches = |pattern: &str| {
         bit_workspace_config::glob::matches(pattern, bare)
             || bit_workspace_config::glob::matches(pattern, name)

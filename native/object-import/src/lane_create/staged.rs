@@ -115,31 +115,17 @@ fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
     )
 }
 
-fn bitmap_row_matches(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
+fn bitmap_row_matches(key: &str, row: &Value, scope: &str, name: &str, _full: &str) -> bool {
     if key.starts_with('$')
-        || key == "version"
-        || key == "_bit_lane"
+        || matches!(key, "version" | "_bit_lane")
         || !row.is_object()
         || row["isAvailableOnCurrentLane"] == false
         || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
     {
         return false;
     }
-    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
-    let row_name = row["name"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .unwrap_or(key_id);
-    let name_ok = row_name == name || key_id == name || key_id == full;
-    let tracked_scope = row["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["defaultScope"]
-                .as_str()
-                .filter(|val| !val.is_empty())
-        });
-    name_ok && (tracked_scope == Some(scope) || (tracked_scope.is_none() && key_id == full))
+    let (tracked_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+    row_name == name && tracked_scope == Some(scope)
 }
 
 fn remote(moved: &mut Moved, scope_path: &Path, model: &Value) -> io::Result<Option<String>> {
