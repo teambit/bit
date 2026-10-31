@@ -29,13 +29,13 @@ pub(super) fn ids(root: &Path, options: &Options) -> io::Result<Vec<String>> {
 }
 fn scopes(options: &Options) -> Vec<String> {
     if options.scope_fork {
-        return vec![options.source.clone()];
+        return vec![options.source.trim().to_owned()];
     }
     patterns::split(&options.source)
         .into_iter()
         .filter(|pattern| !pattern.starts_with(['!', '$']))
         .filter_map(|pattern| {
-            let scope = pattern.split('/').next()?;
+            let scope = pattern.split('/').next()?.trim();
             (!scope.is_empty() && !scope.contains('*')).then(|| scope.to_owned())
         })
         .collect()

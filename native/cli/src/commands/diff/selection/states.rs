@@ -91,16 +91,18 @@ fn select_states(
 fn retain_capture(capture: &mut Capture, selected: &[Value]) {
     let ids: HashSet<_> = selected
         .iter()
-        .filter_map(|target| target["identity"].as_str())
+        .filter_map(|target| target["identity"].as_str().map(str::trim))
         .collect();
     capture.captured.retain(|row| {
         row["identity"]
             .as_str()
+            .map(str::trim)
             .is_some_and(|id| ids.contains(id))
     });
     capture.comparisons.retain(|row| {
         row["identity"]
             .as_str()
+            .map(str::trim)
             .is_some_and(|id| ids.contains(id))
     });
 }

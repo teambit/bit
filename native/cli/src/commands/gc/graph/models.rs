@@ -101,6 +101,7 @@ fn normalize_name(value: &mut Value) -> Result<(), String> {
 fn text(value: &Value) -> Result<&str, String> {
     value
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| "legacy workspace model metadata requires the published runtime".into())
 }

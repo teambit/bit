@@ -90,7 +90,12 @@ impl DependentsOptions {
     pub fn request(&self) -> Value {
         let via = self.via
             .as_deref()
-            .map_or_else(Vec::new, |via| via.split(',').map(str::trim).collect());
+            .map_or_else(Vec::new, |via| {
+                via.split(',')
+                    .map(str::trim)
+                    .filter(|item| !item.is_empty())
+                    .collect()
+            });
         json!({"enabled":self.active(),"via":via,"silent":self.silent})
     }
 }

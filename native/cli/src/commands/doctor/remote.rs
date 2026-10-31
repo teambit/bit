@@ -157,7 +157,7 @@ fn file(context: &Context, options: &Options, path: &Path) -> io::Result<(Vec<Va
         };
         match result {
             Ok(result) => results.push(result),
-            Err(error) if options.name.is_some() => return Err(error),
+            Err(error) if requested.is_some() => return Err(error),
             Err(_) => {}
         }
     }

@@ -42,9 +42,15 @@ fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<Stri
             formatter.success_summary("the following files have been re-formatted:")
         });
         for file in issues {
-            lines.push(formatter.item(
-                file["filePath"].as_str().ok_or_else(|| invalid("formatter report filename"))?,
-            ));
+            lines.push(
+                formatter.item(
+                    file["filePath"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|path| !path.is_empty())
+                        .ok_or_else(|| invalid("formatter report filename"))?,
+                ),
+            );
         }
     }
     Ok(lines.join("\n"))

@@ -74,8 +74,10 @@ impl Exported {
         if let Some(history) = &self.fork_history
             && history.external_count > 0
         {
-            let reason =
-                format!("fetching version-history from forked-from lane {}", history.parent);
+            let reason = format!(
+                "fetching version-history from forked-from lane {}",
+                history.parent.trim(),
+            );
             output.restart(&format!("importing {} components {reason}", history.external_count));
             output.restart(&format!(
                 "successfully imported {} components {reason}",

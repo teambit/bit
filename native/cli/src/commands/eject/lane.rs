@@ -86,6 +86,7 @@ pub(in crate::commands) fn eject_from_lane(
 }
 
 fn resolve_main_version(models: &[Value], id: &str) -> io::Result<String> {
+    let id = id.trim();
     let identity = id.split('@').next().unwrap_or(id);
     let model = models
         .iter()

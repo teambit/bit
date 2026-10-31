@@ -156,7 +156,7 @@ impl Receipt {
         let name = id.without_version();
         self.details
             .iter()
-            .find(|detail| detail.id == name)
+            .find(|detail| detail.id.trim() == name)
             .ok_or_else(|| decline("missing details"))
     }
 

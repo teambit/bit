@@ -103,7 +103,7 @@ fn valid_merge_mode(
     if ids.is_empty() {
         return true;
     }
-    strategy.is_some() && ids.len() == 1
+    strategy.is_some_and(|strat| !strat.trim().is_empty()) && ids.len() == 1
 }
 
 fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {

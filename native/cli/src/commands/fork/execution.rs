@@ -69,14 +69,13 @@ fn local(
     output: &bit_install::output::Output,
     results: &mut Results,
 ) -> io::Result<()> {
-    let (scope, id) = source;
-    if scope.trim().is_empty() || id.trim().is_empty() {
+    let (scope, id) = (source.0.trim(), source.1.trim());
+    if scope.is_empty() || id.is_empty() {
         return Err(io::Error::other("fork source identity is empty"));
     }
     let bitmap = bitmap(root)?;
     let captured = linker.capture(root, &bitmap, &[id.to_owned()])?;
     print!("{}", linker.take_stdout());
-    let id = id.trim();
     let mut source = captured
         .into_iter()
         .find(|row| {

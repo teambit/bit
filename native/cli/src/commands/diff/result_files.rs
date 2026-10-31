@@ -34,7 +34,8 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
         file.get("relativePath")
             .or_else(|| file.get("path"))
             .or_else(|| file.get("filePath")),
-    )?;
+    )?
+    .trim();
     let path = if cfg!(windows) { path.replace('/', r"\") } else { path.to_owned() };
     let raw = text(file.get("rawDiff"))?;
     let raw = raw

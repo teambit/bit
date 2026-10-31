@@ -3,6 +3,9 @@ use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};
 
 pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
+    if source.as_os_str().is_empty() || target.as_os_str().is_empty() {
+        return Err(io::Error::from(io::ErrorKind::InvalidInput));
+    }
     let metadata = fs::symlink_metadata(source).map_err(|error| failure(error, "lstat", source))?;
     if metadata.is_symlink() {
         copy_link(source, target)?;

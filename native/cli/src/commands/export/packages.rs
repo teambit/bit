@@ -29,7 +29,11 @@ pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
             .cloned()
             .unwrap_or(Value::Null),
     )?;
-    let cloud_domain = staged["cloudDomain"].as_str().unwrap_or("bit.cloud");
+    let cloud_domain = staged["cloudDomain"]
+        .as_str()
+        .map(str::trim)
+        .filter(|domain| !domain.is_empty())
+        .unwrap_or("bit.cloud");
     for plan in plans {
         let manifest = (!plan.component.has_package_json).then(|| {
             prepared_package_manifest(

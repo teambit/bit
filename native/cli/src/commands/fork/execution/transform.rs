@@ -23,11 +23,13 @@ pub(super) fn source(
     let source_short = source
         .rsplit('/')
         .next()
-        .unwrap_or(source);
+        .unwrap_or(source)
+        .trim();
     let target_short = target
         .rsplit('/')
         .next()
-        .unwrap_or(target.as_str());
+        .unwrap_or(target.as_str())
+        .trim();
     let outputs = ast(
         root,
         linker,

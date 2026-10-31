@@ -30,6 +30,7 @@ pub(super) fn deleted(
         .collect()
 }
 fn description(hash: &str, object: &Object) -> io::Result<String> {
+    let hash = hash.trim();
     let kind = object.kind.as_str();
     let constructor = if kind == "Component" { "ModelComponent" } else { kind };
     let value = &object.value;

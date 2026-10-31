@@ -63,6 +63,7 @@ fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {
     let mut index = 0;
     while let Some(name) = lines.get(index) {
         index += 1;
+        let name = name.trim();
         if name.is_empty() {
             continue;
         }
@@ -72,7 +73,7 @@ fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {
         index += usize::from(right.is_some());
         let kind = change_type(left, right)?;
         rows.push(vec![
-            (*name).to_string(),
+            name.to_string(),
             kind.to_string(),
             left.unwrap_or("---").to_string(),
             right.unwrap_or("---").to_string(),

@@ -43,6 +43,7 @@ fn current(path: &Path, fresh: bool) -> io::Result<Value> {
 pub(super) fn valid_name(name: &str) -> io::Result<String> {
     let mut dot = false;
     let name = name
+        .trim()
         .to_lowercase()
         .chars()
         .filter(|character| {

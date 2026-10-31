@@ -18,7 +18,7 @@ pub(super) fn classify(
             locals.push(bare(id).into());
         }
         if let Some(candidate) = remote.iter().find(|candidate| equal(id, candidate, pool)) {
-            remotes.push(candidate.clone());
+            remotes.push(candidate.trim().to_owned());
         }
     }
     // All forkMultipleFromRemote entries here lack env; its published comparator returns -1.

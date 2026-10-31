@@ -26,7 +26,7 @@ pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::R
     if options.flags.external_pm
         || options.defaults.directory
             .as_deref()
-            .is_some_and(|value| value.starts_with("bit-components"))
+            .is_some_and(|value| value.trim().starts_with("bit-components"))
     {
         super::plan::backup_bytes(
             plan,

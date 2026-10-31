@@ -21,7 +21,7 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
     let patterns = options.ids
         .iter()
         .map(|pattern| {
-            regress::Regex::new(&format!("^{}$", pattern.replace('*', ".*")))
+            regress::Regex::new(&format!("^{}$", pattern.trim().replace('*', ".*")))
                 .map_err(|error| io::Error::other(error.to_string()))
         })
         .collect::<io::Result<Vec<_>>>()?;

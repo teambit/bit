@@ -115,9 +115,13 @@ fn resolve_versions<'a>(
     let to_clean = to_version
         .map(str::trim)
         .filter(|value| !value.is_empty());
+    let default_version = version
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("latest");
     Versions {
-        left: from_clean.unwrap_or_else(|| version.unwrap_or("latest")),
-        right: to_clean.unwrap_or_else(|| version.unwrap_or("latest")),
+        left: from_clean.unwrap_or(default_version),
+        right: to_clean.unwrap_or(default_version),
         historical: to_clean.is_some(),
     }
 }

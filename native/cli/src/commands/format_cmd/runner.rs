@@ -43,7 +43,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     }
 }
 fn invalid(message: &str) -> io::Error {
-    io::Error::other(message)
+    io::Error::other(message.trim())
 }
 
 fn supported_writes(

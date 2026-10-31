@@ -10,7 +10,7 @@ pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report 
     if options.multiple() {
         sections.push(
             ids.iter()
-                .map(|id| formatter.item(id))
+                .map(|id| formatter.item(id.trim()))
                 .collect::<Vec<_>>()
                 .join("\n"),
         );

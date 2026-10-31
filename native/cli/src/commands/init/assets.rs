@@ -26,8 +26,12 @@ fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
     let (path, bytes) = file?;
     let relative = path.to_string_lossy().into_owned();
     let path = root.join(path);
-    let parent = path.parent()?;
-    fs::create_dir_all(parent).ok()?;
+    if let Some(parent) = path
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+    {
+        fs::create_dir_all(parent).ok()?;
+    }
     fs::write(&path, bytes).ok()?;
     Some(relative)
 }

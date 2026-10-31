@@ -110,6 +110,7 @@ fn is_unimported_npm_spec(
 }
 
 fn npm_bit_dep_id(root: &Path, raw_spec: &str) -> Option<String> {
+    let raw_spec = raw_spec.trim();
     let pkg_name = if raw_spec.starts_with('@') {
         let mut parts = raw_spec.splitn(3, '/');
         let scope = parts.next()?;

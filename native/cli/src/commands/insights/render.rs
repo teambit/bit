@@ -323,6 +323,10 @@ fn render_duplicate_entries(entries: &[DuplicateEntry]) -> String {
 }
 
 fn strip_ver(id: &str) -> &str {
+    let id = id.trim();
     id.rsplit_once('@')
-        .map_or(id, |(bare, _)| if bare.is_empty() { id } else { bare })
+        .map_or(id, |(bare, _)| {
+            let bare = bare.trim();
+            if bare.is_empty() { id } else { bare }
+        })
 }

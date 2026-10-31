@@ -54,6 +54,8 @@ impl Guard {
 impl Drop for Guard {
     fn drop(&mut self) {
         platform::restore(&self.0);
+        ENABLED.store(false, Ordering::Release);
+        COLOR.store(false, Ordering::Release);
         ACTIVE.store(false, Ordering::Release);
     }
 }

@@ -97,6 +97,8 @@ impl Lifecycle {
                 row["identity"]
                     .as_str()
                     .or_else(|| row["id"].as_str())
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
                     .map(str::to_owned)
                     .ok_or_else(|| io::Error::other("import graph identity"))
             })

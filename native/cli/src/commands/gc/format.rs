@@ -139,6 +139,7 @@ fn build_summary_lines(
         )));
     }
     for (kind, stats) in &result.deleted.by_type {
+        let kind = kind.trim();
         let size_dim = chalk.dim(&format!("({})", format_bytes(stats.size)));
         lines.push(formatter.item(&format!("{kind}: {} objects {size_dim}", stats.count)));
     }

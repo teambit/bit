@@ -191,9 +191,10 @@ fn load_index_row_version(
 }
 
 fn resolve_scope_seeder(scope_dir: &Path, raw_id: &str) -> Result<(String, Value), Failure> {
+    let raw_id = raw_id.trim();
     let (bare, explicit_ver) = raw_id
         .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+        .map_or((raw_id, None), |(id, ver)| (id.trim(), Some(ver.trim())));
     if bare.is_empty() || explicit_ver == Some("") {
         return Err(Failure::Declined("invalid graph target id".into()));
     }
@@ -211,9 +212,10 @@ fn resolve_scope_seeder(scope_dir: &Path, raw_id: &str) -> Result<(String, Value
     }
     let ver_hash = resolve_ver_hash(&comp_val, explicit_ver.unwrap_or("latest"))
         .ok_or_else(|| Failure::Declined("target version not found".into()))?;
-    let ver_val = read_version_object(scope_dir, &ver_hash)?;
-    let ver_label = tags(&comp_val, &ver_hash).unwrap_or(&ver_hash);
-    Ok((format!("{scope}/{name}@{ver_label}"), ver_val))
+    Ok((
+        format!("{scope}/{name}@{}", tags(&comp_val, &ver_hash).unwrap_or(&ver_hash)),
+        read_version_object(scope_dir, &ver_hash)?,
+    ))
 }
 
 fn read_version_object(scope_dir: &Path, ver_hash: &str) -> Result<Value, Failure> {

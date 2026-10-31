@@ -198,7 +198,7 @@ fn workspace_env_has_version(bitmap: &Bitmap, bare: &str) -> bool {
                 && entry.id.to_string_without_version() == bare
                 && entry.id.version
                     .as_deref()
-                    .is_some_and(|ver| !ver.is_empty())
+                    .is_some_and(|ver| !ver.trim().is_empty())
         })
 }
 

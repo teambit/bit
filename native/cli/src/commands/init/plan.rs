@@ -144,11 +144,11 @@ pub(super) fn backup_bytes(
     let id = workspace_command::file_id();
     plan.actions.push(Action::File(
         scope
-            .join(directory)
-            .join(format!("{prefix}{id}")),
+            .join(directory.trim())
+            .join(format!("{}{id}", prefix.trim())),
         bytes,
     ));
-    let metadata_path = scope.join(metadata);
+    let metadata_path = scope.join(metadata.trim());
     let mut bytes = plan.actions
         .iter()
         .rev()

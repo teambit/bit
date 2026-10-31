@@ -60,7 +60,12 @@ impl Planned {
             let semver = workspace_command::checkout_policy::semver(receipt)?;
             completed = self.engine.request(&json!({"kind":"commandInboundPolicyComplete","token":self.prepared["token"],"semver":semver}))?;
         }
-        if completed["completed"] != true || completed["token"] != self.prepared["token"] {
+        if completed["completed"] != true
+            || completed["token"] != self.prepared["token"]
+            || self.prepared["token"]
+                .as_str()
+                .is_none_or(|tok| tok.trim().is_empty())
+        {
             return Err(io::Error::other("native import dependency completion"));
         }
         let receipt = report::validate(&completed)?;

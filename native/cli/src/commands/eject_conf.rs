@@ -213,10 +213,11 @@ fn prepare_entry(
     bitmap_val: &mut Value,
     entry: &BitmapEntry,
 ) -> Result<(EjectedFile, bool), Failure> {
-    if entry.root_dir.is_empty() {
+    let root_dir = entry.root_dir.trim();
+    if root_dir.is_empty() {
         return Err(Failure::Declined("empty root_dir on eject-conf".into()));
     }
-    let abs_path = ctx.root.join(&entry.root_dir).join("component.json");
+    let abs_path = ctx.root.join(root_dir).join("component.json");
     let existing = load_existing_comp_json(&abs_path, ctx.opts.override_existing)?;
     let scope = entry.id.scope
         .as_deref()

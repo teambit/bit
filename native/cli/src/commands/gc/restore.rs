@@ -28,7 +28,7 @@ pub(super) enum Error {
 impl Error {
     pub(super) fn report(self, chalk: Chalk) -> io::Error {
         match self {
-            Self::Missing(message) => io::Error::other(message),
+            Self::Missing(message) => io::Error::other(message.trim().to_owned()),
             Self::Filesystem(error) => super::io_error::report(&error, chalk),
         }
     }

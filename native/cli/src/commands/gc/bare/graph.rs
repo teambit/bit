@@ -77,7 +77,9 @@ impl<'a> Collector<'a> {
                 "ScopeMeta" => {
                     self.retained.insert(digest(text(&object.value["name"])?));
                 }
-                "Component" if object.value["scope"] == self.name => {
+                "Component"
+                    if object.value["scope"].as_str().map(str::trim) == Some(self.name.trim()) =>
+                {
                     let component = &object.value;
                     self.component(component, component["head"].as_str(), true)?;
                     for head in strings(&component["detachedHeads"]["heads"])? {

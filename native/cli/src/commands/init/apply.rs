@@ -9,7 +9,10 @@ pub(super) fn apply(plan: Plan) -> io::Result<()> {
             Action::Remove(path) => remove(&path)?,
             Action::Empty(path) => empty(&path)?,
             Action::File(path, bytes) => {
-                if let Some(parent) = path.parent() {
+                if let Some(parent) = path
+                    .parent()
+                    .filter(|dir| !dir.as_os_str().is_empty())
+                {
                     fs::create_dir_all(parent)?;
                 }
                 fs::write(path, bytes)?;

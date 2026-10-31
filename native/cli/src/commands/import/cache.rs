@@ -86,6 +86,9 @@ fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
                 .map(|_| clean)
         })
         .collect();
+    if requested.is_empty() {
+        return Ok(Vec::new());
+    }
     let targets =
         context["targets"].as_array().ok_or_else(|| io::Error::other("import cache targets"))?;
     Ok(targets

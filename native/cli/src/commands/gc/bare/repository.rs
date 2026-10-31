@@ -112,6 +112,7 @@ fn entries(directory: &Path) -> io::Result<Vec<fs::DirEntry>> {
     }
 }
 pub(super) fn hash(value: &str) -> bool {
+    let value = value.trim();
     value.len() == 40
         && value
             .bytes()

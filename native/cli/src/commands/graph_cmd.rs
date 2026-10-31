@@ -171,7 +171,8 @@ fn consume_trailing_graph_id(rest: &[&str], options: &mut Options) -> Option<()>
 fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
     let arg = args[*idx];
     match arg {
-        "--no-color" | "--no-color=true" | "--no-color=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "--png" | "--png=true" => options.png = true,
         "--png=false" => options.png = false,
         "--cycles" | "--cycles=true" => options.cycles = true,

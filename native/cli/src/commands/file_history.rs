@@ -48,6 +48,7 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
     if root.join("workspace.jsonc").is_file() {
         super::status::autosync::run_if_enabled(root)?;
     }
+    let input = input.trim();
     let normalized = if cfg!(windows) { input.replace('\\', "/") } else { input.to_string() };
     let requested = normalized.strip_prefix("./").unwrap_or(&normalized);
     if !is_valid_relative_file_path(requested) {

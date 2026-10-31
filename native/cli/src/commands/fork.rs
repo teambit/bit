@@ -41,7 +41,13 @@ fn handle_outside_workspace(
     options: &options::Options,
     scope_fork: bool,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+    {
         return Ok(Outcome::Declined("fork requires a workspace".into()));
     }
     let msg = if !scope_fork && options.multiple() && options.target.is_some() {

@@ -189,6 +189,7 @@ fn read_one_trashed_lane(
 }
 
 fn trash_read_error(trash_dir: &Path, reason: &str) -> String {
+    let reason = reason.trim();
     format!(
         "unable to read the trash of the scope, so it is not safe to run gc.\nthe trash holds lanes that \"bit lane remove\" can bring back, and gc needs to know which snaps they\npoint at. empty the trash directory (\"{}\") if you don't need it, and run again.\nError: {reason}",
         trash_dir.display(),

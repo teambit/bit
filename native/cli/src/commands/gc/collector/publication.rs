@@ -28,7 +28,7 @@ impl Plan {
     pub(in crate::commands::gc) fn log(&self, output: &bit_install::output::Output) {
         for (kind, hashes) in [("Version", &self.versions), ("Source", &self.sources)] {
             for hash in hashes {
-                output.console(&format!("gc, deleting {kind} {hash}"));
+                output.console(&format!("gc, deleting {kind} {}", hash.trim()));
             }
         }
     }

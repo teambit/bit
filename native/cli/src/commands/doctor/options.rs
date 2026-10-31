@@ -195,6 +195,7 @@ impl Options {
 fn optional_path(args: &[&str], cursor: &mut usize) -> PathBuf {
     if let Some(path) = args
         .get(*cursor + 1)
+        .map(|arg| arg.trim())
         .filter(|arg| !arg.is_empty() && !arg.starts_with('-'))
     {
         *cursor += 1;

@@ -10,6 +10,7 @@ pub(super) fn render(value: &Value, original: Option<&[u8]>) -> io::Result<Vec<u
 
 fn decode_original(original: Option<&[u8]>) -> io::Result<&str> {
     original
+        .filter(|bytes| !bytes.is_empty())
         .map(std::str::from_utf8)
         .transpose()
         .map_err(io::Error::other)

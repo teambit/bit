@@ -126,7 +126,12 @@ fn import_token(capture: &Capture) -> Option<&Value> {
     capture.captured
         .first()
         .and_then(|target| target.get("_importToken"))
-        .filter(|token| !token.is_null())
+        .filter(|token| {
+            !token.is_null()
+                && token
+                    .as_str()
+                    .is_none_or(|text| !text.trim().is_empty())
+        })
 }
 
 /// The diff of the selected components.

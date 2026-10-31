@@ -51,8 +51,10 @@ fn run(host: &Host, payload: &Value, info: &HostInfo) -> io::Result<Continuation
     if let Some(receipt) = result.get("receipt") {
         return Ok(Continuation::Receipt(receipt.clone()));
     }
-    let path =
-        result["path"].as_str().ok_or_else(|| io::Error::other("published build-script PATH"))?;
+    let path = result["path"]
+        .as_str()
+        .filter(|path| !path.is_empty())
+        .ok_or_else(|| io::Error::other("published build-script PATH"))?;
     Ok(Continuation::Resume(run_prepared(prepared, path.to_owned())))
 }
 

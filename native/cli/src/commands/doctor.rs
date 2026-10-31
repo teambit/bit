@@ -181,7 +181,10 @@ fn examine_all(context: &Context) -> Vec<io::Result<Value>> {
 }
 fn json_results(options: &Options, results: &[Value], saved: Option<&str>) -> io::Result<String> {
     let mut value = json!({});
-    if let Some(saved) = saved {
+    if let Some(saved) = saved
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+    {
         value["savedFilePath"] = json!(saved);
     }
     if options.name.is_some() {

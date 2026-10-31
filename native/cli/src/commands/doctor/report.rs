@@ -62,7 +62,7 @@ fn text(value: &Value) -> &str {
 }
 fn metadata(meta: &Value) -> String {
     let version = |key: &str| {
-        meta[key]
+        meta[key.trim()]
             .as_str()
             .map(str::trim)
             .filter(|text| !text.is_empty())

@@ -71,5 +71,5 @@ pub(super) fn existing(scope: &Path) -> io::Result<bool> {
     if path.exists() && !path.is_file() {
         return Err(super::repository::unsupported("scope index is not a file"));
     }
-    Ok(path.exists())
+    Ok(path.is_file())
 }

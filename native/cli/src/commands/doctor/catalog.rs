@@ -55,7 +55,7 @@ impl Diagnosis {
         let valid = is_valid(&bare);
         let mut result = json!({"diagnosisMetaData":{"category":self.category,"name":self.name,"description":self.description},
             "bareResult":null,"formattedSymptoms":if valid {String::new()} else {symptoms},
-            "formattedManualTreat":if valid {""} else {treatment}});
+            "formattedManualTreat":if valid {""} else {treatment.trim()}});
         result["bareResult"] = bare;
         result
     }

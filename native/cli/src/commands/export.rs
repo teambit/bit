@@ -240,23 +240,27 @@ fn transfer(
         return Err("native outbound ownership receipt".into());
     }
     exported.output.central_hub = applied["centralHub"] == true;
-    exported.output.failure_phase = applied["failurePhase"].as_str().map(str::to_owned);
+    exported.output.failure_phase = applied["failurePhase"]
+        .as_str()
+        .map(str::trim)
+        .filter(|phase| !phase.is_empty())
+        .map(str::to_owned);
     exported.output.attempted_scopes = applied["attemptedScopes"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .map(str::to_owned)
+        .collect();
+    exported.output.messages = applied["hubMessages"]
         .as_array()
         .into_iter()
         .flatten()
         .filter_map(Value::as_str)
         .map(str::to_owned)
         .collect();
-    exported.output.messages = applied["hubMessages"]
-        .as_array()
-        .map_or_else(Vec::new, |messages| {
-            messages
-                .iter()
-                .filter_map(Value::as_str)
-                .map(str::to_owned)
-                .collect()
-        });
     if let Some(error) = applied["failure"].as_str() {
         let error = owned_failure(error, scopes, &mut exported.persisted);
         exported.result = Err(error.clone());

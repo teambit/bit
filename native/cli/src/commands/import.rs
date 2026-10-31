@@ -341,7 +341,7 @@ pub(super) fn prepare_status_forked_refresh(
     lane: &str,
 ) -> io::Result<Value> {
     let options = objects_refresh_options("status", false, true);
-    prepare_into(engine, root, &options, &[lane.to_owned()])
+    prepare_into(engine, root, &options, &[lane.trim().to_owned()])
 }
 
 /// Fetch and publish one remote Lane without materializing workspace files.
@@ -351,7 +351,7 @@ pub(super) fn prepare_lane_import(
     lane: &str,
 ) -> io::Result<Value> {
     let options = objects_refresh_options("laneImport", false, true);
-    prepare_into(engine, root, &options, &[lane.to_owned()])
+    prepare_into(engine, root, &options, &[lane.trim().to_owned()])
 }
 
 pub(super) fn apply_status_refresh(engine: &mut Engine, token: &Value) -> io::Result<()> {

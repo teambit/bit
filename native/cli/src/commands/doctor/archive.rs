@@ -119,7 +119,7 @@ fn excluded(path: &Path, options: &Options) -> bool {
             .any(|part| matches!(*part, "objects" | "cache" | "tmp"))
 }
 fn previous_archive(name: &str) -> bool {
-    let lowered = name.to_ascii_lowercase();
+    let lowered = name.trim().to_ascii_lowercase();
     lowered
         .strip_prefix("doctor-results-")
         .and_then(|rest| {

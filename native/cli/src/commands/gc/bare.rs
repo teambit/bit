@@ -89,6 +89,7 @@ fn inventory_report(
     objects: &BTreeMap<String, Object>,
     trash: &BTreeMap<String, Object>,
 ) -> Vec<String> {
+    let name = name.trim();
     let count = |kind| {
         objects
             .values()

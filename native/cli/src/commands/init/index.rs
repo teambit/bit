@@ -101,7 +101,9 @@ fn lane(value: &Value, hash: &str) -> io::Result<Value> {
         .ok_or_else(|| io::Error::other("init lane name"))?;
     let mut id = json!({"name":name});
     if let Some(scope) = value.get("scope") {
-        id["scope"] = scope.clone();
+        id["scope"] = scope
+            .as_str()
+            .map_or_else(|| scope.clone(), |text| json!(text.trim()));
     }
     Ok(json!({"id":id,"hash":hash}))
 }

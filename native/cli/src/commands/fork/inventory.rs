@@ -37,6 +37,7 @@ pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Val
 }
 
 fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bool {
+    let bare = bare.trim();
     let row_id = row["identity"]
         .as_str()
         .map(str::trim)

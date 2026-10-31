@@ -191,8 +191,8 @@ impl Terminal {
         let no_color = argv
             .iter()
             .fold(false, |acc, arg| match arg.as_str() {
-                "--no-color" | "--no-color=true" => true,
-                "--no-color=false" => false,
+                "--no-color" | "--no-color=true" | "--color=false" | "--color=never" => true,
+                "--no-color=false" | "--color" | "--color=true" | "--color=always" => false,
                 _ => acc,
             });
         let non_interactive = argv

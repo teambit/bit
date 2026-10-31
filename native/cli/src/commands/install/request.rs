@@ -101,6 +101,7 @@ pub(super) async fn links_changed(host: &JsHost, ids: &[String]) -> io::Result<(
 /// The `yesno` package: repeat until a yes or no answer; end of input is no.
 pub(in crate::commands) fn confirm(question: &str) -> io::Result<bool> {
     use std::io::Write;
+    let question = question.trim();
     let stdin = io::stdin();
     loop {
         print!("{question} ");

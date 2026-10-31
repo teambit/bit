@@ -157,7 +157,7 @@ fn failure(args: &[OsString], error: &str) -> io::Result<Outcome> {
     let output = workspace_command::loader_output(chalk, false);
     output.restart(r#"running command "init"..."#);
     output.stop();
-    eprintln!("{}", chalk.red(error));
+    eprintln!("{}", chalk.red(error.trim()));
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 

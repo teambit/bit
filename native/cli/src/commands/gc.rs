@@ -166,7 +166,8 @@ fn apply_gc_arg(opts: &mut Options, arg: &str, next: Option<&str>) -> Option<usi
         return Some(1);
     }
     match arg {
-        "--no-color" | "--no-color=true" | "--no-color=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "-d" | "--dry-run" | "--dry-run=true" => opts.dry_run = true,
         "--dry-run=false" => opts.dry_run = false,
         "--backup" | "--backup=true" => opts.backup = true,

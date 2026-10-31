@@ -59,7 +59,7 @@ pub(super) fn error_report(chalk: Chalk, error: &str) -> String {
         "{} {}\nThe following error was thrown by the package manager:\n{}\nUse \"bit install\" to complete the installation, remove the imported components using \"bit remove <comp id>\" or remove the missing dependencies from their source code",
         formatter.error_symbol(),
         formatter.title("Installation Error"),
-        formatter.chalk.red(error),
+        formatter.chalk.red(error.trim()),
     )
 }
 

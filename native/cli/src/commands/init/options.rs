@@ -48,7 +48,17 @@ pub(super) fn parse(args: &[OsString]) -> Option<Options> {
             consume_trailing_init_path(args, &mut options)?;
             break;
         }
-        if !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if !matches!(
+            arg,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             apply_arg(arg, &mut args, &mut options)?;
         }
     }

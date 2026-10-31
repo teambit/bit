@@ -38,7 +38,7 @@ impl Engine {
                     .as_str()
                     .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"));
             if !is_fresh {
-                return Err(io::Error::other(stale.to_owned()));
+                return Err(io::Error::other(stale.trim().to_owned()));
             }
         }
         Ok(())

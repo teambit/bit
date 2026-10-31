@@ -83,5 +83,5 @@ fn path(input: &Value) -> io::Result<&Path> {
 }
 
 pub(super) fn message(environment: &str, error: &Value) -> io::Result<String> {
-    filesystem::message("formatter", environment, error)
+    filesystem::message("formatter", environment.trim(), error)
 }

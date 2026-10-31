@@ -62,6 +62,7 @@ pub(super) fn exported_ids(root: &Path) -> Vec<String> {
         .filter_map(|(key, entry)| {
             let scope = entry["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())?;
             let name = crate::commands::update_cmd::bitmap_row_name(key, entry);
             (!name.is_empty()).then(|| format!("{scope}/{name}"))

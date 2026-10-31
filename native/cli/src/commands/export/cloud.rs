@@ -10,7 +10,10 @@ pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Re
         return Ok(());
     };
     let mut last = json!({"timestamp":crate::history::iso_now(),"rippleJobs":jobs});
-    if let Some(lane) = metadata["lastExport"].get("lane") {
+    if let Some(lane) = metadata["lastExport"]
+        .get("lane")
+        .filter(|lane| !lane.is_null())
+    {
         last["lane"] = lane.clone();
     } else if let Some(lane) = exported_lane(&receipt["exportedLanes"][0]) {
         last["lane"] = lane;

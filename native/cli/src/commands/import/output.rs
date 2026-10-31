@@ -24,7 +24,12 @@ pub(super) fn json_report(
     installation_error: bool,
     compilation_error: bool,
 ) -> io::Result<String> {
-    let mut report = json!({"importDetails":prepared["importDetails"],"missingIds":[]});
+    let details = prepared
+        .get("importDetails")
+        .filter(|value| !value.is_null())
+        .cloned()
+        .unwrap_or_else(|| json!([]));
+    let mut report = json!({"importDetails":details,"missingIds":[]});
     if installation_error {
         report["installationError"] = json!({});
     }

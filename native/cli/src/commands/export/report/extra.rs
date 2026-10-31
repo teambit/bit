@@ -3,7 +3,7 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 
 pub(super) fn ids<'a>(receipt: &'a Value, field: &str) -> Vec<&'a str> {
-    receipt[field]
+    receipt[field.trim()]
         .as_array()
         .into_iter()
         .flatten()

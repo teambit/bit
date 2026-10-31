@@ -230,9 +230,13 @@ fn remove_env_from_map_with_fallback(
         Some(val) if val.as_str() == Some("-") => None,
         Some(val) => val["env"]
             .as_str()
+            .map(str::trim)
             .filter(|text| !text.is_empty())
             .map(str::to_owned),
-        None => fallback_env.map(str::to_owned),
+        None => fallback_env
+            .map(str::trim)
+            .filter(|text| !text.is_empty())
+            .map(str::to_owned),
     };
     let Some(curr_env) = curr_env else {
         return false;

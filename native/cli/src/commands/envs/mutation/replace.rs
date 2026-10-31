@@ -51,9 +51,11 @@ pub(super) fn prepare_replace(
 }
 
 fn record_available_env(available_envs: &mut Vec<String>, env_id: &str) {
-    if !available_envs
-        .iter()
-        .any(|item| item == env_id)
+    let env_id = env_id.trim();
+    if !env_id.is_empty()
+        && !available_envs
+            .iter()
+            .any(|item| item == env_id)
     {
         available_envs.push(env_id.to_owned());
     }

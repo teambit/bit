@@ -125,7 +125,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_internalize(iter, &mut options.pattern)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-r" | "--revert" | "--revert=true" => options.revert = true,
             "--revert=false" => options.revert = false,
             "-l" | "--list" | "--list=true" => options.list = true,

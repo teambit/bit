@@ -153,7 +153,11 @@ fn seed_one_component(
     detached_heads: &mut CompHeadList,
 ) {
     let key = comp_value_key(comp_val);
-    if let Some(head) = comp_val["head"].as_str() {
+    if let Some(head) = comp_val["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
         graph.add_root(head);
         comp_heads.push((key.clone(), head.to_owned()));
     }

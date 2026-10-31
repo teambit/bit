@@ -106,7 +106,7 @@ fn run_in_workspace(
 }
 
 fn published_file_matches(root: &Path, input: &str, file: &str) -> io::Result<bool> {
-    let normalized = input.replace('\\', "/");
+    let normalized = input.trim().replace('\\', "/");
     let requested = normalized.strip_prefix("./").unwrap_or(&normalized);
     let component_dir = requested
         .strip_suffix(file)

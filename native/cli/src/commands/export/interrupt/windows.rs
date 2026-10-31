@@ -6,9 +6,12 @@ unsafe extern "system" fn interrupt(kind: u32) -> i32 {
     if kind != CTRL_C_EVENT {
         return 0;
     }
-    let mut stdout = io::stdout();
-    let _ = stdout.write_all(super::message());
-    let _ = stdout.flush();
+    let bytes = super::message();
+    if !bytes.is_empty() {
+        let mut stdout = io::stdout();
+        let _ = stdout.write_all(bytes);
+        let _ = stdout.flush();
+    }
     1
 }
 pub(super) fn install() -> io::Result<Previous> {

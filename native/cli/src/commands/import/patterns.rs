@@ -58,7 +58,13 @@ pub fn select(root: &Path, options: &Options) -> io::Result<Selection> {
 
 /// The ids `pattern`'s list holds, in `sortListScopeResults` order.
 fn listed(pattern: &str, list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
-    if list.get("pattern").and_then(Value::as_str) != Some(pattern) {
+    let pattern = pattern.trim();
+    if list
+        .get("pattern")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        != Some(pattern)
+    {
         return Err(decline("remote list pattern"));
     }
     let mut ids = matched(list, include_deprecated)?;

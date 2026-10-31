@@ -141,7 +141,12 @@ fn compile(base: Option<&Ignore>, patterns: &[impl AsRef<str>]) -> io::Result<Ig
         ignore.add_ignore(base);
     }
     ignore
-        .add(patterns.iter().map(AsRef::as_ref))
+        .add(
+            patterns
+                .iter()
+                .map(|pat| pat.as_ref().trim())
+                .filter(|pat| !pat.is_empty()),
+        )
         .map_err(io::Error::other)?;
     Ok(ignore)
 }

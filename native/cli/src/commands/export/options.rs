@@ -59,8 +59,17 @@ fn apply_export_arg<'a>(
     arg: &str,
     args: &mut impl Iterator<Item = &'a str>,
 ) -> Option<()> {
-    if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false")
-        || set_boolean_flag(options, arg)
+    if matches!(
+        arg,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    ) || set_boolean_flag(options, arg)
     {
         return Some(());
     }

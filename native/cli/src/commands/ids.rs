@@ -103,7 +103,9 @@ impl Id {
     /// `isEqual`: same scope and name, and the same version where both have one.
     pub fn same(&self, other: &Self) -> bool {
         let same_version = match (self.has_version(), other.has_version()) {
-            (true, true) => self.version == other.version,
+            (true, true) => {
+                self.version.as_deref().map(str::trim) == other.version.as_deref().map(str::trim)
+            }
             (false, false) => true,
             _ => false,
         };

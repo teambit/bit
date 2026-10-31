@@ -72,7 +72,8 @@ fn parse_flag(
     options: &mut Options,
 ) -> Option<()> {
     match argument {
-        "--no-color" | "--no-color=true" | "--no-color=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "--ast" | "--ast=true" => options.flags.ast = true,
         "--ast=false" => options.flags.ast = false,
         "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {

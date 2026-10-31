@@ -24,6 +24,7 @@ fn strip_final_newline(mut bytes: &[u8]) -> &[u8] {
     bytes
 }
 pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
+    let git = git.trim();
     let (valid, symptoms, treatment) = match diagnosis.name {
         "validate git exec" => (
             Command::new(executable(git))

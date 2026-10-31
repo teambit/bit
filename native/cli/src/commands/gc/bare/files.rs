@@ -153,7 +153,7 @@ pub(in crate::commands::gc) fn validate_batch(
         &config["config"],
         &serde_json::Value::Null,
         &["concurrency.io"],
-        |key| std::env::var(key).ok(),
+        |key| std::env::var(key.trim()).ok(),
     );
     let value = values
         .get("concurrency.io")

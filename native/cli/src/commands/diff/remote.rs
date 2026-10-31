@@ -24,7 +24,8 @@ pub(super) fn prepare(
             target
                 .get("identity")
                 .or_else(|| target.get("id")),
-        )?;
+        )?
+        .trim();
         if !exported.iter().any(|id| id == identity) {
             continue;
         }

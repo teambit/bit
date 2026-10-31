@@ -17,7 +17,9 @@ pub(in crate::commands) fn select(
     targets: &[Value],
     pattern: Option<&str>,
 ) -> io::Result<Vec<Value>> {
-    let Some(pattern) = pattern else { return Ok(targets.to_vec()) };
+    let Some(pattern) = pattern.map(str::trim) else {
+        return Ok(targets.to_vec());
+    };
     let active = matching(targets, |target| target["locallyRemoved"] != true);
     let targets = active.as_slice();
     if stateful(pattern) {

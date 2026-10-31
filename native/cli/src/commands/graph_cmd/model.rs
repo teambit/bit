@@ -156,6 +156,7 @@ impl CompGraph {
     }
 
     fn direct_targets(&self, src: &str) -> Vec<&str> {
+        let src = src.trim();
         self.edges
             .iter()
             .filter(|edge| edge.source_id == src)

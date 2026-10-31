@@ -65,7 +65,10 @@ pub(in crate::commands) fn recover_scope_import(
 fn import_options(ids: &[String], skip_config: bool, skip_installation: bool) -> options::Options {
     options::Options {
         operation: "import",
-        ids: ids.to_vec(),
+        ids: ids
+            .iter()
+            .map(|id| id.trim().to_owned())
+            .collect(),
         objects_only: false,
         all_history: false,
         write: options::WriteOptions {

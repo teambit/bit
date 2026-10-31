@@ -196,13 +196,15 @@ fn eject_one_component(
     let name = super::update_cmd::bitmap_row_name(&key, &row);
     let scope = row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         })
-        .or_else(|| key_id.split_once('/').map(|(prefix, _)| prefix))
+        .or_else(|| key_id.split_once('/').map(|(prefix, _)| prefix.trim()))
         .unwrap_or_default();
     let version = bitmap_row_version(&key, &row);
     if scope.is_empty() || version.is_empty() {

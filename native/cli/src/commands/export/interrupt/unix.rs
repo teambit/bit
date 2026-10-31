@@ -8,7 +8,7 @@ extern "C" fn interrupt(_signal: libc::c_int) {
     }
     // SAFETY: write is async-signal-safe and the immutable byte slice has static lifetime.
     unsafe {
-        libc::write(libc::STDOUT_FILENO, bytes.as_ptr().cast(), bytes.len());
+        let _ = libc::write(libc::STDOUT_FILENO, bytes.as_ptr().cast(), bytes.len());
     }
 }
 pub(super) fn install() -> io::Result<Previous> {

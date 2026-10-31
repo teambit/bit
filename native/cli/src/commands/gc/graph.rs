@@ -44,12 +44,14 @@ impl GcGraph {
     }
 
     pub fn add_root(&mut self, hash: &str) {
+        let hash = hash.trim();
         if self.version_map.contains_key(hash) {
             self.root_versions.insert(hash.to_owned());
         }
     }
 
     pub fn add_new_root(&mut self, hash: &str) -> bool {
+        let hash = hash.trim();
         if self.root_versions.contains(hash) || !self.version_map.contains_key(hash) {
             return false;
         }

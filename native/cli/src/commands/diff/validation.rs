@@ -125,7 +125,9 @@ fn validate_target_versions(
     to_version: Option<&str>,
     chalk: Chalk,
 ) -> io::Result<()> {
+    let identity = identity.trim();
     for version in [from_version, to_version].into_iter().flatten() {
+        let version = version.trim();
         if !has_model_version(component_model, version) {
             return Err(io::Error::other(format!(
                 r#"{OWNED_ERROR_PREFIX}error: version "{}" of component {} was not found."#,

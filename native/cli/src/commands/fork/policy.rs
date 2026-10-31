@@ -103,6 +103,7 @@ fn write(root: &Path, config: &Value, reason: &str) -> io::Result<()> {
     if fs::read(&path)? != before {
         return Err(io::Error::other("fork workspace configuration changed"));
     }
+    let reason = reason.trim();
     let id = workspace_command::file_id();
     let history = bit_object_import::scope_path(root).join("workspace-config-history");
     fs::create_dir_all(history.join("files"))?;

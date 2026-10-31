@@ -42,11 +42,12 @@ impl Engine {
     pub fn request<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
         let started = std::time::Instant::now();
         let result = self.request_owned(input);
-        crate::trace::log(format!(
-            "engine {} took {} ms",
-            input["kind"].as_str().unwrap_or("request"),
-            started.elapsed().as_millis(),
-        ));
+        let kind = input["kind"]
+            .as_str()
+            .map(str::trim)
+            .filter(|kind| !kind.is_empty())
+            .unwrap_or("request");
+        crate::trace::log(format!("engine {kind} took {} ms", started.elapsed().as_millis()));
         result
     }
 

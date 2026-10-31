@@ -4,7 +4,7 @@ use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};
 
 pub(super) fn preflight(source: &Path, target: &Path) -> io::Result<()> {
-    if source == target {
+    if source.as_os_str().is_empty() || target.as_os_str().is_empty() || source == target {
         return Err(io::Error::other("Source and destination must not be the same."));
     }
     let metadata = fs::symlink_metadata(source)?;

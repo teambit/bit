@@ -32,10 +32,8 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
 }
 
 fn write_formatter_input(child: &mut std::process::Child, bytes: &[u8]) -> io::Result<()> {
-    let result = child.stdin
-        .take()
-        .ok_or_else(|| invalid("formatter tool stdin"))?
-        .write_all(bytes);
+    let mut stdin = child.stdin.take().ok_or_else(|| invalid("formatter tool stdin"))?;
+    let result = stdin.write_all(bytes).and_then(|()| stdin.flush());
     if let Err(error) = result {
         let _ = child.kill();
         let _ = child.wait();

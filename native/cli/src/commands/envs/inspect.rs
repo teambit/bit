@@ -193,7 +193,7 @@ fn render_scripts_service(
     if let Some(filter) = services
         && !filter
             .iter()
-            .any(|item| item == service_id)
+            .any(|item| item.trim() == service_id)
     {
         return None;
     }

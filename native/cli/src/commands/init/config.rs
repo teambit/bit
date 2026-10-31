@@ -23,10 +23,18 @@ pub(super) fn create(root: &Path, modules: &Path, options: &Options) -> io::Resu
             str::to_owned,
         );
     document.set(&[WORKSPACE, "name"], &json!(name));
-    if let Some(value) = &options.defaults.directory {
+    if let Some(value) = options.defaults.directory
+        .as_deref()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
         document.set(&[WORKSPACE, "defaultDirectory"], &json!(value));
     }
-    if let Some(value) = &options.defaults.scope {
+    if let Some(value) = options.defaults.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
         document.set(&[WORKSPACE, "defaultScope"], &json!(value));
     }
     if let Some(value) = &options.defaults.generator {

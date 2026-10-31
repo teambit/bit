@@ -230,7 +230,11 @@ fn one(row: &Value, file: &str, chalk: Chalk, previous: &Previous<'_>) -> io::Re
 }
 
 fn heading(entry: &Value, chalk: Chalk) -> io::Result<String> {
-    let title = match entry["tag"].as_str() {
+    let title = match entry["tag"]
+        .as_str()
+        .map(str::trim)
+        .filter(|tag| !tag.is_empty())
+    {
         Some(tag) => format!("tag {tag} ({})\n", text(entry.get("hash"))?),
         None => format!("snap {}\n", text(entry.get("hash"))?),
     };

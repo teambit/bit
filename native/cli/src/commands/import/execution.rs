@@ -115,7 +115,11 @@ fn complete(
         .flatten()
     {
         output.warning(
-            warning.as_str().ok_or_else(|| io::Error::other("native import directory warning"))?,
+            warning
+                .as_str()
+                .map(str::trim)
+                .filter(|msg| !msg.is_empty())
+                .ok_or_else(|| io::Error::other("native import directory warning"))?,
         );
     }
     lifecycle.before_apply()?;

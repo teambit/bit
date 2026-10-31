@@ -41,7 +41,7 @@ fn missing_ids(options: &Options) -> Option<&'static str> {
     )
 }
 fn dependencies_depth(options: &Options) -> Option<String> {
-    let raw = options.write.dependencies.raw_depth.as_deref()?;
+    let raw = options.write.dependencies.raw_depth.as_deref()?.trim();
     if !has_dependency_import_flag(options) {
         return Some(
             r#""--dependencies-depth" flag requires "--dependencies" or "--dependencies-head""#

@@ -41,11 +41,13 @@ fn single(options: &Options, state: &Value, scope: String) -> Selected {
             row["identity"]
                 .as_str()
                 .or_else(|| row["id"].as_str())
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
                 .map(str::to_owned)
         });
     Selected {
         local: local.iter().cloned().collect(),
-        remote: if local.is_none() { vec![options.source.clone()] } else { vec![] },
+        remote: if local.is_none() { vec![options.source.trim().to_owned()] } else { vec![] },
         target_scope: scope,
     }
 }

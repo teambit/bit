@@ -151,7 +151,10 @@ fn root_aspects(context: &Value) -> io::Result<bool> {
             config
                 .keys()
                 .any(|id| {
-                    id.contains('/') && !core.contains(id) && !bit_install::policy::is_core_env(id)
+                    let bare = bit_install::config::aspect_id_without_version(id.trim());
+                    bare.contains('/')
+                        && !core.iter().any(|item| item == bare)
+                        && !bit_install::policy::is_core_env(bare)
                 })
         }))
 }

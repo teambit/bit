@@ -54,7 +54,7 @@ impl Context {
             "userDetails":format!("{}<{}>",self.setting("user.name",""),self.setting("user.email",""))}))
     }
     pub fn setting<'a>(&'a self, key: &str, default: &'a str) -> &'a str {
-        self.config[key]
+        self.config[key.trim()]
             .as_str()
             .map(str::trim)
             .filter(|text| !text.is_empty())

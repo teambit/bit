@@ -70,7 +70,10 @@ fn environment(
     plan: &mut Plan,
     linker: &mut ProjectedLinker,
 ) -> io::Result<()> {
-    if let Some(env) = &options.env
+    if let Some(env) = options.env
+        .as_deref()
+        .map(str::trim)
+        .filter(|env| !env.is_empty())
         && !(remote && options.multiple())
     {
         let config = linker.call(

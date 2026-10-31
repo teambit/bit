@@ -148,7 +148,17 @@ fn split<'a>(args: &[&'a str]) -> Option<(Vec<String>, Vec<&'a str>)> {
             consume_trailing_import_ids(iter, &mut ids)?;
             break;
         }
-        if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if matches!(
+            arg,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             continue;
         }
         let duplicate = flags.contains(&arg);

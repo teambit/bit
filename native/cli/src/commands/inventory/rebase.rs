@@ -3,6 +3,7 @@
 
 /// `pattern` from the ignore file in `dir` (a Linux-style relative path).
 pub fn pattern(pattern: &str, dir: &str) -> String {
+    let pattern = pattern.trim();
     let (negated, body) = match pattern.strip_prefix('!') {
         Some(body) => (true, body),
         None => (false, pattern),

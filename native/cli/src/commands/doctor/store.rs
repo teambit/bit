@@ -25,7 +25,7 @@ pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<V
         return Ok(diagnosis.result(json!({"valid":true}), String::new(), ""));
     };
     let config: Value = bit_object_import::parse_jsonc(&fs::read(scope.join("scope.json"))?)?;
-    let scope_name = config["name"].as_str().unwrap_or_default();
+    let scope_name = config["name"].as_str().map_or("", str::trim);
     let index = read_index(scope)?;
     let models = index
         .as_array()

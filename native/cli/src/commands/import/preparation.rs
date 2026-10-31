@@ -166,7 +166,7 @@ fn bitmap_has_exported_components(root: &Path) -> io::Result<bool> {
                 && key != "_bit_lane"
                 && row["scope"]
                     .as_str()
-                    .is_some_and(|scope| !scope.is_empty())
+                    .is_some_and(|scope| !scope.trim().is_empty())
         }))
 }
 

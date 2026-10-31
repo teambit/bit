@@ -78,7 +78,7 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
 fn parse_transfers(value: &Value) -> io::Result<Transfers> {
     let scopes = array(value.get("scopes"), "scopes")?
         .iter()
-        .map(|scope| text(Some(scope)).map(str::to_string))
+        .map(|scope| text(Some(scope)).map(|raw| raw.trim().to_string()))
         .collect::<io::Result<Vec<_>>>()?;
     let counts = array(value.get("scopeObjectCounts"), "object counts")?;
     if counts.len() != scopes.len() || scopes.iter().any(String::is_empty) {

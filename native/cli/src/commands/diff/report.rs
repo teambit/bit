@@ -125,9 +125,9 @@ pub(super) fn format(result: &Value, chalk: Chalk, options: &Options) -> io::Res
 }
 
 fn one(row: &Value, chalk: Chalk, options: &Options) -> io::Result<String> {
-    let id = text(row.get("id"))?;
+    let id = text(row.get("id"))?.trim();
     if row["hasDiff"] != true {
-        let id = text(row.get("_fullId"))?;
+        let id = text(row.get("_fullId"))?.trim();
         let suffix = if options.output.name_only || options.output.stat {
             ""
         } else {
