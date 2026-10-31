@@ -49,6 +49,8 @@ pub(super) fn reusing_candidates(
 }
 
 fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
+    let hash = hash.trim();
+    let kind = kind.trim();
     crate::merge_history::hash(hash)?;
     let text = serde_json::to_string(value).map_err(io::Error::other)?;
     let mut bytes = format!("{kind} {hash} {}\0", text.encode_utf16().count()).into_bytes();

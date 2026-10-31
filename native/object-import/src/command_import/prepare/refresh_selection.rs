@@ -13,6 +13,9 @@ pub(super) fn refresh_all<'a>(
     ignore_missing: bool,
     all_history: bool,
 ) -> io::Result<Vec<&'a Target>> {
+    if scoped.len() > 4096 {
+        return Err(invalid("import refresh target limit"));
+    }
     let mut directories = HashMap::new();
     let mut available = Vec::new();
     for target in scoped {

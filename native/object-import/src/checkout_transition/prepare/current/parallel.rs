@@ -9,6 +9,9 @@ use std::io;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
 pub(super) fn load(files: &[wire::Current], total: &mut usize) -> io::Result<Vec<Loaded>> {
+    if files.is_empty() {
+        return Ok(Vec::new());
+    }
     let budget = Budget::new(MAX_BYTES.saturating_sub(*total));
     let loaded = files
         .par_iter()

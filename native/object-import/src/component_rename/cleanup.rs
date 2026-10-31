@@ -19,7 +19,7 @@ pub(super) fn prepare(plan: &mut Plan) -> io::Result<()> {
         return Ok(());
     }
     let mut tree = Tree { directories: BTreeMap::new(), observed: Observed::default() };
-    let root = plan.root.join(&plan.identity.source_directory);
+    let root = plan.root.join(plan.identity.source_directory.trim());
     let mut pending = vec![root];
     while let Some(directory) = pending.pop() {
         if tree.directories.len() >= 65536 {

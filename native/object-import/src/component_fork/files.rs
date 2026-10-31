@@ -152,6 +152,7 @@ fn private_root(root: &Path, path: &Path, prefix: &str) -> io::Result<()> {
 }
 pub(super) fn relative_path(path: &str) -> io::Result<()> {
     if path.is_empty()
+        || path.contains('\\')
         || Path::new(path)
             .components()
             .any(|part| !matches!(part, Component::Normal(_)))

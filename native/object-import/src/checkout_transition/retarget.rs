@@ -159,13 +159,13 @@ fn check_budget(body_count: usize, retained: usize, added: &[plan::Body]) -> io:
 fn statuses(plan: &plan::Plan, target: &[wire::Manifest]) -> Vec<Value> {
     let mut current = HashMap::new();
     for file in &plan.current {
-        current.entry(file.relative_path.as_str()).or_insert(file);
+        current.entry(file.relative_path.trim()).or_insert(file);
     }
     target
         .iter()
         .map(|file| {
             let same = current
-                .get(file.relative_path.as_str())
+                .get(file.relative_path.trim())
                 .is_some_and(|current| current.raw_hash.trim() == file.hash.trim());
             json!({"relativePath":file.relative_path,"status":if same {"unchanged"}else{"updated"}})
         })

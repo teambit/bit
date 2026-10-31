@@ -110,12 +110,12 @@ fn retain_inputs(
         let plan_index = bodies.len();
         bodies.push(plan::Body::new(file.normalized.clone()));
         current_files.push(plan::Current {
-            relative_path: request.current[index].relative_path.clone(),
+            relative_path: request.current[index].relative_path.trim().to_owned(),
             path: request.current[index].path.clone(),
             protected: request.current[index].protected,
             plan_index,
             shares_buffer: file.raw == file.normalized,
-            raw_hash: request.current[index].snapshot_hash.clone(),
+            raw_hash: request.current[index].snapshot_hash.trim().to_owned(),
         });
     }
     bodies.extend(merged_bodies);

@@ -192,11 +192,13 @@ impl Record {
     fn target(&mut self, value: &Value) -> io::Result<Value> {
         let target = value
             .as_str()
+            .map(str::trim)
             .filter(|text| !text.is_empty() && text.len() <= 32768)
             .ok_or_else(|| invalid("checkout resolved target must be string"))?;
         target.clone_into(&mut self.target);
         if self.options.version
-            .as_ref()
+            .as_deref()
+            .map(str::trim)
             .is_some_and(|version| !version.is_empty())
             && !self.options.flags.head
         {

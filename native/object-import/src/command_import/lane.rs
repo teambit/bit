@@ -189,6 +189,7 @@ impl PreparedImport {
         Ok(None)
     }
     pub(crate) fn lane_version(&mut self, reference: &str) -> io::Result<Value> {
+        let reference = reference.trim();
         if let Some(value) = self.overlay.read(reference, "Version")? {
             return Ok(value.clone());
         }

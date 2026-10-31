@@ -3,6 +3,9 @@ use super::invalid;
 use std::{fs, io, path::Path};
 pub fn select_ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();
+    if pattern.is_empty() {
+        return Err(invalid("component selection pattern is empty"));
+    }
     if pattern == "$deprecated" {
         return crate::component_deprecation::Plan::prepare(root, pattern, None, None, true)
             .map(|plan| plan.changed().to_vec());

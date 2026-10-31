@@ -223,7 +223,7 @@ pub(crate) fn split<'a>(
     let header = std::str::from_utf8(&object[..end])
         .map_err(|_| invalid("checkout object header is not UTF-8"))?;
     let mut parts = header.split(' ');
-    if parts.next() != Some(kind)
+    if parts.next() != Some(kind.trim())
         || parts.next() != Some(crate::validate::hexadecimal(&hash).as_str())
     {
         return Err(invalid("checkout object header identity differs"));

@@ -108,10 +108,11 @@ pub(super) fn retain_histories(plan: &mut PreparedImport, targets: &[&Target]) -
             .as_str()
             .or_else(|| model["head"]["ref"].as_str())
             .or_else(|| model["head"]["hash"].as_str())
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
             .or_else(|| {
-                crate::merge_history::hash(&target.version)
-                    .is_ok()
-                    .then_some(target.version.as_str())
+                let candidate = target.version.trim();
+                crate::merge_history::hash(candidate).is_ok().then_some(candidate)
             })
             .ok_or_else(|| invalid("recovery divergence head"))?;
         let (hash, history, changed) =

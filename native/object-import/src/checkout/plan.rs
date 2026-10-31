@@ -201,6 +201,7 @@ fn validate_files(files: &[ManifestFile]) -> io::Result<()> {
 }
 
 fn hash(value: &str) -> io::Result<[u8; 20]> {
+    let value = value.trim();
     if value.len() != 40
         || !value
             .bytes()

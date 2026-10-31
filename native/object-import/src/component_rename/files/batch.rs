@@ -82,6 +82,7 @@ fn batch_component(
     let directory = row["directory"]
         .as_str()
         .or_else(|| row["rootDir"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| unsupported("scope rename loaded directory"))?;
     let mut component = row.clone();
@@ -94,6 +95,7 @@ fn batch_component(
             .as_str()
             .or_else(|| file["relativePath"].as_str())
             .or_else(|| file["path"].as_str())
+            .map(str::trim)
             .filter(|value| !value.is_empty())
             .ok_or_else(|| unsupported("scope rename loaded path"))?;
         let (mut change, _) = dependent_file(plan, &component, directory, relative, initial)?;

@@ -7,12 +7,16 @@ pub(in crate::component_remove) fn validate(
     components: &[Value],
 ) -> io::Result<()> {
     for component in components {
-        let Some(identity) = component["identity"].as_str() else {
+        let Some(identity) = component["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+        else {
             return Err(invalid("stash removal component identity"));
         };
         if identities
             .iter()
-            .any(|removed| removed == identity)
+            .any(|removed| removed.trim() == identity)
         {
             continue;
         }

@@ -122,14 +122,15 @@ fn validate<'a>(
     seen: &mut HashSet<&'a str>,
     retained: bool,
 ) -> io::Result<()> {
-    crate::checkout::plan::relative_path(&file.relative_path)?;
-    if file.bitmap && file.relative_path.trim() != ".bitmap" {
+    let relative = file.relative_path.trim();
+    crate::checkout::plan::relative_path(relative)?;
+    if file.bitmap && relative != ".bitmap" {
         return Err(invalid("checkout bitmap normalization label"));
     }
     if !file.path.is_absolute()
-        || file.relative_path.len() > 32768
-        || file.relative_path.contains('\0')
-        || !seen.insert(file.relative_path.as_str())
+        || relative.len() > 32768
+        || relative.contains('\0')
+        || !seen.insert(relative)
     {
         return Err(invalid("checkout current path/type"));
     }

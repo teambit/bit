@@ -64,10 +64,17 @@ impl Selection {
         Ok(Self { root: root.into(), before, bitmap, entries, default_scope, key })
     }
     pub fn validate(&self) -> io::Result<()> {
-        if fs::read(self.root.join("workspace.jsonc"))? != self.before
-            || fs::read(self.root.join(".bitmap"))? != self.bitmap
-        {
-            return Err(io::Error::other("scope rename inputs changed"));
+        for (path, expected) in [
+            (self.root.join("workspace.jsonc"), &self.before),
+            (self.root.join(".bitmap"), &self.bitmap),
+        ] {
+            let metadata = fs::symlink_metadata(&path)?;
+            if !metadata.is_file()
+                || metadata.file_type().is_symlink()
+                || fs::read(&path)? != *expected
+            {
+                return Err(io::Error::other("scope rename inputs changed"));
+            }
         }
         Ok(())
     }

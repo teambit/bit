@@ -140,11 +140,13 @@ fn unchanged(metadata: &Value, replacement: Option<&str>, range: Option<&str>, u
     let clearable = deprecated
         || metadata["range"]
             .as_str()
-            .is_some_and(|value| !value.is_empty());
+            .is_some_and(|value| !value.trim().is_empty());
     if undo {
         !clearable
     } else {
-        replacement.is_none() && range.is_none_or(str::is_empty) && deprecated
+        replacement.is_none_or(|val| val.trim().is_empty())
+            && range.is_none_or(|val| val.trim().is_empty())
+            && deprecated
     }
 }
 pub fn set_config(

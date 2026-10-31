@@ -309,16 +309,7 @@ pub(super) fn remote_lane_hash(
                 .join("index.json"),
         )?
         .unwrap_or_else(|| serde_json::json!({"lanes":[]}));
-    let rows = if index.is_array() {
-        &[][..]
-    } else if let Some(lanes) = index
-        .get("lanes")
-        .filter(|val| !val.is_null())
-    {
-        lanes.as_array().ok_or_else(|| invalid("lane remote index"))?
-    } else {
-        &[][..]
-    };
+    let rows = lane_rows(&index)?;
     let matches = rows
         .iter()
         .filter(|row| {
@@ -338,8 +329,23 @@ pub(super) fn remote_lane_hash(
     }
     matches[0]["hash"]
         .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
         .ok_or_else(|| invalid("lane remote hash"))
+}
+
+fn lane_rows(index: &serde_json::Value) -> io::Result<&[serde_json::Value]> {
+    if index.is_array() {
+        Ok(&[])
+    } else if let Some(lanes) = index
+        .get("lanes")
+        .filter(|val| !val.is_null())
+    {
+        Ok(lanes.as_array().ok_or_else(|| invalid("lane remote index"))?)
+    } else {
+        Ok(&[])
+    }
 }
 
 fn referenced_candidates(

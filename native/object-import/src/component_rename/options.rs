@@ -10,3 +10,23 @@ pub struct Options {
     pub ast: bool,
     pub deprecate: bool,
 }
+impl Options {
+    #[must_use]
+    pub(super) fn normalized(&self) -> Self {
+        Self {
+            source: self.source.trim().to_owned(),
+            target: self.target.trim().to_owned(),
+            scope: self.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .map(str::to_owned),
+            path: self.path
+                .as_deref()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .map(str::to_owned),
+            ..*self
+        }
+    }
+}

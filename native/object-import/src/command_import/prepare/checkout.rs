@@ -102,14 +102,24 @@ impl PreparedImport {
             return Ok(());
         }
         for target in outside {
-            let scope = target.scope.as_deref().ok_or_else(|| invalid("checkout scope"))?;
+            let scope = target.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .ok_or_else(|| invalid("checkout scope"))?;
             if scope == self.environment.local_scope {
                 continue;
             }
             let directory = remote(self, remotes, scope)?;
             let model = super::read_model(self, &directory, target)?
                 .ok_or_else(|| invalid("checkout off-lane model missing"))?;
-            let Some(head) = model["head"].as_str() else { continue };
+            let Some(head) = model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+            else {
+                continue;
+            };
             let row = self.progress.last_mut().ok_or_else(|| invalid("checkout lane refresh"))?;
             row.ids.push(super::identity(target)?);
             row.objects.insert(super::object_hash(scope));

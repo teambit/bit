@@ -168,7 +168,11 @@ fn select_component(root: &Path, bitmap: &Value, name: &str) -> io::Result<Selec
     if selected.main_exists == restore_files {
         return Err(invalid("component source state is outside local recovery"));
     }
-    let relative = row["rootDir"].as_str().ok_or_else(|| invalid("component root"))?;
+    let relative = row["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| invalid("component root"))?;
     crate::checkout::plan::relative_path(relative)?;
     if relative == "." {
         return Err(invalid("component workspace root"));
@@ -176,8 +180,7 @@ fn select_component(root: &Path, bitmap: &Value, name: &str) -> io::Result<Selec
     let directory = root.join(relative);
     validate_destination(root, &directory, restore_files)?;
     let version = selected.version.ok_or_else(|| invalid("component version"))?;
-    let main_file =
-        directory.join(row["mainFile"].as_str().ok_or_else(|| invalid("component main file"))?);
+    let main_file = component_main_file(&directory, row)?;
     Ok(Selection {
         key,
         identity: selected.identity,
@@ -187,6 +190,15 @@ fn select_component(root: &Path, bitmap: &Value, name: &str) -> io::Result<Selec
         restore_files,
         lane: selected.lane,
     })
+}
+fn component_main_file(directory: &Path, row: &Value) -> io::Result<PathBuf> {
+    Ok(directory.join(
+        row["mainFile"]
+            .as_str()
+            .map(str::trim)
+            .filter(|file| !file.is_empty())
+            .ok_or_else(|| invalid("component main file"))?,
+    ))
 }
 fn prepare_files(root: &Path, selected: &Selection) -> io::Result<(Repository, Vec<SourceFile>)> {
     let (mut repository, manifest) = read_repository(root, selected)?;

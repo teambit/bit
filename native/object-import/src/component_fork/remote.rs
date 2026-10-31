@@ -121,6 +121,7 @@ impl RemoteCapture {
         let object_directory =
             tempfile::Builder::new().prefix("bit-native-fork-objects-").tempdir()?;
         for (hash, bytes) in objects {
+            let hash = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
             if self.objects
                 .iter()
                 .any(|row| row["hash"] == hash)

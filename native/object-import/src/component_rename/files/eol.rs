@@ -13,10 +13,12 @@ impl Writer {
     pub(super) fn contents(self, bytes: Vec<u8>, windows: bool) -> Vec<u8> {
         match self {
             // ComponentWriter persists AbstractVinyl through eol.auto().
-            Self::Component => crate::checkout::eol::normalize(bytes, windows),
+            Self::Component if !crate::checkout::eol::binary(&bytes) => {
+                crate::checkout::eol::normalize(bytes, windows)
+            }
             // NewComponentHelper and changed dependents call Workspace.write(),
             // which passes SourceFile.contents directly to fs-extra.outputFile.
-            Self::Workspace => bytes,
+            Self::Component | Self::Workspace => bytes,
         }
     }
 }

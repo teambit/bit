@@ -39,8 +39,8 @@ pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
 }
 
 pub(super) fn plan(root: &Path, scope: &str, name: &str, head: &str) -> io::Result<HistoryState> {
-    let identity = format!("{scope}/{name}:VersionHistory");
-    let hash = format!("{:x}", Sha1::digest(identity.as_bytes()));
+    let (scope, name, head) = (scope.trim(), name.trim(), head.trim());
+    let hash = format!("{:x}", Sha1::digest(format!("{scope}/{name}:VersionHistory").as_bytes()));
     let path = crate::scope_path(root)
         .join("objects")
         .join(&hash[..2])

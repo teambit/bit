@@ -298,6 +298,8 @@ fn publish_environment_config(
 }
 
 fn backup(plan: &Plan, file_id: &str) -> io::Result<()> {
+    crate::component_remove::validate_file_id(file_id)?;
+    let file_id = file_id.trim();
     let base = crate::scope_path(&plan.root).join("workspace-config-history");
     fs::create_dir_all(base.join("files"))?;
     fs::write(base.join("files").join(file_id), &plan.controls.workspace_before)?;

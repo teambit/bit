@@ -69,9 +69,10 @@ fn modified(
     files: &mut [File],
     status: &mut Map<String, Value>,
 ) -> io::Result<Option<String>> {
+    let trimmed_path = path.trim();
     let Some(file) = files
         .iter_mut()
-        .find(|file| file.path == path)
+        .find(|file| file.path.trim() == trimmed_path)
     else {
         return Ok(Some(format!("file {} not found", error_path(path))));
     };

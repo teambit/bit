@@ -9,6 +9,9 @@ pub(super) fn locations(
     from: &str,
     to: &str,
 ) -> io::Result<(PathBuf, PathBuf, bool)> {
+    if from.trim().is_empty() || to.trim().is_empty() {
+        return Err(invalid("move source and destination paths must not be empty"));
+    }
     let source = normalize(&cwd.join(from.trim()));
     let destination = normalize(&cwd.join(to.trim()));
     let first = source.try_exists()?;

@@ -36,7 +36,17 @@ pub(super) fn finish_original(
     file_id: &str,
     source_package: &str,
 ) -> io::Result<()> {
-    let package: std::path::PathBuf = Path::new(source_package.trim()).components().collect();
+    let trimmed = source_package.trim();
+    let package_path = Path::new(trimmed);
+    if !trimmed.is_empty()
+        && (trimmed.contains('\\')
+            || package_path
+                .components()
+                .any(|part| !matches!(part, std::path::Component::Normal(_))))
+    {
+        return Err(invalid("rename source package path"));
+    }
+    let package: std::path::PathBuf = package_path.components().collect();
     if !package.as_os_str().is_empty()
         && (!plan.identity.exported || !plan.options.deprecate)
     {

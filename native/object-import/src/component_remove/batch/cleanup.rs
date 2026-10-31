@@ -21,7 +21,9 @@ pub(super) struct Change {
 }
 impl Change {
     pub(in crate::component_remove) fn validate(&self) -> io::Result<()> {
-        if !fs::symlink_metadata(&self.path)?.file_type().is_file()
+        let metadata = fs::symlink_metadata(&self.path)?;
+        if !metadata.is_file()
+            || metadata.file_type().is_symlink()
             || fs::read(&self.path)? != self.before
         {
             return Err(invalid("stash removal configuration changed"));

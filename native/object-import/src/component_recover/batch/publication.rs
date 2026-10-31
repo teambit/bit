@@ -88,7 +88,11 @@ pub(super) fn after_import(batch: &mut Batch, published: &serde_json::Value) -> 
     proofs.read(&crate::scope_path(&batch.root).join("index.json"))?;
     for item in &batch.items {
         for file in &item.files {
-            if fs::read(&file.source)? != file.proof {
+            let metadata = fs::symlink_metadata(&file.source)?;
+            if !metadata.is_file()
+                || metadata.file_type().is_symlink()
+                || fs::read(&file.source)? != file.proof
+            {
                 return Err(invalid("recovery retained Source changed during import"));
             }
             proofs.read(&file.source)?;

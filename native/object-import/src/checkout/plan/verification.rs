@@ -7,7 +7,7 @@ pub(crate) fn verify_manifest(
     expected: &Value,
     compressed: &mut usize,
 ) -> io::Result<()> {
-    let version = metadata(directory, hash(expected_hash)?, "Version", compressed)?;
+    let version = metadata(directory, hash(expected_hash.trim())?, "Version", compressed)?;
     verify_manifest_value(&version, expected)
 }
 pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Result<()> {

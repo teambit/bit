@@ -23,6 +23,9 @@ impl Refactor {
         package: bool,
         ast: bool,
     ) -> io::Result<Self> {
+        if rows.len() > 4096 || pairs.len() > 4096 {
+            return Err(unsupported("fork refactor batch limit"));
+        }
         let mut plan = Self { groups: Vec::new(), observed: Observed::default() };
         for row in rows {
             let group = group(root, row, pairs, package, ast, &mut plan.observed)?;

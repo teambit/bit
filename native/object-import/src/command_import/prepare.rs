@@ -262,11 +262,15 @@ fn configure_cached_at(
     Ok(())
 }
 fn identity(target: &Target) -> io::Result<String> {
-    let scope = target.scope.as_deref().ok_or_else(|| invalid("import unscoped target"))?;
-    if target.name.is_empty() || target.name.len() > 4096 {
+    let scope = target.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("import unscoped target"))?;
+    if target.name.trim().is_empty() || target.name.len() > 4096 {
         return Err(invalid("import target name"));
     }
-    Ok(format!("{scope}/{}", target.name))
+    Ok(format!("{scope}/{}", target.name.trim()))
 }
 fn read_model(
     plan: &mut PreparedImport,

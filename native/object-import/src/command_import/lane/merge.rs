@@ -31,11 +31,9 @@ pub(super) fn merge(
         }
     }
     changed |= prune_hidden(&mut merged.value, &incoming.value)?;
-    if merged.value.get("overrideUpdateDependents").is_some() {
-        merged.value
-            .as_object_mut()
-            .unwrap()
-            .remove("overrideUpdateDependents");
+    if let Some(object) = merged.value.as_object_mut()
+        && object.remove("overrideUpdateDependents").is_some()
+    {
         changed = true;
     }
     if changed {

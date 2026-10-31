@@ -39,7 +39,9 @@ fn parallel(
     let mut files = Vec::with_capacity(request.files.len());
     for (input, body) in request.files.iter().zip(bodies) {
         let length = body.len();
-        state.insert(&request.directory, input.hash, body.clone());
+        if state.get(&request.directory, input.hash).is_none() {
+            state.insert(&request.directory, input.hash, body.clone());
+        }
         let contents = if input.normalize { eol::auto(body) } else { body };
         raw.reserve(contents.len().saturating_sub(length))
             .map_err(|_| invalid("checkout materialized bytes out of bounds"))?;

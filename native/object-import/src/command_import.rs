@@ -127,6 +127,11 @@ impl MainRefresh {
 }
 impl PreparedImport {
     pub(crate) fn remote_host(&mut self, scope: &str, host: &str) -> io::Result<()> {
+        let scope = scope.trim();
+        let host = host.trim();
+        if scope.is_empty() {
+            return Err(invalid("import remote scope"));
+        }
         bit_client_transfer::remotes::Remote::from_host(host)?;
         let remotes = self.environment.remotes
             .as_object_mut()

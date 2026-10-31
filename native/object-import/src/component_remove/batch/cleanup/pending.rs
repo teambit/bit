@@ -24,5 +24,9 @@ pub(super) fn prepare(root: &Path, selected: &[Selected]) -> io::Result<Option<C
     if rows.len() == length {
         return Ok(None);
     }
-    Ok(Some(Change { path, before, after: serde_json::to_vec_pretty(&value)? }))
+    let mut after = serde_json::to_vec_pretty(&value)?;
+    if before.ends_with(b"\n") {
+        after.push(b'\n');
+    }
+    Ok(Some(Change { path, before, after }))
 }

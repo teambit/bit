@@ -36,11 +36,11 @@ fn load_files(
             MAX_BYTES.checked_sub(*total).ok_or_else(|| invalid("checkout prepared raw limit"))?;
         let body = crate::checkout::repository::source(
             directory,
-            crate::merge_history::hash(&file.hash)?,
+            crate::merge_history::hash(file.hash.trim())?,
             remaining,
             compressed,
         )?;
-        *total += body.len();
+        *total = total.saturating_add(body.len());
         if *total > MAX_BYTES {
             return Err(invalid("checkout prepared raw limit"));
         }

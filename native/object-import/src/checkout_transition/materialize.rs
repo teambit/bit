@@ -66,9 +66,14 @@ fn write(
     body: &[u8],
     directories: &mut HashSet<PathBuf>,
 ) -> io::Result<()> {
+    if let Ok(metadata) = fs::metadata(&file.path)
+        && !metadata.is_file()
+    {
+        return Err(invalid("checkout materialize target is not a regular file"));
+    }
     let parent =
         file.path.parent().ok_or_else(|| invalid("checkout materialize destination parent"))?;
-    if !directories.contains(parent) {
+    if !parent.as_os_str().is_empty() && !directories.contains(parent) {
         fs::create_dir_all(parent)?;
         directories.insert(parent.to_path_buf());
     }

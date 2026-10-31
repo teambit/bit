@@ -89,6 +89,7 @@ use --skip-fetch to skip this step."#,
             &mut scope,
             id,
             alias
+                .map(str::trim)
                 .filter(|alias| !alias.is_empty())
                 .unwrap_or(&id.name),
         )? {

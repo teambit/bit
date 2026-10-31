@@ -6,7 +6,10 @@ use std::{
 };
 pub(super) fn assign(bodies: &mut [Body], directory: &Path, token: &str, first: usize) {
     let token = token.trim();
-    let path = directory.join(format!("{token}-{first}.checkout-pack"));
+    let path = directory
+        .components()
+        .collect::<std::path::PathBuf>()
+        .join(format!("{token}-{first}.checkout-pack"));
     let mut offset = 0_usize;
     for body in bodies {
         body.path.clone_from(&path);

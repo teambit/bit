@@ -148,38 +148,45 @@ impl PreparedImport {
             ..Default::default()
         });
         for target in targets {
-            if target.scope.is_none() {
-                continue;
-            }
-            let remote_scope = self.cache.lane_sources
-                .get(&identity(target)?)
-                .cloned()
-                .or_else(|| target.scope.clone());
-            if remote_scope.as_deref() == Some(self.environment.local_scope.as_str()) {
-                continue;
-            }
-            if let Some(path) = self.environment.missing_global_remotes.take() {
-                self.environment.global_remotes = Some(path);
-            }
-            if self.cached_selected(target)? {
-                continue;
-            }
-            let remotes = self.environment.remotes.clone();
-            let directory = remote(
-                self,
-                &remotes,
-                remote_scope.as_deref().ok_or_else(|| invalid("import selected scope"))?,
-            )?;
-            let row =
-                self.progress.last_mut().ok_or_else(|| invalid("import selected progress"))?;
-            row.ids.push(format!("{}@{}", identity(target)?, target.version));
-            row.objects.insert(object_hash(remote_scope.as_deref().unwrap_or_default()));
-            let incoming = read_model(self, &directory, target)?
-                .ok_or_else(|| invalid("import selected component missing"))?;
-            let hash = version_ref(&incoming, &target.version)?;
-            super::transfer::receive_cached(self, &directory, target, &incoming, &hash)?;
+            self.prepare_selected_target(target)?;
         }
         self.validate()
+    }
+    fn prepare_selected_target(&mut self, target: &Target) -> io::Result<()> {
+        if target.scope.is_none() {
+            return Ok(());
+        }
+        let remote_scope = self.cache.lane_sources
+            .get(&identity(target)?)
+            .cloned()
+            .or_else(|| target.scope.clone());
+        if remote_scope.as_deref() == Some(self.environment.local_scope.as_str()) {
+            return Ok(());
+        }
+        if let Some(path) = self.environment.missing_global_remotes.take() {
+            self.environment.global_remotes = Some(path);
+        }
+        if self.cached_selected(target)? {
+            return Ok(());
+        }
+        let remotes = self.environment.remotes.clone();
+        let directory = remote(
+            self,
+            &remotes,
+            remote_scope.as_deref().ok_or_else(|| invalid("import selected scope"))?,
+        )?;
+        let row = self.progress.last_mut().ok_or_else(|| invalid("import selected progress"))?;
+        row.ids.push(format!("{}@{}", identity(target)?, target.version.trim()));
+        row.objects.insert(object_hash(
+            remote_scope
+                .as_deref()
+                .unwrap_or_default()
+                .trim(),
+        ));
+        let incoming = read_model(self, &directory, target)?
+            .ok_or_else(|| invalid("import selected component missing"))?;
+        let hash = version_ref(&incoming, &target.version)?;
+        super::transfer::receive_cached(self, &directory, target, &incoming, &hash)
     }
     fn cached_selected(&mut self, target: &Target) -> io::Result<bool> {
         let local = self.environment.local_directory.clone();

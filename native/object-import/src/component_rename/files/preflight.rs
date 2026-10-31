@@ -10,6 +10,7 @@ pub(super) fn dependent(
     relative: &str,
     matcher: &mut refactor::PackageMatcher,
 ) -> io::Result<()> {
+    let (directory, relative) = (directory.trim(), relative.trim());
     let path = plan.root.join(directory).join(relative);
     plan.observed.ancestors(
         &plan.root,

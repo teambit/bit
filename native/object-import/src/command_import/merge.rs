@@ -35,11 +35,12 @@ pub(super) fn model_from(
     apply_tags(&mut result, &tags, &plan)?;
     if origin
         && local.is_empty()
-        && incoming["head"]
+        && let Some(head) = incoming["head"]
             .as_str()
-            .is_some_and(|head| !head.is_empty())
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
     {
-        result["head"] = incoming["head"].clone();
+        result["head"] = json!(head);
     }
     apply_detached(&mut result, &heads, &deleted, &plan)?;
     if result["orphanedVersions"].as_object().is_some_and(serde_json::Map::is_empty) {

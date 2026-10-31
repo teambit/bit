@@ -28,6 +28,9 @@ impl LocalBatch {
         track: bool,
         components: &[Value],
     ) -> io::Result<Self> {
+        if !root.is_absolute() {
+            return Err(invalid("component removal workspace root must be absolute"));
+        }
         preparation::prepare(root, identities, keep_files, track, components)
     }
     pub fn bitmap(&self) -> io::Result<Value> {

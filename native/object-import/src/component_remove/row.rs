@@ -103,6 +103,7 @@ fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
     };
     shape
         && lane_fields
+        && !crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         && row.get("localOnly").is_none_or(Value::is_boolean)
         && row
             .get("nextVersion")

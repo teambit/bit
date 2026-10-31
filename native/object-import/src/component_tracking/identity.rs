@@ -90,19 +90,24 @@ pub(super) fn scope(
     if let Some(scope) = options.scope
         .as_deref()
         .or_else(|| facts["defaultScopes"][directory].as_str())
-        .filter(|scope| !scope.trim().is_empty())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
     {
         return Ok(scope.into());
     }
     let variants = variant_scope(&facts["workspace"], directory, name)?;
-    if variants.as_deref().is_none_or(str::is_empty) && vendor(&facts["workspace"], directory) {
+    if variants
+        .as_deref()
+        .is_none_or(|scope| scope.trim().is_empty())
+        && vendor(&facts["workspace"], directory)
+    {
         return Err(unsupported("tracking unscoped vendor component requires canonical loading"));
     }
     let scope = variants
         .as_deref()
         .or_else(|| workspace_aspect(&facts["workspace"])["defaultScope"].as_str())
         .or_else(|| facts["defaultScope"].as_str())
-        .unwrap_or_default();
+        .map_or("", str::trim);
     if scope.is_empty() {
         return Err(error(
             "a default scope is missing. please set the defaultScope in workspace.jsonc",

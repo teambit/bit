@@ -42,13 +42,16 @@ pub(super) fn entries_with_default(
 }
 
 fn row_scope_and_name<'a>(key: &'a str, row: &'a Value) -> (&'a str, &'a str) {
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let key = key.trim();
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
     let explicit_scope = row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|value| !value.is_empty())
         });
     let (current, fallback_name) = if let Some(scope_name) = explicit_scope {

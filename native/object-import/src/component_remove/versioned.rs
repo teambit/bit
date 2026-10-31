@@ -209,6 +209,8 @@ fn index_change(
     }
     let hash = rows[position]["hash"]
         .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .ok_or_else(|| invalid("Component hash"))?
         .to_owned();
     crate::merge_history::hash(&hash)?;

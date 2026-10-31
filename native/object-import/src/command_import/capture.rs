@@ -150,15 +150,18 @@ impl Capture {
         if hashes
             .iter()
             .any(|hash| {
-                let path = directory
-                    .join(&hash[..2])
-                    .join(&hash[2..]);
-                self.virtual_files.contains_key(&path)
+                let hash = hash.trim();
+                hash.len() >= 3
+                    && self.virtual_files.contains_key(
+                        &directory
+                            .join(&hash[..2])
+                            .join(&hash[2..]),
+                    )
             })
         {
             return hashes
                 .iter()
-                .map(|hash| self.virtual_source(directory, hash))
+                .map(|hash| self.virtual_source(directory, hash.trim()))
                 .collect();
         }
         use rayon::prelude::*;

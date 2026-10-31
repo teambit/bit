@@ -202,22 +202,19 @@ pub(super) fn record_remote_head(
     target: &Target,
     incoming: &Value,
 ) -> io::Result<()> {
-    let Some(head) = incoming["head"].as_str() else {
+    let Some(head) = incoming["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
         return Ok(());
     };
-    let scope = target.scope.as_deref().ok_or_else(|| invalid("import remote ref scope"))?;
-    if !plan.overlay.remote_refs.contains_key(scope) {
-        let path = plan.environment.local_directory
-            .parent()
-            .ok_or_else(|| invalid("import scope directory"))?
-            .join("refs/remotes")
-            .join(scope)
-            .join("main");
-        let rows = plan.capture
-            .json(&path)?
-            .unwrap_or_else(|| json!([]));
-        plan.overlay.remote_refs.insert(scope.to_owned(), rows);
-    }
+    let scope = target.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("import remote ref scope"))?;
+    ensure_remote_refs(plan, scope)?;
     let rows = plan.overlay.remote_refs
         .get_mut(scope)
         .and_then(Value::as_array_mut)
@@ -235,6 +232,21 @@ pub(super) fn record_remote_head(
         row["head"] = json!(head);
     } else {
         rows.push(json!({"id":{"scope":scope,"name":target.name},"head":head}));
+    }
+    Ok(())
+}
+fn ensure_remote_refs(plan: &mut PreparedImport, scope: &str) -> io::Result<()> {
+    if !plan.overlay.remote_refs.contains_key(scope) {
+        let path = plan.environment.local_directory
+            .parent()
+            .ok_or_else(|| invalid("import scope directory"))?
+            .join("refs/remotes")
+            .join(scope)
+            .join("main");
+        let rows = plan.capture
+            .json(&path)?
+            .unwrap_or_else(|| json!([]));
+        plan.overlay.remote_refs.insert(scope.to_owned(), rows);
     }
     Ok(())
 }

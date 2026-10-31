@@ -42,7 +42,11 @@ fn config(options: &Options, source: &Value) -> io::Result<Value> {
         for (key, value) in
             overrides.as_object().ok_or_else(|| unsupported("fork config override object"))?
         {
-            result[key] = value.clone();
+            let trimmed = key.trim();
+            if trimmed.is_empty() {
+                return Err(unsupported("fork config override key"));
+            }
+            result[trimmed] = value.clone();
         }
     }
     Ok(result)

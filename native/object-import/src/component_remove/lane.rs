@@ -83,6 +83,10 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
         .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
+    let metadata = fs::symlink_metadata(&path)?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() {
+        return Err(invalid("current lane object path"));
+    }
     let before = fs::read(&path)?;
     let value = outbound::read_object(&crate::scope_path(root).join("objects"), &hash, "Lane")?;
     if value["scope"].as_str().map(str::trim) != Some(scope)

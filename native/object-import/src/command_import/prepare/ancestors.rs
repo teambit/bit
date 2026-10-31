@@ -21,6 +21,8 @@ fn collect_target(
     let model = read_model(plan, directory, target)?
         .ok_or_else(|| invalid("import history component absent"))?;
     let head = requested
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .or_else(|| ref_str(&model["head"]))
         .ok_or_else(|| invalid("import history head absent"))?;
     let mut pending = vec![head.to_owned()];

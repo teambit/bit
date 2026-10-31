@@ -55,7 +55,11 @@ fn candidates(
 }
 fn tracked_directory(root: &Path, cwd: &Path, path: &Path) -> io::Result<String> {
     let relative = relative(root, path)?;
-    if !fs::metadata(path)?.is_dir() {
+    let metadata = fs::symlink_metadata(path)?;
+    if metadata.file_type().is_symlink() {
+        return Err(unsupported("tracking symlink directory"));
+    }
+    if !metadata.is_dir() {
         return Err(error(format!(
             r#"error: adding individual files is blocked ("{}"), and only directories can be added"#,
             display(cwd, path),

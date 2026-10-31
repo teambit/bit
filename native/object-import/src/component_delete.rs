@@ -307,14 +307,18 @@ fn find_indexed_model_hash<'a>(rows: &'a [Value], scope: &str, name: &str) -> io
 }
 
 fn resolve_model_version<'a>(value: &'a Value, version: &'a str) -> Option<&'a str> {
+    let version = version.trim();
     if matches!(version, "latest" | "head") {
         return value["head"]
             .as_str()
+            .map(str::trim)
             .filter(|val| !val.is_empty());
     }
     value["versions"][version]
         .as_str()
         .or_else(|| value["orphanedVersions"][version].as_str())
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
         .or_else(|| (version.len() == 40).then_some(version))
 }
 

@@ -119,6 +119,7 @@ fn source(row: &Value) -> io::Result<(&str, &str)> {
         .or_else(|| trimmed_str(&row["path"]))
         .ok_or_else(|| unsupported("fork remote source path"))?;
     if path.is_empty()
+        || path.contains('\\')
         || Path::new(path)
             .components()
             .any(|part| !matches!(part, Component::Normal(_)))

@@ -23,6 +23,9 @@ pub struct Plan {
 }
 impl Plan {
     pub fn prepare(root: &Path, cwd: &Path, from: &str, to: &str) -> io::Result<Self> {
+        if !root.is_absolute() || !cwd.is_absolute() {
+            return Err(invalid("move root and cwd paths must be absolute"));
+        }
         let (source, destination, physical) = paths::locations(root, cwd, from, to)?;
         let mut observed = Observed::default();
         let before = observed

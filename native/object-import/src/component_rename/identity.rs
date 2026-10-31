@@ -16,7 +16,11 @@ pub(super) fn prepare(
     let (key, source) = selected(bitmap, &options.source)?;
     let source_name = row_name(key, source);
     let source_scope = resolve_source_scope(key, source, workspace)?;
-    let target_scope = options.scope.as_deref().unwrap_or(source_scope);
+    let target_scope = options.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .unwrap_or(source_scope);
     validate_scope(target_scope)?;
     if !preflight && source_name == options.target && source_scope == target_scope {
         return Err(invalid(format!(

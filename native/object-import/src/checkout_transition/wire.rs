@@ -86,7 +86,6 @@ where
 {
     let token = String::deserialize(deserializer)?;
     Ok(token
-        .trim_end_matches('\0')
-        .trim()
+        .trim_matches(|ch: char| ch.is_whitespace() || ch == '\0')
         .to_owned())
 }

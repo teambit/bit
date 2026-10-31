@@ -17,11 +17,15 @@ pub(super) fn apply(
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("component bitmap"))?;
     let mut changes = vec![];
     for (key, row) in rows {
-        let Some(directory) = row["rootDir"].as_str().map(str::to_owned) else {
+        let Some(directory) = row["rootDir"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .map(str::to_owned)
+        else {
             continue;
         };
         let identity = identity(key, row)?;
-        let full = id(key, &identity, row);
         let edited = if directory.starts_with(&from) {
             let next = directory.replacen(&from, &to, 1);
             row["rootDir"] = json!(next);
@@ -32,7 +36,9 @@ pub(super) fn apply(
             vec![]
         };
         if !edited.is_empty() {
-            changes.push(json!({"id":full,"identity":identity,"changes":edited}));
+            changes.push(
+                json!({"id":id(key, &identity, row),"identity":identity,"changes":edited}),
+            );
         }
     }
     if changes.is_empty() {

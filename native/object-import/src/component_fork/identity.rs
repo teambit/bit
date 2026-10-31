@@ -48,17 +48,29 @@ pub(super) fn prepare(
     )?;
     destination(root, &directory, observed)?;
     available(bitmap, name, scope, ws_default, &target)?;
-    let main = source["mainFile"].as_str().ok_or_else(|| unsupported("fork main file"))?;
-    let main = if options.remote && !options.preserve && source["refactorIdentity"] != false {
-        crate::component_rename::copy_refactor::filename(main, leaf(source_name), leaf(name))?
-    } else {
-        main.into()
-    };
+    let main = resolve_main(options, source, source_name, name)?;
     let duplicate_name = bitmap
         .as_object()
         .is_some_and(|rows| rows.iter().any(|(key, row)| is_active_named(key, row, name)));
     let key = if duplicate_name { target.clone() } else { name.into() };
     Ok(Identity { target, key, name: name.into(), scope: scope.into(), directory, main })
+}
+fn resolve_main(
+    options: &Options,
+    source: &Value,
+    source_name: &str,
+    name: &str,
+) -> io::Result<String> {
+    let main = source["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .filter(|main| !main.is_empty())
+        .ok_or_else(|| unsupported("fork main file"))?;
+    if options.remote && !options.preserve && source["refactorIdentity"] != false {
+        crate::component_rename::copy_refactor::filename(main, leaf(source_name), leaf(name))
+    } else {
+        Ok(main.into())
+    }
 }
 fn default_scope(workspace: &Value) -> Option<&str> {
     crate::component_tracking::identity::workspace_aspect(workspace)["defaultScope"]

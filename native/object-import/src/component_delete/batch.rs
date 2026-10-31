@@ -118,9 +118,21 @@ fn dependency_facts(
             .iter()
             .cloned()
             .map(|mut component| {
+                let bare = component.identity
+                    .split('@')
+                    .next()
+                    .map(str::trim);
                 if identities
                     .iter()
-                    .any(|id| component.identity.split('@').next() == Some(id))
+                    .any(|id| {
+                        bare == Some(
+                            id.trim()
+                                .split('@')
+                                .next()
+                                .unwrap_or(id)
+                                .trim(),
+                        )
+                    })
                 {
                     component.dependencies.clear();
                 }

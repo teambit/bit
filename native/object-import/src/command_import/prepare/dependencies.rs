@@ -227,17 +227,7 @@ pub(super) fn dependency_target(value: &Value) -> io::Result<Target> {
         .as_str()
         .or_else(|| value["id"].as_str())
     {
-        let (identity, version) = text
-            .trim()
-            .rsplit_once('@')
-            .ok_or_else(|| invalid("import dependency version"))?;
-        let (scope, name) =
-            identity.split_once('/').ok_or_else(|| invalid("import dependency identity"))?;
-        return Ok(Target {
-            scope: Some(scope.trim().to_owned()),
-            name: name.trim().to_owned(),
-            version: version.trim().to_owned(),
-        });
+        return dependency_target_str(text);
     }
     let id_obj = value
         .get("id")
@@ -246,23 +236,43 @@ pub(super) fn dependency_target(value: &Value) -> io::Result<Target> {
     let scope = id_obj["scope"]
         .as_str()
         .or_else(|| value["scope"].as_str())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("import dependency scope"))?;
     let raw_name = id_obj["name"]
         .as_str()
         .or_else(|| value["name"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("import dependency name"))?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+        .map_or((raw_name, None), |(bare, ver)| {
+            (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
     let version = value["version"]
         .as_str()
         .or_else(|| id_obj["version"].as_str())
         .or_else(|| id_obj["head"].as_str())
         .or_else(|| value["head"].as_str())
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
         .or(inline_ver)
         .ok_or_else(|| invalid("import dependency version"))?;
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
+}
+fn dependency_target_str(text: &str) -> io::Result<Target> {
+    let (identity, version) = text
+        .trim()
+        .rsplit_once('@')
+        .ok_or_else(|| invalid("import dependency version"))?;
+    let (scope, name) =
+        identity.split_once('/').ok_or_else(|| invalid("import dependency identity"))?;
+    Ok(Target {
+        scope: Some(scope.trim().to_owned()),
+        name: name.trim().to_owned(),
+        version: version.trim().to_owned(),
+    })
 }
 pub(super) fn only_unbuilt_requests(
     plan: &mut PreparedImport,

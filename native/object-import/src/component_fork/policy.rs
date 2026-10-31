@@ -7,11 +7,11 @@ pub fn dependency_policy(source: &Value) -> io::Result<Vec<Value>> {
     let dependencies =
         source["dependencies"].as_array().ok_or_else(|| unsupported("fork dependency metadata"))?;
     let excluded = source["excludedComponents"].as_array();
-    let prefix = source["savePrefix"].as_str().unwrap_or("^");
+    let prefix = source["savePrefix"].as_str().map_or("^", str::trim);
     let mut output = Vec::new();
     for dependency in dependencies
         .iter()
-        .filter(|row| row["source"] == "auto")
+        .filter(|row| row["source"].as_str().map(str::trim) == Some("auto"))
     {
         if excluded_dependency(dependency, excluded) {
             continue;

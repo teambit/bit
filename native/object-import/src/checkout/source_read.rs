@@ -124,7 +124,9 @@ fn prepare(request: &Request, state: &mut cache::State, pool: &ThreadPool) -> io
     for (input, record) in request.files.iter().zip(records) {
         if let Some(record) = record {
             output.extend_from_slice(&record.body);
-            state.insert(&request.directory, input.hash, record.body);
+            if state.get(&request.directory, input.hash).is_none() {
+                state.insert(&request.directory, input.hash, record.body);
+            }
         }
     }
     Ok(output)

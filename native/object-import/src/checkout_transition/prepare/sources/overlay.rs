@@ -51,13 +51,14 @@ pub(super) fn files(
     };
     let local: Vec<_> = manifests
         .iter()
-        .filter(|file| overlay.source(&file.hash).is_none())
+        .filter(|file| overlay.source(file.hash.trim()).is_none())
         .cloned()
         .collect();
     let mut imported = Vec::with_capacity(manifests.len());
     for file in manifests {
-        imported.push(if overlay.source(&file.hash).is_some() {
-            Some(body(directory, &file.hash, total, compressed, Some(overlay))?)
+        let trimmed_hash = file.hash.trim();
+        imported.push(if overlay.source(trimmed_hash).is_some() {
+            Some(body(directory, trimmed_hash, total, compressed, Some(overlay))?)
         } else {
             None
         });

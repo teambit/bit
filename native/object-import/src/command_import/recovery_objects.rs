@@ -11,7 +11,11 @@ impl PreparedImport {
         for (hash, bytes) in objects {
             let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
             let path = LooseObject::path(&crate::scope_path(root), &canonical);
-            if fs::read(&path)? != *bytes {
+            let metadata = fs::symlink_metadata(&path)?;
+            if !metadata.is_file()
+                || metadata.file_type().is_symlink()
+                || fs::read(&path)? != *bytes
+            {
                 return Err(invalid("import restored component changed"));
             }
             self.capture.accept_known(&path, bytes);

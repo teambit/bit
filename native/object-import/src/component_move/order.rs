@@ -8,9 +8,9 @@ use std::{
 pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Result<Vec<String>> {
     let mut remaining = files
         .iter()
-        .cloned()
+        .map(|file| file.trim().to_owned())
         .collect::<HashSet<_>>();
-    let mut pending = VecDeque::from([root.join(directory)]);
+    let mut pending = VecDeque::from([root.join(directory.trim())]);
     let mut ordered = vec![];
     while let Some(parent) = pending.pop_front() {
         let entries = entries(&parent)?;

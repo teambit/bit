@@ -107,11 +107,12 @@ impl State {
         digest.update(sequence.to_be_bytes());
         digest.update(serde_json::to_vec(input).map_err(io::Error::other)?);
         let token = crate::validate::hexadecimal(&digest.finalize());
+        let directory: PathBuf = directory.components().collect();
         for (index, body) in plan.bodies.iter_mut().enumerate() {
             body.path = directory.join(format!("{token}-{index}.checkout"));
         }
         if input["packedBodies"] == true {
-            super::spool::assign(&mut plan.bodies, directory, &token, 0);
+            super::spool::assign(&mut plan.bodies, &directory, &token, 0);
         }
         let output = plan.manifest(&token);
         if serde_json::to_vec(&output).map_err(io::Error::other)?.len() > 4 * 1024 * 1024 {

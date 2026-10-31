@@ -20,7 +20,11 @@ impl Observed {
     pub(crate) fn read(&mut self, path: &Path) -> io::Result<Option<Vec<u8>>> {
         let bytes = match fs::symlink_metadata(path) {
             Err(error) if error.kind() == io::ErrorKind::NotFound => None,
-            Ok(metadata) if metadata.is_file() && metadata.len() <= 32 * 1024 * 1024 => {
+            Ok(metadata)
+                if metadata.is_file()
+                    && !metadata.file_type().is_symlink()
+                    && metadata.len() <= 32 * 1024 * 1024 =>
+            {
                 Some(crate::read_budget::Budget::new(32 * 1024 * 1024).read(fs::File::open(path)?)?)
             }
             Ok(_) => return Err(unsupported("tracking requires bounded regular files")),

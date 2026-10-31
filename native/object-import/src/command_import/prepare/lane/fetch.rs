@@ -12,6 +12,8 @@ impl PreparedImport {
         scope: &str,
         hash: &str,
     ) -> io::Result<Option<crate::command_import::capture::Object>> {
+        let scope = scope.trim();
+        let hash = hash.trim();
         if !self.environment.remote_overrides.contains_key(scope)
             && self.environment.remotes.get(scope).is_none()
         {

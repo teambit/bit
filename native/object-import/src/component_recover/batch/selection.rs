@@ -57,7 +57,10 @@ pub(super) fn key(bitmap: &Value, id: &str) -> io::Result<Option<String>> {
     Ok(matches.first().map(|(key, _)| (*key).clone()))
 }
 pub(super) fn bare(id: &str) -> &str {
-    id.split('@').next().unwrap_or(id)
+    let id = id.trim();
+    id.split('@')
+        .next()
+        .map_or(id, str::trim)
 }
 pub(super) fn select(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
     if !pattern.contains(['*', '?']) {

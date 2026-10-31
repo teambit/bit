@@ -64,6 +64,7 @@ pub(super) fn remote(
     remotes: &Value,
     name: &str,
 ) -> io::Result<PathBuf> {
+    let name = name.trim();
     let directory = raw_remote(plan, remotes, name)?;
     // The published importer persists ScopeMeta for both file and HTTP
     // transfers, including when the remote has no matching component model.
@@ -75,7 +76,7 @@ pub(super) fn remote(
             .is_some_and(|record| {
                 record.value
                     .as_ref()
-                    .is_none_or(|value| value["name"] != name)
+                    .is_none_or(|value| value["name"].as_str().map(str::trim) != Some(name))
             })
         {
             return Err(invalid("import remote ScopeMeta identity"));

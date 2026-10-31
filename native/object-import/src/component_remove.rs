@@ -223,8 +223,16 @@ fn component_files(
     row: &Value,
     keep_files: bool,
 ) -> io::Result<(bool, Option<PathBuf>)> {
-    let root_dir = row["rootDir"].as_str().ok_or_else(|| invalid("component root"))?;
-    let main_file = row["mainFile"].as_str().ok_or_else(|| invalid("component main file"))?;
+    let root_dir = row["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| invalid("component root"))?;
+    let main_file = row["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .filter(|file| !file.is_empty())
+        .ok_or_else(|| invalid("component main file"))?;
     if !safe_relative(Path::new(main_file)) {
         return Err(invalid("component main file"));
     }

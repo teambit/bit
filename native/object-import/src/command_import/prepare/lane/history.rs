@@ -64,7 +64,7 @@ impl PreparedImport {
 
 fn merge_history(existing: Option<Value>, incoming: Value, lane_hash: &str) -> io::Result<Value> {
     let lane_hash = lane_hash.trim();
-    if incoming["laneHash"] != lane_hash {
+    if incoming["laneHash"].as_str().map(str::trim) != Some(lane_hash) {
         return Err(invalid("remote LaneHistory identity"));
     }
     let incoming_rows =
@@ -73,7 +73,7 @@ fn merge_history(existing: Option<Value>, incoming: Value, lane_hash: &str) -> i
         return Err(invalid("remote LaneHistory entry budget"));
     }
     let Some(mut existing) = existing else { return Ok(incoming) };
-    if existing["laneHash"] != lane_hash {
+    if existing["laneHash"].as_str().map(str::trim) != Some(lane_hash) {
         return Err(invalid("local LaneHistory identity"));
     }
     let rows =

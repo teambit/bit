@@ -159,9 +159,16 @@ pub(crate) fn version_hash(model: &Value, id: &str) -> io::Result<String> {
             model["versions"][version]
                 .as_str()
                 .or_else(|| model["orphanedVersions"][version].as_str())
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
                 .unwrap_or(version)
         })
-        .or_else(|| model["head"].as_str());
+        .or_else(|| {
+            model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+        });
     let hash = hash.ok_or_else(|| {
         invalid(format!("unable to find the component {id} in the current lane or main"))
     })?;

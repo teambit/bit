@@ -197,8 +197,9 @@ fn latest(model: &Value) -> io::Result<Option<String>> {
     versions
         .keys()
         .map(|tag| {
-            Version::parse(tag)
-                .map(|version| (version, tag.clone()))
+            let trimmed = tag.trim();
+            Version::parse(trimmed)
+                .map(|version| (version, trimmed.to_owned()))
                 .map_err(io::Error::other)
         })
         .collect::<io::Result<Vec<_>>>()

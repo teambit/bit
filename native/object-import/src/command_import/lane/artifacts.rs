@@ -18,8 +18,16 @@ impl PreparedImport {
                 return Err(invalid("lane artifact Source budget"));
             }
         }
-        let scope = lane.value["scope"].as_str().ok_or_else(|| invalid("lane artifact scope"))?;
-        let name = lane.value["name"].as_str().ok_or_else(|| invalid("lane artifact name"))?;
+        let scope = lane.value["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("lane artifact scope"))?;
+        let name = lane.value["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("lane artifact name"))?;
         self.prepare_lane_objects(
             scope,
             &references,

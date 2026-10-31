@@ -163,6 +163,7 @@ fn format_dsl(main: &str, file: &str) -> String {
 }
 
 fn missing(id: &str) -> io::Error {
+    let id = id.trim();
     error(format!(
         "error: the component {id} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://bit.dev/components/component-main-file",
     ))

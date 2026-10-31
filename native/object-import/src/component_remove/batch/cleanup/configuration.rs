@@ -39,6 +39,8 @@ impl Configuration {
         self.0.write()
     }
     fn backup(&self, root: &Path, file_id: &str) -> io::Result<()> {
+        crate::component_remove::validate_file_id(file_id)?;
+        let file_id = file_id.trim();
         let base = crate::scope_path(root).join("workspace-config-history");
         fs::create_dir_all(base.join("files"))?;
         fs::write(base.join("files").join(file_id), &self.0.before)?;

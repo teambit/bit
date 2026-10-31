@@ -43,7 +43,7 @@ pub fn probe_remote(
                         objects::http(&items, id)?
                     }
                 };
-                result.insert(id.clone(), deleted);
+                result.insert(id.trim().to_owned(), deleted);
             }
             Ok(result)
         })

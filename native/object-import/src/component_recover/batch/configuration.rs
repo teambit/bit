@@ -27,6 +27,9 @@ pub(super) fn prepare(batch: &mut Batch, item: &Item) -> io::Result<Option<Confi
     Ok(Some(Configuration { path, bytes }))
 }
 fn projection(parsed: &Value) -> io::Result<Value> {
+    if !parsed.is_object() {
+        return Err(invalid("recovery component.json must be an object"));
+    }
     let has_scope = parsed["componentId"]
         .as_str()
         .map(str::trim)

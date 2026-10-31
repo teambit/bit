@@ -127,10 +127,16 @@ fn change(
     })
 }
 fn dependencies(plan: &mut Plan, facts: &Value, validate_only: bool) -> io::Result<()> {
-    let source =
-        facts["sourcePackage"].as_str().ok_or_else(|| unsupported("rename source package"))?;
-    let target =
-        facts["targetPackage"].as_str().ok_or_else(|| unsupported("rename target package"))?;
+    let source = facts["sourcePackage"]
+        .as_str()
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
+        .ok_or_else(|| unsupported("rename source package"))?;
+    let target = facts["targetPackage"]
+        .as_str()
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
+        .ok_or_else(|| unsupported("rename target package"))?;
     let mut matcher =
         refactor::PackageMatcher::with_cache(source, target, Arc::clone(&plan.context.patterns));
     for change in &mut plan.files {

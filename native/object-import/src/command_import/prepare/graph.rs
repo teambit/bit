@@ -50,7 +50,11 @@ impl PreparedImport {
         self.cache.switch_existing_versions = previous;
         result?;
         for target in targets {
-            self.cache.unbuilt.insert(format!("{}@{}", super::identity(target)?, target.version));
+            self.cache.unbuilt.insert(format!(
+                "{}@{}",
+                super::identity(target)?,
+                target.version.trim(),
+            ));
         }
         let remotes = self.environment.remotes.clone();
         let scoped = targets

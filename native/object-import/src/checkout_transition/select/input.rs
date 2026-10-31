@@ -112,5 +112,6 @@ pub(super) fn validate(request: &Begin) -> io::Result<()> {
 }
 
 fn invalid_id(value: &str) -> bool {
-    value.trim().is_empty() || value.len() > 32768 || value.contains('\0')
+    let trimmed = value.trim();
+    trimmed.is_empty() || value.len() > 32768 || value.chars().any(char::is_control)
 }

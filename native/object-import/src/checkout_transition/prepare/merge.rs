@@ -79,7 +79,7 @@ fn retain_field(
             return Ok(());
         }
         let bytes = text.into_bytes();
-        let index = offset + bodies.len();
+        let index = offset.saturating_add(bodies.len());
         bodies.push(plan::Body::new(bytes));
         row[output] = json!(index);
     }

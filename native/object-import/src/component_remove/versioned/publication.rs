@@ -95,7 +95,11 @@ fn remove_object(path: &std::path::Path) -> io::Result<()> {
     fs::remove_file(path)?;
     let parent = path.parent().ok_or_else(|| invalid("object directory"))?;
     if fs::read_dir(parent)?.next().is_none() {
-        fs::remove_dir(parent)?;
+        match fs::remove_dir(parent) {
+            Ok(()) => {}
+            Err(error) if error.kind() == io::ErrorKind::DirectoryNotEmpty => {}
+            Err(error) => return Err(error),
+        }
     }
     Ok(())
 }

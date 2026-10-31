@@ -16,7 +16,13 @@ pub struct Options {
 }
 impl Options {
     pub(super) fn validate(&self, directories: &[String], bitmap: &Value) -> io::Result<()> {
-        if self.id.is_some() && self.namespace.is_some() {
+        let has_id = self.id
+            .as_deref()
+            .is_some_and(|id| !id.trim().is_empty());
+        let has_ns = self.namespace
+            .as_deref()
+            .is_some_and(|ns| !ns.trim().is_empty());
+        if has_id && has_ns {
             return Err(error(
                 "please use either [id] or [namespace] to add a particular component - they cannot be used together",
             ));
@@ -24,17 +30,7 @@ impl Options {
         let tracks_root = directories
             .iter()
             .any(|directory| directory == ".");
-        let existing_root = bitmap
-            .as_object()
-            .is_some_and(|rows| {
-                rows.values()
-                    .any(|row| {
-                        (row["rootDir"].as_str().map(str::trim) == Some(".")
-                            || row["directory"].as_str().map(str::trim) == Some("."))
-                            && super::active(row)
-                    })
-            });
-        if tracks_root && !self.workspace_root && !existing_root {
+        if tracks_root && !self.workspace_root && !existing_root(bitmap) {
             return Err(error(
                 "unable to track the workspace root without the --root flag.\nit makes the workspace itself a component - it owns every file no other component claims, .bitmap included, and every other component becomes a member of it.\nif that is what you want, run \"bit add . --root\". to track a component, pass its directory, e.g. \"bit add my-component\"",
             ));
@@ -54,4 +50,16 @@ impl Options {
         }
         Ok(())
     }
+}
+fn existing_root(bitmap: &Value) -> bool {
+    bitmap
+        .as_object()
+        .is_some_and(|rows| {
+            rows.values()
+                .any(|row| {
+                    (row["rootDir"].as_str().map(str::trim) == Some(".")
+                        || row["directory"].as_str().map(str::trim) == Some("."))
+                        && super::active(row)
+                })
+        })
 }

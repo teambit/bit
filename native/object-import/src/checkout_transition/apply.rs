@@ -61,6 +61,8 @@ fn initial(
         status.insert(
             row["relativePath"]
                 .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
                 .ok_or_else(|| invalid("checkout initial status path"))?
                 .into(),
             row["status"].clone(),
@@ -74,6 +76,8 @@ fn initial(
         status.insert(
             row["relativePath"]
                 .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
                 .ok_or_else(|| invalid("checkout removal path"))?
                 .into(),
             row["status"].clone(),

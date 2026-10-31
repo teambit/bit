@@ -35,5 +35,6 @@ fn normalize_rel(path: &str) -> String {
     replaced
         .strip_prefix("./")
         .unwrap_or(&replaced)
+        .trim_matches('/')
         .to_owned()
 }

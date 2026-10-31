@@ -25,7 +25,7 @@ impl Batch {
         options: &[Options],
         facts: &[Value],
     ) -> io::Result<Vec<Plan>> {
-        if options.len() != facts.len() {
+        if options.len() != facts.len() || options.len() > 4096 {
             return Err(invalid("rename plan options/facts length mismatch"));
         }
         if options.is_empty() {

@@ -49,6 +49,10 @@ struct File {
 }
 impl Batch {
     pub fn prepare(root: &Path, pattern: &str) -> io::Result<Self> {
+        let pattern = pattern.trim();
+        if !root.is_absolute() || pattern.is_empty() {
+            return Err(invalid("recovery workspace root and pattern are required"));
+        }
         let mut proofs = Observed::default();
         proofs.ancestors(root, root)?;
         let before = required(&mut proofs, &root.join(".bitmap"))?;

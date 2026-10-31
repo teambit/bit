@@ -148,14 +148,14 @@ fn sequential_preflight(
             let body = repository::source(
                 &request.directory,
                 input.hash,
-                MAX_BYTES - inflated,
+                MAX_BYTES.saturating_sub(inflated),
                 &mut compressed,
             )?;
             state.insert(&request.directory, input.hash, body.clone());
             body
         };
         let contents = if input.normalize { eol::auto(body) } else { body };
-        inflated += contents.len();
+        inflated = inflated.saturating_add(contents.len());
         if inflated > MAX_BYTES {
             return Err(invalid("checkout materialized bytes out of bounds"));
         }

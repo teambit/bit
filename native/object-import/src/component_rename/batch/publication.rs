@@ -40,7 +40,12 @@ pub(super) fn write(
     reason: &str,
 ) -> io::Result<()> {
     crate::component_remove::validate_file_id(file_id)?;
-    if fs::read(root.join(".bitmap"))? != *expected {
+    let bitmap_path = root.join(".bitmap");
+    let metadata = fs::symlink_metadata(&bitmap_path)?;
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || fs::read(&bitmap_path)? != *expected
+    {
         return Err(invalid("scope rename bitmap changed before publication"));
     }
     if crate::inspection::render_workspace_bitmap(bitmap)? == *expected {

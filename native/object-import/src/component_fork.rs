@@ -43,6 +43,9 @@ pub struct Plan {
 }
 impl Plan {
     pub fn prepare(root: &Path, options: &Options, source: &Value) -> io::Result<Self> {
+        if !root.is_absolute() {
+            return Err(invalid("fork workspace root must be absolute"));
+        }
         let mut observed = Observed::default();
         observed.ancestors(root, root)?;
         let before = required(&mut observed, &root.join(".bitmap"))?;

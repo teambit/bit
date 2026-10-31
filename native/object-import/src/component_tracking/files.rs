@@ -174,7 +174,8 @@ fn excluded(plan: &Plan, directory: &str, batch: &[String]) -> Vec<std::path::Pa
         directories.extend(
             rows.values()
                 .filter(|row| super::active(row))
-                .filter_map(|row| row["rootDir"].as_str())
+                .filter_map(|row| row["rootDir"].as_str().map(str::trim))
+                .filter(|dir| !dir.is_empty())
                 .map(str::to_owned),
         );
     }

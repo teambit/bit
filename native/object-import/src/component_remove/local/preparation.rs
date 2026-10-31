@@ -69,7 +69,7 @@ fn packages(
     for model in models {
         if let Some(row) = selected
             .iter()
-            .find(|row| row.identity == model.identity())
+            .find(|row| row.identity.trim() == model.identity().trim())
         {
             model.package_path(row.package.clone());
         }

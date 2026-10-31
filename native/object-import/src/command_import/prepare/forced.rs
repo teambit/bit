@@ -40,7 +40,7 @@ fn collect_forced_dependencies(
         {
             let dependency = dependency_target(row)?;
             let id = identity(&dependency)?;
-            let key = format!("{id}@{}", dependency.version);
+            let key = format!("{id}@{}", dependency.version.trim());
             if !seen.insert(key.clone()) {
                 continue;
             }

@@ -18,7 +18,7 @@ pub(crate) struct State {
     plans: plan::State,
 }
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
-    match kind {
+    match kind.trim() {
         "checkoutApply" => apply::apply(input, &state.plans),
         "checkoutMaterialize" => materialize::apply(input, &state.plans),
         "checkoutPrepare" => prepare::prepare(&input, &mut state.plans, None),
@@ -26,7 +26,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         "checkoutFinish" => {
             let request: wire::Token = serde_json::from_value(input).map_err(io::Error::other)?;
             state.plans.plans
-                .remove(&request.token)
+                .remove(request.token.trim())
                 .ok_or_else(|| invalid("stale checkout plan"))?;
             Ok(json!({"finished":true}))
         }

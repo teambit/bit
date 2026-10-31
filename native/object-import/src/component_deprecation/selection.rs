@@ -60,6 +60,7 @@ pub(crate) fn resolve(bitmap: &Value, id: &str) -> io::Result<String> {
     identity(key, &bitmap[key]).ok_or_else(|| invalid("component identity"))
 }
 pub(crate) fn select(bitmap: &Value, pattern: &str) -> io::Result<Vec<String>> {
+    let pattern = pattern.trim();
     validate_pattern(pattern)?;
     let rows = bitmap.as_object().ok_or_else(|| invalid("invalid component bitmap"))?;
     let pattern = if pattern == "$deprecated" { "**" } else { pattern };

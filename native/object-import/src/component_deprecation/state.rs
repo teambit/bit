@@ -147,8 +147,8 @@ fn range_state(config: &mut Value, id: &str, model: &Value) {
         .into_iter()
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter())
-        .find(|(_, hash)| hash.as_str() == Some(version))
-        .map_or(version, |(tag, _)| tag.as_str());
+        .find(|(_, hash)| hash.as_str().map(str::trim) == Some(version))
+        .map_or(version, |(tag, _)| tag.trim());
     if let Ok(version) = node_semver::Version::parse(tag) {
         config["deprecate"] = Value::Bool(range.satisfies(&version));
     }

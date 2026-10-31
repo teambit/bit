@@ -89,6 +89,7 @@ impl Plan {
         facts: &Value,
         context: &PreparationContext,
     ) -> io::Result<Self> {
+        let options = options.normalized();
         let mut observed = Observed::default();
         observed.ancestors(root, root)?;
         let bitmap_before = required(&mut observed, &root.join(".bitmap"))?;
@@ -96,11 +97,11 @@ impl Plan {
         let bitmap = crate::parse_jsonc(&bitmap_before)?;
         let workspace = crate::parse_jsonc(&workspace_before)?;
         let identity =
-            identity::prepare(root, &bitmap, &workspace, options, facts["preflight"] == true)?;
+            identity::prepare(root, &bitmap, &workspace, &options, facts["preflight"] == true)?;
         let mut plan = Self {
             root: root.to_owned(),
             identity,
-            options: options.clone(),
+            options,
             files: Vec::new(),
             observed,
             cleanup: None,

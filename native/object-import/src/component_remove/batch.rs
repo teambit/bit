@@ -209,8 +209,10 @@ pub(super) fn custom_packages(
         }
         let Some(name) = components
             .iter()
-            .find(|component| component["identity"] == row.identity)
+            .find(|component| component["identity"].as_str().map(str::trim) == Some(&row.identity))
             .and_then(|component| component["packageName"].as_str())
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
         else {
             continue;
         };

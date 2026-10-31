@@ -126,10 +126,18 @@ pub(super) fn head(batch: &mut Batch, bare: &str, model: &Value) -> io::Result<O
                     })
             })
         {
-            return Ok(row["head"].as_str().map(str::to_owned));
+            return Ok(row["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+                .map(str::to_owned));
         }
     }
-    Ok(model["head"].as_str().map(str::to_owned))
+    Ok(model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .map(str::to_owned))
 }
 pub(super) fn version(batch: &mut Batch, id: &str, model: &Value) -> io::Result<Option<Value>> {
     let (bare, version) = id

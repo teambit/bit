@@ -5,7 +5,7 @@ use std::{io, path::Path};
 
 /// Whether the canonical pre-ignore component scan finds any files.
 pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Result<bool> {
-    let directory = directory.trim();
+    let directory = directory.trim().trim_end_matches('/');
     if directory != "." && !super::safe_relative(Path::new(directory)) {
         return Err(super::invalid("component scan directory"));
     }
