@@ -232,16 +232,16 @@ fn lane_only(bitmap: &Value) -> io::Result<HashSet<String>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("switch bitmap"))?;
     rows.iter()
         .filter(|(key, row)| {
-            !matches!(key.as_str(), "$schema-version" | "_bit_lane")
+            !key.starts_with('$')
+                && !matches!(key.as_str(), "_bit_lane" | "version")
                 && (row["isAvailableOnCurrentLane"] == false || row["onLanesOnly"] == true)
         })
-        .map(|(_, row)| {
-            let scope = row["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-                .or_else(|| row["defaultScope"].as_str())
-                .ok_or_else(|| invalid("switch lane-only scope"))?;
-            let name = row["name"].as_str().ok_or_else(|| invalid("switch lane-only name"))?;
+        .map(|(key, row)| {
+            let (scope_opt, name) = crate::reset_lane::bitmap::row_identity(key, row);
+            let scope = scope_opt.ok_or_else(|| invalid("switch lane-only scope"))?;
+            if name.is_empty() {
+                return Err(invalid("switch lane-only name"));
+            }
             Ok(format!("{scope}/{name}"))
         })
         .collect()

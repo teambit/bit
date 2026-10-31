@@ -98,8 +98,14 @@ fn prepare_one(
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| invalid("lane destination scope"))?;
     let existing = rows
-        .values()
-        .find(|row| effective_scope(row) == Some(scope) && row["name"] == name);
+        .iter()
+        .find(|(key, row)| {
+            !key.starts_with('$')
+                && !matches!(key.as_str(), "_bit_lane" | "version")
+                && row.is_object()
+                && crate::reset_lane::bitmap::row_identity(key, row) == (Some(scope), name)
+        })
+        .map(|(_, row)| row);
     let directory = match existing {
         Some(row) => row["rootDir"]
             .as_str()

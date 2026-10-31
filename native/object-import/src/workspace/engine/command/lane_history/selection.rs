@@ -37,13 +37,17 @@ fn membership(bitmap: &Value, settings: &Value) -> io::Result<HashSet<String>> {
     Ok(projected
         .as_object()
         .ok_or_else(|| invalid("history bitmap"))?
-        .values()
-        .filter_map(|row| {
-            let scope = row["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-                .or_else(|| row["defaultScope"].as_str())?;
-            Some(format!("{scope}/{}", row["name"].as_str()?))
+        .iter()
+        .filter(|(key, row)| {
+            !key.starts_with('$')
+                && !matches!(key.as_str(), "_bit_lane" | "version")
+                && row.is_object()
+        })
+        .filter_map(|(key, row)| {
+            let (scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+            scope
+                .filter(|_| !name.is_empty())
+                .map(|scope| format!("{scope}/{name}"))
         })
         .collect())
 }

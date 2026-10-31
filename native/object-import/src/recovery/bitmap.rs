@@ -77,10 +77,7 @@ fn identity(key: &str, component: &Value) -> io::Result<()> {
     {
         return Err(invalid("bitmap name type"));
     }
-    let name = component["name"]
-        .as_str()
-        .filter(|name| !name.is_empty())
-        .unwrap_or(key);
+    let (_, name) = crate::reset_lane::bitmap::row_identity(key, component);
     if !identifier(name, true) {
         return Err(invalid("bitmap component name"));
     }

@@ -35,7 +35,7 @@ fn all_targets(bitmap: &Value, settings: &Value) -> io::Result<Vec<Value>> {
         .clone();
     bitmap.remove("_bit_lane");
     for (key, row) in &mut bitmap {
-        if key == "$schema-version" {
+        if key.starts_with('$') || key == "version" {
             continue;
         }
         let row = row.as_object_mut().ok_or_else(|| invalid("history bitmap row"))?;

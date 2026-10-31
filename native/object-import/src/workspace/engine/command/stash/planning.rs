@@ -172,8 +172,14 @@ fn find_entry(bitmap: &Value, identity: &str, directory: &str) -> io::Result<Val
         .ok_or_else(|| invalid("stash bitmap object"))?
         .iter()
         .find(|(key, entry)| {
+            if key.starts_with('$')
+                || matches!(key.as_str(), "_bit_lane" | "version")
+                || !entry.is_object()
+            {
+                return false;
+            }
             let scope = entry["scope"].as_str().unwrap_or_default();
-            let name = entry["name"].as_str().unwrap_or(key);
+            let (_, name) = crate::reset_lane::bitmap::row_identity(key, entry);
             entry["rootDir"] == directory
                 && (format!("{scope}/{name}") == identity
                     || (scope.is_empty() && identity.ends_with(&format!("/{name}"))))

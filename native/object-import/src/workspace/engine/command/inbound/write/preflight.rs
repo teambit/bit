@@ -29,7 +29,10 @@ pub(in super::super) fn check(
     )?;
     let mut directories = directories.iter();
     for target in targets {
-        let row = rows.values().find(|row| super::matches_target(row, target));
+        let row = rows
+            .iter()
+            .find(|(key, row)| super::matches_target(key, row, target))
+            .map(|(_, row)| row);
         if let Some(row) = row {
             existing_target(root, target, row, options)?;
         } else if !options.track_only && !options.write_to_empty_dir {

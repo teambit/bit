@@ -71,7 +71,13 @@ fn main_file_removed(root: &Path, chalk: Chalk) -> io::Result<Option<io::Error>>
 }
 
 fn entry_missing_main(root: &Path, bitmap: &Value, key: &str, value: &Value) -> io::Result<bool> {
-    if key.starts_with('$') || key == "_bit_lane" || !value.is_object() {
+    if key.starts_with('$')
+        || matches!(key, "_bit_lane" | "version")
+        || !value.is_object()
+        || value["isAvailableOnCurrentLane"] == false
+        || crate::commands::update_cmd::aspect_entry(&value["config"], "teambit.component/remove")
+            .is_some_and(|(_, rem)| rem["removed"] == true)
+    {
         return Ok(false);
     }
     let Some(root_dir) = value["rootDir"]
@@ -99,20 +105,25 @@ fn format_main_removed(
     chalk: Chalk,
 ) -> io::Error {
     let main_file = value["mainFile"].as_str().unwrap_or_default();
-    let name = value["name"]
-        .as_str()
-        .filter(|name| !name.is_empty())
-        .unwrap_or_else(|| key.rsplit_once('@').map_or(key, |(name, _)| name));
+    let name = crate::commands::update_cmd::bitmap_row_name(key, value);
     let scope = value["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty());
-    let identity = match scope.or(default_scope) {
+    let row_default_scope = value["defaultScope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty());
+    let identity = match scope.or(row_default_scope).or(default_scope) {
         Some(scope) => format!("{scope}/{name}"),
         None => name.to_owned(),
     };
     let version = value["version"]
         .as_str()
-        .filter(|version| !version.is_empty());
+        .filter(|version| !version.is_empty())
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver)
+                .filter(|ver| !ver.is_empty())
+        });
     let id = match (scope.is_some(), version) {
         (true, Some(version)) => format!("{identity}@{version}"),
         (false, Some(version)) => format!("{name}@{version}"),

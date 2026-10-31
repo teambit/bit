@@ -108,10 +108,16 @@ fn unexported_targets(
         .filter_map(|target| {
             let identity = target["identity"].as_str()?;
             let (scope, name) = identity.split_once('/')?;
-            rows.values()
-                .any(|row| {
-                    row["scope"] == ""
-                        && row["name"] == name
+            rows.iter()
+                .any(|(key, row)| {
+                    !key.starts_with('$')
+                        && !matches!(key.as_str(), "_bit_lane" | "version")
+                        && row.is_object()
+                        && row["scope"]
+                            .as_str()
+                            .unwrap_or_default()
+                            .is_empty()
+                        && crate::reset_lane::bitmap::row_identity(key, row).1 == name
                         && row["rootDir"] == target["directory"]
                 })
                 .then(|| command_import::Target {

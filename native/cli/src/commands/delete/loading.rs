@@ -27,7 +27,7 @@ pub(in crate::commands) fn validate(
             .join(main)
             .is_file()
         {
-            return Err(missing_main(row, main, chalk));
+            return Err(missing_main(id, row, main, chalk));
         }
     }
     Ok(())
@@ -40,14 +40,24 @@ fn missing_directory(directory: &str, chalk: Chalk) -> io::Error {
     ))
 }
 
-fn missing_main(row: &Value, main: &str, chalk: Chalk) -> io::Error {
-    let name = row["name"].as_str().unwrap_or_default();
+fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io::Error {
+    let (fallback_scope, fallback_name) = fallback_id
+        .split_once('/')
+        .map_or(("", fallback_id), |(scope, name)| (scope, name));
+    let name = row["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .unwrap_or(fallback_name);
     let version = row["version"].as_str().unwrap_or_default();
     let scope = row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
-        .unwrap_or_default();
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+        })
+        .unwrap_or(fallback_scope);
     let id = format!(
         "{}{}{name}{}",
         scope,

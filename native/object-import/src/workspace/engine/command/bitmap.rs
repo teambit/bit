@@ -8,6 +8,7 @@ mod stash;
 mod switch_tests;
 use crate::workspace::engine::invalid;
 use serde_json::{Map, Value};
+use soft::{identity, rows};
 use std::{
     collections::{HashMap, HashSet},
     fs,
@@ -220,29 +221,6 @@ fn validate_updates(original: &[u8], updates: &[Update]) -> io::Result<()> {
         return Err(invalid("command bitmap bounds"));
     }
     Ok(())
-}
-fn rows(bitmap: &Value) -> io::Result<Vec<Value>> {
-    let entries = bitmap.as_object().ok_or_else(|| invalid("command bitmap object"))?;
-    if bitmap["$schema-version"].as_str().is_none() {
-        return Err(invalid("command bitmap schema requires canonical migration"));
-    }
-    let mut rows = Vec::new();
-    for (key, entry) in entries {
-        if !matches!(key.as_str(), "$schema-version" | "_bit_lane") {
-            entry["name"].as_str().ok_or_else(|| invalid("command bitmap component name"))?;
-            rows.push(entry.clone());
-        }
-    }
-    Ok(rows)
-}
-fn identity(entry: &Value) -> io::Result<String> {
-    let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
-    let scope = entry["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| entry["defaultScope"].as_str())
-        .ok_or_else(|| invalid("command bitmap scope"))?;
-    Ok(format!("{scope}/{name}"))
 }
 fn apply_updates(rows: &mut [Value], context: &Value, updates: &[Update]) -> io::Result<bool> {
     let mut matched = 0;

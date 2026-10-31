@@ -56,7 +56,7 @@ pub(in crate::commands) fn read(root: &Path) -> io::Result<Bitmap> {
                 && key.as_str() != "_bit_lane"
                 && value.is_object()
         })
-        .map(|(_, value)| entry(value))
+        .map(|(key, value)| entry(key, value))
         .collect::<io::Result<_>>()?;
     Ok(Bitmap { entries, lane })
 }
@@ -75,30 +75,44 @@ fn lane_id(lane: &Value) -> io::Result<Value> {
     Ok(serde_json::json!({ "scope": id["scope"], "name": id["name"] }))
 }
 
-fn entry(value: &Value) -> io::Result<Entry> {
-    let text = |field: &str| {
-        value[field]
-            .as_str()
-            .filter(|text| !text.is_empty())
+fn text<'a>(value: &'a Value, field: &str) -> Option<&'a str> {
+    value[field]
+        .as_str()
+        .filter(|val| !val.is_empty())
+}
+
+fn entry_scope<'a>(key_id: &'a str, name: &str, value: &'a Value) -> io::Result<(&'a str, bool)> {
+    let key_scope = key_id
+        .strip_suffix(&format!("/{name}"))
+        .filter(|sc| !sc.is_empty());
+    match text(value, "scope").or(key_scope) {
+        Some(scope) => Ok((scope, true)),
+        None => {
+            Ok((text(value, "defaultScope").ok_or_else(|| decline("bitmap default scope"))?, false))
+        }
+    }
+}
+
+fn entry(key: &str, value: &Value) -> io::Result<Entry> {
+    let name = crate::commands::update_cmd::bitmap_row_name(key, value);
+    if name.is_empty() || !matches!(value["version"], Value::String(_) | Value::Null) {
+        return Err(decline("bitmap entry"));
+    }
+    let (key_id, key_ver) = match key.rsplit_once('@') {
+        Some((bare, ver)) => (bare, Some(ver).filter(|ver| !ver.is_empty())),
+        None => (key, None),
     };
-    let name = text("name").ok_or_else(|| decline("bitmap entry name"))?;
-    let (scope, has_scope) = match text("scope") {
-        Some(scope) => (scope, true),
-        None => (text("defaultScope").ok_or_else(|| decline("bitmap default scope"))?, false),
-    };
-    let root_dir = text("rootDir").ok_or_else(|| decline("bitmap root dir"))?;
+    let (scope, has_scope) = entry_scope(key_id, name, value)?;
+    let root_dir = text(value, "rootDir").ok_or_else(|| decline("bitmap root dir"))?;
     let dep_entry = crate::commands::update_cmd::aspect_entry(
         &value["config"],
         "teambit.component/deprecation",
     )
     .map(|(_, dep)| dep);
-    if !matches!(value["version"], Value::String(_) | Value::Null) {
-        return Err(decline("bitmap entry version"));
-    }
     Ok(Entry {
         identity: format!("{scope}/{name}"),
         has_scope,
-        version: text("version").map(str::to_string),
+        version: text(value, "version").or(key_ver).map(str::to_string),
         root_dir: root_dir.to_string(),
         staged_deprecation: dep_entry.is_some_and(Value::is_object),
         deprecation: dep_entry

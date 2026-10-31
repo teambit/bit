@@ -46,42 +46,37 @@ fn find_export_row<'a>(
     scope: &str,
     name: &str,
 ) -> Option<&'a mut Value> {
-    let key = if rows.contains_key(full) {
-        Some(full.to_owned())
-    } else if rows.contains_key(name) {
-        Some(name.to_owned())
-    } else {
-        rows.iter()
-            .find(|(key, row)| export_row_matches(key, row, full, scope, name))
-            .map(|(key, _)| key.clone())
-    }?;
+    let key = rows
+        .iter()
+        .find(|(key, row)| export_row_matches(key, row, full, scope, name))
+        .map(|(key, _)| key.clone())?;
     rows.get_mut(&key)
 }
 
 fn export_row_matches(key: &str, row: &Value, full: &str, scope: &str, name: &str) -> bool {
-    if matches!(key, "$schema-version" | "_bit_lane") || !row.is_object() {
+    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
         return false;
     }
-    let base = key.split('@').next().unwrap_or(key);
-    if base == full || base == name {
-        return true;
-    }
-    let row_scope = row["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| row["defaultScope"].as_str());
-    row["name"].as_str() == Some(name) && row_scope == Some(scope)
+    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let _ = full;
+    row_name == name && row_scope == Some(scope)
 }
 
 fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bool> {
     if row["name"]
         .as_str()
+        .filter(|row_name| !row_name.is_empty())
         .is_some_and(|row_name| row_name != name)
         || row["version"].as_str().is_none_or(str::is_empty)
     {
         return Err(invalid("export bitmap lifecycle"));
     }
-    if row["scope"] == "" && row["defaultScope"] == scope {
+    if row["scope"]
+        .as_str()
+        .unwrap_or_default()
+        .is_empty()
+        && (row["defaultScope"].is_null() || row["defaultScope"] == scope)
+    {
         let fields = row.as_object_mut().ok_or_else(|| invalid("export bitmap entry"))?;
         fields.insert("scope".into(), Value::String(scope.to_owned()));
         fields.shift_remove("defaultScope");

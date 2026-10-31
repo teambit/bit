@@ -20,9 +20,9 @@ impl Retained {
         target: &super::Target,
         rows: &Map<String, Value>,
     ) -> io::Result<String> {
-        let Some(row) = rows
-            .values()
-            .find(|row| row["rootDir"] == directory)
+        let Some((key, row)) = rows
+            .iter()
+            .find(|(_, row)| row["rootDir"] == directory)
         else {
             return Ok(directory);
         };
@@ -50,9 +50,10 @@ impl Retained {
             .as_str()
             .filter(|version| !version.is_empty())
             .map_or(String::new(), |version| format!("@{version}"));
+        let (_, used_name) = crate::reset_lane::bitmap::row_identity(key, row);
         self.warnings.push(format!(
             r#""{directory}" is already used by {}/{}{version}, importing {scope}/{} into "{candidate}" instead"#,
-            used_scope, row["name"].as_str().unwrap_or_default(), target.name,
+            used_scope, used_name, target.name,
         ));
         Ok(candidate)
     }
@@ -102,14 +103,15 @@ fn unavailable(
     rows: &Map<String, Value>,
     observed: &mut Observed,
 ) -> io::Result<Option<String>> {
-    if let Some(row) = rows
-        .values()
-        .find(|row| row["rootDir"] == directory)
+    if let Some((key, row)) = rows
+        .iter()
+        .find(|(_, row)| row["rootDir"] == directory)
     {
+        let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
         return Ok(Some(format!(
             "it is already used by {}/{}@{}",
-            row["scope"].as_str().unwrap_or_default(),
-            row["name"].as_str().unwrap_or_default(),
+            row_scope.unwrap_or_default(),
+            row_name,
             row["version"].as_str().unwrap_or_default(),
         )));
     }

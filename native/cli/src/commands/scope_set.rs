@@ -232,7 +232,11 @@ fn update_bitmap_default_scope(
         bitmap_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap object".to_owned()))?;
     let mut changed = false;
     for (key, row) in rows {
-        if key.starts_with('$') || key == "_bit_lane" || has_version(key, row) {
+        if key.starts_with('$')
+            || matches!(key.as_str(), "_bit_lane" | "version")
+            || !row.is_object()
+            || has_version(key, row)
+        {
             continue;
         }
         if row["defaultScope"].as_str() == Some(old_scope) {
@@ -302,7 +306,12 @@ fn set_entry_default_scope(
         bitmap_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap object".to_owned()))?;
     let (_, row) = rows
         .iter_mut()
-        .find(|(key, row)| super::update_cmd::bitmap_row_name(key, row) == name)
+        .find(|(key, row)| {
+            !key.starts_with('$')
+                && !matches!(key.as_str(), "_bit_lane" | "version")
+                && row.is_object()
+                && super::update_cmd::bitmap_row_name(key, row) == name
+        })
         .ok_or_else(|| Failure::Declined(format!("bitmap entry {name}")))?;
     row["defaultScope"] = json!(new_scope);
     Ok(())

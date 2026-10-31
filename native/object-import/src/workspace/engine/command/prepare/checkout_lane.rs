@@ -225,14 +225,15 @@ fn missing_root(path: &Path) -> io::Result<bool> {
 pub(super) fn bitmap_identities(bitmap: &Value) -> io::Result<std::collections::HashSet<String>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("checkout lane bitmap"))?;
     rows.iter()
-        .filter(|(key, _)| !matches!(key.as_str(), "$schema-version" | "_bit_lane"))
-        .map(|(_, row)| {
-            let scope = row["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-                .or_else(|| row["defaultScope"].as_str())
-                .ok_or_else(|| invalid("checkout lane bitmap scope"))?;
-            let name = row["name"].as_str().ok_or_else(|| invalid("checkout lane bitmap name"))?;
+        .filter(|(key, _)| {
+            !key.starts_with('$') && !matches!(key.as_str(), "_bit_lane" | "version")
+        })
+        .map(|(key, row)| {
+            let (row_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+            let scope = row_scope.ok_or_else(|| invalid("checkout lane bitmap scope"))?;
+            if name.is_empty() {
+                return Err(invalid("checkout lane bitmap name"));
+            }
             Ok(format!("{scope}/{name}"))
         })
         .collect()

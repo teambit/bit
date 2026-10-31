@@ -16,7 +16,9 @@ pub(super) fn chosen(
     let rows = bitmap.as_object().ok_or_else(|| invalid("switch bitmap"))?;
     let tracked = rows
         .iter()
-        .filter(|(key, _)| !matches!(key.as_str(), "$schema-version" | "_bit_lane"));
+        .filter(|(key, _)| {
+            !key.starts_with('$') && !matches!(key.as_str(), "_bit_lane" | "version")
+        });
     if pattern.is_some() && tracked.clone().next().is_some() {
         return Err(canonical("error: use --pattern only when the workspace is empty".into()));
     }

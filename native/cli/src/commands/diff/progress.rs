@@ -58,11 +58,13 @@ pub(super) fn exported_ids(root: &Path) -> Vec<String> {
         .as_object()
         .into_iter()
         .flatten()
-        .filter_map(|(_, entry)| {
+        .filter(|(key, _)| !key.starts_with('$') && *key != "_bit_lane" && *key != "version")
+        .filter_map(|(key, entry)| {
             let scope = entry["scope"]
                 .as_str()
                 .filter(|scope| !scope.is_empty())?;
-            Some(format!("{scope}/{}", entry["name"].as_str()?))
+            let name = crate::commands::update_cmd::bitmap_row_name(key, entry);
+            (!name.is_empty()).then(|| format!("{scope}/{name}"))
         })
         .collect()
 }

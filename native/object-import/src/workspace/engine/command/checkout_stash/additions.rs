@@ -37,13 +37,16 @@ fn identities(bitmap: &Value) -> io::Result<HashSet<String>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("stash bitmap"))?;
     Ok(rows
         .iter()
-        .filter(|(key, _)| !key.starts_with('$') && key.as_str() != "_bit_lane")
-        .filter_map(|(_, row)| {
-            let scope = row["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-                .or_else(|| row["defaultScope"].as_str())?;
-            Some(format!("{scope}/{}", row["name"].as_str()?))
+        .filter(|(key, row)| {
+            !key.starts_with('$')
+                && !matches!(key.as_str(), "_bit_lane" | "version")
+                && row.is_object()
+        })
+        .filter_map(|(key, row)| {
+            let (scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+            scope
+                .filter(|_| !name.is_empty())
+                .map(|scope| format!("{scope}/{name}"))
         })
         .collect())
 }

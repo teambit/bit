@@ -8,7 +8,10 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap"))?;
     let mut targets = Vec::new();
     for (key, row) in rows {
-        if key == "$schema-version" {
+        if key.starts_with('$')
+            || matches!(key.as_str(), "_bit_lane" | "version")
+            || !row.is_object()
+        {
             continue;
         }
         let Some(scope) = row["scope"]
@@ -17,8 +20,15 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
         else {
             continue;
         };
-        let name = row["name"].as_str().ok_or_else(|| invalid("inbound bitmap name"))?;
-        let version = row["version"].as_str().ok_or_else(|| invalid("inbound bitmap version"))?;
+        let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
+        if name.is_empty() {
+            return Err(invalid("inbound bitmap name"));
+        }
+        let version = row["version"]
+            .as_str()
+            .filter(|ver| !ver.is_empty())
+            .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
+            .ok_or_else(|| invalid("inbound bitmap version"))?;
         targets.push(Target {
             scope: Some(scope.to_owned()),
             name: name.to_owned(),

@@ -32,7 +32,7 @@ fn project_with(
     let mut projected = bitmap.clone();
     let mut configs = HashMap::new();
     for (key, row) in projected.as_object_mut().ok_or_else(|| invalid("recovery bitmap"))? {
-        if matches!(key.as_str(), "$schema-version" | "_bit_lane") {
+        if key.starts_with('$') || matches!(key.as_str(), "_bit_lane" | "version") {
             continue;
         }
         let object = row.as_object_mut().ok_or_else(|| invalid("recovery bitmap component"))?;

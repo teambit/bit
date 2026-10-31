@@ -52,28 +52,31 @@ fn insert_target(
     if key.parse::<u32>().is_ok() {
         return Err(invalid("status numeric bitmap alias"));
     }
-    let target = target(value, config)?;
+    let target = target(key, value, config)?;
     if !roots.insert(target.directory.clone()) || !ids.insert(target.id.clone()) {
         return Err(invalid("status duplicate component"));
     }
     targets.push(target);
     Ok(())
 }
-fn target(value: &Value, config: &Value) -> io::Result<Target> {
+fn target(key: &str, value: &Value, config: &Value) -> io::Result<Target> {
     validate_entry(value)?;
-    let name = text(value, "name")?;
     let scope = text(value, "scope")?;
     let version = text(value, "version")?;
     let directory = text(value, "rootDir")?;
     let effective_scope = if scope.is_empty() {
-        value
-            .get("defaultScope")
-            .unwrap_or_else(|| &config["defaultScope"])
+        value["defaultScope"]
             .as_str()
+            .filter(|val| !val.is_empty())
+            .or_else(|| config["defaultScope"].as_str())
             .ok_or_else(|| invalid("status missing default scope"))?
     } else {
         scope
     };
+    let (_, fallback) = crate::reset_lane::bitmap::row_identity(key, value);
+    let name = fallback
+        .strip_prefix(&format!("{effective_scope}/"))
+        .unwrap_or(fallback);
     identifier(name, true)?;
     identifier(effective_scope, false)?;
     if !version.is_empty() && !version_supported(version) {
@@ -119,8 +122,11 @@ fn validate_entry(value: &Value) -> io::Result<()> {
 
 fn validate_flags(value: &Value) -> io::Result<()> {
     if value
-        .get("localOnly")
-        .is_some_and(|flag| !flag.is_boolean())
+        .get("name")
+        .is_some_and(|val| !val.is_string() && !val.is_null())
+        || value
+            .get("localOnly")
+            .is_some_and(|flag| !flag.is_boolean())
         || value
             .get("onLanesOnly")
             .is_some_and(|flag| !flag.is_boolean())

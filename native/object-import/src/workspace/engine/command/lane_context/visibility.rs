@@ -13,15 +13,32 @@ pub(in crate::workspace::engine::command) fn identity_bitmap(
     settings: &Value,
 ) -> io::Result<Value> {
     let mut projected = bitmap.clone();
-    for row in projected
-        .as_object_mut()
-        .ok_or_else(|| invalid("command lane bitmap"))?
-        .values_mut()
-    {
-        if row["scope"] == "" && row.get("defaultScope").is_none() {
-            row.as_object_mut()
-                .ok_or_else(|| invalid("command lane bitmap component"))?
-                .insert("defaultScope".into(), settings["defaultScope"].clone());
+    for (key, row) in projected.as_object_mut().ok_or_else(|| invalid("command lane bitmap"))? {
+        if key.starts_with('$')
+            || matches!(key.as_str(), "_bit_lane" | "version")
+            || !row.is_object()
+        {
+            continue;
+        }
+        let name = crate::reset_lane::bitmap::row_identity(key, row).1.to_owned();
+        let unexported = row["scope"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty();
+        let missing_default = row["defaultScope"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty();
+        let missing_name = row["name"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty();
+        let object = row.as_object_mut().ok_or_else(|| invalid("command lane bitmap component"))?;
+        if unexported && missing_default {
+            object.insert("defaultScope".into(), settings["defaultScope"].clone());
+        }
+        if missing_name && !name.is_empty() {
+            object.insert("name".into(), Value::String(name));
         }
     }
     Ok(projected)
@@ -64,9 +81,10 @@ pub(in crate::workspace::engine::command) fn switch_targets(
         if key == "$schema-version" || row["isAvailableOnCurrentLane"] != false {
             return true;
         }
-        let identity = effective_scope(row)
-            .zip(row["name"].as_str())
-            .map(|(scope, name)| format!("{scope}/{name}"));
+        let (scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+        let identity = scope
+            .filter(|_| !name.is_empty())
+            .map(|sc| format!("{sc}/{name}"));
         main || identity.is_some_and(|identity| destination_heads.contains(&identity))
     });
     for (key, row) in &mut selected {
@@ -194,15 +212,21 @@ pub(super) fn effective_scope(row: &Value) -> Option<&str> {
 }
 
 fn bitmap_has(bitmap: &Value, identity: &str) -> bool {
-    bitmap
-        .as_object()
-        .is_some_and(|rows| {
-            rows.values()
-                .any(|row| {
-                    effective_scope(row)
-                        .zip(row["name"].as_str())
-                        .is_some_and(|(scope, name)| format!("{scope}/{name}") == identity)
-                })
+    let Some(rows) = bitmap.as_object() else {
+        return false;
+    };
+    rows.iter()
+        .any(|(key, row)| {
+            if key.starts_with('$')
+                || matches!(key.as_str(), "_bit_lane" | "version")
+                || !row.is_object()
+            {
+                return false;
+            }
+            let (Some(scope), name) = crate::reset_lane::bitmap::row_identity(key, row) else {
+                return false;
+            };
+            format!("{scope}/{name}") == identity
         })
 }
 
@@ -258,6 +282,13 @@ fn unexported(bitmap: &Value, visible: &[Value], identity: &str) -> bool {
         .as_object()
         .is_some_and(|rows| {
             rows.values()
-                .any(|row| row["scope"] == "" && row["rootDir"] == target["directory"])
+                .any(|row| {
+                    row.is_object()
+                        && row["scope"]
+                            .as_str()
+                            .unwrap_or_default()
+                            .is_empty()
+                        && row["rootDir"] == target["directory"]
+                })
         })
 }

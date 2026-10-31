@@ -322,15 +322,19 @@ fn bitmap_row_version(
     name: &str,
     full: &str,
 ) -> Option<String> {
-    if key == "$schema-version" || key == "_bit_lane" || !row.is_object() {
+    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
         return None;
     }
     let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
-    let row_name = row["name"].as_str().unwrap_or(key_id);
+    let row_name = super::update_cmd::bitmap_row_name(key, row);
     let row_scope = row["scope"]
         .as_str()
         .filter(|val| !val.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
         .unwrap_or_default();
     let matches =
         (row_name == name && (row_scope.is_empty() || row_scope == scope)) || key_id == full;

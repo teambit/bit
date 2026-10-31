@@ -89,16 +89,16 @@ fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<Selected
     {
         return Err(invalid("never-exported unavailable component"));
     }
-    let name = row["name"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .unwrap_or_else(|| key.split('@').next().unwrap_or(key));
+    let (row_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
     if name.is_empty() {
         return Err(invalid("never-exported name"));
     }
-    let scope =
-        row["defaultScope"].as_str().ok_or_else(|| invalid("never-exported default scope"))?;
-    let version = row["version"].as_str().unwrap_or_default();
+    let scope = row_scope.ok_or_else(|| invalid("never-exported default scope"))?;
+    let version = row["version"]
+        .as_str()
+        .filter(|ver| !ver.is_empty())
+        .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
+        .unwrap_or_default();
     let identity = format!("{scope}/{name}");
     let label = if version.is_empty() { identity } else { format!("{identity}@{version}") };
     let hash = format!("{:x}", Sha1::digest(name.as_bytes()));

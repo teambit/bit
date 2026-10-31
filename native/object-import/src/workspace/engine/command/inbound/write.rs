@@ -156,7 +156,7 @@ fn target_directories(
 ) -> io::Result<Vec<String>> {
     let new = targets
         .iter()
-        .filter(|target| !rows.values().any(|row| matches_target(row, target)))
+        .filter(|target| !rows.iter().any(|(key, row)| matches_target(key, row, target)))
         .cloned()
         .collect::<Vec<_>>();
     if let Some(path) = options.path {
@@ -188,9 +188,8 @@ fn plan_target(
     written: &mut HashSet<String>,
 ) -> io::Result<()> {
     let existing = rows
-        .values()
-        .find(|row| matches_target(row, target))
-        .cloned();
+        .iter()
+        .find_map(|(key, row)| matches_target(key, row, target).then(|| row.clone()));
     let directory = if let Some(row) = &existing {
         row["rootDir"]
             .as_str()
@@ -255,8 +254,14 @@ fn prepare_target(
 ) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound workspace scope"))?;
     if rows
-        .values()
-        .any(|row| row["name"] == target.name && row["scope"].as_str().is_none_or(str::is_empty))
+        .iter()
+        .any(|(key, row)| {
+            !key.starts_with('$')
+                && !matches!(key.as_str(), "_bit_lane" | "version")
+                && row.is_object()
+                && crate::reset_lane::bitmap::row_identity(key, row).1 == target.name
+                && row["scope"].as_str().is_none_or(str::is_empty)
+        })
     {
         return Err(invalid("inbound unscoped workspace identity"));
     }

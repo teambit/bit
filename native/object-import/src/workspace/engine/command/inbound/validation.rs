@@ -145,13 +145,13 @@ fn valid_write_mode(input: &Prepare) -> bool {
 }
 
 fn is_unscoped_match(key: &str, row: &Value, raw_id: &str) -> bool {
-    if key == "$schema-version" {
+    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
         return false;
     }
     let has_scope = row["scope"]
         .as_str()
         .is_some_and(|scope| !scope.is_empty());
-    !has_scope && (key == raw_id || row["name"].as_str() == Some(raw_id))
+    !has_scope && (key == raw_id || crate::reset_lane::bitmap::row_identity(key, row).1 == raw_id)
 }
 
 fn has_local_unscoped_conflict(input: &Prepare) -> io::Result<bool> {
