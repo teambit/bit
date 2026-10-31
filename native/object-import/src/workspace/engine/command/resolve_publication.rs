@@ -360,7 +360,7 @@ impl Prepared {
                         extensions
                             .iter()
                             .any(|extension| {
-                                extension["name"] == "teambit.envs/envs"
+                                crate::workspace::engine::client_status::config::is_extension_aspect(extension, "teambit.envs/envs")
                                     && extension["data"]["type"] == "aspect"
                             })
                     })

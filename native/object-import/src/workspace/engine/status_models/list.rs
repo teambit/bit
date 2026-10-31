@@ -404,7 +404,9 @@ fn core_config<'v>(version: &'v Value, id: &str) -> Option<&'v Value> {
     version["extensions"]
         .as_array()?
         .iter()
-        .find(|extension| extension["name"] == id)
+        .find(|extension| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(extension, id)
+        })
         .map(|extension| &extension["config"])
 }
 

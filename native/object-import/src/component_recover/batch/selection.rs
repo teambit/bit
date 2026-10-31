@@ -1,14 +1,32 @@
-use super::{Batch, REMOVE, Value, invalid, repository};
+use super::{Batch, Value, invalid, repository};
 use std::io;
 pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
-    let name = row["name"].as_str().unwrap_or(key);
+    if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+        return None;
+    }
+    let (key_id, key_ver) = key
+        .rsplit_once('@')
+        .map_or((key, None), |(id, ver)| (id, Some(ver)));
+    let (key_scope, key_name) = key_id
+        .split_once('/')
+        .map_or((None, key_id), |(scope, name)| (Some(scope), name));
+    let name = row["name"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .unwrap_or(key_name);
     let scope = row["scope"]
         .as_str()
         .filter(|value| !value.is_empty())
-        .or_else(|| row["defaultScope"].as_str())?;
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|value| !value.is_empty())
+        })
+        .or(key_scope)?;
     let version = row["version"]
         .as_str()
-        .filter(|version| !version.is_empty());
+        .filter(|version| !version.is_empty())
+        .or_else(|| key_ver.filter(|version| !version.is_empty()));
     Some(format!(
         "{scope}/{name}{}",
         version.map_or_else(String::new, |version| format!("@{version}")),
@@ -22,7 +40,7 @@ pub(super) fn key(bitmap: &Value, id: &str) -> io::Result<Option<String>> {
         .filter(|(key, row)| {
             identity(key, row)
                 .is_some_and(|full| {
-                    self::bare(&full) == bare || row["name"] == bare || key.as_str() == bare
+                    self::bare(&full) == bare || row["name"] == bare || self::bare(key) == bare
                 })
         })
         .collect();
@@ -58,7 +76,7 @@ fn bitmap_pool(batch: &mut Batch) -> io::Result<Vec<String>> {
     for (key, row) in &rows {
         let Some(id) = identity(key, row) else { continue };
         if row["isAvailableOnCurrentLane"] != false
-            && row["config"][REMOVE]["removed"] != true
+            && !crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
             && removed_head(batch, &id)?
         {
             append(&mut result, id);
@@ -72,7 +90,7 @@ fn removed_bitmap_rows(rows: &serde_json::Map<String, Value>, result: &mut Vec<S
             continue;
         }
         let Some(id) = identity(key, row) else { continue };
-        if row["config"][REMOVE]["removed"] == true {
+        if crate::workspace::engine::client_status::config::is_config_removed(&row["config"]) {
             append(result, id);
         }
     }
@@ -176,7 +194,7 @@ fn staged_main(batch: &mut Batch, result: &mut Vec<String>) -> io::Result<()> {
     let Some(bytes) = batch.proofs.read(&path)? else { return Ok(()) };
     let rows: Value = serde_json::from_slice(&bytes)?;
     for row in rows.as_array().ok_or_else(|| invalid("recovery staged configuration"))? {
-        if row["config"][REMOVE]["removed"] != true {
+        if !crate::workspace::engine::client_status::config::is_config_removed(&row["config"]) {
             continue;
         }
         append(

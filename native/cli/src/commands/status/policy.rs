@@ -51,7 +51,7 @@ impl Policy {
     pub fn ignored_issues(&self) -> io::Result<Vec<String>> {
         let config = self.extensions
             .iter()
-            .find(|entry| entry["name"] == "teambit.component/issues");
+            .find(|entry| component::matches_aspect(entry, "teambit.component/issues"));
         array(
             config.and_then(|entry| entry["config"].get("ignoreIssues")),
             "component ignoreIssues",
@@ -178,7 +178,7 @@ pub(in crate::commands) fn environment_target(
     let rows = projection::extensions(context, target, version)?;
     let environment = rows
         .iter()
-        .find(|row| row["name"] == "teambit.envs/envs")
+        .find(|row| component::matches_aspect(row, "teambit.envs/envs"))
         .and_then(|row| row["config"]["env"].as_str())
         .map(str::to_string);
     let mut config = Map::new();
@@ -226,9 +226,8 @@ fn names(identity: &str, model: Option<&Value>, extensions: &[Value]) -> (String
 }
 
 fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[Value]) -> String {
-    let Some(pkg) = extensions
-        .iter()
-        .find(|entry| entry["name"] == "teambit.pkg/pkg")
+    let Some(pkg) =
+        extensions.iter().find(|entry| component::matches_aspect(entry, "teambit.pkg/pkg"))
     else {
         return package_name(identity, prefix);
     };

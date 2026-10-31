@@ -3,18 +3,34 @@ use std::io;
 pub(super) fn metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     let key = selection::key(&plan.bitmap, id)?;
     let row = &plan.bitmap[key];
-    let local = &row["config"][ASPECT];
-    if local["deprecate"].is_boolean()
-        || local["range"]
-            .as_str()
-            .is_some_and(|value| !value.is_empty())
+    if let Some(local) = local_aspect(row)
+        && (local["deprecate"].is_boolean()
+            || local["range"]
+                .as_str()
+                .is_some_and(|value| !value.is_empty()))
     {
         return Ok(local.clone());
     }
-    if row["version"].as_str().is_none_or(str::is_empty) {
+    if row["version"].as_str().is_none_or(str::is_empty)
+        && key.rsplit_once('@').is_none_or(|(_, ver)| ver.is_empty())
+    {
         return Ok(serde_json::json!({}));
     }
     model_metadata(plan, id)
+}
+fn local_aspect(row: &Value) -> Option<&Value> {
+    row["config"]
+        .as_object()
+        .and_then(|cfg| {
+            cfg.get(ASPECT)
+                .or_else(|| {
+                    cfg.iter()
+                        .find_map(|(key, val)| {
+                            key.starts_with(&format!("{ASPECT}@"))
+                                .then_some(val)
+                        })
+                })
+        })
 }
 fn model_metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     let Some(hash) = model_hash(plan, id)? else {
@@ -32,7 +48,13 @@ fn model_metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
         .as_array()
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["name"] == ASPECT)
+                .find(|row| {
+                    row["name"]
+                        .as_str()
+                        .is_some_and(|name| {
+                            name == ASPECT || name.starts_with(&format!("{ASPECT}@"))
+                        })
+                })
         })
         .map_or_else(|| serde_json::json!({}), |row| row["config"].clone());
     range_state(&mut config, id, &model);
@@ -102,6 +124,8 @@ fn range_state(config: &mut Value, id: &str, model: &Value) {
 
 pub(super) fn requires_hydration(bitmap: &Value, id: &str) -> io::Result<bool> {
     let key = selection::key(bitmap, id)?;
-    let local = &bitmap[key]["config"][ASPECT];
+    let Some(local) = local_aspect(&bitmap[key]) else {
+        return Ok(true);
+    };
     Ok(!local["deprecate"].is_boolean() && local["range"].as_str().is_none_or(str::is_empty))
 }

@@ -272,7 +272,12 @@ pub enum IndexRow {
 fn read_index(path: &Path) -> io::Result<Value> {
     match fs::read(path) {
         Ok(bytes) => {
-            serde_json::from_slice(&bytes).map_err(|_| invalid("invalid scope index.json"))
+            let value: Value =
+                serde_json::from_slice(&bytes).map_err(|_| invalid("invalid scope index.json"))?;
+            Ok(match value {
+                Value::Array(components) => json!({ "components": components, "lanes": [] }),
+                other => other,
+            })
         }
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             Ok(json!({ "components": [], "lanes": [] }))

@@ -296,7 +296,7 @@ pub(super) fn parse_builder_artifacts(ver_val: &Value) -> Vec<ArtifactItem> {
     };
     let Some(builder_ext) = exts
         .iter()
-        .find(|ext| ext["name"].as_str() == Some("teambit.pipelines/builder"))
+        .find(|ext| crate::commands::update_cmd::matches_aspect(ext, "teambit.pipelines/builder"))
     else {
         return Vec::new();
     };

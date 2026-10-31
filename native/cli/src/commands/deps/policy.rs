@@ -21,11 +21,7 @@ impl WorkspaceDepsContext {
         let Some(ext) = model.extensions
             .iter()
             .find(|item| {
-                item["name"]
-                    .as_str()
-                    .is_some_and(|name| {
-                        aspect_id_without_version(name) == DEPENDENCY_RESOLVER_ASPECT
-                    })
+                crate::commands::update_cmd::matches_aspect(item, DEPENDENCY_RESOLVER_ASPECT)
             })
         else {
             return;
@@ -69,8 +65,10 @@ impl WorkspaceDepsContext {
             return;
         };
         for ext_map in variant.extensions.iter().rev() {
-            if let Some(cfg) = ext_map.get(DEPENDENCY_RESOLVER_ASPECT) {
-                self.apply_policy_object(&cfg["policy"], identity, deps);
+            for (key, cfg) in ext_map {
+                if aspect_id_without_version(key) == DEPENDENCY_RESOLVER_ASPECT {
+                    self.apply_policy_object(&cfg["policy"], identity, deps);
+                }
             }
         }
     }
@@ -83,8 +81,12 @@ impl WorkspaceDepsContext {
     ) {
         let Ok(text) = fs::read_to_string(dir.join("component.json")) else { return };
         let Ok(parsed) = jsonc::parse(&text) else { return };
-        let cfg = &parsed["extensions"][DEPENDENCY_RESOLVER_ASPECT];
-        self.apply_policy_object(&cfg["policy"], identity, deps);
+        if let Some((_, cfg)) = crate::commands::update_cmd::aspect_entry(
+            &parsed["extensions"],
+            DEPENDENCY_RESOLVER_ASPECT,
+        ) {
+            self.apply_policy_object(&cfg["policy"], identity, deps);
+        }
     }
 
     pub(super) fn apply_policy_object(

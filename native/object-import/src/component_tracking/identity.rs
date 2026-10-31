@@ -220,7 +220,17 @@ pub(super) fn root_config(existing: Option<&Value>, options: &Options) -> Value 
             config[key] = value.clone();
         }
     }
-    if config.get("teambit.envs/envs").is_some_and(bit_workspace_config::truthy) {
+    if config
+        .as_object()
+        .and_then(|cfg| {
+            cfg.get("teambit.envs/envs")
+                .or_else(|| {
+                    cfg.iter()
+                        .find_map(|(key, val)| key.starts_with("teambit.envs/envs@").then_some(val))
+                })
+        })
+        .is_some_and(bit_workspace_config::truthy)
+    {
         return config;
     }
     config["teambit.harmony/empty-env"] = json!({});

@@ -50,7 +50,12 @@ fn dependency_usage(dependency: &Value) -> Option<String> {
 fn resolver_usages(usages: &mut Vec<String>, extensions: &[Value]) {
     let Some(resolver) = extensions
         .iter()
-        .find(|extension| extension["name"] == "teambit.dependencies/dependency-resolver")
+        .find(|extension| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                extension,
+                "teambit.dependencies/dependency-resolver",
+            )
+        })
     else {
         return;
     };

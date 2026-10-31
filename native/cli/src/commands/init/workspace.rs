@@ -100,18 +100,32 @@ fn empty(value: &Value) -> bool {
 fn reset_new(value: &mut Value, lane_only: bool) -> io::Result<()> {
     let rows = value.as_object_mut().ok_or_else(|| io::Error::other("init bitmap object"))?;
     for (key, row) in rows.iter_mut() {
-        if key.starts_with('$') || key == "_bit_lane" || key == "version" {
+        if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
             continue;
         }
         if lane_only && row["isAvailableOnCurrentLane"] != false {
             continue;
         }
+        let key_id = key.rsplit_once('@').map_or(key.as_str(), |(id, _)| id);
+        let (key_scope, key_name) = key_id
+            .split_once('/')
+            .map_or((None, key_id), |(scope, name)| (Some(scope), name));
+        let name = row["name"]
+            .as_str()
+            .filter(|name| !name.is_empty())
+            .unwrap_or(key_name)
+            .to_owned();
         let scope = row["scope"]
             .as_str()
             .filter(|scope| !scope.is_empty())
-            .or_else(|| row["defaultScope"].as_str())
+            .or_else(|| {
+                row["defaultScope"]
+                    .as_str()
+                    .filter(|scope| !scope.is_empty())
+            })
+            .or(key_scope)
             .map(str::to_owned);
-        let mut fresh = json!({"name":row["name"],"scope":"","version":"","rootDir":row["rootDir"],"mainFile":row["mainFile"]});
+        let mut fresh = json!({"name":name,"scope":"","version":"","rootDir":row["rootDir"],"mainFile":row["mainFile"]});
         if let Some(scope) = scope {
             fresh["defaultScope"] = json!(scope);
         }

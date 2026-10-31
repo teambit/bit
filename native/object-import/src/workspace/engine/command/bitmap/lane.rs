@@ -201,7 +201,7 @@ fn validate_addition(addition: &Value, rows: &[Value]) -> io::Result<()> {
 pub(super) fn validate_roots(directory: &str, rows: &[Value]) -> io::Result<()> {
     for row in rows {
         if row["isAvailableOnCurrentLane"] == false
-            || row["config"]["teambit.component/remove"]["removed"] == true
+            || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         {
             continue;
         }
@@ -222,7 +222,7 @@ pub(super) fn make_available_on_main(entries: &mut [Value], context: &Value) -> 
     let mut changed = false;
     for entry in entries {
         if entry["isAvailableOnCurrentLane"] != false
-            || entry["config"]["teambit.component/remove"]["removed"] == true
+            || crate::workspace::engine::client_status::config::is_config_removed(&entry["config"])
         {
             continue;
         }

@@ -264,10 +264,7 @@ fn collect_serialized_model_deps(
 ) {
     let Some(deps) = ver_val["extensions"]
         .as_array()
-        .and_then(|arr| {
-            arr.iter()
-                .find(|ext| ext["name"].as_str() == Some(DEP_RESOLVER_ID))
-        })
+        .and_then(|arr| arr.iter().find(|ext| super::matches_aspect(ext, DEP_RESOLVER_ID)))
         .and_then(|ext| ext["data"]["dependencies"].as_array())
     else {
         return;

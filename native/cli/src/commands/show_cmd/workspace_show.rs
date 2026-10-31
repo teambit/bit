@@ -297,9 +297,7 @@ fn has_bitmap_peer_component(ws: &Workspace) -> bool {
     ws.entries
         .iter()
         .any(|entry| {
-            entry.config
-                .as_ref()
-                .and_then(|cfg| cfg.get(DEPENDENCY_RESOLVER_ASPECT))
+            crate::commands::update_cmd::bitmap_entry_aspect(entry, DEPENDENCY_RESOLVER_ASPECT)
                 .is_some_and(|dep_cfg| {
                     dep_cfg.get("peer").is_some()
                         || dep_cfg

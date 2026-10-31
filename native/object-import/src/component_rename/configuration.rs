@@ -124,7 +124,8 @@ fn copied_config(facts: &Value) -> io::Result<serde_json::Map<String, Value>> {
     Ok(config)
 }
 fn copy_config(config: &mut serde_json::Map<String, Value>, name: &str, value: &Value) {
-    if !matches!(name, "teambit.pkg/pkg" | "teambit.component/renaming") && !value.is_null() {
+    let bare = name.split('@').next().unwrap_or(name);
+    if !matches!(bare, "teambit.pkg/pkg" | "teambit.component/renaming") && !value.is_null() {
         config.insert(name.into(), value.clone());
     }
 }
@@ -155,6 +156,9 @@ fn remove_or_deprecate(plan: &mut Plan) -> io::Result<()> {
     if !row["config"].is_object() {
         row["config"] = json!({});
     }
+    if let Some(cfg) = row["config"].as_object_mut() {
+        cfg.retain(|cfg_key, _| !cfg_key.starts_with("teambit.component/remove@"));
+    }
     row["config"]["teambit.component/remove"] = json!({"removed":true,"removeOnMain":true});
     Ok(())
 }
@@ -179,7 +183,11 @@ pub(super) fn replace_config(config: &mut Value, source: &str, target: &str, ren
         config.insert(target.into(), value);
     }
     if rename_env
-        && let Some(env) = config.get_mut("teambit.envs/envs")
+        && let Some((_, env)) = config
+            .iter_mut()
+            .find(|(key, _)| {
+                key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
+            })
         && env["env"] == source
     {
         env["env"] = json!(target);

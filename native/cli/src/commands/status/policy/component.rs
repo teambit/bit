@@ -14,6 +14,12 @@ pub(super) struct Policy {
     pub(super) env_own: Map<String, Value>,
 }
 
+pub(super) fn matches_aspect(entry: &Value, id: &str) -> bool {
+    entry["name"]
+        .as_str()
+        .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
+}
+
 struct Entry {
     name: String,
     version: String,
@@ -32,9 +38,7 @@ impl Policy {
             entries.extend(variant(own, Some(true))?);
         }
         entries.extend(registered(facts)?);
-        let config = extensions
-            .iter()
-            .find(|entry| entry["name"] == RESOLVER);
+        let config = extensions.iter().find(|entry| matches_aspect(entry, RESOLVER));
         if let Some(policy) = nullish(config.and_then(|entry| entry["config"].get("policy"))) {
             entries.extend(variant(policy, None)?);
         }

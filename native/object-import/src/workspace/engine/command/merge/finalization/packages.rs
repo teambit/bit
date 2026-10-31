@@ -75,7 +75,12 @@ pub(super) fn package_name(version: &Value) -> io::Result<&str> {
         .as_array()
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["name"] == "teambit.dependencies/dependency-resolver")
+                .find(|row| {
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        row,
+                        "teambit.dependencies/dependency-resolver",
+                    )
+                })
         })
         .and_then(|row| row["data"]["packageName"].as_str())
         .ok_or_else(|| invalid("merge package name"))?;

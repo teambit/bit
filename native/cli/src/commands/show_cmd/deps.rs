@@ -87,9 +87,8 @@ pub(super) fn collect_dependencies(ctx: &CompContext<'_>) -> Vec<DepEntry> {
     scan_component_files(ctx, &identity, &mut deps);
     apply_variant_policies(ctx.ws_config, ctx.entry, &identity, &mut deps);
     apply_component_json_policy(&ctx.component.dir, &identity, &mut deps);
-    if let Some(cfg) = ctx.entry.config
-        .as_ref()
-        .and_then(|map| map.get(DEPENDENCY_RESOLVER_ASPECT))
+    if let Some(cfg) =
+        crate::commands::update_cmd::bitmap_entry_aspect(ctx.entry, DEPENDENCY_RESOLVER_ASPECT)
     {
         apply_policy_object(&cfg["policy"], &identity, &mut deps);
     }

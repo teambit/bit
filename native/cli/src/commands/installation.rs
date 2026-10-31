@@ -406,8 +406,9 @@ fn canonical_workspace(root: &Path, react_service: bool) -> io::Result<bool> {
     Ok(workspace.components
         .iter()
         .any(|component| {
-            (component.env_id != "teambit.harmony/node"
-                && !(react_service && component.env_id == "teambit.react/react"))
+            let bare_env = bit_install::config::aspect_id_without_version(&component.env_id);
+            (bare_env != "teambit.harmony/node"
+                && !(react_service && bare_env == "teambit.react/react"))
                 || component.config.keys().any(|id| custom(id))
         }))
 }

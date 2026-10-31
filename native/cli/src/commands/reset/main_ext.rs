@@ -364,14 +364,12 @@ fn find_bitmap_key(fields: &Map<String, Value>, scope: &str, name: &str) -> io::
     fields
         .iter()
         .find_map(|(key, row)| {
-            if key.starts_with('$') || !row.is_object() {
+            if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
                 return None;
             }
-            let row_scope = row["scope"]
-                .as_str()
-                .filter(|value| !value.is_empty())
-                .or_else(|| row["defaultScope"].as_str());
-            (row_scope == Some(scope) && row["name"] == name).then(|| key.clone())
+            let (row_scope, row_name) =
+                crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
+            (row_scope == scope && row_name == name).then(|| key.clone())
         })
         .ok_or_else(|| invalid("detached bitmap key absent"))
 }

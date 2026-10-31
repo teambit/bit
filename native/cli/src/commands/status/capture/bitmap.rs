@@ -35,7 +35,7 @@ pub(super) fn record_remote(
         && extensions
             .iter()
             .any(|extension| {
-                extension["name"] == "teambit.component/remove"
+                crate::commands::update_cmd::matches_aspect(extension, "teambit.component/remove")
                     && extension["config"]["removed"] == true
             })
     {

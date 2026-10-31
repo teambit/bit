@@ -30,6 +30,7 @@ fn projection(parsed: &Value) -> io::Result<Value> {
         .as_object()
         .cloned()
         .unwrap_or_default();
+    extensions.retain(|key, _| !key.starts_with(&format!("{REMOVE}@")));
     extensions.insert(REMOVE.into(), serde_json::json!({"removed":false}));
     let mut value = serde_json::json!({
         "componentId":parsed["componentId"],

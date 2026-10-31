@@ -56,7 +56,12 @@ fn prefix(version: &Value) -> io::Result<Option<char>> {
     let Some(rows) = version["extensions"].as_array() else { return Ok(None) };
     let value = rows
         .iter()
-        .find(|row| row["name"] == "teambit.dependencies/dependency-resolver")
+        .find(|row| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                row,
+                "teambit.dependencies/dependency-resolver",
+            )
+        })
         .map(|row| &row["data"]["componentRangePrefix"]);
     match value.and_then(Value::as_str) {
         Some("^") => Ok(Some('^')),

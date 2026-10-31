@@ -33,7 +33,10 @@ pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::
     let extensions =
         version["extensions"].as_array_mut().ok_or_else(|| invalid("command snap extensions"))?;
     for extension in extensions {
-        if extension["name"] == "teambit.pipelines/builder" {
+        if crate::workspace::engine::client_status::config::is_extension_aspect(
+            extension,
+            "teambit.pipelines/builder",
+        ) {
             extension["data"] = json!({});
         }
     }
@@ -78,8 +81,10 @@ fn build_status(version: &Value) -> &'static str {
             extensions
                 .iter()
                 .any(|extension| {
-                    extension["name"] == "teambit.component/remove"
-                        && extension["config"]["removed"] == true
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        extension,
+                        "teambit.component/remove",
+                    ) && extension["config"]["removed"] == true
                 })
         })
     {
@@ -292,7 +297,10 @@ pub(super) fn no_application_files(files: &[Value]) -> io::Result<()> {
 }
 
 fn builder_artifacts(extension: &mut Value) -> io::Result<()> {
-    if extension["name"] != "teambit.pipelines/builder" {
+    if !crate::workspace::engine::client_status::config::is_extension_aspect(
+        extension,
+        "teambit.pipelines/builder",
+    ) {
         return Ok(());
     }
     let Some(artifacts) = extension["data"].get_mut("artifacts") else { return Ok(()) };

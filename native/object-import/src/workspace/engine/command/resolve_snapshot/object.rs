@@ -103,7 +103,10 @@ fn empty_builder(version: &mut Value) -> io::Result<()> {
     let extensions =
         version["extensions"].as_array_mut().ok_or_else(|| invalid("resolve extensions"))?;
     for extension in extensions {
-        if extension["name"] == "teambit.pipelines/builder" {
+        if crate::workspace::engine::client_status::config::is_extension_aspect(
+            extension,
+            "teambit.pipelines/builder",
+        ) {
             extension["data"] = json!({});
         }
     }

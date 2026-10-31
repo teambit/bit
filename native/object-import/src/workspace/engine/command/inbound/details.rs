@@ -1,6 +1,6 @@
 //! The `importDetails` of an inbound receipt (`_getImportDetails`).
 use super::{Target, invalid, write};
-use crate::command_import;
+use crate::{command_import, workspace::engine::client_status::config::is_extension_aspect};
 use serde_json::{Value, json};
 use sha1::Digest;
 use std::{borrow::Cow, io, path::Path};
@@ -133,9 +133,9 @@ fn removed(
         .as_array()
         .into_iter()
         .flatten()
-        .find(|extension| {
-            extension["name"] == "teambit.component/remove"
-                || extension["extensionId"] == "teambit.component/remove"
+        .find(|ext| {
+            is_extension_aspect(ext, "teambit.component/remove")
+                || ext["extensionId"] == "teambit.component/remove"
         });
     let Some(config) = aspect.map(|aspect| &aspect["config"]) else { return Ok(false) };
     if config["removed"] == true {
@@ -180,7 +180,7 @@ fn deprecated(
         .as_array()
         .into_iter()
         .flatten()
-        .find(|extension| extension["name"] == "teambit.component/deprecation");
+        .find(|ext| is_extension_aspect(ext, "teambit.component/deprecation"));
     let Some(config) = aspect.map(|aspect| &aspect["config"]) else { return Ok(false) };
     if config["deprecate"] == true {
         return Ok(true);

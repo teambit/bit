@@ -12,7 +12,14 @@ pub(in crate::workspace::engine::command::merge_planning) fn prepare_hidden_meta
         .as_array()
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["name"] == "teambit.dependencies/dependency-resolver")
+                .find(|row| {
+                    row["name"]
+                        .as_str()
+                        .is_some_and(|name| {
+                            name == "teambit.dependencies/dependency-resolver"
+                                || name.starts_with("teambit.dependencies/dependency-resolver@")
+                        })
+                })
         })
         .map_or_else(|| json!([]), |row| row["data"]["dependencies"].clone());
     for field in ["dependencies", "devDependencies"] {

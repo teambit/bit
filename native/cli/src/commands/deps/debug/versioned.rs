@@ -306,25 +306,17 @@ fn allowed_config(extension: &Value, env_id: &str, manual: Option<&ManualPolicy>
     if extension["name"] == "teambit.dependencies/dependency-resolver" && manual.is_some() {
         return true;
     }
-    if env_id == "teambit.react/react" {
-        match extension["name"].as_str().map(bit_install::config::aspect_id_without_version) {
-            Some("teambit.react/react") => return config == &json!({"__specific": true}),
-            Some("teambit.envs/envs") => {
-                return config
-                    .as_object()
-                    .is_some_and(|map| {
-                        map.len() == 2
-                            && map.get("__specific") == Some(&json!(true))
-                            && map
-                                .get("env")
-                                .and_then(Value::as_str)
-                                .is_some_and(|env| {
-                                    bit_install::config::aspect_id_without_version(env) == env_id
-                                })
-                    });
-            }
-            _ => {}
-        }
+    let name = extension["name"].as_str().map(bit_install::config::aspect_id_without_version);
+    if env_id == "teambit.react/react" && name == Some("teambit.react/react") {
+        return config == &json!({"__specific": true});
+    }
+    if env_id == "teambit.react/react" && name == Some("teambit.envs/envs") {
+        let env = config["env"].as_str().map(bit_install::config::aspect_id_without_version);
+        return config
+            .as_object()
+            .is_some_and(|map| map.len() == 2)
+            && config["__specific"] == true
+            && env == Some(env_id);
     }
     config.as_object().is_some_and(serde_json::Map::is_empty)
 }

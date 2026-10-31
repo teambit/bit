@@ -229,7 +229,10 @@ fn bind_new_extensions(extensions: &mut Value, identities: &HashSet<String>) {
         .flatten()
     {
         bind_extension_id(extension, identities);
-        if extension["name"] == "teambit.dependencies/dependency-resolver" {
+        if crate::workspace::engine::client_status::config::is_extension_aspect(
+            extension,
+            "teambit.dependencies/dependency-resolver",
+        ) {
             for dep in extension["data"]["dependencies"]
                 .as_array_mut()
                 .into_iter()

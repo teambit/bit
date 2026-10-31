@@ -128,7 +128,12 @@ fn enrich_packages(version: &mut Value) -> io::Result<()> {
         .as_array()
         .into_iter()
         .flatten()
-        .find(|row| row["name"] == "teambit.dependencies/dependency-resolver")
+        .find(|row| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                row,
+                "teambit.dependencies/dependency-resolver",
+            )
+        })
         .and_then(|row| row["data"]["dependencies"].as_array())
         .cloned()
         .unwrap_or_default();

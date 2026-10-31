@@ -308,10 +308,8 @@ pub(in crate::commands) fn find_bitmap_row_ref<'a>(
 }
 
 fn row_matches_entry(key: &str, row: &Value, entry: &BitmapEntry) -> bool {
-    if !entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()) {
-        return true;
-    }
-    row["name"].as_str().unwrap_or(key) == entry.id.name
+    (!entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()))
+        || crate::commands::update_cmd::bitmap_row_name(key, row) == entry.id.name
 }
 
 pub(in crate::commands) fn deep_merge(target: &mut Value, source: &Value) {

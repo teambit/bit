@@ -104,7 +104,13 @@ pub(in crate::component_recover) fn removal(version: &Value) -> Value {
         .as_array()
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["name"] == REMOVE)
+                .find(|row| {
+                    row["name"]
+                        .as_str()
+                        .is_some_and(|name| {
+                            name == REMOVE || name.starts_with(&format!("{REMOVE}@"))
+                        })
+                })
         })
         .map_or_else(|| serde_json::json!({}), |row| row["config"].clone())
 }

@@ -66,7 +66,10 @@ fn artifacts(value: &Value) -> io::Result<Vec<[u8; 20]>> {
     let Some(builder) = extensions
         .iter()
         .find(|entry| {
-            entry.get("name").and_then(Value::as_str) == Some("teambit.pipelines/builder")
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                entry,
+                "teambit.pipelines/builder",
+            )
         })
     else {
         return Ok(Vec::new());

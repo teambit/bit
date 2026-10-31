@@ -12,7 +12,10 @@ pub(super) fn validate_version(version: &Value) -> io::Result<()> {
         .is_some_and(|extensions| {
             extensions
                 .iter()
-                .any(|extension| extension["name"] == ASPECT && extension["data"]["isRoot"] == true)
+                .any(|extension| {
+                    config::is_extension_aspect(extension, ASPECT)
+                        && extension["data"]["isRoot"] == true
+                })
         });
     if !root {
         return Err(invalid("command non-root Version at workspace root"));

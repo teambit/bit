@@ -113,7 +113,9 @@ fn reference(receipt: &mut Value, artifact: &GeneratedFile, hash: &str) -> io::R
         .as_array_mut()
         .ok_or_else(|| invalid("snapshot artifact extensions"))?
         .iter_mut()
-        .find(|extension| extension["name"] == BUILDER)
+        .find(|extension| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(extension, BUILDER)
+        })
         .ok_or_else(|| invalid("snapshot artifact builder"))?;
     let file = builder["data"]["artifacts"]
         .get_mut(artifact.artifact_index)
@@ -176,7 +178,9 @@ fn planned_tasks(version: &mut Value, allocation: &Value) -> io::Result<()> {
         version["extensions"].as_array_mut().ok_or_else(|| invalid("snapshot extensions"))?;
     if let Some(builder) = extensions
         .iter_mut()
-        .find(|extension| extension["name"] == BUILDER)
+        .find(|extension| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(extension, BUILDER)
+        })
     {
         builder["data"] = json!({"plannedTasks": tasks});
     } else {

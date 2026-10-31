@@ -166,7 +166,10 @@ fn extensions(value: &Value, clean: &mut Value, artifacts: bool) -> io::Result<(
                 .remove("extensionId");
         }
         if artifacts
-            && item.get("name").and_then(Value::as_str) == Some("teambit.pipelines/builder")
+            && crate::workspace::engine::client_status::config::is_extension_aspect(
+                item,
+                "teambit.pipelines/builder",
+            )
             && let Some(data) =
                 clean["extensions"][index].get_mut("data").and_then(Value::as_object_mut)
         {

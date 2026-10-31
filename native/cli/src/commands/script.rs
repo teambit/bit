@@ -166,9 +166,14 @@ pub(super) fn active_component_count(bitmap: &Value) -> usize {
                 .filter(|(key, row)| {
                     !key.starts_with('$')
                         && *key != "_bit_lane"
+                        && *key != "version"
                         && row.is_object()
                         && row["isAvailableOnCurrentLane"] != false
-                        && row["config"]["teambit.component/remove"]["removed"] != true
+                        && !super::update_cmd::aspect_entry(
+                            &row["config"],
+                            "teambit.component/remove",
+                        )
+                        .is_some_and(|(_, cfg)| cfg["removed"] == true)
                 })
                 .count()
         })

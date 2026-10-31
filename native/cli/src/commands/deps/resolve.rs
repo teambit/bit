@@ -129,9 +129,8 @@ impl WorkspaceDepsContext {
         self.apply_component_json(&component.dir, &identity, &mut deps);
         if let Some(policy) = override_policy {
             self.apply_policy_object(policy, &identity, &mut deps);
-        } else if let Some(cfg) = entry.config
-            .as_ref()
-            .and_then(|map| map.get(DEPENDENCY_RESOLVER_ASPECT))
+        } else if let Some(cfg) =
+            crate::commands::update_cmd::bitmap_entry_aspect(entry, DEPENDENCY_RESOLVER_ASPECT)
         {
             self.apply_policy_object(&cfg["policy"], &identity, &mut deps);
         }

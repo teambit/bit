@@ -181,7 +181,7 @@ fn model_package_json(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<
         .ok_or_else(|| io::Error::other("versioned capsule component model is missing"))?;
     Ok(model.extensions
         .iter()
-        .find(|extension| extension.get("name").and_then(Value::as_str) == Some("teambit.pkg/pkg"))
+        .find(|extension| crate::commands::update_cmd::matches_aspect(extension, "teambit.pkg/pkg"))
         .and_then(|extension| extension.get("config"))
         .and_then(|config| config.get("packageJson"))
         .cloned())
@@ -293,7 +293,7 @@ fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Strin
         .ok_or_else(|| io::Error::other("versioned capsule component model is missing"))?;
     let model_env = model.extensions
         .iter()
-        .find(|ext| ext.get("name").and_then(Value::as_str) == Some("teambit.envs/envs"))
+        .find(|ext| crate::commands::update_cmd::matches_aspect(ext, "teambit.envs/envs"))
         .and_then(|ext| ext.get("config"))
         .and_then(|config| config.get("env"))
         .and_then(Value::as_str);

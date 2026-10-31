@@ -13,8 +13,8 @@ pub(super) fn prepare(
     preflight: bool,
 ) -> io::Result<Identity> {
     validate_name(&options.target)?;
-    let (_, source) = selected(bitmap, &options.source)?;
-    let source_name = source["name"].as_str().ok_or_else(|| unsupported("rename bitmap name"))?;
+    let (key, source) = selected(bitmap, &options.source)?;
+    let source_name = row_name(key, source);
     let source_scope = scope(source).ok_or_else(|| unsupported("rename source scope"))?;
     let target_scope = options.scope.as_deref().unwrap_or(source_scope);
     validate_scope(target_scope)?;
@@ -55,10 +55,12 @@ pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, 
         .iter()
         .filter(|(key, row)| {
             let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
-            let row_name = row["name"].as_str().unwrap_or(key_id);
+            let row_name = row_name(key, row);
             row["rootDir"].is_string()
                 && row["isAvailableOnCurrentLane"] != false
-                && row["config"]["teambit.component/remove"]["removed"] != true
+                && !crate::workspace::engine::client_status::config::is_config_removed(
+                    &row["config"],
+                )
                 && (key_id == id
                     || *key == id
                     || row_name == id
@@ -71,6 +73,14 @@ pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, 
         return Err(invalid(format!("component {id} is ambiguous")));
     }
     Ok((key, row))
+}
+pub(super) fn row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let key_name = key_id.split_once('/').map_or(key_id, |(_, name)| name);
+    row["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .unwrap_or(key_name)
 }
 pub(super) fn scope(row: &Value) -> Option<&str> {
     row["scope"]

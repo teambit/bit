@@ -115,7 +115,9 @@ impl Component<'_> {
     fn package_name(&self, extensions: &[Value]) -> io::Result<String> {
         let configured = extensions
             .iter()
-            .find(|extension| extension["name"] == "teambit.pkg/pkg")
+            .find(|extension| {
+                crate::commands::update_cmd::matches_aspect(extension, "teambit.pkg/pkg")
+            })
             .and_then(|extension| extension.get("config"));
         let identity = text(self.target.get("identity"))?;
         let (scope, name) =

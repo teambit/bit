@@ -290,14 +290,14 @@ fn resolve_scope_package_name(scope_dir: &Path, raw_id: &str) -> Option<String> 
 fn extract_version_package_name(ver_val: &Value) -> Option<String> {
     let exts = ver_val["extensions"].as_array()?;
     for ext in exts {
-        if ext["name"].as_str() == Some("teambit.dependencies/dependency-resolver")
+        if super::update_cmd::matches_aspect(ext, "teambit.dependencies/dependency-resolver")
             && let Some(pkg) = ext["data"]["packageName"]
                 .as_str()
                 .filter(|val| !val.is_empty())
         {
             return Some(pkg.to_owned());
         }
-        if ext["name"].as_str() == Some("teambit.pkg/pkg")
+        if super::update_cmd::matches_aspect(ext, "teambit.pkg/pkg")
             && let Some(pkg) = ext["config"]["packageJson"]["name"]
                 .as_str()
                 .or_else(|| ext["data"]["packageJson"]["name"].as_str())

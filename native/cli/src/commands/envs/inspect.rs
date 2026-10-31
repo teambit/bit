@@ -349,7 +349,7 @@ fn bare_row_core_env(scope_dir: &Path, row: &Value, req_ver: Option<&str>) -> Op
         .as_array()
         .and_then(|exts| {
             exts.iter()
-                .find(|ext| ext["name"].as_str() == Some("teambit.envs/envs"))
+                .find(|ext| crate::commands::update_cmd::matches_aspect(ext, "teambit.envs/envs"))
                 .and_then(|ext| {
                     ext["config"]["env"]
                         .as_str()

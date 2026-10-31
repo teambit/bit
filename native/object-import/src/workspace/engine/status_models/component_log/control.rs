@@ -15,7 +15,11 @@ impl Control {
                 .as_array()
                 .and_then(|rows| {
                     rows.iter()
-                        .find(|row| row["name"] == name)
+                        .find(|row| {
+                            crate::workspace::engine::client_status::config::is_extension_aspect(
+                                row, name,
+                            )
+                        })
                 })
                 .map(|row| &row["config"])
         };

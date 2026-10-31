@@ -154,7 +154,15 @@ fn component_versions<'a>(
             .as_array()
             .into_iter()
             .flatten()
-            .find(|row| row["name"] == RESOLVER || row["extensionId"]["name"] == RESOLVER);
+            .find(|row| {
+                crate::workspace::engine::client_status::config::is_extension_aspect(row, RESOLVER)
+                    || row["extensionId"]["name"]
+                        .as_str()
+                        .or_else(|| row["extensionId"].as_str())
+                        .is_some_and(|name| {
+                            name == RESOLVER || name.starts_with(&format!("{RESOLVER}@"))
+                        })
+            });
         let Some(dependencies) = resolver.and_then(|row| row["data"]["dependencies"].as_array())
         else {
             continue;

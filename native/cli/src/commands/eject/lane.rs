@@ -120,12 +120,7 @@ fn eject_one_lane_component(
     main_version: &str,
 ) -> io::Result<bool> {
     let Some((key, row)) = find_bitmap_row(bitmap, id) else { return Ok(false) };
-    let name = row["name"].as_str().unwrap_or(&key);
-    let scope = row["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
-        .unwrap_or_default();
+    let (scope, name) = crate::commands::update_cmd::bitmap_row_scope_and_name(&key, &row);
     let root_dir = row["rootDir"].as_str().unwrap_or_default();
     let main_file = row["mainFile"].as_str().unwrap_or("index.js");
     let pkg_name = pkg_name_for(scope, name);
@@ -142,8 +137,11 @@ fn eject_one_lane_component(
             root_dir,
         )?;
     }
-    if bitmap[&key]["config"].is_null() {
+    if !bitmap[&key]["config"].is_object() {
         bitmap[&key]["config"] = json!({});
+    }
+    if let Some(cfg) = bitmap[&key]["config"].as_object_mut() {
+        cfg.retain(|cfg_key, _| !cfg_key.starts_with("teambit.component/remove@"));
     }
     bitmap[&key]["config"]["teambit.component/remove"] = json!({ "removed": true });
     if !root_dir.is_empty() && root_dir != "." {

@@ -215,8 +215,10 @@ fn remotely_removed(target: &Value) -> bool {
             extensions
                 .iter()
                 .any(|extension| {
-                    extension["name"] == "teambit.component/remove"
-                        && extension["config"]["removed"] == true
+                    crate::commands::update_cmd::matches_aspect(
+                        extension,
+                        "teambit.component/remove",
+                    ) && extension["config"]["removed"] == true
                 })
         })
 }

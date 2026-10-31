@@ -125,8 +125,11 @@ fn has_env_jsonc_policy(root: &Path) -> bool {
         .any(|(key, row)| {
             !key.starts_with('$')
                 && *key != "_bit_lane"
+                && *key != "version"
+                && row.is_object()
                 && row["isAvailableOnCurrentLane"] != false
-                && row["config"]["teambit.component/remove"]["removed"] != true
+                && !aspect_entry(&row["config"], "teambit.component/remove")
+                    .is_some_and(|(_, cfg)| cfg["removed"] == true)
                 && row["rootDir"]
                     .as_str()
                     .filter(|dir| !dir.is_empty())
@@ -136,6 +139,60 @@ fn has_env_jsonc_policy(root: &Path) -> bool {
                             .is_file()
                     })
         })
+}
+
+pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
+    entry["name"]
+        .as_str()
+        .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
+}
+
+pub(in crate::commands) fn bitmap_row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {
+    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
+    let key_name = key_id.split_once('/').map_or(key_id, |(_, name)| name);
+    row["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .unwrap_or(key_name)
+}
+
+pub(in crate::commands) fn bitmap_row_scope_and_name<'a>(
+    key: &'a str,
+    row: &'a Value,
+) -> (&'a str, &'a str) {
+    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
+    let (key_scope, key_name) = key_id
+        .split_once('/')
+        .map_or((None, key_id), |(scope, name)| (Some(scope), name));
+    let name = row["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .unwrap_or(key_name);
+    let scope = row["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
+        .or(key_scope)
+        .unwrap_or_default();
+    (scope, name)
+}
+
+pub(in crate::commands) fn bitmap_entry_aspect<'a>(
+    entry: &'a bit_install::workspace::BitmapEntry,
+    bare_id: &str,
+) -> Option<&'a Value> {
+    let map = entry.config.as_ref()?;
+    if let Some(val) = map.get(bare_id) {
+        return Some(val);
+    }
+    let prefix = format!("{bare_id}@");
+    map.iter()
+        .find(|(key, _)| key.starts_with(&prefix))
+        .map(|(_, val)| val)
 }
 
 pub(in crate::commands) fn aspect_entry<'a>(

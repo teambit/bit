@@ -281,10 +281,8 @@ fn find_bitmap_row_mut<'a>(
 }
 
 fn row_matches_entry(key: &str, row: &Value, entry: &BitmapEntry) -> bool {
-    if !entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()) {
-        return true;
-    }
-    row["name"].as_str().unwrap_or(key) == entry.id.name
+    (!entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()))
+        || super::update_cmd::bitmap_row_name(key, row) == entry.id.name
 }
 
 impl Prepared {

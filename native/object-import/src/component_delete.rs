@@ -204,7 +204,7 @@ fn component_count(bitmap: &Value) -> io::Result<usize> {
         .as_object()
         .ok_or_else(|| invalid("component bitmap"))?
         .keys()
-        .filter(|key| !key.starts_with('$') && *key != "_bit_lane")
+        .filter(|key| !key.starts_with('$') && *key != "_bit_lane" && *key != "version")
         .count())
 }
 
@@ -226,6 +226,9 @@ fn project_bitmap(
     }
     if !bitmap[key]["config"].is_object() {
         bitmap[key]["config"] = json!({});
+    }
+    if let Some(cfg) = bitmap[key]["config"].as_object_mut() {
+        cfg.retain(|cfg_key, _| !cfg_key.starts_with("teambit.component/remove@"));
     }
     bitmap[key]["config"]["teambit.component/remove"] = config;
     inspection::render_workspace_bitmap(bitmap)

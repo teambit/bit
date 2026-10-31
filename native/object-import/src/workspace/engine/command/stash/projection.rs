@@ -47,7 +47,10 @@ fn clean_extensions(version: &mut Value) {
         .into_iter()
         .flatten()
     {
-        if extension["name"] != "teambit.dependencies/dependency-resolver" {
+        if !crate::workspace::engine::client_status::config::is_extension_aspect(
+            extension,
+            "teambit.dependencies/dependency-resolver",
+        ) {
             continue;
         }
         for dependency in extension["data"]["dependencies"]

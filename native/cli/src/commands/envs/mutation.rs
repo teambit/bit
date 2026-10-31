@@ -274,7 +274,7 @@ fn find_model_env(root: &Path, entry: &BitmapEntry) -> Result<Option<String>, Fa
     };
     Ok(exts
         .iter()
-        .find(|ext| ext["name"].as_str() == Some("teambit.envs/envs"))
+        .find(|ext| crate::commands::update_cmd::matches_aspect(ext, "teambit.envs/envs"))
         .and_then(|ext| {
             ext["config"]["env"]
                 .as_str()

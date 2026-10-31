@@ -93,7 +93,9 @@ fn write(version: &mut Value, data: Value) -> io::Result<()> {
         version["extensions"].as_array_mut().ok_or_else(|| invalid("workspace-root extensions"))?;
     if let Some(extension) = extensions
         .iter_mut()
-        .find(|extension| extension["name"] == ASPECT)
+        .find(|extension| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(extension, ASPECT)
+        })
     {
         extension["data"] = data;
     } else if data

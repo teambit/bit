@@ -74,7 +74,10 @@ fn is_env(root: &Path, selected: &Selected) -> io::Result<bool> {
             extensions
                 .iter()
                 .any(|extension| {
-                    extension["name"] == "teambit.envs/envs" && extension["data"]["type"] == "env"
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        extension,
+                        "teambit.envs/envs",
+                    ) && extension["data"]["type"] == "env"
                 })
         }))
 }
@@ -83,22 +86,8 @@ fn validate_graph(bitmap: &Value, components: &[DependencyComponent]) -> io::Res
     let rows = bitmap.as_object().ok_or_else(|| invalid("dependency bitmap"))?;
     let expected = rows
         .iter()
-        .filter(|(key, _)| !key.starts_with('$') && *key != "_bit_lane")
-        .map(|(_, row)| {
-            let scope = row["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-                .or_else(|| row["defaultScope"].as_str())
-                .ok_or_else(|| invalid("dependency component scope"))?;
-            let name = row["name"].as_str().ok_or_else(|| invalid("dependency component name"))?;
-            let version =
-                row["version"].as_str().ok_or_else(|| invalid("dependency component version"))?;
-            Ok(if version.is_empty() {
-                format!("{scope}/{name}")
-            } else {
-                format!("{scope}/{name}@{version}")
-            })
-        })
+        .filter(|(key, _)| !key.starts_with('$') && *key != "_bit_lane" && *key != "version")
+        .map(|(key, row)| bitmap_row_identity(key, row))
         .collect::<io::Result<HashSet<_>>>()?;
     let actual = components
         .iter()
@@ -118,6 +107,39 @@ fn validate_graph(bitmap: &Value, components: &[DependencyComponent]) -> io::Res
         return Err(invalid("lane deletion has dependencies outside the captured workspace"));
     }
     Ok(())
+}
+
+fn bitmap_row_identity(key: &str, row: &Value) -> io::Result<String> {
+    let (key_id, key_ver) = key
+        .rsplit_once('@')
+        .map_or((key, None), |(id, ver)| (id, Some(ver)));
+    let (key_scope, key_name) = key_id
+        .split_once('/')
+        .map_or((None, key_id), |(scope_part, name_part)| (Some(scope_part), name_part));
+    let scope = row["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+        })
+        .or(key_scope)
+        .ok_or_else(|| invalid("dependency component scope"))?;
+    let name = row["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .or(Some(key_name))
+        .ok_or_else(|| invalid("dependency component name"))?;
+    let version = row["version"]
+        .as_str()
+        .or(key_ver)
+        .ok_or_else(|| invalid("dependency component version"))?;
+    Ok(if version.is_empty() {
+        format!("{scope}/{name}")
+    } else {
+        format!("{scope}/{name}@{version}")
+    })
 }
 
 fn read_model(root: &Path, identity: &str, objects: &mut Vec<FrozenObject>) -> io::Result<Value> {

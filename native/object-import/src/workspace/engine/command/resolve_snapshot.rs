@@ -37,8 +37,10 @@ pub(super) fn is_removed(version: &Value) -> bool {
             entries
                 .iter()
                 .any(|entry| {
-                    entry["name"] == "teambit.component/remove"
-                        && entry["config"]["removed"] == true
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        entry,
+                        "teambit.component/remove",
+                    ) && entry["config"]["removed"] == true
                 })
         })
 }

@@ -302,7 +302,7 @@ fn set_entry_default_scope(
         bitmap_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap object".to_owned()))?;
     let (_, row) = rows
         .iter_mut()
-        .find(|(key, row)| row["name"].as_str().unwrap_or(key.as_str()) == name)
+        .find(|(key, row)| super::update_cmd::bitmap_row_name(key, row) == name)
         .ok_or_else(|| Failure::Declined(format!("bitmap entry {name}")))?;
     row["defaultScope"] = json!(new_scope);
     Ok(())

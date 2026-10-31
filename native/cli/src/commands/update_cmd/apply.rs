@@ -109,8 +109,10 @@ fn apply_comp_json_updates(updates: &[ResolvedUpdate]) -> io::Result<()> {
 fn update_single_comp_json(path: &Path, group: &[&ResolvedUpdate]) -> io::Result<()> {
     let content = fs::read_to_string(path)?;
     let mut parsed: Value = serde_json::from_str(&content).map_err(io::Error::other)?;
+    let key = super::aspect_entry(&parsed["extensions"], DEP_RESOLVER_ID)
+        .map_or_else(|| DEP_RESOLVER_ID.to_owned(), |(aspect_key, _)| aspect_key.to_owned());
     for upd in group {
-        let target = &mut parsed["extensions"][DEP_RESOLVER_ID]["policy"][&upd.field][&upd.name];
+        let target = &mut parsed["extensions"][&key]["policy"][&upd.field][&upd.name];
         if target.is_object() && target.get("version").is_some() {
             target["version"] = Value::String(upd.latest_range.clone());
         } else {

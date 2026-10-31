@@ -16,7 +16,8 @@ impl Host for Builtin {
         Err(unsupported())
     }
     async fn package_json_props(&self, env_id: &str) -> io::Result<Value> {
-        if !matches!(env_id, "teambit.harmony/node" | "teambit.react/react") {
+        let bare = bit_install::config::aspect_id_without_version(env_id);
+        if !matches!(bare, "teambit.harmony/node" | "teambit.react/react") {
             return Err(unsupported());
         }
         Ok(

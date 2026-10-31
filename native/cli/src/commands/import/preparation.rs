@@ -248,19 +248,28 @@ fn id_is_modified(
 fn bitmap_component_id(rows: &serde_json::Map<String, Value>, id: &str) -> Option<String> {
     let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base);
     let (requested_scope, name) = without_ver.split_once('/')?;
-    let row = rows
+    let (key, row) = rows
         .iter()
-        .find(|(key, row)| {
-            row["name"].as_str().unwrap_or(key) == name && row["scope"] == requested_scope
-        })?
-        .1;
-    let scope = row["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())?;
+        .find(|(key, row)| bitmap_row_matches_scope_name(key, row, requested_scope, name))?;
+    let key_ver = key.rsplit_once('@').map(|(_, ver)| ver);
     let version = row["version"]
         .as_str()
-        .filter(|val| !val.is_empty())?;
-    Some(format!("{scope}/{name}@{version}"))
+        .filter(|val| !val.is_empty())
+        .or_else(|| key_ver.filter(|val| !val.is_empty()))?;
+    Some(format!("{requested_scope}/{name}@{version}"))
+}
+
+fn bitmap_row_matches_scope_name(key: &str, row: &Value, scope: &str, name: &str) -> bool {
+    if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+        return false;
+    }
+    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
+    let row_name = crate::commands::update_cmd::bitmap_row_name(key, row);
+    let row_scope = row["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| key_id.split_once('/').map(|(prefix, _)| prefix));
+    row_name == name && row_scope == Some(scope)
 }
 
 fn destination_error(root: &Path, options: &Options) -> io::Result<Option<String>> {
@@ -293,10 +302,7 @@ fn new_target_directory(
     }
     let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base);
     let (scope, name) = without_ver.split_once('/')?;
-    if rows
-        .iter()
-        .any(|(key, row)| row["name"].as_str().unwrap_or(key) == name && row["scope"] == scope)
-    {
+    if rows.iter().any(|(key, row)| bitmap_row_matches_scope_name(key, row, scope, name)) {
         return None;
     }
     let rel_dir =

@@ -57,7 +57,7 @@ pub(super) fn request_with_empty(
                 .collect::<Vec<_>>()
         )
     };
-    if environment == "teambit.react/react" {
+    if bit_install::config::aspect_id_without_version(environment) == "teambit.react/react" {
         config["testEnvironment"] = json!("$jsdom");
         config["setupFiles"] = json!(["$polyfill"]);
     }

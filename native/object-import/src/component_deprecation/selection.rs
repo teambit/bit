@@ -1,12 +1,33 @@
 use super::{Value, invalid};
 use std::io;
 pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {
-    let name = row["name"].as_str().unwrap_or(key);
+    if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+        return None;
+    }
+    let (key_id, key_ver) = key
+        .rsplit_once('@')
+        .map_or((key, None), |(id, ver)| (id, Some(ver)));
+    let (key_scope, key_name) = key_id
+        .split_once('/')
+        .map_or((None, key_id), |(scope, name)| (Some(scope), name));
+    let name = row["name"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .unwrap_or(key_name);
     let scope = row["scope"]
         .as_str()
         .filter(|value| !value.is_empty())
-        .or_else(|| row["defaultScope"].as_str())?;
-    let version = row["version"].as_str().unwrap_or_default();
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|value| !value.is_empty())
+        })
+        .or(key_scope)?;
+    let version = row["version"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .or_else(|| key_ver.filter(|value| !value.is_empty()))
+        .unwrap_or_default();
     Some(format!(
         "{scope}/{name}{}",
         if version.is_empty() { String::new() } else { format!("@{version}") },
@@ -21,7 +42,8 @@ pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
         .find_map(|(key, row)| {
             let full = identity(key, row)?;
             let full = full.split('@').next()?;
-            (full == id || row["name"] == id || key == id).then_some(key.as_str())
+            let key_bare = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
+            (full == id || row["name"] == id || key_bare == id).then_some(key.as_str())
         })
         .ok_or_else(|| invalid(format!("component {id} was not found")))
 }
@@ -63,17 +85,22 @@ fn validate_pattern(pattern: &str) -> io::Result<()> {
 }
 fn matches_parts(key: &str, row: &Value, id: &str, parts: &[&str]) -> bool {
     let bare = id.split('@').next().unwrap_or(id);
+    let key_bare = key.rsplit_once('@').map_or(key, |(prefix, _)| prefix);
+    let name = row["name"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .unwrap_or(key_bare);
     let matches = |pattern: &str| {
         bit_workspace_config::glob::matches(pattern, bare)
-            || bit_workspace_config::glob::matches(pattern, row["name"].as_str().unwrap_or(key))
+            || bit_workspace_config::glob::matches(pattern, name)
     };
     parts
         .iter()
         .filter(|pattern| !pattern.starts_with('!'))
-        .any(|p| matches(p))
+        .any(|pat| matches(pat))
         && !parts
             .iter()
-            .filter_map(|p| p.strip_prefix('!'))
+            .filter_map(|pat| pat.strip_prefix('!'))
             .any(matches)
 }
 pub(crate) fn id_object(bitmap: &Value, id: &str) -> io::Result<Value> {

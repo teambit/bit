@@ -154,6 +154,9 @@ pub fn set_config(
     if !row["config"].is_object() {
         row["config"] = json!({});
     }
+    if let Some(cfg) = row["config"].as_object_mut() {
+        cfg.retain(|cfg_key, _| !cfg_key.starts_with(&format!("{ASPECT}@")));
+    }
     let mut config = json!({"deprecate":!undo && range.is_none_or(str::is_empty)});
     if undo {
         config["newId"] = json!("");

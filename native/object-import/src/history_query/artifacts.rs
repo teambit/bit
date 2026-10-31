@@ -9,7 +9,10 @@ pub(super) fn validate(value: &Value) -> io::Result<()> {
     let Some(builder) = entries
         .iter()
         .find(|entry| {
-            entry.get("name").and_then(Value::as_str) == Some("teambit.pipelines/builder")
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                entry,
+                "teambit.pipelines/builder",
+            )
         })
     else {
         return Ok(());

@@ -36,7 +36,12 @@ fn artifact_refs(version: &Value) -> io::Result<Vec<String>> {
         version["extensions"].as_array().ok_or_else(|| invalid("lane artifact extensions"))?;
     let Some(builder) = rows
         .iter()
-        .find(|row| row["name"] == "teambit.pipelines/builder")
+        .find(|row| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                row,
+                "teambit.pipelines/builder",
+            )
+        })
     else {
         return Ok(Vec::new());
     };

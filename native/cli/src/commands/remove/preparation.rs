@@ -48,14 +48,18 @@ pub(in crate::commands) fn all(bitmap: &Value) -> Vec<String> {
         .into_iter()
         .flat_map(|rows| rows.iter())
         .filter_map(|(key, row)| {
-            let name = row["name"].as_str()?;
-            let scope = row["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-                .or_else(|| row["defaultScope"].as_str())?;
-            (!key.starts_with('$') && row["isAvailableOnCurrentLane"] != false).then(|| {
-                format!("{scope}/{name}")
-            })
+            if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+                return None;
+            }
+            let removed = crate::commands::update_cmd::aspect_entry(
+                &row["config"],
+                "teambit.component/remove",
+            )
+            .is_some_and(|(_, cfg)| cfg["removed"] == true);
+            if row["isAvailableOnCurrentLane"] == false || removed {
+                return None;
+            }
+            row_identity(key, row)
         })
         .collect()
 }
@@ -63,17 +67,32 @@ pub(in crate::commands) fn row<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'
     bitmap
         .as_object()
         .and_then(|rows| {
-            rows.values()
-                .find(|row| {
-                    let scope = row["scope"]
-                        .as_str()
-                        .filter(|scope| !scope.is_empty())
-                        .or_else(|| row["defaultScope"].as_str())
-                        .unwrap_or_default();
-                    format!("{scope}/{}", row["name"].as_str().unwrap_or_default()) == id
+            rows.iter()
+                .find_map(|(key, row)| {
+                    (row_identity(key, row).as_deref() == Some(id)).then_some(row)
                 })
         })
         .ok_or_else(|| io::Error::other("remove component selection changed"))
+}
+fn row_identity(key: &str, row: &Value) -> Option<String> {
+    let key_id = bare(key);
+    let (key_scope, key_name) = key_id
+        .split_once('/')
+        .map_or((None, key_id), |(scope, name)| (Some(scope), name));
+    let name = row["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .unwrap_or(key_name);
+    let scope = row["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+        })
+        .or(key_scope)?;
+    Some(format!("{scope}/{name}"))
 }
 fn main_exists(root: &Path, row: &Value) -> bool {
     row["rootDir"]

@@ -221,8 +221,10 @@ impl Prepared {
                         extensions
                             .iter()
                             .any(|extension| {
-                                extension["name"] == "teambit.component/remove"
-                                    && extension["config"]["removed"] == true
+                                crate::workspace::engine::client_status::config::is_extension_aspect(
+                                    extension,
+                                    "teambit.component/remove",
+                                ) && extension["config"]["removed"] == true
                             })
                     }),
             )?;

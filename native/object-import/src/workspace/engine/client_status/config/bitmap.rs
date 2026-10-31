@@ -173,6 +173,12 @@ pub(crate) fn is_config_removed(config: &Value) -> bool {
         })
         .is_some_and(|rem| rem["removed"] == true)
 }
+
+pub(crate) fn is_extension_aspect(entry: &Value, id: &str) -> bool {
+    entry["name"]
+        .as_str()
+        .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
+}
 fn component_config(config: &Value) -> bool {
     config
         .as_object()

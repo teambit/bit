@@ -178,7 +178,9 @@ fn data<'a>(version: &'a Value, identity: &str) -> Option<&'a Value> {
     version["extensions"]
         .as_array()?
         .iter()
-        .find(|row| row["name"] == identity)
+        .find(|row| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(row, identity)
+        })
         .map(|row| &row["data"])
 }
 

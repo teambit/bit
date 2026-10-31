@@ -18,7 +18,9 @@ pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
             .ok_or_else(|| invalid("recovery loaded aspect receipt"))?;
         if let Some(config) = extensions
             .iter()
-            .find(|row| row["name"] == REMOVE)
+            .find(|row| {
+                crate::workspace::engine::client_status::config::is_extension_aspect(row, REMOVE)
+            })
             .map(|row| &row["config"])
         {
             item.action = if super::classification::has_remove_info(config) {

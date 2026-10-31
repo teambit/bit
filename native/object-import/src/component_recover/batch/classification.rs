@@ -96,11 +96,11 @@ pub(super) fn update(bitmap: &mut Value, item: &Item) -> io::Result<()> {
     } else {
         let config = row
             .entry("config")
-            .or_insert_with(|| serde_json::json!({}));
-        config
+            .or_insert_with(|| serde_json::json!({}))
             .as_object_mut()
-            .ok_or_else(|| invalid("recovery component configuration"))?
-            .insert(REMOVE.into(), serde_json::json!({"removed":false}));
+            .ok_or_else(|| invalid("recovery component configuration"))?;
+        config.retain(|cfg_key, _| !cfg_key.starts_with("teambit.component/remove@"));
+        config.insert(REMOVE.into(), serde_json::json!({"removed":false}));
     }
     Ok(())
 }

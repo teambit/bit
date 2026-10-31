@@ -50,11 +50,17 @@ fn insert_dependency_fields(fields: &mut Map<String, Value>, version: &Value) {
     }
 }
 
+fn matches_aspect(row: &Value, id: &str) -> bool {
+    row["name"]
+        .as_str()
+        .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
+}
+
 fn peer_bit_metadata(version: &Value) -> Option<Value> {
     let config = version["extensions"]
         .as_array()?
         .iter()
-        .find(|row| row["name"] == "teambit.dependencies/dependency-resolver")?
+        .find(|row| matches_aspect(row, "teambit.dependencies/dependency-resolver"))?
         .get("config")?;
     if !truthy(config.get("peer")) {
         return None;
@@ -85,17 +91,14 @@ fn truthy(value: Option<&Value>) -> bool {
 fn validate_default_env(version: &Value) -> io::Result<()> {
     let env = version["extensions"]
         .as_array()
-        .and_then(|rows| {
-            rows.iter()
-                .find(|row| row["name"] == "teambit.envs/envs")
-        });
+        .and_then(|rows| rows.iter().find(|row| matches_aspect(row, "teambit.envs/envs")));
     let props = &version["packageJsonChangedProps"];
     let unchanged = props.is_null() || props.as_object().is_some_and(Map::is_empty);
     let optional = version["extensions"]
         .as_array()
         .into_iter()
         .flatten()
-        .filter(|row| row["name"] == "teambit.dependencies/dependency-resolver")
+        .filter(|row| matches_aspect(row, "teambit.dependencies/dependency-resolver"))
         .flat_map(|row| {
             row["data"]["dependencies"]
                 .as_array()
@@ -104,7 +107,11 @@ fn validate_default_env(version: &Value) -> io::Result<()> {
         })
         .any(|dependency| dependency["optional"] == true);
     if env.is_none_or(|env| {
-        env["data"]["id"] != "teambit.harmony/node"
+        env["data"]["id"]
+            .as_str()
+            .is_none_or(|id| {
+                id != "teambit.harmony/node" && !id.starts_with("teambit.harmony/node@")
+            })
             || !env["config"].as_object().is_some_and(Map::is_empty)
     }) || !unchanged
         || optional
@@ -117,10 +124,7 @@ fn validate_default_env(version: &Value) -> io::Result<()> {
 fn package_paths(version: &Value, main_file: &str) -> io::Result<(String, Option<String>)> {
     let pkg = version["extensions"]
         .as_array()
-        .and_then(|rows| {
-            rows.iter()
-                .find(|row| row["name"] == "teambit.pkg/pkg")
-        });
+        .and_then(|rows| rows.iter().find(|row| matches_aspect(row, "teambit.pkg/pkg")));
     let changes = pkg
         .filter(|pkg| pkg["config"].as_object().is_some_and(Map::is_empty))
         .map(|pkg| &pkg["data"]["packageJsonModification"]);

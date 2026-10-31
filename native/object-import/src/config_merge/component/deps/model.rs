@@ -184,7 +184,12 @@ fn dependencies(engine: &Engine<'_>, side: &str) -> io::Result<Vec<Value>> {
         .as_array()
         .ok_or_else(|| invalid("extension list"))?
         .iter()
-        .find(|entry| entry["name"] == "teambit.dependencies/dependency-resolver");
+        .find(|entry| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                entry,
+                "teambit.dependencies/dependency-resolver",
+            )
+        });
     let Some(extension) = extension else {
         return Ok(Vec::new());
     };

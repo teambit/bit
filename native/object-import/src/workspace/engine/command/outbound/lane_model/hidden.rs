@@ -229,7 +229,13 @@ fn fetch(input: &Prepare, host: &str, scope: &str, name: &str) -> io::Result<Opt
 }
 fn file(path: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
     let index: Value = serde_json::from_slice(&fs::read(path.join("index.json"))?)?;
-    let rows = index["lanes"].as_array().ok_or_else(|| invalid("outbound remote lane index"))?;
+    let Some(rows) = index["lanes"].as_array() else {
+        return if index.is_array() {
+            Ok(None)
+        } else {
+            Err(invalid("outbound remote lane index"))
+        };
+    };
     let Some(row) = rows
         .iter()
         .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)

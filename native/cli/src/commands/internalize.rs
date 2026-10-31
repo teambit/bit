@@ -214,9 +214,9 @@ fn is_entry_internal(
     entry: &BitmapEntry,
 ) -> Result<bool, Failure> {
     let row = find_bitmap_row_ref(bitmap_val, entry)?;
-    if let Some(cfg) = row
+    if let Some((_, cfg)) = row
         .get("config")
-        .and_then(|cfg| cfg.get(INTERNALIZE_ASPECT_ID))
+        .and_then(|cfg| super::update_cmd::aspect_entry(cfg, INTERNALIZE_ASPECT_ID))
     {
         if cfg.as_str() == Some("-") {
             return Ok(false);
@@ -240,7 +240,9 @@ fn is_comp_json_entry_internal(root: &Path, entry: &BitmapEntry) -> Result<Optio
     let bytes = fs::read(&comp_json_path)?;
     let parsed: Value =
         serde_json::from_slice(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
-    let Some(cfg) = parsed["extensions"].get(INTERNALIZE_ASPECT_ID) else {
+    let Some((_, cfg)) =
+        super::update_cmd::aspect_entry(&parsed["extensions"], INTERNALIZE_ASPECT_ID)
+    else {
         return Ok(None);
     };
     if cfg.as_str() == Some("-") {
@@ -269,8 +271,7 @@ fn is_scope_entry_internal(root: &Path, entry: &BitmapEntry) -> Result<bool, Fai
     let ext = ver_val["extensions"]
         .as_array()
         .and_then(|arr| {
-            arr.iter()
-                .find(|ext| ext["name"].as_str() == Some(INTERNALIZE_ASPECT_ID))
+            arr.iter().find(|ext| super::update_cmd::matches_aspect(ext, INTERNALIZE_ASPECT_ID))
         });
     Ok(ext.is_some_and(|item| item["config"]["internal"].as_bool().unwrap_or(false)))
 }
@@ -315,19 +316,22 @@ fn apply_internalize_row(
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
     if row
         .get("config")
-        .and_then(|cfg| cfg.get(INTERNALIZE_ASPECT_ID))
+        .and_then(|cfg| super::update_cmd::aspect_entry(cfg, INTERNALIZE_ASPECT_ID))
+        .map(|(_, val)| val)
         == Some(target_cfg)
     {
         return Ok(false);
     }
     let row_obj =
         row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
-    let cfg_obj = row_obj
+    let cfg_val = row_obj
         .entry("config")
-        .or_insert_with(|| json!({}))
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
-    cfg_obj.insert(INTERNALIZE_ASPECT_ID.into(), target_cfg.clone());
+        .or_insert_with(|| json!({}));
+    let key = super::update_cmd::aspect_entry(cfg_val, INTERNALIZE_ASPECT_ID)
+        .map_or_else(|| INTERNALIZE_ASPECT_ID.to_owned(), |(aspect_key, _)| aspect_key.to_owned());
+    let cfg_obj =
+        cfg_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
+    cfg_obj.insert(key, target_cfg.clone());
     Ok(true)
 }
 

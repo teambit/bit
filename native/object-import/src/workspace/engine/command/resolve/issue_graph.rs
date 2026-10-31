@@ -156,9 +156,12 @@ fn validate_ordinary_version(version: &Value) -> io::Result<()> {
             extensions
                 .iter()
                 .any(|extension| {
-                    matches!(
-                        extension["name"].as_str(),
-                        Some("teambit.component/deprecation" | "teambit.component/remove"),
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        extension,
+                        "teambit.component/deprecation",
+                    ) || crate::workspace::engine::client_status::config::is_extension_aspect(
+                        extension,
+                        "teambit.component/remove",
                     )
                 })
         })

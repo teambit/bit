@@ -103,8 +103,19 @@ fn unsupported(message: impl Into<String>) -> io::Error {
 }
 
 fn active(row: &Value) -> bool {
-    row["isAvailableOnCurrentLane"] != false
-        && !bit_workspace_config::truthy(&row["config"]["teambit.component/remove"]["removed"])
+    let removed = row["config"]
+        .as_object()
+        .and_then(|cfg| {
+            cfg.get("teambit.component/remove")
+                .or_else(|| {
+                    cfg.iter()
+                        .find_map(|(key, val)| {
+                            key.starts_with("teambit.component/remove@").then_some(val)
+                        })
+                })
+        })
+        .is_some_and(|cfg| bit_workspace_config::truthy(&cfg["removed"]));
+    row["isAvailableOnCurrentLane"] != false && !removed
 }
 
 /// Reuse tracked-file policy when an identity mutation reads an existing component.

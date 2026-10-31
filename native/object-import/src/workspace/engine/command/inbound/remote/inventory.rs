@@ -323,7 +323,14 @@ fn lane_readme(version: &Value) -> io::Result<Vec<String>> {
         .and_then(|extensions| {
             extensions
                 .iter()
-                .find(|row| row["name"] == "teambit.lanes/lanes")
+                .find(|row| {
+                    row["name"]
+                        .as_str()
+                        .is_some_and(|name| {
+                            name == "teambit.lanes/lanes"
+                                || name.starts_with("teambit.lanes/lanes@")
+                        })
+                })
         })
         .map(|row| &row["config"]["readme"])
         .filter(|readme| !readme.is_null() && *readme != false)

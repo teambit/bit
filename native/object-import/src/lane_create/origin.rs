@@ -150,8 +150,10 @@ fn active_lane_components(
             .is_some_and(|rows| {
                 rows.iter()
                     .any(|row| {
-                        row["name"] == "teambit.component/remove"
-                            && row["config"]["removed"] == true
+                        crate::workspace::engine::client_status::config::is_extension_aspect(
+                            row,
+                            "teambit.component/remove",
+                        ) && row["config"]["removed"] == true
                     })
             });
         if !removed {
@@ -168,9 +170,19 @@ fn active_lane_components(
 fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
     let scope = id["scope"].as_str()?;
     let name = id["name"].as_str()?;
+    let full = format!("{scope}/{name}");
     let row = bitmap
         .get(name)
-        .or_else(|| bitmap.get(format!("{scope}/{name}")))?;
+        .or_else(|| bitmap.get(&full))
+        .or_else(|| {
+            bitmap
+                .as_object()?
+                .iter()
+                .find_map(|(key, row)| {
+                    let bare = key.rsplit_once('@').map_or(key.as_str(), |(id, _)| id);
+                    (bare == name || bare == full).then_some(row)
+                })
+        })?;
     if row["isAvailableOnCurrentLane"].as_bool() == Some(false) {
         return None;
     }

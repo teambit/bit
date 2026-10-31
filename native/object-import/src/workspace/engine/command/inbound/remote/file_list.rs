@@ -152,7 +152,11 @@ pub(super) fn extension(version: &Value, name: &str, flag: &str) -> bool {
         .is_some_and(|extensions| {
             extensions
                 .iter()
-                .any(|extension| extension["name"] == name && truthy(&extension["config"][flag]))
+                .any(|extension| {
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        extension, name,
+                    ) && truthy(&extension["config"][flag])
+                })
         })
 }
 

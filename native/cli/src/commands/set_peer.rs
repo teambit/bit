@@ -266,8 +266,7 @@ fn extract_scope_dep_resolver_config(
     let Some(ext) = ver_val["extensions"]
         .as_array()
         .and_then(|arr| {
-            arr.iter()
-                .find(|ext| ext["name"].as_str() == Some(DEP_RESOLVER_ID))
+            arr.iter().find(|ext| super::update_cmd::matches_aspect(ext, DEP_RESOLVER_ID))
         })
     else {
         return Ok(None);

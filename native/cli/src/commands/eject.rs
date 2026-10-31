@@ -195,8 +195,12 @@ fn eject_one_component(
 ) -> io::Result<()> {
     let Some((key, row)) = find_bitmap_row(bitmap, id) else { return Ok(()) };
     let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
-    let name = row["name"].as_str().unwrap_or(key_id);
-    let scope = row["scope"].as_str().unwrap_or_default();
+    let name = super::update_cmd::bitmap_row_name(&key, &row);
+    let scope = row["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| key_id.split_once('/').map(|(prefix, _)| prefix))
+        .unwrap_or_default();
     let version = bitmap_row_version(&key, &row);
     if scope.is_empty() || version.is_empty() {
         summary.not_exported.push(id.to_owned());
@@ -286,17 +290,13 @@ fn bitmap_row_matches(key: &str, row: &Value, bare: &str) -> bool {
         || key == "_bit_lane"
         || !row.is_object()
         || row["isAvailableOnCurrentLane"] == false
-        || row["config"]["teambit.component/remove"]["removed"] == true
+        || super::update_cmd::aspect_entry(&row["config"], "teambit.component/remove")
+            .is_some_and(|(_, cfg)| cfg["removed"] == true)
     {
         return false;
     }
     let key_id = key.rsplit_once('@').map_or(key, |(bare_key, _)| bare_key);
-    let name = row["name"].as_str().unwrap_or(key_id);
-    let scope = row["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
-        .unwrap_or_default();
+    let (scope, name) = super::update_cmd::bitmap_row_scope_and_name(key, row);
     let full = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
     full == bare || name == bare || key_id == bare || key == bare
 }

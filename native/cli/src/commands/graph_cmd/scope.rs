@@ -216,7 +216,7 @@ fn is_version_removed(ver_val: &Value) -> bool {
         .is_some_and(|exts| {
             exts.iter()
                 .any(|ext| {
-                    ext["name"].as_str() == Some("teambit.component/remove")
+                    crate::commands::update_cmd::matches_aspect(ext, "teambit.component/remove")
                         && ext["config"]["removed"] == true
                 })
         })

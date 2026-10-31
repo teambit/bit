@@ -231,14 +231,16 @@ pub(super) fn extract_stored_schema(scope_dir: &Path, ver_val: &Value) -> Option
     let exts = ver_val["extensions"].as_array()?;
     if let Some(schema_ext) = exts
         .iter()
-        .find(|ext| ext["name"].as_str() == Some("teambit.semantics/schema"))
+        .find(|ext| crate::commands::update_cmd::matches_aspect(ext, "teambit.semantics/schema"))
         && let Some(schema) = extract_direct_schema_data(&schema_ext["data"])
     {
         return Some(schema);
     }
     let builder_ext = exts
         .iter()
-        .find(|ext| ext["name"].as_str() == Some("teambit.pipelines/builder"))?;
+        .find(|ext| {
+            crate::commands::update_cmd::matches_aspect(ext, "teambit.pipelines/builder")
+        })?;
     let file_hash = find_schema_artifact_hash(builder_ext)?;
     let (_, body) = bit_object_import::read_raw_scope_object(scope_dir, &file_hash).ok()??;
     serde_json::from_slice(&body).ok()
@@ -275,8 +277,16 @@ fn find_schema_artifact_hash(builder_ext: &Value) -> Option<String> {
 }
 
 fn is_schema_artifact(art: &Value) -> bool {
-    art["task"]["id"].as_str() == Some("teambit.semantics/schema")
-        || art["generatedBy"].as_str() == Some("teambit.semantics/schema")
+    art["task"]["id"]
+        .as_str()
+        .is_some_and(|id| {
+            bit_install::config::aspect_id_without_version(id) == "teambit.semantics/schema"
+        })
+        || art["generatedBy"]
+            .as_str()
+            .is_some_and(|id| {
+                bit_install::config::aspect_id_without_version(id) == "teambit.semantics/schema"
+            })
         || art["task"]["name"].as_str() == Some("ExtractSchema")
         || art["name"].as_str() == Some("schema")
 }
