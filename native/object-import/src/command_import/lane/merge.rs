@@ -199,6 +199,9 @@ fn index(plan: &mut PreparedImport, lane: &Record) -> io::Result<()> {
     Ok(())
 }
 fn index_entry(index: &mut Value, lane: &Record) -> io::Result<bool> {
+    if let Value::Array(components) = index {
+        *index = json!({"components":std::mem::take(components),"lanes":[]});
+    }
     let rows = index["lanes"].as_array_mut().ok_or_else(|| invalid("lane index entries"))?;
     let identity = json!({"name":lane.value["name"],"scope":lane.value["scope"]});
     if let Some(row) = rows

@@ -128,9 +128,8 @@ fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(Pat
     }
     let index_path = root.join("index.json");
     let index_bytes = fs::read(&index_path).ok()?;
-    if all_lanes
-        && !serde_json::from_slice::<Value>(&index_bytes).ok()?["lanes"].as_array()?.is_empty()
-    {
+    let index: Value = serde_json::from_slice(&index_bytes).ok()?;
+    if all_lanes && !index.is_array() && !index["lanes"].as_array()?.is_empty() {
         return None;
     }
     let mut proofs = vec![(config_path, config_bytes), (index_path, index_bytes)];

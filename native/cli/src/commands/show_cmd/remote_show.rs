@@ -300,7 +300,7 @@ fn extract_version_files(ver_val: &Value) -> Vec<String> {
 
 fn extract_env_id(extensions: &[Value]) -> String {
     for ext in extensions {
-        if ext_id_str(ext).is_some_and(|name| aspect_id_without_version(name) == ENVS_ASPECT)
+        if ext_id_str(ext).is_some_and(|name| aspect_id_without_version(&name) == ENVS_ASPECT)
             && let Some(env_id) = ext["data"]["id"]
                 .as_str()
                 .or_else(|| ext["config"]["env"].as_str())
@@ -320,7 +320,7 @@ fn extract_config_map(extensions: &[Value]) -> Map<String, Value> {
                 .get("config")
                 .cloned()
                 .unwrap_or_else(|| Value::Object(Map::new()));
-            map.insert(name.to_owned(), cfg);
+            map.insert(name, cfg);
         }
     }
     map
@@ -330,15 +330,38 @@ fn check_is_removed(extensions: &[Value]) -> bool {
     extensions
         .iter()
         .any(|ext| {
-            ext_id_str(ext).is_some_and(|name| aspect_id_without_version(name) == REMOVE_ASPECT)
+            ext_id_str(ext).is_some_and(|name| aspect_id_without_version(&name) == REMOVE_ASPECT)
                 && (ext["config"]["removed"] == true || ext["data"]["removed"] == true)
         })
 }
 
-pub(super) fn ext_id_str(ext: &Value) -> Option<&str> {
-    ext["name"]
+pub(super) fn ext_id_str(ext: &Value) -> Option<String> {
+    if let Some(name) = ext["name"]
         .as_str()
-        .or_else(|| ext["extensionId"]["name"].as_str())
+        .or_else(|| ext["extensionId"].as_str())
+    {
+        return Some(name.to_owned());
+    }
+    let id = ext.get("extensionId")?.as_object()?;
+    let name = id.get("name")?.as_str()?;
+    let base = match id
+        .get("scope")
+        .and_then(Value::as_str)
+        .filter(|scope| !scope.is_empty())
+    {
+        Some(scope) => format!("{scope}/{name}"),
+        None => name.to_owned(),
+    };
+    Some(
+        match id
+            .get("version")
+            .and_then(Value::as_str)
+            .filter(|ver| !ver.is_empty())
+        {
+            Some(ver) => format!("{base}@{ver}"),
+            None => base,
+        },
+    )
 }
 
 pub(super) fn render_remote_outcome(

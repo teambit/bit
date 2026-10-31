@@ -7,13 +7,7 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
     let (key_id, key_ver) = key
         .rsplit_once('@')
         .map_or((key, None), |(id, ver)| (id, Some(ver)));
-    let (key_scope, key_name) = key_id
-        .split_once('/')
-        .map_or((None, key_id), |(scope, name)| (Some(scope), name));
-    let name = row["name"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .unwrap_or(key_name);
+    let key_scope = key_id.split_once('/').map(|(scope, _)| scope);
     let scope = row["scope"]
         .as_str()
         .filter(|value| !value.is_empty())
@@ -23,6 +17,14 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
                 .filter(|value| !value.is_empty())
         })
         .or(key_scope)?;
+    let name = row["name"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| {
+            key_id
+                .strip_prefix(&format!("{scope}/"))
+                .unwrap_or(key_id)
+        });
     let version = row["version"]
         .as_str()
         .filter(|version| !version.is_empty())

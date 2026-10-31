@@ -76,10 +76,14 @@ impl Plan {
 
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
+        let index = match serde_json::from_slice(&fs::read(
+            bit_workspace_config::scope_path(root).join("index.json"),
+        )?)? {
+            Value::Array(components) => json!({ "components": components, "lanes": [] }),
+            other => other,
+        };
         Ok(Self {
-            index: serde_json::from_slice(&fs::read(
-                bit_workspace_config::scope_path(root).join("index.json"),
-            )?)?,
+            index,
             scope_json: serde_json::from_slice(&fs::read(
                 bit_workspace_config::scope_path(root).join("scope.json"),
             )?)?,

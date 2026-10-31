@@ -19,15 +19,14 @@ impl Prepared {
             else {
                 continue;
             };
-            if old["scope"] != "" {
+            if !old["scope"]
+                .as_str()
+                .unwrap_or_default()
+                .is_empty()
+            {
                 continue;
             }
-            let scope =
-                row["scope"].as_str().ok_or_else(|| invalid("outbound lane promoted scope"))?;
-            let identity = format!(
-                "{scope}/{}",
-                row["name"].as_str().ok_or_else(|| invalid("outbound lane promoted name"))?,
-            );
+            let identity = promoted_identity(key, row)?;
             if ids
                 .iter()
                 .any(|id| id.starts_with(&format!("{identity}@")))
@@ -83,6 +82,20 @@ impl Prepared {
             && object_bytes(root, &self.objects.lane_hash)? == self.objects.lane
             && object_bytes(root, &self.objects.history_hash)? == self.objects.history)
     }
+}
+
+fn promoted_identity(key: &str, row: &serde_json::Value) -> io::Result<String> {
+    let scope = row["scope"].as_str().ok_or_else(|| invalid("outbound lane promoted scope"))?;
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let name = row["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .unwrap_or_else(|| {
+            key_id
+                .strip_prefix(&format!("{scope}/"))
+                .unwrap_or(key_id)
+        });
+    Ok(format!("{scope}/{name}"))
 }
 
 fn sort_ids(ids: &mut [String]) {

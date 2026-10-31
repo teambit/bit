@@ -146,7 +146,7 @@ pub(in crate::commands) fn resolve_lane_entry(
         return None;
     }
     let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let lanes = index["lanes"].as_array()?;
+    let lanes = if index.is_array() { &[][..] } else { index["lanes"].as_array()? };
     if let Some((scope, name)) = id.split_once('/') {
         return find_lane_in_index(lanes, scope, name);
     }
@@ -233,7 +233,7 @@ pub(in crate::commands) fn diagnose_lane_lookup_error(
     for_history: bool,
 ) -> Option<String> {
     let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let lanes = index["lanes"].as_array()?;
+    let lanes = if index.is_array() { &[][..] } else { index["lanes"].as_array()? };
     let scope_json: Value =
         serde_json::from_slice(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
     scope_json["name"].as_str()?;

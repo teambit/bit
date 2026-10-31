@@ -62,15 +62,35 @@ fn copy(output: &mut Value, source: &Value) -> io::Result<()> {
     }
     let Some(entries) = source["current"]["extensions"].as_array() else { return Ok(()) };
     for entry in entries {
-        let Some(key) = entry["id"]
-            .as_str()
-            .or_else(|| entry["name"].as_str())
-        else {
+        let Some(key) = extension_key(entry) else {
             continue;
         };
-        insert_config(output, key, &entry["config"]);
+        insert_config(output, &key, &entry["config"]);
     }
     Ok(())
+}
+fn extension_key(entry: &Value) -> Option<String> {
+    if let Some(key) = entry["id"]
+        .as_str()
+        .or_else(|| entry["name"].as_str())
+        .or_else(|| entry["extensionId"].as_str())
+    {
+        return Some(key.to_owned());
+    }
+    let ext = &entry["extensionId"];
+    let scope = ext["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())?;
+    let name = ext["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())?;
+    let version = ext["version"]
+        .as_str()
+        .filter(|version| !version.is_empty());
+    Some(version.map_or_else(
+        || format!("{scope}/{name}"),
+        |version| format!("{scope}/{name}@{version}"),
+    ))
 }
 fn copy_configs(output: &mut Value, configs: &Value) -> io::Result<()> {
     if let Some(entries) = configs.as_array() {

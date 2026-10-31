@@ -143,7 +143,10 @@ impl Plan {
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
         let index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
-            Ok(bytes) => serde_json::from_slice(&bytes)?,
+            Ok(bytes) => match serde_json::from_slice(&bytes)? {
+                Value::Array(components) => json!({"components":components,"lanes":[]}),
+                value => value,
+            },
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
                 json!({"components":[],"lanes":[]})
             }

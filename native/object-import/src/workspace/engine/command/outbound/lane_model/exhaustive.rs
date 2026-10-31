@@ -40,17 +40,15 @@ pub(super) fn workspace_entries(
 }
 
 fn workspace_entry_id(key: &str, entry: &Value) -> Option<Value> {
-    if matches!(key, "$schema-version" | "_bit_lane")
+    if key.starts_with('$')
+        || matches!(key, "_bit_lane" | "version")
+        || !entry.is_object()
         || entry["isAvailableOnCurrentLane"] == false
         || crate::workspace::engine::client_status::config::is_config_removed(&entry["config"])
     {
         return None;
     }
     let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
-    let name = entry["name"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .unwrap_or_else(|| key_id.split_once('/').map_or(key_id, |(_, name_part)| name_part));
     let scope = entry["scope"]
         .as_str()
         .filter(|val| !val.is_empty())
@@ -60,6 +58,14 @@ fn workspace_entry_id(key: &str, entry: &Value) -> Option<Value> {
                 .filter(|val| !val.is_empty())
         })
         .or_else(|| key_id.split_once('/').map(|(scope_part, _)| scope_part))?;
+    let name = entry["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .unwrap_or_else(|| {
+            key_id
+                .strip_prefix(&format!("{scope}/"))
+                .unwrap_or(key_id)
+        });
     let version = entry["version"]
         .as_str()
         .filter(|val| !val.is_empty())

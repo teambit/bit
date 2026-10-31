@@ -198,7 +198,7 @@ fn find_model_ext_data(model_exts: &[Value], bare_id: &str) -> Option<Value> {
         .iter()
         .find_map(|ext| {
             let name = ext_id_str(ext)?;
-            (aspect_id_without_version(name) == bare_id)
+            (aspect_id_without_version(&name) == bare_id)
                 .then(|| ext.get("data").cloned())
                 .flatten()
         })
@@ -209,7 +209,7 @@ fn append_unlisted_model_extensions(loaded: &LoadedComponent, legacy: bool, out:
         let Some(name) = ext_id_str(ext) else {
             continue;
         };
-        let bare = aspect_id_without_version(name);
+        let bare = aspect_id_without_version(&name);
         let already_present = out
             .iter()
             .any(|existing| {
@@ -220,7 +220,7 @@ fn append_unlisted_model_extensions(loaded: &LoadedComponent, legacy: bool, out:
         if !already_present {
             let cfg = ext.get("config").unwrap_or(&Value::Null);
             let data = ext.get("data").unwrap_or(&Value::Null);
-            out.push(format_extension_entry(name, cfg, data, legacy));
+            out.push(format_extension_entry(&name, cfg, data, legacy));
         }
     }
 }

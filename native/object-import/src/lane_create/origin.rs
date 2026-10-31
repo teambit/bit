@@ -171,26 +171,39 @@ fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
     let scope = id["scope"].as_str()?;
     let name = id["name"].as_str()?;
     let full = format!("{scope}/{name}");
-    let row = bitmap
-        .get(name)
-        .or_else(|| bitmap.get(&full))
-        .or_else(|| {
-            bitmap
-                .as_object()?
-                .iter()
-                .find_map(|(key, row)| {
-                    let bare = key.rsplit_once('@').map_or(key.as_str(), |(id, _)| id);
-                    (bare == name || bare == full).then_some(row)
-                })
-        })?;
-    if row["isAvailableOnCurrentLane"].as_bool() == Some(false) {
-        return None;
-    }
-    if let Some(row_scope) = row["scope"].as_str()
-        && !row_scope.is_empty()
-        && row_scope != scope
+    bitmap
+        .as_object()?
+        .iter()
+        .find_map(|(key, row)| {
+            if !snap_row_matches(key, row, scope, name, &full) {
+                return None;
+            }
+            row["version"]
+                .as_str()
+                .filter(|ver| !ver.is_empty())
+                .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
+                .filter(|ver| valid_hash(ver))
+        })
+}
+
+fn snap_row_matches(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
+    if key.starts_with('$')
+        || matches!(key, "_bit_lane" | "version")
+        || !row.is_object()
+        || row["isAvailableOnCurrentLane"] == false
+        || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
     {
-        return None;
+        return false;
     }
-    row["version"].as_str().filter(|ver| valid_hash(ver))
+    let bare = key.rsplit_once('@').map_or(key, |(id, _)| id);
+    let name_ok = row["name"] == name || bare == name || bare == full;
+    let row_scope = row["scope"]
+        .as_str()
+        .filter(|scope_str| !scope_str.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|scope_str| !scope_str.is_empty())
+        });
+    name_ok && (row_scope == Some(scope) || (row_scope.is_none() && (bare == full || bare == name)))
 }

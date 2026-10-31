@@ -86,7 +86,15 @@ fn validate_graph(bitmap: &Value, components: &[DependencyComponent]) -> io::Res
     let rows = bitmap.as_object().ok_or_else(|| invalid("dependency bitmap"))?;
     let expected = rows
         .iter()
-        .filter(|(key, _)| !key.starts_with('$') && *key != "_bit_lane" && *key != "version")
+        .filter(|(key, row)| {
+            !key.starts_with('$')
+                && *key != "_bit_lane"
+                && *key != "version"
+                && row["isAvailableOnCurrentLane"] != false
+                && !crate::workspace::engine::client_status::config::is_config_removed(
+                    &row["config"],
+                )
+        })
         .map(|(key, row)| bitmap_row_identity(key, row))
         .collect::<io::Result<HashSet<_>>>()?;
     let actual = components
@@ -113,9 +121,7 @@ fn bitmap_row_identity(key: &str, row: &Value) -> io::Result<String> {
     let (key_id, key_ver) = key
         .rsplit_once('@')
         .map_or((key, None), |(id, ver)| (id, Some(ver)));
-    let (key_scope, key_name) = key_id
-        .split_once('/')
-        .map_or((None, key_id), |(scope_part, name_part)| (Some(scope_part), name_part));
+    let key_scope = key_id.split_once('/').map(|(scope_part, _)| scope_part);
     let scope = row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
@@ -129,8 +135,11 @@ fn bitmap_row_identity(key: &str, row: &Value) -> io::Result<String> {
     let name = row["name"]
         .as_str()
         .filter(|name| !name.is_empty())
-        .or(Some(key_name))
-        .ok_or_else(|| invalid("dependency component name"))?;
+        .unwrap_or_else(|| {
+            key_id
+                .strip_prefix(&format!("{scope}/"))
+                .unwrap_or(key_id)
+        });
     let version = row["version"]
         .as_str()
         .or(key_ver)

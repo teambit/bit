@@ -147,14 +147,18 @@ pub(super) fn configs(version: &Value) -> io::Result<Value> {
     {
         let name = entry["name"]
             .as_str()
+            .or_else(|| entry["extensionId"].as_str())
             .map(str::to_owned)
             .or_else(|| {
                 let id = &entry["extensionId"];
                 let name = id["name"].as_str()?;
-                let scope = id["scope"].as_str()?;
+                let scope = id["scope"]
+                    .as_str()
+                    .filter(|scope| !scope.is_empty())?;
                 Some(
                     id["version"]
                         .as_str()
+                        .filter(|ver| !ver.is_empty())
                         .map_or_else(
                             || format!("{scope}/{name}"),
                             |version| format!("{scope}/{name}@{version}"),

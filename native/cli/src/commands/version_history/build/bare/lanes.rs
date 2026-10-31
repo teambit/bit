@@ -9,6 +9,9 @@ pub(super) fn lane_heads(
     proofs: &mut Vec<(PathBuf, Vec<u8>)>,
 ) -> Option<Vec<String>> {
     let index: Value = serde_json::from_slice(&proofs[1].1).ok()?;
+    if index.is_array() {
+        return Some(Vec::new());
+    }
     let lanes = index["lanes"].as_array()?;
     if lanes.len() > 128 {
         return None;

@@ -160,12 +160,7 @@ pub(crate) fn select(
             });
         member.then_some(lane)
     };
-    let version = (kind != RowKind::New).then(|| {
-        row["version"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned()
-    });
+    let version = row_version(key, row, kind);
     let identity = format!("{scope}/{component_name}");
     if kind == RowKind::New {
         validate_no_model(root, scope, component_name)?;
@@ -174,6 +169,17 @@ pub(crate) fn select(
     let package =
         if row["rootDir"] == "." { PathBuf::new() } else { package(root, scope, component_name)? };
     Ok(Selected { key: key.clone(), identity, files, package, main_exists, version, lane })
+}
+
+fn row_version(key: &str, row: &Value, kind: RowKind) -> Option<String> {
+    (kind != RowKind::New).then(|| {
+        row["version"]
+            .as_str()
+            .filter(|version| !version.is_empty())
+            .or_else(|| key.rsplit_once('@').map(|(_, version)| version))
+            .unwrap_or_default()
+            .to_owned()
+    })
 }
 
 pub(super) fn find_row<'a>(
@@ -276,7 +282,12 @@ fn validate_no_overlap(
     relative: &Path,
 ) -> io::Result<()> {
     for (other_key, other) in rows {
-        if other_key == key || other_key.starts_with('$') || other_key == "_bit_lane" {
+        if other_key == key
+            || other_key.starts_with('$')
+            || other_key == "_bit_lane"
+            || other_key == "version"
+            || other["isAvailableOnCurrentLane"] == false
+        {
             continue;
         }
         let Some(other) = other["rootDir"].as_str() else {

@@ -318,7 +318,11 @@ pub(super) fn remote_lane_hash(
                 .join("index.json"),
         )?
         .unwrap_or_else(|| serde_json::json!({"lanes":[]}));
-    let rows = index["lanes"].as_array().ok_or_else(|| invalid("lane remote index"))?;
+    let rows = if index.is_array() {
+        &[][..]
+    } else {
+        index["lanes"].as_array().ok_or_else(|| invalid("lane remote index"))?
+    };
     let matches = rows
         .iter()
         .filter(|row| row["id"]["scope"] == id.scope && row["id"]["name"] == id.name)

@@ -50,9 +50,18 @@ fn unexported_lane_row<'a>(
     let full = format!("{scope}/{name}");
     rows.iter_mut()
         .find(|(key, row)| {
+            if key.starts_with('$')
+                || matches!(key.as_str(), "_bit_lane" | "version")
+                || !row.is_object()
+            {
+                return false;
+            }
             let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
             (key_id == name || key_id == full || row["name"] == name)
-                && row["scope"] == ""
+                && row["scope"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .is_empty()
                 && (row["defaultScope"].is_null() || row["defaultScope"] == scope)
         })
         .map(|(_, row)| row)

@@ -276,7 +276,7 @@ fn find_aspect_in_scope_version(
         .ok()??;
     for ext in ver_obj["extensions"].as_array()? {
         if extension_bare_id(ext).as_deref() == Some(bare_aspect) {
-            let ver = ext["extensionId"]["version"].as_str().map(str::to_owned);
+            let ver = extension_version(ext);
             let cfg = ext
                 .get("config")
                 .cloned()
@@ -287,13 +287,29 @@ fn find_aspect_in_scope_version(
     None
 }
 
+fn extension_version(ext: &Value) -> Option<String> {
+    let ver = ext["extensionId"]["version"]
+        .as_str()
+        .or_else(|| {
+            let raw = ext["extensionId"]
+                .as_str()
+                .or_else(|| ext["name"].as_str())?;
+            raw.rsplit_once('@').map(|(_, ver)| ver)
+        })?;
+    (!ver.is_empty()).then(|| ver.to_owned())
+}
+
 fn extension_bare_id(ext: &Value) -> Option<String> {
-    if let Some(name) = ext["name"].as_str() {
-        return Some(name.to_owned());
+    if let Some(name) = ext["name"]
+        .as_str()
+        .or_else(|| ext["extensionId"].as_str())
+    {
+        return Some(bit_install::config::aspect_id_without_version(name).to_owned());
     }
     let scope_str = ext["extensionId"]["scope"].as_str()?;
     let name_str = ext["extensionId"]["name"].as_str()?;
-    Some(format!("{scope_str}/{name_str}"))
+    let bare_name = bit_install::config::aspect_id_without_version(name_str);
+    Some(format!("{scope_str}/{bare_name}"))
 }
 
 pub(in crate::commands) fn update_in_comp_json(

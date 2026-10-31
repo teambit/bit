@@ -71,7 +71,7 @@ fn validate(bitmap: &serde_json::Value, ids: &[String], options: &Options<'_>) -
     }
     let new = ids
         .iter()
-        .filter(|id| selection::row(bitmap, id).is_ok_and(|row| row["version"] == ""))
+        .filter(|id| selection::is_new(bitmap, id))
         .cloned()
         .collect::<Vec<_>>();
     if !new.is_empty() {

@@ -105,11 +105,9 @@ pub(in crate::component_recover) fn removal(version: &Value) -> Value {
         .and_then(|rows| {
             rows.iter()
                 .find(|row| {
-                    row["name"]
-                        .as_str()
-                        .is_some_and(|name| {
-                            name == REMOVE || name.starts_with(&format!("{REMOVE}@"))
-                        })
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        row, REMOVE,
+                    )
                 })
         })
         .map_or_else(|| serde_json::json!({}), |row| row["config"].clone())

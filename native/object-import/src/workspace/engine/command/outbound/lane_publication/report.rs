@@ -61,16 +61,7 @@ pub(super) fn missing(report: &Reported, bitmap: &Value, exported_ids: &[String]
                 return None;
             }
             let (scope, name) = identity.split_once('/')?;
-            let present = bitmap
-                .as_object()
-                .is_some_and(|rows| {
-                    rows.values()
-                        .any(|row| {
-                            row["name"] == name
-                                && (row["scope"] == scope
-                                    || (row["scope"] == "" && row["defaultScope"] == scope))
-                        })
-                });
+            let present = super::super::publication::reconcile_present(bitmap, scope, name);
             (!present).then(|| identity.to_owned())
         })
         .collect()

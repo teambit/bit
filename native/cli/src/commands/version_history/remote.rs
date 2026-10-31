@@ -81,13 +81,16 @@ fn clean_index(scope: &std::path::Path) -> bool {
         Err(error) => return error.kind() == io::ErrorKind::NotFound,
     };
     let Ok(index) = serde_json::from_slice::<Value>(&bytes) else { return false };
-    ["components", "lanes"]
-        .iter()
-        .all(|key| {
-            index[key]
-                .as_array()
-                .is_some_and(|items| items.iter().all(Value::is_object))
-        })
+    index
+        .as_array()
+        .is_some_and(|items| items.iter().all(Value::is_object))
+        || ["components", "lanes"]
+            .iter()
+            .all(|key| {
+                index[key]
+                    .as_array()
+                    .is_some_and(|items| items.iter().all(Value::is_object))
+            })
 }
 
 fn clean_unmerged(scope: &std::path::Path) -> bool {

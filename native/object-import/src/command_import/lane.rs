@@ -291,6 +291,9 @@ fn resolve_local(name: &str, scope: &Value, index: &Value) -> io::Result<Id> {
     Ok(Id { scope: text(&candidates[0]["id"], "scope")?.into(), name: name.into() })
 }
 fn index_rows(index: &Value) -> io::Result<&[Value]> {
+    if index.is_array() {
+        return Ok(&[][..]);
+    }
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("command lane index"))?;
     if rows.len() > 4096 {
         return Err(invalid("command lane index budget"));

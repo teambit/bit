@@ -297,6 +297,10 @@ pub(super) fn unique(refs: Vec<String>) -> Vec<String> {
         .collect()
 }
 pub(super) fn remove_index_refs(index: &mut Value, refs: &[String]) -> io::Result<()> {
+    if let Some(rows) = index.as_array_mut() {
+        rows.retain(|row| !selected_ref(row, refs));
+        return Ok(());
+    }
     for kind in ["components", "lanes"] {
         let rows = index[kind].as_array_mut().ok_or_else(|| invalid("remote index rows"))?;
         rows.retain(|row| !selected_ref(row, refs));

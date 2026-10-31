@@ -107,14 +107,7 @@ fn reset_new(value: &mut Value, lane_only: bool) -> io::Result<()> {
             continue;
         }
         let key_id = key.rsplit_once('@').map_or(key.as_str(), |(id, _)| id);
-        let (key_scope, key_name) = key_id
-            .split_once('/')
-            .map_or((None, key_id), |(scope, name)| (Some(scope), name));
-        let name = row["name"]
-            .as_str()
-            .filter(|name| !name.is_empty())
-            .unwrap_or(key_name)
-            .to_owned();
+        let key_scope = key_id.split_once('/').map(|(scope, _)| scope);
         let scope = row["scope"]
             .as_str()
             .filter(|scope| !scope.is_empty())
@@ -125,6 +118,16 @@ fn reset_new(value: &mut Value, lane_only: bool) -> io::Result<()> {
             })
             .or(key_scope)
             .map(str::to_owned);
+        let name = row["name"]
+            .as_str()
+            .filter(|name| !name.is_empty())
+            .unwrap_or_else(|| {
+                scope
+                    .as_deref()
+                    .and_then(|scope_str| key_id.strip_prefix(&format!("{scope_str}/")))
+                    .unwrap_or(key_id)
+            })
+            .to_owned();
         let mut fresh = json!({"name":name,"scope":"","version":"","rootDir":row["rootDir"],"mainFile":row["mainFile"]});
         if let Some(scope) = scope {
             fresh["defaultScope"] = json!(scope);

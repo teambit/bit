@@ -74,15 +74,21 @@ pub(in crate::commands) fn row<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'
         })
         .ok_or_else(|| io::Error::other("remove component selection changed"))
 }
+pub(in crate::commands) fn is_new(bitmap: &Value, id: &str) -> bool {
+    bitmap
+        .as_object()
+        .and_then(|rows| {
+            rows.iter()
+                .find(|(key, row)| row_identity(key, row).as_deref() == Some(id))
+        })
+        .is_some_and(|(key, row)| {
+            row["version"].as_str().is_none_or(str::is_empty)
+                && key.rsplit_once('@').is_none_or(|(_, ver)| ver.is_empty())
+        })
+}
 fn row_identity(key: &str, row: &Value) -> Option<String> {
     let key_id = bare(key);
-    let (key_scope, key_name) = key_id
-        .split_once('/')
-        .map_or((None, key_id), |(scope, name)| (Some(scope), name));
-    let name = row["name"]
-        .as_str()
-        .filter(|name| !name.is_empty())
-        .unwrap_or(key_name);
+    let key_scope = key_id.split_once('/').map(|(scope, _)| scope);
     let scope = row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
@@ -92,6 +98,14 @@ fn row_identity(key: &str, row: &Value) -> Option<String> {
                 .filter(|scope| !scope.is_empty())
         })
         .or(key_scope)?;
+    let name = row["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| {
+            key_id
+                .strip_prefix(&format!("{scope}/"))
+                .unwrap_or(key_id)
+        });
     Some(format!("{scope}/{name}"))
 }
 fn main_exists(root: &Path, row: &Value) -> bool {
