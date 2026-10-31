@@ -14,10 +14,8 @@ pub(super) fn render(
     ])
 }
 fn removed_section(format: &Formatter, ids: &[String], location: &str) -> String {
-    let items: Vec<String> = ids
-        .iter()
-        .map(|id| id.trim())
-        .filter(|id| !id.is_empty())
+    let items: Vec<String> = unique_ids(ids)
+        .into_iter()
         .map(|id| format.item(id))
         .collect();
     let location = location.trim();
@@ -33,10 +31,8 @@ fn removed_section(format: &Formatter, ids: &[String], location: &str) -> String
     )
 }
 fn modified_section(format: &Formatter, ids: &[String]) -> String {
-    let items: Vec<String> = ids
-        .iter()
-        .map(|id| id.trim())
-        .filter(|id| !id.is_empty())
+    let items: Vec<String> = unique_ids(ids)
+        .into_iter()
         .map(|id| Formatter::item_with(id, &format.error_symbol()))
         .collect();
     if items.is_empty() {
@@ -48,4 +44,17 @@ fn modified_section(format: &Formatter, ids: &[String]) -> String {
         format.title("unable to remove modified components (use --force to remove)"),
         items.join("\n"),
     )
+}
+fn unique_ids(ids: &[String]) -> Vec<&str> {
+    let mut out = Vec::with_capacity(ids.len());
+    for id in ids
+        .iter()
+        .map(|id| id.trim())
+        .filter(|id| !id.is_empty())
+    {
+        if !out.contains(&id) {
+            out.push(id);
+        }
+    }
+    out
 }

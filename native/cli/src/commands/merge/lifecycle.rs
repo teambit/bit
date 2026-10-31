@@ -94,9 +94,13 @@ pub(in crate::commands) fn run(
 }
 
 fn precheck(planned: Planned, args: &[OsString], options: &Options) -> io::Result<Planned> {
-    super::failures::check(&planned.plan["result"], Chalk::detect(args), options.mode.lane)?;
+    let chalk = Chalk::detect(args);
+    super::failures::check(&planned.plan["result"], chalk, options.mode.lane)?;
     Progress::parse(planned.plan.get("progress"))?;
-    report::format(&planned.plan["result"], options.mode, Chalk::detect(args))?;
+    if !planned.plan["mergeSnapshotSeeds"].is_array() {
+        return Err(decline("merge snapshot identities"));
+    }
+    report::format(&planned.plan["result"], options.mode, chalk)?;
     Ok(planned)
 }
 

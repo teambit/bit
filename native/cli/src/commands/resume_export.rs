@@ -76,7 +76,10 @@ fn consume_trailing_resume_args<'a>(
 fn push_resume_arg(val: &str, export_id: &mut Option<String>, remotes: &mut Vec<String>) {
     if export_id.is_none() {
         *export_id = Some(val.to_owned());
-    } else {
+    } else if !remotes
+        .iter()
+        .any(|existing| existing == val)
+    {
         remotes.push(val.to_owned());
     }
 }

@@ -44,6 +44,7 @@ pub(super) fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)>
 }
 
 pub(super) fn identities(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
+    let pattern = pattern.trim();
     let bitmap = bitmap::read(root)?;
     let pool = bitmap.entries
         .iter()
@@ -73,6 +74,18 @@ pub(super) fn identities(root: &Path, pattern: &str) -> io::Result<Vec<String>> 
         .into_iter()
         .map(str::to_string)
         .collect())
+}
+
+pub(super) fn ci_active() -> bool {
+    std::env::var_os("CI")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+        })
 }
 
 #[derive(Clone)]

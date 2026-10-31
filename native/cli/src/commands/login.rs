@@ -31,10 +31,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native login grammar".into()));
     };
-    if options.default_cloud_domain
-        && options.cloud_domain.is_some()
-        && env::var_os("CI").is_none_or(|val| val.is_empty())
-    {
+    let ci_enabled = env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        });
+    if options.default_cloud_domain && options.cloud_domain.is_some() && !ci_enabled {
         return emit_conflicting_domain_error(args, options.json);
     }
     Ok(Outcome::Declined("interactive browser login delegated".into()))
@@ -133,6 +136,10 @@ fn apply_inline_login_arg(arg: &str, options: &mut Options) -> Option<()> {
 }
 
 fn take_val(val: &str) -> Option<String> {
-    let trimmed = val.trim();
+    let trimmed = val
+        .trim()
+        .trim_matches('"')
+        .trim_matches('\'')
+        .trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }

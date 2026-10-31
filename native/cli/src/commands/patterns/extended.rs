@@ -22,7 +22,7 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
                 .trim();
             let (negated, pattern) = pattern
                 .strip_prefix('!')
-                .map_or((false, pattern), |pattern| (true, pattern));
+                .map_or((false, pattern), |pattern| (true, pattern.trim()));
             Ok((negated, ranges::expand(pattern)?))
         })
         .collect::<io::Result<Vec<_>>>()?;
@@ -50,6 +50,6 @@ fn matches(identity: &str, pattern: &str) -> bool {
     }
     let positive = pattern.trim_start_matches('!');
     let negated = (pattern.len() - positive.len()) % 2 == 1;
-    let matched = glob::matches(positive, identity);
+    let matched = glob::matches(positive, identity.trim());
     matched != negated
 }

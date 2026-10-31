@@ -88,7 +88,8 @@ fn execute(
             if let Some(history) = history {
                 history.end(false);
             }
-            writeln!(io::stderr().lock(), "{}", chalk.red(&error.to_string()))?;
+            let message = error.to_string();
+            writeln!(io::stderr().lock(), "{}", chalk.red(message.trim()))?;
             Ok(Outcome::Exit(ExitCode::FAILURE))
         }
     }

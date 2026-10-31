@@ -34,7 +34,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native new grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    let ci_enabled = env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        });
+    if ci_enabled {
         return Ok(Outcome::Declined("CI new error stack".into()));
     }
     let cwd = env::current_dir()?;

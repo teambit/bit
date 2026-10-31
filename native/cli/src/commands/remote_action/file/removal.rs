@@ -50,7 +50,15 @@ fn remove_directory(path: &Path) -> io::Result<()> {
     if let Some(error) = first_error {
         return Err(error);
     }
-    fs::remove_dir(path).map_err(|error| failure(error, "rmdir", path))
+    match fs::remove_dir(path) {
+        Ok(()) => Ok(()),
+        Err(error)
+            if matches!(error.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) =>
+        {
+            Ok(())
+        }
+        Err(error) => Err(failure(error, "rmdir", path)),
+    }
 }
 
 fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {

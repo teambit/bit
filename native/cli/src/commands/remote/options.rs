@@ -21,7 +21,7 @@ impl Options {
         let tokens = args
             .iter()
             .skip(1)
-            .map(|arg| arg.to_str())
+            .map(|arg| arg.to_str().map(str::trim))
             .collect::<Option<Vec<_>>>()?;
         let tokens = tokens
             .into_iter()

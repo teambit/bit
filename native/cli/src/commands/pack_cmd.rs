@@ -30,7 +30,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native pack grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    let ci_enabled = env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        });
+    if ci_enabled {
         return Ok(Outcome::Declined("CI pack delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -189,6 +195,8 @@ fn join_yellow_array(arr_val: &serde_json::Value, chalk: super::color::Chalk) ->
         .map(|arr| {
             arr.iter()
                 .filter_map(serde_json::Value::as_str)
+                .map(str::trim)
+                .filter(|msg| !msg.is_empty())
                 .map(|msg| chalk.yellow(msg))
                 .collect::<Vec<_>>()
                 .join("\n")

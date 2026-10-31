@@ -91,14 +91,7 @@ impl Sequence {
             .checked_abs()
             .ok_or_else(|| decline("component pattern sequence step"))?
             .max(1);
-        let padded = parts[..2]
-            .iter()
-            .any(|part| {
-                let unsigned = part.trim_start_matches(['-', '+']);
-                unsigned.starts_with('0') && unsigned.len() > 1
-            });
-        let width =
-            if numbers.is_some() && padded { parts[0].len().max(parts[1].len()) } else { 0 };
+        let width = padded_width(&parts[..2], numbers.is_some());
         Ok(Some(Self { start, end, step, width, letters: numbers.is_none() }))
     }
 
@@ -147,4 +140,21 @@ fn numeric_endpoint(value: &str) -> bool {
         .or_else(|| value.strip_prefix('+'))
         .unwrap_or(value);
     !digits.is_empty() && digits.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+fn padded_width(parts: &[&str], is_numeric: bool) -> usize {
+    let padded = parts
+        .iter()
+        .any(|part| {
+            let unsigned = part.trim_start_matches(['-', '+']);
+            unsigned.starts_with('0') && unsigned.len() > 1
+        });
+    if is_numeric && padded {
+        parts[0]
+            .trim_start_matches('+')
+            .len()
+            .max(parts[1].trim_start_matches('+').len())
+    } else {
+        0
+    }
 }

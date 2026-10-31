@@ -104,26 +104,24 @@ fn apply_resolve_inline<'a>(
     canonical: &'a str,
     val: &str,
 ) -> Option<usize> {
+    let trimmed = val.trim();
     if canonical == "--message" {
-        (!val.starts_with('-')).then_some(())?;
+        (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
         flags.push(canonical);
-        options.message = Some(val.to_owned());
+        options.message = Some(trimmed.to_owned());
         return Some(0);
     }
     if FLAGS.contains(&canonical) {
-        match val {
-            "true" => {
-                flags.push(canonical);
-                if canonical == "--build" {
-                    options.build = true;
-                }
-            }
-            "false" => {
-                if canonical == "--build" {
-                    options.build = false;
-                }
-            }
+        let enabled = match trimmed {
+            "true" => true,
+            "false" => false,
             _ => return None,
+        };
+        if enabled {
+            flags.push(canonical);
+        }
+        if canonical == "--build" {
+            options.build = enabled;
         }
         return Some(0);
     }

@@ -98,6 +98,7 @@ fn prepare_add(url: &str, global: bool, cwd: &Path, chalk: Chalk) -> Result<Prep
     let remote_name = target_scope
         .get("name")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|name| !name.is_empty() && *name != "__proto__")
         .ok_or_else(|| Failure::Declined("remote scope name".to_owned()))?
         .to_owned();

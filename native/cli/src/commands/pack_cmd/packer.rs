@@ -114,9 +114,12 @@ fn resolve_from_workspace(
                         && entry.root_dir.trim_end_matches('/') == normalized))
         })?;
     let scope_name = entry.id.scope
-        .clone()
-        .or(default_scope)
-        .unwrap_or_else(|| "my-scope".to_owned());
+        .as_deref()
+        .or(default_scope.as_deref())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .unwrap_or("my-scope")
+        .to_owned();
     let version = explicit_ver
         .or_else(|| {
             entry.id.version
@@ -160,6 +163,11 @@ fn collect_dir_files(base: &Path, curr: &Path, out: &mut Vec<(String, Vec<u8>)>)
     Ok(())
 }
 
+fn read_typed_scope_object(scope_dir: &Path, hash: &str, expected: &str) -> Option<Value> {
+    let (kind, val) = bit_object_import::read_scope_object(scope_dir, hash).ok().flatten()?;
+    (kind == expected).then_some(val)
+}
+
 fn resolve_from_scope(
     scope_dir: &Path,
     bare_id: &str,
@@ -167,32 +175,29 @@ fn resolve_from_scope(
     raw_id: &str,
 ) -> Option<ResolvedComponent> {
     let (scope_opt, comp_name, comp_hash) = resolve_component_entry(scope_dir, bare_id)?;
-    let (kind, comp_val) =
-        bit_object_import::read_scope_object(scope_dir, &comp_hash).ok().flatten()?;
-    if kind != "Component" {
-        return None;
-    }
+    let comp_val = read_typed_scope_object(scope_dir, &comp_hash, "Component")?;
     let (version, ver_hash) = resolve_scope_version(&comp_val, explicit_ver)?;
-    let (ver_kind, ver_val) =
-        bit_object_import::read_scope_object(scope_dir, &ver_hash).ok().flatten()?;
-    if ver_kind != "Version" {
-        return None;
-    }
+    let ver_val = read_typed_scope_object(scope_dir, &ver_hash, "Version")?;
     let scope_name = scope_opt
-        .or_else(|| comp_val["scope"].as_str().map(str::to_owned))
-        .unwrap_or_else(|| "my-scope".to_owned());
+        .as_deref()
+        .or_else(|| comp_val["scope"].as_str())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .unwrap_or("my-scope")
+        .to_owned();
     let main_file = ver_val["mainFile"]
         .as_str()
+        .map(str::trim)
+        .filter(|main| !main.is_empty())
         .unwrap_or("index.js")
         .to_owned();
-    let files = load_version_files(scope_dir, &ver_val);
     Some(ResolvedComponent {
         id_display: raw_id.to_owned(),
         scope_name,
         comp_name,
         version,
         main_file,
-        files,
+        files: load_version_files(scope_dir, &ver_val),
     })
 }
 

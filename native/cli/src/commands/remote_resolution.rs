@@ -90,7 +90,13 @@ impl Session {
                 Err(error) => Some(Err(error)),
             })
             .collect::<io::Result<Vec<_>>>()?;
-        if !pending.is_empty() && env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        let ci_enabled = env::var_os("CI")
+            .is_some_and(|val| {
+                let text = val.to_string_lossy();
+                let trimmed = text.trim();
+                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            });
+        if !pending.is_empty() && ci_enabled {
             return Err(io::Error::other(CiResolverDecline));
         }
         for scope in pending {
@@ -177,7 +183,7 @@ fn read_scope(root: &Path, bare: bool) -> io::Result<Value> {
     if bytes.len() as u64 > MAX_SCOPE_CONFIG {
         return Err(io::Error::other("remote resolver scope configuration limit"));
     }
-    serde_json::from_slice(&bytes).map_err(io::Error::other)
+    bit_object_import::parse_jsonc(&bytes)
 }
 
 #[derive(Debug)]

@@ -35,8 +35,8 @@ fn apply_rename_arg<'a>(
 ) -> Option<()> {
     match argument {
         "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
-        | "--color=false" | "--color=always" | "--color=never" | "--delete" | "--delete=true"
-        | "--delete=false" => {}
+        | "--color=false" | "--color=always" | "--color=never" | "-d" | "--delete"
+        | "--delete=true" | "--delete=false" => {}
         "-s" | "--scope" => options.scope = Some(take_val(arguments.next()?)?),
         "-p" | "--path" => options.path = Some(take_val(arguments.next()?)?),
         "-r" | "--refactor" | "--refactor=true" => options.refactor = true,

@@ -41,7 +41,7 @@ fn work(
 ) -> io::Result<Report> {
     output.status("removing components");
     let bitmap = preparation::bitmap(root)?;
-    let selected = linker.select_workspace(root, &bitmap, options.pattern, output)?;
+    let selected = linker.select_workspace(root, &bitmap, options.pattern.trim(), output)?;
     output.status("removing components");
     let mut reader = load_free::Reader::new(root).ok();
     let consumers =
@@ -107,13 +107,14 @@ fn metadata(
 }
 
 fn preflight(root: &Path, options: &options::Options<'_>) -> io::Result<()> {
-    if options.pattern.trim().is_empty() {
+    let pattern = options.pattern.trim();
+    if pattern.is_empty() {
         return Err(io::Error::other("remove pattern is empty"));
     }
-    if add::ProjectedLinker::state_pattern(options.pattern) {
+    if add::ProjectedLinker::state_pattern(pattern) {
         return add::ProjectedLinker::preflight_selection(root, &preparation::bitmap(root)?);
     }
-    let ids = preparation::ids(root, options.pattern)?;
+    let ids = preparation::ids(root, pattern)?;
     preparation::prepare(root, &ids, options, &[]).map(|_| ())
 }
 

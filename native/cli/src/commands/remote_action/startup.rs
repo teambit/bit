@@ -53,8 +53,13 @@ fn supported_workspace(
 }
 
 fn is_main_lane(name: &str) -> bool {
-    let trimmed = name.trim();
-    trimmed.is_empty() || trimmed.rsplit('/').next() == Some("main")
+    let bare = name
+        .trim()
+        .split('@')
+        .next()
+        .unwrap_or_default()
+        .trim();
+    bare.is_empty() || bare.rsplit('/').next() == Some("main")
 }
 
 fn scope_supported(scope: &Path) -> io::Result<bool> {

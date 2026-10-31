@@ -48,7 +48,11 @@ pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &
     for row in rows {
         let cells: Vec<Vec<&str>> = row
             .iter()
-            .map(|cell| cell.split('\n').collect())
+            .map(|cell| {
+                cell.split('\n')
+                    .map(|line| line.strip_suffix('\r').unwrap_or(line))
+                    .collect()
+            })
             .collect();
         let height = cells
             .iter()
@@ -85,7 +89,7 @@ fn column_widths(rows: &[Vec<&str>]) -> Vec<usize> {
             rows.iter()
                 .filter_map(|row| row.get(index).copied())
                 .flat_map(|cell| cell.split('\n'))
-                .map(UnicodeWidthStr::width)
+                .map(|line| UnicodeWidthStr::width(line.strip_suffix('\r').unwrap_or(line)))
                 .max()
                 .unwrap_or(0)
         })

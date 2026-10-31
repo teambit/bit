@@ -78,7 +78,7 @@ fn supported(glob: &str) -> io::Result<()> {
 /// `minimatch(path, glob)`: segment by segment, `**` spanning any number of
 /// segments, neither matching a dot segment.
 fn matches(path: &str, glob: &str) -> bool {
-    let path: Vec<&str> = path.split('/').collect();
+    let path: Vec<&str> = path.trim().split('/').collect();
     let glob: Vec<&str> = glob.split('/').collect();
     match_segments(&path, &glob)
 }

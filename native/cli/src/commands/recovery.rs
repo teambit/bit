@@ -271,11 +271,13 @@ impl Prepared {
 
     fn commit(&mut self, root: &Path) -> io::Result<Value> {
         capture::commit(&mut self.engine, root, &self.context, &self.capture)?;
-        let file_id = self.context["recoveryRestoredFileId"]
+        let restored_id = self.context["recoveryRestoredFileId"]
             .as_str()
-            .map_or_else(workspace_command::file_id, str::to_owned);
+            .map(str::trim)
+            .filter(|id| !id.is_empty());
+        let file_id = restored_id.map_or_else(workspace_command::file_id, str::to_owned);
         let mut read_set = self.capture.dependency_read_set();
-        if self.kind == Kind::Lane && self.context["recoveryRestoredFileId"].is_null() {
+        if self.kind == Kind::Lane && restored_id.is_none() {
             let restored: Value = self.engine.request(&json!({
                 "kind":"commandRecoveryRestore","token":self.token,"fileId":file_id,
                 "dependencyReadSet":read_set,
@@ -310,8 +312,9 @@ fn execute(
     if let Some(progress) = &prepared.progress {
         progress.render_merge(output);
     }
+    let chalk = Chalk::detect(args);
     let result = prepared.commit(root)?;
-    let mut report = format_result(&result, prepared.kind, Chalk::detect(args))?;
+    let mut report = format_result(&result, prepared.kind, chalk)?;
     if let Some(info) = installation
         && !prepared.ids.is_empty()
         && result.get("checkoutError").is_none()
@@ -325,10 +328,8 @@ fn execute(
         if let Err(error) = installed
             && prepared.kind != Kind::Component
         {
-            report.data = Formatter::join(&[
-                report.data,
-                installation::error_report(Chalk::detect(args), &error.to_string()),
-            ]);
+            let err_report = installation::error_report(chalk, &error.to_string());
+            report.data = Formatter::join(&[report.data, err_report]);
         }
     }
     Ok(report)

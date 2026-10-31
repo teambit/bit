@@ -11,7 +11,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options { pattern: "", keep: false, force: false, track: false };
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
-        match arg {
+        match arg.trim() {
             "--" => {
                 crate::commands::delete::options::consume_trailing_delete_pattern(
                     iter,
@@ -29,12 +29,8 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--force=false" => options.force = false,
             "-t" | "--track" | "--track=true" => options.track = true,
             "--track=false" => options.track = false,
-            value
-                if !value.trim().starts_with('-')
-                    && !value.trim().is_empty()
-                    && pattern.is_none() =>
-            {
-                pattern = Some(value.trim());
+            value if !value.starts_with('-') && !value.is_empty() && pattern.is_none() => {
+                pattern = Some(value);
             }
             value => apply_short_bundle(value, &mut silent, &mut options)?,
         }

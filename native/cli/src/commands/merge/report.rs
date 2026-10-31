@@ -169,6 +169,10 @@ impl Merge<'_> {
         if !self.with_conflicts() {
             return String::new();
         }
+        let lines = self.results.conflict_lines(self.chalk());
+        if lines.is_empty() {
+            return String::new();
+        }
         let title = self.format.title(&format!(
             "{} files with conflicts summary",
             self.format.warn_symbol(),
@@ -176,7 +180,7 @@ impl Merge<'_> {
         let hint = self.format.hint(
             "merge process not completed due to the conflicts above. fix conflicts manually and then run \"bit install\".\nonce ready, snap/tag the components to complete the merge.",
         );
-        format!("{title}\n{}\n\n{hint}", self.results.conflict_lines(self.chalk()).join("\n"))
+        format!("{title}\n{}\n\n{hint}", lines.join("\n"))
     }
 
     /// `getSummary`.

@@ -100,11 +100,13 @@ fn id(value: &Value, chalk: Chalk) -> String {
     }
     if let Some(name) = value["id"]["name"]
         .as_str()
+        .or_else(|| value["id"]["_legacy"]["name"].as_str())
         .map(str::trim)
         .filter(|name| !name.is_empty())
     {
         let formatted = match value["id"]["scope"]
             .as_str()
+            .or_else(|| value["id"]["_legacy"]["scope"].as_str())
             .map(str::trim)
             .filter(|scope| !scope.is_empty())
         {

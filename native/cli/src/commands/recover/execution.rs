@@ -15,21 +15,22 @@ pub(super) fn execute(
     linker: &mut ProjectedLinker,
     output: &Output,
 ) -> io::Result<Report> {
-    if options.pattern.trim().is_empty() {
+    let pattern = options.pattern.trim();
+    if pattern.is_empty() {
         return Err(io::Error::other("recover pattern is empty"));
     }
-    if options.pattern.contains(['*', '?']) {
+    if pattern.contains(['*', '?']) {
         // ComponentList.getFromFileSystem enters Consumer.loadMany even when
         // every selected row is removed; its invalidation precedes that split.
         let cache = bit_install::dependencies::cache::invalidation::deps_dir(root);
         bit_install::dependencies::cache::invalidation::invalidate(root, &cache)?;
     }
-    let mut plan = Batch::prepare(root, options.pattern)?;
+    let mut plan = Batch::prepare(root, pattern)?;
     let missing = plan.scope_import_ids()?;
     if !missing.is_empty() {
         plan.validate()?;
         recover_scope_import(root, &missing, output)?;
-        plan = Batch::prepare(root, options.pattern)?;
+        plan = Batch::prepare(root, pattern)?;
     }
     let load = plan.hydration_ids();
     if !load.is_empty() {

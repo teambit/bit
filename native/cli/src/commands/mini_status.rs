@@ -41,9 +41,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     let mut json = false;
-    let rest = &args[1..];
+    let rest = args.get(1..)?;
     for (idx, arg) in rest.iter().enumerate() {
-        match arg.to_str()? {
+        match arg.to_str()?.trim() {
             "--" => return (idx + 1 == rest.len()).then_some(json),
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
@@ -96,7 +96,10 @@ fn print(
         Err(reason) => return Ok(Outcome::Declined(reason)),
     };
     if let Some(report) = report(&summary, Chalk::detect(args)) {
-        let command = if args[0] == "status" || args[0] == "s" { "status" } else { "mini-status" };
+        let is_status = args
+            .first()
+            .is_some_and(|cmd| cmd == "status" || cmd == "s");
+        let command = if is_status { "status" } else { "mini-status" };
         return workspace_command::execute_with(&root, args, command, &report, |_| Ok(()));
     }
     let history = History::start(&root, args);

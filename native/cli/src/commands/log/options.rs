@@ -59,12 +59,7 @@ fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
         options.id = Some(trimmed);
         return Some(());
     }
-    let (flag, val) = match arg.split_once('=') {
-        Some((flag, "true")) if flag.starts_with("--") => (flag, true),
-        Some((flag, "false")) if flag.starts_with("--") => (flag, false),
-        None => (arg, true),
-        _ => return None,
-    };
+    let (flag, val) = parse_log_flag_value(arg)?;
     let field = match flag {
         "-j" | "--json" => &mut options.json,
         "--parents" => &mut options.parents,
@@ -77,6 +72,25 @@ fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
     };
     *field = val;
     Some(())
+}
+
+fn parse_log_flag_value(arg: &str) -> Option<(&str, bool)> {
+    match arg.split_once('=') {
+        Some((flag, raw)) if flag.starts_with("--") => {
+            match raw
+                .trim()
+                .trim_matches('"')
+                .trim_matches('\'')
+                .trim()
+            {
+                "true" => Some((flag, true)),
+                "false" => Some((flag, false)),
+                _ => None,
+            }
+        }
+        None => Some((arg, true)),
+        _ => None,
+    }
 }
 
 fn apply_log_combined_short(options: &mut Options<'_>, arg: &str) -> bool {

@@ -152,18 +152,19 @@ fn apply_setup_arg(
     opts: &mut SetupOptions,
     editor: &mut Option<String>,
 ) -> Option<()> {
-    match rest[*idx] {
+    match rest[*idx].trim() {
         "--consumer-project" | "--consumer-project=true" => opts.consumer_project = true,
         "--consumer-project=false" => opts.consumer_project = false,
         "-g" | "--global" | "--global=true" => opts.is_global = true,
         "--global=false" => opts.is_global = false,
         "--include-additional" => {
             *idx += 1;
-            let val = *rest.get(*idx)?;
+            let val = rest.get(*idx)?.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             opts.include_additional = Some(val.to_owned());
         }
         arg if let Some(val) = arg.strip_prefix("--include-additional=") => {
+            let val = val.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             opts.include_additional = Some(val.to_owned());
         }
@@ -347,29 +348,19 @@ fn vscode_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> 
         return Ok(cwd.join(".vscode").join("settings.json"));
     }
     let home = workspace_command::home();
-    if cfg!(windows) {
-        Ok(home
-            .join("AppData")
-            .join("Roaming")
-            .join("Code")
-            .join("User")
-            .join("settings.json"))
+    let base = if cfg!(windows) {
+        home.join("AppData").join("Roaming")
     } else if cfg!(target_os = "macos") {
-        Ok(home
-            .join("Library")
-            .join("Application Support")
-            .join("Code")
-            .join("User")
-            .join("settings.json"))
+        home.join("Library").join("Application Support")
     } else if cfg!(target_os = "linux") {
-        Ok(home
-            .join(".config")
-            .join("Code")
-            .join("User")
-            .join("settings.json"))
+        home.join(".config")
     } else {
-        Err(format!("Unsupported platform: {}", env::consts::OS))
-    }
+        return Err(format!("Unsupported platform: {}", env::consts::OS));
+    };
+    Ok(base
+        .join("Code")
+        .join("User")
+        .join("settings.json"))
 }
 
 fn roo_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
@@ -386,24 +377,18 @@ fn claude_code_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, Str
         return Ok(cwd.join(".mcp.json"));
     }
     let home = workspace_command::home();
-    if cfg!(windows) {
-        Ok(home
-            .join("AppData")
+    let dir = if cfg!(windows) {
+        home.join("AppData")
             .join("Roaming")
             .join("Claude")
-            .join("claude_desktop_config.json"))
     } else if cfg!(target_os = "macos") {
-        Ok(home
-            .join("Library")
+        home.join("Library")
             .join("Application Support")
             .join("Claude")
-            .join("claude_desktop_config.json"))
     } else if cfg!(target_os = "linux") {
-        Ok(home
-            .join(".config")
-            .join("claude")
-            .join("claude_desktop_config.json"))
+        home.join(".config").join("claude")
     } else {
-        Err(format!("Unsupported platform: {}", env::consts::OS))
-    }
+        return Err(format!("Unsupported platform: {}", env::consts::OS));
+    };
+    Ok(dir.join("claude_desktop_config.json"))
 }

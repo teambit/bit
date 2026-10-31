@@ -37,7 +37,13 @@ fn run_generate(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_generate_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native generate-preview grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    let ci_enabled = env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        });
+    if ci_enabled {
         return Ok(Outcome::Declined("CI generate-preview delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -170,7 +176,8 @@ pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {
         let arg = args[idx];
         match arg {
             "--" => return (idx + 1 == args.len()).then_some(options),
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-p" | "--port" => {
                 if let Some(&next) = args.get(idx + 1)
                     && !next.starts_with('-')

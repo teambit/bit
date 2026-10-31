@@ -100,10 +100,20 @@ fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
         bare.split_once('/')
             .unwrap_or(("", bare))
     } else {
-        (row["id"]["scope"].as_str().unwrap_or_default(), row["id"]["name"].as_str()?)
+        let scope = row["id"]["scope"]
+            .as_str()
+            .or_else(|| row["id"]["_legacy"]["scope"].as_str())
+            .unwrap_or_default();
+        let name = row["id"]["name"]
+            .as_str()
+            .or_else(|| row["id"]["_legacy"]["name"].as_str())?;
+        (scope, name)
     };
     let scope = scope.trim();
     let name = name.trim();
+    if name.is_empty() {
+        return None;
+    }
     let full = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
     (name == target || full == target).then_some(full)
 }

@@ -34,6 +34,11 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
             "--no-color"
                 | "--no-color=true"
                 | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never"
                 | "--build"
                 | "--build=true"
                 | "--build=false",

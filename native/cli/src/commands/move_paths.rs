@@ -77,11 +77,23 @@ fn format_component_move_section(
     component: &serde_json::Value,
     format: &Formatter,
 ) -> io::Result<String> {
-    let id = component["id"].as_str().ok_or_else(|| io::Error::other("move component identity"))?;
+    let id = component["id"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| io::Error::other("move component identity"))?;
     let mut lines = vec![format.title(&format!("moved component {id}"))];
     for change in component["changes"].as_array().ok_or_else(|| io::Error::other("move paths"))? {
-        let from = change["from"].as_str().ok_or_else(|| io::Error::other("move source path"))?;
-        let to = change["to"].as_str().ok_or_else(|| io::Error::other("move destination path"))?;
+        let from = change["from"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| io::Error::other("move source path"))?;
+        let to = change["to"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| io::Error::other("move destination path"))?;
         lines.push(format.item(&format!(
             "from {} to {}",
             format.chalk.bold(from),

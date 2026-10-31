@@ -13,9 +13,10 @@ pub(super) fn run(
     installer: Option<Installer>,
 ) -> io::Result<Outcome> {
     let mut engine = Engine::new()?;
-    let request = prepare_request(root, &workspace_command::home(), options)?;
-    let preview: Value = engine.request(&request)?;
-    let prompt = prompt(&preview, Chalk::detect(args))?;
+    let preview: Value =
+        engine.request(&prepare_request(root, &workspace_command::home(), options)?)?;
+    let chalk = Chalk::detect(args);
+    let prompt = prompt(&preview, chalk)?;
     workspace_command::execute_then(root, args, "merge-abort", |output| {
         output.stop();
         if !confirm(&prompt)? {
@@ -29,7 +30,7 @@ pub(super) fn run(
         let report = match prepared {
             Ok(prepared) => execute(root, args, output, prepared, installation)?,
             Err(error) => match failure::result(&error) {
-                Some(result) => format_result(result, Kind::Lane, Chalk::detect(args))?,
+                Some(result) => format_result(result, Kind::Lane, chalk)?,
                 None => return Err(error),
             },
         };

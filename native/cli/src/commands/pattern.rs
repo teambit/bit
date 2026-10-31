@@ -70,7 +70,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     match resolved {
         Ok(ids) => present(&root, args, &options, &ids, &session),
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if ci_enabled() {
                 return Ok(Outcome::Declined("CI pattern error stack".to_owned()));
             }
             present_error(&root, args, &options, &session, io::Error::other(message))
@@ -80,6 +80,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("pattern: {reason}"))),
     }
+}
+
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
 }
 
 fn parse_options(args: &[OsString]) -> Option<Options> {
@@ -106,7 +115,9 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
             "--remote=false" => remote = false,
             "-jr" | "-rj" => (json, remote) = (true, true),
             flag if flag.starts_with('-') => return None,
-            value if pattern.is_none() && !value.is_empty() => pattern = Some(value.to_owned()),
+            value if pattern.is_none() && !value.trim().is_empty() => {
+                pattern = Some(value.trim().to_owned());
+            }
             _ => return None,
         }
     }

@@ -71,26 +71,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn parse_options(args: &[OsString]) -> Option<Action> {
-    let raw: Vec<&str> = args
+    let raw = args
         .iter()
         .skip(1)
         .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?
-        .into_iter()
-        .filter(|token| {
-            !matches!(
-                *token,
-                "--no-color"
-                    | "--no-color=true"
-                    | "--no-color=false"
-                    | "--color"
-                    | "--color=true"
-                    | "--color=false"
-                    | "--color=always"
-                    | "--color=never",
-            )
-        })
-        .collect();
+        .collect::<Option<Vec<_>>>()?;
     let tokens = super::scope_set::collect_non_flag_tokens(&raw)?;
     match tokens.as_slice() {
         ["dependency-name", old_id, new_id] if !old_id.is_empty() && !new_id.is_empty() => {
@@ -380,9 +365,10 @@ fn refactor_component(
 }
 
 fn replace_package_name(input: &str, old_name: &str, new_name: &str) -> Result<String, Failure> {
+    let escaped = old_name.replace('.', r"\.").replace('+', r"\+");
     let mut current = input.to_owned();
     for quote in ['\'', '"'] {
-        let pattern = format!("({quote}~?){old_name}(/|{quote})");
+        let pattern = format!("({quote}~?){escaped}(/|{quote})");
         let regex =
             regress::Regex::new(&pattern).map_err(|error| Failure::Declined(error.to_string()))?;
         let mut next = String::with_capacity(current.len());

@@ -115,8 +115,16 @@ fn find_scope(cwd: &Path, workspace: Option<&Path>) -> Option<PathBuf> {
     workspace.map_or_else(
         || {
             cwd.ancestors()
-                .find(|path| path.join("scope.json").is_file())
-                .map(Path::to_path_buf)
+                .find_map(|path| {
+                    if path.join("scope.json").is_file() {
+                        return Some(path.to_path_buf());
+                    }
+                    let nested = workspace::scope_path(path);
+                    nested
+                        .join("scope.json")
+                        .is_file()
+                        .then_some(nested)
+                })
         },
         |root| Some(workspace::scope_path(root)),
     )

@@ -41,9 +41,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn valid_args(args: &[OsString]) -> bool {
-    let rest = &args[1..];
+    let Some(rest) = args.get(1..) else {
+        return false;
+    };
     for (idx, arg) in rest.iter().enumerate() {
-        let Some(str_arg) = arg.to_str() else {
+        let Some(str_arg) = arg.to_str().map(str::trim) else {
             return false;
         };
         if str_arg == "--" {

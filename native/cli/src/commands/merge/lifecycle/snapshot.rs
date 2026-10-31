@@ -75,7 +75,8 @@ fn snap_results(resolved: &Planned) -> io::Result<Value> {
         array(resolved.plan["result"].get("resolvedComponents"), "merge resolved components")?
             .iter()
             .map(|row| {
-                let identity = text(row.get("id"))?.trim();
+                let raw = text(row.get("id"))?.trim();
+                let identity = raw.split_once('@').map_or(raw, |(bare, _)| bare.trim());
                 let version = versions
                     .iter()
                     .find(|version| version["identity"].as_str().map(str::trim) == Some(identity))

@@ -47,7 +47,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native publish grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    let ci_enabled = env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        });
+    if ci_enabled {
         return Ok(Outcome::Declined("CI publish delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -214,13 +220,21 @@ fn is_entry_exported(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
             .is_some_and(|remotes| !remotes.is_empty())
 }
 
+fn entry_ver(entry: &BitmapEntry) -> &str {
+    entry.id.version
+        .as_deref()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .unwrap_or("0.0.1")
+}
+
 fn format_dry_run_report(entries: &[&BitmapEntry], is_json: bool) -> String {
     if is_json {
         let items: Vec<_> = entries
             .iter()
             .map(|entry| {
                 let pkg = default_package_name(&entry.id);
-                let ver = entry.id.version.as_deref().unwrap_or("0.0.1");
+                let ver = entry_ver(entry);
                 json!({
                     "id": selection::entry_full_id(entry),
                     "data": format!("{pkg}@{ver}"),
@@ -233,7 +247,7 @@ fn format_dry_run_report(entries: &[&BitmapEntry], is_json: bool) -> String {
         .iter()
         .map(|entry| {
             let pkg = default_package_name(&entry.id);
-            let ver = entry.id.version.as_deref().unwrap_or("0.0.1");
+            let ver = entry_ver(entry);
             format!("publishing {pkg}@{ver} (dry-run)")
         })
         .collect::<Vec<_>>()

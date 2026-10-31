@@ -46,9 +46,9 @@ impl Reader {
         if !eligible(root, row) || pending(&self.context, identity) {
             return Ok(None);
         }
-        let directory = row["rootDir"].as_str().unwrap_or_default();
+        let directory = row["rootDir"].as_str().map_or("", str::trim);
         let files = self.files(root, directory)?;
-        let main = row["mainFile"].as_str().unwrap_or_default();
+        let main = row["mainFile"].as_str().map_or("", str::trim);
         if !files.iter().any(|file| file == main) {
             return Ok(None);
         }
@@ -64,7 +64,7 @@ impl Reader {
     ) -> io::Result<Option<bool>> {
         let model = self.model(identity);
         let has_history = model.is_some_and(|model| self.has_history(identity, model));
-        let version = row["version"].as_str().unwrap_or_default();
+        let version = row["version"].as_str().map_or("", str::trim);
         if version.is_empty() && !has_history {
             return Ok(Some(false));
         }
@@ -92,8 +92,8 @@ impl Reader {
         if stored["mainFile"] != target["mainFile"] {
             return Ok(Some(true));
         }
-        let main = row["mainFile"].as_str().unwrap_or_default();
-        let directory = row["rootDir"].as_str().unwrap_or_default();
+        let main = row["mainFile"].as_str().map_or("", str::trim);
+        let directory = row["rootDir"].as_str().map_or("", str::trim);
         let current = json!({"mainFile":main,"dependencies":[],"devDependencies":[],"packageDependencies":{},"devPackageDependencies":{},"peerPackageDependencies":{},"bindingPrefix":"@bit","overrides":{},"extensions":[]});
         let result: Value = self.engine.request(&json!({"kind":"statusCompare", "root":root, "targets":[{"identity":identity,"version":version,"directory":directory,"files":files,"current":current}]}))?;
         Ok(result["comparisons"][0]["codeModified"].as_bool())

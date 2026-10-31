@@ -14,8 +14,15 @@ pub(super) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<String> 
     let updates = section(value.get("workspaceDepsUpdates"), &formatter, true)?;
     let conflicts = if value
         .get("workspaceDepsConflicts")
-        .is_some_and(|conflicts| !conflicts.is_null())
-    {
+        .is_some_and(|conflicts| {
+            !conflicts.is_null()
+                && conflicts
+                    .as_object()
+                    .is_none_or(|map| !map.is_empty())
+                && conflicts
+                    .as_array()
+                    .is_none_or(|arr| !arr.is_empty())
+        }) {
         chalk.yellow("workspace.jsonc has conflicts, please edit the file and fix them")
     } else {
         String::new()
@@ -33,6 +40,9 @@ fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::R
             Ok(format!("  {name}: {value}"))
         })
         .collect::<io::Result<Vec<_>>>()?;
+    if rows.is_empty() {
+        return Ok(String::new());
+    }
     let title = if updates {
         "workspace.jsonc has been updated with the following dependencies"
     } else {

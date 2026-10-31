@@ -104,17 +104,21 @@ pub(super) fn find_bitmap_key(
     scope: &str,
     name: &str,
 ) -> io::Result<String> {
-    fields
-        .iter()
-        .find_map(|(key, row)| {
-            if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
-                return None;
-            }
-            let (row_scope, row_name) =
-                crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
-            ((row_scope == scope || row_scope.is_empty()) && row_name == name).then(|| key.clone())
-        })
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "detached bitmap key absent"))
+    let mut fallback = None;
+    for (key, row) in fields {
+        if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+            continue;
+        }
+        let (row_scope, row_name) =
+            crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
+        if row_name == name && row_scope == scope {
+            return Ok(key.clone());
+        }
+        if row_name == name && row_scope.is_empty() && fallback.is_none() {
+            fallback = Some(key.clone());
+        }
+    }
+    fallback.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "detached bitmap key absent"))
 }
 
 /// Encode a Bit scope object into a valid RFC 1950 zlib stream using stored deflate blocks.

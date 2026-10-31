@@ -23,11 +23,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(root) => root,
         Err(outcome) => return Ok(outcome),
     };
-    let preview = match Batch::prepare(&root, options.pattern.trim()) {
+    let mut preview = match Batch::prepare(&root, options.pattern.trim()) {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("recover: {error}"))),
     };
-    let mut linker = if needs_installation(&options, &preview) {
+    let mut linker = if needs_installation(&options, &mut preview) {
         ProjectedLinker::prepare_with_installation(&root, args)?
     } else {
         ProjectedLinker::prepare(&root)?
@@ -38,14 +38,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
-fn needs_installation(options: &options::Options, preview: &Batch) -> bool {
-    !options.skip_installation
-        && (preview
-            .import_ids()
-            .iter()
+fn needs_installation(options: &options::Options, preview: &mut Batch) -> bool {
+    let has_non_empty = |ids: &[String]| {
+        ids.iter()
             .any(|id| !id.trim().is_empty())
-            || preview
-                .probe_ids()
-                .iter()
-                .any(|id| !id.trim().is_empty()))
+    };
+    !options.skip_installation
+        && (has_non_empty(&preview.import_ids())
+            || has_non_empty(&preview.probe_ids())
+            || preview.scope_import_ids().is_ok_and(|ids| has_non_empty(&ids)))
 }

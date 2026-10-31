@@ -4,8 +4,9 @@
 mod tests;
 
 use super::{Command, color::Chalk, workspace_command};
-use crate::native::Outcome;
+use crate::{history::History, native::Outcome, workspace};
 use std::{
+    env,
     ffi::OsString,
     io::{self, Write},
     process::ExitCode,
@@ -21,11 +22,20 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("npmrc generate requires canonical aspect".to_owned()));
     }
     let chalk = Chalk::detect(args);
+    let history = env::current_dir()
+        .ok()
+        .and_then(|cwd| workspace::root(&cwd))
+        .map(|root| History::start(&root, args));
     let output = workspace_command::loader_output(chalk, false);
     output.restart(r#"running command "npmrc"..."#);
     output.stop();
     let message = unknown_subcommand_message(&subcommand, chalk);
-    writeln!(io::stdout(), "{message}")?;
+    let mut stdout = io::stdout().lock();
+    writeln!(stdout, "{message}")?;
+    stdout.flush()?;
+    if let Some(history) = history {
+        history.end(true);
+    }
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 

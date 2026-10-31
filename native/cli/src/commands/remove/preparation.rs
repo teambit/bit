@@ -128,12 +128,12 @@ fn row_identity(key: &str, row: &Value) -> Option<String> {
 fn main_exists(root: &Path, row: &Value) -> bool {
     row["rootDir"]
         .as_str()
-        .map(str::trim)
+        .map(|dir| dir.trim().trim_start_matches("./"))
         .filter(|dir| !dir.is_empty())
         .zip(
             row["mainFile"]
                 .as_str()
-                .map(str::trim)
+                .map(|main| main.trim().trim_start_matches("./"))
                 .filter(|main| !main.is_empty()),
         )
         .is_some_and(|(directory, main)| {
@@ -149,9 +149,9 @@ pub(in crate::commands) fn facts(rows: &[Value]) -> Vec<Value> {
     rows.iter().map(|row| json!({"identity":row["identity"],"extensions":row["current"]["extensions"],"packageName":row["packageName"]})).collect()
 }
 fn bare(id: &str) -> &str {
-    let trimmed = id.trim();
+    let trimmed = id.trim().trim_matches('/');
     match trimmed.rsplit_once('@') {
-        Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
+        Some((prefix, _)) if !prefix.trim().is_empty() => prefix.trim().trim_matches('/'),
         _ => trimmed,
     }
 }

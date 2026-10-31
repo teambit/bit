@@ -42,7 +42,11 @@ fn row_identity(row: &Value) -> Option<String> {
     {
         return Some(identity.to_owned());
     }
-    let object = row["id"].as_object()?;
+    let outer = row["id"].as_object()?;
+    let object = outer
+        .get("_legacy")
+        .and_then(Value::as_object)
+        .unwrap_or(outer);
     let name = object
         .get("name")?
         .as_str()

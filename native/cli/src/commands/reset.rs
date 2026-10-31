@@ -123,7 +123,7 @@ fn needs_lane_ci_decline(root: &Path, options: &Options<'_>) -> io::Result<bool>
     if options.soft
         || options.never_exported
         || !options.pattern.is_some_and(selection::stateful)
-        || env::var_os("CI").is_none_or(|value| value.is_empty())
+        || !selection::ci_active()
     {
         return Ok(false);
     }
@@ -135,7 +135,7 @@ fn run_without_workspace(
     args: &[OsString],
     options: &Options<'_>,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+    if selection::ci_active() {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     }
     let msg = if options.never_exported {
@@ -195,7 +195,7 @@ fn dispatch(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result
 
 fn route_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
     if options.head {
-        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        if selection::ci_active() {
             return Ok(Outcome::Declined("CI reset soft+head".into()));
         }
         return workspace_command::execute_then(root, args, "reset", |_| {

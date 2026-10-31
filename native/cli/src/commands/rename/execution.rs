@@ -92,6 +92,9 @@ fn refactor_load(
 
 fn source_display(prepared: &Prepared) -> String {
     let source = prepared.plan.identity.source.trim();
+    if source.contains('@') {
+        return source.to_owned();
+    }
     prepared.facts["sourceVersion"]
         .as_str()
         .map(str::trim)

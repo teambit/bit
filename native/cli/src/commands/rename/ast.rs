@@ -60,8 +60,12 @@ pub(super) fn transform(
 }
 
 fn short_component_name(name: &str) -> Option<&str> {
-    let normalized = name.trim().trim_end_matches('/');
-    normalized
+    let trimmed = name.trim();
+    let bare = trimmed
+        .rsplit_once('@')
+        .filter(|(prefix, _)| !prefix.trim().is_empty())
+        .map_or(trimmed, |(prefix, _)| prefix.trim());
+    bare.trim_end_matches('/')
         .rsplit('/')
         .next()
         .map(str::trim)

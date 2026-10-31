@@ -57,8 +57,16 @@ fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outc
     if is_ci_environment() {
         return Ok(Outcome::Declined("outside the native merge grammar".into()));
     }
+    let json = raw_args
+        .iter()
+        .any(|arg| matches!(arg.trim(), "-j" | "--json" | "--json=true"));
     let cwd = std::env::current_dir()?;
     if let Some(root) = crate::workspace::root(&cwd) {
+        if json {
+            return workspace_command::execute_json(&root, args, "merge", |_| {
+                Err(io::Error::other(err_msg))
+            });
+        }
         return workspace_command::execute_then(&root, args, "merge", |_| {
             Err(io::Error::other(err_msg))
         });
@@ -67,7 +75,7 @@ fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outc
         &cwd,
         args,
         "merge",
-        false,
+        json,
         "",
         io::Error::other(err_msg),
     )

@@ -76,7 +76,11 @@ fn validate_inventory(engine: &mut Engine, facts: &Value) -> io::Result<()> {
 
 fn packages(workspace: &Workspace, options: &Options, facts: &mut Value) -> io::Result<()> {
     let source = options.source.trim();
-    let bare = source.rsplit_once('@').map_or(source, |(id, _)| id.trim());
+    let bare = source
+        .rsplit_once('@')
+        .filter(|(id, _)| !id.trim().is_empty())
+        .map_or(source, |(id, _)| id.trim())
+        .trim_matches('/');
     let component = workspace.components
         .iter()
         .find(|component| {
@@ -87,12 +91,15 @@ fn packages(workspace: &Workspace, options: &Options, facts: &mut Value) -> io::
         })?;
     facts["sourcePackage"] = json!(component.package_name);
     let mut id = component.id.clone();
-    id.name.clone_from(&options.target);
+    options.target
+        .trim()
+        .trim_matches('/')
+        .clone_into(&mut id.name);
     id.scope = None;
     id.version = None;
     id.default_scope = options.scope
         .as_deref()
-        .map(str::trim)
+        .map(|scope| scope.trim().trim_matches('/'))
         .filter(|scope| !scope.is_empty())
         .map(str::to_owned)
         .or_else(|| component.id.effective_scope().map(str::to_owned));

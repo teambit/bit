@@ -37,6 +37,7 @@ pub(super) fn prepare(path: &Path) -> io::Result<Option<PathBuf>> {
 }
 
 pub(super) fn action(scope: &Path, name: &str, payload: &Value) -> io::Result<Value> {
+    let name = name.trim();
     if !supports(name) {
         return Err(io::Error::other("unsupported native file action"));
     }

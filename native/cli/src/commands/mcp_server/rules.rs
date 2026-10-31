@@ -53,7 +53,7 @@ pub(super) fn parse_rules(rest: &[&str]) -> Option<RulesOptions> {
             "--force-standard" | "--force-standard=true" => force_standard = true,
             "--force-standard=false" => force_standard = false,
             val if !val.starts_with('-') && !val.trim().is_empty() && editor.is_none() => {
-                editor = Some(val.to_owned());
+                editor = Some(val.trim().to_owned());
             }
             _ => return None,
         }
@@ -68,7 +68,7 @@ pub(super) fn parse_rules(rest: &[&str]) -> Option<RulesOptions> {
 }
 
 pub(super) fn execute_rules(cwd: &Path, opts: &RulesOptions, chalk: Chalk) -> String {
-    if opts.editor.eq_ignore_ascii_case("windsurf") && !opts.should_print {
+    if opts.editor.trim().eq_ignore_ascii_case("windsurf") && !opts.should_print {
         return chalk.yellow(WINDSURF_WARNING);
     }
     let base_content = default_rules_content(cwd, opts.consumer_project, opts.force_standard);
@@ -93,11 +93,11 @@ fn default_rules_content(cwd: &Path, consumer_project: bool, force_standard: boo
 }
 
 fn write_rules_file(cwd: &Path, opts: &RulesOptions, base: &str) -> Result<PathBuf, String> {
-    let editor_lower = opts.editor.to_ascii_lowercase();
+    let editor_trimmed = opts.editor.trim();
+    let editor_lower = editor_trimmed.to_ascii_lowercase();
     if !RULES_EDITORS.contains(&editor_lower.as_str()) {
         return Err(format!(
-            r#"Editor "{}" is not supported yet. Currently supported: {}"#,
-            opts.editor,
+            r#"Editor "{editor_trimmed}" is not supported yet. Currently supported: {}"#,
             RULES_EDITORS.join(", "),
         ));
     }

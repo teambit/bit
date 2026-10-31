@@ -8,7 +8,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options { pattern: "", skip_installation: false, skip_config: false };
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
-        match arg {
+        match arg.trim() {
             "--" => {
                 consume_trailing_pattern(iter, &mut options.pattern)?;
                 break;
@@ -23,8 +23,12 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
                 options.skip_config = true;
             }
             "--skip-write-config-files=false" => options.skip_config = false,
-            value if !value.trim().starts_with('-') && options.pattern.is_empty() => {
-                options.pattern = value.trim();
+            value
+                if !value.is_empty()
+                    && !value.starts_with('-')
+                    && options.pattern.is_empty() =>
+            {
+                options.pattern = value;
             }
             _ => return None,
         }
