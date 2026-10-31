@@ -9,8 +9,8 @@ import { GLOBAL_CONFIG, GLOBAL_LOGS, WORKSPACE_JSONC } from '@teambit/legacy.con
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
-const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <25.0.0';
-const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <25.0.0';
+const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <27.0.0';
+const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <27.0.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -28,8 +28,6 @@ process.emit = function (name, data) {
 
   // 1. avoid punycode deprecation warning
   //
-  // this fix is based on yarn fix for the similar issue, see code here:
-  // https://github.com/yarnpkg/berry/blob/2cf0a8fe3e4d4bd7d4d344245d24a85a45d4c5c9/packages/yarnpkg-pnp/sources/loader/applyPatch.ts#L414-L435
   // ignore punycode deprecation warning
   // ignoring this warning for now, as the main issue is that
   // this package https://www.npmjs.com/package/uri-js?activeTab=readme is using it and it's deprecated

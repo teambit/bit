@@ -28,11 +28,11 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { ComponentMain, Component } from '@teambit/component';
 import type { VariantsMain } from '@teambit/variants';
 import type { Consumer } from '@teambit/legacy.consumer';
-import { loadConsumerIfExist } from '@teambit/legacy.consumer';
+import { loadConsumerIfExist, ComponentLoader as LegacyComponentLoader } from '@teambit/legacy.consumer';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
-import { ComponentLoader as LegacyComponentLoader, ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ComponentID } from '@teambit/component-id';
 import { EXT_NAME } from './constants';
 import type { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';
@@ -244,7 +244,8 @@ export class WorkspaceMain {
         const id = legacyComponent.id;
         const newComponent = await workspace.get(id, legacyComponent, true, true, opts);
         return newComponent.state._consumer;
-      }
+      },
+      WorkspaceAspect.id
     );
 
     ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id, loadOpts: ComponentConfigLoadOptions) => {

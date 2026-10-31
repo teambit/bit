@@ -12,20 +12,18 @@ const token = {
   DESC_DELIMITER: 'DESC_DELIMITER',
   RETURNS_DELIMITER: 'RETURNS_DELIMITER',
   COMMENT: 'COMMENT',
-};
+} as const;
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-type Token = $Keys<typeof token>;
+type Token = keyof typeof token;
 
 const status = {
   IN_CODE: 'IN_CODE',
   IN_DESCRIPTION: 'IN_DESCRIPTION',
   IN_RETURNS: 'IN_RETURNS',
   NONE: 'NONE',
-};
+} as const;
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-type Status = $Keys<typeof status>;
+type Status = keyof typeof status;
 
 function isComment(str: string): boolean {
   return str.startsWith('//');
@@ -125,10 +123,8 @@ function parseToken(currentToken, line, currentStatus, example): Status {
  * }
  */
 export default function parse(exampleRaw: string): Example {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const example: Example = {};
+  const example: Example = { raw: exampleRaw };
   let currentStatus: Status = status.NONE;
-  example.raw = exampleRaw;
   try {
     const lines = exampleRaw.split('\n');
     for (let line of lines) {

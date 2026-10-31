@@ -86,9 +86,7 @@ describe('bit checkout command', function () {
           });
           it('bit list should show the currently used version and latest local version', () => {
             const listOutput = helper.command.listLocalScopeParsed('--outdated');
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             expect(listOutput[0].currentVersion).to.equal('0.0.5');
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             expect(listOutput[0].localVersion).to.equal('0.0.10');
           });
           describe('trying to tag when using an old version', () => {
@@ -314,7 +312,6 @@ describe('bit checkout command', function () {
       it('should not run the package installation', () => {
         expect(output).not.to.have.string('installing dependencies');
         expect(output).not.to.have.string('pnpm');
-        expect(output).not.to.have.string('yarn');
       });
     });
     describe('using theirs strategy', () => {

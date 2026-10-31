@@ -20,6 +20,10 @@ type ParentMethods = {
 export class PubsubPreview {
   private _parentPubsub?: ParentMethods;
   private events = new EventEmitter2();
+  /**
+   * events published while connecting to the parent. sent once the connection is up, dropped if it fails.
+   */
+  private pendingEvents?: Array<[string, BitBaseEvent<any>]>;
 
   public sub(topic: string, callback: Callback) {
     const emitter = this.events;
@@ -33,7 +37,15 @@ export class PubsubPreview {
 
   public pub(topic: string, event: BitBaseEvent<any>) {
     this.events.emit(topic, event);
-    this._parentPubsub?.pub(topic, event).catch((err) => {
+    if (!this._parentPubsub) {
+      this.pendingEvents?.push([topic, event]);
+      return;
+    }
+    this.pubToParent(this._parentPubsub, topic, event);
+  }
+
+  private pubToParent(parentPubsub: ParentMethods, topic: string, event: BitBaseEvent<any>) {
+    parentPubsub.pub(topic, event).catch((err) => {
       // eslint-disable-next-line no-console
       console.error('[Pubsub.preview]', err);
     });
@@ -56,7 +68,13 @@ export class PubsubPreview {
         pub: this.handleMessageFromParent,
       },
     })
-      .promise.then((parentPubsub) => (this._parentPubsub = parentPubsub))
+      .promise.then((parentPubsub) => {
+        this._parentPubsub = parentPubsub;
+        const pendingEvents = this.pendingEvents || [];
+        this.pendingEvents = undefined;
+        pendingEvents.forEach(([topic, event]) => this.pubToParent(parentPubsub, topic, event));
+        return parentPubsub;
+      })
       .catch((e: any) => {
         if (e.code !== ErrorCode.ConnectionTimeout) throw e;
 
@@ -74,7 +92,9 @@ export class PubsubPreview {
     const pubsubPreview = new PubsubPreview();
 
     if (pubsubPreview.inIframe()) {
+      pubsubPreview.pendingEvents = [];
       pubsubPreview.connectToParentPubSub().catch((err) => {
+        pubsubPreview.pendingEvents = undefined;
         // parent window is not required to accept connections
         if (err instanceof PubSubNoParentError) return;
 

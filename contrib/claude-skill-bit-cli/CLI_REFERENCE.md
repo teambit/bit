@@ -78,7 +78,7 @@ Flags: --include-message
 run build pipeline tasks in isolated environments
 
 executes the complete build pipeline including compilation, testing, linting, and other tasks defined by component environments. the build takes place in isolated directories called "capsules" where component files are copied and dependencies are installed via the package manager. by default processes only new and modified components - use --unmodified to build all components. because this process can take a while on large workspaces, various flags are available to optimize the process - see examples for debugging workflows.
-Flags: --unmodified, --dev, --install, --reuse-capsules, --rewrite, --reinstall, --tasks <string>, --cache-packages-on-capsule-root, --list-tasks <string>, --skip-tests, --loose, --skip-tasks <string>, --fail-fast, --include-snap, --include-tag, --ignore-issues <issues>
+Flags: --unmodified, --dev, --install, --reuse-capsules, --rewrite, --reinstall, --tasks <string>, --list-tasks <string>, --skip-tests, --loose, --skip-tasks <string>, --fail-fast, --include-snap, --include-tag, --ignore-issues <issues>
 
 ## bit capsule
 
@@ -95,7 +95,7 @@ Flags: --json, --with-stats
 ## bit capsule create [component-id...]
 
 create capsules for components
-Flags: --base-dir <name>, --root-base-dir <name>, --always-new, --seeders-only, --id <name>, --use-hash, --json, --install-packages, --package-manager <name>
+Flags: --base-dir <name>, --root-base-dir <name>, --always-new, --seeders-only, --id <name>, --use-hash, --json, --install-packages
 
 ## bit capsule delete
 
@@ -331,7 +331,7 @@ Flags: --json, --list, --save [filePath], --archive [filePath], --include-node-m
 
 remove component from workspace and install it as npm package
 
-converts workspace components to external npm packages by removing them from .bitmap and installing via package manager. by default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency. useful for components that no longer need active development in current workspace.
+converts workspace components to external npm packages by removing them from .bitmap and installing via package manager. the packages are added to the workspace dependencies in workspace.jsonc. to untrack components without that, use "bit remove". by default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency. useful for components that no longer need active development in current workspace.
 Flags: --force, --skip-dependency-installation, --json, --keep-files
 
 ## bit eject-conf <pattern>
@@ -483,7 +483,7 @@ Flags: --json, --remote
 
 creates a new lane and switches to it
 
-a lane created from main (default-lane) is empty until components are snapped. a lane created from another lane contains all the components of the original lane.
+a lane created from main (default-lane) is empty until components are snapped. if main has snaps that were not exported, they are moved to the new lane, and main goes back to its remote state. a lane created from another lane contains all the components of the original lane.
 Flags: --scope <scope-name>, --alias <name>, --fork-lane-new-scope
 
 ## bit lane remove <lanes...>
@@ -807,7 +807,7 @@ Flags: --lane <lane>, --component <component>, --json
 ## bit ripple errors [job-id]
 
 show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
-Flags: --lane <lane>, --log, --json
+Flags: --lane <lane>, --full-log, --json
 
 ## bit ripple retry [job-id]
 

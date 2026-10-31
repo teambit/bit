@@ -915,4 +915,48 @@ describe('lane export skips main history objects', function () {
       expect(dangling, `dangling parent refs in scope-M VH for comp2:\n${dangling.join('\n')}`).to.have.lengthOf(0);
     });
   });
+
+  // snaps on main that were never exported are not on scope-C. creating a lane moves them to the lane, so main goes
+  // back to its remote head, and the lane export pushes them to scope-L as lane snaps.
+  describe('lane in scope-L created from main that has unexported snaps, then snapped and exported', () => {
+    let laneScopePath: string;
+    let unexportedMainSnap: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope();
+      const laneScope = newScope.scopeName;
+      laneScopePath = newScope.scopePath;
+      helper.scopeHelper.addRemoteScope(laneScopePath);
+      helper.scopeHelper.addRemoteScope(laneScopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, laneScopePath);
+
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo(); // a new component, never exported
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // not exported
+      unexportedMainSnap = helper.command.getHead('comp1');
+
+      helper.command.createLane('dev', `--scope ${laneScope}`);
+    });
+    it('main should have nothing staged, because the snaps were moved to the lane', () => {
+      helper.command.switchLocalLane('main', '-x');
+      expect(helper.command.statusJson().stagedComponents).to.have.lengthOf(0);
+    });
+    it('should be able to switch back to the lane', () => {
+      expect(() => helper.command.switchLocalLane('dev', '-x')).to.not.throw();
+    });
+    it('bit export should not throw after snapping on the lane', () => {
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      expect(() => helper.command.export()).to.not.throw();
+    });
+    it('the lane scope should contain the moved snap, as a lane snap, and have a closed VersionHistory', () => {
+      const version = helper.command.catObject(unexportedMainSnap, true, laneScopePath);
+      expect(version.origin.lane.name).to.equal('dev');
+      const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, laneScopePath);
+      const dangling = danglingParentsIn(vh);
+      expect(dangling, `dangling parent refs in scope-L VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
+    });
+  });
 });

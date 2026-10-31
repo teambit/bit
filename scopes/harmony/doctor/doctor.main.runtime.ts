@@ -23,7 +23,6 @@ import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { getConfig } from '@teambit/config-store';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
-import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';
 import { MissingDiagnosisName } from './exceptions/missing-diagnosis-name';
 import { getRemoteByName } from '@teambit/scope.remotes';
@@ -48,7 +47,6 @@ export type DoctorMetaData = {
   platform: string;
   bitVersion: string;
   npmVersion: string | null | undefined;
-  yarnVersion: string | null | undefined;
   userDetails: string;
 };
 export type DoctorRunAllResults = {
@@ -361,11 +359,9 @@ export class DoctorMain {
       platform: os.platform(),
       bitVersion: getBitVersion(),
       npmVersion: await getNpmVersion(),
-      yarnVersion: await getYarnVersion(),
       userDetails: this._getUserDetails(),
     };
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return env;
   }
 

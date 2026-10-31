@@ -20,12 +20,14 @@ import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
-import type { BuilderMain, OnTagOpts } from '@teambit/builder';
+import type { BuilderMain, OnTagOpts, UnbuiltBuilderData } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
 import { DependenciesGraph } from '@teambit/objects';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
+import { throwForPlusRangeVersions } from './plus-range-versions';
 import type { VersionCandidate } from './published-versions';
 import { createIsVersionPublished, skipPublishedVersions } from './published-versions';
 import type { DependencyResolverMain, ComponentRangePrefix } from '@teambit/dependency-resolver';
@@ -33,6 +35,7 @@ import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependenc
 import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { getAutoTagInfoFromComponents } from '@teambit/workspace';
 import { findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
@@ -140,10 +143,14 @@ export class VersionMaker {
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
-    const autoTagData = await this.getAutoTagData(idsToTag);
+    // a component that is tagged explicitly is not auto-tagged too (the scope flow may find it as both)
+    // like updateDependenciesVersions, a removed component is not a new version of its dependents' dependency
+    const removedIds = ComponentIdList.fromArray(componentsToTag.filter((c) => c.isRemoved()).map((c) => c.id));
+    const autoTagData = (await this.getAutoTagData(idsToTag, removedIds)).filter(
+      (autoTagItem) => !idsToTag.has(autoTagItem.component.id)
+    );
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
-    const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
-    const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
+    const autoTagIds = ComponentIdList.fromArray(autoTagComponents.map((autoTag) => autoTag.id));
 
     // Validate component issues for auto-tag components
     if (this.allWorkspaceComps && autoTagIds.length) {
@@ -152,7 +159,9 @@ export class VersionMaker {
     }
 
     await this.triggerOnPreSnap(autoTagIds);
-    this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
+    this.allComponentsToTag = [...componentsToTag, ...autoTagComponents];
+    // in a bare scope (e.g. bit.cloud), the components were already snapped in a workspace, so they passed this check
+    if (this.workspace) throwForPlusRangeVersions(this.allComponentsToTag);
     await this.parseVersionsFile(idsToTag, autoTagIds);
     const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
     await this.checkForNewerVersions();
@@ -190,7 +199,7 @@ export class VersionMaker {
       await this._addDependenciesGraphToComponents();
     }
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
-    if (!build) this.emptyBuilderData();
+    if (!build) this.setUnbuiltBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
 
     const currentLane = this.consumer?.getCurrentLaneId();
@@ -224,6 +233,15 @@ export class VersionMaker {
         },
         batchId: this.batchId,
       });
+      if (!build) {
+        component.dependenciesGraph = undefined;
+        component.flattenedEdges = [];
+        const workspaceComp = this._findWorkspaceCompByConsumerComp(component);
+        if (workspaceComp?.state._consumer) {
+          workspaceComp.state._consumer.dependenciesGraph = undefined;
+          workspaceComp.state._consumer.flattenedEdges = [];
+        }
+      }
       if (this.workspace && !isHiddenLaneEntry) {
         const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
         await updateVersions(
@@ -452,13 +470,17 @@ export class VersionMaker {
     return Object.values(consumerComponentsIdsMap); // consumerComponents unique
   }
 
-  private async getAutoTagData(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
+  private async getAutoTagData(idsToTag: ComponentIdList, removedIds: ComponentIdList): Promise<AutoTagResult[]> {
     if (this.params.skipAutoTag) return [];
     // hidden lane.updateDependents are scope-only — they're not in the workspace
     // bitmap, so the workspace autotag candidate pool can't see them. Always run the scope-side
     // autotag pass alongside the workspace one when on a lane, so cascading a hidden updateDependent
     // off a workspace snap (scenario 1) works.
-    const fromScope = await this.getLaneAutoTagIdsFromScope(idsToTag, /* hiddenOnly */ Boolean(this.workspace));
+    const fromScope = await this.getLaneAutoTagIdsFromScope(
+      idsToTag,
+      removedIds,
+      /* hiddenOnly */ Boolean(this.workspace)
+    );
     if (!this.workspace) return fromScope;
     // ids without versions are new. it's impossible that tagged (and not-modified) components has
     // them as dependencies. Also filter out hidden lane entries — getAutoTagInfo loads
@@ -484,41 +506,31 @@ export class VersionMaker {
     return [...fromWorkspace, ...fromScopeFiltered];
   }
 
-  private async getLaneAutoTagIdsFromScope(idsToTag: ComponentIdList, hiddenOnly = false): Promise<AutoTagResult[]> {
+  private async getLaneAutoTagIdsFromScope(
+    idsToTag: ComponentIdList,
+    removedIds: ComponentIdList,
+    hiddenOnly = false
+  ): Promise<AutoTagResult[]> {
+    const triggerIds = ComponentIdList.fromArray(idsToTag.filter((id) => !removedIds.has(id)));
+    if (!triggerIds.length) return [];
     const lane = await this.legacyScope.getCurrentLaneObject();
     if (!lane) return [];
     // for the workspace+lane path we only care about hidden entries — workspace autotag handles
     // visible ones. for the bare-scope path (no workspace), include all lane entries.
-    const hiddenLaneIds = lane.updateDependents || [];
-    const candidateLaneIds = hiddenOnly ? hiddenLaneIds : [...lane.toComponentIds(), ...hiddenLaneIds];
+    const laneIds = hiddenOnly ? lane.updateDependents || [] : lane.toComponentIdsIncludeUpdateDependents();
+    const candidateLaneIds = laneIds.filter((id) => !idsToTag.hasWithoutVersion(id));
     if (!candidateLaneIds.length) return [];
-    const laneCompIds = ComponentIdList.fromArray(candidateLaneIds);
-    // include `idsToTag` in the graph too. For the bare-scope reverse cascade
-    // (`snapFromScope({ updateDependents: true })`), the targeted hidden entry is being NEWLY
-    // introduced to the lane and isn't in candidateLaneEntries yet — without seeding it into
-    // the graph, predecessors lookup wouldn't surface lane.components that depend on it, and
-    // the reverse cascade (re-snap visible dependents) wouldn't fire.
-    const graphSeedIds = ComponentIdList.uniqFromArray([...laneCompIds, ...idsToTag]);
-    const graphIds = await this.scope.getGraphIds(graphSeedIds);
-    const dependentsMap = idsToTag.reduce(
-      (acc, id) => {
-        const dependents = graphIds.predecessors(id.toString());
-        const dependentsCompIds = dependents.map((d) => d.attr);
-        const dependentsCompIdsFromTheLane = dependentsCompIds.filter((s) => laneCompIds.has(s));
-        if (!dependentsCompIdsFromTheLane.length) return acc;
-        acc[id.toString()] = ComponentIdList.fromArray(dependentsCompIdsFromTheLane);
-        return acc;
-      },
-      {} as Record<string, ComponentIdList>
-    );
-    if (Object.keys(dependentsMap).length === 0) return [];
-    const allDependentsIds = ComponentIdList.uniqFromArray(Object.values(dependentsMap).flat());
-    const allDependents = await this.legacyScope.getManyConsumerComponents(allDependentsIds);
-    return allDependents.map((dependent) => {
-      const triggeredByIds = Object.keys(dependentsMap).filter((id) => dependentsMap[id].has(dependent.id));
-      const triggeredBy = ComponentIdList.fromStringArray(triggeredByIds);
-      return { component: dependent, triggeredBy };
+    // a bare scope (e.g. a Ripple cascade) has only the components it snaps. fetch the lane entries that are missing.
+    await this.scope.import(candidateLaneIds, {
+      lane,
+      includeUpdateDependents: true,
+      reFetchUnBuiltVersion: false,
+      reason: 'to find the lane components to snap along',
     });
+    const candidates = await this.legacyScope.getManyConsumerComponents(ComponentIdList.fromArray(candidateLaneIds));
+    // a component that was removed from the lane is not snapped again, same as in a workspace, where it's not loaded
+    const notRemovedCandidates = candidates.filter((candidate) => !candidate.isRemoved());
+    return getAutoTagInfoFromComponents(notRemovedCandidates, triggerIds);
   }
 
   private async setFutureVersions(autoTagIds: ComponentIdList): Promise<void> {
@@ -699,15 +711,37 @@ export class VersionMaker {
   }
 
   /**
-   * otherwise, tagging without build will have the old build data of the previous snap/tag.
-   * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
+   * when not building, replace the builder data, otherwise, it has the old build data of the previous snap/tag.
+   * (when building, the build overrides it anyway).
+   * the new data has only the tasks that are going to run once the component is built (e.g. by the CI), so they can
+   * be shown before the build starts.
    */
-  private emptyBuilderData() {
+  private setUnbuiltBuilderData() {
+    const plannedTasksPerComp = this.builder.getPlannedTasks(
+      this.getHarmonyComps(this.allComponentsToTag.filter((c) => !c.isRemoved())),
+      this.params.isSnap ? 'snap' : 'tag'
+    );
     this.allComponentsToTag.forEach((component) => {
       component.extensions = component.extensions.clone();
+      const plannedTasks = plannedTasksPerComp.get(component.id.toStringWithoutVersion());
+      const data: Partial<UnbuiltBuilderData> = plannedTasks ? { plannedTasks } : {};
       const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
-      if (existingBuilder) existingBuilder.data = {};
+      if (existingBuilder) existingBuilder.data = data;
+      else if (plannedTasks)
+        component.extensions.push(new ExtensionDataEntry(undefined, undefined, Extensions.builder, {}, data));
     });
+  }
+
+  /**
+   * the harmony components that were already loaded. (the auto-tagged ones are available only in a workspace).
+   */
+  private getHarmonyComps(consumerComponents: ConsumerComponent[]): Component[] {
+    const loadedComps = [...this.components, ...(this.allWorkspaceComps || [])];
+    return compact(
+      consumerComponents.map((consumerComp) =>
+        loadedComps.find((comp) => comp.id.isEqualWithoutVersion(consumerComp.id))
+      )
+    );
   }
 
   private updateDependenciesVersions() {
@@ -947,11 +981,12 @@ function addIntegritiesToDependenciesGraph(
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingPkg =
-      dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`) ??
-      dependenciesGraph.packages.get(`${name}@${version}`);
+    const pendingKey = dependenciesGraph.packages.has(`${name}@${previouslyUsedVersion}`)
+      ? `${name}@${previouslyUsedVersion}`
+      : `${name}@${version}`;
+    const pendingPkg = dependenciesGraph.packages.get(pendingKey);
     if (pendingPkg) {
-      pendingPkg.resolution = { integrity };
+      dependenciesGraph.packages.set(pendingKey, { ...pendingPkg, resolution: { integrity } });
       resolvedVersions.push({ name, version, previouslyUsedVersion });
     }
   }

@@ -1070,11 +1070,7 @@ module.exports.default = {
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitWorkspace({
-      yarnRCConfig: {
-        unsafeHttpWhitelist: ['localhost'],
-      },
-    });
+    helper.scopeHelper.reInitWorkspace();
     helper.scopeHelper.addRemoteScope();
     helper.workspaceJsonc.setupDefault();
   });
@@ -1188,7 +1184,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
   this.timeout(0);
 
   describe('pnpm isolated linker', function () {
-    before(() => prepare('pnpm'));
+    before(prepare);
     after(() => {
       helper.scopeHelper.destroy();
     });
@@ -1204,10 +1200,10 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     });
   });
 
-  function prepare(pm: 'yarn' | 'pnpm') {
+  function prepare() {
     helper = new Helper();
     helper.scopeHelper.setWorkspaceWithRemoteScope();
-    helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/${pm}`);
+    helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     helper.env.setCustomNewEnv(
       undefined,
       undefined,
@@ -1292,5 +1288,71 @@ describe('custom root components directory', function () {
         getRootComponentDir(path.join(helper.scopes.localPath, '.bit_roots'), 'teambit.react/react')
       ).to.be.a.path();
     });
+  });
+});
+
+describe('workspace component dependency with a pinned older version in rootComponents workspace', function () {
+  let helper: Helper;
+  this.timeout(0);
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    helper.fixtures.populateComponents(3);
+    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp1`, {});
+    helper.fs.outputFile(
+      'comp1/comp1.node-app.js',
+      `module.exports.default = {
+  name: 'comp1',
+  entry: require.resolve('./index.js'),
+};`
+    );
+    helper.extensions.addExtensionToVariant('comp1', 'teambit.harmony/aspect');
+    helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        dependencies: {
+          react: '16',
+        },
+      },
+    });
+    helper.extensions.addExtensionToVariant('comp2', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        peerDependencies: {
+          react: '16 || 17',
+        },
+      },
+    });
+    helper.extensions.addExtensionToVariant('comp3', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        peerDependencies: {
+          react: '16 || 17',
+        },
+      },
+    });
+    helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
+      dependencies: {
+        react: '17',
+      },
+    });
+    helper.command.tagAllWithoutBuild();
+    helper.command.dependenciesSet('comp2', `@${helper.scopes.remote}/comp3@0.0.1`);
+    helper.fs.outputFile('comp3/index.js', `module.exports = () => 'comp3 v2';`);
+    helper.command.tagWithoutBuild('comp3');
+    helper.command.install();
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should link the workspace dependency into the root component virtual store with its peer dependencies even when its bitmap version differs', () => {
+    expect(
+      fs.readJsonSync(
+        resolveFrom(helper.env.rootCompDir(`${helper.scopes.remote}/comp1`), [
+          `@${helper.scopes.remote}/comp1`,
+          `@${helper.scopes.remote}/comp2`,
+          `@${helper.scopes.remote}/comp3`,
+          'react/package.json',
+        ])
+      ).version
+    ).to.match(/^16\./);
   });
 });

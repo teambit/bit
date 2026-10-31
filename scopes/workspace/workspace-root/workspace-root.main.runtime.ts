@@ -5,6 +5,8 @@ import { CLIAspect } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
+import type { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect } from '@teambit/component-writer';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { Workspace } from '@teambit/workspace';
@@ -87,13 +89,19 @@ export class WorkspaceRootMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [WorkspaceAspect, ComponentAspect, CLIAspect];
+  static dependencies = [WorkspaceAspect, ComponentAspect, CLIAspect, ComponentWriterAspect];
 
-  static async provider([workspace, component, cli]: [Workspace | undefined, ComponentMain, CLIMain]) {
+  static async provider([workspace, component, cli, componentWriter]: [
+    Workspace | undefined,
+    ComponentMain,
+    CLIMain,
+    ComponentWriterMain,
+  ]) {
     const workspaceRoot = new WorkspaceRootMain(workspace);
     component.registerShowFragments([new WorkspaceRootFragment(workspaceRoot)]);
     cli.register(new CloneCmd(workspaceRoot));
     workspace?.registerOnComponentLoad(markWorkspaceRoot);
+    componentWriter.registerWorkspaceRootDetector(isWorkspaceRootComponent);
     return workspaceRoot;
   }
 }

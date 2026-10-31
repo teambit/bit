@@ -25,6 +25,7 @@ import { updateDependencyVersion } from './update-dependency-version';
 import type { DependenciesGraph } from '@teambit/objects';
 import { applyDependenciesGraph } from './dependencies-from-graph';
 import { WorkspaceManifest } from './workspace-manifest';
+import { isPlusVersion, resolvePlusVersion } from '../plus-version';
 
 export type DepsFilterFn = (dependencies: DependencyList) => DependencyList;
 
@@ -210,7 +211,7 @@ export class WorkspaceManifestFactory {
         // No conflict — merge to root
         const entry = this.createResolvedEntry(componentsManifestsMap, pkgName, versions[0]);
         resolvedEntries.push(entry);
-        if (overridesFlags.get(pkgName) && versions[0] !== '+') {
+        if (overridesFlags.get(pkgName) && !isPlusVersion(versions[0])) {
           peerOverrides[pkgName] = versions[0];
         }
         continue;
@@ -225,7 +226,7 @@ export class WorkspaceManifestFactory {
         const chosenVersion = this.resolveConflictingPeerVersions(pkgName, versionsMap);
         resolvedEntries.push(this.createResolvedEntry(componentsManifestsMap, pkgName, chosenVersion));
         conflictingPackages.push(pkgName);
-        if (overridesFlags.get(pkgName) && chosenVersion !== '+') {
+        if (overridesFlags.get(pkgName) && !isPlusVersion(chosenVersion)) {
           peerOverrides[pkgName] = chosenVersion;
         }
       } else {
@@ -233,7 +234,7 @@ export class WorkspaceManifestFactory {
         // Each env gets its own version injected into its components
         for (const [version, envIds] of versionsMap.entries()) {
           // Skip "+" placeholder — it's resolved at the workspace root level
-          if (version === '+') continue;
+          if (isPlusVersion(version)) continue;
           for (const envId of envIds) {
             if (!componentPeerOverrides.has(envId)) {
               componentPeerOverrides.set(envId, {});
@@ -295,11 +296,12 @@ export class WorkspaceManifestFactory {
     const envsByVersion = Array.from(versionsMap.entries());
 
     // Filter out non-semver versions (like '+') for comparison
-    const semverVersions = versions.filter((v) => v !== '+' && semver.coerce(v) !== null);
+    const semverVersions = versions.filter((v) => !isPlusVersion(v) && semver.coerce(v) !== null);
 
     if (semverVersions.length === 0) {
-      // All versions are non-semver (e.g., '+'), just pick the first
-      return versions[0];
+      // All versions are non-semver (e.g., '+'). they resolve against the same version, so the strictest satisfies all
+      const strictestPlusVersion = ['+', '+~', '+^'].find((plusVersion) => versions.includes(plusVersion));
+      return strictestPlusVersion || versions[0];
     }
 
     // For each version, count how many envs it could satisfy
@@ -311,7 +313,7 @@ export class WorkspaceManifestFactory {
       if (!coercedCandidate) continue;
       let satisfiedCount = 0;
       for (const [version, envIds] of envsByVersion) {
-        if (version === candidateVersion || version === '+') {
+        if (version === candidateVersion || isPlusVersion(version)) {
           satisfiedCount += envIds.size;
         } else if (semver.validRange(version)) {
           // Check if the candidate could satisfy the range
@@ -333,7 +335,7 @@ export class WorkspaceManifestFactory {
     // Only warn about envs whose version is NOT satisfied by the chosen version
     const coercedBestForCheck = semver.coerce(bestVersion);
     const unsatisfiedEnvs = envsByVersion.filter(([version]) => {
-      if (version === bestVersion || version === '+') return false;
+      if (version === bestVersion || isPlusVersion(version)) return false;
       if (coercedBestForCheck && semver.validRange(version) && semver.satisfies(coercedBestForCheck.version, version))
         return false;
       return true;
@@ -422,7 +424,11 @@ export class WorkspaceManifestFactory {
         for (const comp of depList.toTypeArray('component') as ComponentDependency[]) {
           const [compIdWithoutVersion] = comp.id.split('@');
           if (!comp.isExtension && !coreAspectIds.includes(compIdWithoutVersion)) {
-            const componentInWorkspace = components.find((c) => c.id.isEqual(comp.componentId));
+            const componentInWorkspace = components.find(
+              (c) =>
+                c.id.isEqualWithoutVersion(comp.componentId) ||
+                c.state._consumer.id.isEqualWithoutVersion(comp.componentId)
+            );
             if (componentInWorkspace) {
               const pkgName = this.dependencyResolver.getPackageName(componentInWorkspace);
               if (pkgName !== '@teambit/harmony') {
@@ -584,7 +590,7 @@ export class WorkspaceManifestFactory {
 
     const nameVersionTuples = selfPolicyWithoutLocal.toNameVersionTuple();
     const resolved = nameVersionTuples.map(([name, version]) => {
-      if (version !== '+') {
+      if (!isPlusVersion(version)) {
         return [name, version];
       }
       // Resolve "+" version placeholders by looking up the already resolved version that was set in
@@ -593,7 +599,7 @@ export class WorkspaceManifestFactory {
       const found = currentDeps.findByPkgNameOrCompId(name);
       // If not found, use '*' as fallback
       // Use snapToSemver to convert raw hash versions to valid semver format (0.0.0-{hash})
-      return [name, found?.version ? snapToSemver(found.version) : '*'];
+      return [name, resolvePlusVersion(version, found?.version && snapToSemver(found.version))];
     });
     return fromPairs(resolved);
   }

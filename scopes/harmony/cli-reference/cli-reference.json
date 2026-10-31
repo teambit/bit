@@ -960,11 +960,6 @@
             "d",
             "install-packages",
             "install packages by the package-manager"
-          ],
-          [
-            "p",
-            "package-manager <name>",
-            "npm, yarn or pnpm, default to npm"
           ]
         ],
         "description": "create capsules for components",
@@ -1417,7 +1412,7 @@
           ],
           [
             "",
-            "log",
+            "full-log",
             "show full build log for failed containers (not just the error summary)"
           ],
           [
@@ -1998,12 +1993,7 @@
       [
         "",
         "tasks <string>",
-        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
-      ],
-      [
-        "",
-        "cache-packages-on-capsule-root",
-        "set the package-manager cache on the capsule root"
+        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\"), the task-aspect-id (e.g. teambit.compilation/compiler)\nor the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)"
       ],
       [
         "",
@@ -2023,7 +2013,7 @@
       [
         "",
         "skip-tasks <string>",
-        "skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.\n  specify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
+        "skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.\n  specify the task-name (e.g. \"TypescriptCompiler\"), the task-aspect-id (e.g. teambit.compilation/compiler)\n  or the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)"
       ],
       [
         "",
@@ -2920,7 +2910,7 @@
       ]
     ],
     "description": "remove component from workspace and install it as npm package",
-    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
+    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nthe packages are added to the workspace dependencies in workspace.jsonc. to untrack components without that, use \"bit remove\".\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -4123,7 +4113,7 @@
           ]
         ],
         "description": "creates a new lane and switches to it",
-        "extendedDescription": "a lane created from main (default-lane) is empty until components are snapped.\na lane created from another lane contains all the components of the original lane.",
+        "extendedDescription": "a lane created from main (default-lane) is empty until components are snapped.\nif main has snaps that were not exported, they are moved to the new lane, and main goes back to its remote state.\na lane created from another lane contains all the components of the original lane.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
@@ -5311,7 +5301,7 @@
       [
         "",
         "external-package-manager",
-        "enable external package manager mode (npm/yarn/pnpm)"
+        "enable external package manager mode (npm/pnpm)"
       ],
       [
         "",

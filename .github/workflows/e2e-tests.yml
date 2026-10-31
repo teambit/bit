@@ -8,13 +8,18 @@ name: e2e-tests
 
 on:
   pull_request:
-    # mirrors the doc-only skip of the CircleCI e2e_test job (skip_when_doc_only):
-    # doc-only PRs skip e2e, but doc files under e2e/ are test fixtures, not docs,
+    # mirrors the skip of the CircleCI e2e_test job (skip_when_doc_only): PRs that change
+    # only docs or the Rust CLI (native/ and its scripts and workflows, see
+    # docs/rust-cli.md) skip e2e, but doc files under e2e/ are test fixtures, not docs,
     # so they still trigger the workflow (last matching pattern wins).
     paths:
       - '**'
       - '!**.md'
       - '!**.mdx'
+      - '!native/**'
+      - '!scripts/rust/**'
+      - '!.github/workflows/rust.yml'
+      - '!.github/workflows/rust-scope.yml'
       - 'e2e/**'
   workflow_dispatch:
 
@@ -41,7 +46,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.22.0
+          node-version: 26.12.1
 
       - name: install bvm and latest bit (bbit)
         run: |
@@ -60,15 +65,6 @@ jobs:
           bbit config set user.name CI
           bbit config set user.email ci@bit.dev
           bbit config set registry https://node-registry.bit.cloud
-          bbit config set package-manager.cache "$HOME/package-manager-cache"
-
-      - name: restore package-manager cache
-        uses: actions/cache@v4
-        with:
-          path: ~/package-manager-cache
-          key: pm-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pm-cache-${{ runner.os }}-
 
       - name: install dependencies (bbit install)
         run: |

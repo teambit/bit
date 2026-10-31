@@ -5,7 +5,6 @@ import ValidateGitExec from './core-diagnoses/validate-git-exec';
 import ValidateNpmExec from './core-diagnoses/validate-npm-exec';
 import ValidateScopeObjects from './core-diagnoses/validate-scope-objects';
 import ValidateWorkspaceBitJsonSyntax from './core-diagnoses/validate-workspace-bit-json-syntax';
-import ValidateYarnExec from './core-diagnoses/validate-yarn-exec';
 import type Diagnosis from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
 
@@ -16,7 +15,6 @@ export default function registerCoreAndExtensionsDiagnoses(extensionDiagnoses: D
     new OrphanSymlinkObjects(),
     new BrokenSymlinkFiles(),
     new ValidateNpmExec(),
-    new ValidateYarnExec(),
     new ValidateBitVersion(),
     new ValidateScopeObjects(),
   ].concat(extensionDiagnoses);

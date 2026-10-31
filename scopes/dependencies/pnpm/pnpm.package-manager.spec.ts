@@ -154,6 +154,39 @@ describe('mergeGraphLockfileIntoExisting', () => {
     expect(merged.pnpmfileChecksum).to.equal('bit-1');
     expect(merged.settings).to.eql(settings);
   });
+
+  it("takes a graph snapshot's emptied dependency map over the existing one", () => {
+    const importers = { '.': { dependencies: { '@types/react-helmet': { specifier: '6.1.6', version: '6.1.6' } } } };
+    const merged = mergeGraphLockfileIntoExisting(
+      {
+        ...lockfile(),
+        importers,
+        packages: {
+          '@types/react-helmet@6.1.6': { resolution: { integrity: 'sha512-helmet' } },
+          '@types/react@18.2.23': { resolution: { integrity: 'sha512-react18' } },
+        },
+        snapshots: {
+          '@types/react-helmet@6.1.6': {
+            dependencies: { '@types/react': '18.2.23' },
+            transitivePeerDependencies: ['react'],
+          },
+          '@types/react@18.2.23': {},
+        },
+      },
+      {
+        ...lockfile(),
+        importers,
+        packages: { '@types/react-helmet@6.1.6': { resolution: { integrity: 'sha512-helmet' } } },
+        snapshots: { '@types/react-helmet@6.1.6': { dependencies: {} } },
+      }
+    );
+    expect(merged.snapshots!['@types/react-helmet@6.1.6']).to.eql({
+      dependencies: {},
+      transitivePeerDependencies: ['react'],
+    });
+    expect(merged.snapshots).to.not.have.property('@types/react@18.2.23');
+    expect(merged.packages).to.not.have.property('@types/react@18.2.23');
+  });
 });
 
 describe('mergeGraphLockfileIntoExisting with workspace components', () => {

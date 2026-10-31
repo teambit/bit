@@ -13,7 +13,7 @@ export { BitObject, BitRawObject, Ref, Repository } from './objects';
 export type { ObjectWithType, ObjectsWithType } from './objects';
 export { ComponentLog, ScopeListItem, AddVersionOpts, ComponentProps, VERSION_ZERO } from './models/model-component';
 export { ComponentItem, IndexType, LaneItem } from './objects/scope-index';
-export { ObjectItem, ObjectList, ObjectItemsStream } from './objects/object-list';
+export { ObjectItem, ObjectList, ObjectItemsStream, RawObjectsMap } from './objects/object-list';
 export { BitObjectList } from './objects/bit-object-list';
 export { LaneComponent, Log as LaneLog, LaneReadmeComponent } from './models/lane';
 export {

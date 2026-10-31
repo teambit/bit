@@ -50,9 +50,9 @@ import { PackageFragment } from './package.fragment';
 import { PackTask } from './pack.task';
 import { PkgService } from './pkg.service';
 
-export interface PackageJsonProps {
-  [key: string]: any;
-}
+import type { PackageJsonProps } from '@teambit/envs.contracts';
+
+export type { PackageJsonProps };
 
 export type PackageJsonPropsRegistry = SlotRegistry<PackageJsonProps>;
 
@@ -203,7 +203,7 @@ export class PkgMain {
       scope.registerOnCompAspectReCalc(calcPkgOnLoad);
     }
 
-    PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
+    PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg), PkgAspect.id);
     // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer), new PublishCmd(publisher));
     return pkg;
