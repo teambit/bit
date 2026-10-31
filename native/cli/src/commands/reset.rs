@@ -31,7 +31,7 @@ struct Options<'a> {
 
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
-    let mut iter = args.iter().copied();
+    let mut iter = args.iter().copied().map(str::trim);
     while let Some(arg) = iter.next() {
         if arg == "--" {
             for rest in iter {

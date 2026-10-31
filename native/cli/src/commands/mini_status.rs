@@ -98,7 +98,8 @@ fn print(
     if let Some(report) = report(&summary, Chalk::detect(args)) {
         let is_status = args
             .first()
-            .is_some_and(|cmd| cmd == "status" || cmd == "s");
+            .and_then(|cmd| cmd.to_str())
+            .is_some_and(|cmd| matches!(cmd.trim(), "status" | "s"));
         let command = if is_status { "status" } else { "mini-status" };
         return workspace_command::execute_with(&root, args, command, &report, |_| Ok(()));
     }

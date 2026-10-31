@@ -38,18 +38,33 @@ pub(super) fn transform(
         fs::write(&stored, bytes)?;
         rows.push(json!({"spool":stored,"filename":path}));
     }
-    linker.call(
+    let (Some(source_name), Some(target_name)) = (
+        short_component_name(&plan.identity.source_name),
+        short_component_name(&plan.identity.target_name),
+    ) else {
+        return Err(io::Error::other("rename AST component name is empty"));
+    };
+    let result = linker.call(
         root,
         "renameAst",
         &json!({
             "files": rows,
-            "sourceName": short_component_name(&plan.identity.source_name),
-            "targetName": short_component_name(&plan.identity.target_name),
+            "sourceName": source_name,
+            "targetName": target_name,
         }),
-    )?;
+    );
     print!("{}", linker.take_stdout());
+    result?;
+    read_transformed_inputs(&spool.0, &inputs, plan)
+}
+
+fn read_transformed_inputs(
+    spool_dir: &Path,
+    inputs: &[(std::path::PathBuf, Vec<u8>)],
+    plan: &mut Plan,
+) -> io::Result<()> {
     for (index, (path, _)) in inputs.iter().enumerate() {
-        let source = spool.0.join(index.to_string());
+        let source = spool_dir.join(index.to_string());
         let metadata = fs::symlink_metadata(&source)?;
         if !metadata.is_file() || metadata.len() > 32 * 1024 * 1024 {
             return Err(io::Error::other("rename AST spool is not a bounded regular file"));

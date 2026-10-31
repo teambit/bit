@@ -35,7 +35,7 @@ pub(super) fn parse_rules(rest: &[&str]) -> Option<RulesOptions> {
     let mut force_standard = false;
     let mut iter = rest.iter().copied();
     while let Some(arg) = iter.next() {
-        match arg {
+        match arg.trim() {
             "--" => {
                 crate::commands::internalize::consume_trailing_internalize(iter, &mut editor)?;
                 break;
@@ -52,8 +52,8 @@ pub(super) fn parse_rules(rest: &[&str]) -> Option<RulesOptions> {
             "--consumer-project=false" => consumer_project = false,
             "--force-standard" | "--force-standard=true" => force_standard = true,
             "--force-standard=false" => force_standard = false,
-            val if !val.starts_with('-') && !val.trim().is_empty() && editor.is_none() => {
-                editor = Some(val.trim().to_owned());
+            val if !val.starts_with('-') && !val.is_empty() && editor.is_none() => {
+                editor = Some(val.to_owned());
             }
             _ => return None,
         }

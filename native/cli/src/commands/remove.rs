@@ -146,11 +146,12 @@ fn status_consumers(
         use bit_install::dependencies::cache::invalidation::{deps_dir, invalidate};
         invalidate(root, &deps_dir(root))?;
     }
-    linker.call(root, "identityConsumerMode", &serde_json::json!({"enabled":true}))?;
     if !loadable.is_empty() {
-        rows.extend(linker.capture_consumers(root, bitmap, &loadable)?);
+        linker.call(root, "identityConsumerMode", &serde_json::json!({"enabled":true}))?;
+        let captured = linker.capture_consumers(root, bitmap, &loadable);
+        print!("{}", linker.take_stdout());
+        let _ = linker.call(root, "identityConsumerMode", &serde_json::json!({"enabled":false}));
+        rows.extend(captured?);
     }
-    print!("{}", linker.take_stdout());
-    linker.call(root, "identityConsumerMode", &serde_json::json!({"enabled":false}))?;
     Ok(rows)
 }

@@ -125,6 +125,7 @@ fn consume_trailing_pack_positions<'a>(
     options: &mut Options,
 ) -> Option<()> {
     for rest in iter {
+        let rest = rest.trim();
         if rest.starts_with('-') || rest.is_empty() {
             return None;
         }
@@ -134,6 +135,7 @@ fn consume_trailing_pack_positions<'a>(
 }
 
 fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
+    let arg = arg.trim();
     if let Some(val) = arg
         .strip_prefix("--out-dir=")
         .or_else(|| arg.strip_prefix("-d="))
@@ -141,12 +143,11 @@ fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
         let val = val.trim();
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.out_dir = Some(val.to_owned());
-    } else if !arg.starts_with('-') && !arg.trim().is_empty() {
-        let trimmed = arg.trim();
+    } else if !arg.starts_with('-') && !arg.is_empty() {
         if options.comp_id.is_empty() {
-            trimmed.clone_into(&mut options.comp_id);
+            arg.clone_into(&mut options.comp_id);
         } else if options.scope_path.is_none() {
-            options.scope_path = Some(trimmed.to_owned());
+            options.scope_path = Some(arg.to_owned());
         } else {
             return None;
         }

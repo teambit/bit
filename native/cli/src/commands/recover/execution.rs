@@ -70,23 +70,25 @@ fn import(
     plan.after_import(&bitmap)
 }
 fn report(options: &Options<'_>, plan: &Batch, args: &[OsString]) -> io::Result<Report> {
-    let ids = plan.recovered_ids();
-    if ids.is_empty() {
+    let format = Formatter::new(Chalk::detect(args));
+    let items = plan
+        .recovered_ids()
+        .into_iter()
+        .map(|id| id.trim().to_owned())
+        .filter(|id| !id.is_empty())
+        .map(|id| format.item(&id))
+        .collect::<Vec<_>>();
+    if items.is_empty() {
         return Err(io::Error::other(format!(
             r#"no soft-deleted components found matching pattern "{}""#,
             options.pattern.trim(),
         )));
     }
-    let format = Formatter::new(Chalk::detect(args));
-    let items = ids
-        .iter()
-        .map(|id| format.item(id.trim()))
-        .collect::<Vec<_>>()
-        .join("\n");
     Ok(Report {
         data: format!(
-            "{}\n{items}",
+            "{}\n{}",
             format.success_summary("successfully recovered the following component(s)"),
+            items.join("\n"),
         ),
         code: 0,
         details: None,

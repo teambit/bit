@@ -225,6 +225,9 @@ fn extract_remotes(remotes: Option<&Value>) -> Result<Map<String, Value>, Failur
         .as_object()
         .ok_or_else(|| Failure::Declined("remotes is not an object".to_owned()))?;
     if object.contains_key("__proto__")
+        || object
+            .keys()
+            .any(|key| key.trim().is_empty())
         || !object
             .values()
             .all(|val| {

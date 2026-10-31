@@ -76,12 +76,19 @@ fn snap_results(resolved: &Planned) -> io::Result<Value> {
             .iter()
             .map(|row| {
                 let raw = text(row.get("id"))?.trim();
-                let identity = raw.split_once('@').map_or(raw, |(bare, _)| bare.trim());
+                let identity = raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim());
+                if identity.is_empty() {
+                    return Err(io::Error::other("merge resolved identity empty"));
+                }
                 let version = versions
                     .iter()
                     .find(|version| version["identity"].as_str().map(str::trim) == Some(identity))
                     .ok_or_else(|| io::Error::other("merge allocated identity absent"))?;
-                Ok(json!({"id":format!("{identity}@{}",text(version.get("hash"))?.trim())}))
+                let hash = text(version.get("hash"))?.trim();
+                if hash.is_empty() {
+                    return Err(io::Error::other("merge allocated hash empty"));
+                }
+                Ok(json!({"id":format!("{identity}@{hash}")}))
             })
             .collect::<io::Result<Vec<_>>>()?;
     Ok(

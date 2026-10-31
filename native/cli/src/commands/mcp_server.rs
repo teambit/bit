@@ -157,7 +157,7 @@ fn apply_setup_arg(
         "--consumer-project=false" => opts.consumer_project = false,
         "-g" | "--global" | "--global=true" => opts.is_global = true,
         "--global=false" => opts.is_global = false,
-        "--include-additional" => {
+        "--include-additional" if opts.include_additional.is_none() => {
             *idx += 1;
             let val = rest.get(*idx)?.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
@@ -165,7 +165,8 @@ fn apply_setup_arg(
         }
         arg if let Some(val) = arg.strip_prefix("--include-additional=") => {
             let val = val.trim();
-            (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+            (opts.include_additional.is_none() && !val.is_empty() && !val.starts_with('-'))
+                .then_some(())?;
             opts.include_additional = Some(val.to_owned());
         }
         arg if !arg.starts_with('-') && !arg.is_empty() && editor.is_none() => {

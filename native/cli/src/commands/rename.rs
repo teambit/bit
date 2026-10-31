@@ -26,7 +26,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     {
         return Ok(Outcome::Declined(format!("component rename: {error}")));
     }
-    let mut linker = ProjectedLinker::prepare(&root)?;
+    let mut linker = match ProjectedLinker::prepare(&root) {
+        Ok(linker) => linker,
+        Err(error) if !super::engine::is_canonical(&error) => {
+            return Ok(Outcome::Declined(format!("component rename: {error}")));
+        }
+        Err(error) => return Err(error),
+    };
     print!("{}", linker.take_stdout());
     let chalk = Chalk::detect(args);
     workspace_command::execute_then(&root, args, "rename", |output| {

@@ -157,8 +157,9 @@ fn consume_trailing_positionals<'a>(
     positionals: &mut Vec<&'a str>,
 ) -> Option<()> {
     for &rest in tail {
-        (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
-        positionals.push(rest);
+        let trimmed = rest.trim();
+        (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+        positionals.push(trimmed);
     }
     Some(())
 }
@@ -182,7 +183,9 @@ fn apply_merge_flag<'a>(
         return Some(0);
     }
     if VALUED.contains(&arg) {
-        let value = next.filter(|value| !value.is_empty() && !value.starts_with('-'))?;
+        let value = next
+            .map(str::trim)
+            .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
         flags.push((arg, json!(value)));
         return Some(1);
     }

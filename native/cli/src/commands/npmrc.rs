@@ -50,12 +50,12 @@ fn parse_subcommand(args: &[OsString]) -> Option<String> {
     let tokens = args
         .iter()
         .skip(1)
-        .map(|arg| arg.to_str())
+        .map(|arg| arg.to_str().map(str::trim))
         .collect::<Option<Vec<_>>>()?;
     let filtered = super::scope_set::collect_non_flag_tokens(&tokens)?;
     let [subcommand] = filtered.as_slice() else {
         return None;
     };
     let trimmed = subcommand.trim();
-    (!trimmed.is_empty()).then(|| trimmed.to_owned())
+    (!trimmed.is_empty() && !trimmed.contains(char::is_whitespace)).then(|| trimmed.to_owned())
 }

@@ -40,10 +40,13 @@ pub(super) fn run(
 }
 
 fn prompt(preview: &Value, chalk: Chalk) -> io::Result<String> {
-    let directories = array(preview.get("restoredItems"), "recovery restoration items")?
+    let items = array(preview.get("restoredItems"), "recovery restoration items")?
         .iter()
-        .filter_map(Value::as_str)
-        .find_map(|item| item.strip_prefix("deleted components directories: "))
+        .map(|item| super::text(Some(item)).map(str::trim))
+        .collect::<io::Result<Vec<_>>>()?;
+    let directories = items
+        .into_iter()
+        .find_map(|item| item.strip_prefix("deleted components directories:"))
         .map(str::trim)
         .filter(|dirs| !dirs.is_empty());
     let directories = directories.map_or_else(String::new, |dirs| {

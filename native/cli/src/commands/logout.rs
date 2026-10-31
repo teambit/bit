@@ -33,7 +33,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     clear_auth_config(&global_config_dir())?;
     output.stop();
     let message = Formatter::new(chalk).success_summary("logged out successfully.");
-    writeln!(io::stdout(), "{message}")?;
+    let mut stdout = io::stdout().lock();
+    writeln!(stdout, "{message}")?;
+    stdout.flush()?;
     if let Some(history) = history {
         history.end(true);
     }

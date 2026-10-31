@@ -26,6 +26,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             value
                 if !value.is_empty()
                     && !value.starts_with('-')
+                    && !value.contains(char::is_whitespace)
                     && options.pattern.is_empty() =>
             {
                 options.pattern = value;
@@ -42,7 +43,11 @@ fn consume_trailing_pattern<'a>(
 ) -> Option<()> {
     for rest in iter {
         let trimmed = rest.trim();
-        if trimmed.is_empty() || trimmed.starts_with('-') || !pattern.is_empty() {
+        if trimmed.is_empty()
+            || trimmed.starts_with('-')
+            || trimmed.contains(char::is_whitespace)
+            || !pattern.is_empty()
+        {
             return None;
         }
         *pattern = trimmed;

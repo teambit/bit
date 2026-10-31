@@ -73,18 +73,18 @@ impl Reader {
             return Ok(Some(false));
         }
         let reference = if matches!(version, "" | "latest" | "head") {
-            model["head"].as_str().unwrap_or(version)
+            model["head"].as_str().map_or(version, str::trim)
         } else {
             model["versions"][version]
                 .as_str()
                 .or_else(|| model["orphanedVersions"][version].as_str())
-                .unwrap_or(version)
+                .map_or(version, str::trim)
         };
         let Some(stored) = self.context["versions"]
             .as_array()
             .into_iter()
             .flatten()
-            .find(|entry| entry[0] == reference)
+            .find(|entry| entry[0].as_str().map(str::trim) == Some(reference))
             .map(|entry| &entry[1])
         else {
             return Ok(None);

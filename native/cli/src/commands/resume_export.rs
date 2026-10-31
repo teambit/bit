@@ -36,8 +36,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut delete = false;
     let mut force = false;
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
-        match arg {
+    while let Some(raw_arg) = iter.next() {
+        match raw_arg.trim() {
             "--" => {
                 consume_trailing_resume_args(iter, &mut export_id, &mut remotes)?;
                 break;
@@ -48,8 +48,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--delete=false" => delete = false,
             "--force" | "--force=true" => force = true,
             "--force=false" => force = false,
-            val if !val.starts_with('-') && !val.trim().is_empty() => {
-                push_resume_arg(val.trim(), &mut export_id, &mut remotes);
+            val if !val.starts_with('-') && !val.is_empty() => {
+                push_resume_arg(val, &mut export_id, &mut remotes);
             }
             _ => return None,
         }

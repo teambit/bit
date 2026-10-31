@@ -36,7 +36,8 @@ fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::R
         .iter()
         .map(|(name, value)| {
             let name = name.trim();
-            let value = if updates { update_pair(value)? } else { text(Some(value))?.to_owned() };
+            let value =
+                if updates { update_pair(value)? } else { text(Some(value))?.trim().to_owned() };
             Ok(format!("  {name}: {value}"))
         })
         .collect::<io::Result<Vec<_>>>()?;
@@ -59,10 +60,10 @@ fn update_pair(value: &Value) -> io::Result<String> {
         let to = value
             .get("to")
             .or_else(|| value.get("newVersion"));
-        return Ok(format!("{} => {}", text(Some(from))?, text(to)?));
+        return Ok(format!("{} => {}", text(Some(from))?.trim(), text(to)?.trim()));
     }
     let pair = array(Some(value), "merge workspace dependency update")?;
-    Ok(format!("{} => {}", text(pair.first())?, text(pair.get(1))?))
+    Ok(format!("{} => {}", text(pair.first())?.trim(), text(pair.get(1))?.trim()))
 }
 
 pub(super) fn conflicted(result: &Value, lane: bool) -> io::Result<Vec<String>> {
@@ -75,12 +76,16 @@ pub(super) fn conflicted(result: &Value, lane: bool) -> io::Result<Vec<String>> 
         .flatten()
         .filter(|row| row["hasConflicts"] == true)
         .map(|row| {
-            text(
+            let id = text(
                 row.get("compIdStr")
                     .or_else(|| row.get("id"))
                     .or_else(|| row.get("componentId")),
-            )
-            .map(|id| id.trim().to_owned())
+            )?
+            .trim();
+            if id.is_empty() {
+                return Err(io::Error::other("merge config conflict id"));
+            }
+            Ok(id.to_owned())
         })
         .collect()
 }

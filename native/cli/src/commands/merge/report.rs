@@ -131,11 +131,11 @@ impl Merge<'_> {
             .other_skipped()
             .iter()
             .map(|(id, message)| {
-                self.format.item(&format!(
-                    "{} - {}",
-                    self.chalk().bold(&id.display()),
-                    message.trim(),
-                ))
+                let bold_id = self.chalk().bold(&id.display());
+                let trimmed = message.trim();
+                let row =
+                    if trimmed.is_empty() { bold_id } else { format!("{bold_id} - {trimmed}") };
+                self.format.item(&row)
             })
             .collect();
         self.format.section("merge skipped", "", &items)

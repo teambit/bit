@@ -29,6 +29,7 @@ pub(in crate::commands) fn prepare_many(
     let mut facts = Vec::with_capacity(options.len());
     let mut package_error = None;
     for option in options {
+        bit_object_import::component_rename::validate_name(&option.target)?;
         let mut component = shared.clone();
         if let Err(error) = packages(&workspace, option, &mut component) {
             package_error = Some(error);

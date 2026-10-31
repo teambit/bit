@@ -45,6 +45,7 @@ fn needs_installation(options: &options::Options, preview: &mut Batch) -> bool {
     };
     !options.skip_installation
         && (has_non_empty(&preview.import_ids())
+            || has_non_empty(&preview.hydration_ids())
             || has_non_empty(&preview.probe_ids())
             || preview.scope_import_ids().is_ok_and(|ids| has_non_empty(&ids)))
 }

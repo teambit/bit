@@ -184,7 +184,10 @@ pub(super) fn prepare_recovery_context(
     startup: &mut Startup,
 ) -> io::Result<(String, Value, Vec<Value>)> {
     let prepared: Value = engine.request(request)?;
-    let token = text(prepared.get("token"))?.to_string();
+    let token = text(prepared.get("token"))?.trim().to_string();
+    if token.is_empty() {
+        return Err(decline("recovery token"));
+    }
     let mut context = prepared
         .get("context")
         .filter(|value| value.is_object())

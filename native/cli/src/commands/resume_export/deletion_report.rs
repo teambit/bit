@@ -55,10 +55,10 @@ pub(super) fn probe(
 ) -> String {
     let export_id = export_id.trim();
     Formatter::join(&[
-        formatter.section("pending objects to delete", &format!(r#"(of the export-id "{export_id}")"#), &to_clear.iter().map(|name| formatter.item(name)).collect::<Vec<_>>()),
+        formatter.section("pending objects to delete", &format!(r#"(of the export-id "{export_id}")"#), &to_clear.iter().map(|name| formatter.item(name.trim())).collect::<Vec<_>>()),
         formatter.section(&format!("{} scopes that no longer hold these objects", formatter.warn_symbol()),
             "a scope drops the pending objects as soon as it persisted them, so this export may be\npartially persisted already. if it is, deleting the rest leaves these scopes with\ndependencies that were never exported. run without \"--delete\" to persist instead.",
-            &probe.absent.iter().map(|name| Formatter::item_with(name, &formatter.warn_symbol())).collect::<Vec<_>>()),
+            &probe.absent.iter().map(|name| Formatter::item_with(name.trim(), &formatter.warn_symbol())).collect::<Vec<_>>()),
         if probe.unknown.is_empty() { String::new() } else {
             warning(formatter, &format!("{} scope(s) run a server that can't report whether anything is pending, so the check above skipped them", probe.unknown.len()))
         },

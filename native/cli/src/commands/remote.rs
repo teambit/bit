@@ -78,7 +78,9 @@ fn execute(
     output.stop();
     match committed {
         Ok(()) => {
-            writeln!(io::stdout().lock(), "{}", prepared.report)?;
+            let mut stdout = io::stdout().lock();
+            writeln!(stdout, "{}", prepared.report)?;
+            stdout.flush()?;
             if let Some(history) = history {
                 history.end(true);
             }
@@ -89,7 +91,9 @@ fn execute(
                 history.end(false);
             }
             let message = error.to_string();
-            writeln!(io::stderr().lock(), "{}", chalk.red(message.trim()))?;
+            let mut stderr = io::stderr().lock();
+            writeln!(stderr, "{}", chalk.red(message.trim()))?;
+            stderr.flush()?;
             Ok(Outcome::Exit(ExitCode::FAILURE))
         }
     }
@@ -109,6 +113,8 @@ fn execute_error(
     if let Some(history) = history {
         history.end(false);
     }
-    writeln!(io::stderr().lock(), "{}", chalk.red(message.trim()))?;
+    let mut stderr = io::stderr().lock();
+    writeln!(stderr, "{}", chalk.red(message.trim()))?;
+    stderr.flush()?;
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }

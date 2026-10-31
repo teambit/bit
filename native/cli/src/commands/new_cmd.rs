@@ -113,7 +113,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut load_from = None;
     let mut current_dir = false;
     let mut iter = args.iter().copied().peekable();
-    while let Some(token) = iter.next() {
+    while let Some(raw_token) = iter.next() {
+        let token = raw_token.trim();
         if token == "--" {
             for item in iter {
                 positionals.push(take_new_val(item)?);

@@ -115,6 +115,7 @@ async fn persist_one(plan: &Plan, name: &str, client_id: &str) -> io::Result<Val
 fn append_ids(ids: &mut Vec<String>, value: Value) -> io::Result<()> {
     match value {
         Value::Null => {}
+        Value::Object(ref map) if map.is_empty() => {}
         Value::Array(values) => {
             for id in values.iter().filter_map(extract_export_id) {
                 push_unique_id(ids, id);

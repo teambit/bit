@@ -48,8 +48,12 @@ fn matches(identity: &str, pattern: &str) -> bool {
     if pattern.is_empty() || pattern.starts_with('#') {
         return false;
     }
-    let positive = pattern.trim_start_matches('!');
-    let negated = (pattern.len() - positive.len()) % 2 == 1;
+    let stripped = pattern.trim_start_matches('!');
+    let negated = (pattern.len() - stripped.len()) % 2 == 1;
+    let positive = stripped.trim();
+    if positive.is_empty() || positive.starts_with('#') {
+        return false;
+    }
     let matched = glob::matches(positive, identity.trim());
     matched != negated
 }

@@ -31,6 +31,15 @@ fn parse_move_args<'a>(args: &[&'a str]) -> Option<(&'a str, &'a str)> {
     let to = to.trim();
     (!from.is_empty() && !to.is_empty()).then_some((from, to))
 }
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn run_workspace(
     root: &std::path::Path,
     cwd: &std::path::Path,
@@ -39,8 +48,7 @@ fn run_workspace(
     to: &str,
 ) -> io::Result<Outcome> {
     if let Err(error) = Plan::prepare(root, cwd, from, to)
-        && (error.kind() != io::ErrorKind::InvalidInput
-            || env::var_os("CI").is_some_and(|value| !value.is_empty()))
+        && (error.kind() != io::ErrorKind::InvalidInput || ci_enabled())
     {
         return Ok(Outcome::Declined(format!("move: {error}")));
     }

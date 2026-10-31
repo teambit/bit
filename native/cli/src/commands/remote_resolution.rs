@@ -110,15 +110,13 @@ impl Session {
         let global: GlobalConfig =
             serde_json::from_value(bit_workspace_config::read_global_config(&config_dir)?)
                 .map_err(io::Error::other)?;
-        let scope = self.root
-            .as_ref()
-            .map(|root| read_scope(root, false))
-            .transpose()?
-            .or(self.bare_scope_root
-                .as_ref()
-                .map(|root| read_scope(root, true))
-                .transpose()?)
-            .unwrap_or(Value::Null);
+        let scope = match self.root.as_ref() {
+            Some(root) => read_scope(root, false)?,
+            None => match self.bare_scope_root.as_ref() {
+                Some(root) => read_scope(root, true)?,
+                None => Value::Null,
+            },
+        };
         let custom = scope["resolverPath"]
             .as_str()
             .is_some_and(|path| !path.trim().is_empty());

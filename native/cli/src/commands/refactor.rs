@@ -132,7 +132,17 @@ fn run_dependency_name(
             Ok(Report { data: prepared.report, code: 0, details: None })
         }),
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|val| {
+                    let text = val.to_string_lossy();
+                    !matches!(
+                        text.trim()
+                            .to_ascii_lowercase()
+                            .as_str(),
+                        "" | "0" | "false",
+                    )
+                })
+            {
                 return Ok(Outcome::Declined("CI refactor error stack".to_owned()));
             }
             super::lint_cmd::emit_pattern_error(root, args, "dependency-name", false, message)
@@ -147,7 +157,17 @@ fn run_dependency_name_non_workspace(
     old: &str,
     new: &str,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            !matches!(
+                text.trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false",
+            )
+        })
+    {
         return Ok(Outcome::Declined("CI non-workspace refactor delegated".to_owned()));
     }
     let Some(sr) = scope_root::discover().ok().flatten() else {

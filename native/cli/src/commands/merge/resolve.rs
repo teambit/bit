@@ -145,7 +145,9 @@ impl Options {
         if flag != "--message" {
             return Some(0);
         }
-        let message = next.filter(|message| !message.starts_with('-'))?;
+        let message = next
+            .map(str::trim)
+            .filter(|message| !message.is_empty() && !message.starts_with('-'))?;
         self.message = Some(message.to_string());
         Some(1)
     }

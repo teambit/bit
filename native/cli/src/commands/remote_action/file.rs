@@ -42,7 +42,7 @@ pub(super) fn action(scope: &Path, name: &str, payload: &Value) -> io::Result<Va
         return Err(io::Error::other("unsupported native file action"));
     }
     let path = pending_path(scope, payload.get("clientId"))?;
-    let existed = path.exists();
+    let existed = path.exists() || fs::symlink_metadata(&path).is_ok();
     if name == "PendingDirStatus" {
         return Ok(json!({"exists":existed}));
     }
@@ -60,8 +60,9 @@ fn pending_path(scope: &Path, value: Option<&Value>) -> io::Result<PathBuf> {
     let valid = value
         .and_then(Value::as_str)
         .filter(|id| {
-            !id.is_empty()
-                && !matches!(*id, "." | "..")
+            let trimmed = id.trim();
+            !trimmed.is_empty()
+                && !matches!(trimmed, "." | "..")
                 && id.encode_utf16().count() <= 4096
                 && !id
                     .chars()

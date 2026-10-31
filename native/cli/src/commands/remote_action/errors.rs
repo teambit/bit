@@ -16,7 +16,8 @@ pub(super) fn format(error: io::Error) -> io::Error {
     deleted_report(conflicts, updates, chalk, &mut output);
     conflict_report(conflicts, chalk, &mut output);
     update_report(updates, chalk, &mut output);
-    io::Error::other(output.concat())
+    let rendered = output.concat();
+    if rendered.trim().is_empty() { error } else { io::Error::other(rendered) }
 }
 
 fn deleted_report(conflicts: &[Value], updates: &[Value], chalk: Chalk, output: &mut Vec<String>) {

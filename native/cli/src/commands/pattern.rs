@@ -101,8 +101,8 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?
         .into_iter();
-    while let Some(token) = iter.next() {
-        match token {
+    while let Some(raw_token) = iter.next() {
+        match raw_token.trim() {
             "--" => {
                 super::internalize::consume_trailing_internalize(iter, &mut pattern)?;
                 break;
@@ -115,8 +115,8 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
             "--remote=false" => remote = false,
             "-jr" | "-rj" => (json, remote) = (true, true),
             flag if flag.starts_with('-') => return None,
-            value if pattern.is_none() && !value.trim().is_empty() => {
-                pattern = Some(value.trim().to_owned());
+            value if pattern.is_none() && !value.is_empty() => {
+                pattern = Some(value.to_owned());
             }
             _ => return None,
         }

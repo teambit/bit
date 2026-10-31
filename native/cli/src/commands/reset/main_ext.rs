@@ -270,15 +270,18 @@ fn prepare_item(scope: &Path, row: &Value) -> io::Result<Option<DetachedItem>> {
 
 /// Validate that the component's only local snap is its detached current head.
 fn detached_current_snap(model: &Value, local: &[String]) -> io::Result<String> {
-    let head = model["head"].as_str().ok_or_else(|| invalid("detached main head"))?;
+    let head = model["head"]
+        .as_str()
+        .ok_or_else(|| invalid("detached main head"))?
+        .trim();
     let current = model["detachedHeads"]["current"]
         .as_str()
         .ok_or_else(|| invalid("detached current head"))?
-        .to_owned();
-    if local != [current.clone()] || head == current {
+        .trim();
+    if head.is_empty() || current.is_empty() || local != [current] || head == current {
         return Err(invalid("unsupported detached history"));
     }
-    Ok(current)
+    Ok(current.to_owned())
 }
 
 /// Load the detached `Version` object and resolve its parent list and `.bitmap` version label.

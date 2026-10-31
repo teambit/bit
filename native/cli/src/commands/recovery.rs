@@ -59,7 +59,8 @@ fn parse(args: &[&str], kind: Kind) -> Option<Options> {
         Options { kind, pattern: None, skip_install: false, verbose: false, silent: false };
     let mut abort = false;
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
+    while let Some(raw_arg) = iter.next() {
+        let arg = raw_arg.trim();
         if arg == "--" {
             consume_trailing_recovery(iter, kind, &mut opts.pattern)?;
             break;

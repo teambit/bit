@@ -68,7 +68,7 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
 fn supported(glob: &str) -> io::Result<()> {
     if glob.is_empty()
         || glob.starts_with('#')
-        || glob.contains(['[', ']', '{', '}', '(', ')', '+', '!', '\\', '@'])
+        || glob.contains(['[', ']', '{', '}', '(', ')', '+', '!', '\\', '@', '$', ':'])
     {
         return Err(decline("component pattern outside the native glob grammar"));
     }

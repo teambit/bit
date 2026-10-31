@@ -7,7 +7,12 @@ pub(in crate::commands) fn start(
     argv: &[&str],
     skip: bool,
 ) -> io::Result<Option<Installer>> {
-    if skip || !root.is_dir() || argv.is_empty() {
+    if skip
+        || !root.is_dir()
+        || !argv
+            .iter()
+            .any(|arg| !arg.trim().is_empty())
+    {
         Ok(None)
     } else {
         Installer::start(root, argv).map(Some)

@@ -179,6 +179,7 @@ pub(super) fn collect_untagged_ids(root: &Path, entries: &[&BitmapEntry]) -> Vec
 fn is_entry_in_scope(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
     let Some(ver) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
     else {
         return false;
@@ -197,6 +198,7 @@ fn is_entry_in_scope(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
 fn is_entry_exported(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
     let Some(ver) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
     else {
         return false;
@@ -213,7 +215,7 @@ fn is_entry_exported(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
     };
     model["scope"]
         .as_str()
-        .is_some_and(|sc| !sc.is_empty())
+        .is_some_and(|sc| !sc.trim().is_empty())
         && (model["versions"].get(ver).is_some() || model["orphanedVersions"].get(ver).is_some())
         && model["remotes"]
             .as_array()

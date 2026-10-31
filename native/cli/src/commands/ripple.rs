@@ -73,7 +73,17 @@ fn emit_invalid_limit(
     raw: &str,
     json_flag: bool,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            !matches!(
+                text.trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false",
+            )
+        })
+    {
         return Ok(Outcome::Declined("CI ripple error delegated".into()));
     }
     let msg = format!(r#"invalid --limit value "{raw}": expected a positive integer"#);
@@ -87,7 +97,17 @@ fn run_simulate(
     lane_flag: Option<&str>,
     json_flag: bool,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            !matches!(
+                text.trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false",
+            )
+        })
+    {
         return Ok(Outcome::Declined("CI ripple simulate delegated".into()));
     }
     let Some(err) = diagnose_simulate_error(root_opt, lane_flag) else {

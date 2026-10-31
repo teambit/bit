@@ -23,7 +23,17 @@ pub(super) fn check(result: &Value, chalk: Chalk, lane: bool) -> io::Result<()> 
     if failures.is_empty() {
         return Ok(());
     }
-    if std::env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+    if std::env::var_os("CI")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && trimmed != "0"
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
+        })
+    {
         return Err(io::Error::other("published CI error diagnostic stack"));
     }
     let operation = if lane { "proceed" } else { "merge" };

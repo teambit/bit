@@ -31,7 +31,12 @@ impl Options {
         let (global, values) = parse_flags_and_values(rest)?;
         let action = match (command, values.as_slice()) {
             ("remote" | "list", []) => Action::List,
-            ("add", [url]) if valid_target(url) && url.starts_with("file://") => {
+            ("add", [url])
+                if valid_target(url)
+                    && url
+                        .strip_prefix("file://")
+                        .is_some_and(|path| !path.trim().is_empty()) =>
+            {
                 Action::Add((*url).to_owned())
             }
             ("del", [name]) if valid_target(name) => Action::Del((*name).to_owned()),

@@ -82,9 +82,13 @@ fn resolve_component(
     scope_dir: &Path,
     raw_id: &str,
 ) -> Option<ResolvedComponent> {
-    let (bare_id, explicit_ver) = raw_id
-        .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+    let (bare_id, explicit_ver) = match raw_id.trim().rsplit_once('@') {
+        Some((id, ver)) => {
+            let (id, ver) = (id.trim(), ver.trim());
+            (!id.is_empty() && !ver.is_empty()).then_some((id, Some(ver)))?
+        }
+        None => (raw_id.trim(), None),
+    };
     if let Some(root) = ws_root
         && let Some(comp) = resolve_from_workspace(root, bare_id, explicit_ver, raw_id)
     {

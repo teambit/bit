@@ -98,10 +98,18 @@ pub(in crate::commands) fn is_new(bitmap: &Value, id: &str) -> bool {
 }
 fn row_identity(key: &str, row: &Value) -> Option<String> {
     let key_id = bare(key);
-    let key_scope = key_id
-        .split_once('/')
-        .map(|(scope, _)| scope.trim())
-        .filter(|scope| !scope.is_empty());
+    let explicit_name = row["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty());
+    let key_scope = match explicit_name {
+        Some(name) => key_id
+            .strip_suffix(name)
+            .and_then(|prefix| prefix.strip_suffix('/')),
+        None => key_id.split_once('/').map(|(scope, _)| scope),
+    }
+    .map(str::trim)
+    .filter(|scope| !scope.is_empty());
     let scope = row["scope"]
         .as_str()
         .map(str::trim)
@@ -113,16 +121,12 @@ fn row_identity(key: &str, row: &Value) -> Option<String> {
                 .filter(|scope| !scope.is_empty())
         })
         .or(key_scope)?;
-    let name = row["name"]
-        .as_str()
-        .map(str::trim)
-        .filter(|name| !name.is_empty())
-        .unwrap_or_else(|| {
-            key_id
-                .strip_prefix(&format!("{scope}/"))
-                .unwrap_or(key_id)
-                .trim()
-        });
+    let name = explicit_name.unwrap_or_else(|| {
+        key_id
+            .strip_prefix(&format!("{scope}/"))
+            .unwrap_or(key_id)
+            .trim()
+    });
     (!name.is_empty()).then(|| format!("{scope}/{name}"))
 }
 fn main_exists(root: &Path, row: &Value) -> bool {

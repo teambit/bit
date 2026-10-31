@@ -6,7 +6,9 @@ pub(super) fn remove(path: &Path) -> io::Result<()> {
         return Ok(());
     }
     match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.is_dir() => return remove_directory(path),
+        Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {
+            return remove_directory(path);
+        }
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
         #[cfg(windows)]
         Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {

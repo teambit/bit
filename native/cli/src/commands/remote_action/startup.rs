@@ -65,6 +65,7 @@ fn is_main_lane(name: &str) -> bool {
 fn scope_supported(scope: &Path) -> io::Result<bool> {
     let path = scope.join("scope.jsonc");
     let raw = match fs::read(path) {
+        Ok(bytes) if bytes.iter().all(u8::is_ascii_whitespace) => Value::Null,
         Ok(bytes) => parse_jsonc(&bytes)?,
         Err(error) if error.kind() == io::ErrorKind::NotFound => Value::Null,
         Err(error) => return Err(error),
@@ -78,7 +79,7 @@ fn scope_supported(scope: &Path) -> io::Result<bool> {
 }
 
 fn config_supported(config: &Value, core: &[String]) -> bool {
-    let Some(entries) = config.as_object() else { return true };
+    let Some(entries) = config.as_object() else { return config.is_null() };
     entries
         .keys()
         .all(|key| {

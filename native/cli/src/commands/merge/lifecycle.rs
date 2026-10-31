@@ -29,24 +29,28 @@ pub(in crate::commands) struct Options {
 pub(in crate::commands) fn workflow<'a>(
     args: &[&'a str],
 ) -> Option<(resolve::workflow::Workflow, Vec<&'a str>)> {
-    let count = args
-        .iter()
-        .filter(|arg| matches!(arg.trim(), "--build" | "--build=true" | "--build=false"))
-        .count();
+    let mut count = 0usize;
+    let mut build = false;
+    let mut rest = Vec::with_capacity(args.len());
+    let mut after_double_dash = false;
+    for &arg in args {
+        let trimmed = arg.trim();
+        if trimmed == "--" {
+            after_double_dash = true;
+        }
+        if !after_double_dash && matches!(trimmed, "--build" | "--build=true" | "--build=false") {
+            count += 1;
+            build = matches!(trimmed, "--build" | "--build=true");
+        } else {
+            rest.push(arg);
+        }
+    }
     if count > 1 {
         return None;
     }
     let mut workflow = resolve::workflow::Workflow::default();
-    workflow.build = args
-        .iter()
-        .any(|arg| matches!(arg.trim(), "--build" | "--build=true"));
-    Some((
-        workflow,
-        args.iter()
-            .copied()
-            .filter(|arg| !matches!(arg.trim(), "--build" | "--build=true" | "--build=false"))
-            .collect(),
-    ))
+    workflow.build = build;
+    Some((workflow, rest))
 }
 
 pub(in crate::commands) fn run(

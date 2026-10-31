@@ -173,14 +173,14 @@ pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {
     let mut options = ServeOptions::default();
     let mut idx = 0;
     while idx < args.len() {
-        let arg = args[idx];
+        let arg = args[idx].trim();
         match arg {
             "--" => return (idx + 1 == args.len()).then_some(options),
             "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
             | "--color=false" | "--color=always" | "--color=never" => {}
             "-p" | "--port" => {
                 if let Some(&next) = args.get(idx + 1)
-                    && !next.starts_with('-')
+                    && !next.trim().starts_with('-')
                 {
                     options.port = parse_optional_port(next)?;
                     idx += 1;

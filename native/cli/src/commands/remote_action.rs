@@ -126,7 +126,13 @@ fn find_scope(cwd: &Path, workspace: Option<&Path>) -> Option<PathBuf> {
                         .then_some(nested)
                 })
         },
-        |root| Some(workspace::scope_path(root)),
+        |root| {
+            let scope = workspace::scope_path(root);
+            scope
+                .join("scope.json")
+                .is_file()
+                .then_some(scope)
+        },
     )
 }
 

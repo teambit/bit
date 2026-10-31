@@ -49,7 +49,7 @@ fn unique_ids(ids: &[String]) -> Vec<&str> {
     let mut out = Vec::with_capacity(ids.len());
     for id in ids
         .iter()
-        .map(|id| id.trim())
+        .map(|id| id.trim().trim_matches('/'))
         .filter(|id| !id.is_empty())
     {
         if !out.contains(&id) {

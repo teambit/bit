@@ -122,10 +122,24 @@ async fn ask(
         let (name, result) = result.map_err(io::Error::other)?;
         answers.record(name, result, delete);
     }
+    answers.order_by(names);
     Ok(answers)
 }
 
 impl Answers {
+    fn order_by(&mut self, names: &[String]) {
+        let pos = |target: &str| {
+            names
+                .iter()
+                .position(|name| name == target)
+                .unwrap_or(usize::MAX)
+        };
+        self.present.sort_by_key(|name| pos(name));
+        self.absent.sort_by_key(|name| pos(name));
+        self.unknown.sort_by_key(|name| pos(name));
+        self.failed.sort_by(|left, _, right, _| pos(left).cmp(&pos(right)));
+    }
+
     fn record(&mut self, name: String, result: io::Result<serde_json::Value>, delete: bool) {
         match result {
             Ok(value) => match value[if delete { "existed" } else { "exists" }].as_bool() {

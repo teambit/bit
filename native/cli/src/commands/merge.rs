@@ -59,7 +59,12 @@ fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outc
     }
     let json = raw_args
         .iter()
-        .any(|arg| matches!(arg.trim(), "-j" | "--json" | "--json=true"));
+        .take_while(|&&arg| arg.trim() != "--")
+        .fold(false, |acc, arg| match arg.trim() {
+            "-j" | "--json" | "--json=true" => true,
+            "--json=false" => false,
+            _ => acc,
+        });
     let cwd = std::env::current_dir()?;
     if let Some(root) = crate::workspace::root(&cwd) {
         if json {
@@ -89,5 +94,7 @@ fn is_ci_environment() -> bool {
             !trimmed.is_empty()
                 && !trimmed.eq_ignore_ascii_case("0")
                 && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
 }

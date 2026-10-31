@@ -79,18 +79,16 @@ impl Sequence {
         }
         let letters = letter(parts[0]).zip(letter(parts[1]));
         let Some((start, end)) = numbers.or(letters) else { return Ok(None) };
-        let step = parts
-            .get(2)
-            .map_or(Some(1), |step| {
-                numeric_endpoint(step)
-                    .then(|| step.parse::<i64>().ok())
-                    .flatten()
-            });
-        let Some(step) = step else { return Ok(None) };
-        let step = step
-            .checked_abs()
-            .ok_or_else(|| decline("component pattern sequence step"))?
-            .max(1);
+        let step = match parts.get(2) {
+            None => 1,
+            Some(step) if !numeric_endpoint(step) => return Ok(None),
+            Some(step) => step
+                .parse::<i64>()
+                .ok()
+                .and_then(i64::checked_abs)
+                .ok_or_else(|| decline("component pattern sequence step"))?
+                .max(1),
+        };
         let width = padded_width(&parts[..2], numbers.is_some());
         Ok(Some(Self { start, end, step, width, letters: numbers.is_none() }))
     }

@@ -4,7 +4,8 @@ pub(super) fn parse(argv: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut positions = Vec::new();
     let mut arguments = argv.iter().copied();
-    while let Some(argument) = arguments.next() {
+    while let Some(raw_argument) = arguments.next() {
+        let argument = raw_argument.trim();
         if argument == "--" {
             consume_trailing_positions(arguments, &mut positions)?;
             break;

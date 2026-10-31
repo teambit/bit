@@ -211,7 +211,7 @@ pub(super) fn lane_failure(
     selected: Option<&Selected>,
     error: &io::Error,
 ) -> io::Result<crate::native::Outcome> {
-    if std::env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+    if ci_active() {
         return Ok(crate::native::Outcome::Declined(LANE_CI_DIAGNOSTIC.into()));
     }
     crate::commands::workspace_command::execute_then(root, args, "reset", |output| {

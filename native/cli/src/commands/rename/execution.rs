@@ -115,17 +115,18 @@ pub(in crate::commands) fn hydrate(
         &ids,
     )?;
     print!("{}", linker.take_stdout());
-    if let Some(source) = captured
+    let source = captured
         .iter()
-        .find(|row| row["identity"] == prepared.plan.identity.source)
-    {
-        prepared.facts["sourceExtensions"] = source["current"]["extensions"].clone();
-        prepared.facts["sourceVersion"] = source["version"].clone();
-        if prepared.plan.identity.exported {
-            prepared.facts["sourceConfigs"] =
-                linker.call(root, "renameSourceConfig", &json!({"component":source}))?;
-            print!("{}", linker.take_stdout());
-        }
+        .find(|row| {
+            row["identity"].as_str().map(str::trim) == Some(prepared.plan.identity.source.trim())
+        })
+        .ok_or_else(|| io::Error::other("rename source component capture missing"))?;
+    prepared.facts["sourceExtensions"] = source["current"]["extensions"].clone();
+    prepared.facts["sourceVersion"] = source["version"].clone();
+    if prepared.plan.identity.exported {
+        let config_res = linker.call(root, "renameSourceConfig", &json!({"component":source}));
+        print!("{}", linker.take_stdout());
+        prepared.facts["sourceConfigs"] = config_res?;
     }
     prepared.facts["preflight"] = json!(false);
     refreshed_files(prepared, &captured)?;

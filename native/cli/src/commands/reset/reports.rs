@@ -38,7 +38,7 @@ pub(super) fn report(args: &[OsString], identity: &str, labels: &[String]) -> Re
     let formatter = Formatter::new(Chalk::detect(args));
     let item = formatter.item(&format!(
         "{} - version(s): {}",
-        formatter.chalk.cyan(identity),
+        formatter.chalk.cyan(identity.trim()),
         labels.join(", "),
     ));
     Report {
