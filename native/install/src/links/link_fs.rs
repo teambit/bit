@@ -316,7 +316,12 @@ fn symlink_each(source: &Path, targets: &[PathBuf]) -> io::Result<()> {
     for target in targets {
         // `read_dir` order is platform-defined: a symlinked directory can come
         // before any entry that would have created the destination.
-        fs::create_dir_all(target.parent().unwrap_or_else(|| Path::new("")))?;
+        if let Some(parent) = target
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+        {
+            fs::create_dir_all(parent)?;
+        }
         remove_path(target)?;
         symlink_dir(source, target)?;
     }
@@ -337,7 +342,12 @@ fn link_file(src: &Path, dest: &Path) -> io::Result<()> {
     let linked = match fs::hard_link(src, dest) {
         Err(error) if error.kind() == io::ErrorKind::NotFound && !src.exists() => return Ok(()),
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
-            fs::create_dir_all(dest.parent().unwrap_or_else(|| Path::new("")))?;
+            if let Some(parent) = dest
+                .parent()
+                .filter(|parent| !parent.as_os_str().is_empty())
+            {
+                fs::create_dir_all(parent)?;
+            }
             fs::hard_link(src, dest)
         }
         other => other,

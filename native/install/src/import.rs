@@ -138,7 +138,15 @@ fn connect(
 /// `getIdsToImportFromBitmap()` on main; on a lane, the lane ids (with hidden
 /// update-dependents) and the current-lane `.bitmap` ids the lane lacks.
 fn ids_to_import(bitmap: &Bitmap, lane: Option<&RemoteLane>) -> Vec<Id> {
-    let Some(lane) = lane else { return bitmap.ids.clone() };
+    let Some(lane) = lane else {
+        let mut unique = Vec::with_capacity(bitmap.ids.len());
+        for id in &bitmap.ids {
+            if !unique.contains(id) {
+                unique.push(id.clone());
+            }
+        }
+        return unique;
+    };
     let mut ids = lane.ids_with_update_dependents();
     for id in &bitmap.current_lane_ids {
         if !ids

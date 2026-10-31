@@ -98,10 +98,9 @@ impl EngineCall {
         if let Some(project) = projects
             .iter_mut()
             .find(|project| normalize(&project.dir) == root)
+            && !project.manifest.get("dependenciesMeta").is_some_and(Value::is_object)
         {
-            project.manifest
-                .entry("dependenciesMeta")
-                .or_insert_with(|| Value::Object(Map::new()));
+            project.manifest.insert("dependenciesMeta".to_string(), Value::Object(Map::new()));
         }
         projects
     }

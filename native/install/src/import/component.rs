@@ -300,21 +300,25 @@ pub fn keep_existing_version(existing: &Value, incoming: &Value) -> bool {
 /// `VersionHistory.merge`: incoming versions, then those only the existing one has.
 #[must_use]
 pub fn merge_version_history(existing: &Value, incoming: &Value) -> Value {
-    let incoming_versions = incoming["versions"]
+    let mut merged = incoming["versions"]
         .as_array()
         .cloned()
         .unwrap_or_default();
-    let mut merged = incoming_versions.clone();
     for version in existing["versions"]
         .as_array()
         .into_iter()
         .flatten()
     {
-        if !incoming_versions
-            .iter()
-            .any(|other| other["hash"] == version["hash"])
-            && !merged.contains(version)
-        {
+        let hash = version["hash"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty());
+        let already_present = hash.is_some_and(|hash| {
+            merged
+                .iter()
+                .any(|other| other["hash"].as_str().map(str::trim) == Some(hash))
+        }) || merged.contains(version);
+        if !already_present {
             merged.push(version.clone());
         }
     }

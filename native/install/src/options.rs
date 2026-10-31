@@ -182,7 +182,10 @@ fn flag_value<'a>(
         (_, Some(value)) => Some(value),
         // yargs booleans take a following `true`/`false`.
         (Arity::Switch, None) => args
-            .next_if(|next| matches!(next.as_str(), "true" | "false"))
+            .next_if(|next| {
+                let normalized = next.trim();
+                normalized.eq_ignore_ascii_case("true") || normalized.eq_ignore_ascii_case("false")
+            })
             .cloned(),
         (Arity::Value, None) => args
             .next_if(|next| !next.starts_with('-'))
@@ -325,7 +328,8 @@ fn dash_case(name: &str) -> String {
 }
 
 fn is_truthy(value: &str) -> bool {
-    !matches!(value, "false" | "0")
+    let trimmed = value.trim();
+    !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
 }
 
 fn invalid(message: &str) -> io::Error {

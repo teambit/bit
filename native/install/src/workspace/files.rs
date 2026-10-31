@@ -91,7 +91,10 @@ impl FileRules {
         dir: &str,
         exclude_dirs: &[String],
     ) -> io::Result<Vec<String>> {
-        let trimmed = dir.trim().trim_end_matches('/');
+        let trimmed = dir
+            .trim()
+            .trim_start_matches("./")
+            .trim_end_matches('/');
         let dir = if trimmed.is_empty() { WORKSPACE_ROOT_DIR } else { trimmed };
         let scanned = scan(&self.root, dir, exclude_dirs)?;
         if scanned.is_empty() {

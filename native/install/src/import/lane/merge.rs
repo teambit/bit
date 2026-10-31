@@ -53,7 +53,7 @@ fn merge(repo: &Repo, incoming: &LaneObject) -> io::Result<LaneObject> {
 /// local lane with the same hash under another id, renamed to the incoming id.
 fn load_existing(repo: &Repo, incoming: &LaneObject) -> io::Result<Option<LaneObject>> {
     if let Some(hash) = repo.lane_hash(&incoming.scope, &incoming.name)? {
-        if hash != incoming.hash {
+        if hash.trim() != incoming.hash.trim() {
             return Err(io::Error::other(format!(
                 r#"unable to merge "{}" lane. a lane with the same id already exists with a different hash.
 you can either export to a different scope (use bit lane track) or create a new lane with a different name and export.

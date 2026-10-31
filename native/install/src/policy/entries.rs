@@ -23,8 +23,8 @@ pub struct VariantOptions {
 #[must_use]
 pub fn entry(name: &str, version: &str, lifecycle: Lifecycle) -> PolicyEntry {
     PolicyEntry {
-        name: name.to_owned(),
-        version: version.to_owned(),
+        name: name.trim().to_owned(),
+        version: version.trim().to_owned(),
         lifecycle,
         force: false,
         optional: false,

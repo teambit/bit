@@ -89,10 +89,10 @@ pub(super) fn drop_unreachable(lockfile: &mut Map<String, Value>, strip: fn(&str
         .map(|path| strip(path).to_string())
         .collect();
     if let Some(entries) = object_mut(lockfile, "packages") {
-        entries.retain(|id, _| packages.contains(id));
+        entries.retain(|id, _| packages.contains(id.trim()));
     }
     if let Some(entries) = object_mut(lockfile, "snapshots") {
-        entries.retain(|path, _| snapshots.contains(path));
+        entries.retain(|path, _| snapshots.contains(path.trim()));
     }
     if let Some(Value::Array(deps)) = lockfile
         .get_mut("bit")
@@ -121,7 +121,7 @@ fn refers_to(pkg_ids: &HashSet<String>, name: &str, version: Option<&str>) -> bo
 /// Remove `pkg_ids` and every reference to them (`scrubPkgsFromLockfile`).
 pub(super) fn scrub(lockfile: &mut Map<String, Value>, pkg_ids: &HashSet<String>) {
     if let Some(packages) = object_mut(lockfile, "packages") {
-        packages.retain(|id, _| !pkg_ids.contains(id));
+        packages.retain(|id, _| !pkg_ids.contains(id.trim()));
     }
     if let Some(snapshots) = object_mut(lockfile, "snapshots") {
         snapshots.retain(|path, _| !pkg_ids.contains(remove_suffix(path)));

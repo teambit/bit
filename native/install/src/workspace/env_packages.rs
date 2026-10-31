@@ -29,15 +29,17 @@ pub fn external_env_packages(
         }
         let local = components
             .iter()
-            .any(|candidate| candidate.id.to_string_without_version() == env);
+            .any(|candidate| candidate.id.to_string_without_version().trim() == env);
         if CORE_ENVS.contains(&env) || local || packages.contains_key(env) {
             continue;
         }
         let id = bare_id(env);
         let package = objects
             .aspect(component.env_id.trim())?
-            .map_or_else(|| default_package_name(&id), |model| model.package_name(&id));
-        packages.insert(env.to_owned(), package);
+            .map(|model| model.package_name(&id))
+            .filter(|pkg| !pkg.trim().is_empty())
+            .unwrap_or_else(|| default_package_name(&id));
+        packages.insert(env.to_owned(), package.trim().to_owned());
     }
     Ok(packages)
 }

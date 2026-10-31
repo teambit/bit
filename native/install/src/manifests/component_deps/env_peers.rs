@@ -36,7 +36,10 @@ pub(super) fn legacy_env_peers(
     deps: &ComponentDependencies,
     input: &ManifestInput<'_>,
 ) -> DependencyMap {
-    let Some(env) = input.policies.envs.get(&component.env_id) else {
+    let Some(env) = input.policies.envs
+        .get(&component.env_id)
+        .or_else(|| input.policies.envs.get(component.env_id.trim()))
+    else {
         return DependencyMap::new();
     };
     let mut peers = DependencyMap::new();

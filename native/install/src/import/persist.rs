@@ -151,16 +151,18 @@ fn write_components(
         if existing.as_ref() != Some(&merged) {
             repo.write_raw(hash, &compress_json("Component", hash, &merged)?)?;
         }
-        rows.push(IndexRow::Component {
-            scope: scope.clone(),
-            name: name.clone(),
-            hash: hash.clone(),
-        });
-        if let Some(head) = remote_head {
-            heads
-                .entry(scope.clone())
-                .or_default()
-                .push(RemoteRef { scope, name, head });
+        if !scope.is_empty() && !name.is_empty() {
+            rows.push(IndexRow::Component {
+                scope: scope.clone(),
+                name: name.clone(),
+                hash: hash.clone(),
+            });
+            if let Some(head) = remote_head {
+                heads
+                    .entry(scope.clone())
+                    .or_default()
+                    .push(RemoteRef { scope, name, head });
+            }
         }
     }
     repo.index_add(&rows)?;

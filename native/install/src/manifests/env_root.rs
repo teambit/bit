@@ -34,15 +34,20 @@ pub(super) struct EnvRoot {
 fn collect(input: &ManifestInput<'_>) -> IndexMap<String, PeerVersions> {
     let mut peers: IndexMap<String, PeerVersions> = IndexMap::new();
     for component in super::load_order::load_order(input.components) {
-        let Some(policy) = input.policies.envs.get(&component.env_id) else {
+        let env_id = component.env_id.trim();
+        let Some(policy) = input.policies.envs
+            .get(&component.env_id)
+            .or_else(|| input.policies.envs.get(env_id))
+        else {
             continue;
         };
-        let env = without_version(&component.env_id).to_string();
+        let env = without_version(env_id).to_string();
         for entry in &policy.self_policy {
             let name = entry.name.trim();
             let version = entry.version.trim();
             if name.is_empty()
                 || version.is_empty()
+                || version == "-"
                 || input.components
                     .iter()
                     .any(|local| local.package_name.trim() == name)

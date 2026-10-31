@@ -44,22 +44,20 @@ pub fn auto_detect(policy: &[PolicyEntry]) -> FieldMaps {
 #[must_use]
 pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {
     let mut result = FieldMaps::default();
-    let mut used: Vec<&str> = Vec::new();
+    let mut used = std::collections::HashSet::new();
     for entry in policy.iter().filter(|entry| entry.force) {
-        let name = entry.name.trim();
-        let version = entry.version.trim();
-        if name.is_empty() || version.is_empty() {
-            continue;
-        }
-        if used.contains(&name) && version != REMOVE {
+        let (name, version) = (entry.name.trim(), entry.version.trim());
+        if name.is_empty() || version.is_empty() || (used.contains(name) && version != REMOVE) {
             continue;
         }
         result[field_index(entry.lifecycle)]
             .entry(name.to_owned())
-            .or_insert_with(|| version.to_owned());
-        if version != REMOVE && !used.contains(&name) {
-            used.push(name);
-        }
+            .or_insert_with(|| {
+                if version != REMOVE {
+                    used.insert(name);
+                }
+                version.to_owned()
+            });
     }
     result
 }

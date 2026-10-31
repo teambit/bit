@@ -24,7 +24,12 @@ pub fn aspect_env_ids(
         if bare.is_empty()
             || ids
                 .iter()
-                .any(|existing| existing == env_id || existing == bare)
+                .any(|existing| {
+                    existing == env_id
+                        || existing == bare
+                        || (env_id == bare
+                            && crate::config::aspect_id_without_version(existing) == bare)
+                })
         {
             continue;
         }

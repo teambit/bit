@@ -23,7 +23,9 @@ fn write(path: &Path, manifest: &Manifest, tracking: bool) -> io::Result<bool> {
     let mut text = serde_json::to_string_pretty(manifest).map_err(io::Error::other)?;
     text.push('\n');
     let directory = path.parent().unwrap_or_else(|| Path::new(""));
-    fs::create_dir_all(directory)?;
+    if !directory.as_os_str().is_empty() {
+        fs::create_dir_all(directory)?;
+    }
     let temporary = if tracking {
         directory.join(format!("package.json.{}", std::process::id()))
     } else {

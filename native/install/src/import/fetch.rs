@@ -48,8 +48,9 @@ impl Fetcher<'_> {
                 Err(error) if error.kind() == io::ErrorKind::ConnectionAborted => {
                     failed.push((scope, error));
                 }
-                Err(error) if error.kind() == io::ErrorKind::NotFound && options.kind != "lane" => {
-                }
+                Err(error)
+                    if error.kind() == io::ErrorKind::NotFound
+                        && !options.kind.trim().eq_ignore_ascii_case("lane") => {}
                 Err(error) => return Err(error),
             }
         }
@@ -66,31 +67,26 @@ impl Fetcher<'_> {
         options: &FetchOptions,
     ) -> io::Result<Vec<ObjectItem>> {
         let scope = scope.trim();
-        if scope.is_empty()
-            || !ids
-                .iter()
-                .any(|id| !id.trim().is_empty())
-        {
+        let cleaned_ids: Vec<String> = ids
+            .iter()
+            .map(|id| id.trim().to_string())
+            .filter(|id| !id.is_empty())
+            .collect();
+        if scope.is_empty() || cleaned_ids.is_empty() {
             return Ok(Vec::new());
         }
         let remote = self.remotes.resolve(scope, self.network).await.map_err(|error| {
             if error.kind() != io::ErrorKind::NotFound {
                 return error;
             }
-            let listed: Vec<&str> = ids
-                .iter()
-                .map(String::as_str)
-                .map(str::trim)
-                .filter(|id| !id.is_empty())
-                .collect();
             io::Error::other(format!(
                 "unable to import the following component(s): {}.\nthe remote scope \"{scope}\" was not found",
-                listed.join(", "),
+                cleaned_ids.join(", "),
             ))
         })?;
         match remote {
-            Remote::File(path) => fs_remote::fetch(&path, ids, options),
-            Remote::Http(url) => self.network.fetch(&url, ids, options).await,
+            Remote::File(path) => fs_remote::fetch(&path, &cleaned_ids, options),
+            Remote::Http(url) => self.network.fetch(&url, &cleaned_ids, options).await,
         }
     }
 }

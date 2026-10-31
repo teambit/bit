@@ -47,7 +47,7 @@ impl Importer<'_> {
         }
         let externals: Vec<Id> = ids
             .iter()
-            .filter(|id| id.scope != self.local_scope)
+            .filter(|id| id.scope.trim() != self.local_scope.trim())
             .cloned()
             .collect();
         let mut written = self.import_latest(&externals).await?;

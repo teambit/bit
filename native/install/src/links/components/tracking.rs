@@ -38,13 +38,13 @@ pub(super) fn persist(
 ) -> io::Result<bool> {
     let mut changed = false;
     for component in components {
+        let pkg_name = component.package_name.trim();
+        if pkg_name.is_empty() {
+            continue;
+        }
         let package = root
             .join("node_modules")
-            .join(
-                Path::new(component.package_name.trim())
-                    .components()
-                    .collect::<std::path::PathBuf>(),
-            );
+            .join(Path::new(pkg_name).components().collect::<std::path::PathBuf>());
         if is_symlink(&package) {
             remove_path(&package)?;
         }
@@ -70,7 +70,10 @@ pub(super) fn version(
     if component.id.version
         .as_deref()
         .is_none_or(|ver| ver.trim().is_empty())
-        && package_context.props.get("version").is_none()
+        && package_context.props
+            .get("version")
+            .and_then(Value::as_str)
+            .is_none_or(|ver| ver.trim().is_empty())
     {
         manifest.shift_remove("version");
     }

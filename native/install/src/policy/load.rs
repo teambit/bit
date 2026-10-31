@@ -182,6 +182,7 @@ impl EnvJsoncReader<'_> {
 /// The version a dependent env's `Version` records for its parent env.
 fn dependency_version(dependent: Option<&Value>, id: &str) -> Option<String> {
     let dependent = dependent?;
+    let target = split_version(id.trim()).0;
     ["dependencies", "devDependencies", "peerDependencies"]
         .iter()
         .filter_map(|field| dependent[field].as_array())
@@ -190,7 +191,10 @@ fn dependency_version(dependent: Option<&Value>, id: &str) -> Option<String> {
             let parsed = crate::dependencies::data::id_from_object(
                 dependency.get("id").unwrap_or(dependency),
             )?;
-            (parsed.to_string_without_version() == id).then_some(parsed.version)?
+            let version = parsed.version.as_deref()?.trim();
+            (parsed.to_string_without_version() == target && !version.is_empty()).then(|| {
+                version.to_owned()
+            })
         })
 }
 

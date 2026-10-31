@@ -106,8 +106,13 @@ impl DepsObject {
 
 /// `map[name]` is set and not an empty string.
 pub(super) fn truthy(map: &DependencyMap, name: &str) -> bool {
+    let trimmed = name.trim();
     map.get(name)
-        .or_else(|| map.get(name.trim()))
+        .or_else(|| map.get(trimmed))
+        .or_else(|| {
+            map.iter()
+                .find_map(|(key, val)| (key.trim() == trimmed).then_some(val))
+        })
         .map(|version| version.trim())
         .is_some_and(|version| !version.is_empty())
 }

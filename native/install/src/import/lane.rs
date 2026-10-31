@@ -50,15 +50,24 @@ impl RemoteLane {
     /// `toComponentIdsIncludeUpdateDependents()`.
     #[must_use]
     pub fn ids_with_update_dependents(&self) -> Vec<Id> {
-        let hidden = self.object["updateDependents"]
+        let mut ids = self.components();
+        for dep in self.object["updateDependents"]
             .as_array()
             .into_iter()
             .flatten()
-            .filter_map(super::fs_remote::dependency_id);
-        self.components()
-            .into_iter()
-            .chain(hidden)
-            .collect()
+            .filter_map(super::fs_remote::dependency_id)
+        {
+            if !ids
+                .iter()
+                .any(|existing| {
+                    existing.scope.trim() == dep.scope.trim()
+                        && existing.name.trim() == dep.name.trim()
+                })
+            {
+                ids.push(dep);
+            }
+        }
+        ids
     }
 
     /// Whether the lane lists the component (`groupByLanes`).

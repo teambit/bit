@@ -302,8 +302,8 @@ impl Loader<'_> {
         if propagate {
             let variant = by_root_dir_and_name(
                 &self.config.variants,
-                entry.root_dir.trim_end_matches('/'),
-                &entry.id.name,
+                entry.root_dir.trim().trim_end_matches('/'),
+                entry.id.name.trim(),
             )?;
             let lists = variant.extensions
                 .iter()

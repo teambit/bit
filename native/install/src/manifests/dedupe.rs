@@ -62,8 +62,10 @@ fn index_by_dep_id(
         .filter(|entry| entry.preserve.unwrap_or(true))
     {
         if let Some(existing) = index.get_mut(entry.name.trim()) {
-            existing.preserved =
-                Some((entry.version.trim().to_owned(), Field::of(entry.lifecycle)));
+            let version = super::versions::snap_to_semver(&entry.version);
+            if !version.is_empty() {
+                existing.preserved = Some((version, Field::of(entry.lifecycle)));
+            }
         }
     }
     index

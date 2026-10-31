@@ -108,7 +108,7 @@ struct Reducer<'a> {
 impl Reducer<'_> {
     /// One side is `*`: keep the other, widening a prerelease bound to its release.
     fn against_any(&self, bound: &Comparator) -> io::Result<Comparator> {
-        let kept_as_is = bound.operator == self.end.inclusive()
+        let kept_as_is = bound.operator.trim() == self.end.inclusive()
             && self.opposite_versions.contains(&version_text(bound));
         if self.single_range || !is_prerelease(bound) || kept_as_is {
             return Ok(bound.clone());
@@ -132,7 +132,7 @@ impl Reducer<'_> {
         };
         let chosen = if pick_left { left } else { right };
         let operator = match self.end {
-            End::Lower => chosen.operator.as_str(),
+            End::Lower => chosen.operator.trim(),
             End::Upper => "<",
         };
         Comparator::parse(&format!("{operator}{}", strip_prerelease(chosen)))
@@ -146,8 +146,10 @@ impl Reducer<'_> {
         (right, right_semver): (&Comparator, &SemVer),
     ) -> io::Result<Comparator> {
         let order = left_semver.compare(right_semver);
-        if left.operator != right.operator && order == Ordering::Equal {
-            let tighter = if left.operator == self.end.exclusive() { left } else { right };
+        let left_op = left.operator.trim();
+        let right_op = right.operator.trim();
+        if left_op != right_op && order == Ordering::Equal {
+            let tighter = if left_op == self.end.exclusive() { left } else { right };
             return Ok(tighter.clone());
         }
         let main = left_semver.compare_main(right_semver);

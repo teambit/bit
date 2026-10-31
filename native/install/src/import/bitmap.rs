@@ -36,6 +36,9 @@ impl Id {
 
     #[must_use]
     pub fn with_version(&self, version: Option<String>) -> Self {
+        let version = version
+            .map(|ver| ver.trim().to_string())
+            .filter(|ver| !ver.is_empty() && !matches!(ver.as_str(), "latest" | "head"));
         Self { version, ..self.clone() }
     }
 
@@ -74,7 +77,7 @@ pub struct LaneId {
 impl LaneId {
     #[must_use]
     pub fn to_request(&self) -> String {
-        format!("{}/{}", self.scope, self.name)
+        format!("{}/{}", self.scope.trim(), self.name.trim())
     }
 }
 

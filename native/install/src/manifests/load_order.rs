@@ -85,7 +85,8 @@ fn env_layers<'a>(
         .iter()
         .filter(|id| !envs_of_components.contains(**id))
         .filter_map(|id| by_id(components, id))
-        .map(|component| component.env_id.as_str())
+        .map(|component| component.env_id.trim())
+        .filter(|id| !id.is_empty())
         .collect();
     let (first, rest) = envs
         .iter()

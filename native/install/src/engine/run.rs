@@ -34,10 +34,10 @@ pub async fn install(
         settings.layout.enable_global_virtual_store,
         &settings.layout.bit_dir,
     )?;
+    let _guard = engine_call_lock().lock().await;
     if let Some(restore) = &options.restore {
         restore::write_lockfile(restore, plan, settings).await?;
     }
-    let _guard = engine_call_lock().lock().await;
     let pre_install_attrs = lockfile_attrs::read(root);
     let removed_lockfile = lockfile_attrs::remove_for_update(root, options.update_all)?;
     let outcome = EngineCall::new(plan, settings, options).spawn().await;
@@ -48,22 +48,29 @@ pub async fn install(
             return Err(error);
         }
     };
-    let deps_requiring_build = outcome.deps_requiring_build.map(|deps| {
-        let mut sorted: Vec<String> = deps
-            .into_iter()
-            .map(|dep| dep.trim().to_string())
-            .filter(|dep| !dep.is_empty())
-            .collect();
-        sorted.sort();
-        sorted.dedup();
-        sorted
-    });
+    let deps_requiring_build = outcome.deps_requiring_build.map(normalize_deps_requiring_build);
     if let Some(attrs) = lockfile_attrs::merge(pre_install_attrs, deps_requiring_build.as_deref()) {
         lockfile_attrs::write(root, attrs)?;
     }
+    let store_dir = if outcome.store_dir.as_os_str().is_empty() {
+        settings.store.store_dir.clone()
+    } else {
+        outcome.store_dir
+    };
     Ok(EngineResult {
         dependencies_changed: outcome.added.saturating_add(outcome.removed) > 0,
         deps_requiring_build,
-        store_dir: outcome.store_dir,
+        store_dir,
     })
+}
+
+fn normalize_deps_requiring_build(deps: Vec<String>) -> Vec<String> {
+    let mut sorted: Vec<String> = deps
+        .into_iter()
+        .map(|dep| dep.trim().to_string())
+        .filter(|dep| !dep.is_empty())
+        .collect();
+    sorted.sort();
+    sorted.dedup();
+    sorted
 }

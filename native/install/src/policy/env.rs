@@ -89,11 +89,8 @@ fn from_key(config: &Value, key: &str, options: &KeyOptions) -> io::Result<Vec<P
 fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<PolicyEntry> {
     let fallback_key =
         if options.version_key == "supportedRange" { "version" } else { "supportedRange" };
-    let version = item
-        .get(options.version_key)
-        .filter(|value| truthy(value))
-        .or_else(|| item.get(fallback_key).filter(|value| truthy(value)))
-        .and_then(Value::as_str)
+    let version = non_empty_field(item, options.version_key)
+        .or_else(|| non_empty_field(item, fallback_key))
         .ok_or_else(|| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -103,17 +100,8 @@ fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<Policy
                 ),
             )
         })?;
-    let name = item
-        .get("name")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|name| !name.is_empty())
-        .or_else(|| {
-            item.get("packageName")
-                .and_then(Value::as_str)
-                .map(str::trim)
-                .filter(|name| !name.is_empty())
-        })
+    let name = non_empty_field(item, "name")
+        .or_else(|| non_empty_field(item, "packageName"))
         .unwrap_or_default();
     let flag = |field: &str| item.get(field).is_some_and(truthy);
     Ok(PolicyEntry {
@@ -123,8 +111,15 @@ fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<Policy
         workspace_singleton: flag("workspaceSingleton"),
         r#override: flag("override"),
         source: Some(options.source.to_owned()),
-        ..entries::entry(name, version.trim(), options.lifecycle)
+        ..entries::entry(name, version, options.lifecycle)
     })
+}
+
+fn non_empty_field<'a>(item: &'a Value, field: &str) -> Option<&'a str> {
+    item.get(field)
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
 }
 
 /// `mergeEnvManifestPolicy` followed by `mergeEnvManifests`: for each of `peers`,

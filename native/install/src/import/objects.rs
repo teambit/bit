@@ -153,6 +153,7 @@ impl Repo {
     /// `getHashFromIndex(IndexType.lanes, ...)`: the object hash of the lane
     /// `scope/name`, `None` when the index does not list it.
     pub fn lane_hash(&self, scope: &str, name: &str) -> io::Result<Option<String>> {
+        let (scope, name) = (scope.trim(), name.trim());
         let index = read_index(&self.root.join("index.json"))?;
         Ok(index["lanes"]
             .as_array()
@@ -160,6 +161,8 @@ impl Repo {
             .flatten()
             .find(|row| id_scope_and_name(&row["id"]) == Some((scope, name)))
             .and_then(|row| row["hash"].as_str())
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
             .map(str::to_owned))
     }
 

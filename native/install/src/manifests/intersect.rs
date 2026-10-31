@@ -59,7 +59,8 @@ impl Multi {
                 parts.push(text);
             }
         }
-        parts.join(" || ")
+        let text = parts.join(" || ");
+        if text.is_empty() { "*".to_string() } else { text }
     }
 }
 
@@ -82,9 +83,6 @@ fn all_pairs_intersect(ranges: &[Range]) -> io::Result<bool> {
 /// `intersect(...ranges)`: the intersected range, or `None` when the ranges do
 /// not intersect or one of them is not a valid range.
 pub(crate) fn intersect(ranges: &[&str]) -> io::Result<Option<String>> {
-    if ranges.is_empty() {
-        return Ok(None);
-    }
     let Ok(parsed) = ranges
         .iter()
         .map(|range| Range::parse(range.trim(), Flavor::V6))
@@ -92,16 +90,25 @@ pub(crate) fn intersect(ranges: &[&str]) -> io::Result<Option<String>> {
     else {
         return Ok(None);
     };
+    let Some((first, rest)) = parsed.split_first() else {
+        return Ok(None);
+    };
     if !all_pairs_intersect(&parsed)? {
         return Ok(None);
     }
-    let mut result = Multi::default();
-    for range in &parsed {
-        result = result.intersect(Multi::from_range(range)?)?;
-    }
+    let mut result = Multi::from_range(first)?;
     if result.0.is_empty() {
         return Ok(None);
     }
-    let text = result.format();
-    Ok(Some(if text.is_empty() { "*".to_string() } else { text }))
+    for range in rest {
+        let next = Multi::from_range(range)?;
+        if next.0.is_empty() {
+            return Ok(None);
+        }
+        result = result.intersect(next)?;
+        if result.0.is_empty() {
+            return Ok(None);
+        }
+    }
+    Ok(Some(result.format()))
 }

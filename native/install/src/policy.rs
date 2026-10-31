@@ -69,7 +69,7 @@ pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String,
     for entry in policy {
         let name = entry.name.trim();
         let version = entry.version.trim();
-        if name.is_empty() || version.is_empty() {
+        if name.is_empty() || version.is_empty() || version == "-" {
             continue;
         }
         let index = usize::from(entry.lifecycle == crate::model::Lifecycle::Peer);

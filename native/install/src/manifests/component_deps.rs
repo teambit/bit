@@ -178,7 +178,7 @@ fn update_version(
 fn local_references(list: &[Dep<'_>], input: &ManifestInput<'_>) -> DependencyMap {
     let core_ids: Vec<&str> = input.context.core_aspects
         .iter()
-        .map(|aspect| aspect.id.as_str())
+        .map(|aspect| without_version(aspect.id.trim()))
         .collect();
     let mut references = DependencyMap::new();
     for dep in list {
@@ -191,8 +191,8 @@ fn local_references(list: &[Dep<'_>], input: &ManifestInput<'_>) -> DependencyMa
         let local = input.components
             .iter()
             .find(|component| same_id(&component.id, id) && component.id.version == id.version);
-        if let Some(local) = local.filter(|local| local.package_name != "@teambit/harmony") {
-            references.insert(local.package_name.clone(), "workspace:*".to_string());
+        if let Some(local) = local.filter(|local| local.package_name.trim() != "@teambit/harmony") {
+            references.insert(local.package_name.trim().to_string(), "workspace:*".to_string());
         }
     }
     references
@@ -200,15 +200,32 @@ fn local_references(list: &[Dep<'_>], input: &ManifestInput<'_>) -> DependencyMa
 
 fn missing(deps: &ComponentDependencies) -> (Vec<String>, Vec<String>) {
     let mut runtime: Vec<String> = Vec::new();
-    for name in &deps.missing_packages.runtime {
-        if !runtime.contains(name) {
-            runtime.push(name.clone());
+    for name in deps.missing_packages.runtime
+        .iter()
+        .map(|name| name.trim())
+        .filter(|name| !name.is_empty())
+    {
+        if !runtime
+            .iter()
+            .any(|existing| existing == name)
+        {
+            runtime.push(name.to_owned());
         }
     }
     let mut dev: Vec<String> = Vec::new();
-    for name in &deps.missing_packages.dev {
-        if !dev.contains(name) && !runtime.contains(name) {
-            dev.push(name.clone());
+    for name in deps.missing_packages.dev
+        .iter()
+        .map(|name| name.trim())
+        .filter(|name| !name.is_empty())
+    {
+        if !dev
+            .iter()
+            .any(|existing| existing == name)
+            && !runtime
+                .iter()
+                .any(|existing| existing == name)
+        {
+            dev.push(name.to_owned());
         }
     }
     (runtime, dev)

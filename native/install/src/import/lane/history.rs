@@ -59,7 +59,7 @@ pub fn record(
     identity: &Identity,
 ) -> io::Result<()> {
     let hash = history_hash(&lane.hash);
-    let mut history = match repo.read_json(&hash)? {
+    let mut history = match repo.read_json(&hash)?.filter(Value::is_object) {
         Some(existing) => existing,
         None => {
             json!({ "name": lane.name, "scope": lane.scope, "laneHash": lane.hash, "history": {} })

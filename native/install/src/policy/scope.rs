@@ -116,6 +116,7 @@ impl Scope {
 
     /// The `ModelComponent` of `scope/name`.
     pub fn model(&self, id: &str) -> io::Result<Option<Value>> {
+        let id = id.trim();
         if let Some(hash) = self.index_hash(id)
             && let Some(model) = self.json(&hash, "Component")?
         {
@@ -125,30 +126,35 @@ impl Scope {
             return Ok(Some(model));
         }
         match id.split_once('/') {
-            Some((_, name)) => self.json(&hex_sha1(name.as_bytes()), "Component"),
+            Some((_, name)) => self.json(&hex_sha1(name.trim().as_bytes()), "Component"),
             None => Ok(None),
         }
     }
 
     fn index_hash(&self, id: &str) -> Option<String> {
+        let id = id.trim();
         let bytes = fs::read(self.path.join("index.json")).ok()?;
         let index = bit_object_import::parse_jsonc(&bytes).ok()?;
         let rows = index["components"].as_array().or_else(|| index.as_array())?;
         let (target_scope, target_name) = id
             .split_once('/')
-            .map_or((None, id), |(scope, name)| (Some(scope), name));
+            .map_or((None, id), |(scope, name)| (Some(scope.trim()), name.trim()));
         rows.iter()
             .find(|row| {
                 row["isSymlink"] != true && index_row_matches(row, target_scope, target_name)
             })
             .and_then(|row| row["hash"].as_str())
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
             .map(str::to_owned)
     }
 
     /// The `Version` object of `scope/name` at `version` (a tag or a snap hash),
     /// or at the head when `version` is `None`.
     pub fn version(&self, id: &str, version: Option<&str>) -> io::Result<Option<Value>> {
-        let version = version.filter(|ver| !matches!(*ver, "" | "latest" | "head"));
+        let version = version
+            .map(str::trim)
+            .filter(|ver| !matches!(*ver, "" | "latest" | "head"));
         let Some(model) = self.model(id)? else {
             return match version.filter(|version| is_hash(version)) {
                 Some(hash) => self.json(hash, "Version"),
@@ -160,8 +166,13 @@ impl Scope {
                 .get(version)
                 .or_else(|| model["orphanedVersions"].get(version))
                 .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
                 .or_else(|| is_hash(version).then_some(version)),
-            None => model["head"].as_str(),
+            None => model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty()),
         };
         reference.map_or(Ok(None), |hash| self.json(hash, "Version"))
     }
@@ -187,17 +198,18 @@ impl Scope {
 }
 
 fn index_row_matches(row: &Value, target_scope: Option<&str>, target_name: &str) -> bool {
-    if let Some(id_str) = row["id"].as_str() {
+    if let Some(id_str) = row["id"].as_str().map(str::trim) {
         let (row_scope, row_name) = id_str
             .split_once('/')
-            .unwrap_or(("", id_str));
+            .map_or(("", id_str), |(scope, name)| (scope.trim(), name.trim()));
         return row_name == target_name
             && target_scope.is_none_or(|scope| row_scope.is_empty() || row_scope == scope);
     }
-    row["id"]["name"].as_str() == Some(target_name)
+    row["id"]["name"].as_str().map(str::trim) == Some(target_name)
         && target_scope.is_none_or(|scope| {
             row["id"]["scope"]
                 .as_str()
+                .map(str::trim)
                 .is_none_or(|row_scope| row_scope.is_empty() || row_scope == scope)
         })
 }

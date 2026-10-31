@@ -74,10 +74,10 @@ fn env_dir(
     env_packages: &IndexMap<String, String>,
     env_id: &str,
 ) -> PathBuf {
-    let bare = split_version(env_id).0;
+    let bare = split_version(env_id.trim()).0.trim();
     if let Some(aspect) = info.core_aspects
         .iter()
-        .find(|aspect| aspect.id.trim() == bare)
+        .find(|aspect| split_version(aspect.id.trim()).0.trim() == bare)
     {
         return bvm_or(info, aspect);
     }
@@ -90,6 +90,13 @@ fn env_dir(
         .or_else(|| {
             env_packages
                 .get(bare)
+                .or_else(|| {
+                    env_packages
+                        .iter()
+                        .find_map(|(key, pkg)| {
+                            (split_version(key.trim()).0.trim() == bare).then_some(pkg)
+                        })
+                })
                 .map(|pkg| pkg.trim())
                 .filter(|pkg| !pkg.is_empty())
                 .map(str::to_owned)

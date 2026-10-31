@@ -226,13 +226,17 @@ fn component_id(
         .or_else(|| {
             scope
                 .is_none()
-                .then(|| default_scope.map(str::to_owned))
-                .flatten()
+                .then(|| {
+                    default_scope
+                        .map(str::trim)
+                        .filter(|text| !text.is_empty())
+                        .map(str::to_owned)
+                })?
         });
     Ok(ComponentId {
         scope,
         default_scope,
-        name: string(value, "name").unwrap_or_else(|| key.to_owned()),
+        name: string(value, "name").unwrap_or_else(|| key.trim().to_owned()),
         version,
     })
 }

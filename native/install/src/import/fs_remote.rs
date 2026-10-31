@@ -286,22 +286,28 @@ pub(super) fn dependency_id(value: &Value) -> Option<Id> {
     let raw_name = target["name"]
         .as_str()
         .or_else(|| value["name"].as_str())
+        .map(str::trim)
         .filter(|val| !val.is_empty())?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
+        .map_or((raw_name, None), |(base, ver)| (base.trim(), Some(ver.trim())));
+    if name.is_empty() {
+        return None;
+    }
     let version = target["version"]
         .as_str()
         .or_else(|| value["version"].as_str())
         .or_else(|| target["head"].as_str())
         .or_else(|| value["head"].as_str())
         .or(inline_ver)
+        .map(str::trim)
         .filter(|val| !val.is_empty() && !matches!(*val, "latest" | "head"))
         .map(str::to_string);
     Some(Id {
         scope: target["scope"]
             .as_str()
             .or_else(|| value["scope"].as_str())
+            .map(str::trim)
             .filter(|val| !val.is_empty())?
             .to_string(),
         name: name.to_string(),
@@ -326,19 +332,24 @@ fn lane_hash(repo: &Repo, lane: &str) -> io::Result<Option<String>> {
         .flatten()
         .find(|row| matches_id_scope_name(&row["id"], lane_scope, name))
         .and_then(|row| row["hash"].as_str())
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(str::to_string))
 }
 
 fn matches_id_scope_name(id: &Value, expected_scope: Option<&str>, expected_name: &str) -> bool {
+    let expected_scope = expected_scope.map(str::trim);
+    let expected_name = expected_name.trim();
     if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let raw = raw.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
         let (sc, nm) = bare
             .split_once('/')
-            .map_or((None, bare), |(sc, nm)| (Some(sc), nm));
+            .map_or((None, bare), |(sc, nm)| (Some(sc.trim()), nm.trim()));
         return expected_scope.is_none_or(|exp| sc == Some(exp)) && nm == expected_name;
     }
-    expected_scope.is_none_or(|sc| id["scope"].as_str() == Some(sc))
-        && id["name"].as_str() == Some(expected_name)
+    expected_scope.is_none_or(|sc| id["scope"].as_str().map(str::trim) == Some(sc))
+        && id["name"].as_str().map(str::trim) == Some(expected_name)
 }
 
 fn find_lane(repo: &Repo, lane: &str) -> io::Result<Option<Value>> {

@@ -59,11 +59,21 @@ fn yaml_virtual_store_dir(line: &str) -> Option<String> {
     let line = line.trim();
     let rest = line
         .strip_prefix(r#""virtualStoreDir""#)
+        .or_else(|| line.strip_prefix("'virtualStoreDir'"))
         .or_else(|| line.strip_prefix("virtualStoreDir"))?;
     let value = rest
         .trim_start()
         .strip_prefix(':')?
         .trim();
+    let value = if value.starts_with(['"', '\'']) {
+        value
+    } else {
+        value
+            .split('#')
+            .next()
+            .unwrap_or(value)
+            .trim_end()
+    };
     let value = value
         .strip_suffix(',')
         .unwrap_or(value)

@@ -118,11 +118,16 @@ pub fn configures_non_core(component: &WorkspaceComponent, core_aspects: &[CoreA
 #[must_use]
 pub fn is_core(id: &str, core_aspects: &[CoreAspect]) -> bool {
     let id = id.trim();
+    let bare = super::split_version(id).0;
     RESERVED.contains(&id)
+        || RESERVED.contains(&bare)
         || is_core_env(id)
         || core_aspects
             .iter()
-            .any(|aspect| aspect.id.trim() == id)
+            .any(|aspect| {
+                let aspect_id = aspect.id.trim();
+                aspect_id == id || super::split_version(aspect_id).0 == bare
+            })
 }
 
 /// `[[registrar, policy], ...]` as the host returns `policiesRegistry.toArray()`.
@@ -161,10 +166,11 @@ pub fn component_slots(
         let registered = registry
             .iter()
             .find(|(registrar, _)| {
-                registrar == trimmed
-                    || super::split_version(registrar).0 == bare
-                    || registrar.contains(trimmed)
-                    || registrar.contains(bare)
+                let reg = registrar.trim();
+                reg == trimmed
+                    || super::split_version(reg).0 == bare
+                    || reg.contains(trimmed)
+                    || reg.contains(bare)
             });
         if let Some((_, policy)) = registered.filter(|(_, policy)| entries::truthy(policy)) {
             slots = merge(vec![slots, entries::from_variant_config(policy, &options)]);

@@ -91,16 +91,20 @@ fn root_manifest(projects: &[Project], root: &Path) -> io::Result<PackageManifes
             io::Error::other(format!("the install plan has no project for {}", root.display()))
         })?;
     Ok(PackageManifest::from_value(
-        project.dir.join("package.json"),
+        normalized_root.join("package.json"),
         Value::Object(project.manifest.clone()),
     ))
 }
 
 /// An engine importer of a project with its (transformed) manifest.
 pub(super) fn engine_project(dir: &Path, manifest: Map<String, Value>) -> pnpm_workspace::Project {
+    let normalized_dir = normalize(dir);
     pnpm_workspace::Project {
-        root_dir: dir.to_path_buf(),
-        manifest: PackageManifest::from_value(dir.join("package.json"), Value::Object(manifest)),
+        manifest: PackageManifest::from_value(
+            normalized_dir.join("package.json"),
+            Value::Object(manifest),
+        ),
+        root_dir: normalized_dir,
         dependency_manifest: None,
     }
 }

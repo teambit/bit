@@ -179,16 +179,19 @@ impl Resolver<'_> {
         if entry.core {
             return;
         }
-        let without = aspect_id_without_version(&entry.id).to_owned();
+        let trimmed_id = entry.id.trim().to_owned();
+        let without = aspect_id_without_version(&trimmed_id).to_owned();
         let Some(found) = self.workspace
             .iter()
-            .find(|id| id.to_string_without_version() == without || id.name == without)
+            .find(|id| id.to_string_without_version() == without || id.name.trim() == without)
         else {
             return;
         };
-        let given = entry.id
+        let given = trimmed_id
             .strip_prefix(&without)
-            .and_then(|rest| rest.strip_prefix('@'));
+            .and_then(|rest| rest.strip_prefix('@'))
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty());
         let version = if prefer_workspace_version {
             found.version.as_deref()
         } else {
@@ -247,7 +250,13 @@ impl<'a> Merger<'a> {
         let env = envs_entry.and_then(|entry| {
             entry
                 .env_config()
-                .or_else(|| entry.data.get("id").and_then(Value::as_str))
+                .or_else(|| {
+                    entry.data
+                        .get("id")
+                        .and_then(Value::as_str)
+                        .map(str::trim)
+                        .filter(|id| !id.is_empty())
+                })
                 .map(str::to_owned)
         });
         let has_envs = envs_entry.is_some() || entries.iter().any(|entry| is_core_env(&entry.id));

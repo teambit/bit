@@ -199,18 +199,18 @@ fn best_range<'a>(ranges: &[&'a str]) -> io::Result<BestRange<'a>> {
 fn handle_exact_versions_only(deduped: &mut Deduped, name: &str, items: &[Item]) -> io::Result<()> {
     let (version, _) = most_common_version(items.iter().map(|item| item.range.as_str()))?;
     set_root(deduped, lifecycle_field(items), name, &version);
-    keep_in_components(deduped, name, items, |item| item.range == version);
+    keep_in_components(deduped, name, items, |item| item.range.trim() == version);
     Ok(())
 }
 
 fn handle_ranges_only(deduped: &mut Deduped, name: &str, items: &[Item]) -> io::Result<()> {
     let ranges: Vec<&str> = items
         .iter()
-        .map(|item| item.range.as_str())
+        .map(|item| item.range.trim())
         .collect();
     let best = best_range(&ranges)?;
     set_root(deduped, lifecycle_field(items), name, &best.intersected);
-    keep_in_components(deduped, name, items, |item| best.ranges.contains(&item.range.as_str()));
+    keep_in_components(deduped, name, items, |item| best.ranges.contains(&item.range.trim()));
     Ok(())
 }
 
@@ -224,17 +224,17 @@ fn handle_ranges_and_versions(
     let (version, count) = most_common_version(versions.iter().map(|item| item.range.as_str()))?;
     let ranges: Vec<&str> = items
         .iter()
-        .map(|item| item.range.as_str())
+        .map(|item| item.range.trim())
         .filter(|range| valid_range(range).is_some())
         .collect();
     let best = best_range(&ranges)?;
     let field = lifecycle_field(items);
     if best.count < count {
         set_root(deduped, field, name, &version);
-        keep_in_components(deduped, name, items, |item| item.range == version);
+        keep_in_components(deduped, name, items, |item| item.range.trim() == version);
     } else {
         set_root(deduped, field, name, &best.intersected);
-        keep_in_components(deduped, name, items, |item| best.ranges.contains(&item.range.as_str()));
+        keep_in_components(deduped, name, items, |item| best.ranges.contains(&item.range.trim()));
     }
     Ok(())
 }

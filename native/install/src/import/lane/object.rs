@@ -18,7 +18,7 @@ pub struct LaneComponent {
 
 impl LaneComponent {
     fn same_id(&self, scope: &str, name: &str) -> bool {
-        self.scope == scope && self.name == name
+        self.scope.trim() == scope.trim() && self.name.trim() == name.trim()
     }
 }
 
@@ -133,13 +133,16 @@ impl LaneObject {
     /// `Lane.id()`: `scope/name`.
     #[must_use]
     pub fn id(&self) -> String {
-        format!("{}/{}", self.scope, self.name)
+        format!("{}/{}", self.scope.trim(), self.name.trim())
     }
 
     pub fn change_id(&mut self, scope: &str, name: &str) {
-        self.scope = scope.to_string();
-        self.name = name.to_string();
-        self.changed = true;
+        let (scope, name) = (scope.trim(), name.trim());
+        if self.scope != scope || self.name != name {
+            self.scope = scope.to_string();
+            self.name = name.to_string();
+            self.changed = true;
+        }
     }
 
     /// `Lane.getComponent`.
@@ -178,10 +181,11 @@ impl LaneObject {
     /// `Lane.getUpdateDependentAsLaneComponent`: the hidden entry as a lane component.
     #[must_use]
     pub fn update_dependent(&self, scope: &str, name: &str) -> Option<LaneComponent> {
+        let (scope, name) = (scope.trim(), name.trim());
         let found = self.update_dependents
             .iter()
             .flatten()
-            .find(|id| id.scope == scope && id.name == name)?;
+            .find(|id| id.scope.trim() == scope && id.name.trim() == name)?;
         Some(LaneComponent {
             scope: found.scope.clone(),
             name: found.name.clone(),
@@ -192,6 +196,7 @@ impl LaneObject {
 
     /// `Lane.removeComponentFromUpdateDependentsIfExist`.
     pub fn remove_update_dependent(&mut self, scope: &str, name: &str) {
+        let (scope, name) = (scope.trim(), name.trim());
         if self.update_dependent(scope, name).is_none() {
             return;
         }
@@ -199,7 +204,7 @@ impl LaneObject {
             .take()
             .into_iter()
             .flatten()
-            .filter(|id| !(id.scope == scope && id.name == name))
+            .filter(|id| !(id.scope.trim() == scope && id.name.trim() == name))
             .collect();
         self.update_dependents = (!remaining.is_empty()).then_some(remaining);
         self.changed = true;

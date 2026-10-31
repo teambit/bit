@@ -153,13 +153,21 @@ impl Single {
     }
 }
 
+fn equals_value(comp: &Comparator) -> &str {
+    comp.value
+        .trim()
+        .trim_start_matches('=')
+        .trim()
+}
+
 /// `createSingleRange(comparators)`.
 pub(super) fn create_single(comparators: &[Comparator]) -> io::Result<Option<Single>> {
     let mut equals: Vec<&Comparator> = Vec::new();
     for comparator in comparators.iter().filter(|comp| is_equals(comp)) {
+        let candidate = equals_value(comparator);
         if !equals
             .iter()
-            .any(|existing| existing.value.trim() == comparator.value.trim())
+            .any(|existing| equals_value(existing) == candidate)
         {
             equals.push(comparator);
         }

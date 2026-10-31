@@ -5,10 +5,13 @@ use crate::model::{Lifecycle, PolicyEntry};
 use regress::Regex;
 use std::{io, sync::OnceLock};
 
-/// `isHash` of `@teambit/component-version`: 3 to 40 hex characters.
+/// `isHash` of `@teambit/component-version`: 3 to 40 lowercase hex characters.
 pub(super) fn is_hash(version: &str) -> bool {
     let trimmed = version.trim();
-    (3..=40).contains(&trimmed.len()) && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
+    (3..=40).contains(&trimmed.len())
+        && trimmed
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 /// `snapToSemver`: a snap hash becomes `0.0.0-<hash>`.

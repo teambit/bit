@@ -31,7 +31,13 @@ pub fn refetch_requested() -> bool {
 pub fn incomplete(repo: &Repo, ids: &[Id]) -> io::Result<Vec<Id>> {
     let mut incomplete = Vec::new();
     for id in ids {
-        let Some(version) = id.version.as_deref() else { continue };
+        let Some(version) = id.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
+        else {
+            continue;
+        };
         let Some(component) = repo.read_json(&super::objects::component_hash(&id.scope, &id.name))?
         else {
             continue;

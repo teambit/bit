@@ -124,8 +124,12 @@ struct AppWalk<'a> {
 
 impl AppWalk<'_> {
     fn found(&mut self, package_name: &str) {
-        if let Some(spec) = self.workspace_deps.get(package_name) {
-            self.found.insert(package_name.to_string(), spec.clone());
+        let trimmed = package_name.trim();
+        if let Some(spec) = self.workspace_deps
+            .get(package_name)
+            .or_else(|| self.workspace_deps.get(trimmed))
+        {
+            self.found.insert(trimmed.to_string(), spec.clone());
         }
     }
 
@@ -176,16 +180,25 @@ fn app_manifests(
 ) -> IndexMap<PathBuf, Manifest> {
     let mut result = IndexMap::new();
     for app_id in input.context.apps {
+        let trimmed_app_id = app_id.trim();
         let Some(app) = input.components
             .iter()
-            .find(|component| component.id.to_string_without_version() == *app_id)
+            .find(|component| {
+                let bare = component.id.to_string_without_version();
+                bare == trimmed_app_id || without_version(trimmed_app_id) == bare
+            })
         else {
             continue;
         };
-        let name = Value::String(app.package_name.clone());
+        let target_name = app.package_name.trim();
         let Some(component_manifest) = manifests
             .values()
-            .find(|manifest| manifest.get("name") == Some(&name))
+            .find(|manifest| {
+                manifest
+                    .get("name")
+                    .and_then(Value::as_str)
+                    .is_some_and(|name| name.trim() == target_name)
+            })
         else {
             continue;
         };

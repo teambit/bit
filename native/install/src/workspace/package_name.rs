@@ -50,7 +50,10 @@ pub fn component_package_name(
     binding_prefix: Option<&str>,
     aspects: &Map<String, Value>,
 ) -> String {
-    let scope = id.effective_scope();
+    let scope = id
+        .effective_scope()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
     let clean_name = id.name.trim().trim_matches('/');
     if let Some(template) = configured_package_name(aspects) {
         let (owner, scope_name) = parse_scope(scope);

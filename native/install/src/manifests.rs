@@ -199,7 +199,10 @@ fn root_policy(input: &ManifestInput<'_>) -> Vec<PolicyEntry> {
         .iter()
         .filter(|entry| {
             let name = entry.name.trim();
+            let version = entry.version.trim();
             !name.is_empty()
+                && !version.is_empty()
+                && version != "-"
                 && name != "@teambit/legacy"
                 && !input.context.core_aspects
                     .iter()

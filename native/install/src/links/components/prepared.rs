@@ -34,10 +34,10 @@ pub fn link_prepared_component(
     manifest: Option<&Manifest>,
     root_components_dir: Option<&Path>,
 ) -> io::Result<ComponentLinks> {
-    if is_workspace_root_dir(&component.root_dir) {
+    let pkg_name = component.package_name.trim();
+    if is_workspace_root_dir(&component.root_dir) || pkg_name.is_empty() {
         return Ok(ComponentLinks::default());
     }
-    let pkg_name = component.package_name.trim();
     let package = root
         .join("node_modules")
         .join(Path::new(pkg_name).components().collect::<std::path::PathBuf>());

@@ -12,8 +12,11 @@ pub fn component_package_copies(
     component: &WorkspaceComponent,
     root_components: &Path,
 ) -> io::Result<Vec<PathBuf>> {
-    let injected = read_injected_deps(root)?;
     let pkg_name = component.package_name.trim();
+    if pkg_name.is_empty() {
+        return Ok(Vec::new());
+    }
+    let injected = read_injected_deps(root)?;
     let key = format!("node_modules/{pkg_name}");
     let mut directories = vec![root.join(&key)];
     let extras: Vec<PathBuf> =
@@ -45,9 +48,11 @@ fn injected_copy_paths<'a>(
     key: &str,
     root_dir: &str,
 ) -> Option<&'a [String]> {
+    let trimmed_root = root_dir.trim();
     injected
         .get(key)
-        .or_else(|| injected.get(root_dir.trim()))
+        .or_else(|| injected.get(trimmed_root))
+        .or_else(|| injected.get(trimmed_root.trim_end_matches(['/', '\\'])))
         .map(Vec::as_slice)
         .filter(|copies| !copies.is_empty())
 }

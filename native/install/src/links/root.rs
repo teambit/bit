@@ -202,17 +202,22 @@ fn workspace_ids(components: &[WorkspaceComponent]) -> Vec<String> {
 /// The workspace authors this core aspect. Matches both the full id and the bare name, as
 /// TypeScript does while the default scope of a core aspect is unresolved.
 fn is_authored(aspect: &CoreAspect, ids: &[String]) -> bool {
-    if aspect.id == MAIN_ASPECT_ID {
+    let aspect_id = crate::policy::split_version(aspect.id.trim()).0.trim();
+    if aspect_id == MAIN_ASPECT_ID {
         return false;
     }
-    let name = core_aspect_name(&aspect.id);
+    let name = core_aspect_name(aspect_id);
     ids.iter()
-        .any(|id| *id == name || *id == aspect.id)
+        .any(|id| {
+            let trimmed = id.trim();
+            trimmed == name || trimmed == aspect_id
+        })
 }
 
 /// `getCoreAspectName`: `teambit.harmony/envs/core-aspect-env` → `envs.core-aspect-env`.
 fn core_aspect_name(id: &str) -> String {
-    id.split('/')
+    crate::policy::split_version(id.trim()).0
+        .split('/')
         .skip(1)
         .collect::<Vec<_>>()
         .join(".")

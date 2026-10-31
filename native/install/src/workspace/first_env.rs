@@ -22,10 +22,18 @@ pub fn resolve(
 ) -> io::Result<()> {
     let envs: Vec<(String, bool)> = components
         .iter()
-        .map(|component| (component.id.to_string_without_version(), component.is_env))
+        .map(|component| {
+            (
+                component.id
+                    .to_string_without_version()
+                    .trim()
+                    .to_owned(),
+                component.is_env,
+            )
+        })
         .collect();
     for component in components.iter_mut() {
-        if component.env_id != DEFAULT_ENV || has_configured_env(component) {
+        if component.env_id.trim() != DEFAULT_ENV || has_configured_env(component) {
             continue;
         }
         if let Some(env) = first_env(component, &envs, objects, core_aspect_ids)? {

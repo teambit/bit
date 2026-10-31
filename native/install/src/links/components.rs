@@ -309,10 +309,16 @@ fn link_injected_package_json(
     package_dir: &Path,
     injected: &InjectedDeps,
 ) -> io::Result<()> {
-    let by_package = injected.get(&format!("node_modules/{}", component.package_name));
-    let dirs = by_package.or_else(|| injected.get(&component.root_dir));
+    let pkg_name = component.package_name.trim();
+    let by_package = injected.get(&format!("node_modules/{pkg_name}"));
+    let dirs = by_package.or_else(|| injected.get(component.root_dir.trim()));
     let source = package_dir.join("package.json");
-    for dir in dirs.into_iter().flatten() {
+    for dir in dirs
+        .into_iter()
+        .flatten()
+        .map(|dir| dir.trim())
+        .filter(|dir| !dir.is_empty())
+    {
         let dest = root.join(dir).join("package.json");
         create_link_or_symlink(&source, &dest, LinkKind::HardLinkOrSymlink, false)?;
     }

@@ -71,16 +71,15 @@ impl HostInfo {
         self.token
             .as_deref()
             .map(str::trim)
-            .map(|token| {
-                if token
+            .map(|mut token| {
+                while token
                     .get(..6)
                     .is_some_and(|prefix| prefix.eq_ignore_ascii_case("bearer"))
                     && token[6..].starts_with(char::is_whitespace)
                 {
-                    token[6..].trim()
-                } else {
-                    token
+                    token = token[6..].trim();
                 }
+                token
             })
             .filter(|token| !token.is_empty() && !token.chars().any(char::is_control))
     }

@@ -158,7 +158,7 @@ pub(super) fn merge_linked_root(
     let root_manifest = manifests.entry(root).or_default();
     let merged = spread(&[&linked, &manifest_field(root_manifest, "dependencies")]);
     root_manifest.insert("dependencies".into(), map_value(&merged));
-    if !root_manifest.contains_key("dependenciesMeta") {
+    if !root_manifest.get("dependenciesMeta").is_some_and(Value::is_object) {
         root_manifest.insert("dependenciesMeta".into(), Value::Object(serde_json::Map::new()));
     }
 }

@@ -77,14 +77,13 @@ pub(super) fn resolve(
         return allow_all_but(never_built);
     }
     let mut allow_builds = configured_builds(allow_scripts);
-    let configured = |name: &str| allow_scripts.and_then(|scripts| scripts.get(name));
     for name in trusted_package_names() {
-        if configured(name).is_none_or(Value::is_null) {
+        if configured_script(allow_scripts, name).is_none_or(Value::is_null) {
             allow_builds.insert(name.clone(), true);
         }
     }
     for name in UNTRUSTED_PACKAGE_NAMES {
-        if configured(name) != Some(&Value::Bool(true)) {
+        if configured_script(allow_scripts, name) != Some(&Value::Bool(true)) {
             allow_builds.insert(name.to_string(), false);
         }
     }
@@ -98,14 +97,36 @@ pub(super) fn resolve(
     ScriptPolicy { allow_builds, ..ScriptPolicy::default() }
 }
 
+fn configured_script<'a>(
+    allow_scripts: Option<&'a IndexMap<String, Value>>,
+    name: &str,
+) -> Option<&'a Value> {
+    let scripts = allow_scripts?;
+    scripts
+        .get(name)
+        .or_else(|| {
+            scripts
+                .iter()
+                .find_map(|(key, value)| (key.trim() == name).then_some(value))
+        })
+}
+
 /// `dangerouslyAllowAllScripts`: everything builds, except the never-built
 /// dependencies, whose scripts are also removed from their manifests.
 fn allow_all_but(never_built: &[String]) -> ScriptPolicy {
-    let cleaned: Vec<String> = never_built
+    let mut cleaned = Vec::new();
+    for name in never_built
         .iter()
-        .map(|name| name.trim().to_owned())
+        .map(|name| name.trim())
         .filter(|name| !name.is_empty())
-        .collect();
+    {
+        if !cleaned
+            .iter()
+            .any(|existing| existing == name)
+        {
+            cleaned.push(name.to_owned());
+        }
+    }
     if cleaned.is_empty() {
         return ScriptPolicy {
             dangerously_allow_all_builds: Some(true),

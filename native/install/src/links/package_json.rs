@@ -71,11 +71,11 @@ fn base(component: &WorkspaceComponent, context: &PackageJsonContext<'_>) -> Man
             .unwrap_or_else(|| "latest".into())
             .into(),
     );
-    if let Some(scope) = id.scope
+    let exported_scope = id.scope
         .as_deref()
         .map(str::trim)
-        .filter(|scope| !scope.is_empty())
-    {
+        .filter(|scope| !scope.is_empty());
+    if let Some(scope) = exported_scope {
         let path = scope.replacen('.', "/", 1);
         let domain = context.cloud_domain.trim().trim_end_matches('/');
         let homepage = format!("https://{domain}/{path}/{}", id.name.trim());
@@ -87,25 +87,36 @@ fn base(component: &WorkspaceComponent, context: &PackageJsonContext<'_>) -> Man
     manifest.insert("devDependencies".into(), packages(Lifecycle::Dev));
     manifest.insert("peerDependencies".into(), packages(Lifecycle::Peer));
     manifest.insert("license".into(), "SEE LICENSE IN UNLICENSED".into());
-    manifest.insert("exported".into(), id.scope.is_some().into());
+    manifest.insert("exported".into(), exported_scope.is_some().into());
     manifest
 }
 
 /// `ComponentID.serialize()`: `{ scope, name, version }`; an unexported id appends its default scope.
 fn serialized_id(component: &WorkspaceComponent) -> Value {
     let id = &component.id;
+    let exported_scope = id.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
     let mut object = Map::new();
-    if let Some(scope) = &id.scope {
-        object.insert("scope".into(), scope.clone().into());
+    if let Some(scope) = exported_scope {
+        object.insert("scope".into(), scope.into());
     }
     object.insert("name".into(), id.name.clone().into());
-    if let Some(version) = &id.version {
-        object.insert("version".into(), version.clone().into());
-    }
-    if id.scope.is_none()
-        && let Some(scope) = &id.default_scope
+    if let Some(version) = id.version
+        .as_deref()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
     {
-        object.insert("scope".into(), scope.clone().into());
+        object.insert("version".into(), version.into());
+    }
+    if exported_scope.is_none()
+        && let Some(scope) = id.default_scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|sc| !sc.is_empty())
+    {
+        object.insert("scope".into(), scope.into());
     }
     Value::Object(object)
 }
