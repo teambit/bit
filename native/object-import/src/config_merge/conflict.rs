@@ -82,6 +82,10 @@ pub(super) fn plan(input: &Value) -> io::Result<(Value, Conflict)> {
 pub(super) fn commit(input: &Value, pending: &mut Option<Conflict>) -> io::Result<Value> {
     let token = text(input, "token")?.trim();
     let path = PathBuf::from(text(input, "path")?.trim());
+    if token.is_empty() {
+        return Err(invalid("config conflict token"));
+    }
+    absolute(&path)?;
     let state = pending.as_ref().ok_or_else(|| invalid("no config conflict plan"))?;
     if state.token != token || state.path != path {
         return Err(invalid("stale config conflict plan"));

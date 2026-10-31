@@ -48,6 +48,12 @@ fn observed<'a>(
         .filter(|hash| !hash.is_empty())
         .ok_or_else(|| invalid("inspection retained raw hash"))?;
     crate::merge_history::hash(expected)?;
+    let snapshot_hash = file.snapshot_hash
+        .as_deref()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("inspection retained workspace observation"))?;
+    crate::merge_history::hash(snapshot_hash)?;
     snapshots
         .and_then(|state| state.get(token, &file.path, expected))
         .filter(|snapshot| {

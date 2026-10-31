@@ -35,7 +35,8 @@ pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
 }
 fn regular(path: &Path) -> io::Result<fs::Metadata> {
     let metadata = fs::symlink_metadata(path)?;
-    if !metadata.is_file() || metadata.len() > 32 * 1024 * 1024 {
+    if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > 32 * 1024 * 1024
+    {
         return Err(invalid("unsupported recovery copy metadata"));
     }
     links(path, &metadata)?;

@@ -13,10 +13,14 @@ pub(crate) fn distance(
         serde_json::from_value(records.clone()).map_err(|_| invalid("status history records"))?;
     graph::validate(&versions)?;
     let source = source
-        .map(|head| hash(head.trim()).map(|digest| crate::validate::hexadecimal(&digest)))
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .map(|head| hash(head).map(|digest| crate::validate::hexadecimal(&digest)))
         .transpose()?;
     let target = target
-        .map(|head| hash(head.trim()).map(|digest| crate::validate::hexadecimal(&digest)))
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .map(|head| hash(head).map(|digest| crate::validate::hexadecimal(&digest)))
         .transpose()?;
     for head in [&source, &target].into_iter().flatten() {
         if !versions

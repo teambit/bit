@@ -59,6 +59,7 @@ pub fn read_raw_scope_object(
     let end = raw
         .iter()
         .position(|byte| *byte == 0)
+        .filter(|end| *end < 256)
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing object header"))?;
     let header_str = std::str::from_utf8(&raw[..end])
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "object header is not UTF-8"))?;

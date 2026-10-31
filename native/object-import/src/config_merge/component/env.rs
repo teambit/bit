@@ -98,9 +98,16 @@ fn monotonic(engine: &mut Engine<'_>) -> io::Result<bool> {
     if engine.strategy() != "ours" || current["id"] != other["id"] {
         return Ok(false);
     }
-    let (Some(current_version), Some(other_version)) =
-        (current["version"].as_str(), other["version"].as_str())
-    else {
+    let (Some(current_version), Some(other_version)) = (
+        current["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty()),
+        other["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty()),
+    ) else {
         return Ok(false);
     };
     let semver = &engine.input["semver"];

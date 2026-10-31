@@ -185,7 +185,7 @@ fn verify_expected(expected: Option<&str>, actual: &str) -> io::Result<()> {
         .filter(|val| !val.is_empty())
     {
         crate::merge_history::hash(expected)?;
-        if expected != actual.trim() {
+        if !expected.eq_ignore_ascii_case(actual.trim()) {
             return Err(invalid("inspection expected snapshot differs"));
         }
     }

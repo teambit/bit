@@ -33,11 +33,12 @@ impl Capsules {
             retained.clone()
         } else {
             let path = self.directory.join(format!("{}-{index}.source.body", self.token));
-            OpenOptions::new()
+            let mut file = OpenOptions::new()
                 .create_new(true)
                 .write(true)
-                .open(&path)?
-                .write_all(&record.body)?;
+                .open(&path)?;
+            file.write_all(&record.body)?;
+            file.flush()?;
             (path, None)
         };
         self.sources.push(json!({"hash":hash,"privatePath":path,"compressedSize":record.compressed_size,"inflatedSize":record.inflated_size,"encoding":"raw","bodySize":record.body.len()}));

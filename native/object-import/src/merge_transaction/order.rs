@@ -8,7 +8,8 @@ pub(super) fn permutation(input: &Value, groups: &[Value], count: usize) -> io::
     }
     let mut permutation = (0..count).collect::<Vec<_>>();
     for (actual, expected) in observed.iter().zip(groups) {
-        if actual["stage"] != expected["stage"] {
+        let expected_stage = expected["stage"].as_str().map(str::trim);
+        if actual["stage"].as_str().map(str::trim) != expected_stage {
             return Err(invalid("merge order stage"));
         }
         let rows = indices(&expected["loads"], true)?;
@@ -24,7 +25,7 @@ pub(super) fn permutation(input: &Value, groups: &[Value], count: usize) -> io::
         if rows.len() != selected.len()
             || source != selected_set
             || selected_set.len() != selected.len()
-            || (expected["stage"] == "modified" && rows != selected)
+            || (expected_stage == Some("modified") && rows != selected)
         {
             return Err(invalid("merge invalid completion permutation"));
         }

@@ -40,7 +40,7 @@ pub(crate) fn modified(
                 .any(|file| {
                     models
                         .get(&file.relative_path)
-                        .is_none_or(|model| !same_hash(&model.hash, &file.linux_hash))
+                        .is_none_or(|model| !same_hash(model.normalized_hash(), &file.linux_hash))
                 })))
 }
 

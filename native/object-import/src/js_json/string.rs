@@ -6,6 +6,9 @@ pub(super) fn write(writer: &mut Writer, units: &[u16]) -> io::Result<()> {
     if units.is_empty() {
         return writer.bytes(b"\"\"");
     }
+    if units.len() > 32 * 1024 * 1024 {
+        return Err(super::invalid("JSON output limit"));
+    }
     writer.bytes(b"\"")?;
     let mut units = units.iter().copied().peekable();
     while let Some(unit) = units.next() {

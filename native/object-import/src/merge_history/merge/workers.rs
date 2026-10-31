@@ -21,6 +21,7 @@ pub(super) fn classify_all(execution: &Execution<'_>) -> io::Result<Vec<Value>> 
 
 fn should_classify_serially(execution: &Execution<'_>) -> bool {
     execution.request.current.len() < 2
+        || (execution.base.is_empty() && execution.other.is_empty())
         || rayon::current_thread_index().is_none()
         || rayon::current_num_threads() <= 1
 }

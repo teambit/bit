@@ -18,7 +18,14 @@ impl Handler {
         Self(Arc::new(callback))
     }
     pub(crate) fn call(&self, path: &Path, name: &str, options: &Value) -> io::Result<Value> {
-        (self.0)(path, name.trim(), options)
+        let name = name.trim();
+        if path.as_os_str().is_empty() || name.is_empty() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "export action requires a non-empty scope path and action name",
+            ));
+        }
+        (self.0)(path, name, options)
     }
 }
 thread_local! {

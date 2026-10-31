@@ -140,6 +140,7 @@ fn row_identity(row: &Value, model: &Value) -> Option<String> {
         .or_else(|| {
             model["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         })?;
     let name = (!row_name.is_empty())
@@ -147,6 +148,7 @@ fn row_identity(row: &Value, model: &Value) -> Option<String> {
         .or_else(|| {
             model["name"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         })?;
     Some(format!("{scope}/{name}"))
@@ -174,38 +176,38 @@ fn dependencies(version: &Value) -> Vec<String> {
 }
 
 fn id(value: &Value) -> Option<String> {
-    if let Some(text) = value
-        .as_str()
-        .or_else(|| value["id"].as_str())
-        .filter(|text| !text.is_empty())
-    {
+    if let Some(text) = non_empty(value).or_else(|| non_empty(&value["id"])) {
         return Some(text.to_owned());
     }
     let id_obj = value
         .get("id")
         .filter(|sub| sub.is_object())
         .unwrap_or(value);
-    let scope = id_obj["scope"]
-        .as_str()
-        .or_else(|| value["scope"].as_str())
-        .filter(|scope| !scope.is_empty())?;
-    let raw_name = id_obj["name"]
-        .as_str()
-        .or_else(|| value["name"].as_str())
-        .filter(|name| !name.is_empty())?;
+    let scope = non_empty(&id_obj["scope"]).or_else(|| non_empty(&value["scope"]))?;
+    let raw_name = non_empty(&id_obj["name"]).or_else(|| non_empty(&value["name"]))?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
         .map_or((raw_name, None), |(bare, ver)| {
-            (bare, Some(ver).filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")))
+            (
+                bare.trim(),
+                Some(ver.trim())
+                    .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")),
+            )
         });
-    let version = id_obj["version"]
-        .as_str()
-        .or_else(|| value["version"].as_str())
-        .or_else(|| value["head"].as_str())
-        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
+    let version = non_empty(&id_obj["version"])
+        .or_else(|| non_empty(&value["version"]))
+        .or_else(|| non_empty(&value["head"]))
+        .filter(|version| !matches!(*version, "latest" | "head"))
         .or(inline_ver);
     Some(version.map_or_else(
         || format!("{scope}/{name}"),
         |version| format!("{scope}/{name}@{version}"),
     ))
+}
+
+fn non_empty(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }

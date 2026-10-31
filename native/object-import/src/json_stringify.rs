@@ -22,17 +22,27 @@ fn convert(value: &serde_json::Value) -> io::Result<Value> {
             Value::Number(format!("{:016x}", number.to_bits()))
         }
         serde_json::Value::String(value) => Value::text(value),
-        serde_json::Value::Array(values) => Value::Array(
-            values
-                .iter()
-                .map(convert)
-                .collect::<io::Result<_>>()?,
-        ),
-        serde_json::Value::Object(values) => Value::Object(
-            values
-                .iter()
-                .map(|(key, value)| Ok((key.encode_utf16().collect(), convert(value)?)))
-                .collect::<io::Result<_>>()?,
-        ),
+        serde_json::Value::Array(values) => {
+            if values.len() > 262_144 {
+                return Err(io::Error::other("JSON array limit"));
+            }
+            Value::Array(
+                values
+                    .iter()
+                    .map(convert)
+                    .collect::<io::Result<_>>()?,
+            )
+        }
+        serde_json::Value::Object(values) => {
+            if values.len() > 262_144 {
+                return Err(io::Error::other("JSON object limit"));
+            }
+            Value::Object(
+                values
+                    .iter()
+                    .map(|(key, value)| Ok((key.encode_utf16().collect(), convert(value)?)))
+                    .collect::<io::Result<_>>()?,
+            )
+        }
     })
 }

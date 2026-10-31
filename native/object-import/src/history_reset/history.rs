@@ -27,6 +27,9 @@ fn history_entries(fields: &js_json::Value) -> io::Result<Vec<(Vec<u16>, js_json
         return Err(invalid("lane history map"));
     };
     bound(entries.len())?;
+    if entries.iter().any(|(key, _)| key.is_empty()) {
+        return Err(invalid("lane history key"));
+    }
     Ok(entries)
 }
 pub(super) fn prune(input: Value) -> io::Result<Value> {

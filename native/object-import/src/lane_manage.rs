@@ -156,17 +156,21 @@ impl Documents {
             .as_array()
             .and_then(|rows| {
                 rows.iter()
-                    .find(|row| row["localLane"] == name)
+                    .find(|row| row["localLane"].as_str().map(str::trim) == Some(name))
             })
         else {
             return Ok(None);
         };
         let remote_lane = tracked["remoteLane"]
             .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
             .ok_or_else(invalid)?
             .to_owned();
         let remote_scope = tracked["remoteScope"]
             .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
             .ok_or_else(invalid)?
             .to_owned();
         Ok(Some((remote_lane, remote_scope)))

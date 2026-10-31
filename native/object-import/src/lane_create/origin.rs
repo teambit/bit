@@ -135,10 +135,15 @@ pub(super) fn read_merge_move_backup(
         .iter()
         .find(|row| matches_lane_row(row, parent_id, parent_scope, parent_name))
         .ok_or_else(invalid)?;
-    let expected_hash = row["hash"].as_str().ok_or_else(invalid)?;
+    let expected_hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(invalid)?;
     let backup_bytes = fs::read(bit_workspace_config::scope_path(root).join("last-merged/lane"))?;
     let value = decode_backup_lane(&backup_bytes, expected_hash)?;
-    if value["name"].as_str() != Some(parent_name) || value["scope"].as_str() != Some(parent_scope)
+    if value["name"].as_str().map(str::trim) != Some(parent_name)
+        || value["scope"].as_str().map(str::trim) != Some(parent_scope)
     {
         return Err(invalid());
     }
@@ -146,14 +151,11 @@ pub(super) fn read_merge_move_backup(
 }
 
 fn matches_lane_row(row: &Value, parent_id: &Value, scope: &str, name: &str) -> bool {
+    let row_scope = row["id"]["scope"].as_str().map_or("", str::trim);
     row["id"] == *parent_id
-        || row["id"].as_str() == Some(&format!("{scope}/{name}"))
-        || (row["id"]["name"] == name
-            && (row["id"]["scope"]
-                .as_str()
-                .unwrap_or_default()
-                .is_empty()
-                || row["id"]["scope"] == scope))
+        || row["id"].as_str().map(str::trim) == Some(&format!("{scope}/{name}"))
+        || (row["id"]["name"].as_str().map(str::trim) == Some(name)
+            && (row_scope.is_empty() || row_scope == scope))
 }
 
 fn decode_backup_lane(backup_bytes: &[u8], expected_hash: &str) -> io::Result<Value> {

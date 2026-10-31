@@ -265,14 +265,15 @@ fn aliases(input: &Value, entry: &Value) -> io::Result<()> {
 }
 
 fn deleted(input: &Value, hash: Option<&str>) -> bool {
-    hash.is_some_and(|hash| {
-        input["deletedRefs"]
-            .as_array()
-            .is_some_and(|refs| {
-                refs.iter()
-                    .any(|reference| reference == hash)
-            })
-    })
+    hash.map(str::trim)
+        .is_some_and(|hash| {
+            input["deletedRefs"]
+                .as_array()
+                .is_some_and(|refs| {
+                    refs.iter()
+                        .any(|reference| reference.as_str().map(str::trim) == Some(hash))
+                })
+        })
 }
 fn optional<'a>(input: &'a Value, field: &str) -> io::Result<Option<&'a str>> {
     input

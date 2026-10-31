@@ -59,9 +59,10 @@ impl Writer {
 
     fn array(&mut self, values: &[Value], depth: usize) -> io::Result<()> {
         self.bytes(b"[")?;
+        let next_depth = depth.saturating_add(1);
         for (index, value) in values.iter().enumerate() {
-            self.separator(index, depth + 1)?;
-            self.value(value, depth + 1)?;
+            self.separator(index, next_depth)?;
+            self.value(value, next_depth)?;
         }
         self.close(b"]", !values.is_empty(), depth)
     }
@@ -69,11 +70,12 @@ impl Writer {
     fn object(&mut self, fields: &[(Vec<u16>, Value)], depth: usize) -> io::Result<()> {
         let entries = object::entries(fields)?;
         self.bytes(b"{")?;
+        let next_depth = depth.saturating_add(1);
         for (index, (key, value)) in entries.iter().enumerate() {
-            self.separator(index, depth + 1)?;
+            self.separator(index, next_depth)?;
             string::write(self, key)?;
             self.bytes(if self.pretty { b": " } else { b":" })?;
-            self.value(value, depth + 1)?;
+            self.value(value, next_depth)?;
         }
         self.close(b"}", !entries.is_empty(), depth)
     }

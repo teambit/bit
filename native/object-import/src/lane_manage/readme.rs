@@ -155,10 +155,14 @@ fn find_readme_bitmap_entry<'a>(
 
 fn readme_identity(readme: &Value) -> Option<(Option<&str>, &str)> {
     if let Some(raw) = readme["id"].as_str().or_else(|| readme.as_str()) {
-        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let raw = raw.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
         let (sc, nm) = bare
             .split_once('/')
-            .map_or((None, bare), |(sc, nm)| ((!sc.is_empty()).then_some(sc), nm));
+            .map_or((None, bare), |(sc, nm)| {
+                let sc = sc.trim();
+                ((!sc.is_empty()).then_some(sc), nm.trim())
+            });
         return (!nm.is_empty()).then_some((sc, nm));
     }
     let target = readme
@@ -167,9 +171,11 @@ fn readme_identity(readme: &Value) -> Option<(Option<&str>, &str)> {
         .unwrap_or(readme);
     let name = target["name"]
         .as_str()
+        .map(str::trim)
         .filter(|nm| !nm.is_empty())?;
     let scope = target["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|sc| !sc.is_empty());
     Some((scope, name))
 }

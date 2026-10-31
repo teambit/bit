@@ -85,7 +85,10 @@ pub(super) fn missing(input: &Value) -> io::Result<Value> {
     let existing = hashes(input, "existing")?;
     let mut missing = Vec::new();
     for (index, value) in rows(input, "candidates")?.iter().enumerate() {
-        let hash = value.as_str().ok_or_else(|| invalid("merge missing hash"))?;
+        let hash = value
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("merge missing hash"))?;
         crate::merge_history::hash(hash)?;
         if !existing.contains(hash) {
             missing.push(index);

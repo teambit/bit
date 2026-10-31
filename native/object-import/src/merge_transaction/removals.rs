@@ -37,7 +37,11 @@ fn status<'a>(statuses: &'a mut Vec<Value>, path: &str) -> io::Result<&'a str> {
         .iter()
         .position(|row| row["relativePath"] == path || row["path"] == path);
     let status = if let Some(index) = found {
-        statuses[index]["status"].as_str().ok_or_else(|| invalid("merge file status"))?
+        statuses[index]["status"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .ok_or_else(|| invalid("merge file status"))?
     } else {
         if [
             "__proto__",

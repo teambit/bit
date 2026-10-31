@@ -19,8 +19,12 @@ pub(super) fn plan(existing: &[String], incoming: &[Version]) -> io::Result<Valu
     for version in incoming {
         hash(version.hash.trim())?;
         references_valid(&version.parents)?;
-        if let Some(unrelated) = &version.unrelated {
-            hash(unrelated.trim())?;
+        if let Some(unrelated) = version.unrelated
+            .as_deref()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        {
+            hash(unrelated)?;
         }
         if let Some(squashed) = &version.squashed {
             references_valid(squashed)?;

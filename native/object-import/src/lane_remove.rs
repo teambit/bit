@@ -27,17 +27,8 @@ impl Plan {
         let mut index: Value = crate::parse_jsonc(&before)?;
         let before_bitmap = fs::read(root.join(".bitmap"))?;
         let bitmap = recovery::jsonc::parse(&before_bitmap)?;
-        let current = &bitmap["_bit_lane"];
         let rows = index["lanes"].as_array_mut().ok_or_else(|| invalid("lane index"))?;
-        let mut hashes = Vec::with_capacity(ids.len());
-        let mut seen = HashSet::new();
-        for raw_id in ids {
-            let id = raw_id.trim();
-            if !seen.insert(id.to_owned()) {
-                return Err(invalid("lane removal ID"));
-            }
-            hashes.push(select_one(root, rows, current, id)?);
-        }
+        let hashes = select_all(root, rows, &bitmap["_bit_lane"], ids)?;
         Store::new(scope_dir.join("objects"), None)?.validate_index_write()?;
         Ok(Self { root: root.to_owned(), before, before_bitmap, index, hashes })
     }
@@ -73,6 +64,28 @@ fn lane_matches(row: &Value, scope: &str, name: &str) -> bool {
     crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
         row, scope, name,
     )
+}
+
+fn select_all(
+    root: &Path,
+    rows: &mut Vec<Value>,
+    current: &Value,
+    ids: &[String],
+) -> io::Result<Vec<String>> {
+    let mut hashes = Vec::with_capacity(ids.len());
+    let mut seen = HashSet::new();
+    for raw_id in ids {
+        let id = raw_id.trim();
+        let Some((raw_scope, raw_name)) = id.split_once('/') else {
+            return Err(invalid("lane ID"));
+        };
+        let canonical = format!("{}/{}", raw_scope.trim(), raw_name.trim());
+        if !seen.insert(canonical.clone()) {
+            return Err(invalid("lane removal ID"));
+        }
+        hashes.push(select_one(root, rows, current, &canonical)?);
+    }
+    Ok(hashes)
 }
 
 fn select_one(root: &Path, rows: &mut Vec<Value>, current: &Value, id: &str) -> io::Result<String> {

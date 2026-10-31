@@ -223,8 +223,15 @@ fn resolve_main(
 
 fn existing_main(existing: Option<&Value>, directory: &str, files: &[String]) -> Option<String> {
     let existing = existing?;
-    let main = existing["mainFile"].as_str()?;
-    let root = existing["rootDir"].as_str().unwrap_or(directory);
+    let main = existing["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())?;
+    let root = existing["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .unwrap_or(directory);
     let main = if root == directory {
         main.into()
     } else {

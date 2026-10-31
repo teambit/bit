@@ -303,7 +303,10 @@ pub(super) fn component_row<'a>(index: &'a Value, id: &str) -> Option<&'a Value>
         .or_else(|| rows.iter().find(matches_id))
 }
 pub(super) fn hash(value: &Value) -> io::Result<&str> {
-    let text = value.as_str().ok_or_else(|| invalid("object hash"))?;
+    let text = value
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("object hash"))?;
     if text.len() != 40
         || !text
             .bytes()
@@ -340,6 +343,7 @@ pub(super) fn remove_index_refs(index: &mut Value, refs: &[String]) -> io::Resul
 fn selected_ref(row: &Value, refs: &[String]) -> bool {
     row["hash"]
         .as_str()
+        .map(str::trim)
         .is_some_and(|hash| refs.iter().any(|item| item == hash))
 }
 fn unmerged(scope: &Path, removed: &[String]) -> io::Result<Option<(Vec<u8>, Vec<u8>)>> {

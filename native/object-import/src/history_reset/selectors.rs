@@ -84,8 +84,9 @@ pub(super) fn soft(input: Value) -> io::Result<Value> {
             .as_ref()
             .map_or(index, |aliases| aliases[index]);
         if let Some(version) = version
-            .as_ref()
-            .filter(|version| !version.trim().is_empty())
+            .as_deref()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
             && !cleared.contains(&alias)
         {
             text(version)?;

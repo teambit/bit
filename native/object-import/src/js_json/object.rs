@@ -9,13 +9,11 @@ pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &
     if fields.len() > 262_144 {
         return Err(invalid("JavaScript object key limit"));
     }
-    let mut seen = HashSet::with_capacity(fields.len());
+    let mut seen = HashSet::with_capacity(fields.len().min(4096));
     let mut indices = Vec::new();
     let mut names = Vec::new();
     for (key, value) in fields {
-        if !seen.insert(key) {
-            return Err(invalid("duplicate JavaScript own key"));
-        }
+        validate_key(key.as_slice(), &mut seen)?;
         if matches!(value, Value::Undefined) {
             continue;
         }
@@ -31,6 +29,16 @@ pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &
         .map(|(_, key, value)| (key, value))
         .chain(names)
         .collect())
+}
+
+fn validate_key<'a>(key: &'a [u16], seen: &mut HashSet<&'a [u16]>) -> io::Result<()> {
+    if key.len() > 32768 {
+        return Err(invalid("JavaScript object key limit"));
+    }
+    if !seen.insert(key) {
+        return Err(invalid("duplicate JavaScript own key"));
+    }
+    Ok(())
 }
 
 fn index(key: &[u16]) -> Option<u32> {

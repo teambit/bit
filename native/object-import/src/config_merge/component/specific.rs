@@ -17,7 +17,7 @@ pub(super) fn retain(engine: &mut Engine<'_>) -> io::Result<()> {
 fn incoming<'a>(input: &'a Value, row: &Value) -> io::Result<Option<&'a Value>> {
     let merged = &row["merged"];
     if let Some(source) = merged.get("source") {
-        if source["side"] != "other" {
+        if source["side"].as_str().map(str::trim) != Some("other") {
             return Ok(None);
         }
         let index =

@@ -98,6 +98,7 @@ fn optional(path: &Path) -> io::Result<Option<Vec<u8>>> {
         Err(error) => return Err(error),
     }
     match fs::read(path) {
+        Ok(bytes) if bytes.len() > 32 * 1024 * 1024 => Err(invalid("remote object readset budget")),
         Ok(bytes) => Ok(Some(bytes)),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(error) => Err(error),

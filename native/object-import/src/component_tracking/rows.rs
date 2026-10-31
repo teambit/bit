@@ -29,14 +29,14 @@ pub(super) fn row_name<'a>(key: &'a str, row: &'a Value) -> Option<&'a str> {
     }
     let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
     if let Some(row_scope) = scope(row) {
-        return Some(
-            key_id
-                .strip_prefix(row_scope)
-                .and_then(|rest| rest.strip_prefix('/'))
-                .unwrap_or(key_id),
-        );
+        return key_id
+            .strip_prefix(row_scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .map_or(Some(key_id), |rest| Some(rest.trim()))
+            .filter(|name| !name.is_empty());
     }
     Some(key_id.split_once('/').map_or(key_id, |(_, name)| name.trim()))
+        .filter(|name| !name.is_empty())
 }
 pub(super) fn find<'a>(
     bitmap: &'a Value,

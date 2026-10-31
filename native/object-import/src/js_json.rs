@@ -78,6 +78,9 @@ pub fn stringify_indented(value: &Value, spaces: usize) -> io::Result<Vec<u8>> {
     if spaces > 10 {
         return Err(invalid("JavaScript indent out of bounds"));
     }
+    if matches!(value, Value::Undefined) {
+        return Err(invalid("JavaScript root undefined"));
+    }
     let mut writer = writer::Writer::new(spaces > 0);
     writer.spacing(spaces);
     writer.value(value, 0)?;

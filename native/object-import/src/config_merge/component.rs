@@ -25,7 +25,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
         "debug",
         format!(
             "*** end config-merger for {} ***\n",
-            engine.input["compIdStr"].as_str().unwrap_or(""),
+            engine.input["compIdStr"].as_str().map_or("", str::trim),
         ),
     );
     data::merge(&mut engine)?;
@@ -50,7 +50,7 @@ fn current(engine: &mut Engine<'_>) -> io::Result<()> {
         let base = engine.find("base", id)?;
         let other = engine.find("other", id)?;
         match (base, other) {
-            (_, Some(other)) if id.split('@').next() == Some("teambit.dependencies/dependency-resolver") => deps::merge(engine,index,other,base)?,
+            (_, Some(other)) if id.split('@').next().map(str::trim) == Some("teambit.dependencies/dependency-resolver") => deps::merge(engine,index,other,base)?,
             (_, Some(other)) => engine.basic(id,&Engine::source("current",index),&Engine::source("other",other),base.map(|base|Engine::source("base",base)).as_ref())?,
             (Some(_),None) if engine.strategy() == "theirs" => engine.rows.push(json!({"id":id,"merged":{"value":"-"}})),
             (Some(_),None) if engine.strategy() != "ours" => engine.rows.push(json!({"id":id,"conflict":{"kind":"basic","current":Engine::source("current",index),"other":{"value":"-"}}})),

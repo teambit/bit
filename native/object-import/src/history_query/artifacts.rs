@@ -56,7 +56,11 @@ fn validate_file(file: &Value) -> io::Result<()> {
         || path.contains('\0')
         || file
             .get("url")
-            .is_some_and(|value| !value.is_string())
+            .is_some_and(|value| {
+                value
+                    .as_str()
+                    .is_none_or(|url| url.len() > 32768 || url.contains('\0'))
+            })
     {
         return Err(invalid("history query artifact metadata"));
     }

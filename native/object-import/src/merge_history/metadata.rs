@@ -128,7 +128,12 @@ fn lane(value: &Value, field: &str) -> io::Result<()> {
 fn references(value: &Value) -> io::Result<()> {
     for field in ["flattenedDependenciesRef", "flattenedEdgesRef", "dependenciesGraphRef"] {
         if let Some(reference) = value.get(field).filter(|value| truthy(value)) {
-            hash(reference.as_str().ok_or_else(|| invalid("history invalid graph ref"))?)?;
+            hash(
+                reference
+                    .as_str()
+                    .map(str::trim)
+                    .ok_or_else(|| invalid("history invalid graph ref"))?,
+            )?;
         }
     }
     Ok(())

@@ -19,7 +19,11 @@ pub fn resolve(version: &str, resolved: Option<&str>, fallback: &str) -> String 
     else {
         return fallback.to_owned();
     };
-    if !resolved.starts_with("0.0.0-") && node_semver::npm::valid(resolved).is_some() {
+    if !resolved
+        .trim_start_matches(['v', 'V'])
+        .starts_with("0.0.0-")
+        && node_semver::npm::valid(resolved).is_some()
+    {
         format!("{}{resolved}", trimmed_version.strip_prefix('+').unwrap_or_default())
     } else {
         resolved.to_owned()

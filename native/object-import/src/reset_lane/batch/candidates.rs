@@ -54,8 +54,12 @@ pub(super) fn prepare(root: &Path) -> io::Result<Discovery> {
 }
 
 fn staged_repository(root: &Path, identity: &str) -> io::Result<Repository> {
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("lane candidate identity"))?;
+    let (scope, name) = identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("lane candidate identity"))?;
     let mut bitmap = context(root)?;
     bitmap.key = bitmap_key(
         bitmap.document.as_object().ok_or_else(|| invalid("lane candidate bitmap"))?,

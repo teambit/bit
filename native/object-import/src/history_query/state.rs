@@ -106,6 +106,8 @@ fn directory(input: &Value) -> io::Result<PathBuf> {
         input
             .get("objectsDirectory")
             .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
             .ok_or_else(|| invalid("history query objects directory"))?,
     );
     crate::merge_history::path(&path)?;

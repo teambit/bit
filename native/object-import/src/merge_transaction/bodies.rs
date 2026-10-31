@@ -208,7 +208,7 @@ fn text<'a>(value: &'a Value, field: &str) -> io::Result<&'a str> {
     value[field]
         .as_str()
         .map(str::trim)
-        .filter(|val| !val.is_empty())
+        .filter(|val| !val.is_empty() && val.len() <= 32768 && !val.contains('\0'))
         .ok_or_else(|| invalid("merge string field"))
 }
 

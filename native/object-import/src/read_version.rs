@@ -56,7 +56,11 @@ impl<'a> Reader<'a> {
         self.raw += object.len();
         self.records += 1;
         let (size, body) = repository::split(&object, hash, "Version")?;
-        if size.parse::<usize>().is_err() {
+        if size
+            .parse::<usize>()
+            .ok()
+            .is_none_or(|len| len > MAX_BYTES)
+        {
             return Err(invalid("invalid Version header size"));
         }
         let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;

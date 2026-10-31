@@ -40,7 +40,11 @@ fn bound(count: usize) -> io::Result<()> {
     Ok(())
 }
 fn text(value: &str) -> io::Result<()> {
-    if value.trim().is_empty() || value.len() > 32768 || value.contains('\0') {
+    if value.trim().is_empty()
+        || value.len() > 32768
+        || value.contains('\0')
+        || value.chars().any(char::is_control)
+    {
         return Err(invalid("history reset text"));
     }
     Ok(())

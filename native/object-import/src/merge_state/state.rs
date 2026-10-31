@@ -117,6 +117,12 @@ impl State {
         if ids.len() > 4096 {
             return Err(invalid("merge removal count limit"));
         }
+        for id in ids {
+            let name = id.name.trim();
+            if name.is_empty() || name.len() > 4096 || name.contains('\0') {
+                return Err(invalid("invalid unmerged name"));
+            }
+        }
         let removed: Vec<_> = ids
             .iter()
             .filter_map(|id| {

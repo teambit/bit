@@ -54,14 +54,19 @@ pub(super) fn index(input: Value) -> io::Result<Value> {
     Ok(json!({"dependents":dependents,"outside":outside}))
 }
 fn output_budget(queries: &[String], incoming: &HashMap<&str, Vec<&str>>) -> io::Result<()> {
-    let mut total = 256 + queries.len() * 8;
+    let mut total = 256_usize.saturating_add(queries.len().saturating_mul(8));
     for query in queries {
         let Some(rows) = incoming.get(query.trim()) else {
             continue;
         };
         for row in rows {
+            let entry_cost = row
+                .len()
+                .checked_mul(12)
+                .and_then(|val| val.checked_add(8))
+                .ok_or_else(|| invalid("dependency response overflow"))?;
             total = total
-                .checked_add(row.len() * 12 + 8)
+                .checked_add(entry_cost)
                 .ok_or_else(|| invalid("dependency response overflow"))?;
             if total > 4 * 1024 * 1024 {
                 return Err(invalid("dependency response limit"));

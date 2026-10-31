@@ -33,9 +33,10 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
         }
     }
     for other in array(engine.input, "other")? {
+        let id = non_empty_str(&other["stringId"], "data id")?;
         let query = non_empty_str(&other["idWithoutVersion"], "data query")?;
         if engine.find("current", query)?.is_none() {
-            engine.conflicts.push(json!({"id":other["stringId"],"reason":"missing in current"}));
+            engine.conflicts.push(json!({"id":id,"reason":"missing in current"}));
         }
     }
     Ok(())
@@ -68,6 +69,8 @@ fn reason(
         let version = |entry: Option<&serde_json::Value>| {
             entry
                 .and_then(|entry| entry["componentId"]["version"].as_str())
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
                 .unwrap_or("undefined")
                 .to_owned()
         };

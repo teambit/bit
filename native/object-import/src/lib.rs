@@ -80,7 +80,15 @@ mod workspace;
 pub fn render_workspace_bitmap(value: &serde_json::Value) -> std::io::Result<Vec<u8>> {
     if value
         .as_object()
-        .is_none_or(|rows| rows.len() > 65_536)
+        .is_none_or(|rows| {
+            rows.len() > 65_536
+                || rows
+                    .get("$schema-version")
+                    .is_some_and(|ver| {
+                        ver.as_str()
+                            .is_none_or(|text| text.trim().is_empty())
+                    })
+        })
     {
         return Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,

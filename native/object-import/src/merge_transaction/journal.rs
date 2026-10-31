@@ -192,7 +192,8 @@ impl State {
         Ok(output)
     }
     fn live(&self, token: &str) -> io::Result<&Record> {
-        let original = self.records.get(token).ok_or_else(|| invalid("stale merge owner"))?;
+        let original =
+            self.records.get(token.trim()).ok_or_else(|| invalid("stale merge owner"))?;
         let mut record = original;
         for _ in 0..4096 {
             let Some(parent) = &record.parent else { return Ok(original) };
@@ -220,6 +221,7 @@ impl State {
         Ok(())
     }
     pub(super) fn finish(&mut self, token: &str) -> io::Result<Vec<String>> {
+        let token = token.trim();
         self.live(token)?;
         let mut removed = vec![token.to_owned()];
         loop {

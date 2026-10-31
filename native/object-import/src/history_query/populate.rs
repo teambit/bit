@@ -183,7 +183,7 @@ fn traverse(
         missing,
         existing: request.existing
             .iter()
-            .cloned()
+            .map(|entry| entry.trim().to_owned())
             .collect(),
         overlays: overlay_indices(&request.overlays),
     };

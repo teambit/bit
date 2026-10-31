@@ -29,7 +29,9 @@ pub(super) fn prepare(
     } else {
         json!({"name":name,"scope":scope,"versions":[],"graphCompleteRefs":[]})
     };
-    if history["name"] != name || history["scope"] != scope {
+    if history["name"].as_str().map(str::trim) != Some(name)
+        || history["scope"].as_str().map(str::trim) != Some(scope)
+    {
         return Err(invalid());
     }
     let original = history.clone();

@@ -114,5 +114,9 @@ fn is_range(value: &Value) -> bool {
     matches!(value.as_str().map(str::trim), Some("+^" | "+~"))
 }
 fn text(value: &Value) -> &str {
-    value.as_str().map_or("undefined", str::trim)
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .unwrap_or("undefined")
 }

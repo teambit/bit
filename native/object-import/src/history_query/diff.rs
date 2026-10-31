@@ -31,10 +31,14 @@ pub(super) fn diff(request: Request, cache: &mut Cache) -> io::Result<Value> {
         Sources::new(request.objects_directory.clone(), request.snapshot_directory.clone(), cache)?;
     let left = request.left
         .as_deref()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(|hash| sources.read(hash))
         .transpose()?;
     let right = request.right
         .as_deref()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(|hash| sources.read(hash))
         .transpose()?;
     let mut result = finish(request, left, right)?;

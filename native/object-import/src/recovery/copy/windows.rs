@@ -2,6 +2,7 @@
 use std::{fs::OpenOptions, io, os::windows::fs::OpenOptionsExt, path::Path};
 
 const DIRECTORY: u64 = 0x0010;
+const OFFLINE: u64 = 0x1000;
 const OPEN_REPARSE_POINT: u32 = 0x0020_0000;
 const REPARSE_POINT: u64 = 0x0400;
 
@@ -15,5 +16,6 @@ pub(super) fn single(path: &Path) -> io::Result<bool> {
 }
 
 fn is_single_regular_handle(info: &winapi_util::file::Information) -> bool {
-    info.number_of_links() == 1 && info.file_attributes() & (DIRECTORY | REPARSE_POINT) == 0
+    info.number_of_links() == 1
+        && info.file_attributes() & (DIRECTORY | REPARSE_POINT | OFFLINE) == 0
 }

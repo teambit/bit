@@ -158,6 +158,7 @@ impl Documents {
         let bitmap = recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?;
         if scope_json["lanes"]["current"]
             .as_str()
+            .map(str::trim)
             .is_some_and(|current| !current.is_empty() && current != "main")
         {
             return Err(invalid());
@@ -180,7 +181,7 @@ impl Documents {
         let tracking = self.scope_json["lanes"]["tracking"].as_array_mut().ok_or_else(invalid)?;
         if tracking
             .iter()
-            .any(|row| row["localLane"] == alias)
+            .any(|row| row["localLane"].as_str().map(str::trim) == Some(alias))
         {
             return Err(invalid());
         }

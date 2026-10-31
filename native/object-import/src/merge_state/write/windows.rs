@@ -39,7 +39,9 @@ fn same_file_identity(
 }
 
 fn validate(info: &winapi_util::file::Information) -> io::Result<()> {
-    if info.number_of_links() != 1 || info.file_attributes() & (REPARSE_POINT | 0x0010) != 0 {
+    if info.number_of_links() != 1
+        || info.file_attributes() & (REPARSE_POINT | 0x0010 | 0x0040) != 0
+    {
         return Err(invalid("unsupported merge state file"));
     }
     Ok(())

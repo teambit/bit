@@ -17,6 +17,10 @@ pub fn ci_requires_published_diagnostic(
     global_remotes_file: &Path,
     history_id: &str,
 ) -> io::Result<bool> {
+    let history_id = history_id.trim();
+    if history_id.is_empty() {
+        return Ok(true);
+    }
     let bitmap = document(&root.join(".bitmap"))?;
     let Some(current) = bitmap.get("_bit_lane") else { return Ok(true) };
     let id: Id = command_import::lane::lane_index_id(current)?;

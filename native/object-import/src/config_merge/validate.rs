@@ -103,7 +103,7 @@ pub(super) fn component(input: &Value) -> io::Result<()> {
 }
 fn extension(entry: &Value) -> io::Result<()> {
     if !entry.is_object()
-        || (!entry["config"].is_object() && entry["config"] != "-")
+        || (!entry["config"].is_object() && entry["config"].as_str().map(str::trim) != Some("-"))
         || !entry["data"].is_object()
     {
         return Err(invalid("extension metadata"));

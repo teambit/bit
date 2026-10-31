@@ -39,20 +39,26 @@ fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
             }
             None => (None, bare),
         };
-        if name.is_empty() || name.len() > 4096 {
+        if name.is_empty()
+            || name.len() > 4096
+            || name.contains('\0')
+            || scope.is_some_and(|scope| scope.contains('\0'))
+        {
             return Err(invalid("merge identity name"));
         }
         return Ok((scope, name));
     }
     let scope = match target.get("scope") {
         None | Some(Value::Null) => None,
-        Some(Value::String(scope)) => Some(scope.trim()).filter(|scope| !scope.is_empty()),
+        Some(Value::String(scope)) if !scope.contains('\0') => {
+            Some(scope.trim()).filter(|scope| !scope.is_empty())
+        }
         _ => return Err(invalid("merge identity scope")),
     };
     let name = target["name"]
         .as_str()
         .map(str::trim)
-        .filter(|name| !name.is_empty() && name.len() <= 4096)
+        .filter(|name| !name.is_empty() && name.len() <= 4096 && !name.contains('\0'))
         .ok_or_else(|| invalid("merge identity name"))?;
     Ok((scope, name))
 }

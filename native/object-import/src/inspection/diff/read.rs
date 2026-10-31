@@ -25,7 +25,10 @@ pub(super) fn load(
         serial(directory, models, budget)?
     };
     for (model, record) in models.iter().zip(records) {
-        crate::merge_transaction::reads::source(crate::merge_history::hash(&model.hash)?, &record)?;
+        crate::merge_transaction::reads::source(
+            crate::merge_history::hash(model.normalized_hash())?,
+            &record,
+        )?;
         output.push(record.body);
     }
     Ok(output)
@@ -42,7 +45,7 @@ fn parallel(
         .map(|model| {
             crate::checkout::repository::read_source_shared(
                 directory,
-                crate::merge_history::hash(&model.hash)?,
+                crate::merge_history::hash(model.normalized_hash())?,
                 &raw,
                 &compressed,
             )

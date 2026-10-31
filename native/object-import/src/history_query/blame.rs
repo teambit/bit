@@ -80,7 +80,10 @@ fn reference<'a>(log: &'a Value, field: &str) -> io::Result<&'a str> {
 }
 fn metadata(row: &mut Value, log: &Value) {
     for field in ["username", "email", "date", "message", "hash", "tag"] {
-        if let Some(value) = log.get(field) {
+        if let Some(value) = log
+            .get(field)
+            .filter(|val| !val.is_null())
+        {
             row[field] = value.clone();
         } else if let Some(object) = row.as_object_mut() {
             object.remove(field);

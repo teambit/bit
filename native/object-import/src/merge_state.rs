@@ -380,6 +380,7 @@ fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 fn hash(hash: &str) -> io::Result<()> {
+    let hash = hash.trim();
     if hash.len() != 40
         || !hash
             .bytes()

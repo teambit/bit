@@ -33,10 +33,11 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
             .ok_or_else(|| invalid("component version"))?;
         let lifecycle = entries
             .iter()
-            .find(|entry| entry["dependencyId"] == name)
+            .find(|entry| entry["dependencyId"].as_str().map(str::trim) == Some(name))
             .ok_or_else(|| invalid("missing workspace dep"))?;
         plan.has_deps = true;
-        decide(&mut plan, input, name, workspace, component, lifecycle["lifecycleType"] == "peer")?;
+        let is_peer = lifecycle["lifecycleType"].as_str().map(str::trim) == Some("peer");
+        decide(&mut plan, input, name, workspace, component, is_peer)?;
     }
     Ok(
         json!({"updates":plan.updates,"conflicts":plan.conflicts,"logs":plan.logs,"warnings":plan.warnings,"hasDeps":plan.has_deps}),

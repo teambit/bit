@@ -131,6 +131,7 @@ pub(crate) fn path(path: &Path) -> io::Result<()> {
     }
 }
 pub(crate) fn hash(hash: &str) -> io::Result<[u8; 20]> {
+    let hash = hash.trim();
     if hash.len() != 40
         || !hash
             .bytes()

@@ -214,8 +214,21 @@ fn dependencies(engine: &Engine<'_>, side: &str) -> io::Result<Vec<Value>> {
 }
 fn normalize_dependency(entry: &Value, policies: &Value) -> io::Result<Value> {
     let mut dep = entry.clone();
-    let id = entry["id"].as_str().ok_or_else(|| invalid("dependency id"))?;
-    let id = if dep["__type"] == "package" { id } else { id.split('@').next().unwrap_or("") };
+    let raw_id = entry["id"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("dependency id"))?;
+    let id = if dep["__type"] == "package" {
+        raw_id
+    } else {
+        raw_id
+            .split('@')
+            .next()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .ok_or_else(|| invalid("dependency id"))?
+    };
     dep["id"] = json!(id);
     if dep["__type"] == "package" {
         dep.as_object_mut()

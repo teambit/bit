@@ -291,7 +291,13 @@ fn parse(mut input: Value) -> io::Result<Request> {
         }
     }
     let labels: Labels = serde_json::from_value(Value::Object(labels)).map_err(io::Error::other)?;
-    let fields: Fields = serde_json::from_value(input).map_err(io::Error::other)?;
+    let mut fields: Fields = serde_json::from_value(input).map_err(io::Error::other)?;
+    fields.start = fields.start
+        .map(|hash| hash.trim().to_owned())
+        .filter(|hash| !hash.is_empty());
+    fields.main_head = fields.main_head
+        .map(|hash| hash.trim().to_owned())
+        .filter(|hash| !hash.is_empty());
     let overlays = super::overlay_indices(&fields.overlays);
     let stops = fields.stop_at
         .iter()

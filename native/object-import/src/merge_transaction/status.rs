@@ -195,7 +195,7 @@ impl Cursor {
         });
     }
     fn modified(&mut self, value: &Value) -> io::Result<()> {
-        match value.get("type").and_then(Value::as_str) {
+        match value.get("type").and_then(Value::as_str).map(str::trim) {
             Some("code")=>self.unchanged("component is modified, please snap/tag it first".to_owned(),false),
             Some("config") if !boolean(value,"ignoreConfigChanges")?=>self.unchanged("component has config changes, please snap/tag it first. alternatively, use --ignore-config-changes flag to bypass".to_owned(),false),
             None | Some("config")=>self.next("divergence"),
@@ -228,9 +228,10 @@ impl Cursor {
         Ok(())
     }
     fn divergence_error(&mut self, value: &Value, error: &Value) -> io::Result<()> {
-        if error["kind"] == "noCommon"
+        if error["kind"].as_str().map(str::trim) == Some("noCommon")
             && value["resolveUnrelated"]
                 .as_str()
+                .map(str::trim)
                 .is_some_and(|strategy| !strategy.is_empty())
         {
             self.next("unrelated");
@@ -246,8 +247,10 @@ impl Cursor {
         Ok(())
     }
     fn unrelated(&mut self, value: &Value) -> io::Result<()> {
-        let strategy =
-            value["strategy"].as_str().ok_or_else(|| invalid("merge unrelated strategy"))?;
+        let strategy = value["strategy"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("merge unrelated strategy"))?;
         if !["ours", "theirs"].contains(&strategy) {
             return Err(invalid("unsupported unrelated strategy"));
         }

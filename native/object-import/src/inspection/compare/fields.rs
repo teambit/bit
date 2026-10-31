@@ -95,7 +95,11 @@ fn file_positions(model: &[Js]) -> HashMap<Vec<u16>, usize> {
 }
 fn align_files(left: &Js, right: &mut Js) -> io::Result<Vec<Value>> {
     let model = array(get(left, "files"))?;
-    let mut current = array(get(right, "files"))?.to_vec();
+    let current_slice = array(get(right, "files"))?;
+    if model.len() > 4096 || current_slice.len() > 4096 {
+        return Err(invalid("inspection compare row budget"));
+    }
+    let mut current = current_slice.to_vec();
     let mut metadata = Vec::new();
     let positions = file_positions(model);
     for (index, row) in current.iter_mut().enumerate() {

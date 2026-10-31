@@ -37,7 +37,10 @@ fn removed(entry: &Map<String, Value>) -> bool {
                         config
                             .iter()
                             .find_map(|(key, value)| {
-                                key.starts_with("teambit.component/remove@").then_some(value)
+                                let trimmed = key.trim();
+                                (trimmed == "teambit.component/remove"
+                                    || trimmed.starts_with("teambit.component/remove@"))
+                                .then_some(value)
                             })
                     })
             })

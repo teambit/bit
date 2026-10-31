@@ -103,6 +103,7 @@ fn matches_comparator(candidate: &Value, comparator: &Value) -> io::Result<bool>
     }
 }
 pub(super) fn greater(input: &Value, left: &str, right: &str) -> io::Result<bool> {
+    let (left, right) = (left.trim(), right.trim());
     Ok(compare(&input[left]["version"], &input[right]["version"])? == Ordering::Greater)
 }
 

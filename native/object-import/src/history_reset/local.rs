@@ -16,7 +16,11 @@ pub(super) fn append(input: Value) -> io::Result<Value> {
     let mut combined = request.source_only;
     let mut source_append = Vec::new();
     for (index, hash) in request.main_only.into_iter().enumerate() {
-        if !combined.contains(&hash) {
+        let trimmed = hash.trim();
+        if !combined
+            .iter()
+            .any(|existing| existing.trim() == trimmed)
+        {
             combined.push(hash);
             source_append.push(index);
         }

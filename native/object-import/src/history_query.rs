@@ -53,6 +53,7 @@ fn overlay_indices(overlays: &[Value]) -> std::collections::HashMap<String, usiz
             .filter(|hash| !hash.is_empty())
         {
             indices.entry(hash.to_owned()).or_insert(index);
+            indices.entry(hash.to_ascii_lowercase()).or_insert(index);
         }
     }
     indices

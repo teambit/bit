@@ -96,6 +96,9 @@ fn overrides(value: &mut Js) -> io::Result<Value> {
     if !overrides.truthy()? {
         return Ok(Value::Object(output));
     }
+    if !matches!(overrides, Js::Object(_)) {
+        return Err(invalid("inspection sortable map required"));
+    }
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
         let mut map = fields::get(&overrides, field).clone();
         if map.truthy()? {

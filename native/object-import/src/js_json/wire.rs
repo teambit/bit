@@ -54,6 +54,9 @@ impl<'de> Visitor<'de> for ValueVisitor {
                 .min(4096),
         );
         while let Some(value) = sequence.next_element()? {
+            if values.len() >= 262_144 {
+                return Err(serde::de::Error::custom("JavaScript array length limit"));
+            }
             values.push(value);
         }
         Ok(Value::Array(values))

@@ -55,7 +55,10 @@ fn rewrite(input: &Policy, previous: &[String]) -> io::Result<Value> {
         ("none", None)
     };
     let parents = match parent {
-        Some(_) if legacy => previous.to_vec(),
+        Some(_) if legacy => previous
+            .iter()
+            .map(|entry| entry.trim().to_owned())
+            .collect(),
         Some(parent) => vec![parent.trim().to_owned()],
         None => Vec::new(),
     };

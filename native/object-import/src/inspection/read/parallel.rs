@@ -8,6 +8,7 @@ pub(super) fn capture(
     maximum: usize,
     snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Vec<File>> {
+    let maximum = maximum.min(super::super::MAX_BYTES);
     let budget = Budget::new(maximum);
     let result = request.files
         .par_iter()

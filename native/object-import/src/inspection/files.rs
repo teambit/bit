@@ -6,7 +6,11 @@ use std::{
 };
 pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: wire::Files = serde_json::from_value(input).map_err(io::Error::other)?;
-    let files = plans.get(request.token.trim()).ok_or_else(|| invalid("stale inspection token"))?;
+    let token = request.token.trim();
+    if token.is_empty() {
+        return Err(invalid("stale inspection token"));
+    }
+    let files = plans.get(token).ok_or_else(|| invalid("stale inspection token"))?;
     let models = validated_models(&request.model_files)?;
     let mut statuses = Vec::new();
     let mut current = HashSet::new();

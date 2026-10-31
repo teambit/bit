@@ -136,10 +136,15 @@ fn hidden_parents(results: &mut [Value]) {
         if parents.len() != 1 {
             continue;
         }
+        let Some(target) = parents[0].as_str().map(str::trim) else {
+            continue;
+        };
         let Some(parent) = results
             .iter()
             .find(|row| {
-                row.get("hash") == Some(&parents[0])
+                row.get("hash")
+                    .and_then(Value::as_str)
+                    .is_some_and(|cand| cand.trim().eq_ignore_ascii_case(target))
                     && row.get("hidden") == Some(&Value::Bool(true))
             })
         else {

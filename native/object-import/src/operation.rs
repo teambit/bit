@@ -116,15 +116,22 @@ impl ComponentPlan {
         if !self.origin {
             return Vec::new();
         }
-        let local: HashSet<_> = self.local.iter().collect();
+        let local: HashSet<_> = self.local
+            .iter()
+            .map(|tag| tag.trim())
+            .collect();
         self.incoming
             .iter()
             .filter_map(|[tag, hash]| {
-                (local.contains(tag)
+                let tag_str = tag.trim();
+                let hash_str = hash.trim();
+                (local.contains(tag_str)
                     && self.existing
                         .iter()
-                        .any(|[old_tag, old_hash]| old_tag == tag && old_hash != hash))
-                .then_some(tag.as_str())
+                        .any(|[old_tag, old_hash]| {
+                            old_tag.trim() == tag_str && old_hash.trim() != hash_str
+                        }))
+                .then_some(tag_str)
             })
             .collect()
     }
@@ -135,19 +142,20 @@ impl ComponentPlan {
         let incoming: HashMap<_, _> = self.incoming
             .iter()
             .enumerate()
-            .map(|(index, [tag, hash])| (tag.as_str(), (index, hash)))
+            .map(|(index, [tag, hash])| (tag.trim(), (index, hash.trim())))
             .collect();
         let local: HashSet<_> = self.local
             .iter()
-            .map(String::as_str)
+            .map(|tag| tag.trim())
             .collect();
         for (index, [tag, hash]) in self.existing.iter().enumerate() {
-            match incoming.get(tag.as_str()) {
-                Some((new_index, new_hash)) if hash != *new_hash => {
+            let tag_str = tag.trim();
+            match incoming.get(tag_str) {
+                Some((new_index, new_hash)) if hash.trim() != *new_hash => {
                     actions.push(json!(["tag", 1, new_index]));
                 }
-                None if !local.contains(tag.as_str()) => {
-                    present.remove(tag.as_str());
+                None if !local.contains(tag_str) => {
+                    present.remove(tag_str);
                     actions.push(json!(["remove", 0, index]));
                 }
                 _ => {}

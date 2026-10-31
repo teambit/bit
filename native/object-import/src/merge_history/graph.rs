@@ -301,10 +301,10 @@ pub(super) fn diverge(
     hash(target)?;
     if !versions
         .iter()
-        .any(|version| version.hash == source)
+        .any(|version| version.hash.trim() == source)
         || !versions
             .iter()
-            .any(|version| version.hash == target)
+            .any(|version| version.hash.trim() == target)
     {
         return Err(invalid("history missing head"));
     }
@@ -323,8 +323,8 @@ pub(super) fn diverge(
         .collect();
     let version_unrelated = versions
         .iter()
-        .find(|version| version.hash == source)
-        .is_some_and(|version| version.unrelated.as_deref() == Some(target));
+        .find(|version| version.hash.trim() == source)
+        .is_some_and(|version| version.unrelated.as_deref().map(str::trim) == Some(target));
     let mut data = json!({"sourceOnly":source_only,"targetOnly":target_only,"noCommon":closest.is_none()&&!unrelated&&!version_unrelated});
     if let Some(common) = closest {
         data["common"] = json!(common);

@@ -126,11 +126,17 @@ impl<'a> Engine<'a> {
         Ok(())
     }
     pub(super) fn local(&self, id: &str, version: Option<&str>) -> io::Result<bool> {
+        let id = id.trim();
+        let version = version
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .unwrap_or("undefined");
+        let target = format!("{id}@{version}");
         Ok(array(self.input, "workspaceIds")?
             .iter()
-            .any(|entry| entry["base"] == id)
+            .any(|entry| entry["base"].as_str().map(str::trim) == Some(id))
             || array(self.input, "otherLaneIds")?
                 .iter()
-                .any(|entry| entry == &format!("{id}@{}", version.unwrap_or("undefined"))))
+                .any(|entry| entry.as_str().map(str::trim) == Some(target.as_str())))
     }
 }

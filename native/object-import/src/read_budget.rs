@@ -32,6 +32,9 @@ impl Budget {
             return Err(io::Error::other("parallel read requires a regular file"));
         }
         let length = usize::try_from(metadata.len()).map_err(io::Error::other)?;
+        if length > 32 * 1024 * 1024 {
+            return Err(io::Error::other("parallel read single file budget"));
+        }
         self.reserve(length)?;
         let mut bytes = vec![0; length];
         input.read_exact(&mut bytes)?;

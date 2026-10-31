@@ -7,6 +7,9 @@ pub(crate) const MAX_BYTES: usize = 256 * 1024;
 
 // Only losslessly decoded, completely terminated streams can bypass Node inflation.
 pub(crate) fn inflate(compressed: &[u8]) -> Option<String> {
+    if compressed.is_empty() {
+        return None;
+    }
     let mut decoder = Decompress::new(true);
     let mut chunk = vec![0; 64 * 1024].into_boxed_slice();
     let mut output = Vec::new();

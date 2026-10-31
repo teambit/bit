@@ -21,22 +21,12 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let current =
         plans.get(request.token.trim()).ok_or_else(|| invalid("stale inspection token"))?;
-    if !request.objects_directory.is_absolute() || request.model_files.len() > super::MAX_FILES {
-        return Err(invalid("inspection diff path/budget"));
-    }
-    let mut files = Vec::new();
     let mut seen = HashSet::new();
+    validate_request(&request, &mut seen)?;
     let total = current
         .iter()
         .map(|file| file.contents.len())
         .fold(0_usize, usize::saturating_add);
-    for model in &request.model_files {
-        super::read::relative(&model.relative_path)?;
-        crate::merge_history::hash(&model.hash)?;
-        if !seen.insert(model.relative_path.clone()) {
-            return Err(invalid("duplicate inspection diff model path"));
-        }
-    }
     let remaining = super::MAX_BYTES
         .checked_sub(total)
         .ok_or_else(|| invalid("inspection diff path/budget"))?;
@@ -45,6 +35,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
         .iter()
         .map(|file| (&file.relative_path, file))
         .collect();
+    let mut files = Vec::new();
     for (model, body) in request.model_files.into_iter().zip(bodies) {
         let right = by_path.get(&model.relative_path).map(|file| file.contents.clone());
         files.push((model.relative_path, Some(body), right));
@@ -55,6 +46,25 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
         }
     }
     Ok(
-        json!({"files":crate::workspace::engine::diff::frozen(files,&request.git_executable,request.color)?}),
+        json!({"files":crate::workspace::engine::diff::frozen(files,request.git_executable.trim(),request.color)?}),
     )
+}
+
+fn validate_request(request: &Request, seen: &mut HashSet<String>) -> io::Result<()> {
+    let git_executable = request.git_executable.trim();
+    if !request.objects_directory.is_absolute()
+        || request.model_files.len() > super::MAX_FILES
+        || git_executable.is_empty()
+        || git_executable.contains('\0')
+    {
+        return Err(invalid("inspection diff path/budget"));
+    }
+    for model in &request.model_files {
+        super::read::relative(&model.relative_path)?;
+        crate::merge_history::hash(&model.hash)?;
+        if !seen.insert(model.relative_path.clone()) {
+            return Err(invalid("duplicate inspection diff model path"));
+        }
+    }
+    Ok(())
 }

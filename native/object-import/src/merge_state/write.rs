@@ -33,6 +33,7 @@ pub(crate) fn commit_metadata(
         apply_metadata(&file, metadata)?;
     }
     file.write_all(contents.as_bytes())?;
+    file.flush()?;
     if (restore || cfg!(windows))
         && let Some(metadata) = metadata
     {

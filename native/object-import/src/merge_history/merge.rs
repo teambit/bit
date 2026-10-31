@@ -225,14 +225,14 @@ fn category(current: &str, base: Option<&Model>, other: Option<&Model>) -> &'sta
     let Some(other) = other else {
         return match base {
             None => "addFiles",
-            Some(base) if current == base.hash => "removeFiles",
+            Some(base) if current == base.hash.trim() => "removeFiles",
             Some(_) => "deletedConflictFiles",
         };
     };
-    if current == other.hash {
+    if current == other.hash.trim() {
         return "unModifiedFiles";
     }
-    if base.is_some_and(|base| current == base.hash) {
+    if base.is_some_and(|base| current == base.hash.trim()) {
         return "updatedFiles";
     }
     "modifiedFiles"

@@ -44,5 +44,12 @@ pub(crate) fn with_sender<Output>(
 /// Return whether the owning caller received this phase; no observer means no output.
 #[must_use]
 pub fn emit(event: Event) -> bool {
+    let event = match event {
+        Event::Transfer { scope, objects } => {
+            Event::Transfer { scope: scope.trim().to_owned(), objects }
+        }
+        Event::Persist { scope } => Event::Persist { scope: scope.trim().to_owned() },
+        other => other,
+    };
     current().is_some_and(|sender| sender.send(event).is_ok())
 }

@@ -127,6 +127,7 @@ impl Sources<'_> {
                 .create_new(true)
                 .open(&path)?;
             file.write_all(&record.compressed)?;
+            file.flush()?;
             descriptor["privatePath"] = json!(path);
         }
         Ok(descriptor)

@@ -43,6 +43,7 @@ fn roots(value: &Value) -> io::Result<HashSet<&str>> {
     let mut roots = HashSet::new();
     let mut explicit = HashSet::new();
     for (key, component) in entries {
+        let key = key.trim();
         if key == "_bit_lane" || key == if schema { "$schema-version" } else { "version" } {
             continue;
         }

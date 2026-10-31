@@ -56,8 +56,9 @@ fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()>
 
 fn normalize_path(path: &str) -> String {
     let replaced = path.trim().replace('\\', "/");
-    replaced
-        .strip_prefix("./")
-        .unwrap_or(&replaced)
-        .to_owned()
+    let mut current = replaced.as_str();
+    while let Some(stripped) = current.strip_prefix("./") {
+        current = stripped;
+    }
+    current.to_owned()
 }

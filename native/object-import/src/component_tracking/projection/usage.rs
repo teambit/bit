@@ -42,7 +42,10 @@ pub(super) fn filter(
 }
 
 fn existing_root(candidate: &Candidate, existing: Option<&Value>) -> io::Result<()> {
-    if let Some(root) = existing.and_then(|row| row["rootDir"].as_str())
+    if let Some(root) = existing
+        .and_then(|row| row["rootDir"].as_str())
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
         && root != candidate.directory
         && !root.starts_with(&format!("{}/", candidate.directory))
     {

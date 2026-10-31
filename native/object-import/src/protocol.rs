@@ -41,7 +41,8 @@ pub(crate) fn serve_extension(
         b"BCK1" => crate::checkout::plan::serve(reader, writer, checkout)?,
         b"BWC2" => crate::checkout::read_sources(reader, writer, checkout, pool)?,
         b"BWC0" | b"BWC1" => {
-            crate::checkout::serve(reader, writer, magic == *b"BWC0", checkout, pool)?;
+            let legacy = magic == *b"BWC0";
+            crate::checkout::serve(reader, writer, legacy, checkout, pool)?;
         }
         _ => return serve_workspace(magic, reader, writer),
     }

@@ -115,7 +115,10 @@ fn active(row: &Value) -> bool {
                 .or_else(|| {
                     cfg.iter()
                         .find_map(|(key, val)| {
-                            key.starts_with("teambit.component/remove@").then_some(val)
+                            let trimmed = key.trim();
+                            (trimmed == "teambit.component/remove"
+                                || trimmed.starts_with("teambit.component/remove@"))
+                            .then_some(val)
                         })
                 })
         })

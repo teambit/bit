@@ -102,8 +102,11 @@ pub(super) fn prepare(
 }
 
 fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
-    let name = model["name"].as_str()?;
-    let scope = model["scope"].as_str().unwrap_or_default();
+    let name = model["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())?;
+    let scope = model["scope"].as_str().map_or("", str::trim);
     let full = format!("{scope}/{name}");
     let (key, row) = bitmap
         .as_object()?
@@ -112,8 +115,9 @@ fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
     Some(
         row["version"]
             .as_str()
+            .map(str::trim)
             .filter(|ver| !ver.is_empty())
-            .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
+            .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver.trim()))
             .unwrap_or_default()
             .to_owned(),
     )

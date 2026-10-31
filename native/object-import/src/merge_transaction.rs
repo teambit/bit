@@ -68,7 +68,7 @@ fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
     let token = input["token"]
         .as_str()
         .map(str::trim)
-        .filter(|val| !val.is_empty())
+        .filter(|val| !val.is_empty() && val.len() <= 256 && !val.contains('\0'))
         .ok_or_else(|| invalid("merge owner token"))?;
     let index = input["index"]
         .as_u64()
@@ -81,7 +81,7 @@ fn verify_owner(input: &Value, state: &journal::State) -> io::Result<()> {
     let token = input["token"]
         .as_str()
         .map(str::trim)
-        .filter(|val| !val.is_empty())
+        .filter(|val| !val.is_empty() && val.len() <= 256 && !val.contains('\0'))
         .ok_or_else(|| invalid("merge owner token"))?;
     let index = input["index"]
         .as_u64()

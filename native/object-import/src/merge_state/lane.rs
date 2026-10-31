@@ -65,7 +65,10 @@ fn validate(input: &Plan) -> io::Result<()> {
     if input.options.detach_head && input.options.override_head {
         return Err(invalid("conflicting lane head options"));
     }
-    if input.parent.is_none()
+    let has_parent = input.parent
+        .as_deref()
+        .is_some_and(|val| !val.trim().is_empty());
+    if !has_parent
         && (input.lane.existing_visible_head.is_some() || input.lane.model_head.is_some())
     {
         return Err(invalid("lane snapshot requires previous version"));

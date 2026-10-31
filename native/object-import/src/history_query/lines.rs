@@ -24,7 +24,8 @@ fn tokens(text: &str) -> Vec<&str> {
 pub(super) fn diff(old: &str, new: &str) -> io::Result<Vec<Part>> {
     let old = tokens(old);
     let new = tokens(new);
-    if old.len() + new.len() > 65536 {
+    let total = old.len().saturating_add(new.len());
+    if total > 65536 {
         return Err(invalid("history line count limit"));
     }
     let mut seed = Path { old: -1, runs: Vec::new() };
@@ -34,7 +35,7 @@ pub(super) fn diff(old: &str, new: &str) -> io::Result<Vec<Part>> {
     }
     let mut paths = HashMap::from([(0isize, seed)]);
     let mut work = 0;
-    for distance in 1..=old.len() + new.len() {
+    for distance in 1..=total {
         for diagonal in (-(distance as isize)..=distance as isize).step_by(2) {
             if let Some(runs) = step(&mut paths, diagonal, &old, &new, &mut work)? {
                 return Ok(values(runs, &old, &new));

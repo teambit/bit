@@ -95,7 +95,12 @@ fn workspace_merge_for_platform(
     labels: [&str; 2],
     windows: bool,
 ) -> io::Result<(Vec<u8>, bool)> {
-    if current.len() + base.len() + other.len() > MAX_RAW {
+    if current
+        .len()
+        .saturating_add(base.len())
+        .saturating_add(other.len())
+        > MAX_RAW
+    {
         return Err(invalid("import merge input limit"));
     }
     let directory = Directory::new()?;

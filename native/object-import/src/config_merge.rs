@@ -58,7 +58,9 @@ fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(value) => *value,
-        Value::Number(value) => value.as_f64() != Some(0.0),
+        Value::Number(value) => value
+            .as_f64()
+            .is_some_and(|num| num != 0.0 && !num.is_nan()),
         Value::String(value) => !value.is_empty(),
         _ => true,
     }
@@ -77,7 +79,7 @@ pub(crate) fn render_workspace_conflict(contents: &str, conflicts: &Value) -> io
 fn text<'a>(input: &'a Value, field: &str) -> io::Result<&'a str> {
     input[field]
         .as_str()
-        .filter(|value| value.len() <= 4096)
+        .filter(|value| value.len() <= 4096 && !value.contains('\0'))
         .ok_or_else(|| invalid("config text"))
 }
 fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {

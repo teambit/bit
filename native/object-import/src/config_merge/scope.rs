@@ -74,10 +74,11 @@ fn one(merged: &Value, scope: Option<&Value>) -> io::Result<Value> {
         .unwrap_or(&[]);
     let mut append = Vec::new();
     for entry in entries {
+        let entry_name = entry["name"].as_str().map(str::trim);
         if originals
             .iter()
             .chain(append.iter())
-            .any(|existing| existing["name"] == entry["name"])
+            .any(|existing| existing["name"].as_str().map(str::trim) == entry_name)
         {
             continue;
         }
@@ -86,12 +87,12 @@ fn one(merged: &Value, scope: Option<&Value>) -> io::Result<Value> {
     }
     let mut retain = Vec::new();
     for (index, entry) in originals.iter().enumerate() {
-        if entry["version"] != "-" {
+        if entry["version"].as_str().map(str::trim) != Some("-") {
             retain.push(json!({"original":index}));
         }
     }
     for (index, entry) in append.iter().enumerate() {
-        if entry["version"] != "-" {
+        if entry["version"].as_str().map(str::trim) != Some("-") {
             retain.push(json!({"appended":index}));
         }
     }

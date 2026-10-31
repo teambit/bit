@@ -64,8 +64,11 @@ fn aggregate_entries(groups: &mut Groups, entries: &[Value], component: &str) ->
         if entry["force"] == true {
             continue;
         }
-        let name = text(entry, "name")?;
-        let version = text(entry, "version")?;
+        let name = text(entry, "name")?.trim();
+        let version = text(entry, "version")?.trim();
+        if name.is_empty() || version.is_empty() {
+            return Err(invalid("config entry"));
+        }
         if let Some((_, uses)) = groups
             .iter_mut()
             .find(|(key, _)| key == name)

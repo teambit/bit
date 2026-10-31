@@ -165,7 +165,7 @@ impl State {
     }
     fn prepare_fork(&self, request: &Fork, token: &str) -> io::Result<Record> {
         bound(request.count)?;
-        if self.records.len() + request.count > 4096 {
+        if self.records.len().saturating_add(request.count) > 4096 {
             return Err(invalid("reset child owner limit"));
         }
         let mut record = self.records

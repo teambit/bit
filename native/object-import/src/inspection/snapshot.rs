@@ -7,6 +7,9 @@ impl State {
     }
 }
 pub(super) fn remaining(state: &mut State, incoming: usize) -> io::Result<usize> {
+    if incoming > MAX_FILES {
+        return Err(invalid("inspection retained file/byte limit"));
+    }
     state.retained.retain(|files| files.strong_count() != 0);
     let mut count = incoming;
     let mut bytes = 0_usize;

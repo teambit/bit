@@ -47,6 +47,7 @@ pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
 }
 
 pub(crate) fn hash(lane_hash: &str) -> String {
+    let lane_hash = lane_hash.trim();
     format!("{:x}", Sha1::digest(format!("{lane_hash}:LaneHistory").as_bytes()))
 }
 

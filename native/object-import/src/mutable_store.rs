@@ -39,7 +39,7 @@ fn check_header(hash: &str, serialized: &[u8], models: bool) -> io::Result<()> {
         || parts
             .next()
             .and_then(|size| size.parse::<usize>().ok())
-            .is_none()
+            .is_none_or(|size| size > 32 * 1024 * 1024)
         || parts.next().is_some()
     {
         return Err(invalid("unsupported mutable identity or type"));

@@ -123,9 +123,16 @@ fn local(state: &State<'_, '_>, name: &str, version: Option<&str>) -> io::Result
     if let Some(component) = component {
         let id = component["id"]
             .as_str()
-            .or_else(|| component["componentId"].as_str())
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .or_else(|| {
+                component["componentId"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|val| !val.is_empty())
+            })
             .ok_or_else(|| super::super::super::invalid("component id"))?;
-        return state.engine.local(id, version);
+        return state.engine.local(id, version.map(str::trim));
     }
     Ok(false)
 }

@@ -91,7 +91,12 @@ fn edges(request: &Request) -> io::Result<Vec<Edge>> {
                 version.squashed
                     .iter()
                     .flatten()
-                    .filter(|hash| !version.parents.contains(hash))
+                    .filter(|hash| {
+                        let trimmed = hash.trim();
+                        !version.parents
+                            .iter()
+                            .any(|parent| parent.trim() == trimmed)
+                    })
                     .map(|hash| (hash, "squashed")),
             );
         for (hash, kind) in targets {

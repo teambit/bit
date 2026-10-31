@@ -69,7 +69,8 @@ pub(crate) fn source_parts(
         if !trace.records.contains_key(&hash) {
             trace.compressed = trace.compressed.saturating_add(compressed_size);
             trace.retained_bytes = trace.retained_bytes.saturating_add(body.len());
-            if trace.compressed > 32 * 1024 * 1024
+            if inflated_size < body.len()
+                || trace.compressed > 32 * 1024 * 1024
                 || trace.retained_bytes > 32 * 1024 * 1024
                 || trace.records.len() >= 4096
             {

@@ -49,7 +49,9 @@ impl State {
         Ok(json!({"token":self.token}))
     }
     pub(crate) fn advance(&mut self, token: &str, count: usize) -> io::Result<Value> {
-        if self.token.as_deref() != Some(token.trim())
+        let token = token.trim();
+        if token.is_empty()
+            || self.token.as_deref() != Some(token)
             || count == 0
             || count > self.operations.len().saturating_sub(self.index)
         {

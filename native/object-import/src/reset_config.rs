@@ -56,33 +56,37 @@ pub(crate) fn removed_lane_row(
         .as_array()
         .filter(|rows| rows.len() <= 4096)
         .ok_or_else(|| invalid("reset removed staged rows"))?;
-    let staged = rows
-        .iter()
-        .find(|row| {
-            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
-                row, scope, name,
-            )
-        });
-    let Some(staged) = staged.filter(|row| {
-        crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
-    }) else {
+    let Some(staged) = find_removed_staged(rows, scope, name) else {
         return Ok(None);
     };
     let map =
         staged["componentMapObject"].as_object().ok_or_else(|| invalid("reset removed map"))?;
-    let main_file = map
-        .get("mainFile")
-        .and_then(Value::as_str)
-        .ok_or_else(|| invalid("reset removed main file"))?;
-    let root_dir = map
-        .get("rootDir")
-        .and_then(Value::as_str)
-        .ok_or_else(|| invalid("reset removed root dir"))?;
-    let version =
-        staged["id"]["version"].as_str().ok_or_else(|| invalid("reset removed version"))?;
+    let main_file = non_empty(map.get("mainFile"), "reset removed main file")?;
+    let root_dir = non_empty(map.get("rootDir"), "reset removed root dir")?;
+    let version = non_empty(staged["id"].get("version"), "reset removed version")?;
     Ok(Some(serde_json::json!({
         "name":name,"scope":scope,"version":version,"mainFile":main_file,"rootDir":root_dir,
     })))
+}
+
+fn find_removed_staged<'a>(rows: &'a [Value], scope: &str, name: &str) -> Option<&'a Value> {
+    rows.iter()
+        .find(|row| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, name,
+            )
+        })
+        .filter(|row| {
+            crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
+        })
+}
+
+fn non_empty<'a>(value: Option<&'a Value>, message: &str) -> io::Result<&'a str> {
+    value
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid(message))
 }
 
 pub(crate) fn restore(row: &mut Map<String, Value>, config: Option<Value>) {

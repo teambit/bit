@@ -59,21 +59,21 @@ fn one(state: &mut State<'_, '_>, id: &str) -> io::Result<()> {
     state.engine.log("trace", format!("depData.id, {id}"));
     if state.engine.envs[..2]
         .iter()
-        .any(|env| env["id"] == id)
+        .any(|env| env["id"].as_str().map(str::trim) == Some(id))
     {
         return Ok(());
     }
     let current = state.data[0]
         .iter()
-        .find(|dep| dep["id"] == id)
+        .find(|dep| dep["id"].as_str().map(str::trim) == Some(id))
         .cloned();
     let other = state.data[1]
         .iter()
-        .find(|dep| dep["id"] == id && dep["source"] == "auto")
+        .find(|dep| dep["id"].as_str().map(str::trim) == Some(id) && dep["source"] == "auto")
         .cloned();
     let base = state.data[2]
         .iter()
-        .find(|dep| dep["id"] == id && dep["source"] == "auto")
+        .find(|dep| dep["id"].as_str().map(str::trim) == Some(id) && dep["source"] == "auto")
         .cloned();
     state.engine.meta("trace", "currentDep", current.as_ref());
     state.engine.meta("trace", "otherDep", other.as_ref());

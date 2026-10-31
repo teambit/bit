@@ -44,7 +44,12 @@ fn root_owner(
     if !super::super::active(row) {
         return Ok(());
     }
-    if directory == "." && name != row["name"].as_str().unwrap_or(owner) {
+    let tracked_name = row["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .unwrap_or(owner);
+    if directory == "." && name != tracked_name {
         return Err(error(format!(
             r#"unable to track the workspace root, it is already tracked by "{scope}/{owner}""#,
         )));
@@ -52,7 +57,7 @@ fn root_owner(
     if directory != "." && contains_root_main_file(row, directory) {
         return Err(error(format!(
             r#"unable to add "{directory}" as "{added_scope}/{name}", it contains "{}", the main file of the workspace-root component "{scope}/{owner}". set a different main file for it first: bit add . --main workspace.jsonc"#,
-            row["mainFile"].as_str().unwrap_or_default(),
+            row["mainFile"].as_str().map_or("", str::trim),
         )));
     }
     Ok(())
@@ -61,8 +66,10 @@ fn root_owner(
 fn contains_root_main_file(row: &Value, directory: &str) -> bool {
     row["mainFile"]
         .as_str()
+        .map(str::trim)
+        .filter(|main| !main.is_empty())
         .is_some_and(|main| {
             main.to_lowercase()
-                .starts_with(&format!("{}/", directory.to_lowercase()))
+                .starts_with(&format!("{}/", directory.trim().to_lowercase()))
         })
 }

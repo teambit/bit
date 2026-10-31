@@ -18,7 +18,7 @@ pub(super) fn merge(
         "trace",
         format!(
             "start depResolverStrategy for {}",
-            engine.input["compIdStr"].as_str().unwrap_or(""),
+            engine.input["compIdStr"].as_str().map_or("", str::trim),
         ),
     );
     for (side, index) in [("current", Some(current)), ("other", Some(other)), ("base", base)] {
