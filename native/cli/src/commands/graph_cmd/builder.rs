@@ -361,6 +361,7 @@ pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
 pub(crate) fn format_dep_id(id_val: &Value) -> Option<String> {
     if let Some(raw) = id_val
         .as_str()
+        .map(str::trim)
         .filter(|raw| !raw.is_empty())
     {
         return Some(raw.to_owned());
@@ -372,20 +373,26 @@ pub(crate) fn format_dep_id(id_val: &Value) -> Option<String> {
     let raw_name = inner["name"]
         .as_str()
         .or_else(|| id_val["name"].as_str())
+        .map(str::trim)
         .filter(|name| !name.is_empty())?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, ""), |(nm, ver)| (nm, ver));
+        .map_or((raw_name, ""), |(nm, ver)| (nm.trim(), ver.trim()));
+    if name.is_empty() {
+        return None;
+    }
     let ver = inner["version"]
         .as_str()
         .or_else(|| id_val["version"].as_str())
         .or_else(|| inner["head"].as_str())
         .or_else(|| id_val["head"].as_str())
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
         .unwrap_or(inline_ver);
     let base = match inner["scope"]
         .as_str()
         .or_else(|| id_val["scope"].as_str())
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     {
         Some(scope) => format!("{scope}/{name}"),

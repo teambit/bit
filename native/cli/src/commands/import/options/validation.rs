@@ -113,6 +113,7 @@ fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {
         None => true,
         Some(target_path) => {
             !target_path.trim().is_empty()
+                && !target_path.contains('\0')
                 && !objects_only
                 && ids.len() == 1
                 && !has_wildcard(&ids[0])

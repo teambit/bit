@@ -312,11 +312,15 @@ fn new_target_directory(
     template: &str,
     id: &str,
 ) -> Option<std::path::PathBuf> {
+    let id = id.trim();
     if id.contains('*') {
         return None;
     }
-    let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base);
-    let (scope, name) = without_ver.split_once('/')?;
+    let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
+    let (scope, name) = without_ver
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())?;
     if rows.iter().any(|(key, row)| bitmap_row_matches_scope_name(key, row, scope, name)) {
         return None;
     }

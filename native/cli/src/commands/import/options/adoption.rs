@@ -55,7 +55,14 @@ fn inline_value(values: &mut Values<'_>, argument: &str) -> Option<Option<()>> {
 }
 fn set_adoption_slot(field: &mut Option<String>, value: &str) -> Option<()> {
     let trimmed = value.trim();
-    if field.is_some() || trimmed.is_empty() || trimmed.starts_with('-') || trimmed.len() > 4096 {
+    if field.is_some()
+        || trimmed.contains('\0')
+        || trimmed.starts_with('-')
+        || trimmed.len() > 4096
+        || !trimmed
+            .split(',')
+            .any(|item| !item.trim().is_empty())
+    {
         return None;
     }
     *field = Some(trimmed.to_owned());

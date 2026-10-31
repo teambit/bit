@@ -23,13 +23,21 @@ pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report 
 }
 fn summary(options: &Options, ids: &[String], chalk: Chalk) -> String {
     let source = options.source.trim();
+    let count = ids
+        .iter()
+        .filter(|id| !id.trim().is_empty())
+        .count();
     if options.scope_fork {
         let scope = target_scope(options, ids);
         format!("forked {} into {}", chalk.bold(source), chalk.bold(scope))
     } else if options.multiple() {
-        format!("forked {} component(s) matching pattern {}", ids.len(), chalk.bold(source))
+        format!("forked {count} component(s) matching pattern {}", chalk.bold(source))
     } else {
-        let first_id = ids.first().map_or("", |id| id.trim());
+        let first_id = ids
+            .iter()
+            .map(|id| id.trim())
+            .find(|id| !id.is_empty())
+            .unwrap_or("");
         format!("forked {} from {}", chalk.bold(first_id), chalk.bold(source))
     }
 }

@@ -36,17 +36,27 @@ fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
         .map(|(_, version)| version.trim())
         .filter(|candidate| is_concrete_version(candidate));
     explicit.or_else(|| {
-        pool.iter()
+        let row = pool
+            .iter()
             .find(|row| {
                 row["identity"]
                     .as_str()
+                    .filter(|val| !val.trim().is_empty())
                     .or_else(|| row["id"].as_str())
                     .map(bare)
                     == Some(bare_id)
-            })
-            .and_then(|row| row["version"].as_str())
+            })?;
+        row["version"]
+            .as_str()
             .map(str::trim)
             .filter(|candidate| is_concrete_version(candidate))
+            .or_else(|| {
+                row["id"]
+                    .as_str()
+                    .and_then(|raw| raw.trim().rsplit_once('@'))
+                    .map(|(_, ver)| ver.trim())
+                    .filter(|candidate| is_concrete_version(candidate))
+            })
     })
 }
 

@@ -127,6 +127,7 @@ fn read_scope_layer(cwd: &Path, ws_root: Option<&Path>) -> io::Result<Value> {
         .map_err(io::Error::other)?;
     Ok(parsed
         .get("config")
+        .filter(|val| val.is_object())
         .cloned()
         .unwrap_or(Value::Null))
 }

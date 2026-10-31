@@ -38,7 +38,10 @@ fn missing_ids(options: &Options) -> Option<&'static str> {
     }
     if dependents.via
         .as_deref()
-        .is_some_and(|via| !via.trim().is_empty())
+        .is_some_and(|via| {
+            via.split(',')
+                .any(|item| !item.trim().is_empty())
+        })
     {
         return Some(r#"you have to specify ids to use "--dependents-via" flag"#);
     }

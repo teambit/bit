@@ -109,7 +109,7 @@ fn find_restoring_leftovers(scope_dir: &Path) -> Vec<String> {
 }
 
 fn rollback(source: &Path, target: &Path) -> io::Result<()> {
-    if fs::symlink_metadata(target).is_err() {
+    if fs::symlink_metadata(source).is_ok() && fs::symlink_metadata(target).is_err() {
         fs::rename(source, target)
             .map_err(|error| paired_failure(error, "rename", source, target))?;
     }

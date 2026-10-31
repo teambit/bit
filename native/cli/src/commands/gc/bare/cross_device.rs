@@ -6,6 +6,9 @@ pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
     if source.as_os_str().is_empty() || target.as_os_str().is_empty() {
         return Err(io::Error::from(io::ErrorKind::InvalidInput));
     }
+    if source == target {
+        return Ok(());
+    }
     let metadata = fs::symlink_metadata(source).map_err(|error| failure(error, "lstat", source))?;
     if metadata.is_dir() {
         return Err(paired_failure(

@@ -29,7 +29,12 @@ pub(super) fn json_report(
         .filter(|value| value.is_array())
         .cloned()
         .unwrap_or_else(|| json!([]));
-    let mut report = json!({"importDetails":details,"missingIds":[]});
+    let missing_ids = prepared
+        .get("missingIds")
+        .filter(|value| value.is_array())
+        .cloned()
+        .unwrap_or_else(|| json!([]));
+    let mut report = json!({"importDetails":details,"missingIds":missing_ids});
     if installation_error {
         report["installationError"] = json!({});
     }

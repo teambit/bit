@@ -180,8 +180,11 @@ fn load_index_row_version(
     let name = row_name
         .filter(|name| !name.is_empty())
         .ok_or_else(|| Failure::Declined("missing component name".into()))?;
-    let hash =
-        row["hash"].as_str().ok_or_else(|| Failure::Declined("missing component hash".into()))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| Failure::Declined("missing component hash".into()))?;
     let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, hash)
         .ok()
         .flatten()
@@ -189,7 +192,11 @@ fn load_index_row_version(
     if kind != "Component" {
         return Err(Failure::Declined("unexpected non-Component in index".into()));
     }
-    let Some(head) = comp_val["head"].as_str() else {
+    let Some(head) = comp_val["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    else {
         return Ok(None);
     };
     let ver_val = read_version_object(scope_dir, head)?;

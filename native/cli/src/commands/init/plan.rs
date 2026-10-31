@@ -131,8 +131,11 @@ pub(super) fn backup(
     metadata: &str,
     prefix: &str,
 ) -> io::Result<()> {
-    if let Ok(bytes) = fs::read(path) {
-        backup_bytes(plan, scope, directory, metadata, prefix, bytes);
+    match fs::read(path) {
+        Ok(bytes) => backup_bytes(plan, scope, directory, metadata, prefix, bytes),
+        Err(err) if matches!(err.kind(), io::ErrorKind::NotFound | io::ErrorKind::IsADirectory) => {
+        }
+        Err(err) => return Err(err),
     }
     Ok(())
 }

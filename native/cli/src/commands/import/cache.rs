@@ -155,6 +155,8 @@ fn documentation(
                         .map(str::trim)
                         .filter(|id| !id.is_empty())
                 })
+                .map(bare)
+                .filter(|id| !id.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| io::Error::other("import documentation identity"))
         })

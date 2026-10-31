@@ -14,7 +14,11 @@ impl Plan {
                 "mixed object-type collection report ordering requires the published runtime",
             ));
         }
-        let config = bit_object_import::parse_jsonc(&fs::read(scope.join("scope.json"))?)?;
+        let config = match fs::read(scope.join("scope.json")) {
+            Ok(bytes) => bit_object_import::parse_jsonc(&bytes)?,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => serde_json::Value::Null,
+            Err(error) => return Err(error),
+        };
         files::validate_batch(&config, self.versions.len().max(self.sources.len()))?;
         if self.result.flags.backup {
             files::preflight_moves(scope, &self.versions)?;

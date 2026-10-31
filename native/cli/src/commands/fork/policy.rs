@@ -15,6 +15,7 @@ pub(super) fn persist(
     multiple: bool,
 ) -> io::Result<()> {
     let mut config = linker.call(root, "forkPolicyFacts", &json!({}))?;
+    print!("{}", linker.take_stdout());
     config["policy"] = build_policy(&config["policy"], facts, old_packages, multiple)?;
     write(root, &config, if multiple { "fork" } else { "fork (save deps)" })?;
     linker.call(root, "forkPolicyApplied", &json!({"config":config}))?;

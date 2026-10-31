@@ -28,16 +28,15 @@ pub(super) fn prepare(
 }
 
 fn component(value: &Value, hash: &str) -> io::Result<Value> {
-    let name_value = if value["name"].is_string() { &value["name"] } else { &value["id"]["name"] };
-    let name = text(name_value)?;
+    let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
     let scope = normalized_scope(value).unwrap_or(Value::Null);
     let is_symlink = value["isSymlink"].as_bool().unwrap_or(false);
     Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":is_symlink,"hash":hash}))
 }
 
 fn lane(value: &Value, hash: &str) -> io::Result<Value> {
-    let name_value = if value["name"].is_string() { &value["name"] } else { &value["id"]["name"] };
-    let mut id = json!({"name":text(name_value)?});
+    let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
+    let mut id = json!({"name":name});
     if let Some(scope) = normalized_scope(value) {
         id["scope"] = scope;
     }

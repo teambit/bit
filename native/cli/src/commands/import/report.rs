@@ -125,14 +125,22 @@ fn details_row(row: &Value) -> io::Result<Details> {
         return Err(decline("native inbound details"));
     }
     Ok(Details {
-        id: text(map.get("id"))?.to_string(),
+        id: text(map.get("id"))?.trim().to_string(),
         versions,
-        latest: latest.as_str().map(str::to_string),
+        latest: parse_latest_version(latest),
         status: status.to_string(),
         deprecated: map.get("deprecated") == Some(&Value::Bool(true)),
         removed: removed == Some(&Value::Bool(true)),
         conflicts,
     })
+}
+
+fn parse_latest_version(latest: &Value) -> Option<String> {
+    latest
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .map(str::to_string)
 }
 
 fn conflict_paths(value: Option<&Value>) -> io::Result<Vec<String>> {

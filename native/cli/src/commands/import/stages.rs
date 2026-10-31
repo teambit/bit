@@ -55,6 +55,12 @@ impl Planned {
         options: &Options,
         lifecycle: &mut Lifecycle,
     ) -> io::Result<()> {
+        if self.prepared["token"]
+            .as_str()
+            .is_none_or(|tok| tok.trim().is_empty())
+        {
+            return Err(io::Error::other("native import dependency completion"));
+        }
         let captured = lifecycle.dependency_facts(root)?;
         let mut completed: Value = self.engine.request(&json!({"kind":"commandInboundWriteDependencies","token":self.prepared["token"],"facts":captured["facts"],"readSet":captured["readSet"]}))?;
         if let Some(receipt) = completed
@@ -64,12 +70,7 @@ impl Planned {
             let semver = workspace_command::checkout_policy::semver(receipt)?;
             completed = self.engine.request(&json!({"kind":"commandInboundPolicyComplete","token":self.prepared["token"],"semver":semver}))?;
         }
-        if completed["completed"] != true
-            || completed["token"] != self.prepared["token"]
-            || self.prepared["token"]
-                .as_str()
-                .is_none_or(|tok| tok.trim().is_empty())
-        {
+        if completed["completed"] != true || completed["token"] != self.prepared["token"] {
             return Err(io::Error::other("native import dependency completion"));
         }
         let receipt = report::validate(&completed)?;

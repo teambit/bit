@@ -322,6 +322,8 @@ fn version_parents(ver_val: &Value) -> Vec<String> {
         .map(|arr| {
             arr.iter()
                 .filter_map(Value::as_str)
+                .map(str::trim)
+                .filter(|parent| !parent.is_empty())
                 .map(str::to_owned)
                 .collect()
         })
@@ -340,7 +342,11 @@ fn version_dependencies(scope_dir: &Path, ver_val: &Value) -> Vec<CompIdSpec> {
 }
 
 fn collect_flattened_deps(scope_dir: &Path, ver_val: &Value) -> Vec<CompIdSpec> {
-    if let Some(flat_ref) = ver_val["flattenedDependenciesRef"].as_str() {
+    if let Some(flat_ref) = ver_val["flattenedDependenciesRef"]
+        .as_str()
+        .map(str::trim)
+        .filter(|flat_ref| !flat_ref.is_empty())
+    {
         let Ok(Some((_, body))) = bit_object_import::read_raw_scope_object(scope_dir, flat_ref)
         else {
             return Vec::new();

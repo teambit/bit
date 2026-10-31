@@ -122,14 +122,21 @@ fn inventory_report(
     ]
 }
 fn count_local_components(objects: &BTreeMap<String, Object>, name: &str) -> usize {
+    let name = name.trim();
     objects
         .values()
         .filter(|object| {
             object.kind == "Component"
                 && object.value["scope"]
                     .as_str()
-                    .or_else(|| object.value["id"]["scope"].as_str())
                     .map(str::trim)
+                    .filter(|scope| !scope.is_empty())
+                    .or_else(|| {
+                        object.value["id"]["scope"]
+                            .as_str()
+                            .map(str::trim)
+                            .filter(|scope| !scope.is_empty())
+                    })
                     == Some(name)
         })
         .count()

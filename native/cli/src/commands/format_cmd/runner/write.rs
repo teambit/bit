@@ -31,10 +31,12 @@ pub(super) fn publish_components(
     outputs: &[Value],
 ) -> io::Result<Option<Value>> {
     progress.start(output);
-    let mut offset = 0;
+    let mut offset = 0usize;
     for (index, component) in components.iter().enumerate() {
         progress.component(output, index);
-        let end = offset + component.files.len();
+        let Some(end) = offset.checked_add(component.files.len()) else {
+            return Err(invalid("formatter file slice bounds"));
+        };
         let (Some(in_slice), Some(out_slice)) = (inputs.get(offset..end), outputs.get(offset..end))
         else {
             return Err(invalid("formatter file slice bounds"));
@@ -43,6 +45,9 @@ pub(super) fn publish_components(
             return Ok(Some(error));
         }
         offset = end;
+    }
+    if offset != inputs.len() || offset != outputs.len() {
+        return Err(invalid("formatter file slice bounds"));
     }
     Ok(None)
 }

@@ -67,7 +67,9 @@ fn import_options(ids: &[String], skip_config: bool, skip_installation: bool) ->
         operation: "import",
         ids: ids
             .iter()
-            .map(|id| id.trim().to_owned())
+            .map(|id| id.trim())
+            .filter(|id| !id.is_empty())
+            .map(str::to_owned)
             .collect(),
         objects_only: false,
         all_history: false,

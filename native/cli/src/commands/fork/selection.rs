@@ -60,7 +60,14 @@ fn local_matches(options: &Options, pool: &[Value]) -> io::Result<Vec<String>> {
         .filter_map(|row| {
             row["identity"]
                 .as_str()
-                .or_else(|| row["id"].as_str())
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .or_else(|| {
+                    row["id"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|id| !id.is_empty())
+                })
                 .map(str::to_owned)
         })
         .collect::<Vec<_>>();

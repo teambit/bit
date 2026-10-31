@@ -248,10 +248,12 @@ fn parse_one_remote_lane_file(
             continue;
         };
         let comp_key = comp_value_key(&item["id"]);
-        per_comp
-            .entry(comp_key)
-            .or_default()
-            .push(head.to_owned());
+        if !comp_key.is_empty() {
+            per_comp
+                .entry(comp_key)
+                .or_default()
+                .push(head.to_owned());
+        }
         all_refs.insert(head.to_owned());
     }
     Ok(())

@@ -244,6 +244,8 @@ fn collect_file_refs(files_val: &Value, refs: &mut Vec<String>) {
         if let Some(hash) = file["file"]
             .as_str()
             .or_else(|| file["file"]["hash"].as_str())
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
         {
             refs.push(hash.to_owned());
         }
@@ -264,6 +266,8 @@ fn collect_artifact_refs(artifacts_val: &Value, refs: &mut Vec<String>) {
                 .as_str()
                 .or_else(|| item["ref"]["hash"].as_str())
                 .or_else(|| item["file"].as_str())
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
             {
                 refs.push(hash.to_owned());
             }

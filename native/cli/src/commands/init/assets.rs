@@ -78,6 +78,7 @@ fn mcp(root: &Path) -> io::Result<(PathBuf, Vec<u8>)> {
     let mut value = fs::read(&path)
         .ok()
         .and_then(|bytes| bit_object_import::parse_jsonc(&bytes).ok())
+        .filter(|val| !val.is_null())
         .unwrap_or_else(|| json!({}));
     if !value.is_array() {
         let object = value.as_object_mut().ok_or_else(|| io::Error::other("MCP object"))?;

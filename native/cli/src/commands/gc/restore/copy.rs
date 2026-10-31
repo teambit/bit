@@ -19,10 +19,24 @@ pub(super) fn preflight(source: &Path, target: &Path) -> io::Result<()> {
         }
     }
     #[cfg(unix)]
-    if metadata.file_type().is_symlink()
-        && destination.is_some_and(|metadata| metadata.file_type().is_symlink())
-    {
-        link_target(&fs::read_link(source)?, target)?;
+    if metadata.file_type().is_symlink() {
+        preflight_symlink(source, target, destination.as_ref())?;
+    }
+    Ok(())
+}
+
+#[cfg(unix)]
+fn preflight_symlink(
+    source: &Path,
+    target: &Path,
+    destination: Option<&fs::Metadata>,
+) -> io::Result<()> {
+    let link = fs::read_link(source).map_err(|error| failure(error, "readlink", source))?;
+    if link.as_os_str().is_empty() {
+        return Err(failure(io::Error::from(io::ErrorKind::InvalidInput), "readlink", source));
+    }
+    if destination.is_some_and(|metadata| metadata.file_type().is_symlink()) {
+        link_target(&link, target)?;
     }
     Ok(())
 }

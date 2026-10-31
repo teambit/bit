@@ -41,11 +41,13 @@ fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bo
     if bare.is_empty() {
         return false;
     }
-    let row_id = row["identity"]
+    let raw_id = row["identity"]
         .as_str()
+        .filter(|id| !id.trim().is_empty())
         .or_else(|| row["id"].as_str())
         .map(str::trim)
         .unwrap_or_default();
+    let row_id = raw_id.rsplit_once('@').map_or(raw_id, |(prefix, _)| prefix.trim());
     let id_matches =
         row_id == bare || row_id.split_once('/').map(|(_, name)| name.trim()) == Some(bare);
     let ver_matches = explicit_ver.is_none_or(|ver| {

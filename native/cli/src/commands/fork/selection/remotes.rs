@@ -35,8 +35,9 @@ fn scopes(options: &Options) -> Vec<String> {
         .into_iter()
         .filter(|pattern| !pattern.starts_with(['!', '$']))
         .filter_map(|pattern| {
-            let scope = pattern.split('/').next()?.trim();
-            (!scope.is_empty() && !scope.contains('*')).then(|| scope.to_owned())
+            let (scope, _) = pattern.trim().split_once('/')?;
+            let scope = scope.trim();
+            (!scope.is_empty() && !scope.contains(['*', '?', '{', '}'])).then(|| scope.to_owned())
         })
         .collect()
 }

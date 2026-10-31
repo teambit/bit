@@ -162,9 +162,9 @@ fn optional<'a>(
 ) -> Option<String> {
     if args
         .peek()
-        .is_some_and(|arg| arg.is_some_and(|arg| !arg.starts_with('-')))
+        .is_some_and(|arg| arg.is_some_and(|arg| !arg.trim().starts_with('-')))
     {
-        return Some(args.next()??.to_owned());
+        return Some(args.next()??.trim().to_owned());
     }
     Some(String::new())
 }

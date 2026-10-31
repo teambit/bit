@@ -45,7 +45,9 @@ pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
     Some(options)
 }
 fn assign_positions(mut positions: Vec<String>, options: &mut Options) -> Option<()> {
-    if positions.is_empty() || positions.len() > if options.scope_fork { 3 } else { 2 } {
+    let min = if options.scope_fork { 2 } else { 1 };
+    let max = if options.scope_fork { 3 } else { 2 };
+    if !(min..=max).contains(&positions.len()) {
         return None;
     }
     options.source = positions.remove(0);

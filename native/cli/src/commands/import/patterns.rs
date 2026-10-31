@@ -41,7 +41,7 @@ pub fn select(root: &Path, options: &Options) -> io::Result<Selection> {
             let list = lists.next().ok_or_else(|| decline("remote lists"))?;
             listed(pattern, list, options.selection.include_deprecated)?
         } else {
-            vec![pattern.clone()]
+            vec![pattern.trim().to_owned()]
         };
         if ids.is_empty() {
             selection.warnings.push(format!(

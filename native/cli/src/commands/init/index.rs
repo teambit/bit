@@ -60,15 +60,14 @@ fn hashes(objects: &Path) -> io::Result<Vec<String>> {
         if !directory.file_type()?.is_dir() {
             continue;
         }
+        let bucket = directory.file_name();
+        let bucket = bucket.to_string_lossy();
         for entry in fs::read_dir(directory.path())? {
             let entry = entry?;
-            let hash = format!(
-                "{}{}",
-                directory.file_name().to_string_lossy(),
-                entry.file_name().to_string_lossy(),
-            )
-            .to_ascii_lowercase();
-            if !entry.file_type()?.is_file()
+            let hash =
+                format!("{bucket}{}", entry.file_name().to_string_lossy()).to_ascii_lowercase();
+            if bucket.len() != 2
+                || !entry.file_type()?.is_file()
                 || hash.len() != 40
                 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit())
             {

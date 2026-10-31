@@ -190,11 +190,14 @@ fn root_policy_has_any(root: &Path, packages: &[String]) -> bool {
     else {
         return false;
     };
-    let policy = &resolver["policy"];
+    let policy = resolver
+        .get("policy")
+        .unwrap_or_else(|| &resolver["config"]["policy"]);
     packages
         .iter()
         .any(|pkg| {
             policy["dependencies"].get(pkg).is_some()
+                || policy["devDependencies"].get(pkg).is_some()
                 || policy["peerDependencies"].get(pkg).is_some()
         })
 }

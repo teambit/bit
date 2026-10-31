@@ -14,13 +14,14 @@ impl Progress {
                 output.status(&format!("loading {count} component(s)"));
             }
         }
-        if !self.identities
+        let total = self.identities
             .iter()
-            .any(|id| !id.trim().is_empty())
-        {
+            .filter(|id| !id.trim().is_empty())
+            .count();
+        if total == 0 {
             return;
         }
-        output.status(&format!("formatting components (total: {})", self.identities.len()));
+        output.status(&format!("formatting components (total: {total})"));
     }
     pub fn component(&self, output: &Output, index: usize) {
         let Some(identity) = self.identities

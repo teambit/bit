@@ -43,9 +43,16 @@ fn description(hash: &str, object: &Object) -> io::Result<String> {
                     .or_else(|_| text(&value["id"]["name"]))
                     .map(str::to_owned)
             })?,
-        "ScopeMeta" | "Symlink" => text(&value["name"])?.into(),
+        "ScopeMeta" | "Symlink" => text(&value["name"])
+            .or_else(|_| text(&value["id"]["name"]))?
+            .into(),
         "VersionHistory" => format!("{}:VersionHistory", identity(value)?),
-        "LaneHistory" => format!("{}:LaneHistory", text(&value["laneHash"])?),
+        "LaneHistory" => format!(
+            "{}:LaneHistory",
+            text(&value["laneHash"])
+                .or_else(|_| text(&value["id"]))
+                .or_else(|_| text(&value["name"]))?,
+        ),
         _ => return Err(unsupported("verbose object identity")),
     };
     Ok(format!("ref {hash} {constructor} {kind} {id}"))

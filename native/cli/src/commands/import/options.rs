@@ -321,8 +321,12 @@ pub fn has_wildcard(id: &str) -> bool {
 /// `<scope>/<namespaces with wildcards>`: `getRemoteCompIdsByWildcards`
 /// needs the scope written out.
 fn valid_pattern(id: &str) -> bool {
+    let id = id.trim();
     id.split_once('/')
-        .is_some_and(|(scope, rest)| !scope.is_empty() && !scope.contains('*') && !rest.is_empty())
+        .is_some_and(|(scope, rest)| {
+            let scope = scope.trim();
+            !scope.is_empty() && !scope.contains('*') && !rest.trim().is_empty()
+        })
         && !id.starts_with('@')
 }
 

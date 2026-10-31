@@ -99,7 +99,10 @@ fn replacements(root: &Path, results: &Results) -> io::Result<Vec<(String, Strin
     Ok(pairs)
 }
 fn source_identity(source: &Value) -> io::Result<String> {
-    if let Some(raw) = non_empty_str(source) {
+    if let Some(raw) = non_empty_str(source)
+        .or_else(|| non_empty_str(&source["identity"]))
+        .or_else(|| non_empty_str(&source["id"]))
+    {
         let bare = raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim());
         if !bare.is_empty() {
             return Ok(bare.to_owned());

@@ -55,9 +55,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&cwd) else {
         let ci_active = env::var_os("CI")
             .is_some_and(|val| {
-                let text = val.to_string_lossy();
-                let trimmed = text.trim();
-                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+                !matches!(
+                    val.to_string_lossy()
+                        .trim()
+                        .to_ascii_lowercase()
+                        .as_str(),
+                    "" | "0" | "false" | "no" | "off",
+                )
             });
         if options.operation == "import"
             && !(options.output.json && options.ids.is_empty())

@@ -61,7 +61,9 @@ impl CompGraph {
             .iter_mut()
             .find(|edge| edge.id == edge_id)
         {
-            attr.clone_into(&mut existing.attr);
+            if !attr.is_empty() {
+                attr.clone_into(&mut existing.attr);
+            }
         } else {
             self.edges.push(GraphEdge {
                 id: edge_id,

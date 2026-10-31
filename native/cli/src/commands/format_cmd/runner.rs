@@ -73,6 +73,9 @@ fn supported_writes(
 }
 
 fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
+    if inputs.len() != outputs.len() {
+        return false;
+    }
     let changed = inputs
         .iter()
         .zip(outputs)
@@ -85,6 +88,7 @@ fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
     if changed.len() <= 1 {
         return true;
     }
+    let mut seen = std::collections::HashSet::new();
     changed
         .into_iter()
         .all(|(input, _)| {
@@ -93,7 +97,8 @@ fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
                 .map(str::trim)
                 .filter(|path| !path.is_empty() && Path::new(path).is_absolute())
                 .is_some_and(|path| {
-                    std::fs::symlink_metadata(path).is_ok_and(|meta| meta.is_file())
+                    seen.insert(path)
+                        && std::fs::symlink_metadata(path).is_ok_and(|meta| meta.is_file())
                         && std::fs::OpenOptions::new()
                             .write(true)
                             .open(path)

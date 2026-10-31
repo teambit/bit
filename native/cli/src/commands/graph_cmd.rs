@@ -203,10 +203,10 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
 
 fn take_optional_remote(args: &[&str], idx: &mut usize) -> String {
     if let Some(&next) = args.get(*idx + 1)
-        && !next.starts_with('-')
+        && !next.trim().starts_with('-')
     {
         *idx += 1;
-        next.to_owned()
+        next.trim().to_owned()
     } else {
         String::new()
     }

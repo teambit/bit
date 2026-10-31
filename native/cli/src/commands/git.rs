@@ -302,7 +302,10 @@ fn apply_git_merge_driver(cwd: &Path, global: bool) -> io::Result<()> {
     let attr_path = resolve_attributes_path(cwd, scope_flag, global);
     if attr_path.exists() {
         let content = fs::read_to_string(&attr_path)?;
-        if content.contains(GIT_ATTRIBUTES_LINE) {
+        if content
+            .lines()
+            .any(|line| line.trim() == GIT_ATTRIBUTES_LINE)
+        {
             return Ok(());
         }
         let mut file = OpenOptions::new().append(true).open(&attr_path)?;

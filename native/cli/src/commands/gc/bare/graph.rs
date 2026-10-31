@@ -183,11 +183,12 @@ impl<'a> Collector<'a> {
     }
     fn retain_lanes(&mut self) -> io::Result<IndexSet<(String, String)>> {
         let mut foreign = IndexSet::new();
+        let prefix = format!("{}/", self.name.trim());
         for (hash, lane) in &self.lanes {
             self.retained.insert(hash.clone());
             self.retained.insert(digest(&format!("{hash}:LaneHistory")));
             for (id, head) in lane_entries(lane)? {
-                if !id.starts_with(&format!("{}/", self.name)) {
+                if !id.starts_with(&prefix) {
                     foreign.insert((id, head));
                 }
             }

@@ -38,10 +38,10 @@ pub(super) fn create(root: &Path, modules: &Path, options: &Options) -> io::Resu
         document.set(&[WORKSPACE, "defaultScope"], &json!(value));
     }
     if let Some(value) = &options.defaults.generator {
-        document.set(
-            &["teambit.generator/generator"],
-            &json!({"envs": parse_generator_envs(value)}),
-        );
+        let envs = parse_generator_envs(value);
+        if !envs.is_empty() {
+            document.set(&["teambit.generator/generator"], &json!({"envs": envs}));
+        }
     }
     configure(&mut document, options);
     Ok(render(&document))

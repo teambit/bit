@@ -103,11 +103,7 @@ pub(super) fn create(
                 .any(|row| {
                     row["results"]
                         .as_array()
-                        .is_some_and(|files| {
-                            files
-                                .iter()
-                                .any(|file| file["hasIssues"] == true)
-                        })
+                        .is_some_and(|files| files.iter().any(file_has_issues))
                 }),
     );
     let data = if options.json {
@@ -116,4 +112,11 @@ pub(super) fn create(
         render(value, Chalk::detect(args), seconds, progress, options.check)?
     };
     Ok(crate::commands::workspace_command::results::Report { data, code, details: None })
+}
+
+fn file_has_issues(file: &Value) -> bool {
+    file["hasIssues"] == true
+        || file["hasIssues"]
+            .as_str()
+            .is_some_and(|val| val.trim().eq_ignore_ascii_case("true"))
 }

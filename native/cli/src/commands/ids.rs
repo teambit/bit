@@ -39,15 +39,18 @@ impl Id {
             return Self::parse(raw);
         }
         let scope = text(id.get("scope"))?.trim();
-        let name = text(id.get("name"))?.trim();
+        let raw_name = text(id.get("name"))?.trim();
+        let (name, inline_ver) = raw_name
+            .rsplit_once('@')
+            .map_or((raw_name, ""), |(nm, ver)| (nm.trim(), ver.trim()));
         if scope.is_empty() || name.is_empty() {
             return Err(decline("component id without scope or name"));
         }
         let version = match id.get("version") {
-            None | Some(Value::Null) => None,
-            Some(version) => {
-                Some(text(Some(version))?.trim().to_string()).filter(|value| !value.is_empty())
-            }
+            None | Some(Value::Null) => (!inline_ver.is_empty()).then(|| inline_ver.to_owned()),
+            Some(version) => Some(text(Some(version))?.trim().to_string())
+                .filter(|value| !value.is_empty())
+                .or_else(|| (!inline_ver.is_empty()).then(|| inline_ver.to_owned())),
         };
         Ok(Self { scope: scope.to_string(), name: name.to_string(), version })
     }

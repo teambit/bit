@@ -212,7 +212,11 @@ pub(super) fn parse_keep_versions(raw: &str) -> Option<u64> {
     if trimmed.is_empty() {
         return Some(0);
     }
-    trimmed.parse::<u64>().ok()
+    trimmed
+        .bytes()
+        .all(|byte| byte.is_ascii_digit())
+        .then(|| trimmed.parse::<u64>().ok())
+        .flatten()
 }
 
 fn run_restore(

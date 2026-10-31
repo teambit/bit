@@ -14,6 +14,9 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     };
     let package =
         cli.bit_dir.ok_or_else(|| invalid("formatter tool package root"))?.join("package.json");
+    if !package.is_file() {
+        return Err(invalid("formatter tool package manifest missing"));
+    }
     let mut child = Command::new(cli.node)
         .arg("-e")
         .arg(include_str!("tool.cjs"))
@@ -25,7 +28,10 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     let bytes = serde_json::to_vec(files)?;
     write_formatter_input(&mut child, &bytes)?;
     let output = child.wait_with_output()?;
-    if !output.status.success() || !output.stderr.is_empty() {
+    if !output.status.success()
+        || !output.stderr.is_empty()
+        || output.stdout.len() > 64 * 1024 * 1024
+    {
         return Err(invalid("formatter tool rejected source"));
     }
     let formatted: Vec<Value> = serde_json::from_slice(&output.stdout).map_err(io::Error::other)?;

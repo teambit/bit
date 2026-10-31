@@ -79,7 +79,8 @@ fn normalize_name(kind: &str, value: &mut Value) -> io::Result<()> {
     {
         return Ok(());
     }
-    value["name"] = Value::String(format!("{}/{}", text(&value["box"])?, text(&value["name"])?));
+    let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
+    value["name"] = Value::String(format!("{}/{name}", text(&value["box"])?));
     Ok(())
 }
 
@@ -90,7 +91,8 @@ pub(super) fn model<'objects>(
 ) -> io::Result<Option<&'objects Object>> {
     let Some(object) = objects.get(&digest(id.trim())) else { return Ok(None) };
     if object.kind == "Symlink" {
-        let id = format!("{}/{}", text(&object.value["realScope"])?, text(&object.value["name"])?);
+        let name = text(&object.value["name"]).or_else(|_| text(&object.value["id"]["name"]))?;
+        let id = format!("{}/{name}", text(&object.value["realScope"])?);
         let target = objects
             .get(&digest(&id))
             .ok_or_else(|| unsupported("legacy alias target model is missing"))?;

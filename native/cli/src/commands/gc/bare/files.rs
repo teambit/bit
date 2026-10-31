@@ -14,6 +14,9 @@ pub(in crate::commands::gc) fn preflight_moves(scope: &Path, hashes: &[String]) 
             .join(bucket)
             .join(leaf);
         let metadata = fs::symlink_metadata(&source)?;
+        if metadata.is_dir() {
+            return Err(super::repository::unsupported("directory object source"));
+        }
         match metadata_if_present(&target, false) {
             Ok(existing) => check_target(&source, &target, &metadata, existing.as_ref())?,
             Err(error) if hashes.len() > 1 => return Err(error),

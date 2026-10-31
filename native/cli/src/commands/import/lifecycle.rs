@@ -271,8 +271,9 @@ fn ordered_ids(ids: &[String], order: &[String]) -> io::Result<Vec<String>> {
     let ordered = order
         .iter()
         .filter(|id| {
+            let target = bare_id(id);
             ids.iter()
-                .any(|candidate| candidate.trim() == id.trim())
+                .any(|candidate| bare_id(candidate) == target)
         })
         .cloned()
         .collect::<Vec<_>>();
@@ -280,4 +281,8 @@ fn ordered_ids(ids: &[String], order: &[String]) -> io::Result<Vec<String>> {
         return Err(io::Error::other("import workspace order incomplete"));
     }
     Ok(ordered)
+}
+fn bare_id(raw: &str) -> &str {
+    let trimmed = raw.trim();
+    trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
 }

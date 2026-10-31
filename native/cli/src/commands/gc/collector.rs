@@ -202,7 +202,13 @@ fn seed_workspace_roots(
         let checked_out = spec.version
             .as_deref()
             .and_then(|ver| resolve_comp_version_ref(&comp, ver))
-            .or_else(|| comp["head"].as_str().map(str::to_owned));
+            .or_else(|| {
+                comp["head"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|val| !val.is_empty())
+                    .map(str::to_owned)
+            });
         if let Some(head) = checked_out {
             graph.add_root(&head);
             checked_out_heads.push((key, head));
@@ -227,7 +233,11 @@ fn seed_lane_roots(graph: &mut GcGraph, inv: &ScopeInventory) -> (CompHeadList, 
                 unattached.push(ver_hash);
             }
         }
-        if let Some(readme_head) = lane_val["readmeComponent"]["head"].as_str() {
+        if let Some(readme_head) = lane_val["readmeComponent"]["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        {
             graph.add_root(readme_head);
         }
     }
