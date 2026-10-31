@@ -70,6 +70,9 @@ fn ref_str(value: &Value) -> Option<&str> {
 
 impl PreparedImport {
     pub(crate) fn collect_lane_history(&mut self, id: &Id, targets: &[Target]) -> io::Result<()> {
+        if targets.len() > 4096 {
+            return Err(invalid("import history target limit"));
+        }
         let remotes = self.environment.remotes.clone();
         let directory = super::remote(self, &remotes, &id.scope)?;
         for target in targets {

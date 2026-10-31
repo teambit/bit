@@ -292,18 +292,25 @@ fn scope_row_matches(row: &Value, scope: &str, name: &str) -> bool {
 /// The Version hash of `version`: a snap hash as is, a tag through the model's
 /// `versions` or `orphanedVersions`, and the model `head` when no version is given.
 fn version_hash(model: Option<&Value>, version: Option<&str>) -> Option<String> {
-    match version.filter(|ver| !matches!(*ver, "" | "latest" | "head")) {
+    match version
+        .map(str::trim)
+        .filter(|ver| !matches!(*ver, "" | "latest" | "head"))
+    {
         Some(version) if is_hash(version) => Some(version.to_owned()),
         Some(version) => {
             let model = model?;
             model["versions"][version]
                 .as_str()
                 .or_else(|| model["orphanedVersions"][version].as_str())
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
                 .map(str::to_owned)
         }
         None => model?
             .get("head")?
             .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
             .map(str::to_owned),
     }
 }

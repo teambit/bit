@@ -54,7 +54,7 @@ impl PreparedImport {
     ) -> io::Result<Record> {
         id.validate()?;
         let remotes = self.environment.remotes.clone();
-        let directory = remote(self, &remotes, &id.scope)?;
+        let directory = remote(self, &remotes, id.scope.trim())?;
         let hash = lane_hash(self, &directory, id, supplied_hash)?;
         let record = self.capture
             .object(&directory, &hash, "Lane")?
@@ -65,14 +65,10 @@ impl PreparedImport {
             .clone();
         validate_value(id, &value)?;
         self.progress.push(Progress {
-            reason: Some(format!("for fetching lane {}/{}", id.scope, id.name)),
+            reason: Some(format!("for fetching lane {}/{}", id.scope.trim(), id.name.trim())),
+            objects: HashSet::from([super::super::object_hash(id.scope.trim())]),
             ..Default::default()
         });
-        self.progress
-            .last_mut()
-            .unwrap()
-            .objects
-            .insert(super::super::object_hash(&id.scope));
         let mut visited = HashSet::new();
         for entry in entries(&value)? {
             if delta && locally_at_remote_head(self, id, &entry)? {
@@ -80,12 +76,15 @@ impl PreparedImport {
             }
             let (scope, name) =
                 entry.identity.split_once('/').ok_or_else(|| invalid("lane component scope"))?;
-            let target =
-                Target { scope: Some(scope.into()), name: name.into(), version: entry.head };
+            let target = Target {
+                scope: Some(scope.trim().into()),
+                name: name.trim().into(),
+                version: entry.head.trim().into(),
+            };
             if prefer_graph {
-                receive_prefer_graph(self, &directory, &id.scope, &target, &mut visited)?;
+                receive_prefer_graph(self, &directory, id.scope.trim(), &target, &mut visited)?;
             } else {
-                receive_closure(self, &directory, &id.scope, &target, &mut visited)?;
+                receive_closure(self, &directory, id.scope.trim(), &target, &mut visited)?;
             }
         }
         Ok(Record { hash, value, is_new: false })

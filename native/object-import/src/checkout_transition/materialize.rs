@@ -40,11 +40,12 @@ fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec
     let mut total = 0_usize;
     let mut paths = HashSet::new();
     for file in &request.files {
+        let canonical_path: PathBuf = file.path.components().collect();
         if !file.path.is_absolute()
             || file.path
                 .to_str()
                 .is_none_or(|path| path.len() > 32768 || path.contains('\0'))
-            || !paths.insert(&file.path)
+            || !paths.insert(canonical_path)
             || !file.eol.trim().eq_ignore_ascii_case("auto")
         {
             return Err(invalid("checkout materialize unsupported destination"));

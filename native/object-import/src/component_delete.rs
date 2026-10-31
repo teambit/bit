@@ -261,6 +261,7 @@ fn validate_scope(_root: &Path, scope: &Scope) -> io::Result<()> {
 
 fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<RepositorySnapshot> {
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
+    let (scope, name) = (scope.trim(), name.trim());
     let index_before = fs::read(crate::scope_path(root).join("index.json"))?;
     let index: Value = crate::parse_jsonc(&index_before)?;
     let rows = index["components"]
@@ -272,8 +273,10 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
     let model = freeze(root, model_hash)?;
     let value =
         outbound::read_object(&crate::scope_path(root).join("objects"), model_hash, "Component")?;
-    let model_scope = value["scope"].as_str().unwrap_or_default();
-    if (!model_scope.is_empty() && model_scope != scope) || value["name"] != name {
+    let model_scope = value["scope"].as_str().map_or("", str::trim);
+    if (!model_scope.is_empty() && model_scope != scope)
+        || value["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("Component model identity"));
     }
     let hash = resolve_model_version(&value, version)
@@ -289,12 +292,13 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
 }
 
 fn find_indexed_model_hash<'a>(rows: &'a [Value], scope: &str, name: &str) -> io::Result<&'a str> {
+    let (scope, name) = (scope.trim(), name.trim());
     let matches: Vec<_> = rows
         .iter()
         .filter(|row| {
             let (row_scope, row_name) =
                 crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
-                    .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
+                    .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default().trim(), nm.trim()));
             row["isSymlink"] != true
                 && row_name == name
                 && (row_scope.is_empty() || row_scope == scope)
@@ -303,7 +307,11 @@ fn find_indexed_model_hash<'a>(rows: &'a [Value], scope: &str, name: &str) -> io
     if matches.len() != 1 {
         return Err(invalid("component is not uniquely indexed"));
     }
-    matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))
+    matches[0]["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("Component hash"))
 }
 
 fn resolve_model_version<'a>(value: &'a Value, version: &'a str) -> Option<&'a str> {

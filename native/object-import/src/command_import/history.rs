@@ -56,8 +56,10 @@ fn model_scope_and_name(model: &Value) -> io::Result<(&str, &str)> {
         .map(str::trim)
         .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
         .and_then(|base| base.split_once('/'))
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
     {
-        return Ok((scope.trim(), name.trim()));
+        return Ok((scope, name));
     }
     let scope = model["scope"]
         .as_str()

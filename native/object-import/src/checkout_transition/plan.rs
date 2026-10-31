@@ -76,7 +76,7 @@ impl Plan {
                 row
             })
             .collect::<Vec<_>>();
-        json!({"token":token,"count":self.bodies.len(),"hasConflicts":self.has_conflicts,"targetFiles":target,"bodies":self.bodies.iter().enumerate().map(|(index,body)|body.manifest(index)).collect::<Vec<_>>(),"mergeRows":self.merge_rows,"statuses":self.statuses,"removals":[],"currentFiles":self.current.iter().enumerate().map(|(index,file)|{let mut row=self.bodies[file.plan_index].manifest(file.plan_index);row["index"]=json!(index);row["relativePath"]=json!(file.relative_path);row["currentHash"]=json!(self.bodies[file.plan_index].hash);row["sharesCurrent"]=json!(file.shares_buffer);row["protected"]=json!(file.protected);row}).collect::<Vec<_>>()})
+        json!({"token":token,"count":self.bodies.len(),"hasConflicts":self.has_conflicts,"targetFiles":target,"bodies":self.bodies.iter().enumerate().map(|(index,body)|body.manifest(index)).collect::<Vec<_>>(),"mergeRows":self.merge_rows,"statuses":self.statuses,"removals":[],"currentFiles":self.current.iter().enumerate().map(|(index,file)|{let mut row=self.bodies[file.plan_index].manifest(file.plan_index);row["index"]=json!(index);row["relativePath"]=json!(file.relative_path.trim());row["currentHash"]=json!(self.bodies[file.plan_index].hash);row["sharesCurrent"]=json!(file.shares_buffer);row["protected"]=json!(file.protected);row}).collect::<Vec<_>>()})
     }
 }
 impl State {

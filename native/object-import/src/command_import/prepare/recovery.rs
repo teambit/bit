@@ -92,8 +92,17 @@ pub(super) fn retain_cached_versions(
     plan: &mut PreparedImport,
     targets: &[Target],
 ) -> io::Result<()> {
+    if targets.len() > 4096 {
+        return Err(invalid("recovery cached target limit"));
+    }
     let directory = plan.environment.local_directory.clone();
     for target in targets {
+        if target.scope
+            .as_deref()
+            .is_none_or(|scope| scope.trim().is_empty())
+        {
+            continue;
+        }
         let model =
             read_model(plan, &directory, target)?.ok_or_else(|| invalid("recovery cached model"))?;
         let hash = version_ref(&model, &target.version)?;

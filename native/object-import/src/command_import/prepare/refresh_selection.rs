@@ -96,6 +96,7 @@ fn refresh(
     let scope = target.scope
         .as_deref()
         .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("import scope"))?;
     let model = match read_model(plan, directory, target)? {
         Some(model) => model,
@@ -110,9 +111,12 @@ fn refresh(
         return Ok(!ignore_missing);
     };
     let path = remote_main_refs_path(&local, scope)?;
-    let rows = plan.capture
-        .json(&path)?
-        .unwrap_or_else(|| json!([]));
+    let rows = match plan.overlay.remote_refs.get(scope).cloned() {
+        Some(rows) => rows,
+        None => plan.capture
+            .json(&path)?
+            .unwrap_or_else(|| json!([])),
+    };
     let entries = rows.as_array().ok_or_else(|| invalid("import remote refs"))?;
     let stop = entries
         .iter()

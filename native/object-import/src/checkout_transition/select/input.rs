@@ -102,7 +102,7 @@ pub(super) fn validate(request: &Begin) -> io::Result<()> {
 fn invalid_version(version: Option<&String>) -> bool {
     version.is_some_and(|value| {
         value.len() > 32768
-            || value.contains('\0')
+            || value.chars().any(char::is_control)
             || (!value.is_empty() && value.trim().is_empty())
     })
 }

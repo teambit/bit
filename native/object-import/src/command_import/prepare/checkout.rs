@@ -95,7 +95,11 @@ impl PreparedImport {
             .filter(|target| {
                 !lane
                     .iter()
-                    .any(|row| row.scope == target.scope && row.name == target.name)
+                    .any(|row| {
+                        row.scope.as_deref().map(str::trim)
+                            == target.scope.as_deref().map(str::trim)
+                            && row.name.trim() == target.name.trim()
+                    })
             })
             .collect::<Vec<_>>();
         if outside.is_empty() {
@@ -107,7 +111,7 @@ impl PreparedImport {
                 .map(str::trim)
                 .filter(|scope| !scope.is_empty())
                 .ok_or_else(|| invalid("checkout scope"))?;
-            if scope == self.environment.local_scope {
+            if scope == self.environment.local_scope.trim() {
                 continue;
             }
             let directory = remote(self, remotes, scope)?;

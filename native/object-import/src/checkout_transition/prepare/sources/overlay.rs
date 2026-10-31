@@ -11,7 +11,8 @@ pub(super) fn verify(
     compressed: &mut usize,
     overlay: Option<&Overlay>,
 ) -> io::Result<()> {
-    crate::merge_history::hash(&version.hash)?;
+    let version_hash = version.hash.trim();
+    crate::merge_history::hash(version_hash)?;
     let proof = version.proof_files.as_deref().unwrap_or(&version.files);
     if version.proof_files.is_some()
         && version.files
@@ -31,12 +32,12 @@ pub(super) fn verify(
     }
     let expected = serde_json::to_value(proof).map_err(io::Error::other)?;
     if let Some(overlay) = overlay
-        && let Some(value) = overlay.read(&version.hash, "Version")?
+        && let Some(value) = overlay.read(version_hash, "Version")?
     {
-        charge(overlay, &version.hash, compressed)?;
+        charge(overlay, version_hash, compressed)?;
         return crate::checkout::plan::verify_manifest_value(value, &expected);
     }
-    crate::checkout::plan::verify_manifest(directory, &version.hash, &expected, compressed)
+    crate::checkout::plan::verify_manifest(directory, version_hash, &expected, compressed)
 }
 
 pub(super) fn files(

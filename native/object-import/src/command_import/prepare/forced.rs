@@ -32,13 +32,18 @@ fn collect_forced_dependencies(
         let version = plan.policy_version(target)?;
         let rows = super::dependencies::flattened_dependencies(plan, &version)?;
         for row in &rows {
-            let dependency = dependency_target(row)?;
+            let mut dependency = dependency_target(row)?;
+            dependency.version = dependency.version.trim().into();
             let id = identity(&dependency)?;
-            let key = format!("{id}@{}", dependency.version.trim());
+            let key = format!("{id}@{}", dependency.version);
             if !seen.insert(key.clone()) {
                 continue;
             }
-            if received.contains(&id) {
+            if received.contains(&id)
+                || received
+                    .iter()
+                    .any(|rec| rec.trim() == id)
+            {
                 plan.cache.unbuilt.remove(&key);
             }
             dependencies.push(dependency);

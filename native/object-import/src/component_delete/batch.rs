@@ -17,6 +17,9 @@ impl Batch {
         update_main: bool,
         components: Option<&[DependencyComponent]>,
     ) -> io::Result<Self> {
+        if identities.len() > 4096 {
+            return Err(invalid("component deletion batch limit"));
+        }
         let facts = dependency_facts(components, identities);
         let mut plans = Vec::new();
         for id in identities {
@@ -32,6 +35,9 @@ impl Batch {
         let first = plans.first().ok_or_else(|| invalid("no components selected for deletion"))?;
         let mut bitmap = crate::parse_jsonc(&first.bitmap.before)?;
         for plan in &plans {
+            if plan.bitmap.before != first.bitmap.before {
+                return Err(invalid("component workspace changed before deletion"));
+            }
             let projected = crate::parse_jsonc(&plan.bitmap.after)?;
             for (key, row) in projected.as_object().ok_or_else(|| invalid("component bitmap"))? {
                 if row != &crate::parse_jsonc(&plan.bitmap.before)?[key] {

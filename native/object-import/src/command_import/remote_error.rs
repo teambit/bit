@@ -26,10 +26,13 @@ pub(super) fn mark(scope: Option<&str>, error: io::Error) -> io::Error {
 }
 pub(crate) fn message(error: &io::Error) -> Option<String> {
     let failure = error.get_ref()?.downcast_ref::<Failure>()?;
+    let scope = failure.scope.trim();
     let message = crate::checkout::repository::inflate_message(&failure.cause)?;
+    let message = message.trim();
+    if scope.is_empty() || message.is_empty() {
+        return None;
+    }
     Some(format!(
-        "remote {} responded with the following error:\nfatal: zlib.inflate has failed with an error: \"{}\"\ntry running bit import --all-history to fix the corrupted objects",
-        failure.scope.trim(),
-        message.trim(),
+        "remote {scope} responded with the following error:\nfatal: zlib.inflate has failed with an error: \"{message}\"\ntry running bit import --all-history to fix the corrupted objects",
     ))
 }

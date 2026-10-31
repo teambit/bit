@@ -114,9 +114,10 @@ fn add(
     {
         return Ok(());
     }
+    let trimmed_path = path.trim();
     if files
         .iter()
-        .any(|file| file.path == path)
+        .any(|file| file.path.trim() == trimmed_path)
     {
         return Ok(());
     }
@@ -126,11 +127,11 @@ fn add(
             kind,
             index,
             plan_index,
-            path: path.into(),
+            path: trimmed_path.into(),
             alias_kind: if kind == "current" { "current" } else { "other" },
             alias_index: index,
         });
-        status.insert(path.into(), json!("added"));
+        status.insert(trimmed_path.into(), json!("added"));
     }
     Ok(())
 }
@@ -141,9 +142,10 @@ fn update(
     files: &mut [File],
     status: &mut Map<String, Value>,
 ) -> io::Result<Option<String>> {
+    let trimmed_path = path.trim();
     let Some(file) = files
         .iter_mut()
-        .find(|file| file.path == path)
+        .find(|file| file.path.trim() == trimmed_path)
     else {
         return Ok(Some(format!("file {} not found", error_path(path))));
     };
@@ -155,7 +157,7 @@ fn update(
         .as_u64()
         .ok_or_else(|| invalid("checkout update alias missing"))? as usize;
     status.insert(
-        path.into(),
+        trimmed_path.into(),
         json!(if kind == "overrideFiles" { "overridden" } else { "updated" }),
     );
     Ok(None)

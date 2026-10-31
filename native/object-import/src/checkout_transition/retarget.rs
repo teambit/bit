@@ -164,10 +164,13 @@ fn statuses(plan: &plan::Plan, target: &[wire::Manifest]) -> Vec<Value> {
     target
         .iter()
         .map(|file| {
+            let path = file.relative_path.trim();
             let same = current
-                .get(file.relative_path.trim())
-                .is_some_and(|current| current.raw_hash.trim() == file.hash.trim());
-            json!({"relativePath":file.relative_path,"status":if same {"unchanged"}else{"updated"}})
+                .get(path)
+                .is_some_and(|current| {
+                    current.raw_hash.trim().eq_ignore_ascii_case(file.hash.trim())
+                });
+            json!({"relativePath":path,"status":if same {"unchanged"}else{"updated"}})
         })
         .collect()
 }

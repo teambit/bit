@@ -38,21 +38,28 @@ pub(super) fn plan(
     };
     let identity = format!(
         "{}@{}",
-        selected.identity,
-        selected.version.as_deref().ok_or_else(|| invalid("lane component version"))?,
+        selected.identity.trim(),
+        selected.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+            .ok_or_else(|| invalid("lane component version"))?,
     );
     validate_graph(bitmap, components)?;
     if !components
         .iter()
         .any(|component| {
-            component.identity != identity && component.dependencies.contains(&identity)
+            component.identity.trim() != identity
+                && component.dependencies
+                    .iter()
+                    .any(|dep| dep.trim() == identity)
         })
     {
         return Ok(Decision::default());
     }
     let target = components
         .iter()
-        .find(|component| component.identity == identity)
+        .find(|component| component.identity.trim() == identity)
         .ok_or_else(|| invalid("deleted component is absent from dependency graph"))?;
     if is_env(root, selected)? {
         return Ok(Decision::default());
@@ -60,7 +67,7 @@ pub(super) fn plan(
     let model = read_model(root, &selected.identity, objects)?;
     Ok(Decision {
         pin: latest(&model)?
-            .map(|version| Pin { package_name: target.package_name.clone(), version }),
+            .map(|version| Pin { package_name: target.package_name.trim().to_owned(), version }),
         loaded: true,
     })
 }

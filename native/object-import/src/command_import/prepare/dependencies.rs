@@ -298,9 +298,12 @@ fn loaded(plan: &mut PreparedImport, target: &Target) -> io::Result<Option<(Stri
     Ok(read_version(plan, &hash)?.map(|version| (hash, version)))
 }
 fn available(target: &Target, hash: &str, version: &Value, scope: &str, staged: &str) -> bool {
-    target.scope.as_deref() == Some(scope)
-        || staged.lines().any(|line| line == hash)
-        || matches!(version["buildStatus"].as_str(), Some("succeed" | "skipped"))
+    let hash = hash.trim();
+    target.scope.as_deref().map(str::trim) == Some(scope.trim())
+        || staged
+            .lines()
+            .any(|line| line.trim() == hash)
+        || matches!(version["buildStatus"].as_str().map(str::trim), Some("succeed" | "skipped"))
 }
 fn request_available(
     plan: &mut PreparedImport,

@@ -193,10 +193,18 @@ fn split_component_scope_and_name<'a>(
     value: &'a Value,
     default_scope: Option<&'a str>,
 ) -> io::Result<(&'a str, &'a str)> {
+    let default_scope = default_scope
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
     if let Some(raw) = value.as_str() {
-        let base = raw.split('@').next().unwrap_or(raw);
+        let raw = raw.trim();
+        let base = raw
+            .split('@')
+            .next()
+            .unwrap_or(raw)
+            .trim();
         return match base.split_once('/') {
-            Some((scope, name)) => Ok((scope, name)),
+            Some((scope, name)) => Ok((scope.trim(), name.trim())),
             None => {
                 Ok((default_scope.ok_or_else(|| invalid("command lane component scope"))?, base))
             }
@@ -204,10 +212,11 @@ fn split_component_scope_and_name<'a>(
     }
     let scope = value["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .or(default_scope)
         .ok_or_else(|| invalid("command lane string field"))?;
-    Ok((scope, text(value, "name")?))
+    Ok((scope, text(value, "name")?.trim()))
 }
 
 fn valid_lane_component_name(name: &str) -> bool {

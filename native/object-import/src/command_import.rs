@@ -230,6 +230,7 @@ impl PreparedImport {
         path: PathBuf,
         objects: &[(String, Vec<u8>)],
     ) -> io::Result<()> {
+        let scope = scope.trim();
         if scope.is_empty() || objects.len() > 16384 {
             return Err(invalid("virtual import remote bounds"));
         }
@@ -242,7 +243,9 @@ impl PreparedImport {
         )?;
         let mut inflated_total = 0usize;
         for (hash, compressed) in objects {
-            inflated_total += validate_virtual_object(hash, compressed)?;
+            let hash = hash.trim();
+            inflated_total =
+                inflated_total.saturating_add(validate_virtual_object(hash, compressed)?);
             if inflated_total > capture::MAX_BYTES {
                 return Err(invalid("virtual import inflated byte limit"));
             }
@@ -265,7 +268,8 @@ impl PreparedImport {
     }
 }
 fn validate_virtual_object(hash: &str, compressed: &[u8]) -> io::Result<usize> {
-    crate::merge_history::hash(hash)?;
+    let hash = hash.trim();
+    let identity = crate::merge_history::hash(hash)?;
     let raw = crate::checkout::repository::inflate(compressed, 32 * 1024 * 1024)?;
     let kind = raw
         .split(|byte| *byte == b' ')
@@ -284,11 +288,10 @@ fn validate_virtual_object(hash: &str, compressed: &[u8]) -> io::Result<usize> {
     ) {
         return Err(invalid("virtual import object kind"));
     }
-    let (_, body) =
-        crate::checkout::repository::split(&raw, crate::merge_history::hash(hash)?, kind)?;
+    let (_, body) = crate::checkout::repository::split(&raw, identity, kind)?;
     if kind == "Source" {
         use sha1::{Digest, Sha1};
-        if crate::validate::hexadecimal(&Sha1::digest(body)) != *hash {
+        if crate::validate::hexadecimal(&Sha1::digest(body)) != hash {
             return Err(invalid("virtual import Source identity"));
         }
     } else {

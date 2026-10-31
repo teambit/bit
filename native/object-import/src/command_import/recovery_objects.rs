@@ -12,6 +12,9 @@ impl PreparedImport {
             return Err(invalid("import recovery object bounds"));
         }
         for (hash, bytes) in objects {
+            if bytes.is_empty() || bytes.len() > 32 * 1024 * 1024 {
+                return Err(invalid("import recovery object size"));
+            }
             let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
             let path = LooseObject::path(&crate::scope_path(root), &canonical);
             let metadata = fs::symlink_metadata(&path)?;

@@ -20,15 +20,15 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
         .get(request.token.trim())
         .ok_or_else(|| invalid("stale checkout apply token"))?;
     let strategy = request.strategy.as_deref().map(str::trim);
-    let keep = request.current_exists
-        && (request.force_ours || (plan.has_conflicts && strategy == Some("ours")));
-    if keep {
+    if request.current_exists
+        && (request.force_ours || (plan.has_conflicts && strategy_eq(strategy, "ours")))
+    {
         return Ok(
-            json!({"keepOurs":true,"files":[],"filesStatus":plan.current.iter().map(|file|json!({"relativePath":file.relative_path,"status":"unchanged"})).collect::<Vec<_>>(),"removals":[]}),
+            json!({"keepOurs":true,"files":[],"filesStatus":plan.current.iter().map(|file|json!({"relativePath":file.relative_path.trim(),"status":"unchanged"})).collect::<Vec<_>>(),"removals":[]}),
         );
     }
     let (mut files, mut status, removal) = initial(plan, &request, state)?;
-    let error = if plan.has_conflicts && strategy != Some("manual") {
+    let error = if plan.has_conflicts && !strategy_eq(strategy, "manual") {
         None
     } else {
         effects::apply(plan, &mut files, &mut status)?
@@ -38,6 +38,9 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
         output["deferredError"] = json!({"phase":"applyModified","message":message});
     }
     Ok(output)
+}
+fn strategy_eq(strategy: Option<&str>, expected: &str) -> bool {
+    strategy.is_some_and(|strat| strat.eq_ignore_ascii_case(expected))
 }
 fn initial(
     plan: &plan::Plan,

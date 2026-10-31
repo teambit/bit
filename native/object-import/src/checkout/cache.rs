@@ -32,13 +32,13 @@ impl State {
         let dir = canonical_dir(directory);
         let weight = body.len();
         let key_weight = dir.as_os_str().len().saturating_add(20);
-        if weight > MAX_BYTES || key_weight > MAX_KEY_BYTES {
-            return;
-        }
         let key = (dir, hash);
         if let Some(previous) = self.sources.remove(&key) {
             self.bytes = self.bytes.saturating_sub(previous.len());
             self.key_bytes = self.key_bytes.saturating_sub(key_weight);
+        }
+        if weight > MAX_BYTES || key_weight > MAX_KEY_BYTES {
+            return;
         }
         if self.bytes.saturating_add(weight) > MAX_BYTES
             || self.key_bytes.saturating_add(key_weight) > MAX_KEY_BYTES

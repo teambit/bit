@@ -26,7 +26,7 @@ pub(super) fn rows(
         overlay,
     )?;
     let labels = request.labels.as_ref().ok_or_else(|| invalid("checkout merge labels missing"))?;
-    let input = json!({"objectsDirectory":request.objects_directory,"labels":{"current":labels.current,"other":labels.other},"base":base.files.iter().map(|file|json!({"path":file.relative_path,"hash":file.hash})).collect::<Vec<_>>(),"other":request.target.files.iter().map(|file|json!({"path":file.relative_path,"hash":file.hash})).collect::<Vec<_>>(),"current":request.current.iter().map(|file|json!({"path":file.relative_path,"source":{"hash":file.snapshot_hash}})).collect::<Vec<_>>()});
+    let input = json!({"objectsDirectory":request.objects_directory,"labels":{"current":labels.current,"other":labels.other},"base":base.files.iter().map(|file|json!({"path":file.relative_path.trim(),"hash":file.hash.trim()})).collect::<Vec<_>>(),"other":request.target.files.iter().map(|file|json!({"path":file.relative_path.trim(),"hash":file.hash.trim()})).collect::<Vec<_>>(),"current":request.current.iter().map(|file|json!({"path":file.relative_path.trim(),"source":{"hash":file.snapshot_hash.trim()}})).collect::<Vec<_>>()});
     let prepared = crate::merge_history::merge::Prepared {
         base: base_bodies
             .iter()

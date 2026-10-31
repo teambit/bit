@@ -61,6 +61,9 @@ fn parallel(
     for (hash, record) in records {
         *total = total.saturating_add(record.body.len());
         *compressed = compressed.saturating_add(record.compressed.len());
+        if *total > MAX_BYTES || *compressed > MAX_BYTES {
+            return Err(invalid("checkout prepared raw limit"));
+        }
         crate::merge_transaction::reads::source(hash, &record)?;
         files.push(record.body);
     }

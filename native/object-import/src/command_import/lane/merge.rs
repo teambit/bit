@@ -111,6 +111,7 @@ fn replace_entry(value: &mut Value, incoming: &Value, entry: &Entry) -> io::Resu
     Ok(())
 }
 fn replace_hidden(value: &mut Value, entry: &Entry) {
+    let default_scope = value["scope"].as_str().map(str::trim);
     let mut hidden = value
         .get("updateDependents")
         .and_then(Value::as_array)
@@ -119,9 +120,8 @@ fn replace_hidden(value: &mut Value, entry: &Entry) {
     let old_index = hidden
         .iter()
         .position(|row| {
-            row.as_str()
-                .and_then(|id| id.rsplit_once('@'))
-                .is_some_and(|(id, _)| id == entry.identity)
+            super::hidden_entry(row, default_scope)
+                .is_ok_and(|parsed| parsed.identity == entry.identity)
         });
     if entry.hidden {
         let id = json!(format!("{}@{}", entry.identity, entry.head));
@@ -135,6 +135,7 @@ fn replace_hidden(value: &mut Value, entry: &Entry) {
     set_hidden(value, hidden);
 }
 fn prune_hidden(value: &mut Value, incoming: &Value) -> io::Result<bool> {
+    let default_scope = value["scope"].as_str().map(str::trim);
     let incoming = entries(incoming)?
         .into_iter()
         .filter(|row| row.hidden)
@@ -146,12 +147,11 @@ fn prune_hidden(value: &mut Value, incoming: &Value) -> io::Result<bool> {
     let retained = rows
         .iter()
         .filter(|row| {
-            row.as_str()
-                .and_then(|id| id.rsplit_once('@'))
-                .is_some_and(|(id, _)| {
+            super::hidden_entry(row, default_scope)
+                .is_ok_and(|parsed| {
                     incoming
                         .iter()
-                        .any(|identity| identity == id)
+                        .any(|identity| identity == &parsed.identity)
                 })
         })
         .cloned()

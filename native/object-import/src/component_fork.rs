@@ -93,6 +93,7 @@ impl Plan {
         self.validate()?;
         identity::destination(&self.root, &self.identity.directory, &mut Observed::default())?;
         files::apply(&self.files)?;
+        self.output = Observed::default();
         files::retain_output(&self.root, &self.files, &mut self.output)?;
         self.materialized = true;
         Ok(())
@@ -137,6 +138,9 @@ impl Plan {
             .collect()
     }
     pub fn transformed(&mut self, path: &Path, bytes: Vec<u8>) -> io::Result<()> {
+        if self.materialized {
+            return Err(invalid("fork sources have already been materialized"));
+        }
         if bytes.len() > 32 * 1024 * 1024 {
             return Err(unsupported("fork transformed source limit"));
         }

@@ -85,6 +85,18 @@ impl Refactor {
         Ok(())
     }
 }
+fn refactor_relative_path(file: &Value) -> io::Result<&str> {
+    let relative = [file, &file["relativePath"], &file["path"]]
+        .into_iter()
+        .find_map(|val| {
+            val.as_str()
+                .map(str::trim)
+                .filter(|text| !text.is_empty())
+        })
+        .ok_or_else(|| unsupported("fork refactor file path"))?;
+    files::relative_path(relative)?;
+    Ok(relative)
+}
 fn group(
     root: &Path,
     row: &Value,
@@ -95,27 +107,18 @@ fn group(
 ) -> io::Result<Group> {
     let directory = row["directory"]
         .as_str()
+        .or_else(|| row["rootDir"].as_str())
         .map(str::trim)
         .filter(|value| !value.is_empty())
-        .or_else(|| {
-            row["rootDir"]
-                .as_str()
-                .map(str::trim)
-                .filter(|value| !value.is_empty())
-        })
         .ok_or_else(|| unsupported("fork refactor component root"))?;
     files::relative_path(directory)?;
     let mut group = Group { files: Vec::new(), initial: Vec::new() };
-    for file in row["files"].as_array().ok_or_else(|| unsupported("fork refactor files"))? {
-        let relative = [file, &file["relativePath"], &file["path"]]
-            .into_iter()
-            .find_map(|val| {
-                val.as_str()
-                    .map(str::trim)
-                    .filter(|text| !text.is_empty())
-            })
-            .ok_or_else(|| unsupported("fork refactor file path"))?;
-        files::relative_path(relative)?;
+    for file in row["files"]
+        .as_array()
+        .filter(|files| files.len() <= 16384)
+        .ok_or_else(|| unsupported("fork refactor files"))?
+    {
+        let relative = refactor_relative_path(file)?;
         let destination = root.join(directory).join(relative);
         observed.ancestors(
             root,
@@ -126,6 +129,9 @@ fn group(
         source["rootDir"] = serde_json::json!(directory);
         let path = files::source_path(root, &source, relative, observed)?;
         let before = required(observed, &path)?;
+        if before.len() > 32 * 1024 * 1024 {
+            return Err(unsupported("fork refactor single file byte limit"));
+        }
         let bytes = if ast { before.clone() } else { replace(&before, pairs, package)? };
         group.initial.push(before);
         group.files.push(files::Copy { source: path, destination, bytes });

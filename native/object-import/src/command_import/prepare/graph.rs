@@ -51,7 +51,15 @@ impl PreparedImport {
         );
         self.cache.switch_existing_versions = previous;
         result?;
-        for target in targets {
+        let scoped = targets
+            .iter()
+            .filter(|target| {
+                target.scope
+                    .as_deref()
+                    .is_some_and(|scope| !scope.trim().is_empty())
+            })
+            .collect::<Vec<_>>();
+        for target in &scoped {
             self.cache.unbuilt.insert(format!(
                 "{}@{}",
                 super::identity(target)?,
@@ -59,10 +67,6 @@ impl PreparedImport {
             ));
         }
         let remotes = self.environment.remotes.clone();
-        let scoped = targets
-            .iter()
-            .filter(|target| target.scope.is_some())
-            .collect::<Vec<_>>();
         super::prepare_dependencies(self, root, &scoped, &remotes)?;
         let mut graph_rows = self.progress.split_off(first);
         graph_rows.retain(|row| !row.ids.is_empty() || !row.objects.is_empty());

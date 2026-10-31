@@ -34,9 +34,9 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
 
 fn normalize_rel(path: &str) -> String {
     let replaced = path.trim().replace('\\', "/");
-    let mut rest = replaced.as_str();
+    let mut rest = replaced.as_str().trim_start_matches('/');
     while let Some(stripped) = rest.strip_prefix("./") {
-        rest = stripped;
+        rest = stripped.trim_start_matches('/');
     }
-    rest.trim_matches('/').to_owned()
+    rest.trim_end_matches('/').to_owned()
 }

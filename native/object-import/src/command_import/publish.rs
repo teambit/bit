@@ -73,8 +73,8 @@ impl PreparedImport {
             ["Source", "ScopeMeta", "Version", "VersionHistory", "Component", "Lane", "LaneHistory"]
         {
             for (hash, record) in &self.overlay.objects {
-                if record.kind == kind {
-                    store.write(hash, &record.bytes)?;
+                if record.kind.trim() == kind {
+                    store.write(hash.trim(), &record.bytes)?;
                 }
             }
             store.finish_batch()?;
@@ -105,7 +105,7 @@ impl PreparedImport {
             write_file(
                 &scope
                     .join("refs/remotes")
-                    .join(remote)
+                    .join(remote.trim())
                     .join("main"),
                 &serde_json::to_vec_pretty(rows).map_err(io::Error::other)?,
             )?;
@@ -114,8 +114,8 @@ impl PreparedImport {
             write_file(
                 &scope
                     .join("refs/remotes")
-                    .join(remote)
-                    .join(lane),
+                    .join(remote.trim())
+                    .join(lane.trim()),
                 &serde_json::to_vec_pretty(rows).map_err(io::Error::other)?,
             )?;
         }

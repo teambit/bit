@@ -196,12 +196,15 @@ pub fn write_bitmap(
         return Err(invalid("component bitmap changed before publication"));
     }
     let after = crate::inspection::render_workspace_bitmap(bitmap)?;
-    let _ = crate::component_remove::backup_bitmap(root, file_id, reason);
+    crate::component_remove::backup_bitmap(root, file_id, reason)?;
     fs::write(root.join(".bitmap"), after)
 }
 fn validate_range(range: Option<&str>) -> io::Result<()> {
     if let Some(range) = range {
-        node_semver::Range::parse(range).map_err(|_|invalid(format!(r#"the range "{range}" is invalid. see https://www.npmjs.com/package/semver#ranges for the range syntax"#)))?;
+        if range.len() > 4096 {
+            return Err(invalid("deprecation range exceeds maximum length"));
+        }
+        node_semver::Range::parse(range).map_err(|_| invalid(format!(r#"the range "{range}" is invalid. see https://www.npmjs.com/package/semver#ranges for the range syntax"#)))?;
     }
     Ok(())
 }

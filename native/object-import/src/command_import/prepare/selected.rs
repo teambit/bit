@@ -27,18 +27,19 @@ impl PreparedImport {
             ..Default::default()
         });
         for target in external {
-            let directory = remote(
-                self,
-                &remotes,
-                target.scope.as_deref().ok_or_else(|| invalid("import unexported scope"))?,
-            )?;
+            let scope = target.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .ok_or_else(|| invalid("import unexported scope"))?;
+            let directory = remote(self, &remotes, scope)?;
             let incoming = read_model(self, &directory, &target)?
                 .ok_or_else(|| invalid("import unexported remote missing"))?;
             let hash = version_ref(&incoming, "latest")?;
             let progress =
                 self.progress.last_mut().ok_or_else(|| invalid("import unexported progress"))?;
             progress.ids.push(format!("{}@latest", identity(&target)?));
-            progress.objects.insert(object_hash(target.scope.as_deref().unwrap_or_default()));
+            progress.objects.insert(object_hash(scope));
             receive(self, &directory, &target, &incoming, &hash, false)?;
         }
         self.validate()

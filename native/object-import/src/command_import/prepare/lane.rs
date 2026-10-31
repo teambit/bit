@@ -357,8 +357,11 @@ fn extend_candidates(
     checked: &mut HashSet<String>,
     candidates: &mut Vec<String>,
 ) -> io::Result<()> {
-    let component_scope =
-        identity.split_once('/').ok_or_else(|| invalid("lane referenced identity"))?.0;
+    let component_scope = identity
+        .split_once('/')
+        .map(|(scope, _)| scope.trim())
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("lane referenced identity"))?;
     let flattened = match version.get("flattenedDependencies") {
         None | Some(serde_json::Value::Null) if version["flattenedDependenciesRef"].is_string() => {
             &[][..]
@@ -373,13 +376,14 @@ fn extend_candidates(
         .chain(dev_flattened.into_iter().flatten())
     {
         let dependency = super::dependencies::dependency_target(value)?;
-        if dependency.scope.as_deref() != Some(component_scope)
-            || crate::merge_history::hash(&dependency.version).is_err()
+        let dep_version = dependency.version.trim();
+        if dependency.scope.as_deref().map(str::trim) != Some(component_scope)
+            || crate::merge_history::hash(dep_version).is_err()
         {
             continue;
         }
-        if checked.insert(dependency.version.clone()) {
-            candidates.push(dependency.version);
+        if checked.insert(dep_version.to_owned()) {
+            candidates.push(dep_version.to_owned());
         }
         if candidates.len() > 4096 {
             return Err(invalid("lane referenced Version budget"));

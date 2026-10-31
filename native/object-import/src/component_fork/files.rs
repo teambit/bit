@@ -39,7 +39,11 @@ pub(super) fn prepare(
         relative_path(relative)?;
         let path = source_path(root, source, relative, observed)?;
         let bytes = required(observed, &path)?;
+        if bytes.len() > 32 * 1024 * 1024 {
+            return Err(unsupported("fork single source byte limit"));
+        }
         let (name, bytes) = transform(options, source, id, relative, bytes)?;
+        relative_path(&name)?;
         let destination = root.join(&id.directory).join(name);
         if !destinations.insert(destination.clone()) {
             return Err(unsupported("fork duplicate destination source"));

@@ -278,7 +278,7 @@ fn resolve_local(name: &str, scope: &Value, index: &Value) -> io::Result<Id> {
         }
         if let Some(row) = rows
             .iter()
-            .find(|row| row["localLane"] == name)
+            .find(|row| row["localLane"].as_str().map(str::trim) == Some(name))
         {
             return Ok(Id {
                 scope: text(row, "remoteScope")?.into(),
@@ -307,7 +307,7 @@ fn index_rows(index: &Value) -> io::Result<&[Value]> {
     Ok(rows)
 }
 pub(crate) fn entries(value: &Value) -> io::Result<Vec<Entry>> {
-    let default_scope = value["scope"].as_str();
+    let default_scope = value["scope"].as_str().map(str::trim);
     let visible =
         value["components"].as_array().ok_or_else(|| invalid("command lane components"))?;
     let mut result = visible
@@ -344,12 +344,17 @@ pub(crate) fn component_identity(value: &Value) -> io::Result<String> {
     component_identity_with_scope(value, None)
 }
 pub(crate) fn validate_value(id: &Id, value: &Value) -> io::Result<()> {
-    if value["scope"] != id.scope || value["name"] != id.name {
+    if value["scope"].as_str().map(str::trim) != Some(id.scope.as_str())
+        || value["name"].as_str().map(str::trim) != Some(id.name.as_str())
+    {
         return Err(invalid("command lane object identity"));
     }
     entries(value)?;
     Ok(())
 }
 fn text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
-    value[key].as_str().ok_or_else(|| invalid("command lane string field"))
+    value[key]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("command lane string field"))
 }

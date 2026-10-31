@@ -77,7 +77,7 @@ impl PreparedImport {
             files.insert(
                 scope
                     .join("refs/remotes")
-                    .join(remote)
+                    .join(remote.trim())
                     .join("main"),
                 pretty(rows, false)?,
             );
@@ -86,8 +86,8 @@ impl PreparedImport {
             files.insert(
                 scope
                     .join("refs/remotes")
-                    .join(remote)
-                    .join(lane),
+                    .join(remote.trim())
+                    .join(lane.trim()),
                 pretty(rows, false)?,
             );
         }
@@ -101,7 +101,8 @@ impl super::capture::Capture {
     pub(super) fn accept_published(&mut self, files: &HashMap<PathBuf, Vec<u8>>) -> io::Result<()> {
         for (path, bytes) in files {
             let metadata = fs::symlink_metadata(path)?;
-            if !metadata.is_file()
+            if bytes.len() > 32 * 1024 * 1024
+                || !metadata.is_file()
                 || metadata.file_type().is_symlink()
                 || metadata.len() != bytes.len() as u64
                 || fs::read(path)? != *bytes

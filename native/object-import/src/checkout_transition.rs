@@ -66,6 +66,12 @@ fn decision(input: &Value) -> io::Result<Value> {
     let conflicts = input["hasConflicts"]
         .as_bool()
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "checkout conflict flag"))?;
+    if let Some(strategy) = input.get("strategy")
+        && !strategy.is_null()
+        && !strategy.is_string()
+    {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "checkout strategy flag"));
+    }
     let ours = input["strategy"]
         .as_str()
         .is_some_and(|strategy| strategy.trim().eq_ignore_ascii_case("ours"));

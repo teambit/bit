@@ -76,39 +76,36 @@ fn copy(output: &mut Value, source: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+fn non_empty_field<'a>(value: &'a Value, field: &str) -> Option<&'a str> {
+    value[field]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+}
 pub(super) fn extension_key(entry: &Value) -> Option<String> {
     if let Some(key) = ["id", "name", "legacyId", "extensionId"]
         .into_iter()
-        .find_map(|field| {
-            entry[field]
-                .as_str()
-                .map(str::trim)
-                .filter(|key| !key.is_empty())
-        })
+        .find_map(|field| non_empty_field(entry, field))
     {
         return Some(
             key.strip_suffix("@latest")
                 .or_else(|| key.strip_suffix("@head"))
                 .unwrap_or(key)
-                .to_owned(),
-        );
+                .trim(),
+        )
+        .filter(|stripped| !stripped.is_empty())
+        .map(str::to_owned);
     }
     let ext = &entry["extensionId"];
-    let scope = ext["scope"]
-        .as_str()
-        .map(str::trim)
-        .filter(|scope| !scope.is_empty())?;
-    let raw_name = ext["name"]
-        .as_str()
-        .map(str::trim)
-        .filter(|name| !name.is_empty())?;
+    let scope = non_empty_field(ext, "scope")?;
+    let raw_name = non_empty_field(ext, "name")?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
         .map_or((raw_name, None), |(base, ver)| (base.trim(), Some(ver.trim())));
-    let version = ext["version"]
-        .as_str()
-        .map(str::trim)
-        .filter(|version| !version.is_empty())
+    if name.is_empty() {
+        return None;
+    }
+    let version = non_empty_field(ext, "version")
         .or(inline_ver)
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"));
     Some(version.map_or_else(

@@ -115,6 +115,7 @@ pub(super) fn raw_remote(
         .ok_or_else(|| invalid("import unmapped remote requires canonical resolver"))?;
     let path = host
         .strip_prefix("file://")
+        .map(str::trim)
         .ok_or_else(|| invalid("import remote protocol requires canonical transport"))?;
     let directory = PathBuf::from(path);
     if !directory.is_absolute() {
@@ -139,7 +140,7 @@ fn validate_virtual(
     let scope = plan.capture
         .json(&directory.join("scope.json"))?
         .ok_or_else(|| invalid("virtual remote scope absent"))?;
-    if scope["name"].as_str().map(str::trim) != Some(name) {
+    if scope["name"].as_str().map(str::trim) != Some(name.trim()) {
         return Err(invalid("virtual remote scope mismatch"));
     }
     Ok(())

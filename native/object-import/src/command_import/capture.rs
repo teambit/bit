@@ -176,9 +176,10 @@ impl Capture {
         let records = hashes
             .par_iter()
             .map(|hash| {
-                let identity = crate::merge_history::hash(hash)?;
+                let trimmed = hash.trim();
+                let identity = crate::merge_history::hash(trimmed)?;
                 let record = repository::read_source_shared(directory, identity, &raw, &packed)?;
-                Ok((hash.clone(), record))
+                Ok((trimmed.to_owned(), record))
             })
             .collect::<io::Result<Vec<_>>>()?;
         let mut result = Vec::with_capacity(records.len());

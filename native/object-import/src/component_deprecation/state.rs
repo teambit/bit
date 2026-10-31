@@ -7,12 +7,16 @@ pub(super) fn metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
         && (local["deprecate"].is_boolean()
             || local["range"]
                 .as_str()
-                .is_some_and(|value| !value.is_empty()))
+                .is_some_and(|value| !value.trim().is_empty()))
     {
         return Ok(local.clone());
     }
-    if row["version"].as_str().is_none_or(str::is_empty)
-        && key.rsplit_once('@').is_none_or(|(_, ver)| ver.is_empty())
+    if row["version"]
+        .as_str()
+        .is_none_or(|ver| ver.trim().is_empty())
+        && key
+            .rsplit_once('@')
+            .is_none_or(|(_, ver)| ver.trim().is_empty())
     {
         return Ok(serde_json::json!({}));
     }

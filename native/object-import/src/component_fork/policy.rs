@@ -6,6 +6,9 @@ use std::io;
 pub fn dependency_policy(source: &Value) -> io::Result<Vec<Value>> {
     let dependencies =
         source["dependencies"].as_array().ok_or_else(|| unsupported("fork dependency metadata"))?;
+    if dependencies.len() > 4096 {
+        return Err(unsupported("fork dependency count budget"));
+    }
     let excluded = source["excludedComponents"].as_array();
     let prefix = source["savePrefix"].as_str().map_or("^", str::trim);
     let mut output = Vec::new();
@@ -49,7 +52,10 @@ fn excluded_dependency(row: &Value, excluded: Option<&Vec<Value>>) -> bool {
     let Some(identity) = component_identity(component) else { return false };
     excluded.is_some_and(|rows| {
         rows.iter()
-            .any(|row| row == &identity || component_identity(row).as_deref() == Some(&identity))
+            .any(|row| {
+                row.as_str().map(str::trim) == Some(identity.as_str())
+                    || component_identity(row).as_deref() == Some(identity.as_str())
+            })
     })
 }
 fn component_identity(component: &Value) -> Option<String> {

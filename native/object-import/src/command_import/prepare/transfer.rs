@@ -31,7 +31,7 @@ pub(super) fn receive_lane(
         incoming,
         hash,
         true,
-        target.scope.as_deref() == Some(source),
+        target.scope.as_deref().map(str::trim) == Some(source.trim()),
     )
 }
 

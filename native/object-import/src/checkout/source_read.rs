@@ -22,14 +22,14 @@ fn read(
     request: &Request,
     input: &super::Input,
     state: &cache::State,
-    budget: (usize, usize),
+    remaining_raw: usize,
+    compressed: &mut usize,
 ) -> io::Result<Option<Record>> {
     if input.cached(request, state, false).is_some() {
         return Ok(None);
     }
-    let mut compressed = MAX_BYTES.saturating_sub(budget.1);
     let source =
-        repository::read_source_record(&request.directory, input.hash, budget.0, &mut compressed)?;
+        repository::read_source_record(&request.directory, input.hash, remaining_raw, compressed)?;
     Ok(Some(Record {
         body: source.body,
         compressed: source.compressed.len(),
@@ -67,15 +67,10 @@ fn serial_records(request: &Request, state: &cache::State) -> io::Result<Vec<Opt
     request.files
         .iter()
         .map(|input| {
-            let record = read(
-                request,
-                input,
-                state,
-                (MAX_BYTES.saturating_sub(raw), MAX_BYTES.saturating_sub(compressed)),
-            )?;
+            let record =
+                read(request, input, state, MAX_BYTES.saturating_sub(raw), &mut compressed)?;
             if let Some(source) = &record {
                 raw = raw.saturating_add(source.body.len());
-                compressed = compressed.saturating_add(source.compressed);
             }
             Ok(record)
         })

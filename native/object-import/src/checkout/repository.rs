@@ -168,7 +168,7 @@ fn inflate_using(
             .decompress(&compressed[before_in as usize..], chunk, FlushDecompress::None)
             .map_err(inflate_error::retain)?;
         let count = (decoder.total_out() - before_out) as usize;
-        if output.len() + count > maximum {
+        if output.len().saturating_add(count) > maximum {
             return Err(invalid("checkout inflated bytes out of bounds"));
         }
         reserve_inflated(budget, &mut header, output.len(), &chunk[..count])?;
@@ -197,13 +197,13 @@ fn reserve_inflated(
         return budget.reserve(chunk.len());
     }
     if let Some(end) = chunk.iter().position(|byte| *byte == 0) {
-        if previous + end >= 256 {
+        if previous.saturating_add(end) >= 256 {
             return Err(invalid("checkout object header exceeds bounds"));
         }
-        *header = Some(previous + end + 1);
+        *header = Some(previous.saturating_add(end).saturating_add(1));
         return budget.reserve(chunk.len() - end - 1);
     }
-    if previous + chunk.len() >= 256 {
+    if previous.saturating_add(chunk.len()) >= 256 {
         return Err(invalid("checkout object header exceeds bounds"));
     }
     Ok(())

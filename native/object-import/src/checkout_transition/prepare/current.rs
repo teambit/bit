@@ -148,6 +148,8 @@ fn retained(
 ) -> io::Result<Loaded> {
     let raw_hash = file.raw_hash.trim();
     let snapshot_hash = file.snapshot_hash.trim();
+    crate::merge_history::hash(raw_hash)?;
+    crate::merge_history::hash(snapshot_hash)?;
     let maximum = (32 * 1024 * 1024usize).saturating_sub(*total);
     let snapshot = snapshots
         .and_then(|state| state.get(token, &file.path, raw_hash))
@@ -165,7 +167,7 @@ fn retained(
         }
         snapshot.contents.to_vec()
     };
-    *total += snapshot.raw_bytes;
+    *total = total.saturating_add(snapshot.raw_bytes);
     let normalized = crate::checkout::eol::normalize(raw.clone(), false);
     Ok(Loaded { raw, normalized })
 }

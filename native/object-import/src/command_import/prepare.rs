@@ -94,7 +94,11 @@ fn prepare_with_virtual_options(
     }
     let scoped: Vec<_> = targets
         .iter()
-        .filter(|target| target.scope.is_some())
+        .filter(|target| {
+            target.scope
+                .as_deref()
+                .is_some_and(|scope| !scope.trim().is_empty())
+        })
         .collect();
     plan.bitmap_count = scoped.len();
     if scoped.is_empty() {

@@ -154,10 +154,18 @@ fn same_manifest(stored: &[ManifestFile], live: &[ManifestFile]) -> bool {
     }
     let records: HashMap<_, _> = stored
         .iter()
-        .map(|file| (file.relative_path.as_str(), file))
+        .map(|file| (file.relative_path.trim(), file))
         .collect();
     live.iter()
-        .all(|file| records.get(file.relative_path.as_str()).copied() == Some(file))
+        .all(|file| {
+            records
+                .get(file.relative_path.trim())
+                .is_some_and(|stored_file| {
+                    stored_file.hash.trim() == file.hash.trim()
+                        && stored_file.name == file.name
+                        && stored_file.test == file.test
+                })
+        })
 }
 
 fn validate(request: &Request) -> io::Result<()> {

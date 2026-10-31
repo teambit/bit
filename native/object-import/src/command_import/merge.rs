@@ -185,8 +185,11 @@ fn validate_model(value: &Value) -> io::Result<()> {
     let has_name = value["name"]
         .as_str()
         .is_some_and(|name| !name.trim().is_empty());
+    let has_scope = value["scope"]
+        .as_str()
+        .is_some_and(|scope| !scope.trim().is_empty());
     if !has_name
-        || value["scope"].as_str().is_none()
+        || !has_scope
         || !matches!(value["schema"].as_str().map(str::trim), Some("1.0.0" | "2.0.0"))
         || !value["versions"].is_object()
     {

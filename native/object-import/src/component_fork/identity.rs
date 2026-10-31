@@ -155,6 +155,24 @@ fn scope_name(scope: &str) -> io::Result<()> {
     }
     Ok(())
 }
+fn default_directory_path(workspace: &Value, name: &str, scope: &str) -> String {
+    let template =
+        crate::component_tracking::identity::workspace_aspect(workspace)["defaultDirectory"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .unwrap_or("components/{name}");
+    let template =
+        if template.contains("{name}") { template.into() } else { format!("{template}/{{name}}") };
+    let (owner, short_scope) = scope
+        .rsplit_once('.')
+        .unwrap_or(("", scope));
+    template
+        .replace("{name}", name)
+        .replace("{scopeId}", scope)
+        .replace("{scope}", short_scope)
+        .replace("{owner}", owner)
+}
 fn directory(
     options: &Options,
     name: &str,
@@ -163,25 +181,13 @@ fn directory(
     bitmap: &Value,
     increment: bool,
 ) -> io::Result<String> {
-    let template =
-        crate::component_tracking::identity::workspace_aspect(workspace)["defaultDirectory"]
-            .as_str()
-            .unwrap_or("components/{name}");
-    let template =
-        if template.contains("{name}") { template.into() } else { format!("{template}/{{name}}") };
-    let (owner, short_scope) = scope
-        .rsplit_once('.')
-        .unwrap_or(("", scope));
-    let mut path = options.path
-        .clone()
-        .unwrap_or_else(|| {
-            template
-                .replace("{name}", name)
-                .replace("{scopeId}", scope)
-                .replace("{scope}", short_scope)
-                .replace("{owner}", owner)
-        });
-    if options.path.is_none() && increment {
+    let custom = options.path
+        .as_deref()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty());
+    let mut path =
+        custom.map_or_else(|| default_directory_path(workspace, name, scope), str::to_owned);
+    if custom.is_none() && increment {
         path = increment_path(&path, bitmap);
     }
     let parsed = Path::new(&path);
@@ -200,12 +206,13 @@ fn increment_path(path: &str, bitmap: &Value) -> String {
         .as_object()
         .into_iter()
         .flat_map(|rows| rows.values())
-        .filter_map(|row| row["rootDir"].as_str())
+        .filter_map(|row| row["rootDir"].as_str().map(str::trim))
+        .filter(|dir| !dir.is_empty())
         .collect::<Vec<_>>();
     let parent = paths
         .iter()
         .copied()
-        .find(|other| path.starts_with(*other));
+        .find(|other| *other == path || path.starts_with(&format!("{other}/")));
     let conflicts = parent.is_some()
         || paths
             .iter()

@@ -230,7 +230,9 @@ impl Record {
         {
             return Err(invalid("checkout current version limit"));
         }
-        self.current.value = observed.value;
+        self.current.value = observed.value
+            .map(|val| val.trim().to_owned())
+            .filter(|val| !val.is_empty());
         self.current.has_bitmap = observed.has_bitmap;
         Ok(self.current_policy())
     }
@@ -249,6 +251,7 @@ impl Record {
                     self.component.id_without_version,
                     self.options.version
                         .as_deref()
+                        .map(str::trim)
                         .filter(|version| !version.is_empty())
                         .unwrap_or(&self.target),
                 ),
@@ -276,6 +279,7 @@ impl Record {
     fn already_current(&self) -> bool {
         self.options.version
             .as_deref()
+            .map(str::trim)
             .filter(|version| !version.is_empty())
             .is_some_and(|version| self.current.value.as_deref() == Some(version))
             || (self.options.version_per_id.is_some()

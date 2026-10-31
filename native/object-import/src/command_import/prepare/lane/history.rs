@@ -75,6 +75,12 @@ fn merge_history(existing: Option<Value>, incoming: Value, lane_hash: &str) -> i
     if incoming_rows.len() > 4096 {
         return Err(invalid("remote LaneHistory entry budget"));
     }
+    if incoming_rows
+        .iter()
+        .any(|(key, value)| key.trim().is_empty() || !value.is_object())
+    {
+        return Err(invalid("remote LaneHistory entry shape"));
+    }
     let Some(mut existing) = existing else { return Ok(incoming) };
     if existing["laneHash"].as_str().map(str::trim) != Some(lane_hash) {
         return Err(invalid("local LaneHistory identity"));
@@ -82,7 +88,7 @@ fn merge_history(existing: Option<Value>, incoming: Value, lane_hash: &str) -> i
     let rows =
         existing["history"].as_object_mut().ok_or_else(|| invalid("local LaneHistory entries"))?;
     for (key, value) in incoming_rows {
-        rows.insert(key.clone(), value.clone());
+        rows.insert(key.trim().to_owned(), value.clone());
         if rows.len() > 4096 {
             return Err(invalid("merged LaneHistory entry budget"));
         }

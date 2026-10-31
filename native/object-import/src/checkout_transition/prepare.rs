@@ -77,12 +77,10 @@ fn validate(request: &wire::Prepare) -> io::Result<()> {
     {
         return Err(invalid("checkout private directory must be ordinary empty"));
     }
-    if request.target.files.len() > 4096
+    if invalid_manifest_files(&request.target.files)
+        || request.base.as_ref().is_some_and(|base| invalid_manifest_files(&base.files))
         || request.current.len() > 4096
         || !request.objects_directory.is_absolute()
-        || request.target.files
-            .iter()
-            .any(|file| file.relative_path.trim().is_empty())
         || request.current
             .iter()
             .any(|file| file.relative_path.trim().is_empty())
@@ -93,6 +91,12 @@ fn validate(request: &wire::Prepare) -> io::Result<()> {
         return Err(invalid("packed bodies require a merge base"));
     }
     Ok(())
+}
+fn invalid_manifest_files(files: &[wire::Manifest]) -> bool {
+    files.len() > 4096
+        || files
+            .iter()
+            .any(|file| file.relative_path.trim().is_empty())
 }
 fn retain_inputs(
     request: &wire::Prepare,

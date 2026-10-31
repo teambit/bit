@@ -11,6 +11,12 @@ pub(crate) fn verify_manifest(
     verify_manifest_value(&version, expected)
 }
 pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Result<()> {
+    let Some(items) = expected.as_array() else {
+        return Err(invalid("checkout invalid expected manifest"));
+    };
+    if items.len() > 4096 {
+        return Err(invalid("checkout plan manifest file count out of bounds"));
+    }
     let expected: Vec<ManifestFile> =
         serde_json::from_value(expected.clone()).map_err(io::Error::other)?;
     validate_files(&expected)?;

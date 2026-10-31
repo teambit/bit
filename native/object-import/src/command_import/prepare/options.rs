@@ -52,11 +52,19 @@ impl PreparedImport {
         if targets.len() > 4096 {
             return Err(super::invalid("import lane dependency target limit"));
         }
-        if targets.is_empty() {
+        let scoped = targets
+            .iter()
+            .filter(|target| {
+                target.scope
+                    .as_deref()
+                    .is_some_and(|scope| !scope.trim().is_empty())
+            })
+            .collect::<Vec<_>>();
+        if scoped.is_empty() {
             return Ok(());
         }
         self.cache.fetch_all_dependencies = true;
-        for target in targets {
+        for target in &scoped {
             self.cache.unbuilt.insert(format!(
                 "{}@{}",
                 super::identity(target)?,
@@ -64,7 +72,7 @@ impl PreparedImport {
             ));
         }
         let remotes = self.environment.remotes.clone();
-        super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
+        super::prepare_dependencies(self, root, &scoped, &remotes)?;
         self.validate()
     }
 
@@ -74,6 +82,9 @@ impl PreparedImport {
         targets: &[Target],
         all_history: bool,
     ) -> io::Result<()> {
+        if targets.len() > 4096 {
+            return Err(super::invalid("import main fetch target limit"));
+        }
         let scoped = targets
             .iter()
             .filter(|target| {

@@ -169,6 +169,9 @@ fn load_source_body(
     compressed: &mut usize,
 ) -> io::Result<Vec<u8>> {
     if let Some(body) = input.cached(request, state, use_cache) {
+        if body.len() > remaining {
+            return Err(invalid("checkout materialized bytes out of bounds"));
+        }
         return Ok(body.clone());
     }
     let body = repository::source(&request.directory, input.hash, remaining, compressed)?;

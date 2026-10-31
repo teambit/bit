@@ -47,7 +47,7 @@ fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
 pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
     let trimmed = id.trim();
     let id = match trimmed.rsplit_once('@') {
-        Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
+        Some((prefix, _)) if !prefix.trim().is_empty() => prefix.trim(),
         _ => trimmed,
     };
     bitmap
@@ -55,10 +55,19 @@ pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
         .ok_or_else(|| invalid("invalid component bitmap"))?
         .iter()
         .find_map(|(key, row)| {
+            if row["isAvailableOnCurrentLane"] == false
+                || crate::workspace::engine::client_status::config::is_config_removed(
+                    &row["config"],
+                )
+            {
+                return None;
+            }
             let full = identity(key, row)?;
-            let full = full.rsplit_once('@').map_or(full.as_str(), |(bare, _)| bare);
+            let full = full.rsplit_once('@').map_or(full.as_str(), |(bare, _)| bare.trim());
             let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
-            let key_bare = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
+            let key_trimmed = key.trim();
+            let key_bare =
+                key_trimmed.rsplit_once('@').map_or(key_trimmed, |(bare, _)| bare.trim());
             (full == id || name == id || key_bare == id).then_some(key.as_str())
         })
         .ok_or_else(|| invalid(format!("component {id} was not found")))
@@ -75,6 +84,7 @@ pub(crate) fn select(bitmap: &Value, pattern: &str) -> io::Result<Vec<String>> {
     let parts = pattern
         .split(',')
         .map(str::trim)
+        .filter(|part| !part.is_empty())
         .collect::<Vec<_>>();
     let mut result = vec![];
     for (key, row) in rows {
