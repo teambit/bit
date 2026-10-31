@@ -74,19 +74,31 @@ pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, 
     }
     Ok((key, row))
 }
-pub(super) fn row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
-    let key_name = key_id.split_once('/').map_or(key_id, |(_, name)| name);
-    row["name"]
+pub(crate) fn row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {
+    if let Some(name) = row["name"]
         .as_str()
         .filter(|name| !name.is_empty())
-        .unwrap_or(key_name)
+    {
+        return name;
+    }
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    if let Some(row_scope) = scope(row) {
+        return key_id
+            .strip_prefix(row_scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .unwrap_or(key_id);
+    }
+    key_id.split_once('/').map_or(key_id, |(_, name)| name)
 }
-pub(super) fn scope(row: &Value) -> Option<&str> {
+pub(crate) fn scope(row: &Value) -> Option<&str> {
     row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+        })
 }
 fn staged(row: &Value, scope: &str, name: &str, exported: bool) -> io::Result<()> {
     if !exported

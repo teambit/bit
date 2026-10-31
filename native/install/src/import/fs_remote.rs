@@ -81,7 +81,7 @@ impl Collector {
 
     fn push_lane(&mut self, scope: &str, lane: &str) -> io::Result<()> {
         let name = lane.rsplit_once('/').map_or(lane, |(_, name)| name);
-        let hash = lane_hash(&self.repo, name)?
+        let hash = lane_hash(&self.repo, lane)?
             .ok_or_else(|| {
                 io::Error::new(
                     io::ErrorKind::NotFound,
@@ -245,14 +245,26 @@ fn is_built(version: &Value) -> bool {
 }
 
 fn dependency_id(value: &Value) -> Option<Id> {
+    if let Some(raw) = value.as_str() {
+        return Id::parse(raw).ok();
+    }
     Some(Id {
-        scope: value["scope"].as_str()?.to_string(),
-        name: value["name"].as_str()?.to_string(),
-        version: value["version"].as_str().map(str::to_string),
+        scope: value["scope"]
+            .as_str()
+            .filter(|val| !val.is_empty())?
+            .to_string(),
+        name: value["name"]
+            .as_str()
+            .filter(|val| !val.is_empty())?
+            .to_string(),
+        version: value["version"]
+            .as_str()
+            .filter(|val| !val.is_empty())
+            .map(str::to_string),
     })
 }
 
-fn lane_hash(repo: &Repo, name: &str) -> io::Result<Option<String>> {
+fn lane_hash(repo: &Repo, lane: &str) -> io::Result<Option<String>> {
     let index: Value = match fs::read(repo.root().join("index.json")) {
         Ok(bytes) => {
             serde_json::from_slice(&bytes).map_err(|_| invalid("invalid scope index.json"))?
@@ -260,18 +272,23 @@ fn lane_hash(repo: &Repo, name: &str) -> io::Result<Option<String>> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
     };
+    let (lane_scope, name) = lane
+        .rsplit_once('/')
+        .map_or((None, lane), |(sc, nm)| (Some(sc), nm));
     Ok(index["lanes"]
         .as_array()
         .into_iter()
         .flatten()
-        .find(|row| row["id"]["name"].as_str() == Some(name))
+        .find(|row| {
+            lane_scope.is_none_or(|sc| row["id"]["scope"].as_str() == Some(sc))
+                && row["id"]["name"].as_str() == Some(name)
+        })
         .and_then(|row| row["hash"].as_str())
         .map(str::to_string))
 }
 
 fn find_lane(repo: &Repo, lane: &str) -> io::Result<Option<Value>> {
-    let name = lane.rsplit_once('/').map_or(lane, |(_, name)| name);
-    match lane_hash(repo, name)? {
+    match lane_hash(repo, lane)? {
         Some(hash) => repo.read_json(&hash),
         None => Ok(None),
     }
@@ -279,7 +296,10 @@ fn find_lane(repo: &Repo, lane: &str) -> io::Result<Option<Value>> {
 
 /// The lane head of a versionless id that the lane contains.
 fn lane_head(lane: &Value, id: &Id) -> Option<Id> {
-    if id.version.is_some() {
+    if id.version
+        .as_deref()
+        .is_some_and(|ver| !ver.is_empty())
+    {
         return None;
     }
     lane["components"]

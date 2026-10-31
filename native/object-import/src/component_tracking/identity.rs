@@ -17,10 +17,7 @@ pub(super) fn choose(
             .find(|(_, row)| row["rootDir"] == directory)
     {
         return Ok((
-            row["name"]
-                .as_str()
-                .unwrap_or(key)
-                .into(),
+            rows::row_name(key, row).unwrap_or(key).into(),
             false,
             super::rows::scope(row).map(str::to_owned),
         ));
@@ -70,7 +67,11 @@ fn explicit(
         )));
     }
     let name = existing
-        .and_then(|row| row["name"].as_str())
+        .and_then(|row| {
+            row["name"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
         .unwrap_or(name);
 
     validate(name)?;

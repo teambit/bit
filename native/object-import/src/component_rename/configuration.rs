@@ -130,11 +130,23 @@ fn copy_config(config: &mut serde_json::Map<String, Value>, name: &str, value: &
     }
 }
 fn aspect_id(value: &Value) -> Option<String> {
-    let name = value["name"].as_str()?;
+    if let Some(id) = value
+        .as_str()
+        .filter(|id| !id.is_empty())
+    {
+        return Some(id.to_owned());
+    }
+    let name = value["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())?;
     let mut id = value["scope"]
         .as_str()
+        .filter(|scope| !scope.is_empty())
         .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
-    if let Some(version) = value["version"].as_str() {
+    if let Some(version) = value["version"]
+        .as_str()
+        .filter(|version| !version.is_empty())
+    {
         id.push('@');
         id.push_str(version);
     }
@@ -272,7 +284,13 @@ pub(crate) fn target_key(
 ) -> io::Result<String> {
     let similar = rows
         .iter()
-        .filter(|(key, row)| row["name"].as_str().unwrap_or(key) == name)
+        .filter(|(key, row)| {
+            !key.starts_with('$')
+                && *key != "_bit_lane"
+                && *key != "version"
+                && row.is_object()
+                && identity::row_name(key, row) == name
+        })
         .map(|(key, row)| {
             let scope =
                 identity::scope(row).ok_or_else(|| unsupported("rename duplicate name scope"))?;

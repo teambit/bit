@@ -1,12 +1,12 @@
 //! Reset graph-selected local lane snapshots without changing workspace sources.
 
+pub(crate) mod bitmap;
 pub(crate) mod controls;
 
 pub use batch::Batch;
 pub use diagnostics::{apply_error_prefix, diagnostic};
 
 mod batch;
-mod bitmap;
 mod dependents;
 mod diagnostics;
 #[cfg(test)]
@@ -224,7 +224,11 @@ fn changed(objects: &Path, hash: &str, kind: &str, value: &Value) -> io::Result<
 }
 
 fn indexed_hash(index: &Value, section: &str, scope: &str, name: &str) -> io::Result<String> {
-    let rows = index[section].as_array().ok_or_else(|| invalid("lane reset index section"))?;
+    let rows = if let Some(arr) = index.as_array() {
+        if section == "components" { arr.as_slice() } else { &[][..] }
+    } else {
+        index[section].as_array().ok_or_else(|| invalid("lane reset index section"))?
+    };
     let row = &rows[unique_position(rows, scope, name)?];
     let hash = row["hash"].as_str().ok_or_else(|| invalid("lane reset index hash"))?;
     crate::merge_history::hash(hash)?;

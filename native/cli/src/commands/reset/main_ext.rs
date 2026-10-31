@@ -123,6 +123,9 @@ fn version_depends_on(version: &Value, target: &str) -> bool {
 
 /// Check whether a dependency entry matches `"<scope>/<name>@<version>"`.
 fn row_matches_target(row: &Value, target: &str) -> bool {
+    if let Some(raw) = row.as_str() {
+        return raw == target;
+    }
     let (Some(dep_scope), Some(dep_name), Some(dep_ver)) =
         (row["scope"].as_str(), row["name"].as_str(), row["version"].as_str())
     else {

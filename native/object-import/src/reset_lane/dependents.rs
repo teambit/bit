@@ -106,8 +106,20 @@ fn tag(model: &Value, hash: &str) -> String {
 }
 
 fn dependency_id(value: &Value) -> Option<String> {
-    let scope = value["scope"].as_str()?;
-    let name = value["name"].as_str()?;
-    let version = value["version"].as_str()?;
+    if let Some(id) = value
+        .as_str()
+        .filter(|id| !id.is_empty())
+    {
+        return Some(id.to_owned());
+    }
+    let scope = value["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    let name = value["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    let version = value["version"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
     Some(format!("{scope}/{name}@{version}"))
 }

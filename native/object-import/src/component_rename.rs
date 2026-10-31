@@ -4,7 +4,7 @@ pub mod batch;
 pub(crate) mod copy_refactor {
     pub(crate) use super::{
         configuration::target_key,
-        identity::validate_name,
+        identity::{row_name, scope, validate_name},
         refactor::{content, filename, package, replace_bytes as replace},
     };
 }

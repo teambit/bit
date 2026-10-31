@@ -18,7 +18,7 @@ pub(super) fn apply(
             continue;
         };
         let identity = identity(key, row)?;
-        let full = id(&identity, row);
+        let full = id(key, &identity, row);
         let edited = if directory.starts_with(&from) {
             let next = directory.replacen(&from, &to, 1);
             row["rootDir"] = json!(next);
@@ -74,17 +74,19 @@ fn internal(
     Ok(changes)
 }
 fn identity(key: &str, row: &Value) -> io::Result<String> {
-    let scope = row["scope"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
-        .ok_or_else(|| unsupported("unscoped move component"))?;
-    Ok(format!("{scope}/{}", row["name"].as_str().unwrap_or(key)))
+    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let scope = row_scope.ok_or_else(|| unsupported("unscoped move component"))?;
+    Ok(format!("{scope}/{row_name}"))
 }
-fn id(identity: &str, row: &Value) -> String {
+fn id(key: &str, identity: &str, row: &Value) -> String {
     row["version"]
         .as_str()
         .filter(|value| !value.is_empty())
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver)
+                .filter(|ver| !ver.is_empty())
+        })
         .map_or_else(|| identity.into(), |version| format!("{identity}@{version}"))
 }
 

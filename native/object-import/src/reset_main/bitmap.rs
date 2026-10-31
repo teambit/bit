@@ -50,14 +50,11 @@ pub(super) fn find_key(
 ) -> io::Result<String> {
     let mut found = None;
     for (key, row) in fields {
-        if key.starts_with('$') || !row.is_object() {
+        if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
             continue;
         }
-        let row_scope = row["scope"]
-            .as_str()
-            .filter(|value| !value.is_empty())
-            .or_else(|| row["defaultScope"].as_str());
-        if row_scope == Some(scope) && row["name"] == name && found.replace(key.clone()).is_some() {
+        let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+        if row_scope == Some(scope) && row_name == name && found.replace(key.clone()).is_some() {
             return Err(invalid("reset ambiguous bitmap identity"));
         }
     }

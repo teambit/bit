@@ -79,11 +79,7 @@ fn model(
     )?;
     snapshot.models
         .into_iter()
-        .find(|model| {
-            let scope = model["scope"].as_str().unwrap_or_default();
-            let name = model["name"].as_str().unwrap_or_default();
-            format!("{scope}/{name}") == request.identity
-        })
+        .find(|model| super::comparison::model_id(model) == request.identity)
         .ok_or_else(|| invalid("version parent model absent"))
 }
 
@@ -95,6 +91,17 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
         let reference = reference.as_str().ok_or_else(|| invalid("version parent tag ref"))?;
         merge_history::hash(reference)?;
         tags.entry(reference.to_string()).or_insert_with(|| tag.clone());
+    }
+    for (tag, reference) in model["orphanedVersions"]
+        .as_object()
+        .into_iter()
+        .flatten()
+    {
+        if let Some(reference) = reference.as_str()
+            && merge_history::hash(reference).is_ok()
+        {
+            tags.entry(reference.to_string()).or_insert_with(|| tag.clone());
+        }
     }
     Ok(tags)
 }

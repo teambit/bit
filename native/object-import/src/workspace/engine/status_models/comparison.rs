@@ -58,16 +58,7 @@ fn compare_all(
 ) -> io::Result<(usize, Value)> {
     let models: HashMap<_, _> = snapshot.models
         .iter()
-        .map(|model| {
-            (
-                format!(
-                    "{}/{}",
-                    model["scope"].as_str().unwrap_or_default(),
-                    model["name"].as_str().unwrap_or_default(),
-                ),
-                model,
-            )
-        })
+        .map(|model| (model_id(model), model))
         .collect();
     let versions: HashMap<_, _> = snapshot.versions
         .iter()
@@ -111,6 +102,12 @@ pub(in crate::workspace::engine) fn compare(
     Ok(json!({"identity":target.identity,"modified":result["modified"],
         "codeModified":code_modified(files,model)?,
         "modelHash":result["leftHash"],"currentHash":result["rightHash"]}))
+}
+
+pub(super) fn model_id(model: &Value) -> String {
+    let scope = model["scope"].as_str().unwrap_or_default();
+    let name = model["name"].as_str().unwrap_or_default();
+    if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 
 /// `CompFiles.isModified`: empty model files are never code-modified.

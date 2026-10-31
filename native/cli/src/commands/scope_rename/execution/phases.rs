@@ -147,6 +147,9 @@ fn bitmap_ids(bitmap: &Value) -> io::Result<Vec<String>> {
         .collect())
 }
 fn row_id(key: &str, row: &Value) -> Option<String> {
+    if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+        return None;
+    }
     let removed =
         crate::commands::update_cmd::aspect_entry(&row["config"], "teambit.component/remove")
             .is_some_and(|(_, val)| val["removed"] == true);
@@ -154,13 +157,10 @@ fn row_id(key: &str, row: &Value) -> Option<String> {
         return None;
     }
     row["rootDir"].as_str()?;
-    let name = row["name"]
-        .as_str()
-        .unwrap_or_else(|| key.split('@').next().unwrap_or(key));
-    let scope = row["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| row["defaultScope"].as_str())?;
+    let (scope, name) = crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
+    if scope.is_empty() || name.is_empty() {
+        return None;
+    }
     Some(format!("{scope}/{name}"))
 }
 fn order_changed(bitmap: &Value, order: &[String], changed: &[String]) -> io::Result<Vec<String>> {
@@ -171,17 +171,23 @@ fn order_changed(bitmap: &Value, order: &[String], changed: &[String]) -> io::Re
             if !changed.contains(id) {
                 return None;
             }
-            let row = rows
+            let (key, row) = rows
                 .iter()
-                .find_map(|(key, row)| (row_id(key, row).as_ref() == Some(id)).then_some(row))?;
-            Some(
-                row["version"]
-                    .as_str()
-                    .filter(|version| !version.is_empty())
-                    .map_or_else(|| id.clone(), |version| format!("{id}@{version}")),
-            )
+                .find(|(key, row)| row_id(key, row).as_ref() == Some(id))?;
+            Some(row_version_or_id(id, key, row))
         })
         .collect())
+}
+fn row_version_or_id(id: &str, key: &str, row: &Value) -> String {
+    row["version"]
+        .as_str()
+        .filter(|version| !version.is_empty())
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver)
+                .filter(|ver| !ver.is_empty())
+        })
+        .map_or_else(|| id.to_owned(), |version| format!("{id}@{version}"))
 }
 
 fn requested(entries: &Entries, index: usize, owner: bool) -> io::Result<String> {

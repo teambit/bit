@@ -100,6 +100,20 @@ fn extension(row: &Value) -> io::Result<Value> {
     Ok(value)
 }
 fn identity(value: &Value) -> io::Result<Value> {
+    if let Some(text) = value.as_str() {
+        let (bare, ver) = text
+            .rsplit_once('@')
+            .map_or((text, None), |(bare, ver)| (bare, Some(ver)));
+        let (scope, name) = bare
+            .split_once('/')
+            .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
+            .ok_or_else(|| invalid("status Version dependency scope"))?;
+        let mut out = json!({"scope":scope,"name":name});
+        if let Some(ver) = ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+            out["version"] = json!(ver);
+        }
+        return Ok(out);
+    }
     let object = value.as_object().ok_or_else(|| invalid("status Version dependency identity"))?;
     if !object.get("name").is_some_and(Value::is_string)
         || object
@@ -112,7 +126,8 @@ fn identity(value: &Value) -> io::Result<Value> {
     let mut object = object.clone();
     if object
         .get("version")
-        .is_some_and(|version| version == "latest")
+        .and_then(Value::as_str)
+        .is_some_and(|version| version.is_empty() || version == "latest")
     {
         object.remove("version");
     }

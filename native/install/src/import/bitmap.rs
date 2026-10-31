@@ -102,22 +102,35 @@ pub fn read(root: &Path) -> io::Result<Bitmap> {
 
 fn exported_id(key: &str, entry: &Value) -> Option<Id> {
     let bare = key.split('@').next().unwrap_or(key);
+    let entry_name = entry["name"]
+        .as_str()
+        .filter(|val| !val.is_empty());
     let (scope, name) = if let Some(scope) = entry["scope"]
         .as_str()
         .filter(|val| !val.is_empty())
     {
-        (scope, entry["name"].as_str().unwrap_or(bare))
-    } else if entry.get("scope").is_none() {
+        let fallback = bare
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .unwrap_or(bare);
+        (scope, entry_name.unwrap_or(fallback))
+    } else if entry.get("scope").is_none()
+        && entry["defaultScope"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty()
+    {
         let (key_scope, key_name) = bare.split_once('/')?;
         if key_scope.is_empty() || key_name.is_empty() {
             return None;
         }
-        (key_scope, entry["name"].as_str().unwrap_or(key_name))
+        (key_scope, entry_name.unwrap_or(key_name))
     } else {
         return None;
     };
     let version = entry["version"]
         .as_str()
+        .filter(|val| !val.is_empty())
         .or_else(|| key.split_once('@').map(|(_, ver)| ver))
         .filter(|version| !version.is_empty() && *version != "latest");
     Some(Id {

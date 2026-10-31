@@ -76,16 +76,32 @@ fn references(component: &Value) -> io::Result<HashSet<String>> {
 }
 
 fn uses_removed(version: &Value, scope: &str, name: &str, removed: &HashSet<&str>) -> bool {
-    ["dependencies", "devDependencies", "peerDependencies", "extensionDependencies"]
-        .into_iter()
-        .filter_map(|field| version[field].as_array())
-        .flatten()
-        .any(|dependency| {
-            let id = &dependency["id"];
-            id["scope"] == scope
-                && id["name"] == name
-                && id["version"]
-                    .as_str()
-                    .is_some_and(|version| removed.contains(version))
-        })
+    let dep_matches =
+        ["dependencies", "devDependencies", "peerDependencies", "extensionDependencies"]
+            .into_iter()
+            .filter_map(|field| version[field].as_array())
+            .flatten()
+            .any(|dependency| id_matches_removed(&dependency["id"], scope, name, removed));
+    dep_matches
+        || version["extensions"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .any(|ext| id_matches_removed(&ext["extensionId"], scope, name, removed))
+}
+
+fn id_matches_removed(id: &Value, scope: &str, name: &str, removed: &HashSet<&str>) -> bool {
+    if let Some(raw) = id.as_str() {
+        return raw
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .and_then(|rest| rest.strip_prefix(name))
+            .and_then(|rest| rest.strip_prefix('@'))
+            .is_some_and(|version| removed.contains(version));
+    }
+    id["scope"] == scope
+        && id["name"] == name
+        && id["version"]
+            .as_str()
+            .is_some_and(|version| removed.contains(version))
 }

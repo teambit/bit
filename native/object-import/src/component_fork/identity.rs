@@ -52,15 +52,16 @@ pub(super) fn prepare(
     };
     let duplicate_name = bitmap
         .as_object()
-        .is_some_and(|rows| {
-            rows.iter()
-                .any(|(key, row)| {
-                    let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
-                    row["name"].as_str().unwrap_or(key_id) == name
-                })
-        });
+        .is_some_and(|rows| rows.iter().any(|(key, row)| is_active_named(key, row, name)));
     let key = if duplicate_name { target.clone() } else { name.into() };
     Ok(Identity { target, key, name: name.into(), scope: scope.into(), directory, main })
+}
+fn is_active_named(key: &str, row: &Value, name: &str) -> bool {
+    row.is_object()
+        && !key.starts_with('$')
+        && key != "_bit_lane"
+        && key != "version"
+        && crate::component_rename::copy_refactor::row_name(key, row) == name
 }
 fn available(bitmap: &Value, name: &str, scope: &str, target: &str) -> io::Result<()> {
     let found = bitmap
@@ -68,14 +69,8 @@ fn available(bitmap: &Value, name: &str, scope: &str, target: &str) -> io::Resul
         .is_some_and(|rows| {
             rows.iter()
                 .any(|(key, row)| {
-                    let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
-                    let row_name = row["name"].as_str().unwrap_or(key_id);
-                    row_name == name
-                        && row["scope"]
-                            .as_str()
-                            .filter(|value| !value.is_empty())
-                            .or_else(|| row["defaultScope"].as_str())
-                            == Some(scope)
+                    is_active_named(key, row, name)
+                        && crate::component_rename::copy_refactor::scope(row) == Some(scope)
                 })
         });
     if found {

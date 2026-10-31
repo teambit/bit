@@ -79,11 +79,11 @@ fn select(
 ) -> io::Result<Vec<Entry>> {
     let mut found = Vec::new();
     for (key, row) in rows.iter_mut() {
-        if key.starts_with('$') || key == "_bit_lane" {
+        if key.starts_with('$') || key == "_bit_lane" || key == "version" {
             continue;
         }
         let Some(version) = row["nextVersion"]["version"].as_str() else { continue };
-        let identity = identity(row)?;
+        let identity = identity(key, row)?;
         if !matches(&identity, pattern, selected) {
             continue;
         }
@@ -98,14 +98,13 @@ fn select(
     Ok(found)
 }
 
-fn identity(row: &Value) -> io::Result<String> {
-    let name = row["name"].as_str().ok_or_else(|| invalid("soft reset name"))?;
-    let scope = row["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
-        .ok_or_else(|| invalid("soft reset scope"))?;
-    Ok(format!("{scope}/{name}"))
+fn identity(key: &str, row: &Value) -> io::Result<String> {
+    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let scope = row_scope.ok_or_else(|| invalid("soft reset scope"))?;
+    if row_name.is_empty() {
+        return Err(invalid("soft reset name"));
+    }
+    Ok(format!("{scope}/{row_name}"))
 }
 
 fn invalid(message: &str) -> io::Error {

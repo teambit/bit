@@ -264,19 +264,19 @@ fn refactor_bitmap(plan: &Plan) -> io::Result<Cow<'_, Value>> {
     }
 }
 fn listed_identity(key: &str, row: &Value) -> Option<String> {
+    if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+        return None;
+    }
     let removed =
         crate::commands::update_cmd::aspect_entry(&row["config"], "teambit.component/remove")
             .is_some_and(|(_, val)| val["removed"] == true);
     if removed || row["isAvailableOnCurrentLane"] == false {
         return None;
     }
-    let name = row["name"]
-        .as_str()
-        .unwrap_or_else(|| key.split('@').next().unwrap_or(key));
-    let scope = row["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| row["defaultScope"].as_str())?;
     row["rootDir"].as_str()?;
+    let (scope, name) = crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
+    if scope.is_empty() || name.is_empty() {
+        return None;
+    }
     Some(format!("{scope}/{name}"))
 }

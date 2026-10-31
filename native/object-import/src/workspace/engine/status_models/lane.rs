@@ -127,7 +127,11 @@ fn local_object(root: &Path, reader: &Reader<'_>, scope: &str, name: &str) -> io
             .read(File::open(crate::scope_path(root).join("index.json"))?)?,
     )
     .map_err(io::Error::other)?;
-    let rows = index["lanes"].as_array().ok_or_else(|| invalid("status lane index"))?;
+    let rows = if index.is_array() {
+        &[][..]
+    } else {
+        index["lanes"].as_array().ok_or_else(|| invalid("status lane index"))?
+    };
     let row = rows
         .iter()
         .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)

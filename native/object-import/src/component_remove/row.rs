@@ -5,12 +5,19 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn supported_row<'a>(
-    key: &str,
+    key: &'a str,
     row: &'a Value,
     kind: RowKind,
 ) -> io::Result<(&'a str, &'a str)> {
-    let name = row["name"].as_str().ok_or_else(|| invalid("component name"))?;
     let scope = scope(row)?;
+    let fallback_name = key
+        .strip_prefix(scope)
+        .and_then(|rest| rest.strip_prefix('/'))
+        .unwrap_or(key);
+    let name = row["name"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .unwrap_or(fallback_name);
     let identity =
         (key == name || key == format!("{scope}/{name}")) && valid_name(name) && valid_scope(scope);
     let local = if matches!(kind, RowKind::Imported | RowKind::ExportedLane) {
@@ -31,16 +38,15 @@ pub(super) fn supported_row<'a>(
 }
 
 fn scope(row: &Value) -> io::Result<&str> {
-    row[if row["scope"]
+    row["scope"]
         .as_str()
-        .is_some_and(|scope| !scope.is_empty())
-    {
-        "scope"
-    } else {
-        "defaultScope"
-    }]
-    .as_str()
-    .ok_or_else(|| invalid("component scope"))
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+        })
+        .ok_or_else(|| invalid("component scope"))
 }
 
 fn supported_row_shape(row: &Value, kind: RowKind) -> bool {

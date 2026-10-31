@@ -100,16 +100,7 @@ fn model_request(request: &Request) -> super::Request {
 fn index_models(models: &[Value]) -> HashMap<String, &Value> {
     models
         .iter()
-        .map(|model| {
-            (
-                format!(
-                    "{}/{}",
-                    model["scope"].as_str().unwrap_or_default(),
-                    model["name"].as_str().unwrap_or_default(),
-                ),
-                model,
-            )
-        })
+        .map(|model| (super::comparison::model_id(model), model))
         .collect()
 }
 

@@ -100,8 +100,8 @@ fn shorten(
         let existing = bitmap
             .as_object()
             .is_some_and(|rows| {
-                rows.values()
-                    .any(|row| row["name"] == name)
+                rows.iter()
+                    .any(|(key, row)| rows::row_name(key, row) == Some(name))
             });
         if !existing
             && generated
@@ -242,6 +242,7 @@ fn bitmap_row(
     let mut row = existing.cloned().unwrap_or_else(
         || json!({"name":candidate.name,"scope":"","version":"","defaultScope":candidate.scope}),
     );
+    row["name"] = json!(candidate.name);
     row["mainFile"] = json!(main);
     row["rootDir"] = json!(candidate.directory);
     let config = if candidate.directory == "." {

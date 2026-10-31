@@ -157,12 +157,21 @@ fn dependencies(version: &Value) -> Vec<String> {
 }
 
 fn id(value: &Value) -> Option<String> {
-    if let Some(text) = value.as_str() {
+    if let Some(text) = value
+        .as_str()
+        .filter(|text| !text.is_empty())
+    {
         return Some(text.to_owned());
     }
-    let scope = value["scope"].as_str()?;
-    let name = value["name"].as_str()?;
-    let version = value["version"].as_str();
+    let scope = value["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())?;
+    let name = value["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())?;
+    let version = value["version"]
+        .as_str()
+        .filter(|version| !version.is_empty());
     Some(version.map_or_else(
         || format!("{scope}/{name}"),
         |version| format!("{scope}/{name}@{version}"),

@@ -69,11 +69,9 @@ fn load_pair(
         false,
         overlay,
     )?;
-    let (scope, name) =
-        request.identity.split_once('/').ok_or_else(|| invalid("version diff identity"))?;
     let model = snapshot.models
         .iter()
-        .find(|model| model["scope"] == scope && model["name"] == name)
+        .find(|model| super::comparison::model_id(model) == request.identity)
         .ok_or_else(|| invalid("version diff model absent"))?;
     let reference = |version| versions::reference(model, version);
     let to_ref = reference(&request.to_version)?;

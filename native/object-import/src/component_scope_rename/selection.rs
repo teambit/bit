@@ -39,23 +39,29 @@ pub(super) fn entries(
 
 fn row_scope_and_name<'a>(key: &'a str, row: &'a Value) -> (&'a str, &'a str) {
     let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
-    let (key_scope, key_name) = key_id
-        .split_once('/')
-        .map_or((None, key_id), |(scope_part, name_part)| (Some(scope_part), name_part));
-    let current = row["scope"]
+    let explicit_scope = row["scope"]
         .as_str()
         .filter(|value| !value.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
                 .filter(|value| !value.is_empty())
-        })
-        .or(key_scope)
-        .unwrap_or_default();
+        });
+    let (current, fallback_name) = if let Some(scope_name) = explicit_scope {
+        let stripped = key_id
+            .strip_prefix(scope_name)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .unwrap_or(key_id);
+        (scope_name, stripped)
+    } else {
+        key_id
+            .split_once('/')
+            .unwrap_or(("", key_id))
+    };
     let name = row["name"]
         .as_str()
         .filter(|value| !value.is_empty())
-        .unwrap_or(key_name);
+        .unwrap_or(fallback_name);
     (current, name)
 }
 

@@ -94,9 +94,11 @@ pub(in super::super) fn present(bitmap: &Value, scope: &str, name: &str) -> bool
 }
 
 fn row_matches_present(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
-    if matches!(key, "$schema-version" | "_bit_lane")
+    if key.starts_with('$')
+        || matches!(key, "_bit_lane" | "version")
         || !row.is_object()
         || row["isAvailableOnCurrentLane"] == false
+        || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
     {
         return false;
     }
@@ -111,6 +113,16 @@ fn row_matches_present(key: &str, row: &Value, scope: &str, name: &str, full: &s
     name_matches && scope_matches
 }
 
+fn row_is_promoted(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    row_matches_present(key, row, scope, name, full)
+        && row["scope"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty()
+        && (row["defaultScope"] == scope || key_id == full)
+}
+
 fn updates(bitmap: &Value, promotions: &[(String, String)]) -> Vec<String> {
     promotions
         .iter()
@@ -119,12 +131,7 @@ fn updates(bitmap: &Value, promotions: &[(String, String)]) -> Vec<String> {
             bitmap
                 .as_object()
                 .is_some_and(|rows| {
-                    rows.iter()
-                        .any(|(key, row)| {
-                            row_matches_present(key, row, scope, name, &full)
-                                && row["scope"] == ""
-                                && row["defaultScope"] == *scope
-                        })
+                    rows.iter().any(|(key, row)| row_is_promoted(key, row, scope, name, &full))
                 })
         })
         .map(|(scope, name)| format!("{scope}/{name}"))

@@ -79,7 +79,11 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
     let index: Value = serde_json::from_slice(
         &Budget::new(4 * 1024 * 1024).read(File::open(path.join("index.json"))?)?,
     )?;
-    let rows = index["lanes"].as_array().ok_or_else(|| invalid("inbound file lane index"))?;
+    let rows = if index.is_array() {
+        &[][..]
+    } else {
+        index["lanes"].as_array().ok_or_else(|| invalid("inbound file lane index"))?
+    };
     let matching = rows
         .iter()
         .filter(|row| row["id"]["scope"] == id.scope && row["id"]["name"] == id.name)

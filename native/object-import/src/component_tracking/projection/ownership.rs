@@ -14,18 +14,15 @@ pub(super) fn validate(
         let Some(parent) = row["rootDir"].as_str() else {
             continue;
         };
-        let scope = row["scope"]
-            .as_str()
-            .filter(|scope| !scope.is_empty())
-            .or_else(|| row["defaultScope"].as_str())
-            .unwrap_or_default();
+        let owner_name = super::rows::row_name(owner, row).unwrap_or(owner);
+        let scope = super::rows::scope(row).unwrap_or_default();
         if parent == "." {
-            root_owner(row, owner, scope, directory, name, added_scope)?;
+            root_owner(row, owner_name, scope, directory, name, added_scope)?;
         }
         if parent != "." && directory.starts_with(&format!("{parent}/")) {
             let directory = super::super::paths::diagnostic(directory);
             return Err(error(format!(
-                "components can't be nested under other components. unable to create a component in directory \"{directory}\" which is nested under component \"{scope}/{owner}\".\nusing 'bit create', choose a different path with the '--path' flag or if using 'bit add' put the component in a different directory",
+                "components can't be nested under other components. unable to create a component in directory \"{directory}\" which is nested under component \"{scope}/{owner_name}\".\nusing 'bit create', choose a different path with the '--path' flag or if using 'bit add' put the component in a different directory",
             )));
         }
     }

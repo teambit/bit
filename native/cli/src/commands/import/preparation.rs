@@ -268,6 +268,11 @@ fn bitmap_row_matches_scope_name(key: &str, row: &Value, scope: &str, name: &str
     let row_scope = row["scope"]
         .as_str()
         .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
         .or_else(|| key_id.split_once('/').map(|(prefix, _)| prefix));
     row_name == name && row_scope == Some(scope)
 }

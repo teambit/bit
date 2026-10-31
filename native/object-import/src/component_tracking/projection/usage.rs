@@ -11,12 +11,9 @@ pub(super) fn filter(
         .as_object()
         .unwrap()
         .iter()
-        .filter_map(|(name, row)| {
+        .filter_map(|(key, row)| {
             Some((
-                row["name"]
-                    .as_str()
-                    .unwrap_or(name)
-                    .to_owned(),
+                rows::row_name(key, row)?.to_owned(),
                 row["rootDir"].as_str()?.to_owned(),
                 row.clone(),
             ))
@@ -54,11 +51,7 @@ fn existing_root(candidate: &Candidate, existing: Option<&Value>) -> io::Result<
 }
 
 fn warning(warnings: &mut Value, name: &str, row: &Value, file: &str) {
-    let scope = row["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
-        .unwrap_or_default();
+    let scope = rows::scope(row).unwrap_or_default();
     let key = format!("{scope}/{name}");
     if !warnings["alreadyUsed"][&key].is_array() {
         warnings["alreadyUsed"][&key] = json!([]);
