@@ -114,11 +114,10 @@ fn removed(version: &Value) -> io::Result<bool> {
     Ok(extensions
         .iter()
         .any(|extension| {
-            extension["name"]
-                .as_str()
-                .or_else(|| extension["extensionId"].as_str())
-                .is_some_and(|id| id.split('@').next() == Some("teambit.component/remove"))
-                && extension["config"]["removed"] == true
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                extension,
+                "teambit.component/remove",
+            ) && extension["config"]["removed"] == true
         }))
 }
 
@@ -128,11 +127,10 @@ fn remove_on_main(version: &Value) -> bool {
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| {
-                    row["name"]
-                        .as_str()
-                        .or_else(|| row["extensionId"].as_str())
-                        .is_some_and(|id| id.split('@').next() == Some("teambit.component/remove"))
-                        && row["config"]["removeOnMain"] == true
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        row,
+                        "teambit.component/remove",
+                    ) && row["config"]["removeOnMain"] == true
                 })
         })
 }

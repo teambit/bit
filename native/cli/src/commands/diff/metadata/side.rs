@@ -202,7 +202,7 @@ fn ids_of(rows: Option<&Value>) -> io::Result<Vec<Id>> {
 fn data_peers(extensions: &[Value]) -> io::Result<Vec<Id>> {
     let resolver = extensions
         .iter()
-        .find(|extension| extension.get("name").and_then(Value::as_str) == Some(RESOLVER));
+        .find(|extension| crate::commands::update_cmd::matches_aspect(extension, RESOLVER));
     let rows = resolver
         .and_then(|e| e.get("data"))
         .and_then(|data| data.get("dependencies"));

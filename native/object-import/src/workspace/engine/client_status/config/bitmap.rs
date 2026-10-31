@@ -175,9 +175,20 @@ pub(crate) fn is_config_removed(config: &Value) -> bool {
 }
 
 pub(crate) fn is_extension_aspect(entry: &Value, id: &str) -> bool {
-    entry["name"]
+    if let Some(name) = entry["name"]
         .as_str()
-        .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
+        .or_else(|| entry["legacyId"].as_str())
+        .or_else(|| entry["extensionId"].as_str())
+    {
+        return name == id || name.starts_with(&format!("{id}@"));
+    }
+    let Some((scope, bare_name)) = id.split_once('/') else {
+        return false;
+    };
+    entry["extensionId"]["scope"].as_str() == Some(scope)
+        && entry["extensionId"]["name"]
+            .as_str()
+            .is_some_and(|name| name == bare_name || name.starts_with(&format!("{bare_name}@")))
 }
 fn component_config(config: &Value) -> bool {
     config

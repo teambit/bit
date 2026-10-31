@@ -51,9 +51,7 @@ fn insert_dependency_fields(fields: &mut Map<String, Value>, version: &Value) {
 }
 
 fn matches_aspect(row: &Value, id: &str) -> bool {
-    row["name"]
-        .as_str()
-        .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
+    crate::workspace::engine::client_status::config::is_extension_aspect(row, id)
 }
 
 fn peer_bit_metadata(version: &Value) -> Option<Value> {

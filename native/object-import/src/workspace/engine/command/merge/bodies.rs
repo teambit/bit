@@ -348,10 +348,10 @@ fn has_remove_extension(version: &Value) -> bool {
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| {
-                    row["name"]
-                        .as_str()
-                        .or_else(|| row["extensionId"].as_str())
-                        .is_some_and(|id| id.split('@').next() == Some("teambit.component/remove"))
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        row,
+                        "teambit.component/remove",
+                    )
                 })
         })
 }

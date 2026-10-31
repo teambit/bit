@@ -203,8 +203,7 @@ impl State<'_> {
             .find(|row| row["identity"] == id)
             .and_then(|row| row["current"]["extensions"].as_array())
             .and_then(|rows| {
-                rows.iter()
-                    .find(|row| row["name"] == aspect)
+                rows.iter().find(|row| crate::commands::update_cmd::matches_aspect(row, aspect))
             })
             .map_or(Value::Null, |row| row["config"].clone())
     }
@@ -235,8 +234,7 @@ impl State<'_> {
             .find(|row| &row[0] == head)
             .and_then(|row| row[1]["extensions"].as_array())
             .and_then(|rows| {
-                rows.iter()
-                    .find(|row| row["name"] == aspect)
+                rows.iter().find(|row| crate::commands::update_cmd::matches_aspect(row, aspect))
             })
             .map_or(Value::Null, |row| row["config"].clone())
     }

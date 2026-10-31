@@ -102,10 +102,9 @@ pub(in crate::commands::aspect) fn missing_scope_error(raw: &str) -> String {
 
 pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -> Option<String> {
     let scope_dir = crate::workspace::scope_path(root);
-    let rows = serde_json::from_slice::<Value>(&fs::read(scope_dir.join("index.json")).ok()?)
-        .ok()?
-        .as_array()?
-        .clone();
+    let index =
+        serde_json::from_slice::<Value>(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let rows = index["components"].as_array().or_else(|| index.as_array())?;
     let matches = rows
         .iter()
         .filter(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(bare))

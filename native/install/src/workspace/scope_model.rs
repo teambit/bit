@@ -36,7 +36,7 @@ impl ModelData {
     fn envs_data(&self) -> Option<&Value> {
         self.extensions
             .iter()
-            .find(|extension| extension_name(extension) == Some(ENVS_ASPECT))
+            .find(|extension| extension_name(extension).as_deref() == Some(ENVS_ASPECT))
             .and_then(|extension| extension.get("data"))
     }
 
@@ -71,7 +71,9 @@ impl ModelData {
     pub fn package_name(&self, id: &ComponentId) -> String {
         let stored = self.extensions
             .iter()
-            .find(|extension| extension_name(extension) == Some(DEPENDENCY_RESOLVER_ASPECT))
+            .find(|extension| {
+                extension_name(extension).as_deref() == Some(DEPENDENCY_RESOLVER_ASPECT)
+            })
             .and_then(|extension| {
                 extension
                     .get("data")?
@@ -86,7 +88,7 @@ impl ModelData {
             .filter_map(|extension| {
                 let name = extension_name(extension)?;
                 Some((
-                    name.to_owned(),
+                    name,
                     extension
                         .get("config")
                         .cloned()
@@ -100,31 +102,32 @@ impl ModelData {
 
 /// The aspect id of a stored extension: `name` for core aspects, the
 /// serialized `extensionId` otherwise, without the version.
-fn extension_name(extension: &Value) -> Option<&str> {
-    extension
+fn extension_name(extension: &Value) -> Option<String> {
+    if let Some(name) = extension
         .get("name")
+        .or_else(|| extension.get("legacyId"))
+        .or_else(|| extension.get("extensionId"))
         .and_then(Value::as_str)
-        .or_else(|| {
-            extension
-                .get("extensionId")?
-                .get("name")
-                .and_then(Value::as_str)
-        })
-        .map(aspect_id_without_version)
+    {
+        return Some(aspect_id_without_version(name).to_owned());
+    }
+    let id = extension.get("extensionId")?.as_object()?;
+    let name = aspect_id_without_version(id.get("name")?.as_str()?);
+    Some(
+        match id
+            .get("scope")
+            .and_then(Value::as_str)
+            .filter(|scope| !scope.is_empty())
+        {
+            Some(scope) => format!("{scope}/{name}"),
+            None => name.to_owned(),
+        },
+    )
 }
 
 /// The extension configures `teambit.envs/env`, or `teambit.envs/envs` sets it as env.
 fn uses_env_of_envs(extension: &Value) -> bool {
-    let name = extension
-        .get("name")
-        .or_else(|| {
-            extension
-                .get("extensionId")
-                .and_then(|id| id.get("name"))
-        })
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-    let bare = aspect_id_without_version(name);
+    let bare = extension_name(extension).unwrap_or_default();
     bare == ENV_OF_ENVS
         || (bare == ENVS_ASPECT
             && [extension.get("config"), extension.get("data")]

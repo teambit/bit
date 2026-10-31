@@ -15,9 +15,7 @@ pub(super) struct Policy {
 }
 
 pub(super) fn matches_aspect(entry: &Value, id: &str) -> bool {
-    entry["name"]
-        .as_str()
-        .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
+    crate::commands::update_cmd::matches_aspect(entry, id)
 }
 
 struct Entry {

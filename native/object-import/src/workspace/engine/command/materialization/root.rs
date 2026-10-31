@@ -28,7 +28,10 @@ pub(super) fn nested_directories(root: &Path) -> io::Result<Vec<String>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("command root bitmap"))?;
     let mut nested = Vec::new();
     for (key, row) in rows {
-        if matches!(key.as_str(), "$schema-version" | "_bit_lane") {
+        if matches!(key.as_str(), "$schema-version" | "_bit_lane")
+            || row["isAvailableOnCurrentLane"] == false
+            || config::is_config_removed(&row["config"])
+        {
             continue;
         }
         let directory =

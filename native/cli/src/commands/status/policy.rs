@@ -204,6 +204,12 @@ pub(in crate::commands) fn environment_target(
 }
 
 fn extension_identity(id: &Value) -> String {
+    if let Some(id) = id.as_str() {
+        return id
+            .strip_suffix("@latest")
+            .unwrap_or(id)
+            .to_string();
+    }
     let version = id["version"]
         .as_str()
         .filter(|version| !version.is_empty() && *version != "latest")
@@ -322,7 +328,7 @@ impl Sources<'_> {
             array(self.version.and_then(|stored| stored.get("extensions")), "extensions")?;
         let resolver_data = extensions
             .iter()
-            .find(|extension| extension.get("name").and_then(Value::as_str) == Some(RESOLVER))
+            .find(|extension| component::matches_aspect(extension, RESOLVER))
             .and_then(|extension| extension.get("data"));
         let prefix = nullish(resolver_data.and_then(|data| data.get("componentRangePrefix")));
         Ok(json!({

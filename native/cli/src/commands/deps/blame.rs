@@ -148,7 +148,10 @@ fn exists_in_scope_index(root: &Path, bare: &str) -> bool {
     let Ok(bytes) = fs::read(index_path) else {
         return false;
     };
-    let Ok(Value::Array(rows)) = serde_json::from_slice::<Value>(&bytes) else {
+    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else {
+        return false;
+    };
+    let Some(rows) = index["components"].as_array().or_else(|| index.as_array()) else {
         return false;
     };
     let target_name = bare.split_once('/').map_or(bare, |(_, name)| name);

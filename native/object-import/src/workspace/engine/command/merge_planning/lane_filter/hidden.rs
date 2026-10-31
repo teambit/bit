@@ -13,12 +13,10 @@ pub(in crate::workspace::engine::command::merge_planning) fn prepare_hidden_meta
         .and_then(|rows| {
             rows.iter()
                 .find(|row| {
-                    row["name"]
-                        .as_str()
-                        .is_some_and(|name| {
-                            name == "teambit.dependencies/dependency-resolver"
-                                || name.starts_with("teambit.dependencies/dependency-resolver@")
-                        })
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        row,
+                        "teambit.dependencies/dependency-resolver",
+                    )
                 })
         })
         .map_or_else(|| json!([]), |row| row["data"]["dependencies"].clone());

@@ -324,12 +324,10 @@ fn lane_readme(version: &Value) -> io::Result<Vec<String>> {
             extensions
                 .iter()
                 .find(|row| {
-                    row["name"]
-                        .as_str()
-                        .is_some_and(|name| {
-                            name == "teambit.lanes/lanes"
-                                || name.starts_with("teambit.lanes/lanes@")
-                        })
+                    crate::workspace::engine::client_status::config::is_extension_aspect(
+                        row,
+                        "teambit.lanes/lanes",
+                    )
                 })
         })
         .map(|row| &row["config"]["readme"])

@@ -90,13 +90,7 @@ fn candidate(
         .as_array()
         .into_iter()
         .flatten()
-        .find(|row| {
-            row["name"]
-                .as_str()
-                .is_some_and(|name| {
-                    name == "teambit.pkg/pkg" || name.starts_with("teambit.pkg/pkg@")
-                })
-        })
+        .find(|row| crate::commands::update_cmd::matches_aspect(row, "teambit.pkg/pkg"))
         .map_or(&Value::Null, |row| &row["config"]);
     if config["avoidPublishToNPM"] == true
         || (config["packageJson"]["name"].is_null()

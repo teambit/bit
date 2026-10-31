@@ -142,11 +142,20 @@ fn has_env_jsonc_policy(root: &Path) -> bool {
 }
 
 pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
-    entry["name"]
+    if let Some(name) = entry["name"]
         .as_str()
+        .or_else(|| entry["legacyId"].as_str())
         .or_else(|| entry["extensionId"].as_str())
-        .or_else(|| entry["extensionId"]["name"].as_str())
-        .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
+    {
+        return name == id || name.starts_with(&format!("{id}@"));
+    }
+    let Some((scope, bare_name)) = id.split_once('/') else {
+        return false;
+    };
+    entry["extensionId"]["scope"].as_str() == Some(scope)
+        && entry["extensionId"]["name"]
+            .as_str()
+            .is_some_and(|name| name == bare_name || name.starts_with(&format!("{bare_name}@")))
 }
 
 pub(in crate::commands) fn bitmap_row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {

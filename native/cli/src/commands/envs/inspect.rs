@@ -291,9 +291,11 @@ fn collect_bare_scope_envs(scope_dir: &Path) -> Option<Vec<(String, String)>> {
 }
 
 fn load_bare_scope_index(scope_dir: &Path) -> Option<Vec<Value>> {
-    serde_json::from_slice::<Value>(&fs::read(scope_dir.join("index.json")).ok()?)
-        .ok()?
+    let index =
+        serde_json::from_slice::<Value>(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .cloned()
 }
 
