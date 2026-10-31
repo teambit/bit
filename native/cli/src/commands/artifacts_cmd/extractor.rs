@@ -361,15 +361,31 @@ fn extract_artifact_files(files_val: &Value) -> Vec<ArtifactFile> {
         .filter_map(|item| {
             let relative_path = item["relativePath"]
                 .as_str()
-                .or_else(|| item["relative"].as_str())
                 .map(str::trim)
-                .filter(|path| !path.is_empty())?
+                .filter(|path| !path.is_empty())
+                .or_else(|| {
+                    item["relative"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|path| !path.is_empty())
+                })?
                 .to_owned();
             let hash = item["ref"]
                 .as_str()
-                .or_else(|| item["ref"]["hash"].as_str())
-                .or_else(|| item["file"].as_str())
                 .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+                .or_else(|| {
+                    item["ref"]["hash"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|hash| !hash.is_empty())
+                })
+                .or_else(|| {
+                    item["file"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|hash| !hash.is_empty())
+                })
                 .unwrap_or_default()
                 .to_owned();
             Some(ArtifactFile { relative_path, hash })

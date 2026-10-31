@@ -5,6 +5,7 @@ mod tests;
 use std::sync::OnceLock;
 
 pub(super) fn normalize(raw: &str) -> String {
+    let raw = raw.trim();
     number(raw)
         .and_then(|number| {
             serde_json::Number::from_f64(number)

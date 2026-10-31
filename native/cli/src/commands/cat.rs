@@ -61,8 +61,17 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     present(&root, args, &options, prepared)
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn emit_file_with_config_error(cwd: &Path, args: &[OsString], json: bool) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("published cat option error".into()));
     }
     if let Some(root) = workspace::root(cwd) {
@@ -86,7 +95,7 @@ fn emit_file_with_config_error(cwd: &Path, args: &[OsString], json: bool) -> io:
 }
 
 fn run_outside_workspace(cwd: &Path, args: &[OsString], json: bool) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty())
+    if ci_enabled()
         || cwd
             .ancestors()
             .any(|dir| {

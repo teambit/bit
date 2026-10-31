@@ -93,13 +93,7 @@ fn build_list_json(items: Vec<(String, Vec<AspectSourceItem>)>) -> Value {
     for (comp_id, sources) in items {
         let arr = sources
             .into_iter()
-            .map(|src| {
-                json!({
-                    "aspectName": src.aspect_name,
-                    "source": src.source,
-                    "level": src.level,
-                })
-            })
+            .map(|src| json!({"aspectName": src.aspect_name, "source": src.source, "level": src.level}))
             .collect::<Vec<_>>();
         map.insert(comp_id, Value::Array(arr));
     }
@@ -157,8 +151,9 @@ fn sources_for_entry(
     let raw_origins = collect_raw_origins(ictx, entry)?;
     let self_id = entry.id.to_string_without_version();
     let mut out: Vec<AspectSourceItem> = Vec::new();
+    let mut removed: Vec<String> = Vec::new();
     for origin in raw_origins {
-        append_origin_sources(&mut out, origin, &ictx.ws_ids, &self_id);
+        append_origin_sources(&mut out, &mut removed, origin, &ictx.ws_ids, &self_id);
     }
     let env_id = comp
         .map(|item| item.env_id.trim())
@@ -182,21 +177,24 @@ fn sources_for_entry(
 
 fn append_origin_sources(
     out: &mut Vec<AspectSourceItem>,
+    removed: &mut Vec<String>,
     origin: RawOrigin,
     ws_ids: &[ComponentId],
     self_id: &str,
 ) {
     for mut aspect in origin.entries {
+        let bare = aspect_id_without_version(&aspect.id).to_owned();
         if aspect.config.as_str() == Some("-") {
+            removed.push(bare);
             continue;
         }
-        if !aspect.core && aspect_id_without_version(&aspect.id) == self_id {
+        if removed.contains(&bare) || (!aspect.core && bare == self_id) {
             continue;
         }
         resolve_aspect_id(&mut aspect, ws_ids, origin.prefer_ws);
         if !out
             .iter()
-            .any(|existing| existing.aspect_name == aspect.id)
+            .any(|existing| aspect_id_without_version(&existing.aspect_name) == bare)
         {
             out.push(AspectSourceItem {
                 aspect_name: aspect.id,

@@ -295,9 +295,9 @@ fn parse_list(rest: &[&str]) -> Option<Subcommand> {
 fn parse_get(rest: &[&str]) -> Option<Subcommand> {
     let (positional, debug, json) = parse_debug_json_args(rest)?;
     let (component, aspect_id) = match positional.as_slice() {
-        [comp] if is_supported_pattern(comp) => ((*comp).to_owned(), None),
-        [comp, aspect] if is_supported_pattern(comp) && !aspect.is_empty() => {
-            ((*comp).to_owned(), Some((*aspect).to_owned()))
+        [comp] if is_supported_pattern(comp) => (comp.trim().to_owned(), None),
+        [comp, aspect] if is_supported_pattern(comp) && !aspect.trim().is_empty() => {
+            (comp.trim().to_owned(), Some(aspect.trim().to_owned()))
         }
         _ => return None,
     };

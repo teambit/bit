@@ -117,7 +117,11 @@ fn merge_debug_origins(
         });
     }
     let mut after_merge = merge_lists(lists);
-    after_merge.retain(|item| !removed.contains(&item.id));
+    after_merge.retain(|item| {
+        !removed
+            .iter()
+            .any(|rem| rem == aspect_id_without_version(&item.id))
+    });
     (before_merge, after_merge)
 }
 
@@ -148,7 +152,7 @@ fn prepare_origin_entries(
             cfg.insert("__specific".into(), Value::Bool(true));
         }
         if item.config.as_str() == Some("-") {
-            removed.push(item.id.clone());
+            removed.push(aspect_id_without_version(&item.id).to_owned());
             continue;
         }
         if !item.core && aspect_id_without_version(&item.id) == self_id {

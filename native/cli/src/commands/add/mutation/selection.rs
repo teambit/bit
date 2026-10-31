@@ -16,11 +16,19 @@ pub(super) fn prepare(
         "../../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
     ))?;
     let workspace = Workspace::load_projected(root, &config, &core, bitmap)?;
+    let expected = identities
+        .iter()
+        .map(|target| {
+            let trimmed = target.trim();
+            trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
+        })
+        .filter(|target| !target.is_empty())
+        .collect::<std::collections::HashSet<_>>();
     let selected = workspace.components
         .iter()
         .filter(|component| {
             let id = component.id.to_string_without_version();
-            identities.iter().any(|target| target.trim() == id)
+            expected.contains(id.trim())
         })
         .map(|component| {
             json!({
@@ -32,7 +40,7 @@ pub(super) fn prepare(
             })
         })
         .collect::<Vec<_>>();
-    if selected.len() != identities.len() {
+    if selected.len() != expected.len() {
         return Err(io::Error::other("identity link selection changed"));
     }
     projection::prepare_loaded(root, bitmap, &selected, context, workspace)

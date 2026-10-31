@@ -92,14 +92,22 @@ fn extract_env_id<'a>(facts: &'a Value, key: &str) -> Option<&'a str> {
     let value = facts.get(key)?;
     value
         .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
         .or_else(|| {
             value
                 .get("id")
-                .or_else(|| value.get("resolvedId"))
                 .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|text| !text.is_empty())
         })
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
+        .or_else(|| {
+            value
+                .get("resolvedId")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|text| !text.is_empty())
+        })
 }
 
 fn load(

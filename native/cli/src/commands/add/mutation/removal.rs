@@ -64,14 +64,17 @@ fn unchecked_ids(rows: &[Value]) -> Vec<String> {
         .filter_map(|row| {
             row["identity"]
                 .as_str()
-                .or_else(|| row["id"].as_str())
                 .map(str::trim)
                 .filter(|id| !id.is_empty())
-                .map(|id| {
-                    id.rsplit_once('@')
-                        .map_or(id, |(base, _)| base.trim())
-                        .to_owned()
+                .or_else(|| {
+                    row["id"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|id| !id.is_empty())
                 })
+                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
+                .filter(|id| !id.is_empty())
+                .map(str::to_owned)
         })
         .collect()
 }

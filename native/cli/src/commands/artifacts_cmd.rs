@@ -182,8 +182,10 @@ fn apply_inline_or_pattern(
         *files = Some(take_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--out-dir=").filter(|_| out_dir.is_none()) {
         *out_dir = Some(take_val(val)?);
-    } else if !arg.starts_with('-') && !arg.trim().is_empty() && pattern.is_none() {
-        *pattern = Some(arg.trim().to_owned());
+    } else if pattern.is_none()
+        && let Some(val) = take_val(arg)
+    {
+        *pattern = Some(val);
     } else {
         return None;
     }

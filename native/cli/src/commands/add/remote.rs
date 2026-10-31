@@ -46,28 +46,25 @@ pub(super) fn warn(
 }
 
 fn remote_id_str(value: &Value) -> Option<String> {
-    if let Some(id) = value
-        .as_str()
-        .or_else(|| value["id"].as_str())
-        .or_else(|| value["identity"].as_str())
-        .map(str::trim)
-        .filter(|id| !id.is_empty())
+    if let Some(id) = non_empty_str(value)
+        .or_else(|| non_empty_str(&value["id"]))
+        .or_else(|| non_empty_str(&value["identity"]))
     {
         return Some(id.to_owned());
     }
-    let name = value["name"]
-        .as_str()
-        .or_else(|| value["id"]["name"].as_str())
-        .map(str::trim)
-        .filter(|name| !name.is_empty())?;
+    let name = non_empty_str(&value["name"]).or_else(|| non_empty_str(&value["id"]["name"]))?;
     Some(
-        value["scope"]
-            .as_str()
-            .or_else(|| value["id"]["scope"].as_str())
-            .map(str::trim)
-            .filter(|scope| !scope.is_empty())
+        non_empty_str(&value["scope"])
+            .or_else(|| non_empty_str(&value["id"]["scope"]))
             .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")),
     )
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 fn candidates(added: &[Value], projection: &Projection) -> Vec<Value> {

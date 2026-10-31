@@ -346,7 +346,14 @@ fn extension_version(ext: &Value) -> Option<String> {
         .and_then(|obj| {
             obj["version"]
                 .as_str()
-                .or_else(|| obj["head"].as_str())
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .or_else(|| {
+                    obj["head"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|val| !val.is_empty())
+                })
         })
         .or_else(|| {
             let raw = ext["extensionId"]
@@ -355,9 +362,11 @@ fn extension_version(ext: &Value) -> Option<String> {
                 .or_else(|| ext["legacyId"].as_str())
                 .or_else(|| ext["id"].as_str())
                 .or_else(|| id_obj.and_then(|obj| obj["name"].as_str()))?;
-            raw.rsplit_once('@').map(|(_, ver)| ver)
+            raw.rsplit_once('@')
+                .map(|(_, ver)| ver.trim())
+                .filter(|val| !val.is_empty())
         })?;
-    (!ver.is_empty() && !matches!(ver, "latest" | "head")).then(|| ver.to_owned())
+    (!matches!(ver, "latest" | "head")).then(|| ver.to_owned())
 }
 
 fn extension_bare_id(ext: &Value) -> Option<String> {

@@ -134,7 +134,10 @@ impl Retained {
 }
 
 fn row_id(row: &Value) -> Option<&str> {
-    trimmed_str(&row["identity"]).or_else(|| trimmed_str(&row["id"]))
+    trimmed_str(&row["identity"])
+        .or_else(|| trimmed_str(&row["id"]))
+        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
+        .filter(|id| !id.is_empty())
 }
 
 fn trimmed_str(value: &Value) -> Option<&str> {

@@ -28,7 +28,8 @@ pub(crate) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<(String,
     let updates = updates(value.get("workspaceDepsUpdates"), &formatter)?;
     let conflicts = match value.get("workspaceDepsConflicts") {
         None | Some(Value::Null) => String::new(),
-        Some(conflicts) if conflicts.is_object() => {
+        Some(Value::Object(map)) if map.is_empty() => String::new(),
+        Some(Value::Object(_)) => {
             chalk.yellow("workspace.jsonc has conflicts, please edit the file and fix them")
         }
         Some(_) => return Err(decline("checkout workspace dependency conflicts")),

@@ -65,7 +65,8 @@ impl ProjectedLinker {
         bitmap: &Value,
         identities: &[String],
     ) -> io::Result<()> {
-        let (_, projection) = super::load::projected(root, bitmap, identities)?;
+        let (mut engine, projection) = super::load::projected(root, bitmap, identities)?;
+        super::controls::validate(&mut engine, &projection.context)?;
         for component in &projection.workspace.components {
             self.retained.import_version(
                 &component.id.to_string_without_version(),

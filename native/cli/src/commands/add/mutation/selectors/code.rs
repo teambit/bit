@@ -76,17 +76,15 @@ fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Val
         .into_iter()
         .flatten()
         .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"]
-                    .as_str()
-                    .map(str::trim)
-                    .unwrap_or_default(),
-                model["name"]
-                    .as_str()
-                    .map(str::trim)
-                    .unwrap_or_default(),
-            ) == id
+            let scope = model["scope"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default();
+            let name = model["name"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default();
+            if scope.is_empty() { name == id } else { format!("{scope}/{name}") == id }
         })
         .ok_or_else(|| io::Error::other("code predicate model"))?;
     let hash = if version.is_empty() || matches!(version, "latest" | "head") {

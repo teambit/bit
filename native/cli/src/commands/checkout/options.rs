@@ -192,11 +192,7 @@ fn apply_checkout_inline(
     }
     let val = val.trim();
     if BOOLEAN.contains(&flag) || (allow_interactive && flag == "--interactive-merge") {
-        let bool_val = match val {
-            "true" => true,
-            "false" => false,
-            _ => return None,
-        };
+        let bool_val = parse_bool_val(val)?;
         flags.insert(flag.to_string(), json!(bool_val));
         return Some(0);
     }
@@ -207,7 +203,18 @@ fn apply_checkout_inline(
     None
 }
 
+fn parse_bool_val(val: &str) -> Option<bool> {
+    if val.eq_ignore_ascii_case("true") || val == "1" {
+        Some(true)
+    } else if val.eq_ignore_ascii_case("false") || val == "0" {
+        Some(false)
+    } else {
+        None
+    }
+}
+
 fn alias(arg: &str) -> &str {
+    let arg = arg.trim();
     match arg {
         "-x" => "--skip-dependency-installation",
         "-r" => "--auto-merge-resolve",

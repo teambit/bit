@@ -57,13 +57,18 @@ pub(super) fn select(files: &[Value], requested: &str) -> io::Result<Value> {
         .trim()
         .replace('\\', "/")
         .trim_start_matches("./")
+        .trim_start_matches('/')
         .to_owned();
     files
         .iter()
         .find(|file| {
             file_path(file)
                 .is_some_and(|candidate| {
-                    candidate.replace('\\', "/").trim_start_matches("./") == normalized
+                    candidate
+                        .replace('\\', "/")
+                        .trim_start_matches("./")
+                        .trim_start_matches('/')
+                        == normalized
                 })
         })
         .cloned()

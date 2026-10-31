@@ -219,9 +219,12 @@ pub(in crate::commands) fn resolve_aspect_identity(
     bitmap: &Bitmap,
     raw: &str,
 ) -> Result<(String, String), Failure> {
+    let raw = raw.trim();
     let (bare, ver) = raw
         .rsplit_once('@')
-        .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
+        .filter(|(bare, _)| !bare.trim().is_empty())
+        .map_or((raw, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
+    let ver = ver.filter(|ver_str| !ver_str.is_empty() && !matches!(*ver_str, "latest" | "head"));
     let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     if let Some(entry) = bitmap.entries
         .iter()
@@ -233,16 +236,15 @@ pub(in crate::commands) fn resolve_aspect_identity(
         })
     {
         let scoped_bare = entry.id.to_string_without_version();
-        let full = ver
-            .filter(|ver_str| !ver_str.is_empty() && !matches!(*ver_str, "latest" | "head"))
-            .map_or_else(
-                || selection::entry_full_id(entry),
-                |ver_str| format!("{scoped_bare}@{ver_str}"),
-            );
+        let full = ver.map_or_else(
+            || selection::entry_full_id(entry),
+            |ver_str| format!("{scoped_bare}@{ver_str}"),
+        );
         return Ok((full, scoped_bare));
     }
     if bare.contains('/') {
-        return Ok((raw.to_owned(), bare.to_owned()));
+        let full = ver.map_or_else(|| bare.to_owned(), |ver_str| format!("{bare}@{ver_str}"));
+        return Ok((full, bare.to_owned()));
     }
     if let Some(scoped_bare) = scope_index_lookup(root, bare) {
         let full =

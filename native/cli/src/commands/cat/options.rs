@@ -57,10 +57,11 @@ fn apply_cat_arg<'a>(
 
 fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
     let (flag, val) = match arg.split_once('=') {
-        Some((flag, val)) if val.trim() == "true" => (flag.trim(), true),
-        Some((flag, val)) if val.trim() == "false" => (flag.trim(), false),
+        Some((flag, raw)) => {
+            let Some(val) = parse_bool_val(raw) else { return false };
+            (flag.trim(), val)
+        }
         None => (arg.trim(), true),
-        _ => return false,
     };
     match flag {
         "--config" | "-c" if val || arg.starts_with("--") => options.config = val,
@@ -69,6 +70,17 @@ fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
         _ => return false,
     }
     true
+}
+
+fn parse_bool_val(raw: &str) -> Option<bool> {
+    let trimmed = raw.trim();
+    if trimmed.eq_ignore_ascii_case("true") || trimmed == "1" {
+        Some(true)
+    } else if trimmed.eq_ignore_ascii_case("false") || trimmed == "0" {
+        Some(false)
+    } else {
+        None
+    }
 }
 
 fn apply_cat_combined_short(options: &mut Options<'_>, arg: &str) -> bool {

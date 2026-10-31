@@ -311,6 +311,8 @@ pub(super) fn compute_capsules_root_dirs(
     let is_global_scope = scope_dir == cache_root().join("scope");
     let workspace = (!root.bare).then(|| {
         let sub = lookup_config_str(&combined, BUILD_BASE_KEY)
+            .map(|val| val.trim().to_owned())
+            .filter(|val| !val.is_empty())
             .unwrap_or_else(|| object_hash_short(&root.path.to_string_lossy()));
         Path::new(&capsules_base)
             .join(sub)
@@ -320,6 +322,8 @@ pub(super) fn compute_capsules_root_dirs(
     let aspect_key =
         if is_global_scope { GLOBAL_SCOPE_ASPECTS_BASE_KEY } else { SCOPE_ASPECTS_BASE_KEY };
     let aspect_sub = lookup_config_str(&combined, aspect_key)
+        .map(|val| val.trim().to_owned())
+        .filter(|val| !val.is_empty())
         .unwrap_or_else(|| object_hash_short(&format!("{}-aspects", scope_dir.display())));
     let scope_aspects = Path::new(&capsules_base)
         .join(aspect_sub)

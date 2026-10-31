@@ -210,10 +210,13 @@ pub(in crate::commands::capsule) fn lookup_config_str(
     key: &str,
 ) -> Option<String> {
     environment_value(key)
+        .map(|val| val.trim().to_owned())
+        .filter(|val| !val.is_empty())
         .or_else(|| {
             combined
                 .get(key)
                 .and_then(Value::as_str)
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
                 .map(str::to_owned)
         })

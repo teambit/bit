@@ -143,6 +143,7 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
         .and_then(|cfg| {
             cfg.iter()
                 .find_map(|(key, val)| {
+                    let key = key.trim();
                     (key == "teambit.pkg/pkg" || key.starts_with("teambit.pkg/pkg@")).then_some(val)
                 })
         })
@@ -273,6 +274,7 @@ fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Strin
             config
                 .iter()
                 .find_map(|(key, val)| {
+                    let key = key.trim();
                     (key == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")).then_some(
                         val,
                     )

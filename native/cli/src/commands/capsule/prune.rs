@@ -72,16 +72,16 @@ pub(super) fn parse_flags(rest: &[&str]) -> Option<PruneArgs> {
             "--no-orphans=false" => parsed.no_orphans = false,
             "--with-sizes" | "--with-sizes=true" => parsed.with_sizes = true,
             "--with-sizes=false" => parsed.with_sizes = false,
-            "-j" | "--json" | "--json=true" => parsed.json = true,
-            "--json=false" => parsed.json = false,
+            "-j" | "-j=true" | "--json" | "--json=true" => parsed.json = true,
+            "-j=false" | "--json=false" => parsed.json = false,
             "--older-than" => {
-                let next = *iter.next()?;
-                (!next.trim().is_empty() && !next.starts_with('-')).then_some(())?;
+                let next = iter.next()?.trim();
+                (!next.is_empty() && !next.starts_with('-')).then_some(())?;
                 parsed.older_than = Some(next.to_owned());
             }
             value if value.starts_with("--older-than=") => {
-                let val = &value["--older-than=".len()..];
-                (!val.trim().is_empty() && !val.starts_with('-')).then_some(())?;
+                let val = value["--older-than=".len()..].trim();
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
                 parsed.older_than = Some(val.to_owned());
             }
             _ => return None,

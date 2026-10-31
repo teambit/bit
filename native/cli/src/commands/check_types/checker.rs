@@ -198,7 +198,11 @@ fn find_assign_eq(line: &str) -> Option<usize> {
             .and_then(|i| bytes.get(i))
             .copied();
         let next = bytes.get(idx + 1).copied();
-        if matches!(prev, Some(b'=' | b'!' | b'<' | b'>')) || matches!(next, Some(b'=' | b'>')) {
+        if matches!(
+            prev,
+            Some(b'=' | b'!' | b'<' | b'>' | b'+' | b'-' | b'*' | b'/' | b'%' | b'?' | b'|' | b'&'),
+        ) || matches!(next, Some(b'=' | b'>'))
+        {
             continue;
         }
         return Some(idx);

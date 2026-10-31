@@ -84,8 +84,15 @@ pub(super) fn union(selected: &mut Vec<Value>, targets: Vec<Value>) {
 fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
-        .or_else(|| row["id"].as_str())
         .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+        })
+        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
         .filter(|id| !id.is_empty())
 }
 pub(super) fn no_matches(pattern: &str) -> io::Error {

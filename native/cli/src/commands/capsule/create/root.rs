@@ -77,12 +77,12 @@ fn apply_create_bool(arg: &str, create: &mut CreateArgs) -> bool {
 fn parse_bool_flag(arg: &str) -> Option<(&str, bool)> {
     match arg.split_once('=') {
         Some((flag, raw)) if raw.trim().eq_ignore_ascii_case("true") || raw.trim() == "1" => {
-            Some((flag, true))
+            Some((flag.trim(), true))
         }
         Some((flag, raw)) if raw.trim().eq_ignore_ascii_case("false") || raw.trim() == "0" => {
-            Some((flag, false))
+            Some((flag.trim(), false))
         }
-        None => Some((arg, true)),
+        None => Some((arg.trim(), true)),
         _ => None,
     }
 }
@@ -93,7 +93,7 @@ fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {
         if val.is_empty() || val.starts_with('-') {
             return None;
         }
-        match key {
+        match key.trim() {
             "--id" | "-i" => create.name = Some(val.to_owned()),
             "--base-dir" | "-b" => create.base_dir = Some(val.to_owned()),
             "--root-base-dir" | "-r" => create.root_base_dir = Some(val.to_owned()),

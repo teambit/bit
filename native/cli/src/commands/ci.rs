@@ -120,12 +120,21 @@ fn run_bare(cwd: &Path, root_opt: Option<&Path>, args: &[OsString]) -> io::Resul
     }
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn emit_outside_workspace(
     cwd: &Path,
     args: &[OsString],
     subcommand: &Subcommand,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("CI ci outside-workspace error delegated".into()));
     }
     workspace_command::execute_failure_scope(
@@ -144,7 +153,7 @@ fn emit_subcommand_error(
     subcommand: &Subcommand,
     message: &str,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("CI ci error delegated".into()));
     }
     let banner = subcommand.init_banner();

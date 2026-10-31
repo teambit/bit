@@ -42,12 +42,21 @@ pub(super) fn retain(context: &Value, capture: &mut Capture) -> io::Result<()> {
 fn proof_path(proof: &Value) -> Option<&str> {
     proof
         .as_str()
-        .or_else(|| proof["path"].as_str())
-        .or_else(|| proof["filePath"].as_str())
         .map(str::trim)
-        .filter(|path| {
-            !path.is_empty() && Path::new(path).is_absolute() && !path.chars().any(char::is_control)
+        .filter(|path| !path.is_empty())
+        .or_else(|| {
+            proof["path"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
         })
+        .or_else(|| {
+            proof["filePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+        })
+        .filter(|path| Path::new(path).is_absolute() && !path.chars().any(char::is_control))
 }
 
 pub(super) fn reads(facts: &Value) -> &[Value] {

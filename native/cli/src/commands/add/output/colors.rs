@@ -22,9 +22,9 @@ pub(super) fn native_io(error: io::Error, chalk: Chalk) -> io::Error {
     if !chalk.enabled()
         || error
             .get_ref()
-            .is_some_and(
-                <dyn Error + Send + Sync>::is::<crate::host::callback_error::CallbackError>,
-            )
+            .is_some_and(|inner| {
+                inner.is::<crate::host::callback_error::CallbackError>() || inner.is::<Colored>()
+            })
     {
         return error;
     }

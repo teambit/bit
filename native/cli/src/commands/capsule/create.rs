@@ -195,8 +195,22 @@ fn resolve_seeder_indices(
     }
     let mut indices = Vec::new();
     for raw_id in raw_ids {
-        let entry = find_existing_bitmap_entry(bitmap, raw_id)
+        let trimmed = raw_id.trim();
+        let (bare, explicit_ver) = trimmed
+            .rsplit_once('@')
+            .filter(|(base, _)| !base.trim().is_empty())
+            .map_or((trimmed, None), |(base, ver)| (base.trim(), Some(ver.trim())));
+        if explicit_ver == Some("") {
+            return Err(io::Error::other(format!("invalid component id {raw_id}")));
+        }
+        let entry = find_existing_bitmap_entry(bitmap, bare)
             .ok_or_else(|| io::Error::other(format!("component {raw_id} not in bitmap")))?;
+        if let Some(ver) = explicit_ver
+            && !matches!(ver, "latest" | "head")
+            && entry.id.version.as_deref().map(str::trim) != Some(ver)
+        {
+            return Err(io::Error::other(format!("component {raw_id} version mismatch")));
+        }
         let idx = active
             .iter()
             .position(|cand| cand.key == entry.key)

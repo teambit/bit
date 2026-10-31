@@ -23,6 +23,14 @@ impl ProjectedLinker {
             return Err(io::Error::other("fork bitmap workspace root is empty"));
         }
         let path = bitmap_path(root);
+        if before["path"]
+            .as_str()
+            .map(str::trim)
+            .map(Path::new)
+            != Some(path.as_path())
+        {
+            return Err(io::Error::other("fork bitmap preimage path"));
+        }
         let bytes = bit_object_import::render_workspace_bitmap(bitmap)?;
         let after = bit_install::policy::scope::proof_from_bytes(&path, Some(&bytes));
         if controls::refresh(&path)? != after {

@@ -117,23 +117,25 @@ pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -
     };
     let scope = row["id"]["scope"]
         .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
         .or_else(|| {
             row["id"]
                 .as_str()
                 .and_then(|raw| {
-                    raw.split('@')
-                        .next()?
+                    aspect_id_without_version(raw.trim())
                         .split_once('/')
-                        .map(|(sc, _)| sc)
+                        .map(|(sc, _)| sc.trim())
+                        .filter(|val| !val.is_empty())
                 })
         })
-        .filter(|val| !val.is_empty())
         .map(str::to_owned)
         .or_else(|| {
             let scope_json =
                 bit_object_import::parse_jsonc(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
             scope_json["name"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
                 .map(str::to_owned)
         })?;

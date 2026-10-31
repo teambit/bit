@@ -57,6 +57,9 @@ impl ProjectedLinker {
         bitmap: &Value,
         identities: &[String],
     ) -> io::Result<Vec<Value>> {
+        if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
+            return self.finish(Err(io::Error::other("identity workspace root is empty")));
+        }
         let result =
             load::capture(root, bitmap, identities, &mut self.environment, &mut self.stdout);
         let result = result.and_then(|capture| self.retained.keep(capture));

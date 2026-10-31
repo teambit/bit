@@ -74,7 +74,7 @@ fn is_safe_artifact_path(relative_path: &str) -> bool {
 }
 
 fn sanitize_component_dir(identity: &str) -> String {
-    identity
+    let sanitized: String = identity
         .trim()
         .chars()
         .map(|ch| {
@@ -85,7 +85,12 @@ fn sanitize_component_dir(identity: &str) -> String {
                 ch
             }
         })
-        .collect()
+        .collect();
+    if sanitized.is_empty() || matches!(sanitized.as_str(), "." | "..") {
+        "_".to_owned()
+    } else {
+        sanitized
+    }
 }
 
 pub(super) fn render_artifacts_report(

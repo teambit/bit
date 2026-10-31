@@ -271,8 +271,10 @@ fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
         .or_else(|| arg.strip_prefix("-i="))
     {
         take_val(val)?;
-    } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
-        options.pattern = Some(arg.to_owned());
+    } else if options.pattern.is_none()
+        && let Some(val) = take_val(arg)
+    {
+        options.pattern = Some(val);
     } else {
         return None;
     }

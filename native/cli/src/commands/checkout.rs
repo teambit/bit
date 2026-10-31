@@ -30,11 +30,20 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_options(args, &argv, &options)
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn fallback_checkout_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outcome> {
     let Some(err_msg) = options::validate_error(raw_args) else {
         return Ok(Outcome::Declined("outside the native checkout grammar".to_string()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("CI checkout option validation".to_string()));
     }
     let Some(root) = workspace::root(&env::current_dir()?) else {
@@ -60,9 +69,7 @@ fn run_options(
 ) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if options.revert
-            && env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty())
-        {
+        if options.revert && !ci_enabled() {
             return workspace_command::execute_then_scope(&cwd, args, "revert", |output| {
                 output.status("reverting components...");
                 Err(io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR))

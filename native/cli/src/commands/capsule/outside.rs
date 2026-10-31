@@ -82,6 +82,12 @@ fn safe_unscoped_id(id: &str) -> bool {
 }
 
 fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
+    let filtered = argv
+        .iter()
+        .copied()
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
+        .collect::<Vec<_>>();
+    let argv = filtered.as_slice();
     if supports_named_create_outside(argv, args) {
         return true;
     }

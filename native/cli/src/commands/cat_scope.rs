@@ -294,13 +294,20 @@ fn extract_boxed_name(raw: &Value) -> Option<String> {
 
 fn build_symlink_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
     let name = extract_boxed_name(raw)?;
-    let real_scope = raw["realScope"].as_str()?;
+    let real_scope = raw["realScope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())?;
     let id = name.clone();
     let hash = sha1_hex(&id);
     let json_obj = opts.json.then(|| {
         let mut map = Map::new();
         map.insert("validateBeforePersist".into(), Value::Bool(true));
-        if let Some(scope) = raw["scope"].as_str() {
+        if let Some(scope) = raw["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|text| !text.is_empty())
+        {
             map.insert("scope".into(), Value::String(scope.to_owned()));
         }
         map.insert("name".into(), Value::String(name));
@@ -341,6 +348,7 @@ fn build_lane_entry(raw: &Value, fallback_hash: &str, opts: &Options) -> Option<
 fn build_scope_meta_entry(raw: &Value, hash: &str, opts: &Options) -> Option<ScopeEntry> {
     let name = raw["name"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())?
         .to_owned();
     let json_obj = opts.json.then(|| {

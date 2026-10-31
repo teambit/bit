@@ -135,6 +135,7 @@ pub(super) fn parse_builtin_env(env: Option<&str>) -> Option<BuiltinEnv> {
         .filter(|raw| !raw.is_empty())
         .map(|raw| {
             raw.rsplit_once('@')
+                .filter(|(base, _)| !base.trim().is_empty())
                 .map_or(raw, |(base, _)| base.trim())
                 .trim_end_matches('/')
         });

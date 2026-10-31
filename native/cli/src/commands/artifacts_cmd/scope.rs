@@ -167,12 +167,19 @@ pub(super) fn filter_artifacts(
 }
 
 fn matches_aspect_and_task(art: &ArtifactItem, options: &Options) -> bool {
-    options.aspect
+    let matches_aspect = options.aspect
         .as_deref()
-        .is_none_or(|aspect| art.aspect_id == aspect)
-        && options.task
-            .as_deref()
-            .is_none_or(|task| art.task_name == task)
+        .map(str::trim)
+        .is_none_or(|aspect| {
+            art.aspect_id == aspect
+                || (!aspect.contains('@')
+                    && bit_install::config::aspect_id_without_version(&art.aspect_id) == aspect)
+        });
+    let matches_task = options.task
+        .as_deref()
+        .map(str::trim)
+        .is_none_or(|task| art.task_name == task);
+    matches_aspect && matches_task
 }
 
 fn filter_by_files_glob(

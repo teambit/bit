@@ -106,8 +106,14 @@ fn refreshed(
     for row in &mut rows {
         let identity = row["identity"]
             .as_str()
-            .or_else(|| row["id"].as_str())
             .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .or_else(|| {
+                row["id"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
+            })
             .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
             .filter(|id| !id.is_empty());
         let component = components

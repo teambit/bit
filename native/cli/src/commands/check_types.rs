@@ -115,7 +115,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_check_types_pattern(iter, &mut options.pattern)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" => {}
             "-a" | "-a=true" | "--all" | "--all=true" => options.all = true,
             "-a=false" | "--all=false" => options.all = false,
             "-u" | "-u=true" | "--unmodified" | "--unmodified=true" => options.unmodified = true,

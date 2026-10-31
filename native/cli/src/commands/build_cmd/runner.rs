@@ -189,10 +189,11 @@ fn materialize_entry_capsules(
 ) -> io::Result<()> {
     let scope = entry.id.scope
         .as_deref()
+        .map(str::trim)
         .filter(|scope_str| !scope_str.is_empty())
-        .unwrap_or(default_scope);
-    let base_dir_name = format!("{scope}_{}", entry.id.name.replace('/', "_"));
-    let uses_babel = variant_uses_babel(ws_val, &entry.root_dir, &entry.id.name);
+        .unwrap_or_else(|| default_scope.trim());
+    let base_dir_name = format!("{scope}_{}", entry.id.name.trim().replace('/', "_"));
+    let uses_babel = variant_uses_babel(ws_val, entry.root_dir.trim(), entry.id.name.trim());
     populate_single_capsule(
         ws_root,
         &capsules_root.join(&base_dir_name),
@@ -202,6 +203,7 @@ fn materialize_entry_capsules(
     )?;
     if let Some(ver) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver_str| !ver_str.is_empty())
     {
         let ver_dir = capsules_root.join(format!("{base_dir_name}@{ver}"));

@@ -88,6 +88,14 @@ pub(super) fn unset_in_comp_json(
         .as_object_mut()
         .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))?;
     if let Some(found_key) = find_matching_aspect_key(ext_obj, bare_aspect) {
+        if ext_obj
+            .get(&found_key)
+            .and_then(Value::as_str)
+            .map(str::trim)
+            == Some("-")
+        {
+            return Err(Failure::Declined("aspect already minus in component.json".into()));
+        }
         ext_obj.remove(&found_key);
     } else {
         ext_obj.insert(exist_aspect_id.to_owned(), json!("-"));

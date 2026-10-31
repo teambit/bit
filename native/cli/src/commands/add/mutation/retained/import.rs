@@ -117,9 +117,14 @@ fn receipt(write: &Value) -> io::Result<(Value, Value)> {
         return Err(invalid("import write digest"));
     }
     Ok((
-        json!({"path":path,"hash":write["beforeHash"]}),
-        json!({"path":path,"hash":write["afterHash"]}),
+        json!({"path":path,"hash":normalize_hash(&write["beforeHash"])}),
+        json!({"path":path,"hash":normalize_hash(&write["afterHash"])}),
     ))
+}
+fn normalize_hash(value: &Value) -> Value {
+    value
+        .as_str()
+        .map_or_else(|| value.clone(), |text| Value::String(text.trim().to_owned()))
 }
 fn hash(value: &Value) -> bool {
     value.is_null()

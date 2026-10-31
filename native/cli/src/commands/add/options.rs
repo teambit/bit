@@ -16,7 +16,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     while let Some(arg) = args.next() {
         if *arg == "--" {
             for item in args {
-                (!item.is_empty() && !item.starts_with('-')).then_some(())?;
+                (!item.trim().is_empty() && !item.starts_with('-')).then_some(())?;
                 options.tracking.paths.push((*item).to_owned());
             }
             break;

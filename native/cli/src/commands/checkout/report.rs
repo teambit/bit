@@ -129,12 +129,28 @@ impl Checkout<'_> {
             return self.format.success_summary(&title);
         }
         let version = if self.to("head") || self.to("latest") {
-            id.version.as_deref()
+            id.version
+                .as_deref()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+                .or_else(|| {
+                    self.results.version
+                        .as_deref()
+                        .map(str::trim)
+                        .filter(|ver| !ver.is_empty())
+                })
         } else {
-            self.results.version.as_deref()
+            self.results.version
+                .as_deref()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+                .or_else(|| {
+                    id.version
+                        .as_deref()
+                        .map(str::trim)
+                        .filter(|ver| !ver.is_empty())
+                })
         }
-        .map(str::trim)
-        .filter(|ver| !ver.is_empty())
         .unwrap_or("undefined");
         let title = format!(
             "successfully {} {} to version {}",

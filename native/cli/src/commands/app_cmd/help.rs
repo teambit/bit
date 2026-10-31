@@ -70,7 +70,9 @@ fn rejected_app_option(args: &[&str], list: bool) -> Option<&'static str> {
     }
     let flag = match args {
         [flag] => flag.trim(),
-        [flag @ ("--port" | "--args" | "-p" | "-a"), value] if !value.starts_with('-') => {
+        [flag @ ("--port" | "--args" | "-p" | "-a"), value]
+            if !value.trim().is_empty() && !value.trim_start().starts_with('-') =>
+        {
             flag.trim()
         }
         _ => return None,

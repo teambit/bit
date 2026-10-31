@@ -73,7 +73,8 @@ fn split_scope_name(val: &Value) -> Option<(&str, &str)> {
     let (scope, name) =
         if let Some(raw) = non_empty_str(target).or_else(|| non_empty_str(&val["id"])) {
             raw.rsplit_once('@')
-                .map_or(raw, |(bare, _)| bare)
+                .filter(|(bare, _)| !bare.trim().is_empty())
+                .map_or(raw, |(bare, _)| bare.trim())
                 .split_once('/')?
         } else {
             (non_empty_str(&target["scope"])?, non_empty_str(&target["name"])?)

@@ -40,7 +40,7 @@ pub(super) fn write_root_metadata(capsules_root: &Path, base_dir: &str) -> io::R
         fs::write(package, format!("{content}\n"))?;
     }
     let marker = capsules_root.join(".bit-capsule-origin.json");
-    if marker.exists() {
+    if has_valid_origin_marker(&marker) {
         if let Ok(file) = fs::OpenOptions::new().write(true).open(&marker) {
             let _ = file.set_modified(SystemTime::now());
         }
@@ -54,4 +54,18 @@ pub(super) fn write_root_metadata(capsules_root: &Path, base_dir: &str) -> io::R
         let _ = fs::write(marker, format!("{content}\n"));
     }
     Ok(())
+}
+
+fn has_valid_origin_marker(marker: &Path) -> bool {
+    fs::read(marker)
+        .ok()
+        .and_then(|bytes| bit_object_import::parse_jsonc(&bytes).ok())
+        .is_some_and(|val| {
+            val["originPath"]
+                .as_str()
+                .is_some_and(|origin| !origin.trim().is_empty())
+                && val["kind"]
+                    .as_str()
+                    .is_some_and(|kind| !kind.trim().is_empty())
+        })
 }

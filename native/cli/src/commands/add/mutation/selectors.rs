@@ -87,7 +87,7 @@ impl ProjectedLinker {
         grammar::validate(entered)?;
         let ids = grammar::identities(&targets);
         if ids.is_empty() {
-            return Ok(targets);
+            return Ok(Vec::new());
         }
         if grammar::loads(entered) {
             self.load_criterion(request, &ids)?;

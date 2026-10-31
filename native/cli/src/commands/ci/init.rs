@@ -90,7 +90,7 @@ impl Plan {
         let repo_root = if relative.as_os_str().is_empty() {
             ".".into()
         } else {
-            relative.to_string_lossy().into_owned()
+            relative.to_string_lossy().replace('\\', "/")
         };
         report::Target {
             scope: self.scope

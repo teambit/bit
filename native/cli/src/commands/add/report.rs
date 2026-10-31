@@ -41,10 +41,20 @@ fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String
     for file in files {
         let file = file
             .as_str()
-            .or_else(|| file["relativePath"].as_str())
-            .or_else(|| file["path"].as_str())
             .map(str::trim)
             .filter(|file| !file.is_empty())
+            .or_else(|| {
+                file["relativePath"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|file| !file.is_empty())
+            })
+            .or_else(|| {
+                file["path"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|file| !file.is_empty())
+            })
             .ok_or_else(|| io::Error::other("tracking file path"))?;
         lines.push(formatter.item(&format!("added {file}")));
     }
@@ -54,9 +64,14 @@ fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String
 fn component_id(component: &Value) -> io::Result<String> {
     if let Some(id) = component["id"]
         .as_str()
-        .or_else(|| component["identity"].as_str())
         .map(str::trim)
         .filter(|id| !id.is_empty())
+        .or_else(|| {
+            component["identity"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+        })
     {
         return Ok(id.to_owned());
     }
