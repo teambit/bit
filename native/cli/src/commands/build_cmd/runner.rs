@@ -129,9 +129,8 @@ fn is_delegated_pipeline(pipeline: &super::PipelineFlags) -> bool {
 }
 
 fn has_patched_dependencies(ws_val: &Value) -> bool {
-    ws_val
-        .get("teambit.dependencies/dependency-resolver")
-        .and_then(|dep| dep.get("patchedDependencies"))
+    crate::commands::update_cmd::aspect_entry(ws_val, "teambit.dependencies/dependency-resolver")
+        .and_then(|(_, dep)| dep.get("patchedDependencies"))
         .and_then(Value::as_object)
         .is_some_and(|map| !map.is_empty())
 }
@@ -210,7 +209,10 @@ fn materialize_entry_capsules(
 }
 
 fn variant_uses_babel(ws_val: &Value, root_dir: &str, comp_name: &str) -> bool {
-    let Some(variants) = ws_val.get("teambit.workspace/variants").and_then(Value::as_object) else {
+    let Some(variants) =
+        crate::commands::update_cmd::aspect_entry(ws_val, "teambit.workspace/variants")
+            .and_then(|(_, val)| val.as_object())
+    else {
         return false;
     };
     for (pattern, cfg) in variants {

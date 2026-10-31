@@ -60,15 +60,27 @@ fn remove(document: &mut Document, identity: &str) -> bool {
         })
         .cloned();
     let mut changed = existing.is_some_and(|key| document.remove(&[&key]));
+    let gen_key = value
+        .as_object()
+        .and_then(|values| {
+            values
+                .keys()
+                .find(|key| {
+                    key.as_str() == "teambit.generator/generator"
+                        || key.starts_with("teambit.generator/generator@")
+                })
+        })
+        .cloned()
+        .unwrap_or_else(|| "teambit.generator/generator".to_owned());
     if let Some(mut envs) = document
-        .get(&["teambit.generator/generator", "envs"])
+        .get(&[&gen_key, "envs"])
         .and_then(|value| value.as_array().cloned())
         && let Some(index) = envs
             .iter()
             .position(|env| env == identity)
     {
         envs.remove(index);
-        document.set(&["teambit.generator/generator", "envs"], &serde_json::Value::Array(envs));
+        document.set(&[&gen_key, "envs"], &serde_json::Value::Array(envs));
         changed = true;
     }
     changed

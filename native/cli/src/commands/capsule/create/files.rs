@@ -115,9 +115,8 @@ pub(super) fn supported_builtin_manifests(
 ) -> io::Result<Option<Vec<ManifestConfig>>> {
     let bytes = fs::read(ws_root.join("workspace.jsonc"))?;
     let config: Value = bit_object_import::parse_jsonc(&bytes).map_err(io::Error::other)?;
-    if config
-        .get("teambit.workspace/variants")
-        .and_then(Value::as_object)
+    if crate::commands::update_cmd::aspect_entry(&config, "teambit.workspace/variants")
+        .and_then(|(_, val)| val.as_object())
         .is_some_and(|variants| !variants.is_empty())
     {
         return Ok(None);

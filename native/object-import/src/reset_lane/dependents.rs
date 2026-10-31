@@ -63,7 +63,11 @@ fn references(
     reads: &mut proofs::ReadSet,
 ) -> io::Result<Vec<(String, String)>> {
     let mut refs = Vec::new();
-    for row in index["components"].as_array().ok_or_else(|| invalid("lane dependent components"))? {
+    for row in index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("lane dependent components"))?
+    {
         let hash = row["hash"].as_str().ok_or_else(|| invalid("lane dependent model hash"))?;
         let model = proofs::object(objects, hash, "Component", reads)?;
         let identity = format!(

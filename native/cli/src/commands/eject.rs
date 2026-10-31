@@ -194,9 +194,10 @@ fn eject_one_component(
     summary: &mut EjectSummary,
 ) -> io::Result<()> {
     let Some((key, row)) = find_bitmap_row(bitmap, id) else { return Ok(()) };
-    let name = row["name"].as_str().unwrap_or(&key);
+    let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
+    let name = row["name"].as_str().unwrap_or(key_id);
     let scope = row["scope"].as_str().unwrap_or_default();
-    let version = row["version"].as_str().unwrap_or_default();
+    let version = bitmap_row_version(&key, &row);
     if scope.is_empty() || version.is_empty() {
         summary.not_exported.push(id.to_owned());
         return Ok(());
@@ -213,6 +214,14 @@ fn eject_one_component(
     Ok(())
 }
 
+fn bitmap_row_version<'a>(key: &'a str, row: &'a Value) -> &'a str {
+    row["version"]
+        .as_str()
+        .filter(|ver| !ver.is_empty())
+        .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
+        .unwrap_or_default()
+}
+
 fn eject_hub_package_and_untrack(
     root: &Path,
     options: &Options,
@@ -222,14 +231,16 @@ fn eject_hub_package_and_untrack(
     scope: &str,
     name: &str,
 ) -> io::Result<()> {
-    let version = row["version"].as_str().unwrap_or_default();
+    let version = bitmap_row_version(key, row);
     let root_dir = row["rootDir"].as_str().unwrap_or_default();
     let main_file = row["mainFile"].as_str().unwrap_or("index.js");
     let pkg_name = pkg_name_for(scope, name);
     remove_nm_pkg(root, &pkg_name);
     if !options.skip_dependency_installation && root_dir != "." {
         add_dependency_to_workspace_jsonc(root, &pkg_name, version)?;
-        materialize_ejected_package(root, &pkg_name, scope, name, version, main_file, root_dir)?;
+        lane::materialize_ejected_package(
+            root, &pkg_name, scope, name, version, main_file, root_dir,
+        )?;
     }
     if let Some(obj) = bitmap.as_object_mut() {
         obj.remove(key);
@@ -262,23 +273,32 @@ fn check_modified_or_staged(
 
 fn find_bitmap_row(bitmap: &Value, id: &str) -> Option<(String, Value)> {
     let bare = id.split('@').next().unwrap_or(id);
-    let rows = bitmap.as_object()?;
-    for (key, row) in rows {
-        if key == "$schema-version" || key == "_bit_lane" || !row.is_object() {
-            continue;
-        }
-        let name = row["name"].as_str().unwrap_or(key);
-        let scope = row["scope"]
-            .as_str()
-            .filter(|val| !val.is_empty())
-            .or_else(|| row["defaultScope"].as_str())
-            .unwrap_or_default();
-        let full = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
-        if full == bare || name == bare || key == bare {
-            return Some((key.clone(), row.clone()));
-        }
+    bitmap
+        .as_object()?
+        .iter()
+        .find(|(key, row)| bitmap_row_matches(key, row, bare))
+        .map(|(key, row)| (key.clone(), row.clone()))
+}
+
+fn bitmap_row_matches(key: &str, row: &Value, bare: &str) -> bool {
+    if key.starts_with('$')
+        || key == "version"
+        || key == "_bit_lane"
+        || !row.is_object()
+        || row["isAvailableOnCurrentLane"] == false
+        || row["config"]["teambit.component/remove"]["removed"] == true
+    {
+        return false;
     }
-    None
+    let key_id = key.rsplit_once('@').map_or(key, |(bare_key, _)| bare_key);
+    let name = row["name"].as_str().unwrap_or(key_id);
+    let scope = row["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| row["defaultScope"].as_str())
+        .unwrap_or_default();
+    let full = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
+    full == bare || name == bare || key_id == bare || key == bare
 }
 
 fn pkg_name_for(scope: &str, name: &str) -> String {
@@ -307,54 +327,16 @@ fn add_dependency_to_workspace_jsonc(root: &Path, pkg_name: &str, version: &str)
     let before = fs::read(&path)?;
     let text = std::str::from_utf8(&before).map_err(io::Error::other)?;
     let mut doc = bit_workspace_config::jsonc::Document::parse(text)?;
-    doc.set(
-        &["teambit.dependencies/dependency-resolver", "policy", "dependencies", pkg_name],
-        &json!(version),
+    let resolver_key = crate::commands::update_cmd::aspect_entry(
+        &doc.value(),
+        "teambit.dependencies/dependency-resolver",
+    )
+    .map_or_else(
+        || "teambit.dependencies/dependency-resolver".to_owned(),
+        |(key, _)| key.to_owned(),
     );
+    doc.set(&[&resolver_key, "policy", "dependencies", pkg_name], &json!(version));
     fs::write(&path, format!("{doc}\n"))
-}
-
-fn materialize_ejected_package(
-    root: &Path,
-    pkg_name: &str,
-    scope: &str,
-    name: &str,
-    version: &str,
-    main_file: &str,
-    root_dir: &str,
-) -> io::Result<()> {
-    let pkg_dir = root.join("node_modules").join(pkg_name);
-    fs::create_dir_all(&pkg_dir)?;
-    let src_dir = root.join(root_dir);
-    if src_dir.is_dir() {
-        copy_dir_files(&src_dir, &pkg_dir)?;
-    }
-    let pkg_json = json!({
-        "name": pkg_name,
-        "version": version,
-        "main": main_file,
-        "componentId": {
-            "scope": scope,
-            "name": name,
-            "version": version,
-        },
-    });
-    fs::write(pkg_dir.join("package.json"), serde_json::to_vec_pretty(&pkg_json)?)
-}
-
-fn copy_dir_files(src: &Path, dst: &Path) -> io::Result<()> {
-    fs::create_dir_all(dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let path = entry.path();
-        let target = dst.join(entry.file_name());
-        if path.is_dir() {
-            copy_dir_files(&path, &target)?;
-        } else if path.is_file() {
-            fs::copy(&path, &target)?;
-        }
-    }
-    Ok(())
 }
 
 fn format_eject_template(summary: &EjectSummary, chalk: Chalk) -> String {

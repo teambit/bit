@@ -95,7 +95,10 @@ fn read_index_rows(root: &Path) -> io::Result<Option<Vec<Value>>> {
         Err(error) => return Err(error),
     };
     let index: Value = serde_json::from_slice(&index_bytes)?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("outbound index"))?;
     Ok(Some(rows.clone()))
 }
 

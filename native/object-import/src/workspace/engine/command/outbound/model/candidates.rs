@@ -6,7 +6,10 @@ use std::{fs, io, path::Path};
 pub(super) fn read(root: &Path, all: bool) -> io::Result<Value> {
     let index: Value =
         serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("outbound index"))?;
     let candidates = if all { all_rows(root, rows)? } else { staged_rows(root, rows)? };
     let ids = candidates
         .iter()
@@ -26,7 +29,10 @@ pub(super) fn histories(root: &Path) -> io::Result<Vec<super::HistoryBytes>> {
     let bitmap = crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?;
     let index: Value =
         serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("outbound index"))?;
     let dir = crate::scope_path(root).join("objects");
     let mut histories = Vec::new();
     for (row, model) in staged_rows(root, rows)? {

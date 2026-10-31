@@ -21,8 +21,10 @@ impl Repository {
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let index_before = fs::read(root.join(".bit/index.json"))?;
         let index: Value = serde_json::from_slice(&index_before)?;
-        let rows =
-            index["components"].as_array().ok_or_else(|| invalid("reset index components"))?;
+        let rows = index["components"]
+            .as_array()
+            .or_else(|| index.as_array())
+            .ok_or_else(|| invalid("reset index components"))?;
         let position = position(rows, scope, name)?;
         let model_hash = rows[position]["hash"]
             .as_str()
@@ -47,6 +49,7 @@ impl Repository {
     pub(super) fn components(&self) -> io::Result<&[Value]> {
         self.index["components"]
             .as_array()
+            .or_else(|| self.index.as_array())
             .map(Vec::as_slice)
             .ok_or_else(|| invalid("reset index components"))
     }
@@ -65,9 +68,12 @@ impl Repository {
             .map(|value| outbound::encode_object(&self.model_hash, "Component", value))
             .transpose()?;
         let index = if updated.is_none() {
-            let rows = self.index["components"]
-                .as_array_mut()
-                .ok_or_else(|| invalid("reset index components"))?;
+            let rows = if self.index.is_array() {
+                self.index.as_array_mut()
+            } else {
+                self.index["components"].as_array_mut()
+            }
+            .ok_or_else(|| invalid("reset index components"))?;
             rows.remove(self.position);
             let mut after = serde_json::to_vec_pretty(&self.index)?;
             after.push(b'\n');

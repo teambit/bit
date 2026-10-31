@@ -214,8 +214,10 @@ fn select_components(
     loaded: &Loaded,
 ) -> io::Result<Selection> {
     let (rows, exhaustive) = selection_rows(input, loaded)?;
-    let component_rows =
-        loaded.index["components"].as_array().ok_or_else(|| invalid("outbound component index"))?;
+    let component_rows = loaded.index["components"]
+        .as_array()
+        .or_else(|| loaded.index.as_array())
+        .ok_or_else(|| invalid("outbound component index"))?;
     let heads = RemoteLaneHeads::load(input, loaded, scope, name)?;
     let host = remote::configured_host(input, scope)?;
     let context = ComponentContext { input, loaded, scope, name, host: &host };

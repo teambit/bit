@@ -200,7 +200,9 @@ fn index_change(
     regular_file(root, &path)?;
     let before = fs::read(&path)?;
     let mut index: Value = serde_json::from_slice(&before)?;
-    let rows = index["components"].as_array_mut().ok_or_else(|| invalid("scope components"))?;
+    let rows =
+        if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
+            .ok_or_else(|| invalid("scope components"))?;
     let position = unique_position(rows, scope, name)?;
     if rows[position]["isSymlink"] != false {
         return Err(invalid("tagged scope model is a symlink"));

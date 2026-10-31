@@ -103,7 +103,11 @@ fn membership(lane: &Value) -> io::Result<HashSet<String>> {
 
 fn ordered(index: &Value, membership: &HashSet<String>) -> io::Result<Vec<String>> {
     let mut ids = Vec::new();
-    for row in index["components"].as_array().ok_or_else(|| invalid("lane candidate index"))? {
+    for row in index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("lane candidate index"))?
+    {
         let id = identity(&row["id"])?;
         if membership.contains(&id) {
             ids.push(id);

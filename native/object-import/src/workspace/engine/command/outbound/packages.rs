@@ -100,7 +100,10 @@ fn component(
 ) -> io::Result<Option<Value>> {
     let identity = target["identity"].as_str().ok_or_else(|| invalid("export package identity"))?;
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("export package scope"))?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("export package index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("export package index"))?;
     let Some(row) = rows
         .iter()
         .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)

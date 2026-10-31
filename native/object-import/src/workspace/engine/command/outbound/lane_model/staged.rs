@@ -131,6 +131,7 @@ pub(super) fn check_new_cross_scope_conflict(
     let index: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
     if index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| id.matches(row) && row["isSymlink"] != true)

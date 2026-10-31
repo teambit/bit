@@ -153,7 +153,7 @@ fn read_workspace_lane_state(root_opt: Option<&Path>) -> Option<(Option<String>,
         return Some((None, false));
     };
     let ws_val = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
-    if ws_val["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+    if super::build_cmd::is_bitmap_auto_sync(&ws_val) {
         return None;
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap")).ok()?).ok()?;

@@ -61,7 +61,7 @@ pub(super) fn prepare_with_workspace_ids(
 fn load_workspace_ids(root: &Path) -> Option<Vec<CompIdSpec>> {
     let ws_bytes = fs::read(root.join("workspace.jsonc")).ok()?;
     let ws_val = bit_object_import::parse_jsonc(&ws_bytes).ok()?;
-    if ws_val["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+    if crate::commands::build_cmd::is_bitmap_auto_sync(&ws_val) {
         return None;
     }
     let default_scope = workspace_default_scope(&ws_val).ok()?;

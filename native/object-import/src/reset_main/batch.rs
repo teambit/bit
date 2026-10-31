@@ -115,7 +115,10 @@ impl Batch {
 fn candidates(root: &Path) -> io::Result<Vec<String>> {
     let index: Value =
         serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("reset batch index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("reset batch index"))?;
     let mut selected = Vec::new();
     for row in rows {
         let hash = row["hash"].as_str().ok_or_else(|| invalid("reset batch model hash"))?;
@@ -174,7 +177,9 @@ fn project_index(root: &Path, items: &[Plan]) -> io::Result<Option<BytesChange>>
     }
     let before = fs::read(crate::scope_path(root).join("index.json"))?;
     let mut index: Value = serde_json::from_slice(&before)?;
-    let rows = index["components"].as_array_mut().ok_or_else(|| invalid("reset batch index"))?;
+    let rows =
+        if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
+            .ok_or_else(|| invalid("reset batch index"))?;
     for item in items.iter().filter(|item| item.index.is_some()) {
         let position = rows
             .iter()

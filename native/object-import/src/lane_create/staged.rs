@@ -82,7 +82,11 @@ pub(super) fn prepare(
         moved.read(&path)?;
     }
     let lane = json!({"scope":scope,"name":name,"hash":lane_hash});
-    for row in documents.index["components"].as_array().ok_or_else(invalid)? {
+    for row in documents.index["components"]
+        .as_array()
+        .or_else(|| documents.index.as_array())
+        .ok_or_else(invalid)?
+    {
         let hash = row["hash"].as_str().ok_or_else(invalid)?;
         let model = moved.object(&directory, hash, "Component")?;
         if let Some(version) = workspace_version(&documents.bitmap, &model) {
@@ -96,9 +100,11 @@ pub(super) fn prepare(
 fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
     let name = model["name"].as_str()?;
     let scope = model["scope"].as_str()?;
-    let row = bitmap
-        .get(name)
-        .or_else(|| bitmap.get(format!("{scope}/{name}")))?;
+    let full = format!("{scope}/{name}");
+    let (key, row) = bitmap
+        .as_object()?
+        .iter()
+        .find(|(key, row)| bitmap_row_matches(key, row, name, &full))?;
     let tracked_scope = row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
@@ -106,9 +112,25 @@ fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
     (tracked_scope == scope).then(|| {
         row["version"]
             .as_str()
+            .filter(|ver| !ver.is_empty())
+            .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
             .unwrap_or_default()
             .to_owned()
     })
+}
+
+fn bitmap_row_matches(key: &str, row: &Value, name: &str, full: &str) -> bool {
+    if key.starts_with('$')
+        || key == "version"
+        || key == "_bit_lane"
+        || !row.is_object()
+        || row["isAvailableOnCurrentLane"] == false
+    {
+        return false;
+    }
+    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
+    let row_name = row["name"].as_str().unwrap_or(key_id);
+    row_name == name || key_id == name || key_id == full
 }
 
 fn remote(moved: &mut Moved, scope_path: &Path, model: &Value) -> io::Result<Option<String>> {

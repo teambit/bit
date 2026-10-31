@@ -313,7 +313,8 @@ fn project_index(root: &Path, items: &[Plan]) -> io::Result<Option<BytesChange>>
     let before = fs::read(crate::scope_path(root).join("index.json"))?;
     let mut index: Value = serde_json::from_slice(&before)?;
     let rows =
-        index["components"].as_array_mut().ok_or_else(|| invalid("lane batch index components"))?;
+        if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
+            .ok_or_else(|| invalid("lane batch index components"))?;
     for item in items.iter().filter(|item| item.index.is_some()) {
         let (scope, name) =
             item.identity.split_once('/').ok_or_else(|| invalid("lane batch identity"))?;

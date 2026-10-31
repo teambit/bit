@@ -12,7 +12,8 @@ pub(super) fn remove_new_model(
     let before = fs::read(crate::scope_path(root).join("index.json"))?;
     let mut index: Value = serde_json::from_slice(&before)?;
     let rows =
-        index["components"].as_array_mut().ok_or_else(|| invalid("lane reset index components"))?;
+        if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
+            .ok_or_else(|| invalid("lane reset index components"))?;
     let position = unique_position(rows, scope, name)?;
     let hash = rows[position]["hash"]
         .as_str()

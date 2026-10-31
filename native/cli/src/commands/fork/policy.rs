@@ -82,10 +82,12 @@ fn write(root: &Path, config: &Value, reason: &str) -> io::Result<()> {
     let path = root.join("workspace.jsonc");
     let before = fs::read(&path)?;
     let mut document = Document::parse(std::str::from_utf8(&before).map_err(io::Error::other)?)?;
+    let resolver_key = crate::commands::update_cmd::aspect_entry(&document.value(), RESOLVER)
+        .map_or_else(|| RESOLVER.to_owned(), |(key, _)| key.to_owned());
     for (key, value) in
         config.as_object().ok_or_else(|| io::Error::other("fork resolver config"))?
     {
-        document.set(&[RESOLVER, key], value);
+        document.set(&[&resolver_key, key], value);
     }
     let text = format!("{document}\n");
     let text = if cfg!(windows) { text.replace('\n', "\r\n") } else { text };

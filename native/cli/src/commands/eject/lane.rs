@@ -1,9 +1,6 @@
 //! `bit lane eject` helper logic (`scopes/workspace/eject/eject.main.runtime.ts`).
 
-use super::{
-    add_dependency_to_workspace_jsonc, find_bitmap_row, materialize_ejected_package, pkg_name_for,
-    remove_nm_pkg,
-};
+use super::{add_dependency_to_workspace_jsonc, find_bitmap_row, pkg_name_for, remove_nm_pkg};
 use crate::{
     commands::{
         aspect::write_bitmap_if_changed,
@@ -153,4 +150,47 @@ fn eject_one_lane_component(
         let _ = fs::remove_dir_all(root.join(root_dir));
     }
     Ok(true)
+}
+
+pub(super) fn materialize_ejected_package(
+    root: &Path,
+    pkg_name: &str,
+    scope: &str,
+    name: &str,
+    version: &str,
+    main_file: &str,
+    root_dir: &str,
+) -> io::Result<()> {
+    let pkg_dir = root.join("node_modules").join(pkg_name);
+    fs::create_dir_all(&pkg_dir)?;
+    let src_dir = root.join(root_dir);
+    if src_dir.is_dir() {
+        copy_dir_files(&src_dir, &pkg_dir)?;
+    }
+    let pkg_json = json!({
+        "name": pkg_name,
+        "version": version,
+        "main": main_file,
+        "componentId": {
+            "scope": scope,
+            "name": name,
+            "version": version,
+        },
+    });
+    fs::write(pkg_dir.join("package.json"), serde_json::to_vec_pretty(&pkg_json)?)
+}
+
+fn copy_dir_files(src: &Path, dst: &Path) -> io::Result<()> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let path = entry.path();
+        let target = dst.join(entry.file_name());
+        if path.is_dir() {
+            copy_dir_files(&path, &target)?;
+        } else if path.is_file() {
+            fs::copy(&path, &target)?;
+        }
+    }
+    Ok(())
 }

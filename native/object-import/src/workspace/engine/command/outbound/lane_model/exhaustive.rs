@@ -12,8 +12,10 @@ pub(super) fn workspace_entries(
 ) -> io::Result<Vec<Value>> {
     let bitmap = crate::recovery::jsonc::parse(&fs::read(input.root.join(".bitmap"))?)?;
     let entries = bitmap.as_object().ok_or_else(|| invalid("outbound lane bitmap"))?;
-    let indexed =
-        loaded.index["components"].as_array().ok_or_else(|| invalid("outbound component index"))?;
+    let indexed = loaded.index["components"]
+        .as_array()
+        .or_else(|| loaded.index.as_array())
+        .ok_or_else(|| invalid("outbound component index"))?;
     let mut extra = Vec::new();
     for entry in entries.values() {
         let (Some(name), Some(scope), Some(_)) =

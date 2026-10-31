@@ -27,7 +27,11 @@ pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
             .as_deref()
             .ok_or_else(|| invalid("outbound prefilter index absent"))?,
     )?;
-    for row in index["components"].as_array().ok_or_else(|| invalid("outbound prefilter index"))? {
+    for row in index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("outbound prefilter index"))?
+    {
         prepared.capture_component(&scope.join("objects"), row)?;
     }
     prepared.histories = candidates::histories(root)?;

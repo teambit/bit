@@ -91,8 +91,10 @@ fn validate_index(
     let bytes = proof::read(&crate::scope_path(root).join("index.json"), proofs)?
         .ok_or_else(|| invalid("main recovery index absent"))?;
     let index: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
-    let entries =
-        index["components"].as_array().ok_or_else(|| invalid("main recovery index shape"))?;
+    let entries = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("main recovery index shape"))?;
     if objects
         .iter()
         .any(|(hash, _)| {

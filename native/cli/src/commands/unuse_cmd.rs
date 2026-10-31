@@ -104,12 +104,14 @@ fn apply_unuse(
 }
 
 fn clean_generator_envs(document: &mut Document, target: &str, resolved_id: &str) {
-    if let Some(Value::Array(envs)) = document.get(&["teambit.generator/generator", "envs"]) {
+    let gen_key = super::update_cmd::aspect_entry(&document.value(), "teambit.generator/generator")
+        .map_or_else(|| "teambit.generator/generator".to_owned(), |(key, _)| key.to_owned());
+    if let Some(Value::Array(envs)) = document.get(&[&gen_key, "envs"]) {
         let filtered: Vec<Value> = envs
             .into_iter()
             .filter(|env| env.as_str() != Some(target) && env.as_str() != Some(resolved_id))
             .collect();
-        document.set(&["teambit.generator/generator", "envs"], &Value::Array(filtered));
+        document.set(&[&gen_key, "envs"], &Value::Array(filtered));
     }
 }
 
@@ -161,8 +163,8 @@ fn lookup_bitmap_aspect_id(root: &Path, doc_val: &Value, bare: &str) -> Option<S
 }
 
 fn is_in_generator_envs(doc_val: &Value, target: &str, resolved_id: &str) -> bool {
-    doc_val["teambit.generator/generator"]["envs"]
-        .as_array()
+    super::update_cmd::aspect_entry(doc_val, "teambit.generator/generator")
+        .and_then(|(_, cfg)| cfg["envs"].as_array())
         .is_some_and(|envs| {
             envs.iter()
                 .any(|env| env.as_str() == Some(target) || env.as_str() == Some(resolved_id))

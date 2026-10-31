@@ -20,9 +20,7 @@ pub(in crate::commands) struct Startup {
 
 pub(in crate::commands) fn run_if_enabled(root: &Path) -> io::Result<()> {
     let config = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if config["teambit.workspace/workspace"]["bitmapAutoSync"] != true
-        || !root.join(".git").exists()
-    {
+    if !crate::commands::build_cmd::is_bitmap_auto_sync(&config) || !root.join(".git").exists() {
         return Ok(());
     }
     let mut engine = Engine::new()?;
@@ -36,7 +34,11 @@ pub(in crate::commands) fn run(
     startup: &mut Startup,
 ) -> io::Result<()> {
     let config = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    let workspace = &config["teambit.workspace/workspace"];
+    let Some((_, workspace)) =
+        crate::commands::update_cmd::aspect_entry(&config, "teambit.workspace/workspace")
+    else {
+        return Ok(());
+    };
     if workspace["bitmapAutoSync"] != true || !root.join(".git").exists() {
         return Ok(());
     }

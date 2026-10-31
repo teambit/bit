@@ -56,7 +56,7 @@ fn load_workspace_bitmap(root: &Path) -> Result<Bitmap, Failure> {
         fs::read(root.join("workspace.jsonc")).map_err(|err| Failure::Declined(err.to_string()))?;
     let ws_val = bit_object_import::parse_jsonc(&ws_bytes)
         .map_err(|err| Failure::Declined(err.to_string()))?;
-    if ws_val["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+    if crate::commands::build_cmd::is_bitmap_auto_sync(&ws_val) {
         return Err(Failure::Declined("bitmapAutoSync enabled".into()));
     }
     let default_scope = workspace_default_scope(&ws_val)?;

@@ -25,8 +25,11 @@ pub(super) fn collect(root: &Path, capture: &Capture) -> io::Result<Vec<String>>
 pub(super) fn config_error(root: &Path) -> Option<String> {
     let bytes = std::fs::read(root.join("workspace.jsonc")).ok()?;
     let ws = bit_object_import::parse_jsonc(&bytes).ok()?;
-    let dep_resolver = &ws["teambit.dependencies/dependency-resolver"];
-    if dep_resolver["externalPackageManager"] == true && dep_resolver["rootComponent"] == true {
+    if let Some((_, dep_resolver)) =
+        crate::commands::update_cmd::aspect_entry(&ws, "teambit.dependencies/dependency-resolver")
+        && dep_resolver["externalPackageManager"] == true
+        && dep_resolver["rootComponent"] == true
+    {
         return Some(
             "rootComponent cannot be true when externalPackageManager is enabled".to_owned(),
         );
@@ -43,7 +46,14 @@ fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String>
 }
 
 fn unknown_variant_harmony_aspect(obj: &serde_json::Map<String, Value>) -> Option<String> {
-    let variants = obj.get("teambit.workspace/variants")?.as_object()?;
+    let variants = obj
+        .iter()
+        .find(|(key, _)| {
+            key.as_str() == "teambit.workspace/variants"
+                || key.starts_with("teambit.workspace/variants@")
+        })?
+        .1
+        .as_object()?;
     let core: Vec<String> = serde_json::from_str(include_str!(
         "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
     ))

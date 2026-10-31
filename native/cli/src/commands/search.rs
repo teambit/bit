@@ -142,10 +142,10 @@ fn workspace_default_scope(root: &Path) -> Option<String> {
     let val = doc.value();
     val.get("defaultScope")
         .or_else(|| {
-            val.get("teambit.workspace/workspace")
-                .and_then(|w| w.get("defaultScope"))
+            super::update_cmd::aspect_entry(&val, "teambit.workspace/workspace")
+                .and_then(|(_, ws)| ws.get("defaultScope"))
         })
-        .and_then(|s| s.as_str())
+        .and_then(|scope| scope.as_str())
         .map(ToOwned::to_owned)
 }
 

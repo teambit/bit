@@ -184,10 +184,13 @@ pub(super) fn replace_config(config: &mut Value, source: &str, target: &str, ren
     {
         env["env"] = json!(target);
     }
-    if let Some(envs) = config
-        .get_mut("teambit.generator/generator")
-        .and_then(|config| config.get_mut("envs"))
-        .and_then(Value::as_array_mut)
+    if let Some((_, gen_cfg)) = config
+        .iter_mut()
+        .find(|(key, _)| {
+            key.as_str() == "teambit.generator/generator"
+                || key.starts_with("teambit.generator/generator@")
+        })
+        && let Some(envs) = gen_cfg.get_mut("envs").and_then(Value::as_array_mut)
         && let Some(value) = envs
             .iter_mut()
             .find(|value| **value == source)
@@ -228,7 +231,16 @@ fn publish_environment_config(
     original: &Value,
     target: &Value,
 ) {
-    let aspect = "teambit.generator/generator";
+    let aspect = target
+        .as_object()
+        .and_then(|map| {
+            map.keys()
+                .find(|key| {
+                    key.as_str() == "teambit.generator/generator"
+                        || key.starts_with("teambit.generator/generator@")
+                })
+        })
+        .map_or("teambit.generator/generator", String::as_str);
     if original[aspect]["envs"] != target[aspect]["envs"] {
         document.set(&[aspect, "envs"], &target[aspect]["envs"]);
     }
