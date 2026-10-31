@@ -46,6 +46,7 @@ fn model_hash(plan: &mut Plan, id: &str) -> io::Result<Option<String>> {
     let bare = id.split('@').next().unwrap_or(id);
     let model_hash = index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .and_then(|rows| {
             rows.iter()
                 .find(|row| {

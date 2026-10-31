@@ -1,7 +1,10 @@
 //! Graph traversal and lowest-common-ancestor helpers for `bit snap-distance`.
 
 use serde_json::{Value, json};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    path::Path,
+};
 
 pub(super) fn compute_snap_distance(vh_val: &Value, source: &str, target: &str) -> Option<Value> {
     let parents_map = build_parents_map(vh_val)?;
@@ -128,4 +131,52 @@ fn bfs_first<'a>(
         }
     }
     None
+}
+
+pub(super) fn load_version_history_with_local_versions(
+    scope_dir: &Path,
+    vh_hash: &str,
+    heads: &[&str],
+) -> Option<Value> {
+    let mut versions = match bit_object_import::read_scope_object(scope_dir, vh_hash) {
+        Ok(Some((kind, val))) if kind == "VersionHistory" => val["versions"].as_array()?.clone(),
+        Ok(None) => Vec::new(),
+        _ => return None,
+    };
+    let mut known: HashSet<String> = versions
+        .iter()
+        .filter_map(|ver| ver["hash"].as_str().map(str::to_owned))
+        .collect();
+    let mut stack: Vec<String> = heads
+        .iter()
+        .map(|&head| head.to_owned())
+        .collect();
+    while let Some(hash) = stack.pop() {
+        if known.contains(&hash) {
+            continue;
+        }
+        let parents = read_version_parents(scope_dir, &hash)?;
+        for parent in &parents {
+            if !known.contains(parent) {
+                stack.push(parent.clone());
+            }
+        }
+        known.insert(hash.clone());
+        versions.push(json!({ "hash": hash, "parents": parents }));
+    }
+    Some(json!({ "versions": versions }))
+}
+
+fn read_version_parents(scope_dir: &Path, hash: &str) -> Option<Vec<String>> {
+    let (kind, ver) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
+    (kind == "Version").then(|| {
+        ver["parents"]
+            .as_array()
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|parent| parent.as_str().map(str::to_owned))
+                    .collect()
+            })
+            .unwrap_or_default()
+    })
 }

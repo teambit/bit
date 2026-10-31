@@ -12,8 +12,10 @@ pub(super) fn file(scope: &Path, id: &str) -> io::Result<bool> {
             .read(std::fs::File::open(scope.join("index.json"))?)?,
     )?;
     let bare = id.split('@').next().unwrap_or(id);
-    let rows =
-        index["components"].as_array().ok_or_else(|| invalid("recovery remote scope index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("recovery remote scope index"))?;
     let row = rows
         .iter()
         .find(|row| {

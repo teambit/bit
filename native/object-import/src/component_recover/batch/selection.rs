@@ -89,6 +89,7 @@ fn single(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
     let index = repository::index(batch)?;
     let rows: Vec<_> = index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .into_iter()
         .flatten()
         .filter(|row| {

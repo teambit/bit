@@ -219,7 +219,9 @@ fn validate_no_model(root: &Path, scope: &str, name: &str) -> io::Result<()> {
         return Ok(());
     }
     let index: Value = serde_json::from_slice(&fs::read(path)?)?;
-    let Some(rows) = index["components"].as_array() else { return Err(invalid("component index")) };
+    let Some(rows) = index["components"].as_array().or_else(|| index.as_array()) else {
+        return Err(invalid("component index"));
+    };
     if rows
         .iter()
         .any(|component| component["id"]["scope"] == scope && component["id"]["name"] == name)

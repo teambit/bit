@@ -25,7 +25,11 @@ pub(super) fn dependents(
 
 fn build_reverse(readset: &mut Readset, index: &Value) -> io::Result<Reverse> {
     let mut reverse = Reverse::new();
-    for row in index["components"].as_array().ok_or_else(|| invalid("component index"))? {
+    for row in index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("component index"))?
+    {
         if row["isSymlink"] == true {
             continue;
         }

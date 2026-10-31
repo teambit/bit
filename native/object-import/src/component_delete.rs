@@ -251,7 +251,10 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
     let index_before = fs::read(crate::scope_path(root).join("index.json"))?;
     let index: Value = serde_json::from_slice(&index_before)?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("scope index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("scope index"))?;
     let matches: Vec<_> = rows
         .iter()
         .filter(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)

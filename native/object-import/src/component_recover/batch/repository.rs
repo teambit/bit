@@ -27,7 +27,10 @@ pub(super) fn object(batch: &mut Batch, hash: &str, kind: &str) -> io::Result<Op
 }
 pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> {
     let index = index(batch)?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("recovery component index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("recovery component index"))?;
     let local_name = super::selection::key(&batch.bitmap, bare)?
         .filter(|key| batch.bitmap[key]["scope"].as_str().is_none_or(str::is_empty))
         .and_then(|_| bare.split_once('/').map(|(_, name)| name));

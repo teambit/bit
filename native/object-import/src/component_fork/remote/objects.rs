@@ -43,6 +43,7 @@ fn model_row<'a>(index: &'a Value, id: &str) -> io::Result<&'a Value> {
     let bare = id.split('@').next().unwrap_or(id);
     index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .and_then(|rows| {
             rows.iter()
                 .find(|row| {

@@ -70,7 +70,12 @@ fn range(document: &Document, tag: &str) -> io::Result<String> {
     if version.is_prerelease() {
         return Ok(tag.to_owned());
     }
-    let prefix = document.get(&[RESOLVER, "savePrefix"]);
+    let prefix = document
+        .get(&[RESOLVER, "savePrefix"])
+        .or_else(|| {
+            crate::commands::update_cmd::aspect_entry(&document.value(), RESOLVER)
+                .and_then(|(_, resolver)| resolver.get("savePrefix").cloned())
+        });
     let prefix = match &prefix {
         None | Some(Value::Null) => "^",
         Some(Value::String(prefix)) if prefix.is_empty() => "^",

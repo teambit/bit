@@ -163,6 +163,7 @@ fn active_index_rows(scope_dir: &Path) -> Vec<Value> {
     };
     index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .map(|comps| {
             comps
                 .iter()

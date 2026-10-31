@@ -4,7 +4,10 @@ mod graph;
 #[cfg(test)]
 mod tests;
 
-use self::graph::{build_parents_map, collect_successors, compute_snap_distance};
+use self::graph::{
+    build_parents_map, collect_successors, compute_snap_distance,
+    load_version_history_with_local_versions,
+};
 use super::{
     Command,
     color::Chalk,
@@ -19,7 +22,7 @@ use super::{
 };
 use crate::native::Outcome;
 use serde_json::{Value, json};
-use std::{collections::HashSet, env, ffi::OsString, fs, io, path::Path};
+use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "snap-distance", aliases: &[], run };
 
@@ -68,25 +71,49 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Ok(Some(root)) = scope_root::discover() else {
         return emit_scope_not_found(args, "snap-distance", false);
     };
-    let scope_dir = scope_dir_for(&root);
-    let bare = opts.id.rsplit_once('@').map_or(opts.id.as_str(), |(id, _)| id);
-    if resolve_component_entry(&scope_dir, bare).is_none_or(|(sc, _, _)| sc.is_none()) {
-        if env::var_os("CI").is_none_or(|val| val.is_empty())
-            && let Some(err) =
-                diagnose_component_lookup_error(&scope_dir, &opts.id, bare, Chalk::detect(args))
-        {
-            return emit_failure(&root, args, "snap-distance", true, false, err);
-        }
-        return Ok(Outcome::Declined("snap-distance component lookup delegated".into()));
-    }
-    if opts.source_snap.is_some() && opts.target_snap.is_none() {
-        return emit_missing_target_error(&root, args);
+    if let Some(outcome) = validate_target(&root, args, &opts)? {
+        return Ok(outcome);
     }
     let Some(result) = evaluate_snap_distance(&root, &opts) else {
         return Ok(Outcome::Declined("snap-distance delegated".into()));
     };
     let data = serde_json::to_string_pretty(&result)?;
     emit_text(&root, args, "snap-distance", true, data)
+}
+
+fn validate_target(
+    root: &ScopeRoot,
+    args: &[OsString],
+    opts: &Options,
+) -> io::Result<Option<Outcome>> {
+    let scope_dir = scope_dir_for(root);
+    let bare = opts.id.rsplit_once('@').map_or(opts.id.as_str(), |(id, _)| id);
+    let missing_target = opts.source_snap.is_some() && opts.target_snap.is_none();
+    if is_valid_scoped_id(&opts.id, bare) && missing_target {
+        return emit_missing_target_error(root, args).map(Some);
+    }
+    if resolve_component_entry(&scope_dir, bare).is_none_or(|(sc, _, _)| sc.is_none()) {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) =
+                diagnose_component_lookup_error(&scope_dir, &opts.id, bare, Chalk::detect(args))
+        {
+            return emit_failure(root, args, "snap-distance", true, false, err).map(Some);
+        }
+        return Ok(Some(Outcome::Declined("snap-distance component lookup delegated".into())));
+    }
+    if missing_target {
+        return emit_missing_target_error(root, args).map(Some);
+    }
+    Ok(None)
+}
+
+fn is_valid_scoped_id(raw_id: &str, bare: &str) -> bool {
+    !raw_id.starts_with('@')
+        && bare
+            .split_once('/')
+            .is_some_and(|(scope, name)| {
+                !scope.is_empty() && !name.is_empty() && !name.contains('/')
+            })
 }
 
 fn evaluate_snap_distance(root: &ScopeRoot, opts: &Options) -> Option<Value> {
@@ -282,24 +309,43 @@ fn collect_head_hashes(scope_dir: &Path, vh_hash: &str, head: &str) -> Option<Ve
 
 fn find_bitmap_version(bitmap: &Value, scope: &str, name: &str) -> Option<String> {
     let full = format!("{scope}/{name}");
-    for (key, row) in bitmap.as_object()? {
-        if key == "$schema-version" || key == "_bit_lane" || !row.is_object() {
-            continue;
-        }
-        let row_name = row["name"].as_str().unwrap_or(key);
-        let row_scope = row["scope"]
-            .as_str()
-            .filter(|val| !val.is_empty())
-            .or_else(|| row["defaultScope"].as_str())
-            .unwrap_or_default();
-        if row_name == name && (row_scope.is_empty() || row_scope == scope || key == &full) {
-            return row["version"]
-                .as_str()
-                .filter(|ver| !ver.is_empty())
-                .map(str::to_owned);
-        }
+    bitmap
+        .as_object()?
+        .iter()
+        .find_map(|(key, row)| bitmap_row_version(key, row, scope, name, &full))
+}
+
+fn bitmap_row_version(
+    key: &str,
+    row: &Value,
+    scope: &str,
+    name: &str,
+    full: &str,
+) -> Option<String> {
+    if key == "$schema-version" || key == "_bit_lane" || !row.is_object() {
+        return None;
     }
-    None
+    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
+    let row_name = row["name"].as_str().unwrap_or(key_id);
+    let row_scope = row["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| row["defaultScope"].as_str())
+        .unwrap_or_default();
+    let matches =
+        (row_name == name && (row_scope.is_empty() || row_scope == scope)) || key_id == full;
+    if !matches {
+        return None;
+    }
+    row["version"]
+        .as_str()
+        .filter(|ver| !ver.is_empty())
+        .map(str::to_owned)
+        .or_else(|| {
+            key.rsplit_once('@')
+                .filter(|(_, ver)| !ver.is_empty())
+                .map(|(_, ver)| ver.to_owned())
+        })
 }
 
 fn read_remote_main_head(scope_dir: &Path, scope: &str, name: &str) -> Option<Option<String>> {
@@ -326,52 +372,4 @@ fn read_remote_main_head(scope_dir: &Path, scope: &str, name: &str) -> Option<Op
         }
     }
     Some(None)
-}
-
-fn load_version_history_with_local_versions(
-    scope_dir: &Path,
-    vh_hash: &str,
-    heads: &[&str],
-) -> Option<Value> {
-    let mut versions = match bit_object_import::read_scope_object(scope_dir, vh_hash) {
-        Ok(Some((kind, val))) if kind == "VersionHistory" => val["versions"].as_array()?.clone(),
-        Ok(None) => Vec::new(),
-        _ => return None,
-    };
-    let mut known: HashSet<String> = versions
-        .iter()
-        .filter_map(|ver| ver["hash"].as_str().map(str::to_owned))
-        .collect();
-    let mut stack: Vec<String> = heads
-        .iter()
-        .map(|&h| h.to_owned())
-        .collect();
-    while let Some(hash) = stack.pop() {
-        if known.contains(&hash) {
-            continue;
-        }
-        let parents = read_version_parents(scope_dir, &hash)?;
-        for parent in &parents {
-            if !known.contains(parent) {
-                stack.push(parent.clone());
-            }
-        }
-        known.insert(hash.clone());
-        versions.push(json!({ "hash": hash, "parents": parents }));
-    }
-    Some(json!({ "versions": versions }))
-}
-
-fn read_version_parents(scope_dir: &Path, hash: &str) -> Option<Vec<String>> {
-    let (kind, ver) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
-    (kind == "Version").then(|| {
-        ver["parents"]
-            .as_array()
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|parent| parent.as_str().map(str::to_owned))
-                    .collect()
-            })
-            .unwrap_or_default()
-    })
 }

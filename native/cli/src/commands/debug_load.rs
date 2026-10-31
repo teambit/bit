@@ -178,6 +178,7 @@ fn exists_in_scope_index(root: &Path, name: &str) -> bool {
     };
     index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .is_some_and(|components| {
             components
                 .iter()

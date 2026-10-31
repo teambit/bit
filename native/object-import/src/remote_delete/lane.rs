@@ -82,6 +82,7 @@ fn component_merged(index: &Value, readset: &mut Readset, row: &Value) -> io::Re
     };
     let model = index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .and_then(|items| {
             items
                 .iter()

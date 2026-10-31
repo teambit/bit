@@ -269,7 +269,8 @@ pub(super) fn identity(id: &str) -> io::Result<&str> {
 pub(super) fn component_row<'a>(index: &'a Value, id: &str) -> Option<&'a Value> {
     let (scope, name) = id.split_once('/')?;
     index["components"]
-        .as_array()?
+        .as_array()
+        .or_else(|| index.as_array())?
         .iter()
         .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
 }
