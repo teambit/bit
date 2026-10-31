@@ -966,10 +966,8 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
       if (!snapshot) continue;
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         for (const [name, ref] of Object.entries(snapshot[depType] ?? {})) {
-          // A `file:` ref names a workspace component's own snapshot, which
-          // is reachable through it like any other. A `link:` ref has none.
-          if (ref.startsWith('link:')) continue;
-          stack.push(`${name}@${ref}`);
+          const subDepPath = refToDepPath(ref, name);
+          if (subDepPath != null) stack.push(subDepPath);
         }
       }
     }
@@ -977,8 +975,8 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
   for (const importer of Object.values(lockfile.importers ?? {})) {
     for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
       for (const [name, { version }] of Object.entries(importer[depType] ?? {})) {
-        if (version.startsWith('link:')) continue;
-        visit(`${name}@${version}`);
+        const depPath = refToDepPath(version, name);
+        if (depPath != null) visit(depPath);
       }
     }
   }
@@ -1091,6 +1089,17 @@ function linkWorkspaceComponents(
 }
 
 /**
+ * The dep path a lockfile ref under `name` points at, or `undefined` for a
+ * `link:` ref, which points at no snapshot. An aliased ref
+ * (`real-name@1.0.0` under the alias) names the real package, and a `file:`
+ * ref a workspace component's own snapshot.
+ */
+export function refToDepPath(ref: string, name: string): string | undefined {
+  ensureInitialized();
+  return dp.refToRelative(ref, name) ?? undefined;
+}
+
+/**
  * Set each snapshot's `optional` flag the way pnpm does: on when every path
  * from an importer to it goes through an `optionalDependencies` edge, off
  * otherwise. The graph does not record the flag, and an install that takes
@@ -1112,7 +1121,8 @@ export function markOptionalOnlyEntries(lockfile: Pick<LockfileFile, 'importers'
       ['optionalDependencies', true],
     ] as const) {
       for (const [name, { version }] of Object.entries(importer[depType] ?? {})) {
-        if (!version.startsWith('link:')) queue.push([`${name}@${version}`, optional]);
+        const depPath = refToDepPath(version, name);
+        if (depPath != null) queue.push([depPath, optional]);
       }
     }
   }
@@ -1124,11 +1134,14 @@ export function markOptionalOnlyEntries(lockfile: Pick<LockfileFile, 'importers'
     (optional ? reachedOptionally : reachedNonOptionally).add(depPath);
     const snapshot = snapshots[depPath];
     if (!snapshot) continue;
-    for (const [name, ref] of Object.entries(snapshot.dependencies ?? {})) {
-      if (!ref.startsWith('link:')) queue.push([`${name}@${ref}`, optional]);
-    }
-    for (const [name, ref] of Object.entries(snapshot.optionalDependencies ?? {})) {
-      if (!ref.startsWith('link:')) queue.push([`${name}@${ref}`, true]);
+    for (const [depType, edgeOptional] of [
+      ['dependencies', optional],
+      ['optionalDependencies', true],
+    ] as const) {
+      for (const [name, ref] of Object.entries(snapshot[depType] ?? {})) {
+        const subDepPath = refToDepPath(ref, name);
+        if (subDepPath != null) queue.push([subDepPath, edgeOptional]);
+      }
     }
   }
   for (const [depPath, snapshot] of Object.entries(snapshots)) {

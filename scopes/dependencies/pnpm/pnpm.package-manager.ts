@@ -24,6 +24,7 @@ import { join } from 'path';
 import {
   convertLockfileToGraph,
   markOptionalOnlyEntries,
+  refToDepPath,
   convertGraphToLockfile,
   createFileVersionReplacer,
   createLockfileToGraphCache,
@@ -757,10 +758,8 @@ function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
       if (!snapshot) continue;
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         for (const [name, ref] of Object.entries(snapshot[depType] ?? {}) as Array<[string, string]>) {
-          // A `file:` ref names a workspace component's own snapshot, which
-          // is reachable through it like any other. A `link:` ref has none.
-          if (ref.startsWith('link:')) continue;
-          stack.push(`${name}@${ref}`);
+          const subDepPath = refToDepPath(ref, name);
+          if (subDepPath != null) stack.push(subDepPath);
         }
       }
     }
@@ -771,8 +770,8 @@ function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
         [string, { version?: string } | string]
       >) {
         const version = typeof dep === 'string' ? dep : dep.version;
-        if (!version || version.startsWith('link:')) continue;
-        visit(`${name}@${version}`);
+        const depPath = version ? refToDepPath(version, name) : undefined;
+        if (depPath != null) visit(depPath);
       }
     }
   }

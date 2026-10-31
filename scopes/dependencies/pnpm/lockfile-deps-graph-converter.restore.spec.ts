@@ -4,6 +4,7 @@ import { DependenciesGraph } from '@teambit/objects';
 import {
   convertLockfileToGraph,
   convertGraphToLockfile,
+  markOptionalOnlyEntries,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
 import { type BitLockfileFile } from './lynx';
@@ -404,5 +405,28 @@ describe('entries no importer reaches in a restored lockfile', () => {
       },
     });
     expect(Object.keys(lockfile.packages!)).to.eql(['foo@1.0.0']);
+  });
+});
+
+describe('optional flags under an aliased dependency', () => {
+  it('walks into the package an alias names', () => {
+    const lockfile = {
+      importers: {
+        'comps/comp1': {
+          dependencies: { foo: { version: 'real-foo@1.0.0', specifier: 'npm:real-foo@1.0.0' } },
+          optionalDependencies: { bar: { version: '1.0.0', specifier: '1.0.0' } },
+        },
+      },
+      snapshots: {
+        'real-foo@1.0.0': { optionalDependencies: { qar: '1.0.0' }, dependencies: { bar: '1.0.0' } },
+        'bar@1.0.0': { optional: true },
+        'qar@1.0.0': {},
+      },
+    };
+    markOptionalOnlyEntries(lockfile as any);
+    expect(lockfile.snapshots['real-foo@1.0.0']).not.to.have.property('optional');
+    // Reached optionally from the importer, but required through the alias.
+    expect(lockfile.snapshots['bar@1.0.0']).not.to.have.property('optional');
+    expect(lockfile.snapshots['qar@1.0.0']).to.have.property('optional', true);
   });
 });

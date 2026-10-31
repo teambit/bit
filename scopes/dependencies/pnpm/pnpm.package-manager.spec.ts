@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import type { ResolvedConfig } from '@pnpm/napi';
 import { PnpmPackageManager, applyInstallLinkSetting, mergeGraphLockfileIntoExisting } from './pnpm.package-manager';
+import { init as initLockfileDepsGraphConverter } from './lockfile-deps-graph-converter';
 
 describe('PnpmPackageManager.getNetworkConfig', () => {
   it('uses the Bit user agent when no user agent is configured', async () => {
@@ -78,6 +79,31 @@ function createPackageManager(config: Partial<ResolvedConfig>) {
 }
 
 describe('mergeGraphLockfileIntoExisting', () => {
+  before(async () => {
+    await initLockfileDepsGraphConverter();
+  });
+
+  it('keeps the entries an aliased dependency reaches', () => {
+    const merged = mergeGraphLockfileIntoExisting(
+      { lockfileVersion: '9.0', importers: {} } as any,
+      {
+        lockfileVersion: '9.0',
+        importers: {
+          'comps/comp1': {
+            dependencies: { foo: { version: 'real-foo@1.0.0', specifier: 'npm:real-foo@1.0.0' } },
+          },
+        },
+        packages: {
+          'real-foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+          'bar@1.0.0': { resolution: { integrity: 'sha512-bar' } },
+        },
+        snapshots: { 'real-foo@1.0.0': { dependencies: { bar: '1.0.0' } }, 'bar@1.0.0': {} },
+      } as any
+    );
+    expect(Object.keys(merged.packages ?? {}).sort()).to.eql(['bar@1.0.0', 'real-foo@1.0.0']);
+    expect(Object.keys(merged.snapshots ?? {}).sort()).to.eql(['bar@1.0.0', 'real-foo@1.0.0']);
+  });
+
   function lockfile(pnpmfileChecksum?: string) {
     return { lockfileVersion: '9.0', importers: {}, ...(pnpmfileChecksum ? { pnpmfileChecksum } : {}) };
   }
