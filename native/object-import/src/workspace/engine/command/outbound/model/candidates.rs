@@ -39,16 +39,7 @@ pub(super) fn histories(root: &Path) -> io::Result<Vec<super::HistoryBytes>> {
         let scope =
             row["id"]["scope"].as_str().ok_or_else(|| invalid("outbound candidate scope"))?;
         let name = row["id"]["name"].as_str().ok_or_else(|| invalid("outbound candidate name"))?;
-        if !bitmap
-            .as_object()
-            .is_some_and(|rows| {
-                rows.values()
-                    .any(|row| {
-                        row["name"] == name
-                            && (row["scope"] == scope || row["defaultScope"] == scope)
-                    })
-            })
-        {
+        if !super::super::publication::reconcile_present(&bitmap, scope, name) {
             continue;
         }
         let head = model["head"].as_str().ok_or_else(|| invalid("outbound candidate head"))?;

@@ -17,13 +17,10 @@ pub(super) fn workspace_entries(
         .or_else(|| loaded.index.as_array())
         .ok_or_else(|| invalid("outbound component index"))?;
     let mut extra = Vec::new();
-    for entry in entries.values() {
-        let (Some(name), Some(scope), Some(_)) =
-            (entry["name"].as_str(), entry["scope"].as_str(), entry["version"].as_str())
-        else {
+    for (key, entry) in entries {
+        let Some(id) = workspace_entry_id(key, entry) else {
             continue;
         };
-        let id = json!({"scope":scope,"name":name});
         if lane_rows
             .iter()
             .any(|row| row["id"] == id)
@@ -40,6 +37,39 @@ pub(super) fn workspace_entries(
         extra.push(json!({"id":id,"head":head}));
     }
     Ok(extra)
+}
+
+fn workspace_entry_id(key: &str, entry: &Value) -> Option<Value> {
+    if matches!(key, "$schema-version" | "_bit_lane")
+        || entry["isAvailableOnCurrentLane"] == false
+        || crate::workspace::engine::client_status::config::is_config_removed(&entry["config"])
+    {
+        return None;
+    }
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let name = entry["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .unwrap_or_else(|| key_id.split_once('/').map_or(key_id, |(_, name_part)| name_part));
+    let scope = entry["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            entry["defaultScope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
+        .or_else(|| key_id.split_once('/').map(|(scope_part, _)| scope_part))?;
+    let version = entry["version"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver)
+                .filter(|val| !val.is_empty())
+        })?;
+    let _ = version;
+    Some(json!({"scope":scope,"name":name}))
 }
 
 /// `getAllVersionHashes` starts at the lane head and walks its complete

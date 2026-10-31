@@ -29,8 +29,10 @@ fn deprecated(context: &Value, full_id: &str) -> io::Result<bool> {
         .iter()
         .find(|target| target["identity"] == identity);
     if let Some(value) = target
-        .and_then(|target| target["componentConfig"][DEPRECATION].get("deprecate"))
-        .and_then(Value::as_bool)
+        .and_then(|target| {
+            crate::commands::update_cmd::aspect_entry(&target["componentConfig"], DEPRECATION)
+        })
+        .and_then(|(_, cfg)| cfg["deprecate"].as_bool())
     {
         return Ok(value);
     }
@@ -77,7 +79,7 @@ fn head_deprecation<'c>(
         .as_array()
         .into_iter()
         .flatten()
-        .find(|extension| extension["name"] == DEPRECATION);
+        .find(|extension| crate::commands::update_cmd::matches_aspect(extension, DEPRECATION));
     let Some(extension) = extension else {
         return Ok(None);
     };

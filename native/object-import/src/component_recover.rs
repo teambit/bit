@@ -248,7 +248,10 @@ fn read_repository(root: &Path, selected: &Selection) -> io::Result<(Repository,
 fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Object, Value)> {
     let index = fs::read(root.join(".bit/index.json"))?;
     let value: Value = serde_json::from_slice(&index)?;
-    let rows = value["components"].as_array().ok_or_else(|| invalid("scope index"))?;
+    let rows = value["components"]
+        .as_array()
+        .or_else(|| value.as_array())
+        .ok_or_else(|| invalid("scope index"))?;
     let matches: Vec<_> = rows
         .iter()
         .filter(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)

@@ -144,6 +144,8 @@ fn has_env_jsonc_policy(root: &Path) -> bool {
 pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
     entry["name"]
         .as_str()
+        .or_else(|| entry["extensionId"].as_str())
+        .or_else(|| entry["extensionId"]["name"].as_str())
         .is_some_and(|name| name == id || name.starts_with(&format!("{id}@")))
 }
 

@@ -90,9 +90,12 @@ fn ordinary_head(head: &Value, expected: &Value, check_issues: bool) -> bool {
                 || !extensions
                     .iter()
                     .any(|extension| {
-                        matches!(
-                            extension["name"].as_str(),
-                            Some("teambit.component/deprecation" | "teambit.component/remove"),
+                        crate::commands::update_cmd::matches_aspect(
+                            extension,
+                            "teambit.component/deprecation",
+                        ) || crate::commands::update_cmd::matches_aspect(
+                            extension,
+                            "teambit.component/remove",
                         )
                     })
         })

@@ -24,15 +24,14 @@ pub(super) fn export_bitmap(
     header["exported"] = Value::Bool(true);
     let components =
         lane["components"].as_array().ok_or_else(|| invalid("outbound lane bitmap components"))?;
+    let rows = bitmap.as_object_mut().ok_or_else(|| invalid("outbound lane bitmap"))?;
     for component in components {
         let component_scope = component["id"]["scope"]
             .as_str()
             .ok_or_else(|| invalid("outbound lane bitmap scope"))?;
         let component_name =
             component["id"]["name"].as_str().ok_or_else(|| invalid("outbound lane bitmap name"))?;
-        if let Some(row) = bitmap.get_mut(component_name)
-            && row["scope"] == ""
-        {
+        if let Some(row) = unexported_lane_row(rows, component_scope, component_name) {
             row["scope"] = Value::String(component_scope.to_owned());
             row.as_object_mut()
                 .ok_or_else(|| invalid("outbound lane bitmap row"))?
@@ -41,6 +40,22 @@ pub(super) fn export_bitmap(
         }
     }
     if changed { crate::inspection::render_bitmap(&bitmap) } else { Ok(before.to_vec()) }
+}
+
+fn unexported_lane_row<'a>(
+    rows: &'a mut serde_json::Map<String, Value>,
+    scope: &str,
+    name: &str,
+) -> Option<&'a mut Value> {
+    let full = format!("{scope}/{name}");
+    rows.iter_mut()
+        .find(|(key, row)| {
+            let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
+            (key_id == name || key_id == full || row["name"] == name)
+                && row["scope"] == ""
+                && (row["defaultScope"].is_null() || row["defaultScope"] == scope)
+        })
+        .map(|(_, row)| row)
 }
 
 pub(super) fn export_scope(before: &[u8], name: &str) -> io::Result<Vec<u8>> {

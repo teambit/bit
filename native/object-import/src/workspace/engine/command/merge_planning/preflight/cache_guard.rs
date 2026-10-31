@@ -79,12 +79,25 @@ fn extensions(target: &Value) -> io::Result<Value> {
     let rows = target["extensions"]
         .as_array()
         .ok_or_else(|| invalid("command fast-forward extensions"))?;
-    let rows = rows.iter().map(|row| {
-        if row.get("extensionId").is_some() || row.get("legacyId").is_some()
-            || row["name"] == "teambit.envs/envs" && row["data"]["id"] != "teambit.harmony/node" {
-            return Err(invalid("command fast-forward dependency cache environment"));
-        }
-        Ok(json!({"name":row["name"],"config":row.get("config").cloned().unwrap_or_else(|| json!({}))}))
-    }).collect::<io::Result<Vec<_>>>()?;
+    let rows = rows
+        .iter()
+        .map(|row| {
+            let is_envs = crate::workspace::engine::client_status::config::is_extension_aspect(
+                row,
+                "teambit.envs/envs",
+            );
+            let non_node_env = row["data"]["id"]
+                .as_str()
+                .and_then(|id| id.split('@').next())
+                != Some("teambit.harmony/node");
+            if row.get("extensionId").is_some()
+                || row.get("legacyId").is_some()
+                || is_envs && non_node_env
+            {
+                return Err(invalid("command fast-forward dependency cache environment"));
+            }
+            Ok(json!({"name":row["name"],"config":row.get("config").cloned().unwrap_or_else(|| json!({}))}))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
     Ok(json!(rows))
 }

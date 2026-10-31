@@ -58,7 +58,7 @@ fn validate_bare_index(directory: &Path) -> io::Result<()> {
         return Err(io::Error::other("lane scope index limit"));
     }
     let index: Value = serde_json::from_slice(&bytes)?;
-    if !index["components"].is_array() || !index["lanes"].is_array() {
+    if !index.is_array() && (!index["components"].is_array() || !index["lanes"].is_array()) {
         return Err(io::Error::other("lane scope index"));
     }
     Ok(())

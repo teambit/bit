@@ -199,7 +199,12 @@ fn model_manual_policy(model: &ModelData, env_id: &str) -> Result<Option<ManualP
     let decline = || Failure::Declined("configured versioned deps debug delegated".into());
     let resolver = model.extensions
         .iter()
-        .find(|extension| extension["name"] == "teambit.dependencies/dependency-resolver")
+        .find(|extension| {
+            crate::commands::update_cmd::matches_aspect(
+                extension,
+                "teambit.dependencies/dependency-resolver",
+            )
+        })
         .ok_or_else(decline)?;
     let config = &resolver["config"];
     if config.as_object().is_some_and(serde_json::Map::is_empty) {
@@ -263,7 +268,9 @@ fn valid_entry<'a>(field: &str, name: &'a str, value: &Value, seen: &mut HashSet
 fn model_env(model: &ModelData) -> Option<&'static str> {
     let mut envs = model.extensions
         .iter()
-        .filter(|extension| extension["name"] == "teambit.envs/envs");
+        .filter(|extension| {
+            crate::commands::update_cmd::matches_aspect(extension, "teambit.envs/envs")
+        });
     let id = envs
         .next()?
         .pointer("/data/id")?
@@ -288,8 +295,10 @@ fn plain_model(model: &ModelData, env_id: &str, manual: Option<&ManualPolicy>) -
     let mut resolver = model.extensions
         .iter()
         .filter(|extension| {
-            extension.get("name").and_then(Value::as_str)
-                == Some("teambit.dependencies/dependency-resolver")
+            crate::commands::update_cmd::matches_aspect(
+                extension,
+                "teambit.dependencies/dependency-resolver",
+            )
         });
     let Some(deps) = resolver
         .next()
@@ -303,14 +312,21 @@ fn plain_model(model: &ModelData, env_id: &str, manual: Option<&ManualPolicy>) -
 
 fn allowed_config(extension: &Value, env_id: &str, manual: Option<&ManualPolicy>) -> bool {
     let config = &extension["config"];
-    if extension["name"] == "teambit.dependencies/dependency-resolver" && manual.is_some() {
+    if crate::commands::update_cmd::matches_aspect(
+        extension,
+        "teambit.dependencies/dependency-resolver",
+    ) && manual.is_some()
+    {
         return true;
     }
-    let name = extension["name"].as_str().map(bit_install::config::aspect_id_without_version);
-    if env_id == "teambit.react/react" && name == Some("teambit.react/react") {
+    if env_id == "teambit.react/react"
+        && crate::commands::update_cmd::matches_aspect(extension, "teambit.react/react")
+    {
         return config == &json!({"__specific": true});
     }
-    if env_id == "teambit.react/react" && name == Some("teambit.envs/envs") {
+    if env_id == "teambit.react/react"
+        && crate::commands::update_cmd::matches_aspect(extension, "teambit.envs/envs")
+    {
         let env = config["env"].as_str().map(bit_install::config::aspect_id_without_version);
         return config
             .as_object()

@@ -85,28 +85,43 @@ impl Prepared {
 }
 
 pub(in super::super) fn present(bitmap: &Value, scope: &str, name: &str) -> bool {
+    let full = format!("{scope}/{name}");
     bitmap
         .as_object()
         .is_some_and(|rows| {
-            rows.values()
-                .any(|row| {
-                    row["name"] == name
-                        && (row["scope"] == scope
-                            || (row["scope"] == "" && row["defaultScope"] == scope))
-                })
+            rows.iter().any(|(key, row)| row_matches_present(key, row, scope, name, &full))
         })
+}
+
+fn row_matches_present(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
+    if matches!(key, "$schema-version" | "_bit_lane")
+        || !row.is_object()
+        || row["isAvailableOnCurrentLane"] == false
+    {
+        return false;
+    }
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let name_matches = row["name"] == name || key_id == name || key_id == full;
+    let scope_matches = row["scope"] == scope
+        || (row["scope"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty()
+            && (row["defaultScope"] == scope || key_id == full));
+    name_matches && scope_matches
 }
 
 fn updates(bitmap: &Value, promotions: &[(String, String)]) -> Vec<String> {
     promotions
         .iter()
         .filter(|(scope, name)| {
+            let full = format!("{scope}/{name}");
             bitmap
                 .as_object()
                 .is_some_and(|rows| {
-                    rows.values()
-                        .any(|row| {
-                            row["name"] == *name
+                    rows.iter()
+                        .any(|(key, row)| {
+                            row_matches_present(key, row, scope, name, &full)
                                 && row["scope"] == ""
                                 && row["defaultScope"] == *scope
                         })

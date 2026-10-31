@@ -121,7 +121,7 @@ fn non_loaded_workspace_env<'a>(
     reader: &EnvJsoncReader<'_>,
     component: &'a WorkspaceComponent,
 ) -> Option<&'a str> {
-    if component.env_id != "teambit.harmony/node" {
+    if bit_install::policy::split_version(&component.env_id).0 != "teambit.harmony/node" {
         return None;
     }
     component.config
@@ -169,7 +169,9 @@ fn own_policy(
     host: &Host,
     aspects: &[String],
 ) -> io::Result<Value> {
-    if !component.is_env && component.env_id != "teambit.envs/env" {
+    if !component.is_env
+        && bit_install::policy::split_version(&component.env_id).0 != "teambit.envs/env"
+    {
         return Ok(json!({}));
     }
     let policy = if let Some(manifest) = reader.resolved(&component.id.to_string_without_version())?

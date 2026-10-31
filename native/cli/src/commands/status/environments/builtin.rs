@@ -18,7 +18,7 @@ pub(super) fn supported(
     aspects: &[String],
 ) -> bool {
     !component.is_env
-        && component.env_id == "teambit.react/react"
+        && bit_install::policy::split_version(&component.env_id).0 == "teambit.react/react"
         && aspects.is_empty()
         && component.config
             .keys()

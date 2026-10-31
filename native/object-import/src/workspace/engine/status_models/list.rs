@@ -239,7 +239,7 @@ pub(super) fn remote_for_lane(
 
 fn read_bare_index(root: &Path) -> io::Result<Value> {
     let index = read_json_file(&root.join("index.json"))?;
-    if !index["lanes"].is_array() || !index["components"].is_array() {
+    if !index.is_array() && (!index["lanes"].is_array() || !index["components"].is_array()) {
         return Err(invalid("list remote index"));
     }
     Ok(index)
@@ -255,7 +255,10 @@ pub(super) fn read_json_file(path: &Path) -> io::Result<Value> {
 fn fully_merged(reader: &Reader<'_>, index: &Value, lane: &Value) -> io::Result<bool> {
     let components =
         lane["components"].as_array().ok_or_else(|| invalid("list lane components"))?;
-    let indexed = index["components"].as_array().ok_or_else(|| invalid("list component index"))?;
+    let indexed = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("list component index"))?;
     for component in components {
         let id = &component["id"];
         let Some(model_row) = indexed

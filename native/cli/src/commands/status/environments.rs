@@ -274,7 +274,9 @@ fn stored_env(context: &Value, target: &Value) -> String {
         .and_then(|extensions| {
             extensions
                 .iter()
-                .find(|extension| extension["name"] == "teambit.envs/envs")
+                .find(|extension| {
+                    crate::commands::update_cmd::matches_aspect(extension, "teambit.envs/envs")
+                })
         })
         .and_then(|env| env["data"]["id"].as_str())
         .unwrap_or("teambit.harmony/node")
@@ -378,13 +380,14 @@ fn root_aspects(context: &Value, core: &[String]) -> Vec<String> {
 
 fn needs_facts(component: &WorkspaceComponent, core: &[String], aspects: &[String]) -> bool {
     component.is_env
-        || component.env_id != "teambit.harmony/node"
+        || bit_install::policy::split_version(&component.env_id).0 != "teambit.harmony/node"
         || !aspects.is_empty()
         || component.config
             .keys()
             .any(|id| {
-                !core.contains(id)
-                    || bit_install::policy::is_core_env(id) && id != "teambit.harmony/node"
+                let bare = bit_install::policy::split_version(id).0;
+                !(core.contains(id) || core.iter().any(|item| item == bare))
+                    || bit_install::policy::is_core_env(id) && bare != "teambit.harmony/node"
             })
 }
 
