@@ -84,9 +84,13 @@ impl Planned {
             if current.is_empty() {
                 continue;
             }
-            ids.push(current.to_owned());
-            let identity =
-                current.rsplit_once('@').map_or(current, |(identity, _)| identity.trim());
+            if !ids
+                .iter()
+                .any(|existing| existing == current)
+            {
+                ids.push(current.to_owned());
+            }
+            let identity = bit_install::config::aspect_id_without_version(current).trim();
             let incoming = targets
                 .into_iter()
                 .flatten()
@@ -95,7 +99,10 @@ impl Planned {
                 .filter(|head| !head.is_empty());
             if let Some(head) = incoming {
                 let incoming = format!("{identity}@{head}");
-                if incoming != current {
+                if !ids
+                    .iter()
+                    .any(|existing| existing == &incoming)
+                {
                     ids.push(incoming);
                 }
             }
@@ -270,7 +277,12 @@ fn plan_captured(
     if !prepared.selector_loads.is_empty() {
         plan["progress"]["loads"] = json!(prepared.selector_loads);
     }
-    if plan.get("token").and_then(Value::as_str) != Some(prepared.token.as_str()) {
+    if plan
+        .get("token")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        != Some(prepared.token.trim())
+    {
         return Err(decline("command plan token"));
     }
     Ok(plan)

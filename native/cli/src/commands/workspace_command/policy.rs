@@ -270,7 +270,9 @@ fn completions(
         .zip(captures)
         .map(|((target, input), detected)| {
             let (policy, default_node) = (&input.policy, &input.default_node);
-            if detected.get("identity") != target.get("identity") {
+            if detected["identity"].as_str().map(str::trim)
+                != target["identity"].as_str().map(str::trim)
+            {
                 return Err(decline("command dependency capture order"));
             }
             let mut component =
@@ -297,7 +299,7 @@ fn validate(completed: &Value, projected: &[Value], rows: &[Value]) -> io::Resul
             .filter(|target| {
                 rows.iter()
                     .any(|row| {
-                        row.get("identity") == target.get("identity")
+                        has_identity(row, target["identity"].as_str().map_or("", str::trim))
                             && !truthy(row.get("fastForward"))
                     })
             })
@@ -305,19 +307,21 @@ fn validate(completed: &Value, projected: &[Value], rows: &[Value]) -> io::Resul
     } else {
         projected.iter().collect()
     };
-    let caches = completed.get("dependencyCaches").and_then(Value::as_array);
-    let caches = caches.filter(|caches| caches.len() == cache_targets.len());
-    let caches = caches.ok_or_else(|| decline("command dependency cache receipt"))?;
+    let caches = completed["dependencyCaches"]
+        .as_array()
+        .filter(|caches| caches.len() == cache_targets.len())
+        .ok_or_else(|| decline("command dependency cache receipt"))?;
     for (cache, target) in caches.iter().zip(&cache_targets) {
-        if cache.get("identity").and_then(Value::as_str) != Some(versioned(target).as_str()) {
+        if cache["identity"].as_str().map(str::trim) != Some(versioned(target).as_str()) {
             return Err(decline("command dependency cache receipt"));
         }
     }
-    let issues = completed.get("issueTargets").and_then(Value::as_array);
-    let issues = issues.filter(|issues| issues.len() == projected.len());
-    let issues = issues.ok_or_else(|| decline("command issue target receipt"))?;
+    let issues = completed["issueTargets"]
+        .as_array()
+        .filter(|issues| issues.len() == projected.len())
+        .ok_or_else(|| decline("command issue target receipt"))?;
     for (component, target) in issues.iter().zip(projected) {
-        let valid = component.get("identity").and_then(Value::as_str)
+        let valid = component["identity"].as_str().map(str::trim)
             == Some(versioned(target).as_str())
             && component.get("packageName").is_some_and(Value::is_string)
             && component["dependencies"]

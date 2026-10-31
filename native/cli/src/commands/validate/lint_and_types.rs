@@ -107,7 +107,12 @@ fn check_component_types(
 }
 
 fn is_ts_source(rel_file: &str) -> bool {
-    !rel_file.ends_with(".d.ts") && (rel_file.ends_with(".ts") || rel_file.ends_with(".tsx"))
+    ![".d.ts", ".d.mts", ".d.cts"]
+        .iter()
+        .any(|ext| rel_file.ends_with(ext))
+        && [".ts", ".tsx", ".mts", ".cts"]
+            .iter()
+            .any(|ext| rel_file.ends_with(ext))
 }
 
 pub(super) fn check_ts_content(content: &str) -> Vec<String> {
@@ -137,6 +142,9 @@ fn check_line_type_mismatch(line: &str) -> Option<&'static str> {
     let eq_idx = find_assign_eq(line)?;
     let lhs = line[..eq_idx].trim();
     let rhs = line[eq_idx + 1..]
+        .split("//")
+        .next()
+        .unwrap_or_default()
         .trim()
         .trim_end_matches(';')
         .trim();
@@ -239,11 +247,12 @@ fn lint_component_files(comp: &WorkspaceComponent, total_errors: &mut usize) -> 
 }
 
 fn is_lintable_source(rel_file: &str) -> bool {
-    !rel_file.ends_with(".d.ts")
-        && (rel_file.ends_with(".js")
-            || rel_file.ends_with(".jsx")
-            || rel_file.ends_with(".ts")
-            || rel_file.ends_with(".tsx"))
+    ![".d.ts", ".d.mts", ".d.cts"]
+        .iter()
+        .any(|ext| rel_file.ends_with(ext))
+        && [".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"]
+            .iter()
+            .any(|ext| rel_file.ends_with(ext))
 }
 
 pub(super) fn lint_source_content(content: &str) -> Vec<String> {

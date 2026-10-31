@@ -27,6 +27,8 @@ pub(super) fn deferred(request: &Request<'_>) -> bool {
         && request.options.get("lane").is_none()
         && request.options["pattern"]
             .as_str()
+            .map(str::trim)
+            .filter(|pattern| !pattern.is_empty())
             .is_some_and(|pattern| {
                 !pattern
                     .chars()
@@ -190,22 +192,23 @@ fn source_proofs(root: &Path, capture: &Capture) -> io::Result<Vec<Value>> {
     capture.captured
         .iter()
         .flat_map(|component| {
-            let directory = root.join(
-                component["directory"]
-                    .as_str()
-                    .or_else(|| component["rootDir"].as_str())
-                    .map_or("", str::trim),
-            );
+            let dir = [component["directory"].as_str(), component["rootDir"].as_str()]
+                .into_iter()
+                .flatten()
+                .map(str::trim)
+                .find(|val| !val.is_empty())
+                .unwrap_or("");
+            let directory = root.join(dir);
             component["files"]
                 .as_array()
                 .into_iter()
                 .flatten()
                 .filter_map(|file| {
-                    file.as_str()
-                        .or_else(|| file["relativePath"].as_str())
-                        .or_else(|| file["path"].as_str())
+                    [file.as_str(), file["relativePath"].as_str(), file["path"].as_str()]
+                        .into_iter()
+                        .flatten()
                         .map(str::trim)
-                        .filter(|path| !path.is_empty())
+                        .find(|path| !path.is_empty())
                 })
                 .map(move |file| directory.join(file))
         })

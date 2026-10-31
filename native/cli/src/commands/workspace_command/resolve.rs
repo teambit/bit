@@ -285,7 +285,11 @@ impl<'r> Session<'r> {
             context["targets"]
                 .as_array_mut()
                 .ok_or_else(|| decline("tag targets"))?
-                .retain(|target| ids.contains(&target["identity"]));
+                .retain(|target| {
+                    let target_id = target["identity"].as_str().map(str::trim);
+                    ids.iter()
+                        .any(|id| id.as_str().map(str::trim) == target_id)
+                });
         }
         let (selected, loading) = tag::selections_with_state(
             &mut self.engine,
@@ -316,7 +320,7 @@ impl<'r> Session<'r> {
         self.selector_loads.extend(loading);
         selected
             .iter()
-            .map(|target| text(target.get("identity")).map(str::to_owned))
+            .map(|target| text(target.get("identity")).map(|id| id.trim().to_owned()))
             .collect::<io::Result<Vec<_>>>()
             .map(Some)
     }

@@ -74,11 +74,12 @@ fn tag(params: &mut Value, options: &Value) {
     for field in
         ["exactVersion", "releaseType", "autoTagReleaseType", "preReleaseId", "incrementBy"]
     {
-        if !options[field].is_null()
-            && options[field]
-                .as_str()
-                .is_none_or(|val| !val.trim().is_empty())
-        {
+        if let Some(val) = options[field].as_str() {
+            let trimmed = val.trim();
+            if !trimmed.is_empty() {
+                params[field] = json!(trimmed);
+            }
+        } else if !options[field].is_null() {
             params[field] = options[field].clone();
         }
     }

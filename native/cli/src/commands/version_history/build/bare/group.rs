@@ -26,6 +26,10 @@ fn has_etc_group_proof(proofs: &[(PathBuf, Vec<u8>)]) -> bool {
 #[cfg(unix)]
 pub(super) fn resolve(name: &str) -> Option<(PathBuf, Vec<u8>)> {
     let path = PathBuf::from("/etc/group");
+    let meta = fs::metadata(&path).ok()?;
+    if !meta.is_file() || meta.len() > 1024 * 1024 {
+        return None;
+    }
     let bytes = fs::read(&path).ok()?;
     if bytes.len() > 1024 * 1024 {
         return None;
@@ -63,7 +67,7 @@ pub(super) fn safe_parents(root: &Path, object: &Path) -> Option<bool> {
 #[cfg(unix)]
 fn parse_group_gid(bytes: &[u8], name: &str) -> Option<u32> {
     let name = name.trim();
-    if name.is_empty() {
+    if name.is_empty() || name.contains(':') {
         return None;
     }
     let contents = std::str::from_utf8(bytes).ok()?;

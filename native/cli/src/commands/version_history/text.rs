@@ -21,9 +21,15 @@ pub(super) fn run(
     let Some(report) = prepare(root, id, short, chalk) else {
         let scope_dir = scope_dir_for(root);
         let bare = id.rsplit_once('@').map_or(id, |(name, _)| name.trim());
+        let is_ci = env::var_os("CI")
+            .is_some_and(|val| {
+                let trimmed = val.to_string_lossy();
+                let trimmed = trimmed.trim();
+                !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+            });
         if bare.contains('/')
             && resolve_component_entry(&scope_dir, bare).is_none()
-            && env::var_os("CI").is_none_or(|val| val.is_empty())
+            && !is_ci
             && let Some(err) = diagnose_component_lookup_error(&scope_dir, id, bare, chalk)
         {
             return emit_failure(root, args, "show", true, false, err);
@@ -84,8 +90,8 @@ fn format_row(
     pointers.extend(
         lanes
             .iter()
-            .filter(|(_, head)| head == hash)
-            .map(|(name, _)| name.as_str()),
+            .filter(|(_, head)| head.trim() == hash)
+            .map(|(name, _)| name.trim()),
     );
     if model["head"].as_str().map(str::trim) == Some(hash) {
         pointers.push("main");
@@ -125,7 +131,10 @@ pub(in crate::commands) fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a 
             .rev()
             .find(|(_, value)| value.as_str().map(str::trim) == Some(hash))
         {
-            return Some(tag.as_str());
+            let trimmed = tag.trim();
+            if !trimmed.is_empty() {
+                return Some(trimmed);
+            }
         }
     }
     None

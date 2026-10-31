@@ -75,25 +75,38 @@ impl Progress {
 }
 
 fn render_rows(rows: &[Import], output: &Output, wildcard: bool, on_lane: bool) {
-    let requested = rows.iter().find(|row| latest_request(row));
+    let mut requested = rows.iter().find(|row| latest_request(row));
     for row in rows {
-        if dependency_request(row) {
-            let fallback = requested
-                .unwrap_or(row)
-                .ids
-                .iter()
-                .filter(|id| !id.trim().is_empty())
-                .count() as u64;
-            output.status(&format!(
-                "import {} components with their dependencies (if missing)",
-                row.requested.unwrap_or(fallback),
-            ));
-            if row.components == 0 && !((wildcard || on_lane) && row.objects > 0) {
-                continue;
-            }
+        if latest_request(row) {
+            requested = Some(row);
+        }
+        if dependency_request(row)
+            && !announce_dependency(row, requested, output, wildcard, on_lane)
+        {
+            continue;
         }
         render_import(output, row);
     }
+}
+
+fn announce_dependency(
+    row: &Import,
+    requested: Option<&Import>,
+    output: &Output,
+    wildcard: bool,
+    on_lane: bool,
+) -> bool {
+    let fallback = requested
+        .unwrap_or(row)
+        .ids
+        .iter()
+        .filter(|id| !id.trim().is_empty())
+        .count() as u64;
+    output.status(&format!(
+        "import {} components with their dependencies (if missing)",
+        row.requested.unwrap_or(fallback),
+    ));
+    row.components > 0 || ((wildcard || on_lane) && row.objects > 0)
 }
 
 fn render_group(rows: &[Import], output: &Output, main: bool, started: Instant) {

@@ -33,12 +33,8 @@ impl Loaded {
             .zip(&self.counts)
             .zip(&self.progress.identities)
             .map(|((id, count), identity)| {
-                let identity = identity.trim();
-                let identity = identity
-                    .split('@')
-                    .next()
-                    .unwrap_or(identity)
-                    .trim();
+                let identity =
+                    bit_install::config::aspect_id_without_version(identity.trim()).trim();
                 let captured = self.capture.captured
                     .iter()
                     .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
@@ -150,31 +146,34 @@ impl Loaded {
         let identity = entry.id.to_string_without_version();
         let row = self.capture.captured
             .iter()
-            .find(|row| row["identity"] == identity)
+            .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.as_str()))
             .ok_or_else(|| invalid("component service capture"))?;
         let files = row["files"].as_array().ok_or_else(|| invalid("component service files"))?;
         self.counts.push(files.len());
         for file in files {
-            let relative = file.as_str().ok_or_else(|| invalid("component service filename"))?;
-            let path = root.join(&entry.root_dir).join(relative);
+            let relative = file
+                .as_str()
+                .ok_or_else(|| invalid("component service filename"))?
+                .trim();
+            let path = root.join(entry.root_dir.trim()).join(relative);
             let source = fs::read_to_string(&path)?;
             self.files.push(json!({"filePath":relative,"absolutePath":path,"source":source}));
         }
-        let mut legacy = json!({"scope":entry.id.scope,"name":entry.id.name});
-        legacy["version"] = json!(entry.id.version.as_deref().unwrap_or("latest"));
-        let mut id = json!({"_legacy":legacy});
-        id["_scope"] = json!(
-            entry.id.scope
-                .as_ref()
-                .or(entry.id.default_scope.as_ref())
-                .ok_or_else(|| invalid("component service component scope"))?
-        );
-        self.ids.push(id);
-        self.progress.identities.push(
-            entry.id.version
-                .as_ref()
-                .map_or_else(|| identity.clone(), |version| format!("{identity}@{version}")),
-        );
+        let ver = entry.id.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty());
+        let version = ver.unwrap_or("latest");
+        let scope = entry.id.scope
+            .as_ref()
+            .or(entry.id.default_scope.as_ref())
+            .ok_or_else(|| invalid("component service component scope"))?;
+        let legacy = json!({"scope":entry.id.scope,"name":entry.id.name,"version":version});
+        self.ids.push(json!({"_legacy":legacy,"_scope":scope}));
+        self.progress.identities.push(ver.map_or_else(
+            || identity.clone(),
+            |ver| format!("{identity}@{ver}"),
+        ));
         Ok(())
     }
     pub(in crate::commands) fn result(&self, files: &[Value]) -> io::Result<Value> {
@@ -254,10 +253,16 @@ fn changed(
     Ok(targets
         .into_iter()
         .filter(|target| {
-            target["version"].as_str().is_none_or(str::is_empty)
+            let target_id = target["identity"].as_str().map(str::trim);
+            target["version"]
+                .as_str()
+                .is_none_or(|ver| ver.trim().is_empty())
                 || rows
                     .iter()
-                    .any(|row| row["identity"] == target["identity"] && row["modified"] == true)
+                    .any(|row| {
+                        row["identity"].as_str().map(str::trim) == target_id
+                            && row["modified"] == true
+                    })
         })
         .collect())
 }

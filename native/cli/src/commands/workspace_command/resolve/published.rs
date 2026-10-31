@@ -87,7 +87,7 @@ fn candidate(
     }
     let material = array(plan.get("tagRegistryVersions"), "registry native versions")?
         .iter()
-        .find(|row| row["identity"] == identity)
+        .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
         .ok_or_else(|| decline("registry native component absent"))?;
     let config = material["extensions"]
         .as_array()
@@ -114,12 +114,15 @@ fn package_name(
 ) -> io::Result<String> {
     if let Some(target) = array(session.context.get("targets"), "registry targets")?
         .iter()
-        .find(|target| target["identity"] == identity)
+        .find(|target| target["identity"].as_str().map(str::trim) == Some(identity))
     {
         return policy::status_policy(&session.context, target).map(|policy| policy.package_name);
     }
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| decline("registry component identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| decline("registry component identity"))?;
     let id = bit_install::model::ComponentId {
         scope: Some(scope.to_string()),
         name: name.to_string(),
@@ -129,7 +132,7 @@ fn package_name(
     let aspects = serde_json::Map::from_iter([("teambit.pkg/pkg".to_string(), config.clone())]);
     Ok(bit_install::workspace::component_package_name(
         &id,
-        material["bindingPrefix"].as_str(),
+        material["bindingPrefix"].as_str().map(str::trim),
         &aspects,
     ))
 }
@@ -139,17 +142,17 @@ fn explicit(session: &Session<'_>, identity: &str, selections: Option<&Value>) -
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
-        .filter(|row| row["identity"] == identity)
+        .filter(|row| row["identity"].as_str().map(str::trim) == Some(identity))
         .filter_map(|row| row["version"].as_str());
     let pending = session.context["targets"]
         .as_array()
         .into_iter()
         .flatten()
-        .filter(|target| target["identity"] == identity)
+        .filter(|target| target["identity"].as_str().map(str::trim) == Some(identity))
         .filter_map(|target| target["nextVersion"]["version"].as_str());
     entered
         .chain(pending)
-        .any(|version| node_semver::npm::valid(version).is_some())
+        .any(|version| node_semver::npm::valid(version.trim()).is_some())
 }
 
 fn registry(config: &Value) -> Option<String> {
@@ -242,12 +245,12 @@ fn report(candidates: &[Value], versions: &HashMap<String, String>) -> String {
     let items = candidates
         .iter()
         .filter_map(|candidate| {
-            let identity = candidate["id"].as_str()?;
+            let identity = candidate["id"].as_str()?.trim();
             let version = versions.get(identity)?;
             Some(formatter.item(&format!(
                 "{}: {} is taken, tagging {version}",
-                candidate["packageName"].as_str()?,
-                candidate["version"].as_str()?,
+                candidate["packageName"].as_str()?.trim(),
+                candidate["version"].as_str()?.trim(),
             )))
         })
         .collect::<Vec<_>>();

@@ -13,28 +13,35 @@ use std::{
     fs, io,
 };
 
+pub(super) fn has_bool_flag(args: &[OsString], bare: &str, truthy: &str, falsy: &str) -> bool {
+    args.iter()
+        .take_while(|arg| arg.to_str().map(str::trim) != Some("--"))
+        .fold(false, |acc, arg| {
+            let trimmed = arg.to_str().map(str::trim);
+            if trimmed == Some(bare) || trimmed == Some(truthy) {
+                true
+            } else if trimmed == Some(falsy) {
+                false
+            } else {
+                acc
+            }
+        })
+}
+
 pub(super) fn run(
     root: &ScopeRoot,
     args: &[OsString],
     id: &str,
     from: Option<&str>,
 ) -> io::Result<Outcome> {
-    let delete_existing = args
-        .iter()
-        .any(|arg| {
-            matches!(
-                arg.to_str().map(str::trim),
-                Some("--delete-existing" | "--delete-existing=true"),
-            )
-        });
-    let from_all_lanes = args
-        .iter()
-        .any(|arg| {
-            matches!(
-                arg.to_str().map(str::trim),
-                Some("--from-all-lanes" | "--from-all-lanes=true"),
-            )
-        });
+    let delete_existing = has_bool_flag(
+        args,
+        "--delete-existing",
+        "--delete-existing=true",
+        "--delete-existing=false",
+    );
+    let from_all_lanes =
+        has_bool_flag(args, "--from-all-lanes", "--from-all-lanes=true", "--from-all-lanes=false");
     if root.bare
         && let Some(plan) = bare::prepare(root, id, from, from_all_lanes, delete_existing)
     {
@@ -210,6 +217,7 @@ pub(super) fn supported_startup(root: &ScopeRoot, scope: &std::path::Path) -> Op
 }
 
 fn complete(history: &Value, head: &str) -> Option<bool> {
+    let head = head.trim();
     let rows = history["versions"].as_array()?;
     if rows.len() > 10000 {
         return None;
@@ -219,7 +227,7 @@ fn complete(history: &Value, head: &str) -> Option<bool> {
         .as_array()
         .is_some_and(|refs| {
             refs.iter()
-                .any(|value| value.as_str() == Some(head))
+                .any(|value| value.as_str().map(str::trim) == Some(head))
         })
     {
         return Some(true);
@@ -232,7 +240,7 @@ fn complete(history: &Value, head: &str) -> Option<bool> {
         }
         let Some(parents) = by_hash.get(hash) else { return Some(false) };
         for parent in *parents {
-            pending.push(parent.as_str()?);
+            pending.push(parent.as_str()?.trim());
         }
     }
     Some(true)
@@ -241,9 +249,11 @@ fn complete(history: &Value, head: &str) -> Option<bool> {
 fn parent_index(rows: &[Value]) -> Option<HashMap<&str, &Vec<Value>>> {
     let mut by_hash = HashMap::new();
     for row in rows {
-        if by_hash
-            .insert(row["hash"].as_str()?, row["parents"].as_array()?)
-            .is_some()
+        let hash = row["hash"].as_str()?.trim();
+        if hash.is_empty()
+            || by_hash
+                .insert(hash, row["parents"].as_array()?)
+                .is_some()
         {
             return None;
         }

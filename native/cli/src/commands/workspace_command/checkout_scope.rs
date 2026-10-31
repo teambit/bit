@@ -25,6 +25,7 @@ pub(super) fn candidates(
 fn default_workspace_scope(workspace: &Value) -> Option<&str> {
     crate::commands::update_cmd::aspect_entry(workspace, "teambit.workspace/workspace")
         .and_then(|(_, config)| config["defaultScope"].as_str())
+        .or_else(|| workspace["defaultScope"].as_str())
         .map(str::trim)
         .filter(|scope| !scope.is_empty())
 }
@@ -46,12 +47,13 @@ fn list(engine: &mut Engine, root: &Path, scope: &str) -> io::Result<Vec<Value>>
         .and_then(|entry| entry.get("components"));
     Ok(array(first, "checkout scope components")?
         .iter()
-        .map(|component| component["id"].clone())
-        .filter(|id| {
-            !id.is_null()
-                && id
-                    .as_str()
-                    .is_none_or(|text| !text.trim().is_empty())
+        .filter_map(|component| match &component["id"] {
+            Value::Null => None,
+            Value::String(text) => {
+                let trimmed = text.trim();
+                (!trimmed.is_empty()).then(|| Value::String(trimmed.to_owned()))
+            }
+            other => Some(other.clone()),
         })
         .collect())
 }

@@ -167,7 +167,7 @@ fn version_parents(
     }
     let parents: Vec<String> = parents
         .iter()
-        .map(|parent| Some(parent.as_str()?.to_owned()))
+        .map(|parent| Some(parent.as_str()?.trim().to_owned()))
         .collect::<Option<_>>()?;
     let mut row = json!({"hash":hash,"parents":parents});
     for (field, key) in [("unrelated", "head"), ("squashed", "previousParents")] {
@@ -293,14 +293,12 @@ impl Plan {
 
     pub fn run(mut self, root: &ScopeRoot, args: &[OsString]) -> io::Result<Outcome> {
         let chalk = Chalk::detect(args);
-        let delete_existing = args
-            .iter()
-            .any(|arg| {
-                matches!(
-                    arg.to_str().map(str::trim),
-                    Some("--delete-existing" | "--delete-existing=true"),
-                )
-            });
+        let delete_existing = super::has_bool_flag(
+            args,
+            "--delete-existing",
+            "--delete-existing=true",
+            "--delete-existing=false",
+        );
         workspace_command::execute_then_scope(&root.path, args, "build", |_| {
             if delete_existing {
                 trash::move_history(&mut self, &root.path)

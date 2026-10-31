@@ -143,10 +143,11 @@ fn collect_comp_json(
     local_pkgs: &HashSet<String>,
     out: &mut Vec<Candidate>,
 ) {
-    if entry.root_dir.is_empty() {
+    let root_dir = entry.root_dir.trim();
+    if root_dir.is_empty() {
         return;
     }
-    let path = root.join(&entry.root_dir).join("component.json");
+    let path = root.join(root_dir).join("component.json");
     let Ok(bytes) = fs::read(&path) else {
         return;
     };
@@ -224,6 +225,7 @@ fn collect_model_deps(
 ) {
     let Some(ver) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
     else {
         return;
@@ -324,10 +326,7 @@ fn serialized_field_and_target(
 fn extract_serialized_comp_id(dep: &Value) -> Option<String> {
     for candidate in [&dep["componentId"], &dep["id"]] {
         if let Some(formatted) = crate::commands::graph_cmd::builder::format_dep_id(candidate) {
-            let bare = formatted
-                .split('@')
-                .next()
-                .unwrap_or(&formatted);
+            let bare = bit_install::config::aspect_id_without_version(formatted.trim()).trim();
             if bare.contains('/') {
                 return Some(bare.to_owned());
             }

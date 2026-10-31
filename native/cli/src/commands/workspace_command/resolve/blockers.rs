@@ -40,8 +40,8 @@ pub(super) fn callbacks(
     let before = crate::commands::status::capture::callback_issue_stdout(resolved.capture).len();
     let automatic = needs_snap
         .iter()
+        .map(|id| id.trim().to_owned())
         .filter(|id| !selected.contains(id))
-        .cloned()
         .collect::<Vec<_>>();
     if !automatic.is_empty() {
         let result = callback_batch(resolved, rows, &automatic, ignored, resolving);
@@ -122,6 +122,7 @@ pub(super) fn validate(rows: &[Value], selected: &[String], ignored: &Value) -> 
         .unwrap_or_default()
         .split(',')
         .map(str::trim)
+        .filter(|name| !name.is_empty())
         .collect::<HashSet<_>>();
     let chalk = Chalk::detect(&std::env::args_os().collect::<Vec<_>>());
     let mut components = Vec::new();

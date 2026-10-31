@@ -264,14 +264,18 @@ fn pick_best_version(versions: &[String], wanted: &str) -> Option<node_semver::V
 fn compute_latest_range(cand: &Candidate, latest_ver: &str, save_prefix: Option<&str>) -> String {
     let uses_save_prefix =
         matches!(cand.target, Target::Bitmap(_) | Target::ModelRoot | Target::ModelBitmap(_));
-    if uses_save_prefix && let Some(prefix) = save_prefix {
+    if uses_save_prefix
+        && let Some(prefix) = save_prefix
+            .map(str::trim)
+            .filter(|pref| !pref.is_empty())
+    {
         return format!("{prefix}{latest_ver}");
     }
     repeat_prefix(&cand.current_range, latest_ver)
 }
 
 fn repeat_prefix(original_spec: &str, new_version: &str) -> String {
-    match original_spec.chars().next() {
+    match original_spec.trim().chars().next() {
         Some('~') => format!("~{new_version}"),
         Some('^') => format!("^{new_version}"),
         _ => new_version.to_owned(),
@@ -315,14 +319,19 @@ fn candidate_from_legacy_dep(
         .unwrap_or(dep);
     let raw_name = inner["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())?;
     let (comp_name, inline_ver) = raw_name
         .rsplit_once('@')
-        .unwrap_or((raw_name, ""));
-    let comp_scope = inner["scope"]
-        .as_str()
-        .filter(|sc| !sc.is_empty())
-        .or(default_scope)?;
+        .map_or((raw_name, ""), |(name, ver)| (name.trim(), ver.trim()));
+    if comp_name.is_empty() {
+        return None;
+    }
+    let comp_scope = [inner["scope"].as_str(), default_scope]
+        .into_iter()
+        .flatten()
+        .map(str::trim)
+        .find(|sc| !sc.is_empty())?;
     let comp_ver = legacy_dep_version(dep, inner, inline_ver)?;
     let comp_id = ComponentId {
         scope: Some(comp_scope.to_owned()),
@@ -331,10 +340,7 @@ fn candidate_from_legacy_dep(
         version: None,
     };
     let pkg_name = default_package_name(&comp_id);
-    if local_pkgs.contains(&pkg_name) || root_names.contains(&pkg_name) {
-        return None;
-    }
-    Some(Candidate {
+    (!local_pkgs.contains(&pkg_name) && !root_names.contains(&pkg_name)).then(|| Candidate {
         name: pkg_name,
         current_range: comp_ver,
         field: target_field.to_owned(),
@@ -352,7 +358,11 @@ fn legacy_dep_version(dep: &Value, inner: &Value, inline_ver: &str) -> Option<St
     ]
     .into_iter()
     .flatten()
+    .map(str::trim)
     .find(|ver| !ver.is_empty())
-    .or_else(|| (!inline_ver.is_empty()).then_some(inline_ver))
+    .or_else(|| {
+        let inline_ver = inline_ver.trim();
+        (!inline_ver.is_empty()).then_some(inline_ver)
+    })
     .map(str::to_owned)
 }

@@ -36,43 +36,42 @@ pub(super) fn check_token(receipt: &Value, token: &str) -> io::Result<()> {
 }
 
 /// The automatic dependents from the resolve plan, with hashes allocated in
-/// the same receipt that the engine commits. This is for the enclosing merge
-/// report; the standalone `merge --resolve` result keeps its Node shape.
+/// the same receipt that the engine commits.
 pub(super) fn auto_snap_report(plan: &Value, receipt: &Value) -> io::Result<Vec<Value>> {
     let versions = array(receipt.get("versions"), "resolve receipt versions")?;
     let hashes = versions
         .iter()
-        .map(|version| Ok((text(version.get("identity"))?, text(version.get("hash"))?)))
+        .map(|ver| Ok((text(ver.get("identity"))?.trim(), text(ver.get("hash"))?.trim())))
         .collect::<io::Result<HashMap<_, _>>>()?;
     if hashes.len() != versions.len() {
         return Err(decline("resolve automatic snap identities"));
     }
     let selected = array(plan["result"].get("resolvedComponents"), "resolved components")?
         .iter()
-        .map(|row| text(row.get("id")))
+        .map(|row| text(row.get("id")).map(str::trim))
         .collect::<io::Result<HashSet<_>>>()?;
     let mut seen = HashSet::new();
     array(plan.get("autoSnapResults"), "resolve automatic snaps")?
         .iter()
         .map(|row| {
-            let identity = text(row.get("id"))?;
-            let hash =
-                hashes.get(identity).ok_or_else(|| decline("resolve automatic snap hash"))?;
+            let identity = text(row.get("id"))?.trim();
+            let hash = hashes
+                .get(identity)
+                .filter(|hash| !hash.is_empty())
+                .ok_or_else(|| decline("resolve automatic snap hash"))?;
             let triggered = array(row.get("triggeredBy"), "resolve automatic triggers")?
                 .iter()
-                .map(|id| text(Some(id)).map(str::to_string))
+                .map(|id| text(Some(id)).map(|text| text.trim().to_string()))
                 .collect::<io::Result<Vec<_>>>()?;
             if identity.is_empty()
                 || selected.contains(identity)
                 || !seen.insert(identity)
                 || triggered.is_empty()
+                || triggered.iter().any(String::is_empty)
             {
                 return Err(decline("resolve automatic snap report"));
             }
-            Ok(json!({
-                "component": { "id": format!("{identity}@{hash}") },
-                "triggeredBy": triggered,
-            }))
+            Ok(json!({"component": {"id": format!("{identity}@{hash}")}, "triggeredBy": triggered}))
         })
         .collect()
 }
@@ -302,7 +301,7 @@ impl Resolved<'_> {
         resolving: bool,
         startup: Option<&mut Startup>,
     ) -> io::Result<()> {
-        if ignored == "*" {
+        if ignored.as_str().map(str::trim) == Some("*") {
             return Ok(());
         }
         let heads = self.context.get("resolveIssueHeads").filter(|heads| heads.is_array());
@@ -357,7 +356,7 @@ impl Resolved<'_> {
 pub(super) fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()> {
     let mut seen = HashSet::new();
     for row in rows {
-        let identity = text(row.get("identity"))?;
+        let identity = text(row.get("identity"))?.trim();
         let (scope, name) = squash_lane_id(&row["laneId"])?;
         let versions = array(receipt.get("versions"), "resolve receipt versions")?;
         if !seen.insert(identity)
@@ -366,7 +365,7 @@ pub(super) fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()>
             || name.is_empty()
             || !versions
                 .iter()
-                .any(|version| version["identity"] == identity)
+                .any(|version| version["identity"].as_str().map(str::trim) == Some(identity))
         {
             return Err(decline("resolve snapshot squash receipt"));
         }
@@ -375,7 +374,7 @@ pub(super) fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()>
         for version in
             receipt["versions"].as_array_mut().ok_or_else(|| decline("resolve receipt versions"))?
         {
-            if version["identity"] == identity {
+            if version["identity"].as_str().map(str::trim) == Some(identity) {
                 version["squashLog"] = log.clone();
             }
         }

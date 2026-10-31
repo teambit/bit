@@ -123,11 +123,15 @@ fn match_by_pattern<'a>(
         ws.active()
             .filter(|(entry, _)| {
                 let no_ver = entry.id.to_string_without_version();
-                let root_dir = entry.root_dir.trim().trim_end_matches('/');
+                let norm_root = inventory::normalize(entry.root_dir.trim());
+                let root_dir = norm_root
+                    .strip_prefix("./")
+                    .unwrap_or(&norm_root)
+                    .trim_end_matches('/');
                 no_ver == pattern
                     || entry.id.name == pattern
                     || entry.key == pattern
-                    || root_dir == dir
+                    || (!root_dir.is_empty() && root_dir == dir)
             })
             .collect(),
     )
@@ -140,6 +144,7 @@ fn is_new_or_modified(
 ) -> Option<bool> {
     let Some(ver) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
     else {
         return Some(true);
@@ -183,8 +188,11 @@ fn has_spec_files(components: &[(&BitmapEntry, &WorkspaceComponent)]) -> bool {
             comp.files
                 .iter()
                 .any(|file| {
-                    let trimmed = file.trim();
-                    trimmed.contains(".spec.") || trimmed.contains(".test.")
+                    let trimmed = inventory::normalize(file.trim());
+                    trimmed.contains(".spec.")
+                        || trimmed.contains(".test.")
+                        || trimmed.starts_with("__tests__/")
+                        || trimmed.contains("/__tests__/")
                 })
         })
 }

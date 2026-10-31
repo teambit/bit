@@ -18,7 +18,8 @@ pub(super) fn lane_heads(
     }
     let mut heads = Vec::new();
     for entry in lanes {
-        let lane = read(root, entry["hash"].as_str()?, "Lane", proofs)?;
+        let hash = entry["hash"].as_str()?.trim();
+        let lane = read(root, hash, "Lane", proofs)?;
         if let Some(head) = lane_head(&lane, scope, name)? {
             heads.push(head);
         }
@@ -27,6 +28,7 @@ pub(super) fn lane_heads(
 }
 
 pub(super) fn lane_head(lane: &Value, scope: &str, name: &str) -> Option<Option<String>> {
+    let (scope, name) = (scope.trim(), name.trim());
     identifier(lane["name"].as_str()?)?;
     identifier(lane["scope"].as_str()?)?;
     if !lane["readmeComponent"].is_null() || !lane["forkedFrom"].is_null() {

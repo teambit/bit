@@ -70,6 +70,15 @@ pub fn execute_failure_scope(
     })
 }
 
+fn ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let trimmed = val.to_string_lossy();
+            let trimmed = trimmed.trim();
+            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+        })
+}
+
 /// Locate the workspace root or emit `ConsumerNotFound` outside a workspace when `CI` is unset.
 pub fn workspace_or_fail(
     args: &[OsString],
@@ -79,7 +88,7 @@ pub fn workspace_or_fail(
     if let Some(root) = crate::workspace::root(&cwd) {
         return Ok(Ok(root));
     }
-    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
+    if ci_active() {
         return Ok(Err(Outcome::Declined("not inside a workspace".into())));
     }
     let msg = match command {
@@ -204,9 +213,9 @@ fn execute_mode_impl(
 /// Bit's loader on stdout: ora draws a spinner on an interactive terminal
 /// and prints plain lines elsewhere; `BIT_DISABLE_SPINNER` turns it off.
 pub(in crate::commands) fn loader_output(chalk: Chalk, quiet: bool) -> Output {
-    let interactive = io::stdout().is_terminal()
-        && env::var("TERM").map_or(true, |term| term != "dumb")
-        && env::var_os("CI").is_none();
+    let ci = ci_active();
+    let interactive =
+        io::stdout().is_terminal() && env::var("TERM").map_or(true, |term| term != "dumb") && !ci;
     let disabled = env::var("BIT_DISABLE_SPINNER")
         .is_ok_and(|value| {
             matches!(
@@ -226,7 +235,6 @@ pub(in crate::commands) fn loader_output(chalk: Chalk, quiet: bool) -> Output {
         let _ = stdout.flush();
     });
     // `logger.setStatusLine` prints nothing while `process.env.CI` is set.
-    let ci = env::var_os("CI").is_some_and(|ci| !ci.is_empty());
     Output::new(chalk.enabled(), interactive, !disabled && !quiet, sink)
         .with_ci(ci)
         .with_console(!quiet && !disabled)

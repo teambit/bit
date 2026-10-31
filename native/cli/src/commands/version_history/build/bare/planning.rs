@@ -45,6 +45,10 @@ pub(super) fn prepare(
 }
 
 fn resolve_target(root: &Path, id: &str) -> Option<Target> {
+    let id = id.trim();
+    if id.is_empty() {
+        return None;
+    }
     if id.contains('*') || id.contains(',') {
         return pattern_target(root, id);
     }
@@ -217,10 +221,10 @@ pub(super) fn merge(
     if !super::existing::valid_rows(&rows)? {
         return None;
     }
-    let head_hash = &ancestors.first()?["hash"];
+    let head_hash = ancestors.first()?["hash"].as_str()?.trim();
     let head_exists = rows
         .iter()
-        .any(|row| &row["hash"] == head_hash);
+        .any(|row| row["hash"].as_str().map(str::trim) == Some(head_hash));
     let count = ancestors.len() - usize::from(head_exists);
     refresh_rows(&mut rows, ancestors);
     Some((rows, count))
@@ -228,9 +232,10 @@ pub(super) fn merge(
 
 fn refresh_rows(rows: &mut Vec<Value>, ancestors: Vec<Value>) {
     for (index, row) in ancestors.into_iter().enumerate() {
+        let row_hash = row["hash"].as_str().map(str::trim);
         if let Some(existing) = rows
             .iter_mut()
-            .find(|existing| existing["hash"] == row["hash"])
+            .find(|existing| existing["hash"].as_str().map(str::trim) == row_hash)
         {
             if index != 0 {
                 *existing = row;

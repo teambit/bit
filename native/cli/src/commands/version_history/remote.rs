@@ -52,27 +52,21 @@ fn payload(args: &[OsString], pattern: &str, from: Option<&str>) -> Value {
         payload["from-snap"] = json!(from);
         payload["fromSnap"] = json!(from);
     }
-    if args
-        .iter()
-        .any(|arg| {
-            matches!(
-                arg.to_str().map(str::trim),
-                Some("--from-all-lanes" | "--from-all-lanes=true"),
-            )
-        })
-    {
+    if build::has_bool_flag(
+        args,
+        "--from-all-lanes",
+        "--from-all-lanes=true",
+        "--from-all-lanes=false",
+    ) {
         payload["from-all-lanes"] = json!(true);
         payload["fromAllLanes"] = json!(true);
     }
-    if args
-        .iter()
-        .any(|arg| {
-            matches!(
-                arg.to_str().map(str::trim),
-                Some("--delete-existing" | "--delete-existing=true"),
-            )
-        })
-    {
+    if build::has_bool_flag(
+        args,
+        "--delete-existing",
+        "--delete-existing=true",
+        "--delete-existing=false",
+    ) {
         payload["delete-existing"] = json!(true);
         payload["deleteExisting"] = json!(true);
     }
@@ -133,15 +127,13 @@ fn render(value: &Value, chalk: Chalk) -> io::Result<String> {
     let mut lines = Vec::new();
     for (id, result) in results {
         let message = if !result["err"].is_null() {
-            format!(
-                "{} failed: {}",
-                formatter.error_symbol(),
-                result["err"]["message"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|msg| !msg.is_empty())
-                    .unwrap_or("undefined"),
-            )
+            let err_msg = [result["err"]["message"].as_str(), result["err"].as_str()]
+                .into_iter()
+                .flatten()
+                .map(str::trim)
+                .find(|msg| !msg.is_empty())
+                .unwrap_or("undefined");
+            format!("{} failed: {err_msg}", formatter.error_symbol())
         } else if let Some(added) = result["added"].as_array() {
             format!("added {} hashes", added.len())
         } else {

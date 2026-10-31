@@ -42,10 +42,15 @@ fn refs(value: &Value) -> Option<Vec<&str>> {
     }
     refs.iter()
         .map(|entry| {
-            let text = entry
-                .as_str()
-                .or_else(|| entry.get("hash").and_then(Value::as_str))
-                .or_else(|| entry.get("id").and_then(Value::as_str))?;
+            let text = [
+                entry.as_str(),
+                entry.get("hash").and_then(Value::as_str),
+                entry.get("id").and_then(Value::as_str),
+            ]
+            .into_iter()
+            .flatten()
+            .map(str::trim)
+            .find(|val| !val.is_empty())?;
             valid_hash(text)
         })
         .collect()

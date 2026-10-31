@@ -39,7 +39,17 @@ fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .map(str::trim)
         .filter(|arg| {
             !arg.is_empty()
-                && !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false")
+                && !matches!(
+                    *arg,
+                    "--no-color"
+                        | "--no-color=true"
+                        | "--no-color=false"
+                        | "--color"
+                        | "--color=true"
+                        | "--color=false"
+                        | "--color=always"
+                        | "--color=never",
+                )
         })
         .collect::<Vec<_>>();
     match filtered.as_slice() {
@@ -174,8 +184,17 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+fn is_ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let trimmed = val.to_string_lossy();
+            let trimmed = trimmed.trim();
+            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+        })
+}
+
 fn run_without_scope(args: &[OsString], subcommand: &Subcommand) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if is_ci_active() {
         return Ok(Outcome::Declined("version-history requires a scope".into()));
     }
     let cwd = env::current_dir()?;
@@ -212,9 +231,10 @@ fn run_without_scope(args: &[OsString], subcommand: &Subcommand) -> io::Result<O
 
 fn run_show_json(root: &ScopeRoot, args: &[OsString], id: &str) -> io::Result<Outcome> {
     let scope_dir = scope_dir_for(root);
-    let (bare_id, _) = id.rsplit_once('@').unwrap_or((id, ""));
+    let id = id.trim();
+    let bare_id = id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim());
     let Some((Some(scope), name, _)) = resolve_component_entry(&scope_dir, bare_id) else {
-        if env::var_os("CI").is_none_or(|val| val.is_empty())
+        if !is_ci_active()
             && let Some(err) =
                 diagnose_component_lookup_error(&scope_dir, id, bare_id, Chalk::detect(args))
         {

@@ -25,15 +25,19 @@ pub(super) fn bootstrap(
         return Ok(None);
     };
     preflight(root, home, request, preview)?;
-    let pattern = request.options["pattern"]
+    let pattern = non_stateful_pattern(request);
+    let (_, environments) =
+        environments::read_context(engine, root, home, false, pattern, startup)?;
+    Ok(Some(environments.for_checkout()))
+}
+
+fn non_stateful_pattern<'a>(request: &'a super::Request<'_>) -> Option<&'a str> {
+    request.options["pattern"]
         .as_str()
         .map(str::trim)
         .filter(|pattern| {
             !pattern.is_empty() && !crate::commands::diff::selection::stateful(pattern)
-        });
-    let (_, environments) =
-        environments::read_context(engine, root, home, false, pattern, startup)?;
-    Ok(Some(environments.for_checkout()))
+        })
 }
 
 fn preflight(
@@ -68,12 +72,7 @@ pub(in crate::commands) fn bootstrap_inherited(
     let home = super::home();
     preflight(root, &home, request, preview)?;
     let mut engine = Engine::new()?;
-    let pattern = request.options["pattern"]
-        .as_str()
-        .map(str::trim)
-        .filter(|pattern| {
-            !pattern.is_empty() && !crate::commands::diff::selection::stateful(pattern)
-        });
+    let pattern = non_stateful_pattern(request);
     let (_, environment) = environments::read_inherited_context(
         &mut engine,
         root,
@@ -94,14 +93,19 @@ pub(in crate::commands) fn retain(startup: Option<&mut Startup>, capture: &captu
 
 /// Provider output precedes `CommandRunner`; component onLoad output follows its status line.
 pub(in crate::commands) fn before(startup: &Startup) -> io::Result<()> {
+    if startup.stdout.is_empty() {
+        return Ok(());
+    }
     let mut stdout = io::stdout().lock();
     stdout.write_all(startup.stdout.as_bytes())?;
     stdout.flush()
 }
 
 pub(in crate::commands) fn loaded(startup: &Startup) {
-    print!("{}", startup.build_stdout);
-    let _ = io::stdout().flush();
+    if !startup.build_stdout.is_empty() {
+        print!("{}", startup.build_stdout);
+        let _ = io::stdout().flush();
+    }
 }
 
 pub(in crate::commands) fn failure(

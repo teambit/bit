@@ -18,7 +18,7 @@ impl Summary<'_> {
             .count();
         let errors = rows
             .iter()
-            .filter(|row| row["failed"] == 0 && row["hasError"] == true)
+            .filter(|row| row["failed"].as_u64().unwrap_or(0) == 0 && row["hasError"] == true)
             .count();
         (failed, errors)
     }
@@ -130,12 +130,9 @@ pub(super) fn format_report(
     let summary = format_summary(value, code, elapsed_ms, chalk);
     let flags: Vec<_> = args
         .iter()
-        .take_while(|arg| *arg != "--")
+        .take_while(|arg| arg.to_str().map(str::trim) != Some("--"))
         .collect();
-    if flags
-        .iter()
-        .any(|arg| matches!(arg.to_str().map(str::trim), Some("--summary" | "--summary=true")))
-    {
+    if bool_flag(&flags, "--summary", "--summary=true", "--summary=false") {
         return summary;
     }
     let mut sections = Vec::new();
@@ -143,13 +140,26 @@ pub(super) fn format_report(
     no_tests_section(
         value,
         chalk,
-        flags
-            .iter()
-            .any(|arg| matches!(arg.to_str().map(str::trim), Some("--verbose" | "--verbose=true"))),
+        bool_flag(&flags, "--verbose", "--verbose=true", "--verbose=false"),
         &mut sections,
     );
     sections.push(summary);
     format!("\n{}", sections.join("\n\n"))
+}
+
+fn bool_flag(flags: &[&OsString], bare: &str, truthy: &str, falsy: &str) -> bool {
+    flags
+        .iter()
+        .fold(false, |acc, arg| {
+            let trimmed = arg.to_str().map(str::trim);
+            if trimmed == Some(bare) || trimmed == Some(truthy) {
+                true
+            } else if trimmed == Some(falsy) {
+                false
+            } else {
+                acc
+            }
+        })
 }
 fn result_sections(value: &Value, chalk: Chalk, sections: &mut Vec<String>) {
     let tested = value["componentsWithTests"]

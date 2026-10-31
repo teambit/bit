@@ -97,11 +97,12 @@ fn load_docs(
     let identities = targets
         .iter()
         .filter(|target| {
-            target["directory"]
-                .as_str()
-                .or_else(|| target["rootDir"].as_str())
+            [target["directory"].as_str(), target["rootDir"].as_str()]
+                .into_iter()
+                .flatten()
                 .map(str::trim)
-                .is_some_and(|directory| !directory.is_empty() && root.join(directory).is_dir())
+                .find(|directory| !directory.is_empty())
+                .is_some_and(|directory| root.join(directory).is_dir())
         })
         .map(|target| super::text(target.get("identity")).map(|id| id.trim().to_owned()))
         .collect::<io::Result<Vec<_>>>()?;

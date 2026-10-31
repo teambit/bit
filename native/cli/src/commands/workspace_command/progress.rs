@@ -324,7 +324,13 @@ fn render_import(output: &Output, row: &Import) {
         .map_or_else(String::new, |reason| format!(" {reason}"));
     // `ObjectsFetcher` starts the loader itself, so its lines show on CI too.
     output.restart(&message);
-    if std::env::var_os("CI").is_none() {
+    let is_ci = std::env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+        });
+    if !is_ci {
         for downloaded in (100..=row.objects).step_by(100) {
             output.status(&format!("{message}. downloaded {downloaded} objects."));
         }
@@ -359,7 +365,7 @@ fn import_message(row: &Import) -> String {
 fn without_version(id: &str) -> &str {
     let id = id.trim();
     match id.rfind('@') {
-        Some(index) if index + 1 < id.len() => id[..index].trim(),
+        Some(index) if index > 0 && index + 1 < id.len() => id[..index].trim(),
         _ => id,
     }
 }

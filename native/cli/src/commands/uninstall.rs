@@ -94,6 +94,9 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
     {
         return Ok(Err(format!("unrecognized option: {flag}")));
     }
+    if argv.is_empty() {
+        return Ok(Err("missing package arguments".to_string()));
+    }
     let Target::Entry(cli) = discovery::find()? else {
         return Ok(Err("the Node.js CLI is only reachable as a wrapper".to_string()));
     };
@@ -122,7 +125,17 @@ fn parse_arguments(args: &[OsString]) -> Option<Vec<String>> {
             consume_trailing_packages(iter, &mut packages)?;
             break;
         }
-        if !matches!(string, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if !matches!(
+            string,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             packages.push(string.to_owned());
         }
     }

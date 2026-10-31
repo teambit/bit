@@ -54,21 +54,23 @@ fn apply_single_ws_update(doc: &mut Document, upd: &ResolvedUpdate) {
     let field = upd.field.trim();
     let name = upd.name.trim();
     let latest_range = upd.latest_range.trim();
+    let doc_val = doc.value();
     match &upd.target {
         Target::RootPolicy | Target::ModelRoot => {
-            set_doc_policy_entry(doc, &[DEP_RESOLVER_ID, "policy", field, name], latest_range);
+            let resolver_key = super::aspect_entry(&doc_val, DEP_RESOLVER_ID)
+                .map_or(DEP_RESOLVER_ID, |(key, _)| key);
+            set_doc_policy_entry(doc, &[resolver_key, "policy", field, name], latest_range);
         }
         Target::Variant(pattern) => {
+            let variants_key = super::aspect_entry(&doc_val, "teambit.workspace/variants")
+                .map_or("teambit.workspace/variants", |(key, _)| key);
+            let pattern = pattern.trim();
+            let resolver_key =
+                super::aspect_entry(&doc_val[variants_key][pattern], DEP_RESOLVER_ID)
+                    .map_or(DEP_RESOLVER_ID, |(key, _)| key);
             set_doc_policy_entry(
                 doc,
-                &[
-                    "teambit.workspace/variants",
-                    pattern.trim(),
-                    DEP_RESOLVER_ID,
-                    "policy",
-                    field,
-                    name,
-                ],
+                &[variants_key, pattern, resolver_key, "policy", field, name],
                 latest_range,
             );
         }

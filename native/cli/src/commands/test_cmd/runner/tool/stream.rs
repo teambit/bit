@@ -60,7 +60,7 @@ impl Stream {
         Ok(session)
     }
     fn spawn(
-        _colors: bool,
+        colors: bool,
         args: &[OsString],
         listener: &TcpListener,
         token: &str,
@@ -68,6 +68,14 @@ impl Stream {
         let Target::Entry(cli) = discovery::find()? else {
             return Err(invalid("tester tool installation"));
         };
+        if cli.entry.as_os_str().is_empty()
+            || cli.entry
+                .to_string_lossy()
+                .trim()
+                .is_empty()
+        {
+            return Err(invalid("tester tool entry"));
+        }
         let package = cli.bit_dir
             .filter(|dir| !dir.as_os_str().is_empty() && !dir.to_string_lossy().trim().is_empty())
             .ok_or_else(|| invalid("tester package root"))?
@@ -79,6 +87,8 @@ impl Stream {
             .arg(assets.root.join("runner.cjs"))
             .arg(cli.entry)
             .args(args)
+            .env("FORCE_COLOR", if colors { "1" } else { "0" })
+            .env_remove("NO_COLOR")
             .env("BIT_NATIVE_TESTER_CONTROL", format!("{}:{token}", listener.local_addr()?.port()))
             .stdin(Stdio::piped())
             .stdout(output.reopen()?)

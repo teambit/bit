@@ -22,33 +22,32 @@ fn matches(row: &Value, selector: &str) -> bool {
     let (name, version) = selector
         .rsplit_once('@')
         .map_or((selector, None), |(name, version)| (name.trim(), Some(version.trim())));
-    let row_version = row["version"]
-        .as_str()
-        .or_else(|| row["head"].as_str())
-        .map(str::trim);
-    if version.is_some_and(|version| row_version != Some(version)) {
+    if version.is_some_and(|ver| row_text(row, ["version", "head"]) != Some(ver)) {
         return false;
     }
-    let Some(raw_identity) = row["identity"]
-        .as_str()
-        .or_else(|| row["id"].as_str())
-    else {
+    let Some(raw_identity) = row_text(row, ["identity", "id"]) else {
         return false;
     };
-    let raw_identity = raw_identity.trim();
     let identity = raw_identity.rsplit_once('@').map_or(raw_identity, |(base, _)| base.trim());
     let component_name = identity.split_once('/').map_or(identity, |(_, name)| name.trim());
-    let normalized = name.replace('\\', "/");
-    let directory = normalized
-        .strip_prefix("./")
-        .unwrap_or(&normalized)
-        .trim_end_matches('/');
-    let row_dir = row["directory"]
-        .as_str()
-        .map(|dir| {
-            dir.trim()
-                .trim_start_matches("./")
-                .trim_end_matches('/')
-        });
-    identity == name || component_name == name || row_dir == Some(directory)
+    let directory = normalized_dir(name);
+    let row_dir = row_text(row, ["directory", "rootDir"]).map(normalized_dir);
+    identity == name
+        || component_name == name
+        || (!directory.is_empty() && row_dir.as_deref() == Some(directory.as_str()))
+}
+
+fn row_text<'r>(row: &'r Value, keys: [&str; 2]) -> Option<&'r str> {
+    keys.into_iter()
+        .filter_map(|key| row[key].as_str())
+        .map(str::trim)
+        .find(|val| !val.is_empty())
+}
+
+fn normalized_dir(value: &str) -> String {
+    let normalized = value.replace('\\', "/");
+    normalized
+        .trim_start_matches("./")
+        .trim_end_matches('/')
+        .to_owned()
 }

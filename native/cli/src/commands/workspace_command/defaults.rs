@@ -193,15 +193,33 @@ pub(in crate::commands) fn semver_values(
     let mut values = vec![to.map_or("", str::trim).to_string()];
     for model in array(context.get("models"), "models")? {
         for field in ["versions", "orphanedVersions"] {
-            if let Some(versions) = model
-                .get(field)
-                .filter(|versions| !versions.is_null())
-            {
-                values.extend(object(versions)?.keys().cloned());
-            }
+            append_model_field_versions(model, field, &mut values)?;
         }
     }
     Ok(values)
+}
+
+fn append_model_field_versions(
+    model: &Value,
+    field: &str,
+    values: &mut Vec<String>,
+) -> io::Result<()> {
+    let Some(versions) = model
+        .get(field)
+        .filter(|versions| !versions.is_null())
+    else {
+        return Ok(());
+    };
+    for key in object(versions)?.keys() {
+        let trimmed = key.trim();
+        if !values
+            .iter()
+            .any(|existing| existing == trimmed)
+        {
+            values.push(trimmed.to_owned());
+        }
+    }
+    Ok(())
 }
 
 /// `currentDateAndTimeToFileName()`: local time, unpadded.

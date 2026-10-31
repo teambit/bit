@@ -205,21 +205,17 @@ pub(super) fn pre_snap(
         params,
     );
     callback_output(startup, &capture::callback_load_stdout(&session.capture)[before..]);
-    let result = result?;
-    refresh_sources(session, &result)?;
+    refresh_sources(session, &result?)?;
     plus_ranges::validate(session, plan)?;
-    if let Some(editor) = &workflow.editor {
-        startup.committed = true;
-        capture::snapshot_editor(
-            &session.capture,
-            &selected,
-            &automatic,
-            &json!(editor),
-            session.root,
-        )
-    } else {
-        Ok(json!([]))
-    }
+    let Some(editor) = workflow.editor
+        .as_deref()
+        .map(str::trim)
+        .filter(|ed| !ed.is_empty())
+    else {
+        return Ok(json!([]));
+    };
+    startup.committed = true;
+    capture::snapshot_editor(&session.capture, &selected, &automatic, &json!(editor), session.root)
 }
 
 fn hydrate_default(

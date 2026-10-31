@@ -68,11 +68,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
 
 fn plan_identity(value: &Value) -> Option<String> {
     if let Some(raw) = non_empty_str(value).or_else(|| non_empty_str(&value["id"])) {
-        let bare = raw
-            .split('@')
-            .next()
-            .unwrap_or(raw)
-            .trim();
+        let bare = bit_install::config::aspect_id_without_version(raw).trim();
         return (!bare.is_empty()).then(|| bare.to_owned());
     }
     let name = non_empty_str(&value["name"])?;
@@ -85,12 +81,7 @@ fn plan_identity(value: &Value) -> Option<String> {
 fn row_identity(row: &Value) -> Option<&str> {
     non_empty_str(&row["identity"])
         .or_else(|| non_empty_str(&row["id"]))
-        .map(|raw| {
-            raw.split('@')
-                .next()
-                .unwrap_or(raw)
-                .trim()
-        })
+        .map(|raw| bit_install::config::aspect_id_without_version(raw).trim())
         .filter(|bare| !bare.is_empty())
 }
 
@@ -124,9 +115,10 @@ fn dependencies(session: &Session<'_>, identity: &str) -> Vec<Value> {
         .into_iter()
         .flatten()
         .map(|entry| {
-            let id = entry
-                .get("identity")
-                .or_else(|| entry.get("id"))
+            let id = [entry.get("identity"), entry.get("id")]
+                .into_iter()
+                .flatten()
+                .find(|val| !val.is_null() && val.as_str().is_none_or(|text| !text.trim().is_empty()))
                 .cloned()
                 .unwrap_or(Value::Null);
             json!({"id": id, "packageName": entry["packageName"], "versionRange": entry["versionRange"]})

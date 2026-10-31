@@ -52,10 +52,9 @@ pub(in crate::commands) fn report(error: &io::Error, chalk: Chalk) -> io::Error 
         .filter(|_| {
             std::env::var_os("CI")
                 .is_some_and(|value| {
-                    !value
-                        .to_string_lossy()
-                        .trim()
-                        .is_empty()
+                    let trimmed = value.to_string_lossy();
+                    let trimmed = trimmed.trim();
+                    !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
                 })
         })
         .map(|error| inspect::render(error, chalk));

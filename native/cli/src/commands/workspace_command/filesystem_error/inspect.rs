@@ -11,9 +11,11 @@ pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
     if let Some(errno) = error.errno {
         fields.push(format!("errno: {}", chalk.yellow(&errno.to_string())));
     }
-    for (key, value) in
-        [("code", error.code.trim()), ("syscall", error.operation.trim()), ("path", &error.path)]
-    {
+    for (key, value) in [
+        ("code", error.code.trim()),
+        ("syscall", error.operation.trim()),
+        ("path", error.path.trim()),
+    ] {
         fields.push(format!("{key}: {}", chalk.green(&quote(value))));
     }
     if let Some(destination) = error.destination

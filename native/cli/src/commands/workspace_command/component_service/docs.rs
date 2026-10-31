@@ -26,11 +26,11 @@ pub(super) fn prepare(root: &Path, components: &[Value]) -> io::Result<Vec<CatDo
 }
 
 fn component_directory(component: &Value) -> Value {
-    component["directory"]
-        .as_str()
-        .or_else(|| component["rootDir"].as_str())
+    [component["directory"].as_str(), component["rootDir"].as_str()]
+        .into_iter()
+        .flatten()
         .map(str::trim)
-        .filter(|dir| !dir.is_empty())
+        .find(|dir| !dir.is_empty())
         .map_or_else(
             || {
                 if component["directory"].is_null() {
@@ -44,13 +44,16 @@ fn component_directory(component: &Value) -> Value {
 }
 
 fn normalize_file(file: &Value) -> Value {
-    let path = file
-        .as_str()
-        .or_else(|| file["relativePath"].as_str())
-        .or_else(|| file["path"].as_str())
-        .or_else(|| file["filePath"].as_str())
-        .map(str::trim)
-        .filter(|path| !path.is_empty());
+    let path = [
+        file.as_str(),
+        file["relativePath"].as_str(),
+        file["path"].as_str(),
+        file["filePath"].as_str(),
+    ]
+    .into_iter()
+    .flatten()
+    .map(str::trim)
+    .find(|path| !path.is_empty());
     match path {
         Some(path) => json!({"relativePath":path,"test":file["test"] == true}),
         None => json!({"relativePath":file,"test":false}),

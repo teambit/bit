@@ -12,7 +12,11 @@ impl fmt::Display for WithDetails {
         self.error.fmt(formatter)
     }
 }
-impl std::error::Error for WithDetails {}
+impl std::error::Error for WithDetails {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.error)
+    }
+}
 
 /// Attach the released error inspection without applying message styles to it.
 pub fn with_error_details(error: io::Error, details: String) -> io::Error {
@@ -30,8 +34,14 @@ pub(in crate::commands) fn print(error: &io::Error, chalk: Chalk) {
 }
 
 fn downcast_details(error: &io::Error) -> Option<&str> {
-    error
+    let mut current: Option<&(dyn std::error::Error + 'static)> = error
         .get_ref()
-        .and_then(|inner| inner.downcast_ref::<WithDetails>())
-        .map(|with_details| with_details.details.as_str())
+        .map(|inner| inner as &(dyn std::error::Error + 'static));
+    while let Some(err) = current {
+        if let Some(with_details) = err.downcast_ref::<WithDetails>() {
+            return Some(with_details.details.as_str());
+        }
+        current = err.source();
+    }
+    None
 }

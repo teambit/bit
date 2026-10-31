@@ -38,7 +38,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     match prepare(&root, &target, chalk) {
         Ok(report) => workspace_command::execute_then(&root, args, "unuse", |_output| Ok(report)),
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|value| {
+                    let trimmed = value.to_string_lossy();
+                    let trimmed = trimmed.trim();
+                    !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+                })
+            {
                 return Ok(Outcome::Declined("CI unuse error stack".to_owned()));
             }
             workspace_command::execute_then(&root, args, "unuse", |_output| {
@@ -125,11 +131,7 @@ fn resolve_configured_aspect_key(
     target: &str,
 ) -> Result<Option<(Option<String>, String)>, Failure> {
     let target = target.trim();
-    let bare = target
-        .split('@')
-        .next()
-        .unwrap_or(target)
-        .trim();
+    let bare = bit_install::config::aspect_id_without_version(target).trim();
     if let Some(key) =
         find_extension_key(doc_val, target).or_else(|| find_extension_key(doc_val, bare))
     {

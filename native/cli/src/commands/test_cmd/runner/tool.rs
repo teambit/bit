@@ -76,6 +76,14 @@ impl Quiet {
         let Target::Entry(cli) = discovery::find()? else {
             return Err(invalid("tester tool installation"));
         };
+        if cli.entry.as_os_str().is_empty()
+            || cli.entry
+                .to_string_lossy()
+                .trim()
+                .is_empty()
+        {
+            return Err(invalid("tester tool entry"));
+        }
         let package = cli.bit_dir
             .filter(|dir| !dir.as_os_str().is_empty() && !dir.to_string_lossy().trim().is_empty())
             .ok_or_else(|| invalid("tester package root"))?
@@ -102,8 +110,9 @@ impl Quiet {
         let mut input = self.input.take().ok_or_else(|| invalid("tester input closed"))?;
         input.write_all(b"true\n")?;
         drop(input);
-        let value = self.read()?;
+        let value = self.read();
         let status = self.child.wait()?;
+        let value = value?;
         if status.code().is_none() || !self.stderr()?.is_empty() {
             return Err(invalid("tester external tool failed"));
         }

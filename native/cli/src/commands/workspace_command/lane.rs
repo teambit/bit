@@ -39,7 +39,8 @@ pub fn pattern_ids(options: &Value, context: &Value) -> io::Result<Option<Vec<St
     let Some(pattern) = options
         .get("pattern")
         .and_then(Value::as_str)
-        .filter(|_| options.get("lane").is_some())
+        .map(str::trim)
+        .filter(|pat| !pat.is_empty() && options.get("lane").is_some())
     else {
         return Ok(None);
     };

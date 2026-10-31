@@ -23,7 +23,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native ui-build grammar".into()));
     }
-    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let trimmed = val.to_string_lossy();
+            let trimmed = trimmed.trim();
+            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+        })
+    {
         return Ok(Outcome::Declined("CI ui-build delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -56,7 +62,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_ui_type(iter, &mut ui_root_name)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             val if !val.starts_with('-') && !val.is_empty() && ui_root_name.is_none() => {
                 ui_root_name = Some(val.to_owned());
             }

@@ -14,7 +14,11 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
         .filter(|name| !name.is_empty() && !name.to_string_lossy().trim().is_empty())?;
     let trash = root.join("trash");
     let parent = trash.join(bucket);
-    let device = fs::metadata(source).ok()?.dev();
+    let source_meta = fs::symlink_metadata(source).ok()?;
+    if !source_meta.is_file() || source_meta.file_type().is_symlink() {
+        return None;
+    }
+    let device = source_meta.dev();
     if fs::metadata(root).ok()?.dev() != device {
         return None;
     }
@@ -29,8 +33,7 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
         Ok(metadata)
             if metadata.is_file()
                 && !metadata.file_type().is_symlink()
-                && (metadata.dev(), metadata.ino())
-                    != (device, fs::metadata(source).ok()?.ino()) =>
+                && (metadata.dev(), metadata.ino()) != (device, source_meta.ino()) =>
         {
             Some(destination)
         }

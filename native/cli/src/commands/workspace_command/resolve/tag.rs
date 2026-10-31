@@ -117,9 +117,11 @@ fn split(text: &str) -> io::Result<(&str, Option<&str>)> {
 /// The one component a literal names: its id, or the id ending in
 /// `/<pattern>`. Globs and lists are matched by `multimatch` in Node.
 fn literal_match<'i>(identities: &[&'i str], pattern: &str) -> io::Result<&'i str> {
-    let literal = pattern
-        .chars()
-        .all(|character| character.is_ascii_alphanumeric() || "_./-".contains(character));
+    let pattern = pattern.trim();
+    let literal = !pattern.is_empty()
+        && pattern
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || "_./-".contains(character));
     if pattern.contains('*') || pattern.contains(',') || !literal {
         return Err(decline("tag pattern outside the native grammar"));
     }
@@ -165,9 +167,13 @@ pub fn planned_versions(result: &Value, identities: &[String]) -> io::Result<Vec
     let ids = array(result.get("taggedComponents"), "tagged components")?.iter().chain(automatic);
     let mut versions = HashMap::new();
     for id in ids {
-        let (identity, version) =
-            text(Some(id))?.rsplit_once('@').ok_or_else(|| decline("native tag version"))?;
-        versions.insert(identity.trim(), version.trim());
+        let (identity, version) = text(Some(id))?
+            .trim()
+            .rsplit_once('@')
+            .map(|(identity, version)| (identity.trim(), version.trim()))
+            .filter(|(identity, version)| !identity.is_empty() && !version.is_empty())
+            .ok_or_else(|| decline("native tag version"))?;
+        versions.insert(identity, version);
     }
     identities
         .iter()

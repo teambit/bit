@@ -20,10 +20,13 @@ pub(super) fn lanes(root: &Path, scope: &str, component: &str) -> Option<Vec<(St
 fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
     let mut remotes = std::collections::HashMap::new();
     for (name, head) in lanes {
-        let remote = name.split_once('/')?.0;
-        if remotes
-            .insert(head, remote)
-            .is_some_and(|previous| previous != remote)
+        let remote = name.split_once('/')?.0.trim();
+        let head = head.trim();
+        if remote.is_empty()
+            || head.is_empty()
+            || remotes
+                .insert(head, remote)
+                .is_some_and(|previous| previous != remote)
         {
             return None;
         }
@@ -88,7 +91,13 @@ fn remote_lanes(root: &Path, remote: &str) -> Option<Vec<(String, PathBuf)>> {
 
 fn entries(path: &Path) -> Option<Vec<fs::DirEntry>> {
     match fs::read_dir(path) {
-        Ok(entries) => entries.collect::<Result<Vec<_>, _>>().ok(),
+        Ok(entries) => {
+            let collected = entries
+                .take(1025)
+                .collect::<Result<Vec<_>, _>>()
+                .ok()?;
+            (collected.len() <= 1024).then_some(collected)
+        }
         Err(error) if error.kind() == io::ErrorKind::NotFound => Some(Vec::new()),
         Err(_) => None,
     }

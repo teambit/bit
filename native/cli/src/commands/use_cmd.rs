@@ -38,7 +38,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     match prepare(&root, &target, chalk) {
         Ok(report) => workspace_command::execute_then(&root, args, "use", |_output| Ok(report)),
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|value| {
+                    let trimmed = value.to_string_lossy();
+                    let trimmed = trimmed.trim();
+                    !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+                })
+            {
                 return Ok(Outcome::Declined("CI use error stack".to_owned()));
             }
             workspace_command::execute_then(&root, args, "use", |_output| {
@@ -100,14 +106,15 @@ fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<Strin
         Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
         _ => trimmed,
     };
-    let normalized = bare.trim_start_matches("./").trim_end_matches('/');
+    let normalized = super::inventory::normalize(bare)
+        .trim_start_matches("./")
+        .trim_end_matches('/')
+        .to_owned();
     let entry = bitmap.entries
         .iter()
         .find(|entry| {
-            let root_dir = entry.root_dir
-                .trim()
-                .trim_start_matches("./")
-                .trim_end_matches('/');
+            let norm_root = super::inventory::normalize(entry.root_dir.trim());
+            let root_dir = norm_root.trim_start_matches("./").trim_end_matches('/');
             entry.owns_its_dir()
                 && (entry.id.to_string_without_version() == bare
                     || entry.id.name == bare

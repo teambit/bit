@@ -8,6 +8,7 @@ pub(in crate::commands) fn error(
     syscall: &str,
 ) -> io::Result<Value> {
     let (code, unix_errno, windows_errno) = match error.kind() {
+        io::ErrorKind::PermissionDenied if error.raw_os_error() == Some(1) => ("EPERM", -1, -4048),
         io::ErrorKind::PermissionDenied => ("EACCES", -13, -4092),
         io::ErrorKind::NotFound => ("ENOENT", -2, -4058),
         io::ErrorKind::AlreadyExists => ("EEXIST", -17, -4075),
@@ -32,6 +33,7 @@ pub(in crate::commands) fn message(
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("service error code"))?;
     let description = match code {
+        "EPERM" => "operation not permitted",
         "EACCES" => "permission denied",
         "ENOENT" => "no such file or directory",
         "EEXIST" => "file already exists",
@@ -41,11 +43,11 @@ pub(in crate::commands) fn message(
         "ENOTEMPTY" => "directory not empty",
         _ => return Err(invalid("service filesystem error")),
     };
-    let path = error["path"]
-        .as_str()
-        .or_else(|| error["filePath"].as_str())
+    let path = [error["path"].as_str(), error["filePath"].as_str()]
+        .into_iter()
+        .flatten()
         .map(str::trim)
-        .filter(|value| !value.is_empty())
+        .find(|value| !value.is_empty())
         .ok_or_else(|| invalid("service error path"))?;
     let syscall = error["syscall"]
         .as_str()

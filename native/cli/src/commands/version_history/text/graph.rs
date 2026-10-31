@@ -15,6 +15,9 @@ pub(super) struct Graph {
 impl Graph {
     pub fn build(history: &Value, short: bool) -> Option<Self> {
         let rows = history["versions"].as_array()?;
+        if rows.len() > 10000 {
+            return None;
+        }
         let mut graph = Self { nodes: Vec::new(), indices: HashMap::new() };
         let mut seen_rows = HashSet::new();
         for row in rows {
@@ -25,16 +28,7 @@ impl Graph {
             if !seen_rows.insert(hash) {
                 return None;
             }
-            graph.add_node(hash)?;
-            for hash in refs(row, "parents")?
-                .into_iter()
-                .chain(refs(row, "squashed")?)
-            {
-                graph.add_node(hash)?;
-            }
-            if let Some(hash) = optional(row, "unrelated")? {
-                graph.add_node(hash)?;
-            }
+            graph.add_row_nodes(row)?;
         }
         if short && !graph.unique_short_hashes() {
             return None;
@@ -43,6 +37,24 @@ impl Graph {
             graph.add_edges(row)?;
         }
         Some(graph)
+    }
+
+    fn add_row_nodes(&mut self, row: &Value) -> Option<()> {
+        let hash = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())?;
+        self.add_node(hash)?;
+        for hash in refs(row, "parents")?
+            .into_iter()
+            .chain(refs(row, "squashed")?)
+        {
+            self.add_node(hash)?;
+        }
+        if let Some(hash) = optional(row, "unrelated")? {
+            self.add_node(hash)?;
+        }
+        Some(())
     }
 
     fn unique_short_hashes(&self) -> bool {
@@ -167,9 +179,10 @@ fn optional<'a>(row: &'a Value, key: &str) -> Option<Option<&'a str>> {
             let trimmed = value.trim();
             Some((!trimmed.is_empty()).then_some(trimmed))
         }
-        Some(Value::Object(map)) => map
-            .get("head")
-            .and_then(non_empty_str)
+        Some(Value::Object(map)) => [map.get("head"), map.get("hash"), map.get("id")]
+            .into_iter()
+            .flatten()
+            .find_map(non_empty_str)
             .map(Some),
         _ => None,
     }

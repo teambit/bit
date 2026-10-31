@@ -144,11 +144,12 @@ fn has_env_jsonc_policy(root: &Path) -> bool {
 
 pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
     let id = id.trim();
-    if let Some(name) = entry["name"]
-        .as_str()
-        .or_else(|| entry["legacyId"].as_str())
-        .or_else(|| entry["extensionId"].as_str())
-        .map(str::trim)
+    if let Some(name) =
+        [entry["name"].as_str(), entry["legacyId"].as_str(), entry["extensionId"].as_str()]
+            .into_iter()
+            .flatten()
+            .map(str::trim)
+            .find(|name| !name.is_empty())
     {
         return name == id || name.starts_with(&format!("{id}@"));
     }
@@ -173,20 +174,24 @@ pub(in crate::commands) fn bitmap_row_scope_and_name<'a>(
     key: &'a str,
     row: &'a Value,
 ) -> (&'a str, &'a str) {
-    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
-    let key_scope = key_id.split_once('/').map(|(scope, _)| scope);
+    let key = key.trim();
+    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id.trim());
+    let key_scope = key_id.split_once('/').map(|(scope, _)| scope.trim());
     let scope = row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         })
         .or(key_scope)
         .unwrap_or_default();
     let name = row["name"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .unwrap_or_else(|| {
             if scope.is_empty() {
@@ -194,7 +199,7 @@ pub(in crate::commands) fn bitmap_row_scope_and_name<'a>(
             } else {
                 key_id
                     .strip_prefix(&format!("{scope}/"))
-                    .unwrap_or(key_id)
+                    .map_or(key_id, str::trim)
             }
         });
     (scope, name)

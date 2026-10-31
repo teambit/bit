@@ -40,7 +40,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Some(user) => formatter.success_summary(&format!("logged in as {user}")),
         None => formatter.hint("not logged in. please run `bit login` to log in to bit cloud"),
     };
-    writeln!(io::stdout(), "{message}")?;
+    let mut stdout = io::stdout().lock();
+    writeln!(stdout, "{message}")?;
+    stdout.flush()?;
     if let Some(history) = history {
         history.end(true);
     }
@@ -65,7 +67,17 @@ fn apply_whoami_arg<'a>(
     iter: &mut impl Iterator<Item = &'a OsString>,
     token: &mut Option<String>,
 ) -> Option<()> {
-    if matches!(str_arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+    if matches!(
+        str_arg,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    ) {
         return Some(());
     }
     if str_arg == "--token" {
