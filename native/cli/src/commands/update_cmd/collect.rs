@@ -150,7 +150,7 @@ fn collect_comp_json(
     let Ok(bytes) = fs::read(&path) else {
         return;
     };
-    let Ok(parsed) = serde_json::from_slice::<Value>(&bytes) else {
+    let Ok(parsed) = parse_jsonc(&bytes) else {
         return;
     };
     let Some((_, resolver)) = super::aspect_entry(&parsed["extensions"], DEP_RESOLVER_ID) else {
@@ -238,7 +238,7 @@ fn collect_model_deps(
         return;
     };
     collect_serialized_model_deps(&ver_val, entry, local_pkgs, root_names, out);
-    collect_legacy_model_deps(&ver_val, default_scope, local_pkgs, root_names, out);
+    super::resolve::collect_legacy_model_deps(&ver_val, default_scope, local_pkgs, root_names, out);
 }
 
 fn collect_serialized_model_deps(
@@ -321,85 +321,6 @@ fn extract_serialized_comp_id(dep: &Value) -> Option<String> {
         }
     }
     None
-}
-
-fn collect_legacy_model_deps(
-    ver_val: &Value,
-    default_scope: Option<&str>,
-    local_pkgs: &HashSet<String>,
-    root_names: &HashSet<String>,
-    out: &mut Vec<Candidate>,
-) {
-    for (dep_key, target_field) in
-        [("dependencies", "dependencies"), ("devDependencies", "devDependencies")]
-    {
-        let Some(arr) = ver_val[dep_key].as_array() else { continue };
-        for dep in arr {
-            if let Some(cand) =
-                candidate_from_legacy_dep(dep, target_field, default_scope, local_pkgs, root_names)
-                && !out
-                    .iter()
-                    .any(|existing| existing.name == cand.name)
-            {
-                out.push(cand);
-            }
-        }
-    }
-}
-
-fn candidate_from_legacy_dep(
-    dep: &Value,
-    target_field: &str,
-    default_scope: Option<&str>,
-    local_pkgs: &HashSet<String>,
-    root_names: &HashSet<String>,
-) -> Option<Candidate> {
-    let inner = dep
-        .get("id")
-        .filter(|val| val.is_object())
-        .unwrap_or(dep);
-    let raw_name = inner["name"]
-        .as_str()
-        .filter(|name| !name.is_empty())?;
-    let (comp_name, inline_ver) = raw_name
-        .rsplit_once('@')
-        .unwrap_or((raw_name, ""));
-    let comp_scope = inner["scope"]
-        .as_str()
-        .filter(|sc| !sc.is_empty())
-        .or(default_scope)?;
-    let comp_ver = legacy_dep_version(dep, inner, inline_ver)?;
-    let comp_id = ComponentId {
-        scope: Some(comp_scope.to_owned()),
-        default_scope: None,
-        name: comp_name.to_owned(),
-        version: None,
-    };
-    let pkg_name = default_package_name(&comp_id);
-    if local_pkgs.contains(&pkg_name) || root_names.contains(&pkg_name) {
-        return None;
-    }
-    Some(Candidate {
-        name: pkg_name,
-        current_range: comp_ver,
-        field: target_field.to_owned(),
-        target: Target::ModelRoot,
-        comp_bare_id: Some(format!("{comp_scope}/{comp_name}")),
-    })
-}
-
-fn legacy_dep_version(dep: &Value, inner: &Value, inline_ver: &str) -> Option<String> {
-    [
-        inner["version"].as_str(),
-        dep["version"].as_str(),
-        inner["head"].as_str(),
-        dep["head"].as_str(),
-    ]
-    .into_iter()
-    .flatten()
-    .find(|ver| !ver.is_empty())
-    .or_else(|| (!inline_ver.is_empty()).then_some(inline_ver))
-    .map(str::to_owned)
 }
 
 fn filter_by_patterns(candidates: &mut Vec<Candidate>, patterns: &[String]) {

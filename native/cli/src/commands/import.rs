@@ -291,6 +291,32 @@ fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Resul
     Ok((engine, prepared))
 }
 
+fn objects_refresh_options(
+    operation: &'static str,
+    all_history: bool,
+    lanes: bool,
+) -> options::Options {
+    options::Options {
+        operation,
+        ids: Vec::new(),
+        objects_only: true,
+        all_history,
+        write: options::WriteOptions {
+            skip_write_config_files: false,
+            skip_dependency_installation: false,
+            override_existing: false,
+            merge: false,
+            path: None,
+            merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
+            adoption: options::AdoptionOptions::default(),
+        },
+        lanes,
+        output: options::OutputOptions::default(),
+        selection: options::SelectionOptions::default(),
+    }
+}
+
 /// Retain a main-component refresh for `status --lanes` until its complete
 /// report has passed preflight. The same inbound transfer serves `bit fetch`.
 pub(super) fn prepare_status_refresh(
@@ -298,26 +324,7 @@ pub(super) fn prepare_status_refresh(
     root: &Path,
     ids: &[String],
 ) -> io::Result<Value> {
-    let options = options::Options {
-        operation: "status",
-        ids: Vec::new(),
-        objects_only: true,
-        all_history: true,
-        write: options::WriteOptions {
-            skip_write_config_files: false,
-            skip_dependency_installation: false,
-            override_existing: false,
-            merge: false,
-            path: None,
-            merge_strategy: None,
-            dependencies: options::DependencyOptions::default(),
-            adoption: options::AdoptionOptions::default(),
-        },
-        lanes: false,
-        output: options::OutputOptions::default(),
-        selection: options::SelectionOptions::default(),
-    };
-    prepare_into(engine, root, &options, ids)
+    prepare_into(engine, root, &objects_refresh_options("status", true, false), ids)
 }
 
 pub(super) fn prepare_diff_refresh(
@@ -325,26 +332,7 @@ pub(super) fn prepare_diff_refresh(
     root: &Path,
     ids: &[String],
 ) -> io::Result<Value> {
-    let options = options::Options {
-        operation: "diff",
-        ids: Vec::new(),
-        objects_only: true,
-        all_history: false,
-        write: options::WriteOptions {
-            skip_write_config_files: false,
-            skip_dependency_installation: false,
-            override_existing: false,
-            merge: false,
-            path: None,
-            merge_strategy: None,
-            dependencies: options::DependencyOptions::default(),
-            adoption: options::AdoptionOptions::default(),
-        },
-        lanes: false,
-        output: options::OutputOptions::default(),
-        selection: options::SelectionOptions::default(),
-    };
-    prepare_into(engine, root, &options, ids)
+    prepare_into(engine, root, &objects_refresh_options("diff", false, false), ids)
 }
 
 pub(super) fn prepare_status_forked_refresh(
@@ -352,25 +340,7 @@ pub(super) fn prepare_status_forked_refresh(
     root: &Path,
     lane: &str,
 ) -> io::Result<Value> {
-    let options = options::Options {
-        operation: "status",
-        ids: Vec::new(),
-        objects_only: true,
-        all_history: false,
-        write: options::WriteOptions {
-            skip_write_config_files: false,
-            skip_dependency_installation: false,
-            override_existing: false,
-            merge: false,
-            path: None,
-            merge_strategy: None,
-            dependencies: options::DependencyOptions::default(),
-            adoption: options::AdoptionOptions::default(),
-        },
-        lanes: true,
-        output: options::OutputOptions::default(),
-        selection: options::SelectionOptions::default(),
-    };
+    let options = objects_refresh_options("status", false, true);
     prepare_into(engine, root, &options, &[lane.to_owned()])
 }
 
@@ -380,25 +350,7 @@ pub(super) fn prepare_lane_import(
     root: &Path,
     lane: &str,
 ) -> io::Result<Value> {
-    let options = options::Options {
-        operation: "laneImport",
-        ids: Vec::new(),
-        objects_only: true,
-        all_history: false,
-        write: options::WriteOptions {
-            skip_write_config_files: false,
-            skip_dependency_installation: false,
-            override_existing: false,
-            merge: false,
-            path: None,
-            merge_strategy: None,
-            dependencies: options::DependencyOptions::default(),
-            adoption: options::AdoptionOptions::default(),
-        },
-        lanes: true,
-        output: options::OutputOptions::default(),
-        selection: options::SelectionOptions::default(),
-    };
+    let options = objects_refresh_options("laneImport", false, true);
     prepare_into(engine, root, &options, &[lane.to_owned()])
 }
 

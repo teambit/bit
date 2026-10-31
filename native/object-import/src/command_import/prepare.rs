@@ -271,18 +271,30 @@ fn read_model(
     directory: &Path,
     target: &Target,
 ) -> io::Result<Option<Value>> {
-    let hash = object_hash(&identity(target)?);
-    if directory == plan.environment.local_directory
-        && let Some(value) = plan.overlay.read(&hash, "Component")?
-    {
+    let scoped_hash = object_hash(&identity(target)?);
+    let is_local = directory == plan.environment.local_directory;
+    if is_local && let Some(value) = plan.overlay.read(&scoped_hash, "Component")? {
         return Ok(Some(value.clone()));
     }
-    let value = plan.capture.object(directory, &hash, "Component")?.and_then(|record| record.value);
+    let mut value =
+        plan.capture.object(directory, &scoped_hash, "Component")?.and_then(|record| record.value);
+    if value.is_none() && is_local {
+        let unscoped_hash = object_hash(&target.name);
+        if let Some(overlay_val) = plan.overlay.read(&unscoped_hash, "Component")? {
+            return Ok(Some(overlay_val.clone()));
+        }
+        value = plan.capture
+            .object(directory, &unscoped_hash, "Component")?
+            .and_then(|record| record.value);
+    }
     if value
         .as_ref()
-        .is_some_and(|value| {
-            value["name"] != target.name
-                || value["scope"].as_str() != target.scope.as_deref()
+        .is_some_and(|val| {
+            let val_scope = val["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty());
+            val["name"] != target.name
+                || (val_scope != target.scope.as_deref() && !(is_local && val_scope.is_none()))
         })
     {
         return Err(invalid("import model identity"));
@@ -315,7 +327,7 @@ fn refresh(
     let entries = rows.as_array().ok_or_else(|| invalid("import remote refs"))?;
     let stop = entries
         .iter()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == target.name)
+        .find(|row| ref_row_matches(row, scope, &target.name))
         .and_then(|row| row["head"].as_str());
     if let Some(stop) = stop
         && read_model(plan, &local, target)?.is_some()
@@ -337,21 +349,26 @@ fn update_main_ref(
 ) -> io::Result<()> {
     let rows = plan.overlay.remote_refs.entry(scope.to_owned()).or_insert(rows);
     let entries = rows.as_array_mut().ok_or_else(|| invalid("import refs rows"))?;
-    if let Some(row) = entries
-        .iter_mut()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == target.name)
-    {
+    if let Some(row) = entries.iter_mut().find(|row| ref_row_matches(row, scope, &target.name)) {
         row["head"] = json!(head);
     } else {
         entries.push(json!({"id":{"scope":scope,"name":target.name},"head":head}));
     }
     Ok(())
 }
+fn ref_row_matches(row: &Value, scope: &str, name: &str) -> bool {
+    if let Some(raw) = row["id"].as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        return bare == name || bare == format!("{scope}/{name}");
+    }
+    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+    row["id"]["name"] == name && (row_scope.is_empty() || row_scope == scope)
+}
 fn version_ref(model: &Value, version: &str) -> io::Result<String> {
     if crate::merge_history::hash(version).is_ok() {
         return Ok(version.to_owned());
     }
-    if version.is_empty() || version == "latest" {
+    if version.is_empty() || matches!(version, "latest" | "head") {
         return model["head"]
             .as_str()
             .map(str::to_owned)

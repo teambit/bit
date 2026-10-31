@@ -1,8 +1,14 @@
 use super::{Chalk, resolve_capsules_dir};
-use bit_workspace_config::environment_value;
+use crate::{commands::lane::scope_root::ScopeRoot, workspace};
+use bit_workspace_config::{
+    environment_value, global_config_dir, merge_layers, parse_jsonc, read_global_config,
+    workspace_values,
+};
 use serde::Serialize;
 use serde_json::{Map, Value};
+use sha1::{Digest, Sha1};
 use std::{
+    fmt::Write as _,
     fs, io,
     path::Path,
     time::{SystemTime, UNIX_EPOCH},
@@ -53,7 +59,7 @@ pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
     let marker = path.join(ORIGIN_FILE);
     let origin = fs::read(&marker)
         .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
+        .and_then(|bytes| parse_jsonc(&bytes).ok());
     let valid = origin
         .as_ref()
         .filter(|value| {
@@ -197,4 +203,52 @@ pub(super) fn format_bytes(bytes: u64) -> String {
         let tenths = ((bytes as f64 / 1024_f64.powi(index as i32)) * 10.0).round();
         format!("{:.1} {}", tenths / 10.0, units[index])
     }
+}
+
+pub(in crate::commands::capsule) fn lookup_config_str(
+    combined: &Map<String, Value>,
+    key: &str,
+) -> Option<String> {
+    environment_value(key)
+        .or_else(|| {
+            combined
+                .get(key)
+                .and_then(Value::as_str)
+                .filter(|val| !val.is_empty())
+                .map(str::to_owned)
+        })
+}
+
+pub(in crate::commands::capsule) fn read_combined_config(
+    root: &ScopeRoot,
+) -> io::Result<Map<String, Value>> {
+    let global = read_global_config(&global_config_dir())?;
+    let scope_dir = if root.bare { root.path.clone() } else { workspace::scope_path(&root.path) };
+    let scope_layer = if scope_dir.join("scope.json").is_file() {
+        parse_jsonc(&fs::read(scope_dir.join("scope.json"))?)?
+            .get("config")
+            .cloned()
+            .unwrap_or(Value::Null)
+    } else {
+        Value::Null
+    };
+    let ws_layer = if root.bare {
+        Value::Null
+    } else {
+        Value::Object(workspace_values(&parse_jsonc(&fs::read(root.path.join(
+            "workspace.jsonc",
+        ))?)?))
+    };
+    Ok(merge_layers(&global, &scope_layer, &ws_layer))
+}
+
+pub(in crate::commands::capsule) fn object_hash_short(text: &str) -> String {
+    let payload = format!("string:{}:{text}", text.encode_utf16().count());
+    let digest = Sha1::digest(payload.as_bytes());
+    let mut out = String::with_capacity(10);
+    for byte in &digest[..5] {
+        let _ = write!(out, "{byte:02x}");
+    }
+    out.truncate(9);
+    out
 }

@@ -22,7 +22,7 @@ use super::{
     js::{array, assign, decline, full_identity, nullish, string_map, text},
 };
 use model::{dependencies, stored_version, validate_harmony_version};
-use names::{default_prefix, extension_identity, package_name};
+use names::{extension_identity, identity, names};
 use serde_json::{Map, Value, json};
 use std::io;
 use workspace::{Workspace, read as workspace};
@@ -198,35 +198,6 @@ pub(in crate::commands) fn environment_target(
     Ok(effective)
 }
 
-fn names(identity: &str, model: Option<&Value>, extensions: &[Value]) -> (String, String) {
-    let stored = model
-        .and_then(|model| model.get("bindingPrefix"))
-        .and_then(Value::as_str)
-        .filter(|prefix| !prefix.is_empty());
-    let prefix = stored.map_or_else(|| default_prefix(identity), str::to_string);
-    (prefix, configured_package_name(identity, stored, extensions))
-}
-
-fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[Value]) -> String {
-    let Some(pkg) =
-        extensions.iter().find(|entry| component::matches_aspect(entry, "teambit.pkg/pkg"))
-    else {
-        return package_name(identity, prefix);
-    };
-    let (scope, name) = identity
-        .split_once('/')
-        .unwrap_or(("", identity));
-    let id = bit_install::model::ComponentId {
-        scope: Some(scope.to_string()),
-        default_scope: None,
-        name: name.to_string(),
-        version: None,
-    };
-    let mut aspects = Map::new();
-    aspects.insert("teambit.pkg/pkg".to_string(), pkg["config"].clone());
-    bit_install::workspace::component_package_name(&id, prefix, &aspects)
-}
-
 fn model_packages(version: Option<&Value>) -> io::Result<[Map<String, Value>; 3]> {
     let field = |name: &str| string_map(version.and_then(|stored| stored.get(name)));
     Ok([field(PACKAGE_FIELDS[0])?, field(PACKAGE_FIELDS[1])?, field(PACKAGE_FIELDS[2])?])
@@ -367,53 +338,6 @@ fn bitmap_identities(context: &Value) -> io::Result<Vec<String>> {
         .iter()
         .map(full_identity)
         .collect()
-}
-
-fn identity(value: Option<&Value>) -> io::Result<String> {
-    let outer = value.ok_or_else(|| decline("status dependency id"))?;
-    let id = outer.get("id").unwrap_or(outer);
-    if let Some(text) = id.as_str() {
-        return Ok(text
-            .strip_suffix("@latest")
-            .unwrap_or(text)
-            .to_string());
-    }
-    let part = |key| text(id.get(key).or_else(|| outer.get(key)));
-    let raw_name = part("name")?;
-    let (name, inline_ver) = raw_name
-        .rsplit_once('@')
-        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
-    let suffix = resolve_dep_version_suffix(outer, id, inline_ver)?;
-    if let Some(scope) = part("scope")
-        .ok()
-        .filter(|scope| !scope.is_empty())
-    {
-        return Ok(format!("{scope}/{name}{suffix}"));
-    }
-    if name.contains('/') {
-        return Ok(format!("{name}{suffix}"));
-    }
-    Err(decline("status dependency scope"))
-}
-
-fn resolve_dep_version_suffix(
-    outer: &Value,
-    id: &Value,
-    inline_ver: Option<&str>,
-) -> io::Result<String> {
-    let raw_version = nullish(id.get("version"))
-        .or_else(|| nullish(outer.get("version")))
-        .or_else(|| nullish(id.get("head")))
-        .or_else(|| nullish(outer.get("head")));
-    let version = match raw_version {
-        None => inline_ver
-            .filter(|ver| *ver != "latest")
-            .unwrap_or(""),
-        Some(Value::String(version)) if version.is_empty() || version == "latest" => "",
-        Some(Value::String(version)) => version,
-        Some(_) => return Err(decline("status dependency version")),
-    };
-    Ok(if version.is_empty() { String::new() } else { format!("@{version}") })
 }
 
 pub(in crate::commands) fn export_package_config(

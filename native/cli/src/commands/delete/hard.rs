@@ -250,10 +250,6 @@ fn apply_hard_arg<'a>(
         "--force=false" => state.force = false,
         "--update-main" | "--update-main=true" => state.update_main = true,
         "--update-main=false" => state.update_main = false,
-        "-sf" | "-fs" => {
-            state.silent = true;
-            state.force = true;
-        }
         "--range" => {
             let val = iter.next()?;
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
@@ -263,12 +259,33 @@ fn apply_hard_arg<'a>(
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             state.has_range = true;
         }
+        flag if apply_combined_hard_short(flag, state) => {}
         value if !value.starts_with('-') && !value.is_empty() && state.pattern.is_none() => {
             state.pattern = Some(value);
         }
         _ => return None,
     }
     Some(())
+}
+
+fn apply_combined_hard_short(flag: &str, state: &mut ParseState<'_>) -> bool {
+    if !flag.starts_with('-')
+        || flag.starts_with("--")
+        || flag.len() <= 2
+        || !flag[1..]
+            .chars()
+            .all(|ch| matches!(ch, 's' | 'f'))
+    {
+        return false;
+    }
+    for ch in flag[1..].chars() {
+        if ch == 's' {
+            state.silent = true;
+        } else {
+            state.force = true;
+        }
+    }
+    true
 }
 
 fn feature_enabled(global: &GlobalConfig) -> bool {
@@ -299,9 +316,13 @@ impl Context {
         let scope_path = root.as_deref().map(bit_object_import::scope_path);
         let scope: Value = scope_path
             .as_ref()
-            .map(|path| fs::read(path.join("scope.json")))
+            .and_then(|path| match fs::read(path.join("scope.json")) {
+                Ok(bytes) => Some(Ok(bytes)),
+                Err(err) if err.kind() == io::ErrorKind::NotFound => None,
+                Err(err) => Some(Err(err)),
+            })
             .transpose()?
-            .map(|bytes| serde_json::from_slice(&bytes))
+            .map(|bytes| bit_workspace_config::parse_jsonc(&bytes))
             .transpose()?
             .unwrap_or(Value::Null);
         if !scope["resolverPath"].is_null() || !scope["hooksPath"].is_null() {
@@ -313,7 +334,7 @@ impl Context {
                 if bytes.len() > 1024 * 1024 {
                     return Err(io::Error::other("global remotes budget"));
                 }
-                validate_remote_hosts(&serde_json::from_slice::<Value>(&bytes)?)?;
+                validate_remote_hosts(&bit_workspace_config::parse_jsonc(&bytes)?)?;
             }
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error),

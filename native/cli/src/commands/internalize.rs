@@ -12,8 +12,9 @@ use super::{
         write_bitmap_if_changed,
     },
     color::Chalk,
-    debug_cat::lookup::{load_cat_component, resolve_component_entry},
-    lane::scope_root::ScopeRoot,
+    lint_cmd::{
+        has_variants_internalize_config, is_comp_json_entry_internal, is_scope_entry_internal,
+    },
     scope_set::{Failure, selection},
     workspace_command::{self, format::Formatter, results::Report},
 };
@@ -124,7 +125,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_internalize(iter, &mut options.pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-r" | "--revert" | "--revert=true" => options.revert = true,
             "--revert=false" => options.revert = false,
             "-l" | "--list" | "--list=true" => options.list = true,
@@ -199,15 +200,6 @@ fn prepare_list(
     Ok(Prepared::List { ids })
 }
 
-fn has_variants_internalize_config(workspace_val: &Value) -> bool {
-    let Some(rows) = workspace_val.as_object() else {
-        return false;
-    };
-    rows.iter()
-        .find(|(key, _)| key.split('@').next() == Some("teambit.workspace/variants"))
-        .is_some_and(|(_, val)| val.to_string().contains(INTERNALIZE_ASPECT_ID))
-}
-
 fn is_entry_internal(
     root: &Path,
     bitmap_val: &Value,
@@ -223,56 +215,10 @@ fn is_entry_internal(
         }
         return Ok(cfg["internal"].as_bool().unwrap_or(false));
     }
-    if let Some(internal) = is_comp_json_entry_internal(root, entry)? {
+    if let Some(internal) = is_comp_json_entry_internal(root, entry, INTERNALIZE_ASPECT_ID)? {
         return Ok(internal);
     }
-    is_scope_entry_internal(root, entry)
-}
-
-fn is_comp_json_entry_internal(root: &Path, entry: &BitmapEntry) -> Result<Option<bool>, Failure> {
-    if entry.root_dir.is_empty() {
-        return Ok(None);
-    }
-    let comp_json_path = root.join(&entry.root_dir).join("component.json");
-    if !comp_json_path.exists() {
-        return Ok(None);
-    }
-    let bytes = fs::read(&comp_json_path)?;
-    let parsed: Value = bit_object_import::parse_jsonc(&bytes)?;
-    let Some((_, cfg)) =
-        super::update_cmd::aspect_entry(&parsed["extensions"], INTERNALIZE_ASPECT_ID)
-    else {
-        return Ok(None);
-    };
-    if cfg.as_str() == Some("-") {
-        return Ok(Some(false));
-    }
-    Ok(Some(cfg["internal"].as_bool().unwrap_or(false)))
-}
-
-fn is_scope_entry_internal(root: &Path, entry: &BitmapEntry) -> Result<bool, Failure> {
-    let scope_dir = workspace::scope_path(root);
-    let bare_id = entry.id.to_string_without_version();
-    let Some(ver) = entry.id.version
-        .as_deref()
-        .filter(|ver| !ver.is_empty())
-    else {
-        if resolve_component_entry(&scope_dir, &bare_id).is_some() {
-            return Err(Failure::Declined("unversioned bitmap entry exists in scope".into()));
-        }
-        return Ok(false);
-    };
-    let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
-    let Some(ver_val) = load_cat_component(&scope_root, &scope_dir, &format!("{bare_id}@{ver}"))
-    else {
-        return Err(Failure::Declined("version object missing in local scope".into()));
-    };
-    let ext = ver_val["extensions"]
-        .as_array()
-        .and_then(|arr| {
-            arr.iter().find(|ext| super::update_cmd::matches_aspect(ext, INTERNALIZE_ASPECT_ID))
-        });
-    Ok(ext.is_some_and(|item| item["config"]["internal"].as_bool().unwrap_or(false)))
+    is_scope_entry_internal(root, entry, INTERNALIZE_ASPECT_ID)
 }
 
 fn prepare_mutate(

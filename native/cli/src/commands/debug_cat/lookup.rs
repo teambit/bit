@@ -1,4 +1,4 @@
-use super::sha1_hex;
+pub(in crate::commands) use crate::commands::lane::scope_root::diagnose_component_lookup_error;
 use crate::commands::{color::Chalk, lane::scope_root::ScopeRoot};
 use serde_json::Value;
 use std::{fs, path::Path};
@@ -22,12 +22,16 @@ pub(in crate::commands) fn load_cat_component(
     let Some(ver) = version_opt else {
         return Some(comp_val);
     };
-    let ver_hash = (ver == "latest")
+    let ver_hash = is_head_alias(ver)
         .then(|| current_lane_head(root, scope_dir, comp_scope.as_deref(), &comp_name))
         .flatten()
         .or_else(|| resolve_version_hash(&comp_val, ver))?;
     let (v_kind, ver_val) = bit_object_import::read_scope_object(scope_dir, &ver_hash).ok()??;
     (v_kind == "Version").then_some(ver_val)
+}
+
+fn is_head_alias(ver: &str) -> bool {
+    matches!(ver, "latest" | "head")
 }
 
 pub(in crate::commands) fn resolve_scope_target_id(
@@ -43,7 +47,7 @@ pub(in crate::commands) fn resolve_scope_target_id(
     }
     let (id_without_ver, comp_val) = load_scope_component_model(scope_dir, bare_id)?;
     let ver_str = match version_opt {
-        Some(ver) if ver != "latest" => ver.to_owned(),
+        Some(ver) if !is_head_alias(ver) => ver.to_owned(),
         _ => resolve_head_version_label(&comp_val)?,
     };
     let id_with_ver = format!("{id_without_ver}@{ver_str}");
@@ -88,28 +92,46 @@ fn current_lane_head(
     comp_name: &str,
 ) -> Option<String> {
     let lane_val = active_lane_object(root, scope_dir)?;
-    if let Some(comp) = lane_val["components"]
-        .as_array()
-        .and_then(|arr| {
-            arr.iter()
-                .find(|row| {
-                    row["id"]["name"].as_str() == Some(comp_name)
-                        && row["id"]["scope"].as_str() == comp_scope
-                })
-        })
-    {
-        return comp["head"].as_str().map(str::to_owned);
-    }
     let full_id =
         comp_scope.map_or_else(|| comp_name.to_owned(), |scope| format!("{scope}/{comp_name}"));
-    lane_val["updateDependents"]
-        .as_array()?
-        .iter()
-        .filter_map(Value::as_str)
-        .find_map(|entry| {
-            let (id, hash) = entry.rsplit_once('@')?;
-            (id == full_id || id == comp_name).then(|| hash.to_owned())
-        })
+    for field in ["components", "updateDependents"] {
+        if let Some(head) = lane_val[field]
+            .as_array()
+            .and_then(|arr| {
+                arr.iter()
+                    .find_map(|row| match_lane_entry_head(row, comp_scope, comp_name, &full_id))
+            })
+        {
+            return Some(head);
+        }
+    }
+    None
+}
+
+fn match_lane_entry_head(
+    row: &Value,
+    comp_scope: Option<&str>,
+    comp_name: &str,
+    full_id: &str,
+) -> Option<String> {
+    if let Some(raw) = row.as_str() {
+        let (id, hash) = raw.rsplit_once('@')?;
+        return (id == full_id || id == comp_name).then(|| hash.to_owned());
+    }
+    let head = row["head"]
+        .as_str()
+        .or_else(|| row["version"].as_str())?;
+    let id_node = row.get("id").unwrap_or(row);
+    if let Some(raw) = id_node.as_str() {
+        let base = raw.split('@').next().unwrap_or(raw);
+        return (base == full_id || base == comp_name).then(|| head.to_owned());
+    }
+    let row_scope = id_node["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty());
+    (id_node["name"].as_str() == Some(comp_name)
+        && (row_scope.is_none() || row_scope == comp_scope))
+        .then(|| head.to_owned())
 }
 
 fn active_lane_object(root: &ScopeRoot, scope_dir: &Path) -> Option<Value> {
@@ -119,14 +141,17 @@ fn active_lane_object(root: &ScopeRoot, scope_dir: &Path) -> Option<Value> {
     let bitmap =
         bit_install::jsonc::parse(&fs::read_to_string(root.path.join(".bitmap")).ok()?).ok()?;
     let lane_id = &bitmap["_bit_lane"]["id"];
-    let lane_key = format!("{}/{}", lane_id["scope"].as_str()?, lane_id["name"].as_str()?);
+    let name = lane_id["name"]
+        .as_str()
+        .filter(|val| !val.is_empty() && *val != "main")?;
+    let lane_key = format!("{}/{name}", lane_id["scope"].as_str()?);
     let (_, _, lane_hash) = resolve_lane_entry(scope_dir, &lane_key)?;
     let (kind, lane_val) = bit_object_import::read_scope_object(scope_dir, &lane_hash).ok()??;
     (kind == "Lane").then_some(lane_val)
 }
 
 fn resolve_version_hash(comp_val: &Value, ver: &str) -> Option<String> {
-    if ver == "latest" {
+    if is_head_alias(ver) {
         return comp_val["head"].as_str().map(str::to_owned);
     }
     if let Some(hash) = comp_val["versions"].get(ver).and_then(Value::as_str) {
@@ -145,13 +170,16 @@ pub(in crate::commands) fn resolve_lane_entry(
     if id == "main" {
         return None;
     }
-    let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let lanes = if index.is_array() { &[][..] } else { index["lanes"].as_array()? };
+    let index: Value =
+        bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let lanes = index["lanes"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
     if let Some((scope, name)) = id.split_once('/') {
         return find_lane_in_index(lanes, scope, name);
     }
-    let scope_json: Value =
-        serde_json::from_slice(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
+    let scope_json =
+        bit_object_import::parse_jsonc(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
     if let Some(tracked) = scope_json["lanes"]["tracking"]
         .as_array()
         .and_then(|arr| {
@@ -190,7 +218,8 @@ pub(in crate::commands) fn resolve_component_entry(
     scope_dir: &Path,
     bare_id: &str,
 ) -> Option<(Option<String>, String, String)> {
-    let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let index: Value =
+        bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     let active: Vec<&Value> = index["components"]
         .as_array()
         .or_else(|| index.as_array())?
@@ -201,11 +230,8 @@ pub(in crate::commands) fn resolve_component_entry(
         .iter()
         .copied()
         .filter(|row| {
-            let name = row["id"]["name"].as_str().unwrap_or_default();
-            row["id"]["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-                .map_or_else(|| name == bare_id, |scope| format!("{scope}/{name}") == bare_id)
+            let (scope, name) = index_row_scope_and_name(row);
+            if scope.is_empty() { name == bare_id } else { format!("{scope}/{name}") == bare_id }
         })
         .collect();
     let row = if let [exact_row] = exact.as_slice() {
@@ -213,18 +239,36 @@ pub(in crate::commands) fn resolve_component_entry(
     } else {
         let by_name: Vec<&Value> = active
             .into_iter()
-            .filter(|row| row["id"]["name"].as_str() == Some(bare_id))
+            .filter(|row| index_row_scope_and_name(row).1 == bare_id)
             .collect();
         let [name_row] = by_name.as_slice() else {
             return None;
         };
         *name_row
     };
+    let (scope, name) = index_row_scope_and_name(row);
+    (!name.is_empty()).then_some(())?;
     Some((
-        row["id"]["scope"].as_str().map(str::to_owned),
-        row["id"]["name"].as_str()?.to_owned(),
+        (!scope.is_empty()).then(|| scope.to_owned()),
+        name.to_owned(),
         row["hash"].as_str()?.to_owned(),
     ))
+}
+
+fn index_row_scope_and_name(row: &Value) -> (&str, &str) {
+    if let Some(id_str) = row["id"].as_str() {
+        let bare = id_str
+            .split('@')
+            .next()
+            .unwrap_or(id_str);
+        return bare
+            .split_once('/')
+            .unwrap_or(("", bare));
+    }
+    (
+        row["id"]["scope"].as_str().unwrap_or_default(),
+        row["id"]["name"].as_str().unwrap_or_default(),
+    )
 }
 
 pub(in crate::commands) fn diagnose_lane_lookup_error(
@@ -232,10 +276,13 @@ pub(in crate::commands) fn diagnose_lane_lookup_error(
     id: &str,
     for_history: bool,
 ) -> Option<String> {
-    let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let lanes = if index.is_array() { &[][..] } else { index["lanes"].as_array()? };
-    let scope_json: Value =
-        serde_json::from_slice(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
+    let index: Value =
+        bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let lanes = index["lanes"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    let scope_json =
+        bit_object_import::parse_jsonc(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
     scope_json["name"].as_str()?;
     if let Some((scope, name)) = id.split_once('/') {
         return (!scope.is_empty() && !name.is_empty() && !name.contains('/')).then(|| {
@@ -312,7 +359,7 @@ pub(in crate::commands) fn diagnose_cat_component_error(
         .as_deref()
         .filter(|scope| !scope.is_empty())
         .map_or_else(|| comp_name.clone(), |scope| format!("{scope}/{comp_name}"));
-    let lane_head = (ver == "latest")
+    let lane_head = is_head_alias(ver)
         .then(|| current_lane_head(root, scope_dir, comp_scope.as_deref(), &comp_name))
         .flatten();
     diagnose_version_error(scope_dir, &comp_id, &comp_val, ver, lane_head.as_deref(), chalk)
@@ -326,7 +373,7 @@ fn diagnose_version_error(
     lane_head: Option<&str>,
     chalk: Chalk,
 ) -> Option<String> {
-    if ver == "latest" {
+    if is_head_alias(ver) {
         let ver_hash = lane_head
             .map(str::to_owned)
             .or_else(|| comp_val["head"].as_str().map(str::to_owned))?;
@@ -353,51 +400,4 @@ fn missing_version_on_fs_msg(ver: &str, comp_id: &str) -> String {
     format!(
         "error: version \"{ver}\" of component {comp_id} was not found on the filesystem.\ntry running \"bit import\". if it doesn't help, try running \"bit import {comp_id} --objects\"",
     )
-}
-
-pub(in crate::commands) fn diagnose_component_lookup_error(
-    scope_dir: &Path,
-    raw_id: &str,
-    bare_id: &str,
-    chalk: Chalk,
-) -> Option<String> {
-    if raw_id.starts_with('@') || bare_id.is_empty() {
-        return None;
-    }
-    let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let comps = index["components"].as_array().or_else(|| index.as_array())?;
-    let object_exists = bit_object_import::read_scope_object(scope_dir, &sha1_hex(bare_id))
-        .ok()
-        .flatten()
-        .is_some();
-    if object_exists {
-        return None;
-    }
-    if let Some((scope, name)) = bare_id.split_once('/') {
-        if scope.is_empty() || name.is_empty() || name.contains('/') {
-            return None;
-        }
-        let display_id = raw_id.strip_suffix("@latest").unwrap_or(raw_id);
-        return Some(format!(r#"error: component "{}" was not found"#, chalk.bold(display_id)));
-    }
-    diagnose_unscoped_component_error(comps, raw_id, bare_id)
-}
-
-fn diagnose_unscoped_component_error(
-    comps: &[Value],
-    raw_id: &str,
-    bare_id: &str,
-) -> Option<String> {
-    if bare_id.contains('.') {
-        return None;
-    }
-    match comps
-        .iter()
-        .filter(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(bare_id))
-        .count()
-    {
-        0 => Some(format!("scope.getParsedId, the component {raw_id} must include a scope-name")),
-        count if count > 2 => Some("getHashFromIndex expect to get zero or one result".to_owned()),
-        _ => None,
-    }
 }

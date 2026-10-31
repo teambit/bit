@@ -298,7 +298,6 @@ pub(in crate::workspace::engine) fn apply(
     }
     if deferred {
         receipt["requiresWriteDependencies"] = json!(true);
-        let mut retained = retained;
         retained.applied = true;
         retained.receipt = receipt.clone();
         state.inbound = Some(retained);
@@ -333,8 +332,6 @@ fn commit_inbound(retained: &mut Retained, omit_receipts: bool) -> io::Result<Op
     Ok(writes)
 }
 
-/// Compare the current lane with main using the retained remote import before
-/// publishing it. The status command can still decline without changing scope.
 pub(in crate::workspace::engine) fn lane_updates(
     input: &super::super::status_models::lane_updates::Request,
     state: &State,
@@ -369,11 +366,12 @@ fn imported_identity(
 ) -> io::Result<String> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound target scope"))?;
     let model = details::model(root, imported, scope, &target.name)?;
-    let version = if target.version == "latest" {
-        details::head_as_tag_or_hash(model.as_ref())?
-    } else {
-        target.version.clone()
-    };
+    let version =
+        if target.version.is_empty() || matches!(target.version.as_str(), "latest" | "head") {
+            details::head_as_tag_or_hash(model.as_ref())?
+        } else {
+            target.version.clone()
+        };
     Ok(format!("{scope}/{}@{version}", target.name))
 }
 

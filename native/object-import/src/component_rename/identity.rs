@@ -15,7 +15,7 @@ pub(super) fn prepare(
     validate_name(&options.target)?;
     let (key, source) = selected(bitmap, &options.source)?;
     let source_name = row_name(key, source);
-    let source_scope = scope(source).ok_or_else(|| unsupported("rename source scope"))?;
+    let source_scope = resolve_source_scope(key, source, workspace)?;
     let target_scope = options.scope.as_deref().unwrap_or(source_scope);
     validate_scope(target_scope)?;
     if !preflight && source_name == options.target && source_scope == target_scope {
@@ -26,12 +26,7 @@ pub(super) fn prepare(
     let exported = source["scope"]
         .as_str()
         .is_some_and(|scope| !scope.is_empty());
-    let source_version = source["version"]
-        .as_str()
-        .filter(|version| !version.is_empty())
-        .or_else(|| key.rsplit_once('@').map(|(_, version)| version))
-        .filter(|version| !version.is_empty() && *version != "latest")
-        .map(str::to_owned);
+    let source_version = extract_source_version(key, source);
     staged(source_version.as_deref(), source_scope, source_name, exported)?;
     let source_directory =
         source["rootDir"].as_str().ok_or_else(|| unsupported("rename component root"))?;
@@ -49,6 +44,25 @@ pub(super) fn prepare(
         target_directory,
         exported,
     })
+}
+fn resolve_source_scope<'a>(
+    key: &'a str,
+    source: &'a Value,
+    workspace: &'a Value,
+) -> io::Result<&'a str> {
+    let ws_default_scope =
+        crate::component_tracking::identity::workspace_aspect(workspace)["defaultScope"]
+            .as_str()
+            .filter(|val| !val.is_empty());
+    row_scope(key, source).or(ws_default_scope).ok_or_else(|| unsupported("rename source scope"))
+}
+fn extract_source_version(key: &str, source: &Value) -> Option<String> {
+    source["version"]
+        .as_str()
+        .filter(|version| !version.is_empty())
+        .or_else(|| key.rsplit_once('@').map(|(_, version)| version))
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
+        .map(str::to_owned)
 }
 pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, &'a Value)> {
     select_row(bitmap, id, false)
@@ -78,7 +92,7 @@ fn select_row<'a>(
                 && (key_id == id
                     || *key == id
                     || row_name == id
-                    || scope(row).is_some_and(|scope| format!("{scope}/{row_name}") == id))
+                    || row_scope(key, row).is_some_and(|scope| format!("{scope}/{row_name}") == id))
         });
     let (key, row) = rows
         .next()
@@ -114,6 +128,16 @@ pub(crate) fn scope(row: &Value) -> Option<&str> {
                 .filter(|scope| !scope.is_empty())
         })
 }
+pub(crate) fn row_scope<'a>(key: &'a str, row: &'a Value) -> Option<&'a str> {
+    scope(row)
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map_or(key, |(bare, _)| bare)
+                .split_once('/')
+                .map(|(sc, _)| sc)
+                .filter(|sc| !sc.is_empty())
+        })
+}
 fn staged(version: Option<&str>, scope: &str, name: &str, exported: bool) -> io::Result<()> {
     if !exported && let Some(version) = version {
         return Err(invalid(format!(
@@ -129,7 +153,7 @@ pub fn validate_name(name: &str) -> io::Result<()> {
         && name
             .bytes()
             .all(|byte| {
-                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"-_/".contains(&byte)
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"-_$!/".contains(&byte)
             })
     {
         return Ok(());
@@ -148,7 +172,7 @@ fn validate_scope(scope: &str) -> io::Result<()> {
         || !scope
             .bytes()
             .all(|byte| {
-                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"-_.".contains(&byte)
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"-_$!.".contains(&byte)
             })
     {
         return Err(invalid(format!("invalid scope name: {scope}")));

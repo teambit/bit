@@ -1,6 +1,6 @@
 //! Released core-environment dependency policies for capsule manifests.
 
-use super::{BuiltinEnv, PackageDependencies};
+use super::{BuiltinEnv, EntryPointMetadata, ManifestConfig, PackageDependencies};
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 
@@ -103,4 +103,43 @@ pub(super) fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>)
                         .is_none_or(|env| !env.is_empty())
             })
     })
+}
+
+pub(super) fn configured_entry_points(manifest: &ManifestConfig, stem: &str) -> EntryPointMetadata {
+    let mut entry_points = entry_point_metadata(manifest.env, stem);
+    if let Some(types) = &manifest.overrides.entry_points.types {
+        entry_points.types = Some(types.clone());
+    }
+    if let Some(exports) = &manifest.overrides.entry_points.exports {
+        entry_points.exports = Some(exports.clone());
+    }
+    entry_points
+}
+
+fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
+    let types = (!matches!(env, BuiltinEnv::Empty)).then(|| format!("{stem}.ts"));
+    let exports = matches!(env, BuiltinEnv::Aspect).then(|| {
+        let main = format!("./dist/{stem}.js");
+        serde_json::json!({
+            "node": { "require": main, "import": "./dist/esm.mjs" },
+            "default": main,
+        })
+    });
+    EntryPointMetadata { types, exports }
+}
+
+pub(super) fn parse_builtin_env(env: Option<&str>) -> Option<BuiltinEnv> {
+    match env.map(|raw| raw.split('@').next().unwrap_or(raw)) {
+        None | Some("teambit.harmony/node") => Some(BuiltinEnv::Node),
+        Some("teambit.react/react") => Some(BuiltinEnv::React),
+        Some("teambit.html/html") => Some(BuiltinEnv::Html),
+        Some("teambit.react/react-native") => Some(BuiltinEnv::ReactNative),
+        Some("teambit.harmony/aspect") => Some(BuiltinEnv::Aspect),
+        Some("teambit.mdx/mdx") => Some(BuiltinEnv::Mdx),
+        Some("teambit.envs/env") => Some(BuiltinEnv::Environment),
+        Some("teambit.mdx/readme") => Some(BuiltinEnv::MdxReadme),
+        Some("teambit.harmony/bit-custom-aspect") => Some(BuiltinEnv::BitCustomAspect),
+        Some("teambit.harmony/empty-env") => Some(BuiltinEnv::Empty),
+        _ => None,
+    }
 }

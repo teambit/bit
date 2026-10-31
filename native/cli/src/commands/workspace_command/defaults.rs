@@ -2,13 +2,23 @@
 //! the engine can build its metadata. Every value is a constant of the
 //! environment, apart from the dev files.
 
+use super::{Engine, Request, checkout_scope, checkout_selection};
 use crate::commands::status::{
-    fresh::dev_files::{self, Group},
-    js::{decline, text},
+    cache,
+    fresh::{
+        dependency_grammar,
+        dev_files::{self, Group},
+    },
+    js::{array, decline, object, text, truthy},
     policy::Policy,
 };
 use serde_json::{Value, json};
-use std::io;
+use std::{
+    env,
+    ffi::OsString,
+    io,
+    path::{Path, PathBuf},
+};
 
 const NODE_ENV: &str = "teambit.harmony/node";
 /// The Node environment's icon.
@@ -114,6 +124,89 @@ pub(super) fn app_file(file: &str) -> bool {
             name.find(marker)
                 .is_some_and(|index| index + marker.len() < name.len())
         })
+}
+
+/// The user's home directory, as Node's `os.homedir()` reads it.
+pub fn home() -> PathBuf {
+    PathBuf::from(
+        env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
+    )
+}
+
+/// `commandPrepare`: the token, the context and the selected targets.
+pub(super) fn prepare(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    request: &Request<'_>,
+    preview_snapshot: bool,
+) -> io::Result<(String, Value, Vec<Value>)> {
+    let mut options = request.options.clone();
+    if options["includeNewFromScope"] == true {
+        options["scopeCandidates"] =
+            json!(checkout_scope::candidates(engine, root, home, request)?);
+    }
+    let prepared: Value = engine.request(&json!({
+        "kind": "commandPrepare",
+        "root": root,
+        "home": home,
+        "operation": request.operation,
+        "internalSnapshotPreview": preview_snapshot,
+        "deferCheckoutPattern": checkout_selection::deferred(request),
+        "dependencyGrammar": dependency_grammar()?,
+        "options": options,
+        "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),
+    }))?;
+    let token = text(prepared.get("token"))?.to_string();
+    let context = prepared
+        .get("context")
+        .filter(|context| truthy(Some(context)))
+        .cloned();
+    let mut context = context.ok_or_else(|| decline("command context"))?;
+    context["commandProgress"] = prepared["progress"].clone();
+    let targets = array(prepared.get("targets"), "command targets")?.to_vec();
+    Ok((token, context, targets))
+}
+
+/// The arguments as UTF-8, or `None`.
+pub fn utf8_args(args: &[OsString]) -> Option<Vec<&str>> {
+    args.iter()
+        .map(|arg| arg.to_str())
+        .collect()
+}
+
+/// `[options.to ?? '', ...model versions, ...orphaned versions]`.
+pub(in crate::commands) fn semver_values(
+    to: Option<&str>,
+    context: &Value,
+) -> io::Result<Vec<String>> {
+    let mut values = vec![to.unwrap_or_default().to_string()];
+    for model in array(context.get("models"), "models")? {
+        for field in ["versions", "orphanedVersions"] {
+            if let Some(versions) = model
+                .get(field)
+                .filter(|versions| !versions.is_null())
+            {
+                values.extend(object(versions)?.keys().cloned());
+            }
+        }
+    }
+    Ok(values)
+}
+
+/// `currentDateAndTimeToFileName()`: local time, unpadded.
+pub fn file_id() -> String {
+    use chrono::{Datelike, Timelike};
+    let now = chrono::Local::now();
+    format!(
+        "{}-{}-{}-{}-{}-{}",
+        now.year(),
+        now.month(),
+        now.day(),
+        now.hour(),
+        now.minute(),
+        now.second(),
+    )
 }
 
 #[cfg(test)]

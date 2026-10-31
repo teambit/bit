@@ -352,9 +352,8 @@ fn semver_values(context: &Value, targets: &[Value]) -> io::Result<Vec<String>> 
             let dependency = text(Some(dependency))?;
             values.push(
                 dependency
-                    .split('@')
-                    .nth(1)
-                    .unwrap_or_default()
+                    .rsplit_once('@')
+                    .map_or("", |(_, ver)| ver)
                     .to_string(),
             );
         }

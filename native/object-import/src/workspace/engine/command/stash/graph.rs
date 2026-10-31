@@ -30,6 +30,10 @@ pub(super) fn project(
         }
         row.version["flattenedDependencies"] = json!(flattened);
         row.version["flattenedEdges"] = json!(graph);
+        row.version
+            .as_object_mut()
+            .ok_or_else(|| invalid("stash Version"))?
+            .remove("flattenedEdgesRef");
     }
     Ok(None)
 }
@@ -89,16 +93,14 @@ fn key(id: &Value) -> String {
 fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     let mut rows = Vec::new();
     for (field, kind) in [("dependencies", "prod"), ("devDependencies", "dev")] {
-        for dependency in
-            version[field].as_array().ok_or_else(|| invalid("stash dependency list"))?
-        {
+        for dependency in array_or_empty(version, field, "stash dependency list")? {
             insert(
                 &mut rows,
                 json!({"source":canonical_id(source),"target":canonical_id(&dependency["id"]),"type":kind}),
             );
         }
     }
-    for extension in version["extensions"].as_array().ok_or_else(|| invalid("stash extensions"))? {
+    for extension in array_or_empty(version, "extensions", "stash extensions")? {
         if let Some(id) = extension.get("extensionId") {
             insert(
                 &mut rows,
@@ -107,6 +109,20 @@ fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
         }
     }
     Ok(rows)
+}
+
+fn array_or_empty<'a>(
+    version: &'a Value,
+    field: &str,
+    message: &'static str,
+) -> io::Result<&'a [Value]> {
+    match version.get(field) {
+        None | Some(Value::Null) => Ok(&[][..]),
+        Some(value) => value
+            .as_array()
+            .map(Vec::as_slice)
+            .ok_or_else(|| invalid(message)),
+    }
 }
 fn insert(rows: &mut Vec<Value>, edge: Value) {
     if let Some(old) = rows
@@ -191,8 +207,7 @@ fn load(id: &Value, repository: &mut Repository) -> io::Result<Value> {
             id["scope"].as_str().unwrap_or_default(),
             id["name"].as_str().unwrap_or_default(),
         );
-        let model =
-            repository.read(&crate::workspace::engine::hash(identity.as_bytes()), "Component")?;
+        let model = repository.read_component(&identity)?;
         versions::reference(&model, version)?
     };
     harmony::project(&repository.read(&reference, "Version")?)
@@ -233,20 +248,30 @@ fn canonical_id(id: &Value) -> Value {
 }
 fn raw_dependency_ids(version: &mut Value, identities: &HashMap<String, Value>) -> io::Result<()> {
     for field in ["dependencies", "devDependencies"] {
-        for dependency in
-            version[field].as_array_mut().ok_or_else(|| invalid("stash dependencies"))?
-        {
+        for dependency in array_mut_or_empty(version, field, "stash dependencies")? {
             dependency["id"] = ordered_id(&dependency["id"], identities);
         }
     }
-    for extension in
-        version["extensions"].as_array_mut().ok_or_else(|| invalid("stash extensions"))?
-    {
+    for extension in array_mut_or_empty(version, "extensions", "stash extensions")? {
         if let Some(id) = extension.get("extensionId").cloned() {
             extension["extensionId"] = ordered_id(&id, identities);
         }
     }
     Ok(())
+}
+
+fn array_mut_or_empty<'a>(
+    version: &'a mut Value,
+    field: &str,
+    message: &'static str,
+) -> io::Result<&'a mut [Value]> {
+    match version.get_mut(field) {
+        None | Some(Value::Null) => Ok(&mut [][..]),
+        Some(value) => value
+            .as_array_mut()
+            .map(Vec::as_mut_slice)
+            .ok_or_else(|| invalid(message)),
+    }
 }
 
 fn unversioned(

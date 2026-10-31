@@ -38,7 +38,9 @@ fn all_targets(bitmap: &Value, settings: &Value) -> io::Result<Vec<Value>> {
         if key.starts_with('$') || key == "version" {
             continue;
         }
-        let row = row.as_object_mut().ok_or_else(|| invalid("history bitmap row"))?;
+        let Some(row) = row.as_object_mut() else {
+            continue;
+        };
         row.remove("isAvailableOnCurrentLane");
         row.remove("onLanesOnly");
     }

@@ -228,12 +228,25 @@ impl GcGraph {
 }
 
 pub(super) fn comp_value_key(comp: &Value) -> String {
+    if let Some(id_str) = comp.as_str() {
+        return id_str
+            .split('@')
+            .next()
+            .unwrap_or(id_str)
+            .to_owned();
+    }
     let scope = comp["scope"].as_str().unwrap_or("");
     let name = comp["name"].as_str().unwrap_or("");
     if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 
 pub(super) fn resolve_comp_version_ref(comp: &Value, ver: &str) -> Option<String> {
+    if matches!(ver, "latest" | "head") {
+        return comp["head"]
+            .as_str()
+            .filter(|val| !val.is_empty())
+            .map(str::to_owned);
+    }
     comp["versions"]
         .get(ver)
         .and_then(Value::as_str)

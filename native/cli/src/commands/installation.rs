@@ -8,22 +8,16 @@ use crate::{
     commands::{
         color::Chalk,
         install::{self, Input, Terminal},
-        status::{
-            cache::cache_root,
-            js::{array, text},
-        },
+        status::js::{array, text},
         workspace_command::format::Formatter,
     },
     discovery::{self, Target},
     host::Host,
 };
-use bit_install::{
-    HostInfo, InstallOptions, Outcome,
-    config::{EffectiveConfig, ScopeJson, WorkspaceConfig, load_global_config, scope_path},
-    output::Output,
-};
+use bit_install::{HostInfo, InstallOptions, Outcome, config::WorkspaceConfig, output::Output};
+use canonical::{canonical_workspace, deps_graph_enabled};
 use serde_json::{Value, json};
-use std::{env, io, path::Path, sync::Arc};
+use std::{io, path::Path, sync::Arc};
 
 const YARN: &str = "teambit.dependencies/yarn";
 
@@ -369,81 +363,4 @@ impl Installer {
             _ => Err(io::Error::other("published InstallMain.install receipt")),
         }
     }
-}
-
-fn canonical_workspace(root: &Path, react_service: bool) -> io::Result<bool> {
-    let config = WorkspaceConfig::load(root)?;
-    let core: Vec<String> = serde_json::from_str(include_str!(
-        "../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-    ))?;
-    let custom = |id: &str| {
-        !core
-            .iter()
-            .any(|core| core == bit_install::config::aspect_id_without_version(id))
-    };
-    if config.aspects.keys().any(|id| custom(id)) {
-        return Ok(true);
-    }
-    if scope_has_custom_aspects(root, &custom)? {
-        return Ok(true);
-    }
-    let global = load_global_config(&cache_root().join("config"))?;
-    if global
-        .keys()
-        .any(|id| id.contains('/') && custom(id))
-    {
-        return Ok(true);
-    }
-    let raw = bit_install::jsonc::parse(&std::fs::read_to_string(&config.path)?)?;
-    if !raw["require"].is_null()
-        && raw["require"] != false
-        && raw["require"] != json!([])
-        && raw["require"] != ""
-    {
-        return Ok(true);
-    }
-    let workspace = bit_install::workspace::Workspace::load(root, &config, &core)?;
-    Ok(workspace.components
-        .iter()
-        .any(|component| {
-            let bare_env = bit_install::config::aspect_id_without_version(&component.env_id);
-            (bare_env != "teambit.harmony/node"
-                && !(react_service && bare_env == "teambit.react/react"))
-                || component.config.keys().any(|id| custom(id))
-        }))
-}
-
-fn scope_has_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Result<bool> {
-    let path = scope_path(root).join("scope.jsonc");
-    if !path.try_exists()? {
-        return Ok(false);
-    }
-    let raw = bit_install::jsonc::parse(&std::fs::read_to_string(path)?)?;
-    Ok(raw
-        .as_object()
-        .is_none_or(|entries| {
-            entries
-                .keys()
-                .any(|id| id != "$schema" && id.contains('/') && custom(id))
-        }))
-}
-
-/// `isFeatureEnabled(DEPS_GRAPH)`: `BIT_FEATURES`, else the `features` config.
-fn deps_graph_enabled(root: &Path) -> io::Result<bool> {
-    let features = if let Some(features) = env::var("BIT_FEATURES")
-        .ok()
-        .filter(|features| !features.is_empty())
-    {
-        Some(features)
-    } else {
-        let global = load_global_config(&cache_root().join("config"))?;
-        let scope = ScopeJson::load(&scope_path(root))?;
-        let workspace = WorkspaceConfig::load(root)?;
-        EffectiveConfig::new(&global, &scope.config, &workspace.config_store).get("features")
-    };
-    Ok(features.is_some_and(|features| {
-        features
-            .split(',')
-            .any(|feature| feature.trim() == "deps-graph")
-    }))
 }

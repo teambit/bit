@@ -1,11 +1,12 @@
 //! Native `capsule prune` planning and removal.
 
 use super::{
-    Chalk, History, Outcome, Report, ScopeRoot, emit_report, global_config_dir, list_stats,
-    merge_layers, read_combined_config, read_global_config, resolve_capsules_dir,
+    Chalk, History, Outcome, Report, ScopeRoot, emit_report, list_stats, resolve_capsules_dir,
     workspace_command,
 };
-use bit_workspace_config::environment_value;
+use bit_workspace_config::{
+    environment_value, global_config_dir, merge_layers, read_global_config,
+};
 use chrono::{Datelike, Local};
 use serde::Serialize;
 use serde_json::{Map, Value};
@@ -176,7 +177,7 @@ fn build(cwd: &Path, root: Option<&ScopeRoot>, opts: &PruneArgs) -> io::Result<P
 
 fn prune_config(root: Option<&ScopeRoot>) -> io::Result<Map<String, Value>> {
     if let Some(root) = root {
-        read_combined_config(root)
+        list_stats::read_combined_config(root)
     } else {
         Ok(merge_layers(&read_global_config(&global_config_dir())?, &Value::Null, &Value::Null))
     }

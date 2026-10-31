@@ -75,7 +75,7 @@ fn resolve_target_id(
         let identity = entry.id.to_string_without_version();
         let ver = explicit_ver.or(entry.id.version.as_deref());
         let full = match ver {
-            Some(ver_str) if !ver_str.is_empty() && ver_str != "latest" => {
+            Some(ver_str) if !ver_str.is_empty() && !matches!(ver_str, "latest" | "head") => {
                 format!("{identity}@{ver_str}")
             }
             _ => identity.clone(),
@@ -103,7 +103,9 @@ fn resolve_scope_target_id(
         .flatten()
         .ok_or_else(|| Failure::Declined("missing Component object".into()))?;
     let ver = match explicit_ver {
-        Some(ver_str) if !ver_str.is_empty() && ver_str != "latest" => Some(ver_str.to_owned()),
+        Some(ver_str) if !ver_str.is_empty() && !matches!(ver_str, "latest" | "head") => {
+            Some(ver_str.to_owned())
+        }
         _ => latest_version_label(&comp_val),
     };
     let full = ver.map_or_else(|| identity.clone(), |ver_str| format!("{identity}@{ver_str}"));
@@ -127,7 +129,7 @@ fn resolve_missing_scope_target(
         selection::validate_scope_name(scope)?;
         selection::validate_component_name(name)?;
         let full = match explicit_ver {
-            Some(ver_str) if ver_str != "latest" => format!("{bare}@{ver_str}"),
+            Some(ver_str) if !matches!(ver_str, "latest" | "head") => format!("{bare}@{ver_str}"),
             _ => bare.to_owned(),
         };
         return Ok((full, bare.to_owned()));
@@ -179,7 +181,7 @@ fn add_scope_component_versions(scope_dir: &Path, row: &Value, graph: &mut DepGr
     if kind != "Component" {
         return;
     }
-    let Some(identity) = component_identity(&comp_val) else { return };
+    let Some(identity) = component_identity(&comp_val, row) else { return };
     for (ver_label, ver_hash) in collect_all_versions(&comp_val) {
         if let Some((v_kind, ver_val)) =
             bit_object_import::read_scope_object(scope_dir, &ver_hash).ok().flatten()
@@ -223,7 +225,7 @@ fn add_latest_model_to_ws_graph(
     if kind != "Component" {
         return;
     }
-    let Some(identity) = component_identity(&comp_val) else { return };
+    let Some(identity) = component_identity(&comp_val, row) else { return };
     let Some(latest_ver) = latest_version_label(&comp_val) else { return };
     let node_id = format!("{identity}@{latest_ver}");
     if ws_ids.get(&identity) == Some(&node_id) {
@@ -305,12 +307,23 @@ fn match_ws_target(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<St
     None
 }
 
-fn component_identity(comp_val: &Value) -> Option<String> {
-    let name = comp_val["name"].as_str()?;
+fn component_identity(comp_val: &Value, row: &Value) -> Option<String> {
+    let name = comp_val["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["id"]["name"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })?;
     match comp_val["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
-    {
+        .or_else(|| {
+            row["id"]["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+        }) {
         Some(scope) => Some(format!("{scope}/{name}")),
         None => Some(name.to_owned()),
     }

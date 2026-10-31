@@ -26,15 +26,22 @@ pub(super) fn read(root: &Path) -> io::Result<Value> {
     Ok(json!({"bitmap":bitmap,"components":components,"workspace":context["workspace"]}))
 }
 pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Value> {
+    let (bare, explicit_ver) = source
+        .rsplit_once('@')
+        .map_or((source, None), |(id, ver)| (id, Some(ver)));
     inventory["components"]
         .as_array()?
         .iter()
         .find(|row| {
-            row["identity"] == source
+            let id_matches = row["identity"] == bare
                 || row["identity"]
                     .as_str()
                     .and_then(|id| id.split_once('/').map(|(_, name)| name))
-                    == Some(source)
+                    == Some(bare);
+            let ver_matches = explicit_ver.is_none_or(|ver| {
+                matches!(ver, "latest" | "head") || row["version"].as_str() == Some(ver)
+            });
+            id_matches && ver_matches
         })
 }
 pub(super) fn default_scope(inventory: &Value) -> io::Result<String> {

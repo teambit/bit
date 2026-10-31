@@ -14,8 +14,7 @@ use serde_json::{Value, json};
 use std::{
     env,
     ffi::OsString,
-    fs,
-    io::{self, Write},
+    fs, io,
     path::{Path, PathBuf},
 };
 
@@ -94,7 +93,7 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?
         .into_iter()
-        .filter(|token| *token != "--no-color")
+        .filter(|token| !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     let (&"set", rest) = tokens.split_first()? else {
         return None;
@@ -123,7 +122,7 @@ pub(super) fn collect_non_flag_tokens<'a>(rest: &[&'a str]) -> Option<Vec<&'a st
         if token == "--" {
             return collect_trailing(&mut positional, iter).then_some(positional);
         }
-        if token == "--no-color" {
+        if matches!(token, "--no-color" | "--no-color=true" | "--no-color=false") {
             continue;
         }
         if token.is_empty() || token.starts_with('-') {
@@ -240,8 +239,8 @@ fn update_bitmap_default_scope(
             continue;
         }
         let default_scope = row["defaultScope"].as_str();
-        if default_scope == Some(old_scope)
-            || (default_scope == Some("") && row["scope"].as_str().is_none_or(str::is_empty))
+        let unscoped = row["scope"].as_str().is_none_or(str::is_empty);
+        if default_scope == Some(old_scope) || (default_scope.is_none_or(str::is_empty) && unscoped)
         {
             row["defaultScope"] = json!(new_scope);
             changed = true;
@@ -313,6 +312,7 @@ fn set_entry_default_scope(
             !key.starts_with('$')
                 && !matches!(key.as_str(), "_bit_lane" | "version")
                 && row.is_object()
+                && row["isAvailableOnCurrentLane"] != false
                 && ((!entry.root_dir.is_empty()
                     && row["rootDir"].as_str() == Some(entry.root_dir.as_str()))
                     || super::update_cmd::bitmap_row_name(key, row) == entry.id.name)
@@ -335,7 +335,7 @@ impl WorkspacePlan {
     fn commit(self, chalk: Chalk) -> io::Result<Report> {
         let formatter = Formatter::new(chalk);
         let file_id = workspace_command::file_id();
-        publish_workspace_default_scope(
+        selection::publish_workspace_default_scope(
             &self.root,
             &self.workspace_before,
             &self.ws_key,
@@ -381,44 +381,4 @@ impl ComponentPlan {
             .collect::<Vec<_>>();
         Ok(Report { data: format!("{title}\n{}", items.join("\n")), code: 0, details: None })
     }
-}
-
-fn publish_workspace_default_scope(
-    root: &Path,
-    before: &[u8],
-    key: &str,
-    scope: &str,
-    file_id: &str,
-) -> io::Result<()> {
-    let text = std::str::from_utf8(before).map_err(io::Error::other)?;
-    let mut document = bit_workspace_config::jsonc::Document::parse(text)?;
-    document.set(&[key, "defaultScope"], &json!(scope));
-    let _ = backup_workspace_config(root, before, scope, file_id);
-    let rendered = format!("{document}\n");
-    let bytes = if cfg!(windows)
-        && before
-            .windows(2)
-            .any(|pair| pair == b"\r\n")
-    {
-        rendered.replace('\n', "\r\n").into_bytes()
-    } else {
-        rendered.into_bytes()
-    };
-    fs::write(root.join("workspace.jsonc"), bytes)
-}
-
-fn backup_workspace_config(
-    root: &Path,
-    before: &[u8],
-    scope: &str,
-    file_id: &str,
-) -> io::Result<()> {
-    let directory = workspace::scope_path(root).join("workspace-config-history");
-    fs::create_dir_all(directory.join("files"))?;
-    fs::write(directory.join("files").join(file_id), before)?;
-    let mut metadata = fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(directory.join("metadata.txt"))?;
-    writeln!(metadata, "{file_id} default-scope ({scope})")
 }

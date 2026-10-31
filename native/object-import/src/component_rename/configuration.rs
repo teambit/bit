@@ -137,6 +137,7 @@ fn aspect_id(value: &Value) -> Option<String> {
     {
         return Some(
             id.strip_suffix("@latest")
+                .or_else(|| id.strip_suffix("@head"))
                 .unwrap_or(id)
                 .to_owned(),
         );
@@ -155,7 +156,7 @@ fn aspect_id(value: &Value) -> Option<String> {
         .as_str()
         .filter(|version| !version.is_empty())
         .or(inline_ver)
-        .filter(|version| !version.is_empty() && *version != "latest")
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
     {
         id.push('@');
         id.push_str(version);
@@ -317,8 +318,8 @@ pub(crate) fn target_key(
                 && identity::row_name(key, row) == name
         })
         .map(|(key, row)| {
-            let scope =
-                identity::scope(row).ok_or_else(|| unsupported("rename duplicate name scope"))?;
+            let scope = identity::row_scope(key, row)
+                .ok_or_else(|| unsupported("rename duplicate name scope"))?;
             Ok((key.clone(), format!("{scope}/{name}")))
         })
         .collect::<io::Result<Vec<_>>>()?;

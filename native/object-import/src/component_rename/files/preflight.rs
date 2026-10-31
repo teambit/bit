@@ -1,7 +1,7 @@
 //! Exported rename preflight validates dependent reads without retaining discarded writes.
-use super::{Plan, overlaid, refactor, unsupported};
+use super::{Plan, refactor, unsupported};
 use serde_json::Value;
-use std::{fs, io};
+use std::{fs, io, path::Path};
 
 pub(super) fn dependent(
     plan: &mut Plan,
@@ -20,4 +20,43 @@ pub(super) fn dependent(
     matcher.apply(&loaded)?;
     fs::metadata(&path)?;
     Ok(())
+}
+
+pub(super) fn overlaid(
+    plan: &mut Plan,
+    component: &Value,
+    relative: &str,
+    original: Vec<u8>,
+) -> io::Result<Vec<u8>> {
+    let Some(path) = component["sourceOverlays"].get(relative).and_then(Value::as_str) else {
+        return Ok(original);
+    };
+    let root = Path::new(
+        component["sourceOverlayRoot"]
+            .as_str()
+            .ok_or_else(|| unsupported("rename callback source root"))?,
+    );
+    let path = Path::new(path);
+    if !path.starts_with(root)
+        || root
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_none_or(|name| !name.starts_with("bit-native-callback-"))
+    {
+        return Err(unsupported("rename callback source outside private root"));
+    }
+    let temporary = std::env::temp_dir().canonicalize()?;
+    if root
+        .parent()
+        .ok_or_else(|| unsupported("rename callback source parent"))?
+        .canonicalize()?
+        != temporary
+    {
+        return Err(unsupported("rename callback source is not private temporary data"));
+    }
+    plan.observed.ancestors(
+        root,
+        path.parent().ok_or_else(|| unsupported("rename callback source path"))?,
+    )?;
+    super::super::required(&mut plan.observed, path)
 }

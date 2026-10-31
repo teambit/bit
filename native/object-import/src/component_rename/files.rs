@@ -2,6 +2,7 @@ pub(super) mod batch;
 mod eol;
 mod preflight;
 
+use self::preflight::overlaid;
 use super::{Plan, invalid, refactor, unsupported};
 use serde_json::Value;
 use std::{
@@ -22,10 +23,7 @@ pub(super) struct Change {
 pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     let component = facts["components"]
         .as_array()
-        .and_then(|rows| {
-            rows.iter()
-                .find(|row| row["identity"] == plan.identity.source)
-        });
+        .and_then(|rows| rows.iter().find(|row| identity_matches(row, &plan.identity.source)));
     let files = component
         .and_then(|row| row["files"].as_array())
         .ok_or_else(|| unsupported("rename source file inventory"))?;
@@ -53,12 +51,23 @@ pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     }
     prepare_dependencies(plan, facts)
 }
+fn identity_matches(row: &Value, expected: &str) -> bool {
+    let Some(raw) = row["identity"].as_str() else { return false };
+    let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+    let expected_bare = expected.rsplit_once('@').map_or(expected, |(prefix, _)| prefix);
+    bare == expected_bare
+        || bare
+            .split_once('/')
+            .is_some_and(|(_, name)| name == expected_bare)
+        || expected_bare
+            .split_once('/')
+            .is_some_and(|(_, name)| name == bare)
+}
 fn prepare_dependencies(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     if !plan.options.refactor {
         return Ok(());
     }
     if plan.identity.exported {
-        // Validate now; package replacements follow onAdd and original removal.
         let target = std::mem::take(&mut plan.files);
         dependencies(plan, facts, true)?;
         plan.files = target;
@@ -120,7 +129,7 @@ fn dependencies(plan: &mut Plan, facts: &Value, validate_only: bool) -> io::Resu
     for component in
         facts["components"].as_array().ok_or_else(|| unsupported("rename refactor inventory"))?
     {
-        if component["identity"] == plan.identity.source {
+        if identity_matches(component, &plan.identity.source) {
             continue;
         }
         dependent(plan, component, &mut matcher, validate_only)?;
@@ -140,7 +149,10 @@ fn dependent(
     for file in
         component["files"].as_array().ok_or_else(|| unsupported("rename dependent files"))?
     {
-        let relative = file.as_str().ok_or_else(|| unsupported("rename dependent path"))?;
+        let relative = file
+            .as_str()
+            .or_else(|| file["relativePath"].as_str())
+            .ok_or_else(|| unsupported("rename dependent path"))?;
         if validate_only {
             preflight::dependent(plan, component, directory, relative, matcher)?;
             continue;
@@ -184,14 +196,7 @@ fn dependent_file(
 }
 pub(super) fn apply(plan: &Plan) -> io::Result<()> {
     super::cleanup::apply(plan)?;
-    for change in &plan.files {
-        if let Some(parent) = change.destination.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        let bytes = change.writer.contents(change.bytes.clone(), cfg!(windows));
-        fs::write(&change.destination, bytes)?;
-        fs::set_permissions(&change.destination, change.permissions.clone())?;
-    }
+    write_changes(&plan.files)?;
     if plan.cleanup.is_none() { cleanup_sources(plan) } else { Ok(()) }
 }
 fn cleanup_sources(plan: &Plan) -> io::Result<()> {
@@ -254,45 +259,6 @@ fn safe_parent(root: &Path, path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn overlaid(
-    plan: &mut Plan,
-    component: &Value,
-    relative: &str,
-    original: Vec<u8>,
-) -> io::Result<Vec<u8>> {
-    let Some(path) = component["sourceOverlays"].get(relative).and_then(Value::as_str) else {
-        return Ok(original);
-    };
-    let root = Path::new(
-        component["sourceOverlayRoot"]
-            .as_str()
-            .ok_or_else(|| unsupported("rename callback source root"))?,
-    );
-    let path = Path::new(path);
-    if !path.starts_with(root)
-        || root
-            .file_name()
-            .and_then(|name| name.to_str())
-            .is_none_or(|name| !name.starts_with("bit-native-callback-"))
-    {
-        return Err(unsupported("rename callback source outside private root"));
-    }
-    let temporary = std::env::temp_dir().canonicalize()?;
-    if root
-        .parent()
-        .ok_or_else(|| unsupported("rename callback source parent"))?
-        .canonicalize()?
-        != temporary
-    {
-        return Err(unsupported("rename callback source is not private temporary data"));
-    }
-    plan.observed.ancestors(
-        root,
-        path.parent().ok_or_else(|| unsupported("rename callback source path"))?,
-    )?;
-    super::required(&mut plan.observed, path)
-}
-
 pub(super) fn target_load(
     plan: &mut Plan,
     component: &Value,
@@ -338,8 +304,8 @@ pub(super) fn refactor_loaded(
     }
     let mut matcher = refactor::PackageMatcher::new(packages.0, packages.1);
     for row in rows {
-        if row["identity"] == plan.identity.source && !plan.options.deprecate
-            || row["identity"] == plan.identity.target && !plan.identity.exported
+        if (identity_matches(row, &plan.identity.source) && !plan.options.deprecate)
+            || (identity_matches(row, &plan.identity.target) && !plan.identity.exported)
         {
             continue;
         }

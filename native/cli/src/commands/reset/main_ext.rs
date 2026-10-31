@@ -56,7 +56,7 @@ pub(super) fn dependent_error(root: &Path, identity: &str, head_only: bool) -> O
 
 /// Collect `(version_hash, "scope/name@version")` across all indexed components.
 fn load_all_version_refs(scope: &Path) -> io::Result<Vec<(String, String)>> {
-    let index: Value = serde_json::from_slice(&fs::read(scope.join("index.json"))?)?;
+    let index = parse_jsonc(&fs::read(scope.join("index.json"))?)?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -80,7 +80,29 @@ fn append_model_version_refs(
     row: &Value,
     refs: &mut Vec<(String, String)>,
 ) -> io::Result<()> {
-    let comp_scope = model["scope"]
+    let (comp_scope, comp_name) = model_scope_and_name(model, row);
+    if comp_name.is_empty() {
+        return Err(invalid("reset name"));
+    }
+    let identity =
+        if comp_scope.is_empty() { comp_name } else { format!("{comp_scope}/{comp_name}") };
+    for field in ["versions", "orphanedVersions"] {
+        if let Some(versions) = model[field].as_object() {
+            append_version_map(&identity, versions, refs)?;
+        }
+    }
+    Ok(())
+}
+
+fn model_scope_and_name(model: &Value, row: &Value) -> (String, String) {
+    let (id_scope, id_name) = row["id"]
+        .as_str()
+        .map_or(("", ""), |id_str| {
+            id_str
+                .split_once('/')
+                .unwrap_or(("", id_str))
+        });
+    let scope = model["scope"]
         .as_str()
         .filter(|val| !val.is_empty())
         .or_else(|| {
@@ -88,8 +110,8 @@ fn append_model_version_refs(
                 .as_str()
                 .filter(|val| !val.is_empty())
         })
-        .unwrap_or_default();
-    let comp_name = model["name"]
+        .unwrap_or(id_scope);
+    let name = model["name"]
         .as_str()
         .filter(|val| !val.is_empty())
         .or_else(|| {
@@ -97,18 +119,8 @@ fn append_model_version_refs(
                 .as_str()
                 .filter(|val| !val.is_empty())
         })
-        .ok_or_else(|| invalid("reset name"))?;
-    let identity = if comp_scope.is_empty() {
-        comp_name.to_owned()
-    } else {
-        format!("{comp_scope}/{comp_name}")
-    };
-    for field in ["versions", "orphanedVersions"] {
-        if let Some(versions) = model[field].as_object() {
-            append_version_map(&identity, versions, refs)?;
-        }
-    }
-    Ok(())
+        .unwrap_or(id_name);
+    (scope.to_owned(), name.to_owned())
 }
 
 /// Append version entries from a single version map (`versions` or `orphanedVersions`).
@@ -179,7 +191,7 @@ impl DetachedBatch {
     /// Prepare a batch reset of main-lane components with detached heads.
     pub(super) fn prepare(root: &Path) -> io::Result<Self> {
         let scope = scope_path(root);
-        let index: Value = serde_json::from_slice(&fs::read(scope.join("index.json"))?)?;
+        let index = parse_jsonc(&fs::read(scope.join("index.json"))?)?;
         let rows = index["components"]
             .as_array()
             .or_else(|| index.as_array())
@@ -210,9 +222,9 @@ impl DetachedBatch {
     pub(super) fn commit(&self, file_id: &str) -> io::Result<()> {
         let scope = scope_path(&self.root);
         for item in &self.items {
-            write_object(&scope, &item.model_hash, &item.model_after)?;
+            super::reports::write_object(&scope, &item.model_hash, &item.model_after)?;
             if let Some((hash, bytes)) = &item.history {
-                write_object(&scope, hash, bytes)?;
+                super::reports::write_object(&scope, hash, bytes)?;
             }
         }
         reset_main::backup_bitmap(&self.root, file_id)?;
@@ -231,28 +243,12 @@ fn prepare_item(scope: &Path, row: &Value) -> io::Result<Option<DetachedItem>> {
     }
     let current = detached_current_snap(&model, &local)?;
     let (parents, bitmap_version) = detached_parent_info(scope, &model, &current)?;
-    let comp_scope = model["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["id"]["scope"]
-                .as_str()
-                .filter(|val| !val.is_empty())
-        })
-        .ok_or_else(|| invalid("detached scope"))?
-        .to_owned();
-    let comp_name = model["name"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["id"]["name"]
-                .as_str()
-                .filter(|val| !val.is_empty())
-        })
-        .ok_or_else(|| invalid("detached name"))?
-        .to_owned();
+    let (comp_scope, comp_name) = model_scope_and_name(&model, row);
+    if comp_scope.is_empty() || comp_name.is_empty() {
+        return Err(invalid("detached scope or name"));
+    }
     update_detached_model(&mut model, &current)?;
-    let model_after = encode_object("Component", model_hash, &model)?;
+    let model_after = super::reports::encode_object("Component", model_hash, &model)?;
     let history = prepare_history(scope, &comp_scope, &comp_name, &current, &parents)?;
     Ok(Some(DetachedItem {
         identity: format!("{comp_scope}/{comp_name}"),
@@ -368,7 +364,7 @@ fn prepare_history(
         return Ok(None);
     }
     versions.push(json!({"hash": removed, "parents": parents}));
-    let bytes = encode_object("VersionHistory", &hash, &history)?;
+    let bytes = super::reports::encode_object("VersionHistory", &hash, &history)?;
     Ok(Some((hash, bytes)))
 }
 
@@ -380,68 +376,12 @@ fn project_bitmap(root: &Path, items: &[DetachedItem]) -> io::Result<Vec<u8>> {
     for item in items {
         let (scope, name) =
             item.identity.split_once('/').ok_or_else(|| invalid("detached item identity"))?;
-        let key = find_bitmap_key(fields, scope, name)?;
+        let key = super::reports::find_bitmap_key(fields, scope, name)?;
         let row = fields[&key].as_object_mut().ok_or_else(|| invalid("detached bitmap row"))?;
         row.insert("version".into(), Value::String(item.bitmap_version.clone()));
         row.shift_remove("nextVersion");
     }
     render_workspace_bitmap(&document)
-}
-
-/// Locate the `.bitmap` key for `scope/name`.
-fn find_bitmap_key(fields: &Map<String, Value>, scope: &str, name: &str) -> io::Result<String> {
-    fields
-        .iter()
-        .find_map(|(key, row)| {
-            if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
-                return None;
-            }
-            let (row_scope, row_name) =
-                crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
-            ((row_scope == scope || row_scope.is_empty()) && row_name == name).then(|| key.clone())
-        })
-        .ok_or_else(|| invalid("detached bitmap key absent"))
-}
-
-/// Encode a Bit scope object into a valid RFC 1950 zlib stream using stored deflate blocks.
-fn encode_object(kind: &str, hash: &str, value: &Value) -> io::Result<Vec<u8>> {
-    let body = serde_json::to_string(value).map_err(io::Error::other)?;
-    let raw = format!("{kind} {hash} {}\0{body}", body.encode_utf16().count()).into_bytes();
-    let mut out = vec![0x78, 0x01];
-    let chunks: Vec<&[u8]> = if raw.is_empty() { vec![&[]] } else { raw.chunks(65535).collect() };
-    for (index, chunk) in chunks.iter().enumerate() {
-        let last = u8::from(index + 1 == chunks.len());
-        let len = u16::try_from(chunk.len()).unwrap_or(0);
-        out.push(last);
-        out.extend_from_slice(&len.to_le_bytes());
-        out.extend_from_slice(&(!len).to_le_bytes());
-        out.extend_from_slice(chunk);
-    }
-    out.extend_from_slice(&adler32(&raw).to_be_bytes());
-    Ok(out)
-}
-
-/// Compute the RFC 1950 Adler-32 checksum of `bytes`.
-fn adler32(bytes: &[u8]) -> u32 {
-    let mut sum_low: u32 = 1;
-    let mut sum_high: u32 = 0;
-    for &byte in bytes {
-        sum_low = (sum_low + u32::from(byte)) % 65521;
-        sum_high = (sum_high + sum_low) % 65521;
-    }
-    (sum_high << 16) | sum_low
-}
-
-/// Write compressed object bytes to `<scope>/objects/<2>/<38>`.
-fn write_object(scope: &Path, hash: &str, bytes: &[u8]) -> io::Result<()> {
-    let path = scope
-        .join("objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-    fs::write(path, bytes)
 }
 
 fn invalid(message: &str) -> io::Error {

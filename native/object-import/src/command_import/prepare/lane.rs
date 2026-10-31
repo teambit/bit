@@ -85,7 +85,6 @@ impl PreparedImport {
             .ok_or_else(|| invalid("lane main progress"))?
             .ids
             .push(format!("{identity}@latest"));
-        // The fetch stream includes ScopeMeta even when ignoreMissingHead omits the model.
         self.progress
             .last_mut()
             .unwrap()
@@ -130,18 +129,7 @@ fn receive_prefer_graph(
     if super::dependencies::has_edges(plan, &version)? {
         return Ok(());
     }
-    let flattened = version["flattenedDependencies"]
-        .as_array()
-        .ok_or_else(|| invalid("lane flattened dependencies"))?
-        .iter()
-        .chain(
-            version["flattenedDevDependencies"]
-                .as_array()
-                .into_iter()
-                .flatten(),
-        )
-        .cloned()
-        .collect::<Vec<_>>();
+    let flattened = super::dependencies::flattened_dependencies(plan, &version)?;
     for dependency in &flattened {
         receive_closure(
             plan,
@@ -172,18 +160,7 @@ pub(super) fn receive_closure(
     let hash = receive_counted(plan, directory, source, target, key)?;
     let version =
         super::read_version(plan, &hash)?.ok_or_else(|| invalid("lane fetched Version absent"))?;
-    let flattened = version["flattenedDependencies"]
-        .as_array()
-        .ok_or_else(|| invalid("lane flattened dependencies"))?
-        .iter()
-        .chain(
-            version["flattenedDevDependencies"]
-                .as_array()
-                .into_iter()
-                .flatten(),
-        )
-        .cloned()
-        .collect::<Vec<_>>();
+    let flattened = super::dependencies::flattened_dependencies(plan, &version)?;
     for dependency in &flattened {
         let target = super::dependencies::dependency_target(dependency)?;
         if !local_version(plan, &target)? {
@@ -193,10 +170,6 @@ pub(super) fn receive_closure(
     Ok(())
 }
 
-/// Receive one Version of the lane. `importMany` re-fetches a version it has
-/// locally only while it is not built, once per process
-/// (`cacheUnBuiltIds`), and the remote returns nothing for a version it was
-/// given: such a version is not counted as imported.
 fn receive_counted(
     plan: &mut PreparedImport,
     directory: &Path,
@@ -212,7 +185,6 @@ fn receive_counted(
     row.ids.push(key.clone());
     let counted = (row.components.clone(), row.objects.clone());
     if present && plan.cache.switch_existing_versions {
-        // sources.getMany(..., true) primes cacheUnBuiltIds before the lane fetch.
         plan.cache.unbuilt.insert(key);
         return Ok(hash);
     }
@@ -338,8 +310,13 @@ pub(super) fn remote_lane_hash(
         .unwrap_or_else(|| serde_json::json!({"lanes":[]}));
     let rows = if index.is_array() {
         &[][..]
+    } else if let Some(lanes) = index
+        .get("lanes")
+        .filter(|val| !val.is_null())
+    {
+        lanes.as_array().ok_or_else(|| invalid("lane remote index"))?
     } else {
-        index["lanes"].as_array().ok_or_else(|| invalid("lane remote index"))?
+        &[][..]
     };
     let matches = rows
         .iter()
@@ -354,11 +331,10 @@ pub(super) fn remote_lane_hash(
     if matches.len() != 1 {
         return Err(invalid("lane remote identity missing or ambiguous"));
     }
-    let hash = matches[0]["hash"]
+    matches[0]["hash"]
         .as_str()
-        .ok_or_else(|| invalid("lane remote hash"))?
-        .to_owned();
-    Ok(hash)
+        .map(str::to_owned)
+        .ok_or_else(|| invalid("lane remote hash"))
 }
 
 fn referenced_candidates(
@@ -380,9 +356,14 @@ fn extend_candidates(
 ) -> io::Result<()> {
     let component_scope =
         identity.split_once('/').ok_or_else(|| invalid("lane referenced identity"))?.0;
-    let flattened = version["flattenedDependencies"]
-        .as_array()
-        .ok_or_else(|| invalid("lane referenced dependencies"))?;
+    let flattened = match version.get("flattenedDependencies") {
+        None | Some(serde_json::Value::Null) if version["flattenedDependenciesRef"].is_string() => {
+            &[][..]
+        }
+        _ => version["flattenedDependencies"]
+            .as_array()
+            .ok_or_else(|| invalid("lane referenced dependencies"))?,
+    };
     let dev_flattened = version["flattenedDevDependencies"].as_array();
     for value in flattened
         .iter()

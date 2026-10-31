@@ -1,7 +1,7 @@
 //! Plan the main and lane history publications.
 use super::{
-    Path, PathBuf, Plan, ScopeRoot, Value, ancestry, encode, fs, json, lanes, merge,
-    metadata_proofs, object_path, read, resolve_component_entry, sha1_hex, stored,
+    Path, PathBuf, Plan, ScopeRoot, Value, ancestry, encode, fs, json, lanes, metadata_proofs,
+    object_path, read, resolve_component_entry, sha1_hex, stored,
 };
 use crate::commands::{patterns, version_history::text};
 
@@ -182,4 +182,47 @@ pub(super) fn content(
     let complete = existing.map_or_else(|| json!([]), |value| value["graphCompleteRefs"].clone());
     let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":complete});
     Some((encode(hash, &value).ok()?, count, value))
+}
+
+pub(super) fn merge(
+    existing: Option<&Value>,
+    ancestors: Vec<Value>,
+    name: &str,
+    scope: &str,
+) -> Option<(Vec<Value>, usize)> {
+    let Some(existing) = existing else {
+        let count = ancestors.len();
+        return Some((ancestors, count));
+    };
+    if existing["name"] != name
+        || existing["scope"] != scope
+        || !super::existing::complete_refs(&existing["graphCompleteRefs"])?
+    {
+        return None;
+    }
+    let mut rows = existing["versions"].as_array()?.clone();
+    if !super::existing::valid_rows(&rows)? {
+        return None;
+    }
+    let head_exists = rows
+        .iter()
+        .any(|row| row["hash"] == ancestors[0]["hash"]);
+    let count = ancestors.len() - usize::from(head_exists);
+    refresh_rows(&mut rows, ancestors);
+    Some((rows, count))
+}
+
+fn refresh_rows(rows: &mut Vec<Value>, ancestors: Vec<Value>) {
+    for (index, row) in ancestors.into_iter().enumerate() {
+        if let Some(existing) = rows
+            .iter_mut()
+            .find(|existing| existing["hash"] == row["hash"])
+        {
+            if index != 0 {
+                *existing = row;
+            }
+        } else {
+            rows.push(row);
+        }
+    }
 }

@@ -4,10 +4,10 @@ use serde_json::{Value, json};
 use std::io;
 
 /// The lanes `scope.json` tracks: `localLane` per remote lane.
-pub(in crate::commands::lane::list) struct Tracking(pub(in crate::commands::lane::list) Vec<Value>);
+pub(in crate::commands::lane) struct Tracking(pub(in crate::commands::lane) Vec<Value>);
 
 impl Tracking {
-    pub(super) fn read(scope: &Value) -> Self {
+    pub(in crate::commands::lane) fn read(scope: &Value) -> Self {
         Self(
             scope["lanes"]["tracking"]
                 .as_array()
@@ -17,7 +17,7 @@ impl Tracking {
     }
 
     /// `getLocalTrackedLaneByRemoteName(name, scope)`.
-    pub(super) fn alias(&self, name: &str, scope: &str) -> Option<String> {
+    pub(in crate::commands::lane) fn alias(&self, name: &str, scope: &str) -> Option<String> {
         self.0
             .iter()
             .find(|row| row["remoteLane"] == name && row["remoteScope"] == scope)

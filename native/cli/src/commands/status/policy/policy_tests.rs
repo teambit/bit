@@ -1,4 +1,4 @@
-use super::package_name;
+use super::names::package_name;
 use serde_json::json;
 
 #[test]

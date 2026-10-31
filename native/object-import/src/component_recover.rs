@@ -230,6 +230,8 @@ fn read_repository(root: &Path, selected: &Selection) -> io::Result<(Repository,
     let (index, model, model_value) = read_model(root, scope, name)?;
     let version_hash = if selected.lane.is_some() {
         selected.version.as_str()
+    } else if matches!(selected.version.as_str(), "latest" | "head") {
+        model_value["head"].as_str().ok_or_else(|| invalid("component version is not in model"))?
     } else {
         model_value["versions"][&selected.version]
             .as_str()
@@ -264,7 +266,7 @@ fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Obje
         .iter()
         .filter(|row| {
             let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-            row["isSymlink"] == false
+            row["isSymlink"] != true
                 && row["id"]["name"] == name
                 && (row_scope == scope || row_scope.is_empty())
         })

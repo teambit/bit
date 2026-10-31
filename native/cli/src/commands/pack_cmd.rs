@@ -93,7 +93,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_pack_positions(iter, &mut options)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-o" | "--override" | "--override=true" => options.override_existing = true,
             "--override=false" => options.override_existing = false,
             "-k" | "--keep" | "--keep=true" => options.keep = true,
@@ -162,4 +162,31 @@ fn apply_short_pack_flags(arg: &str, options: &mut Options) -> Option<()> {
         }
     }
     Some(())
+}
+
+pub(super) fn format_pack_report(
+    payload: &serde_json::Value,
+    chalk: super::color::Chalk,
+) -> String {
+    let warnings = join_yellow_array(&payload["warnings"], chalk);
+    let errors = join_yellow_array(&payload["errors"], chalk);
+    let id_str = payload["id"].as_str().unwrap_or_default();
+    let tar_line = payload["metadata"]["tarPath"]
+        .as_str()
+        .map(|tar_path| chalk.green(&format!("tar path for component {id_str}: {tar_path}")))
+        .unwrap_or_default();
+    format!("{warnings}\n{errors}\n{tar_line}")
+}
+
+fn join_yellow_array(arr_val: &serde_json::Value, chalk: super::color::Chalk) -> String {
+    arr_val
+        .as_array()
+        .map(|arr| {
+            arr.iter()
+                .filter_map(serde_json::Value::as_str)
+                .map(|msg| chalk.yellow(msg))
+                .collect::<Vec<_>>()
+                .join("\n")
+        })
+        .unwrap_or_default()
 }

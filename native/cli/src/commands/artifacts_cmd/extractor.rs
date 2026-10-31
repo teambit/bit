@@ -3,13 +3,12 @@
 use super::{
     Options,
     render::{render_artifacts_report, save_artifacts_to_dir},
-    scope::resolve_bare_scope_targets,
+    scope::{filter_artifacts, resolve_bare_scope_targets},
 };
 use crate::{
     commands::{
         aspect::workspace_default_scope,
         debug_cat::lookup::resolve_component_entry,
-        patterns,
         remote_action::startup,
         scope_set::{Failure, selection},
         workspace_command::format::Formatter,
@@ -215,7 +214,7 @@ fn load_component_artifacts(
 }
 
 fn resolve_target_version(comp_val: &Value, req_ver: &str) -> Option<(String, String)> {
-    if req_ver == "latest" {
+    if matches!(req_ver, "latest" | "head") {
         let head = comp_val["head"].as_str()?;
         let tag = find_tag_for_hash(comp_val, head).unwrap_or_else(|| head.to_owned());
         return Some((tag, head.to_owned()));
@@ -280,7 +279,7 @@ fn read_version_object(scope_dir: &Path, ver_hash: &str) -> Option<Value> {
 
 fn lookup_remote_url(scope_dir: &Path, comp_scope: &str) -> Option<String> {
     let bytes = fs::read(scope_dir.join("scope.json")).ok()?;
-    let val: Value = serde_json::from_slice(&bytes).ok()?;
+    let val: Value = bit_object_import::parse_jsonc(&bytes).ok()?;
     val["remotes"]
         .get(comp_scope)
         .and_then(Value::as_str)
@@ -357,53 +356,4 @@ fn extract_artifact_files(files_val: &Value) -> Vec<ArtifactFile> {
             Some(ArtifactFile { relative_path, hash })
         })
         .collect()
-}
-
-pub(super) fn filter_artifacts(
-    artifacts: &mut Vec<ArtifactItem>,
-    options: &Options,
-) -> Result<(), Failure> {
-    if options.aspect.is_some() || options.task.is_some() {
-        artifacts.retain(|art| matches_aspect_and_task(art, options));
-    }
-    if let Some(files_glob) = &options.files {
-        filter_by_files_glob(artifacts, files_glob)?;
-    }
-    Ok(())
-}
-
-fn matches_aspect_and_task(art: &ArtifactItem, options: &Options) -> bool {
-    options.aspect
-        .as_deref()
-        .is_none_or(|aspect| art.aspect_id == aspect)
-        && options.task
-            .as_deref()
-            .is_none_or(|task| art.task_name == task)
-}
-
-fn filter_by_files_glob(
-    artifacts: &mut Vec<ArtifactItem>,
-    files_glob: &str,
-) -> Result<(), Failure> {
-    let split_globs = patterns::split(files_glob);
-    for art in artifacts.iter_mut() {
-        art.files = retain_matching_files(&art.files, &split_globs)?;
-    }
-    artifacts.retain(|art| !art.files.is_empty());
-    Ok(())
-}
-
-fn retain_matching_files(
-    files: &[ArtifactFile],
-    split_globs: &[String],
-) -> Result<Vec<ArtifactFile>, Failure> {
-    let mut kept = Vec::new();
-    for file in files {
-        let matched = patterns::matching(&[file.relative_path.as_str()], split_globs)
-            .map_err(|_| Failure::Declined("unsupported files glob".into()))?;
-        if !matched.is_empty() {
-            kept.push(file.clone());
-        }
-    }
-    Ok(kept)
 }

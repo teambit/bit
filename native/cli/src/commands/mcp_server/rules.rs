@@ -236,3 +236,13 @@ fn claude_code_prompts_path(is_global: bool, cwd: &Path) -> PathBuf {
     let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
     base.join(".claude").join("bit.md")
 }
+
+pub(super) fn cursor_settings_path(is_global: bool, cwd: &Path) -> PathBuf {
+    let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
+    base.join(".cursor").join("mcp.json")
+}
+
+pub(super) fn windsurf_settings_path(is_global: bool, cwd: &Path) -> PathBuf {
+    let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
+    base.join(".windsurf").join("mcp.json")
+}

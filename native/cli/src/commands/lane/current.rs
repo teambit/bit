@@ -1,12 +1,19 @@
 //! Native `bit lane current`: read the bitmap and local lane tracking.
 
-use super::list::read_current;
-use crate::{commands::status::js::text, history::History, native::Outcome, workspace};
+use super::list::Tracking;
+use crate::{
+    commands::{list::bitmap, status::js::text},
+    history::History,
+    native::Outcome,
+    workspace,
+};
 use serde_json::{Value, json};
 use std::{
     env,
     ffi::OsString,
+    fs,
     io::{self, Write},
+    path::Path,
     process::ExitCode,
 };
 
@@ -65,4 +72,28 @@ fn write_current(stdout: &mut impl Write, id: &Value, alias: &str, json: bool) -
     }
     stdout.flush()?;
     Ok(())
+}
+
+pub(super) fn scope(root: &Path) -> io::Result<Value> {
+    scope_for(root, false)
+}
+
+pub(super) fn scope_for(root: &Path, bare: bool) -> io::Result<Value> {
+    let path = if bare { root.to_owned() } else { bit_object_import::scope_path(root) };
+    bit_object_import::parse_jsonc(&fs::read(path.join("scope.json"))?)
+}
+
+pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {
+    let scope = scope(root)?;
+    let current =
+        bitmap::read(root)?.lane.unwrap_or_else(|| json!({"name":"main","scope":scope["name"]}));
+    with_alias(current, &Tracking::read(&scope))
+}
+
+pub(super) fn with_alias(current: Value, tracking: &Tracking) -> io::Result<(Value, String)> {
+    let name = text(current.get("name"))?;
+    let alias = tracking
+        .alias(name, text(current.get("scope"))?)
+        .unwrap_or_else(|| name.to_string());
+    Ok((current, alias))
 }

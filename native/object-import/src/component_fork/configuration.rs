@@ -78,6 +78,7 @@ pub(super) fn extension_key(entry: &Value) -> Option<String> {
     {
         return Some(
             key.strip_suffix("@latest")
+                .or_else(|| key.strip_suffix("@head"))
                 .unwrap_or(key)
                 .to_owned(),
         );
@@ -96,7 +97,7 @@ pub(super) fn extension_key(entry: &Value) -> Option<String> {
         .as_str()
         .filter(|version| !version.is_empty())
         .or(inline_ver)
-        .filter(|version| !version.is_empty() && *version != "latest");
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"));
     Some(version.map_or_else(
         || format!("{scope}/{name}"),
         |version| format!("{scope}/{name}@{version}"),

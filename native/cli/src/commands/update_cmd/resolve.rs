@@ -3,10 +3,12 @@ use super::{
     collect::{Candidate, Target},
 };
 use crate::workspace;
-use bit_install::policy::scope::hex_sha1;
+use bit_install::{
+    dependencies::default_package_name, model::ComponentId, policy::scope::hex_sha1,
+};
 use serde_json::Value;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs,
     path::{Path, PathBuf},
     process::Command,
@@ -43,7 +45,7 @@ fn read_local_remotes(root: &Path) -> HashMap<String, PathBuf> {
     let Ok(bytes) = fs::read(scope_dir.join("scope.json")) else {
         return HashMap::new();
     };
-    let Ok(parsed) = serde_json::from_slice::<Value>(&bytes) else {
+    let Ok(parsed) = bit_object_import::parse_jsonc(&bytes) else {
         return HashMap::new();
     };
     let Some(remotes) = parsed["remotes"].as_object() else {
@@ -262,4 +264,83 @@ fn repeat_prefix(original_spec: &str, new_version: &str) -> String {
         Some('^') => format!("^{new_version}"),
         _ => new_version.to_owned(),
     }
+}
+
+pub(super) fn collect_legacy_model_deps(
+    ver_val: &Value,
+    default_scope: Option<&str>,
+    local_pkgs: &HashSet<String>,
+    root_names: &HashSet<String>,
+    out: &mut Vec<Candidate>,
+) {
+    for (dep_key, target_field) in
+        [("dependencies", "dependencies"), ("devDependencies", "devDependencies")]
+    {
+        let Some(arr) = ver_val[dep_key].as_array() else { continue };
+        for dep in arr {
+            if let Some(cand) =
+                candidate_from_legacy_dep(dep, target_field, default_scope, local_pkgs, root_names)
+                && !out
+                    .iter()
+                    .any(|existing| existing.name == cand.name)
+            {
+                out.push(cand);
+            }
+        }
+    }
+}
+
+fn candidate_from_legacy_dep(
+    dep: &Value,
+    target_field: &str,
+    default_scope: Option<&str>,
+    local_pkgs: &HashSet<String>,
+    root_names: &HashSet<String>,
+) -> Option<Candidate> {
+    let inner = dep
+        .get("id")
+        .filter(|val| val.is_object())
+        .unwrap_or(dep);
+    let raw_name = inner["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())?;
+    let (comp_name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .unwrap_or((raw_name, ""));
+    let comp_scope = inner["scope"]
+        .as_str()
+        .filter(|sc| !sc.is_empty())
+        .or(default_scope)?;
+    let comp_ver = legacy_dep_version(dep, inner, inline_ver)?;
+    let comp_id = ComponentId {
+        scope: Some(comp_scope.to_owned()),
+        default_scope: None,
+        name: comp_name.to_owned(),
+        version: None,
+    };
+    let pkg_name = default_package_name(&comp_id);
+    if local_pkgs.contains(&pkg_name) || root_names.contains(&pkg_name) {
+        return None;
+    }
+    Some(Candidate {
+        name: pkg_name,
+        current_range: comp_ver,
+        field: target_field.to_owned(),
+        target: Target::ModelRoot,
+        comp_bare_id: Some(format!("{comp_scope}/{comp_name}")),
+    })
+}
+
+fn legacy_dep_version(dep: &Value, inner: &Value, inline_ver: &str) -> Option<String> {
+    [
+        inner["version"].as_str(),
+        dep["version"].as_str(),
+        inner["head"].as_str(),
+        dep["head"].as_str(),
+    ]
+    .into_iter()
+    .flatten()
+    .find(|ver| !ver.is_empty())
+    .or_else(|| (!inline_ver.is_empty()).then_some(inline_ver))
+    .map(str::to_owned)
 }

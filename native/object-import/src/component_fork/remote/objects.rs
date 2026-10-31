@@ -52,8 +52,9 @@ fn model_row<'a>(index: &'a Value, id: &str) -> io::Result<&'a Value> {
                 .find(|row| {
                     let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
                     row["isSymlink"] != true
-                        && row["id"]["name"].as_str() == Some(target_name)
-                        && (row_scope == target_scope || row_scope.is_empty())
+                        && (row["id"].as_str() == Some(bare)
+                            || (row["id"]["name"].as_str() == Some(target_name)
+                                && (row_scope == target_scope || row_scope.is_empty())))
                 })
         })
         .ok_or_else(|| missing(id))
@@ -112,7 +113,11 @@ fn source(row: &Value) -> io::Result<(&str, &str)> {
     {
         return Err(unsupported("fork unsafe remote source path"));
     }
-    Ok((path, row["file"].as_str().ok_or_else(|| unsupported("fork remote source hash"))?))
+    let file_hash = row["file"]
+        .as_str()
+        .or_else(|| row["hash"].as_str())
+        .ok_or_else(|| unsupported("fork remote source hash"))?;
+    Ok((path, file_hash))
 }
 fn retain(scope: &Path, hash: &str, observed: &mut Observed) -> io::Result<Vec<u8>> {
     crate::merge_history::hash(hash)?;
@@ -129,7 +134,7 @@ fn retain(scope: &Path, hash: &str, observed: &mut Observed) -> io::Result<Vec<u
 fn version_id(model: &Value, id: &str, hash: &str) -> String {
     if let Some((_, version)) = id.rsplit_once('@')
         && !version.is_empty()
-        && version != "latest"
+        && !matches!(version, "latest" | "head")
     {
         return version.into();
     }

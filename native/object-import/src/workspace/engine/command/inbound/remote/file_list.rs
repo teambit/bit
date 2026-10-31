@@ -29,7 +29,11 @@ pub(super) fn index(path: &Path) -> io::Result<Vec<Value>> {
     if rows.len() > 4096 {
         return Err(invalid("inbound file index limit"));
     }
-    Ok(rows.clone())
+    Ok(rows
+        .iter()
+        .filter(|row| row["isSymlink"] != true)
+        .cloned()
+        .collect())
 }
 
 fn collect(path: &Path, scope: &str, pattern: &Regex, rows: &[Value]) -> io::Result<Vec<Listed>> {
@@ -82,7 +86,9 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
     let rows = if index.is_array() {
         &[][..]
     } else {
-        index["lanes"].as_array().ok_or_else(|| invalid("inbound file lane index"))?
+        index["lanes"]
+            .as_array()
+            .map_or(&[][..], Vec::as_slice)
     };
     let matching = rows
         .iter()
@@ -104,10 +110,17 @@ pub(super) fn indexed(
 ) -> io::Result<(String, String)> {
     let name = row["id"]["name"].as_str().ok_or_else(|| invalid("inbound file index name"))?;
     let hash = row["hash"].as_str().ok_or_else(|| invalid("inbound file index hash"))?;
-    if row["id"]["scope"] != scope
-        || row["isSymlink"] != false
+    let row_scope = row["id"]["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .unwrap_or(scope);
+    let scoped_hash =
+        crate::validate::hexadecimal(&Sha1::digest(format!("{scope}/{name}").as_bytes()));
+    let unscoped_hash = crate::validate::hexadecimal(&Sha1::digest(name.as_bytes()));
+    if row_scope != scope
+        || row["isSymlink"] == true
         || !seen.insert(name.to_owned())
-        || crate::validate::hexadecimal(&Sha1::digest(format!("{scope}/{name}").as_bytes())) != hash
+        || (hash != scoped_hash && hash != unscoped_hash)
     {
         return Err(invalid("inbound file index identity"));
     }

@@ -1,5 +1,8 @@
-use super::{Record, capture, history, history_replay, input, repository, selection};
-use crate::checkout_transition;
+use super::{
+    Record, capture, history, history_replay, input, invalid, repository, reset_comparison,
+    selection,
+};
+use crate::{checkout_transition, workspace::engine::status_models::comparison};
 use serde_json::{Value, json};
 use std::io;
 
@@ -25,7 +28,7 @@ pub(super) fn select(
     }
     let model = repository::model(&record.context, identity)?;
     let remote = remote_head(record, identity)?;
-    let (modified, pending) = super::modification(
+    let (modified, pending) = modification(
         record,
         captured,
         model.as_ref(),
@@ -41,7 +44,7 @@ pub(super) fn select(
             modified,
             merge_pending: pending,
             remote_head: remote.as_deref(),
-            lane_head: super::lane_head(&record.context, identity),
+            lane_head: lane_head(&record.context, identity),
             semver,
         },
         &mut record.repository,
@@ -51,6 +54,90 @@ pub(super) fn select(
     Ok(selected)
 }
 
+fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
+    let (scope, name) = identity.split_once('/')?;
+    context["lane"]["current"]["value"]["components"]
+        .as_array()?
+        .iter()
+        .find(|row| {
+            row["id"]
+                .as_str()
+                .is_some_and(|id| {
+                    let base = id.rsplit_once('@').map_or(id, |(base, _)| base);
+                    base == identity || base == name
+                })
+                || row["id"]["name"] == name
+                    && row["id"]["scope"]
+                        .as_str()
+                        .filter(|val| !val.is_empty())
+                        .is_none_or(|val| val == scope)
+        })
+        .and_then(|row| row["head"].as_str())
+}
+
+fn modification(
+    record: &mut Record,
+    captured: &capture::Captured,
+    model: Option<&Value>,
+    remote: Option<&str>,
+    histories: &history::State,
+    recovery_reset: bool,
+) -> io::Result<(bool, bool)> {
+    let identity = &captured.target.identity;
+    if record.request.operation == input::Operation::Switch {
+        return switch_modification(record, captured, model);
+    }
+    let mut staged = histories.clone();
+    let Some(model) = model else {
+        if recovery_reset && reset_comparison::incomplete(&captured.target.current) {
+            return Err(invalid("reset Source comparison requires a stored component"));
+        }
+        return Ok((false, false));
+    };
+    if record.repository.read_component(identity)? != *model {
+        return Err(invalid("command model changed"));
+    }
+    let hash = selection::versions::reference(model, &captured.target.version)?;
+    let version = record.repository.read(&hash, "Version")?;
+    let modified = if recovery_reset && reset_comparison::incomplete(&captured.target.current) {
+        reset_comparison::prove_changed(&captured.metadata, &version)?;
+        true
+    } else {
+        comparison::compare(&captured.target, &captured.metadata, &version)?["modified"] == true
+    };
+    let source = super::super::lane_history::heads::source(
+        &record.request.options,
+        &record.context,
+        identity,
+        model,
+    );
+    let distance = staged.distance(
+        &record.request.root,
+        identity,
+        model,
+        [source, remote],
+        &mut record.repository,
+    )?;
+    Ok((
+        modified,
+        !distance["sourceOnly"].as_array().is_some_and(Vec::is_empty)
+            && !distance["targetOnly"].as_array().is_some_and(Vec::is_empty),
+    ))
+}
+
+fn switch_modification(
+    record: &mut Record,
+    captured: &capture::Captured,
+    model: Option<&Value>,
+) -> io::Result<(bool, bool)> {
+    let model = model.ok_or_else(|| invalid("switch model missing"))?;
+    let hash = selection::versions::reference(model, &captured.target.version)?;
+    let version = record.repository.read(&hash, "Version")?;
+    let modified =
+        comparison::compare(&captured.target, &captured.metadata, &version)?["modified"] == true;
+    Ok((modified, false))
+}
+
 fn tracked_head(record: &Record, captured: &capture::Captured) -> Option<Value> {
     let tracked = record.request.operation == input::Operation::Checkout
         && record.request.options.to.as_deref() == Some("head")
@@ -58,7 +145,7 @@ fn tracked_head(record: &Record, captured: &capture::Captured) -> Option<Value> 
             .as_array()?
             .iter()
             .any(|row| row["identity"] == captured.target.identity);
-    let head = tracked.then(|| super::lane_head(&record.context, &captured.target.identity))??;
+    let head = tracked.then(|| lane_head(&record.context, &captured.target.identity))??;
     Some(json!({"kind":"target","version":head,"merge":false}))
 }
 

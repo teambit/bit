@@ -55,7 +55,7 @@ impl Options {
         seen: &mut Vec<&'a str>,
     ) -> Option<usize> {
         let raw = args[index];
-        if raw == "--no-color" {
+        if matches!(raw, "--no-color" | "--no-color=true" | "--no-color=false") {
             return Some(1);
         }
         if !raw.starts_with('-') {

@@ -86,24 +86,17 @@ fn extension_edges(source: &Value, version: &Value, edges: &mut Vec<Value>) -> i
 
 fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {
     let version = id["version"].as_str().ok_or_else(|| invalid("command graph version"))?;
-    let identity = format!("{}/{}", id["scope"].as_str().unwrap(), id["name"].as_str().unwrap());
+    let identity = format!(
+        "{}/{}",
+        id["scope"].as_str().ok_or_else(|| invalid("command graph scope"))?,
+        id["name"].as_str().ok_or_else(|| invalid("command graph name"))?,
+    );
     let reference = if crate::merge_history::hash(version).is_ok() {
         version.to_owned()
     } else {
-        let model =
-            repository.read(&crate::workspace::engine::hash(identity.as_bytes()), "Component")?;
-        if version.is_empty() || version == "latest" {
-            model["head"]
-                .as_str()
-                .ok_or_else(|| invalid("command graph missing dependency reference"))?
-                .to_owned()
-        } else {
-            model["versions"][version]
-                .as_str()
-                .or_else(|| model["orphanedVersions"][version].as_str())
-                .ok_or_else(|| invalid("command graph missing dependency reference"))?
-                .to_owned()
-        }
+        let model = repository.read_component(&identity)?;
+        crate::workspace::engine::status_models::versions::reference(&model, version)
+            .map_err(|_| invalid("command graph missing dependency reference"))?
     };
     let version = repository.read(&reference, "Version")?;
     crate::workspace::engine::status_models::harmony::project(&version)

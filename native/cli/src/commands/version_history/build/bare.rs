@@ -76,60 +76,22 @@ fn existing_mode(_path: &Path) -> Option<u32> {
     None
 }
 
-fn merge(
-    existing: Option<&Value>,
-    ancestors: Vec<Value>,
-    name: &str,
-    scope: &str,
-) -> Option<(Vec<Value>, usize)> {
-    let Some(existing) = existing else {
-        let count = ancestors.len();
-        return Some((ancestors, count));
-    };
-    if existing["name"] != name
-        || existing["scope"] != scope
-        || !existing::complete_refs(&existing["graphCompleteRefs"])?
-    {
-        return None;
-    }
-    let mut rows = existing["versions"].as_array()?.clone();
-    if !existing::valid_rows(&rows)? {
-        return None;
-    }
-    let head_exists = rows
-        .iter()
-        .any(|row| row["hash"] == ancestors[0]["hash"]);
-    let count = ancestors.len() - usize::from(head_exists);
-    refresh_rows(&mut rows, ancestors);
-    Some((rows, count))
-}
-
-fn refresh_rows(rows: &mut Vec<Value>, ancestors: Vec<Value>) {
-    for (index, row) in ancestors.into_iter().enumerate() {
-        if let Some(existing) = rows
-            .iter_mut()
-            .find(|existing| existing["hash"] == row["hash"])
-        {
-            if index != 0 {
-                *existing = row;
-            }
-        } else {
-            rows.push(row);
-        }
-    }
-}
-
 fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(PathBuf, Vec<u8>)>> {
     let config_path = root.join("scope.json");
     let config_bytes = fs::read(&config_path).ok()?;
-    let config: Value = serde_json::from_slice(&config_bytes).ok()?;
+    let config = bit_object_import::parse_jsonc(&config_bytes).ok()?;
     if config["name"].as_str() != Some(scope) {
         return None;
     }
     let index_path = root.join("index.json");
     let index_bytes = fs::read(&index_path).ok()?;
     let index: Value = serde_json::from_slice(&index_bytes).ok()?;
-    if all_lanes && !index.is_array() && !index["lanes"].as_array()?.is_empty() {
+    if all_lanes
+        && !index.is_array()
+        && index["lanes"]
+            .as_array()
+            .is_some_and(|lanes| !lanes.is_empty())
+    {
         return None;
     }
     let mut proofs = vec![(config_path, config_bytes), (index_path, index_bytes)];
@@ -204,31 +166,57 @@ fn version_parents(
         .collect::<Option<_>>()?;
     let mut row = json!({"hash":hash,"parents":parents});
     for (field, key) in [("unrelated", "head"), ("squashed", "previousParents")] {
-        if version[field].is_null() {
-            continue;
-        }
-        let data = &version[field];
-        data["laneId"]["name"].as_str()?;
-        data["laneId"]["scope"].as_str()?;
-        let refs = if field == "unrelated" {
-            vec![data[key].as_str()?]
-        } else {
-            data[key]
-                .as_array()?
-                .iter()
-                .map(Value::as_str)
-                .collect::<Option<Vec<_>>>()?
-        };
-        if refs.len() > 128
-            || refs
-                .iter()
-                .any(|hash| object_path(root, hash).is_none())
-        {
+        if !apply_extra_parent_field(root, &version, &mut row, field, key) {
             return None;
         }
-        row[field] = data[key].clone();
     }
     Some((parents, row))
+}
+
+fn apply_extra_parent_field(
+    root: &Path,
+    version: &Value,
+    row: &mut Value,
+    field: &str,
+    key: &str,
+) -> bool {
+    if version[field].is_null() {
+        return true;
+    }
+    let data = &version[field];
+    if !valid_lane_id(&data["laneId"]) {
+        return false;
+    }
+    let Some(refs) = (if field == "unrelated" {
+        data[key]
+            .as_str()
+            .map(|head| vec![head])
+    } else {
+        data[key]
+            .as_array()
+            .and_then(|arr| arr.iter().map(Value::as_str).collect())
+    }) else {
+        return false;
+    };
+    if refs.len() > 128
+        || refs
+            .iter()
+            .any(|hash| object_path(root, hash).is_none())
+    {
+        return false;
+    }
+    row[field] = data[key].clone();
+    true
+}
+
+fn valid_lane_id(lane_id: &Value) -> bool {
+    lane_id
+        .as_str()
+        .is_some_and(|raw| {
+            raw.split_once('/')
+                .is_some_and(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        })
+        || (lane_id["name"].is_string() && lane_id["scope"].is_string())
 }
 
 fn object_path(root: &Path, hash: &str) -> Option<PathBuf> {

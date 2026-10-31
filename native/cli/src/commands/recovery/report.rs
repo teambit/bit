@@ -1,7 +1,8 @@
-//! Canonical component and lane abort reports.
+//! Canonical component and lane abort reports and preparation helpers.
 use super::{
-    Chalk, Formatter, Id, Kind, Report, Value, array, checkout, decline, installation, io, object,
-    text,
+    Chalk, Engine, Formatter, HostInfo, Id, Installer, Kind, Options, Path, Report, Startup, Value,
+    array, cache, checkout, decline, dependency_grammar, environments, installation, io, json,
+    object, text,
 };
 
 pub(super) fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>> {
@@ -88,4 +89,66 @@ fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
         code: checkout.code,
         details: checkout.details.map(|details| Formatter::join(&[details, summary, error])),
     })
+}
+
+pub(super) fn consume_trailing_recovery<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    kind: Kind,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for value in iter {
+        (kind == Kind::Component && pattern.is_none() && valid_pattern(value)).then_some(())?;
+        *pattern = Some(value.to_string());
+    }
+    Some(())
+}
+
+pub(super) fn valid_pattern(pattern: &str) -> bool {
+    !pattern.is_empty()
+        && pattern.len() <= 256
+        && !pattern.starts_with('-')
+        && pattern
+            .bytes()
+            .all(|byte| {
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"_./-".contains(&byte)
+            })
+}
+
+pub(super) fn installation_session(
+    installer: Option<Installer>,
+) -> io::Result<(Option<environments::Environments>, Option<HostInfo>)> {
+    let Some(installer) = installer else { return Ok((None, None)) };
+    let (environment, info) = installer.into_parts()?;
+    Ok((Some(environment), Some(info)))
+}
+
+pub(super) fn read_environment(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    startup: &mut Startup,
+    inherited: Option<environments::Environments>,
+) -> io::Result<environments::Environments> {
+    let (_, environment) = match inherited {
+        Some(env_state) => {
+            environments::read_inherited_context(engine, root, home, None, startup, env_state)?
+        }
+        None => environments::read_context(engine, root, home, false, None, startup)?,
+    };
+    Ok(environment.for_checkout())
+}
+
+pub(super) fn prepare_request(root: &Path, home: &Path, options: &Options) -> io::Result<Value> {
+    let operation = if options.kind == Kind::Lane { "laneAbort" } else { "componentAbort" };
+    let mut request = json!({
+        "kind":"commandRecoveryPrepare","root":root,"home":home,
+        "globalRemotesFile":cache::cache_root().join("config/global-remotes.json"),
+        "operation":operation,"dependencyGrammar":dependency_grammar()?,
+        "options":{"silent":options.kind==Kind::Lane,"verbose":options.verbose,
+            "skipDependencyInstallation":true,"callbackLifecycle":true},
+    });
+    if let Some(pattern) = &options.pattern {
+        request["options"]["pattern"] = json!(pattern);
+    }
+    Ok(request)
 }

@@ -17,7 +17,7 @@ fn scope_selection_keeps_namespaces_and_forces_owner_preservation() {
         refactor: true,
         ..Default::default()
     };
-    let selected = selection::entries(&bitmap, &options).unwrap();
+    let selected = selection::entries_with_default(&bitmap, "", &options).unwrap();
     assert_eq!(selected[0].source, "old.team/ui/button");
     assert_eq!(selected[0].target, "ui/button");
     assert!(selected[0].preserve);

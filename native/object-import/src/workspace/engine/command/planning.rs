@@ -5,8 +5,8 @@ mod history_replay;
 mod missing_reset;
 mod reset_comparison;
 use super::{
-    super::{invalid, status_models::comparison},
-    Record, capture, history, input, materialization, repository, scratch, selection,
+    super::invalid, Record, capture, history, input, materialization, repository, scratch,
+    selection,
 };
 use crate::{checkout_transition, command_import, workspace::snapshots};
 use serde_json::{Value, json};
@@ -112,14 +112,6 @@ fn validate_current_inner(
     }
     Ok(())
 }
-fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
-    let (scope, name) = identity.split_once('/')?;
-    context["lane"]["current"]["value"]["components"]
-        .as_array()?
-        .iter()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
-        .and_then(|row| row["head"].as_str())
-}
 fn import_selected(record: &mut Record, selections: &[Value]) -> io::Result<()> {
     // Stash snapshots are detached local Versions, never published model ancestry.
     // Read Version/Source objects through the retained repository instead of trying
@@ -199,10 +191,7 @@ pub(super) fn prepare_one(
     snapshots: &snapshots::State,
 ) -> io::Result<()> {
     let current = &plan.captured[index];
-    let model = record.repository.read(
-        &super::super::hash(current.target.identity.as_bytes()),
-        "Component",
-    )?;
+    let model = record.repository.read_component(&current.target.identity)?;
     let reference = selection::versions::reference(
         &model,
         selected["version"].as_str().ok_or_else(|| invalid("command selected Version"))?,
@@ -330,69 +319,6 @@ fn prepare_selections(
         }
     }
     Ok(())
-}
-
-fn modification(
-    record: &mut Record,
-    captured: &capture::Captured,
-    model: Option<&Value>,
-    remote: Option<&str>,
-    histories: &history::State,
-    recovery_reset: bool,
-) -> io::Result<(bool, bool)> {
-    let identity = &captured.target.identity;
-    if record.request.operation == input::Operation::Switch {
-        return switch_modification(record, captured, model);
-    }
-    let mut staged = histories.clone();
-    let Some(model) = model else {
-        if recovery_reset && reset_comparison::incomplete(&captured.target.current) {
-            return Err(invalid("reset Source comparison requires a stored component"));
-        }
-        return Ok((false, false));
-    };
-    if record.repository.read(&super::super::hash(identity.as_bytes()), "Component")? != *model {
-        return Err(invalid("command model changed"));
-    }
-    let hash = selection::versions::reference(model, &captured.target.version)?;
-    let version = record.repository.read(&hash, "Version")?;
-    let modified = if recovery_reset && reset_comparison::incomplete(&captured.target.current) {
-        reset_comparison::prove_changed(&captured.metadata, &version)?;
-        true
-    } else {
-        comparison::compare(&captured.target, &captured.metadata, &version)?["modified"] == true
-    };
-    let source = super::lane_history::heads::source(
-        &record.request.options,
-        &record.context,
-        identity,
-        model,
-    );
-    let distance = staged.distance(
-        &record.request.root,
-        identity,
-        model,
-        [source, remote],
-        &mut record.repository,
-    )?;
-    Ok((
-        modified,
-        !distance["sourceOnly"].as_array().is_some_and(Vec::is_empty)
-            && !distance["targetOnly"].as_array().is_some_and(Vec::is_empty),
-    ))
-}
-
-fn switch_modification(
-    record: &mut Record,
-    captured: &capture::Captured,
-    model: Option<&Value>,
-) -> io::Result<(bool, bool)> {
-    let model = model.ok_or_else(|| invalid("switch model missing"))?;
-    let hash = selection::versions::reference(model, &captured.target.version)?;
-    let version = record.repository.read(&hash, "Version")?;
-    let modified =
-        comparison::compare(&captured.target, &captured.metadata, &version)?["modified"] == true;
-    Ok((modified, false))
 }
 
 fn select_captured(

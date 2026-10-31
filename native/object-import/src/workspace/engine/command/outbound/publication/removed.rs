@@ -13,6 +13,12 @@ pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
             crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         })
         .map(|row| {
+            if let Some(raw) = row["id"].as_str() {
+                let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+                let (scope, name) =
+                    bare.split_once('/').ok_or_else(|| invalid("outbound removal scope"))?;
+                return Ok(format!("{scope}/{name}"));
+            }
             let scope =
                 row["id"]["scope"].as_str().ok_or_else(|| invalid("outbound removal scope"))?;
             let name =

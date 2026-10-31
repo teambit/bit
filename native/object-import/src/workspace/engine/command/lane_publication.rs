@@ -218,14 +218,12 @@ impl Prepared {
                 version["version"]["extensions"]
                     .as_array()
                     .is_some_and(|extensions| {
-                        extensions
-                            .iter()
-                            .any(|extension| {
-                                crate::workspace::engine::client_status::config::is_extension_aspect(
-                                    extension,
-                                    "teambit.component/remove",
-                                ) && extension["config"]["removed"] == true
-                            })
+                        extensions.iter().any(|extension| {
+                            crate::workspace::engine::client_status::config::is_extension_aspect(
+                                extension,
+                                "teambit.component/remove",
+                            ) && extension["config"]["removed"] == true
+                        })
                     }),
             )?;
         }

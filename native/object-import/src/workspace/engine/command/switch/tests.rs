@@ -22,8 +22,11 @@ fn forked_lane_provenance_does_not_change_checkout_eligibility() {
 
 #[test]
 fn unavailable_lane_only_bitmap_rows_remain_tracked_for_later_switches() {
-    let ids = lane_only(&json!({"comp":{"scope":"scope","name":"comp",
-        "onLanesOnly":true,"isAvailableOnCurrentLane":false}}))
+    let ids = lane_only(
+        &json!({"comp":{"scope":"scope","name":"comp",
+        "onLanesOnly":true,"isAvailableOnCurrentLane":false}}),
+        None,
+    )
     .unwrap();
     assert!(ids.contains("scope/comp"));
 }

@@ -6,8 +6,12 @@ use super::{
 };
 use crate::workspace;
 use bit_install::workspace::{Bitmap, BitmapEntry};
-use serde_json::Value;
-use std::{fs, path::Path};
+use serde_json::{Value, json};
+use std::{
+    fs,
+    io::{self, Write},
+    path::Path,
+};
 
 pub(in crate::commands) fn resolve_pattern_entries<'a>(
     root: &Path,
@@ -108,7 +112,14 @@ fn exists_in_scope_index(root: &Path, name: &str) -> bool {
         .is_some_and(|components| {
             components
                 .iter()
-                .any(|item| item["id"]["name"].as_str() == Some(name))
+                .any(|item| {
+                    item["isSymlink"] != true
+                        && (item["id"]["name"].as_str() == Some(name)
+                            || item["id"]
+                                .as_str()
+                                .and_then(|id| id.split_once('/'))
+                                .is_some_and(|(_, item_name)| item_name == name))
+                })
         })
 }
 
@@ -118,7 +129,9 @@ pub(in crate::commands) fn valid_id_chunk(chunk: &str) -> bool {
         && chunk
             .chars()
             .all(|ch| {
-                ch.is_ascii_lowercase() || ch.is_ascii_digit() || matches!(ch, '-' | '_' | '/')
+                ch.is_ascii_lowercase()
+                    || ch.is_ascii_digit()
+                    || matches!(ch, '-' | '_' | '$' | '!' | '/')
             })
 }
 
@@ -159,9 +172,49 @@ pub(in crate::commands) fn validate_scope_name(scope: &str) -> Result<(), Failur
 pub(in crate::commands) fn entry_full_id(entry: &BitmapEntry) -> String {
     let identity = entry.id.to_string_without_version();
     match &entry.id.version {
-        Some(version) if !version.is_empty() && version != "latest" => {
+        Some(version) if !version.is_empty() && !matches!(version.as_str(), "latest" | "head") => {
             format!("{identity}@{version}")
         }
         _ => identity,
     }
+}
+
+pub(super) fn publish_workspace_default_scope(
+    root: &Path,
+    before: &[u8],
+    key: &str,
+    scope: &str,
+    file_id: &str,
+) -> io::Result<()> {
+    let text = std::str::from_utf8(before).map_err(io::Error::other)?;
+    let mut document = bit_workspace_config::jsonc::Document::parse(text)?;
+    document.set(&[key, "defaultScope"], &json!(scope));
+    let _ = backup_workspace_config(root, before, scope, file_id);
+    let rendered = format!("{document}\n");
+    let bytes = if cfg!(windows)
+        && before
+            .windows(2)
+            .any(|pair| pair == b"\r\n")
+    {
+        rendered.replace('\n', "\r\n").into_bytes()
+    } else {
+        rendered.into_bytes()
+    };
+    fs::write(root.join("workspace.jsonc"), bytes)
+}
+
+fn backup_workspace_config(
+    root: &Path,
+    before: &[u8],
+    scope: &str,
+    file_id: &str,
+) -> io::Result<()> {
+    let directory = workspace::scope_path(root).join("workspace-config-history");
+    fs::create_dir_all(directory.join("files"))?;
+    fs::write(directory.join("files").join(file_id), before)?;
+    let mut metadata = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(directory.join("metadata.txt"))?;
+    writeln!(metadata, "{file_id} default-scope ({scope})")
 }

@@ -150,3 +150,38 @@ fn apply_short_bundle(arg: &str, options: &mut Options) -> bool {
     }
     true
 }
+
+fn render_remote_outcome(
+    cwd: &Path,
+    args: &[OsString],
+    options: &Options,
+    loaded: &workspace_show::LoadedComponent,
+) -> io::Result<Option<Outcome>> {
+    let report = format_remote_report(options, loaded)?;
+    let outcome = if let Some(root) = workspace::root(cwd) {
+        if options.json {
+            workspace_command::execute_json(&root, args, "show", |_| Ok(report))?
+        } else {
+            workspace_command::execute_then(&root, args, "show", |_| Ok(report))?
+        }
+    } else if options.json {
+        workspace_command::execute_json_scope(cwd, args, "show", |_| Ok(report))?
+    } else {
+        workspace_command::execute_with_scope(cwd, args, "show", &report)?
+    };
+    Ok(Some(outcome))
+}
+
+fn format_remote_report(
+    options: &Options,
+    loaded: &workspace_show::LoadedComponent,
+) -> io::Result<workspace_command::results::Report> {
+    let data = if options.json {
+        let value =
+            if options.legacy { render::legacy_json(loaded) } else { render::harmony_json(loaded) };
+        serde_json::to_string_pretty(&value)?
+    } else {
+        render::text_report(loaded)
+    };
+    Ok(workspace_command::results::Report { data, code: 0, details: None })
+}

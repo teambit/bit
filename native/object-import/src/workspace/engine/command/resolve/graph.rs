@@ -187,10 +187,15 @@ pub(super) fn key(id: &Value) -> io::Result<String> {
 pub(super) fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     let mut edges = Vec::new();
     for (field, kind) in [("dependencies", "prod"), ("devDependencies", "dev")] {
-        for dependency in
-            version[field].as_array().ok_or_else(|| invalid("resolve graph dependencies"))?
+        if let Some(rows) = version
+            .get(field)
+            .filter(|val| !val.is_null())
         {
-            add_edge(&mut edges, source, &dependency["id"], kind)?;
+            for dependency in
+                rows.as_array().ok_or_else(|| invalid("resolve graph dependencies"))?
+            {
+                add_edge(&mut edges, source, &dependency["id"], kind)?;
+            }
         }
     }
     for extension in version["extensions"]
@@ -225,8 +230,7 @@ fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {
         version.to_owned()
     } else {
         let identity = super::selection::identity(id)?;
-        let model =
-            repository.read(&crate::workspace::engine::hash(identity.as_bytes()), "Component")?;
+        let model = repository.read_component(&identity)?;
         crate::workspace::engine::status_models::versions::reference(&model, version)?
     };
     let value = repository.read(&reference, "Version")?;

@@ -24,7 +24,8 @@ mod write;
 use self::{
     get::prepare_get,
     mutation::{
-        ListActionSpec, SetSpec, commit_list_action, commit_set, prepare_list_action, prepare_set,
+        ListActionSpec, SetSpec, commit_list_action, commit_set, outside_workspace_failure,
+        prepare_list_action, prepare_set, run_unrecognized,
     },
     remove::{RemoveSpec, RemovedByComp, prepare_remove, render_remove},
     usage::prepare_usage,
@@ -44,15 +45,12 @@ use serde_json::{Map, Value, json};
 use std::{
     env,
     ffi::OsString,
-    io::{self, Write},
+    io,
     path::{Path, PathBuf},
-    process::ExitCode,
 };
 
 pub const COMMAND: Command = Command { name: "deps", aliases: &["dependencies"], run };
 pub const WHY: Command = Command { name: "why", aliases: &[], run: run_why };
-
-const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
@@ -149,31 +147,6 @@ fn run_without_workspace(
     )
 }
 
-fn outside_workspace_failure(subcommand: &Subcommand) -> Option<(bool, &'static str)> {
-    match subcommand {
-        Subcommand::Debug { .. }
-        | Subcommand::Usage { .. }
-        | Subcommand::Why { .. }
-        | Subcommand::Diagnose { .. }
-        | Subcommand::DiagnosePackage { .. } => Some((false, OUTSIDE_WORKSPACE_ERR)),
-        Subcommand::Circular { json, .. } => Some((*json, OUTSIDE_WORKSPACE_ERR)),
-        Subcommand::Set { .. }
-        | Subcommand::Remove { .. }
-        | Subcommand::Unset { .. }
-        | Subcommand::Reset { .. }
-        | Subcommand::Eject { .. } => {
-            Some((false, "Cannot read properties of undefined (reading 'idsByPattern')"))
-        }
-        Subcommand::Blame { .. } | Subcommand::Get { .. } => {
-            Some((false, "Cannot read properties of undefined (reading 'resolveComponentId')"))
-        }
-        Subcommand::Write { .. } => {
-            Some((false, "Cannot read properties of undefined (reading 'writeDependencies')"))
-        }
-        Subcommand::Unrecognized(_) => None,
-    }
-}
-
 fn run_in_workspace(
     root: &Path,
     args: &[OsString],
@@ -256,25 +229,6 @@ fn run_circular(
         workspace_command::execute_then(root, args, "circular", |_| {
             Ok(Report { data, code: 0, details: None })
         })
-    }
-}
-
-fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Outcome> {
-    let data = chalk.red(&format!(
-        r#""{sub}" is not a subcommand of "dependencies", please run "bit dependencies --help" to list the subcommands"#,
-    ));
-    let report = Report { data, code: 0, details: None };
-    match scope_root::discover().ok().flatten() {
-        Some(root) if !root.bare => {
-            workspace_command::execute_then(&root.path, args, "deps", |_| Ok(report))
-        }
-        Some(root) => workspace_command::execute_with_scope(&root.path, args, "deps", &report),
-        None => {
-            let mut stdout = io::stdout().lock();
-            writeln!(stdout, "{}", report.data)?;
-            stdout.flush()?;
-            Ok(Outcome::Exit(ExitCode::SUCCESS))
-        }
     }
 }
 

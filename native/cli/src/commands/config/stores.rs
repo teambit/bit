@@ -97,7 +97,10 @@ impl Stores {
             .iter_mut()
             .find(|store| store.origin == origin)
             .ok_or_else(|| {
-                io::Error::other(format!(r#"unable to set config, "{origin}" origin is missing"#))
+                let verb = if value.is_some() { "set" } else { "delete" };
+                io::Error::other(format!(
+                    r#"unable to {verb} config, "{origin}" origin is missing"#,
+                ))
             })?;
         store.prepare_change(key, value)?;
         Ok(())
@@ -173,11 +176,7 @@ fn read_source(origin: &str, path: &Path) -> io::Result<Value> {
         return Ok(Value::Object(Map::new()));
     }
     let bytes = fs::read(path)?;
-    if origin == "workspace" {
-        bit_workspace_config::parse_jsonc(&bytes)
-    } else {
-        serde_json::from_slice(&bytes).map_err(io::Error::other)
-    }
+    bit_workspace_config::parse_jsonc(&bytes)
 }
 
 fn aspect(value: &Value) -> &str {

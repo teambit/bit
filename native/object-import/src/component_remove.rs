@@ -145,22 +145,8 @@ pub(crate) fn select(
 ) -> io::Result<Selected> {
     let (key, row) = find_row(bitmap, name, kind)?;
     let (component_name, scope) = supported_row(key, row, kind)?;
-    let lane = if bitmap["_bit_lane"].is_null() {
-        if matches!(kind, RowKind::LaneSnap | RowKind::ExportedLane) {
-            return Err(invalid("component is not on a lane"));
-        }
-        None
-    } else {
-        let lane = select_lane(root, bitmap, scope, component_name, row, kind)?;
-        let member = lane.value["components"]
-            .as_array()
-            .is_some_and(|rows| {
-                rows.iter()
-                    .any(|row| row["id"]["scope"] == scope && row["id"]["name"] == component_name)
-            });
-        member.then_some(lane)
-    };
     let version = row_version(key, row, kind);
+    let lane = select_row_lane(root, bitmap, scope, component_name, version.as_deref(), kind)?;
     let identity = format!("{scope}/{component_name}");
     if kind == RowKind::New {
         validate_no_model(root, scope, component_name)?;
@@ -169,6 +155,30 @@ pub(crate) fn select(
     let package =
         if row["rootDir"] == "." { PathBuf::new() } else { package(root, scope, component_name)? };
     Ok(Selected { key: key.clone(), identity, files, package, main_exists, version, lane })
+}
+
+fn select_row_lane(
+    root: &Path,
+    bitmap: &Value,
+    scope: &str,
+    component_name: &str,
+    version: Option<&str>,
+    kind: RowKind,
+) -> io::Result<Option<Lane>> {
+    let lane_name = bitmap["_bit_lane"]["id"]["name"].as_str().unwrap_or_default();
+    if bitmap["_bit_lane"].is_null() || lane_name.is_empty() || lane_name == "main" {
+        if matches!(kind, RowKind::LaneSnap | RowKind::ExportedLane) {
+            return Err(invalid("component is not on a lane"));
+        }
+        return Ok(None);
+    }
+    let lane = select_lane(root, bitmap, scope, component_name, version, kind)?;
+    let member = lane.value["components"]
+        .as_array()
+        .is_some_and(|rows| {
+            rows.iter().any(|entry| lane::matches_component_entry(entry, scope, component_name))
+        });
+    Ok(member.then_some(lane))
 }
 
 fn row_version(key: &str, row: &Value, kind: RowKind) -> Option<String> {
@@ -230,7 +240,12 @@ fn validate_no_model(root: &Path, scope: &str, name: &str) -> io::Result<()> {
     };
     if rows
         .iter()
-        .any(|component| component["id"]["scope"] == scope && component["id"]["name"] == name)
+        .any(|component| {
+            let row_scope = component["id"]["scope"].as_str().unwrap_or_default();
+            component["isSymlink"] != true
+                && (row_scope == scope || row_scope.is_empty())
+                && component["id"]["name"] == name
+        })
     {
         return Err(invalid("component already has a local model"));
     }
@@ -286,6 +301,7 @@ fn validate_no_overlap(
             || other_key.starts_with('$')
             || other_key == "_bit_lane"
             || other_key == "version"
+            || !other.is_object()
             || other["isAvailableOnCurrentLane"] == false
         {
             continue;

@@ -65,6 +65,11 @@ pub(in crate::workspace::engine::command) fn reference(
     model: &Value,
     version: &str,
 ) -> io::Result<String> {
+    if matches!(version, "" | "latest" | "head") {
+        let reference = head(model)?;
+        crate::merge_history::hash(reference)?;
+        return Ok(reference.to_owned());
+    }
     for field in ["orphanedVersions", "versions"] {
         if let Some(reference) = model[field].get(version) {
             let reference = reference.as_str().ok_or_else(|| invalid("command tag reference"))?;
@@ -95,7 +100,11 @@ pub(in crate::workspace::engine::command) fn label(model: &Value, hash: &str) ->
 }
 
 fn latest(model: &Value, semver: &Value) -> io::Result<Option<String>> {
-    let tags = model["versions"].as_object().ok_or_else(|| invalid("command model tags"))?;
+    let empty = serde_json::Map::new();
+    let tags = match model.get("versions") {
+        None | Some(Value::Null) => &empty,
+        Some(value) => value.as_object().ok_or_else(|| invalid("command model tags"))?,
+    };
     let mut latest: Option<&str> = None;
     for tag in tags.keys() {
         let grammar =

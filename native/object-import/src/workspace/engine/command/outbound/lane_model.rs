@@ -1,13 +1,14 @@
 //! Freeze the ordinary current lane, its component models, and the local
 //! Version closure before the export transaction starts.
-use super::{Prepare, invalid, model, remote};
+pub(super) use self::exhaustive::lane_entries;
 mod exhaustive;
 mod hidden;
 mod readme;
 mod staged;
+use super::{Prepare, invalid, model, remote};
 use crate::transfer;
 use bit_client_transfer::tar::ObjectItem;
-use serde_json::{Value, json};
+use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
@@ -49,9 +50,7 @@ pub(super) struct LaneHashes {
 }
 
 pub(super) fn select(input: &Prepare) -> io::Result<Option<LaneSelected>> {
-    let Some((scope, name)) = current_identity(input)? else {
-        return Ok(None);
-    };
+    let Some((scope, name)) = current_identity(input)? else { return Ok(None) };
     let loaded = load_lane(input, &scope, &name)?;
     let mut selected = select_components(input, &scope, &name, &loaded)?;
     let candidate_count = lane_entries(&loaded.lane)?.len();
@@ -86,9 +85,7 @@ pub(super) fn select(input: &Prepare) -> io::Result<Option<LaneSelected>> {
 
 fn current_identity(input: &Prepare) -> io::Result<Option<(String, String)>> {
     let bitmap = crate::recovery::jsonc::parse(&fs::read(input.root.join(".bitmap"))?)?;
-    let Some(current) = bitmap.get("_bit_lane") else {
-        return Ok(None);
-    };
+    let Some(current) = bitmap.get("_bit_lane") else { return Ok(None) };
     if !input.ids.is_empty() {
         return Err(invalid("outbound explicit lane IDs require canonical stack"));
     }
@@ -137,7 +134,6 @@ fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
     let history_hash =
         crate::validate::hexadecimal(&Sha1::digest(format!("{hash}:LaneHistory").as_bytes()));
     let history = model::read_object(&dir, &history_hash, "LaneHistory")?;
-    // LaneHistory keeps its original name/scope after a local rename or scope change.
     if history["laneHash"] != hash {
         return Err(invalid("outbound LaneHistory identity"));
     }
@@ -151,13 +147,13 @@ fn forked_from(lane: &Value, scope: &str, new_scope: bool) -> io::Result<Option<
         .map(|parent| {
             let parent_scope = parent["scope"]
                 .as_str()
-                .filter(|scope| !scope.is_empty());
+                .filter(|val| !val.is_empty());
             let parent_name = parent["name"]
                 .as_str()
-                .filter(|name| !name.is_empty());
+                .filter(|val| !val.is_empty());
             parent_scope
                 .zip(parent_name)
-                .map(|(scope, name)| (scope.to_owned(), name.to_owned()))
+                .map(|(par_scope, par_name)| (par_scope.to_owned(), par_name.to_owned()))
                 .ok_or_else(|| invalid("outbound lane fork identity"))
         })
         .transpose()?;
@@ -170,6 +166,7 @@ fn forked_from(lane: &Value, scope: &str, new_scope: bool) -> io::Result<Option<
     Ok(forked_from)
 }
 
+#[derive(Default)]
 struct Selection {
     objects: Vec<ObjectItem>,
     seen: HashSet<String>,
@@ -181,17 +178,6 @@ struct Selection {
 }
 
 impl Selection {
-    fn new() -> Self {
-        Self {
-            objects: Vec::new(),
-            seen: HashSet::new(),
-            budget: 0,
-            component_ids: Vec::new(),
-            expected_ids: Vec::new(),
-            models: Vec::new(),
-            histories: Vec::new(),
-        }
-    }
     fn append(&mut self, item: ObjectItem) -> io::Result<()> {
         if !self.seen.insert(item.hash.clone()) {
             return Ok(());
@@ -222,7 +208,7 @@ fn select_components(
     let host = remote::configured_host(input, scope)?;
     let context = ComponentContext { input, loaded, scope, name, host: &host };
     let mut seen_ids = HashSet::new();
-    let mut selected = Selection::new();
+    let mut selected = Selection::default();
     for entry in &rows {
         let component = ComponentId::parse(entry)?;
         if !seen_ids.insert(component.id.clone()) {
@@ -233,7 +219,7 @@ fn select_components(
         };
         let row = component_rows
             .iter()
-            .find(|row| component.matches(row))
+            .find(|row| row["isSymlink"] != true && component.matches(row))
             .ok_or_else(|| invalid("outbound lane component model missing"))?;
         select_component(&context, &component, row, previous_head, exhaustive, &mut selected)?;
     }
@@ -287,39 +273,12 @@ fn selection_rows(input: &Prepare, loaded: &Loaded) -> io::Result<(Vec<Value>, b
     let exhaustive =
         input.options.all || input.options.all_versions || input.options.head_only;
     if exhaustive || input.options.fork_lane_new_scope {
-        let extra = exhaustive::workspace_entries(input, loaded, &rows)?;
-        rows.extend(extra);
+        rows.extend(exhaustive::workspace_entries(input, loaded, &rows)?);
     }
     if rows.len() > MAX_OBJECTS {
         return Err(invalid("outbound lane component budget"));
     }
     Ok((rows, exhaustive))
-}
-
-pub(super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
-    let mut entries = lane["components"]
-        .as_array()
-        .ok_or_else(|| invalid("outbound lane components"))?
-        .clone();
-    let updates = match lane.get("updateDependents") {
-        None | Some(Value::Null) => &[][..],
-        Some(Value::Array(updates)) => updates.as_slice(),
-        Some(_) => return Err(invalid("outbound lane update-dependents")),
-    };
-    for update in updates {
-        let id = update.as_str().ok_or_else(|| invalid("outbound lane update-dependent"))?;
-        let (identity, head) =
-            id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
-        let (scope, name) = identity
-            .split_once('/')
-            .ok_or_else(|| invalid("outbound lane update-dependent identity"))?;
-        crate::merge_history::hash(head)?;
-        if scope.is_empty() || name.is_empty() {
-            return Err(invalid("outbound lane update-dependent identity"));
-        }
-        entries.push(json!({"id":{"scope":scope,"name":name},"head":head}));
-    }
-    Ok(entries)
 }
 
 struct ComponentId<'a> {
@@ -331,16 +290,29 @@ struct ComponentId<'a> {
 
 impl<'a> ComponentId<'a> {
     fn parse(entry: &'a Value) -> io::Result<Self> {
-        let scope = entry["id"]["scope"]
+        let (scope, name) = if let Some(raw) = entry["id"].as_str() {
+            raw.split_once('/').ok_or_else(|| invalid("outbound lane component scope"))?
+        } else {
+            let scope = entry["id"]["scope"]
+                .as_str()
+                .or_else(|| entry["scope"].as_str())
+                .filter(|val| !val.is_empty())
+                .ok_or_else(|| invalid("outbound lane component scope"))?;
+            let name = entry["id"]["name"]
+                .as_str()
+                .or_else(|| entry["name"].as_str())
+                .filter(|val| !val.is_empty())
+                .ok_or_else(|| invalid("outbound lane component name"))?;
+            (scope, name)
+        };
+        let head = entry["head"]
             .as_str()
-            .filter(|scope| !scope.is_empty())
-            .ok_or_else(|| invalid("outbound lane component scope"))?;
-        let name = entry["id"]["name"]
-            .as_str()
-            .filter(|name| !name.is_empty())
-            .ok_or_else(|| invalid("outbound lane component name"))?;
-        let head = entry["head"].as_str().ok_or_else(|| invalid("outbound lane head"))?;
+            .or_else(|| entry["version"].as_str())
+            .ok_or_else(|| invalid("outbound lane head"))?;
         crate::merge_history::hash(head)?;
+        if scope.is_empty() || name.is_empty() {
+            return Err(invalid("outbound lane component name"));
+        }
         Ok(Self { scope, name, head, id: format!("{scope}/{name}") })
     }
     fn matches(&self, row: &Value) -> bool {

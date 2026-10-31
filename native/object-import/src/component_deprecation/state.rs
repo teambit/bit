@@ -40,10 +40,11 @@ fn model_metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     if model["deprecated"] == true {
         return Ok(serde_json::json!({"deprecate":true}));
     }
-    let Some(head) = model["head"].as_str() else {
+    let Some(ver_hash) = resolve_model_version(&model, id).or_else(|| model["head"].as_str())
+    else {
         return Ok(serde_json::json!({}));
     };
-    let version = read(plan, head)?;
+    let version = read(plan, ver_hash)?;
     let mut config = version["extensions"]
         .as_array()
         .and_then(|rows| {
@@ -54,31 +55,56 @@ fn model_metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
                     )
                 })
         })
-        .map_or_else(|| serde_json::json!({}), |row| row["config"].clone());
+        .map_or_else(
+            || serde_json::json!({}),
+            |row| {
+                if row["config"].is_object()
+                    && !row["config"].as_object().is_none_or(serde_json::Map::is_empty)
+                {
+                    row["config"].clone()
+                } else {
+                    row["data"].clone()
+                }
+            },
+        );
     range_state(&mut config, id, &model);
     Ok(config)
 }
+fn resolve_model_version<'a>(model: &'a Value, id: &'a str) -> Option<&'a str> {
+    let (_, ver) = id.rsplit_once('@')?;
+    if matches!(ver, "" | "latest" | "head") {
+        return model["head"]
+            .as_str()
+            .filter(|val| !val.is_empty());
+    }
+    model["versions"][ver]
+        .as_str()
+        .or_else(|| model["orphanedVersions"][ver].as_str())
+        .or_else(|| (ver.len() == 40).then_some(ver))
+}
 fn model_hash(plan: &mut Plan, id: &str) -> io::Result<Option<String>> {
-    let scope = crate::scope_path(&plan.root);
-    let index_path = scope.join("index.json");
+    let index_path = crate::scope_path(&plan.root).join("index.json");
     let bytes = plan.proofs.read(&index_path)?.ok_or_else(|| invalid("scope index missing"))?;
     let index: Value = serde_json::from_slice(&bytes)?;
-    let bare = id.split('@').next().unwrap_or(id);
-    let model_hash = index["components"]
+    let bare = id.rsplit_once('@').map_or(id, |(bare_id, _)| bare_id);
+    let found = index["components"]
         .as_array()
         .or_else(|| index.as_array())
-        .and_then(|rows| {
-            rows.iter()
-                .find(|row| {
-                    format!(
-                        "{}/{}",
-                        row["id"]["scope"].as_str().unwrap_or_default(),
-                        row["id"]["name"].as_str().unwrap_or_default(),
-                    ) == bare
-                })
-        })
+        .and_then(|rows| rows.iter().find(|row| matches_indexed_component(row, bare)))
         .and_then(|row| row["hash"].as_str());
-    Ok(model_hash.map(str::to_owned))
+    Ok(found.map(str::to_owned))
+}
+fn matches_indexed_component(row: &Value, bare: &str) -> bool {
+    let (scope_part, name_part) = bare
+        .split_once('/')
+        .unwrap_or(("", bare));
+    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+    let row_name = row["id"]["name"].as_str().unwrap_or_default();
+    row["isSymlink"] != true
+        && ((row_name == name_part
+            && (row_scope.is_empty() || scope_part.is_empty() || row_scope == scope_part))
+            || format!("{row_scope}/{row_name}") == bare
+            || row_name == bare)
 }
 fn read(plan: &mut Plan, hash: &str) -> io::Result<Value> {
     crate::merge_history::hash(hash)?;

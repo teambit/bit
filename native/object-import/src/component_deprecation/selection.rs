@@ -89,11 +89,16 @@ fn validate_pattern(pattern: &str) -> io::Result<()> {
     Ok(())
 }
 fn matches_parts(key: &str, row: &Value, id: &str, parts: &[&str]) -> bool {
-    let bare = id.split('@').next().unwrap_or(id);
+    let bare = id.rsplit_once('@').map_or(id, |(bare_id, _)| bare_id);
     let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
     let matches = |pattern: &str| {
-        bit_workspace_config::glob::matches(pattern, bare)
+        let pat_bare = pattern.rsplit_once('@').map_or(pattern, |(pat_id, _)| pat_id);
+        bit_workspace_config::glob::matches(pattern, id)
+            || bit_workspace_config::glob::matches(pattern, bare)
             || bit_workspace_config::glob::matches(pattern, name)
+            || (pat_bare != pattern
+                && (bit_workspace_config::glob::matches(pat_bare, bare)
+                    || bit_workspace_config::glob::matches(pat_bare, name)))
     };
     parts
         .iter()

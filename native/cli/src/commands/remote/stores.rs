@@ -161,8 +161,8 @@ fn load_global_remotes(
     if bytes.is_empty() {
         return Ok(Map::new());
     }
-    let value: Value =
-        serde_json::from_slice(&bytes).map_err(|error| Failure::Declined(error.to_string()))?;
+    let value: Value = bit_workspace_config::parse_jsonc(&bytes)
+        .map_err(|error| Failure::Declined(error.to_string()))?;
     extract_remotes(Some(&value))
 }
 
@@ -198,7 +198,7 @@ fn load_scope_json(
     if !scope_json_path.exists() {
         return Err(Failure::Declined("scope.json missing".to_owned()));
     }
-    let value: Value = serde_json::from_slice(&fs::read(&scope_json_path)?)
+    let value: Value = bit_workspace_config::parse_jsonc(&fs::read(&scope_json_path)?)
         .map_err(|error| Failure::Declined(error.to_string()))?;
     let object = value
         .as_object()
@@ -318,7 +318,7 @@ fn scope_at_dir(current: &Path) -> Option<Option<PathBuf>> {
             return Some(None);
         }
         let dot_bit = current.join(".bit");
-        return Some(Some(if dot_bit.exists() { dot_bit } else { current.to_path_buf() }));
+        return Some(Some(if is_scope_dir(&dot_bit) { dot_bit } else { current.to_path_buf() }));
     }
     let dot_bit = current.join(".bit");
     if is_scope_dir(&dot_bit) {

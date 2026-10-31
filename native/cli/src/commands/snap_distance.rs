@@ -243,20 +243,27 @@ fn read_remote_lane_head(
     comp_scope: &str,
     comp_name: &str,
 ) -> Option<Option<String>> {
-    let path = scope_dir
-        .join("refs")
-        .join("remote")
-        .join(lane_scope)
-        .join(lane_name);
-    let bytes = match fs::read(path) {
-        Ok(bytes) => bytes,
-        Err(err) if err.kind() == io::ErrorKind::NotFound => return Some(None),
-        Err(_) => return None,
+    read_remote_ref_head(scope_dir, lane_scope, lane_name, comp_scope, comp_name)
+}
+
+fn read_remote_ref_head(
+    scope_dir: &Path,
+    ref_scope: &str,
+    ref_name: &str,
+    comp_scope: &str,
+    comp_name: &str,
+) -> Option<Option<String>> {
+    let Some(bytes) = read_remote_ref_bytes(scope_dir, ref_scope, ref_name)? else {
+        return Some(None);
     };
     let entries: Value = serde_json::from_slice(&bytes).ok()?;
+    let full = format!("{comp_scope}/{comp_name}");
     for item in entries.as_array()? {
-        if item["id"]["scope"].as_str() == Some(comp_scope)
-            && item["id"]["name"].as_str() == Some(comp_name)
+        let item_scope = item["id"]["scope"].as_str().unwrap_or_default();
+        if (item["id"]["name"].as_str() == Some(comp_name)
+            && (item_scope.is_empty() || item_scope == comp_scope))
+            || item["id"].as_str() == Some(full.as_str())
+            || item["id"].as_str() == Some(comp_name)
         {
             return Some(
                 item["head"]
@@ -267,6 +274,32 @@ fn read_remote_lane_head(
         }
     }
     Some(None)
+}
+
+fn read_remote_ref_bytes(
+    scope_dir: &Path,
+    ref_scope: &str,
+    ref_name: &str,
+) -> Option<Option<Vec<u8>>> {
+    let primary = scope_dir
+        .join("refs")
+        .join("remote")
+        .join(ref_scope)
+        .join(ref_name);
+    let fallback = scope_dir
+        .join("refs")
+        .join("remotes")
+        .join(ref_scope)
+        .join(ref_name);
+    match fs::read(primary) {
+        Ok(bytes) => Some(Some(bytes)),
+        Err(err) if err.kind() == io::ErrorKind::NotFound => match fs::read(fallback) {
+            Ok(bytes) => Some(Some(bytes)),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Some(None),
+            Err(_) => None,
+        },
+        Err(_) => None,
+    }
 }
 
 fn distance_from_heads(
@@ -336,8 +369,9 @@ fn bitmap_row_version(
                 .filter(|val| !val.is_empty())
         })
         .unwrap_or_default();
-    let matches =
-        (row_name == name && (row_scope.is_empty() || row_scope == scope)) || key_id == full;
+    let matches = (row_name == name && (row_scope.is_empty() || row_scope == scope))
+        || key_id == full
+        || key_id.strip_prefix(&format!("{scope}/")) == Some(name);
     if !matches {
         return None;
     }
@@ -353,27 +387,5 @@ fn bitmap_row_version(
 }
 
 fn read_remote_main_head(scope_dir: &Path, scope: &str, name: &str) -> Option<Option<String>> {
-    let path = scope_dir
-        .join("refs")
-        .join("remote")
-        .join(scope)
-        .join("main");
-    let bytes = match fs::read(path) {
-        Ok(bytes) => bytes,
-        Err(err) if err.kind() == io::ErrorKind::NotFound => return Some(None),
-        Err(_) => return None,
-    };
-    let entries: Value = serde_json::from_slice(&bytes).ok()?;
-    for item in entries.as_array()? {
-        if item["id"]["scope"].as_str() == Some(scope) && item["id"]["name"].as_str() == Some(name)
-        {
-            return Some(
-                item["head"]
-                    .as_str()
-                    .filter(|head| !head.is_empty())
-                    .map(str::to_owned),
-            );
-        }
-    }
-    Some(None)
+    read_remote_ref_head(scope_dir, scope, "main", scope, name)
 }

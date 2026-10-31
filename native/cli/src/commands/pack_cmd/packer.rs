@@ -1,6 +1,6 @@
 //! Native component tarball packer (`scopes/pkg/pkg/packer.ts`).
 
-use super::Options;
+use super::{Options, format_pack_report};
 use crate::{
     commands::{
         aspect::workspace_default_scope,
@@ -197,7 +197,9 @@ fn resolve_from_scope(
 }
 
 fn resolve_scope_version(comp_val: &Value, explicit_ver: Option<&str>) -> Option<(String, String)> {
-    if let Some(req) = explicit_ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+    if let Some(req) =
+        explicit_ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
+    {
         if let Some(hash) = comp_val["versions"]
             .get(req)
             .and_then(Value::as_str)
@@ -369,28 +371,4 @@ fn crc32(data: &[u8]) -> u32 {
         }
     }
     !crc
-}
-
-fn format_pack_report(payload: &Value, chalk: Chalk) -> String {
-    let warnings = join_yellow_array(&payload["warnings"], chalk);
-    let errors = join_yellow_array(&payload["errors"], chalk);
-    let id_str = payload["id"].as_str().unwrap_or_default();
-    let tar_line = payload["metadata"]["tarPath"]
-        .as_str()
-        .map(|tar_path| chalk.green(&format!("tar path for component {id_str}: {tar_path}")))
-        .unwrap_or_default();
-    format!("{warnings}\n{errors}\n{tar_line}")
-}
-
-fn join_yellow_array(arr_val: &Value, chalk: Chalk) -> String {
-    arr_val
-        .as_array()
-        .map(|arr| {
-            arr.iter()
-                .filter_map(Value::as_str)
-                .map(|msg| chalk.yellow(msg))
-                .collect::<Vec<_>>()
-                .join("\n")
-        })
-        .unwrap_or_default()
 }

@@ -1,6 +1,9 @@
 //! Bare-scope target resolution for `bit artifacts`.
 
-use super::extractor::TargetComponent;
+use super::{
+    Options,
+    extractor::{ArtifactFile, ArtifactItem, TargetComponent},
+};
 use crate::commands::{debug_cat::lookup::resolve_component_entry, patterns, scope_set::Failure};
 use serde_json::Value;
 use std::{fs, path::Path};
@@ -11,8 +14,8 @@ pub(super) fn resolve_bare_scope_targets(
 ) -> Result<Vec<TargetComponent>, Failure> {
     let scope_bytes =
         fs::read(scope_dir.join("scope.json")).map_err(|err| Failure::Declined(err.to_string()))?;
-    let scope_val: Value =
-        serde_json::from_slice(&scope_bytes).map_err(|err| Failure::Declined(err.to_string()))?;
+    let scope_val: Value = bit_object_import::parse_jsonc(&scope_bytes)
+        .map_err(|err| Failure::Declined(err.to_string()))?;
     let scope_name = scope_val["name"]
         .as_str()
         .filter(|name| !name.is_empty())
@@ -100,7 +103,7 @@ fn load_bare_scope_candidates(
     let bytes =
         fs::read(scope_dir.join("index.json")).map_err(|err| Failure::Declined(err.to_string()))?;
     let index: Value =
-        serde_json::from_slice(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
+        bit_object_import::parse_jsonc(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -113,15 +116,11 @@ fn load_bare_scope_candidates(
         .iter()
         .filter(|row| row["isSymlink"] != true)
     {
-        let scope = row["id"]["scope"]
-            .as_str()
-            .ok_or_else(|| Failure::Declined("missing scope in index".into()))?;
+        let (scope, name) = parse_index_row_id(row)
+            .ok_or_else(|| Failure::Declined("missing scope or name in index".into()))?;
         if scope != scope_name {
             return Err(Failure::Declined("cached external component in bare scope".into()));
         }
-        let name = row["id"]["name"]
-            .as_str()
-            .ok_or_else(|| Failure::Declined("missing name in index".into()))?;
         let hash = row["hash"]
             .as_str()
             .ok_or_else(|| Failure::Declined("missing hash in index".into()))?;
@@ -137,4 +136,64 @@ fn load_bare_scope_candidates(
         }
     }
     Ok(candidates)
+}
+
+fn parse_index_row_id(row: &Value) -> Option<(&str, &str)> {
+    if let Some(id_str) = row["id"].as_str() {
+        let bare = id_str
+            .split('@')
+            .next()
+            .unwrap_or(id_str);
+        return bare.split_once('/');
+    }
+    Some((row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?))
+}
+
+pub(super) fn filter_artifacts(
+    artifacts: &mut Vec<ArtifactItem>,
+    options: &Options,
+) -> Result<(), Failure> {
+    if options.aspect.is_some() || options.task.is_some() {
+        artifacts.retain(|art| matches_aspect_and_task(art, options));
+    }
+    if let Some(files_glob) = &options.files {
+        filter_by_files_glob(artifacts, files_glob)?;
+    }
+    Ok(())
+}
+
+fn matches_aspect_and_task(art: &ArtifactItem, options: &Options) -> bool {
+    options.aspect
+        .as_deref()
+        .is_none_or(|aspect| art.aspect_id == aspect)
+        && options.task
+            .as_deref()
+            .is_none_or(|task| art.task_name == task)
+}
+
+fn filter_by_files_glob(
+    artifacts: &mut Vec<ArtifactItem>,
+    files_glob: &str,
+) -> Result<(), Failure> {
+    let split_globs = patterns::split(files_glob);
+    for art in artifacts.iter_mut() {
+        art.files = retain_matching_files(&art.files, &split_globs)?;
+    }
+    artifacts.retain(|art| !art.files.is_empty());
+    Ok(())
+}
+
+fn retain_matching_files(
+    files: &[ArtifactFile],
+    split_globs: &[String],
+) -> Result<Vec<ArtifactFile>, Failure> {
+    let mut kept = Vec::new();
+    for file in files {
+        let matched = patterns::matching(&[file.relative_path.as_str()], split_globs)
+            .map_err(|_| Failure::Declined("unsupported files glob".into()))?;
+        if !matched.is_empty() {
+            kept.push(file.clone());
+        }
+    }
+    Ok(kept)
 }

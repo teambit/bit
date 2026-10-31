@@ -77,7 +77,7 @@ fn parse_options(args: &[OsString]) -> Option<Action> {
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?
         .into_iter()
-        .filter(|token| *token != "--no-color")
+        .filter(|token| !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect();
     let tokens = super::scope_set::collect_non_flag_tokens(&raw)?;
     match tokens.as_slice() {
@@ -276,18 +276,16 @@ fn resolve_scope_package_name(scope_dir: &Path, raw_id: &str) -> Option<String> 
     if kind != "Component" {
         return None;
     }
-    let ver_hash = match explicit_ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
-        Some(ver) => comp_val["versions"][ver]
-            .as_str()
-            .or_else(|| comp_val["orphanedVersions"][ver].as_str())
-            .unwrap_or(ver),
-        None => comp_val["head"].as_str()?,
-    };
+    let ver_hash =
+        match explicit_ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")) {
+            Some(ver) => comp_val["versions"][ver]
+                .as_str()
+                .or_else(|| comp_val["orphanedVersions"][ver].as_str())
+                .unwrap_or(ver),
+            None => comp_val["head"].as_str()?,
+        };
     let (vkind, ver_val) = bit_object_import::read_scope_object(scope_dir, ver_hash).ok()??;
-    if vkind != "Version" {
-        return None;
-    }
-    extract_version_package_name(&ver_val)
+    (vkind == "Version").then(|| extract_version_package_name(&ver_val)).flatten()
 }
 
 fn extract_version_package_name(ver_val: &Value) -> Option<String> {
@@ -322,7 +320,7 @@ fn is_valid_scoped_package_name(name: &str) -> bool {
 
 fn load_scope_index_components(scope_dir: &Path) -> Option<Vec<Value>> {
     let bytes = fs::read(scope_dir.join("index.json")).ok()?;
-    let index = serde_json::from_slice::<Value>(&bytes).ok()?;
+    let index = bit_object_import::parse_jsonc(&bytes).ok()?;
     index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -339,18 +337,7 @@ fn scope_has_components(scope_dir: &Path) -> bool {
 }
 
 fn exists_in_scope_index(scope_dir: &Path, id: &str) -> bool {
-    let without_version = id.split('@').next().unwrap_or(id);
-    resolve_component_entry(scope_dir, without_version).is_some()
-        || load_scope_index_components(scope_dir)
-            .is_some_and(|components| {
-                components
-                    .iter()
-                    .any(|item| {
-                        let name = item["id"]["name"].as_str().unwrap_or_default();
-                        let scope = item["id"]["scope"].as_str().unwrap_or_default();
-                        name == without_version || format!("{scope}/{name}") == without_version
-                    })
-            })
+    resolve_component_entry(scope_dir, id.split('@').next().unwrap_or(id)).is_some()
 }
 
 fn refactor_component(

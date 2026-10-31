@@ -7,6 +7,7 @@ pub(super) use self::lane::eject_from_lane;
 #[cfg(test)]
 mod tests;
 
+use self::lane::{add_dependency_to_workspace_jsonc, pkg_name_for, remove_nm_pkg};
 use super::{
     Command,
     aspect::write_bitmap_if_changed,
@@ -15,12 +16,9 @@ use super::{
     workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
-use bit_install::{
-    dependencies::cache::invalidation::deps_dir, model::ComponentId,
-    workspace::component_package_name,
-};
+use bit_install::dependencies::cache::invalidation::deps_dir;
 use bit_object_import::{component_remove::select_ids, parse_jsonc, scope_path};
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "eject", aliases: &["E"], run };
@@ -87,7 +85,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_eject(iter, &mut options.pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-f" | "--force" | "--force=true" => options.force = true,
             "--force=false" => options.force = false,
             "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
@@ -143,7 +141,10 @@ pub(super) fn validate_workspace(root: &Path, pattern: &str) -> io::Result<Optio
         Err(err) => return Err(err),
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
-    if !bitmap["_bit_lane"].is_null() && bitmap["_bit_lane"]["id"]["name"] != "main" {
+    if bitmap["_bit_lane"]["id"]["name"]
+        .as_str()
+        .is_some_and(|name| !name.is_empty() && name != "main")
+    {
         return Ok(Some(
             r#"unable to eject when the workspace is on a lane, please use "bit lane eject" to delete the component from the lane and install the main version"#
                 .into(),
@@ -304,44 +305,6 @@ fn bitmap_row_matches(key: &str, row: &Value, bare: &str) -> bool {
     let (scope, name) = super::update_cmd::bitmap_row_scope_and_name(key, row);
     let full = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
     full == bare || name == bare || key_id == bare || key == bare
-}
-
-fn pkg_name_for(scope: &str, name: &str) -> String {
-    let comp_id = ComponentId {
-        scope: Some(scope.to_owned()),
-        name: name.to_owned(),
-        version: None,
-        default_scope: None,
-    };
-    component_package_name(&comp_id, None, &Map::new())
-}
-
-fn remove_nm_pkg(root: &Path, pkg_name: &str) {
-    let pkg_path = root.join("node_modules").join(pkg_name);
-    if let Ok(meta) = fs::symlink_metadata(&pkg_path) {
-        if meta.file_type().is_symlink() || meta.is_file() {
-            let _ = fs::remove_file(&pkg_path);
-        } else if meta.is_dir() {
-            let _ = fs::remove_dir_all(&pkg_path);
-        }
-    }
-}
-
-fn add_dependency_to_workspace_jsonc(root: &Path, pkg_name: &str, version: &str) -> io::Result<()> {
-    let path = root.join("workspace.jsonc");
-    let before = fs::read(&path)?;
-    let text = std::str::from_utf8(&before).map_err(io::Error::other)?;
-    let mut doc = bit_workspace_config::jsonc::Document::parse(text)?;
-    let resolver_key = crate::commands::update_cmd::aspect_entry(
-        &doc.value(),
-        "teambit.dependencies/dependency-resolver",
-    )
-    .map_or_else(
-        || "teambit.dependencies/dependency-resolver".to_owned(),
-        |(key, _)| key.to_owned(),
-    );
-    doc.set(&[&resolver_key, "policy", "dependencies", pkg_name], &json!(version));
-    fs::write(&path, format!("{doc}\n"))
 }
 
 fn format_eject_template(summary: &EjectSummary, chalk: Chalk) -> String {

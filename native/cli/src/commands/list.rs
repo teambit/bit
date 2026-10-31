@@ -22,13 +22,7 @@ use super::{
 };
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use serde_json::{Value, json};
-use std::{
-    env,
-    ffi::OsString,
-    io::{self, Write},
-    path::Path,
-    process::ExitCode,
-};
+use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "list", aliases: &["ls"], run };
 
@@ -66,7 +60,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         Err(error) => return Ok(Outcome::Declined(format!("list: {error}"))),
     };
-    present(root.as_deref(), args, &rows, &options, &session)
+    failure::present(root.as_deref(), args, &rows, &options, &session)
 }
 
 fn unsupported(root: Option<&Path>, options: &Options) -> Option<&'static str> {
@@ -97,72 +91,6 @@ fn prepared_rows(
         validate_versions(&rows)?;
     }
     Ok(rows)
-}
-
-fn present(
-    root: Option<&Path>,
-    args: &[OsString],
-    rows: &[Row],
-    options: &Options,
-    session: &Session,
-) -> io::Result<Outcome> {
-    if options.json {
-        return json_output(root, args, rows, options.ids, session);
-    }
-    let report = workspace_command::results::Report {
-        data: report(rows, options, Chalk::detect(args), table::colors(args)),
-        code: 0,
-        details: None,
-    };
-    let status =
-        if options.remote.is_some() { "listing remote components" } else { "listing components" };
-    if let Some(root) = root {
-        workspace_command::execute_with(root, args, "list", &report, |output| {
-            output.status(status);
-            io::stdout()
-                .lock()
-                .write_all(session.output().as_bytes())?;
-            if let Some(warning) = session.warning() {
-                output.console(&Chalk::detect(args).red(warning));
-            }
-            Ok(())
-        })
-    } else {
-        let output = workspace_command::loader_output(Chalk::detect(args), false);
-        output.restart(r#"running command "list"..."#);
-        output.status(status);
-        io::stdout()
-            .lock()
-            .write_all(session.output().as_bytes())?;
-        if let Some(warning) = session.warning() {
-            output.console(&Chalk::detect(args).red(warning));
-        }
-        output.stop();
-        writeln!(io::stdout().lock(), "{}", report.data)?;
-        Ok(Outcome::Exit(ExitCode::SUCCESS))
-    }
-}
-
-fn json_output(
-    root: Option<&Path>,
-    args: &[OsString],
-    rows: &[Row],
-    ids: bool,
-    session: &Session,
-) -> io::Result<Outcome> {
-    let history = root.map(|root| History::start(root, args));
-    // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
-    let mut stdout = io::stdout().lock();
-    stdout.write_all(session.output().as_bytes())?;
-    if let Some(warning) = session.warning() {
-        writeln!(stdout, "{}", Chalk::detect(args).red(warning))?;
-    }
-    stdout.write_all(serde_json::to_string_pretty(&json_report(rows, ids))?.as_bytes())?;
-    stdout.flush()?;
-    if let Some(history) = history {
-        history.end(true);
-    }
-    Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
 /// A `ListScopeResult`.

@@ -4,9 +4,7 @@ mod main_ext;
 mod reports;
 mod selection;
 
-use reports::{batch_report, never_exported_report, report, soft_report};
-
-use super::{color::Chalk, list::bitmap, workspace_command};
+use super::{list::bitmap, workspace_command};
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_object_import::{
     reset_lane::Batch as LaneBatch,
@@ -14,10 +12,11 @@ use bit_object_import::{
     reset_never_exported::Plan as NeverPlan,
     reset_soft::Plan as SoftPlan,
 };
+use reports::{batch_report, never_exported_report, report, soft_report};
+use selection::LANE_CI_DIAGNOSTIC;
 use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "reset", aliases: &[], run };
-const LANE_CI_DIAGNOSTIC: &str = "CI lane reset diagnostics require the published stack";
 
 #[derive(Default)]
 struct Options<'a> {
@@ -48,7 +47,7 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
 
 fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "--head" | "--head=true" => options.head = true,
         "--head=false" => options.head = false,
         "--force" | "-f" | "--force=true" => options.force = true,
@@ -61,11 +60,7 @@ fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
             options.silent = true;
         }
         "--silent=false" | "--all=false" => options.silent = false,
-        "-fs" | "-sf" | "-fa" | "-af" => {
-            options.force = true;
-            options.silent = true;
-        }
-        "-sa" | "-as" => options.silent = true,
+        arg if is_combined_reset_short(arg) => apply_combined_reset_short(arg, options),
         arg if !arg.starts_with('-')
             && !arg.is_empty()
             && options.pattern.is_none()
@@ -76,6 +71,25 @@ fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
         _ => return None,
     }
     Some(())
+}
+
+fn is_combined_reset_short(arg: &str) -> bool {
+    arg.starts_with('-')
+        && !arg.starts_with("--")
+        && arg.len() > 1
+        && arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'f' | b's' | b'a'))
+}
+
+fn apply_combined_reset_short(arg: &str, options: &mut Options<'_>) {
+    for byte in arg[1..].bytes() {
+        if byte == b'f' {
+            options.force = true;
+        } else {
+            options.silent = true;
+        }
+    }
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -334,7 +348,7 @@ fn run_lane_batch(
     ) {
         Ok(batch) => batch,
         Err(error) if bit_object_import::reset_lane::diagnostic(&error).is_some() => {
-            return lane_failure(args, root, selected, &error);
+            return selection::lane_failure(args, root, selected, &error);
         }
         Err(error) => return Ok(Outcome::Declined(format!("lane reset batch: {error}"))),
     };
@@ -345,26 +359,6 @@ fn run_lane_batch(
             selected.verify()?;
         }
         batch.commit(&workspace_command::file_id())
-    })
-}
-
-fn lane_failure(
-    args: &[OsString],
-    root: &Path,
-    selected: Option<&selection::Selected>,
-    error: &io::Error,
-) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
-        return Ok(Outcome::Declined(LANE_CI_DIAGNOSTIC.into()));
-    }
-    workspace_command::execute_then(root, args, "reset", |output| {
-        if let Some(selected) = selected {
-            selected.render(output);
-            selected.verify()?;
-        }
-        bit_object_import::reset_lane::apply_error_prefix(error)?;
-        // defaultErrorHandler colors a non-BitError message before its outer red wrapper.
-        Err(io::Error::new(error.kind(), Chalk::detect(args).red(&error.to_string())))
     })
 }
 

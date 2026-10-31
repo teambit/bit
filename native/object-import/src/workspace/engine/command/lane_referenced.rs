@@ -48,7 +48,7 @@ impl Projection<'_> {
         {
             return Ok(Some(value));
         }
-        let model = repository.read(&super::super::hash(identity.as_bytes()), "Component")?;
+        let model = repository.read_component(identity)?;
         let Some(hash) = model["head"].as_str() else { return Ok(None) };
         let value = self.rebased
             .iter()

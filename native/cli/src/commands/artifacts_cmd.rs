@@ -133,7 +133,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_pattern(iter, &mut pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "--aspect" => aspect = Some(take_val(iter.next()?)?),
             "--task" => task = Some(take_val(iter.next()?)?),
             "--files" => files = Some(take_val(iter.next()?)?),

@@ -1,5 +1,7 @@
 //! Default dependency binding prefixes and package names.
 
+use super::{Map, Value, component, decline, io, nullish, text};
+
 /// `@<owner>` of `owner.scope/name`.
 pub(super) fn default_prefix(identity: &str) -> String {
     let owner = identity
@@ -42,15 +44,45 @@ pub(super) fn package_name(identity: &str, stored_prefix: Option<&str>) -> Strin
     format!("{prefix}/{name}")
 }
 
-pub(super) fn extension_identity(id: &serde_json::Value) -> String {
+pub(super) fn names(
+    identity: &str,
+    model: Option<&Value>,
+    extensions: &[Value],
+) -> (String, String) {
+    let stored = model
+        .and_then(|model| model.get("bindingPrefix"))
+        .and_then(Value::as_str)
+        .filter(|prefix| !prefix.is_empty());
+    let prefix = stored.map_or_else(|| default_prefix(identity), str::to_string);
+    (prefix, configured_package_name(identity, stored, extensions))
+}
+
+fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[Value]) -> String {
+    let Some(pkg) =
+        extensions.iter().find(|entry| component::matches_aspect(entry, "teambit.pkg/pkg"))
+    else {
+        return package_name(identity, prefix);
+    };
+    let (scope, name) = identity
+        .split_once('/')
+        .unwrap_or(("", identity));
+    let id = bit_install::model::ComponentId {
+        scope: Some(scope.to_string()),
+        default_scope: None,
+        name: name.to_string(),
+        version: None,
+    };
+    let mut aspects = Map::new();
+    aspects.insert("teambit.pkg/pkg".to_string(), pkg["config"].clone());
+    bit_install::workspace::component_package_name(&id, prefix, &aspects)
+}
+
+pub(super) fn extension_identity(id: &Value) -> String {
     if let Some(text) = id
         .as_str()
         .or_else(|| id["id"].as_str())
     {
-        return text
-            .strip_suffix("@latest")
-            .unwrap_or(text)
-            .to_string();
+        return strip_latest_or_head(text).to_string();
     }
     let id_obj = id
         .get("id")
@@ -70,7 +102,7 @@ pub(super) fn extension_identity(id: &serde_json::Value) -> String {
         .or_else(|| id["head"].as_str())
         .filter(|version| !version.is_empty())
         .or(inline_ver)
-        .filter(|version| !version.is_empty() && *version != "latest")
+        .filter(|version| !matches!(*version, "" | "latest" | "head"))
         .map_or_else(String::new, |version| format!("@{version}"));
     match id_obj["scope"]
         .as_str()
@@ -80,4 +112,54 @@ pub(super) fn extension_identity(id: &serde_json::Value) -> String {
         Some(scope) => format!("{scope}/{name}{version}"),
         None => format!("{name}{version}"),
     }
+}
+
+pub(super) fn identity(value: Option<&Value>) -> io::Result<String> {
+    let outer = value.ok_or_else(|| decline("status dependency id"))?;
+    let id = outer.get("id").unwrap_or(outer);
+    if let Some(text) = id.as_str() {
+        return Ok(strip_latest_or_head(text).to_string());
+    }
+    let part = |key| text(id.get(key).or_else(|| outer.get(key)));
+    let raw_name = part("name")?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
+    let suffix = resolve_dep_version_suffix(outer, id, inline_ver)?;
+    if let Some(scope) = part("scope")
+        .ok()
+        .filter(|scope| !scope.is_empty())
+    {
+        return Ok(format!("{scope}/{name}{suffix}"));
+    }
+    if name.contains('/') {
+        return Ok(format!("{name}{suffix}"));
+    }
+    Err(decline("status dependency scope"))
+}
+
+fn resolve_dep_version_suffix(
+    outer: &Value,
+    id: &Value,
+    inline_ver: Option<&str>,
+) -> io::Result<String> {
+    let raw_version = nullish(id.get("version"))
+        .or_else(|| nullish(outer.get("version")))
+        .or_else(|| nullish(id.get("head")))
+        .or_else(|| nullish(outer.get("head")));
+    let version = match raw_version {
+        None => inline_ver
+            .filter(|ver| !matches!(*ver, "latest" | "head"))
+            .unwrap_or(""),
+        Some(Value::String(version)) if matches!(version.as_str(), "" | "latest" | "head") => "",
+        Some(Value::String(version)) => version,
+        Some(_) => return Err(decline("status dependency version")),
+    };
+    Ok(if version.is_empty() { String::new() } else { format!("@{version}") })
+}
+
+fn strip_latest_or_head(text: &str) -> &str {
+    text.strip_suffix("@latest")
+        .or_else(|| text.strip_suffix("@head"))
+        .unwrap_or(text)
 }

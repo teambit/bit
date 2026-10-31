@@ -1,5 +1,5 @@
 //! A fetched switch adds a local alias only when that remote lane is not already tracked.
-use super::{Id, PreparedImport, Record, invalid};
+use super::{Entry, Id, PreparedImport, Record, invalid, text};
 use serde_json::{Value, json};
 use std::{fs, io, path::PathBuf};
 
@@ -127,6 +127,94 @@ fn append(scope: &mut Value, id: &Id, alias: &str) -> io::Result<bool> {
         tracking.push(json!({"localLane":alias,"remoteLane":id.name,"remoteScope":id.scope}));
     }
     Ok(true)
+}
+
+pub(super) fn lane_index_id(row: &Value) -> io::Result<Id> {
+    if let Some(raw) = row["id"].as_str() {
+        let (scope, name) = raw.split_once('/').ok_or_else(|| invalid("command lane identity"))?;
+        return Ok(Id { scope: scope.into(), name: name.into() });
+    }
+    Ok(Id { scope: text(&row["id"], "scope")?.into(), name: text(&row["id"], "name")?.into() })
+}
+
+pub(super) fn hidden_entry(row: &Value, default_scope: Option<&str>) -> io::Result<Entry> {
+    if let Some(raw) = row.as_str() {
+        let (identity, head) =
+            raw.rsplit_once('@').ok_or_else(|| invalid("command hidden lane identity"))?;
+        let identity =
+            component_identity_with_scope(&Value::String(identity.into()), default_scope)?;
+        crate::merge_history::hash(head)?;
+        return Ok(Entry { identity, head: head.to_owned(), hidden: true });
+    }
+    let id_node = row.get("id").unwrap_or(row);
+    let identity = component_identity_with_scope(id_node, default_scope)?;
+    let head = row["head"]
+        .as_str()
+        .or_else(|| row["version"].as_str())
+        .ok_or_else(|| invalid("command hidden lane identity"))?;
+    crate::merge_history::hash(head)?;
+    Ok(Entry { identity, head: head.to_owned(), hidden: true })
+}
+
+pub(super) fn component_identity_with_scope(
+    value: &Value,
+    default_scope: Option<&str>,
+) -> io::Result<String> {
+    let (scope, name) = split_component_scope_and_name(value, default_scope)?;
+    if scope.is_empty()
+        || scope.len() > 1024
+        || matches!(scope, "." | "..")
+        || !scope
+            .bytes()
+            .all(|byte| {
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"._-".contains(&byte)
+            })
+    {
+        return Err(invalid("command lane component scope"));
+    }
+    if !valid_lane_component_name(name) {
+        return Err(invalid("command lane component identity"));
+    }
+    Ok(format!("{scope}/{name}"))
+}
+
+fn split_component_scope_and_name<'a>(
+    value: &'a Value,
+    default_scope: Option<&'a str>,
+) -> io::Result<(&'a str, &'a str)> {
+    if let Some(raw) = value.as_str() {
+        let base = raw.split('@').next().unwrap_or(raw);
+        return match base.split_once('/') {
+            Some((scope, name)) => Ok((scope, name)),
+            None => {
+                Ok((default_scope.ok_or_else(|| invalid("command lane component scope"))?, base))
+            }
+        };
+    }
+    let scope = value["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or(default_scope)
+        .ok_or_else(|| invalid("command lane string field"))?;
+    Ok((scope, text(value, "name")?))
+}
+
+fn valid_lane_component_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.len() <= 4096
+        && name
+            .split('/')
+            .all(|part| {
+                !part.is_empty()
+                    && !matches!(part, "." | "..")
+                    && part
+                        .bytes()
+                        .all(|byte| {
+                            byte.is_ascii_lowercase()
+                                || byte.is_ascii_digit()
+                                || b"._-".contains(&byte)
+                        })
+            })
 }
 
 #[cfg(test)]

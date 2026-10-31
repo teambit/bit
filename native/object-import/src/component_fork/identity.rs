@@ -43,7 +43,11 @@ pub(super) fn prepare(
         source["incrementPathIfConflicted"] == true,
     )?;
     destination(root, &directory, observed)?;
-    available(bitmap, name, scope, &target)?;
+    let ws_default =
+        crate::component_tracking::identity::workspace_aspect(workspace)["defaultScope"]
+            .as_str()
+            .filter(|val| !val.is_empty());
+    available(bitmap, name, scope, ws_default, &target)?;
     let main = source["mainFile"].as_str().ok_or_else(|| unsupported("fork main file"))?;
     let main = if options.remote && !options.preserve && source["refactorIdentity"] != false {
         crate::component_rename::copy_refactor::filename(main, leaf(source_name), leaf(name))?
@@ -61,22 +65,43 @@ fn is_active_named(key: &str, row: &Value, name: &str) -> bool {
         && !key.starts_with('$')
         && key != "_bit_lane"
         && key != "version"
+        && row["isAvailableOnCurrentLane"] != false
+        && !crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         && crate::component_rename::copy_refactor::row_name(key, row) == name
 }
-fn available(bitmap: &Value, name: &str, scope: &str, target: &str) -> io::Result<()> {
+fn available(
+    bitmap: &Value,
+    name: &str,
+    scope: &str,
+    ws_default: Option<&str>,
+    target: &str,
+) -> io::Result<()> {
     let found = bitmap
         .as_object()
         .is_some_and(|rows| {
-            rows.iter()
-                .any(|(key, row)| {
-                    is_active_named(key, row, name)
-                        && crate::component_rename::copy_refactor::scope(row) == Some(scope)
-                })
+            rows.iter().any(|(key, row)| row_matches_scope(key, row, name, scope, ws_default))
         });
     if found {
         return Err(invalid(format!("component {target} already exists")));
     }
     Ok(())
+}
+fn row_matches_scope(
+    key: &str,
+    row: &Value,
+    name: &str,
+    scope: &str,
+    ws_default: Option<&str>,
+) -> bool {
+    let row_scope = crate::component_rename::copy_refactor::scope(row)
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map_or(key, |(bare, _)| bare)
+                .split_once('/')
+                .map(|(sc, _)| sc)
+        })
+        .or(ws_default);
+    is_active_named(key, row, name) && row_scope == Some(scope)
 }
 pub(super) fn source_id<'a>(
     options: &'a Options,
@@ -98,7 +123,7 @@ fn scope_name(scope: &str) -> io::Result<()> {
         || !scope
             .bytes()
             .all(|byte| {
-                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"-_.".contains(&byte)
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"-_$!.".contains(&byte)
             })
     {
         return Err(invalid(format!("invalid scope name: {scope}")));

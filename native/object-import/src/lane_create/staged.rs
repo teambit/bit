@@ -133,21 +133,36 @@ fn bitmap_row_matches(key: &str, row: &Value, scope: &str, name: &str, _full: &s
 
 fn remote(moved: &mut Moved, scope_path: &Path, model: &Value) -> io::Result<Option<String>> {
     let scope = model["scope"].as_str().ok_or_else(invalid)?;
+    let name = model["name"].as_str().ok_or_else(invalid)?;
     if !super::valid_scope(scope) {
         return Err(invalid());
     }
-    let Some(bytes) = moved.read(
+    let bytes = match moved.read(
         &scope_path
-            .join("refs/remotes")
+            .join("refs/remote")
             .join(scope)
             .join("main"),
-    )?
-    else {
+    )? {
+        Some(bytes) => Some(bytes),
+        None => moved.read(
+            &scope_path
+                .join("refs/remotes")
+                .join(scope)
+                .join("main"),
+        )?,
+    };
+    let Some(bytes) = bytes else {
         return Ok(None);
     };
     let rows: Vec<Value> = serde_json::from_slice(&bytes)?;
+    let full = format!("{scope}/{name}");
     rows.iter()
-        .find(|row| row["id"]["scope"] == model["scope"] && row["id"]["name"] == model["name"])
+        .find(|row| {
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            (row["id"]["name"] == name && (row_scope.is_empty() || row_scope == scope))
+                || row["id"].as_str() == Some(full.as_str())
+                || row["id"].as_str() == Some(name)
+        })
         .map(|row| {
             row["head"]
                 .as_str()

@@ -117,8 +117,13 @@ fn observe(
 }
 
 pub(super) fn removed(version: &Value) -> io::Result<bool> {
-    let extensions =
-        version["extensions"].as_array().ok_or_else(|| invalid("command Version extensions"))?;
+    let Some(extensions) = version
+        .get("extensions")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(false);
+    };
+    let extensions = extensions.as_array().ok_or_else(|| invalid("command Version extensions"))?;
     Ok(extensions
         .iter()
         .any(|extension| {

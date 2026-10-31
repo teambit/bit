@@ -18,6 +18,8 @@ pub(in crate::commands) mod stash;
 pub(in crate::commands) mod switch;
 pub mod versions;
 
+pub(super) use defaults::semver_values;
+pub use defaults::{file_id, home, utf8_args};
 pub use execution::{
     execute_failure_scope, execute_json, execute_json_scope, execute_then, execute_then_scope,
     execute_with, execute_with_scope, execute_without_loader, execute_without_loader_scope,
@@ -43,19 +45,15 @@ use super::{
         capture::{self, Capture},
         fresh::dependency_grammar,
         grammar,
-        js::{array, decline, object, text, truthy},
+        js::{array, decline, text},
     },
 };
 use crate::native::Outcome;
 use bit_install::output::Output;
+use defaults::prepare;
 use results::Report;
 use serde_json::{Value, json};
-use std::{
-    env,
-    ffi::OsString,
-    io,
-    path::{Path, PathBuf},
-};
+use std::{ffi::OsString, io, path::Path};
 
 /// Everything decided before the first write.
 pub struct Planned {
@@ -327,55 +325,6 @@ impl Steps<'_> {
     }
 }
 
-/// The user's home directory, as Node's `os.homedir()` reads it.
-pub fn home() -> PathBuf {
-    PathBuf::from(
-        env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
-    )
-}
-
-/// `commandPrepare`: the token, the context and the selected targets.
-fn prepare(
-    engine: &mut Engine,
-    root: &Path,
-    home: &Path,
-    request: &Request<'_>,
-    preview_snapshot: bool,
-) -> io::Result<(String, Value, Vec<Value>)> {
-    let mut options = request.options.clone();
-    if options["includeNewFromScope"] == true {
-        options["scopeCandidates"] =
-            json!(checkout_scope::candidates(engine, root, home, request)?);
-    }
-    let prepared: Value = engine.request(&json!({
-        "kind": "commandPrepare",
-        "root": root,
-        "home": home,
-        "operation": request.operation,
-        "internalSnapshotPreview": preview_snapshot,
-        "deferCheckoutPattern": checkout_selection::deferred(request),
-        "dependencyGrammar": dependency_grammar()?,
-        "options": options,
-        "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),
-    }))?;
-    let token = text(prepared.get("token"))?.to_string();
-    let context = prepared
-        .get("context")
-        .filter(|context| truthy(Some(context)))
-        .cloned();
-    let mut context = context.ok_or_else(|| decline("command context"))?;
-    context["commandProgress"] = prepared["progress"].clone();
-    let targets = array(prepared.get("targets"), "command targets")?.to_vec();
-    Ok((token, context, targets))
-}
-
-/// The arguments as UTF-8, or `None`.
-pub fn utf8_args(args: &[OsString]) -> Option<Vec<&str>> {
-    args.iter()
-        .map(|arg| arg.to_str())
-        .collect()
-}
-
 /// Run the planned command: the loader lines, the commit, then the report.
 /// From here on failures are the command's own.
 pub fn execute(
@@ -390,22 +339,6 @@ pub fn execute(
         progress(output);
         commit(&mut planned, root)
     })
-}
-
-/// `[options.to ?? '', ...model versions, ...orphaned versions]`.
-pub(super) fn semver_values(to: Option<&str>, context: &Value) -> io::Result<Vec<String>> {
-    let mut values = vec![to.unwrap_or_default().to_string()];
-    for model in array(context.get("models"), "models")? {
-        for field in ["versions", "orphanedVersions"] {
-            if let Some(versions) = model
-                .get(field)
-                .filter(|versions| !versions.is_null())
-            {
-                values.extend(object(versions)?.keys().cloned());
-            }
-        }
-    }
-    Ok(values)
 }
 
 /// `capture.commit()`, then `commandApply`.
@@ -426,19 +359,4 @@ fn commit_receipt(planned: &mut Planned, root: &Path) -> io::Result<Value> {
         return Err(io::Error::other("native command apply receipt"));
     }
     Ok(applied)
-}
-
-/// `currentDateAndTimeToFileName()`: local time, unpadded.
-pub fn file_id() -> String {
-    use chrono::{Datelike, Timelike};
-    let now = chrono::Local::now();
-    format!(
-        "{}-{}-{}-{}-{}-{}",
-        now.year(),
-        now.month(),
-        now.day(),
-        now.hour(),
-        now.minute(),
-        now.second(),
-    )
 }

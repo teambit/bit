@@ -4,7 +4,7 @@
 pub(super) mod request;
 
 pub(super) use self::request::confirm;
-use self::request::{lane_installation, needs_canonical_install};
+use self::request::{color_enabled, lane_installation, needs_canonical_install, yn};
 use crate::{
     commands::Command,
     discovery::{self, NodeCli, Target},
@@ -188,19 +188,28 @@ pub(super) struct Terminal {
 impl Terminal {
     pub fn detect(argv: &[String]) -> Self {
         let tty = io::stdout().is_terminal();
+        let no_color = argv
+            .iter()
+            .fold(false, |acc, arg| match arg.as_str() {
+                "--no-color" | "--no-color=true" => true,
+                "--no-color=false" => false,
+                _ => acc,
+            });
+        let non_interactive = argv
+            .iter()
+            .fold(false, |acc, arg| match arg.as_str() {
+                "--json" | "-j" | "--json=true" => true,
+                "--json=false" => false,
+                _ => acc,
+            });
         Self {
-            color: !argv
-                .iter()
-                .any(|arg| arg == "--no-color")
-                && color_enabled(tty),
+            color: !no_color && color_enabled(tty),
             // Ora's `is-interactive` excludes dumb terminals and any defined CI variable.
             tty: tty
                 && env::var_os("TERM").is_none_or(|term| term != "dumb")
                 && env::var_os("CI").is_none(),
             loader: !env::var("BIT_DISABLE_SPINNER").is_ok_and(|value| yn(&value)),
-            non_interactive: argv
-                .iter()
-                .any(|arg| matches!(arg.as_str(), "--json" | "-j")),
+            non_interactive,
         }
     }
 
@@ -216,28 +225,6 @@ impl Terminal {
     pub(super) fn red(&self, text: &str) -> String {
         if self.color { format!("\u{1b}[31m{text}\u{1b}[39m") } else { text.to_string() }
     }
-}
-
-/// chalk's decision: `FORCE_COLOR`, then `NO_COLOR`, then a non-dumb terminal.
-fn color_enabled(tty: bool) -> bool {
-    if let Ok(force) = env::var("FORCE_COLOR") {
-        return force != "0" && force != "false";
-    }
-    if env::var_os("NO_COLOR").is_some() {
-        return false;
-    }
-    tty && env::var("TERM").is_ok_and(|term| term != "dumb")
-}
-
-/// The `yn` package: true for `true`, `1`, `yes`, `y`, `on`.
-fn yn(value: &str) -> bool {
-    matches!(
-        value
-            .trim()
-            .to_ascii_lowercase()
-            .as_str(),
-        "true" | "1" | "yes" | "y" | "on",
-    )
 }
 
 pub(in crate::commands) struct JsHost(Arc<Host>, bool);

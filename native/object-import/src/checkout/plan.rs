@@ -12,6 +12,7 @@ use serde_json::Value;
 
 use super::{MAX_BYTES, MAX_PATH, cache, invalid, repository};
 use crate::protocol;
+use verification::plain_tag;
 
 const MAX_JSON: usize = 4 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
@@ -262,55 +263,17 @@ fn resolve(component: &Value, requested: &str) -> io::Result<String> {
         return Err(invalid("checkout plan requires explicit tag or full hash"));
     }
     let orphaned = component.get("orphanedVersions").and_then(Value::as_object);
-    let versions = component
-        .get("versions")
-        .and_then(Value::as_object)
-        .ok_or_else(|| invalid("checkout plan Component versions missing"))?;
+    let versions = component.get("versions").and_then(Value::as_object);
+    if orphaned.is_none() && versions.is_none() {
+        return Err(invalid("checkout plan Component versions missing"));
+    }
     let value = orphaned
-        .and_then(|versions| versions.get(requested))
-        .or_else(|| versions.get(requested))
+        .and_then(|map| map.get(requested))
+        .or_else(|| versions.and_then(|map| map.get(requested)))
         .and_then(Value::as_str)
         .ok_or_else(|| invalid("checkout plan requested tag missing"))?;
     hash(value)?;
     Ok(value.to_owned())
-}
-
-fn plain_tag(tag: &str) -> bool {
-    if tag.len() > 256 {
-        return false;
-    }
-    let (base, build) = tag
-        .split_once('+')
-        .map_or((tag, None), |(base, build)| (base, Some(build)));
-    let (version, prerelease) = base
-        .split_once('-')
-        .map_or((base, None), |(version, prerelease)| (version, Some(prerelease)));
-    let segments: Vec<_> = version.split('.').collect();
-    segments.len() == 3
-        && segments.iter().all(|segment| numeric_segment(segment))
-        && prerelease.is_none_or(|value| identifiers(value, true))
-        && build.is_none_or(|value| identifiers(value, false))
-}
-fn numeric_segment(value: &str) -> bool {
-    !value.is_empty()
-        && (value.len() == 1 || !value.starts_with('0'))
-        && value.bytes().all(|byte| byte.is_ascii_digit())
-        && value
-            .parse::<u64>()
-            .is_ok_and(|number| number <= 9_007_199_254_740_991)
-}
-fn identifiers(value: &str, numeric_strict: bool) -> bool {
-    value
-        .split('.')
-        .all(|segment| {
-            !segment.is_empty()
-                && segment
-                    .bytes()
-                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
-                && (!numeric_strict
-                    || !segment.bytes().all(|byte| byte.is_ascii_digit())
-                    || numeric_segment(segment))
-        })
 }
 
 fn manifest(version: &Value) -> io::Result<Vec<ManifestFile>> {

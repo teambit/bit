@@ -184,7 +184,7 @@ fn validate(
         id.scope = id.effective_scope().map(str::to_owned);
     }
     let model = ctx.objects
-        .component(&id)
+        .component_or_head(&id)
         .map_err(|_| decline())?
         .ok_or_else(decline)?;
     let env_id = model_env(&model).ok_or_else(decline)?;
@@ -217,52 +217,7 @@ fn model_manual_policy(model: &ModelData, env_id: &str) -> Result<Option<ManualP
         return Err(decline());
     }
     let policy = config["policy"].as_object().ok_or_else(decline)?;
-    Ok(Some(manual_entries(policy)?))
-}
-
-fn manual_entries(policy: &serde_json::Map<String, Value>) -> Result<ManualPolicy, Failure> {
-    if policy.is_empty() || !supported_fields(policy) || !supported_entries(policy) {
-        return Err(Failure::Declined("configured versioned deps debug delegated".into()));
-    }
-    super::parse_manual_fields(policy)
-}
-
-fn supported_fields(policy: &serde_json::Map<String, Value>) -> bool {
-    policy
-        .keys()
-        .all(|field| {
-            matches!(field.as_str(), "dependencies" | "devDependencies" | "peerDependencies")
-        })
-}
-
-fn supported_entries(policy: &serde_json::Map<String, Value>) -> bool {
-    let mut seen = HashSet::new();
-    for (field, group) in policy {
-        let Some(entries) = group.as_object() else { return false };
-        if entries.is_empty() {
-            return false;
-        }
-        for (name, value) in entries {
-            if !valid_entry(field, name, value, &mut seen) {
-                return false;
-            }
-        }
-    }
-    true
-}
-
-fn valid_entry<'a>(field: &str, name: &'a str, value: &Value, seen: &mut HashSet<&'a str>) -> bool {
-    let Some(version) = super::manual_version(value) else { return false };
-    if !seen.insert(name) || version.is_empty() {
-        return false;
-    }
-    if NODE_DEV
-        .iter()
-        .any(|(builtin, _)| name == *builtin)
-    {
-        return field == "devDependencies" && version == "-";
-    }
-    true
+    Ok(Some(super::policy::manual_entries(policy)?))
 }
 
 fn model_env(model: &ModelData) -> Option<&'static str> {

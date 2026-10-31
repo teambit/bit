@@ -241,10 +241,7 @@ fn unique_position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize>
         .iter()
         .enumerate()
         .filter_map(|(position, row)| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-            ((row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name).then_some(
-                position,
-            )
+            super::lane::matches_component_entry(row, scope, name).then_some(position)
         });
     let position = matching.next().ok_or_else(|| invalid("tagged scope model absent"))?;
     if matching.next().is_some() {
@@ -309,6 +306,12 @@ fn staged_change(
     let position = unique_position(rows, scope, name)?;
     let staged_version = rows[position]["id"]["version"]
         .as_str()
+        .or_else(|| rows[position]["version"].as_str())
+        .or_else(|| {
+            rows[position]["id"]
+                .as_str()
+                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
+        })
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("staged version"))?
         .to_owned();
@@ -325,13 +328,7 @@ fn validate_no_staged(root: &Path, scope: &str, name: &str) -> io::Result<()> {
     regular_file(root, &path)?;
     let value: Value = serde_json::from_slice(&fs::read(path)?)?;
     let rows = value.as_array().ok_or_else(|| invalid("staged component config"))?;
-    if rows
-        .iter()
-        .any(|row| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-            (row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name
-        })
-    {
+    if rows.iter().any(|row| super::lane::matches_component_entry(row, scope, name)) {
         return Err(invalid("imported component has staged config"));
     }
     Ok(())

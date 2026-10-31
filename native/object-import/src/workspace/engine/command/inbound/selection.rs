@@ -14,21 +14,23 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
         {
             continue;
         }
-        let Some(scope) = row["scope"]
-            .as_str()
-            .filter(|scope| !scope.is_empty())
-        else {
+        let (row_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+        let Some(scope) = row_scope.filter(|scope| !scope.is_empty()) else {
             continue;
         };
-        let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
         if name.is_empty() {
             return Err(invalid("inbound bitmap name"));
         }
-        let version = row["version"]
+        let raw_version = row["version"]
             .as_str()
             .filter(|ver| !ver.is_empty())
-            .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
-            .ok_or_else(|| invalid("inbound bitmap version"))?;
+            .or_else(|| {
+                key.rsplit_once('@')
+                    .map(|(_, ver)| ver)
+                    .filter(|ver| !ver.is_empty())
+            })
+            .unwrap_or("latest");
+        let version = if raw_version == "head" { "latest" } else { raw_version };
         targets.push(Target {
             scope: Some(scope.to_owned()),
             name: name.to_owned(),
@@ -37,13 +39,15 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
     }
     Ok(targets)
 }
+
 pub(super) fn requested_target(id: &str) -> io::Result<Target> {
     let (scope, rest) = id.split_once('/').ok_or_else(|| invalid("inbound unscoped id"))?;
-    let (name, version) = rest
+    let (name, raw_version) = rest
         .rsplit_once('@')
         .unwrap_or((rest, "latest"));
-    if scope.is_empty() || name.is_empty() || name.contains('*') || version.is_empty() {
+    if scope.is_empty() || name.is_empty() || name.contains('*') || raw_version.is_empty() {
         return Err(invalid("inbound unsupported id"));
     }
+    let version = if raw_version == "head" { "latest" } else { raw_version };
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
 }

@@ -3,9 +3,6 @@
 mod failure;
 mod interactive;
 mod report;
-
-use report::{format_result, install_ids};
-
 #[cfg(test)]
 mod tests;
 
@@ -29,6 +26,10 @@ use super::{
 };
 use crate::native::Outcome;
 use bit_install::{HostInfo, output::Output};
+use report::{
+    consume_trailing_recovery, format_result, install_ids, installation_session, prepare_request,
+    read_environment, valid_pattern,
+};
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path, sync::Arc};
 
@@ -70,7 +71,7 @@ fn parse(args: &[&str], kind: Kind) -> Option<Options> {
                 consume_trailing_recovery(iter, kind, &mut pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "--abort" | "--abort=true" if kind == Kind::Component && !abort => abort = true,
             "-s" | "--silent" | "--silent=true" if kind == Kind::Lane && !silent => silent = true,
             "--silent=false" if kind == Kind::Lane && !silent => {}
@@ -98,29 +99,6 @@ fn parse(args: &[&str], kind: Kind) -> Option<Options> {
         verbose,
         silent,
     })
-}
-
-fn consume_trailing_recovery<'a>(
-    iter: impl Iterator<Item = &'a str>,
-    kind: Kind,
-    pattern: &mut Option<String>,
-) -> Option<()> {
-    for value in iter {
-        (kind == Kind::Component && pattern.is_none() && valid_pattern(value)).then_some(())?;
-        *pattern = Some(value.to_string());
-    }
-    Some(())
-}
-
-fn valid_pattern(pattern: &str) -> bool {
-    !pattern.is_empty()
-        && pattern.len() <= 256
-        && !pattern.starts_with('-')
-        && pattern
-            .bytes()
-            .all(|byte| {
-                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"_./-".contains(&byte)
-            })
 }
 
 #[cfg_attr(
@@ -173,14 +151,6 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
         Err(error) => return Ok(Outcome::Declined(format!("merge recovery: {error}"))),
     };
     execute_prepared(&root, args, options, &startup, prepared, installation)
-}
-
-fn installation_session(
-    installer: Option<Installer>,
-) -> io::Result<(Option<environments::Environments>, Option<HostInfo>)> {
-    let Some(installer) = installer else { return Ok((None, None)) };
-    let (environment, info) = installer.into_parts()?;
-    Ok((Some(environment), Some(info)))
 }
 
 fn execute_prepared(
@@ -335,37 +305,6 @@ impl Prepared {
             .cloned()
             .ok_or_else(|| io::Error::other("recovery apply result"))
     }
-}
-
-fn read_environment(
-    engine: &mut Engine,
-    root: &Path,
-    home: &Path,
-    startup: &mut Startup,
-    inherited: Option<environments::Environments>,
-) -> io::Result<environments::Environments> {
-    let (_, environment) = match inherited {
-        Some(env_state) => {
-            environments::read_inherited_context(engine, root, home, None, startup, env_state)?
-        }
-        None => environments::read_context(engine, root, home, false, None, startup)?,
-    };
-    Ok(environment.for_checkout())
-}
-
-fn prepare_request(root: &Path, home: &Path, options: &Options) -> io::Result<Value> {
-    let operation = if options.kind == Kind::Lane { "laneAbort" } else { "componentAbort" };
-    let mut request = json!({
-        "kind":"commandRecoveryPrepare","root":root,"home":home,
-        "globalRemotesFile":cache::cache_root().join("config/global-remotes.json"),
-        "operation":operation,"dependencyGrammar":dependency_grammar()?,
-        "options":{"silent":options.kind==Kind::Lane,"verbose":options.verbose,
-            "skipDependencyInstallation":true,"callbackLifecycle":true},
-    });
-    if let Some(pattern) = &options.pattern {
-        request["options"]["pattern"] = json!(pattern);
-    }
-    Ok(request)
 }
 
 fn execute(

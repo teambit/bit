@@ -7,6 +7,7 @@ pub(in crate::commands) use callbacks::component_rows as hydration_rows;
 pub(in crate::commands) use context::{
     read_context, read_inherited_context, read_snapshot_context,
 };
+pub(super) use modes::dev_files;
 pub(in crate::commands) use quick::run as quick;
 
 mod builtin;
@@ -288,7 +289,7 @@ fn stored_extensions<'a>(context: &'a Value, target: &Value) -> Option<&'a Vec<V
     let version = target["version"].as_str().unwrap_or_default();
     let hash = model
         .and_then(|model| {
-            if version.is_empty() || version == "latest" {
+            if matches!(version, "" | "latest" | "head") {
                 model["head"].as_str()
             } else {
                 model["versions"][version]
@@ -302,60 +303,6 @@ fn stored_extensions<'a>(context: &'a Value, target: &Value) -> Option<&'a Vec<V
         .iter()
         .find(|row| row[0] == hash)
         .and_then(|row| row[1]["extensions"].as_array())
-}
-
-pub(super) fn dev_files(
-    root: &Path,
-    context: &Value,
-    target: &Value,
-    files: &[String],
-) -> io::Result<Vec<String>> {
-    use bit_install::dependencies::{DevPatternConfig, EnvDevPatterns, dev_files, dev_patterns};
-    let mut component = component(root, context, target)?;
-    component.files = files.to_vec();
-    let facts = &context["environmentFacts"][text(target.get("identity"))?];
-    component.env_id = facts["envId"]
-        .as_str()
-        .unwrap_or(&component.env_id)
-        .to_owned();
-    let hooks = &facts["devPatterns"];
-    let list = |key: &str| {
-        hooks
-            .get(key)
-            .filter(|value| !value.is_null())
-            .map(strings)
-    };
-    let env = EnvDevPatterns {
-        patterns: facts
-            .get("manifestPatterns")
-            .filter(|value| !value.is_null())
-            .or_else(|| {
-                hooks
-                    .get("devPatterns")
-                    .filter(|value| !value.is_null())
-            })
-            .cloned(),
-        tests: list("tests"),
-        docs: list("docs"),
-        compositions: list("compositions"),
-    };
-    let config = DevPatternConfig::from_aspects(&|id| {
-        crate::commands::update_cmd::aspect_entry(&context["workspace"], id)
-            .map(|(_, val)| val.clone())
-    });
-    Ok(dev_files(&component, &dev_patterns(&component, &config, &env)))
-}
-
-fn strings(value: &Value) -> Vec<String> {
-    match value {
-        Value::Array(values) => values
-            .iter()
-            .filter_map(Value::as_str)
-            .map(str::to_owned)
-            .collect(),
-        Value::String(value) => vec![value.clone()],
-        _ => Vec::new(),
-    }
 }
 
 fn local_proofs(components: &[WorkspaceComponent]) -> io::Result<Vec<Value>> {

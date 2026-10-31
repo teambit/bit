@@ -23,7 +23,7 @@ pub(super) fn select_lane(
     bitmap: &Value,
     scope: &str,
     component_name: &str,
-    component: &Value,
+    expected_version: Option<&str>,
     kind: RowKind,
 ) -> io::Result<Lane> {
     let id = &bitmap["_bit_lane"]["id"];
@@ -36,18 +36,23 @@ pub(super) fn select_lane(
     {
         return Err(invalid("unsupported current lane"));
     }
-    let lane = read_lane(root, id, lane_scope, lane_name)?;
-    validate_component(&lane.value, scope, component_name, component, kind)?;
+    let lane = read_lane(root, lane_scope, lane_name)?;
+    validate_component(&lane.value, scope, component_name, expected_version, kind)?;
     Ok(lane)
 }
 
-fn read_lane(root: &Path, id: &Value, scope: &str, name: &str) -> io::Result<Lane> {
+fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     let index_before = fs::read(crate::scope_path(root).join("index.json"))?;
     let index: Value = serde_json::from_slice(&index_before)?;
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("lane index"))?;
     let matches: Vec<_> = rows
         .iter()
-        .filter(|entry| entry["id"] == *id)
+        .filter(|entry| {
+            entry["id"]
+                .as_str()
+                .is_some_and(|raw| raw == format!("{scope}/{name}"))
+                || (entry["id"]["scope"] == scope && entry["id"]["name"] == name)
+        })
         .collect();
     if matches.len() != 1 {
         return Err(invalid("current lane is not uniquely indexed"));
@@ -74,26 +79,32 @@ fn read_lane(root: &Path, id: &Value, scope: &str, name: &str) -> io::Result<Lan
     })
 }
 
+pub(super) fn matches_component_entry(entry: &Value, scope: &str, name: &str) -> bool {
+    if let Some(raw) = entry["id"].as_str() {
+        let base = raw.split('@').next().unwrap_or(raw);
+        return base == name || base == format!("{scope}/{name}");
+    }
+    let entry_scope = entry["id"]["scope"].as_str().unwrap_or_default();
+    (entry_scope == scope || entry_scope.is_empty()) && entry["id"]["name"] == name
+}
+
 fn validate_component(
     lane: &Value,
     scope: &str,
     name: &str,
-    component: &Value,
+    expected_version: Option<&str>,
     kind: RowKind,
 ) -> io::Result<()> {
     let components = lane["components"].as_array().ok_or_else(|| invalid("lane components"))?;
     let matching: Vec<_> = components
         .iter()
-        .filter(|entry| {
-            let entry_scope = entry["id"]["scope"].as_str().unwrap_or_default();
-            (entry_scope == scope || entry_scope.is_empty()) && entry["id"]["name"] == name
-        })
+        .filter(|entry| matches_component_entry(entry, scope, name))
         .collect();
     if kind == RowKind::New && !matching.is_empty() {
         return Err(invalid("new component is already on lane"));
     }
     if matches!(kind, RowKind::LaneSnap | RowKind::ExportedLane)
-        && (matching.len() != 1 || matching[0]["head"] != component["version"])
+        && (matching.len() != 1 || matching[0]["head"].as_str() != expected_version)
     {
         return Err(invalid("lane head differs from workspace version"));
     }

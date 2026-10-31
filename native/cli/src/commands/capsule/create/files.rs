@@ -134,21 +134,8 @@ pub(super) fn supported_builtin_manifests(
 fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<ManifestConfig>> {
     let config = entry.config.as_ref();
     let env = effective_env(ws_root, entry)?;
-    let bare_env = env
-        .as_deref()
-        .map(|raw| raw.split('@').next().unwrap_or(raw));
-    let builtin = match bare_env {
-        None | Some("teambit.harmony/node") => BuiltinEnv::Node,
-        Some("teambit.react/react") => BuiltinEnv::React,
-        Some("teambit.html/html") => BuiltinEnv::Html,
-        Some("teambit.react/react-native") => BuiltinEnv::ReactNative,
-        Some("teambit.harmony/aspect") => BuiltinEnv::Aspect,
-        Some("teambit.mdx/mdx") => BuiltinEnv::Mdx,
-        Some("teambit.envs/env") => BuiltinEnv::Environment,
-        Some("teambit.mdx/readme") => BuiltinEnv::MdxReadme,
-        Some("teambit.harmony/bit-custom-aspect") => BuiltinEnv::BitCustomAspect,
-        Some("teambit.harmony/empty-env") => BuiltinEnv::Empty,
-        _ => return Ok(None),
+    let Some(builtin) = policy::parse_builtin_env(env.as_deref()) else {
+        return Ok(None);
     };
     let model_package_json =
         if entry.id.version.is_some() { model_package_json(ws_root, entry)? } else { None };
@@ -165,6 +152,14 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
     else {
         return Ok(None);
     };
+    if !entry.root_dir.is_empty()
+        && ws_root
+            .join(&entry.root_dir)
+            .join("component.json")
+            .exists()
+    {
+        return Ok(None);
+    }
     if policy::has_custom_builtin_env_config(config) {
         return Ok(None);
     }
@@ -356,7 +351,7 @@ pub(super) fn write_default_package_json(
                 .clone()
                 .unwrap_or_default(),
         },
-        entry_points: configured_entry_points(manifest, &stem),
+        entry_points: policy::configured_entry_points(manifest, &stem),
     };
     let pkg = ComponentPackage { generated, metadata: &manifest.overrides.metadata };
     fs::write(&pkg_json_path, serde_json::to_string_pretty(&pkg)?)
@@ -374,29 +369,6 @@ fn configured_component_id<'a>(
             version: entry.id.version.as_deref(),
         }),
     }
-}
-
-fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
-    let types = (!matches!(env, BuiltinEnv::Empty)).then(|| format!("{stem}.ts"));
-    let exports = matches!(env, BuiltinEnv::Aspect).then(|| {
-        let main = format!("./dist/{stem}.js");
-        serde_json::json!({
-            "node": { "require": main, "import": "./dist/esm.mjs" },
-            "default": main,
-        })
-    });
-    EntryPointMetadata { types, exports }
-}
-
-fn configured_entry_points(manifest: &ManifestConfig, stem: &str) -> EntryPointMetadata {
-    let mut entry_points = entry_point_metadata(manifest.env, stem);
-    if let Some(types) = &manifest.overrides.entry_points.types {
-        entry_points.types = Some(types.clone());
-    }
-    if let Some(exports) = &manifest.overrides.entry_points.exports {
-        entry_points.exports = Some(exports.clone());
-    }
-    entry_points
 }
 
 pub(super) fn copy_component_files(src: &Path, dst: &Path) -> io::Result<()> {

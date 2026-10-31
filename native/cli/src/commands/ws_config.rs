@@ -1,5 +1,7 @@
 //! Native `bit ws-config <sub-command>` (`bit workspace-config`) (`scopes/workspace/workspace-config-files/ws-config.cmd.ts`).
 
+pub(super) use self::clean::collect_standard_env_ids;
+
 mod clean;
 mod format;
 #[cfg(test)]
@@ -7,7 +9,10 @@ mod tests;
 mod write;
 
 use self::{
-    clean::{clean_workspace_configs, format_clean_output, format_list_json, format_list_output},
+    clean::{
+        clean_workspace_configs, collect_active_component_dirs, format_clean_output,
+        format_list_json, format_list_output,
+    },
     format::format_write_output,
     write::write_workspace_configs,
 };
@@ -19,7 +24,6 @@ use super::{
     workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
-use bit_install::{config::aspect_id_without_version, workspace::Workspace};
 use std::{
     env,
     ffi::OsString,
@@ -29,16 +33,6 @@ use std::{
 };
 
 pub const COMMAND: Command = Command { name: "ws-config", aliases: &["workspace-config"], run };
-
-const STANDARD_WRITER_ENVS: &[&str] = &[
-    "teambit.harmony/node",
-    "teambit.react/react",
-    "teambit.harmony/aspect",
-    "teambit.envs/env",
-    "teambit.react/react-native",
-    "teambit.html/html",
-    "teambit.mdx/mdx",
-];
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct WriteOptions {
@@ -226,30 +220,6 @@ fn run_write(args: &[OsString], opts: &WriteOptions, chalk: Chalk) -> io::Result
     })
 }
 
-pub(super) fn collect_standard_env_ids(ws: &Workspace) -> Option<Vec<String>> {
-    let mut env_ids = Vec::new();
-    for (_, comp) in ws.active() {
-        let bare = aspect_id_without_version(&comp.env_id);
-        if !STANDARD_WRITER_ENVS.contains(&bare) {
-            return None;
-        }
-        if !env_ids
-            .iter()
-            .any(|existing| existing == bare)
-        {
-            env_ids.push(bare.to_owned());
-        }
-    }
-    Some(env_ids)
-}
-
-fn collect_active_component_dirs(ws: &Workspace) -> Vec<String> {
-    ws.active()
-        .map(|(_, comp)| comp.root_dir.clone())
-        .filter(|dir| !dir.is_empty())
-        .collect()
-}
-
 pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     if let Some(sub) = parse_unrecognized(args) {
         return Some(Subcommand::Unrecognized(sub.to_owned()));
@@ -257,7 +227,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered: Vec<_> = args
         .iter()
         .copied()
-        .filter(|&arg| arg != "--no-color")
+        .filter(|&arg| !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect();
     let rest = filtered.get(1..)?;
     let rest = rest
@@ -278,7 +248,7 @@ pub(super) fn parse_unrecognized<'a>(args: &[&'a str]) -> Option<&'a str> {
     let filtered: Vec<_> = args
         .iter()
         .copied()
-        .filter(|&arg| arg != "--no-color")
+        .filter(|&arg| !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect();
     let [sub] = filtered.as_slice() else { return None };
     (!sub.starts_with('-') && !matches!(*sub, "write" | "clean" | "list")).then_some(*sub)

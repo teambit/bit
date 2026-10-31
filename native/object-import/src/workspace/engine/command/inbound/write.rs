@@ -77,7 +77,6 @@ pub(super) fn prepare(
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("inbound bitmap object"))?;
     let (schema, lane) = metadata::bitmap_metadata(rows)?;
     let changes = prepare_targets(root, targets, &template, import, rows, options, lane.as_ref())?;
-    // `sortObjectByKeys`: `Object.keys(...).sort()`, by UTF-16 code units.
     rows.sort_keys();
     rows.insert("$schema-version".into(), schema);
     if let Some(lane) = lane {
@@ -268,16 +267,16 @@ fn prepare_target(
     }
     let model = super::details::model(root, import, scope, &target.name)?;
     let (version_name, hash) = version(&model, &target.version)?;
-    let version = import.overlay
+    let version_obj = import.overlay
         .read(&hash, "Version")?
         .ok_or_else(|| invalid("inbound imported Version"))?;
-    if requires_canonical_history_check(lane, target, &model, &hash, version) {
+    if requires_canonical_history_check(lane, target, &model, &hash, version_obj) {
         return Err(invalid("inbound lane snap requires canonical history check"));
     }
-    crate::history_query::validate_version(version)?;
-    let main = version["mainFile"].as_str().ok_or_else(|| invalid("inbound main file"))?;
+    crate::history_query::validate_version(version_obj)?;
+    let main = version_obj["mainFile"].as_str().ok_or_else(|| invalid("inbound main file"))?;
     crate::checkout::plan::relative_path(main)?;
-    let files = target_files(root, directory, version, main, import)?;
+    let files = target_files(root, directory, version_obj, main, import)?;
     let key = bitmap_key(rows, &target.name, scope)?;
     rows.insert(
         key,
@@ -296,7 +295,7 @@ pub(super) fn requires_canonical_history_check(
 ) -> bool {
     lane.is_none()
         && target.version.len() == 40
-        && target.version.bytes().all(|b| b.is_ascii_hexdigit())
+        && target.version.bytes().all(|byte| byte.is_ascii_hexdigit())
         && (model["head"].as_str().is_none()
             || (Some(hash) != model["head"].as_str() && version["origin"]["lane"].is_object()))
 }
@@ -376,7 +375,7 @@ fn safe_destination(root: &Path, path: &Path) -> io::Result<()> {
 }
 
 pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, String)> {
-    let hash = if requested.is_empty() || requested == "latest" {
+    let hash = if requested.is_empty() || matches!(requested, "latest" | "head") {
         model["head"].as_str()
     } else if crate::merge_history::hash(requested).is_ok() {
         Some(requested)

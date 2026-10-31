@@ -9,8 +9,9 @@ pub(super) fn scope(scope: &str, options: &Options) -> Option<String> {
         (scope == options.old).then(|| options.new.clone())
     }
 }
-pub(super) fn entries(
+pub(super) fn entries_with_default(
     bitmap: &Value,
+    default_scope: &str,
     options: &Options,
 ) -> io::Result<Vec<crate::component_rename::Options>> {
     let rows = bitmap.as_object().ok_or_else(|| io::Error::other("scope rename bitmap"))?;
@@ -22,7 +23,8 @@ pub(super) fn entries(
         {
             continue;
         }
-        let (current, name) = row_scope_and_name(key, row);
+        let (raw_scope, name) = row_scope_and_name(key, row);
+        let current = if raw_scope.is_empty() { default_scope } else { raw_scope };
         let Some(target_scope) = scope(current, options) else { continue };
         entries.push(crate::component_rename::Options {
             source: format!("{current}/{name}"),

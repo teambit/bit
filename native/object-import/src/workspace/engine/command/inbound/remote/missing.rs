@@ -37,12 +37,26 @@ impl Objects<'_> {
         if self.has_edges(&version) {
             return false;
         }
-        let Some(dependencies) = version["flattenedDependencies"].as_array() else { return true };
+        let Some(dependencies) = self.flattened_dependencies(&version) else { return true };
         let dev_dependencies = version["flattenedDevDependencies"].as_array();
         dependencies
             .iter()
             .chain(dev_dependencies.into_iter().flatten())
             .any(|dependency| !self.built(dependency))
+    }
+
+    fn flattened_dependencies(&self, version: &Value) -> Option<Vec<Value>> {
+        if let Some(rows) = version["flattenedDependencies"].as_array()
+            && (!rows.is_empty() || !version["flattenedDependenciesRef"].is_string())
+        {
+            return Some(rows.clone());
+        }
+        if let Some(hash) = version["flattenedDependenciesRef"].as_str() {
+            let body = self.body(hash, "Source")?;
+            let parsed = serde_json::from_slice::<Value>(&body).ok()?;
+            return parsed.as_array().cloned();
+        }
+        version["flattenedDependencies"].as_array().cloned()
     }
 
     /// `sources.getMany(flattenedDependencies, reFetchUnBuiltVersion)`: the dependency's
@@ -63,7 +77,7 @@ impl Objects<'_> {
         let model_hash = hexadecimal(&sha1::Sha1::digest(identity.as_bytes()));
         let model = self.object(&model_hash, "Component")?;
         let hash = match version {
-            None | Some("" | "latest") => model["head"].as_str()?.to_owned(),
+            None | Some("" | "latest" | "head") => model["head"].as_str()?.to_owned(),
             Some(version) if merge_history::hash(version).is_ok() => version.to_owned(),
             Some(version) => model["versions"][version]
                 .as_str()

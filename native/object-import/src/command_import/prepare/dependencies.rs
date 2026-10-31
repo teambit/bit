@@ -24,18 +24,7 @@ pub(super) fn closure(
     if !plan.cache.fetch_all_dependencies && has_edges(plan, &version)? {
         return Ok(());
     }
-    let dependencies = version["flattenedDependencies"]
-        .as_array()
-        .ok_or_else(|| invalid("import flattened dependencies"))?
-        .iter()
-        .chain(
-            version["flattenedDevDependencies"]
-                .as_array()
-                .into_iter()
-                .flatten(),
-        )
-        .cloned()
-        .collect::<Vec<_>>();
+    let dependencies = flattened_dependencies(plan, &version)?;
     let source = model
         .as_ref()
         .and_then(|model| model["scope"].as_str())
@@ -200,6 +189,39 @@ pub(super) fn has_edges(plan: &mut PreparedImport, version: &Value) -> io::Resul
     }
     Ok(false)
 }
+pub(super) fn flattened_dependencies(
+    plan: &mut PreparedImport,
+    version: &Value,
+) -> io::Result<Vec<Value>> {
+    let mut flattened = if let Some(rows) = version["flattenedDependencies"].as_array()
+        && (!rows.is_empty() || !version["flattenedDependenciesRef"].is_string())
+    {
+        rows.clone()
+    } else if let Some(hash) = version["flattenedDependenciesRef"].as_str() {
+        let bytes = if let Some(bytes) = plan.overlay.source(hash) {
+            bytes.to_vec()
+        } else {
+            plan.capture
+                .object(&plan.environment.local_directory.clone(), hash, "Source")?
+                .and_then(|record| record.source)
+                .ok_or_else(|| invalid("import flattened dependencies missing"))?
+        };
+        let parsed: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+        parsed
+            .as_array()
+            .ok_or_else(|| invalid("import flattened dependencies"))?
+            .clone()
+    } else {
+        version["flattenedDependencies"]
+            .as_array()
+            .ok_or_else(|| invalid("import flattened dependencies"))?
+            .clone()
+    };
+    if let Some(dev) = version["flattenedDevDependencies"].as_array() {
+        flattened.extend(dev.iter().cloned());
+    }
+    Ok(flattened)
+}
 pub(super) fn dependency_target(value: &Value) -> io::Result<Target> {
     if let Some(text) = value
         .as_str()
@@ -281,18 +303,7 @@ fn request_available(
     {
         return Ok(true);
     }
-    let flattened = version["flattenedDependencies"]
-        .as_array()
-        .ok_or_else(|| invalid("import dependency preflight"))?
-        .iter()
-        .chain(
-            version["flattenedDevDependencies"]
-                .as_array()
-                .into_iter()
-                .flatten(),
-        )
-        .cloned()
-        .collect::<Vec<_>>();
+    let flattened = flattened_dependencies(plan, &version)?;
     for value in &flattened {
         let dependency = dependency_target(value)?;
         let Some((hash, version)) = loaded(plan, &dependency)? else {

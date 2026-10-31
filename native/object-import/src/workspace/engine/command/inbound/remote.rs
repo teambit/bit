@@ -160,17 +160,30 @@ async fn list_pattern(
 
 pub(super) fn active_lane(root: &Path) -> io::Result<Option<lane::Id>> {
     let bitmap = config::document(&root.join(".bitmap"))?;
-    let Some(row) = bitmap.get("_bit_lane") else { return Ok(None) };
-    let id = lane::Id {
-        scope: row["id"]["scope"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned(),
-        name: row["id"]["name"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned(),
+    let Some(row) = bitmap
+        .get("_bit_lane")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(None);
     };
+    let (scope, name) = if let Some(raw) = row["id"].as_str() {
+        let (scope, name) = raw.split_once('/').unwrap_or(("", raw));
+        (scope.to_owned(), name.to_owned())
+    } else {
+        let scope = row["id"]["scope"]
+            .as_str()
+            .or_else(|| row["scope"].as_str())
+            .unwrap_or_default();
+        let name = row["id"]["name"]
+            .as_str()
+            .or_else(|| row["name"].as_str())
+            .unwrap_or_default();
+        (scope.to_owned(), name.to_owned())
+    };
+    if name.is_empty() || name == "main" {
+        return Ok(None);
+    }
+    let id = lane::Id { scope, name };
     id.validate()?;
     Ok(Some(id))
 }
@@ -196,14 +209,15 @@ pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
         return Err(invalid("remote log identity"));
     }
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
-    let (rows, parents_available) = runtime.block_on(async {
-        let result: io::Result<(Vec<Value>, bool)> = match remotes.resolve(scope, &network).await? {
-            Remote::Http(url) => Ok((network.log(&url, &input.identity).await?, false)),
+    let (rows, parents_available): (Vec<Value>, bool) = runtime.block_on(async {
+        match remotes.resolve(scope, &network).await? {
+            Remote::Http(url) => {
+                Ok::<_, io::Error>((network.log(&url, &input.identity).await?, false))
+            }
             Remote::File(path) => {
                 Ok((component_log::read_file_remote(&path, &input.identity)?, true))
             }
-        };
-        result
+        }
     })?;
     Ok((rows.len(), json!({"logs": rows, "parentsAvailable": parents_available})))
 }
@@ -228,21 +242,18 @@ async fn fetch_lane(
         let mut options = FetchOptions::with_dependencies(Some(lane_id), false);
         options.traversal.collect_parents = all_history;
         options.traversal.prefer_dependency_graph = !fetch_deps;
-        let mut more = network.fetch_bounded(url, &components, &options, MAX_INBOUND_BYTES).await?;
-        items.append(&mut more);
+        items.extend(network.fetch_bounded(url, &components, &options, MAX_INBOUND_BYTES).await?);
     }
     Ok((items, hash))
 }
 
 fn lane_targets(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<String>)> {
     let (hash, entries) = remote_lane(id, items)?;
-    Ok((
-        hash,
-        entries
-            .into_iter()
-            .map(|entry| format!("{}@{}", entry.identity, entry.head))
-            .collect(),
-    ))
+    let targets = entries
+        .into_iter()
+        .map(|entry| format!("{}@{}", entry.identity, entry.head))
+        .collect();
+    Ok((hash, targets))
 }
 
 fn remote_lane(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<lane::Entry>)> {
@@ -340,8 +351,9 @@ async fn fetch_one(
     let all_history = input.options.all_history;
     let fetch_dependencies = input.options.dependencies.fetch_deps;
     let without_dependencies = input.operation == "diff";
-    let remote = remotes.resolve(&scope, network).await?;
-    let Remote::Http(url) = remote else { return Ok((scope, None)) };
+    let Remote::Http(url) = remotes.resolve(&scope, network).await? else {
+        return Ok((scope, None));
+    };
     if !all_history && !fetch_dependencies && !without_dependencies {
         return Ok((scope, Some(fetch_in_two_steps(&input.root, &url, &ids, network).await?)));
     }
@@ -356,9 +368,6 @@ async fn fetch_one(
     Ok((scope, Some(items)))
 }
 
-/// `importWithoutDeps`, then `importMany` for the components whose dependencies are
-/// still missing. One request with every component's dependencies makes the remote
-/// walk all their graphs before it streams anything.
 async fn fetch_in_two_steps(
     root: &Path,
     url: &str,

@@ -4,6 +4,7 @@ pub use readme::{ReadmePlan, ReadmeRemoval};
 mod readme;
 
 use crate::{inspection, recovery, store::Store, workspace::engine::command::outbound};
+use readme::{history_components, lane_row_identity, matches_lane_row};
 use serde_json::{Value, json};
 use std::{
     fs, io,
@@ -76,7 +77,7 @@ impl Plan {
 
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
-        let index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
+        let mut index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
             Ok(bytes) => match serde_json::from_slice(&bytes)? {
                 Value::Array(components) => json!({ "components": components, "lanes": [] }),
                 other => other,
@@ -86,9 +87,17 @@ impl Documents {
             }
             Err(error) => return Err(error),
         };
+        if let Some(object) = index.as_object_mut() {
+            object
+                .entry("components")
+                .or_insert_with(|| json!([]));
+            object
+                .entry("lanes")
+                .or_insert_with(|| json!([]));
+        }
         Ok(Self {
             index,
-            scope_json: serde_json::from_slice(&fs::read(
+            scope_json: recovery::jsonc::parse(&fs::read(
                 bit_workspace_config::scope_path(root).join("scope.json"),
             )?)?,
             bitmap: recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?,
@@ -175,24 +184,17 @@ impl Documents {
     }
 
     fn indexed_lane_id(&self, name: &str) -> io::Result<(String, String)> {
-        let matches: Vec<&Value> = self.index["lanes"]
+        let matches: Vec<(String, String)> = self.index["lanes"]
             .as_array()
             .ok_or_else(invalid)?
             .iter()
-            .filter(|row| row["id"]["name"] == name)
+            .filter_map(lane_row_identity)
+            .filter(|(lane_name, _)| lane_name == name)
             .collect();
-        let [row] = matches.as_slice() else {
+        let [(lane_name, scope)] = matches.as_slice() else {
             return Err(invalid());
         };
-        let lane_name = row["id"]["name"]
-            .as_str()
-            .ok_or_else(invalid)?
-            .to_owned();
-        let scope = row["id"]["scope"]
-            .as_str()
-            .ok_or_else(invalid)?
-            .to_owned();
-        Ok((lane_name, scope))
+        Ok((lane_name.clone(), scope.clone()))
     }
 
     fn lane_hash(&self, original: &Original) -> io::Result<String> {
@@ -200,7 +202,7 @@ impl Documents {
             .as_array()
             .ok_or_else(invalid)?
             .iter()
-            .find(|row| row["id"] == json!({"name":original.name,"scope":original.scope}))
+            .find(|row| matches_lane_row(row, &original.name, &original.scope))
             .and_then(|row| row["hash"].as_str())
             .map(str::to_owned)
             .ok_or_else(invalid)
@@ -215,13 +217,12 @@ impl Documents {
             Change::Rename(name) => self.rename(name, original)?,
             Change::Scope(scope) => self.change_scope(scope, original)?,
         };
-        let old_id = json!({"name":original.name,"scope":original.scope});
         let new_id = json!({"name":name,"scope":scope});
         let row = self.index["lanes"]
             .as_array_mut()
             .ok_or_else(invalid)?
             .iter_mut()
-            .find(|row| row["id"] == old_id)
+            .find(|row| matches_lane_row(row, &original.name, &original.scope))
             .ok_or_else(invalid)?;
         row["id"] = new_id.clone();
         self.bitmap["_bit_lane"]["id"] = new_id;
@@ -234,7 +235,7 @@ impl Documents {
             .as_array()
             .ok_or_else(invalid)?
             .iter()
-            .any(|row| row["id"]["name"] == name && row["id"]["scope"] == original.scope);
+            .any(|row| matches_lane_row(row, name, &original.scope));
         if !valid_name(name)
             || name == original.name
             || duplicate
@@ -273,7 +274,7 @@ impl Documents {
             .as_array()
             .ok_or_else(invalid)?
             .iter()
-            .any(|row| row["id"]["name"] == original.name && row["id"]["scope"] == scope);
+            .any(|row| matches_lane_row(row, &original.name, scope));
         if !valid_scope(scope) || scope == original.scope || duplicate {
             return Err(invalid());
         }
@@ -359,21 +360,6 @@ impl Objects {
     }
 }
 
-fn history_components(lane: &Value) -> io::Result<Vec<String>> {
-    lane["components"]
-        .as_array()
-        .ok_or_else(invalid)?
-        .iter()
-        .filter(|component| component["isDeleted"] != true)
-        .map(|component| {
-            let scope = component["id"]["scope"].as_str().ok_or_else(invalid)?;
-            let name = component["id"]["name"].as_str().ok_or_else(invalid)?;
-            let head = component["head"].as_str().ok_or_else(invalid)?;
-            Ok(format!("{scope}/{name}@{head}"))
-        })
-        .collect()
-}
-
 fn valid_name(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 800
@@ -387,7 +373,7 @@ fn valid_name(value: &str) -> bool {
 }
 fn valid_scope(value: &str) -> bool {
     let parts: Vec<&str> = value.split('.').collect();
-    (parts.len() == 2 || value.len() >= 2) && parts.len() <= 2 && parts.into_iter().all(valid_name)
+    (parts.len() >= 2 || value.len() >= 2) && parts.into_iter().all(valid_name)
 }
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, "unsupported local lane metadata change")

@@ -89,7 +89,8 @@ fn retained_sections(text: &str, identities: &HashSet<&str>) -> Vec<String> {
                 .split_once('\n')
                 .unwrap_or((part, ""));
             let id = id.trim();
-            (!id.is_empty() && !identities.contains(id)).then(|| {
+            let base = id.rsplit_once('@').map_or(id, |(prefix, _)| prefix);
+            (!id.is_empty() && !identities.contains(id) && !identities.contains(base)).then(|| {
                 format!("{divider}\n[*] {id}\n{divider}\n{content}")
             })
         })
@@ -100,13 +101,30 @@ fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Ve
         .iter()
         .filter(|row| {
             let id = &row["id"];
-            let identity = format!(
-                "{}/{}",
-                id["scope"].as_str().unwrap_or_default(),
-                id["name"].as_str().unwrap_or_default(),
-            );
-            !identities.contains(identity.as_str())
+            let identity = if let Some(raw) = id.as_str() {
+                raw.rsplit_once('@')
+                    .map_or(raw, |(base, _)| base)
+                    .to_owned()
+            } else {
+                let scope = id["scope"].as_str().unwrap_or_default();
+                let name = id["name"].as_str().unwrap_or_default();
+                if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
+            };
+            !matches_selected(&identity, identities)
         })
         .collect::<Vec<_>>();
     serde_json::to_vec_pretty(&remaining).map_err(io::Error::other)
+}
+
+fn matches_selected(identity: &str, identities: &HashSet<&str>) -> bool {
+    if identities.contains(identity) {
+        return true;
+    }
+    !identity.contains('/')
+        && identities
+            .iter()
+            .any(|cand| {
+                cand.split_once('/')
+                    .is_some_and(|(_, name)| name == identity)
+            })
 }

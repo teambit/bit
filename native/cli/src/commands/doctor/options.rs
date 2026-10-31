@@ -83,7 +83,7 @@ impl Options {
 
     fn apply_boolean(&mut self, arg: &str) -> bool {
         match arg {
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "--json" | "-j" | "--json=true" => self.json = true,
             "--json=false" => self.json = false,
             "--list" | "--list=true" => self.list = true,

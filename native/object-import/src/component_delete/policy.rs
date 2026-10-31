@@ -77,7 +77,8 @@ fn is_env(root: &Path, selected: &Selected) -> io::Result<bool> {
                     crate::workspace::engine::client_status::config::is_extension_aspect(
                         extension,
                         "teambit.envs/envs",
-                    ) && extension["data"]["type"] == "env"
+                    ) && (extension["data"]["type"] == "env"
+                        || extension["config"]["type"] == "env")
                 })
         }))
 }
@@ -90,6 +91,7 @@ fn validate_graph(bitmap: &Value, components: &[DependencyComponent]) -> io::Res
             !key.starts_with('$')
                 && *key != "_bit_lane"
                 && *key != "version"
+                && row.is_object()
                 && row["isAvailableOnCurrentLane"] != false
                 && !crate::workspace::engine::client_status::config::is_config_removed(
                     &row["config"],
@@ -161,16 +163,22 @@ fn read_model(root: &Path, identity: &str, objects: &mut Vec<FrozenObject>) -> i
         .ok_or_else(|| invalid("scope components"))?;
     let matches = rows
         .iter()
-        .filter(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .filter(|row| {
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            row["isSymlink"] != true
+                && row["id"]["name"] == name
+                && (row_scope.is_empty() || row_scope == scope)
+        })
         .collect::<Vec<_>>();
-    if matches.len() != 1 || matches[0]["isSymlink"] != false {
+    if matches.len() != 1 {
         return Err(invalid("component is not uniquely indexed"));
     }
     let hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))?;
     crate::merge_history::hash(hash)?;
     objects.push(freeze(root, hash)?);
     let model = outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Component")?;
-    if model["scope"] != scope || model["name"] != name {
+    let model_scope = model["scope"].as_str().unwrap_or_default();
+    if (!model_scope.is_empty() && model_scope != scope) || model["name"] != name {
         return Err(invalid("Component identity"));
     }
     Ok(model)

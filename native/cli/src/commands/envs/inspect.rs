@@ -139,7 +139,7 @@ fn find_target_component<'a>(
     query: &str,
 ) -> Result<(&'a BitmapEntry, &'a WorkspaceComponent), Failure> {
     let (bare, explicit_ver) = query
-        .split_once('@')
+        .rsplit_once('@')
         .map_or((query, None), |(bare, ver)| (bare, Some(ver)));
     let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     if let Some((entry, comp)) = ws
@@ -152,7 +152,7 @@ fn find_target_component<'a>(
         })
     {
         if explicit_ver
-            .filter(|ver| !ver.is_empty() && *ver != "latest")
+            .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
             .is_some_and(|ver| Some(ver) != entry.id.version.as_deref())
         {
             return Err(Failure::Declined("historical version env get delegated".into()));
@@ -300,6 +300,12 @@ fn load_bare_scope_index(scope_dir: &Path) -> Option<Vec<Value>> {
 }
 
 fn bare_row_full_id(scope_dir: &Path, row: &Value) -> Option<String> {
+    if let Some(id_str) = row["id"]
+        .as_str()
+        .filter(|val| val.contains('/'))
+    {
+        return Some(id_str.to_owned());
+    }
     let name = row["id"]["name"].as_str()?;
     let scope = row["id"]["scope"]
         .as_str()
@@ -307,8 +313,7 @@ fn bare_row_full_id(scope_dir: &Path, row: &Value) -> Option<String> {
         .map(str::to_owned)
         .or_else(|| {
             let scope_json =
-                serde_json::from_slice::<Value>(&fs::read(scope_dir.join("scope.json")).ok()?)
-                    .ok()?;
+                bit_object_import::parse_jsonc(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
             scope_json["name"].as_str().map(str::to_owned)
         })?;
     Some(format!("{scope}/{name}"))
@@ -333,7 +338,8 @@ fn bare_row_core_env(scope_dir: &Path, row: &Value, req_ver: Option<&str>) -> Op
     if kind != "Component" {
         return None;
     }
-    let ver_hash = match req_ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+    let ver_hash = match req_ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
+    {
         Some(ver) => comp_obj["versions"][ver]
             .as_str()
             .or_else(|| comp_obj["orphanedVersions"][ver].as_str())

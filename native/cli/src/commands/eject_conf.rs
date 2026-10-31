@@ -7,6 +7,7 @@ use super::{
     Command,
     aspect::{CORE_ASPECT_IDS, find_bitmap_row_mut, is_supported_pattern, workspace_default_scope},
     color::Chalk,
+    lint_cmd::{load_version_extensions, strip_local_env_version},
     scope_set::{Failure, selection},
     workspace_command::{self, format::Formatter, results::Report},
 };
@@ -18,7 +19,7 @@ use bit_install::{
         aspects::{self, Merger, Origin, Resolver},
     },
 };
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use std::{
     env,
     ffi::OsString,
@@ -83,7 +84,7 @@ fn parse_options(args: &[&str]) -> Option<Options> {
             }
             "--override=false" => opts.override_existing = false,
             "-j" | "--json" | "--json=true" => opts.json = true,
-            "--json=false" | "--no-color" => {}
+            "--json=false" | "--no-color" | "--no-color=true" | "--no-color=false" => {}
             val if !val.starts_with('-') && !val.is_empty() && opts.pattern.is_empty() => {
                 val.clone_into(&mut opts.pattern);
             }
@@ -184,6 +185,7 @@ fn prepare(root: &Path, opts: &Options, chalk: Chalk) -> Result<Prepared, Failur
             .map_err(|err| Failure::Declined(err.to_string()))?,
         ws_ids: bitmap.entries
             .iter()
+            .filter(|entry| entry.owns_its_dir())
             .map(|entry| entry.id.clone())
             .collect(),
     };
@@ -269,7 +271,7 @@ fn load_existing_comp_json(
             abs_path.display(),
         )));
     }
-    let existing: Value = serde_json::from_slice(&fs::read(abs_path)?)
+    let existing: Value = bit_object_import::parse_jsonc(&fs::read(abs_path)?)
         .map_err(|err| Failure::Declined(err.to_string()))?;
     let comp_id = existing["componentId"]
         .as_object()
@@ -309,69 +311,6 @@ fn build_ejected_extensions(
     }
     let merged = merger.finish();
     Ok(Value::Object(strip_local_env_version(ctx.bitmap, aspects::to_config(&merged))))
-}
-
-fn load_version_extensions(
-    objects: &ScopeObjects,
-    scope: &str,
-    entry: &BitmapEntry,
-) -> Result<Vec<Value>, Failure> {
-    let Some(ver) = entry.id.version
-        .as_deref()
-        .filter(|ver| !ver.is_empty())
-    else {
-        return Ok(Vec::new());
-    };
-    let ver_hash = if ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        ver.to_owned()
-    } else {
-        let model = super::lint_cmd::read_model_object(objects, scope, &entry.id.name)?;
-        let resolved = if ver == "latest" {
-            model["head"].as_str()
-        } else {
-            model["versions"][ver]
-                .as_str()
-                .or_else(|| model["orphanedVersions"][ver].as_str())
-        };
-        resolved
-            .map(str::to_owned)
-            .ok_or_else(|| Failure::Declined("missing version in model on eject-conf".into()))?
-    };
-    let version_obj = objects
-        .read(&ver_hash)
-        .map_err(|err| Failure::Declined(err.to_string()))?
-        .ok_or_else(|| Failure::Declined("missing version object on eject-conf".into()))?;
-    Ok(version_obj["extensions"]
-        .as_array()
-        .cloned()
-        .unwrap_or_default())
-}
-
-fn strip_local_env_version(bitmap: &Bitmap, cfg_map: Map<String, Value>) -> Map<String, Value> {
-    let local_env = cfg_map
-        .iter()
-        .find(|(key, _)| {
-            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
-        })
-        .and_then(|(_, val)| val["env"].as_str())
-        .map(|env| env.split('@').next().unwrap_or(env))
-        .filter(|bare| {
-            !bare.is_empty()
-                && bitmap.entries
-                    .iter()
-                    .any(|entry| {
-                        entry.owns_its_dir() && entry.id.to_string_without_version() == *bare
-                    })
-        })
-        .map(str::to_owned);
-    cfg_map
-        .into_iter()
-        .filter(|(_, val)| val.as_str() != Some("-"))
-        .map(|(key, val)| match local_env.as_deref() {
-            Some(bare) if key.starts_with(&format!("{bare}@")) => (bare.to_owned(), val),
-            _ => (key, val),
-        })
-        .collect()
 }
 
 impl Prepared {

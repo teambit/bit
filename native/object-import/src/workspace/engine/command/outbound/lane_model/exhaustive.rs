@@ -1,7 +1,40 @@
 //! Select every tracked lane/main component and its complete Version ancestry.
-use super::{Loaded, MAX_OBJECTS, Prepare, invalid, model};
+use super::{ComponentId, Loaded, MAX_OBJECTS, Prepare, invalid, model};
 use serde_json::{Value, json};
 use std::{collections::HashSet, fs, io, path::Path};
+
+pub(in super::super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
+    let mut entries = lane["components"]
+        .as_array()
+        .ok_or_else(|| invalid("outbound lane components"))?
+        .clone();
+    let updates = match lane.get("updateDependents") {
+        None | Some(Value::Null) => &[][..],
+        Some(Value::Array(updates)) => updates.as_slice(),
+        Some(_) => return Err(invalid("outbound lane update-dependents")),
+    };
+    for update in updates {
+        entries.push(parse_update_dependent(update)?);
+    }
+    Ok(entries)
+}
+
+fn parse_update_dependent(update: &Value) -> io::Result<Value> {
+    if let Some(raw) = update.as_str() {
+        let (identity, head) =
+            raw.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+        let (scope, name) = identity
+            .split_once('/')
+            .ok_or_else(|| invalid("outbound lane update-dependent identity"))?;
+        crate::merge_history::hash(head)?;
+        if scope.is_empty() || name.is_empty() {
+            return Err(invalid("outbound lane update-dependent identity"));
+        }
+        return Ok(json!({"id":{"scope":scope,"name":name},"head":head}));
+    }
+    let parsed = ComponentId::parse(update)?;
+    Ok(json!({"id":{"scope":parsed.scope,"name":parsed.name},"head":parsed.head}))
+}
 
 /// `listNonNewComponentsIds()` also selects tracked main components absent
 /// from the Lane object when `ExportCmd` includes non-staged versions.
@@ -29,7 +62,7 @@ pub(super) fn workspace_entries(
         }
         let row = indexed
             .iter()
-            .find(|row| row["id"] == id)
+            .find(|row| row["isSymlink"] != true && row["id"] == id)
             .ok_or_else(|| invalid("outbound non-staged component model missing"))?;
         let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound model hash"))?;
         let component = model::read_object(&loaded.dir, hash, "Component")?;

@@ -9,14 +9,15 @@ pub(super) fn supported_row<'a>(
     row: &'a Value,
     kind: RowKind,
 ) -> io::Result<(&'a str, &'a str)> {
-    let scope = scope(row)?;
     let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
-    let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let (id_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let scope = scope(row, id_scope)?;
     let identity = (key_id == name || key_id == format!("{scope}/{name}"))
         && valid_name(name)
         && valid_scope(scope);
     let local = if matches!(kind, RowKind::Imported | RowKind::ExportedLane) {
-        row["scope"] == scope && row.get("defaultScope").is_none()
+        (row["scope"] == scope || (row.get("scope").is_none() && id_scope == Some(scope)))
+            && row.get("defaultScope").is_none()
     } else {
         row["scope"]
             .as_str()
@@ -45,7 +46,7 @@ fn has_supported_version(key: &str, row: &Value, kind: RowKind) -> bool {
     if kind == RowKind::New { version.is_none() } else { version.is_some() }
 }
 
-fn scope(row: &Value) -> io::Result<&str> {
+fn scope<'a>(row: &'a Value, fallback: Option<&'a str>) -> io::Result<&'a str> {
     row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
@@ -54,6 +55,7 @@ fn scope(row: &Value) -> io::Result<&str> {
                 .as_str()
                 .filter(|scope| !scope.is_empty())
         })
+        .or_else(|| fallback.filter(|scope| !scope.is_empty()))
         .ok_or_else(|| invalid("component scope"))
 }
 
@@ -70,6 +72,9 @@ fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
         "config",
         "localOnly",
         "nextVersion",
+        "exported",
+        "files",
+        "wrapDir",
     ];
     let shape = row
         .as_object()

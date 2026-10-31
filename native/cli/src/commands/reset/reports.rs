@@ -1,10 +1,11 @@
-//! Canonical reset summaries.
+//! Canonical reset summaries and detached-reset object helpers.
 use crate::commands::{
     color::Chalk,
     workspace_command::{format::Formatter, results::Report},
 };
 use bit_object_import::reset_soft::Plan as SoftPlan;
-use std::ffi::OsString;
+use serde_json::{Map, Value};
+use std::{ffi::OsString, fs, io, path::Path};
 
 pub(super) fn soft_report(args: &[OsString], plan: &SoftPlan) -> Report {
     let formatter = Formatter::new(Chalk::detect(args));
@@ -93,4 +94,63 @@ pub(super) fn never_exported_report(args: &[OsString], labels: &[String]) -> Rep
         code: 0,
         details: None,
     }
+}
+
+/// Locate the `.bitmap` key for `scope/name`.
+pub(super) fn find_bitmap_key(
+    fields: &Map<String, Value>,
+    scope: &str,
+    name: &str,
+) -> io::Result<String> {
+    fields
+        .iter()
+        .find_map(|(key, row)| {
+            if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
+                return None;
+            }
+            let (row_scope, row_name) =
+                crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
+            ((row_scope == scope || row_scope.is_empty()) && row_name == name).then(|| key.clone())
+        })
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "detached bitmap key absent"))
+}
+
+/// Encode a Bit scope object into a valid RFC 1950 zlib stream using stored deflate blocks.
+pub(super) fn encode_object(kind: &str, hash: &str, value: &Value) -> io::Result<Vec<u8>> {
+    let body = serde_json::to_string(value).map_err(io::Error::other)?;
+    let raw = format!("{kind} {hash} {}\0{body}", body.encode_utf16().count()).into_bytes();
+    let mut out = vec![0x78, 0x01];
+    let chunks: Vec<&[u8]> = if raw.is_empty() { vec![&[]] } else { raw.chunks(65535).collect() };
+    for (index, chunk) in chunks.iter().enumerate() {
+        let last = u8::from(index + 1 == chunks.len());
+        let len = u16::try_from(chunk.len()).unwrap_or(0);
+        out.push(last);
+        out.extend_from_slice(&len.to_le_bytes());
+        out.extend_from_slice(&(!len).to_le_bytes());
+        out.extend_from_slice(chunk);
+    }
+    out.extend_from_slice(&adler32(&raw).to_be_bytes());
+    Ok(out)
+}
+
+fn adler32(bytes: &[u8]) -> u32 {
+    let mut sum_low: u32 = 1;
+    let mut sum_high: u32 = 0;
+    for &byte in bytes {
+        sum_low = (sum_low + u32::from(byte)) % 65521;
+        sum_high = (sum_high + sum_low) % 65521;
+    }
+    (sum_high << 16) | sum_low
+}
+
+/// Write compressed object bytes to `<scope>/objects/<2>/<38>`.
+pub(super) fn write_object(scope: &Path, hash: &str, bytes: &[u8]) -> io::Result<()> {
+    let path = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(path, bytes)
 }

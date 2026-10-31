@@ -4,8 +4,9 @@ use super::{
     WriteOptions,
     clean::{find_configs_to_clean, writer_matches},
     format::{
-        EnvsWrittenExtendingConfigFile, EnvsWrittenRealConfigFile, OneConfigWriterIdResult,
-        WriteConfigFilesResult, WriteResults, WrittenConfigFile, WrittenExtendingConfigFile,
+        EnvsWrittenRealConfigFile, OneConfigWriterIdResult, WriteConfigFilesResult, WriteResults,
+        WrittenConfigFile, WrittenExtendingConfigFile, finish_one_writer, strip_dry_run_contents,
+        summarize_writers,
     },
 };
 use bit_install::policy::scope::hex_sha1;
@@ -74,18 +75,6 @@ fn finalize_clean_results(
     }
 }
 
-fn strip_dry_run_contents(write_results: &mut WriteResults) {
-    for writer in &mut write_results.writers_result {
-        for real in &mut writer.real_config_files {
-            real.written_real_config_file.content.clear();
-        }
-        for ext in &mut writer.extending_config_files {
-            ext.extending_config_file.content.clear();
-            ext.extending_config_file.extending_target.content.clear();
-        }
-    }
-}
-
 fn build_write_results(
     root: &Path,
     env_ids: &[String],
@@ -110,28 +99,6 @@ fn build_write_results(
         writers_result.push(write_prettier_configs(root, env_ids, &target_dirs, flags)?);
     }
     Ok(summarize_writers(writers_result))
-}
-
-fn summarize_writers(writers_result: Vec<OneConfigWriterIdResult>) -> WriteResults {
-    let total_real: usize = writers_result
-        .iter()
-        .map(|wr| wr.total_real_config_files)
-        .sum();
-    let total_extending: usize = writers_result
-        .iter()
-        .map(|wr| wr.total_extending_config_files)
-        .sum();
-    let skipped_paths = writers_result
-        .iter()
-        .flat_map(|wr| wr.skipped_paths.iter().cloned())
-        .collect();
-    WriteResults {
-        writers_result,
-        total_written_files: total_real + total_extending,
-        total_real_config_files: total_real,
-        total_extending_config_files: total_extending,
-        skipped_paths,
-    }
 }
 
 fn target_extending_dirs(comp_dirs: &[String], no_dedupe: bool) -> Vec<String> {
@@ -259,29 +226,6 @@ fn write_prettier_configs(
     let spec = (".prettierrc.cjs", "// bit-generated-prettier-config", tpl.as_str());
     let (ext_file, skipped) = persist_extending(root, target_dirs, spec, real_file, flags)?;
     Ok(finish_one_writer("prettier", env_ids, real_files, ext_file, skipped))
-}
-
-fn finish_one_writer(
-    writer_id: &str,
-    env_ids: &[String],
-    real_config_files: Vec<EnvsWrittenRealConfigFile>,
-    extending_config_file: WrittenExtendingConfigFile,
-    skipped_paths: Vec<String>,
-) -> OneConfigWriterIdResult {
-    let total_real = real_config_files.len();
-    let total_extending = extending_config_file.file_paths.len();
-    OneConfigWriterIdResult {
-        writer_id: writer_id.to_owned(),
-        total_written_files: total_real + total_extending,
-        real_config_files,
-        total_real_config_files: total_real,
-        extending_config_files: vec![EnvsWrittenExtendingConfigFile {
-            env_ids: env_ids.to_vec(),
-            extending_config_file,
-        }],
-        total_extending_config_files: total_extending,
-        skipped_paths,
-    }
 }
 
 fn build_tsconfig(comp_dirs: &[String], include_root_dir: bool) -> io::Result<String> {

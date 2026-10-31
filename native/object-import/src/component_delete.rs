@@ -203,8 +203,17 @@ fn component_count(bitmap: &Value) -> io::Result<usize> {
     Ok(bitmap
         .as_object()
         .ok_or_else(|| invalid("component bitmap"))?
-        .keys()
-        .filter(|key| !key.starts_with('$') && *key != "_bit_lane" && *key != "version")
+        .iter()
+        .filter(|(key, row)| {
+            !key.starts_with('$')
+                && *key != "_bit_lane"
+                && *key != "version"
+                && row.is_object()
+                && row["isAvailableOnCurrentLane"] != false
+                && !crate::workspace::engine::client_status::config::is_config_removed(
+                    &row["config"],
+                )
+        })
         .count())
 }
 
@@ -258,25 +267,16 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
         .as_array()
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("scope index"))?;
-    let matches: Vec<_> = rows
-        .iter()
-        .filter(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
-        .collect();
-    if matches.len() != 1 || matches[0]["isSymlink"] != false {
-        return Err(invalid("component is not uniquely indexed"));
-    }
-    let model_hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))?;
+    let model_hash = find_indexed_model_hash(rows, scope, name)?;
     crate::merge_history::hash(model_hash)?;
     let model = freeze(root, model_hash)?;
     let value =
         outbound::read_object(&crate::scope_path(root).join("objects"), model_hash, "Component")?;
-    if value["scope"] != scope || value["name"] != name {
+    let model_scope = value["scope"].as_str().unwrap_or_default();
+    if (!model_scope.is_empty() && model_scope != scope) || value["name"] != name {
         return Err(invalid("Component model identity"));
     }
-    let hash = value["versions"][version]
-        .as_str()
-        .or_else(|| value["orphanedVersions"][version].as_str())
-        .or_else(|| (version.len() == 40).then_some(version))
+    let hash = resolve_model_version(&value, version)
         .ok_or_else(|| invalid("component version is not in model"))?;
     crate::merge_history::hash(hash)?;
     let version_object = freeze(root, hash)?;
@@ -286,6 +286,34 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
         objects: vec![model, version_object],
         policy: policy::Decision::default(),
     })
+}
+
+fn find_indexed_model_hash<'a>(rows: &'a [Value], scope: &str, name: &str) -> io::Result<&'a str> {
+    let matches: Vec<_> = rows
+        .iter()
+        .filter(|row| {
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            row["isSymlink"] != true
+                && row["id"]["name"] == name
+                && (row_scope.is_empty() || row_scope == scope)
+        })
+        .collect();
+    if matches.len() != 1 {
+        return Err(invalid("component is not uniquely indexed"));
+    }
+    matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))
+}
+
+fn resolve_model_version<'a>(value: &'a Value, version: &'a str) -> Option<&'a str> {
+    if matches!(version, "latest" | "head") {
+        return value["head"]
+            .as_str()
+            .filter(|val| !val.is_empty());
+    }
+    value["versions"][version]
+        .as_str()
+        .or_else(|| value["orphanedVersions"][version].as_str())
+        .or_else(|| (version.len() == 40).then_some(version))
 }
 
 fn lane_state(

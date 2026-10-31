@@ -213,7 +213,7 @@ pub(in crate::commands) fn resolve_aspect_identity(
     raw: &str,
 ) -> Result<(String, String), Failure> {
     let (bare, ver) = raw
-        .split_once('@')
+        .rsplit_once('@')
         .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
     let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     if let Some(entry) = bitmap.entries
@@ -227,7 +227,7 @@ pub(in crate::commands) fn resolve_aspect_identity(
     {
         let scoped_bare = entry.id.to_string_without_version();
         let full = ver
-            .filter(|ver_str| !ver_str.is_empty())
+            .filter(|ver_str| !ver_str.is_empty() && !matches!(*ver_str, "latest" | "head"))
             .map_or_else(
                 || selection::entry_full_id(entry),
                 |ver_str| format!("{scoped_bare}@{ver_str}"),
@@ -282,7 +282,11 @@ pub(in crate::commands) fn find_bitmap_row_ref<'a>(
 }
 
 fn row_matches_entry(key: &str, row: &Value, entry: &BitmapEntry) -> bool {
-    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
+    if key.starts_with('$')
+        || matches!(key, "_bit_lane" | "version")
+        || !row.is_object()
+        || row["isAvailableOnCurrentLane"] == false
+    {
         return false;
     }
     if !entry.root_dir.is_empty() && row["rootDir"].as_str() == Some(entry.root_dir.as_str()) {

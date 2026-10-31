@@ -115,3 +115,25 @@ pub(in crate::commands) fn confirm(question: &str) -> io::Result<bool> {
         }
     }
 }
+
+/// chalk's decision: `FORCE_COLOR`, then `NO_COLOR`, then a non-dumb terminal.
+pub(super) fn color_enabled(tty: bool) -> bool {
+    if let Ok(force) = std::env::var("FORCE_COLOR") {
+        return force != "0" && force != "false";
+    }
+    if std::env::var_os("NO_COLOR").is_some() {
+        return false;
+    }
+    tty && std::env::var("TERM").is_ok_and(|term| term != "dumb")
+}
+
+/// The `yn` package: true for `true`, `1`, `yes`, `y`, `on`.
+pub(super) fn yn(value: &str) -> bool {
+    matches!(
+        value
+            .trim()
+            .to_ascii_lowercase()
+            .as_str(),
+        "true" | "1" | "yes" | "y" | "on",
+    )
+}

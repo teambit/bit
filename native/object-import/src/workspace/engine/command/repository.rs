@@ -83,6 +83,23 @@ impl Repository {
         self.values.insert(key, value.clone());
         Ok(value)
     }
+    pub(in crate::workspace::engine) fn read_component(
+        &mut self,
+        identity: &str,
+    ) -> io::Result<Value> {
+        let normalized = identity.trim_start_matches('/');
+        match self.read(&super::super::hash(normalized.as_bytes()), "Component") {
+            Ok(model) => Ok(model),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                let (_, name) = normalized
+                    .split_once('/')
+                    .filter(|(scope, _)| !scope.is_empty())
+                    .ok_or(error)?;
+                self.read(&super::super::hash(name.as_bytes()), "Component")
+            }
+            Err(error) => Err(error),
+        }
+    }
     pub(super) fn resolve_short(&mut self, prefix: &str) -> io::Result<String> {
         let refs = self.matching_short(prefix)?;
         let resolved = short_refs::unique(prefix, &refs)?;

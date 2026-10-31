@@ -60,7 +60,7 @@ fn capture_targets(
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<(Vec<Value>, Value)> {
     let pending = proof::read(&crate::scope_path(&request.root).join("unmerged.json"), proofs)?
-        .map(|bytes| serde_json::from_slice::<Value>(&bytes).map_err(io::Error::other))
+        .map(|bytes| jsonc::parse(&bytes))
         .transpose()?
         .unwrap_or(json!([]));
     let (mut targets, remaining) = select(context, &pending, request)?;
@@ -279,6 +279,16 @@ fn matches_target(request: &Prepare, target: &Value, identity: &str, marked: boo
         })
 }
 fn pending_id(row: &Value) -> Option<String> {
+    if let Some(id) = row["id"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+    {
+        return Some(
+            id.rsplit_once('@')
+                .map_or(id, |(base, _)| base)
+                .to_owned(),
+        );
+    }
     Some(format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?))
 }
 #[cfg(test)]

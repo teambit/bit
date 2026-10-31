@@ -16,6 +16,8 @@ use bit_install::{output::Output, policy::scope::read_proof};
 use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
+pub(super) const LANE_CI_DIAGNOSTIC: &str = "CI lane reset diagnostics require the published stack";
+
 pub(super) fn complex(pattern: &str) -> bool {
     pattern.contains(['*', '?', '[', ']', '{', '}', '!', ',', '$', ' '])
 }
@@ -168,4 +170,27 @@ fn source_proofs(root: &Path, capture: &capture::Capture) -> io::Result<Vec<Valu
         })
         .map(|path| read_proof(&path))
         .collect()
+}
+
+pub(super) fn lane_failure(
+    args: &[std::ffi::OsString],
+    root: &Path,
+    selected: Option<&Selected>,
+    error: &io::Error,
+) -> io::Result<crate::native::Outcome> {
+    if std::env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        return Ok(crate::native::Outcome::Declined(LANE_CI_DIAGNOSTIC.into()));
+    }
+    crate::commands::workspace_command::execute_then(root, args, "reset", |output| {
+        if let Some(selected) = selected {
+            selected.render(output);
+            selected.verify()?;
+        }
+        bit_object_import::reset_lane::apply_error_prefix(error)?;
+        // defaultErrorHandler colors a non-BitError message before its outer red wrapper.
+        Err(io::Error::new(
+            error.kind(),
+            crate::commands::color::Chalk::detect(args).red(&error.to_string()),
+        ))
+    })
 }

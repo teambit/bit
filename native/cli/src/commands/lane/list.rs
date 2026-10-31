@@ -6,11 +6,13 @@
 //! deleted components run on the Node.js CLI.
 
 pub(super) mod remote;
-pub(super) use metadata::components_report;
+pub(super) use super::current::read_current;
+pub(super) use metadata::{Tracking, components_report};
 pub(super) use remote::project as project_http;
 mod merged;
 mod metadata;
 
+use super::current::{scope_for, with_alias};
 use crate::{
     commands::{
         color::Chalk,
@@ -22,11 +24,10 @@ use crate::{
     history::History,
     native::Outcome,
 };
-use metadata::{Tracking, lane, report, report_others};
+use metadata::{lane, report, report_others};
 use serde_json::{Map, Value, json};
 use std::{
     ffi::OsString,
-    fs,
     io::{self, Write},
     path::Path,
     process::ExitCode,
@@ -309,14 +310,15 @@ pub(super) fn read_for_scope(
         .iter()
         .map(|row| lane(row, &tracking))
         .collect::<io::Result<Vec<_>>>()?;
-    let main_id = json!({"name": "main", "scope": text(scope.get("name"))?});
+    let scope_name = text(scope.get("name"))?;
+    let main_id = json!({"name": "main", "scope": scope_name});
     lanes.push(LaneData {
         id: main_id.clone(),
         alias: None,
         components: if let Some(bitmap) = &bitmap {
             main_components(&mut engine, root, &bitmap.entries)?
         } else {
-            bare_main_components(&mut engine, root)?
+            bare_main_components(&mut engine, root, scope_name)?
         },
         update_dependents: None,
         readme_component: None,
@@ -327,16 +329,11 @@ pub(super) fn read_for_scope(
     Ok((lanes, with_alias(current, &tracking)?))
 }
 
-fn scope(root: &Path) -> io::Result<Value> {
-    scope_for(root, false)
-}
-
-fn scope_for(root: &Path, bare: bool) -> io::Result<Value> {
-    let path = if bare { root.to_owned() } else { bit_object_import::scope_path(root) };
-    serde_json::from_slice(&fs::read(path.join("scope.json"))?).map_err(io::Error::from)
-}
-
-fn bare_main_components(engine: &mut Engine, root: &Path) -> io::Result<Vec<Value>> {
+fn bare_main_components(
+    engine: &mut Engine,
+    root: &Path,
+    default_scope: &str,
+) -> io::Result<Vec<Value>> {
     let listed: Value = engine.request(&json!({"kind":"scopeList", "root":root,
         "bareScope":true}))?;
     let models = array(listed.get("components"), "bare scope models")?;
@@ -344,27 +341,16 @@ fn bare_main_components(engine: &mut Engine, root: &Path) -> io::Result<Vec<Valu
         .iter()
         .filter_map(|model| {
             let head = model["head"].as_str()?;
-            let identity = format!("{}/{}", model["scope"].as_str()?, model["name"].as_str()?);
+            let scope = model["scope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+                .unwrap_or(default_scope);
+            let identity = format!("{scope}/{}", model["name"].as_str()?);
             let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
                 .unwrap_or_else(|| head.to_owned());
             Some(json!({"id":format!("{identity}@{label}"),"head":label}))
         })
         .collect())
-}
-
-pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {
-    let scope = scope(root)?;
-    let current =
-        bitmap::read(root)?.lane.unwrap_or_else(|| json!({"name":"main","scope":scope["name"]}));
-    with_alias(current, &Tracking::read(&scope))
-}
-
-fn with_alias(current: Value, tracking: &Tracking) -> io::Result<(Value, String)> {
-    let name = text(current.get("name"))?;
-    let alias = tracking
-        .alias(name, text(current.get("scope"))?)
-        .unwrap_or_else(|| name.to_string());
-    Ok((current, alias))
 }
 
 /// `getIdsOfDefaultLane()`: the bitmap's ids, a versioned one at its model's
@@ -379,18 +365,19 @@ fn main_components(
     let models = array(listed.get("components"), "models")?;
     let mut components = Vec::new();
     for entry in entries {
-        let Some(_) = &entry.version else {
+        if entry.version.is_none() {
             components.push(json!({"id": entry.identity, "head": "latest"}));
             continue;
-        };
+        }
+        let (entry_scope, entry_name) = entry.identity
+            .split_once('/')
+            .unwrap_or(("", entry.identity.as_str()));
         let model = models
             .iter()
             .find(|model| {
-                format!(
-                    "{}/{}",
-                    model["scope"].as_str().unwrap_or_default(),
-                    model["name"].as_str().unwrap_or_default(),
-                ) == entry.identity
+                let model_scope = model["scope"].as_str().unwrap_or_default();
+                model["name"].as_str() == Some(entry_name)
+                    && (model_scope.is_empty() || model_scope == entry_scope)
             })
             .ok_or_else(|| decline("a component without a model"))?;
         let Some(head) = model["head"].as_str() else { continue };

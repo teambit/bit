@@ -12,6 +12,7 @@ use super::{
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_install::output::Output;
 use options::{Mode, Options};
+use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "tag", aliases: &["t"], run };
@@ -302,4 +303,58 @@ fn failure(
         resolve::render_build_output(output, startup, true)?;
         Err(error)
     })
+}
+
+impl Options {
+    /// `options` of `commandTagPrepare`, as `JSON.stringify` writes them.
+    pub fn request(&self) -> Value {
+        let mut options = json!({});
+        if let Some(message) = &self.message {
+            options["message"] = json!(message);
+        }
+        options["unmodified"] = json!(self.unmodified);
+        options["unmerged"] = json!(self.unmerged);
+        options["build"] = json!(false);
+        options
+    }
+
+    /// `tagOptions` of `commandTagPrepare`.
+    pub fn tag_options(&self) -> Value {
+        let release = &self.release;
+        let mut options =
+            json!({ "patterns": self.selection.patterns, "releaseType": release.level });
+        if let Some(level) = &release.auto_tag_release_type {
+            options["autoTagReleaseType"] = json!(level);
+        }
+        options["incrementBy"] = json!(release.increment_by);
+        if let Some(version) = &release.exact_version {
+            options["exactVersion"] = json!(version);
+        }
+        if let Some(id) = &release.pre_release_id {
+            options["preReleaseId"] = json!(id);
+        }
+        options["snapped"] = json!(self.snapped);
+        options["skipAutoTag"] = json!(self.skip_auto_tag);
+        if self.mode == Mode::Soft {
+            options["soft"] = json!(true);
+        }
+        if self.mode == Mode::Persist {
+            options["persist"] = json!(true);
+        }
+        options
+    }
+
+    /// Return the first `<pattern>@<version>` suffix that is not a valid semver string.
+    pub fn invalid_pattern_version(&self) -> Option<&str> {
+        for pattern in &self.selection.patterns {
+            if let Some((base, ver)) = pattern.rsplit_once('@')
+                && !base.is_empty()
+                && !ver.is_empty()
+                && node_semver::npm::valid(ver).is_none()
+            {
+                return Some(ver);
+            }
+        }
+        None
+    }
 }

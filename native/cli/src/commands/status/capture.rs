@@ -38,7 +38,7 @@ use crate::commands::{
     inventory::{Inventory, Options},
 };
 use bit_install::dependencies::cache::invalidation::{deps_dir, needs_invalidation};
-use identities::{base_identity, dependency_identities, peer_identities};
+use identities::{base_identity, record};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};
 
@@ -352,50 +352,6 @@ impl Scan<'_> {
             .map(|file| text(file.get("relativePath")).map(str::to_string))
             .collect()
     }
-}
-
-/// The comparison and component rows of one captured target.
-fn record(
-    target: &Value,
-    directory: &str,
-    files: &[String],
-    policy: &policy::Policy,
-    dependencies: &Value,
-    captured: &mut Capture,
-) -> io::Result<()> {
-    let current = policy::current_metadata(target, policy, dependencies)?;
-    let version = target
-        .get("version")
-        .cloned()
-        .unwrap_or(Value::Null);
-    let mut entry = json!({
-        "identity": target["identity"],
-        "version": version,
-        "directory": directory,
-        "files": files,
-        "current": current,
-    });
-    if let Some(version) = target.get("trackingVersion") {
-        entry["trackingVersion"] = version.clone();
-    }
-    captured.dependency_states.insert(
-        text(target.get("identity"))?.to_string(),
-        dependencies["state"].clone(),
-    );
-    let mut row = entry.clone();
-    row["peerDependencies"] = json!(peer_identities(dependencies)?);
-    captured.captured.push(row);
-    if js::truthy(Some(&version)) {
-        captured.comparisons.push(entry);
-    }
-    captured.components.push(Component {
-        ignored: policy.ignored_issues()?,
-        identity: full_identity(target)?,
-        package_name: policy.package_name.clone(),
-        dependencies: dependency_identities(dependencies)?,
-        issues: policy.issues(dependencies)?,
-    });
-    Ok(())
 }
 
 /// `{ ...request, ...policy.input }`.

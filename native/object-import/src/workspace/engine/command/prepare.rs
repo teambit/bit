@@ -106,18 +106,16 @@ fn unexported_targets(
     Ok(selected(request, context)?
         .iter()
         .filter_map(|target| {
-            let identity = target["identity"].as_str()?;
-            let (scope, name) = identity.split_once('/')?;
+            let (scope, name) = target["identity"].as_str()?.split_once('/')?;
             rows.iter()
                 .any(|(key, row)| {
+                    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
                     !key.starts_with('$')
                         && !matches!(key.as_str(), "_bit_lane" | "version")
                         && row.is_object()
-                        && row["scope"]
-                            .as_str()
-                            .unwrap_or_default()
-                            .is_empty()
-                        && crate::reset_lane::bitmap::row_identity(key, row).1 == name
+                        && row_name == name
+                        && (row_scope.is_none()
+                            || (row_scope == Some(scope) && row["exported"] == false))
                         && row["rootDir"] == target["directory"]
                 })
                 .then(|| command_import::Target {
@@ -229,29 +227,34 @@ fn validate_revert(request: &Prepare) -> io::Result<()> {
 }
 fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> {
     let bitmap = config::document(&request.root.join(".bitmap"))?;
-    let targets: Vec<command_import::Target> = bitmap
+    bitmap
         .as_object()
         .ok_or_else(|| invalid("command bitmap"))?
         .iter()
-        .filter(|(key, _)| !matches!(key.as_str(), "$schema-version" | "_bit_lane"))
-        .map(|(_, value)| {
+        .filter(|(key, value)| {
+            !key.starts_with('$') && *key != "_bit_lane" && *key != "version" && value.is_object()
+        })
+        .map(|(key, value)| {
+            let (scope, name) = crate::reset_lane::bitmap::row_identity(key, value);
+            if name.is_empty() {
+                return Err(invalid("command component name"));
+            }
+            let (_, key_ver) = key
+                .rsplit_once('@')
+                .unwrap_or((key.as_str(), ""));
+            let version = value
+                .get("version")
+                .filter(|val| !val.is_null())
+                .map(|val| val.as_str().ok_or_else(|| invalid("command component version")))
+                .transpose()?
+                .unwrap_or(key_ver);
             Ok(command_import::Target {
-                scope: value["scope"]
-                    .as_str()
-                    .filter(|value| !value.is_empty())
-                    .map(str::to_owned),
-                name: value["name"]
-                    .as_str()
-                    .ok_or_else(|| invalid("command component name"))?
-                    .to_owned(),
-                version: value["version"]
-                    .as_str()
-                    .ok_or_else(|| invalid("command component version"))?
-                    .to_owned(),
+                scope: scope.map(str::to_owned),
+                name: name.to_owned(),
+                version: version.to_owned(),
             })
         })
-        .collect::<io::Result<_>>()?;
-    Ok(targets)
+        .collect()
 }
 
 pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
@@ -303,7 +306,7 @@ fn selected_pattern(request: &Prepare, targets: &[Value], pattern: &str) -> io::
     {
         return Ok(targets.to_vec());
     }
-    select_pattern(targets, pattern)
+    roots::select_pattern(targets, pattern)
 }
 
 fn selected_checkout_lane_heads(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
@@ -340,41 +343,6 @@ fn lane_selected(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
                 .any(|row| row["identity"] == target["identity"])
         })
         .collect())
-}
-
-fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
-    let directory = pattern.strip_prefix("./").unwrap_or(pattern);
-    if directory
-        .split('/')
-        .any(|part| matches!(part, "" | "." | ".."))
-    {
-        return Err(invalid("command complex component pattern"));
-    }
-    if let Some(target) = targets
-        .iter()
-        .find(|target| target["directory"] == directory)
-    {
-        return Ok(vec![target.clone()]);
-    }
-    let selected = targets
-        .iter()
-        .filter(|target| matches_identity(target, pattern))
-        .cloned()
-        .collect::<Vec<_>>();
-    if selected.len() != 1 {
-        return Err(invalid("command exact selection requires one component"));
-    }
-    Ok(selected)
-}
-fn matches_identity(target: &Value, pattern: &str) -> bool {
-    target["identity"]
-        .as_str()
-        .is_some_and(|identity| {
-            identity == pattern
-                || identity
-                    .split_once('/')
-                    .is_some_and(|(_, name)| name == pattern)
-        })
 }
 
 fn extend_lane_targets(context: &Value, model_targets: &mut Vec<Value>) {

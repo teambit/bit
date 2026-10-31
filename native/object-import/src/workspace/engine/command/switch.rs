@@ -95,7 +95,8 @@ impl LaneSelection {
 
     fn load(request: &Prepare) -> io::Result<Self> {
         let bitmap = config::document(&request.root.join(".bitmap"))?;
-        let lane_only = lane_only(&bitmap)?;
+        let settings = config::configuration_for_command(&request.root, true)?;
+        let lane_only = lane_only(&bitmap, settings["defaultScope"].as_str())?;
         let mut imported =
             command_import::prepare_lane(&request.root, &request.global_remotes_file)?;
         let current = super::lane_context::current_id(&bitmap, &imported.lane_scope()?)?;
@@ -104,22 +105,13 @@ impl LaneSelection {
             return Err(invalid("already checked out to requested lane"));
         }
         refresh_main(request, &bitmap, &mut imported)?;
-        let lane = imported.resolve_switch_lane(
-            &destination,
-            request.options.lane.as_ref().unwrap().skip_fetch,
-        )?;
-        if !request.options.lane.as_ref().unwrap().skip_fetch && imported.fetched_lane().is_some() {
+        let lane_options = request.options.lane.as_ref().unwrap();
+        let lane = imported.resolve_switch_lane(&destination, lane_options.skip_fetch)?;
+        if !lane_options.skip_fetch && imported.fetched_lane().is_some() {
             if !imported.lane_import_histories().is_empty() {
                 return Err(invalid("switch fetched lane history requires canonical handling"));
             }
-            imported.stage_switch_tracking_alias(
-                &destination,
-                request.options.lane
-                    .as_ref()
-                    .unwrap()
-                    .alias
-                    .as_deref(),
-            )?;
+            imported.stage_switch_tracking_alias(&destination, lane_options.alias.as_deref())?;
         }
         let current_lane = imported.load_lane(&current)?;
         validate_lane(&destination, lane.as_ref())?;
@@ -157,7 +149,6 @@ impl LaneSelection {
             "switchExported":self.lane.as_ref().is_some_and(|record| !record.is_new),
             "switchFetched":self.imported.fetched_lane().is_some(),
             "switchLaneOnly":self.lane_only,"switchLaneHeads":heads,
-
             "additions":additions,"addedTargets":added_targets,"targets":selected});
         Ok(context)
     }
@@ -228,7 +219,8 @@ fn validate_lane(
     Ok(())
 }
 
-fn lane_only(bitmap: &Value) -> io::Result<HashSet<String>> {
+fn lane_only(bitmap: &Value, default_scope: Option<&str>) -> io::Result<HashSet<String>> {
+    let fallback = default_scope.filter(|scope| !scope.is_empty());
     let rows = bitmap.as_object().ok_or_else(|| invalid("switch bitmap"))?;
     rows.iter()
         .filter(|(key, row)| {
@@ -238,7 +230,7 @@ fn lane_only(bitmap: &Value) -> io::Result<HashSet<String>> {
         })
         .map(|(key, row)| {
             let (scope_opt, name) = crate::reset_lane::bitmap::row_identity(key, row);
-            let scope = scope_opt.ok_or_else(|| invalid("switch lane-only scope"))?;
+            let scope = scope_opt.or(fallback).ok_or_else(|| invalid("switch lane-only scope"))?;
             if name.is_empty() {
                 return Err(invalid("switch lane-only name"));
             }

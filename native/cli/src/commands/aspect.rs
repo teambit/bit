@@ -222,7 +222,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         ["list", rest @ ..] => parse_list(rest),
@@ -357,7 +357,7 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     let (pattern, aspect_id, config) = match positional.as_slice() {
         [pattern, aspect_id] => (*pattern, *aspect_id, json!({})),
         [pattern, aspect_id, raw_cfg] => {
-            let parsed: Value = serde_json::from_str(raw_cfg).ok()?;
+            let parsed: Value = bit_object_import::parse_jsonc(raw_cfg.as_bytes()).ok()?;
             if !parsed.is_object() {
                 return None;
             }

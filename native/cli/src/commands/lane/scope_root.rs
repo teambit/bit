@@ -1,5 +1,8 @@
 //! A lane inspection can start in a workspace or directly in a bare scope.
-use crate::workspace;
+use crate::{
+    commands::{color::Chalk, debug_cat::sha1_hex},
+    workspace,
+};
 use serde_json::Value;
 use std::{
     env, fs,
@@ -62,4 +65,51 @@ fn validate_bare_index(directory: &Path) -> io::Result<()> {
         return Err(io::Error::other("lane scope index"));
     }
     Ok(())
+}
+
+pub(in crate::commands) fn diagnose_component_lookup_error(
+    scope_dir: &Path,
+    raw_id: &str,
+    bare_id: &str,
+    chalk: Chalk,
+) -> Option<String> {
+    if raw_id.starts_with('@') || bare_id.is_empty() {
+        return None;
+    }
+    let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let comps = index["components"].as_array().or_else(|| index.as_array())?;
+    let object_exists = bit_object_import::read_scope_object(scope_dir, &sha1_hex(bare_id))
+        .ok()
+        .flatten()
+        .is_some();
+    if object_exists {
+        return None;
+    }
+    if let Some((scope, name)) = bare_id.split_once('/') {
+        if scope.is_empty() || name.is_empty() || name.contains('/') {
+            return None;
+        }
+        let display_id = raw_id.strip_suffix("@latest").unwrap_or(raw_id);
+        return Some(format!(r#"error: component "{}" was not found"#, chalk.bold(display_id)));
+    }
+    diagnose_unscoped_component_error(comps, raw_id, bare_id)
+}
+
+fn diagnose_unscoped_component_error(
+    comps: &[Value],
+    raw_id: &str,
+    bare_id: &str,
+) -> Option<String> {
+    if bare_id.contains('.') {
+        return None;
+    }
+    match comps
+        .iter()
+        .filter(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(bare_id))
+        .count()
+    {
+        0 => Some(format!("scope.getParsedId, the component {raw_id} must include a scope-name")),
+        count if count > 2 => Some("getHashFromIndex expect to get zero or one result".to_owned()),
+        _ => None,
+    }
 }

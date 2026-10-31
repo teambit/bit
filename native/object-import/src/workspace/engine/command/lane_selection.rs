@@ -213,7 +213,7 @@ fn on_lane(
     history: &mut history::State,
 ) -> io::Result<bool> {
     let identity = format!("{}/{}", text(dependency, "scope")?, text(dependency, "name")?);
-    let model = repository.read(&crate::workspace::engine::hash(identity.as_bytes()), "Component")?;
+    let model = repository.read_component(&identity)?;
     let Some(main) = model["head"].as_str() else { return Ok(true) };
     let version = text(dependency, "version")?;
     if main == version || crate::merge_history::hash(version).is_err() {

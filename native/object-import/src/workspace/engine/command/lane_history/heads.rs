@@ -23,7 +23,7 @@ pub(in crate::workspace::engine::command) fn remote(
         return Err(invalid("history remote lane component budget"));
     }
     for row in rows {
-        if crate::command_import::lane::component_identity(&row["id"])? == identity {
+        if matches_row_identity(&row["id"], identity) {
             let head = row["head"].as_str().ok_or_else(|| invalid("history remote lane head"))?;
             crate::merge_history::hash(head)?;
             return Ok(Some(head.to_owned()));
@@ -39,12 +39,23 @@ pub(in crate::workspace::engine::command) fn local<'a>(
     context["lane"]["current"]["value"]["components"]
         .as_array()?
         .iter()
-        .find(|row| {
-            crate::command_import::lane::component_identity(&row["id"]).ok().as_deref()
-                == Some(identity)
-        })
+        .find(|row| matches_row_identity(&row["id"], identity))
         .and_then(|row| row["head"].as_str())
         .or_else(|| model["head"].as_str())
+}
+
+fn matches_row_identity(id_value: &Value, identity: &str) -> bool {
+    if crate::command_import::lane::component_identity(id_value).ok().as_deref() == Some(identity) {
+        return true;
+    }
+    let Some((scope, name)) = identity.split_once('/') else {
+        return false;
+    };
+    if let Some(raw_id) = id_value.as_str() {
+        return raw_id == identity || raw_id == name;
+    }
+    let row_scope = id_value["scope"].as_str().unwrap_or_default();
+    id_value["name"].as_str() == Some(name) && (row_scope == scope || row_scope.is_empty())
 }
 
 pub(in crate::workspace::engine::command) fn source<'a>(

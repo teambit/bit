@@ -100,8 +100,9 @@ fn resolve_target_version(
     raw_aspect_id: &str,
     bare_aspect: &str,
 ) -> Result<String, Failure> {
-    if let Some((_, ver)) = raw_aspect_id.split_once('@')
+    if let Some((_, ver)) = raw_aspect_id.rsplit_once('@')
         && !ver.is_empty()
+        && !matches!(ver, "latest" | "head")
     {
         return Ok(ver.to_owned());
     }
@@ -192,7 +193,7 @@ fn candidate_scope_dirs(root: &Path, aspect_scope: &str) -> Vec<PathBuf> {
 
 fn remote_file_scope_dir(local_scope: &Path, aspect_scope: &str) -> Option<PathBuf> {
     let bytes = fs::read(local_scope.join("scope.json")).ok()?;
-    let scope_json = serde_json::from_slice::<Value>(&bytes).ok()?;
+    let scope_json = bit_object_import::parse_jsonc(&bytes).ok()?;
     let remote_url = scope_json["remotes"][aspect_scope].as_str()?;
     remote_url.strip_prefix("file://").map(PathBuf::from)
 }
@@ -350,7 +351,7 @@ fn extension_version(ext: &Value) -> Option<String> {
                 .or_else(|| id_obj.and_then(|obj| obj["name"].as_str()))?;
             raw.rsplit_once('@').map(|(_, ver)| ver)
         })?;
-    (!ver.is_empty() && ver != "latest").then(|| ver.to_owned())
+    (!ver.is_empty() && !matches!(ver, "latest" | "head")).then(|| ver.to_owned())
 }
 
 fn extension_bare_id(ext: &Value) -> Option<String> {

@@ -263,7 +263,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 
 fn apply_update_arg(arg: &str, options: &mut Options) -> Option<()> {
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "-y" | "--yes" | "--yes=true" => options.yes = true,
         "--yes=false" => options.yes = false,
         "--patch" | "--patch=true" => options.patch = true,

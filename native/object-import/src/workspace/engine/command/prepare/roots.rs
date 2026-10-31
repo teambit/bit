@@ -28,3 +28,43 @@ pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
     }
     Ok(())
 }
+
+pub(super) fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
+    let directory = pattern.strip_prefix("./").unwrap_or(pattern);
+    if directory
+        .split('/')
+        .any(|part| matches!(part, "" | "." | ".."))
+    {
+        return Err(invalid("command complex component pattern"));
+    }
+    if let Some(target) = targets
+        .iter()
+        .find(|target| target["directory"] == directory)
+    {
+        return Ok(vec![target.clone()]);
+    }
+    let selected = targets
+        .iter()
+        .filter(|target| matches_identity(target, pattern))
+        .cloned()
+        .collect::<Vec<_>>();
+    if selected.len() != 1 {
+        return Err(invalid("command exact selection requires one component"));
+    }
+    Ok(selected)
+}
+
+fn matches_identity(target: &Value, pattern: &str) -> bool {
+    let bare = pattern
+        .split('@')
+        .next()
+        .unwrap_or(pattern);
+    target["identity"]
+        .as_str()
+        .is_some_and(|identity| {
+            identity == bare
+                || identity
+                    .split_once('/')
+                    .is_some_and(|(_, name)| name == bare)
+        })
+}

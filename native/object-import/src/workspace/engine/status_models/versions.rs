@@ -39,7 +39,7 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
     Ok(references)
 }
 pub(in crate::workspace::engine) fn reference(model: &Value, version: &str) -> io::Result<String> {
-    if version.is_empty() || version == "latest" {
+    if matches!(version, "" | "latest" | "head") {
         return model["head"]
             .as_str()
             .map(str::to_owned)

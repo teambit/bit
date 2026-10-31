@@ -162,8 +162,8 @@ fn resolve_single_target_env(
         .iter()
         .find(|entry| entry.owns_its_dir() && entry.id.to_string_without_version() == bare);
     if let Some((_, ver)) = raw
-        .split_once('@')
-        .filter(|(_, ver)| !ver.is_empty())
+        .rsplit_once('@')
+        .filter(|(_, ver)| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
     {
         return Ok(TargetEnv {
             display_id: format!("{bare}@{ver}"),

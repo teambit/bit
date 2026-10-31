@@ -1,18 +1,14 @@
 //! Remote and scope-level component loading for native `bit show`.
 
+pub(super) use super::render_remote_outcome;
 use super::{
     Options,
     deps::{DepEntry, Identity},
     deps_policy::apply_version_dependencies,
-    render,
     workspace_show::LoadedComponent,
 };
 use crate::{
-    commands::{
-        debug_cat::lookup::resolve_component_entry,
-        status::cache,
-        workspace_command::{self, results::Report},
-    },
+    commands::{debug_cat::lookup::resolve_component_entry, status::cache},
     native::Outcome,
     workspace,
 };
@@ -115,15 +111,13 @@ fn lookup_local_scope_remote(cwd: &Path, scope_name: &str) -> Option<String> {
     } else {
         cwd.join("scope.json")
     };
-    let bytes = fs::read(scope_json_path).ok()?;
-    let parsed: Value = serde_json::from_slice(&bytes).ok()?;
+    let parsed = bit_object_import::parse_jsonc(&fs::read(scope_json_path).ok()?).ok()?;
     parsed["remotes"][scope_name].as_str().map(str::to_owned)
 }
 
 fn lookup_global_remote(scope_name: &str) -> Option<String> {
     let path = cache::cache_root().join("config").join("global-remotes.json");
-    let bytes = fs::read(path).ok()?;
-    let parsed: Value = serde_json::from_slice(&bytes).ok()?;
+    let parsed = bit_object_import::parse_jsonc(&fs::read(path).ok()?).ok()?;
     parsed[scope_name].as_str().map(str::to_owned)
 }
 
@@ -264,7 +258,9 @@ pub(super) fn resolve_scope_version(
     comp_val: &Value,
     explicit_ver: Option<&str>,
 ) -> Option<(String, String)> {
-    if let Some(req) = explicit_ver.filter(|ver| *ver != "latest") {
+    if let Some(req) =
+        explicit_ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
+    {
         if let Some(hash) = comp_val["versions"].get(req).and_then(Value::as_str) {
             return Some((req.to_owned(), hash.to_owned()));
         }
@@ -298,7 +294,12 @@ fn extract_version_files(ver_val: &Value) -> Vec<String> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|item| item["relativePath"].as_str().map(str::to_owned))
+        .filter_map(|item| {
+            item.as_str()
+                .or_else(|| item["relativePath"].as_str())
+                .or_else(|| item["path"].as_str())
+                .map(str::to_owned)
+        })
         .collect()
 }
 
@@ -369,36 +370,4 @@ pub(super) fn ext_id_str(ext: &Value) -> Option<String> {
         Some(ver) => format!("{base}@{ver}"),
         None => base,
     })
-}
-
-pub(super) fn render_remote_outcome(
-    cwd: &Path,
-    args: &[OsString],
-    options: &Options,
-    loaded: &LoadedComponent,
-) -> io::Result<Option<Outcome>> {
-    let report = format_remote_report(options, loaded)?;
-    let outcome = if let Some(root) = workspace::root(cwd) {
-        if options.json {
-            workspace_command::execute_json(&root, args, "show", |_| Ok(report))?
-        } else {
-            workspace_command::execute_then(&root, args, "show", |_| Ok(report))?
-        }
-    } else if options.json {
-        workspace_command::execute_json_scope(cwd, args, "show", |_| Ok(report))?
-    } else {
-        workspace_command::execute_with_scope(cwd, args, "show", &report)?
-    };
-    Ok(Some(outcome))
-}
-
-fn format_remote_report(options: &Options, loaded: &LoadedComponent) -> io::Result<Report> {
-    let data = if options.json {
-        let value =
-            if options.legacy { render::legacy_json(loaded) } else { render::harmony_json(loaded) };
-        serde_json::to_string_pretty(&value)?
-    } else {
-        render::text_report(loaded)
-    };
-    Ok(Report { data, code: 0, details: None })
 }

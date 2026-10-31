@@ -25,7 +25,9 @@ impl Options {
             .collect::<Option<Vec<_>>>()?;
         let tokens = tokens
             .into_iter()
-            .filter(|token| *token != "--no-color")
+            .filter(|token| {
+                !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false")
+            })
             .collect::<Vec<_>>();
         let (command, rest) = split_subcommand(&tokens)?;
         let (global, values) = parse_flags_and_values(rest)?;

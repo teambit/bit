@@ -357,12 +357,12 @@ impl Prepared {
                 version["version"]["extensions"]
                     .as_array()
                     .is_some_and(|extensions| {
-                        extensions
-                            .iter()
-                            .any(|extension| {
-                                crate::workspace::engine::client_status::config::is_extension_aspect(extension, "teambit.envs/envs")
-                                    && extension["data"]["type"] == "aspect"
-                            })
+                        extensions.iter().any(|extension| {
+                            crate::workspace::engine::client_status::config::is_extension_aspect(
+                                extension,
+                                "teambit.envs/envs",
+                            ) && extension["data"]["type"] == "aspect"
+                        })
                     })
             })
             .filter_map(|version| version["identity"].as_str().map(str::to_owned))

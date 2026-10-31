@@ -41,7 +41,8 @@ impl Selection {
             .cloned()
             .unwrap_or_else(|| "teambit.workspace/workspace".into());
         let default = workspace[&key]["defaultScope"].as_str().unwrap_or_default();
-        let entries = selection::entries(&crate::parse_jsonc(&bitmap)?, options)?;
+        let entries =
+            selection::entries_with_default(&crate::parse_jsonc(&bitmap)?, default, options)?;
         let default_scope = selection::scope(default, options);
         if let Some(scope) = &default_scope {
             if scope == default {

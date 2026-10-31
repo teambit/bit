@@ -1,9 +1,8 @@
 //! Publish all original-scope export batches locally after remote `ExportPersist`.
-pub(super) use reconcile::present as reconcile_present;
-
+pub(super) use self::reconcile::present as reconcile_present;
 mod reconcile;
 mod removed;
-
+use self::reconcile::prepare_staged_config;
 use super::{Prepare, invalid, model::Selected};
 use crate::store::Store;
 use serde_json::{Value, json};
@@ -26,11 +25,11 @@ struct Preimage {
     index: Vec<u8>,
     refs: BTreeMap<String, Option<Vec<u8>>>,
     staged: Option<Vec<u8>>,
-    staged_config: Vec<u8>,
+    staged_config: Option<Vec<u8>>,
 }
 struct Output {
     refs: BTreeMap<String, Vec<u8>>,
-    staged_config: Vec<u8>,
+    staged_config: Option<Vec<u8>>,
     staged: bool,
     updated_ids: Vec<String>,
     non_existing_ids: Vec<String>,
@@ -116,17 +115,27 @@ fn prepare_output(
     preimage: &Preimage,
     refs: BTreeMap<String, Vec<u8>>,
 ) -> io::Result<Output> {
+    let removed_ids = match preimage.staged_config.as_deref() {
+        Some(bytes) => removed::read(bytes)?,
+        None => Vec::new(),
+    };
+    let staged_config = preimage.staged_config
+        .as_deref()
+        .map(|bytes| {
+            prepare_staged_config(
+                bytes,
+                selected,
+                !(input.options.all || input.options.all_versions),
+            )
+        })
+        .transpose()?;
     Ok(Output {
         staged: false,
         updated_ids: Vec::new(),
         non_existing_ids: Vec::new(),
-        removed_ids: removed::read(&preimage.staged_config)?,
+        removed_ids,
         refs,
-        staged_config: prepare_staged_config(
-            &preimage.staged_config,
-            selected,
-            !(input.options.all || input.options.all_versions),
-        )?,
+        staged_config,
     })
 }
 
@@ -205,7 +214,7 @@ fn prepare_preimage(root: &Path, scopes: &[String]) -> io::Result<Preimage> {
         index: fs::read(crate::scope_path(root).join("index.json"))?,
         refs,
         staged,
-        staged_config: fs::read(crate::scope_path(root).join("staged-config/main.json"))?,
+        staged_config: read_optional(&crate::scope_path(root).join("staged-config/main.json"))?,
     })
 }
 
@@ -289,7 +298,7 @@ impl Prepared {
         self.bitmap.validate()?;
         if read_optional(&crate::scope_path(&self.root).join("staged-snaps"))?
             != self.preimage.staged
-            || fs::read(crate::scope_path(&self.root).join("staged-config/main.json"))?
+            || read_optional(&crate::scope_path(&self.root).join("staged-config/main.json"))?
                 != self.preimage.staged_config
         {
             return Err(invalid("outbound staged or remote state changed"));
@@ -303,10 +312,13 @@ impl Prepared {
     }
 
     fn publish_controls(self) -> io::Result<()> {
-        fs::write(
-            crate::scope_path(&self.root).join("staged-config/main.json"),
-            self.output.staged_config,
-        )?;
+        if let Some(staged_config) = self.output.staged_config {
+            let config_path = crate::scope_path(&self.root).join("staged-config/main.json");
+            if let Some(parent) = config_path.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            fs::write(config_path, staged_config)?;
+        }
         if self.preimage.staged.is_some() {
             fs::remove_file(crate::scope_path(&self.root).join("staged-snaps"))?;
         }
@@ -315,45 +327,6 @@ impl Prepared {
         let _ = self.bitmap.commit(&self.file_id, "export")?;
         Ok(())
     }
-}
-
-fn prepare_staged_config(bytes: &[u8], selected: &[Selected], strict: bool) -> io::Result<Vec<u8>> {
-    let identities = selected
-        .iter()
-        .filter(|item| !item.labels.is_empty())
-        .map(|item| (item.scope.clone(), item.name.clone()))
-        .collect::<Vec<_>>();
-    prepare_staged_config_ids(bytes, &identities, strict)
-}
-
-fn prepare_staged_config_ids(
-    bytes: &[u8],
-    selected: &[(String, String)],
-    strict: bool,
-) -> io::Result<Vec<u8>> {
-    if selected.is_empty() {
-        return Ok(bytes.to_vec());
-    }
-    let mut rows: Vec<Value> = serde_json::from_slice(bytes)?;
-    if rows.len() > 4096 {
-        return Err(invalid("outbound staged configuration bounds"));
-    }
-    let mut found = HashSet::new();
-    rows.retain(|row| {
-        let matched = selected
-            .iter()
-            .find(|(scope, name)| row["id"]["scope"] == *scope && row["id"]["name"] == *name);
-        if let Some((scope, name)) = matched {
-            found.insert(format!("{scope}/{name}"));
-            false
-        } else {
-            true
-        }
-    });
-    if strict && found.len() != selected.len() {
-        return Err(invalid("outbound staged configuration lifecycle"));
-    }
-    serde_json::to_vec_pretty(&rows).map_err(io::Error::other)
 }
 
 fn prepare_refs(before: Option<&[u8]>, scope: &str, selected: &[Selected]) -> io::Result<Vec<u8>> {

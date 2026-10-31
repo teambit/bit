@@ -260,7 +260,6 @@ fn plan_old_file(
             Some(_) => {}
         }
     }
-    // ComponentWriter leaves files removed by the new Version in the workspace.
     Ok(())
 }
 
@@ -281,8 +280,10 @@ fn resolve(
         "ours" => Ok((current.to_vec(), false)),
         "theirs" => Ok((incoming, false)),
         "manual" => {
-            let current_version =
-                input.row["version"].as_str().ok_or_else(|| invalid("inbound current version"))?;
+            let current_version = input.row["version"]
+                .as_str()
+                .filter(|ver| !ver.is_empty())
+                .unwrap_or("latest");
             let labels = [format!("{current_version} modified"), incoming_version.to_owned()];
             let (merged, conflict) = crate::merge_history::merge::git::workspace_merge(
                 current,

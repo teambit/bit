@@ -21,8 +21,8 @@ pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<V
     let Some(scope) = scope else {
         return Ok(diagnosis.result(json!({"valid":true}), String::new(), ""));
     };
-    let config: Value =
-        serde_json::from_slice(&fs::read(scope.join("scope.json"))?).map_err(io::Error::other)?;
+    let config: Value = bit_object_import::parse_jsonc(&fs::read(scope.join("scope.json"))?)?;
+    let scope_name = config["name"].as_str().unwrap_or_default();
     let index = read_index(scope)?;
     let models = index
         .as_array()
@@ -33,15 +33,16 @@ pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<V
         .into_iter()
         .flatten()
         .filter(|row| {
-            row["isSymlink"] != true
-                && (row["id"]["scope"] == config["name"]
-                    || row["id"]["scope"].as_str().is_none_or(str::is_empty))
+            let (row_scope, _) = row_scope_and_name(row);
+            row["isSymlink"] != true && (row_scope == scope_name || row_scope.is_empty())
         })
     {
         let (_, model) = object(scope, text(&row["hash"])?)?
             .ok_or_else(|| io::Error::other("scope index references a missing component object"))?;
         total += 1;
-        if let Some(head) = model["head"].as_str()
+        if let Some(head) = model["head"]
+            .as_str()
+            .filter(|head| !head.is_empty())
             && object(scope, head)?.is_none()
         {
             missing.push(json!({"id":identity(&model),"head":head}));
@@ -66,10 +67,25 @@ fn missing_head_symptoms(missing: &[Value]) -> String {
 }
 fn read_index(scope: &Path) -> io::Result<Value> {
     match fs::read(scope.join("index.json")) {
-        Ok(bytes) => serde_json::from_slice(&bytes).map_err(io::Error::other),
+        Ok(bytes) => bit_object_import::parse_jsonc(&bytes),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(json!([])),
         Err(error) => Err(error),
     }
+}
+fn row_scope_and_name(row: &Value) -> (&str, &str) {
+    if let Some(id_str) = row["id"].as_str() {
+        let bare = id_str
+            .split('@')
+            .next()
+            .unwrap_or(id_str);
+        return bare
+            .split_once('/')
+            .unwrap_or(("", bare));
+    }
+    (
+        row["id"]["scope"].as_str().unwrap_or_default(),
+        row["id"]["name"].as_str().unwrap_or_default(),
+    )
 }
 fn text(value: &Value) -> io::Result<&str> {
     value.as_str().ok_or_else(|| io::Error::other("invalid scope index"))
@@ -121,9 +137,9 @@ fn symlink_target_exists(scope: &Path, index: &Value, id: &Value) -> io::Result<
         .as_array()
         .or_else(|| index["components"].as_array());
     for row in rows.into_iter().flatten() {
-        let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+        let (row_scope, row_name) = row_scope_and_name(row);
         if row["isSymlink"] != true
-            && row["id"]["name"].as_str() == Some(target_name)
+            && row_name == target_name
             && (row_scope == target_scope || row_scope.is_empty() || target_scope.is_empty())
             && let Some(hash) = row["hash"]
                 .as_str()

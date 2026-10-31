@@ -7,6 +7,7 @@ use super::{PreparedImport, invalid};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::io;
+use tracking::{component_identity_with_scope, hidden_entry, lane_index_id};
 mod artifacts;
 mod tracking;
 
@@ -127,9 +128,7 @@ impl PreparedImport {
             let previous_id = index_rows(&self.writes.index)?
                 .iter()
                 .find(|row| row["hash"] == incoming.hash)
-                .map(|row| {
-                    serde_json::from_value::<Id>(row["id"].clone()).map_err(io::Error::other)
-                })
+                .map(lane_index_id)
                 .transpose()?;
             if let Some(previous_id) = previous_id {
                 old = self.load_lane(&previous_id)?;
@@ -176,14 +175,18 @@ impl PreparedImport {
         let (scope, name) =
             identity.split_once('/').ok_or_else(|| invalid("command lane component scope"))?;
         component_identity(&serde_json::json!({"scope":scope,"name":name}))?;
-        let hash = super::object_hash(identity);
-        if let Some(value) = self.overlay.read(&hash, "Component")? {
-            return Ok(Some(value.clone()));
+        for candidate in [identity, name] {
+            let hash = super::object_hash(candidate);
+            if let Some(value) = self.overlay.read(&hash, "Component")? {
+                return Ok(Some(value.clone()));
+            }
+            if let Some(object) =
+                self.capture.object(&self.environment.local_directory, &hash, "Component")?
+            {
+                return object.value.ok_or_else(|| invalid("command lane model body")).map(Some);
+            }
         }
-        self.capture
-            .object(&self.environment.local_directory, &hash, "Component")?
-            .map(|object| object.value.ok_or_else(|| invalid("command lane model body")))
-            .transpose()
+        Ok(None)
     }
     pub(crate) fn lane_version(&mut self, reference: &str) -> io::Result<Value> {
         if let Some(value) = self.overlay.read(reference, "Version")? {
@@ -213,7 +216,7 @@ impl PreparedImport {
         let rows = index_rows(&self.writes.index)?;
         let hashes = rows
             .iter()
-            .filter(|row| row["id"]["scope"] == id.scope && row["id"]["name"] == id.name)
+            .filter(|row| lane_index_id(row).is_ok_and(|row_id| &row_id == id))
             .map(|row| text(row, "hash").map(str::to_owned))
             .collect::<io::Result<Vec<_>>>()?;
         if hashes.len() > 1 {
@@ -283,15 +286,16 @@ fn resolve_local(name: &str, scope: &Value, index: &Value) -> io::Result<Id> {
     }
     let candidates = index_rows(index)?
         .iter()
-        .filter(|row| row["id"]["name"] == name)
+        .filter_map(|row| lane_index_id(row).ok())
+        .filter(|row_id| row_id.name == name)
         .collect::<Vec<_>>();
-    if candidates.len() != 1 {
+    let [matched] = candidates.as_slice() else {
         return Err(invalid("command lane alias missing or ambiguous"));
-    }
-    Ok(Id { scope: text(&candidates[0]["id"], "scope")?.into(), name: name.into() })
+    };
+    Ok(matched.clone())
 }
 fn index_rows(index: &Value) -> io::Result<&[Value]> {
-    if index.is_array() {
+    if index.is_array() || index.get("lanes").is_none_or(Value::is_null) {
         return Ok(&[][..]);
     }
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("command lane index"))?;
@@ -301,12 +305,13 @@ fn index_rows(index: &Value) -> io::Result<&[Value]> {
     Ok(rows)
 }
 pub(crate) fn entries(value: &Value) -> io::Result<Vec<Entry>> {
+    let default_scope = value["scope"].as_str();
     let visible =
         value["components"].as_array().ok_or_else(|| invalid("command lane components"))?;
     let mut result = visible
         .iter()
         .map(|row| {
-            let identity = component_identity(&row["id"])?;
+            let identity = component_identity_with_scope(&row["id"], default_scope)?;
             let head = text(row, "head")?.to_owned();
             crate::merge_history::hash(&head)?;
             Ok(Entry { identity, head, hidden: false })
@@ -321,16 +326,11 @@ pub(crate) fn entries(value: &Value) -> io::Result<Vec<Entry>> {
     }
     if let Some(hidden) = value.get("updateDependents") {
         for row in hidden.as_array().ok_or_else(|| invalid("command hidden lane components"))? {
-            let entry = hidden_entry(row)?;
-            let identity = entry.identity;
-            let head = entry.head;
-            if result
-                .iter()
-                .any(|entry| entry.identity == identity)
-            {
+            let entry = hidden_entry(row, default_scope)?;
+            if !identities.insert(entry.identity.clone()) {
                 return Err(invalid("command duplicate visible or hidden lane component"));
             }
-            result.push(Entry { identity, head, hidden: true });
+            result.push(entry);
         }
     }
     if result.len() > 4096 {
@@ -338,51 +338,8 @@ pub(crate) fn entries(value: &Value) -> io::Result<Vec<Entry>> {
     }
     Ok(result)
 }
-fn hidden_entry(row: &Value) -> io::Result<Entry> {
-    let (identity, head) = row
-        .as_str()
-        .and_then(|value| value.rsplit_once('@'))
-        .ok_or_else(|| invalid("command hidden lane identity"))?;
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("command hidden lane scope"))?;
-    let identity = component_identity(&serde_json::json!({"scope":scope,"name":name}))?;
-    let head = head.to_owned();
-    crate::merge_history::hash(&head)?;
-    Ok(Entry { identity, head, hidden: true })
-}
 pub(crate) fn component_identity(value: &Value) -> io::Result<String> {
-    let scope = text(value, "scope")?;
-    let name = text(value, "name")?;
-    if scope.is_empty()
-        || scope.len() > 1024
-        || matches!(scope, "." | "..")
-        || !scope
-            .bytes()
-            .all(|byte| {
-                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"._-".contains(&byte)
-            })
-    {
-        return Err(invalid("command lane component scope"));
-    }
-    if name.is_empty()
-        || name.len() > 4096
-        || name
-            .split('/')
-            .any(|part| {
-                part.is_empty()
-                    || matches!(part, "." | "..")
-                    || !part
-                        .bytes()
-                        .all(|byte| {
-                            byte.is_ascii_lowercase()
-                                || byte.is_ascii_digit()
-                                || b"_-".contains(&byte)
-                        })
-            })
-    {
-        return Err(invalid("command lane component identity"));
-    }
-    Ok(format!("{scope}/{name}"))
+    component_identity_with_scope(value, None)
 }
 pub(crate) fn validate_value(id: &Id, value: &Value) -> io::Result<()> {
     if value["scope"] != id.scope || value["name"] != id.name {

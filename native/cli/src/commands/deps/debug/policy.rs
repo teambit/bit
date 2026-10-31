@@ -190,3 +190,48 @@ pub(super) fn empty_policy(policy: &Value) -> bool {
                     .all(|entries| entries.as_object().is_some_and(Map::is_empty))
             })
 }
+
+pub(super) fn manual_entries(policy: &Map<String, Value>) -> Result<ManualPolicy, Failure> {
+    if policy.is_empty() || !supported_fields(policy) || !supported_entries(policy) {
+        return Err(Failure::Declined("configured versioned deps debug delegated".into()));
+    }
+    parse_manual_fields(policy)
+}
+
+fn supported_fields(policy: &Map<String, Value>) -> bool {
+    policy
+        .keys()
+        .all(|field| {
+            matches!(field.as_str(), "dependencies" | "devDependencies" | "peerDependencies")
+        })
+}
+
+fn supported_entries(policy: &Map<String, Value>) -> bool {
+    let mut seen = HashSet::new();
+    for (field, group) in policy {
+        let Some(entries) = group.as_object() else { return false };
+        if entries.is_empty() {
+            return false;
+        }
+        for (name, value) in entries {
+            if !valid_entry(field, name, value, &mut seen) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn valid_entry<'a>(field: &str, name: &'a str, value: &Value, seen: &mut HashSet<&'a str>) -> bool {
+    let Some(version) = manual_version(value) else { return false };
+    if !seen.insert(name) || version.is_empty() {
+        return false;
+    }
+    if NODE_DEV
+        .iter()
+        .any(|(builtin, _)| name == *builtin)
+    {
+        return field == "devDependencies" && version == "-";
+    }
+    true
+}

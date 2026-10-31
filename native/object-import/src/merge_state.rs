@@ -327,18 +327,23 @@ fn metadata(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Val
         Request::ConfigWorkspaceUpdates(input) => {
             crate::config_merge::apply("configWorkspaceUpdates", &input)
         }
-        request @ (Request::TransferCollect(_)
-        | Request::TransferInitialize(_)
-        | Request::TransferArchive(_)
-        | Request::TransferRelease(_)
-        | Request::TransferCancel(_)
-        | Request::TransferPending(_)
-        | Request::TransferTransactionInitialize(_)
-        | Request::TransferTransactionReceipt(_)) => {
-            transfer_request(request, &mut state.operations.transfer)
-        }
-        request => snapshot_operation(request, state),
+        request => transfer_or_snapshot(request, state),
     }
+}
+
+fn transfer_or_snapshot(request: Request, state: &mut State) -> io::Result<Value> {
+    let (kind, input) = match request {
+        Request::TransferCollect(input) => ("transferCollect", input),
+        Request::TransferInitialize(input) => ("transferInitialize", input),
+        Request::TransferArchive(input) => ("transferArchive", input),
+        Request::TransferPending(input) => ("transferPending", input),
+        Request::TransferRelease(input) => ("transferRelease", input),
+        Request::TransferCancel(input) => ("transferCancel", input),
+        Request::TransferTransactionInitialize(input) => ("transferTransactionInitialize", input),
+        Request::TransferTransactionReceipt(input) => ("transferTransactionReceipt", input),
+        request => return snapshot_operation(request, state),
+    };
+    crate::transfer::apply(kind, &input, &mut state.operations.transfer)
 }
 
 fn snapshot_operation(request: Request, state: &mut State) -> io::Result<Value> {
@@ -383,26 +388,6 @@ mod config_tests;
 mod squash_tests;
 #[cfg(test)]
 mod tests;
-
-fn transfer_request(request: Request, state: &mut crate::transfer::State) -> io::Result<Value> {
-    match request {
-        Request::TransferCollect(input) => crate::transfer::apply("transferCollect", &input, state),
-        Request::TransferInitialize(input) => {
-            crate::transfer::apply("transferInitialize", &input, state)
-        }
-        Request::TransferArchive(input) => crate::transfer::apply("transferArchive", &input, state),
-        Request::TransferPending(input) => crate::transfer::apply("transferPending", &input, state),
-        Request::TransferRelease(input) => crate::transfer::apply("transferRelease", &input, state),
-        Request::TransferCancel(input) => crate::transfer::apply("transferCancel", &input, state),
-        Request::TransferTransactionInitialize(input) => {
-            crate::transfer::apply("transferTransactionInitialize", &input, state)
-        }
-        Request::TransferTransactionReceipt(input) => {
-            crate::transfer::apply("transferTransactionReceipt", &input, state)
-        }
-        _ => Err(invalid("invalid transfer operation")),
-    }
-}
 
 /// Reuse the canonical squash decision for retained command-owned Versions.
 pub(crate) fn squash_policy(value: Value) -> io::Result<Value> {

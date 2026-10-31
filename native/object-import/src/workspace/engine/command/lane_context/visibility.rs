@@ -53,9 +53,11 @@ pub(in crate::workspace::engine::command) fn targets(
         .ok_or_else(|| invalid("command lane bitmap"))?
         .clone();
     visible.remove("_bit_lane");
-    visible.retain(|key, row| key == "$schema-version" || row["isAvailableOnCurrentLane"] != false);
+    visible.retain(|key, row| {
+        key.starts_with('$') || key == "version" || row["isAvailableOnCurrentLane"] != false
+    });
     for (key, row) in &mut visible {
-        if key == "$schema-version" {
+        if key.starts_with('$') || key == "version" {
             continue;
         }
         clear_visibility(row)?;
@@ -76,19 +78,23 @@ pub(in crate::workspace::engine::command) fn switch_targets(
         .as_object()
         .ok_or_else(|| invalid("switch bitmap"))?
         .clone();
+    let default_scope = settings["defaultScope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty());
     selected.remove("_bit_lane");
     selected.retain(|key, row| {
-        if key == "$schema-version" || row["isAvailableOnCurrentLane"] != false {
+        if key.starts_with('$') || key == "version" || row["isAvailableOnCurrentLane"] != false {
             return true;
         }
         let (scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
         let identity = scope
+            .or(default_scope)
             .filter(|_| !name.is_empty())
             .map(|sc| format!("{sc}/{name}"));
         main || identity.is_some_and(|identity| destination_heads.contains(&identity))
     });
     for (key, row) in &mut selected {
-        if key != "$schema-version" {
+        if !key.starts_with('$') && key != "version" {
             clear_visibility(row)?;
         }
     }
@@ -106,10 +112,10 @@ pub(super) fn inactive_targets(
         .clone();
     inactive.remove("_bit_lane");
     inactive.retain(|key, row| {
-        key == "$schema-version" || row["isAvailableOnCurrentLane"] == false
+        key.starts_with('$') || key == "version" || row["isAvailableOnCurrentLane"] == false
     });
     for (key, row) in &mut inactive {
-        if key != "$schema-version" {
+        if !key.starts_with('$') && key != "version" {
             clear_visibility(row)?;
         }
     }
@@ -223,7 +229,8 @@ fn bitmap_has(bitmap: &Value, identity: &str) -> bool {
             {
                 return false;
             }
-            let (Some(scope), name) = crate::reset_lane::bitmap::row_identity(key, row) else {
+            let (scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+            let Some(scope) = scope.or_else(|| effective_scope(row)) else {
                 return false;
             };
             format!("{scope}/{name}") == identity

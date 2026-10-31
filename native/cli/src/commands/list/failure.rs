@@ -1,5 +1,7 @@
 //! Render a failed inventory after a resolver callback or remote request owns the command.
-use super::{Chalk, Options, Outcome, Session, workspace_command};
+use super::{
+    Chalk, History, Options, Outcome, Row, Session, json_report, report, table, workspace_command,
+};
 use std::{
     ffi::OsString,
     io::{self, Write},
@@ -111,4 +113,59 @@ fn write_session(
         output.console(&Chalk::detect(args).red(warning));
     }
     Ok(())
+}
+
+pub(super) fn present(
+    root: Option<&Path>,
+    args: &[OsString],
+    rows: &[Row],
+    options: &Options,
+    session: &Session,
+) -> io::Result<Outcome> {
+    if options.json {
+        return json_output(root, args, rows, options.ids, session);
+    }
+    let report = workspace_command::results::Report {
+        data: report(rows, options, Chalk::detect(args), table::colors(args)),
+        code: 0,
+        details: None,
+    };
+    let status =
+        if options.remote.is_some() { "listing remote components" } else { "listing components" };
+    if let Some(root) = root {
+        workspace_command::execute_with(root, args, "list", &report, |output| {
+            output.status(status);
+            write_session(args, session, output)
+        })
+    } else {
+        let output = workspace_command::loader_output(Chalk::detect(args), false);
+        output.restart(r#"running command "list"..."#);
+        output.status(status);
+        write_session(args, session, &output)?;
+        output.stop();
+        writeln!(io::stdout().lock(), "{}", report.data)?;
+        Ok(Outcome::Exit(ExitCode::SUCCESS))
+    }
+}
+
+fn json_output(
+    root: Option<&Path>,
+    args: &[OsString],
+    rows: &[Row],
+    ids: bool,
+    session: &Session,
+) -> io::Result<Outcome> {
+    let history = root.map(|root| History::start(root, args));
+    // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
+    let mut stdout = io::stdout().lock();
+    stdout.write_all(session.output().as_bytes())?;
+    if let Some(warning) = session.warning() {
+        writeln!(stdout, "{}", Chalk::detect(args).red(warning))?;
+    }
+    stdout.write_all(serde_json::to_string_pretty(&json_report(rows, ids))?.as_bytes())?;
+    stdout.flush()?;
+    if let Some(history) = history {
+        history.end(true);
+    }
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
 }

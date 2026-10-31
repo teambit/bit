@@ -36,5 +36,5 @@ fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
                 .find(|row| row["identity"] == id)
                 .and_then(|row| row["version"].as_str())
         })
-        .filter(|version| !version.is_empty() && *version != "latest")
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
 }

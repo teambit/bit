@@ -7,6 +7,7 @@ mod prune;
 #[cfg(test)]
 mod tests;
 
+use self::list_stats::{lookup_config_str, object_hash_short, read_combined_config};
 use super::{
     Command,
     color::Chalk,
@@ -15,16 +16,11 @@ use super::{
     workspace_command::{self, format::Formatter, results::Report},
 };
 use crate::{history::History, native::Outcome, workspace};
-use bit_workspace_config::{
-    cache_root, environment_value, global_config_dir, merge_layers, parse_jsonc,
-    read_global_config, workspace_values,
-};
+use bit_workspace_config::cache_root;
 use serde_json::{Map, Value, json};
-use sha1::{Digest, Sha1};
 use std::{
     env,
     ffi::OsString,
-    fmt::Write as _,
     fs,
     io::{self, Write},
     path::Path,
@@ -159,7 +155,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         [] | ["--"] => Some(Subcommand::BareList),
@@ -332,51 +328,6 @@ pub(super) fn compute_capsules_root_dirs(
             .into_owned()
     });
     Ok(CapsuleRootDirs { workspace, scope_aspects, scope })
-}
-
-fn lookup_config_str(combined: &Map<String, Value>, key: &str) -> Option<String> {
-    environment_value(key)
-        .or_else(|| {
-            combined
-                .get(key)
-                .and_then(Value::as_str)
-                .filter(|val| !val.is_empty())
-                .map(str::to_owned)
-        })
-}
-
-fn read_combined_config(root: &ScopeRoot) -> io::Result<Map<String, Value>> {
-    let global = read_global_config(&global_config_dir())?;
-    let scope_dir = if root.bare { root.path.clone() } else { workspace::scope_path(&root.path) };
-    let scope_layer = if scope_dir.join("scope.json").is_file() {
-        let parsed: Value = serde_json::from_slice(&fs::read(scope_dir.join("scope.json"))?)
-            .map_err(io::Error::other)?;
-        parsed
-            .get("config")
-            .cloned()
-            .unwrap_or(Value::Null)
-    } else {
-        Value::Null
-    };
-    let ws_layer = if root.bare {
-        Value::Null
-    } else {
-        Value::Object(workspace_values(&parse_jsonc(&fs::read(root.path.join(
-            "workspace.jsonc",
-        ))?)?))
-    };
-    Ok(merge_layers(&global, &scope_layer, &ws_layer))
-}
-
-pub(super) fn object_hash_short(text: &str) -> String {
-    let payload = format!("string:{}:{text}", text.encode_utf16().count());
-    let digest = Sha1::digest(payload.as_bytes());
-    let mut out = String::with_capacity(10);
-    for byte in &digest[..5] {
-        let _ = write!(out, "{byte:02x}");
-    }
-    out.truncate(9);
-    out
 }
 
 fn list_capsules_in_dir(dir: &str) -> Vec<String> {

@@ -1,6 +1,6 @@
 //! `bit lane eject` helper logic (`scopes/workspace/eject/eject.main.runtime.ts`).
 
-use super::{add_dependency_to_workspace_jsonc, find_bitmap_row, pkg_name_for, remove_nm_pkg};
+use super::find_bitmap_row;
 use crate::{
     commands::{
         aspect::write_bitmap_if_changed,
@@ -11,9 +11,12 @@ use crate::{
     },
     native::Outcome,
 };
-use bit_install::dependencies::cache::invalidation::deps_dir;
+use bit_install::{
+    dependencies::cache::invalidation::deps_dir, model::ComponentId,
+    workspace::component_package_name,
+};
 use bit_object_import::{parse_jsonc, scope_path};
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 use std::{ffi::OsString, fs, io, path::Path};
 
 pub(super) fn is_hub_component_modified(
@@ -87,11 +90,12 @@ fn resolve_main_version(models: &[Value], id: &str) -> io::Result<String> {
     let model = models
         .iter()
         .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
-            ) == identity
+            let name = model["name"].as_str().unwrap_or_default();
+            let model_id = model["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+                .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+            model_id == identity || name == identity
         })
         .ok_or_else(|| {
             io::Error::other(format!(r#"unable to eject "{id}" as it has no main version"#))
@@ -183,4 +187,46 @@ fn copy_dir_files(src: &Path, dst: &Path) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+pub(super) fn pkg_name_for(scope: &str, name: &str) -> String {
+    let comp_id = ComponentId {
+        scope: Some(scope.to_owned()),
+        name: name.to_owned(),
+        version: None,
+        default_scope: None,
+    };
+    component_package_name(&comp_id, None, &Map::new())
+}
+
+pub(super) fn remove_nm_pkg(root: &Path, pkg_name: &str) {
+    let pkg_path = root.join("node_modules").join(pkg_name);
+    if let Ok(meta) = fs::symlink_metadata(&pkg_path) {
+        if meta.file_type().is_symlink() || meta.is_file() {
+            let _ = fs::remove_file(&pkg_path);
+        } else if meta.is_dir() {
+            let _ = fs::remove_dir_all(&pkg_path);
+        }
+    }
+}
+
+pub(super) fn add_dependency_to_workspace_jsonc(
+    root: &Path,
+    pkg_name: &str,
+    version: &str,
+) -> io::Result<()> {
+    let path = root.join("workspace.jsonc");
+    let before = fs::read(&path)?;
+    let text = std::str::from_utf8(&before).map_err(io::Error::other)?;
+    let mut doc = bit_workspace_config::jsonc::Document::parse(text)?;
+    let resolver_key = crate::commands::update_cmd::aspect_entry(
+        &doc.value(),
+        "teambit.dependencies/dependency-resolver",
+    )
+    .map_or_else(
+        || "teambit.dependencies/dependency-resolver".to_owned(),
+        |(key, _)| key.to_owned(),
+    );
+    doc.set(&[&resolver_key, "policy", "dependencies", pkg_name], &json!(version));
+    fs::write(&path, format!("{doc}\n"))
 }

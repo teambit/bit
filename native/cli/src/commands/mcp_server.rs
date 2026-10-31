@@ -4,7 +4,7 @@ mod rules;
 #[cfg(test)]
 mod tests;
 
-use self::rules::{RulesOptions, execute_rules};
+use self::rules::{RulesOptions, cursor_settings_path, execute_rules, windsurf_settings_path};
 use super::{
     Command,
     color::Chalk,
@@ -98,7 +98,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         ["setup", rest @ ..] => parse_setup(rest).map(Subcommand::Setup),
@@ -314,6 +314,7 @@ fn read_json_object(path: &Path) -> Result<Map<String, Value>, String> {
     let content =
         fs::read_to_string(path).map_err(|err| format!("Failed to parse {file_name}: {err}"))?;
     let val: Value = serde_json::from_str(&content)
+        .or_else(|err| bit_object_import::parse_jsonc(content.as_bytes()).map_err(|_| err))
         .map_err(|err| format!("Failed to parse {file_name}: {err}"))?;
     val.as_object()
         .cloned()
@@ -356,16 +357,6 @@ fn vscode_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> 
     } else {
         Err(format!("Unsupported platform: {}", env::consts::OS))
     }
-}
-
-fn cursor_settings_path(is_global: bool, cwd: &Path) -> PathBuf {
-    let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
-    base.join(".cursor").join("mcp.json")
-}
-
-fn windsurf_settings_path(is_global: bool, cwd: &Path) -> PathBuf {
-    let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
-    base.join(".windsurf").join("mcp.json")
 }
 
 fn roo_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {

@@ -16,10 +16,10 @@ impl Options {
             .skip(1)
             .map(|arg| arg.to_str())
             .collect::<Option<Vec<_>>>()?;
-        values.retain(|arg| *arg != "--no-color");
+        values.retain(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"));
         let command = if values
             .first()
-            .is_some_and(|arg| !arg.starts_with('-'))
+            .is_some_and(|arg| !arg.starts_with('-') && *arg != "--")
         {
             values.remove(0).to_owned()
         } else {
@@ -63,7 +63,7 @@ impl Options {
         }
         match self.command.as_str() {
             "set" => self.set_flag(arg),
-            "list" => match arg {
+            "config" | "list" => match arg {
                 "-j" | "--json" | "--json=true" => {
                     self.json = true;
                     Some(())

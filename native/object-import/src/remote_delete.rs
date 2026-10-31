@@ -314,9 +314,11 @@ pub(super) fn remove_index_refs(index: &mut Value, refs: &[String]) -> io::Resul
         rows.retain(|row| !selected_ref(row, refs));
         return Ok(());
     }
-    for kind in ["components", "lanes"] {
-        let rows = index[kind].as_array_mut().ok_or_else(|| invalid("remote index rows"))?;
-        rows.retain(|row| !selected_ref(row, refs));
+    let components =
+        index["components"].as_array_mut().ok_or_else(|| invalid("remote index rows"))?;
+    components.retain(|row| !selected_ref(row, refs));
+    if let Some(lanes) = index.get_mut("lanes").and_then(Value::as_array_mut) {
+        lanes.retain(|row| !selected_ref(row, refs));
     }
     Ok(())
 }
@@ -332,28 +334,34 @@ fn unmerged(scope: &Path, removed: &[String]) -> io::Result<Option<(Vec<u8>, Vec
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
     };
-    let mut value: Value = serde_json::from_slice(&before)?;
+    let mut value = crate::recovery::jsonc::parse(&before)?;
     let rows = value.as_array_mut().ok_or_else(|| invalid("remote unmerged records"))?;
     let count = rows.len();
     rows.retain(|row| {
         !removed
             .iter()
             .any(|id| {
-                id.split_once('@')
-                    .is_some_and(|(identity, _)| {
-                        identity
-                            == format!(
-                                "{}/{}",
-                                row["id"]["scope"].as_str().unwrap_or_default(),
-                                row["id"]["name"].as_str().unwrap_or_default(),
-                            )
-                    })
+                let target = id.split('@').next().unwrap_or(id);
+                matches_unmerged_row(row, target)
             })
     });
     if count == rows.len() {
         return Ok(None);
     }
     Ok(Some((before, serde_json::to_vec_pretty(&value)?)))
+}
+fn matches_unmerged_row(row: &Value, target: &str) -> bool {
+    if let Some(raw) = row["id"].as_str() {
+        let base = raw.split('@').next().unwrap_or(raw);
+        let target_name = target.split_once('/').map_or(target, |(_, name)| name);
+        return base == target || base == target_name;
+    }
+    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+    let row_name = row["id"]["name"].as_str().unwrap_or_default();
+    let (target_scope, target_name) = target
+        .split_once('/')
+        .unwrap_or(("", target));
+    row_name == target_name && (row_scope.is_empty() || row_scope == target_scope)
 }
 pub(super) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

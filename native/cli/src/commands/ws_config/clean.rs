@@ -1,8 +1,19 @@
 //! `bit ws-config list` and `bit ws-config clean` helpers.
 
 use crate::commands::color::Chalk;
+use bit_install::{config::aspect_id_without_version, workspace::Workspace};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
+
+const STANDARD_WRITER_ENVS: &[&str] = &[
+    "teambit.harmony/node",
+    "teambit.react/react",
+    "teambit.harmony/aspect",
+    "teambit.envs/env",
+    "teambit.react/react-native",
+    "teambit.html/html",
+    "teambit.mdx/mdx",
+];
 
 pub(super) const STANDARD_WRITERS: &[(&str, &str, &str, &str)] = &[
     ("typescript", "TypescriptConfigWriter", "tsconfig.json", "// bit-generated-typescript-config"),
@@ -135,10 +146,42 @@ fn check_config_file(
     }
 }
 
-pub(super) fn writer_matches(writer_id: &str, writers: Option<&[String]>) -> bool {
+pub(in crate::commands::ws_config) fn writer_matches(
+    writer_id: &str,
+    writers: Option<&[String]>,
+) -> bool {
     writers.is_none_or(|filter| {
         filter
             .iter()
             .any(|item| item == writer_id)
     })
+}
+
+pub(in crate::commands) fn collect_standard_env_ids(ws: &Workspace) -> Option<Vec<String>> {
+    let mut env_ids = Vec::new();
+    for (_, comp) in ws.active() {
+        let bare = aspect_id_without_version(&comp.env_id);
+        if !STANDARD_WRITER_ENVS.contains(&bare) {
+            return None;
+        }
+        if !env_ids
+            .iter()
+            .any(|existing| existing == bare)
+        {
+            env_ids.push(bare.to_owned());
+        }
+    }
+    Some(env_ids)
+}
+
+pub(in crate::commands::ws_config) fn collect_active_component_dirs(ws: &Workspace) -> Vec<String> {
+    ws.active()
+        .map(|(_, comp)| {
+            comp.root_dir
+                .trim_start_matches("./")
+                .trim_matches('/')
+                .to_owned()
+        })
+        .filter(|dir| !dir.is_empty())
+        .collect()
 }

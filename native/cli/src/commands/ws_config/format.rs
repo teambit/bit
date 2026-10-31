@@ -252,3 +252,60 @@ fn rel_display(ws_dir: &Path, full_path: &str) -> String {
         .strip_prefix(ws_dir)
         .map_or_else(|_| full_path.to_owned(), |rel| rel.to_string_lossy().replace('\\', "/"))
 }
+
+pub(super) fn strip_dry_run_contents(write_results: &mut WriteResults) {
+    for writer in &mut write_results.writers_result {
+        for real in &mut writer.real_config_files {
+            real.written_real_config_file.content.clear();
+        }
+        for ext in &mut writer.extending_config_files {
+            ext.extending_config_file.content.clear();
+            ext.extending_config_file.extending_target.content.clear();
+        }
+    }
+}
+
+pub(super) fn summarize_writers(writers_result: Vec<OneConfigWriterIdResult>) -> WriteResults {
+    let total_real: usize = writers_result
+        .iter()
+        .map(|wr| wr.total_real_config_files)
+        .sum();
+    let total_extending: usize = writers_result
+        .iter()
+        .map(|wr| wr.total_extending_config_files)
+        .sum();
+    let skipped_paths = writers_result
+        .iter()
+        .flat_map(|wr| wr.skipped_paths.iter().cloned())
+        .collect();
+    WriteResults {
+        writers_result,
+        total_written_files: total_real + total_extending,
+        total_real_config_files: total_real,
+        total_extending_config_files: total_extending,
+        skipped_paths,
+    }
+}
+
+pub(super) fn finish_one_writer(
+    writer_id: &str,
+    env_ids: &[String],
+    real_config_files: Vec<EnvsWrittenRealConfigFile>,
+    extending_config_file: WrittenExtendingConfigFile,
+    skipped_paths: Vec<String>,
+) -> OneConfigWriterIdResult {
+    let total_real = real_config_files.len();
+    let total_extending = extending_config_file.file_paths.len();
+    OneConfigWriterIdResult {
+        writer_id: writer_id.to_owned(),
+        total_written_files: total_real + total_extending,
+        real_config_files,
+        total_real_config_files: total_real,
+        extending_config_files: vec![EnvsWrittenExtendingConfigFile {
+            env_ids: env_ids.to_vec(),
+            extending_config_file,
+        }],
+        total_extending_config_files: total_extending,
+        skipped_paths,
+    }
+}

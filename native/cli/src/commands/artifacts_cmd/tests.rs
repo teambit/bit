@@ -1,10 +1,9 @@
 use super::{
     Options,
-    extractor::{
-        ArtifactFile, ArtifactItem, ComponentArtifacts, filter_artifacts, parse_builder_artifacts,
-    },
+    extractor::{ArtifactFile, ArtifactItem, ComponentArtifacts, parse_builder_artifacts},
     is_empty_workspace, parse_options,
     render::render_artifacts_report,
+    scope::filter_artifacts,
 };
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::json;

@@ -1,5 +1,5 @@
 //! Remove the readme component reference from a local lane (`bit lane remove-readme`).
-use super::{Documents, Objects, Original, history_components, invalid};
+use super::{Documents, Objects, Original, invalid};
 use crate::{inspection, store::Store};
 use serde_json::{Value, json};
 use std::{
@@ -169,4 +169,56 @@ fn readme_row_matches(
     let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, value);
     row_name == readme_name
         && (readme_scope.is_none() || row_scope.is_none() || row_scope == readme_scope)
+}
+
+pub(super) fn lane_row_identity(row: &Value) -> Option<(String, String)> {
+    if let Some(raw) = row["id"].as_str() {
+        let (scope, name) = raw.split_once('/')?;
+        return (!scope.is_empty() && !name.is_empty()).then(|| {
+            (name.to_owned(), scope.to_owned())
+        });
+    }
+    let name = row["id"]["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    let scope = row["id"]["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    Some((name.to_owned(), scope.to_owned()))
+}
+
+pub(super) fn matches_lane_row(row: &Value, name: &str, scope: &str) -> bool {
+    lane_row_identity(row)
+        .is_some_and(|(row_name, row_scope)| row_name == name && row_scope == scope)
+}
+
+pub(super) fn history_components(lane: &Value) -> io::Result<Vec<String>> {
+    let default_scope = lane["scope"].as_str().unwrap_or_default();
+    lane["components"]
+        .as_array()
+        .ok_or_else(invalid)?
+        .iter()
+        .filter(|component| component["isDeleted"] != true)
+        .map(|component| {
+            let head = component["head"].as_str().ok_or_else(invalid)?;
+            if let Some(raw) = component["id"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+            {
+                let id = raw.split('@').next().unwrap_or(raw);
+                return Ok(if id.contains('/') || default_scope.is_empty() {
+                    format!("{id}@{head}")
+                } else {
+                    format!("{default_scope}/{id}@{head}")
+                });
+            }
+            let scope = component["id"]["scope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+                .or_else(|| (!default_scope.is_empty()).then_some(default_scope))
+                .ok_or_else(invalid)?;
+            let name = component["id"]["name"].as_str().ok_or_else(invalid)?;
+            Ok(format!("{scope}/{name}@{head}"))
+        })
+        .collect()
 }

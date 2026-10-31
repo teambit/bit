@@ -23,7 +23,11 @@ impl Origin {
         scope: &str,
         new_scope: bool,
     ) -> io::Result<Self> {
-        if let Some(parent) = documents.bitmap.get("_bit_lane") {
+        if let Some(parent) = documents.bitmap.get("_bit_lane")
+            && parent["id"]["name"]
+                .as_str()
+                .is_some_and(|name| !name.is_empty() && name != "main")
+        {
             return Self::from_parent(
                 root,
                 &documents.index,
@@ -45,11 +49,13 @@ impl Origin {
         new_scope: bool,
     ) -> io::Result<Self> {
         let parent_id = &parent["id"];
+        let parent_name = parent_id["name"].as_str().ok_or_else(invalid)?;
+        let parent_scope = parent_id["scope"].as_str().unwrap_or_default();
         let row = index["lanes"]
             .as_array()
             .ok_or_else(invalid)?
             .iter()
-            .find(|row| row["id"] == *parent_id)
+            .find(|row| matches_lane_row(row, parent_id, parent_scope, parent_name))
             .ok_or_else(invalid)?;
         let hash = row["hash"].as_str().ok_or_else(invalid)?;
         let objects_dir = bit_workspace_config::scope_path(root).join("objects");
@@ -101,11 +107,13 @@ pub(super) fn read_merge_move_backup(
     bitmap: &Value,
 ) -> io::Result<(String, Vec<u8>, Value)> {
     let parent_id = &bitmap.get("_bit_lane").ok_or_else(invalid)?["id"];
+    let parent_name = parent_id["name"].as_str().ok_or_else(invalid)?;
+    let parent_scope = parent_id["scope"].as_str().unwrap_or_default();
     let row = index["lanes"]
         .as_array()
         .ok_or_else(invalid)?
         .iter()
-        .find(|row| row["id"] == *parent_id)
+        .find(|row| matches_lane_row(row, parent_id, parent_scope, parent_name))
         .ok_or_else(invalid)?;
     let expected_hash = row["hash"].as_str().ok_or_else(invalid)?;
     let backup_bytes = fs::read(bit_workspace_config::scope_path(root).join("last-merged/lane"))?;
@@ -114,6 +122,17 @@ pub(super) fn read_merge_move_backup(
         return Err(invalid());
     }
     Ok((expected_hash.to_owned(), backup_bytes, value))
+}
+
+fn matches_lane_row(row: &Value, parent_id: &Value, scope: &str, name: &str) -> bool {
+    row["id"] == *parent_id
+        || row["id"].as_str() == Some(&format!("{scope}/{name}"))
+        || (row["id"]["name"] == name
+            && (row["id"]["scope"]
+                .as_str()
+                .unwrap_or_default()
+                .is_empty()
+                || row["id"]["scope"] == scope))
 }
 
 fn decode_backup_lane(backup_bytes: &[u8], expected_hash: &str) -> io::Result<Value> {
@@ -153,7 +172,7 @@ fn active_lane_components(
                         crate::workspace::engine::client_status::config::is_extension_aspect(
                             row,
                             "teambit.component/remove",
-                        ) && row["config"]["removed"] == true
+                        ) && (row["config"]["removed"] == true || row["data"]["removed"] == true)
                     })
             });
         if !removed {

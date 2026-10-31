@@ -9,9 +9,7 @@ pub(super) fn load_selected(
     let identity = &captured.target.identity;
     let model =
         model(&record.context, identity)?.ok_or_else(|| invalid("command merge missing model"))?;
-    if record.repository.read(&super::super::super::hash(identity.as_bytes()), "Component")?
-        != model
-    {
+    if record.repository.read_component(identity)? != model {
         return Err(invalid("command merge model changed"));
     }
     let (remote, current_head) = heads(record, identity, &model)?;
@@ -95,8 +93,7 @@ pub(super) fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::
             selected.model["scope"].as_str().unwrap_or_default(),
             selected.model["name"].as_str().unwrap_or_default(),
         );
-        let model =
-            record.repository.read(&super::super::super::hash(identity.as_bytes()), "Component")?;
+        let model = record.repository.read_component(&identity)?;
         refresh_model(selected, model)?;
         if !selected.base.is_empty() {
             selected.versions[0] = record.repository.read(&selected.base, "Version")?;

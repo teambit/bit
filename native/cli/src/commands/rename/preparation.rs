@@ -75,11 +75,11 @@ fn validate_inventory(engine: &mut Engine, facts: &Value) -> io::Result<()> {
 }
 
 fn packages(workspace: &Workspace, options: &Options, facts: &mut Value) -> io::Result<()> {
+    let bare = options.source.rsplit_once('@').map_or(options.source.as_str(), |(id, _)| id);
     let component = workspace.components
         .iter()
         .find(|component| {
-            component.id.name == options.source
-                || component.id.to_string_without_version() == options.source
+            component.id.name == bare || component.id.to_string_without_version() == bare
         })
         .ok_or_else(|| {
             io::Error::new(

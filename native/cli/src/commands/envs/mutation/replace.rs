@@ -180,17 +180,18 @@ pub(super) fn resolve_verified_env(
     bitmap_val: &Value,
     raw_env: &str,
 ) -> Result<(String, String), Failure> {
-    if CORE_ENVS.contains(&raw_env) {
-        return Ok((raw_env.to_owned(), raw_env.to_owned()));
+    let bare_env = raw_env.rsplit_once('@').map_or(raw_env, |(bare, _)| bare);
+    if CORE_ENVS.contains(&bare_env) {
+        return Ok((bare_env.to_owned(), bare_env.to_owned()));
     }
-    let normalized = raw_env.trim_start_matches("./");
+    let normalized = bare_env.trim_start_matches("./");
     let Some(env_entry) = bitmap.entries
         .iter()
         .find(|entry| {
             entry.owns_its_dir()
                 && ((!entry.root_dir.is_empty() && entry.root_dir == normalized)
-                    || entry.id.to_string_without_version() == raw_env
-                    || entry.id.name == raw_env)
+                    || entry.id.to_string_without_version() == bare_env
+                    || entry.id.name == bare_env)
         })
     else {
         return Err(Failure::Declined(format!("non-core non-workspace env {raw_env}")));

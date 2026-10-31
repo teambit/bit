@@ -67,9 +67,7 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
     if scope["lanes"]["current"] != "main" {
         return Err(invalid("outbound lane export"));
     }
-    let Some(rows) = read_index_rows(&input.root)? else {
-        return Ok(Vec::new());
-    };
+    let Some(rows) = read_index_rows(&input.root)? else { return Ok(Vec::new()) };
     let candidates = candidate_rows(input, &rows)?;
     if input.options.pattern_selection && input.ids.is_empty() {
         return Ok(Vec::new());
@@ -80,12 +78,10 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
         input.options.all || input.options.all_versions || input.options.head_only,
     )?;
     ensure_explicit_ids_in_bitmap(input, &selected)?;
-    let mut components = Vec::new();
-    for (row, model) in selected {
-        let component = select_one(input, &row, model)?;
-        components.push(component);
-    }
-    Ok(components)
+    selected
+        .into_iter()
+        .map(|(row, model)| select_one(input, &row, model))
+        .collect()
 }
 
 fn read_index_rows(root: &Path) -> io::Result<Option<Vec<Value>>> {
@@ -131,13 +127,17 @@ fn ensure_explicit_ids_in_bitmap(input: &Prepare, selected: &[(Value, Value)]) -
 
 fn all_rows(root: &Path, rows: &[Value]) -> io::Result<Vec<(Value, Value)>> {
     rows.iter()
+        .filter(|row| row["isSymlink"] != true)
         .map(|row| Ok((row.clone(), load_model(root, row)?)))
         .collect()
 }
 
 fn staged_rows(root: &Path, rows: &[Value]) -> io::Result<Vec<(Value, Value)>> {
     let mut staged = Vec::new();
-    for row in rows {
+    for row in rows
+        .iter()
+        .filter(|row| row["isSymlink"] != true)
+    {
         let model = load_model(root, row)?;
         if has_staged(&model) {
             staged.push((row.clone(), model));
@@ -211,7 +211,7 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
     let matching_version = |model: &Value| {
         version.is_none_or(|version| {
             version.is_empty()
-                || version == "latest"
+                || matches!(version, "latest" | "head")
                 || Some(version) == model["head"].as_str()
                 || model["versions"][version]
                     .as_str()
@@ -219,9 +219,6 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
                     == model["head"].as_str()
         })
     };
-    // A slash can mean either a scope separator or part of a component
-    // name. Prefer an exact scoped identity, then accept an unscoped name
-    // only when the candidate set makes it unambiguous.
     let scoped = staged
         .iter()
         .find(|(row, model)| {
@@ -246,9 +243,8 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
 }
 
 fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Selected> {
-    let root = &input.root;
     let identity = identity(row, &model)?;
-    let objects_dir = crate::scope_path(root).join("objects");
+    let objects_dir = crate::scope_path(&input.root).join("objects");
     let staged = select_versions(input, &model, &objects_dir)?;
     let model_before = transfer::object::repository(
         &objects_dir,
@@ -330,6 +326,9 @@ pub(super) fn clear_and_mark_exported(
     let rows = model.as_object_mut().ok_or_else(|| invalid("outbound model"))?;
     rows.shift_remove("state");
     rows.shift_remove("local");
+    if !rows.get("remotes").is_some_and(Value::is_array) {
+        rows.insert("remotes".to_owned(), json!([]));
+    }
     let remotes = rows
         .get_mut("remotes")
         .and_then(Value::as_array_mut)

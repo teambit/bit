@@ -7,7 +7,7 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
     let filtered = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         ["set", rest @ ..] => parse_set(rest),
@@ -293,7 +293,7 @@ pub(in crate::commands) fn parse_why(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     let (dep_name, depth) = parse_usage_args(&filtered)?;
     Some(Subcommand::Why { dep_name, depth })
@@ -363,7 +363,7 @@ fn split_pkg_name_and_explicit_ver(raw: &str) -> Option<(String, String)> {
         return None;
     }
     let (name, ver) = raw.rsplit_once('@')?;
-    if !is_valid_pkg_name(name) || ver.is_empty() || ver == "latest" {
+    if !is_valid_pkg_name(name) || ver.is_empty() || matches!(ver, "latest" | "head") {
         return None;
     }
     Some((name.to_owned(), snap_to_semver(ver)))

@@ -7,13 +7,16 @@ mod tests;
 use super::{
     Command,
     color::Chalk,
+    debug_cat::lookup::{load_cat_component, resolve_component_entry},
+    lane::scope_root::ScopeRoot,
     remote_action::startup,
     scope_set::{Failure, selection},
     workspace_command,
 };
 use crate::{native::Outcome, workspace};
-use bit_install::workspace::Bitmap;
+use bit_install::workspace::{Bitmap, BitmapEntry, ScopeObjects, sha1_hex};
 use bit_object_import::parse_jsonc;
+use serde_json::{Map, Value};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "lint", aliases: &[], run };
@@ -91,11 +94,10 @@ pub(in crate::commands) fn consume_trailing_internalize<'a>(
 }
 
 pub(super) fn read_model_object(
-    objects: &bit_install::workspace::ScopeObjects,
+    objects: &ScopeObjects,
     scope: &str,
     name: &str,
-) -> Result<serde_json::Value, Failure> {
-    use bit_install::workspace::sha1_hex;
+) -> Result<Value, Failure> {
     objects
         .read(&sha1_hex(&format!("{scope}/{name}")))
         .and_then(|opt| match opt {
@@ -104,6 +106,135 @@ pub(super) fn read_model_object(
         })
         .map_err(|err| Failure::Declined(err.to_string()))?
         .ok_or_else(|| Failure::Declined("missing model object on eject-conf".into()))
+}
+
+pub(super) fn load_version_extensions(
+    objects: &ScopeObjects,
+    scope: &str,
+    entry: &BitmapEntry,
+) -> Result<Vec<Value>, Failure> {
+    let Some(ver) = entry.id.version
+        .as_deref()
+        .filter(|ver| !ver.is_empty())
+    else {
+        return Ok(Vec::new());
+    };
+    let ver_hash = if ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        ver.to_owned()
+    } else {
+        let model = read_model_object(objects, scope, &entry.id.name)?;
+        let resolved = if matches!(ver, "latest" | "head") {
+            model["head"].as_str()
+        } else {
+            model["versions"][ver]
+                .as_str()
+                .or_else(|| model["orphanedVersions"][ver].as_str())
+        };
+        resolved
+            .map(str::to_owned)
+            .ok_or_else(|| Failure::Declined("missing version in model on eject-conf".into()))?
+    };
+    let version_obj = objects
+        .read(&ver_hash)
+        .map_err(|err| Failure::Declined(err.to_string()))?
+        .ok_or_else(|| Failure::Declined("missing version object on eject-conf".into()))?;
+    Ok(version_obj["extensions"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default())
+}
+
+pub(super) fn strip_local_env_version(
+    bitmap: &Bitmap,
+    cfg_map: Map<String, Value>,
+) -> Map<String, Value> {
+    let local_env = cfg_map
+        .iter()
+        .find(|(key, _)| {
+            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
+        })
+        .and_then(|(_, val)| val["env"].as_str())
+        .map(|env| env.split('@').next().unwrap_or(env))
+        .filter(|bare| {
+            !bare.is_empty()
+                && bitmap.entries
+                    .iter()
+                    .any(|entry| {
+                        entry.owns_its_dir() && entry.id.to_string_without_version() == *bare
+                    })
+        })
+        .map(str::to_owned);
+    cfg_map
+        .into_iter()
+        .filter(|(_, val)| val.as_str() != Some("-"))
+        .map(|(key, val)| match local_env.as_deref() {
+            Some(bare) if key.starts_with(&format!("{bare}@")) => (bare.to_owned(), val),
+            _ => (key, val),
+        })
+        .collect()
+}
+
+pub(super) fn has_variants_internalize_config(workspace_val: &Value) -> bool {
+    let Some(rows) = workspace_val.as_object() else {
+        return false;
+    };
+    rows.iter()
+        .find(|(key, _)| key.split('@').next() == Some("teambit.workspace/variants"))
+        .is_some_and(|(_, val)| val.to_string().contains("teambit.component/internalize"))
+}
+
+pub(super) fn is_comp_json_entry_internal(
+    root: &Path,
+    entry: &BitmapEntry,
+    aspect_id: &str,
+) -> Result<Option<bool>, Failure> {
+    if entry.root_dir.is_empty() {
+        return Ok(None);
+    }
+    let comp_json_path = root.join(&entry.root_dir).join("component.json");
+    if !comp_json_path.exists() {
+        return Ok(None);
+    }
+    let parsed: Value = parse_jsonc(&fs::read(&comp_json_path)?)?;
+    let Some((_, cfg)) = super::update_cmd::aspect_entry(&parsed["extensions"], aspect_id) else {
+        return Ok(None);
+    };
+    if cfg.as_str() == Some("-") {
+        return Ok(Some(false));
+    }
+    Ok(Some(cfg["internal"].as_bool().unwrap_or(false)))
+}
+
+pub(super) fn is_scope_entry_internal(
+    root: &Path,
+    entry: &BitmapEntry,
+    aspect_id: &str,
+) -> Result<bool, Failure> {
+    let scope_dir = workspace::scope_path(root);
+    let bare_id = entry.id.to_string_without_version();
+    let Some(ver) = entry.id.version
+        .as_deref()
+        .filter(|ver| !ver.is_empty())
+    else {
+        if resolve_component_entry(&scope_dir, &bare_id).is_some() {
+            return Err(Failure::Declined("unversioned bitmap entry exists in scope".into()));
+        }
+        return Ok(false);
+    };
+    let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
+    let exts = if let Some(ver_val) =
+        load_cat_component(&scope_root, &scope_dir, &format!("{bare_id}@{ver}"))
+    {
+        ver_val["extensions"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default()
+    } else {
+        let scope = entry.id.scope.as_deref().unwrap_or_default();
+        load_version_extensions(&ScopeObjects::new(&scope_dir), scope, entry)?
+    };
+    let ext = exts.iter().find(|ext| super::update_cmd::matches_aspect(ext, aspect_id));
+    Ok(ext.is_some_and(|item| item["config"]["internal"].as_bool().unwrap_or(false)))
 }
 
 pub(super) fn emit_pattern_error(
@@ -184,7 +315,7 @@ fn apply_token<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "-c" | "--changed" | "--changed=true" => options.changed = true,
         "--changed=false" => options.changed = false,
         "-f" | "--fix" | "--fix=true" => options.fix = true,

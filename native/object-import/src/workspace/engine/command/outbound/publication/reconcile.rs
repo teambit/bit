@@ -1,9 +1,59 @@
 //! Reconcile acknowledgements with component-level bitmap promotions.
-use super::{Prepared, invalid, prepare_staged_config_ids};
+use super::{Prepared, Selected, invalid};
 use crate::store::Store;
 use rayon::prelude::*;
 use serde_json::Value;
 use std::{collections::HashSet, fs, io};
+
+pub(super) fn prepare_staged_config(
+    bytes: &[u8],
+    selected: &[Selected],
+    strict: bool,
+) -> io::Result<Vec<u8>> {
+    let identities = selected
+        .iter()
+        .filter(|item| !item.labels.is_empty())
+        .map(|item| (item.scope.clone(), item.name.clone()))
+        .collect::<Vec<_>>();
+    prepare_staged_config_ids(bytes, &identities, strict)
+}
+
+fn prepare_staged_config_ids(
+    bytes: &[u8],
+    selected: &[(String, String)],
+    strict: bool,
+) -> io::Result<Vec<u8>> {
+    if selected.is_empty() {
+        return Ok(bytes.to_vec());
+    }
+    let mut rows: Vec<Value> = serde_json::from_slice(bytes)?;
+    if rows.len() > 4096 {
+        return Err(invalid("outbound staged configuration bounds"));
+    }
+    let mut found = HashSet::new();
+    rows.retain(|row| {
+        let matched = selected.iter().find(|(scope, name)| staged_row_matches(row, scope, name));
+        if let Some((scope, name)) = matched {
+            found.insert(format!("{scope}/{name}"));
+            false
+        } else {
+            true
+        }
+    });
+    if strict && found.len() != selected.len() {
+        return Err(invalid("outbound staged configuration lifecycle"));
+    }
+    serde_json::to_vec_pretty(&rows).map_err(io::Error::other)
+}
+
+fn staged_row_matches(row: &Value, scope: &str, name: &str) -> bool {
+    if let Some(raw) = row["id"].as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        return bare == name || bare == format!("{scope}/{name}");
+    }
+    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+    row["id"]["name"] == name && (row_scope.is_empty() || row_scope == scope)
+}
 
 impl Prepared {
     pub(in super::super) fn resume_acknowledgement(
@@ -41,8 +91,10 @@ impl Prepared {
             .cloned()
             .collect::<Vec<_>>();
         self.bitmap.select_export_promotions(&tracked)?;
-        self.output.staged_config =
-            prepare_staged_config_ids(&self.preimage.staged_config, &promotions, true)?;
+        self.output.staged_config = self.preimage.staged_config
+            .as_deref()
+            .map(|bytes| prepare_staged_config_ids(bytes, &promotions, true))
+            .transpose()?;
         self.expected_ids.clone_from(&acknowledged);
         self.known_ids = acknowledged;
         Ok(())
@@ -78,8 +130,10 @@ impl Prepared {
             .cloned()
             .collect::<Vec<_>>();
         self.bitmap.select_export_promotions(&tracked)?;
-        self.output.staged_config =
-            prepare_staged_config_ids(&self.preimage.staged_config, &promotions, false)?;
+        self.output.staged_config = self.preimage.staged_config
+            .as_deref()
+            .map(|bytes| prepare_staged_config_ids(bytes, &promotions, false))
+            .transpose()?;
         Ok(())
     }
 }

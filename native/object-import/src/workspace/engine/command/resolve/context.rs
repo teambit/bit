@@ -178,7 +178,16 @@ fn bind_next_versions(bitmap: &Value, context: &mut Value) -> io::Result<()> {
             target["directory"].as_str().ok_or_else(|| invalid("tag persist directory"))?;
         let next = entries
             .values()
-            .find(|entry| entry["rootDir"] == directory)
+            .find(|entry| {
+                entry["rootDir"]
+                    .as_str()
+                    .map(|dir| {
+                        dir.strip_prefix("./")
+                            .unwrap_or(dir)
+                            .trim_end_matches('/')
+                    })
+                    == Some(directory)
+            })
             .map(|entry| &entry["nextVersion"])
             .ok_or_else(|| invalid("tag persist bitmap entry"))?;
         target["nextVersion"] = next.clone();
@@ -263,10 +272,9 @@ fn load_lane(
 
 fn token(state: &mut State) -> io::Result<String> {
     state.sequence = state.sequence.checked_add(1).ok_or_else(|| invalid("resolve sequence"))?;
-    let token = crate::workspace::engine::hash(
+    Ok(crate::workspace::engine::hash(
         format!("resolve:{}:{}", std::process::id(), state.sequence).as_bytes(),
-    );
-    Ok(token)
+    ))
 }
 
 fn validate_extensions(context: &Value) -> io::Result<()> {
@@ -391,9 +399,7 @@ fn bind_models(context: &Value, repository: &mut repository::Repository) -> io::
             .as_str()
             .filter(|scope| !scope.is_empty())
             .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
-        if repository.read(&crate::workspace::engine::hash(identity.as_bytes()), "Component")?
-            != *model
-        {
+        if repository.read_component(&identity)? != *model {
             return Err(invalid("resolve model changed"));
         }
     }

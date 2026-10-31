@@ -150,15 +150,7 @@ fn lifecycle_from_str(raw: Option<&str>) -> &'static str {
 fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<ResolvedDep>) {
     let obj_id = crate::commands::graph_cmd::builder::format_dep_id(&item["componentId"])
         .or_else(|| crate::commands::graph_cmd::builder::format_dep_id(&item["id"]));
-    let Some(pkg_name) = item["packageName"].as_str().or(obj_id.as_deref()) else { return };
-    if identity.is_self(pkg_name) {
-        return;
-    }
-    let Some(ver) = item["version"]
-        .as_str()
-        .or_else(|| item["componentId"]["version"].as_str())
-        .or_else(|| item["id"]["version"].as_str())
-    else {
+    let Some((pkg_name, ver)) = model_item_pkg_and_ver(item, obj_id.as_deref(), identity) else {
         return;
     };
     let is_comp = item["__type"].as_str() == Some("component");
@@ -167,25 +159,40 @@ fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<Re
         .split('@')
         .next()
         .unwrap_or(raw_id);
+    let id =
+        if is_comp && !raw_id.contains('@') { format!("{raw_id}@{ver}") } else { raw_id.into() };
+    let comp_name = is_comp.then(|| {
+        bare.split_once('/')
+            .map_or(bare, |(_, name)| name)
+            .into()
+    });
     upsert_dep(
         deps,
         ResolvedDep {
-            id: if is_comp && !raw_id.contains('@') {
-                format!("{raw_id}@{ver}")
-            } else {
-                raw_id.to_owned()
-            },
+            id,
             package_name: pkg_name.to_owned(),
             version: ver.to_owned(),
             lifecycle: lifecycle_from_str(item["lifecycle"].as_str()),
             dep_type: if is_comp { "component" } else { "package" },
-            comp_name: is_comp.then(|| {
-                bare.split_once('/')
-                    .map_or(bare, |(_, name)| name)
-                    .to_owned()
-            }),
+            comp_name,
             comp_bare_id: is_comp.then(|| bare.to_owned()),
             is_extension: item["isExtension"].as_bool().unwrap_or(false),
         },
     );
+}
+
+fn model_item_pkg_and_ver<'a>(
+    item: &'a Value,
+    obj_id: Option<&'a str>,
+    identity: &Identity<'_>,
+) -> Option<(&'a str, &'a str)> {
+    let pkg_name = item["packageName"]
+        .as_str()
+        .or(obj_id)
+        .filter(|pkg| !identity.is_self(pkg))?;
+    let ver = item["version"]
+        .as_str()
+        .or_else(|| item["componentId"]["version"].as_str())
+        .or_else(|| item["id"]["version"].as_str())?;
+    Some((pkg_name, ver))
 }

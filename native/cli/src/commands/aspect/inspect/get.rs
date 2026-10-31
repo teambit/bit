@@ -118,8 +118,7 @@ pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -
         .map(str::to_owned)
         .or_else(|| {
             let scope_json =
-                serde_json::from_slice::<Value>(&fs::read(scope_dir.join("scope.json")).ok()?)
-                    .ok()?;
+                bit_object_import::parse_jsonc(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
             scope_json["name"]
                 .as_str()
                 .filter(|val| !val.is_empty())

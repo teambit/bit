@@ -142,7 +142,7 @@ impl Plan {
 
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
-        let index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
+        let mut index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
             Ok(bytes) => match serde_json::from_slice(&bytes)? {
                 Value::Array(components) => json!({"components":components,"lanes":[]}),
                 value => value,
@@ -152,13 +152,16 @@ impl Documents {
             }
             Err(error) => return Err(error),
         };
-        let scope_json: Value = serde_json::from_slice(&fs::read(
+        if index.is_object() && index.get("lanes").is_none_or(Value::is_null) {
+            index["lanes"] = json!([]);
+        }
+        let scope_json: Value = recovery::jsonc::parse(&fs::read(
             bit_workspace_config::scope_path(root).join("scope.json"),
         )?)?;
         let bitmap = recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?;
         if scope_json["lanes"]["current"]
             .as_str()
-            .is_some_and(|current| current != "main")
+            .is_some_and(|current| !current.is_empty() && current != "main")
         {
             return Err(invalid());
         }
@@ -264,10 +267,20 @@ fn history_components(components: &[Value]) -> io::Result<Vec<String>> {
     components
         .iter()
         .map(|entry| {
-            let scope = entry["id"]["scope"].as_str().ok_or_else(invalid)?;
-            let name = entry["id"]["name"].as_str().ok_or_else(invalid)?;
+            let id = if let Some(raw_id) = entry["id"].as_str() {
+                raw_id.to_owned()
+            } else {
+                let name = entry["id"]["name"].as_str().ok_or_else(invalid)?;
+                match entry["id"]["scope"]
+                    .as_str()
+                    .filter(|val| !val.is_empty())
+                {
+                    Some(scope) => format!("{scope}/{name}"),
+                    None => name.to_owned(),
+                }
+            };
             let head = entry["head"].as_str().ok_or_else(invalid)?;
-            Ok(format!("{scope}/{name}@{head}"))
+            Ok(format!("{id}@{head}"))
         })
         .collect()
 }
