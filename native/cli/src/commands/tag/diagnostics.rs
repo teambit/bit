@@ -130,10 +130,7 @@ fn format_main_removed(
 fn workspace_default_scope(root: &Path) -> Option<String> {
     let raw = fs::read(root.join("workspace.jsonc")).ok()?;
     let config = bit_object_import::parse_jsonc(&raw).ok()?;
-    config["teambit.workspace/workspace"]["defaultScope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .map(str::to_owned)
+    crate::commands::aspect::workspace_default_scope(&config).ok()
 }
 
 fn existing_version_error(context: &Value, options: &Options) -> Option<io::Error> {

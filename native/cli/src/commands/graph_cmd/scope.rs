@@ -125,6 +125,7 @@ fn load_local_scope_components(
         serde_json::from_slice(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
     let rows = index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .ok_or_else(|| Failure::Declined("invalid index.json components".into()))?;
     if rows.len() > 128 {
         return Err(Failure::Declined("bare scope component count exceeds native cap".into()));

@@ -51,7 +51,7 @@ fn invalid_workspace_config(root: &std::path::Path) -> bool {
     let Ok(config) = bit_workspace_config::parse_jsonc(&bytes) else {
         return true;
     };
-    config["teambit.workspace/workspace"]["defaultScope"].as_str().is_none_or(str::is_empty)
+    super::aspect::workspace_default_scope(&config).is_err()
 }
 
 fn execute(

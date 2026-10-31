@@ -121,12 +121,12 @@ fn validate_test_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option
     let pat = effective_pattern(options)?;
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
     if !startup::service_supported(root, &ws_config).ok()?
-        || ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true
+        || super::build_cmd::is_bitmap_auto_sync(&ws_config)
     {
         return None;
     }
-    let default_scope = ws_config["teambit.workspace/workspace"]["defaultScope"].as_str();
-    let bitmap = Bitmap::load(root, default_scope).ok()?;
+    let default_scope = super::aspect::workspace_default_scope(&ws_config).ok();
+    let bitmap = Bitmap::load(root, default_scope.as_deref()).ok()?;
     match selection::resolve_pattern_entries(root, &bitmap, &pat, chalk) {
         Err(Failure::User(msg)) => Some(msg),
         _ => None,

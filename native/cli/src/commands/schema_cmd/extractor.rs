@@ -159,7 +159,7 @@ fn resolve_scope_pattern_schemas(scope_dir: &Path, pattern: &str) -> Option<Vec<
 
 fn scope_pattern_candidates(scope_dir: &Path) -> Option<Vec<(String, String)>> {
     let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let rows = index["components"].as_array()?;
+    let rows = index["components"].as_array().or_else(|| index.as_array())?;
     if rows.len() > 128 {
         return None;
     }
@@ -185,9 +185,6 @@ fn scope_pattern_candidates(scope_dir: &Path) -> Option<Vec<(String, String)>> {
 fn load_bitmap(root: &Path) -> Option<Bitmap> {
     let ws_bytes = fs::read(root.join("workspace.jsonc")).ok()?;
     let ws_val = bit_object_import::parse_jsonc(&ws_bytes).ok()?;
-    if ws_val["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
-        return None;
-    }
     let default_scope = workspace_default_scope(&ws_val).ok()?;
     Bitmap::load(root, Some(&default_scope)).ok()
 }

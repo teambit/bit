@@ -56,7 +56,10 @@ pub(super) fn dependent_error(root: &Path, identity: &str, head_only: bool) -> O
 /// Collect `(version_hash, "scope/name@version")` across all indexed components.
 fn load_all_version_refs(scope: &Path) -> io::Result<Vec<(String, String)>> {
     let index: Value = serde_json::from_slice(&fs::read(scope.join("index.json"))?)?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("reset index"))?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("reset index"))?;
     let mut refs = Vec::new();
     for row in rows {
         let hash = row["hash"].as_str().ok_or_else(|| invalid("reset model hash"))?;
@@ -149,7 +152,10 @@ impl DetachedBatch {
     pub(super) fn prepare(root: &Path) -> io::Result<Self> {
         let scope = scope_path(root);
         let index: Value = serde_json::from_slice(&fs::read(scope.join("index.json"))?)?;
-        let rows = index["components"].as_array().ok_or_else(|| invalid("detached index"))?;
+        let rows = index["components"]
+            .as_array()
+            .or_else(|| index.as_array())
+            .ok_or_else(|| invalid("detached index"))?;
         let mut items = Vec::new();
         for row in rows {
             if let Some(item) = prepare_item(&scope, row)? {

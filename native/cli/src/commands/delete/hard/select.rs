@@ -54,6 +54,7 @@ fn inventory(
             let index: Value = serde_json::from_slice(&fs::read(path.join("index.json"))?)?;
             Ok(index["components"]
                 .as_array()
+                .or_else(|| index.as_array())
                 .ok_or_else(|| invalid("remote component index"))?
                 .iter()
                 .filter_map(|row| {

@@ -126,14 +126,7 @@ fn build_pattern_options(pattern: String, json: bool, remote: bool) -> Option<Op
 fn workspace_default_scope(root: &Path) -> Option<String> {
     let bytes = fs::read(root.join("workspace.jsonc")).ok()?;
     let config = bit_workspace_config::parse_jsonc(&bytes).ok()?;
-    let ws = &config["teambit.workspace/workspace"];
-    if ws["bitmapAutoSync"] == true {
-        return None;
-    }
-    ws["defaultScope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .map(str::to_owned)
+    super::aspect::workspace_default_scope(&config).ok()
 }
 
 fn local_ids(root: &Path, default_scope: &str, pattern: &str) -> Result<Vec<String>, Failure> {
@@ -215,6 +208,7 @@ fn exists_in_scope_index(root: &Path, name: &str) -> bool {
     };
     index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .is_some_and(|components| {
             components
                 .iter()

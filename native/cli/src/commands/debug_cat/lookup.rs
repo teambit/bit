@@ -192,7 +192,8 @@ pub(in crate::commands) fn resolve_component_entry(
 ) -> Option<(Option<String>, String, String)> {
     let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     let active: Vec<&Value> = index["components"]
-        .as_array()?
+        .as_array()
+        .or_else(|| index.as_array())?
         .iter()
         .filter(|row| row["isSymlink"] != true)
         .collect();
@@ -364,12 +365,12 @@ pub(in crate::commands) fn diagnose_component_lookup_error(
         return None;
     }
     let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let comps = index["components"].as_array()?;
-    if bit_object_import::read_scope_object(scope_dir, &sha1_hex(bare_id))
+    let comps = index["components"].as_array().or_else(|| index.as_array())?;
+    let object_exists = bit_object_import::read_scope_object(scope_dir, &sha1_hex(bare_id))
         .ok()
         .flatten()
-        .is_some()
-    {
+        .is_some();
+    if object_exists {
         return None;
     }
     if let Some((scope, name)) = bare_id.split_once('/') {

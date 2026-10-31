@@ -110,8 +110,11 @@ fn run_in_workspace(
 fn validate_build_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option<String> {
     let pat = options.pattern.as_deref()?;
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
-    let default_scope = super::aspect::workspace_default_scope(&ws_config).ok()?;
-    let bitmap = Bitmap::load(root, Some(&default_scope)).ok()?;
+    if is_bitmap_auto_sync(&ws_config) {
+        return None;
+    }
+    let default_scope = super::aspect::workspace_default_scope(&ws_config).ok();
+    let bitmap = Bitmap::load(root, default_scope.as_deref()).ok()?;
     match selection::resolve_pattern_entries(root, &bitmap, pat, chalk) {
         Err(Failure::User(msg)) => Some(msg),
         _ => None,
@@ -128,12 +131,27 @@ pub(super) fn flag_error(capsules: &CapsuleFlags) -> Option<&'static str> {
     }
 }
 
+pub(in crate::commands) fn is_bitmap_auto_sync(ws_config: &serde_json::Value) -> bool {
+    ws_config
+        .as_object()
+        .and_then(|obj| {
+            obj.get("teambit.workspace/workspace")
+                .or_else(|| {
+                    obj.iter()
+                        .find_map(|(key, val)| {
+                            key.starts_with("teambit.workspace/workspace@").then_some(val)
+                        })
+                })
+        })
+        .is_some_and(|ws| ws["bitmapAutoSync"] == true)
+}
+
 pub(super) fn is_empty_build_workspace(root: &Path, options: &Options) -> io::Result<bool> {
     if options.list_tasks.is_some() || options.pattern.is_some() {
         return Ok(false);
     }
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if super::aspect::workspace_default_scope(&ws_config).is_err() {
+    if is_bitmap_auto_sync(&ws_config) {
         return Ok(false);
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;

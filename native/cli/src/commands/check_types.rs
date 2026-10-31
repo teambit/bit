@@ -90,7 +90,7 @@ fn emit_empty_check_types(
 
 pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if super::aspect::workspace_default_scope(&ws_config).is_err() {
+    if super::build_cmd::is_bitmap_auto_sync(&ws_config) {
         return Ok(false);
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;

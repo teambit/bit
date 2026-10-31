@@ -98,7 +98,7 @@ fn by_pattern(root: &ScopeRoot, pattern: &str, from: Option<&str>) -> Option<Vec
 
 fn index_candidates(scope: &std::path::Path) -> Option<Vec<(String, String)>> {
     let index: Value = serde_json::from_slice(&fs::read(scope.join("index.json")).ok()?).ok()?;
-    let rows = index["components"].as_array()?;
+    let rows = index["components"].as_array().or_else(|| index.as_array())?;
     if rows.len() > 128 {
         return None;
     }

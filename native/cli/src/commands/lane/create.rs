@@ -293,8 +293,5 @@ fn default_scope(root: &Path) -> io::Result<String> {
         return Ok(scope.to_owned());
     }
     let config: Value = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    Ok(config["teambit.workspace/workspace"]["defaultScope"]
-        .as_str()
-        .unwrap_or_default()
-        .to_owned())
+    Ok(crate::commands::aspect::workspace_default_scope(&config).unwrap_or_default())
 }

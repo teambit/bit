@@ -65,7 +65,8 @@ fn prepare(
 ) -> io::Result<Entries> {
     let mut prepared = rename::preparation::prepare_many(root, &selection.entries)?;
     let workspace = bit_object_import::parse_jsonc(&std::fs::read(root.join("workspace.jsonc"))?)?;
-    let tracking_scope = workspace["teambit.workspace/workspace"]["defaultScope"].clone();
+    let tracking_scope = crate::commands::aspect::workspace_default_scope(&workspace)
+        .map_or(serde_json::Value::Null, serde_json::Value::String);
     for (component, option) in prepared.iter_mut().zip(&selection.entries) {
         component.facts["trackingDefaultScope"] = tracking_scope.clone();
         rename::execution::hydrate(root, component, option, linker)?;

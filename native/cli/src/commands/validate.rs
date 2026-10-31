@@ -209,7 +209,7 @@ pub(super) fn classify_workspace(
     chalk: Chalk,
 ) -> io::Result<Option<FastOutcome>> {
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+    if super::build_cmd::is_bitmap_auto_sync(&ws_config) {
         return Ok(None);
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
@@ -218,8 +218,8 @@ pub(super) fn classify_workspace(
         return Ok(Some(FastOutcome::Empty));
     }
     if let Some(pat) = &options.pattern {
-        let default_scope = ws_config["teambit.workspace/workspace"]["defaultScope"].as_str();
-        let loaded_bitmap = Bitmap::load(root, default_scope)?;
+        let default_scope = super::aspect::workspace_default_scope(&ws_config).ok();
+        let loaded_bitmap = Bitmap::load(root, default_scope.as_deref())?;
         if let Err(Failure::User(msg)) =
             selection::resolve_pattern_entries(root, &loaded_bitmap, pat, chalk)
         {

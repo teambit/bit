@@ -84,11 +84,13 @@ pub(super) fn validate_compile_selectors(root: &Path, options: &Options) -> Opti
         return None;
     }
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
-    if !startup::service_supported(root, &ws_config).ok()? {
+    if !startup::service_supported(root, &ws_config).ok()?
+        || super::build_cmd::is_bitmap_auto_sync(&ws_config)
+    {
         return None;
     }
-    let default_scope = super::aspect::workspace_default_scope(&ws_config).ok()?;
-    let bitmap = Bitmap::load(root, Some(&default_scope)).ok()?;
+    let default_scope = super::aspect::workspace_default_scope(&ws_config).ok();
+    let bitmap = Bitmap::load(root, default_scope.as_deref()).ok()?;
     let index_val = fs::read(workspace::scope_path(root).join("index.json"))
         .ok()
         .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())

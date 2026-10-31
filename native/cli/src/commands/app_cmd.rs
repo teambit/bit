@@ -214,7 +214,7 @@ pub(super) fn is_empty_app_workspace(root: &Path) -> io::Result<bool> {
         return Ok(apps.is_empty());
     }
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+    if super::build_cmd::is_bitmap_auto_sync(&ws_config) {
         return Ok(false);
     }
     if has_custom_root_aspects(&ws_config) {
@@ -235,9 +235,7 @@ fn has_custom_root_aspects(ws_config: &serde_json::Value) -> bool {
 
 pub(super) fn discover_workspace_apps(root: &Path) -> Option<Vec<(String, String)>> {
     let raw_ws = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
-    if raw_ws["teambit.workspace/workspace"]["bitmapAutoSync"] == true
-        || has_custom_root_aspects(&raw_ws)
-    {
+    if super::build_cmd::is_bitmap_auto_sync(&raw_ws) || has_custom_root_aspects(&raw_ws) {
         return None;
     }
     let raw_bitmap = parse_jsonc(&fs::read(root.join(".bitmap")).ok()?).ok()?;

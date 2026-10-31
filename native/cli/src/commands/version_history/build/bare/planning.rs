@@ -89,7 +89,7 @@ fn pattern_target(root: &Path, pattern: &str) -> Option<Target> {
 
 fn pattern_candidates(root: &Path) -> Option<(Vec<Candidate>, Proofs)> {
     let index: Value = serde_json::from_slice(&fs::read(root.join("index.json")).ok()?).ok()?;
-    let rows = index["components"].as_array()?;
+    let rows = index["components"].as_array().or_else(|| index.as_array())?;
     if rows.len() > 128 {
         return None;
     }

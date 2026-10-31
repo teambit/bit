@@ -145,7 +145,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 
 pub(super) fn fast_workspace_message(root: &Path, chalk: Chalk) -> io::Result<Option<String>> {
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+    if super::build_cmd::is_bitmap_auto_sync(&ws_config) {
         return Ok(None);
     }
     if read_allowed_envs(&ws_config).is_empty() {
