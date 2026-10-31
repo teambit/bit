@@ -76,10 +76,8 @@ pub(in crate::workspace::engine) fn own(root: &Path) -> io::Result<Vec<String>> 
     }
 }
 fn read(path: &Path, missing: bool) -> io::Result<Vec<String>> {
-    let input = match fs::File::open(path) {
-        Ok(input) => input,
-        Err(error) if missing && error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(error) => return Err(error),
+    let Some(input) = open_ignore_file(path, missing)? else {
+        return Ok(Vec::new());
     };
     let metadata = input.metadata()?;
     if !metadata.is_file() || metadata.len() > 65536 {
@@ -87,10 +85,23 @@ fn read(path: &Path, missing: bool) -> io::Result<Vec<String>> {
     }
     let mut bytes = Vec::new();
     input.take(65537).read_to_end(&mut bytes)?;
-    if bytes.len() > 65536 {
+    if bytes.len() > 65536 || bytes.len() as u64 != metadata.len() || bytes.contains(&0) {
         return Err(invalid("inventory ignore file limit"));
     }
     Ok(parse(&String::from_utf8_lossy(&bytes)))
+}
+fn open_ignore_file(path: &Path, missing: bool) -> io::Result<Option<fs::File>> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.is_file() => {}
+        Err(error) if missing && error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Ok(_) => return Err(invalid("inventory ignore file limit")),
+        Err(error) => return Err(error),
+    }
+    match fs::File::open(path) {
+        Ok(input) => Ok(Some(input)),
+        Err(error) if missing && error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error),
+    }
 }
 fn parse(text: &str) -> Vec<String> {
     text.strip_prefix('\u{feff}')

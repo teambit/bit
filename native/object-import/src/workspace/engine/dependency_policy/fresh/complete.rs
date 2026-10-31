@@ -141,7 +141,7 @@ fn select(version: Option<&str>, grammar: &Value) -> io::Result<Option<String>> 
         return Ok(None);
     };
     if let Some(hash) = version.strip_prefix("0.0.0-").filter(|hash| snap(hash)) {
-        return Ok(Some(hash.to_owned()));
+        return Ok(Some(hash.to_ascii_lowercase()));
     }
     let parsed = grammar.get(version).ok_or_else(|| invalid("fresh component version grammar"))?;
     if parsed["valid"] == true {
@@ -155,7 +155,7 @@ fn select(version: Option<&str>, grammar: &Value) -> io::Result<Option<String>> 
     {
         return Ok(Some(coerced.to_owned()));
     }
-    Ok(snap(version).then(|| version.to_owned()))
+    Ok(snap(version).then(|| version.to_ascii_lowercase()))
 }
 fn snap(version: &str) -> bool {
     version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit())

@@ -15,8 +15,9 @@ impl Projection<'_> {
         origin: &str,
     ) -> io::Result<()> {
         let id = package.component.as_ref().ok_or_else(|| invalid("fresh component metadata"))?;
+        let pkg_name = package.name.trim();
         if identity(id)? == unversioned(&self.request.identity) {
-            self.metadata.issues.self_reference.insert(origin.to_owned(), json!(package.name));
+            self.metadata.issues.self_reference.insert(origin.to_owned(), json!(pkg_name));
             return Ok(());
         }
         if let Some(path) = self.reader.check_main(package, edge)? {
@@ -31,7 +32,7 @@ impl Projection<'_> {
         let already = |entries: &[Value]| {
             entries
                 .iter()
-                .any(|dependency| matches_component_or_package(dependency, &base, &package.name))
+                .any(|dependency| matches_component_or_package(dependency, &base, pkg_name))
         };
         if already(&self.dependencies[0]) || (field == 1 && already(&self.dependencies[1])) {
             return Ok(());
@@ -65,7 +66,7 @@ impl Projection<'_> {
             dependent,
         });
         let id = super::super::component_id::serialize(id, package.manifest["exported"] == false)?;
-        let mut dependency = json!({"id":id,"relativePaths":[],"packageName":package.name});
+        let mut dependency = json!({"id":id,"relativePaths":[],"packageName":package.name.trim()});
         if let Some(range) = peer {
             dependency["versionRange"] = range.clone();
             dependency["peerVersionRange"] = range;

@@ -31,6 +31,14 @@ pub(super) fn read(cache: &Path, key: &str) -> io::Result<Option<Value>> {
     let Some(data) = content(cache, integrity)? else { return Ok(None) };
     let timestamp =
         entry["metadata"].get("timestamp").ok_or_else(|| invalid("dependency cache timestamp"))?;
+    if !timestamp
+        .as_f64()
+        .is_some_and(|ts| {
+            ts.is_finite() && ts >= 0.0 && ts.fract() == 0.0 && ts <= 9_007_199_254_740_991.0
+        })
+    {
+        return Err(invalid("dependency cache timestamp"));
+    }
     Ok(Some(json!({"timestamp":timestamp,"data":data})))
 }
 fn content(cache: &Path, integrity: &str) -> io::Result<Option<String>> {

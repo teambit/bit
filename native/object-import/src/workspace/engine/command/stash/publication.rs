@@ -57,7 +57,8 @@ fn batch(
     for (component, allocation) in retained.components.iter().zip(&input.versions) {
         let hash =
             crate::validate::hexadecimal(&crate::merge_history::hash(allocation.hash.trim())?);
-        if allocation.identity.trim() != component.identity || !hashes.insert(hash.clone()) {
+        let identity = component.identity.trim();
+        if allocation.identity.trim() != identity || !hashes.insert(hash.clone()) {
             return Err(invalid("stash allocation identity"));
         }
         let version =
@@ -69,7 +70,7 @@ fn batch(
         rows.push(
             json!({"id":id,"hash":hash,"bitmapEntry":component.bitmap_entry,"isNew":component.new}),
         );
-        versions.push(json!({"identity":component.identity,"hash":hash,"version":version}));
+        versions.push(json!({"identity":identity,"hash":hash,"version":version}));
     }
     Ok((objects, rows, versions))
 }
@@ -97,7 +98,13 @@ pub(super) fn prepare(
     let metadata = metadata(retained, input.message.as_deref(), &rows)?;
     let directory = scratch::Directory::create()?;
     let mut seen = HashSet::new();
-    objects.retain(|object| object["type"] != "Source" || seen.insert(object["hash"].clone()));
+    objects.retain(|object| {
+        object["type"] != "Source"
+            || object["hash"]
+                .as_str()
+                .map(|hash| hash.trim().to_ascii_lowercase())
+                .is_none_or(|hash| seen.insert(hash))
+    });
     let objects = snapshot::prepare_objects(&directory.0, objects)?;
     let result =
         json!({"token":retained.token,"versions":versions,"stashFile":metadata.filename()});

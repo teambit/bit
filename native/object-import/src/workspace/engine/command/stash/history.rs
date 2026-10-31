@@ -95,6 +95,8 @@ fn accept(retained: &mut Retained, plans: &[Value]) -> io::Result<()> {
     let inflated = crate::read_budget::Budget::new(8 * 1024 * 1024);
     for plan in plans {
         let (reference, expected) = status_history::serialized_plan(plan)?;
+        let reference =
+            crate::validate::hexadecimal(&crate::merge_history::hash(reference.trim())?);
         let path = crate::scope_path(&retained.root)
             .join("objects")
             .join(&reference[..2])

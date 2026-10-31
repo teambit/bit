@@ -4,28 +4,38 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
-    for name in request.environment.policy.keys() {
-        if version(&request.environment.policy, name).is_none() {
+    remove_existing(request, output);
+    for (name, value) in &request.environment.policy {
+        let trimmed = name.trim();
+        if trimmed.is_empty() {
             continue;
         }
-        for packages in &mut output.state.packages {
-            packages.shift_remove(name);
-        }
-    }
-    for (name, value) in &request.environment.policy {
         let value = if let Some(placeholder) = value
             .as_str()
             .map(str::trim)
             .filter(|value| crate::plus_version::is_plus(value))
         {
-            let resolved = resolve(request, name)?;
+            let resolved = resolve(request, trimmed)?;
             Value::String(crate::plus_version::resolve(placeholder, resolved.as_str(), "*"))
         } else {
             value.clone()
         };
-        output.state.packages[0].insert(name.clone(), value);
+        output.state.packages[0].insert(trimmed.to_owned(), value);
     }
     Ok(())
+}
+
+fn remove_existing(request: &Request, output: &mut Output) {
+    for name in request.environment.policy.keys() {
+        let trimmed = name.trim();
+        if trimmed.is_empty() || version(&request.environment.policy, trimmed).is_none() {
+            continue;
+        }
+        for packages in &mut output.state.packages {
+            packages.shift_remove(name);
+            packages.shift_remove(trimmed);
+        }
+    }
 }
 fn resolve(request: &Request, name: &str) -> io::Result<Value> {
     let name = name.trim();

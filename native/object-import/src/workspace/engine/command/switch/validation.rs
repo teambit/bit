@@ -107,6 +107,8 @@ fn reject_removed_lane_targets(
         if let Some(hash) = row["head"]
             .as_str()
             .or_else(|| row["version"].as_str())
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
             && is_version_removed(scope, imported, hash)?
         {
             return Err(invalid("switch target version removed"));
@@ -120,6 +122,7 @@ fn is_version_removed(
     imported: &command_import::PreparedImport,
     hash: &str,
 ) -> io::Result<bool> {
+    let hash = hash.trim();
     let value = if let Some(value) = imported.overlay.read(hash, "Version")? {
         Some(value.clone())
     } else {
@@ -156,5 +159,9 @@ fn model_staged(model: &Value, staged: &std::collections::HashSet<&str>) -> bool
         .into_iter()
         .chain(versions)
         .map(str::trim)
-        .any(|hash| staged.contains(hash))
+        .any(|hash| {
+            staged
+                .iter()
+                .any(|staged_hash| staged_hash.eq_ignore_ascii_case(hash))
+        })
 }

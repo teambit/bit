@@ -160,11 +160,7 @@ pub(super) fn finish(
                     .to_owned()
             }
         })
-        .filter(|path| {
-            !input.ignored_root
-                .iter()
-                .any(|ignored| ignored.trim().trim_start_matches("./") == path)
-        })
+        .filter(|path| !is_ignored_root(&input.ignored_root, path))
         .collect::<Vec<_>>();
     if !plan.workspace_root {
         paths = own.filter(&paths, pool);
@@ -177,6 +173,18 @@ pub(super) fn finish(
         })
         .collect();
     Ok((files.len(), json!({"files":files})))
+}
+fn is_ignored_root(ignored_root: &[String], path: &str) -> bool {
+    ignored_root
+        .iter()
+        .any(|ignored| {
+            ignored
+                .trim()
+                .replace('\\', "/")
+                .trim_start_matches("./")
+                .trim_start_matches('/')
+                == path
+        })
 }
 fn keep_bitmap(plan: &Plan, paths: &mut Vec<String>) {
     if plan.workspace_root

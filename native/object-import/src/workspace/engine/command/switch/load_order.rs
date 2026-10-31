@@ -60,7 +60,9 @@ pub(super) fn order_targets(context: &mut Value, order: &[String]) -> io::Result
         .collect::<io::Result<HashMap<_, _>>>()?;
     let ordered = order
         .iter()
-        .map(|id| by_id.remove(id).ok_or_else(|| invalid("switch ordered target identities")))
+        .map(|id| {
+            by_id.remove(id.trim()).ok_or_else(|| invalid("switch ordered target identities"))
+        })
         .collect::<io::Result<Vec<_>>>()?;
     if !by_id.is_empty() {
         return Err(invalid("switch ordered target identities"));

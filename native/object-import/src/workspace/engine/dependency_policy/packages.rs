@@ -36,15 +36,19 @@ fn policy(policy: &Policy, plan: &mut Plan) {
             .cloned()
             .collect();
         for name in names {
-            let trimmed = name.trim();
-            if let Some(value) = version(&policy.peer_dependencies, trimmed) {
-                plan.packages[field].shift_remove(&name);
-                plan.packages[2].insert(trimmed.to_owned(), Value::String(value));
-            } else if let Some(value) = version(&policy.dependencies, trimmed) {
-                plan.packages[2].shift_remove(trimmed);
-                plan.packages[field].insert(name, Value::String(value));
-            }
+            apply_package_policy(policy, plan, field, &name);
         }
+    }
+}
+fn apply_package_policy(policy: &Policy, plan: &mut Plan, field: usize, name: &str) {
+    let trimmed = name.trim();
+    if let Some(value) = version(&policy.peer_dependencies, trimmed) {
+        plan.packages[field].shift_remove(name);
+        plan.packages[2].insert(trimmed.to_owned(), Value::String(value));
+    } else if let Some(value) = version(&policy.dependencies, trimmed) {
+        plan.packages[2].shift_remove(trimmed);
+        plan.packages[field].shift_remove(name);
+        plan.packages[field].insert(trimmed.to_owned(), Value::String(value));
     }
 }
 fn components(request: &Request, plan: &mut Plan) {

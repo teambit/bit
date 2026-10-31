@@ -119,7 +119,7 @@ pub(super) fn raw(file: &Path, maximum: usize) -> io::Result<Vec<u8>> {
     input
         .take((maximum as u64).saturating_add(1))
         .read_to_end(&mut bytes)?;
-    if bytes.len() > maximum {
+    if bytes.len() > maximum || bytes.len() as u64 != metadata.len() {
         return Err(invalid("workspace raw bytes limit"));
     }
     Ok(bytes)

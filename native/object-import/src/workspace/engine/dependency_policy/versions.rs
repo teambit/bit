@@ -71,7 +71,10 @@ fn updated_range(
             });
         }
     }
-    if !matches!(version, "latest" | "head")
+    let version = version.trim();
+    if !version.is_empty()
+        && !version.eq_ignore_ascii_case("latest")
+        && !version.eq_ignore_ascii_case("head")
         && !wire::snap(version)
         && let Some(prefix @ ("^" | "~")) = request.policy.prefix.as_deref().map(str::trim)
     {

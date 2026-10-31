@@ -7,7 +7,9 @@ pub(in super::super) fn append_skipped(
     targets: &[Value],
     result: &mut Value,
 ) -> io::Result<()> {
-    if context["lane"]["switchId"] == "main" || context["lane"]["switchId"]["name"] == "main" {
+    if context["lane"]["switchId"].as_str().map(str::trim) == Some("main")
+        || context["lane"]["switchId"]["name"].as_str().map(str::trim) == Some("main")
+    {
         return Ok(());
     }
     let lane_only = context["lane"]["switchLaneOnly"]

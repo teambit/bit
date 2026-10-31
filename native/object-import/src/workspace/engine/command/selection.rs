@@ -60,13 +60,14 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
         .map(str::trim)
         .filter(|to| !to.is_empty())
         .unwrap_or("head");
+    let lower = to.to_ascii_lowercase();
     let identity = selection.target["identity"]
         .as_str()
         .map(str::trim)
         .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("command checkout identity"))?;
     let version = selection.target["version"].as_str().map_or("", str::trim);
-    let ancestor = to
+    let ancestor = lower
         .strip_prefix("head~")
         .map(str::parse::<usize>)
         .transpose()
@@ -75,13 +76,13 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
     let historical = super::lane_history::phase(options).is_some();
     let exact = !historical
         && !load_stash
-        && !matches!(to, "head" | "latest" | "reset" | "main")
+        && !matches!(lower.as_str(), "head" | "latest" | "reset" | "main")
         && ancestor.is_none();
     Ok(json!({
         "component":{"id":if version.is_empty(){identity.to_owned()}else{format!("{identity}@{version}")},
             "idWithoutVersion":identity,"componentVersion":version,"hasBitmap":true,"currentExists":true,"isRemoved":false},
         "model":selection.model.map(|model|json!({"hasMainHead":model["head"].as_str().is_some_and(|head| !head.trim().is_empty())})),
-        "options":{"reset":to=="reset","head":to=="head" && !load_stash && !historical,"main":to=="main","latest":to=="latest",
+        "options":{"reset":lower=="reset","head":lower=="head" && !load_stash && !historical,"main":lower=="main","latest":lower=="latest",
             "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":options.revert,"loadStash":load_stash,
             "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":(historical || load_stash || selection.target.get("switchVersion").is_some()).then(||json!({}))},
     }))

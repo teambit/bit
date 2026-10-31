@@ -102,7 +102,14 @@ impl Directories {
             return Ok(());
         }
         let kind = entry.file_type()?;
-        if !(kind.is_dir() || kind.is_symlink() && fs::metadata(entry.path())?.is_dir()) {
+        let is_dir = kind.is_dir()
+            || kind.is_symlink()
+                && match fs::metadata(entry.path()) {
+                    Ok(metadata) => metadata.is_dir(),
+                    Err(error) if error.kind() == io::ErrorKind::NotFound => false,
+                    Err(error) => return Err(error),
+                };
+        if !is_dir {
             return Ok(());
         }
         let path = entry.path();

@@ -35,9 +35,11 @@ pub(super) fn serialize(raw: &Value, unscoped: bool) -> io::Result<Value> {
         id.insert("scope".into(), Value::String(scope.into()));
     }
     id.insert("name".into(), Value::String(name.into()));
-    if let Some(version) =
-        version.filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
-    {
+    if let Some(version) = version.filter(|version| {
+        !version.is_empty()
+            && !version.eq_ignore_ascii_case("latest")
+            && !version.eq_ignore_ascii_case("head")
+    }) {
         id.insert("version".into(), Value::String(version.into()));
     }
     if unscoped {

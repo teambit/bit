@@ -27,18 +27,7 @@ pub(super) fn freshness(
     request: &Freshness,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    path(&request.root)?;
-    if request.files.len() > 65536
-        || !request.timestamp.is_finite()
-        || request.timestamp.fract() != 0.0
-        || request.timestamp.abs() > 9_007_199_254_740_991.0
-    {
-        return Err(invalid("dependency cache freshness limits"));
-    }
-    for file in &request.files {
-        path(file)?;
-    }
-    let stale = freshness::stale(&request.root, &request.files, request.timestamp, pool)?;
+    let stale = cache_stale(&request.root, &request.files, request.timestamp, pool)?;
     Ok((1, json!({"stale":stale})))
 }
 
@@ -59,5 +48,16 @@ pub fn cache_stale(
     timestamp: f64,
     pool: &rayon::ThreadPool,
 ) -> io::Result<bool> {
+    path(root)?;
+    if files.len() > 65536
+        || !timestamp.is_finite()
+        || timestamp.fract() != 0.0
+        || timestamp.abs() > 9_007_199_254_740_991.0
+    {
+        return Err(invalid("dependency cache freshness limits"));
+    }
+    for file in files {
+        path(file)?;
+    }
     freshness::stale(root, files, timestamp, pool)
 }

@@ -111,10 +111,7 @@ impl Reader {
         {
             return Ok(None);
         }
-        if !matches!(
-            Path::new(&resolved).extension().and_then(|ext| ext.to_str()),
-            Some("ts" | "tsx" | "js" | "jsx"),
-        ) {
+        if !source_extension(&resolved) {
             return Ok(None);
         }
         let dist = package.directory.join("dist");
@@ -133,6 +130,12 @@ impl Reader {
         }
         Ok(None)
     }
+}
+fn source_extension(resolved: &str) -> bool {
+    Path::new(resolved)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| matches!(ext.to_ascii_lowercase().as_str(), "ts" | "tsx" | "js" | "jsx"))
 }
 fn directory(resolved: &str) -> io::Result<PathBuf> {
     let resolved = resolved.replace(std::path::MAIN_SEPARATOR, "/");
@@ -170,7 +173,9 @@ fn concrete(package: &Value, component: Option<&Value>) -> io::Result<Option<Str
         .as_ref()
         .is_some_and(|version| !version.is_empty())
         && let Some(id_version) = id_version.filter(|version| {
-            !version.is_empty() && !matches!(version.as_str(), "latest" | "head")
+            !version.is_empty()
+                && !version.eq_ignore_ascii_case("latest")
+                && !version.eq_ignore_ascii_case("head")
         })
     {
         version = Some(id_version);

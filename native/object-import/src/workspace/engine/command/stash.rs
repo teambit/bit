@@ -97,7 +97,11 @@ pub(in crate::workspace::engine) fn prepare(
     state: &mut super::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    if state.record.is_some() || state.recovery.is_some() || state.resolve.is_some() {
+    if state.record.is_some()
+        || state.recovery.is_some()
+        || state.resolve.is_some()
+        || state.stash.is_some()
+    {
         return Err(invalid("stash owner already active"));
     }
     let (_, context) = status_context::read(

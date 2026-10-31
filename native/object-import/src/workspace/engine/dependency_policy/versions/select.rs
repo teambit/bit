@@ -32,6 +32,7 @@ pub(super) fn select(
         && !(index.env.contains(name) && bitmap.is_some())
         && let Some(spec) = request.policy.manual[field]
             .get(name)
+            .map(|value| value.trim())
             .filter(|value| !value.is_empty())
         && let Some((version, range)) = valid(request, spec)?
     {
@@ -45,26 +46,37 @@ pub(super) fn select(
     {
         return Ok(Some((version, range, false)));
     }
-    Ok(index.model
+    Ok(default_version(index, identity, base))
+}
+fn default_version(index: &super::index::Index<'_>, identity: &str, base: &str) -> Selected {
+    let ver = version(identity);
+    index.model
         .get(base)
         .copied()
-        .or_else(|| (!matches!(version(identity), "latest" | "head")).then(|| version(identity)))
-        .map(|value| (value.to_owned(), None, false)))
+        .or_else(|| {
+            (!ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head")).then_some(
+                ver,
+            )
+        })
+        .map(|value| (value.to_owned(), None, false))
 }
 fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<Choice> {
-    if let version = version(identity)
-        && !matches!(version, "latest" | "head")
+    let ver = version(identity);
+    if !ver.eq_ignore_ascii_case("latest")
+        && !ver.eq_ignore_ascii_case("head")
         && let Some(spec) = request.policy.workspace
             .get(name)
+            .map(|spec| spec.trim())
             .filter(|spec| !spec.is_empty())
     {
         let range =
-            (request.policy.ranges() && grammar(request, spec)?.range).then(|| spec.clone());
-        return Ok(Some((version.to_owned(), range)));
+            (request.policy.ranges() && grammar(request, spec)?.range).then(|| spec.to_owned());
+        return Ok(Some((ver.to_owned(), range)));
     }
     if let Some(spec) = request.policy.merge
         .iter()
         .filter_map(|map| map.get(name))
+        .map(|spec| spec.trim())
         .rfind(|spec| !spec.is_empty())
         && let Some((version, _)) = valid(request, spec)?
     {
@@ -74,7 +86,7 @@ fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<C
         .iter()
         .any(|map| {
             map.get(name)
-                .is_some_and(|value| !value.is_empty())
+                .is_some_and(|value| !value.trim().is_empty())
         })
     {
         return Ok(Some((version(identity).to_owned(), None)));
@@ -86,7 +98,7 @@ fn valid(request: &Request, spec: &str) -> io::Result<Choice> {
     if let Some(hash) = spec.strip_prefix("0.0.0-")
         && snap(hash)
     {
-        return Ok(Some((hash.to_owned(), None)));
+        return Ok(Some((hash.to_ascii_lowercase(), None)));
     }
     let parsed = grammar(request, spec)?;
     if parsed.valid {
@@ -100,8 +112,11 @@ fn valid(request: &Request, spec: &str) -> io::Result<Choice> {
     {
         return Ok(Some((version.to_owned(), Some(spec.to_owned()))));
     }
-    Ok(snap(spec).then(|| (spec.to_owned(), None)))
+    Ok(snap(spec).then(|| (spec.to_ascii_lowercase(), None)))
 }
 fn grammar<'a>(request: &'a Request, spec: &str) -> io::Result<&'a super::wire::Grammar> {
-    request.grammar.get(spec).ok_or_else(|| invalid("dependency version grammar missing"))
+    request.grammar
+        .get(spec)
+        .or_else(|| request.grammar.get(spec.trim()))
+        .ok_or_else(|| invalid("dependency version grammar missing"))
 }

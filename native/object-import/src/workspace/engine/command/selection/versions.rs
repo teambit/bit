@@ -16,7 +16,8 @@ pub(super) fn resolve(
         .map(str::trim)
         .filter(|to| !to.is_empty())
         .ok_or_else(|| invalid("command checkout target"))?;
-    if to == "reset" {
+    let lower = to.to_ascii_lowercase();
+    if lower == "reset" {
         return selection.target["version"]
             .as_str()
             .map(str::trim)
@@ -24,23 +25,25 @@ pub(super) fn resolve(
             .map(str::to_owned)
             .ok_or_else(|| invalid("command reset version"));
     }
-    if to == "main" {
+    if lower == "main" {
         return head(model).map(str::to_owned);
     }
-    if matches!(to, "head" | "latest")
+    if matches!(lower.as_str(), "head" | "latest")
         && let Some(head) = selection.lane_head
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
     {
         return Ok(head.to_owned());
     }
-    if let Some(count) = to.strip_prefix("head~") {
+    if let Some(count) = lower.strip_prefix("head~") {
         return ancestor(selection, count.parse().map_err(io::Error::other)?, repository);
     }
-    if to == "latest"
+    if lower == "latest"
         && let Some(tag) = latest(model, selection.semver)?
     {
         return Ok(tag);
     }
-    if matches!(to, "head" | "latest") {
+    if matches!(lower.as_str(), "head" | "latest") {
         return recent(selection, repository);
     }
     explicit(selection, to, repository)
@@ -81,10 +84,13 @@ pub(in crate::workspace::engine::command) fn reference(
     model: &Value,
     version: &str,
 ) -> io::Result<String> {
-    if matches!(version, "" | "latest" | "head") {
+    let version = version.trim();
+    if version.is_empty()
+        || version.eq_ignore_ascii_case("latest")
+        || version.eq_ignore_ascii_case("head")
+    {
         let reference = head(model)?;
-        crate::merge_history::hash(reference)?;
-        return Ok(reference.to_owned());
+        return Ok(crate::validate::hexadecimal(&crate::merge_history::hash(reference)?));
     }
     for field in ["orphanedVersions", "versions"] {
         if let Some(reference) = model[field].get(version) {
@@ -92,12 +98,10 @@ pub(in crate::workspace::engine::command) fn reference(
                 .as_str()
                 .map(str::trim)
                 .ok_or_else(|| invalid("command tag reference"))?;
-            crate::merge_history::hash(reference)?;
-            return Ok(reference.to_owned());
+            return Ok(crate::validate::hexadecimal(&crate::merge_history::hash(reference)?));
         }
     }
-    crate::merge_history::hash(version)?;
-    Ok(version.to_owned())
+    Ok(crate::validate::hexadecimal(&crate::merge_history::hash(version)?))
 }
 
 fn head(model: &Value) -> io::Result<&str> {
@@ -115,9 +119,14 @@ pub(in crate::workspace::engine::command) fn label(model: &Value, hash: &str) ->
             && let Some((tag, _)) = tags
                 .iter()
                 .rev()
-                .find(|(_, value)| value.as_str() == Some(hash))
+                .find(|(_, value)| {
+                    value
+                        .as_str()
+                        .map(str::trim)
+                        .is_some_and(|val| val.eq_ignore_ascii_case(hash))
+                })
         {
-            return tag.clone();
+            return tag.trim().to_owned();
         }
     }
     hash.to_owned()
@@ -148,14 +157,20 @@ fn latest(model: &Value, semver: &Value) -> io::Result<Option<String>> {
 
 fn recent(selection: &Selection<'_>, repository: &mut Repository) -> io::Result<String> {
     let model = selection.model.ok_or_else(|| invalid("command model missing"))?;
-    let local = model["head"].as_str();
-    let Some(remote) = selection.remote_head else {
+    let local = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty());
+    let Some(remote) = selection.remote_head
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
         return Ok(label(model, head(model)?));
     };
     let Some(local) = local else {
         return Ok(remote.to_owned());
     };
-    if local == remote {
+    if local.eq_ignore_ascii_case(remote) {
         return Ok(label(model, local));
     }
     let rows = records(&[local, remote], repository, true)?;
@@ -175,6 +190,7 @@ pub(super) fn has(
     repository: &mut Repository,
     lane_head: Option<&str>,
 ) -> io::Result<bool> {
+    let version = version.trim();
     if model["versions"].get(version).is_some() || model["orphanedVersions"].get(version).is_some()
     {
         return Ok(true);
@@ -182,9 +198,19 @@ pub(super) fn has(
     if crate::merge_history::hash(version).is_err() && !short(version) {
         return Ok(false);
     }
-    let Some(head) = lane_head.or_else(|| model["head"].as_str()) else {
+    let Some(head) = lane_head
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .or_else(|| {
+            model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+        })
+    else {
         return Ok(false);
     };
+    let lower_version = version.to_ascii_lowercase();
     let rows = records(&[head], repository, false)?;
     Ok(rows
         .as_array()
@@ -193,7 +219,7 @@ pub(super) fn has(
                 .any(|row| {
                     row["hash"]
                         .as_str()
-                        .is_some_and(|hash| hash.starts_with(version))
+                        .is_some_and(|hash| hash.to_ascii_lowercase().starts_with(&lower_version))
                 })
         }))
 }
@@ -207,13 +233,19 @@ fn ancestor(
     if count == 0 || count > 4096 {
         return Err(invalid("command checkout ancestor count"));
     }
-    let mut hash = selection.lane_head.map_or_else(|| head(model), Ok)?.to_owned();
+    let mut hash = selection.lane_head
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .map_or_else(|| head(model), Ok)?
+        .to_owned();
     for _ in 0..count {
         let version = repository.read(&hash, "Version")?;
         parents(&version)?
             .first()
             .ok_or_else(|| invalid("command checkout ancestor missing"))?
             .as_str()
+            .map(str::trim)
+            .filter(|parent| !parent.is_empty())
             .ok_or_else(|| invalid("command checkout parent"))?
             .clone_into(&mut hash);
     }
@@ -228,12 +260,13 @@ fn parents(version: &Value) -> io::Result<&Vec<Value>> {
 fn records(heads: &[&str], repository: &mut Repository, full: bool) -> io::Result<Value> {
     let mut pending = heads
         .iter()
-        .map(|hash| (*hash).to_owned())
+        .map(|hash| hash.trim().to_ascii_lowercase())
         .collect::<Vec<_>>();
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
     while let Some(hash) = pending.pop() {
-        if !seen.insert(hash.clone()) {
+        let hash = hash.trim().to_ascii_lowercase();
+        if hash.is_empty() || !seen.insert(hash.clone()) {
             continue;
         }
         if seen.len() > 4096 {
@@ -254,6 +287,8 @@ fn record(hash: &str, version: &Value, full: bool, pending: &mut Vec<String>) ->
         pending.push(
             parent
                 .as_str()
+                .map(str::trim)
+                .filter(|parent| !parent.is_empty())
                 .ok_or_else(|| invalid("command checkout parent hash"))?
                 .to_owned(),
         );

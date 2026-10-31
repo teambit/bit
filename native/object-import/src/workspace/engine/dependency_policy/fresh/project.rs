@@ -240,7 +240,11 @@ impl Projection<'_> {
         };
         let mut missing = Vec::new();
         for name in names {
-            let name = name.as_str().ok_or_else(|| invalid("fresh missing package name"))?;
+            let name = name
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .ok_or_else(|| invalid("fresh missing package name"))?;
             if let Some(version) = self.request.detection.model_packages[0]
                 .get(name)
                 .or_else(|| self.request.detection.model_packages[1].get(name))
@@ -266,24 +270,27 @@ impl Projection<'_> {
         mut packages: Map<String, Value>,
     ) -> io::Result<()> {
         for (name, version) in &mut packages {
-            if !self.request.detection.workspace_policy[0].contains_key(name)
+            let trimmed = name.trim();
+            if !self.request.detection.workspace_policy[0].contains_key(trimmed)
                 && let Some(model) = self.request.detection.model_packages[1]
-                    .get(name)
-                    .or_else(|| self.request.detection.model_packages[0].get(name))
+                    .get(trimmed)
+                    .or_else(|| self.request.detection.model_packages[0].get(trimmed))
             {
                 *version = model.clone();
             }
-            if matches!(
-                Path::new(origin).extension().and_then(|value| value.to_str()),
-                Some("ts" | "tsx"),
-            ) {
-                self.types(name)?;
+            if Path::new(origin)
+                .extension()
+                .and_then(|value| value.to_str())
+                .is_some_and(|ext| matches!(ext.to_ascii_lowercase().as_str(), "ts" | "tsx"))
+            {
+                self.types(trimmed)?;
             }
         }
         self.packages[field].extend(packages);
         Ok(())
     }
     fn types(&mut self, name: &str) -> io::Result<()> {
+        let name = name.trim();
         let escaped = match name
             .strip_prefix('@')
             .and_then(|rest| rest.split_once('/'))
@@ -293,7 +300,7 @@ impl Projection<'_> {
                     .bytes()
                     .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-')) =>
             {
-                format!("{scope}__{package}")
+                format!("{scope}__{}", package.trim())
             }
             _ => name.to_owned(),
         };
@@ -303,12 +310,18 @@ impl Projection<'_> {
             .chain(&self.request.detection.merge_policy)
             .filter_map(|field| field.get(&typed))
             .chain(self.request.detection.model_packages[1].get(&typed))
-            .find(|value| **value != "" && !value.is_null());
-        if let Some(version) = version.filter(|value| **value != "-") {
-            if !version.is_string() {
-                return Err(invalid("fresh type package version"));
-            }
-            self.packages[1].insert(typed, version.clone());
+            .find(|value| {
+                !value.is_null()
+                    && value
+                        .as_str()
+                        .is_none_or(|ver| !ver.trim().is_empty())
+            });
+        if let Some(version) = version.filter(|value| value.as_str().map(str::trim) != Some("-")) {
+            let ver_str = version
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("fresh type package version"))?;
+            self.packages[1].insert(typed, Value::String(ver_str.to_owned()));
         }
         Ok(())
     }

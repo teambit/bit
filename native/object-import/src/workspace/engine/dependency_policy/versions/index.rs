@@ -25,7 +25,10 @@ impl<'a> Index<'a> {
                 .entry(base)
                 .and_modify(|value| *value = None)
                 .or_insert_with(|| {
-                    (!ver.is_empty() && !matches!(ver, "latest" | "head")).then_some(ver)
+                    (!ver.is_empty()
+                        && !ver.eq_ignore_ascii_case("latest")
+                        && !ver.eq_ignore_ascii_case("head"))
+                    .then_some(ver)
                 });
         }
         Self {

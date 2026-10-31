@@ -27,7 +27,13 @@ impl Spool {
         if size > 1024 * 1024 {
             return Err(invalid("overlay source size"));
         }
-        let offset = value["spoolOffset"].as_u64().unwrap_or(0);
+        let offset = match value
+            .get("spoolOffset")
+            .filter(|val| !val.is_null())
+        {
+            None => 0,
+            Some(val) => val.as_u64().ok_or_else(|| invalid("overlay spool offset"))?,
+        };
         offset.checked_add(size).ok_or_else(|| invalid("overlay spool overflow"))?;
         Ok(Self { path: PathBuf::from(path), offset, size, hash })
     }

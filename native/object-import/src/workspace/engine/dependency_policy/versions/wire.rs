@@ -57,7 +57,10 @@ pub(super) fn version(value: &str) -> &str {
 }
 pub(super) fn identity(base: &str, version: &str) -> String {
     let version = version.trim();
-    if matches!(version, "" | "latest" | "head") {
+    if version.is_empty()
+        || version.eq_ignore_ascii_case("latest")
+        || version.eq_ignore_ascii_case("head")
+    {
         unversioned(base).to_owned()
     } else {
         format!("{}@{version}", unversioned(base))

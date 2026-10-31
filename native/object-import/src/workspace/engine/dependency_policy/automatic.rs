@@ -6,11 +6,14 @@ pub(super) fn apply(request: &Request, plan: &mut Plan) {
     let mut seen = HashSet::new();
     for field in 0..3 {
         for (name, value) in &request.policies.automatic[field] {
-            if request.ignore(2, name, &mut plan.removed) || !detected(request, plan, name, &seen) {
+            let trimmed = name.trim();
+            if request.ignore(2, trimmed, &mut plan.removed)
+                || !detected(request, plan, trimmed, &seen)
+            {
                 continue;
             }
-            seen.insert(name.clone());
-            update(request, plan, field, name, value);
+            seen.insert(trimmed.to_owned());
+            update(request, plan, field, trimmed, value);
         }
     }
 }
@@ -79,7 +82,7 @@ fn peers(request: &Request, plan: &mut Plan, name: &str, existing: &[Option<usiz
     for (field, found) in existing.iter().enumerate().take(2) {
         if found.is_some() {
             plan.components[field].retain(|index| {
-                request.entries[*index].package_name.as_deref() != Some(name)
+                request.entries[*index].package_name.as_deref().map(str::trim) != Some(name)
             });
         }
     }

@@ -78,7 +78,7 @@ impl Request {
             .iter()
             .any(|entry| entry.trim() == trimmed);
         if ignored {
-            removed[field].push(name.to_owned());
+            removed[field].push(trimmed.to_owned());
         }
         ignored
     }

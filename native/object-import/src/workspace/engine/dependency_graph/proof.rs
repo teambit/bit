@@ -91,12 +91,13 @@ fn verify_one(proof: &Proof) -> io::Result<usize> {
         return Ok(0);
     }
     let content = contents(&proof.path)?;
-    if content
-        .as_ref()
-        .map(|data| hash(data))
-        .as_deref()
-        != proof.hash.as_deref().map(str::trim)
-    {
+    let actual_hash = content.as_ref().map(|data| hash(data));
+    let expected_hash = proof.hash.as_deref().map(str::trim);
+    if !match (actual_hash.as_deref(), expected_hash) {
+        (None, None) => true,
+        (Some(actual), Some(expected)) => actual.eq_ignore_ascii_case(expected),
+        _ => false,
+    } {
         return Err(invalid("dependency capture changed"));
     }
     Ok(content.as_ref().map_or(0, Vec::len))
@@ -232,7 +233,12 @@ fn verify_range(proof: &Proof, range: &Range) -> io::Result<usize> {
     file.seek(SeekFrom::Start(range.offset))?;
     let mut bytes = Vec::new();
     file.take(range.length).read_to_end(&mut bytes)?;
-    if bytes.len() as u64 != range.length || Some(hash(&bytes)) != proof.hash {
+    if bytes.len() as u64 != range.length
+        || !proof.hash
+            .as_deref()
+            .map(str::trim)
+            .is_some_and(|expected| hash(&bytes).eq_ignore_ascii_case(expected))
+    {
         return Err(invalid("dependency retained source changed"));
     }
     Ok(bytes.len())

@@ -70,7 +70,10 @@ fn prepare_licenses(
 fn checkout_targets(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
     let mut targets = prepare::selected(request, context)?;
     if request.operation == Operation::Checkout
-        && request.options.to.as_deref().map(str::trim) == Some("head")
+        && request.options.to
+            .as_deref()
+            .map(str::trim)
+            .is_some_and(|to| to.eq_ignore_ascii_case("head"))
         && let Some(tracked) = context["lane"]["trackedTargets"].as_array()
     {
         targets.extend(tracked.iter().cloned());
@@ -101,7 +104,7 @@ fn preparation_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
 }
 
 fn validate_license(scope: &str, repository: &mut repository::Repository) -> io::Result<()> {
-    match repository.read(&super::super::hash(scope.as_bytes()), "ScopeMeta") {
+    match repository.read(&super::super::hash(scope.trim().as_bytes()), "ScopeMeta") {
         Ok(metadata)
             if metadata
                 .get("license")

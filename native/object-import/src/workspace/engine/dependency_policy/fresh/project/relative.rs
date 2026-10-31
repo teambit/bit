@@ -89,7 +89,10 @@ fn owners(request: &Detect) -> io::Result<Vec<Owner>> {
     let bitmap = crate::parse_jsonc(text.as_bytes())?;
     let rows = bitmap.as_object().ok_or_else(|| invalid("relative dependency bitmap"))?;
     rows.iter()
-        .filter(|(key, _)| !key.starts_with('_') && !key.starts_with('$'))
+        .filter(|(key, _)| {
+            let trimmed = key.trim();
+            !trimmed.starts_with('_') && !trimmed.starts_with('$') && trimmed != "version"
+        })
         .map(|(key, row)| owner(request, key, row))
         .collect::<io::Result<Vec<_>>>()
         .map(|rows| rows.into_iter().flatten().collect())
@@ -190,14 +193,16 @@ pub(super) fn path(base: &Path, file: &Path) -> io::Result<String> {
 }
 
 pub(super) fn dependency(graph: &Value, origin: &str, edge: &str) -> io::Result<Value> {
+    let origin = origin.trim();
+    let edge = edge.trim();
     let rows = graph["pathMap"].as_array().ok_or_else(|| invalid("relative path map"))?;
     let row = rows
         .iter()
-        .find(|row| row["file"] == origin)
+        .find(|row| row["file"].as_str().map(str::trim) == Some(origin))
         .ok_or_else(|| invalid("relative origin path map"))?;
     let rows = row["dependencies"].as_array().ok_or_else(|| invalid("relative origin imports"))?;
     rows.iter()
-        .find(|row| row["resolvedDep"] == edge)
+        .find(|row| row["resolvedDep"].as_str().map(str::trim) == Some(edge))
         .cloned()
         .ok_or_else(|| invalid("relative import record"))
 }
@@ -320,11 +325,13 @@ fn merge_paths(dependency: &mut Value, path: Value) -> io::Result<()> {
     let rows = dependency["relativePaths"]
         .as_array_mut()
         .ok_or_else(|| invalid("relative dependency paths"))?;
+    let src = path["sourceRelativePath"].as_str().map(str::trim);
+    let dst = path["destinationRelativePath"].as_str().map(str::trim);
     if let Some(existing) = rows
         .iter_mut()
         .find(|row| {
-            row["sourceRelativePath"] == path["sourceRelativePath"]
-                && row["destinationRelativePath"] == path["destinationRelativePath"]
+            row["sourceRelativePath"].as_str().map(str::trim) == src
+                && row["destinationRelativePath"].as_str().map(str::trim) == dst
         })
     {
         merge_specifiers(existing, &path)?;

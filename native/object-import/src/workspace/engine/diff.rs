@@ -173,7 +173,10 @@ fn preflight(files: &[InputFile]) -> io::Result<Vec<Prepared>> {
     let mut compressed = 0;
     let mut prepared = Vec::with_capacity(files.len());
     for file in files {
-        if file.relative_path.len() > 32768 || file.relative_path.contains('\0') {
+        if file.relative_path.trim().is_empty()
+            || file.relative_path.len() > 32768
+            || file.relative_path.contains('\0')
+        {
             return Err(invalid("workspace invalid relative path"));
         }
         let left = input(file.left.as_ref(), &mut total, &mut compressed)?;
@@ -201,9 +204,9 @@ fn input(input: Option<&Input>, total: &mut usize, compressed: &mut usize) -> io
             )?
         }
         Input::Workspace { path, hash: expected } => {
-            expected_hash(expected)?;
+            let expected = crate::validate::hexadecimal(&expected_hash(expected)?);
             let bytes = read::raw(path, MAX_RAW - *total)?;
-            if hash(&bytes) != *expected {
+            if !hash(&bytes).eq_ignore_ascii_case(&expected) {
                 return Err(invalid("workspace snapshot changed"));
             }
             *total += bytes.len();

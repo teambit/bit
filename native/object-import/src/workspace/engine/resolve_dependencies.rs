@@ -133,10 +133,14 @@ impl Budget {
             }
             Err(error) => return Err(error),
         };
+        let metadata = source.metadata()?;
+        if !metadata.is_file() || metadata.len() > 1024 * 1024 {
+            return Err(invalid("dependency source read limit"));
+        }
         source
             .take(1024 * 1024 + 1)
             .read_to_end(&mut bytes)?;
-        if bytes.len() > 1024 * 1024 {
+        if bytes.len() > 1024 * 1024 || bytes.len() as u64 != metadata.len() {
             return Err(invalid("dependency source read limit"));
         }
         if self.proofs.is_some() {

@@ -15,12 +15,7 @@ pub(super) fn chosen(
         .map(str::trim)
         .filter(|pattern| !pattern.is_empty());
     let rows = bitmap.as_object().ok_or_else(|| invalid("switch bitmap"))?;
-    let tracked = rows
-        .iter()
-        .filter(|(key, _)| {
-            !key.starts_with('$') && !matches!(key.as_str(), "_bit_lane" | "version")
-        });
-    if pattern.is_some() && tracked.clone().next().is_some() {
+    if pattern.is_some() && has_tracked(rows) {
         return Err(canonical("error: use --pattern only when the workspace is empty".into()));
     }
     let matched = pattern.map(|pattern| filter(pattern, lane)).transpose()?;
@@ -36,9 +31,19 @@ pub(super) fn chosen(
         .map(str::to_owned)
         .collect::<Vec<_>>();
     if let Some(matched) = matched {
-        allowed.retain(|id| matched.contains(id));
+        allowed.retain(|id| {
+            matched
+                .iter()
+                .any(|item| item.trim() == id.trim())
+        });
     }
     Ok(Some(allowed))
+}
+
+fn has_tracked(rows: &serde_json::Map<String, Value>) -> bool {
+    rows.keys()
+        .map(|key| key.trim())
+        .any(|trimmed| !trimmed.starts_with('$') && !matches!(trimmed, "_bit_lane" | "version"))
 }
 
 fn filter(pattern: &str, entries: &[Entry]) -> io::Result<Vec<String>> {

@@ -75,7 +75,7 @@ fn identity(value: &Value) -> io::Result<String> {
             .map(|(sc, nm)| (sc.trim(), nm.trim()))
             .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
             .ok_or_else(|| invalid("status cached dependency scope"))?;
-        return Ok(match ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")) {
+        return Ok(match ver.filter(|ver| concrete_version(ver)) {
             Some(ver) => format!("{scope}/{name}@{ver}"),
             None => format!("{scope}/{name}"),
         });
@@ -99,10 +99,16 @@ fn identity(value: &Value) -> io::Result<String> {
             .as_str()
             .map(str::trim)
             .ok_or_else(|| invalid("status cached dependency version"))?;
-        if !version.is_empty() && !matches!(version, "latest" | "head") {
+        if concrete_version(version) {
             identity.push('@');
             identity.push_str(version);
         }
     }
     Ok(identity)
+}
+
+fn concrete_version(version: &str) -> bool {
+    !version.is_empty()
+        && !version.eq_ignore_ascii_case("latest")
+        && !version.eq_ignore_ascii_case("head")
 }

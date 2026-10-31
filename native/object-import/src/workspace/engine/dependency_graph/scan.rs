@@ -33,17 +33,21 @@ pub(super) fn scan(
     let extension = file
         .extension()
         .and_then(|value| value.to_str())
-        .map(|value| format!(".{value}"))
+        .map(|value| format!(".{}", value.to_ascii_lowercase()))
         .unwrap_or_default();
     let custom = request.detector.custom
         .as_ref()
         .and_then(|custom| custom.get(filename));
     if let Some(custom) = custom
-        && format!("{:x}", Sha1::digest(&bytes)) != custom.source_hash.trim()
+        && !format!("{:x}", Sha1::digest(&bytes)).eq_ignore_ascii_case(custom.source_hash.trim())
     {
         return Err(invalid("custom detector source changed"));
     }
-    if custom.is_none() && !request.detector_extensions.contains(&extension) {
+    if custom.is_none()
+        && !request.detector_extensions
+            .iter()
+            .any(|ext| ext.trim().eq_ignore_ascii_case(&extension))
+    {
         return Ok(Row {
             path_map: PathMap { file: filename.to_owned(), dependencies: Vec::new() },
             missing: Vec::new(),
@@ -99,12 +103,7 @@ fn read(file: &Path, budget: &AtomicUsize, resolver: &Budget) -> io::Result<Vec<
 }
 
 fn extract(filename: &str, source: String, output_bytes: &AtomicUsize) -> io::Result<Vec<String>> {
-    if source.trim().is_empty()
-        && matches!(
-            Path::new(filename).extension().and_then(|ext| ext.to_str()),
-            Some("css" | "scss" | "sass" | "styl" | "less"),
-        )
-    {
+    if source.trim().is_empty() && is_stylesheet(filename) {
         return Ok(Vec::new());
     }
     let outcome =
@@ -122,6 +121,14 @@ fn extract(filename: &str, source: String, output_bytes: &AtomicUsize) -> io::Re
         .keys()
         .cloned()
         .collect())
+}
+fn is_stylesheet(filename: &str) -> bool {
+    Path::new(filename)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| {
+            matches!(ext.to_ascii_lowercase().as_str(), "css" | "scss" | "sass" | "styl" | "less")
+        })
 }
 struct Resolver<'a> {
     parent: &'a Path,

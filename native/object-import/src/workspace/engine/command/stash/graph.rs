@@ -47,6 +47,7 @@ fn identities(context: &Value) -> io::Result<HashMap<String, Value>> {
             .ok_or_else(|| invalid("stash graph target"))?;
         let (scope, name) = identity
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("stash graph target ID"))?;
         let id = component_id(
@@ -144,9 +145,11 @@ fn array_or_empty<'a>(
     }
 }
 fn insert(rows: &mut Vec<Value>, edge: Value) {
+    let source_key = key(&edge["source"]);
+    let target_key = key(&edge["target"]);
     if let Some(old) = rows
         .iter_mut()
-        .find(|old| old["source"] == edge["source"] && old["target"] == edge["target"])
+        .find(|old| key(&old["source"]) == source_key && key(&old["target"]) == target_key)
     {
         *old = edge;
     } else {
@@ -206,26 +209,29 @@ fn traverse(
     Ok((flattened, graph))
 }
 fn load(id: &Value, repository: &mut Repository) -> io::Result<Value> {
+    let scope = id["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
+    let name = id["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("stash dependency name"))?;
+    let version = id["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+        .ok_or_else(|| invalid("stash dependency version"))?;
     repository.prepare_versions(&[crate::command_import::Target {
-        scope: id["scope"].as_str().map(str::to_owned),
-        name: id["name"]
-            .as_str()
-            .ok_or_else(|| invalid("stash dependency name"))?
-            .to_owned(),
-        version: id["version"]
-            .as_str()
-            .ok_or_else(|| invalid("stash dependency version"))?
-            .to_owned(),
+        scope: scope.map(str::to_owned),
+        name: name.to_owned(),
+        version: version.to_owned(),
     }])?;
-    let version = id["version"].as_str().ok_or_else(|| invalid("stash external version absent"))?;
-    let reference = if crate::merge_history::hash(version).is_ok() {
-        version.to_owned()
+    let reference = if let Ok(bytes) = crate::merge_history::hash(version) {
+        crate::validate::hexadecimal(&bytes)
     } else {
-        let identity = format!(
-            "{}/{}",
-            id["scope"].as_str().unwrap_or_default(),
-            id["name"].as_str().unwrap_or_default(),
-        );
+        let identity = format!("{}/{name}", scope.unwrap_or_default());
         let model = repository.read_component(&identity)?;
         versions::reference(&model, version)?
     };
@@ -302,14 +308,17 @@ fn unversioned(
     for id in flattened {
         if id["version"]
             .as_str()
-            .is_some_and(|value| !value.is_empty())
+            .is_some_and(|value| !value.trim().is_empty())
         {
             continue;
         }
         let dependency = display_id(id);
         if targets
             .iter()
-            .any(|row| row["identity"] == dependency && row["scoped"] == false)
+            .any(|row| {
+                row["identity"].as_str().map(str::trim) == Some(&dependency)
+                    && row["scoped"] == false
+            })
         {
             return Ok(Some(format!(
                 "fatal: \"{}\" has a dependency \"{dependency}\".\nthis dependency was not included in the tag command.",
@@ -322,11 +331,18 @@ fn unversioned(
 fn display_id(id: &Value) -> String {
     let mut value = format!(
         "{}/{}",
-        id["scope"].as_str().unwrap_or_default(),
-        id["name"].as_str().unwrap_or_default(),
+        id["scope"]
+            .as_str()
+            .map(str::trim)
+            .unwrap_or_default(),
+        id["name"]
+            .as_str()
+            .map(str::trim)
+            .unwrap_or_default(),
     );
     if let Some(version) = id["version"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         value.push('@');

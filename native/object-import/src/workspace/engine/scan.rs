@@ -44,8 +44,13 @@ pub(super) fn scan(
 fn validate(root: &Path, excluded: &[PathBuf], workspace_root: bool) -> io::Result<bool> {
     path(root)?;
     count(excluded.len())?;
+    let mut excluded_bytes = 0_usize;
     for directory in excluded {
         path(directory)?;
+        excluded_bytes = excluded_bytes.saturating_add(directory.as_os_str().len());
+        if excluded_bytes > MAX_RAW {
+            return Err(invalid("workspace scan path bytes limit"));
+        }
     }
     match fs::symlink_metadata(root) {
         Ok(metadata) if metadata.is_dir() => Ok(true),

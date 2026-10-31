@@ -31,9 +31,7 @@ pub(super) fn resolved(
             None => optional_string(id.get("version"))?,
         };
         if concrete.is_some_and(|version| !version.is_empty())
-            && version.is_some_and(|version| {
-                !version.is_empty() && !matches!(version, "latest" | "head")
-            })
+            && version.is_some_and(concrete_version)
         {
             concrete = version;
         }
@@ -53,12 +51,10 @@ fn identity(value: &Value) -> io::Result<String> {
             .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("package component scope"))?;
-        return Ok(
-            match version.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")) {
-                Some(ver) => format!("{scope}/{name}@{ver}"),
-                None => format!("{scope}/{name}"),
-            },
-        );
+        return Ok(match version.filter(|ver| concrete_version(ver)) {
+            Some(ver) => format!("{scope}/{name}@{ver}"),
+            None => format!("{scope}/{name}"),
+        });
     }
     let name = value["name"]
         .as_str()
@@ -71,14 +67,16 @@ fn identity(value: &Value) -> io::Result<String> {
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("package component scope"))?;
     let version = optional_string(value.get("version"))?;
-    Ok(
-        match version.filter(|version| {
-            !version.is_empty() && !matches!(*version, "latest" | "head")
-        }) {
-            Some(version) => format!("{scope}/{name}@{version}"),
-            None => format!("{scope}/{name}"),
-        },
-    )
+    Ok(match version.filter(|version| concrete_version(version)) {
+        Some(version) => format!("{scope}/{name}@{version}"),
+        None => format!("{scope}/{name}"),
+    })
+}
+fn concrete_version(version: &str) -> bool {
+    let version = version.trim();
+    !version.is_empty()
+        && !version.eq_ignore_ascii_case("latest")
+        && !version.eq_ignore_ascii_case("head")
 }
 fn optional_string(value: Option<&Value>) -> io::Result<Option<&str>> {
     match value {

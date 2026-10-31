@@ -36,7 +36,7 @@ impl Matcher {
             rules: rules.into(),
             cache: policy.cache
                 .into_iter()
-                .filter(|(path, _)| !path.trim().is_empty())
+                .filter(|(path, _)| !path.trim().is_empty() && !inherited(path))
                 .collect(),
             changes: Vec::new(),
         })

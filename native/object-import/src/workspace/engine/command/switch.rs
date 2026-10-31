@@ -74,11 +74,15 @@ impl LaneSelection {
                     .filter(|id| !id.is_empty())
                     .ok_or_else(|| invalid("switch identity"))?;
                 let has_main = repository::model(context, identity)?
-                    .is_some_and(|model| model["head"].as_str().is_some());
+                    .is_some_and(|model| {
+                        model["head"]
+                            .as_str()
+                            .is_some_and(|head| !head.trim().is_empty())
+                    });
                 if !has_main
                     && current
                         .iter()
-                        .any(|entry| entry.identity == identity)
+                        .any(|entry| entry.identity.trim() == identity)
                 {
                     self.lane_only.insert(identity.to_owned());
                 }
@@ -157,9 +161,13 @@ impl LaneSelection {
     }
 
     fn allows(&self, identity: &str) -> bool {
+        let identity = identity.trim();
         self.chosen
             .as_ref()
-            .is_none_or(|ids| ids.iter().any(|id| id == identity))
+            .is_none_or(|ids| {
+                ids.iter()
+                    .any(|id| id.trim() == identity)
+            })
     }
 
     fn additions(
@@ -172,17 +180,16 @@ impl LaneSelection {
             .as_array()
             .ok_or_else(|| invalid("switch targets"))?
             .iter()
-            .filter_map(|target| target["identity"].as_str())
+            .filter_map(|target| target["identity"].as_str().map(str::trim))
             .collect::<HashSet<_>>();
         let selected = selection::ordered(entries(self.lane.as_ref())?, self.chosen.as_deref())
             .into_iter()
             .filter(|entry| {
-                self.allows(&entry.identity)
-                    && !tracked.contains(entry.identity.as_str())
-                    && !self.lane_only.contains(&entry.identity)
+                let id = entry.identity.trim();
+                self.allows(id) && !tracked.contains(id) && !self.lane_only.contains(id)
             })
             .map(|entry| {
-                json!({"identity":entry.identity,"head":entry.head,"visible":false,"hidden":false,
+                json!({"identity":entry.identity.trim(),"head":entry.head.trim(),"visible":false,"hidden":false,
                 "currentIdPresent":false,"bitmapPresent":false})
             })
             .collect::<Vec<_>>();
@@ -196,8 +203,11 @@ impl LaneSelection {
             &selected,
         )?;
         for row in &selected {
-            let identity =
-                row["identity"].as_str().ok_or_else(|| invalid("switch addition identity"))?;
+            let identity = row["identity"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .ok_or_else(|| invalid("switch addition identity"))?;
             self.lane_only.insert(identity.to_owned());
         }
         let targets = super::lane_context::additions::targets(&additions, &selected);
@@ -223,17 +233,25 @@ fn validate_lane(
 }
 
 fn lane_only(bitmap: &Value, default_scope: Option<&str>) -> io::Result<HashSet<String>> {
-    let fallback = default_scope.filter(|scope| !scope.is_empty());
+    let fallback = default_scope
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
     let rows = bitmap.as_object().ok_or_else(|| invalid("switch bitmap"))?;
     rows.iter()
         .filter(|(key, row)| {
-            !key.starts_with('$')
-                && !matches!(key.as_str(), "_bit_lane" | "version")
+            let trimmed_key = key.trim();
+            !trimmed_key.starts_with('$')
+                && !matches!(trimmed_key, "_bit_lane" | "version")
                 && (row["isAvailableOnCurrentLane"] == false || row["onLanesOnly"] == true)
         })
         .map(|(key, row)| {
             let (scope_opt, name) = crate::reset_lane::bitmap::row_identity(key, row);
-            let scope = scope_opt.or(fallback).ok_or_else(|| invalid("switch lane-only scope"))?;
+            let scope = scope_opt
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .or(fallback)
+                .ok_or_else(|| invalid("switch lane-only scope"))?;
+            let name = name.trim();
             if name.is_empty() {
                 return Err(invalid("switch lane-only name"));
             }

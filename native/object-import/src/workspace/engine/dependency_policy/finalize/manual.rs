@@ -111,25 +111,40 @@ fn promote(output: &mut Output, components: &[Vec<usize>; 3], packages: &[Map<St
     for field in 0..3 {
         let names: HashSet<_> = components[field]
             .iter()
-            .filter_map(|index| output.state.entries[*index].package_name.clone())
+            .filter_map(|index| {
+                output.state.entries[*index].package_name
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|name| !name.is_empty())
+                    .map(str::to_owned)
+            })
             .collect();
         output.state.components[field].extend(&components[field]);
         output.state.packages[field].extend(packages[field].clone());
         for other in (0..3).filter(|other| *other != field) {
             output.state.components[other].retain(|index| {
-                !names.contains(output.state.entries[*index].package_name.as_deref().unwrap_or(""))
+                !names.contains(
+                    output.state.entries[*index].package_name.as_deref().map_or("", str::trim),
+                )
             });
             for name in packages[field].keys() {
                 output.state.packages[other].shift_remove(name);
+                output.state.packages[other].shift_remove(name.trim());
             }
         }
     }
     let names: HashSet<_> = output.state.components
         .iter()
         .flatten()
-        .filter_map(|index| output.state.entries[*index].package_name.clone())
+        .filter_map(|index| {
+            output.state.entries[*index].package_name
+                .as_deref()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .map(str::to_owned)
+        })
         .collect();
     for map in &mut output.state.packages {
-        map.retain(|name, _| !names.contains(name));
+        map.retain(|name, _| !names.contains(name.trim()));
     }
 }

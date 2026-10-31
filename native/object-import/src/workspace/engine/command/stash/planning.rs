@@ -56,7 +56,10 @@ fn select(
             continue;
         };
         let mut component = component(current, &stored, previous, &input.components, &bitmap)?;
-        if let Some(metadata) = input.consumer_metadata.get(&component.identity) {
+        if let Some((_, metadata)) = input.consumer_metadata
+            .iter()
+            .find(|(key, _)| key.trim() == component.identity.trim())
+        {
             apply_metadata(&mut component.version, metadata)?;
         }
         if component.previous.is_some() {
@@ -73,12 +76,12 @@ fn eligible(
     include_new: bool,
 ) -> io::Result<Option<(Value, Option<String>)>> {
     let model = repository::model(&retained.context, &current.target.identity)?;
-    let previous = if current.target.version.is_empty() {
+    let previous = if current.target.version.trim().is_empty() {
         None
     } else {
         Some(versions::reference(
             &model.ok_or_else(|| invalid("stash missing model"))?,
-            &current.target.version,
+            current.target.version.trim(),
         )?)
     };
     let stored = match &previous {
@@ -103,7 +106,7 @@ fn validate(retained: &Retained, input: &Plan) -> io::Result<()> {
     }
     for (current, target) in input.current.iter().zip(targets) {
         for key in ["identity", "version", "directory"] {
-            if current[key] != target[key] {
+            if current[key].as_str().map(str::trim) != target[key].as_str().map(str::trim) {
                 return Err(invalid("stash capture binding"));
             }
         }
@@ -137,10 +140,10 @@ fn component(
     receipts: &[resolve::projection::Component],
     bitmap: &Value,
 ) -> io::Result<Component> {
-    let identity = &current.target.identity;
+    let identity = current.target.identity.trim();
     let receipt = receipts
         .iter()
-        .find(|row| row.identity == *identity)
+        .find(|row| row.identity.trim() == identity)
         .ok_or_else(|| invalid("stash component policy absent"))?;
     let mut version =
         super::projection::version(stored, &current.target.current, &current.metadata, receipt)?;
@@ -150,16 +153,20 @@ fn component(
         }
     }
     let entry = find_entry(bitmap, identity, &current.target.directory)?;
-    let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("stash identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("stash identity"))?;
     Ok(Component {
-        identity: identity.clone(),
+        identity: identity.to_owned(),
         id: graph::component_id(
             scope,
             name,
-            &current.target.version,
+            current.target.version.trim(),
             entry["scope"]
                 .as_str()
-                .is_some_and(|value| !value.is_empty()),
+                .is_some_and(|value| !value.trim().is_empty()),
         ),
         version,
         files: current.files
@@ -173,20 +180,27 @@ fn component(
 }
 
 fn find_entry(bitmap: &Value, identity: &str, directory: &str) -> io::Result<Value> {
+    let identity = identity.trim();
+    let directory = directory.trim();
     bitmap
         .as_object()
         .ok_or_else(|| invalid("stash bitmap object"))?
         .iter()
         .find(|(key, entry)| {
-            if key.starts_with('$')
-                || matches!(key.as_str(), "_bit_lane" | "version")
+            let trimmed_key = key.trim();
+            if trimmed_key.starts_with('$')
+                || matches!(trimmed_key, "_bit_lane" | "version")
                 || !entry.is_object()
             {
                 return false;
             }
-            let scope = entry["scope"].as_str().unwrap_or_default();
+            let scope = entry["scope"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default();
             let (_, name) = crate::reset_lane::bitmap::row_identity(key, entry);
-            entry["rootDir"] == directory
+            let name = name.trim();
+            entry["rootDir"].as_str().map(str::trim) == Some(directory)
                 && (format!("{scope}/{name}") == identity
                     || (scope.is_empty() && identity.ends_with(&format!("/{name}"))))
         })

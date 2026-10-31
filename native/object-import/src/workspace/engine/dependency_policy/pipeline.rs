@@ -168,7 +168,9 @@ fn automatic_placeholder_names(finish: &Value) -> io::Result<Vec<String>> {
                         .map(str::trim)
                         .is_some_and(crate::plus_version::is_plus)
                 })
-                .map(|(name, _)| name.clone()),
+                .map(|(name, _)| name.trim())
+                .filter(|name| !name.is_empty())
+                .map(str::to_owned),
         );
     }
     Ok(names)

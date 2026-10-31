@@ -38,7 +38,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
 
 fn custom(request: &Request) -> io::Result<()> {
     for (file, custom) in request.detector.custom.iter().flat_map(|custom| custom.iter()) {
-        let file_path = Path::new(file);
+        let file_path = Path::new(file.trim());
         path(file_path)?;
         if normalize(file_path) != file_path
             || !request.files.contains(&file_path.to_owned())
@@ -59,6 +59,7 @@ fn custom(request: &Request) -> io::Result<()> {
 }
 
 fn cached_row(file: &str, cached: &Value) -> io::Result<()> {
+    let file = file.trim();
     let file_path = Path::new(file);
     path(file_path)?;
     if normalize(file_path) != file_path {
@@ -71,11 +72,11 @@ fn cached_row(file: &str, cached: &Value) -> io::Result<()> {
         return Err(invalid("dependency graph cached error"));
     }
     let row: PathMap = serde_json::from_value(cached["pathMap"].clone()).map_err(io::Error::other)?;
-    if row.file != *file || row.dependencies.len() > MAX_FILES {
+    if row.file.trim() != file || row.dependencies.len() > MAX_FILES {
         return Err(invalid("dependency graph cached path map"));
     }
     for dependency in row.dependencies {
-        let resolved = Path::new(&dependency.resolved_dep);
+        let resolved = Path::new(dependency.resolved_dep.trim());
         path(resolved)?;
         if normalize(resolved) != resolved {
             return Err(invalid("dependency graph cached path map"));
