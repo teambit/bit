@@ -48,8 +48,11 @@ fn report(plan: &Value) -> io::Result<Value> {
     {
         let mut values = Map::new();
         for row in projection::array(&plan[field])? {
-            let name =
-                row[0].as_str().ok_or_else(|| invalid("command workspace dependency name"))?;
+            let name = row[0]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .ok_or_else(|| invalid("command workspace dependency name"))?;
             let value = if field == "updates" { json!([row[1], row[2]]) } else { row[1].clone() };
             values.insert(name.to_owned(), value);
         }

@@ -37,6 +37,7 @@ fn dependents(receipt: &Value, format: &Formatter) -> String {
 }
 
 fn dependent_row(id: &str, dependencies: &Value, format: &Formatter) -> String {
+    let id = id.trim();
     let symbol = format.error_symbol();
     let body = list(dependencies)
         .iter()

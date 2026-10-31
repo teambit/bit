@@ -21,14 +21,9 @@ pub(super) fn plan(
     let components = components(materials, params, entered, next)?;
     let semver = file::semver(params.get("versionsFile"), semver)?;
     let mut params = params.clone();
-    params
-        .as_object_mut()
-        .ok_or_else(|| invalid("tag version options"))?
-        .remove("versionsFile");
-    params
-        .as_object_mut()
-        .unwrap()
-        .remove("autoAddedWorkspaceRoot");
+    let object = params.as_object_mut().ok_or_else(|| invalid("tag version options"))?;
+    object.remove("versionsFile");
+    object.remove("autoAddedWorkspaceRoot");
     let output = crate::snapshot_transaction::apply(
         "snapshotFutureVersions",
         json!({"components":components,"params":params,"semver":semver}),
@@ -42,6 +37,8 @@ pub(super) fn plan(
         material.version_state.tagged_version = Some(
             version
                 .as_str()
+                .map(str::trim)
+                .filter(|version| !version.is_empty())
                 .ok_or_else(|| invalid("tag planned version"))?
                 .to_owned(),
         );

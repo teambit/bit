@@ -108,6 +108,9 @@ impl SourceOverlay {
         Ok(())
     }
     pub(super) fn seal(mut self) -> io::Result<Self> {
+        if self.data.sealed {
+            return Ok(self);
+        }
         let data = Arc::make_mut(&mut self.data);
         data.proofs = seal::capture(data)?;
         proof::verify(&data.proofs)?;

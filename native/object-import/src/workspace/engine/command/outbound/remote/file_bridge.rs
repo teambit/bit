@@ -72,6 +72,10 @@ impl FileBridge {
     }
 
     pub(super) fn call(&mut self, path: &Path, name: &str, options: &Value) -> io::Result<Value> {
+        let name = name.trim();
+        if name.is_empty() {
+            return Err(io::Error::other("file action name is empty"));
+        }
         let request = json!({ "path": path, "name": name, "options": options });
         let mut bytes = serde_json::to_vec(&request)?;
         if bytes.len() >= MAX_REPLY_BYTES {

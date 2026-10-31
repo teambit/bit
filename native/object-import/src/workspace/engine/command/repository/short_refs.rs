@@ -18,6 +18,7 @@ fn matching_for_separator(
     overlay: impl Iterator<Item = String>,
     separator: char,
 ) -> io::Result<Vec<String>> {
+    let prefix = prefix.trim();
     if !(3..40).contains(&prefix.len()) || !prefix.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(invalid("checkout short reference"));
     }
@@ -27,6 +28,7 @@ fn matching_for_separator(
         return Ok(Vec::new());
     }
     let mut refs = overlay
+        .map(|hash| hash.trim().to_owned())
         .filter(|hash| hash.starts_with(prefix))
         .collect::<BTreeSet<_>>();
     let entries = match fs::read_dir(directory.join(&prefix[..2])) {

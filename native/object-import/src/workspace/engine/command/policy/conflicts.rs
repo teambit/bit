@@ -114,8 +114,18 @@ fn dependency(input: &Value, id: &str, conflict: &Value) -> io::Result<String> {
     let mut lines = text.lines().skip(1).map(|line| {
         if !line.contains("CONFLICT::") { return Ok(line.to_owned()); }
         let parts = line.split("::").collect::<Vec<_>>();
-        let current = parts.get(1).ok_or_else(|| invalid("command conflict current version"))?;
-        let other = parts.get(2).ok_or_else(|| invalid("command conflict incoming version"))?;
+        let current = parts
+            .get(1)
+            .copied()
+            .map(str::trim)
+            .filter(|part| !part.is_empty())
+            .ok_or_else(|| invalid("command conflict current version"))?;
+        let other = parts
+            .get(2)
+            .copied()
+            .map(str::trim)
+            .filter(|part| !part.is_empty())
+            .ok_or_else(|| invalid("command conflict incoming version"))?;
         Ok(format!("<<<<<<< {}\n        \"version\": \"{current}\",\n=======\n        \"version\": \"{other}\",\n>>>>>>> {}", label(input,"currentLabel")?,label(input,"otherLabel")?))
     }).collect::<io::Result<Vec<_>>>()?;
     lines.insert(0, format!(r#""{id}": {{"#));

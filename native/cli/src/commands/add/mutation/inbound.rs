@@ -124,10 +124,15 @@ impl ProjectedLinker {
         root: &Path,
         identities: &[String],
     ) -> io::Result<Vec<Value>> {
+        let normalized = identities
+            .iter()
+            .map(|id| strip_version(id.trim()))
+            .filter(|id| !id.is_empty())
+            .collect::<Vec<_>>();
         let (_, projection) = super::load::projected(
             root,
             &bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?,
-            identities,
+            &normalized,
         )?;
         Ok(projection.loading_components())
     }

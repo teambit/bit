@@ -39,25 +39,30 @@ pub(super) struct Grammar {
     pub(super) coerced: Option<String>,
 }
 pub(super) fn unversioned(value: &str) -> &str {
-    value.rsplit_once('@').map_or(value, |(identity, _)| identity)
+    let trimmed = value.trim();
+    trimmed.rsplit_once('@').map_or(trimmed, |(identity, _)| identity.trim())
 }
 pub(super) fn version(value: &str) -> &str {
-    value.rsplit_once('@').map_or("latest", |(_, version)| version)
+    let trimmed = value.trim();
+    trimmed.rsplit_once('@').map_or("latest", |(_, version)| version.trim())
 }
 pub(super) fn identity(base: &str, version: &str) -> String {
-    if matches!(version, "latest" | "head") {
+    let version = version.trim();
+    if matches!(version, "" | "latest" | "head") {
         unversioned(base).to_owned()
     } else {
         format!("{}@{version}", unversioned(base))
     }
 }
 pub(super) fn snap(value: &str) -> bool {
+    let value = value.trim();
     value.len() == 40 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 impl Policy {
     pub(super) fn ranges(&self) -> bool {
         self.prefix
             .as_deref()
+            .map(str::trim)
             .is_some_and(|prefix| !prefix.is_empty() && prefix != "-")
     }
 }

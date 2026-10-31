@@ -36,7 +36,8 @@ fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<Str
     };
     let permissions = shell_word(&format!(
         "repos/{}/{}/actions/permissions/workflow",
-        repository.owner, repository.name,
+        repository.owner.trim(),
+        repository.name.trim(),
     ));
     vec![
         chalk.cyan(&format!("gh secret set BIT_CONFIG_ACCESS_TOKEN -R {repo}")),

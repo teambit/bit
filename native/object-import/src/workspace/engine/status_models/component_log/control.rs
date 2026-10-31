@@ -74,7 +74,7 @@ impl Control {
 pub(super) fn staged(rows: &mut [Value], config: &Value) {
     let range = config["range"]
         .as_str()
-        .and_then(|range| Range::parse(range).ok());
+        .and_then(|range| Range::parse(range.trim()).ok());
     for row in rows {
         row["deprecated"] = json!(
             range
@@ -82,7 +82,7 @@ pub(super) fn staged(rows: &mut [Value], config: &Value) {
                 .zip(
                     row["tag"]
                         .as_str()
-                        .and_then(|tag| Version::parse(tag).ok())
+                        .and_then(|tag| Version::parse(tag.trim()).ok())
                 )
                 .is_some_and(|(range, tag)| range.satisfies(&tag))
         );

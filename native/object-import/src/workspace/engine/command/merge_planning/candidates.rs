@@ -46,13 +46,14 @@ fn target_identity(target: &Value) -> Option<String> {
     if let Some(identity) = target["identity"]
         .as_str()
         .or_else(|| target["id"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         return Some(
             identity
                 .split('@')
                 .next()
-                .unwrap_or(identity)
+                .map_or(identity, str::trim)
                 .to_owned(),
         );
     }
@@ -60,10 +61,12 @@ fn target_identity(target: &Value) -> Option<String> {
     let name = object
         .get("name")?
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())?;
     match object
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         Some(scope) => Some(format!("{scope}/{name}")),

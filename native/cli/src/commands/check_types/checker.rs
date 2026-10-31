@@ -134,6 +134,7 @@ fn collect_diagnostics(
 }
 
 fn is_ts_source(rel_file: &str) -> bool {
+    let rel_file = rel_file.trim();
     !rel_file.ends_with(".d.ts") && (rel_file.ends_with(".ts") || rel_file.ends_with(".tsx"))
 }
 

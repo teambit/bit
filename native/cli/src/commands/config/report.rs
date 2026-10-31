@@ -37,6 +37,10 @@ fn get(stores: &Stores, key: &str) -> String {
 }
 
 fn git(key: &str) -> String {
+    let key = key.trim();
+    if key.is_empty() {
+        return String::new();
+    }
     let Ok(output) = Command::new("git")
         .args(["config", "--list"])
         .output()

@@ -81,7 +81,8 @@ impl CatDocs {
 }
 
 fn parse_doc_receipt(receipt: &Value) -> io::Result<Option<String>> {
-    if receipt["published"] != true && receipt["published"].as_str() != Some("true") {
+    if receipt["published"] != true && receipt["published"].as_str().map(str::trim) != Some("true")
+    {
         return Err(io::Error::other("cat documentation parser receipt"));
     }
     let error = &receipt["error"];

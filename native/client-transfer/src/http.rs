@@ -206,11 +206,15 @@ impl Network {
             client,
             delete_client,
             token: token
+                .map(str::trim)
                 .filter(|token| !token.is_empty())
                 .or_else(|| config_str(global, CFG_USER_TOKEN))
                 .map(str::to_string),
-            client_version: client_version.to_string(),
-            local_scope: local_scope.map(str::to_string),
+            client_version: client_version.trim().to_string(),
+            local_scope: local_scope
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .map(str::to_string),
             retry: Retry::from_config(global),
             cancellation: Cancellation::current(),
         })

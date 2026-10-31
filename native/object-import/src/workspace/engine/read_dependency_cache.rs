@@ -21,10 +21,11 @@ pub(super) struct Freshness {
 }
 pub(super) fn read(request: &Read) -> io::Result<(usize, Value)> {
     path(&request.cache)?;
-    if request.key.trim().is_empty() || request.key.len() > 4096 {
+    let key = request.key.trim();
+    if key.is_empty() || key.len() > 4096 {
         return Err(invalid("dependency cache key limit"));
     }
-    let cache = reader::read(&request.cache, &request.key)?;
+    let cache = reader::read(&request.cache, key)?;
     Ok((1, json!({"cache":cache})))
 }
 pub(super) fn freshness(

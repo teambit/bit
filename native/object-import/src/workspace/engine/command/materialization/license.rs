@@ -12,7 +12,11 @@ pub(super) struct Prepared {
 
 pub(super) fn prepare(input: &Input<'_>, license: Option<&str>) -> io::Result<Option<Prepared>> {
     let Some(contents) = license else { return Ok(None) };
-    let path = input.root.join(&input.current.target.directory).join("LICENSE");
+    let directory = input.current.target.directory.trim();
+    if directory.is_empty() {
+        return Err(invalid("command license target directory"));
+    }
+    let path = input.root.join(directory).join("LICENSE");
     validate_destination(&path, input.root)?;
     if contents.len() > 4 * 1024 * 1024 || contents.contains('\0') {
         return Err(invalid("command license byte budget"));

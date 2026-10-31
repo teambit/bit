@@ -17,7 +17,7 @@ pub(super) fn render(plan: &Plan, options: &Options<'_>, undo: bool, format: &Fo
         return format.hint(&format!(
             r#"all {} component(s) matching "{}" are {unchanged_state}. no changes have been made"#,
             unchanged.len(),
-            options.pattern,
+            options.pattern.trim(),
         ));
     }
     sections(changed, unchanged, undo, verb, format)

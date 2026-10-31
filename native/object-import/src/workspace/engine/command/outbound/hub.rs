@@ -128,11 +128,16 @@ fn acknowledge(retained: &mut Retained, data: &Value) -> io::Result<Vec<String>>
 }
 
 fn job_url(domain: &str, lane: Option<&str>, job: &str) -> String {
-    match lane {
+    let domain = domain.trim();
+    let job = job.trim();
+    match lane
+        .map(str::trim)
+        .filter(|lane| !lane.is_empty())
+    {
         Some(lane) => {
             let (scope, name) = lane
                 .split_once('/')
-                .unwrap_or((lane, ""));
+                .map_or((lane, ""), |(scope, name)| (scope.trim(), name.trim()));
             format!(
                 "https://{domain}/{}/~lane/{name}/~ripple-ci/job/{job}",
                 scope.replacen('.', "/", 1),

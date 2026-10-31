@@ -230,7 +230,8 @@ fn model_env(model: &ModelData) -> Option<&'static str> {
         .next()?
         .pointer("/data/id")?
         .as_str()
-        .filter(|id| !id.trim().is_empty())?;
+        .map(str::trim)
+        .filter(|id| !id.is_empty())?;
     if envs.next().is_some() {
         return None;
     }

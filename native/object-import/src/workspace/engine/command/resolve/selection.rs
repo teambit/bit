@@ -42,11 +42,20 @@ fn pending_identities(pending: &[Value]) -> io::Result<Vec<String>> {
 
 pub(super) fn identity(value: &Value) -> io::Result<String> {
     let (scope, name) = if let Some(raw) = value.as_str() {
-        let base = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
-        base.split_once('/').ok_or_else(|| invalid("resolve identity scope"))?
+        let raw = raw.trim();
+        let base = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
+        base.split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .ok_or_else(|| invalid("resolve identity scope"))?
     } else {
-        let scope = value["scope"].as_str().ok_or_else(|| invalid("resolve identity scope"))?;
-        let name = value["name"].as_str().ok_or_else(|| invalid("resolve identity name"))?;
+        let scope = value["scope"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("resolve identity scope"))?;
+        let name = value["name"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("resolve identity name"))?;
         (scope, name)
     };
     if scope.is_empty() || name.is_empty() || scope.contains('/') || name.contains('@') {

@@ -140,7 +140,8 @@ fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn valid_diagnose_pkg(val: &str) -> Option<String> {
-    (!val.trim().is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }
 
 fn parse_circular(rest: &[&str]) -> Option<Subcommand> {

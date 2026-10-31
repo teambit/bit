@@ -36,13 +36,11 @@ impl Component {
                 entry["identity"]
                     .as_str()
                     .or_else(|| entry["id"].as_str())
+                    .map(str::trim)
             })
-            .map(|identity| {
-                identity
-                    .rsplit_once('@')
-                    .map_or(identity, |(base, _)| base)
-                    .to_owned()
-            })
+            .map(|identity| identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim()))
+            .filter(|base| !base.is_empty())
+            .map(str::to_owned)
             .collect()
     }
 
@@ -54,12 +52,13 @@ impl Component {
             .filter_map(|entry| {
                 let identity = entry["identity"]
                     .as_str()
-                    .or_else(|| entry["id"].as_str())?;
+                    .or_else(|| entry["id"].as_str())
+                    .map(str::trim)?;
                 let (base, inline_ver) = identity
                     .rsplit_once('@')
-                    .unwrap_or((identity, ""));
+                    .map_or((identity, ""), |(base, ver)| (base.trim(), ver.trim()));
                 let version = if inline_ver.is_empty() {
-                    entry["version"].as_str().unwrap_or_default()
+                    entry["version"].as_str().map_or("", str::trim)
                 } else {
                     inline_ver
                 };
@@ -68,6 +67,7 @@ impl Component {
                 }
                 let pkg = entry["packageName"]
                     .as_str()
+                    .map(str::trim)
                     .filter(|pkg| !pkg.is_empty())
                     .unwrap_or(base);
                 Some(format!("{pkg}@{version}"))

@@ -79,6 +79,7 @@ fn ref_str(value: &Value) -> Option<&str> {
         .as_str()
         .or_else(|| value["ref"].as_str())
         .or_else(|| value["hash"].as_str())
+        .map(str::trim)
 }
 
 pub(super) fn parents(dir: &Path, hash: &str) -> io::Result<Value> {
@@ -92,6 +93,8 @@ fn populate(rows: &mut Vec<Value>, dir: &Path, head: &str) -> io::Result<()> {
         .map(|row| {
             row["hash"]
                 .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("outbound VersionHistory hash"))
         })

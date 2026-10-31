@@ -123,8 +123,11 @@ fn compare_all(
 fn indexed(rows: &[Value]) -> io::Result<BTreeMap<&str, &Value>> {
     let mut result = BTreeMap::new();
     for row in rows {
-        let name =
-            row["relativePath"].as_str().ok_or_else(|| invalid("merge dependency filename"))?;
+        let name = row["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("merge dependency filename"))?;
         crate::checkout::plan::relative_path(name)?;
         if result.insert(name, row).is_some() {
             return Err(invalid("merge dependency duplicate file"));

@@ -61,9 +61,11 @@ fn model_files(model: Option<&Value>) -> io::Result<&[Value]> {
     super::super::super::count(files.len())?;
     let mut seen = HashSet::new();
     for file in files {
-        let path =
-            file["relativePath"].as_str().ok_or_else(|| invalid("workspace diff model path"))?;
-        if !seen.insert(path) || path.len() > 32768 || path.contains('\0') {
+        let path = file["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("workspace diff model path"))?;
+        if path.is_empty() || !seen.insert(path) || path.len() > 32768 || path.contains('\0') {
             return Err(invalid("workspace diff duplicate or invalid model path"));
         }
     }

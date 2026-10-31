@@ -129,6 +129,7 @@ pub fn concurrency(global: &GlobalConfig) -> usize {
     global
         .get("concurrency.fetch")
         .or_else(|| global.get("concurrency_fetch"))
+        .or_else(|| global.get("network.concurrency"))
         .and_then(|value| match value {
             Value::Number(number) => number.as_u64(),
             Value::String(text) => text.trim().parse().ok(),

@@ -44,7 +44,11 @@ fn parse(bytes: &[u8], endpoint: &str) -> io::Result<Vec<Value>> {
     let parsed: Value = serde_json::from_slice(bytes).map_err(|_| {
             invalid(&format!("fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}"))
         })?;
-    if let Some(message) = parsed["errors"][0]["message"].as_str() {
+    if let Some(message) = parsed["errors"][0]["message"]
+        .as_str()
+        .map(str::trim)
+        .filter(|message| !message.is_empty())
+    {
         return Err(io::Error::other(message.to_string()));
     }
     let rows = parsed["data"]["scope"]["getLogs"]

@@ -39,7 +39,7 @@ impl Network {
         force: bool,
         lanes: bool,
     ) -> io::Result<Value> {
-        let endpoint = format!("{}/api/scope/delete", url.trim_end_matches('/'));
+        let endpoint = format!("{}/api/scope/delete", url.trim().trim_end_matches('/'));
         let ids = serde_json::to_string(ids).map_err(io::Error::other)?;
         let body = format!(r#"{{"ids":{ids},"force":{force},"lanes":{lanes}}}"#);
         let response = self.single_delete_post(&endpoint, body, None).await?;

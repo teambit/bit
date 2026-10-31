@@ -26,7 +26,7 @@ impl Directory {
 impl Directory {
     /// An empty subdirectory for one of several users of this directory.
     pub(super) fn child(&self, index: usize) -> io::Result<PathBuf> {
-        if index > 65536 {
+        if index > 65536 || !self.0.is_dir() {
             return Err(io::Error::other("command scratch child index limit"));
         }
         let path = self.0.join(index.to_string());

@@ -90,7 +90,11 @@ fn validate(request: &Request) -> io::Result<()> {
     Ok(())
 }
 fn package_name(name: &str) -> bool {
-    if name.len() > 256 || name.contains("node_modules") || !super::wire::name(name) {
+    if name.trim() != name
+        || name.len() > 256
+        || name.contains("node_modules")
+        || !super::wire::name(name)
+    {
         return false;
     }
     let scoped = name.strip_prefix('@');

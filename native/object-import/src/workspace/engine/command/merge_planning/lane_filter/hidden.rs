@@ -30,6 +30,8 @@ fn package_name(dependency: &mut Value, resolver: &Value) {
                 .find(|row| row["__type"] == "component" && row["componentId"] == dependency["id"])
         })
         .and_then(|row| row["packageName"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
     {
         dependency["packageName"] = json!(name);
     }

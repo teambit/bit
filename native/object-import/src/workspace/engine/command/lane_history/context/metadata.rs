@@ -17,7 +17,7 @@ pub(super) fn read(
         .iter()
         .filter_map(|(id, _)| {
             all.iter()
-                .find(|row| row["identity"] == *id)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(id.trim()))
                 .cloned()
         })
         .collect();

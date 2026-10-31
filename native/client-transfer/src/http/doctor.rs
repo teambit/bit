@@ -48,10 +48,13 @@ impl Network {
 }
 
 fn projection(value: &Value, scope: &str) -> io::Result<Value> {
+    let scope = scope.trim();
     if let Some(message) = value["errors"][0]["message"]
         .as_str()
         .or_else(|| value["error"].as_str())
         .or_else(|| value["message"].as_str())
+        .map(str::trim)
+        .filter(|message| !message.is_empty())
     {
         if message.contains(r#"Cannot query field "doctor""#) {
             return Err(io::Error::other(format!(

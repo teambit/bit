@@ -73,14 +73,8 @@ fn origin_lane_flags(origin: &Value, scope: &str, name: &str) -> (bool, bool) {
         let any = !trimmed_scope.is_empty() && !trimmed_name.is_empty();
         return (same, any);
     }
-    let orig_scope = origin["scope"]
-        .as_str()
-        .map(str::trim)
-        .unwrap_or_default();
-    let orig_name = origin["name"]
-        .as_str()
-        .map(str::trim)
-        .unwrap_or_default();
+    let orig_scope = origin["scope"].as_str().map_or("", str::trim);
+    let orig_name = origin["name"].as_str().map_or("", str::trim);
     let same = orig_scope == scope && orig_name == name;
     let any = !orig_scope.is_empty() && !orig_name.is_empty();
     (same, any)

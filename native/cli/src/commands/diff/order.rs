@@ -74,12 +74,13 @@ fn enumerate(
         if kind.is_dir() && parents.contains(&relative) {
             directories.push(relative);
         } else if kind.is_file() {
-            paths.push(
-                relative
-                    .to_str()
-                    .ok_or_else(|| decline("diff non-UTF8 filename"))?
-                    .replace('\\', "/"),
-            );
+            let normalized = relative
+                .to_str()
+                .ok_or_else(|| decline("diff non-UTF8 filename"))?
+                .replace('\\', "/");
+            if !normalized.is_empty() {
+                paths.push(normalized);
+            }
         }
     }
     Ok((directories, paths))

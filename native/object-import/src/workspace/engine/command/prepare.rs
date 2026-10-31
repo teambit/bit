@@ -238,20 +238,28 @@ fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> 
         })
         .map(|(key, value)| {
             let (scope, name) = crate::reset_lane::bitmap::row_identity(key, value);
+            let name = name.trim();
             if name.is_empty() {
                 return Err(invalid("command component name"));
             }
             let (_, key_ver) = key
                 .rsplit_once('@')
-                .unwrap_or((key.as_str(), ""));
+                .map_or((key.as_str(), ""), |(base, ver)| (base, ver.trim()));
             let version = value
                 .get("version")
                 .filter(|val| !val.is_null())
-                .map(|val| val.as_str().ok_or_else(|| invalid("command component version")))
+                .map(|val| {
+                    val.as_str()
+                        .map(str::trim)
+                        .ok_or_else(|| invalid("command component version"))
+                })
                 .transpose()?
                 .unwrap_or(key_ver);
             Ok(command_import::Target {
-                scope: scope.map(str::to_owned),
+                scope: scope
+                    .map(str::trim)
+                    .filter(|scope| !scope.is_empty())
+                    .map(str::to_owned),
                 name: name.to_owned(),
                 version: version.to_owned(),
             })

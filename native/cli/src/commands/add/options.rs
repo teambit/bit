@@ -83,7 +83,7 @@ fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>
     }
     let (flag, inline) = arg.split_once('=')?;
     let slot = string_option(options, flag)?;
-    if slot.is_some() || inline.is_empty() || inline.starts_with('-') {
+    if slot.is_some() || inline.trim().is_empty() || inline.starts_with('-') {
         return Some(None);
     }
     *slot = Some(inline.to_owned());

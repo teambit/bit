@@ -10,8 +10,12 @@ const MAX_LANE_BYTES: usize = 4 * 1024 * 1024;
 
 impl Network {
     pub async fn list_lanes(&self, url: &str, id: Option<&str>) -> io::Result<Vec<Value>> {
-        let body = json!({"query": LANES_QUERY, "variables": {"ids": id.map(|id| vec![id])}});
-        let endpoint = format!("{url}/graphql");
+        let ids = id
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .map(|id| vec![id]);
+        let body = json!({"query": LANES_QUERY, "variables": {"ids": ids}});
+        let endpoint = format!("{}/graphql", url.trim().trim_end_matches('/'));
         let response = self.send(
             self.headers(self.client.post(&endpoint), "read")?
                 .json(&body),

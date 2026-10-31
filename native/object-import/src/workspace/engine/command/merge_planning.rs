@@ -166,7 +166,7 @@ fn apply_selection(
         return Ok(());
     }
     selected.distance["shouldBeRemoved"] = outcome["shouldBeRemoved"].clone();
-    selected.action = match outcome["action"].as_str() {
+    selected.action = match outcome["action"].as_str().map(str::trim) {
         Some("merge") => Action::Merge,
         Some("target") => Action::Target,
         Some("unrelated") => {
@@ -180,7 +180,11 @@ fn apply_selection(
     if selected.action != Action::Target {
         selected.distance["shouldBeRemoved"] = json!(false);
     }
-    if let Some(common) = distance["common"].as_str() {
+    if let Some(common) = distance["common"]
+        .as_str()
+        .map(str::trim)
+        .filter(|common| !common.is_empty())
+    {
         selected.base = common.into();
     } else if selected.action == Action::Merge {
         return Err(invalid("command merge common version"));

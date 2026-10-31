@@ -340,11 +340,15 @@ fn prepare_components(
         return Err(invalid("command policy preparation count or phase"));
     }
     let workspace = workspace_ids(record)?;
+    let strategy = record.request.options.strategy
+        .as_deref()
+        .map(str::trim)
+        .filter(|strategy| !strategy.is_empty());
     for (row, component) in policy.rows.iter_mut().zip(components) {
-        if row.identity != component.identity {
+        if row.identity.trim() != component.identity.trim() {
             return Err(invalid("command policy identity"));
         }
-        prepare_row(row, &component, &workspace, record.request.options.strategy.as_deref())?;
+        prepare_row(row, &component, &workspace, strategy)?;
     }
     policy.config_ready = true;
     Ok(())

@@ -80,7 +80,8 @@ pub(in crate::workspace::engine) fn complete(
         return Err(invalid("switch completion has no acknowledged installer bitmap writes"));
     }
     let record = state.record.take().ok_or_else(|| invalid("switch completion owner absent"))?;
-    if input.token.trim().is_empty() || record.token != input.token {
+    let token = input.token.trim();
+    if token.is_empty() || record.token != token {
         return Err(invalid("switch completion token"));
     }
     let retained = record.planned

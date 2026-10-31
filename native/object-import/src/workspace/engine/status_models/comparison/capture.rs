@@ -3,25 +3,14 @@ mod overlay;
 use super::{Request, Target, invalid};
 use crate::workspace::engine::read;
 use serde_json::{Value, json};
-use std::{collections::HashSet, io, path::Path};
+use std::{
+    collections::HashSet,
+    io,
+    path::{Path, PathBuf},
+};
 
 pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec<Value>> {
-    let mut paths = Vec::new();
-    let mut bitmaps = HashSet::new();
-    let mut identities = HashSet::new();
-    for target in &request.targets {
-        validate(target)?;
-        if !identities.insert(&target.identity) {
-            return Err(invalid("status comparison duplicate identity"));
-        }
-        for file in &target.files {
-            let source = source_path(&request.root, target, file)?;
-            if target.directory == "." && file == ".bitmap" {
-                bitmaps.insert(source.clone());
-            }
-            paths.push(source);
-        }
-    }
+    let (paths, bitmaps) = collect_sources(request)?;
     let captured =
         read::read_with(&paths, pool, |path, bytes| capture(path, bytes, bitmaps.contains(path)))?
             .into_iter()
@@ -39,6 +28,36 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
         .iter()
         .map(|target| build_target_files(target, &mut captured))
         .collect())
+}
+
+fn collect_sources(request: &Request) -> io::Result<(Vec<PathBuf>, HashSet<PathBuf>)> {
+    let mut paths = Vec::new();
+    let mut bitmaps = HashSet::new();
+    let mut identities = HashSet::new();
+    for target in &request.targets {
+        validate(target)?;
+        if target.identity.trim().is_empty() || !identities.insert(target.identity.trim()) {
+            return Err(invalid("status comparison duplicate identity"));
+        }
+        append_target_sources(&request.root, target, &mut paths, &mut bitmaps)?;
+    }
+    Ok((paths, bitmaps))
+}
+
+fn append_target_sources(
+    root: &Path,
+    target: &Target,
+    paths: &mut Vec<PathBuf>,
+    bitmaps: &mut HashSet<PathBuf>,
+) -> io::Result<()> {
+    for file in &target.files {
+        let source = source_path(root, target, file)?;
+        if target.directory == "." && file == ".bitmap" {
+            bitmaps.insert(source.clone());
+        }
+        paths.push(source);
+    }
+    Ok(())
 }
 fn build_target_files(
     target: &Target,

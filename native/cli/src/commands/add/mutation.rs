@@ -28,7 +28,7 @@ pub(in crate::commands) struct ProjectedLinker {
 impl ProjectedLinker {
     /// Load extensions while their original workspace paths still exist.
     pub(in crate::commands) fn prepare(root: &Path) -> io::Result<Self> {
-        if root.as_os_str().is_empty() {
+        if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
             return Err(io::Error::other("identity workspace root is empty"));
         }
         let mut linker = Self {

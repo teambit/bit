@@ -43,8 +43,8 @@ pub(super) fn execute(
             ordered[index] = Some(file);
         }
     }
-    Ok(ordered
+    ordered
         .into_iter()
-        .map(|file| file.expect("diff queue completes every input"))
-        .collect())
+        .map(|file| file.ok_or_else(|| io::Error::other("workspace diff worker incomplete")))
+        .collect()
 }

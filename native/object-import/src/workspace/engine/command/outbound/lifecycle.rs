@@ -8,8 +8,12 @@ pub(in crate::workspace::engine) fn apply(
     input: &Apply,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
+    let token = input.token.trim();
+    if token.is_empty() {
+        return Err(invalid("outbound owner token"));
+    }
     let retained = state.outbound.as_mut().ok_or_else(|| invalid("outbound owner missing"))?;
-    if retained.token != input.token.trim() || retained.transfer.ids.is_some() {
+    if retained.token != token || retained.transfer.ids.is_some() {
         return Err(invalid("outbound owner token"));
     }
     if retained.transfer.failed.is_some() {

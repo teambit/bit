@@ -111,7 +111,11 @@ fn text_config(config: &Value) -> io::Result<String> {
         }
         lines.push(format!("{field}:"));
         for (name, version) in deps {
-            let version = version.as_str().ok_or_else(|| decline("cat dependency version"))?;
+            let name = name.trim();
+            let version = version
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| decline("cat dependency version"))?;
             lines.push(format!("  {name}: {version}"));
         }
     }

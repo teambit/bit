@@ -31,12 +31,15 @@ fn retain(
     for current in
         plan["currentFiles"].as_array().ok_or_else(|| invalid("merge reload current files"))?
     {
-        let path =
-            current["relativePath"].as_str().ok_or_else(|| invalid("merge reload current path"))?;
+        let path = current["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("merge reload current path"))?;
         crate::checkout::plan::relative_path(path)?;
         if files
             .iter()
-            .any(|file| file["relativePath"] == path)
+            .any(|file| file["relativePath"].as_str().map(str::trim) == Some(path))
             || removals.contains(&directory.join(path))
         {
             continue;

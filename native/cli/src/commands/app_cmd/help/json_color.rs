@@ -20,7 +20,7 @@ pub(super) fn error(args: &[&str], list: bool) -> Option<String> {
 
 fn unknown_names(flag: &str, list: bool) -> Option<&'static [&'static str]> {
     let trimmed = flag.trim();
-    let name = trimmed.split_once('=').map_or(trimmed, |(prefix, _)| prefix);
+    let name = trimmed.split_once('=').map_or(trimmed, |(prefix, _)| prefix.trim());
     match name {
         "--no-color" => Some(&["no-color", "noColor"]),
         "--json" if !list => Some(&["json"]),

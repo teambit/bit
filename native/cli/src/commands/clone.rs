@@ -78,6 +78,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 }
 
 fn apply_clone_positional(val: &str, options: &mut Options) -> Option<()> {
+    let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then_some(())?;
     if options.id.is_empty() {
         val.clone_into(&mut options.id);

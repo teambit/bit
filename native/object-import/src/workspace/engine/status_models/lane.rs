@@ -97,8 +97,14 @@ fn forked_from(lane: &Value) -> io::Result<Option<String>> {
     else {
         return Ok(None);
     };
-    let scope = value["scope"].as_str().ok_or_else(|| invalid("status forked lane scope"))?;
-    let name = value["name"].as_str().ok_or_else(|| invalid("status forked lane name"))?;
+    let scope = value["scope"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("status forked lane scope"))?;
+    let name = value["name"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("status forked lane name"))?;
     parse_id(&format!("{scope}/{name}"))?;
     Ok(Some(format!("{scope}/{name}")))
 }

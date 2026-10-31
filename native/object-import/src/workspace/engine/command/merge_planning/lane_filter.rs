@@ -123,16 +123,22 @@ pub(super) fn capture_hidden(
         .iter()
         .filter(|target| target["hidden"] == true && target["visible"] != true)
     {
-        let identity =
-            target["identity"].as_str().ok_or_else(|| invalid("hidden lane identity"))?;
+        let identity = target["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|identity| !identity.is_empty())
+            .ok_or_else(|| invalid("hidden lane identity"))?;
         if planned.captured
             .iter()
             .any(|captured| captured.target.identity == identity)
         {
             continue;
         }
-        let head =
-            target["currentHead"].as_str().ok_or_else(|| invalid("hidden lane current head"))?;
+        let head = target["currentHead"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+            .ok_or_else(|| invalid("hidden lane current head"))?;
         let version = record.repository.read(head, "Version")?;
         planned.captured.push(super::capture::from_model(
             &directory.0,

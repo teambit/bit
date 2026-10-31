@@ -11,6 +11,7 @@ pub(super) fn validate_sources(files: &[Value]) -> io::Result<()> {
         let path = file["absolutePath"]
             .as_str()
             .or_else(|| file["path"].as_str())
+            .map(str::trim)
             .filter(|value| !value.is_empty())
             .ok_or_else(|| io::Error::other("compiler source path"))?;
         let source = file["source"]

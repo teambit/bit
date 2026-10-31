@@ -136,10 +136,11 @@ fn version(
 }
 
 fn file_hash(version: &Value, path: &str) -> io::Result<Option<String>> {
+    let path = path.trim();
     let files = version["files"].as_array().ok_or_else(|| invalid("file history files"))?;
     let mut selected = None;
     for file in files {
-        if file["relativePath"] == path {
+        if file["relativePath"].as_str().map(str::trim) == Some(path) {
             if selected.is_some() {
                 return Err(invalid("file history duplicate file"));
             }

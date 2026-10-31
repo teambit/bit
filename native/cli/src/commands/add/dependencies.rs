@@ -35,19 +35,31 @@ fn component_packages(row: &Value) -> io::Result<(String, ComponentDependencies)
         let packages = packages
             .as_object()
             .ok_or_else(|| io::Error::other("tracking package dependencies"))?;
-        for (name, spec) in packages {
-            let version = spec
-                .as_str()
-                .or_else(|| spec["version"].as_str())
-                .ok_or_else(|| io::Error::other("tracking package version"))?;
-            let optional = spec["optional"].as_bool().unwrap_or(false);
-            result.packages.push(PackageDependency {
-                name: name.clone(),
-                version: version.to_owned(),
-                lifecycle,
-                optional,
-            });
-        }
+        add_lifecycle_packages(packages, lifecycle, &mut result)?;
     }
     Ok((identity.to_owned(), result))
+}
+
+fn add_lifecycle_packages(
+    packages: &serde_json::Map<String, Value>,
+    lifecycle: Lifecycle,
+    result: &mut ComponentDependencies,
+) -> io::Result<()> {
+    for (name, spec) in packages {
+        let name = name.trim();
+        let version = spec
+            .as_str()
+            .or_else(|| spec["version"].as_str())
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty() && !name.is_empty())
+            .ok_or_else(|| io::Error::other("tracking package version"))?;
+        let optional = spec["optional"].as_bool().unwrap_or(false);
+        result.packages.push(PackageDependency {
+            name: name.to_owned(),
+            version: version.to_owned(),
+            lifecycle,
+            optional,
+        });
+    }
+    Ok(())
 }

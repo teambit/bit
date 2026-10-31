@@ -117,7 +117,7 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>
         .get("data")
         .and_then(Value::as_str)
         .map(str::trim)
-        .filter(|data| !data.is_empty())
+        .filter(|data| !data.is_empty() && data.len() <= 16 * 1024 * 1024)
         .ok_or_else(|| invalid("status dependency cache data"))?;
     let parsed: Value = serde_json::from_str(data).map_err(io::Error::other)?;
     if !parsed.is_object() {

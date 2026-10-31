@@ -151,7 +151,7 @@ fn consume_trailing_check_types_pattern<'a>(
 }
 
 fn apply_short_flags(arg: &str, options: &mut Options) -> Option<()> {
-    let flags = arg.strip_prefix('-')?;
+    let flags = arg.trim().strip_prefix('-')?;
     if flags.is_empty() || flags.starts_with('-') {
         return None;
     }

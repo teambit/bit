@@ -38,6 +38,7 @@ impl DepGraph {
     }
 
     pub(super) fn dependents_of(&self, target_id: &str) -> Vec<DependentInfo> {
+        let target_id = target_id.trim();
         let mut visited: HashSet<String> = HashSet::from([target_id.to_owned()]);
         let mut queue: VecDeque<(String, usize)> = VecDeque::from([(target_id.to_owned(), 0usize)]);
         let mut results = Vec::new();

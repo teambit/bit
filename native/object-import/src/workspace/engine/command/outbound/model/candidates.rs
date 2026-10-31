@@ -35,7 +35,11 @@ pub(super) fn histories(root: &Path) -> io::Result<Vec<super::HistoryBytes>> {
         if !super::super::publication::reconcile_present(&bitmap, scope, name) {
             continue;
         }
-        let head = model["head"].as_str().ok_or_else(|| invalid("outbound candidate head"))?;
+        let head = model["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+            .ok_or_else(|| invalid("outbound candidate head"))?;
         histories.push(super::prepare_history(&dir, scope, name, head)?);
     }
     Ok(histories)

@@ -108,7 +108,8 @@ fn apply_view(
 fn validate(request: &Detect) -> io::Result<()> {
     path(&request.root)?;
     path(&request.component_root)?;
-    if !request.component_root.starts_with(&request.root)
+    if request.identity.trim().is_empty()
+        || !request.component_root.starts_with(&request.root)
         || normalize(&request.root) != request.root
         || normalize(&request.component_root) != request.component_root
         || request.files.len() > 4096

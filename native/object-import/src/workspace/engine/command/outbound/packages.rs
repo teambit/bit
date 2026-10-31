@@ -99,7 +99,7 @@ fn eligible(target: &Value) -> bool {
         && target["directory"] != "."
         && target["version"]
             .as_str()
-            .is_some_and(|version| !version.is_empty())
+            .is_some_and(|version| !version.trim().is_empty())
 }
 
 fn component(
@@ -110,8 +110,14 @@ fn component(
     resume: bool,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<Option<Value>> {
-    let identity = target["identity"].as_str().ok_or_else(|| invalid("export package identity"))?;
-    let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("export package scope"))?;
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("export package identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .ok_or_else(|| invalid("export package scope"))?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -135,17 +141,21 @@ fn component(
         proofs,
     )?;
     let model = model::read_object(&objects, hash, "Component")?;
+    let hash = resolve_version_hash(target, &model)?;
+    let version = model::read_object(&objects, hash, "Version")?;
+    projection(input, target, &version, proofs).map(Some)
+}
+
+fn resolve_version_hash<'a>(target: &'a Value, model: &'a Value) -> io::Result<&'a str> {
     let version_id = target["version"].as_str().ok_or_else(|| invalid("export package version"))?;
-    let hash = if matches!(version_id, "" | "latest" | "head") {
+    Ok(if matches!(version_id, "" | "latest" | "head") {
         model["head"].as_str().unwrap_or(version_id)
     } else {
         model["versions"][version_id]
             .as_str()
             .or_else(|| model["orphanedVersions"][version_id].as_str())
             .unwrap_or(version_id)
-    };
-    let version = model::read_object(&objects, hash, "Version")?;
-    projection(input, target, &version, proofs).map(Some)
+    })
 }
 
 fn projection(

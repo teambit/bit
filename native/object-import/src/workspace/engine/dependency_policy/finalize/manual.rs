@@ -58,14 +58,16 @@ fn component(
     value: &Value,
     components: &mut [Vec<usize>; 3],
 ) -> bool {
-    let Some(resolved) = request.resolved.get(name) else {
-        return false;
-    };
-    let Some(identity) = &resolved.component_identity else {
+    let Some(resolved) = request.resolved.get(name) else { return false };
+    let Some(identity) = resolved.component_identity
+        .as_deref()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    else {
         return false;
     };
     if unversioned(identity) == unversioned(&request.self_identity) {
-        output.ignored_self.push(identity.clone());
+        output.ignored_self.push(identity.to_owned());
         return true;
     }
     if output.state.components[field]
@@ -74,10 +76,10 @@ fn component(
     {
         return true;
     }
-    output.added(field, identity.clone());
+    output.added(field, identity.to_owned());
     components[field].push(output.state.entries.len());
     output.state.entries.push(Entry {
-        identity: identity.clone(),
+        identity: identity.to_owned(),
         package_name: Some(resolved.name.clone()),
         version_range: value
             .as_str()

@@ -359,7 +359,10 @@ fn validate_remote_hosts(value: &Value) -> io::Result<()> {
     let hosts = value.as_object().ok_or_else(|| io::Error::other("invalid remote hosts"))?;
     if hosts
         .values()
-        .any(|host| !host.is_string())
+        .any(|host| {
+            host.as_str()
+                .is_none_or(|url| url.trim().is_empty())
+        })
     {
         return Err(io::Error::other("invalid remote host"));
     }

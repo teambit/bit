@@ -159,7 +159,11 @@ fn extend_dependencies(
         {
             continue;
         }
-        if !input.request.options.lane.as_ref().unwrap().include_deps {
+        if !input.request.options.lane
+            .as_ref()
+            .ok_or_else(|| invalid("lane filter options"))?
+            .include_deps
+        {
             return Err(invalid("lane filter excludes a required lane dependency"));
         }
         if !selected.contains(&other) {

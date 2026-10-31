@@ -6,7 +6,7 @@ use std::{io, path::Path};
 
 impl ProjectedLinker {
     pub(in crate::commands) fn fork_bitmap_preimage(&self, root: &Path) -> io::Result<Value> {
-        if root.as_os_str().is_empty() {
+        if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
             return Err(io::Error::other("fork bitmap workspace root is empty"));
         }
         self.retained.validate()?;

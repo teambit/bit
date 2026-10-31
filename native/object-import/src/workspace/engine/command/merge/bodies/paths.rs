@@ -27,9 +27,11 @@ pub(super) fn validate(root: &Path, path: &Path) -> io::Result<()> {
 
 fn canonical_relative(path: &Path) -> io::Result<()> {
     let raw = path.to_str().ok_or_else(|| invalid("merge nonUTF8 path"))?;
-    if raw
-        .split(std::path::is_separator)
-        .any(|segment| segment == ".")
+    if raw.is_empty()
+        || raw.len() > 4096
+        || raw
+            .split(std::path::is_separator)
+            .any(|segment| segment == ".")
     {
         return Err(invalid("merge nonrelative destination"));
     }
@@ -42,5 +44,8 @@ fn canonical_relative(path: &Path) -> io::Result<()> {
             name.to_str().ok_or_else(|| invalid("merge nonUTF8 path"))
         })
         .collect::<io::Result<Vec<_>>>()?;
+    if segments.is_empty() {
+        return Err(invalid("merge nonrelative destination"));
+    }
     crate::checkout::plan::relative_path(&segments.join("/"))
 }

@@ -11,7 +11,12 @@ pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Resul
         let identity = model_identity(context, model)?;
         let lane_head = find_lane_head(context, &identity);
         let mut heads = Vec::new();
-        for hash in [model["head"].as_str(), lane_head].into_iter().flatten() {
+        for hash in [model["head"].as_str(), lane_head]
+            .into_iter()
+            .flatten()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+        {
             if heads
                 .iter()
                 .any(|head: &Value| head["hash"] == hash)

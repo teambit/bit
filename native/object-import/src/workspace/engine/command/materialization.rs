@@ -86,6 +86,8 @@ fn finish(input: &Input<'_>, plan: &Value, applied: &Value) -> io::Result<Prepar
     let statuses = statuses(applied)?;
     let version_name = input.selection["version"]
         .as_str()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
         .ok_or_else(|| invalid("command selected version"))?
         .to_owned();
     let removals = applied["removals"]
@@ -95,6 +97,8 @@ fn finish(input: &Input<'_>, plan: &Value, applied: &Value) -> io::Result<Prepar
         .map(|value| {
             value
                 .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("command removal path"))
         })

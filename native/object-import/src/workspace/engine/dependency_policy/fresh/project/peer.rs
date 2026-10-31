@@ -34,7 +34,7 @@ fn truthy(value: &Value) -> bool {
         Value::Bool(value) => *value,
         Value::Number(value) => value
             .as_f64()
-            .is_some_and(|number| number != 0.0),
+            .is_some_and(|number| number != 0.0 && !number.is_nan()),
         Value::String(value) => !value.trim().is_empty(),
         _ => true,
     }

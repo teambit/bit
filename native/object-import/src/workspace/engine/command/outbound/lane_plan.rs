@@ -6,12 +6,14 @@ use super::{
 use std::io;
 
 pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
-    let host = remote::host(input, &lane.scope)?;
+    let scope = lane.scope.trim();
+    let lane_name = lane.name.trim();
+    let host = remote::host(input, scope)?;
     let fork_history = (host.starts_with("file://") && !cfg!(windows))
         .then(|| lane.fork_history.clone())
         .flatten();
     let prepared = lane_publication::prepare(input, &lane)?;
-    let name = format!("{}/{}", lane.scope, lane.name);
+    let name = format!("{scope}/{lane_name}");
     let count = lane.components.ids.len();
     let resume = input.options.resume
         .as_ref()

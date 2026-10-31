@@ -169,6 +169,8 @@ fn filter_origin_envs(entries: Vec<AspectEntry>, env_found: &mut bool) -> Vec<As
             .get("env")
             .and_then(Value::as_str)
             .or_else(|| entry.data.get("id").and_then(Value::as_str))
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
             .map(str::to_owned)
     });
     let has_envs = envs_entry.is_some()

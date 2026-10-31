@@ -78,7 +78,9 @@ fn resolve_string_target<'a>(
     let (identity, ver) = fields
         .get(key)?
         .as_str()?
-        .rsplit_once('@')?;
+        .trim()
+        .rsplit_once('@')
+        .map(|(identity, ver)| (identity.trim(), ver.trim()))?;
     if !ver.starts_with("__bit_pending_snapshot__:") && pinned.contains(identity) {
         return None;
     }

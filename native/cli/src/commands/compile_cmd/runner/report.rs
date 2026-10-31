@@ -26,7 +26,7 @@ pub(super) fn create(
 }
 
 fn json_rows(rows: &[Compiled]) -> Vec<Value> {
-    rows.iter().map(|row| json!({"component":row.identity,
+    rows.iter().map(|row| json!({"component":row.identity.trim(),
         "buildResults":row.files.iter().map(|file|&file.path).collect::<Vec<_>>(),
         "errors":row.errors.iter().map(|error|json!({"path":error.path,"error":{}})).collect::<Vec<_>>()
     })).collect()

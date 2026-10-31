@@ -105,7 +105,8 @@ fn receipt(write: &Value) -> io::Result<(Value, Value)> {
     let row = write.as_object().ok_or_else(|| invalid("import write receipt"))?;
     let path = write["path"]
         .as_str()
-        .filter(|path| Path::new(path).is_absolute())
+        .map(str::trim)
+        .filter(|path| !path.is_empty() && Path::new(path).is_absolute())
         .ok_or_else(|| invalid("import write path"))?;
     if row.len() != 3
         || !row.contains_key("beforeHash")

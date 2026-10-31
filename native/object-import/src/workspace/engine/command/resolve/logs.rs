@@ -48,7 +48,9 @@ fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
         .or_else(|| row["id"].as_str())
-        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
+        .map(str::trim)
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
+        .filter(|base| !base.is_empty())
 }
 
 fn editor<'a>(receipt: &'a Value, identity: &str) -> &'a Value {

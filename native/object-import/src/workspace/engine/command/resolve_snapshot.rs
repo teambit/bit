@@ -242,9 +242,18 @@ fn allocations<'a>(
 }
 
 fn validate_scalars(receipt: &Value) -> io::Result<()> {
-    if receipt["batchId"].as_str().is_none()
-        || receipt["bitVersion"].as_str().is_none()
-        || receipt["log"]["date"].as_str().is_none()
+    if receipt["batchId"]
+        .as_str()
+        .map(str::trim)
+        .is_none_or(str::is_empty)
+        || receipt["bitVersion"]
+            .as_str()
+            .map(str::trim)
+            .is_none_or(str::is_empty)
+        || receipt["log"]["date"]
+            .as_str()
+            .map(str::trim)
+            .is_none_or(str::is_empty)
     {
         return Err(invalid("resolve scalar receipt"));
     }

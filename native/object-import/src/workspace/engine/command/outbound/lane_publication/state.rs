@@ -6,7 +6,7 @@ impl Prepared {
     pub(super) fn reconcile(&mut self, exported_ids: &[String]) -> io::Result<()> {
         let ids = exported_ids
             .iter()
-            .cloned()
+            .map(|id| id.trim().to_owned())
             .collect::<HashSet<_>>();
         let before = crate::recovery::jsonc::parse(&self.published.bitmap.before)?;
         self.published.non_existing_ids =
@@ -21,8 +21,7 @@ impl Prepared {
             };
             if !old["scope"]
                 .as_str()
-                .unwrap_or_default()
-                .is_empty()
+                .is_none_or(|scope| scope.trim().is_empty())
             {
                 continue;
             }

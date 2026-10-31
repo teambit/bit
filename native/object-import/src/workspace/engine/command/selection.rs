@@ -38,6 +38,8 @@ pub(super) fn select(
         }
         let observation = directive["observation"]
             .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("command checkout observation"))?;
         let value = observe(observation, directive, options, selection, repository)?;
         observed.push(observation.to_owned());

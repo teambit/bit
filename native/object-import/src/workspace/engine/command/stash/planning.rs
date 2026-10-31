@@ -112,11 +112,12 @@ fn validate_selection(targets: &[Value], ids: Option<&[String]>) -> io::Result<(
     if let Some(ids) = ids {
         let mut seen = HashSet::new();
         for id in ids {
-            if id.trim().is_empty()
-                || !seen.insert(id)
+            let trimmed = id.trim();
+            if trimmed.is_empty()
+                || !seen.insert(trimmed)
                 || !targets
                     .iter()
-                    .any(|target| target["identity"] == *id)
+                    .any(|target| target["identity"].as_str().map(str::trim) == Some(trimmed))
             {
                 return Err(invalid("stash selection"));
             }

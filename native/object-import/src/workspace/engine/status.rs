@@ -25,13 +25,13 @@ pub(super) fn compare(target: &[File], current: &[File]) -> io::Result<(usize, V
     }
     let mut paths = HashMap::with_capacity(current.len());
     for file in current {
-        paths.entry(&file.relative_path).or_insert(&file.hash);
+        paths.entry(file.relative_path.trim()).or_insert(&file.hash);
     }
     let unchanged: Vec<bool> = target
         .iter()
         .map(|file| {
             paths
-                .get(&file.relative_path)
+                .get(file.relative_path.trim())
                 .is_some_and(|hash| hash.trim().eq_ignore_ascii_case(file.hash.trim()))
         })
         .collect();

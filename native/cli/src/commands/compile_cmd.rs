@@ -179,8 +179,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--delete-dist-dir=false" => options.delete_dist_dir = false,
             "--generate-types" | "--generate-types=true" => options.generate_types = true,
             "--generate-types=false" => options.generate_types = false,
-            val if !val.starts_with('-') && !val.is_empty() => {
-                options.components.push(val.to_owned());
+            val if !val.trim().starts_with('-') && !val.trim().is_empty() => {
+                options.components.push(val.trim().to_owned());
             }
             val => apply_short_compile_flags(val, &mut options)?,
         }

@@ -111,17 +111,19 @@ fn identity(value: &Value) -> io::Result<Value> {
     let Some(raw_name) = object.get("name").and_then(Value::as_str) else {
         return Err(invalid("status Version dependency scope"));
     };
-    if object
-        .get("scope")
-        .and_then(Value::as_str)
-        .is_none_or(str::is_empty)
+    let raw_name = raw_name.trim();
+    if raw_name.is_empty()
+        || object
+            .get("scope")
+            .and_then(Value::as_str)
+            .is_none_or(|scope| scope.trim().is_empty())
     {
         return Err(invalid("status Version dependency scope"));
     }
     let mut object = object.clone();
     let (bare_name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver)));
+        .map_or((raw_name, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
     object.insert("name".into(), json!(bare_name));
     if !object.contains_key("version")
         && let Some(ver) = inline_ver.or_else(|| object.get("head").and_then(Value::as_str))

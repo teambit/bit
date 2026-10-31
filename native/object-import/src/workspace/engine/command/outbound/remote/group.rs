@@ -21,7 +21,10 @@ pub(super) fn id(config: &Value) -> io::Result<Option<u32>> {
 fn name(config: &Value) -> io::Result<Option<&str>> {
     match &config["groupName"] {
         Value::Null | Value::Bool(false) => Ok(None),
-        Value::String(name) => Ok((!name.is_empty()).then_some(name.as_str())),
+        Value::String(name) => {
+            let trimmed = name.trim();
+            Ok((!trimmed.is_empty()).then_some(trimmed))
+        }
         Value::Number(number) if number.as_f64() == Some(0.0) => Ok(None),
         _ => Err(io::Error::other("unsupported file remote group configuration")),
     }

@@ -129,7 +129,7 @@ pub(super) fn all_lane_versions(
     main_head: Option<&str>,
 ) -> io::Result<Vec<String>> {
     let mut output = Vec::new();
-    let mut pending = vec![head.to_owned()];
+    let mut pending = vec![head.trim().to_owned()];
     let mut seen = HashSet::new();
     while let Some(hash) = pending.pop() {
         if !seen.insert(hash.clone()) {
@@ -142,14 +142,20 @@ pub(super) fn all_lane_versions(
         let parents =
             version["parents"].as_array().ok_or_else(|| invalid("outbound lane parents"))?;
         for parent in parents.iter().rev() {
-            let parent = parent.as_str().ok_or_else(|| invalid("outbound lane parent"))?;
+            let parent = parent
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("outbound lane parent"))?;
             crate::merge_history::hash(parent)?;
             pending.push(parent.to_owned());
         }
         output.push(hash);
     }
     output.reverse();
-    if let Some(main) = main_head.filter(|main| !seen.contains(*main)) {
+    if let Some(main) = main_head
+        .map(str::trim)
+        .filter(|main| !seen.contains(*main))
+    {
         crate::merge_history::hash(main)?;
         if dir
             .join(&main[..2])

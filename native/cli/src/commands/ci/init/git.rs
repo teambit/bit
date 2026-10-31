@@ -64,6 +64,7 @@ fn detected_branch(root: &Path) -> Option<String> {
         .map(str::to_owned)
 }
 fn valid_branch(value: &str) -> bool {
+    let value = value.trim();
     !value.is_empty()
         && value != "@"
         && !value.starts_with(['-', '/'])

@@ -271,6 +271,7 @@ fn render_dep_info_table(root_id: &str, rows: Vec<DepInfoRow>, chalk: Chalk) -> 
 }
 
 fn display_id(id: &str) -> String {
+    let id = id.trim();
     id.strip_suffix("@0.0.1-new")
         .unwrap_or(id)
         .to_owned()

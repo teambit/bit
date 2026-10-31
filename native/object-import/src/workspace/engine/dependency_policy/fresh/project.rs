@@ -309,23 +309,27 @@ impl Projection<'_> {
 }
 
 fn identity(id: &Value) -> io::Result<String> {
-    if let Some(raw) = id.as_str() {
+    if let Some(raw) = id.as_str().map(str::trim) {
         let (scope, name) = unversioned(raw)
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("fresh component id"))?;
         return Ok(format!("{scope}/{name}"));
     }
     let scope = id["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("fresh component scope"))?;
     let name = id["name"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("fresh component name"))?;
     Ok(format!("{scope}/{name}"))
 }
 fn unversioned(id: &str) -> &str {
-    id.rsplit_once('@').map_or(id, |(base, _)| base)
+    let trimmed = id.trim();
+    trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
 }

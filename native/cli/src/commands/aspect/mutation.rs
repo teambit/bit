@@ -85,7 +85,8 @@ pub(in crate::commands) fn workspace_default_scope(workspace: &Value) -> Result<
     }
     ws["defaultScope"]
         .as_str()
-        .filter(|scope| !scope.trim().is_empty())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .map(str::to_owned)
         .ok_or_else(|| Failure::Declined("missing defaultScope".into()))
 }

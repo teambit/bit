@@ -46,7 +46,10 @@ pub(super) fn include(
 }
 
 pub(super) fn added(retained: &Retained) -> Option<&str> {
-    retained.record.context[AUTO].as_str()
+    retained.record.context[AUTO]
+        .as_str()
+        .map(str::trim)
+        .filter(|root| !root.is_empty())
 }
 
 fn target(context: &Value) -> Option<&Value> {

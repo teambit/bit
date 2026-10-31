@@ -63,11 +63,15 @@ fn row(target: &Target) -> io::Result<Value> {
     Ok(json!({"id":id(&target.identity, &target.version)?,"dependencies":dependencies}))
 }
 fn id(identity: &str, version: &str) -> io::Result<Value> {
+    let identity = identity.trim();
+    let version = version.trim();
     let (identity, inline_version) = identity
         .rsplit_once('@')
-        .unwrap_or((identity, ""));
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("status autotag identity"))?;
+        .map_or((identity, ""), |(bare, ver)| (bare.trim(), ver.trim()));
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .ok_or_else(|| invalid("status autotag identity"))?;
     if scope.is_empty() || name.is_empty() {
         return Err(invalid("status autotag identity"));
     }

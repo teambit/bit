@@ -75,6 +75,8 @@ fn entries(lane: &Value) -> io::Result<Vec<String>> {
             .iter()
             .map(|row| {
                 row.as_str()
+                    .map(str::trim)
+                    .filter(|entry| !entry.is_empty())
                     .map(str::to_owned)
                     .ok_or_else(|| invalid("outbound hidden identity"))
             })
@@ -83,7 +85,12 @@ fn entries(lane: &Value) -> io::Result<Vec<String>> {
     }
 }
 fn identity(value: &str) -> io::Result<(&str, &str)> {
-    let (id, hash) = value.rsplit_once('@').ok_or_else(|| invalid("outbound hidden version"))?;
+    let (id, hash) = value
+        .trim()
+        .rsplit_once('@')
+        .ok_or_else(|| invalid("outbound hidden version"))?;
+    let id = id.trim();
+    let hash = hash.trim();
     crate::merge_history::hash(hash)?;
     if !id.contains('/') {
         return Err(invalid("outbound hidden scope"));

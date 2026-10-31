@@ -251,7 +251,11 @@ fn finalize_git_after_tag(
     if status.trim().is_empty() {
         return;
     }
-    let commit_msg = opts.commit_message.as_deref().unwrap_or(DEFAULT_COMMIT_MESSAGE);
+    let commit_msg = opts.commit_message
+        .as_deref()
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+        .unwrap_or(DEFAULT_COMMIT_MESSAGE);
     let _ = run_git(root, &["commit", "-m", commit_msg]);
     if opts.skip_push {
         notes.push("Skipping git push (--skip-push flag)".into());

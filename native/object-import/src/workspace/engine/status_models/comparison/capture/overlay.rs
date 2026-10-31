@@ -13,9 +13,10 @@ pub(super) fn validate(target: &Target) -> io::Result<()> {
     if !target.source_overlays.is_empty() && target.source_overlay_root.is_none() {
         return Err(invalid("source overlay root missing"));
     }
-    if target.source_overlays
-        .keys()
-        .any(|file| !target.files.contains(file))
+    if target.source_overlays.len() > 4096
+        || target.source_overlays
+            .keys()
+            .any(|file| !target.files.contains(file))
     {
         return Err(invalid("source overlay outside component inventory"));
     }

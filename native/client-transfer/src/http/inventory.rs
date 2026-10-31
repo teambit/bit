@@ -171,7 +171,10 @@ fn inventory_rows(response: &Value, include_deleted: bool) -> io::Result<Vec<Val
                     .and_then(|aspects| {
                         aspects
                             .iter()
-                            .find(|aspect| aspect["id"] == "teambit.component/remove")
+                            .find(|aspect| {
+                                aspect["id"].as_str().map(str::trim)
+                                    == Some("teambit.component/remove")
+                            })
                     })
                     .and_then(|aspect| aspect["config"].get("removed"))
             {

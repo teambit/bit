@@ -132,10 +132,11 @@ pub(in crate::commands) fn apply_dep_resolver_config(
 }
 
 fn component_json_path(root: &Path, entry: &BitmapEntry) -> Option<PathBuf> {
-    if entry.root_dir.is_empty() {
+    let root_dir = entry.root_dir.trim();
+    if root_dir.is_empty() {
         return None;
     }
-    let path = root.join(&entry.root_dir).join("component.json");
+    let path = root.join(root_dir).join("component.json");
     path.is_file().then_some(path)
 }
 

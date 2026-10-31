@@ -18,11 +18,13 @@ pub(super) fn lane_objects(
     {
         return Err(invalid("resolve lane readme lifecycle"));
     }
-    for (material, allocation) in materials
-        .iter()
-        .zip(receipt["versions"].as_array().unwrap())
-    {
-        let next = allocation["hash"].as_str().unwrap();
+    let allocations =
+        receipt["versions"].as_array().ok_or_else(|| invalid("resolve lane versions"))?;
+    for (material, allocation) in materials.iter().zip(allocations) {
+        let next = allocation["hash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("resolve lane allocation hash"))?;
         update(
             &mut value,
             &material.identity,

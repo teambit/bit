@@ -318,6 +318,7 @@ fn normalize_rel_path(path: &Path) -> String {
 }
 
 fn extract_package_name(specifier: &str) -> &str {
+    let specifier = specifier.trim();
     if specifier.starts_with('@') {
         let mut indices = specifier.match_indices('/');
         let _ = indices.next();

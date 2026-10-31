@@ -73,7 +73,7 @@ fn identity(value: &Value) -> io::Result<String> {
 fn optional_string(value: Option<&Value>) -> io::Result<Option<&str>> {
     match value {
         None | Some(Value::Null) => Ok(None),
-        Some(Value::String(value)) => Ok(Some(value)),
+        Some(Value::String(value)) => Ok(Some(value.trim())),
         _ => Err(invalid("dependency package version")),
     }
 }
@@ -81,8 +81,10 @@ fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(value) => *value,
-        Value::Number(value) => value.as_f64() != Some(0.0),
-        Value::String(value) => !value.is_empty(),
+        Value::Number(value) => value
+            .as_f64()
+            .is_some_and(|number| number != 0.0 && !number.is_nan()),
+        Value::String(value) => !value.trim().is_empty(),
         Value::Object(_) | Value::Array(_) => true,
     }
 }

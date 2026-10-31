@@ -23,7 +23,11 @@ fn find_versioned_aspect<'a>(
 ) -> Option<&'a Value> {
     let prefix = format!("{id}@");
     map.iter()
-        .find_map(|(key, val)| key.starts_with(&prefix).then_some(val))
+        .find_map(|(key, val)| {
+            key.trim()
+                .starts_with(&prefix)
+                .then_some(val)
+        })
 }
 
 /// Apply global aspect settings to an already retained workspace document.

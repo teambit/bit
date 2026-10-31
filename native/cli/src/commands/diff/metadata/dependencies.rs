@@ -119,6 +119,7 @@ fn plain_text(changes: &[Change], field: &str, labels: &Labels, chalk: Chalk) ->
     if changes.is_empty() {
         return None;
     }
+    let field = field.trim();
     let side = |sign: &str, name: &str, version: &Option<String>| match version
         .as_deref()
         .map(str::trim)

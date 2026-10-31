@@ -24,8 +24,9 @@ impl ProjectedLinker {
         if !missing.is_empty() {
             let known = identities
                 .iter()
-                .filter(|id| !missing.contains(id))
-                .cloned()
+                .map(|id| id.trim())
+                .filter(|id| !id.is_empty() && !missing.iter().any(|item| item == id))
+                .map(str::to_owned)
                 .collect::<Vec<_>>();
             // Missing captures may need existing classes, then project a fresh
             // bitmap. Seed before loading and rebind all classes afterwards.

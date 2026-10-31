@@ -22,7 +22,11 @@ pub(super) fn prepare(
     let mut engine = Engine::new()?;
     let home = workspace_command::home();
     let (context, preflight) = context(&mut engine, root, cwd, &home, options)?;
-    if diagnostics::ci() && options.env.is_some() {
+    if diagnostics::ci()
+        && options.env
+            .as_deref()
+            .is_some_and(|env| !env.trim().is_empty())
+    {
         let probe =
             projection::prepare(root, preflight.bitmap(), preflight.components(), context.clone())?;
         diagnostics::links(root, &probe)?;

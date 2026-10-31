@@ -146,12 +146,15 @@ fn forked_from(lane: &Value, scope: &str, new_scope: bool) -> io::Result<Option<
         .get("forkedFrom")
         .filter(|value| !value.is_null())
         .map(|parent| {
-            let (parent_scope, parent_name) = if let Some(raw) = parent.as_str() {
-                raw.split_once('/').unwrap_or(("", raw))
+            let (parent_scope, parent_name) = if let Some(raw) = parent.as_str().map(str::trim) {
+                raw.split_once('/')
+                    .map_or(("", raw), |(scope_part, name_part)| {
+                        (scope_part.trim(), name_part.trim())
+                    })
             } else {
                 (
-                    parent["scope"].as_str().unwrap_or_default(),
-                    parent["name"].as_str().unwrap_or_default(),
+                    parent["scope"].as_str().map_or("", str::trim),
+                    parent["name"].as_str().map_or("", str::trim),
                 )
             };
             if parent_scope.is_empty() || parent_name.is_empty() {

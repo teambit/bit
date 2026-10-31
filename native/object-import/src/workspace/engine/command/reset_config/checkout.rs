@@ -69,8 +69,9 @@ fn insert(
     record: &Record,
     prefer_workspace: bool,
 ) -> io::Result<()> {
-    let base = id.rsplit_once('@').map_or(id, |(base, _)| base);
-    if !seen.insert(base.to_owned()) || id.starts_with("file:") {
+    let id = id.trim();
+    let base = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
+    if base.is_empty() || !seen.insert(base.to_owned()) || id.starts_with("file:") {
         return Ok(());
     }
     if value == "-" {
@@ -87,6 +88,7 @@ fn insert(
     let id = if let Some(target) = workspace.filter(|_| prefer_workspace || id == base) {
         target["version"]
             .as_str()
+            .map(str::trim)
             .filter(|version| !version.is_empty())
             .map_or_else(|| base.to_owned(), |version| format!("{base}@{version}"))
     } else {

@@ -15,8 +15,11 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     while let Some(&arg) = args.get(index) {
         if arg == "--" {
             for &rest in &args[index + 1..] {
-                (!rest.is_empty() && !rest.starts_with('-') && options.id.replace(rest).is_none())
-                    .then_some(())?;
+                let trimmed = rest.trim();
+                (!trimmed.is_empty()
+                    && !trimmed.starts_with('-')
+                    && options.id.replace(trimmed).is_none())
+                .then_some(())?;
             }
             break;
         }

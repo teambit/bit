@@ -248,6 +248,7 @@ fn basic_term(term: &str) -> bool {
 
 /// `/^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/`.
 fn teamcity_supports_color(version: &str) -> bool {
+    let version = version.trim();
     let digits = version
         .chars()
         .take_while(char::is_ascii_digit)

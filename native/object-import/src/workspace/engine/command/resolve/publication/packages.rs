@@ -18,8 +18,9 @@ pub(in crate::workspace::engine::command::resolve) fn finalize(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
-    if input.token.trim().is_empty()
-        || retained.record.token != input.token
+    let token = input.token.trim();
+    if token.is_empty()
+        || retained.record.token != token
         || (retained.snap.is_none() && retained.record.context["callbackLifecycle"] != true)
     {
         return Err(invalid("snapshot package token"));
@@ -49,8 +50,9 @@ pub(in crate::workspace::engine::command::resolve) fn stage(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
-    if input.token.trim().is_empty()
-        || retained.record.token != input.token
+    let token = input.token.trim();
+    if token.is_empty()
+        || retained.record.token != token
         || (retained.snap.is_none() && retained.record.context["callbackLifecycle"] != true)
     {
         return Err(invalid("snapshot package token"));

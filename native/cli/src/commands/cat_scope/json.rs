@@ -121,6 +121,7 @@ pub(super) fn build_lane_json_obj(
     }
     let comps = build_lane_components_json(raw.get("components"))?;
     let mut map = Map::new();
+    let (scope, name, hash) = (scope.trim(), name.trim(), hash.trim());
     map.insert("validateBeforePersist".into(), Value::Bool(true));
     map.insert("isNew".into(), Value::Bool(false));
     map.insert("hasChanged".into(), Value::Bool(false));

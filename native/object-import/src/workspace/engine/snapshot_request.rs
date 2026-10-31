@@ -38,7 +38,7 @@ fn dispatch_resolve(
         }
         Request::CommandSnapshotStageBuild(input) => command::resolve::stage_build(&input, state),
         Request::CommandSnapshotBuildFinalize(input) => {
-            command::resolve::build_finalize(input, snapshots)
+            pool.install(|| command::resolve::build_finalize(input, snapshots))
         }
         Request::CommandSnapshotValidate(input) => {
             command::resolve::validate_snapshot(&input, state)

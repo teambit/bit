@@ -124,7 +124,7 @@ fn print_value(value: &Value) -> io::Result<String> {
         Value::Array(items) => {
             let items = items
                 .iter()
-                .map(|item| text(Some(item)))
+                .map(|item| text(Some(item)).map(|val| val.trim().to_owned()))
                 .collect::<io::Result<Vec<_>>>()?;
             Ok(format!("[ {} ]", items.join(", ")))
         }

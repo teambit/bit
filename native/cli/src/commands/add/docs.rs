@@ -138,6 +138,7 @@ fn order(root: &Path, components: &[Value], writes: &mut [Value]) -> io::Result<
     writes.sort_by_key(|row| {
         row["path"]
             .as_str()
+            .map(str::trim)
             .and_then(|path| ranks.get(Path::new(path)))
             .copied()
             .unwrap_or(usize::MAX)

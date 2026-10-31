@@ -61,8 +61,14 @@ fn validate_policy(value: &Value) -> io::Result<()> {
         }
         let dependencies = dependencies.as_object().ok_or_else(|| invalid("reset policy map"))?;
         if dependencies
-            .values()
-            .any(|version| version.as_str().is_none_or(str::is_empty))
+            .iter()
+            .any(|(name, version)| {
+                name.trim().is_empty()
+                    || version
+                        .as_str()
+                        .map(str::trim)
+                        .is_none_or(str::is_empty)
+            })
         {
             return Err(invalid("reset policy version"));
         }
@@ -73,5 +79,11 @@ fn validate_policy(value: &Value) -> io::Result<()> {
 fn is_harmony_node_env(value: &Value) -> bool {
     value
         .as_str()
-        .is_some_and(|env| env.split('@').next() == Some("teambit.harmony/node"))
+        .is_some_and(|env| {
+            env.trim()
+                .split('@')
+                .next()
+                .map(str::trim)
+                == Some("teambit.harmony/node")
+        })
 }

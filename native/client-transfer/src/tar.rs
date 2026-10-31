@@ -170,7 +170,9 @@ pub(crate) fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(value) => *value,
-        Value::Number(value) => value.as_f64() != Some(0.0),
+        Value::Number(value) => value
+            .as_f64()
+            .is_some_and(|number| number != 0.0 && !number.is_nan()),
         Value::String(value) => !value.trim().is_empty(),
         Value::Array(_) | Value::Object(_) => true,
     }

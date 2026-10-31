@@ -202,5 +202,8 @@ fn find_bitmap_entry_by_dir<'a>(bitmap: &'a Bitmap, raw_dir: &str) -> Option<&'a
 }
 
 pub(super) fn is_unscoped_bitmap_row(row: &Value) -> bool {
-    row["scope"].as_str().is_none_or(str::is_empty)
+    row["scope"]
+        .as_str()
+        .map(str::trim)
+        .is_none_or(str::is_empty)
 }

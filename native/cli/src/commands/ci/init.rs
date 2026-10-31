@@ -128,11 +128,12 @@ impl Plan {
         let repo_name = target.repository
             .as_ref()
             .map_or_else(|| agents::UNKNOWN.into(), remote::Repository::display);
-        let section = agents::render(
-            self.scope.as_deref().unwrap_or("<owner>.<scope>"),
-            &repo_name,
-            &target.branch,
-        );
+        let scope = self.scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .unwrap_or("<owner>.<scope>");
+        let section = agents::render(scope, &repo_name, &target.branch);
         let (status, note) = agents::write(&self.root, &section, &repo_name)?;
         Ok(report::File {
             relative: "AGENTS.md",

@@ -110,6 +110,7 @@ fn match_component_dep_usage(
 }
 
 fn dep_matches_query(dep: &ResolvedDep, name: &str, req_ver: Option<&str>) -> bool {
+    let name = name.trim();
     let name_ok = dep.package_name == name
         || dep.id == name
         || dep.comp_name.as_deref() == Some(name)

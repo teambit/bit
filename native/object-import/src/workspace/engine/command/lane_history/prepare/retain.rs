@@ -37,9 +37,8 @@ pub(super) fn run(
     Ok((count, output))
 }
 fn proofs(input: &Prepare, lane_hash: &str) -> io::Result<Vec<proof::Proof>> {
-    if lane_hash.len() < 3 {
-        return Err(invalid("history lane hash"));
-    }
+    let lane_hash = lane_hash.trim();
+    crate::merge_history::hash(lane_hash)?;
     let mut proofs = Vec::new();
     proof::read(&input.root.join(".bitmap"), &mut proofs)?;
     for hash in [lane_hash, &crate::lane_history::hash(lane_hash)] {

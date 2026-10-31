@@ -21,14 +21,17 @@ pub(super) fn select_versions(
 }
 
 fn head_only(model: &Value) -> io::Result<Staged> {
-    let head = model["head"].as_str().ok_or_else(|| invalid("outbound head-only head"))?;
+    let head = model["head"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("outbound head-only head"))?;
     crate::merge_history::hash(head)?;
     let labels = model["versions"]
         .as_object()
         .into_iter()
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter())
-        .filter(|(_, hash)| hash.as_str() == Some(head))
+        .filter(|(_, hash)| hash.as_str().map(str::trim) == Some(head))
         .map(|(tag, _)| tag.as_str())
         .collect::<Vec<_>>();
     let version = match labels.as_slice() {

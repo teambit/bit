@@ -48,7 +48,10 @@ fn directories(paths: &[String], policy: &mut Matcher) -> Vec<(String, String)> 
     let mut positions = HashMap::new();
     for path in paths {
         let Some((directory, name)) = path.rsplit_once('/') else { continue };
-        if !matches!(name, ".gitignore" | ".bitignore") || !policy.keep(&format!("{directory}/")) {
+        if directory.is_empty()
+            || !matches!(name, ".gitignore" | ".bitignore")
+            || !policy.keep(&format!("{directory}/"))
+        {
             continue;
         }
         let index = *positions

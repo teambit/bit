@@ -86,8 +86,8 @@ fn model_request(request: &Request) -> super::Request {
         targets: request.targets
             .iter()
             .map(|target| super::Target {
-                identity: target.identity.clone(),
-                version: target.version.clone(),
+                identity: target.identity.trim().to_owned(),
+                version: target.version.trim().to_owned(),
             })
             .collect(),
         history: false,

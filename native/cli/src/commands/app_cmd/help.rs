@@ -40,7 +40,7 @@ pub(super) fn unsupported_flag_help(argv: &[&str], chalk: Chalk) -> Option<Strin
             return Some(run_flag_help(name, flag, chalk));
         }
         ["run" | "c", app_name, flag @ ("--ssr" | "--json" | "--no-color")]
-            if !app_name.is_empty() && !app_name.starts_with('-') =>
+            if !app_name.trim().is_empty() && !app_name.starts_with('-') =>
         {
             return Some(run_flag_help(name, flag, chalk));
         }

@@ -40,6 +40,7 @@ fn custom(request: &Request) -> io::Result<()> {
     for (file, custom) in request.detector.custom.iter().flat_map(|custom| custom.iter()) {
         path(Path::new(file))?;
         if !request.files.contains(&Path::new(file).to_owned())
+            || custom.source_hash.trim().is_empty()
             || custom.dependencies.len() > MAX_FILES
             || custom.lookups.len() > MAX_FILES
         {

@@ -88,7 +88,8 @@ impl Replay {
                 serde_json::from_value(cached["pathMap"].clone()).map_err(io::Error::other)?;
             let dependencies: Vec<_> = row.dependencies
                 .iter()
-                .map(|dep| dep.resolved_dep.clone())
+                .map(|dep| dep.resolved_dep.trim().to_owned())
+                .filter(|dep| !dep.is_empty())
                 .collect();
             tree.insert(file.clone(), json!(dependencies));
             self.record(&file, cached["pathMap"].clone(), false)?;

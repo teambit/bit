@@ -65,7 +65,7 @@ pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) ->
 fn strip_exported_version(id: &str) -> String {
     let trimmed = id.trim();
     match trimmed.rsplit_once('@') {
-        Some((identity, _)) if !identity.is_empty() => identity.trim().to_owned(),
+        Some((identity, _)) if !identity.trim().is_empty() => identity.trim().to_owned(),
         _ => trimmed.to_owned(),
     }
 }

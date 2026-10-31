@@ -24,31 +24,41 @@ pub(in crate::workspace::engine::command) fn extensions(value: &Value) -> io::Re
 }
 
 fn identity(row: &Value) -> io::Result<String> {
-    if let Some(name) = row["name"].as_str() {
-        if row.get("extensionId").is_some() || !name.contains('/') {
+    if let Some(name) = row["name"].as_str().map(str::trim) {
+        if row.get("extensionId").is_some()
+            || !name
+                .split_once('/')
+                .is_some_and(|(scope, part)| !scope.trim().is_empty() && !part.trim().is_empty())
+        {
             return Err(invalid("snapshot callback core identity"));
         }
         return Ok(name.to_owned());
     }
-    if let Some(raw) = row["extensionId"].as_str() {
-        let base = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
-        let (scope, name) =
-            base.split_once('/').ok_or_else(|| invalid("snapshot callback extension identity"))?;
-        if scope.is_empty() || name.is_empty() {
-            return Err(invalid("snapshot callback extension identity"));
-        }
+    if let Some(raw) = row["extensionId"].as_str().map(str::trim) {
+        let base = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
+        let (scope, name) = base
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("snapshot callback extension identity"))?;
         return Ok(format!("{scope}/{name}"));
     }
+    object_identity(row)
+}
+
+fn object_identity(row: &Value) -> io::Result<String> {
     let id = row["extensionId"]
         .as_object()
         .ok_or_else(|| invalid("snapshot callback extension identity"))?;
     let scope = id
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .ok_or_else(|| invalid("snapshot callback extension scope"))?;
     let name = id
         .get("name")
         .and_then(Value::as_str)
+        .map(str::trim)
         .ok_or_else(|| invalid("snapshot callback extension name"))?;
     if scope.is_empty()
         || name.is_empty()
@@ -57,7 +67,12 @@ fn identity(row: &Value) -> io::Result<String> {
             .any(|key| !matches!(key.as_str(), "scope" | "name" | "version"))
         || id
             .get("version")
-            .is_some_and(|version| !version.is_string())
+            .is_some_and(|version| {
+                version
+                    .as_str()
+                    .map(str::trim)
+                    .is_none_or(str::is_empty)
+            })
     {
         return Err(invalid("snapshot callback extension identity"));
     }

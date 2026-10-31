@@ -9,12 +9,13 @@ impl Prepared {
         relation: Value,
         output: Value,
     ) -> Self {
+        let version_name = version_name(current, &output);
         Self {
             conflict: Conflict::Unrelated(relation),
             hidden: current.hidden,
             output,
             version,
-            version_name: current.target.version.trim().to_owned(),
+            version_name,
             files,
             conflict_paths: Vec::new(),
             destinations: Destinations { request: json!({"files":[]}), removals: Vec::new() },
@@ -26,4 +27,16 @@ impl Prepared {
             _ => None,
         }
     }
+}
+
+fn version_name(current: &Captured, output: &Value) -> String {
+    let trimmed = current.target.version.trim();
+    if !trimmed.is_empty() {
+        return trimmed.to_owned();
+    }
+    output["id"]
+        .as_str()
+        .and_then(|id| id.rsplit_once('@'))
+        .map_or("", |(_, ver)| ver.trim())
+        .to_owned()
 }

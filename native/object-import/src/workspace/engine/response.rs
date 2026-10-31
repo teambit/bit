@@ -22,7 +22,7 @@ pub(super) fn canonical(message: String) -> io::Error {
 }
 
 pub(super) fn with_progress(error: io::Error, progress: serde_json::Value) -> io::Error {
-    if !is_canonical(&error) {
+    if !is_canonical(&error) || progress.is_null() {
         return error;
     }
     io::Error::other(CanonicalError { message: error.to_string(), progress: Some(progress) })

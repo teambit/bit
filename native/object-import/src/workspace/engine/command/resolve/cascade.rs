@@ -53,10 +53,10 @@ fn build_rows(
     ordered
         .iter()
         .map(|row| {
-            let identity = row["identity"].as_str().unwrap_or_default();
+            let identity = row["identity"].as_str().map_or("", str::trim);
             let pinned = components
                 .iter()
-                .find(|comp| comp.identity == identity)
+                .find(|comp| comp.identity.trim() == identity)
                 .map(super::projection::Component::pinned_from_config)
                 .unwrap_or_default();
             component(row, &pinned)
@@ -71,13 +71,13 @@ fn ordered<'a>(
 ) -> io::Result<Vec<&'a Value>> {
     let mut ordered = current
         .iter()
-        .filter(|row| !selected_set.contains(row["identity"].as_str().unwrap_or_default()))
+        .filter(|row| !selected_set.contains(row["identity"].as_str().map_or("", str::trim)))
         .collect::<Vec<_>>();
     for identity in selected {
         ordered.push(
             current
                 .iter()
-                .find(|row| row["identity"] == *identity)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.as_str()))
                 .ok_or_else(|| invalid("resolve changed capture absent"))?,
         );
     }

@@ -110,10 +110,13 @@ fn is_supported_run(args: &[&str]) -> bool {
     options.app_name
         .as_deref()
         .is_none_or(|name| {
-            name.bytes()
-                .all(|byte| {
-                    byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'/' | b'.')
-                })
+            let name = name.trim();
+            !name.is_empty()
+                && name
+                    .bytes()
+                    .all(|byte| {
+                        byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'/' | b'.')
+                    })
         })
 }
 

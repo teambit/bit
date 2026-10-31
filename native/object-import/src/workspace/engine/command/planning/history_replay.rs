@@ -18,12 +18,12 @@ pub(super) fn replay(
         identity,
         model,
     );
-    let to = record.request.options.to.as_deref().unwrap_or_default();
+    let to = record.request.options.to.as_deref().map_or("", str::trim);
     let observations = selected["observations"]
         .as_array()
         .ok_or_else(|| invalid("command selection observations"))?;
     for stage in observations {
-        if let Some(heads) = stage_heads(stage.as_str(), to, model, head, remote) {
+        if let Some(heads) = stage_heads(stage.as_str().map(str::trim), to, model, head, remote) {
             histories.distance(
                 &record.request.root,
                 identity,

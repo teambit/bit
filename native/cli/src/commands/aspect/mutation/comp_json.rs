@@ -171,7 +171,12 @@ fn remove_bitmap_config_key(row: &mut Value, bare_aspect: &str) -> Result<bool, 
     let Some(found_key) = find_matching_aspect_key(cfg_obj, bare_aspect) else {
         return Ok(false);
     };
-    if cfg_obj.get(&found_key).and_then(Value::as_str) == Some("-") {
+    if cfg_obj
+        .get(&found_key)
+        .and_then(Value::as_str)
+        .map(str::trim)
+        == Some("-")
+    {
         return Err(Failure::Declined("aspect already minus in bitmap".into()));
     }
     cfg_obj.remove(&found_key);

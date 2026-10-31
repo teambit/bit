@@ -33,7 +33,8 @@ impl Prepared {
             expected.insert(destination.clone(), bytes.clone());
         }
         for (hash, bytes) in self.main_objects() {
-            if hash.len() < 3 {
+            let hash = hash.trim();
+            if hash.len() < 3 || !hash.is_char_boundary(2) {
                 continue;
             }
             expected.insert(

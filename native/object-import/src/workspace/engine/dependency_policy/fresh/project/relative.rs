@@ -235,7 +235,11 @@ impl super::Projection<'_> {
             .as_array()
             .ok_or_else(|| invalid("untracked dependency tree"))?;
         for child in edges.iter().rev() {
-            let child = child.as_str().ok_or_else(|| invalid("untracked dependency path"))?;
+            let child = child
+                .as_str()
+                .map(str::trim)
+                .filter(|child| !child.is_empty())
+                .ok_or_else(|| invalid("untracked dependency path"))?;
             if !child.replace(std::path::MAIN_SEPARATOR, "/").contains("node_modules/") {
                 pending.push((edge.to_owned(), child.to_owned(), 0, true));
             }

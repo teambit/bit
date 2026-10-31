@@ -199,7 +199,8 @@ fn add_scope(
 }
 
 fn scope_pattern<'a>(id: &'a str, candidates: &[(Value, Value)]) -> Option<&'a str> {
-    let scope = id.strip_suffix("/*").unwrap_or(id);
+    let trimmed = id.trim();
+    let scope = trimmed.strip_suffix("/*").map_or(trimmed, str::trim);
     if scope.is_empty() || scope.contains('/') {
         return None;
     }
@@ -212,9 +213,10 @@ fn scope_pattern<'a>(id: &'a str, candidates: &[(Value, Value)]) -> Option<&'a s
 /// The staged component `id` (`<identity>[@<version>]`) names, by its full
 /// id or, unambiguously, by a slash-free name.
 fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s (Value, Value)> {
+    let id = id.trim();
     let (identity, version) = id
         .rsplit_once('@')
-        .map_or((id, None), |(identity, version)| (identity, Some(version)));
+        .map_or((id, None), |(identity, version)| (identity.trim(), Some(version.trim())));
     let matching_version = |model: &Value| {
         version.is_none_or(|version| {
             version.is_empty()

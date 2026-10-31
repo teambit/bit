@@ -10,6 +10,8 @@ pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
             target["directory"]
                 .as_str()
                 .or_else(|| target["rootDir"].as_str())
+                .map(str::trim)
+                .filter(|root| !root.is_empty())
                 .ok_or_else(|| invalid("command component root"))
         })
         .collect::<io::Result<Vec<_>>>()?;

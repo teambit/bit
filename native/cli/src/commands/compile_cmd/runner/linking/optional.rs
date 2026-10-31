@@ -88,6 +88,11 @@ fn component(
     };
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| io::Error::other("compiler dependency scope"))?;
+    let (scope, name, version, package) =
+        (scope.trim(), name.trim(), version.trim(), package.trim());
+    if scope.is_empty() || name.is_empty() || version.is_empty() || package.is_empty() {
+        return Err(io::Error::other("compiler dependency coordinates"));
+    }
     Ok(ComponentDependency {
         id: ComponentId {
             scope: Some(scope.to_owned()),

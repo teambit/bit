@@ -111,7 +111,7 @@ fn parse_single_id(args: &[&str]) -> Option<String> {
                 super::eject::consume_trailing_eject(iter, &mut id)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             val if !val.starts_with('-') && !val.is_empty() && id.is_empty() => {
                 val.clone_into(&mut id);
             }

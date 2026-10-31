@@ -117,7 +117,7 @@ fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {
         crate::workspace::engine::status_models::versions::reference(&model, version)
             .map_err(|_| invalid("command graph missing dependency reference"))?
     };
-    let version = repository.read(&reference, "Version")?;
+    let version = repository.read(reference.trim(), "Version")?;
     crate::workspace::engine::status_models::harmony::project(&version)
 }
 

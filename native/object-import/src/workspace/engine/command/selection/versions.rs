@@ -72,7 +72,10 @@ pub(in crate::workspace::engine::command) fn reference(
     }
     for field in ["orphanedVersions", "versions"] {
         if let Some(reference) = model[field].get(version) {
-            let reference = reference.as_str().ok_or_else(|| invalid("command tag reference"))?;
+            let reference = reference
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("command tag reference"))?;
             crate::merge_history::hash(reference)?;
             return Ok(reference.to_owned());
         }
@@ -82,7 +85,11 @@ pub(in crate::workspace::engine::command) fn reference(
 }
 
 fn head(model: &Value) -> io::Result<&str> {
-    model["head"].as_str().ok_or_else(|| invalid("command model head"))
+    model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("command model head"))
 }
 
 pub(in crate::workspace::engine::command) fn label(model: &Value, hash: &str) -> String {

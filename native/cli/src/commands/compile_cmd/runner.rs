@@ -34,7 +34,7 @@ pub(super) fn try_run(
     args: &[OsString],
     options: &Options,
 ) -> io::Result<Option<Outcome>> {
-    if root.as_os_str().is_empty() {
+    if root.as_os_str().is_empty() || !root.is_dir() {
         return Ok(None);
     }
     let started = Instant::now();

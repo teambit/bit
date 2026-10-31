@@ -104,7 +104,8 @@ pub(in crate::workspace::engine) fn plan(
 ) -> io::Result<(usize, Value)> {
     let mut retained =
         snapshots.command.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
-    if retained.record.token != input.token.trim() {
+    let token = input.token.trim();
+    if retained.record.token != token {
         return Err(invalid("recovery token changed"));
     }
     proof::verify(&input.dependency_read_set)?;
@@ -126,7 +127,7 @@ pub(in crate::workspace::engine) fn plan(
             json!({"checkoutResults":prepared.plan.result,"restoredItems":retained.restore.items})
         }
     };
-    let output = json!({"token":input.token,"result":retained.result,"progress":retained.record.repository.progress()});
+    let output = json!({"token":token,"result":retained.result,"progress":retained.record.repository.progress()});
     let count = retained.record.targets.len();
     retained.record.planned = Some(prepared);
     snapshots.command.recovery = Some(retained);

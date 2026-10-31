@@ -220,7 +220,7 @@ fn validate_manual_component(
 }
 
 fn builtin_env_deps(env_id: &str) -> Result<(Deps, Deps, Deps), Failure> {
-    match bit_install::config::aspect_id_without_version(env_id) {
+    match bit_install::config::aspect_id_without_version(env_id.trim()) {
         "teambit.harmony/node" => Ok((&[], NODE_DEV, &[])),
         "teambit.react/react" => Ok((REACT_RUNTIME, REACT_DEV, REACT_PEER)),
         _ => Err(Failure::Declined("custom env deps debug delegated".into())),

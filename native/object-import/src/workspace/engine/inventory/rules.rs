@@ -45,7 +45,10 @@ impl Matcher {
             .collect::<io::Result<Vec<_>>>()?;
         Ok(Self {
             rules: rules.into(),
-            cache: policy.cache.into_iter().collect(),
+            cache: policy.cache
+                .into_iter()
+                .filter(|(path, _)| !path.is_empty())
+                .collect(),
             changes: Vec::new(),
         })
     }

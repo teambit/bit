@@ -15,13 +15,19 @@ pub(in crate::commands) fn validate(
     bit_install::dependencies::cache::invalidation::invalidate(root, &cache)?;
     for id in ids {
         let row = selection::row(bitmap, id)?;
-        let directory =
-            row["rootDir"].as_str().ok_or_else(|| io::Error::other("component root"))?;
+        let directory = row["rootDir"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .ok_or_else(|| io::Error::other("component root"))?;
         if !bit_object_import::component_remove::has_scanned_files(root, directory, bitmap)? {
             return Err(missing_directory(directory, chalk));
         }
-        let main =
-            row["mainFile"].as_str().ok_or_else(|| io::Error::other("component main file"))?;
+        let main = row["mainFile"]
+            .as_str()
+            .map(str::trim)
+            .filter(|file| !file.is_empty())
+            .ok_or_else(|| io::Error::other("component main file"))?;
         if !root
             .join(directory)
             .join(main)

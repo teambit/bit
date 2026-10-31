@@ -11,10 +11,8 @@ pub(in crate::commands) fn overlay(
     captured: &[Value],
 ) -> io::Result<()> {
     for component in components {
-        let Some(row) = captured
-            .iter()
-            .find(|row| row["identity"] == component.id.to_string_without_version())
-        else {
+        let expected = component.id.to_string_without_version();
+        let Some(row) = captured.iter().find(|row| matches_captured(row, &expected)) else {
             continue;
         };
         component.files = serde_json::from_value(row["files"].clone())?;
@@ -46,6 +44,14 @@ pub(in crate::commands) fn overlay(
         );
     }
     Ok(())
+}
+
+fn matches_captured(row: &Value, expected: &str) -> bool {
+    row["identity"]
+        .as_str()
+        .map(str::trim)
+        .map(|id| id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim()))
+        == Some(expected)
 }
 
 pub(super) fn error(root: &Path, components: &[WorkspaceComponent], error: io::Error) -> io::Error {

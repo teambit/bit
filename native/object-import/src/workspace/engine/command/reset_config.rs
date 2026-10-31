@@ -50,15 +50,21 @@ pub(super) fn checkout(record: &Record, plan: &planning::Planned) -> io::Result<
 fn prepare_with(record: &Record, plan: &planning::Planned, checkout: bool) -> io::Result<Prepared> {
     let mut prepared = Prepared { proofs: Vec::new(), writes: Vec::new() };
     for material in &plan.materials {
-        let full =
-            material.output["id"].as_str().ok_or_else(|| invalid("reset written identity"))?;
-        let identity = full.rsplit_once('@').map_or(full, |(identity, _)| identity);
+        let full = material.output["id"]
+            .as_str()
+            .map(str::trim)
+            .filter(|full| !full.is_empty())
+            .ok_or_else(|| invalid("reset written identity"))?;
+        let identity = full.rsplit_once('@').map_or(full, |(identity, _)| identity.trim());
         let target = configuration_target(record, identity)?;
         if !checkout {
             validate_target(target)?;
         }
-        let directory =
-            target["directory"].as_str().ok_or_else(|| invalid("reset config directory"))?;
+        let directory = target["directory"]
+            .as_str()
+            .map(str::trim)
+            .filter(|directory| !directory.is_empty())
+            .ok_or_else(|| invalid("reset config directory"))?;
         let path = record.request.root.join(directory).join("component.json");
         let bytes = proof::read(&path, &mut prepared.proofs)?;
         let Some(bytes) = bytes else {

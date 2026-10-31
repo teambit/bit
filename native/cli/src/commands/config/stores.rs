@@ -98,7 +98,7 @@ impl Stores {
         let Some(origin) = origin else { return Ok(()) };
         let store = self.entries
             .iter_mut()
-            .find(|store| store.origin == origin)
+            .find(|store| store.origin.eq_ignore_ascii_case(&origin))
             .ok_or_else(|| {
                 let verb = if value.is_some() { "set" } else { "delete" };
                 io::Error::other(format!(

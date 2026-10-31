@@ -160,8 +160,11 @@ fn sources(
     files
         .iter()
         .map(|file| {
-            let path = file["relativePath"].as_str().ok_or_else(|| invalid("version diff path"))?;
-            if path.len() > 32768 || path.contains('\0') || !seen.insert(path) {
+            let path = file["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("version diff path"))?;
+            if path.is_empty() || path.len() > 32768 || path.contains('\0') || !seen.insert(path) {
                 return Err(invalid("version diff duplicate or invalid path"));
             }
             let reference = file["file"]

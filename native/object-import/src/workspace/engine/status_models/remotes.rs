@@ -58,7 +58,10 @@ fn insert(refs: &mut HashMap<String, String>, row: &Value, file_scope: &str) -> 
     let (scope, name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)
             .ok_or_else(|| invalid("status remote component scope"))?;
-    let head = row["head"].as_str().ok_or_else(|| invalid("status remote head"))?;
+    let head = row["head"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("status remote head"))?;
     crate::merge_history::hash(head)?;
     if scope != file_scope {
         return Ok(());

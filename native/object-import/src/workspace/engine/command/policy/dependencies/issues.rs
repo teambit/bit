@@ -45,6 +45,7 @@ fn parse_issue_packages(data: &Value) -> io::Result<Vec<String>> {
             .iter()
             .map(|item| {
                 item.as_str()
+                    .map(str::trim)
                     .map(str::to_owned)
                     .ok_or_else(|| invalid("command dependency issue data"))
             })
@@ -67,6 +68,8 @@ pub(super) fn target(row: &Row, state: &Value, issues: &Value) -> io::Result<Val
             let identity = entry["identity"]
                 .as_str()
                 .or_else(|| entry["id"].as_str())
+                .map(str::trim)
+                .filter(|identity| !identity.is_empty())
                 .ok_or_else(|| invalid("command issue dependency identity"))?;
             dependencies.push(identity);
         }

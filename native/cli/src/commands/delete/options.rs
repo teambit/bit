@@ -79,7 +79,7 @@ fn apply_inline_or_pattern<'a>(
 }
 fn scope(modifier: Option<(&str, &str)>) -> Scope {
     match modifier {
-        Some(("--range", value)) if !value.is_empty() => Scope::Range(value.into()),
+        Some(("--range", value)) if !value.trim().is_empty() => Scope::Range(value.trim().into()),
         Some(("--snaps", value)) => Scope::Snaps(
             value
                 .split(',')

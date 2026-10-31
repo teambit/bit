@@ -42,7 +42,7 @@ impl Facts {
     ) -> io::Result<Value> {
         let targets = ids
             .iter()
-            .filter_map(|id| self.comparisons.get(id))
+            .filter_map(|id| self.comparisons.get(id.trim()))
             .collect::<Vec<_>>();
         engine.request(&json!({"kind":"statusCompare","root":root,"targets":targets}))
     }

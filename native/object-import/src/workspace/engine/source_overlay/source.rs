@@ -15,7 +15,11 @@ pub(super) struct Spool {
 }
 impl Spool {
     pub(super) fn parse(value: &Value) -> io::Result<Self> {
-        let path = value["spoolPath"].as_str().ok_or_else(|| invalid("overlay spool path"))?;
+        let path = value["spoolPath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("overlay spool path"))?;
         let size = value["bytes"].as_u64().ok_or_else(|| invalid("overlay spool size"))?;
         let raw_hash = value["spoolHash"].as_str().ok_or_else(|| invalid("overlay spool hash"))?;
         let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash.trim())?);

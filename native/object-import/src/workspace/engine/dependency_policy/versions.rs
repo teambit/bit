@@ -60,15 +60,19 @@ fn updated_range(
     selected: Option<String>,
     version: &str,
 ) -> Option<String> {
-    if selected
-        .as_ref()
-        .is_some_and(|range| !range.is_empty())
-    {
-        return selected;
+    if let Some(selected) = selected {
+        let trimmed = selected.trim();
+        if !trimmed.is_empty() {
+            return Some(if trimmed.len() == selected.len() {
+                selected
+            } else {
+                trimmed.to_owned()
+            });
+        }
     }
     if !matches!(version, "latest" | "head")
         && !wire::snap(version)
-        && let Some(prefix @ ("^" | "~")) = request.policy.prefix.as_deref()
+        && let Some(prefix @ ("^" | "~")) = request.policy.prefix.as_deref().map(str::trim)
     {
         return Some(format!("{prefix}{version}"));
     }

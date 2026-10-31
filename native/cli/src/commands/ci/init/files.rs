@@ -65,8 +65,10 @@ pub(super) fn supported(document: &Document) -> bool {
     entries
         .iter()
         .all(|(name, config)| {
-            bit_install::config::aspect_id_without_version(name) != ASPECT
-                || (name == ASPECT && (config.is_object() || !bit_workspace_config::truthy(config)))
+            let trimmed = name.trim();
+            bit_install::config::aspect_id_without_version(trimmed) != ASPECT
+                || (trimmed == ASPECT
+                    && (config.is_object() || !bit_workspace_config::truthy(config)))
         })
 }
 pub(super) fn config(root: &Path) -> io::Result<bool> {

@@ -134,6 +134,10 @@ fn observed_line(
 }
 
 fn line(bytes: &[u8], end: &mut Value, messages: &mut Vec<String>) -> io::Result<()> {
+    let bytes = bytes.strip_suffix(b"\r").unwrap_or(bytes);
+    if bytes.is_empty() {
+        return Ok(());
+    }
     let row: Value = serde_json::from_slice(bytes).map_err(io::Error::other)?;
     let message = row["message"]
         .as_str()

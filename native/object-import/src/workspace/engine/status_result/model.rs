@@ -236,8 +236,11 @@ fn refs<'a>(distance: &'a Value, field: &str) -> io::Result<&'a [Value]> {
 fn unique_refs(versions: &Map<String, Value>) -> io::Result<()> {
     let mut refs = HashSet::new();
     for value in versions.values() {
-        let value = value.as_str().ok_or_else(|| invalid("status tag ref"))?;
-        if !refs.insert(value) {
+        let value = value
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("status tag ref"))?;
+        if value.is_empty() || !refs.insert(value) {
             return Err(invalid("status duplicate tag aliases require canonical lookup cache"));
         }
     }

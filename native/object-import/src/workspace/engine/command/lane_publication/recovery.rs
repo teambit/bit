@@ -147,7 +147,10 @@ fn encode_lane(hash: &str, value: &Value) -> io::Result<Vec<u8>> {
     let object = snapshot::object("Lane", Some(hash), value.clone())?;
     let fields = serde_json::from_value(object["fields"].clone()).map_err(io::Error::other)?;
     let body = crate::snapshot_projection::serialize("Lane", &fields, false)?;
-    let length = String::from_utf8_lossy(&body).encode_utf16().count();
+    let length = std::str::from_utf8(&body)
+        .map_err(|_| invalid("lane recovery utf8 body"))?
+        .encode_utf16()
+        .count();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     encoder.write_all(format!("Lane {hash} {length}\0").as_bytes())?;
     encoder.write_all(&body)?;
@@ -161,7 +164,10 @@ pub(in crate::workspace::engine::command) fn encode_model(
     let fields = serde_json::from_value(object["fields"].clone()).map_err(io::Error::other)?;
     let hash = crate::snapshot_projection::identity("Component", &fields, None)?;
     let body = crate::snapshot_projection::serialize("Component", &fields, false)?;
-    let length = String::from_utf8_lossy(&body).encode_utf16().count();
+    let length = std::str::from_utf8(&body)
+        .map_err(|_| invalid("lane recovery utf8 body"))?
+        .encode_utf16()
+        .count();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     encoder.write_all(format!("Component {hash} {length}\0").as_bytes())?;
     encoder.write_all(&body)?;

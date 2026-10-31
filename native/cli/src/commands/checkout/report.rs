@@ -176,7 +176,7 @@ impl Checkout<'_> {
     }
 
     fn to(&self, name: &str) -> bool {
-        self.options.to == name
+        self.options.to.trim() == name.trim()
     }
 
     /// `getConflictSummary` with `conflictSummaryReport`.

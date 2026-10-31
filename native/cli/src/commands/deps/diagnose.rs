@@ -53,6 +53,7 @@ pub(super) fn run_package(
 }
 
 fn inspect<'a>(root: &Path, package: &'a str) -> Result<PackageReport<'a>, Failure> {
+    let package = package.trim();
     let virtual_store = root.join("node_modules/.pnpm");
     if !virtual_store.is_dir() {
         return Err(Failure::User(format!(

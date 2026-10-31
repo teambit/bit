@@ -334,20 +334,38 @@ pub(in crate::workspace::engine::command) fn component(
     entry: &Value,
     changed: &HashSet<String>,
 ) -> io::Result<Value> {
-    let identity =
-        entry["identity"].as_str().ok_or_else(|| invalid("command dependency identity"))?;
-    let (base, version) =
-        identity.rsplit_once('@').ok_or_else(|| invalid("command dependency version"))?;
+    let identity = entry["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|identity| !identity.is_empty())
+        .ok_or_else(|| invalid("command dependency identity"))?;
+    let (base, version) = identity
+        .rsplit_once('@')
+        .map(|(base, version)| (base.trim(), version.trim()))
+        .filter(|(base, version)| !base.is_empty() && !version.is_empty())
+        .ok_or_else(|| invalid("command dependency version"))?;
     if changed.contains(base) {
         return Err(invalid("command new merged dependency cascade"));
     }
-    let (scope, name) = base.split_once('/').ok_or_else(|| invalid("command dependency scope"))?;
+    let (scope, name) = base
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("command dependency scope"))?;
     let id = json!({"scope":scope,"name":name,"version":version});
     let mut dependency = json!({"id":id,"relativePaths":[]});
-    if let Some(name) = entry["packageName"].as_str() {
+    if let Some(name) = entry["packageName"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    {
         dependency["packageName"] = json!(name);
     }
-    if let Some(range) = entry["versionRange"].as_str() {
+    if let Some(range) = entry["versionRange"]
+        .as_str()
+        .map(str::trim)
+        .filter(|range| !range.is_empty())
+    {
         dependency["versionRange"] = json!(range);
     }
     Ok(dependency)

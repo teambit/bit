@@ -12,7 +12,7 @@ pub(super) fn report_if_applicable(
     recovery_reset: bool,
 ) -> io::Result<()> {
     if record.request.operation != input::Operation::Checkout
-        || record.request.options.to.as_deref() != Some("reset")
+        || record.request.options.to.as_deref().map(str::trim) != Some("reset")
         || recovery_reset
     {
         return Ok(());
@@ -21,11 +21,20 @@ pub(super) fn report_if_applicable(
         let identity = target["identity"]
             .as_str()
             .or_else(|| target["id"].as_str())
-            .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))
+            .map(str::trim)
+            .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
+            .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("reset missing identity"))?;
-        let directory =
-            target["directory"].as_str().ok_or_else(|| invalid("reset missing directory"))?;
-        let main = target["mainFile"].as_str().ok_or_else(|| invalid("reset missing main file"))?;
+        let directory = target["directory"]
+            .as_str()
+            .map(str::trim)
+            .filter(|directory| !directory.is_empty())
+            .ok_or_else(|| invalid("reset missing directory"))?;
+        let main = target["mainFile"]
+            .as_str()
+            .map(str::trim)
+            .filter(|main| !main.is_empty())
+            .ok_or_else(|| invalid("reset missing main file"))?;
         let root = record.request.root.join(directory);
         if !missing(&root)? && !missing(&root.join(main))? {
             continue;
@@ -39,6 +48,8 @@ fn report_one(plan: &mut Planned, identity: &str, target: &Value) -> io::Result<
     let version = target["version"]
         .as_str()
         .or_else(|| target["head"].as_str())
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
         .ok_or_else(|| invalid("reset missing version"))?;
     let id = format!("{identity}@{version}");
     if !plan.materials

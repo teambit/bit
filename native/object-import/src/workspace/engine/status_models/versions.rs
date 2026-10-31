@@ -13,8 +13,8 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
     let index: HashMap<_, _> = models
         .iter()
         .map(|model| {
-            let scope = model["scope"].as_str().unwrap_or_default();
-            let name = model["name"].as_str().unwrap_or_default();
+            let scope = model["scope"].as_str().map_or("", str::trim);
+            let name = model["name"].as_str().map_or("", str::trim);
             (if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }, model)
         })
         .collect();

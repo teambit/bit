@@ -157,7 +157,9 @@ fn directory(resolved: &str) -> io::Result<PathBuf> {
 fn concrete(package: &Value, component: Option<&Value>) -> io::Result<Option<String>> {
     let mut version = optional(package.get("version"))?;
     let id_version = match component {
-        Some(Value::String(raw)) => raw.rsplit_once('@').map(|(_, ver)| ver.to_owned()),
+        Some(Value::String(raw)) => raw
+            .rsplit_once('@')
+            .map(|(_, ver)| ver.trim().to_owned()),
         Some(component) => optional(component.get("version"))?,
         None => None,
     };

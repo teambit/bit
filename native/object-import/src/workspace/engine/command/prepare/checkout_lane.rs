@@ -231,7 +231,11 @@ pub(super) fn bitmap_identities(bitmap: &Value) -> io::Result<std::collections::
         })
         .map(|(key, row)| {
             let (row_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
-            let scope = row_scope.ok_or_else(|| invalid("checkout lane bitmap scope"))?;
+            let scope = row_scope
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .ok_or_else(|| invalid("checkout lane bitmap scope"))?;
+            let name = name.trim();
             if name.is_empty() {
                 return Err(invalid("checkout lane bitmap name"));
             }

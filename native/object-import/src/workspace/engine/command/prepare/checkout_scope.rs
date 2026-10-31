@@ -125,10 +125,17 @@ fn validate_lane_overlap(context: &Value, additions: &[Value]) -> io::Result<()>
         .as_array()
         .map_or(&[][..], Vec::as_slice);
     for addition in additions {
-        let root = addition["rootDir"].as_str().ok_or_else(|| invalid("checkout scope root"))?;
+        let root = addition["rootDir"]
+            .as_str()
+            .map(str::trim)
+            .filter(|root| !root.is_empty())
+            .ok_or_else(|| invalid("checkout scope root"))?;
         for existing in lane {
-            let other =
-                existing["rootDir"].as_str().ok_or_else(|| invalid("checkout lane root"))?;
+            let other = existing["rootDir"]
+                .as_str()
+                .map(str::trim)
+                .filter(|other| !other.is_empty())
+                .ok_or_else(|| invalid("checkout lane root"))?;
             if root == other
                 || root.starts_with(&format!("{other}/"))
                 || other.starts_with(&format!("{root}/"))

@@ -49,7 +49,11 @@ fn membership(bitmap: &Value, settings: &Value) -> io::Result<HashSet<String>> {
 }
 
 pub(super) fn accept_bitmap(proofs: &mut [proof::Proof], receipt: &Value) -> io::Result<()> {
-    let path = receipt["path"].as_str().ok_or_else(|| invalid("history bitmap receipt path"))?;
+    let path = receipt["path"]
+        .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .ok_or_else(|| invalid("history bitmap receipt path"))?;
     let retained = proofs
         .iter_mut()
         .find(|proof| proof.path == Path::new(path))
@@ -63,28 +67,37 @@ pub(super) fn accept_bitmap(proofs: &mut [proof::Proof], receipt: &Value) -> io:
     }
     let mut written = Vec::new();
     proof::read(&retained.path, &mut written)?;
-    if written[0].hash != after {
+    let first = written
+        .into_iter()
+        .next()
+        .ok_or_else(|| invalid("history bitmap proof missing"))?;
+    if first.hash != after {
         return Err(invalid("history bitmap publication changed"));
     }
-    *retained = written.remove(0);
+    *retained = first;
     Ok(())
 }
 
 fn target(row: &Value) -> io::Result<(String, String)> {
-    let raw = row.as_str().ok_or_else(|| invalid("history component ID"))?;
+    let raw = row
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("history component ID"))?;
     if raw.len() > 4096 {
         return Err(invalid("history component ID budget"));
     }
     let (identity, version) =
         raw.rsplit_once('@').ok_or_else(|| invalid("history versioned ID"))?;
+    let identity = identity.trim();
+    let version = version.trim();
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("history scoped ID"))?;
     crate::command_import::lane::component_identity(
-        &serde_json::json!({"scope":scope,"name":name}),
+        &serde_json::json!({"scope":scope.trim(),"name":name.trim()}),
     )?;
     if version.is_empty() {
         return Err(invalid("history empty version"));
     }
-    Ok((identity.to_owned(), version.to_owned()))
+    Ok((format!("{}/{}", scope.trim(), name.trim()), version.to_owned()))
 }
 
 fn is_component_bitmap_row(key: &str, row: &Value) -> bool {

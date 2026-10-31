@@ -45,6 +45,9 @@ fn partition(
     for component in components {
         let mut pending = component.clone();
         let files = component["files"].as_array().ok_or_else(|| invalid("docs files"))?;
+        if files.len() > 16384 {
+            return Err(invalid("docs files"));
+        }
         let mut misses = Vec::new();
         for file in files
             .iter()

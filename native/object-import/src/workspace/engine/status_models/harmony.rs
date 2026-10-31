@@ -84,10 +84,12 @@ fn defaults(output: &mut Value) {
 fn identity(value: &Value) -> io::Result<Value> {
     let scope = value["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid("Harmony dependency scope"))?;
     let name = value["name"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid("Harmony dependency name"))?;
     if scope.contains(['/', '@']) || name.contains('@') {

@@ -9,15 +9,24 @@ use std::io;
 
 pub(super) fn tag_data(file: Option<&Value>, identity: &str) -> io::Result<Value> {
     let Some(file) = file.filter(|file| !file.is_null()) else { return Ok(Value::Null) };
+    let identity = identity.trim();
     let entries = file["entries"].as_array().ok_or_else(|| invalid("tag versions file entries"))?;
     let version = entries
         .iter()
-        .find(|entry| entry["identity"] == identity)
+        .find(|entry| entry["identity"].as_str().map(str::trim) == Some(identity))
         .map_or(&file["default"], |entry| &entry["version"]);
-    let Some(version) = version.as_str() else { return Ok(Value::Null) };
+    let Some(version) = version
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    else {
+        return Ok(Value::Null);
+    };
     let prerelease = version
         .split_once('-')
-        .and_then(|(_, suffix)| suffix.split('.').next());
+        .and_then(|(_, suffix)| suffix.split('.').next())
+        .map(str::trim)
+        .filter(|pre| !pre.is_empty());
     Ok(json!({"versionToTag":version,"prereleaseId":prerelease}))
 }
 

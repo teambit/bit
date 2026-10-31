@@ -192,6 +192,7 @@ fn resolve_scope_dir(target: &Path) -> Option<PathBuf> {
     let scope_json: Value = bit_object_import::parse_jsonc(&bytes).ok()?;
     scope_json["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty() && !name.contains('/'))?;
     Some(scope_dir)
 }

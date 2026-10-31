@@ -17,8 +17,11 @@ pub(super) fn version(
         .as_array_mut()
         .ok_or_else(|| invalid("stash dependency entries"))?
     {
-        let identity =
-            entry["identity"].as_str().ok_or_else(|| invalid("stash dependency identity"))?;
+        let identity = entry["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("stash dependency identity"))?;
         if !identity.contains('@') {
             entry["identity"] = Value::String(format!("{identity}@"));
         }

@@ -142,12 +142,13 @@ pub(super) fn local_model(material: &Material, hash: &str) -> io::Result<Value> 
     let Some(tag) = &material.version_state.tagged_version else {
         return snapshot::local_model(&material.model, hash);
     };
+    let tag = tag.trim();
     let mut model = material.model.clone();
     let tags = model["versions"].as_object_mut().ok_or_else(|| invalid("tag model versions"))?;
-    if tags.contains_key(tag) {
+    if tag.is_empty() || tags.contains_key(tag) {
         return Err(invalid("tag version already exists"));
     }
-    tags.insert(tag.clone(), json!(hash));
+    tags.insert(tag.to_owned(), json!(hash));
     if let Some(orphaned) = model.get_mut("orphanedVersions") {
         orphaned
             .as_object_mut()
@@ -161,7 +162,7 @@ pub(super) fn local_model(material: &Material, hash: &str) -> io::Result<Value> 
     let versions =
         model["state"]["versions"].as_object_mut().ok_or_else(|| invalid("tag local versions"))?;
     let row = versions
-        .entry(tag.clone())
+        .entry(tag.to_owned())
         .or_insert_with(|| json!({}));
     row.as_object_mut()
         .ok_or_else(|| invalid("tag local version"))?

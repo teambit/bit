@@ -95,6 +95,7 @@ pub(super) fn validate_bare_scope(root: &Path) -> io::Result<String> {
     let scope = read_json_file(&root.join("scope.json"))?;
     let name = scope["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty() && !name.contains('/'))
         .ok_or_else(|| invalid("bare lane scope name"))?;
     if !root.join("objects").is_dir() {

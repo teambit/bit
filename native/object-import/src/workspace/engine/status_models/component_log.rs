@@ -284,9 +284,12 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
         };
         let versions = versions.as_object().ok_or_else(|| invalid("component log tags"))?;
         for (tag, reference) in versions {
-            let reference = reference.as_str().ok_or_else(|| invalid("component log tag ref"))?;
+            let reference = reference
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("component log tag ref"))?;
             merge_history::hash(reference)?;
-            tags.insert(reference.to_string(), tag.clone());
+            tags.insert(reference.to_string(), tag.trim().to_owned());
         }
     }
     Ok(tags)

@@ -85,7 +85,11 @@ fn scope_policy(merged: &mut Value, current: &Value) -> io::Result<()> {
         crate::config_merge::apply("configScopePolicy", &json!({"merged":fields,"scope":scope}))?;
     let object = policy.as_object_mut().ok_or_else(|| invalid("command merged policy"))?;
     for field in projection::array(&plan["fields"])? {
-        let name = field["field"].as_str().ok_or_else(|| invalid("command policy field"))?;
+        let name = field["field"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("command policy field"))?;
         if field["delete"] == true {
             object.remove(name);
             continue;

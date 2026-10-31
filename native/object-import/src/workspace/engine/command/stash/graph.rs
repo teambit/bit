@@ -40,13 +40,19 @@ pub(super) fn project(
 fn identities(context: &Value) -> io::Result<HashMap<String, Value>> {
     let mut identities = HashMap::new();
     for target in context["targets"].as_array().ok_or_else(|| invalid("stash graph targets"))? {
-        let identity = target["identity"].as_str().ok_or_else(|| invalid("stash graph target"))?;
-        let (scope, name) =
-            identity.split_once('/').ok_or_else(|| invalid("stash graph target ID"))?;
+        let identity = target["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("stash graph target"))?;
+        let (scope, name) = identity
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("stash graph target ID"))?;
         let id = component_id(
             scope,
             name,
-            target["version"].as_str().unwrap_or_default(),
+            target["version"].as_str().map_or("", str::trim),
             target["scoped"] == true,
         );
         identities.insert(key(&id), id);

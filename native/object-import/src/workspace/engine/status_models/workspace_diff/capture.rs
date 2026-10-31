@@ -15,7 +15,7 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
     let mut identities = HashSet::new();
     for target in &request.targets {
         comparison::capture::validate(target)?;
-        if !identities.insert(&target.identity) {
+        if target.identity.trim().is_empty() || !identities.insert(target.identity.trim()) {
             return Err(invalid("workspace diff duplicate component"));
         }
         for file in &target.files {

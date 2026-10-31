@@ -171,9 +171,10 @@ fn code_modified(current: &Value, model: &Value) -> io::Result<bool> {
         || current
             .iter()
             .any(|file| {
+                let path = file["relativePath"].as_str().map(str::trim);
                 model
                     .iter()
-                    .find(|stored| stored["relativePath"] == file["relativePath"])
+                    .find(|stored| stored["relativePath"].as_str().map(str::trim) == path)
                     .is_none_or(|stored| stored["file"] != file["file"])
             }))
 }

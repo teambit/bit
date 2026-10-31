@@ -54,12 +54,12 @@ pub(super) fn read_with_budget<Record: Send>(
     }
     // A file may change size after its reservation. This phase only reads, so
     // retry using the canonical serial budget before publishing any results.
-    let mut total = 0;
+    let mut total = 0_usize;
     files
         .iter()
         .map(|file| {
-            let bytes = raw(file, maximum - total)?;
-            total += bytes.len();
+            let bytes = raw(file, maximum.saturating_sub(total))?;
+            total = total.saturating_add(bytes.len());
             Ok(record(file, bytes))
         })
         .collect()

@@ -26,7 +26,11 @@ pub(super) fn compare(
     let (_, projection) = load::projected(root, bitmap, ids)?;
     let targets = projection.workspace.components
         .iter()
-        .filter(|component| ids.contains(&component.id.to_string_without_version()))
+        .filter(|component| {
+            let comp_id = component.id.to_string_without_version();
+            ids.iter()
+                .any(|id| id.trim() == comp_id)
+        })
         .map(|component| target(context, component))
         .collect::<io::Result<Vec<_>>>()?;
     let targets = targets

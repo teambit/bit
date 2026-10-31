@@ -355,7 +355,10 @@ fn local_source(package: Option<&Value>) -> io::Result<Option<&str>> {
         return Ok(None);
     };
     let Some(source) = package.get("source") else { return Ok(None) };
-    let source = source.as_str().ok_or_else(|| invalid("dependency local source type"))?;
+    let source = source
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("dependency local source type"))?;
     let path = Path::new(source);
     if source.is_empty()
         || path.is_absolute()
@@ -374,7 +377,7 @@ fn package_main(package: Option<&Value>) -> io::Result<Option<String>> {
     else {
         return Ok(None);
     };
-    if let Some(main) = main.as_str() {
+    if let Some(main) = main.as_str().map(str::trim) {
         return Ok(match main {
             "" => None,
             "." | "./" => Some("index".to_owned()),

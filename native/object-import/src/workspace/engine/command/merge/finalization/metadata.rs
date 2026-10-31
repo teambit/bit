@@ -11,6 +11,9 @@ use std::{
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 pub(super) fn replace(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    if path.as_os_str().is_empty() || bytes.len() > 16 * 1024 * 1024 {
+        return Err(io::Error::other("generated package metadata budget"));
+    }
     let metadata = fs::symlink_metadata(path)?;
     if !metadata.is_file() || metadata.is_symlink() {
         return Err(io::Error::other("generated package destination must be an ordinary file"));

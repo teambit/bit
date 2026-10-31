@@ -11,12 +11,21 @@ pub(super) fn capture(materials: &[Material], repository: &mut Repository) -> io
         .filter(|material| !material.version_state.current_head.is_empty())
     {
         let version = repository.read(&material.version_state.current_head, "Version")?;
-        let edges = match version["flattenedEdgesRef"].as_str() {
-            Some(reference) => repository.source_json(reference)?,
-            None => version
+        let edges = if let Some(value) = version
+            .get("flattenedEdgesRef")
+            .filter(|value| !value.is_null())
+        {
+            let reference = value
+                .as_str()
+                .map(str::trim)
+                .filter(|reference| !reference.is_empty())
+                .ok_or_else(|| invalid("resolve saved graph reference"))?;
+            repository.source_json(reference)?
+        } else {
+            version
                 .get("flattenedEdges")
                 .cloned()
-                .unwrap_or_else(|| serde_json::json!([])),
+                .unwrap_or_else(|| serde_json::json!([]))
         };
         append(&mut graph, &edges)?;
     }

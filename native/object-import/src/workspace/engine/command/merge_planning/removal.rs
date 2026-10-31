@@ -50,12 +50,13 @@ pub(super) fn prepare(
         .filter(|(_, row)| row.distance["shouldBeRemoved"] == true)
     {
         let current = &planned.captured[index];
-        if current.hidden || current.target.directory.is_empty() {
+        let directory = current.target.directory.trim();
+        if current.hidden || directory.is_empty() {
             return Err(invalid("command removed component requires visible workspace files"));
         }
         prepared.publication.removed.push(Removed {
             identity: current.target.identity.clone(),
-            directory: current.target.directory.clone(),
+            directory: directory.to_owned(),
         });
         if let Some(rows) = planned.result["removedComponents"].as_array_mut() {
             rows.push(json!(current.target.identity));

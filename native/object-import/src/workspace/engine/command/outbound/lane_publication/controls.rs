@@ -55,17 +55,12 @@ fn unexported_lane_row<'a>(
                 return false;
             }
             let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
-            let default_scope = row["defaultScope"]
-                .as_str()
-                .map(str::trim)
-                .unwrap_or_default();
+            let default_scope = row["defaultScope"].as_str().map_or("", str::trim);
             let row_name = row["name"].as_str().map(str::trim);
             (key_id == name || key_id == full || row_name == Some(name))
                 && row["scope"]
                     .as_str()
-                    .map(str::trim)
-                    .unwrap_or_default()
-                    .is_empty()
+                    .is_none_or(|val| val.trim().is_empty())
                 && (default_scope.is_empty() || default_scope == scope)
         })
         .map(|(_, row)| row)

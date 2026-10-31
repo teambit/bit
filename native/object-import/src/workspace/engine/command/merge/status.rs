@@ -48,6 +48,8 @@ pub(super) fn select(
         }
         let observe = cursor["directive"]["observe"]
             .as_str()
+            .map(str::trim)
+            .filter(|observe| !observe.is_empty())
             .ok_or_else(|| invalid("command merge observation"))?;
         let value = observation(input, observe)?;
         cursor = crate::merge_transaction::apply(

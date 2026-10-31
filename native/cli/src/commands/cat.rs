@@ -287,13 +287,15 @@ fn read_stored(
 }
 
 fn selected_entry(root: &Path, requested: &str) -> io::Result<bitmap::Entry> {
+    let requested = requested.trim();
     let mut matches = bitmap::read(root)?.entries
         .into_iter()
         .filter(|entry| {
-            entry.identity == requested
-                || entry.identity
+            let identity = entry.identity.trim();
+            identity == requested
+                || identity
                     .split_once('/')
-                    .is_some_and(|(_, name)| name == requested)
+                    .is_some_and(|(_, name)| name.trim() == requested)
         });
     let entry = matches.next().ok_or_else(|| decline("cat identity absent"))?;
     if matches.next().is_some() {

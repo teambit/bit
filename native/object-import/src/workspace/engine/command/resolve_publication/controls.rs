@@ -120,6 +120,10 @@ fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Ve
 }
 
 fn matches_selected(identity: &str, identities: &HashSet<&str>) -> bool {
+    let identity = identity.trim();
+    if identity.is_empty() {
+        return false;
+    }
     if identities.contains(identity) {
         return true;
     }

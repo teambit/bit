@@ -107,10 +107,11 @@ fn normalize(mut manifest: Value, original: &Value) -> io::Result<Value> {
     if !manifest.is_object() {
         return Err(invalid("snapshot package manifest shape"));
     }
-    if matches!(manifest["version"].as_str(), Some("latest" | "head")) {
+    if matches!(manifest["version"].as_str().map(str::trim), Some("latest" | "head")) {
         manifest["version"] = value!("0.0.1-new");
     } else if let Some(hash) = manifest["version"]
         .as_str()
+        .map(str::trim)
         .filter(|hash| {
             (3..=40).contains(&hash.len()) && hash.bytes().all(|byte| byte.is_ascii_hexdigit())
         })
@@ -130,12 +131,9 @@ fn platform_types(manifest: &mut Value, original: &Value, windows: bool) {
     }
     if let Some(types) = original.get("types") {
         manifest["types"] = types.clone();
-    } else {
+    } else if let Some(object) = manifest.as_object_mut() {
         // An absent JavaScript property serializes as absent, never as null.
-        manifest
-            .as_object_mut()
-            .unwrap()
-            .shift_remove("types");
+        object.shift_remove("types");
     }
 }
 

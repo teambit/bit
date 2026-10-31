@@ -97,22 +97,22 @@ fn one(
 
 fn relation(selected: &Selected, lane: &Value, choice: &Value) -> io::Result<Value> {
     let reference = |field: &str| -> io::Result<&str> {
-        match choice[field].as_str() {
+        match choice[field].as_str().map(str::trim) {
             Some("current") => Ok(&selected.current_hash),
             Some("other") => Ok(&selected.remote),
             _ => Err(invalid("unrelated head selector")),
         }
     };
-    let lane_id = match choice["lane"].as_str() {
+    let lane_id = match choice["lane"].as_str().map(str::trim) {
         Some("current") => {
             json!({"name":lane["current"]["value"]["name"],"scope":lane["current"]["value"]["scope"]})
         }
         Some("other") => {
             if let Some((scope, name)) = lane["otherId"]
                 .as_str()
-                .and_then(|raw| raw.split_once('/'))
+                .and_then(|raw| raw.trim().split_once('/'))
             {
-                json!({"scope": scope, "name": name})
+                json!({"scope": scope.trim(), "name": name.trim()})
             } else {
                 lane["otherId"].clone()
             }

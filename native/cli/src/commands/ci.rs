@@ -195,10 +195,11 @@ fn parse_sync(rest: &[&str]) -> Option<SyncOptions> {
 
 fn apply_sync_arg(opts: &mut SyncOptions, arg: &str, next: Option<&str>) -> Option<usize> {
     if let Some(val) = arg.strip_prefix("--branch=") {
-        if val.is_empty() || val.starts_with('-') {
+        let trimmed = val.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') {
             return None;
         }
-        opts.branch = Some(val.to_owned());
+        opts.branch = Some(trimmed.to_owned());
         return Some(1);
     }
     match arg {

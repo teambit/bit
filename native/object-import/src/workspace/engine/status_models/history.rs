@@ -149,9 +149,11 @@ fn keep_lane_ref(reader: &Reader<'_>, entry: &Value, lane_head: &str) -> io::Res
 fn has_lane_origin(version: &Value) -> bool {
     version["origin"]["lane"]["scope"]
         .as_str()
+        .map(str::trim)
         .is_some_and(|scope| !scope.is_empty())
         && version["origin"]["lane"]["name"]
             .as_str()
+            .map(str::trim)
             .is_some_and(|name| !name.is_empty())
 }
 

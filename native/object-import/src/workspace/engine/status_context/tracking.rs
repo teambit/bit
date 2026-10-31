@@ -76,8 +76,12 @@ fn observe(
 }
 
 fn component(root: &Path, mut target: Value, budget: &Budget) -> io::Result<Value> {
-    let path =
-        root.join(target["directory"].as_str().ok_or_else(|| invalid("tracking directory"))?);
+    let directory = target["directory"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| invalid("tracking directory"))?;
+    let path = root.join(directory);
     let component = optional_jsonc(&path.join("component.json"), budget)?;
     target["config"] =
         if component.is_null() { Value::Null } else { normalize(&component, &target)? };

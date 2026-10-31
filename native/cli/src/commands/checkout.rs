@@ -136,9 +136,10 @@ fn prepare(
         }
         None => workspace_command::plan_with_startup(root, &request, startup)?,
     };
+    let target = options.to.trim();
     let report = report::format(&planned.plan["result"], options, Chalk::detect(args))?;
     let progress = Progress::parse(planned.plan.get("progress"))?;
-    let ids = if options.to == "reset" {
+    let ids = if target == "reset" {
         installation::changed_component_ids(&planned.plan["result"])?
     } else {
         installation::component_ids(&planned.plan["result"])?
@@ -151,7 +152,7 @@ fn prepare(
         progress,
         ids,
         conflicts,
-        main: options.to == "main",
+        main: target == "main",
         revert: options.revert,
     })
 }

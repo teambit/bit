@@ -24,19 +24,22 @@ pub(super) fn entry(
 }
 
 fn lane_id(model: &Value, lane: Option<&Value>) -> Value {
-    if let Some(other) = lane.map(|value| &value["otherId"]) {
-        if let Some(raw) = other.as_str() {
-            if let Some((scope, name)) = raw.split_once('/')
-                && name != "main"
-            {
-                return json!({"scope": scope, "name": name});
-            }
-        } else if other["name"]
-            .as_str()
-            .is_some_and(|name| name != "main")
-        {
-            return other.clone();
-        }
+    lane.and_then(|value| other_lane(&value["otherId"]))
+        .unwrap_or_else(|| json!({"scope": model["scope"], "name": "main"}))
+}
+
+fn other_lane(other: &Value) -> Option<Value> {
+    if let Some(raw) = other.as_str().map(str::trim) {
+        let (scope, name) = raw.split_once('/')?;
+        let scope = scope.trim();
+        let name = name.trim();
+        return (!scope.is_empty() && !name.is_empty() && name != "main").then(
+            || json!({"scope": scope, "name": name}),
+        );
     }
-    json!({"scope": model["scope"], "name": "main"})
+    other["name"]
+        .as_str()
+        .map(str::trim)
+        .is_some_and(|name| !name.is_empty() && name != "main")
+        .then(|| other.clone())
 }

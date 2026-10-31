@@ -49,8 +49,10 @@ fn warnings(
     let snap = retained.snap.as_ref().ok_or_else(|| invalid("tag snapshot options"))?;
     let Some(exact) = options.exact_version
         .as_deref()
-        .filter(|_| {
-            snap.unmodified
+        .map(str::trim)
+        .filter(|exact| {
+            !exact.is_empty()
+                && snap.unmodified
                 && !snap.unmerged
                 && !options.snapped
                 && options.patterns.is_empty()

@@ -7,7 +7,7 @@ impl Projection<'_> {
         let issues = self.collect_issues()?;
         let detected = json!({"allPackagesDependencies":{"packageDependencies":self.packages[0],"devPackageDependencies":self.packages[1],"peerPackageDependencies":self.packages[2]},"coreAspects":self.metadata.core_aspects,"issues":issues,"allDependencies":{"dependencies":self.dependencies[0],"devDependencies":self.dependencies[1],"peerDependencies":self.dependencies[2]},"overridesDependencies":{"manuallyRemovedDependencies":{},"manuallyAddedDependencies":{},"missingPackageDependencies":[]}});
         Ok(
-            json!({"identity":self.request.identity,"detected":detected,"componentVersions":self.versions,"grammarInputs":self.grammar,"readSet":self.reader.proofs}),
+            json!({"identity":self.request.identity.trim(),"detected":detected,"componentVersions":self.versions,"grammarInputs":self.grammar,"readSet":self.reader.proofs}),
         )
     }
 

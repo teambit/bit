@@ -7,14 +7,14 @@ use std::{
 };
 
 pub(super) fn capture(data: &Data) -> io::Result<Vec<proof::Proof>> {
-    let declared: u64 = data.entries
+    let declared: Option<u64> = data.entries
         .values()
         .map(|entry| match entry {
             Entry::Source(source) => source.len(),
             Entry::Removed => 0,
         })
-        .fold(0_u64, u64::saturating_add);
-    if declared > 64 * 1024 * 1024 {
+        .try_fold(0_u64, u64::checked_add);
+    if declared.is_none_or(|total| total > 64 * 1024 * 1024) {
         return Err(invalid("overlay byte budget"));
     }
     let bytes = AtomicUsize::new(0);

@@ -276,5 +276,6 @@ fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
 }
 
 fn take_val(val: &str) -> Option<String> {
+    let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }

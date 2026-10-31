@@ -100,11 +100,11 @@ fn resolve_target_version(
     raw_aspect_id: &str,
     bare_aspect: &str,
 ) -> Result<String, Failure> {
-    if let Some((_, ver)) = raw_aspect_id.rsplit_once('@')
-        && !ver.is_empty()
-        && !matches!(ver, "latest" | "head")
-    {
-        return Ok(ver.to_owned());
+    if let Some((_, ver)) = raw_aspect_id.rsplit_once('@') {
+        let ver = ver.trim();
+        if !ver.is_empty() && !matches!(ver, "latest" | "head") {
+            return Ok(ver.to_owned());
+        }
     }
     resolve_latest_aspect_version(root, bare_aspect).ok_or_else(|| {
         Failure::User(format!(

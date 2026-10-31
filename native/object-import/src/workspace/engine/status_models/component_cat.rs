@@ -41,8 +41,12 @@ pub(in crate::workspace::engine) fn read(
 }
 
 fn reference(model: &Value, version: &str) -> io::Result<String> {
+    let version = version.trim();
     if matches!(version, "" | "latest" | "head") {
-        let head = model["head"].as_str().ok_or_else(|| invalid("cat version absent"))?;
+        let head = model["head"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("cat version absent"))?;
         merge_history::hash(head)?;
         return Ok(head.to_owned());
     }

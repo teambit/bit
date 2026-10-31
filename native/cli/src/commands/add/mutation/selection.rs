@@ -18,7 +18,10 @@ pub(super) fn prepare(
     let workspace = Workspace::load_projected(root, &config, &core, bitmap)?;
     let selected = workspace.components
         .iter()
-        .filter(|component| identities.contains(&component.id.to_string_without_version()))
+        .filter(|component| {
+            let id = component.id.to_string_without_version();
+            identities.iter().any(|target| target.trim() == id)
+        })
         .map(|component| {
             json!({
                 "identity": component.id.to_string_without_version(),

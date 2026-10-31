@@ -54,7 +54,8 @@ fn ignored(finish: &Value) -> io::Result<Vec<Vec<String>>> {
             Ok(map
                 .iter()
                 .filter(|(_, version)| *version == "-")
-                .map(|(name, _)| name.clone())
+                .map(|(name, _)| name.trim().to_owned())
+                .filter(|name| !name.is_empty())
                 .collect())
         })
         .collect()

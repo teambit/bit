@@ -45,7 +45,7 @@ fn select(
 ) -> io::Result<(usize, Value)> {
     let history = read(&input.root, &lane_hash)?;
     let item = history["history"]
-        .get(&input.id)
+        .get(input.id.trim())
         .ok_or_else(|| {
             response::with_progress(
                 response::canonical(format!(

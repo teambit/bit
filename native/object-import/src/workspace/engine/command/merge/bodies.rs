@@ -269,7 +269,7 @@ fn manifest(side: &VersionSide<'_>) -> io::Result<Value> {
 }
 
 fn conflict_paths(input: &BodyInput<'_>, plan: &Value) -> io::Result<Vec<String>> {
-    if input.options.strategy.as_deref() != Some("manual") {
+    if input.options.strategy.as_deref().map(str::trim) != Some("manual") {
         return Ok(Vec::new());
     }
     plan["mergeRows"]
@@ -278,11 +278,15 @@ fn conflict_paths(input: &BodyInput<'_>, plan: &Value) -> io::Result<Vec<String>
         .iter()
         .filter(|row| row["kind"] == "modifiedFiles" && row.get("conflictPlanIndex").is_some())
         .map(|row| {
-            let index =
-                row["current"].as_u64().ok_or_else(|| invalid("merge conflict file index"))?
-                    as usize;
-            input.current.files[index]["relativePath"]
-                .as_str()
+            let index = row["current"]
+                .as_u64()
+                .and_then(|index| usize::try_from(index).ok())
+                .ok_or_else(|| invalid("merge conflict file index"))?;
+            input.current.files
+                .get(index)
+                .and_then(|file| file["relativePath"].as_str())
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("merge conflict path"))
         })

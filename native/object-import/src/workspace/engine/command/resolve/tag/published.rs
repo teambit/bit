@@ -30,12 +30,14 @@ pub(in crate::workspace::engine) fn apply(
 fn update(retained: &mut Retained, input: &Overrides) -> io::Result<HashMap<String, String>> {
     let mut replacements = HashMap::new();
     for (identity, version) in &input.versions {
-        if input.semver[version]["version"].is_null() {
+        let identity = identity.trim();
+        let version = version.trim();
+        if identity.is_empty() || version.is_empty() || input.semver[version]["version"].is_null() {
             return Err(invalid("tag registry version grammar"));
         }
         let material = retained.materials
             .iter_mut()
-            .find(|material| material.identity == *identity)
+            .find(|material| material.identity == identity)
             .ok_or_else(|| invalid("tag registry component outside batch"))?;
         if material.model["versions"].get(version).is_some()
             || material.model["orphanedVersions"].get(version).is_some()
@@ -43,7 +45,7 @@ fn update(retained: &mut Retained, input: &Overrides) -> io::Result<HashMap<Stri
             return Err(invalid("tag registry version already exists"));
         }
         let old = material.version_state.tagged_version
-            .replace(version.clone())
+            .replace(version.to_owned())
             .ok_or_else(|| invalid("tag registry semantic version absent"))?;
         replacements.insert(format!("{identity}@{old}"), format!("{identity}@{version}"));
     }

@@ -36,22 +36,31 @@ fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
     let version = destination["version"]
         .as_str()
         .or_else(|| destination["head"].as_str())
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
         .ok_or_else(|| invalid("checkout scope addition version"))?;
     if let Some(identity) = destination["identity"]
         .as_str()
         .or_else(|| destination["id"].as_str())
+        .map(str::trim)
         .filter(|id| !id.is_empty())
     {
-        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base);
-        return Ok((base.to_owned(), version));
+        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
+        if !base.is_empty() {
+            return Ok((base.to_owned(), version));
+        }
     }
     let scope = destination["scope"]
         .as_str()
         .or_else(|| destination["id"]["scope"].as_str())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("checkout scope addition scope"))?;
     let name = destination["name"]
         .as_str()
         .or_else(|| destination["id"]["name"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("checkout scope addition name"))?;
     Ok((format!("{scope}/{name}"), version))
 }

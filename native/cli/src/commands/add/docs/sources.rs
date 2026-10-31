@@ -52,7 +52,11 @@ pub(super) fn observe(root: &Path, components: &[Value]) -> io::Result<BTreeMap<
                 .map(str::trim)
                 .filter(|rel| !rel.is_empty())
                 .ok_or_else(|| io::Error::other("tracking docs relative path"))?;
-            let path = root.join(directory).join(relative);
+            let path: PathBuf = root
+                .join(directory)
+                .join(relative)
+                .components()
+                .collect();
             let source = read_source(&path, &mut remaining)?;
             output.insert(path, source);
             if output.len() > 16384 {

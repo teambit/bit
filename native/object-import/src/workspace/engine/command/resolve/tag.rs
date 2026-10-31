@@ -139,23 +139,32 @@ fn head_snaps(retained: &Retained, captured: &[capture::Captured]) -> io::Result
         else {
             continue;
         };
-        let Some(head) = model["head"].as_str() else { continue };
-        let tagged = model["versions"]
-            .as_object()
-            .ok_or_else(|| invalid("tag model versions"))?
-            .values()
-            .chain(
-                model["orphanedVersions"]
-                    .as_object()
-                    .into_iter()
-                    .flat_map(serde_json::Map::values),
-            )
-            .any(|value| value == head);
-        if !tagged {
+        let Some(head) = model["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+        else {
+            continue;
+        };
+        if !is_tagged(&model, head)? {
             output.push(current.target.identity.clone());
         }
     }
     Ok(output)
+}
+
+fn is_tagged(model: &Value, head: &str) -> io::Result<bool> {
+    Ok(model["versions"]
+        .as_object()
+        .ok_or_else(|| invalid("tag model versions"))?
+        .values()
+        .chain(
+            model["orphanedVersions"]
+                .as_object()
+                .into_iter()
+                .flat_map(serde_json::Map::values),
+        )
+        .any(|value| value.as_str().map(str::trim) == Some(head)))
 }
 
 fn filter_patterns(

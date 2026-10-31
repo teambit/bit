@@ -18,8 +18,10 @@ pub(super) fn resolve_bare_scope_targets(
         .map_err(|err| Failure::Declined(err.to_string()))?;
     let scope_name = scope_val["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| Failure::Declined("missing bare scope name".into()))?;
+    let pattern = pattern.trim();
     if !pattern.contains(['*', ',', '!', '$', ':']) {
         return resolve_bare_literal_target(scope_dir, scope_name, pattern);
     }

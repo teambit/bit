@@ -85,9 +85,11 @@ pub(in crate::commands::aspect) fn resolve_component_for_get<'a>(
             .ok_or_else(|| Failure::User(format!("component {component} was not found"))),
         Err(Failure::User(msg)) => {
             let bare = component
+                .trim()
                 .split('@')
                 .next()
-                .unwrap_or(component);
+                .unwrap_or(component)
+                .trim();
             if !bare.contains('/') && scope_index_lookup(root, bare).is_none() {
                 return Err(Failure::User(missing_scope_error(component)));
             }

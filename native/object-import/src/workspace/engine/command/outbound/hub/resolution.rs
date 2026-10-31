@@ -63,6 +63,9 @@ impl Resolution {
 
 pub(in super::super) fn resolve(input: &Prepare, scope: &str) -> io::Result<Resolved> {
     let scope = scope.trim();
+    if scope.is_empty() {
+        return Err(invalid("outbound remote scope"));
+    }
     if let Some(resolved) = input.resolution.cache()?.get(scope) {
         return Ok(resolved.clone());
     }

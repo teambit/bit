@@ -55,6 +55,8 @@ impl State {
         let raw_hash = raw_hash.trim();
         self.records
             .get(&token)
-            .filter(|snapshot| snapshot.path == path && snapshot.raw_hash == raw_hash)
+            .filter(|snapshot| {
+                snapshot.path == path && snapshot.raw_hash.trim().eq_ignore_ascii_case(raw_hash)
+            })
     }
 }

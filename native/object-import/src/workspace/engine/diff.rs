@@ -90,6 +90,7 @@ impl Drop for Process {
 
 pub(super) fn diff(files: &[InputFile], git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
     count(files.len())?;
+    let git = git.trim();
     if git.is_empty() || git.len() > 32768 || git.contains('\0') {
         return Err(invalid("workspace invalid Git executable"));
     }
@@ -101,6 +102,7 @@ pub(super) fn diff(files: &[InputFile], git: &str, color: bool) -> io::Result<Ve
 }
 pub(crate) type Frozen = (String, Option<Vec<u8>>, Option<Vec<u8>>);
 pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
+    let git = git.trim();
     if git.is_empty() || git.len() > 32768 || git.contains('\0') {
         return Err(invalid("workspace invalid Git executable"));
     }

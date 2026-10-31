@@ -16,12 +16,13 @@ pub(in crate::workspace::engine::command) fn import(
     let ids = targets
         .iter()
         .map(|target| {
+            let name = target.name.trim();
             let identity = target.scope
                 .as_deref()
                 .map(str::trim)
                 .filter(|scope| !scope.is_empty())
-                .map_or_else(|| target.name.clone(), |scope| format!("{scope}/{}", target.name));
-            format!("{identity}@{}", target.version)
+                .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+            format!("{identity}@{}", target.version.trim())
         })
         .collect::<Vec<_>>();
     record.context["historyCheckoutImport"] = json!({"requested":targets.len(),"ids":ids,"performed":!targets.is_empty(),"completed":false});

@@ -140,7 +140,7 @@ impl WorkspaceDepsContext {
 }
 
 fn lifecycle_from_str(raw: Option<&str>) -> &'static str {
-    match raw {
+    match raw.map(str::trim) {
         Some("dev") => "dev",
         Some("peer") => "peer",
         _ => "runtime",

@@ -33,9 +33,16 @@ pub(super) fn failure(
 }
 
 fn downcast_callback(error: &io::Error) -> Option<&crate::host::callback_error::CallbackError> {
-    error
+    let mut current: Option<&(dyn std::error::Error + 'static)> = error
         .get_ref()
-        .and_then(|inner| inner.downcast_ref::<crate::host::callback_error::CallbackError>())
+        .map(|inner| inner as &(dyn std::error::Error + 'static));
+    while let Some(inner) = current {
+        if let Some(callback) = inner.downcast_ref::<crate::host::callback_error::CallbackError>() {
+            return Some(callback);
+        }
+        current = inner.source();
+    }
+    None
 }
 
 /// Released filesystem error formatting nests red within the command handler's red.

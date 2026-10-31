@@ -31,7 +31,10 @@ fn valid_args(args: &[OsString]) -> bool {
     let mut iter = args.iter().skip(1);
     while let Some(arg) = iter.next() {
         match arg.to_str() {
-            Some("--no-color" | "--no-color=true" | "--no-color=false") => {}
+            Some(
+                "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+                | "--color=false" | "--color=always" | "--color=never",
+            ) => {}
             Some("--") => return iter.next().is_none(),
             _ => return false,
         }

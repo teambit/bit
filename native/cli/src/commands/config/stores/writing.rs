@@ -7,6 +7,9 @@ use std::{
 };
 
 pub(super) fn write(store: &Store) -> io::Result<()> {
+    if store.path.as_os_str().is_empty() {
+        return Err(io::Error::other("config store path is empty"));
+    }
     if store.origin == "workspace" {
         return workspace(store);
     }

@@ -73,7 +73,7 @@ fn target(
     let identity = component.id.to_string_without_version();
     let mut target = previous
         .iter()
-        .find(|target| target["identity"] == identity)
+        .find(|target| row_identity(target) == Some(identity.as_str()))
         .cloned()
         .unwrap_or_else(|| json!({"config":null,"packageJson":null}));
     target["identity"] = json!(identity);

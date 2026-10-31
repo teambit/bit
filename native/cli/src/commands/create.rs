@@ -186,6 +186,7 @@ fn has_inline_create_value(token: &str) -> bool {
     .any(|prefix| {
         token
             .strip_prefix(prefix)
+            .map(str::trim)
             .is_some_and(|val| !val.is_empty() && !val.starts_with('-'))
     })
 }

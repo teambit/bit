@@ -51,7 +51,11 @@ struct Directories {
     bytes: usize,
 }
 fn directories(root: &Path) -> io::Result<Vec<PathBuf>> {
-    let text = root.to_str().ok_or_else(|| invalid("dependency cache directory UTF-8"))?;
+    let text = root
+        .to_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .ok_or_else(|| invalid("dependency cache directory UTF-8"))?;
     if text.contains(['*', '?', '[', ']', '{', '}', '!', '(', ')']) {
         return Err(invalid("dependency cache glob directory"));
     }

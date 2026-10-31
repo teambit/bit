@@ -11,12 +11,7 @@ pub(in crate::commands) fn load_cat_component(
     scope_dir: &Path,
     raw_id: &str,
 ) -> Option<Value> {
-    let (bare_id, version_opt) = raw_id
-        .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
-    if bare_id.is_empty() || version_opt == Some("") {
-        return None;
-    }
+    let (bare_id, version_opt) = split_cat_id(raw_id)?;
     let (comp_scope, comp_name, comp_hash) = resolve_component_entry(scope_dir, bare_id)?;
     let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
     if kind != "Component" {
@@ -33,6 +28,14 @@ pub(in crate::commands) fn load_cat_component(
     (v_kind == "Version").then_some(ver_val)
 }
 
+fn split_cat_id(raw_id: &str) -> Option<(&str, Option<&str>)> {
+    let raw_id = raw_id.trim();
+    let (bare_id, version_opt) = raw_id
+        .rsplit_once('@')
+        .map_or((raw_id, None), |(id, ver)| (id.trim(), Some(ver.trim())));
+    (!bare_id.is_empty() && version_opt != Some("")).then_some((bare_id, version_opt))
+}
+
 fn is_head_alias(ver: &str) -> bool {
     matches!(ver, "latest" | "head")
 }
@@ -42,12 +45,7 @@ pub(in crate::commands) fn resolve_scope_target_id(
     scope_dir: &Path,
     raw_id: &str,
 ) -> Option<(String, String)> {
-    let (bare_id, version_opt) = raw_id
-        .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
-    if bare_id.is_empty() || version_opt == Some("") {
-        return None;
-    }
+    let (bare_id, version_opt) = split_cat_id(raw_id)?;
     let (id_without_ver, comp_val) = load_scope_component_model(scope_dir, bare_id)?;
     let ver_str = match version_opt {
         Some(ver) if !is_head_alias(ver) => ver.to_owned(),

@@ -165,6 +165,7 @@ impl std::error::Error for LaneNotFound {}
 
 /// `UnexpectedNetworkError`.
 pub(super) fn unexpected(message: &str) -> io::Error {
+    let message = message.trim();
     io::Error::new(
         io::ErrorKind::ConnectionAborted,
         format!("unexpected network error has occurred.\nserver responded with: \"{message}\""),

@@ -57,22 +57,31 @@ pub(super) fn metadata(current: &Value, files: &[String], target: &Value) -> io:
     if current["extensions"] != extensions(&target)? {
         return Err(invalid("command fast-forward dependency cache extensions changed"));
     }
-    let incoming = target["files"]
-        .as_array()
-        .ok_or_else(|| invalid("command fast-forward files"))?
-        .iter()
-        .map(|file| {
-            file["relativePath"].as_str().ok_or_else(|| invalid("command fast-forward file name"))
-        })
-        .collect::<io::Result<BTreeSet<_>>>()?;
+    let incoming = incoming_files(&target)?;
     let existing = files
         .iter()
         .map(String::as_str)
+        .map(str::trim)
         .collect::<BTreeSet<_>>();
     if incoming != existing {
         return Err(invalid("command fast-forward dependency cache file layout changed"));
     }
     Ok(())
+}
+
+fn incoming_files(target: &Value) -> io::Result<BTreeSet<&str>> {
+    target["files"]
+        .as_array()
+        .ok_or_else(|| invalid("command fast-forward files"))?
+        .iter()
+        .map(|file| {
+            file["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .ok_or_else(|| invalid("command fast-forward file name"))
+        })
+        .collect()
 }
 
 fn extensions(target: &Value) -> io::Result<Value> {

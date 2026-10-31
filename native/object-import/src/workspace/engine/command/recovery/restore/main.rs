@@ -100,7 +100,7 @@ fn validate_index(
         .any(|(hash, _)| {
             !entries
                 .iter()
-                .any(|entry| entry["hash"] == *hash)
+                .any(|entry| entry["hash"].as_str().map(str::trim) == Some(hash.as_str()))
         })
     {
         return Err(invalid("main recovery index repair requires the published runtime"));

@@ -58,11 +58,13 @@ fn remote_id_str(value: &Value) -> Option<String> {
     let name = value["name"]
         .as_str()
         .or_else(|| value["id"]["name"].as_str())
+        .map(str::trim)
         .filter(|name| !name.is_empty())?;
     Some(
         value["scope"]
             .as_str()
             .or_else(|| value["id"]["scope"].as_str())
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
             .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")),
     )

@@ -45,8 +45,11 @@ pub(in crate::commands) fn parse(
         if !error.is_object() {
             return Err(io::Error::other("compiler parser diagnostic unavailable"));
         }
-        let path =
-            input["path"].as_str().ok_or_else(|| io::Error::other("compiler parser path"))?;
+        let path = input["path"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| io::Error::other("compiler parser path"))?;
         let source =
             input["source"].as_str().ok_or_else(|| io::Error::other("compiler parser source"))?;
         result.insert(path.to_owned(), json!({"dependencies":[],"typescript":true,"sourceHash":format!("{:x}",Sha1::digest(source.as_bytes())),"error":error}));

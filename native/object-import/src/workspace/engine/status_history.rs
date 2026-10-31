@@ -22,6 +22,7 @@ struct Plan {
     read_set: Vec<proof::Proof>,
 }
 pub(super) fn identity(component: &str) -> String {
+    let component = component.trim();
     crate::validate::hexadecimal(&Sha1::digest(format!("{component}:VersionHistory").as_bytes()))
 }
 pub(super) fn validate(request: &Request) -> io::Result<(usize, Value)> {

@@ -40,9 +40,13 @@ fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
         .into_iter()
         .flatten()
         .map(|value| {
-            let id = value.as_str().ok_or_else(|| invalid("outbound lane update-dependent"))?;
+            let id = value
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("outbound lane update-dependent"))?;
             let (identity, _) =
                 id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+            let identity = identity.trim();
             Ok(selected_ids.contains(identity).then(|| identity.to_owned()))
         })
         .collect::<io::Result<Vec<_>>>()
@@ -54,7 +58,9 @@ pub(super) fn missing(report: &Reported, bitmap: &Value, exported_ids: &[String]
     exported_ids
         .iter()
         .filter_map(|id| {
-            let identity = id.rsplit_once('@').map_or(id.as_str(), |(identity, _)| identity);
+            let trimmed = id.trim();
+            let identity =
+                trimmed.rsplit_once('@').map_or(trimmed, |(identity, _)| identity.trim());
             if !seen.insert(identity)
                 || report.updates
                     .iter()

@@ -169,15 +169,17 @@ pub(super) fn snapshot_update(
             lane["overrideUpdateDependents"] = json!(true);
         }
     } else if was_hidden {
-        let entries = lane["updateDependents"].as_array_mut().unwrap();
+        let entries = lane["updateDependents"]
+            .as_array_mut()
+            .ok_or_else(|| invalid("lane snapshot hidden entries"))?;
         entries.retain(|row| {
             row.as_str()
-                .and_then(|id| id.rsplit_once('@'))
-                .is_none_or(|(id, _)| id != identity)
+                .and_then(|id| id.trim().rsplit_once('@'))
+                .is_none_or(|(id, _)| id.trim() != identity)
         });
         if entries.is_empty() {
             lane.as_object_mut()
-                .unwrap()
+                .ok_or_else(|| invalid("lane snapshot object"))?
                 .remove("updateDependents");
         }
     }

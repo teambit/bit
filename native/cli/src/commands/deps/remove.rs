@@ -118,6 +118,7 @@ fn match_pkg(
 }
 
 fn dep_matches(dep: &ResolvedDep, name: &str, req_ver: Option<&str>) -> bool {
+    let name = name.trim();
     let name_ok = dep.package_name == name
         || dep.id == name
         || dep.comp_name.as_deref() == Some(name)

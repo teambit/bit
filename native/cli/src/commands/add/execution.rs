@@ -161,7 +161,12 @@ pub(super) fn link_rows(
 fn aspect_environments(components: &[WorkspaceComponent], aspects: &[String]) -> Vec<String> {
     components
         .iter()
-        .filter(|component| aspects.contains(&component.id.to_string_without_version()))
+        .filter(|component| {
+            let id = component.id.to_string_without_version();
+            aspects
+                .iter()
+                .any(|aspect| aspect.trim() == id)
+        })
         .map(|component| component.env_id.clone())
         .collect()
 }

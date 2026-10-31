@@ -181,7 +181,8 @@ fn explicit_policy(config: Option<&serde_json::Value>, dep: &ResolvedDep) -> boo
     value
         .as_str()
         .or_else(|| value["version"].as_str())
-        == Some(&dep.version)
+        .map(str::trim)
+        == Some(dep.version.trim())
 }
 
 fn add_dependency(packages: &mut Vec<PackageInfo>, dep: ResolvedDep, origin: VersionOrigin) {

@@ -85,9 +85,13 @@ fn model(
 }
 
 fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
-    if model
-        .get("versions")
-        .is_some_and(|val| !val.is_null() && !val.is_object())
+    if ["versions", "orphanedVersions"]
+        .into_iter()
+        .any(|field| {
+            model
+                .get(field)
+                .is_some_and(|val| !val.is_null() && !val.is_object())
+        })
     {
         return Err(invalid("version parent tags"));
     }

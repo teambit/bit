@@ -44,16 +44,19 @@ pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Resu
 }
 
 fn saved_edges(version: &Value, repository: &mut Repository) -> io::Result<Value> {
-    let reference = version
+    if let Some(value) = version
         .get("flattenedEdgesRef")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|reference| !reference.is_empty());
-    Ok(match reference {
-        Some(reference) => repository.source_json(reference)?,
-        None => version
-            .get("flattenedEdges")
-            .cloned()
-            .unwrap_or_else(|| serde_json::json!([])),
-    })
+        .filter(|value| !value.is_null())
+    {
+        let reference = value
+            .as_str()
+            .map(str::trim)
+            .filter(|reference| !reference.is_empty())
+            .ok_or_else(|| invalid("command saved dependency graph reference"))?;
+        return repository.source_json(reference);
+    }
+    Ok(version
+        .get("flattenedEdges")
+        .cloned()
+        .unwrap_or_else(|| serde_json::json!([])))
 }

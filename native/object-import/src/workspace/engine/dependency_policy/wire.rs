@@ -71,6 +71,9 @@ impl Plan {
 impl Request {
     pub(super) fn ignore(&self, field: usize, name: &str, removed: &mut [Vec<String>; 3]) -> bool {
         let trimmed = name.trim();
+        if trimmed.is_empty() {
+            return false;
+        }
         let ignored = self.ignored[field]
             .iter()
             .any(|entry| entry.trim() == trimmed);

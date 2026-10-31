@@ -57,7 +57,17 @@ pub(super) fn output_error(options: &Options) -> Option<&'static str> {
 }
 
 fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize) -> Option<()> {
-    if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+    if matches!(
+        arg,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    ) {
         return Some(());
     }
     if arg == "--file" && options.output.files.is_empty() {

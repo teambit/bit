@@ -38,8 +38,11 @@ pub(super) fn nested_directories(root: &Path) -> io::Result<Vec<String>> {
         {
             continue;
         }
-        let directory =
-            row["rootDir"].as_str().ok_or_else(|| invalid("command nested root directory"))?;
+        let directory = row["rootDir"]
+            .as_str()
+            .map(str::trim)
+            .filter(|directory| !directory.is_empty())
+            .ok_or_else(|| invalid("command nested root directory"))?;
         if directory != "." {
             crate::checkout::plan::relative_path(directory)?;
             nested.push(directory.to_owned());
@@ -53,7 +56,7 @@ pub(super) fn filter(manifest: &mut Value, nested: &[String]) -> io::Result<()> 
     let files =
         manifest["files"].as_array_mut().ok_or_else(|| invalid("command root manifest files"))?;
     files.retain(|file| {
-        let Some(path) = file["relativePath"].as_str() else { return true };
+        let Some(path) = file["relativePath"].as_str().map(str::trim) else { return true };
         path != ".bitmap"
             && !nested
                 .iter()

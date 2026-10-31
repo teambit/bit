@@ -72,6 +72,9 @@ impl Cancellation {
         &self,
         future: impl Future<Output = ResultValue>,
     ) -> io::Result<ResultValue> {
+        if self.is_cancelled() {
+            return Err(io::Error::new(io::ErrorKind::Interrupted, "operation cancelled"));
+        }
         let cancelled = self.cancelled();
         futures_util::pin_mut!(cancelled, future);
         match select(cancelled, future).await {

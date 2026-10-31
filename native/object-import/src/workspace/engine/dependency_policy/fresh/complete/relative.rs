@@ -27,7 +27,13 @@ fn untracked(value: &Value) -> io::Result<()> {
     if files.len() > 4096
         || files
             .iter()
-            .any(|file| !file["relativePath"].is_string() || !file["existing"].is_boolean())
+            .any(|file| {
+                file["relativePath"]
+                    .as_str()
+                    .map(str::trim)
+                    .is_none_or(str::is_empty)
+                    || !file["existing"].is_boolean()
+            })
     {
         return Err(invalid("untracked issue file record"));
     }

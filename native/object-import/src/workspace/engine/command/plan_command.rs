@@ -181,8 +181,9 @@ fn snap_receipt(output: &mut Value, planned: &planning::Planned) -> io::Result<(
                     let identity = material.output["id"]
                         .as_str()
                         .and_then(|id| id.rsplit_once('@'))
-                        .ok_or_else(|| invalid("command dependency cache identity"))?
-                        .0;
+                        .map(|(identity, _)| identity.trim())
+                        .filter(|identity| !identity.is_empty())
+                        .ok_or_else(|| invalid("command dependency cache identity"))?;
                     Ok(json!({"identity":identity,"version":material.version_name}))
                 })
                 .collect::<io::Result<Vec<_>>>()?
@@ -195,8 +196,11 @@ pub(super) fn validate_versions(record: &mut Record) -> io::Result<()> {
     for row in
         record.context["versions"].as_array().ok_or_else(|| invalid("command context versions"))?
     {
-        let reference =
-            row[0].as_str().ok_or_else(|| invalid("command context version reference"))?;
+        let reference = row[0]
+            .as_str()
+            .map(str::trim)
+            .filter(|reference| !reference.is_empty())
+            .ok_or_else(|| invalid("command context version reference"))?;
         if record.repository.read(reference, "Version")? != row[1] {
             return Err(invalid("command Version changed during capture"));
         }

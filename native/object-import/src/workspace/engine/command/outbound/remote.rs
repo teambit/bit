@@ -218,7 +218,11 @@ pub(super) fn network(retained: &Retained) -> io::Result<Network> {
     let local: Value = crate::parse_jsonc(&fs::read(
         crate::scope_path(&retained.network.root).join("scope.json"),
     )?)?;
-    let local_name = local["name"].as_str().ok_or_else(|| invalid("outbound local scope"))?;
+    let local_name = local["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("outbound local scope"))?;
     Network::new(
         config,
         &retained.network.bit_version,
@@ -233,6 +237,8 @@ fn persisted_ids(value: Value) -> io::Result<Vec<String>> {
     ids.into_iter()
         .map(|id| {
             id.as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("outbound persisted identities"))
         })

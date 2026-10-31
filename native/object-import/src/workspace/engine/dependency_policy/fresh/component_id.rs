@@ -7,22 +7,28 @@ use serde_json::{Map, Value};
 use std::io;
 
 pub(super) fn serialize(raw: &Value, unscoped: bool) -> io::Result<Value> {
-    let (scope, name, version) = if let Some(text) = raw.as_str() {
+    let (scope, name, version) = if let Some(text) = raw.as_str().map(str::trim) {
         let (bare, ver) = text
             .rsplit_once('@')
-            .map_or((text, None), |(bare, ver)| (bare, Some(ver)));
+            .map_or((text, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
         let (scope, name) = bare
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("fresh component scope"))?;
         (scope, name, ver)
     } else {
-        let name = raw["name"].as_str().ok_or_else(|| invalid("fresh component name"))?;
+        let name = raw["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("fresh component name"))?;
         let scope = raw["scope"]
             .as_str()
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
             .ok_or_else(|| invalid("fresh component scope"))?;
-        (scope, name, raw["version"].as_str())
+        (scope, name, raw["version"].as_str().map(str::trim))
     };
     let mut id = Map::new();
     if !unscoped {

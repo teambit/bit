@@ -24,5 +24,13 @@ pub(super) fn lane(
 fn has_lane_assignment(bitmap: &Value) -> bool {
     bitmap
         .get("_bit_lane")
-        .is_some_and(|lane| !lane.is_null())
+        .is_some_and(|lane| {
+            !lane.is_null()
+                && lane
+                    .as_str()
+                    .is_none_or(|text| !text.trim().is_empty())
+                && lane
+                    .as_object()
+                    .is_none_or(|map| !map.is_empty())
+        })
 }

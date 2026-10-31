@@ -165,7 +165,7 @@ pub(in crate::workspace::engine) fn plan(
 ) -> io::Result<(usize, Value)> {
     let mut retained =
         snapshots.command.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
-    if retained.record.token != input.token
+    if retained.record.token != input.token.trim()
         || !retained.materials.is_empty()
         || !matches!(retained.finalized, publication::Phase::Pending(_))
     {
@@ -185,7 +185,7 @@ pub(in crate::workspace::engine) fn tag_candidates(
     let mut retained =
         snapshots.command.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
     let result = (|| {
-        if retained.record.token != input.token
+        if retained.record.token != input.token.trim()
             || retained.tag.is_none()
             || !retained.materials.is_empty()
         {

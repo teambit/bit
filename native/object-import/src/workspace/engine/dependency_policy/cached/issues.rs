@@ -17,7 +17,11 @@ pub(super) fn missing(issues: &Value) -> io::Result<Vec<Value>> {
         if !seen.insert(name) {
             return Err(invalid("status duplicate cached issue"));
         }
-        let data = issue["data"].as_str().ok_or_else(|| invalid("status cached issue data"))?;
+        let data = issue["data"]
+            .as_str()
+            .map(str::trim)
+            .filter(|data| !data.is_empty())
+            .ok_or_else(|| invalid("status cached issue data"))?;
         if name == MISSING {
             let data: Value = serde_json::from_str(data).map_err(io::Error::other)?;
             for row in rows(&data)? {

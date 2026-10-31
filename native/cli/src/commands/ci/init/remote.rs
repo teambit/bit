@@ -142,6 +142,7 @@ fn refuse(why: &str) -> String {
     )
 }
 fn api_override(server: &Url, raw: &str) -> Result<String, String> {
+    let raw = super::trim(raw);
     let server_host = server.host_str().unwrap_or("github.com");
     let Some(api) = Url::parse(raw)
         .ok()

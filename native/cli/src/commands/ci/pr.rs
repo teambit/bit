@@ -147,7 +147,8 @@ fn apply_pr_value_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option
 }
 
 fn valid_pr_val(val: &str) -> Option<String> {
-    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }
 
 fn consume_bool_flag(rest: &[&str], idx: usize, target: &mut bool) -> usize {

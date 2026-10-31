@@ -16,9 +16,10 @@ pub(super) fn fast_forward(
     for material in &planned.materials {
         let identity = material.output["id"]
             .as_str()
-            .and_then(|id| id.rsplit_once('@'))
-            .ok_or_else(|| invalid("command FF identity"))?
-            .0;
+            .and_then(|id| id.trim().rsplit_once('@'))
+            .map(|(identity, _)| identity.trim())
+            .filter(|identity| !identity.is_empty())
+            .ok_or_else(|| invalid("command FF identity"))?;
         let current = planned.captured
             .iter()
             .find(|row| row.target.identity == identity)

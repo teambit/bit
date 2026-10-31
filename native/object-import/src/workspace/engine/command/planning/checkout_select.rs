@@ -147,7 +147,14 @@ fn tracked_head(record: &Record, captured: &capture::Captured) -> Option<Value> 
         && record.context["lane"]["trackedTargets"]
             .as_array()?
             .iter()
-            .any(|row| row["identity"].as_str().map(str::trim) == Some(target_identity));
+            .any(|row| {
+                row["identity"]
+                    .as_str()
+                    .or_else(|| row["id"].as_str())
+                    .map(str::trim)
+                    .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
+                    == Some(target_identity)
+            });
     let head = tracked.then(|| lane_head(&record.context, target_identity))??;
     Some(json!({"kind":"target","version":head,"merge":false}))
 }

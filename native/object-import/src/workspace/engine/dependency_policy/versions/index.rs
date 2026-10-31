@@ -38,11 +38,10 @@ impl<'a> Index<'a> {
 fn first(ids: &[String]) -> HashMap<&str, &str> {
     let mut index = HashMap::new();
     for id in ids {
+        let base = unversioned(id);
         let ver = version(id).trim();
-        if !ver.is_empty() {
-            index
-                .entry(unversioned(id))
-                .or_insert(ver);
+        if !base.is_empty() && !ver.is_empty() {
+            index.entry(base).or_insert(ver);
         }
     }
     index

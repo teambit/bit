@@ -150,7 +150,7 @@ fn files(report: &Report, chalk: Chalk) -> String {
         format!(
             "   {} {path}{}{}",
             chalk.dim("›"),
-            " ".repeat(width - path.encode_utf16().count()),
+            " ".repeat(width.saturating_sub(path.encode_utf16().count())),
             chalk.dim(note),
         )
     };

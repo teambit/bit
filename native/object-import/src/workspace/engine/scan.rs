@@ -33,7 +33,7 @@ pub(super) fn scan(
         queued_bytes: root.as_os_str().len(),
     };
     while let Some(directory) = scan.directories.pop() {
-        scan.queued_bytes -= directory.as_os_str().len();
+        scan.queued_bytes = scan.queued_bytes.saturating_sub(directory.as_os_str().len());
         for entry in fs::read_dir(directory)? {
             scan.entry(&entry?)?;
         }

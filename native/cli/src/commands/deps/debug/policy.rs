@@ -112,13 +112,15 @@ fn parse_manual_entries(values: &Value) -> Result<Vec<(String, String)>, Failure
         .iter()
         .map(|(name, value)| {
             let version = manual_version(value)
+                .map(str::trim)
                 .ok_or_else(|| {
                     Failure::Declined("unsupported component deps debug version".into())
                 })?;
+            let name = name.trim();
             if name.is_empty() || version.is_empty() {
                 return Err(Failure::Declined("unsupported component deps debug entry".into()));
             }
-            Ok((version != "-" && version != "+").then(|| (name.clone(), version.to_owned())))
+            Ok((version != "-" && version != "+").then(|| (name.to_owned(), version.to_owned())))
         })
         .collect::<Result<Vec<_>, _>>()?
         .into_iter()

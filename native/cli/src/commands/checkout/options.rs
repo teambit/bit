@@ -343,6 +343,6 @@ impl Options {
     /// `checkoutProps.all` once `parseValues` ran: `head` and `latest`
     /// without a pattern check out every component.
     pub fn report_all(&self) -> bool {
-        self.all || (self.pattern.is_none() && matches!(self.to.as_str(), "head" | "latest"))
+        self.all || (self.pattern.is_none() && matches!(self.to.trim(), "head" | "latest"))
     }
 }

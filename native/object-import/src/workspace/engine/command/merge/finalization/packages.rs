@@ -83,6 +83,7 @@ pub(super) fn package_name(version: &Value) -> io::Result<&str> {
                 })
         })
         .and_then(|row| row["data"]["packageName"].as_str())
+        .map(str::trim)
         .ok_or_else(|| invalid("merge package name"))?;
     crate::checkout::plan::relative_path(name)?;
     if !name.starts_with('@') || name.matches('/').count() != 1 {
@@ -91,10 +92,11 @@ pub(super) fn package_name(version: &Value) -> io::Result<&str> {
     Ok(name)
 }
 fn package_id_matches(component_id: &Value, identity: &str, scope: &str, component: &str) -> bool {
-    if let Some(raw) = component_id.as_str() {
-        raw.rsplit_once('@').map_or(raw, |(bare, _)| bare) == identity
+    if let Some(raw) = component_id.as_str().map(str::trim) {
+        raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim()) == identity.trim()
     } else {
-        component_id["scope"] == scope && component_id["name"] == component
+        component_id["scope"].as_str().map(str::trim) == Some(scope.trim())
+            && component_id["name"].as_str().map(str::trim) == Some(component.trim())
     }
 }
 fn validate_package(

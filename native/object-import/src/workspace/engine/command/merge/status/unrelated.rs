@@ -12,6 +12,8 @@ pub(super) fn observation(input: &Input<'_>) -> io::Result<Value> {
     } else {
         input.options.resolve_unrelated
             .as_deref()
+            .map(str::trim)
+            .filter(|strategy| !strategy.is_empty())
             .ok_or_else(|| invalid("command unrelated strategy"))?
     };
     facts["strategy"] = json!(strategy);
@@ -25,10 +27,13 @@ pub(super) fn failure(input: &Input<'_>) -> io::Result<Value> {
         .as_str()
         .or_else(|| input.target["version"].as_str())
         .or_else(|| input.target["head"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("command unrelated current version"))?;
     let head = input.model
         .and_then(|model| model["head"].as_str())
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
         .ok_or_else(|| invalid("command unrelated main head"))?;
     Ok(
         json!({"message":format!("unable to traverse {identity}@{version} history. the main-head {head} doesn't appear in both lanes.\nit was probably created in each lane separately and it also exists on main. please merge main first to one of these lanes")}),

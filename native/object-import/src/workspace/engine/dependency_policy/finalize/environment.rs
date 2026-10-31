@@ -84,11 +84,14 @@ fn preferred(request: &Request, name: &str) -> io::Result<String> {
             .to_owned());
     };
     let Ok(range) = node_semver::Range::parse(&workspace) else { return Ok(workspace) };
-    if let Some(installed) =
-        request.resolved.get(name).and_then(|package| package.concrete_version.as_ref())
+    if let Some(installed) = request.resolved
+        .get(name)
+        .and_then(|package| package.concrete_version.as_deref())
+        .map(str::trim)
+        .filter(|installed| !installed.is_empty())
         && node_semver::Version::parse(installed).is_ok_and(|version| range.satisfies(&version))
     {
-        return Ok(installed.clone());
+        return Ok(installed.to_owned());
     }
     if node_semver::npm::valid_range(&workspace).as_deref() == Some("*") {
         return Ok(workspace);

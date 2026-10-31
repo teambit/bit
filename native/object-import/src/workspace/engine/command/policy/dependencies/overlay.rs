@@ -53,19 +53,24 @@ fn overlay_files<'a>(
 }
 
 fn matches_material_identity(output: &Value, identity: &str) -> bool {
+    let identity = identity.trim();
     if let Some(id) = output["id"]
         .as_str()
         .or_else(|| output["identity"].as_str())
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
     {
-        let base = id.rsplit_once('@').map_or(id, |(base, _)| base);
+        let base = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
         return base == identity;
     }
     output["id"]["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .is_some_and(|name| {
             output["id"]["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
                 .map_or_else(|| name == identity, |scope| format!("{scope}/{name}") == identity)
         })

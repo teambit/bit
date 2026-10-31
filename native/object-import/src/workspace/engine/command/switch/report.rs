@@ -29,7 +29,11 @@ pub(in super::super) fn append_skipped(
         {
             continue;
         }
-        if let Some(head) = context["lane"]["switchLaneHeads"][identity].as_str() {
+        if let Some(head) = context["lane"]["switchLaneHeads"][identity]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+        {
             failed.push(json!({"id":format!("{identity}@{head}"),
                 "unchangedMessage":format!("component {identity} is already at version {head}"),
                 "unchangedLegitimately":true}));

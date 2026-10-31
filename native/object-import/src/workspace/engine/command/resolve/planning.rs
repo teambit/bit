@@ -317,13 +317,20 @@ fn ensure_attached_or_unrelated(
                 .find(|row| row["identity"] == *identity)
         })
         .and_then(|row| row["currentHead"].as_str())
-        .or_else(|| model["head"].as_str())
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .or_else(|| {
+            model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+        })
         .or_else(|| {
             ["versions", "orphanedVersions"]
                 .into_iter()
                 .filter_map(|field| model[field].as_object())
                 .flat_map(serde_json::Map::values)
-                .any(|hash| hash.as_str() == Some(reference))
+                .any(|hash| hash.as_str().map(str::trim) == Some(reference))
                 .then_some(reference)
         })
         .ok_or_else(|| invalid("resolve current head"))?;

@@ -57,8 +57,7 @@ fn heads(record: &mut Record, identity: &str, model: &Value) -> io::Result<(Stri
     let current_head = lane_target
         .map_or(&model["head"], |target| &target["currentHead"])
         .as_str()
-        .map(str::trim)
-        .unwrap_or_default()
+        .map_or("", str::trim)
         .to_owned();
     Ok((remote, current_head))
 }
@@ -94,14 +93,8 @@ pub(super) fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::
     {
         let identity = format!(
             "{}/{}",
-            selected.model["scope"]
-                .as_str()
-                .map(str::trim)
-                .unwrap_or_default(),
-            selected.model["name"]
-                .as_str()
-                .map(str::trim)
-                .unwrap_or_default(),
+            selected.model["scope"].as_str().map_or("", str::trim),
+            selected.model["name"].as_str().map_or("", str::trim),
         );
         let model = record.repository.read_component(&identity)?;
         refresh_model(selected, model)?;

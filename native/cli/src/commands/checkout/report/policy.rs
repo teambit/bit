@@ -42,6 +42,7 @@ fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
     };
     let rows = object(value)?
         .iter()
+        .filter(|(name, _)| !name.trim().is_empty())
         .map(|(name, entry)| {
             let name = name.trim();
             let (before, after) = update_pair(entry)?;

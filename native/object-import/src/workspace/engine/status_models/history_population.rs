@@ -100,7 +100,10 @@ fn populate(
             let value = serde_json::from_str(body).map_err(io::Error::other)?;
             observe(
                 reader,
-                row["hash"].as_str().ok_or_else(|| invalid("history hash"))?,
+                row["hash"]
+                    .as_str()
+                    .map(str::trim)
+                    .ok_or_else(|| invalid("history hash"))?,
                 &value,
                 proofs,
             )?;

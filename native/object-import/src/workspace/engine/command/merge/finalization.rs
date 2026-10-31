@@ -190,9 +190,14 @@ impl Prepared {
         let rows = if index.is_array() { &mut index } else { &mut index["components"] };
         let rows = rows.as_array_mut().ok_or_else(|| invalid("snapshot index components"))?;
         for identity in identities {
-            let (scope, name) =
-                identity.split_once('/').ok_or_else(|| invalid("snapshot index identity"))?;
-            let hash = crate::workspace::engine::hash(identity.as_bytes());
+            let identity = identity.trim();
+            let (scope, name) = identity
+                .split_once('/')
+                .map(|(scope, name)| (scope.trim(), name.trim()))
+                .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+                .ok_or_else(|| invalid("snapshot index identity"))?;
+            let normalized = format!("{scope}/{name}");
+            let hash = crate::workspace::engine::hash(normalized.as_bytes());
             if rows
                 .iter()
                 .any(|row| row["hash"] == hash)

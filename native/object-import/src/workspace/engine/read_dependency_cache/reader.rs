@@ -23,7 +23,11 @@ pub(super) fn read(cache: &Path, key: &str) -> io::Result<Option<Value>> {
     else {
         return Ok(None);
     };
-    let integrity = integrity.as_str().ok_or_else(|| invalid("dependency cache integrity type"))?;
+    let integrity = integrity
+        .as_str()
+        .map(str::trim)
+        .filter(|integrity| !integrity.is_empty())
+        .ok_or_else(|| invalid("dependency cache integrity type"))?;
     let Some(data) = content(cache, integrity)? else { return Ok(None) };
     let timestamp =
         entry["metadata"].get("timestamp").ok_or_else(|| invalid("dependency cache timestamp"))?;

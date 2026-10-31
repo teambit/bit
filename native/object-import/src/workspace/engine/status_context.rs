@@ -165,8 +165,11 @@ fn metadata_projected(
 fn component_controls(root: &std::path::Path, targets: &[Value]) -> io::Result<Vec<proof::Proof>> {
     let mut proofs = Vec::new();
     for target in targets {
-        let directory =
-            target["directory"].as_str().ok_or_else(|| invalid("status control directory"))?;
+        let directory = target["directory"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .ok_or_else(|| invalid("status control directory"))?;
         for name in ["component.json", "package.json"] {
             proof::read(&root.join(directory).join(name), &mut proofs)?;
         }

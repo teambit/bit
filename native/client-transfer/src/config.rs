@@ -51,7 +51,12 @@ fn layers(
     environment: impl Fn(&str) -> Option<String>,
 ) -> GlobalConfig {
     bit_workspace_config::effective_with_environment(
-        &Value::Object(global.into_iter().collect()),
+        &Value::Object(
+            global
+                .into_iter()
+                .map(|(key, value)| (key.trim().to_owned(), value))
+                .collect(),
+        ),
         scope,
         workspace,
         TRANSPORT_KEYS,

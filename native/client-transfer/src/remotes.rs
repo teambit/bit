@@ -97,6 +97,7 @@ impl Remotes {
 
     /// `Remotes.resolve`.
     pub async fn resolve(&self, scope: &str, network: &Network) -> io::Result<Remote> {
+        let scope = scope.trim();
         if let Some(host) = self.hosts.get(scope) {
             return Remote::from_host(host);
         }

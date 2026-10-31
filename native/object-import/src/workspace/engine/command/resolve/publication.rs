@@ -143,10 +143,10 @@ fn allocate_snap_report(result: &mut Value, versions: &[Value]) -> io::Result<()
 }
 
 pub(super) fn apply(input: &Apply, retained: &mut Retained) -> io::Result<Value> {
-    if retained.record.token != input.token {
+    if retained.record.token != input.token.trim() {
         return Err(invalid("resolve apply token"));
     }
-    super::super::bitmap::validate_history_file_id(&input.file_id)?;
+    super::super::bitmap::validate_history_file_id(input.file_id.trim())?;
     proof::verify(&input.dependency_read_set)?;
     validate(retained)?;
     if matches!(retained.finalized, Phase::Noop) && retained.snap.is_some() {
@@ -154,7 +154,7 @@ pub(super) fn apply(input: &Apply, retained: &mut Retained) -> io::Result<Value>
     }
     if let Phase::Soft(bitmap) = &retained.finalized {
         bitmap.commit(
-            &input.file_id,
+            input.file_id.trim(),
             &format!(
                 "tag (message: {})",
                 retained.record.request.options.message
@@ -176,7 +176,7 @@ pub(super) fn apply(input: &Apply, retained: &mut Retained) -> io::Result<Value>
         prepared.notifications = super::super::apply_command::notify(&retained.record.request.root);
     }
     let notifications = prepared.notifications;
-    prepared.publication.commit(&input.file_id)?;
+    prepared.publication.commit(input.file_id.trim())?;
     Ok(json!({"applied":true,"result":retained.result,"postPersistNotifications":notifications}))
 }
 pub(super) fn validate(retained: &Retained) -> io::Result<()> {

@@ -176,8 +176,7 @@ impl Prepared {
         if let Some(lane) = &mut self.publication.lane {
             lane.finalize_snap(staging, &snapshot.versions, receipt, message)?;
         }
-        let results = json!({"snappedComponents":snapshot.versions.iter().map(|version|
-            json!({"id":format!("{}@{}",version["identity"].as_str().unwrap(),version["hash"].as_str().unwrap())})).collect::<Vec<_>>(),"autoSnappedResults":[]});
+        let results = snapped_results(&snapshot.versions)?;
         self.finalized = Some(Finalized { snapshot, files });
         Ok(results)
     }
@@ -371,4 +370,17 @@ fn policy_material(
                 })
         })
         .ok_or_else(|| invalid("command policy material absent"))
+}
+
+fn snapped_results(versions: &[Value]) -> io::Result<Value> {
+    let snapped = versions
+        .iter()
+        .map(|version| {
+            let identity =
+                version["identity"].as_str().ok_or_else(|| invalid("command snapped identity"))?;
+            let hash = version["hash"].as_str().ok_or_else(|| invalid("command snapped hash"))?;
+            Ok(json!({"id":format!("{identity}@{hash}")}))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    Ok(json!({"snappedComponents":snapped,"autoSnappedResults":[]}))
 }

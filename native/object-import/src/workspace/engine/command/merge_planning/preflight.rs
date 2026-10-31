@@ -70,8 +70,8 @@ fn reject_dependents(version: &Value, identities: &HashSet<&str>) -> io::Result<
             let id = &dependency["id"];
             let identity = format!(
                 "{}/{}",
-                id["scope"].as_str().unwrap_or_default(),
-                id["name"].as_str().unwrap_or_default(),
+                id["scope"].as_str().map_or("", str::trim),
+                id["name"].as_str().map_or("", str::trim),
             );
             if identities.contains(identity.as_str()) {
                 return Err(invalid("command merge dependent snap cascade"));

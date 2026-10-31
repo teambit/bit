@@ -131,7 +131,11 @@ fn extension_configuration(name: &str, value: &Value, recovery: bool) -> io::Res
             value.as_object().ok_or_else(|| invalid("status environment configuration"))?;
         if config
             .get("env")
-            .is_some_and(|env| !env.is_string())
+            .is_some_and(|env| {
+                env.as_str()
+                    .map(str::trim)
+                    .is_none_or(str::is_empty)
+            })
         {
             return Err(invalid("status environment identifier"));
         }

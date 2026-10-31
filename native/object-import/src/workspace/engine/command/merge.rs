@@ -19,6 +19,9 @@ pub(super) struct State {
 
 impl State {
     pub(super) fn new(count: usize) -> io::Result<Self> {
+        if count > 4096 {
+            return Err(invalid("command merge status count limit"));
+        }
         let mut native = crate::merge_transaction::State::default();
         let journal = crate::merge_transaction::apply(
             "mergeTransactionBegin",

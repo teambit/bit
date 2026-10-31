@@ -19,10 +19,20 @@ pub(super) fn prepare(
     if id.is_null() {
         return Ok(None);
     }
-    let scope = id["scope"].as_str().ok_or_else(|| invalid("recovery lane scope"))?;
-    let name = id["name"].as_str().ok_or_else(|| invalid("recovery lane name"))?;
+    let scope = id["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("recovery lane scope"))?;
+    let name = id["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("recovery lane name"))?;
     let (hash, value) = read_backup(root, proofs)?;
-    if value["scope"] != scope || value["name"] != name {
+    if value["scope"].as_str().map(str::trim) != Some(scope)
+        || value["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("recovery Lane identity"));
     }
     validate_index(root, &hash, scope, name, proofs)?;

@@ -41,6 +41,7 @@ fn filesystem_message(message: &str) -> bool {
         || trimmed.starts_with("EPERM: operation not permitted,")
 }
 fn message_color(message: &str, chalk: Chalk) -> Option<String> {
+    let message = message.trim();
     if message == NO_FILES {
         return Some(chalk.yellow(NO_FILES));
     }

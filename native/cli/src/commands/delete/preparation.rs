@@ -90,6 +90,9 @@ fn validate(bitmap: &serde_json::Value, ids: &[String], options: &Options<'_>) -
             "--range is not needed when deleting components from a lane, unless --update-main is used",
         ));
     }
+    if matches!(&options.scope, Scope::Snaps(snaps) if snaps.is_empty()) {
+        return Err(invalid("please provide valid snap hashes for --snaps"));
+    }
     Ok(())
 }
 fn invalid(message: &str) -> io::Error {

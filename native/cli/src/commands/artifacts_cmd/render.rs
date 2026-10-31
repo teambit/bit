@@ -66,7 +66,7 @@ fn save_single_artifact_file(
 
 fn is_safe_artifact_path(relative_path: &str) -> bool {
     !relative_path.trim().is_empty()
-        && !relative_path.contains('\\')
+        && !relative_path.contains(['\\', '\0'])
         && Path::new(relative_path)
             .components()
             .all(|part| matches!(part, std::path::Component::Normal(_)))

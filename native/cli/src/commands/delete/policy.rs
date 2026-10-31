@@ -29,13 +29,14 @@ impl Policy {
             Document::parse(std::str::from_utf8(&before).map_err(io::Error::other)?)?;
         let mut items = Vec::new();
         for pin in pins {
-            let version = range(&document, &pin.version)?;
+            let package_name = pin.package_name.trim();
+            let version = range(&document, pin.version.trim())?;
             add_root_policy_entries(
                 &mut document,
-                &[(pin.package_name.clone(), version.clone())],
+                &[(package_name.to_owned(), version.clone())],
                 ExistingEntries::Skip,
             )?;
-            items.push(format!("{}@{version}", pin.package_name));
+            items.push(format!("{package_name}@{version}"));
         }
         Ok(Some(Self { before, document, items }))
     }

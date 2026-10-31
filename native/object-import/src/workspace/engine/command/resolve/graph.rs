@@ -167,22 +167,25 @@ fn mark_dependency(
 }
 
 fn pending(identity: &str) -> io::Result<Value> {
+    let identity = identity.trim();
     let (scope, name) = identity
         .split_once('/')
-        .filter(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .ok_or_else(|| invalid("resolve graph identity"))?;
     Ok(json!({"scope":scope,"name":name,"version":format!("__bit_pending_snapshot__:{identity}")}))
 }
 fn is_pending(id: &Value) -> bool {
     id["version"]
         .as_str()
-        .is_some_and(|version| version.starts_with("__bit_pending_snapshot__:"))
+        .is_some_and(|version| version.trim().starts_with("__bit_pending_snapshot__:"))
 }
 
 pub(super) fn key(id: &Value) -> io::Result<String> {
     let version = id["version"]
         .as_str()
-        .filter(|ver| !ver.trim().is_empty())
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
         .ok_or_else(|| invalid("resolve graph version"))?;
     Ok(format!("{}@{version}", super::selection::identity(id)?))
 }

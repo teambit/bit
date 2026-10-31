@@ -17,7 +17,10 @@ const BUILDER: &str = "teambit.pipelines/builder";
 pub(super) fn metadata(version: &mut Value, allocation: &Value) -> io::Result<()> {
     planned_tasks(version, allocation)?;
     let Some(data) = allocation.get("buildData") else { return Ok(()) };
-    let status = data["buildStatus"].as_str().ok_or_else(|| invalid("snapshot build status"))?;
+    let status = data["buildStatus"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("snapshot build status"))?;
     if !matches!(status, "succeed" | "failed" | "pending" | "skipped") {
         return Err(invalid("snapshot build status"));
     }

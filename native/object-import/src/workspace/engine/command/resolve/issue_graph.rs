@@ -131,7 +131,7 @@ fn load_external_edges(identity: &str, repository: &mut Repository) -> io::Resul
     } else {
         crate::workspace::engine::status_models::versions::reference(&model, version)?
     };
-    let version_obj = repository.read(&reference, "Version")?;
+    let version_obj = repository.read(reference.trim(), "Version")?;
     validate_ordinary_version(&version_obj)?;
     let projected = crate::workspace::engine::status_models::harmony::project(&version_obj)?;
     graph::edges(&source, &projected)

@@ -157,27 +157,31 @@ pub(super) fn check_missing_workspace_component(
     {
         return Ok(None);
     }
+    Ok(missing_component_error(root, raw_id))
+}
 
+fn missing_component_error(root: &Path, raw_id: &str) -> Option<String> {
     let without_ver = raw_id
         .split('@')
         .next()
-        .unwrap_or(raw_id);
+        .unwrap_or(raw_id)
+        .trim();
     if let Some((scope, name)) = without_ver.split_once('/') {
-        if !scope.is_empty() && !name.is_empty() {
-            return Ok(Some(format!(
+        let (scope, name) = (scope.trim(), name.trim());
+        return (!scope.is_empty() && !name.is_empty()).then(|| {
+            format!(
                 r#"unable to find "{raw_id}" in the workspace. debug-load works on workspace components only"#,
-            )));
-        }
-        return Ok(None);
+            )
+        });
     }
     if exists_in_scope_index(root, without_ver) {
-        return Ok(Some(format!(
+        return Some(format!(
             r#"unable to find "{raw_id}" in the workspace. debug-load works on workspace components only"#,
-        )));
+        ));
     }
-    Ok(Some(format!(
+    Some(format!(
         r#"error: component ID "{raw_id}" is invalid, please use the following format: [scope]/<name>"#,
-    )))
+    ))
 }
 
 fn exists_in_scope_index(root: &Path, name: &str) -> bool {

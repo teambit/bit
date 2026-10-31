@@ -21,12 +21,20 @@ pub(super) fn attach_missing(
         &selected,
     )?;
     for row in &mut additions {
-        let scope = row["scope"].as_str().ok_or_else(|| invalid("lane addition scope"))?;
-        let name = row["name"].as_str().ok_or_else(|| invalid("lane addition name"))?;
+        let scope = row["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("lane addition scope"))?;
+        let name = row["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("lane addition name"))?;
         let id = format!("{scope}/{name}");
         let version = &phase.versions
             .iter()
-            .find(|(identity, _)| identity == &id)
+            .find(|(identity, _)| identity.trim() == id)
             .ok_or_else(|| invalid("lane addition version entry"))?
             .1;
         row["version"] = json!(version);
@@ -48,7 +56,7 @@ fn selected(
     for (id, version) in &phase.versions {
         if existing
             .iter()
-            .any(|row| row["identity"] == *id)
+            .any(|row| row["identity"].as_str().map(str::trim) == Some(id.trim()))
         {
             continue;
         }

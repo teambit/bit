@@ -19,7 +19,7 @@ pub(super) const NON_INTERACTIVE_PROMPT_ERR: &str = "this command requires a con
 fn is_hard_delete(args: &[&str]) -> bool {
     let mut hard = false;
     for &arg in args {
-        match arg {
+        match arg.trim() {
             "--" => break,
             "--hard" | "--hard=true" => hard = true,
             "--hard=false" => hard = false,

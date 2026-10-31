@@ -11,8 +11,16 @@ pub(in crate::workspace::engine::command) fn remote(
         return Ok(None);
     }
     let id = &record.context["lane"]["currentId"];
-    let scope = id["scope"].as_str().ok_or_else(|| invalid("history lane scope"))?;
-    let name = id["name"].as_str().ok_or_else(|| invalid("history lane name"))?;
+    let scope = id["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("history lane scope"))?;
+    let name = id["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("history lane name"))?;
     let path = crate::scope_path(&record.request.root)
         .join("refs/remotes")
         .join(scope)
@@ -25,7 +33,10 @@ pub(in crate::workspace::engine::command) fn remote(
     }
     for row in rows {
         if matches_row_identity(&row["id"], identity) {
-            let head = row["head"].as_str().ok_or_else(|| invalid("history remote lane head"))?;
+            let head = row["head"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("history remote lane head"))?;
             crate::merge_history::hash(head)?;
             return Ok(Some(head.to_owned()));
         }
@@ -46,17 +57,19 @@ pub(in crate::workspace::engine::command) fn local<'a>(
 }
 
 fn matches_row_identity(id_value: &Value, identity: &str) -> bool {
+    let identity = identity.trim();
     if crate::command_import::lane::component_identity(id_value).ok().as_deref() == Some(identity) {
         return true;
     }
     let Some((scope, name)) = identity.split_once('/') else {
         return false;
     };
-    if let Some(raw_id) = id_value.as_str() {
+    if let Some(raw_id) = id_value.as_str().map(str::trim) {
         return raw_id == identity || raw_id == name;
     }
-    let row_scope = id_value["scope"].as_str().unwrap_or_default();
-    id_value["name"].as_str() == Some(name) && (row_scope == scope || row_scope.is_empty())
+    let row_scope = id_value["scope"].as_str().map_or("", str::trim);
+    id_value["name"].as_str().map(str::trim) == Some(name)
+        && (row_scope == scope || row_scope.is_empty())
 }
 
 pub(in crate::workspace::engine::command) fn source<'a>(

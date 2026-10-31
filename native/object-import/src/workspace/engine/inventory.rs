@@ -185,6 +185,9 @@ fn keep_bitmap(plan: &Plan, paths: &mut Vec<String>) {
     }
 }
 pub(super) fn cancel(token: u64, state: &mut State) -> io::Result<(usize, Value)> {
+    if token == 0 {
+        return Err(invalid("stale inventory token"));
+    }
     state.plans.remove(&token).ok_or_else(|| invalid("stale inventory token"))?;
     Ok((1, json!({"cancelled":true})))
 }

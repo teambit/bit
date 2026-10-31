@@ -92,22 +92,10 @@ impl Prepared {
         if !self.current.is_null() {
             let hash = self.context["current"]["hash"]
                 .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
                 .ok_or_else(|| invalid("command lane hash"))?;
-            let (other_scope, other_name) = if let Some((scope, name)) = self.context["otherId"]
-                .as_str()
-                .and_then(|raw| raw.split_once('/'))
-            {
-                (scope, name)
-            } else {
-                (
-                    self.context["otherId"]["scope"]
-                        .as_str()
-                        .ok_or_else(|| invalid("command other scope"))?,
-                    self.context["otherId"]["name"]
-                        .as_str()
-                        .ok_or_else(|| invalid("command other name"))?,
-                )
-            };
+            let (other_scope, other_name) = self.other_lane_id()?;
             let message = format!(r#"merge from "{other_scope}/{other_name}""#);
             self.history =
                 objects::history(&self.current, hash, self.history.clone(), receipt, &message)?;
@@ -120,6 +108,26 @@ impl Prepared {
         }
         self.finalized = true;
         Ok(imported)
+    }
+    fn other_lane_id(&self) -> io::Result<(&str, &str)> {
+        if let Some((scope, name)) = self.context["otherId"]
+            .as_str()
+            .and_then(|raw| raw.trim().split_once('/'))
+        {
+            return Ok((scope.trim(), name.trim()));
+        }
+        Ok((
+            self.context["otherId"]["scope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .ok_or_else(|| invalid("command other scope"))?,
+            self.context["otherId"]["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .ok_or_else(|| invalid("command other name"))?,
+        ))
     }
     pub(super) fn rebased(&self) -> Vec<(String, String, Value)> {
         self.squashes

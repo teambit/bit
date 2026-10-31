@@ -63,7 +63,7 @@ impl Retained {
             .iter()
             .map(|identity| {
                 self.rows
-                    .get(identity)
+                    .get(identity.trim())
                     .cloned()
                     .ok_or_else(|| io::Error::other("retained identity component missing"))
             })

@@ -36,7 +36,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
         count += map.len();
         if map
             .iter()
-            .any(|(key, value)| !super::wire::name(key) || !value.is_string())
+            .any(|(key, val)| !valid_map_entry(key, val))
         {
             return Err(invalid("dependency finalization requires string maps"));
         }
@@ -85,4 +85,11 @@ fn validate_state(request: &Request) -> io::Result<()> {
         return Err(invalid("dependency finalization identity"));
     }
     Ok(())
+}
+
+fn valid_map_entry(key: &str, val: &Value) -> bool {
+    super::wire::name(key)
+        && val
+            .as_str()
+            .is_some_and(|ver| (ver.is_empty() || !ver.trim().is_empty()) && ver.len() <= 256)
 }

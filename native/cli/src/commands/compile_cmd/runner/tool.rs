@@ -16,6 +16,9 @@ pub(super) fn compile(files: &[Value]) -> io::Result<Vec<Value>> {
     let package = cli.bit_dir
         .ok_or_else(|| io::Error::other("compiler tool package root"))?
         .join("package.json");
+    if !package.is_file() {
+        return Err(io::Error::other("compiler tool package manifest"));
+    }
     let config: Value = serde_json::from_str(include_str!(
         "../../../../../../scopes/react/react/typescript/tsconfig.json"
     ))?;

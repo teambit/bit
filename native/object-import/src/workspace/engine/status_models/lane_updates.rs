@@ -217,7 +217,10 @@ fn hashes(value: &Value) -> io::Result<Vec<Value>> {
         .ok_or_else(|| invalid("status lane update distance"))?
         .iter()
         .map(|hash| {
-            let hash = hash.as_str().ok_or_else(|| invalid("status lane update hash"))?;
+            let hash = hash
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("status lane update hash"))?;
             crate::merge_history::hash(hash)?;
             Ok(json!({"hash":hash}))
         })

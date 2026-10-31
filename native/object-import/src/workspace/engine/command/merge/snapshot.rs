@@ -104,9 +104,12 @@ pub(in crate::workspace::engine::command) fn prepare(
     let mut proofs = Vec::new();
     for (input, allocation) in inputs
         .iter()
-        .zip(receipt["versions"].as_array().unwrap())
+        .zip(receipt["versions"].as_array().ok_or_else(|| invalid("command snap allocations"))?)
     {
-        let hash = allocation["hash"].as_str().unwrap();
+        let hash = allocation["hash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("command snap hash"))?;
         let mut version = metadata::version(input, receipt, message)?;
         sources::prepare(root, input, hash, &mut version, &mut objects, &mut proofs, &budget)?;
         sources::dependencies_graph(allocation, &mut version, &mut objects)?;

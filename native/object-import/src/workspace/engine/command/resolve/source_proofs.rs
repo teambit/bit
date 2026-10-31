@@ -22,9 +22,19 @@ pub(in crate::workspace::engine::command) fn capture(
         .collect()
 }
 fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof> {
-    let path = Path::new(file["path"].as_str().ok_or_else(|| invalid("resolve source path"))?);
+    let path = Path::new(
+        file["path"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("resolve source path"))?,
+    );
     let token = file["readToken"].as_u64().ok_or_else(|| invalid("resolve retained token"))?;
-    let raw = file["rawHash"].as_str().ok_or_else(|| invalid("resolve retained hash"))?;
+    let raw = file["rawHash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|raw| !raw.is_empty())
+        .ok_or_else(|| invalid("resolve retained hash"))?;
     let observed =
         snapshots.get(token, path, raw).ok_or_else(|| invalid("resolve retained source"))?;
     let mut bytes = Vec::new();

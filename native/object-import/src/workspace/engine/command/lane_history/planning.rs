@@ -54,6 +54,7 @@ pub(in crate::workspace::engine::command) fn added(
 }
 
 fn destination<'a>(context: &'a Value, identity: &str) -> io::Result<&'a Value> {
+    let identity = identity.trim();
     let destination = context["scopeAdditions"]
         .as_array()
         .ok_or_else(|| invalid("history addition destinations"))?
@@ -61,9 +62,9 @@ fn destination<'a>(context: &'a Value, identity: &str) -> io::Result<&'a Value> 
         .find(|row| {
             format!(
                 "{}/{}",
-                row["scope"].as_str().unwrap_or_default(),
-                row["name"].as_str().unwrap_or_default(),
-            ) == *identity
+                row["scope"].as_str().map_or("", str::trim),
+                row["name"].as_str().map_or("", str::trim),
+            ) == identity
         })
         .ok_or_else(|| invalid("history addition absent"))?;
     Ok(destination)

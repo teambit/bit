@@ -60,10 +60,12 @@ fn component_id(component: &Value) -> io::Result<String> {
     }
     let name = component["id"]["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| io::Error::other("tracking component identity"))?;
     Ok(component["id"]["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")))
 }

@@ -173,7 +173,8 @@ pub(in crate::workspace::engine) fn prepare(
     };
     let packages = packages::prepare(input, &plan)?;
     let hub = hub::plan(input, &plan.pending)?;
-    state.sequence = state.sequence.wrapping_add(1);
+    state.sequence =
+        state.sequence.checked_add(1).ok_or_else(|| invalid("outbound sequence limit"))?;
     let token = format!("outbound-{}", state.sequence);
     let lane = plan.publication.as_ref().and_then(Publication::lane_name);
     let mut receipt =

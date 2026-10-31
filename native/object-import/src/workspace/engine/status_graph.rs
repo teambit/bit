@@ -112,11 +112,12 @@ fn read_model(
 }
 
 fn model_matches_name(model: &Value, name: &str) -> bool {
-    let model_scope = model["scope"].as_str().unwrap_or_default();
-    let model_name = model["name"].as_str().unwrap_or_default();
+    let model_scope = model["scope"].as_str().map_or("", str::trim);
+    let model_name = model["name"].as_str().map_or("", str::trim);
+    let name = name.trim();
     let (expected_scope, expected_name) = name
         .split_once('/')
-        .unwrap_or(("", name));
+        .map_or(("", name), |(scope, bare)| (scope.trim(), bare.trim()));
     model_name == expected_name && (model_scope == expected_scope || model_scope.is_empty())
 }
 

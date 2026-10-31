@@ -22,12 +22,7 @@ pub(super) fn prepare(
         if selected.action != Action::Target {
             continue;
         }
-        if planned.captured[index].hidden
-            && !prepared.pending.is_empty()
-            && !record.request.internal_snapshot_preview
-        {
-            return Err(invalid("hidden fast-forward with snapshot reload requires native policy"));
-        }
+        validate_target(record, planned, prepared, selected, index)?;
         add_material(record, planned, selected, index, snapshots)?;
         if let Some(lane) = &mut prepared.publication.lane {
             lane.update(&planned.captured[index].target.identity, &selected.remote, false)?;
@@ -37,6 +32,25 @@ pub(super) fn prepare(
         }
     }
     persist_models(planned, prepared, models)
+}
+
+fn validate_target(
+    record: &Record,
+    planned: &planning::Planned,
+    prepared: &Prepared,
+    selected: &Selected,
+    index: usize,
+) -> io::Result<()> {
+    if selected.remote.trim().is_empty() {
+        return Err(invalid("command fast-forward remote head"));
+    }
+    if planned.captured[index].hidden
+        && !prepared.pending.is_empty()
+        && !record.request.internal_snapshot_preview
+    {
+        return Err(invalid("hidden fast-forward with snapshot reload requires native policy"));
+    }
+    Ok(())
 }
 
 fn persist_models(

@@ -21,7 +21,12 @@ fn validate_snapshot(config: &Value) -> io::Result<()> {
     let rows = config.as_object().ok_or_else(|| invalid("snapshot bitmap configuration"))?;
     if rows
         .iter()
-        .any(|(name, value)| !name.contains('/') || (!value.is_object() && value != "-"))
+        .any(|(name, value)| {
+            name.trim()
+                .split_once('/')
+                .is_none_or(|(scope, part)| scope.trim().is_empty() || part.trim().is_empty())
+                || (!value.is_object() && value != "-")
+        })
     {
         return Err(invalid("snapshot bitmap aspect configuration"));
     }
@@ -46,6 +51,8 @@ fn project_with(
         let directory = object
             .get("rootDir")
             .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|directory| !directory.is_empty())
             .ok_or_else(|| invalid("recovery bitmap directory"))?;
         if configs.insert(directory.to_owned(), config).is_some() {
             return Err(invalid("recovery duplicate config root"));

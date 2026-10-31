@@ -72,5 +72,6 @@ fn apply_inline_flag<'a>(
 }
 
 fn valid_val(val: &str) -> Option<&str> {
+    let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then_some(val)
 }

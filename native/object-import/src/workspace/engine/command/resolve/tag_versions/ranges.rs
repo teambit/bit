@@ -65,7 +65,7 @@ fn prefix(version: &Value) -> io::Result<Option<char>> {
             )
         })
         .map(|row| &row["data"]["componentRangePrefix"]);
-    match value.and_then(Value::as_str) {
+    match value.and_then(Value::as_str).map(str::trim) {
         Some("^") => Ok(Some('^')),
         Some("~") => Ok(Some('~')),
         None | Some("" | "+") => Ok(None),

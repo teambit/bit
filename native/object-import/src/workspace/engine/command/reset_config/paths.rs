@@ -6,7 +6,7 @@ pub(super) fn capture(
     destination: &Path,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
-    if !destination.starts_with(root) {
+    if !destination.starts_with(root) || destination == root {
         return Err(invalid("reset config outside workspace"));
     }
     for parent in destination.ancestors().skip(1) {

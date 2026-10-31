@@ -95,14 +95,19 @@ fn validated_batch_size(root: &Path) -> io::Result<usize> {
 }
 
 fn selection(options: &Options) -> Selection {
+    let exact = options.components
+        .iter()
+        .map(|component| component.trim().to_owned())
+        .filter(|component| !component.is_empty())
+        .collect::<Vec<_>>();
     Selection {
         pattern: None,
         compiler: true,
-        explicit_file_order: !options.components.is_empty(),
-        changed: options.changed && options.components.is_empty(),
+        explicit_file_order: !exact.is_empty(),
+        changed: options.changed && exact.is_empty(),
         allow_cached_pair: false,
         allow_cached_many: !options.json && !options.verbose,
         single_file_write: false,
-        exact: Some(options.components.clone()),
+        exact: Some(exact),
     }
 }

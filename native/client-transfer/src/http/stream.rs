@@ -37,7 +37,7 @@ async fn feed(
             return Err(invalid("remote fetch archive exceeds bounds"));
         }
         count += chunk.len();
-        if !sender.is_closed() {
+        if !chunk.is_empty() && !sender.is_closed() {
             let _ = cancellation.run(sender.send(chunk.to_vec())).await?;
         }
     }

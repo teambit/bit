@@ -311,7 +311,7 @@ impl Acknowledgement {
     fn validate(&self, exported_ids: &[String]) -> io::Result<()> {
         let acknowledged = exported_ids
             .iter()
-            .cloned()
+            .map(|id| id.trim().to_owned())
             .collect::<HashSet<_>>();
         if acknowledged.len() != exported_ids.len() || !acknowledged.is_subset(&self.expected) {
             return Err(invalid("outbound lane remote acknowledgement"));

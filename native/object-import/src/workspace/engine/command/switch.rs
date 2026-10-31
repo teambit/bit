@@ -303,13 +303,25 @@ fn attach_versions(context: &mut Value) -> io::Result<()> {
 }
 
 fn target_version(context: &Value, target: &Value) -> io::Result<String> {
-    let identity = target["identity"].as_str().ok_or_else(|| invalid("switch identity"))?;
-    if let Some(head) = context["lane"]["switchLaneHeads"][identity].as_str() {
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("switch identity"))?;
+    if let Some(head) = context["lane"]["switchLaneHeads"][identity]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    {
         return Ok(head.to_owned());
     }
     let model = repository::model(context, identity)?
         .ok_or_else(|| invalid("switch main component model absent"))?;
-    let head = model["head"].as_str().ok_or_else(|| invalid("switch main head absent"))?;
+    let head = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .ok_or_else(|| invalid("switch main head absent"))?;
     Ok(super::selection::versions::label(&model, head))
 }
 

@@ -129,7 +129,7 @@ fn resolve_literal_target(
 ) -> Result<Vec<TargetComponent>, Failure> {
     let (bare_id, explicit_ver) = pattern
         .rsplit_once('@')
-        .map_or((pattern, None), |(id, ver)| (id, Some(ver)));
+        .map_or((pattern, None), |(id, ver)| (id.trim(), Some(ver.trim())));
     if bare_id.is_empty() || explicit_ver == Some("") {
         return Err(Failure::Declined("invalid component id".into()));
     }

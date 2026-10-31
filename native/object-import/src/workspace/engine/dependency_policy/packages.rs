@@ -17,12 +17,13 @@ fn model_peers(request: &Request, plan: &mut Plan) {
     }
     let mut peers = Map::new();
     for (name, value) in &request.policies.model_peers {
-        if request.ignore(2, name, &mut plan.removed) {
+        let name = name.trim();
+        if name.is_empty() || request.ignore(2, name, &mut plan.removed) {
             continue;
         }
         for field in 0..2 {
             if plan.packages[field].shift_remove(name).is_some() {
-                peers.insert(name.clone(), value.clone());
+                peers.insert(name.to_owned(), value.clone());
             }
         }
     }

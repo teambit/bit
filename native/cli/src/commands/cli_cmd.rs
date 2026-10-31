@@ -81,7 +81,9 @@ pub(super) fn parse_unknown_skill<'a>(args: &[&'a str]) -> Option<&'a str> {
             _ => index += 1,
         }
     }
-    skill.filter(|val| *val != "commands" && *val != "reference")
+    skill
+        .map(str::trim)
+        .filter(|val| *val != "commands" && *val != "reference")
 }
 
 pub(super) fn is_generate_docs(args: &[&str]) -> bool {

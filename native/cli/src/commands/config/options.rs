@@ -43,7 +43,7 @@ impl Options {
         iterator: impl Iterator<Item = &'a str>,
     ) -> Option<()> {
         for rest in iterator {
-            if rest.is_empty() || rest.starts_with('-') {
+            if rest.trim().is_empty() || rest.trim().starts_with('-') {
                 return None;
             }
             self.values.push(rest.to_owned());

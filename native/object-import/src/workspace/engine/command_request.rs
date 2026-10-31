@@ -46,7 +46,11 @@ pub(super) fn dispatch(
 fn import_token(token: Option<&str>) -> Option<&str> {
     token
         .map(str::trim)
-        .filter(|candidate| !candidate.is_empty())
+        .filter(|candidate| {
+            !candidate.is_empty()
+                && candidate.len() <= 256
+                && !candidate.chars().any(char::is_control)
+        })
 }
 
 fn overlay_reads(

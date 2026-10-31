@@ -23,8 +23,9 @@ pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
         prepared.capture(path)?;
     }
     let index: Value = crate::parse_jsonc(
-        prepared.preimages[&scope.join("index.json")]
-            .as_deref()
+        prepared.preimages
+            .get(&scope.join("index.json"))
+            .and_then(Option::as_deref)
             .ok_or_else(|| invalid("outbound prefilter index absent"))?,
     )?;
     for row in index["components"]

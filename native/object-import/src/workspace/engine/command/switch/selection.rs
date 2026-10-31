@@ -60,10 +60,10 @@ fn filter(pattern: &str, entries: &[Entry]) -> io::Result<Vec<String>> {
         let pattern = pattern
             .split('@')
             .next()
-            .unwrap_or_default();
+            .map_or("", str::trim);
         let (exclude, pattern) = pattern
             .strip_prefix('!')
-            .map_or((false, pattern), |pattern| (true, pattern));
+            .map_or((false, pattern), |rest| (true, rest.trim()));
         update_selection(&mut selected, entries, pattern, exclude);
     }
     if selected.is_empty() {

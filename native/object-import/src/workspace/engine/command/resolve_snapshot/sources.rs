@@ -69,8 +69,16 @@ fn observation<'a>(
     file: &Value,
     snapshots: &'a snapshots::State,
 ) -> io::Result<&'a snapshots::Observation> {
-    let path = file["path"].as_str().ok_or_else(|| invalid("resolve capture path"))?;
-    let raw = file["rawHash"].as_str().ok_or_else(|| invalid("resolve capture hash"))?;
+    let path = file["path"]
+        .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .ok_or_else(|| invalid("resolve capture path"))?;
+    let raw = file["rawHash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("resolve capture hash"))?;
     let token = file["readToken"].as_u64().ok_or_else(|| invalid("resolve capture token"))?;
     let observed = snapshots
         .get(token, Path::new(path), raw)

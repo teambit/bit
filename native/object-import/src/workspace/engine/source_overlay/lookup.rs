@@ -24,6 +24,7 @@ impl SourceOverlay {
         if !self.data.sealed {
             return Err(invalid("overlay is not sealed"));
         }
+        super::path(path)?;
         if let Some(entry) = self.data.entries.get(path) {
             return match entry {
                 Entry::Removed => Ok(Found::Missing),

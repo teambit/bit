@@ -15,8 +15,13 @@ pub(super) fn extensions(context: &Value) -> io::Result<()> {
 }
 
 fn extension_identity(row: &Value) -> Option<&Value> {
-    row.get("name")
-        .or_else(|| row.get("legacyId"))
-        .or_else(|| row.get("extensionId"))
-        .or_else(|| row.get("id"))
+    [row.get("name"), row.get("legacyId"), row.get("extensionId"), row.get("id")]
+        .into_iter()
+        .flatten()
+        .find(|value| {
+            !value.is_null()
+                && value
+                    .as_str()
+                    .is_none_or(|text| !text.trim().is_empty())
+        })
 }

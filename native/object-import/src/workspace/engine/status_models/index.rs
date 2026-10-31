@@ -36,6 +36,10 @@ pub(super) fn read_at(scope: &Path) -> io::Result<Vec<Item>> {
     if rows.len() > 4096 {
         return Err(invalid("status component index count"));
     }
+    parse_items(rows)
+}
+
+fn parse_items(rows: &[Value]) -> io::Result<Vec<Item>> {
     let mut seen = HashSet::new();
     let mut items = Vec::new();
     for row in rows {
@@ -43,7 +47,7 @@ pub(super) fn read_at(scope: &Path) -> io::Result<Vec<Item>> {
         if item.is_symlink {
             continue;
         }
-        if !seen.insert(item.hash.clone()) {
+        if item.hash.trim().is_empty() || !seen.insert(item.hash.trim().to_owned()) {
             return Err(invalid("status symlink or duplicate model"));
         }
         items.push(item);

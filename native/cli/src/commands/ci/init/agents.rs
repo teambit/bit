@@ -124,7 +124,8 @@ fn title_end(lines: &[&str], at: usize) -> usize {
 }
 
 fn insert(existing: &str, section: &str) -> String {
-    let lines: Vec<_> = existing.split('\n').collect();
+    let normalized = existing.replace("\r\n", "\n");
+    let lines: Vec<_> = normalized.split('\n').collect();
     let at = insertion_point(&lines);
     let before = lines[..at].join("\n");
     let after = lines[at..].join("\n");

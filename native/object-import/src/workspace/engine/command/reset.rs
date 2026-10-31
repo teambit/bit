@@ -18,7 +18,7 @@ pub(super) fn plan(
     pool: &rayon::ThreadPool,
 ) -> io::Result<PreparedPlan> {
     if record.request.operation != input::Operation::Checkout
-        || record.request.options.to.as_deref() != Some("reset")
+        || record.request.options.to.as_deref().map(str::trim) != Some("reset")
         || record.request.options.lane.is_some()
     {
         return Err(invalid("recovery requires an ordinary reset plan"));

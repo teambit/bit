@@ -387,8 +387,8 @@ fn truthy(value: &Value) -> bool {
         Value::Bool(value) => *value,
         Value::Number(number) => number
             .as_f64()
-            .is_some_and(|number| number != 0.0),
-        Value::String(text) => !text.is_empty(),
+            .is_some_and(|number| number != 0.0 && !number.is_nan()),
+        Value::String(text) => !text.trim().is_empty(),
         Value::Array(_) | Value::Object(_) => true,
     }
 }

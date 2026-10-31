@@ -32,11 +32,12 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
 }
 
 fn id_pair(value: &Value) -> Option<(&str, &str)> {
-    if let Some(raw) = value.as_str() {
+    if let Some(raw) = value.as_str().map(str::trim) {
         return raw
             .rsplit_once('@')
-            .map_or(raw, |(base, _)| base)
-            .split_once('/');
+            .map_or(raw, |(base, _)| base.trim())
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()));
     }
-    Some((value["scope"].as_str()?, value["name"].as_str()?))
+    Some((value["scope"].as_str()?.trim(), value["name"].as_str()?.trim()))
 }

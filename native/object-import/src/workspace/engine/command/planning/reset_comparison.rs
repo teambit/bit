@@ -23,13 +23,20 @@ pub(super) fn prove_changed(current: &Value, version: &Value) -> io::Result<()> 
 fn files(value: &Value, model: bool) -> io::Result<BTreeMap<&str, &str>> {
     let mut files = BTreeMap::new();
     for row in value.as_array().ok_or_else(|| invalid("reset Source comparison files"))? {
-        let path =
-            row["relativePath"].as_str().ok_or_else(|| invalid("reset Source comparison path"))?;
+        let path = row["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("reset Source comparison path"))?;
         // The canonical comparison ignores a stored bitmap outside workspace-root components.
         if model && path == ".bitmap" {
             continue;
         }
-        let hash = row["file"].as_str().ok_or_else(|| invalid("reset Source comparison hash"))?;
+        let hash = row["file"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+            .ok_or_else(|| invalid("reset Source comparison hash"))?;
         crate::merge_history::hash(hash)?;
         if files.insert(path, hash).is_some() {
             return Err(invalid("reset duplicate Source comparison path"));

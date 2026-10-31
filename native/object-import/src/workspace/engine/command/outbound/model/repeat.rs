@@ -9,6 +9,7 @@ pub(super) fn select(model: &Value) -> io::Result<Staged> {
         .as_str()
         .or_else(|| model["head"]["ref"].as_str())
         .or_else(|| model["head"]["hash"].as_str())
+        .map(str::trim)
         .ok_or_else(|| invalid("outbound head"))?;
     crate::merge_history::hash(head)?;
     Ok(Staged { head: head.to_owned(), hashes: Vec::new(), labels: Vec::new() })

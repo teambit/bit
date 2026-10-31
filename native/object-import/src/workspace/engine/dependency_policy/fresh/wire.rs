@@ -17,14 +17,17 @@ pub(in crate::workspace::engine) struct Detect {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Detection {
     pub(super) graph: Value,
+    #[serde(default)]
     pub(super) dev_files: Vec<String>,
     pub(super) model_packages: Packages,
     pub(super) workspace_policy: Packages,
     #[serde(default)]
     pub(super) merge_policy: Packages,
+    #[serde(default)]
     pub(super) core_packages: Vec<String>,
     #[serde(default)]
     pub(super) core_aspect_ids: Vec<String>,
+    #[serde(default)]
     pub(super) workspace_components: Vec<String>,
 }
 #[derive(Deserialize)]

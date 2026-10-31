@@ -74,13 +74,17 @@ fn reject_removed_target(
     let identity = target["identity"]
         .as_str()
         .or_else(|| target["id"].as_str())
-        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))
+        .map(str::trim)
+        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
+        .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("switch identity"))?;
     let Some(model) = repository::model(context, identity)? else { return Ok(()) };
     let version = target["switchVersion"]
         .as_str()
         .or_else(|| target["version"].as_str())
         .or_else(|| target["head"].as_str())
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
         .ok_or_else(|| invalid("switch target version"))?;
     let Ok(hash) = super::super::selection::versions::reference(&model, version) else {
         return Ok(());

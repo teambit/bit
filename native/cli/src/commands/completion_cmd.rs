@@ -84,6 +84,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 pub(super) fn valid_options(args: &[&str]) -> bool {
     for (idx, &arg) in args.iter().enumerate() {
+        let arg = arg.trim();
         if arg == "--" {
             return idx + 1 == args.len();
         }

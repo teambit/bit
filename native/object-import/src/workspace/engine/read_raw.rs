@@ -61,7 +61,11 @@ fn prepare(
     let mut output = Output(Vec::new());
     serde_json::to_writer(&mut output, &response)?;
     output.write_all(b"\n")?;
-    if output.0.len() + bytes > MAX_OUTPUT {
+    if output.0
+        .len()
+        .checked_add(bytes)
+        .is_none_or(|total| total > MAX_OUTPUT)
+    {
         return Err(invalid("workspace output limit"));
     }
     output.0.try_reserve_exact(bytes).map_err(|_| invalid("workspace allocation limit"))?;

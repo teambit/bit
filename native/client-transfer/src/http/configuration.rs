@@ -100,6 +100,7 @@ fn config_u64(global: &GlobalConfig, keys: &[&str]) -> Option<u64> {
             Value::String(text) => text.trim().parse().ok(),
             _ => None,
         })
+        .filter(|value| *value > 0)
 }
 
 fn identity(

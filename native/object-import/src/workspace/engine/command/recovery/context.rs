@@ -276,25 +276,33 @@ fn validate_pending_configuration(
 }
 fn matches_target(request: &Prepare, target: &Value, identity: &str, marked: bool) -> bool {
     request.options.pattern
-        .as_ref()
+        .as_deref()
+        .map(str::trim)
+        .filter(|pattern| !pattern.is_empty())
         .map_or(marked, |pattern| {
             identity == pattern
                 || identity
                     .split_once('/')
                     .is_some_and(|(_, name)| name == pattern)
-                || target["directory"] == *pattern
+                || target["directory"] == pattern
         })
 }
 fn pending_id(row: &Value) -> Option<String> {
     if let Some(id) = row["id"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
     {
-        return Some(
-            id.rsplit_once('@')
-                .map_or(id, |(base, _)| base)
-                .to_owned(),
-        );
+        let base = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
+        return (!base.is_empty()).then(|| base.to_owned());
     }
-    Some(format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?))
+    let scope = row["id"]["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())?;
+    let name = row["id"]["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())?;
+    Some(format!("{scope}/{name}"))
 }

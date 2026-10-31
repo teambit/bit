@@ -11,7 +11,7 @@ pub(super) fn links(root: &Path, projection: &Projection) -> io::Result<()> {
     }
     for component in &projection.workspace.components {
         let comp_identity = component.id.to_string_without_version();
-        if component.root_dir == "."
+        if component.root_dir.trim() == "."
             || !projection.selected.iter().any(|target| matches_target(target, &comp_identity))
         {
             continue;

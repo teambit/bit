@@ -255,9 +255,16 @@ pub(super) fn validate_sources(plan: &Planned) -> io::Result<()> {
 }
 
 fn import_target(target: &Value, selection: &Value) -> io::Result<command_import::Target> {
-    let identity = target["identity"].as_str().ok_or_else(|| invalid("command identity"))?;
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("command scoped identity"))?;
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|identity| !identity.is_empty())
+        .ok_or_else(|| invalid("command identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("command scoped identity"))?;
     let version =
         if selection["kind"] == "target" { &selection["version"] } else { &target["version"] };
     Ok(command_import::Target {
@@ -265,6 +272,8 @@ fn import_target(target: &Value, selection: &Value) -> io::Result<command_import
         name: name.to_owned(),
         version: version
             .as_str()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
             .ok_or_else(|| invalid("command selected version"))?
             .to_owned(),
     })

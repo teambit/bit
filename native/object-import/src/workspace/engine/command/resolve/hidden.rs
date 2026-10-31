@@ -175,9 +175,11 @@ fn enrich_package(dependency: &mut Value, entries: &[Value]) -> io::Result<()> {
     if let Some(name) = entries
         .iter()
         .find(|entry| entry["id"].as_str().map(str::trim) == Some(id.as_str()))
-        .and_then(|entry| entry.get("packageName"))
+        .and_then(|entry| entry["packageName"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
     {
-        dependency["packageName"] = name.clone();
+        dependency["packageName"] = json!(name);
     }
     Ok(())
 }

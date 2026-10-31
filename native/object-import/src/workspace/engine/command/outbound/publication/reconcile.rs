@@ -48,12 +48,13 @@ fn prepare_staged_config_ids(
 }
 
 fn staged_row_matches(row: &Value, scope: &str, name: &str) -> bool {
-    if let Some(raw) = row["id"].as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+    if let Some(raw) = row["id"].as_str().map(str::trim) {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
         return bare == name || bare == format!("{scope}/{name}");
     }
-    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-    row["id"]["name"] == name && (row_scope.is_empty() || row_scope == scope)
+    let row_scope = row["id"]["scope"].as_str().map_or("", str::trim);
+    row["id"]["name"].as_str().map(str::trim) == Some(name)
+        && (row_scope.is_empty() || row_scope == scope)
 }
 
 impl Prepared {

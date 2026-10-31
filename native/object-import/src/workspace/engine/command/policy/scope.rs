@@ -129,9 +129,10 @@ pub(super) fn apply(
 }
 
 fn same_base(entry: &Value, id: &str) -> bool {
+    let id = id.trim();
     identity(entry)
         .is_ok_and(|identity| {
-            identity.split_once('@').map_or(identity.as_str(), |(base, _)| base)
-                == id.split_once('@').map_or(id, |(base, _)| base)
+            identity.rsplit_once('@').map_or(identity.as_str(), |(base, _)| base.trim())
+                == id.rsplit_once('@').map_or(id, |(base, _)| base.trim())
         })
 }

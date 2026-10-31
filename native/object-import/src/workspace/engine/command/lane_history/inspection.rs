@@ -94,11 +94,12 @@ fn refresh(
         None
     };
     import.refresh_lane_history(lane, id, hash.as_deref())?;
+    let lane_hash = lane.hash.trim();
     let history = import.overlay
-        .read(&lane_history::hash(&lane.hash), "LaneHistory")?
+        .read(&lane_history::hash(lane_hash), "LaneHistory")?
         .cloned()
-        .map_or_else(|| local_history(request, &lane.hash), Ok)?;
-    validate_history(&history, &lane.hash)?;
+        .map_or_else(|| local_history(request, lane_hash), Ok)?;
+    validate_history(&history, lane_hash)?;
     Ok(history)
 }
 

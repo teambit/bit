@@ -307,7 +307,8 @@ fn prepare_reset_or_eject(
     eject: bool,
     chalk: Chalk,
 ) -> Result<Prepared, Failure> {
-    if pattern.trim().is_empty() {
+    let pattern = pattern.trim();
+    if pattern.is_empty() {
         return Err(Failure::Declined("deps reset/eject pattern is empty".into()));
     }
     let spec = if eject {

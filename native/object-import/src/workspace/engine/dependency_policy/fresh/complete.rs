@@ -5,7 +5,9 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn detected(request: &Complete) -> io::Result<Value> {
-    if request.finish["selfIdentity"] != request.capture.identity {
+    if request.finish["selfIdentity"].as_str().map(str::trim)
+        != Some(request.capture.identity.trim())
+    {
         return Err(invalid("fresh dependency identity receipt"));
     }
     let mut detected = request.capture.detected.clone();

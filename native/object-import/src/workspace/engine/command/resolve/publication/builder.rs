@@ -103,7 +103,9 @@ fn version_identity(entry: &Value) -> Option<&str> {
     entry["identity"]
         .as_str()
         .or_else(|| entry["id"].as_str())
-        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
+        .map(str::trim)
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
+        .filter(|base| !base.is_empty())
 }
 
 pub(super) fn stage_prepared(retained: &mut super::Retained) -> io::Result<()> {

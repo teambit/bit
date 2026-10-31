@@ -155,7 +155,11 @@ impl Capture {
     ) -> io::Result<Vec<PathBuf>> {
         let mut batch = Vec::new();
         for file in pending.drain(..) {
-            let name = file.to_str().ok_or_else(|| invalid("dependency graph path encoding"))?;
+            let name = file
+                .to_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .ok_or_else(|| invalid("dependency graph path encoding"))?;
             if request.visited
                 .as_ref()
                 .is_some_and(|visited| visited.contains_key(name))

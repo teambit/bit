@@ -123,7 +123,7 @@ fn direct_group(remote: Remote, ids: Vec<String>, lanes: bool, force: bool) -> i
                     .map(|id| unversioned(id).to_owned())
                     .collect()
             };
-            Ok(Group::Http { url, ids })
+            Ok(Group::Http { url: url.trim().to_owned(), ids })
         }
     }
 }

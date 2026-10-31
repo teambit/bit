@@ -68,9 +68,10 @@ fn resolve_target_id(
     bitmap: &Bitmap,
     raw_id: &str,
 ) -> Result<(String, String), Failure> {
+    let raw_id = raw_id.trim();
     let (bare, explicit_ver) = raw_id
         .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+        .map_or((raw_id, None), |(id, ver)| (id.trim(), Some(ver.trim())));
     if let Some(entry) = find_existing_bitmap_entry(bitmap, bare) {
         let identity = entry.id.to_string_without_version();
         let ver = explicit_ver.or(entry.id.version.as_deref());

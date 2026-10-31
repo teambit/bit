@@ -50,9 +50,17 @@ fn squash(
     allocation: &Value,
     remote: &str,
 ) -> io::Result<()> {
-    let parent = version["parents"][0].as_str().ok_or_else(|| invalid("resolve squash parent"))?;
+    let parent = version["parents"][0]
+        .as_str()
+        .map(str::trim)
+        .filter(|parent| !parent.is_empty())
+        .ok_or_else(|| invalid("resolve squash parent"))?;
     version["squashed"] = json!({"previousParents":[parent,remote],"laneId":pending["laneId"]});
-    if allocation["squashLog"]["date"].as_str().is_none() {
+    if allocation["squashLog"]["date"]
+        .as_str()
+        .map(str::trim)
+        .is_none_or(str::is_empty)
+    {
         return Err(invalid("resolve squash log"));
     }
     version["modified"] = json!([allocation["squashLog"]]);

@@ -19,7 +19,7 @@ const STATES: [&str; 9] = [
 ];
 
 pub(super) fn validate(criterion: &str) -> io::Result<()> {
-    let Some(state) = criterion.strip_prefix('$') else { return Ok(()) };
+    let Some(state) = criterion.trim().strip_prefix('$') else { return Ok(()) };
     if let Some((name, _)) = state.split_once(':') {
         if name == "env" {
             return Ok(());

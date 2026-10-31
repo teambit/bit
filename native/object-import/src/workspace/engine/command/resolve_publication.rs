@@ -210,7 +210,8 @@ fn reason(receipt: &Value, tag: bool) -> String {
 
 fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Vec<String> {
     if crate::command_import::lane::parse_lane_id(&context["lane"]["currentId"])
-        .map_or(true, |lane_id| lane_id.is_main())
+        .ok()
+        .is_none_or(|lane_id| lane_id.is_main())
     {
         return Vec::new();
     }

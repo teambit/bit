@@ -68,6 +68,7 @@ pub(super) fn head_tilde_is_nan(after: &str) -> bool {
 }
 
 pub(super) fn valid_revert_version(to: &str) -> bool {
+    let to = to.trim();
     if matches!(to, "head" | "latest" | "reset") || to.starts_with("head~") {
         return false;
     }

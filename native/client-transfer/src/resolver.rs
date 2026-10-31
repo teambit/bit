@@ -68,6 +68,8 @@ impl Resolver {
         let token = global
             .get(CFG_USER_TOKEN)
             .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|token| !token.is_empty())
             .map(str::to_string);
         Some(Self {
             path: path.to_string(),
@@ -81,7 +83,7 @@ impl Resolver {
     /// `resolverFunction(scopeName, thisScope.name, token)`.
     pub async fn resolve(&self, scope: &str) -> io::Result<String> {
         let resolver = self.clone();
-        let scope = scope.to_string();
+        let scope = scope.trim().to_string();
         tokio::task::spawn_blocking(move || resolver.run(&scope)).await.map_err(io::Error::other)?
     }
 

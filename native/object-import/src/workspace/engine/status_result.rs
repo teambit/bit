@@ -139,8 +139,8 @@ fn validate(request: &Request) -> io::Result<()> {
     let mut identities = HashSet::new();
     for target in &request.targets {
         grammar(request, target)?;
-        if target.identity.is_empty()
-            || !identities.insert(&target.identity)
+        if target.identity.trim().is_empty()
+            || !identities.insert(target.identity.trim())
             || target.dependencies.len() > 4096
             || target.issues.len() > 4096
         {

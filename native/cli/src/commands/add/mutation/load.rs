@@ -270,7 +270,14 @@ fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
         .or_else(|| row["id"].as_str())
-        .map(|id| id.split('@').next().unwrap_or(id))
+        .map(str::trim)
+        .map(|id| {
+            id.split('@')
+                .next()
+                .unwrap_or(id)
+                .trim()
+        })
+        .filter(|id| !id.is_empty())
 }
 
 /// `NodeModuleLinker` clears loaded classes when generated package metadata changes.

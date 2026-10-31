@@ -95,6 +95,8 @@ fn one_parent(
         let label = parent["tag"]
             .as_str()
             .or_else(|| parent["reference"].as_str())
+            .map(str::trim)
+            .filter(|label| !label.is_empty())
             .ok_or_else(|| decline("parent diff reference"))?;
         let row = compare(engine, root, identity, label, version, false, token)?;
         let rendered = one(context, capture, &row, chalk, Some(label), Some(version))?;

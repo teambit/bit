@@ -96,7 +96,12 @@ fn base(component: &Component) -> Value {
 }
 
 fn validate_log(log: &Value) -> io::Result<()> {
-    if !log.is_object() || !log["date"].is_string() {
+    if !log.is_object()
+        || log["date"]
+            .as_str()
+            .map(str::trim)
+            .is_none_or(str::is_empty)
+    {
         return Err(invalid("stash log shape"));
     }
     for field in ["message", "username", "email"] {

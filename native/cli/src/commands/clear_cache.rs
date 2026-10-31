@@ -159,7 +159,9 @@ fn format_remote_report(remote: &str, result: &Value, chalk: Chalk) -> String {
 fn is_truthy(value: &Value) -> bool {
     match value {
         Value::Null | Value::Bool(false) => false,
-        Value::Number(num) => num.as_f64() != Some(0.0),
+        Value::Number(num) => num
+            .as_f64()
+            .is_some_and(|val| val != 0.0 && !val.is_nan()),
         Value::String(text) => !text.trim().is_empty(),
         Value::Bool(true) | Value::Array(_) | Value::Object(_) => true,
     }

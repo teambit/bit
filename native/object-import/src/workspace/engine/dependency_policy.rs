@@ -49,7 +49,9 @@ fn ignored(request: &Request, plan: &mut Plan) {
     plan.packages[1].retain(|name, _| !regular.contains_key(name));
     let identities: Vec<_> = plan.components[0]
         .iter()
-        .map(|index| &request.entries[*index].identity)
+        .map(|index| request.entries[*index].identity.trim())
         .collect();
-    plan.components[1].retain(|index| !identities.contains(&&request.entries[*index].identity));
+    plan.components[1].retain(|index| {
+        !identities.contains(&request.entries[*index].identity.trim())
+    });
 }

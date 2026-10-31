@@ -14,7 +14,7 @@ pub use cancellation::Cancellation;
 pub type GlobalConfig = indexmap::IndexMap<String, serde_json::Value>;
 
 pub(crate) fn invalid(message: &str) -> std::io::Error {
-    std::io::Error::new(std::io::ErrorKind::InvalidData, message)
+    std::io::Error::new(std::io::ErrorKind::InvalidData, message.trim())
 }
 
 pub(crate) fn is_hash(value: &str) -> bool {

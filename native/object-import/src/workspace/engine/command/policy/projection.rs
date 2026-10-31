@@ -164,18 +164,33 @@ pub(super) fn configuration_cores() -> Vec<&'static str> {
 }
 
 fn component_dependency(entry: &Value, lifecycle: &str) -> io::Result<Value> {
-    let identity =
-        entry["identity"].as_str().ok_or_else(|| invalid("command dependency identity"))?;
-    let (name, version) =
-        identity.rsplit_once('@').ok_or_else(|| invalid("command unversioned dependency"))?;
-    let (scope, name) = name.split_once('/').ok_or_else(|| invalid("command dependency scope"))?;
+    let identity = entry["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|identity| !identity.is_empty())
+        .ok_or_else(|| invalid("command dependency identity"))?;
+    let (name, version) = identity
+        .rsplit_once('@')
+        .map(|(name, version)| (name.trim(), version.trim()))
+        .filter(|(name, version)| !name.is_empty() && !version.is_empty())
+        .ok_or_else(|| invalid("command unversioned dependency"))?;
+    let (scope, name) = name
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("command dependency scope"))?;
     let package = entry["packageName"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("command missing dependency package name"))?;
     let mut row = json!({"id":identity,"version":version,"__type":"component","lifecycle":lifecycle,
                 "componentId":{"scope":scope,"name":name,"version":version},"isExtension":false,"packageName":package});
-    if let Some(range) = entry["versionRange"].as_str() {
+    if let Some(range) = entry["versionRange"]
+        .as_str()
+        .map(str::trim)
+        .filter(|range| !range.is_empty())
+    {
         row["versionRange"] = json!(range);
     }
     Ok(row)

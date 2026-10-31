@@ -68,7 +68,7 @@ fn edges(
     version["flattenedEdgesRef"] = json!(identity);
     version
         .as_object_mut()
-        .unwrap()
+        .ok_or_else(|| invalid("command snap Version"))?
         .remove("flattenedEdges");
     objects.push(
         json!({"type":"Source","hash":identity,"body":crate::validate::hexadecimal(&body)}),

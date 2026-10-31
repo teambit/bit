@@ -156,7 +156,12 @@ fn automatic_placeholder_names(finish: &Value) -> io::Result<Vec<String>> {
         let map = field.as_object().ok_or_else(|| invalid("dependency pipeline package field"))?;
         names.extend(
             map.iter()
-                .filter(|(_, value)| value.as_str().is_some_and(crate::plus_version::is_plus))
+                .filter(|(_, value)| {
+                    value
+                        .as_str()
+                        .map(str::trim)
+                        .is_some_and(crate::plus_version::is_plus)
+                })
                 .map(|(name, _)| name.clone()),
         );
     }

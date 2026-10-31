@@ -14,7 +14,8 @@ pub(in crate::commands) fn restrict(root: &Path, capture: &mut Capture) {
             capture.captured
                 .iter()
                 .any(|row| {
-                    row["identity"] == identity(&component.identity) && row["directory"] != "."
+                    row["identity"].as_str().map(identity) == Some(identity(&component.identity))
+                        && row["directory"].as_str().map(str::trim) != Some(".")
                 })
                 && !root
                     .join("node_modules")

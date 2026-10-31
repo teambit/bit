@@ -83,6 +83,9 @@ pub(super) fn prepare(
     {
         return Err(invalid("stash finalization state"));
     }
+    if input.bit_version.trim().is_empty() {
+        return Err(invalid("stash bit version"));
+    }
     if input.versions.len() != retained.components.len() {
         return Err(invalid("stash allocation count"));
     }

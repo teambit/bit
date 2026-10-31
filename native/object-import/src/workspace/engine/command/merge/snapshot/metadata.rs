@@ -45,17 +45,13 @@ pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::
 
 fn base_version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
     let mut version = current_schema(&input.material.version)?;
-    if version.get("flattenedEdgesRef").is_some() {
-        version
-            .as_object_mut()
-            .ok_or_else(|| invalid("command snap Version"))?
-            .remove("flattenedEdges");
+    let has_edges_ref = version.get("flattenedEdgesRef").is_some();
+    let version_map = version.as_object_mut().ok_or_else(|| invalid("command snap Version"))?;
+    if has_edges_ref {
+        version_map.remove("flattenedEdges");
     }
     for field in ["squashed", "unrelated", "hidden", "dependenciesGraphRef"] {
-        version
-            .as_object_mut()
-            .unwrap()
-            .remove(field);
+        version_map.remove(field);
     }
     version["log"] = receipt["log"].clone();
     version["log"]["message"] = json!(message_text(input.model, input.lane, message)?);

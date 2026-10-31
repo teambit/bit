@@ -118,6 +118,7 @@ fn validate_default_env(version: &Value) -> io::Result<()> {
     if env.is_none_or(|env| {
         env["data"]["id"]
             .as_str()
+            .map(str::trim)
             .is_none_or(|id| {
                 id != "teambit.harmony/node" && !id.starts_with("teambit.harmony/node@")
             })

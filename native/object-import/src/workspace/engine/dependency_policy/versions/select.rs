@@ -78,6 +78,7 @@ fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<C
     Ok(None)
 }
 fn valid(request: &Request, spec: &str) -> io::Result<Choice> {
+    let spec = spec.trim();
     if let Some(hash) = spec.strip_prefix("0.0.0-")
         && snap(hash)
     {
@@ -88,9 +89,12 @@ fn valid(request: &Request, spec: &str) -> io::Result<Choice> {
         return Ok(Some((spec.to_owned(), None)));
     }
     if parsed.range
-        && let Some(version) = &parsed.coerced
+        && let Some(version) = parsed.coerced
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
     {
-        return Ok(Some((version.clone(), Some(spec.to_owned()))));
+        return Ok(Some((version.to_owned(), Some(spec.to_owned()))));
     }
     Ok(snap(spec).then(|| (spec.to_owned(), None)))
 }

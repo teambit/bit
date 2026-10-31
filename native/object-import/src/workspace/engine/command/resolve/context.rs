@@ -56,11 +56,8 @@ fn selection_state(
     context: &mut Value,
 ) -> io::Result<(Vec<Value>, Vec<Value>, Vec<String>)> {
     let pending = pending_rows(request)?;
-    pending_configuration(
-        context,
-        &pending,
-        request.ordinary_snap || request.options.callback_lifecycle,
-    )?;
+    let snapshot = request.ordinary_snap || request.options.callback_lifecycle;
+    pending_configuration(context, &pending, snapshot)?;
     let targets = context["targets"]
         .as_array()
         .ok_or_else(|| invalid("resolve targets"))?
@@ -381,23 +378,24 @@ fn load_models(
     .map_err(io::Error::other)?;
     let (_, models) =
         crate::workspace::engine::status_models::read_overlay(&input, pool, &imported.overlay)?;
+    let models = models.as_object().ok_or_else(|| invalid("resolve models"))?;
     context
         .as_object_mut()
         .ok_or_else(|| invalid("resolve context"))?
-        .extend(
-            models
-                .as_object()
-                .ok_or_else(|| invalid("resolve models"))?
-                .clone(),
-        );
+        .extend(models.clone());
     Ok(())
 }
 
 fn bind_models(context: &Value, repository: &mut repository::Repository) -> io::Result<()> {
     for model in context["models"].as_array().ok_or_else(|| invalid("resolve models"))? {
-        let name = model["name"].as_str().ok_or_else(|| invalid("resolve model name"))?;
+        let name = model["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("resolve model name"))?;
         let identity = model["scope"]
             .as_str()
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
             .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
         if repository.read_component(&identity)? != *model {
@@ -405,7 +403,11 @@ fn bind_models(context: &Value, repository: &mut repository::Repository) -> io::
         }
     }
     for version in context["versions"].as_array().ok_or_else(|| invalid("resolve versions"))? {
-        let hash = version[0].as_str().ok_or_else(|| invalid("resolve version reference"))?;
+        let hash = version[0]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+            .ok_or_else(|| invalid("resolve version reference"))?;
         if repository.read(hash, "Version")? != version[1] {
             return Err(invalid("resolve version changed"));
         }

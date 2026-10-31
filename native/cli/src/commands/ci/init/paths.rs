@@ -12,10 +12,13 @@ pub(super) fn real(path: &Path) -> io::Result<PathBuf> {
         return Ok(path.to_owned());
     }
     let mut resolved = normalize(&std::path::absolute(path)?);
-    while let Some(link) = resolve_link(&resolved)? {
+    for _ in 0..64 {
+        let Some(link) = resolve_link(&resolved)? else {
+            return Ok(resolved);
+        };
         resolved = link;
     }
-    Ok(resolved)
+    Err(io::Error::other("too many symbolic link levels"))
 }
 fn resolve_link(path: &Path) -> io::Result<Option<PathBuf>> {
     let mut current = PathBuf::new();

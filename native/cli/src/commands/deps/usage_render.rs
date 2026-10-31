@@ -24,6 +24,7 @@ pub(super) fn importer_tree_node(
 }
 
 fn importer_dep_field(importer: &ProjectSnapshot, alias: &str) -> Option<&'static str> {
+    let alias = alias.trim();
     let has = |group: Option<&pnpm_lockfile::ResolvedDependencyMap>| {
         group.is_some_and(|deps| {
             deps.keys()

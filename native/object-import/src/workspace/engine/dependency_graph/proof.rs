@@ -280,12 +280,13 @@ pub(in crate::workspace::engine) fn accept_published(
     }
 }
 
-pub(in crate::workspace::engine) fn symlink(path: &Path) -> io::Result<Proof> {
+pub(in crate::workspace::engine) fn symlink(file: &Path) -> io::Result<Proof> {
+    path(file)?;
     Ok(Proof {
-        path: path.to_path_buf(),
+        path: file.to_path_buf(),
         hash: None,
         exists: None,
-        metadata: Some(Metadata { kind: "symlink".into(), real_path: Some(fs::read_link(path)?) }),
+        metadata: Some(Metadata { kind: "symlink".into(), real_path: Some(fs::read_link(file)?) }),
         range: None,
     })
 }

@@ -128,7 +128,7 @@ impl ProjectedLinker {
         ids: &[String],
     ) -> io::Result<Value> {
         let mut engine = Engine::new()?;
-        match entered {
+        match entered.trim() {
             "$modified" => self.compare_status(&mut engine, request.root, request.context, ids),
             "$codeModified" => {
                 let (result, proofs) =

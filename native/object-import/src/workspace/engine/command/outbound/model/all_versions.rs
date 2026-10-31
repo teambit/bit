@@ -4,7 +4,10 @@ use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
 pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
-    let head = model["head"].as_str().ok_or_else(|| invalid("outbound all-versions head"))?;
+    let head = model["head"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("outbound all-versions head"))?;
     crate::merge_history::hash(head)?;
     let tags =
         model["versions"].as_object().ok_or_else(|| invalid("outbound all-versions tags"))?;
@@ -26,7 +29,7 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
                 .iter()
                 .rev()
                 .filter_map(Value::as_str)
-                .map(str::to_owned),
+                .map(|ancestor| ancestor.trim().to_owned()),
         );
         hashes.push(hash);
     }
@@ -45,7 +48,7 @@ fn resolve_version_labels(
         .map(|hash| {
             tags.iter()
                 .chain(orphaned.into_iter().flat_map(serde_json::Map::iter))
-                .find(|(_, ref_hash)| ref_hash.as_str() == Some(hash))
+                .find(|(_, ref_hash)| ref_hash.as_str().map(str::trim) == Some(hash.as_str()))
                 .map_or_else(|| hash.clone(), |(tag, _)| tag.clone())
         })
         .collect()

@@ -225,7 +225,15 @@ fn known_previous(
         .filter(|material| !material.version_state.current_head.is_empty())
     {
         let previous = repository.read(&material.version_state.current_head, "Version")?;
-        let edges = if let Some(reference) = previous["flattenedEdgesRef"].as_str() {
+        let edges = if let Some(value) = previous
+            .get("flattenedEdgesRef")
+            .filter(|value| !value.is_null())
+        {
+            let reference = value
+                .as_str()
+                .map(str::trim)
+                .filter(|reference| !reference.is_empty())
+                .ok_or_else(|| invalid("snap prior flattened edges ref"))?;
             repository.source_json(reference)?
         } else {
             previous["flattenedEdges"].clone()
@@ -250,7 +258,11 @@ fn id_key(id: &Value) -> io::Result<String> {
     Ok(format!(
         "{}@{}",
         selection::identity(id)?,
-        id["version"].as_str().ok_or_else(|| invalid("snap dependency version"))?,
+        id["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
+            .ok_or_else(|| invalid("snap dependency version"))?,
     ))
 }
 

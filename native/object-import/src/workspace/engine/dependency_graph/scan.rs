@@ -39,7 +39,7 @@ pub(super) fn scan(
         .as_ref()
         .and_then(|custom| custom.get(filename));
     if let Some(custom) = custom
-        && format!("{:x}", Sha1::digest(&bytes)) != custom.source_hash
+        && format!("{:x}", Sha1::digest(&bytes)) != custom.source_hash.trim()
     {
         return Err(invalid("custom detector source changed"));
     }

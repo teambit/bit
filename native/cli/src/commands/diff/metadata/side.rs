@@ -268,7 +268,7 @@ fn name(extension: &Value) -> &str {
     extension
         .get("name")
         .and_then(Value::as_str)
-        .unwrap_or_default()
+        .map_or("", str::trim)
 }
 
 /// JavaScript's default string order: UTF-16 code units.

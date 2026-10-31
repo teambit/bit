@@ -194,7 +194,10 @@ impl Repository {
     }
     pub(super) fn remote_head(&mut self, identity: &str) -> io::Result<Option<String>> {
         let (scope, name) = identity
+            .trim()
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(_, name)| !name.is_empty())
             .ok_or_else(|| super::super::invalid("command remote identity"))?;
         if scope.is_empty()
             || matches!(scope, "." | "..")
@@ -209,8 +212,10 @@ impl Repository {
             return Err(super::super::invalid("command remote row limit"));
         }
         for row in rows {
-            let head =
-                row["head"].as_str().ok_or_else(|| super::super::invalid("command remote head"))?;
+            let head = row["head"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| super::super::invalid("command remote head"))?;
             crate::merge_history::hash(head)?;
             if super::inbound::remote::file_list::row_lane_matches(&row, scope, name) {
                 return Ok(Some(head.to_owned()));

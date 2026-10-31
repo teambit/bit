@@ -377,9 +377,10 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
 }
 
 pub(in crate::commands) fn is_supported_pattern(pattern: &str) -> bool {
-    !pattern.trim().is_empty()
-        && !pattern.starts_with(['-', '@'])
-        && !pattern.contains(['$', ':'])
-        && !pattern.contains(" AND ")
-        && !pattern.starts_with("teambit.")
+    let trimmed = pattern.trim();
+    !trimmed.is_empty()
+        && !trimmed.starts_with(['-', '@'])
+        && !trimmed.contains(['$', ':'])
+        && !trimmed.contains(" AND ")
+        && !trimmed.starts_with("teambit.")
 }

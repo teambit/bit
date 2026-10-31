@@ -36,9 +36,15 @@ fn tag_history(
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
     };
-    let (scope, name) =
-        material.identity.split_once('/').ok_or_else(|| invalid("tag history identity"))?;
-    if history["scope"] != scope || history["name"] != name {
+    let (scope, name) = material.identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("tag history identity"))?;
+    if history["scope"].as_str().map(str::trim) != Some(scope)
+        || history["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("tag history identity mismatch"));
     }
     let head = &material.version_state.current_head;

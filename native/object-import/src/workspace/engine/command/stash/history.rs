@@ -76,7 +76,12 @@ fn targets(context: &Value, selected: Option<&[String]>) -> io::Result<Vec<Value
 fn contains(ids: &[String], target: &Value) -> bool {
     target["identity"]
         .as_str()
-        .is_some_and(|identity| ids.iter().any(|id| id == identity))
+        .map(str::trim)
+        .filter(|identity| !identity.is_empty())
+        .is_some_and(|identity| {
+            ids.iter()
+                .any(|id| id.trim() == identity)
+        })
 }
 
 fn accept(retained: &mut Retained, plans: &[Value]) -> io::Result<()> {

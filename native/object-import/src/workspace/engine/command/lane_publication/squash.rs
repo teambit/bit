@@ -64,7 +64,7 @@ impl Prepared {
         if log
             .get("date")
             .and_then(Value::as_str)
-            .is_none()
+            .is_none_or(|date| date.trim().is_empty())
         {
             return Err(invalid("command squash date"));
         }

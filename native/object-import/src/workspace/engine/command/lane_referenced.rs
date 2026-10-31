@@ -12,6 +12,8 @@ pub(super) fn prepare(record: &mut Record, plan: &planning::Planned) -> io::Resu
         .as_str()
         .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope))
         .or_else(|| lane["otherId"]["scope"].as_str())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("lane referenced scope"))?
         .to_owned();
     let merge = plan.merge.as_ref().ok_or_else(|| invalid("lane referenced merge"))?;
@@ -28,8 +30,9 @@ pub(super) fn prepare(record: &mut Record, plan: &planning::Planned) -> io::Resu
     {
         let identity = result["id"]
             .as_str()
-            .and_then(|id| id.rsplit_once('@'))
-            .map(|(identity, _)| identity)
+            .and_then(|id| id.trim().rsplit_once('@'))
+            .map(|(identity, _)| identity.trim())
+            .filter(|identity| !identity.is_empty())
             .ok_or_else(|| invalid("lane result identity"))?;
         if let Some(value) = projection.version(identity, &mut record.repository)? {
             heads.push((identity.to_owned(), value));

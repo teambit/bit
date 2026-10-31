@@ -59,6 +59,11 @@ impl Output {
         }
     }
     pub(super) fn added(&mut self, field: usize, value: String) {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            return;
+        }
+        let value = if trimmed.len() == value.len() { value } else { trimmed.to_owned() };
         if !self.added[field].contains(&value) {
             self.added[field].push(value);
         }

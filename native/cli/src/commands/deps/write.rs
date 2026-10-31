@@ -146,7 +146,7 @@ fn dedupe_rows(rows: &[CandidateRow]) -> Result<Map<String, Value>, Failure> {
     let mut selected: Map<String, Value> = Map::new();
     let mut selected_root: HashSet<String> = HashSet::new();
     for row in rows {
-        if !row.name.is_empty() {
+        if !row.name.trim().is_empty() {
             apply_candidate_row(&mut selected, &mut selected_root, row)?;
         }
     }

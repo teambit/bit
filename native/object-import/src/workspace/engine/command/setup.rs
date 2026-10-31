@@ -185,8 +185,11 @@ pub(super) fn component_controls(
         .chain(additional)
         .chain(scope_added)
     {
-        let directory =
-            target["directory"].as_str().ok_or_else(|| invalid("command control directory"))?;
+        let directory = target["directory"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .ok_or_else(|| invalid("command control directory"))?;
         for (name, key) in [("component.json", "config"), ("package.json", "packageJson")] {
             let bytes = proof::read(&request.root.join(directory).join(name), proofs)?;
             let value = bytes

@@ -101,10 +101,11 @@ fn report_items(prepared: &mut Prepared) {
             "deleted components directories: {}",
             prepared.mutations.removals
                 .iter()
-                .map(|path| path
-                    .strip_prefix(root)
-                    .unwrap()
-                    .to_string_lossy())
+                .map(|path| {
+                    path.strip_prefix(root)
+                        .unwrap_or(path)
+                        .to_string_lossy()
+                })
                 .collect::<Vec<_>>()
                 .join(", "),
         ));

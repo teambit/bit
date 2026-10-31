@@ -3,11 +3,11 @@ use serde_json::{Value, json};
 use std::io;
 
 pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, Value)> {
-    super::super::bitmap::validate_history_file_id(&input.file_id)?;
+    super::super::bitmap::validate_history_file_id(input.file_id.trim())?;
     let mut retained = state.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
     if retained.operation != Operation::LaneAbort
         || retained.restored
-        || retained.record.token != input.token
+        || retained.record.token != input.token.trim()
     {
         return Err(invalid("recovery restoration state"));
     }
@@ -34,7 +34,7 @@ pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, 
     retained.record.proofs.extend(projected.iter().cloned());
     retained.record.proofs = proof::unique(retained.record.proofs);
     retained.restored = true;
-    retained.restored_file_id = Some(input.file_id.clone());
+    retained.restored_file_id = Some(input.file_id.trim().to_owned());
     let output =
         json!({"restored":true,"dependencyReadSet":projected,"restoredControls":controls.paths()});
     let count = retained.record.targets.len();

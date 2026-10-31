@@ -102,6 +102,8 @@ fn replace_extension(file: &Path, typed: bool, budget: &Budget) -> io::Result<Op
     let name = file
         .file_name()
         .and_then(|name| name.to_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("TypeScript filename"))?;
     let Some(dot) = name.rfind('.') else { return Ok(None) };
     let extension = [".d.ts", ".d.mts", ".d.cts"]

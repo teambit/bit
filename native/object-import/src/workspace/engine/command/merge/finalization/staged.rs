@@ -15,11 +15,15 @@ pub(super) fn prepare(
         Some(bytes) => std::str::from_utf8(bytes)
             .map_err(io::Error::other)?
             .split('\n')
-            .map(str::to_owned)
+            .map(|line| line.trim().to_owned())
             .collect::<Vec<_>>(),
         None => Vec::new(),
     };
-    hashes.extend(inputs.iter().map(|input| input.hash.to_owned()));
+    hashes.extend(
+        inputs
+            .iter()
+            .map(|input| input.hash.trim().to_owned()),
+    );
     output.writes.push((staged, hashes.join("\n").into_bytes()));
     if inputs
         .iter()

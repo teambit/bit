@@ -215,7 +215,8 @@ fn parse(args: &[&str]) -> Option<bool> {
             "--" => return iter.next().is_none().then_some(json),
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             _ => return None,
         }
     }

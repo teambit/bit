@@ -55,10 +55,11 @@ fn rekey(rows: &mut Value, identity: &str, hash: &str) -> io::Result<()> {
     if edges.len() > 16384 {
         return Err(invalid("resolve graph budget"));
     }
+    let identity = identity.trim();
     for edge in edges {
         let source = &mut edge["source"];
-        let scope = source["scope"].as_str().unwrap_or_default();
-        let name = source["name"].as_str().unwrap_or_default();
+        let scope = source["scope"].as_str().map_or("", str::trim);
+        let name = source["name"].as_str().map_or("", str::trim);
         if format!("{scope}/{name}") == identity {
             source["version"] = json!(hash);
         }
@@ -72,7 +73,7 @@ fn store(version: &mut Value, rows: &Value, objects: &mut Vec<Value>) -> io::Res
     version["flattenedEdgesRef"] = json!(digest);
     version
         .as_object_mut()
-        .unwrap()
+        .ok_or_else(|| invalid("resolve graph Version"))?
         .remove("flattenedEdges");
     objects.push(json!({"type":"Source","hash":digest,"body":crate::validate::hexadecimal(&body)}));
     Ok(())

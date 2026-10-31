@@ -198,7 +198,8 @@ pub(in crate::workspace::engine) fn persist(
 
 impl Retained {
     fn check(&self, token: &str) -> io::Result<()> {
-        if token.trim().is_empty() || token != self.token {
+        let token = token.trim();
+        if token.is_empty() || token != self.token {
             return Err(invalid("stale stash token"));
         }
         proof::verify(&self.proofs)?;
