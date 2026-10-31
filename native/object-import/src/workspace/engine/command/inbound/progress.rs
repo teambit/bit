@@ -25,13 +25,18 @@ pub(super) fn rows(
     }
     let latest_roots = roots
         .iter()
-        .filter(|root| root.version == "latest")
+        .filter(|root| root.version.trim() == "latest")
         .count()
         * usize::from(depth);
     let object_phase = depth && (head_dependencies || latest_roots > 0);
     let scopes = roots
         .iter()
-        .filter_map(|root| root.scope.as_deref())
+        .filter_map(|root| {
+            root.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        })
         .collect::<HashSet<_>>()
         .len();
     for row in &mut progress {

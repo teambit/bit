@@ -22,7 +22,10 @@ impl TagIndex {
         index
     }
     pub(crate) fn insert(&mut self, hash: &str, label: &str, normal: bool) {
-        self.0.insert(hash.trim().to_owned(), (label.trim().to_owned(), normal));
+        let (hash, label) = (hash.trim(), label.trim());
+        if !hash.is_empty() && !label.is_empty() {
+            self.0.insert(hash.to_owned(), (label.to_owned(), normal));
+        }
     }
     pub(crate) fn get(&self, hash: &str) -> Option<(&str, bool)> {
         self.0

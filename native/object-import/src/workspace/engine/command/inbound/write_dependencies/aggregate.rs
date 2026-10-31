@@ -164,11 +164,11 @@ fn array_index(name: &str) -> Option<u32> {
 
 fn policy_entries(entries: &Map<String, Value>, rows: &mut Vec<Value>) -> io::Result<()> {
     for (name, value) in entries {
-        if value == "-" {
+        let range = if value.is_string() { value } else { &value["version"] };
+        if range.as_str().map(str::trim) == Some("-") {
             continue;
         }
-        let range = if value.is_string() { value } else { &value["version"] };
-        push(rows, json!({"name":name,"range":range,"root":false}))?;
+        push(rows, json!({"name":name.trim(),"range":range,"root":false}))?;
     }
     Ok(())
 }

@@ -72,7 +72,8 @@ pub(in crate::workspace::engine) fn complete(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let mut retained = state.inbound.take().ok_or_else(|| invalid("inbound graph owner absent"))?;
-    if retained.token != request.token {
+    let token = request.token.trim().to_owned();
+    if token.is_empty() || retained.token != token {
         return Err(invalid("inbound graph token"));
     }
     let pending = retained.pending.take().ok_or_else(|| invalid("inbound graph phase"))?;
@@ -83,14 +84,8 @@ pub(in crate::workspace::engine) fn complete(
     fetch.options.dependencies.import_head_dependencies = false;
     fetch.options.dependencies.dependencies_depth = None;
     let (_, imported) = super::super::prepare_targets(&fetch, &targets)?;
-    let mut result = super::super::finish(
-        &pending.input,
-        &pending.roots,
-        &targets,
-        imported,
-        state,
-        request.token,
-    )?;
+    let mut result =
+        super::super::finish(&pending.input, &pending.roots, &targets, imported, state, token)?;
     let retained =
         state.inbound.as_mut().ok_or_else(|| invalid("inbound graph retained absent"))?;
     retained.proofs = request.graph.read_set;
@@ -156,11 +151,7 @@ fn current_target(value: &Value) -> io::Result<Target> {
         .as_str()
         .or_else(|| value["id"].as_str())
     {
-        let mut target = super::super::requested_target(raw)?;
-        if !raw.contains('@') {
-            target.version.clear();
-        }
-        return Ok(target);
+        return inline_target(raw);
     }
     let id = value
         .get("id")
@@ -169,23 +160,38 @@ fn current_target(value: &Value) -> io::Result<Target> {
     let scope = id["scope"]
         .as_str()
         .or_else(|| value["scope"].as_str())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("inbound graph dependency scope"))?;
     let raw_name = id["name"]
         .as_str()
         .or_else(|| value["name"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("inbound graph dependency name"))?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+        .map_or((raw_name, None), |(bare, ver)| {
+            (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
     let mut target = super::super::requested_target(&format!("{scope}/{name}"))?;
     id["version"]
         .as_str()
         .or_else(|| value["version"].as_str())
         .or_else(|| value["head"].as_str())
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
         .or(inline_ver)
         .unwrap_or_default()
         .clone_into(&mut target.version);
+    Ok(target)
+}
+
+fn inline_target(raw: &str) -> io::Result<Target> {
+    let mut target = super::super::requested_target(raw)?;
+    if !raw.contains('@') {
+        target.version.clear();
+    }
     Ok(target)
 }
 

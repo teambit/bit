@@ -49,6 +49,9 @@ impl State {
             .cloned()
             .collect::<Vec<_>>();
         for path in paths {
+            if fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+                return Err(invalid("transfer spool path must not be a symlink"));
+            }
             match fs::remove_file(&path) {
                 Ok(()) => {}
                 Err(error) if error.kind() == io::ErrorKind::NotFound => {}

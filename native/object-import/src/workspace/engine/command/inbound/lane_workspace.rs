@@ -80,7 +80,7 @@ fn choose(input: &Prepare, roots: &[Target], entries: Vec<lane::Entry>) -> io::R
     let visible = entries
         .into_iter()
         .filter(|entry| !entry.hidden)
-        .map(|entry| (entry.identity, entry.head))
+        .map(|entry| (entry.identity.trim().to_owned(), entry.head.trim().to_owned()))
         .collect::<HashMap<_, _>>();
     let bitmap = config::document(&input.root.join(".bitmap"))?;
     let (selected, main, changed) = select(input, roots, &visible, &bitmap)?;
@@ -156,9 +156,10 @@ fn visible_lane_head<'a>(
     key: &str,
     version: &str,
 ) -> Option<&'a String> {
+    let version = version.trim();
     visible
-        .get(key)
-        .filter(|head| version == "latest" || version == head.as_str())
+        .get(key.trim())
+        .filter(|head| version == "latest" || version == head.trim())
 }
 
 fn check_head_update(

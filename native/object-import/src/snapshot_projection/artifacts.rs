@@ -20,7 +20,9 @@ pub(super) fn convert(data: &Value) -> io::Result<Value> {
     replace(data, "artifacts", &Value::Array(artifacts))
 }
 fn artifact(artifact: &Value) -> io::Result<Value> {
+    object(artifact)?;
     let files = get(artifact, "files");
+    object(files)?;
     if !matches!(get(files, "snapshotArtifactFiles"), Value::Boolean(true)) {
         return Err(invalid("snapshot ArtifactFiles class projection required"));
     }

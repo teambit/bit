@@ -34,8 +34,12 @@ impl PreparedSave {
     /// Publish after detached Version and Source objects have been persisted.
     pub fn apply(&self) -> io::Result<()> {
         self.validate()?;
-        fs::create_dir_all(self.observation.directory())?;
-        fs::write(self.observation.directory().join(&self.filename), &self.bytes)
+        let directory = self.observation.directory();
+        fs::create_dir_all(directory)?;
+        if fs::symlink_metadata(directory)?.file_type().is_symlink() {
+            return Err(invalid("stash directory is not a regular directory"));
+        }
+        fs::write(directory.join(&self.filename), &self.bytes)
     }
 }
 fn next_index(latest: Option<&str>) -> io::Result<u64> {

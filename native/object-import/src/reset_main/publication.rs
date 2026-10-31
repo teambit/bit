@@ -39,7 +39,11 @@ pub(super) fn write_object(root: &Path, object: &ObjectChange) -> io::Result<()>
         if fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink()) {
             return Err(invalid("reset object symlink"));
         }
-        fs::remove_file(path)
+        match fs::remove_file(path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(error),
+        }
     }
 }
 

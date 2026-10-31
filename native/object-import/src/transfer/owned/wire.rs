@@ -103,11 +103,13 @@ impl References {
             edges: self.edges
                 .as_deref()
                 .map(str::trim)
+                .filter(|text| !text.is_empty())
                 .map(crate::merge_history::hash)
                 .transpose()?,
             graph: self.graph
                 .as_deref()
                 .map(str::trim)
+                .filter(|text| !text.is_empty())
                 .map(crate::merge_history::hash)
                 .transpose()?,
         })

@@ -131,7 +131,11 @@ impl State {
 
 fn directory(directory: &Path) -> io::Result<()> {
     path(directory)?;
-    if !fs::symlink_metadata(directory)?.is_dir() || fs::read_dir(directory)?.next().is_some() {
+    let metadata = fs::symlink_metadata(directory)?;
+    if !metadata.is_dir()
+        || metadata.file_type().is_symlink()
+        || fs::read_dir(directory)?.next().is_some()
+    {
         return Err(invalid("snapshot staging directory must be ordinary and empty"));
     }
     Ok(())
@@ -139,7 +143,14 @@ fn directory(directory: &Path) -> io::Result<()> {
 
 fn path(path: &Path) -> io::Result<()> {
     let text = path.to_str().ok_or_else(|| invalid("snapshot nonUTF8 path"))?;
-    if !path.is_absolute() || text.len() > 32768 || text.contains('\0') {
+    if !path.is_absolute()
+        || text.trim().is_empty()
+        || text.len() > 32768
+        || text.contains('\0')
+        || path
+            .components()
+            .any(|comp| matches!(comp, std::path::Component::ParentDir))
+    {
         return Err(invalid("snapshot absolute path required"));
     }
     Ok(())

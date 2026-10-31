@@ -339,6 +339,7 @@ fn tag(context: &Value, identity: &str, version: &str) -> io::Result<String> {
 // Only the receipt used as a filename is constrained. Canonical backup metadata
 // preserves arbitrary reason strings, including multiline merge messages.
 pub(super) fn validate_history_file_id(file_id: &str) -> io::Result<()> {
+    let file_id = file_id.trim();
     if file_id.len() > 32
         || file_id.split('-').count() != 6
         || file_id
@@ -369,6 +370,7 @@ impl Prepared {
         if !self.changed {
             return Ok(None);
         }
+        let file_id = file_id.trim();
         validate_history_file_id(file_id)?;
         let backup = (|| -> io::Result<()> {
             let directory = crate::scope_path(&self.root).join("bitmap-history");

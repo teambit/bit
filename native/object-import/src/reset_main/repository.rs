@@ -21,6 +21,9 @@ impl Repository {
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let scope_dir = crate::scope_path(root);
         let index_before = fs::read(scope_dir.join("index.json"))?;
+        if index_before.len() > 16 * 1024 * 1024 {
+            return Err(invalid("reset index budget"));
+        }
         let index: Value = crate::parse_jsonc(&index_before)?;
         let rows = index["components"]
             .as_array()
@@ -29,6 +32,7 @@ impl Repository {
         let position = position(rows, scope, name)?;
         let model_hash = rows[position]["hash"]
             .as_str()
+            .map(str::trim)
             .ok_or_else(|| invalid("reset index hash"))?
             .to_owned();
         crate::merge_history::hash(&model_hash)?;

@@ -34,14 +34,15 @@ pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
 }
 
 fn digest(receipt: &Value, direct_key: &str, nested_key: &str) -> Value {
-    if !receipt[direct_key].is_null() {
-        return receipt[direct_key].clone();
-    }
-    if !receipt[nested_key]["hash"].is_null() {
-        return receipt[nested_key]["hash"].clone();
-    }
-    if !receipt[nested_key]["digest"].is_null() {
-        return receipt[nested_key]["digest"].clone();
-    }
-    receipt[nested_key].clone()
+    let val = if !receipt[direct_key].is_null() {
+        &receipt[direct_key]
+    } else if !receipt[nested_key]["hash"].is_null() {
+        &receipt[nested_key]["hash"]
+    } else if !receipt[nested_key]["digest"].is_null() {
+        &receipt[nested_key]["digest"]
+    } else {
+        &receipt[nested_key]
+    };
+    val.as_str()
+        .map_or_else(|| val.clone(), |text| Value::String(text.trim().to_owned()))
 }

@@ -15,7 +15,9 @@ pub(super) fn remote_head(
     let (lane_scope, lane_name) = (lane_scope.trim(), lane_name.trim());
     if [lane_scope, lane_name]
         .iter()
-        .any(|part| part.is_empty() || *part == "." || *part == ".." || part.contains(['/', '\\']))
+        .any(|part| {
+            part.is_empty() || *part == "." || *part == ".." || part.contains(['/', '\\', '\0'])
+        })
     {
         return Err(invalid("lane reset remote ref path"));
     }

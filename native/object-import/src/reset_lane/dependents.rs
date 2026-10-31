@@ -121,7 +121,7 @@ fn tag(model: &Value, hash: &str) -> String {
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter())
         .find_map(|(tag, value)| {
-            (value.as_str().map(str::trim) == Some(target)).then(|| tag.clone())
+            (value.as_str().map(str::trim) == Some(target)).then(|| tag.trim().to_owned())
         })
         .unwrap_or_else(|| target.to_owned())
 }

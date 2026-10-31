@@ -18,7 +18,9 @@ fn project_history(objects: &Path, identity: &str, current: &str) -> io::Result<
         }
         Err(error) => return Err(error),
     };
-    if history["scope"] != scope || history["name"] != name {
+    if history["scope"].as_str().map(str::trim) != Some(scope)
+        || history["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("lane reset VersionHistory identity"));
     }
     let versions = history["versions"]

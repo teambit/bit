@@ -23,6 +23,8 @@ impl State {
         heads: [Option<&str>; 2],
         repository: &mut Repository,
     ) -> io::Result<Value> {
+        let identity = identity.trim();
+        let heads = [heads[0].map(str::trim), heads[1].map(str::trim)];
         if heads[0] == heads[1] {
             return Ok(json!({"sourceOnly":[],"targetOnly":[],"noCommon":false}));
         }

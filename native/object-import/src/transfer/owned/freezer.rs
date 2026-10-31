@@ -26,7 +26,10 @@ pub(super) fn freeze(
         };
         compressed = compressed.saturating_add(entry.compressed.len());
         raw = raw.saturating_add(entry.raw);
-        if compressed > MAX_BYTES || raw > MAX_BYTES {
+        if compressed > MAX_BYTES
+            || raw > MAX_BYTES
+            || frozen.entries.len() >= super::super::MAX_OBJECTS
+        {
             return Err(invalid("collection raw byte budget"));
         }
         frozen.entries.push(entry);

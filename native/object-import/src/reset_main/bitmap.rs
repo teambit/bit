@@ -65,7 +65,12 @@ pub(super) fn find_key(
 }
 
 fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
-    !key.starts_with('$') && key != "_bit_lane" && key != "version" && row.is_object()
+    let key = key.trim();
+    !key.is_empty()
+        && !key.starts_with('$')
+        && key != "_bit_lane"
+        && key != "version"
+        && row.is_object()
 }
 
 fn validate_row(row: &Value) -> io::Result<()> {

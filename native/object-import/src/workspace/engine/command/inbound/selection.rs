@@ -23,10 +23,11 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
         }
         let raw_version = row["version"]
             .as_str()
+            .map(str::trim)
             .filter(|ver| !ver.is_empty())
             .or_else(|| {
                 key.rsplit_once('@')
-                    .map(|(_, ver)| ver)
+                    .map(|(_, ver)| ver.trim())
                     .filter(|ver| !ver.is_empty())
             })
             .unwrap_or("latest");
@@ -49,11 +50,24 @@ pub(super) fn requested_target(id: &str) -> io::Result<Target> {
         .rsplit_once('@')
         .unwrap_or((rest, "latest"));
     let (scope, name, raw_version) = (scope.trim(), name.trim(), raw_version.trim());
-    if scope.is_empty() || name.is_empty() || name.contains('*') || raw_version.is_empty() {
+    if !valid_target_parts(scope, name, raw_version) {
         return Err(invalid("inbound unsupported id"));
     }
     let version = normalize_target_version(raw_version);
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
+}
+
+fn valid_target_parts(scope: &str, name: &str, raw_version: &str) -> bool {
+    let valid_segment =
+        |part: &str| !part.is_empty() && !part.contains("..") && !part.contains('\\');
+    valid_segment(scope)
+        && valid_segment(name)
+        && !name.contains('*')
+        && !name.starts_with('/')
+        && !raw_version.is_empty()
+        && ![scope, name, raw_version]
+            .into_iter()
+            .any(|part| part.chars().any(char::is_control))
 }
 
 fn normalize_target_version(raw_version: &str) -> &str {

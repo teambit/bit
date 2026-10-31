@@ -33,9 +33,7 @@ pub(super) fn append(prepared: &mut Prepared, context: &Value) -> io::Result<()>
             return Err(invalid("stash new workspace root"));
         }
         lane::validate_roots(&root, &rows)?;
-        if entry["rootDir"].is_null() {
-            entry["rootDir"] = Value::String(root);
-        }
+        entry["rootDir"] = Value::String(root);
         rows.push(entry);
         prepared.changed = true;
     }

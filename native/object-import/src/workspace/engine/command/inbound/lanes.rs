@@ -201,14 +201,23 @@ fn fetch_lane_targets(
         progress.reason = Some(format!("{reason} {}/{}", id.scope, id.name));
     }
     lane::entries(&record.value)?
-        .into_iter()
-        .map(|entry| {
-            let (scope, name) = entry.identity
-                .split_once('/')
-                .ok_or_else(|| invalid("inbound lane component identity"))?;
-            Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: entry.head })
-        })
+        .iter()
+        .map(entry_target)
         .collect()
+}
+
+fn entry_target(entry: &lane::Entry) -> io::Result<Target> {
+    let (scope, name) = entry.identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("inbound lane component identity"))?;
+    let version = entry.head.trim().to_owned();
+    if version.is_empty() {
+        return Err(invalid("inbound lane component head"));
+    }
+    Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version })
 }
 
 fn append_lane_dependency_progress(
@@ -225,7 +234,11 @@ fn append_lane_dependency_progress(
         let Some(version) = import.overlay.read(&target.version, "Version")? else {
             continue;
         };
-        if let Some(graph) = version["flattenedEdgesRef"].as_str() {
+        if let Some(graph) = version["flattenedEdgesRef"]
+            .as_str()
+            .map(str::trim)
+            .filter(|graph| !graph.is_empty())
+        {
             crate::merge_history::hash(graph)?;
             if !crate::scope_path(root)
                 .join("objects")

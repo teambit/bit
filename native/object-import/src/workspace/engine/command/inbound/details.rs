@@ -13,31 +13,44 @@ pub(super) fn model<'a>(
     scope: &str,
     name: &str,
 ) -> io::Result<Cow<'a, Value>> {
+    let (scope, name) = (scope.trim(), name.trim());
     if let Some(model) = imported.overlay
         .models()
         .into_iter()
-        .find(|model| model["scope"] == scope && model["name"] == name)
+        .find(|model| {
+            model["scope"].as_str().map(str::trim) == Some(scope)
+                && model["name"].as_str().map(str::trim) == Some(name)
+        })
     {
         return Ok(Cow::Borrowed(model));
     }
     let model = local_component_model(root, scope, name)?
         .ok_or_else(|| invalid("inbound existing local model"))?;
-    let model_scope = model["scope"].as_str().unwrap_or_default();
-    if (!model_scope.is_empty() && model_scope != scope) || model["name"] != name {
+    let model_scope = model["scope"]
+        .as_str()
+        .unwrap_or_default()
+        .trim();
+    if (!model_scope.is_empty() && model_scope != scope)
+        || model["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("inbound existing local model identity"));
     }
     Ok(Cow::Owned(model))
 }
 
 pub(super) fn head_as_tag_or_hash(model: &Value) -> io::Result<String> {
-    let head = model["head"].as_str().ok_or_else(|| invalid("inbound model head"))?;
+    let head = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .ok_or_else(|| invalid("inbound model head"))?;
     Ok(model["versions"]
         .as_object()
         .into_iter()
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter().rev())
-        .find(|(_, hash)| hash.as_str() == Some(head))
-        .map_or_else(|| head.to_owned(), |(tag, _)| tag.clone()))
+        .find(|(_, hash)| hash.as_str().map(str::trim) == Some(head))
+        .map_or_else(|| head.to_owned(), |(tag, _)| tag.trim().to_owned()))
 }
 
 /// `_getImportDetails`: per target, the tags the import added, its status,

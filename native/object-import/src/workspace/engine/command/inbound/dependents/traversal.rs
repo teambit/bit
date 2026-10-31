@@ -21,7 +21,7 @@ impl Queue {
     }
     pub(super) fn push(&mut self, path: &[String], id: &str) -> io::Result<()> {
         let id = id.trim();
-        if id.is_empty() {
+        if id.is_empty() || id.contains(char::is_control) {
             return Err(invalid("inbound dependent path"));
         }
         let nodes = self.nodes

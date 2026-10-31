@@ -45,7 +45,7 @@ fn workspace(source: &wire::Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     crate::merge_history::hash(&source.hash)?;
     crate::merge_history::hash(&source.source_hash)?;
     let metadata = std::fs::symlink_metadata(&source.path)?;
-    if !metadata.is_file() || metadata.len() > maximum as u64 {
+    if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > maximum as u64 {
         return Err(invalid("snapshot workspace size/type"));
     }
     let mut bytes = Vec::with_capacity(metadata.len() as usize);

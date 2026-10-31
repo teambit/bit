@@ -67,12 +67,21 @@ fn detached(plan: &Plan) -> io::Result<bool> {
     Ok(true)
 }
 fn parent(plan: &Plan) -> Option<&str> {
-    let head = plan.head.as_deref()?.trim();
+    let head = plan.head
+        .as_deref()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())?;
     if plan.is_legacy || head.eq_ignore_ascii_case(plan.version.trim()) || plan.has_tag {
         return None;
     }
     if plan.head_policy.set_head_as_parent {
         return Some(head);
     }
-    Some(plan.parent.as_deref().map_or(head, str::trim))
+    Some(
+        plan.parent
+            .as_deref()
+            .map(str::trim)
+            .filter(|parent| !parent.is_empty())
+            .unwrap_or(head),
+    )
 }

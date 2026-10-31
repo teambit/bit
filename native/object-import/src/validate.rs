@@ -79,6 +79,9 @@ fn source(
     expected_hex: &str,
     expected: [u8; 20],
 ) -> Result<usize, &'static str> {
+    if compressed.is_empty() {
+        return Err("invalid-compression");
+    }
     let mut decoder = Decompress::new(true);
     let mut digest = Sha1::new();
     let mut chunk = vec![0; CHUNK_BYTES].into_boxed_slice();

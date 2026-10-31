@@ -349,20 +349,17 @@ fn plan_new(
     changes: &mut WorkspaceFiles,
 ) -> io::Result<()> {
     for (relative, hash) in new_files {
-        if old_files.contains_key(relative) {
-            continue;
+        if !old_files.contains_key(relative) {
+            let path = input.root.join(input.directory).join(relative);
+            safe_destination(input.root, &path)?;
+            changes.additions.push((path, new_source(input, hash)?));
         }
-        let path = input.root.join(input.directory).join(relative);
-        safe_destination(input.root, &path)?;
-        changes.additions.push((path, new_source(input, hash)?));
     }
     Ok(())
 }
-
 fn new_source(input: &Input<'_>, hash: &str) -> io::Result<Vec<u8>> {
     old_source(input, hash, &mut 0)
 }
-
 pub(super) fn current_body(root: &Path, path: &Path) -> io::Result<Vec<u8>> {
     let metadata = fs::symlink_metadata(path)?;
     if !metadata.is_file() || metadata.len() > super::MAX_WRITTEN_BYTES as u64 {
@@ -372,7 +369,6 @@ pub(super) fn current_body(root: &Path, path: &Path) -> io::Result<Vec<u8>> {
     check(root, path, &body)?;
     Ok(body)
 }
-
 fn files(version: &Value) -> io::Result<HashMap<String, String>> {
     let rows = version["files"].as_array().ok_or_else(|| invalid("inbound existing files"))?;
     if rows.is_empty() || rows.len() > 4096 {
@@ -380,10 +376,15 @@ fn files(version: &Value) -> io::Result<HashMap<String, String>> {
     }
     let mut files = HashMap::new();
     for row in rows {
-        let relative =
-            row["relativePath"].as_str().ok_or_else(|| invalid("inbound existing file path"))?;
+        let relative = row["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound existing file path"))?;
         checkout::plan::relative_path(relative)?;
-        let hash = row["file"].as_str().ok_or_else(|| invalid("inbound existing Source"))?;
+        let hash = row["file"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound existing Source"))?;
         crate::merge_history::hash(hash)?;
         if files.insert(relative.to_owned(), hash.to_owned()).is_some() {
             return Err(invalid("inbound duplicate existing file"));
@@ -391,18 +392,18 @@ fn files(version: &Value) -> io::Result<HashMap<String, String>> {
     }
     Ok(files)
 }
-
 pub(super) fn check(root: &Path, path: &Path, before: &[u8]) -> io::Result<()> {
-    let relative = path.strip_prefix(root).map_err(io::Error::other)?;
     let mut current = root.to_owned();
-    for part in relative.components() {
+    for part in path
+        .strip_prefix(root)
+        .map_err(io::Error::other)?
+        .components()
+    {
         current.push(part);
         let metadata = fs::symlink_metadata(&current)?;
-        if current == path {
-            if !metadata.is_file() || fs::read(&current)? != before {
-                return Err(invalid("inbound existing workspace file changed"));
-            }
-        } else if !metadata.is_dir() {
+        if current == path && (!metadata.is_file() || fs::read(&current)? != before) {
+            return Err(invalid("inbound existing workspace file changed"));
+        } else if current != path && !metadata.is_dir() {
             return Err(invalid("inbound existing workspace parent linked"));
         }
     }

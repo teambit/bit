@@ -132,7 +132,7 @@ fn resolve(component: &Component, choice: &Choice<'_>, semver: &Value) -> io::Re
     if let Some(exact) = choice.exact.filter(|text| !text.is_empty()) {
         if component.versions
             .iter()
-            .any(|version| version == exact)
+            .any(|version| version.trim() == exact)
             || !valid_exact(semver, exact)
         {
             return Err(invalid("snapshot invalid or existing exact version"));
@@ -156,6 +156,7 @@ fn latest(component: &Component, semver: &Value) -> io::Result<Value> {
     let mut latest = json!({"major":0,"minor":0,"patch":0,"prerelease":[]});
     let mut initialized = false;
     for tag in &component.versions {
+        let tag = tag.trim();
         let candidate =
             semver[tag].get("version").ok_or_else(|| invalid("snapshot invalid stored tag"))?;
         if !initialized

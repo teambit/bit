@@ -93,14 +93,18 @@ fn adjust(receipt: &mut Value, before: &HashMap<String, Vec<String>>) -> io::Res
         let id = row["id"]
             .as_str()
             .map(str::trim)
+            .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("inbound group identity"))?;
         let Some(previous) = before.get(id) else { continue };
         let versions =
             row["versions"].as_array_mut().ok_or_else(|| invalid("inbound group versions"))?;
         versions.retain(|version| {
+            let Some(ver) = version.as_str().map(str::trim) else {
+                return false;
+            };
             !previous
                 .iter()
-                .any(|old| version == old)
+                .any(|old| old.trim() == ver)
         });
         let empty = versions.is_empty();
         row["status"] = json!(if empty {

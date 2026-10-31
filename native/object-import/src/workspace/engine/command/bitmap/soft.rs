@@ -128,13 +128,16 @@ impl Prepared {
 
 fn next_version(version: &str, log: &Value, pre_release: Option<&str>) -> Value {
     let mut next = Map::new();
-    next.insert("version".into(), Value::String(version.to_owned()));
+    next.insert("version".into(), Value::String(version.trim().to_owned()));
     for field in ["message", "username", "email"] {
         if let Some(value) = log.get(field) {
             next.insert(field.into(), value.clone());
         }
     }
-    if let Some(pre_release) = pre_release {
+    if let Some(pre_release) = pre_release
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
         next.insert("preRelease".into(), Value::String(pre_release.to_owned()));
     }
     Value::Object(next)

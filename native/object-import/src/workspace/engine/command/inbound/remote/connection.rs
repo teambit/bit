@@ -56,7 +56,11 @@ pub(super) fn bare(
 ) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
     let scope: Value =
         crate::parse_jsonc(&fs::read(directory.join("scope.json"))?).map_err(io::Error::other)?;
-    let local = scope["name"].as_str().ok_or_else(|| invalid("bare inbound local scope"))?;
+    let local = scope["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("bare inbound local scope"))?;
     if !directory.join("objects").is_dir() {
         return Err(invalid("bare inbound objects"));
     }

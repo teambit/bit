@@ -25,7 +25,7 @@ pub(super) fn prepare(root: &Path, file_id: Option<&str>) -> io::Result<History>
         Err(error) => return Err(error),
     };
     let metadata_before = match fs::symlink_metadata(&metadata) {
-        Ok(info) if info.is_file() => Some(
+        Ok(info) if info.is_file() && !info.file_type().is_symlink() => Some(
             crate::read_budget::Budget::new(16 * 1024 * 1024).read(fs::File::open(&metadata)?)?,
         ),
         Ok(_) => return Err(invalid("inbound bitmap history metadata type")),
@@ -51,7 +51,10 @@ pub(super) struct Attributes {
 impl Attributes {
     fn prepare(root: &Path, backup: &Path) -> io::Result<Self> {
         let source = fs::symlink_metadata(root.join(".bitmap"))?;
-        if !source.is_file() || cfg!(windows) && source.permissions().readonly() {
+        if !source.is_file()
+            || source.file_type().is_symlink()
+            || cfg!(windows) && source.permissions().readonly()
+        {
             return Err(invalid("unsupported inbound bitmap attributes"));
         }
         let backup = match fs::symlink_metadata(backup) {

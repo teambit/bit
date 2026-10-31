@@ -87,7 +87,8 @@ pub(super) fn scan(
         "workspace":plan.root,"excludeDirs":exclude,"rootPolicy":input.root_policy}))
     .map_err(io::Error::other)?;
     let (count, mut output) = inventory::begin(input, &mut plan.inventory, pool)?;
-    plan.pending = output["token"].as_u64();
+    plan.pending =
+        Some(output["token"].as_u64().ok_or_else(|| invalid("status missing inventory token"))?);
     // This cache is private to the cold command, unlike the public inventory API.
     if let Some(object) = output.as_object_mut() {
         object.remove("cache");

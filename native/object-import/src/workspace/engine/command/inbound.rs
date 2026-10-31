@@ -273,7 +273,8 @@ pub(in crate::workspace::engine) fn apply(
 ) -> io::Result<(usize, Value)> {
     validate_receipt_mode(input, state)?;
     let mut retained = state.inbound.take().ok_or_else(|| invalid("inbound owner missing"))?;
-    if input.token.trim() != retained.token || retained.applied {
+    let token = input.token.trim();
+    if token.is_empty() || token != retained.token || retained.applied {
         return Err(invalid("inbound owner token"));
     }
     if let Some(workspace) = &retained.workspace {
@@ -335,7 +336,8 @@ pub(in crate::workspace::engine) fn lane_updates(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     let retained = state.inbound.as_ref().ok_or_else(|| invalid("status inbound owner missing"))?;
-    if input.token != retained.token {
+    let token = input.token.trim();
+    if token.is_empty() || token != retained.token {
         return Err(invalid("status inbound owner token"));
     }
     super::super::status_models::lane_updates::read(input, &retained.import.overlay, pool)
@@ -345,10 +347,9 @@ fn targets(input: &Prepare) -> io::Result<Vec<Target>> {
     if input.ids.is_empty() {
         return bitmap_targets(&input.root);
     }
-    let parse_target = |id: &String| requested_target(id);
     input.ids
         .iter()
-        .map(parse_target)
+        .map(|id| requested_target(id))
         .collect()
 }
 
@@ -377,7 +378,12 @@ pub(in crate::workspace::engine) fn overlay<'a>(
     state: &'a State,
     token: Option<&str>,
 ) -> io::Result<Option<&'a command_import::Overlay>> {
-    let Some(token) = token else { return Ok(None) };
+    let Some(token) = token
+        .map(str::trim)
+        .filter(|token| !token.is_empty())
+    else {
+        return Ok(None);
+    };
     let retained = state.inbound.as_ref().ok_or_else(|| invalid("diff inbound owner missing"))?;
     if token != retained.token {
         return Err(invalid("diff inbound owner token"));

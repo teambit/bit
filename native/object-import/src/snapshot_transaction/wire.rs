@@ -53,9 +53,11 @@ where
     Deser: serde::Deserializer<'de>,
 {
     let token = String::deserialize(deserializer)?;
-    Ok(token
-        .trim_matches(|ch: char| ch.is_ascii_whitespace() || ch == '\0')
-        .to_owned())
+    let trimmed = token.trim();
+    if trimmed.contains('\0') {
+        return Err(serde::de::Error::custom("snapshot token contains NUL"));
+    }
+    Ok(trimmed.to_owned())
 }
 
 #[derive(Deserialize)]

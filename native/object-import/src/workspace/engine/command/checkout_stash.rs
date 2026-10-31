@@ -18,12 +18,13 @@ pub(super) fn new_only(options: &Options) -> bool {
 }
 
 pub(super) fn version<'a>(options: &'a Options, identity: &str) -> Option<&'a str> {
+    let identity = identity.trim();
     options.stash
         .as_ref()?
         .versions
         .iter()
-        .find(|row| row.identity == identity)
-        .map(|row| row.version.as_str())
+        .find(|row| row.identity.trim() == identity)
+        .map(|row| row.version.trim())
 }
 
 pub(super) fn validate(request: &Prepare) -> io::Result<()> {
@@ -36,11 +37,9 @@ pub(super) fn validate(request: &Prepare) -> io::Result<()> {
     }
     let mut seen = HashSet::new();
     for row in &stash.versions {
-        let (scope, name) = row.identity
-            .trim()
-            .split_once('/')
-            .unwrap_or_default();
-        if !seen.insert(&row.identity) || scope.trim().is_empty() || name.trim().is_empty() {
+        let identity = row.identity.trim();
+        let (scope, name) = identity.split_once('/').unwrap_or_default();
+        if !seen.insert(identity) || scope.trim().is_empty() || name.trim().is_empty() {
             return Err(invalid("stash checkout duplicate identity"));
         }
         crate::merge_history::hash(row.version.trim())?;
@@ -54,10 +53,10 @@ pub(super) fn selected(options: &Options, targets: &[Value]) -> io::Result<Optio
         return Ok(None);
     };
     let ids: HashSet<_> = match &stash.reset_ids {
-        Some(ids) => ids.iter().map(String::as_str).collect(),
+        Some(ids) => ids.iter().map(|id| id.trim()).collect(),
         None => stash.versions
             .iter()
-            .map(|row| row.identity.as_str())
+            .map(|row| row.identity.trim())
             .collect(),
     };
     let selected: Vec<_> = targets
@@ -66,7 +65,8 @@ pub(super) fn selected(options: &Options, targets: &[Value]) -> io::Result<Optio
             row["identity"]
                 .as_str()
                 .or_else(|| row["id"].as_str())
-                .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
+                .map(str::trim)
+                .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
                 .is_some_and(|id| ids.contains(id))
         })
         .cloned()

@@ -164,11 +164,13 @@ fn decode(body: &str, maximum: usize) -> io::Result<Vec<u8>> {
 fn read(workspace: &Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     path(&workspace.path)?;
     hash(&workspace.hash)?;
-    if !fs::symlink_metadata(&workspace.path)?.is_file() {
+    let link_meta = fs::symlink_metadata(&workspace.path)?;
+    if !link_meta.is_file() || link_meta.file_type().is_symlink() {
         return Err(invalid("snapshot workspace file type"));
     }
     let file = File::open(&workspace.path)?;
-    if !file.metadata()?.is_file() || file.metadata()?.len() > maximum as u64 {
+    let metadata = file.metadata()?;
+    if !metadata.is_file() || metadata.len() > maximum as u64 {
         return Err(invalid("snapshot workspace byte limit"));
     }
     let mut raw = Vec::new();

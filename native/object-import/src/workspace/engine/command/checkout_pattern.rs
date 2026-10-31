@@ -55,5 +55,7 @@ fn target_identity(target: &Value) -> Option<&str> {
     target["identity"]
         .as_str()
         .or_else(|| target["id"].as_str())
-        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
+        .map(str::trim)
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
+        .filter(|id| !id.is_empty())
 }

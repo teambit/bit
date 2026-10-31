@@ -167,10 +167,10 @@ fn bounded(items: &[Descriptor]) -> io::Result<()> {
     if items.len() > MAX_OBJECTS {
         return Err(invalid("transfer collection count exceeds bounds"));
     }
-    let mut bytes = 0;
+    let mut bytes: usize = 0;
     for item in items {
         if let Body::Snapshot(body) = &item.body {
-            bytes += body.len();
+            bytes = bytes.saturating_add(body.len());
         }
     }
     if bytes > MAX_BYTES {

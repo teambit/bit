@@ -177,14 +177,24 @@ pub(super) fn active_lane(root: &Path) -> io::Result<Option<lane::Id>> {
                     row["scope"]
                         .as_str()
                         .unwrap_or_default()
+                        .trim()
                         .to_owned(),
                     row["name"]
                         .as_str()
                         .unwrap_or_default()
+                        .trim()
                         .to_owned(),
                 )
             },
-            |(scope, name)| (scope.unwrap_or_default().to_owned(), name.to_owned()),
+            |(scope, name)| {
+                (
+                    scope
+                        .unwrap_or_default()
+                        .trim()
+                        .to_owned(),
+                    name.trim().to_owned(),
+                )
+            },
         );
     if name.is_empty() || name == "main" {
         return Ok(None);
@@ -217,15 +227,12 @@ pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
     if scope.is_empty() || name.is_empty() || name.starts_with('/') || name.contains("..") {
         return Err(invalid("remote log identity"));
     }
+    let normalized = format!("{scope}/{name}");
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     let (rows, parents_available): (Vec<Value>, bool) = runtime.block_on(async {
         match remotes.resolve(scope, &network).await? {
-            Remote::Http(url) => {
-                Ok::<_, io::Error>((network.log(&url, &input.identity).await?, false))
-            }
-            Remote::File(path) => {
-                Ok((component_log::read_file_remote(&path, &input.identity)?, true))
-            }
+            Remote::Http(url) => Ok::<_, io::Error>((network.log(&url, &normalized).await?, false)),
+            Remote::File(path) => Ok((component_log::read_file_remote(&path, &normalized)?, true)),
         }
     })?;
     Ok((rows.len(), json!({"logs": rows, "parentsAvailable": parents_available})))

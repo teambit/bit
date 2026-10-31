@@ -157,6 +157,7 @@ pub(super) fn fix_dirs_if_nested(directories: &mut [String], existing: &[String]
 }
 
 fn directory(template: &str, scope: &str, name: &str) -> io::Result<String> {
+    let (template, scope, name) = (template.trim(), scope.trim(), name.trim());
     let (owner, short) = scope
         .rsplit_once('.')
         .unwrap_or(("", scope));

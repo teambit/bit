@@ -54,7 +54,13 @@ pub(crate) fn row_identity<'a>(key: &'a str, row: &'a Value) -> (Option<&'a str>
 }
 
 pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io::Result<()> {
-    if rows.contains_key(key) || key.starts_with('$') || key == "_bit_lane" {
+    let key = key.trim();
+    if key.is_empty()
+        || rows.contains_key(key)
+        || key.starts_with('$')
+        || key == "_bit_lane"
+        || key == "version"
+    {
         return Err(invalid("lane reset restored bitmap key"));
     }
     let existing = std::mem::take(rows);
@@ -75,5 +81,8 @@ pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io
 }
 
 fn should_insert_before(existing_key: &str, key: &str) -> bool {
-    existing_key.starts_with('$') || existing_key == "_bit_lane" || existing_key > key
+    existing_key.starts_with('$')
+        || existing_key == "_bit_lane"
+        || existing_key == "version"
+        || existing_key > key
 }

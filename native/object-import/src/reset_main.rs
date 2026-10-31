@@ -57,12 +57,13 @@ pub struct Plan {
 
 impl Plan {
     pub fn prepare(root: &Path, identity: &str, head_only: bool, force: bool) -> io::Result<Self> {
-        let identity = identity.trim();
         let (scope, name) = identity
+            .trim()
             .split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty() && !name.contains(".."))
             .ok_or_else(|| invalid("reset identity"))?;
+        let identity = format!("{scope}/{name}");
         let bitmap = bitmap::Bitmap::load(root, scope, name)?;
         let repository = repository::Repository::load(root, scope, name)?;
         let selection = selection::select(&repository.component, &repository.objects(), head_only)?;
@@ -71,18 +72,17 @@ impl Plan {
             dependents::validate(
                 &repository.objects(),
                 repository.components()?,
-                identity,
+                &identity,
                 &selection,
                 &repository.component,
             )?;
         }
         let version = selection.bitmap_version(&repository.component);
-        let history = history::pending(root, identity, &repository.component, &selection)?;
+        let history = history::pending(root, &identity, &repository.component, &selection)?;
         let bitmap = bitmap.project(version)?;
         let (object, index) = repository.project(&selection)?;
-        let controls = crate::reset_lane::controls::prepare(root, &[identity.to_owned()])?;
-        let input =
-            Input { root: root.to_owned(), identity: identity.to_owned(), head_only, force };
+        let controls = crate::reset_lane::controls::prepare(root, std::slice::from_ref(&identity))?;
+        let input = Input { root: root.to_owned(), identity, head_only, force };
         Ok(Self { input, object, bitmap, index, history, controls, selection })
     }
 

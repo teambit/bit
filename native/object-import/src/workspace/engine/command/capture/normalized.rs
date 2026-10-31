@@ -37,9 +37,11 @@ fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<(read::Metadata,
     Ok((metadata, contents))
 }
 
-fn is_root_bitmap(directory: &str, file: &str) -> bool {
+pub(super) fn is_root_bitmap(directory: &str, file: &str) -> bool {
     let clean_dir = directory
         .trim()
+        .trim_start_matches("./")
+        .trim_start_matches(r".\")
         .trim_end_matches(['/', '\\']);
     let trimmed_file = file.trim();
     let clean_file = trimmed_file

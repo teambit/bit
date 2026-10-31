@@ -126,7 +126,12 @@ fn invalid_hosts(hosts: &HashMap<String, String>) -> bool {
 }
 
 fn valid_scope(scope: &str) -> bool {
-    !scope.is_empty() && scope.len() <= 512 && !scope.contains('/') && !scope.contains("..")
+    let scope = scope.trim();
+    !scope.is_empty()
+        && scope.len() <= 512
+        && !scope.contains(['/', '\\'])
+        && !scope.contains("..")
+        && !scope.chars().any(char::is_control)
 }
 
 fn connection(input: &Request) -> io::Result<(Remotes, Network, GlobalConfig)> {
@@ -202,9 +207,22 @@ async fn remote_for(
 }
 
 fn identity(id: &str) -> io::Result<(&str, &str)> {
-    let (scope, rest) = id.split_once('/').ok_or_else(|| invalid("remote inventory id"))?;
-    let name = rest.split_once('@').map_or(rest, |(name, _)| name);
-    if !valid_scope(scope) || name.is_empty() || name.contains("..") || name.starts_with('/') {
+    let (scope, rest) = id
+        .trim()
+        .split_once('/')
+        .ok_or_else(|| invalid("remote inventory id"))?;
+    let scope = scope.trim();
+    let name = rest
+        .split_once('@')
+        .map_or(rest, |(name, _)| name)
+        .trim();
+    if !valid_scope(scope)
+        || name.is_empty()
+        || name.contains("..")
+        || name.starts_with('/')
+        || name.contains('\\')
+        || name.chars().any(char::is_control)
+    {
         return Err(invalid("remote inventory id"));
     }
     Ok((scope, name))
@@ -213,7 +231,7 @@ fn identity(id: &str) -> io::Result<(&str, &str)> {
 fn scope_file(path: &Path, scope: &str) -> io::Result<()> {
     let value: Value =
         crate::parse_jsonc(&Budget::new(1024 * 1024).read(File::open(path.join("scope.json"))?)?)?;
-    if value["name"] != scope {
+    if value["name"].as_str().map(str::trim) != Some(scope.trim()) {
         return Err(invalid("remote file scope identity"));
     }
     Ok(())

@@ -36,9 +36,11 @@ fn tag_labels(selection: &mut Selection, model: &Value) {
             .into_iter()
             .chain(model["orphanedVersions"].as_object())
             .flat_map(|versions| versions.iter())
-            .find_map(|(tag, hash)| (hash.as_str() == Some(label.as_str())).then_some(tag))
+            .find_map(|(tag, hash)| {
+                (hash.as_str().map(str::trim) == Some(label.as_str())).then(|| tag.trim())
+            })
         {
-            label.clone_from(tag);
+            tag.clone_into(label);
         }
     }
 }

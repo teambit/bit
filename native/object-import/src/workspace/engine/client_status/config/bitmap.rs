@@ -70,8 +70,14 @@ fn target(key: &str, value: &Value, config: &Value) -> io::Result<Target> {
     let effective_scope = if scope.is_empty() {
         value["defaultScope"]
             .as_str()
+            .map(str::trim)
             .filter(|val| !val.is_empty())
-            .or_else(|| config["defaultScope"].as_str())
+            .or_else(|| {
+                config["defaultScope"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|val| !val.is_empty())
+            })
             .ok_or_else(|| invalid("status missing default scope"))?
     } else {
         scope

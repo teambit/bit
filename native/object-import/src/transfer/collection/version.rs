@@ -95,6 +95,7 @@ fn artifacts(value: &Value) -> io::Result<Vec<[u8; 20]>> {
 fn optional(value: &Value, field: &str) -> io::Result<Option<[u8; 20]>> {
     match value.get(field) {
         None | Some(Value::Null) => Ok(None),
+        Some(Value::String(text)) if text.trim().is_empty() => Ok(None),
         Some(value) => hash(Some(value)).map(Some),
     }
 }

@@ -79,7 +79,7 @@ impl State {
             return Err(invalid("snapshot active journal limit"));
         }
         let trimmed = token.trim();
-        if trimmed.is_empty() {
+        if trimmed.is_empty() || trimmed.len() > 256 || trimmed.contains('\0') {
             return Err(invalid("snapshot journal token"));
         }
         let token = if trimmed.len() == token.len() { token } else { trimmed.to_owned() };

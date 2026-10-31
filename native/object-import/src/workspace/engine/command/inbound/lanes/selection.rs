@@ -13,7 +13,7 @@ pub(super) fn ids(input: &Prepare) -> io::Result<Vec<String>> {
         .iter()
         .map(String::as_str)
         .map(str::trim)
-        .filter(|id| *id != "main")
+        .filter(|id| !id.is_empty() && *id != "main")
         .map(|id| {
             if id.contains('/') {
                 return Ok(id.to_owned());
@@ -83,8 +83,9 @@ fn scope_lanes(directory: &Path, scope: &str) -> io::Result<Vec<String>> {
             .file_name()
             .into_string()
             .map_err(|_| invalid("inbound remote lane UTF8"))?;
-        if !matches!(name.as_str(), "main" | "master") {
-            ids.push(format!("{scope}/{name}"));
+        let name = name.trim();
+        if !name.is_empty() && !name.starts_with('.') && !matches!(name, "main" | "master") {
+            ids.push(format!("{}/{name}", scope.trim()));
         }
     }
     Ok(ids)

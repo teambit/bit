@@ -21,11 +21,12 @@ pub(super) fn bitmap_key(
     name: &str,
     scope: &str,
 ) -> io::Result<String> {
+    let (name, scope) = (name.trim(), scope.trim());
     if !rows
         .iter()
         .any(|(key, row)| {
             is_component_bitmap_entry(key, row)
-                && crate::reset_lane::bitmap::row_identity(key, row).1 == name
+                && crate::reset_lane::bitmap::row_identity(key, row).1.trim() == name
         })
     {
         return Ok(name.to_owned());
@@ -33,9 +34,13 @@ pub(super) fn bitmap_key(
     let previous = std::mem::take(rows);
     for (key, row) in previous {
         let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(&key, &row);
-        let is_same_name = is_component_bitmap_entry(&key, &row) && row_name == name;
+        let is_same_name = is_component_bitmap_entry(&key, &row) && row_name.trim() == name;
         let key = if is_same_name {
-            format!("{}/{name}", row_scope.ok_or_else(|| invalid("inbound bitmap scope"))?)
+            let row_scope = row_scope
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .ok_or_else(|| invalid("inbound bitmap scope"))?;
+            format!("{row_scope}/{name}")
         } else {
             key
         };

@@ -44,6 +44,7 @@ impl Plan {
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        let file_id = file_id.trim();
         crate::reset_main::validate_file_id(file_id)?;
         let fresh = Self::prepare(&self.root)?;
         if self.before != fresh.before

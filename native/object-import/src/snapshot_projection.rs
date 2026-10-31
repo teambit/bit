@@ -18,7 +18,7 @@ use crate::js_json::{Value, stringify};
 /// Project raw default-class fields without calling JavaScript serializers.
 pub fn project(kind: &str, fields: &Value) -> io::Result<Value> {
     object(fields)?;
-    match kind {
+    match kind.trim() {
         "Version" => version::project(fields),
         "Component" => models::component(fields),
         "Lane" => models::lane(fields),
@@ -29,6 +29,7 @@ pub fn project(kind: &str, fields: &Value) -> io::Result<Value> {
 }
 
 pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Result<String> {
+    let kind = kind.trim();
     object(fields)?;
     if kind == "LaneHistory" {
         return lane_history_identity(fields);

@@ -42,17 +42,7 @@ fn capture_remotes(
         let entries = remote::lane_entries(&incoming, &hash, id)?;
         let main = roots
             .iter()
-            .filter(|target| {
-                let name = target.name.trim();
-                let identity = target.scope
-                    .as_deref()
-                    .map(str::trim)
-                    .filter(|scope| !scope.is_empty())
-                    .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
-                !entries
-                    .iter()
-                    .any(|entry| entry.identity.trim() == identity)
-            })
+            .filter(|target| !matches_any_entry(target, &entries))
             .cloned()
             .collect::<Vec<_>>();
         lanes::merge_remote(&mut remotes, incoming)?;
@@ -65,4 +55,19 @@ fn capture_remotes(
     };
     lanes::validate_virtual_bounds(&remotes)?;
     Ok((remotes.into_values().collect(), hash))
+}
+
+fn matches_any_entry(target: &Target, entries: &[lane::Entry]) -> bool {
+    let name = target.name.trim();
+    let identity = target.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+    entries
+        .iter()
+        .any(|entry| {
+            let raw = entry.identity.trim();
+            raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()) == identity
+        })
 }

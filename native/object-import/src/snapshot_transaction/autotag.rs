@@ -91,7 +91,7 @@ pub(super) fn identity(id: &Value) -> io::Result<String> {
     if let Some(raw) = id.as_str() {
         let raw = raw.trim();
         let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
-        if bare.is_empty() {
+        if bare.is_empty() || bare.contains('\0') || bare.contains("..") {
             return Err(invalid("autotag identity"));
         }
         return Ok(bare.to_owned());
@@ -100,12 +100,14 @@ pub(super) fn identity(id: &Value) -> io::Result<String> {
         .as_str()
         .map(str::trim)
         .map(|name| name.rsplit_once('@').map_or(name, |(prefix, _)| prefix.trim()))
-        .filter(|value| !value.is_empty())
+        .filter(|value| !value.is_empty() && !value.contains('\0') && !value.contains(".."))
         .ok_or_else(|| invalid("autotag identity"))?;
     match id.get("scope") {
         None | Some(Value::Null) => Ok(name.to_owned()),
         Some(Value::String(scope)) if scope.trim().is_empty() => Ok(name.to_owned()),
-        Some(Value::String(scope)) => Ok(format!("{}/{name}", scope.trim())),
+        Some(Value::String(scope)) if !scope.contains('\0') && !scope.contains("..") => {
+            Ok(format!("{}/{name}", scope.trim()))
+        }
         _ => Err(invalid("autotag scope")),
     }
 }

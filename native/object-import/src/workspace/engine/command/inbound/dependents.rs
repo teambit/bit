@@ -23,7 +23,9 @@ fn select(
         .collect::<io::Result<HashSet<_>>>()?;
     let through = via
         .iter()
-        .map(|id| bare(id).to_owned())
+        .map(|id| bare(id))
+        .filter(|id| !id.is_empty())
+        .map(str::to_owned)
         .collect::<Vec<_>>();
     let paths = paths(adjacency, sources, &ends, &through)?;
     let mut unique = Vec::new();

@@ -45,7 +45,7 @@ fn append_removed(objects: &Path, history: &mut Value, selection: &Selection) ->
     for reference in &selection.removed {
         if versions
             .iter()
-            .any(|entry| entry["hash"] == *reference)
+            .any(|entry| entry["hash"].as_str().map(str::trim) == Some(reference.as_str()))
         {
             continue;
         }

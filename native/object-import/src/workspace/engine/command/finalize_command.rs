@@ -14,6 +14,7 @@ pub(super) fn run(input: &Finalize, state: &mut State) -> io::Result<(usize, Val
     }
     proof::verify(&input.dependency_read_set)?;
     record.proofs.extend(input.dependency_read_set.iter().cloned());
+    record.proofs = proof::unique(record.proofs);
     let directory = scratch::Directory::create()?;
     let merge = prepared.plan.merge.as_mut().ok_or_else(|| invalid("command finalize nonmerge"))?;
     prepared.plan.result["mergeSnapResults"] =

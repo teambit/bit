@@ -164,7 +164,11 @@ fn root_version(
 fn edges(input: &Prepare, imported: &PreparedImport, version: &Value) -> io::Result<Vec<Value>> {
     let rows = if let Some(rows) = version["flattenedEdges"].as_array() {
         rows.clone()
-    } else if let Some(hash) = version["flattenedEdgesRef"].as_str() {
+    } else if let Some(hash) = version["flattenedEdgesRef"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+    {
         let bytes = if let Some(bytes) = imported.overlay.source(hash) {
             bytes.to_vec()
         } else {
@@ -233,11 +237,17 @@ pub(super) fn target(value: &Value) -> io::Result<Target> {
         .ok_or_else(|| invalid("inbound dependency name"))?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+        .map_or((raw_name, None), |(bare, ver)| {
+            (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
+    if name.is_empty() {
+        return Err(invalid("inbound dependency name"));
+    }
     let version = value["version"]
         .as_str()
         .or_else(|| id_obj["version"].as_str())
         .or_else(|| value["head"].as_str())
+        .map(str::trim)
         .filter(|version| !version.is_empty())
         .or(inline_ver)
         .ok_or_else(|| invalid("inbound dependency version"))?;

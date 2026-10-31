@@ -32,7 +32,9 @@ impl Plan {
     pub fn prepare_selected(root: &Path, identities: &[String]) -> io::Result<Self> {
         let selected = identities
             .iter()
-            .map(|id| id.trim().to_owned())
+            .map(|id| id.trim())
+            .filter(|id| !id.is_empty())
+            .map(str::to_owned)
             .collect();
         Self::prepare_with(root, None, Some(selected))
     }

@@ -40,7 +40,7 @@ impl Observation {
 }
 fn read_files(directory: &Path) -> io::Result<BTreeMap<String, Vec<u8>>> {
     match fs::symlink_metadata(directory) {
-        Ok(metadata) if metadata.file_type().is_dir() => {}
+        Ok(metadata) if metadata.file_type().is_dir() && !metadata.file_type().is_symlink() => {}
         Ok(_) => return Err(invalid("stash directory is not a regular directory")),
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(BTreeMap::new()),
         Err(error) => return Err(error),

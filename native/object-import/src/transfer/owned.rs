@@ -242,7 +242,8 @@ fn limits(entries: &[Entry]) -> io::Result<()> {
 
 pub(super) fn archive(state: &State, input: &Value) -> io::Result<Value> {
     let request: wire::Archive = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
-    let plan = state.plans.get(&request.token).ok_or_else(|| invalid("unknown transfer token"))?;
+    let plan =
+        state.plans.get(request.token.trim()).ok_or_else(|| invalid("unknown transfer token"))?;
     archive::write(plan, &request)
 }
 

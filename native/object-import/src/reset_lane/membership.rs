@@ -60,8 +60,9 @@ fn project_hidden(lane: &mut Value, identity: &str, selection: &Selection) -> io
         .iter()
         .position(|row| {
             row.as_str()
+                .map(str::trim)
                 .and_then(|row| row.rsplit_once('@'))
-                .is_some_and(|(id, _)| id == identity)
+                .is_some_and(|(id, _)| id.trim() == identity)
         })
         .ok_or_else(|| invalid("lane reset hidden absent"))?;
     if selection.keep_lane {

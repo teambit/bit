@@ -41,30 +41,27 @@ fn validate_lane_ids(input: &Prepare) -> io::Result<()> {
     if input.options.lanes && input.ids.len() > 33 {
         return Err(invalid("inbound lanes require explicit IDs"));
     }
-    if input.operation == "laneImport" && input.ids.len() != 1 {
+    if input.operation.trim() == "laneImport" && input.ids.len() != 1 {
         return Err(invalid("lane import requires one lane"));
     }
     Ok(())
 }
 fn validate_override(input: &Prepare) -> io::Result<()> {
+    let operation = input.operation.trim();
     if input.options.resolution.recovery_local
-        && (input.operation != "import"
+        && (operation != "import"
             || input.options.objects_only
             || !input.options.resolution.override_existing)
     {
         return Err(invalid("recovery cache requires explicit overriding workspace import"));
     }
     if input.options.resolution.override_existing
-        && (input.operation != "import"
-            || input.options.objects_only
-            || input.ids.is_empty())
+        && (operation != "import" || input.options.objects_only || input.ids.is_empty())
     {
         return Err(invalid("inbound override requires explicit workspace import"));
     }
     if input.options.resolution.path.is_some()
-        && (input.operation != "import"
-            || input.options.objects_only
-            || input.ids.len() != 1)
+        && (operation != "import" || input.options.objects_only || input.ids.len() != 1)
     {
         return Err(invalid("inbound path requires one explicit workspace import"));
     }
@@ -78,7 +75,7 @@ fn validate_merge(input: &Prepare) -> io::Result<()> {
     else {
         return Ok(());
     };
-    if input.operation != "import"
+    if input.operation.trim() != "import"
         || input.options.objects_only
         || input.ids.is_empty()
         || input.options.resolution.override_existing
@@ -97,7 +94,7 @@ fn validate_dependencies(input: &Prepare) -> io::Result<()> {
         return Ok(());
     }
     let invalid_mode = options.import_dependencies == options.import_head_dependencies
-        || input.operation != "import"
+        || input.operation.trim() != "import"
         || input.options.objects_only
         || input.options.lanes
         || input.ids.is_empty();
@@ -111,7 +108,7 @@ fn validate_dependencies(input: &Prepare) -> io::Result<()> {
     Ok(())
 }
 fn valid_operation(input: &Prepare) -> bool {
-    match input.operation.as_str() {
+    match input.operation.trim() {
         "fetch" => {
             (input.options.components || input.options.lanes)
                 && input.options.components != input.options.lanes
@@ -186,7 +183,7 @@ fn validate_adoption(input: &Prepare) -> io::Result<()> {
         || adoption.write_to_empty_dir
         || adoption.write_deps.is_some()
         || graph)
-        && (input.operation != "import" || input.options.objects_only)
+        && (input.operation.trim() != "import" || input.options.objects_only)
     {
         return Err(invalid("inbound adoption requires workspace import"));
     }

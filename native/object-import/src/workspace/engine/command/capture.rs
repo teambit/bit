@@ -76,7 +76,7 @@ fn all_with(
             metadata.push(json!({"relativePath":file,"name":file.rsplit('/').next(),"test":false,"file":observed.linux_hash}));
             let mut source = json!({"relativePath":file,"path":observed.path,"rawHash":observed.hash,
                 "snapshotHash":observed.snapshot_hash,"readToken":token,"protected":false});
-            if target.directory == "." && file == ".bitmap" {
+            if normalized::is_root_bitmap(&target.directory, file) {
                 source["bitmapSource"] = json!(true);
                 source["protected"] = json!(true);
             }
@@ -109,7 +109,9 @@ fn targets(inputs: Vec<Value>, allow_root: bool) -> io::Result<Vec<comparison::T
             let target: comparison::Target =
                 serde_json::from_value(value).map_err(io::Error::other)?;
             comparison::capture::validate(&target)?;
-            if (!allow_root && target.directory == ".") || !seen.insert(target.identity.clone()) {
+            if (!allow_root && target.directory.trim() == ".")
+                || !seen.insert(target.identity.trim().to_owned())
+            {
                 return Err(invalid("command root or duplicate component"));
             }
             Ok(target)

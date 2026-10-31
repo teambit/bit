@@ -15,6 +15,10 @@ pub(in crate::workspace::engine::command) fn prepare_export_scopes(
     let mut seen = HashSet::new();
     let mut changed = false;
     for (scope, name) in components {
+        let (scope, name) = (scope.trim(), name.trim());
+        if scope.is_empty() || name.is_empty() {
+            return Err(invalid("export bitmap identity"));
+        }
         let full = format!("{scope}/{name}");
         if !seen.insert(full.clone()) {
             return Err(invalid("export duplicate bitmap identity"));

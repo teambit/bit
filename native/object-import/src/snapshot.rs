@@ -109,7 +109,14 @@ fn count(count: usize) -> io::Result<()> {
 }
 fn path(path: &Path) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("snapshot non-UTF8 path"))?;
-    if !path.is_absolute() || name.trim().is_empty() || name.len() > 32768 || name.contains('\0') {
+    if !path.is_absolute()
+        || name.trim().is_empty()
+        || name.len() > 32768
+        || name.contains('\0')
+        || path
+            .components()
+            .any(|comp| matches!(comp, std::path::Component::ParentDir))
+    {
         return Err(invalid("snapshot invalid absolute path"));
     }
     Ok(())

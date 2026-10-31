@@ -65,7 +65,8 @@ impl BitmapState {
                 .as_str()
                 .map(str::trim)
                 .is_none_or(|version| {
-                    model["versions"][version] != head && model["orphanedVersions"][version] != head
+                    model["versions"][version].as_str().map(str::trim) != Some(head)
+                        && model["orphanedVersions"][version].as_str().map(str::trim) != Some(head)
                 })
         {
             return Err(invalid("lane reset bitmap head mismatch"));
@@ -83,7 +84,11 @@ impl BitmapState {
                 .into_iter()
                 .chain(model["orphanedVersions"].as_object())
                 .flat_map(|versions| versions.iter())
-                .find_map(|(tag, value)| (value == &hash).then_some(tag.clone()))
+                .find_map(|(tag, value)| {
+                    (value.as_str().map(str::trim) == Some(hash.as_str())).then(|| {
+                        tag.trim().to_owned()
+                    })
+                })
                 .unwrap_or(hash)
         });
         let row = self.document[&self.key]

@@ -5,7 +5,8 @@ use std::{collections::HashSet, io};
 pub(super) fn on_lane(context: &Value) -> bool {
     context["lane"]["currentId"]["name"]
         .as_str()
-        .is_some_and(|name| name != "main")
+        .map(str::trim)
+        .is_some_and(|name| !name.is_empty() && name != "main")
 }
 
 /// Checkout rewrites already tracked lane rows without changing their visibility.

@@ -41,6 +41,9 @@ fn detached(value: &Value) -> io::Result<Value> {
         let Value::Array(values) = get(value, name) else {
             return Err(invalid("detached refs required"));
         };
+        if values.len() > 4096 {
+            return Err(invalid("detached refs limit"));
+        }
         insert(
             &mut output,
             name,

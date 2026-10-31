@@ -105,6 +105,9 @@ fn load_objects(
 ) -> io::Result<Loaded> {
     let bytes = proofs::read(&crate::scope_path(root).join("index.json"), reads)?
         .ok_or_else(|| invalid("lane reset scope index absent"))?;
+    if bytes.len() > 16 * 1024 * 1024 {
+        return Err(invalid("lane reset scope index oversized"));
+    }
     let index: Value = crate::parse_jsonc(&bytes)?;
     let lane_hash = indexed_hash(&index, "lanes", &bitmap.lane_scope, &bitmap.lane_name)?;
     let model_hash = indexed_hash(&index, "components", scope, name)?;

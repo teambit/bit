@@ -43,8 +43,8 @@ pub(in crate::workspace::engine::command) fn from_model(
         target: comparison::Target {
             source_overlays: std::collections::HashMap::new(),
             source_overlay_root: None,
-            identity: identity.into(),
-            version: version.into(),
+            identity: identity.trim().into(),
+            version: version.trim().into(),
             directory: String::new(),
             files: paths,
             current: current.clone(),
@@ -65,9 +65,15 @@ fn retain_files(
     let mut paths = Vec::new();
     let mut seen = HashSet::new();
     for (row, bytes) in rows.iter().zip(contents) {
-        let relative = row["relativePath"].as_str().ok_or_else(|| invalid("hidden file path"))?;
+        let relative = row["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("hidden file path"))?;
         validate_relative(relative, &mut seen)?;
-        let reference = row["file"].as_str().ok_or_else(|| invalid("hidden Source reference"))?;
+        let reference = row["file"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("hidden Source reference"))?;
         let hash = crate::workspace::engine::hash(&bytes);
         if hash != reference {
             return Err(invalid("hidden lane Source hash mismatch"));

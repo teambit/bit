@@ -74,13 +74,19 @@ async fn group(
     let rows = match remote {
         Remote::File(path) => file_latest(&path, &scope, &ids),
         Remote::Http(url) => network.latest_versions(&url, &ids).await,
-    }?;
+    }?
+    .into_iter()
+    .map(|row| row.trim().to_owned())
+    .collect::<Vec<_>>();
     if rows.len() != ids.len()
         || rows
             .iter()
             .zip(&ids)
             .any(|(row, requested)| {
-                !row.contains('@') || identity(row).ok() != identity(requested).ok()
+                let Some((_, ver)) = row.rsplit_once('@') else {
+                    return true;
+                };
+                ver.trim().is_empty() || identity(row).ok() != identity(requested).ok()
             })
     {
         return Err(invalid("remote latest versions result"));

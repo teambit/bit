@@ -128,6 +128,7 @@ fn dependency_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Va
             let version = target_version(&components[target]["id"])?;
             if let Some(prefix) = component["rangePrefix"]
                 .as_str()
+                .map(str::trim)
                 .filter(|prefix| matches!(*prefix, "^" | "~"))
                 && !is_snap(&version)
             {

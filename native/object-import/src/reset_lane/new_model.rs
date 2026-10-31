@@ -10,6 +10,9 @@ pub(super) fn remove_new_model(
     name: &str,
 ) -> io::Result<(ObjectChange, BytesChange)> {
     let before = fs::read(crate::scope_path(root).join("index.json"))?;
+    if before.len() > 16 * 1024 * 1024 {
+        return Err(invalid("lane reset index budget"));
+    }
     let mut index: Value = crate::parse_jsonc(&before)?;
     let rows =
         if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }

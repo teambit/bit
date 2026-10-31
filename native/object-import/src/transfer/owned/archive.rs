@@ -137,7 +137,11 @@ fn fetch_archive(
 fn candidate(path: &std::path::Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-        Ok(metadata) if metadata.is_file() && metadata.len() == 0 => fs::remove_file(path),
+        Ok(metadata)
+            if metadata.is_file() && !metadata.file_type().is_symlink() && metadata.len() == 0 =>
+        {
+            fs::remove_file(path)
+        }
         _ => Err(invalid("archive candidate must be absent or private empty regular file")),
     }
 }

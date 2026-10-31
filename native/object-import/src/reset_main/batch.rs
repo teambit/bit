@@ -36,7 +36,9 @@ impl Batch {
     ) -> io::Result<Self> {
         let identities = identities
             .iter()
-            .map(|id| id.trim().to_owned())
+            .map(|id| id.trim())
+            .filter(|id| !id.is_empty())
+            .map(str::to_owned)
             .collect();
         Self::prepare_with(root, head_only, Some(Selected { identities, force }))
     }

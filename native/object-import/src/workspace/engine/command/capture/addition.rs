@@ -12,17 +12,7 @@ pub(in crate::workspace::engine::command) fn capture(
     destination: &Value,
 ) -> io::Result<Captured> {
     let identity = identity.trim();
-    let scope = destination["scope"]
-        .as_str()
-        .map(str::trim)
-        .ok_or_else(|| invalid("lane addition scope"))?;
-    let name = destination["name"]
-        .as_str()
-        .map(str::trim)
-        .ok_or_else(|| invalid("lane addition name"))?;
-    if scope.is_empty() || name.is_empty() || identity != format!("{scope}/{name}") {
-        return Err(invalid("lane addition identity"));
-    }
+    validate_addition_identity(identity, destination)?;
     let directory = destination["rootDir"]
         .as_str()
         .map(str::trim)
@@ -47,4 +37,28 @@ pub(in crate::workspace::engine::command) fn capture(
         metadata: json!([]),
         files: json!([]),
     })
+}
+
+fn validate_addition_identity(identity: &str, destination: &Value) -> io::Result<()> {
+    let scope = destination["scope"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("lane addition scope"))?;
+    let name = destination["name"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("lane addition name"))?;
+    let bad_segment = name
+        .split('/')
+        .any(|part| part.is_empty() || matches!(part, "." | ".."));
+    if scope.is_empty()
+        || name.is_empty()
+        || identity != format!("{scope}/{name}")
+        || identity.contains(['\\', '\0'])
+        || identity.chars().any(char::is_control)
+        || bad_segment
+    {
+        return Err(invalid("lane addition identity"));
+    }
+    Ok(())
 }

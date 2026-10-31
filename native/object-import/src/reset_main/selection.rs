@@ -190,6 +190,7 @@ fn remove_labels(fields: Option<&mut Map<String, Value>>, labels: &[String]) -> 
     let fields = fields.ok_or_else(|| invalid("reset versions map"))?;
     for label in labels {
         fields.shift_remove(label);
+        fields.shift_remove(label.trim());
     }
     Ok(())
 }

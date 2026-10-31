@@ -53,6 +53,10 @@ pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io
     let path = directory
         .join(&identity[..2])
         .join(&identity[2..]);
+    let link_meta = std::fs::symlink_metadata(&path)?;
+    if !link_meta.is_file() || link_meta.file_type().is_symlink() {
+        return Err(invalid("transfer object exceeds bounds"));
+    }
     let file = File::open(path)?;
     let metadata = file.metadata()?;
     if !metadata.is_file() || metadata.len() > maximum as u64 {

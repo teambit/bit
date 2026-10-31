@@ -139,6 +139,7 @@ fn number(version: &Value, field: &str) -> io::Result<u64> {
 fn array(version: &Value) -> io::Result<&[Value]> {
     version["prerelease"]
         .as_array()
+        .filter(|items| items.len() <= 256)
         .map(Vec::as_slice)
         .ok_or_else(|| invalid("semver prerelease"))
 }

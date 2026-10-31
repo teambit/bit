@@ -56,7 +56,10 @@ fn component_model(objects: &Path, row: &Value, same: bool, selected: &Value) ->
     if same {
         return Ok(selected.clone());
     }
-    let hash = row["hash"].as_str().ok_or_else(|| invalid("reset dependent index hash"))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("reset dependent index hash"))?;
     outbound::read_object(objects, hash, "Component")
 }
 

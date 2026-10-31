@@ -40,5 +40,8 @@ pub(super) fn file_order(rows: &mut [Listed]) {
                     .to_uppercase()
                     .encode_utf16(),
             )
+            .then_with(|| {
+                (left.scope.trim(), left.name.trim()).cmp(&(right.scope.trim(), right.name.trim()))
+            })
     });
 }

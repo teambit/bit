@@ -17,7 +17,7 @@ pub(super) fn visible(entries: Vec<lane::Entry>) -> io::Result<Vec<Listed>> {
             Ok(Listed {
                 scope: scope.to_owned(),
                 name: name.to_owned(),
-                version: Some(entry.head),
+                version: Some(entry.head.trim().to_owned()).filter(|ver| !ver.is_empty()),
                 // Node filters deprecation only for the main-scope list.
                 deprecated: false,
             })
@@ -53,7 +53,10 @@ pub(super) fn remote_lane(
             "Lane",
         )?;
         let value = crate::parse_jsonc(body)?;
-        if value["scope"] != id.scope || value["name"] != id.name || selected.is_some() {
+        if value["scope"].as_str().map(str::trim) != Some(id.scope.trim())
+            || value["name"].as_str().map(str::trim) != Some(id.name.trim())
+            || selected.is_some()
+        {
             return Err(invalid("inbound HTTP Lane identity"));
         }
         lane::validate_value(id, &value)?;
@@ -61,7 +64,7 @@ pub(super) fn remote_lane(
         if entries.len() > 4096 {
             return Err(invalid("inbound HTTP Lane component limit"));
         }
-        selected = Some((item.hash.clone(), entries));
+        selected = Some((item.hash.trim().to_owned(), entries));
     }
     selected.ok_or_else(|| invalid("inbound HTTP Lane missing"))
 }

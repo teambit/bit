@@ -133,22 +133,26 @@ impl Selection {
 impl Plan {
     pub fn prepare(root: &Path, identity: &str, head_only: bool, force: bool) -> io::Result<Self> {
         let (scope, name) = identity
+            .trim()
             .split_once('/')
-            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty() && !name.contains(".."))
             .ok_or_else(|| invalid("lane reset identity"))?;
+        let identity = format!("{scope}/{name}");
         let mut bitmap = BitmapState::load(root, scope, name)?;
         let mut repository = Repository::load(root, &bitmap, scope, name)?;
         bitmap.validate_head(&repository.model, &repository.heads.current)?;
-        let selection = prepare_selection(root, identity, &bitmap, &repository, head_only, force)?;
-        let mut objects = project_objects(&mut repository, identity, &selection)?;
-        let bitmap_version = bitmap.project(&repository.model, selection.next.clone())?;
-        let bitmap_after = bitmap.after()?;
-        let bitmap =
-            BitmapChange { before: bitmap.before, after: bitmap_after, version: bitmap_version };
+        let selection = prepare_selection(root, &identity, &bitmap, &repository, head_only, force)?;
+        let mut objects = project_objects(&mut repository, &identity, &selection)?;
+        let bitmap = BitmapChange {
+            version: bitmap.project(&repository.model, selection.next.clone())?,
+            after: bitmap.after()?,
+            before: bitmap.before,
+        };
         let index = projected_index(root, scope, name, &repository, &selection, &mut objects)?;
         Ok(Self {
             root: root.to_owned(),
-            identity: identity.to_owned(),
+            identity,
             head_only,
             force,
             objects,

@@ -98,17 +98,28 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
     }
     matching[0]["hash"]
         .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
         .ok_or_else(|| invalid("inbound file lane hash"))
 }
 
 pub(crate) fn row_lane_matches(row: &Value, scope: &str, name: &str) -> bool {
-    if row["id"]["scope"] == scope && row["id"]["name"] == name {
+    let (scope, name) = (scope.trim(), name.trim());
+    if row["id"]["scope"].as_str().map(str::trim) == Some(scope)
+        && row["id"]["name"].as_str().map(str::trim) == Some(name)
+    {
         return true;
     }
     row["id"]
         .as_str()
-        .map(|raw| raw.split('@').next().unwrap_or(raw))
+        .map(str::trim)
+        .map(|raw| {
+            raw.split('@')
+                .next()
+                .unwrap_or(raw)
+                .trim()
+        })
         .is_some_and(|raw| raw == format!("{scope}/{name}"))
 }
 
@@ -117,9 +128,14 @@ pub(super) fn indexed(
     scope: &str,
     seen: &mut HashSet<String>,
 ) -> io::Result<(String, String)> {
+    let scope = scope.trim();
     let (row_scope_opt, name) =
         row_id_parts(row).ok_or_else(|| invalid("inbound file index name"))?;
-    let hash = row["hash"].as_str().ok_or_else(|| invalid("inbound file index hash"))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("inbound file index hash"))?;
     let row_scope = row_scope_opt
         .filter(|val| !val.is_empty())
         .unwrap_or(scope);

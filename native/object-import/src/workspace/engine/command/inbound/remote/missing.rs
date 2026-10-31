@@ -24,7 +24,7 @@ pub(super) fn requests(items: &[ObjectItem], ids: &[String], root: &Path) -> Vec
     let objects = Objects {
         fetched: items
             .iter()
-            .map(|item| (item.hash.as_str(), item.compressed.as_slice()))
+            .map(|item| (item.hash.trim(), item.compressed.as_slice()))
             .collect(),
         local: &crate::scope_path(root).join("objects"),
     };
@@ -68,7 +68,10 @@ impl Objects<'_> {
         dependency_id(dependency)
             .and_then(|id| self.version(&id))
             .is_some_and(|version| {
-                matches!(version["buildStatus"].as_str(), Some("succeed" | "skipped"))
+                matches!(
+                    version["buildStatus"].as_str().map(str::trim),
+                    Some("succeed" | "skipped"),
+                )
             })
     }
 

@@ -103,15 +103,17 @@ fn dependencies(value: &Value) -> io::Result<Value> {
 fn component_id(value: &Value) -> io::Result<String> {
     object(value)?;
     let name = text(get(value, "name"))?;
-    if name.trim().is_empty() {
+    let name = name.trim();
+    if name.is_empty() {
         return Err(invalid("dependency component name required"));
     }
     let scope = get(value, "scope");
-    let mut id = if scope.truthy()? { format!("{}/{name}", text(scope)?) } else { name };
+    let mut id =
+        if scope.truthy()? { format!("{}/{name}", text(scope)?.trim()) } else { name.to_owned() };
     let version = get(value, "version");
     if version.truthy()? {
         id.push('@');
-        id.push_str(&text(version)?);
+        id.push_str(text(version)?.trim());
     }
     Ok(id)
 }

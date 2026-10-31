@@ -28,7 +28,10 @@ pub(super) fn prepare(objects: Vec<wire::Object>, pretty: bool) -> io::Result<Ve
     let mut input_compressed = 0;
     let mut hashes = HashSet::new();
     let mut inputs = Vec::with_capacity(objects.len());
-    for object in objects {
+    for mut object in objects {
+        if object.kind.len() != object.kind.trim().len() {
+            object.kind = object.kind.trim().into();
+        }
         let body = body(&object, pretty, MAX_RAW.saturating_sub(total), &mut input_compressed)?;
         total = total.saturating_add(body.len());
         if total > MAX_RAW {

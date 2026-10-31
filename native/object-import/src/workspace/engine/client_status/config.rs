@@ -191,7 +191,7 @@ pub(in crate::workspace::engine) fn ignored_issues(config: &Value) -> io::Result
     let names = names.as_array().ok_or_else(|| invalid("status ignoreIssues"))?;
     names
         .iter()
-        .map(|name| match name.as_str() {
+        .map(|name| match name.as_str().map(str::trim) {
             Some(name) if ISSUE_CLASSES.contains(&name) => Ok(name.to_string()),
             _ => Err(invalid("status unknown ignored issue requires Harmony")),
         })

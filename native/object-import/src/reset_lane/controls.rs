@@ -26,17 +26,26 @@ pub(crate) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Cont
     let mut value: Value = crate::parse_jsonc(&before)?;
     let rows = value.as_array_mut().ok_or_else(|| invalid("lane reset unmerged records"))?;
     let count = rows.len();
-    rows.retain(|row| {
-        let (row_scope, row_name) = super::row_id_parts(&row["id"]);
-        let candidate = format!("{row_scope}/{row_name}");
-        !identities
-            .iter()
-            .any(|id| id.trim() == candidate)
-    });
+    rows.retain(|row| !matches_identity(row, identities));
     if count == rows.len() {
         return Ok(Vec::new());
     }
     Ok(vec![Control { path, before, after: serde_json::to_vec_pretty(&value)? }])
+}
+
+fn matches_identity(row: &Value, identities: &[String]) -> bool {
+    let (row_scope, row_name) = super::row_id_parts(&row["id"]);
+    let candidate = format!("{row_scope}/{row_name}");
+    identities
+        .iter()
+        .any(|id| {
+            let trimmed = id.trim();
+            trimmed == candidate
+                || (row_scope.is_empty()
+                    && trimmed
+                        .split_once('/')
+                        .is_some_and(|(_, name)| name.trim() == row_name))
+        })
 }
 
 pub(crate) fn publish(controls: &[Control]) -> io::Result<()> {

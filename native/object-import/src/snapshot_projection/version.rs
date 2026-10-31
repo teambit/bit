@@ -54,8 +54,14 @@ fn field(fields: &Value, name: &str) -> io::Result<Value> {
         }
         "flattenedEdges" if get(fields, "flattenedEdgesRef").truthy()? => Ok(Value::Undefined),
         "extensions" => extensions(value),
-        "squashed" if value.truthy()? => choose(value, &["previousParents", "laneId"], false),
-        "unrelated" if value.truthy()? => choose(value, &["head", "laneId"], false),
+        "squashed" if value.truthy()? => {
+            object(value)?;
+            choose(value, &["previousParents", "laneId"], false)
+        }
+        "unrelated" if value.truthy()? => {
+            object(value)?;
+            choose(value, &["head", "laneId"], false)
+        }
         _ => Ok(value.clone()),
     }
 }

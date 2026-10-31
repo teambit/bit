@@ -95,6 +95,7 @@ fn read(path: &Path) -> io::Result<Option<Vec<u8>>> {
 
 fn backup(root: &Path, path: &Path, before: &[u8], file_id: &str) -> io::Result<()> {
     use std::io::Write;
+    let file_id = file_id.trim();
     crate::workspace::engine::command::bitmap::validate_history_file_id(file_id)?;
     let directory = crate::scope_path(root).join("workspace-config-history");
     fs::create_dir_all(directory.join("files"))?;
@@ -107,5 +108,6 @@ fn backup(root: &Path, path: &Path, before: &[u8], file_id: &str) -> io::Result<
         .create(true)
         .append(true)
         .open(directory.join("metadata.txt"))?;
-    writeln!(metadata, "{file_id} Write dependencies")
+    writeln!(metadata, "{file_id} Write dependencies")?;
+    metadata.sync_all()
 }

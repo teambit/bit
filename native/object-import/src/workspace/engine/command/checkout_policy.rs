@@ -187,8 +187,13 @@ fn selected_dependency<'a>(dependency: &'a Value, entries: &[Value]) -> Option<(
             (dependency["__type"] == "package")
                 .then(|| dependency["id"].as_str())
                 .flatten()
-        })?;
-    let version = dependency["version"].as_str()?;
+        })
+        .map(str::trim)
+        .filter(|name| !name.is_empty())?;
+    let version = dependency["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())?;
     entries
         .iter()
         .any(|entry| entry["dependencyId"] == name && entry["value"]["version"] != version)
@@ -218,16 +223,22 @@ fn workspace_entries(policy: &serde_json::Map<String, Value>) -> io::Result<Vec<
             continue;
         };
         for (name, value) in dependencies {
-            let version = value
-                .as_str()
-                .or_else(|| value["version"].as_str())
-                .ok_or_else(|| invalid("command workspace policy entry"))?;
-            entries.push(json!({"dependencyId":name,"lifecycleType":
-                if field == "peerDependencies" { "peer" } else { "runtime" },
-                "value":{"version":version}}));
+            entries.push(policy_entry(field, name, value)?);
         }
     }
     Ok(entries)
+}
+
+fn policy_entry(field: &str, name: &str, value: &Value) -> io::Result<Value> {
+    let name = name.trim();
+    let version = value
+        .as_str()
+        .or_else(|| value["version"].as_str())
+        .map(str::trim)
+        .filter(|version| !name.is_empty() && !version.is_empty())
+        .ok_or_else(|| invalid("command workspace policy entry"))?;
+    let lifecycle = if field == "peerDependencies" { "peer" } else { "runtime" };
+    Ok(json!({"dependencyId":name,"lifecycleType":lifecycle,"value":{"version":version}}))
 }
 
 #[cfg(test)]

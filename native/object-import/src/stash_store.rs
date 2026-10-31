@@ -71,7 +71,10 @@ pub fn list(scope: &Path) -> io::Result<Vec<Value>> {
                 .iter()
                 .map(|row| component_id(&row["id"]))
                 .collect::<io::Result<Vec<_>>>()?;
-            let mut row = json!({"id":name.replace(".json", ""),"components":components});
+            let mut row = json!({
+                "id": name.strip_suffix(".json").unwrap_or(name),
+                "components": components,
+            });
             if let Some(message) = data["metadata"].get("message") {
                 row["message"] = message.clone();
             }
@@ -84,17 +87,24 @@ pub fn list(scope: &Path) -> io::Result<Vec<Value>> {
 fn component_id(id: &Value) -> io::Result<String> {
     if let Some(raw) = id
         .as_str()
+        .map(str::trim)
         .filter(|raw| !raw.is_empty())
     {
         return Ok(raw.to_owned());
     }
-    let name = id["name"].as_str().ok_or_else(|| invalid("stash component identity"))?;
+    let name = id["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("stash component identity"))?;
     let name = id["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
     Ok(id["version"]
         .as_str()
+        .map(str::trim)
         .filter(|version| !version.is_empty())
         .map_or_else(|| name.clone(), |version| format!("{name}@{version}")))
 }

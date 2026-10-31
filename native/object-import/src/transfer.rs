@@ -106,6 +106,9 @@ fn paths(directory: &Path, archive: &Path) -> io::Result<()> {
         if path
             .to_str()
             .is_none_or(|text| text.trim().is_empty() || text.len() > 32768 || text.contains('\0'))
+            || path
+                .components()
+                .any(|comp| matches!(comp, std::path::Component::ParentDir))
         {
             return Err(invalid("unsupported transfer path"));
         }

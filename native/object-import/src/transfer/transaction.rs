@@ -46,9 +46,14 @@ impl Transaction {
             || input.scopes.len() > MAX_OBJECTS
             || input.client_id.trim().is_empty()
             || input.client_id.len() > 4096
+            || input.client_id.contains(char::is_control)
             || input.scopes
                 .iter()
-                .any(|scope| scope.trim().is_empty() || scope.len() > 4096)
+                .any(|scope| {
+                    scope.trim().is_empty()
+                        || scope.len() > 4096
+                        || scope.contains(char::is_control)
+                })
         {
             return Err(invalid("unsupported transfer transaction"));
         }

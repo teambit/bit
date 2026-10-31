@@ -18,6 +18,9 @@ pub(super) fn remove(path: &Path) -> io::Result<()> {
 }
 
 fn prune_empty_parent(parent: &Path) -> io::Result<()> {
+    if fs::symlink_metadata(parent).is_ok_and(|meta| meta.file_type().is_symlink()) {
+        return Ok(());
+    }
     let mut entries = match fs::read_dir(parent) {
         Ok(entries) => entries,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),

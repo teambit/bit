@@ -46,7 +46,11 @@ fn read_component(scope: &Path, directory: &Path, id: &str) -> io::Result<Option
             Err(error) => return Err(error),
         };
         let (size, body) = repository::split(&object, hash, "Component")?;
-        if size.parse::<usize>().is_err() {
+        if size
+            .parse::<usize>()
+            .ok()
+            .is_none_or(|len| len > 32 * 1024 * 1024)
+        {
             return Err(invalid("status Component header"));
         }
         return serde_json::from_slice(body).map(Some).map_err(io::Error::other);

@@ -56,7 +56,8 @@ fn prepare_import(
     targets: &[Target],
     virtual_remotes: &[command_import::VirtualRemote],
 ) -> io::Result<command_import::PreparedImport> {
-    if input.operation == "diff" {
+    let operation = input.operation.trim();
+    if operation == "diff" {
         let mut imported = command_import::prepare_lane_with_virtual(
             &input.root,
             &input.global_remotes_file,
@@ -65,7 +66,7 @@ fn prepare_import(
         imported.prepare_diff_versions(targets)?;
         return Ok(imported);
     }
-    if input.operation == "status" {
+    if operation == "status" {
         command_import::prepare_status_with_virtual(
             &input.root,
             &input.global_remotes_file,
@@ -98,7 +99,7 @@ pub(super) fn finish(
     token: String,
 ) -> io::Result<(usize, Value)> {
     let workspace = prepare_workspace(input, targets, &mut import)?;
-    let mut receipt = if matches!(input.operation.as_str(), "status" | "diff") {
+    let mut receipt = if matches!(input.operation.trim(), "status" | "diff") {
         json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh.count,"refreshObjects":import.main_refresh.objects})
     } else {
         let prefetched =
@@ -144,7 +145,10 @@ fn complete_receipt(
     }
     if let Some(lane) = remote::active_lane(&input.root)? {
         receipt["currentLane"] = json!(format!("{}/{}", lane.scope, lane.name));
-        if input.operation == "import" && input.ids.is_empty() && input.options.objects_only {
+        if input.operation.trim() == "import"
+            && input.ids.is_empty()
+            && input.options.objects_only
+        {
             receipt["laneObjectImport"] = json!(true);
         }
     }

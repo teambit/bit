@@ -56,6 +56,9 @@ pub(super) fn dependencies(value: &Value) -> io::Result<Value> {
     let Value::Array(entries) = value else {
         return Err(invalid("extensions required"));
     };
+    if entries.len() > 4096 {
+        return Err(invalid("extensions limit"));
+    }
     let mut output = Vec::new();
     for row in entries {
         let id = get(row, "extensionId");

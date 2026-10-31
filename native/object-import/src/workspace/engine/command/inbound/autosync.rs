@@ -24,8 +24,10 @@ pub(in crate::workspace::engine) fn finalize(
     state: &State,
 ) -> io::Result<(usize, Value)> {
     bitmap::validate_history_file_id(&input.bitmap_history_file_id)?;
+    let git_head = validate_git_head(&input.git_head)?;
     let retained = state.inbound.as_ref().ok_or_else(|| invalid("auto-sync inbound missing"))?;
-    if retained.token != input.token {
+    let token = input.token.trim();
+    if token.is_empty() || retained.token != token {
         return Err(invalid("auto-sync inbound token"));
     }
     let mut repository = Repository::new(&input.root, None);
@@ -54,8 +56,16 @@ pub(in crate::workspace::engine) fn finalize(
     bitmap.commit(&input.bitmap_history_file_id, "bitmapAutoSync: reconciled with scope HEAD")?;
     let path = crate::scope_path(&input.root).join("last-pull-sync");
     fs::create_dir_all(path.parent().ok_or_else(|| invalid("auto-sync sentinel parent"))?)?;
-    fs::write(path, &input.git_head)?;
+    fs::write(path, git_head)?;
     Ok((count, json!({"synced":count})))
+}
+
+fn validate_git_head(git_head: &str) -> io::Result<&str> {
+    let git_head = git_head.trim();
+    if git_head.is_empty() || git_head.len() > 256 || git_head.chars().any(char::is_control) {
+        return Err(invalid("auto-sync git head"));
+    }
+    Ok(git_head)
 }
 
 fn bare_id(id: &str) -> &str {

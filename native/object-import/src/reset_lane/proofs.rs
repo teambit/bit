@@ -16,7 +16,9 @@ pub(super) fn read(path: &Path, proofs: &mut ReadSet) -> io::Result<Option<Vec<u
 
 fn regular(path: &Path) -> io::Result<Option<Vec<u8>>> {
     let bytes = match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.is_file() => Some(fs::read(path)?),
+        Ok(metadata) if metadata.is_file() && !metadata.file_type().is_symlink() => {
+            Some(fs::read(path)?)
+        }
         Ok(_) => return Err(invalid("lane reset nonordinary input")),
         Err(error) if error.kind() == io::ErrorKind::NotFound => None,
         Err(error) => return Err(error),

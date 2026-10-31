@@ -177,8 +177,14 @@ fn update_one(
     name: &str,
     pair: &Value,
 ) -> io::Result<()> {
-    let old = pair[0].as_str().ok_or_else(|| invalid("command policy old value"))?;
-    let new = pair[1].as_str().ok_or_else(|| invalid("command policy new value"))?;
+    let old = pair[0]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("command policy old value"))?;
+    let new = pair[1]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("command policy new value"))?;
     let mut found = 0;
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
         let mut path = vec![resolver_key, "policy", field, name];
@@ -188,7 +194,7 @@ fn update_one(
         }
         let version =
             document.get(&path).ok_or_else(|| invalid("command policy object version"))?;
-        if version.as_str() != Some(old) {
+        if version.as_str().map(str::trim) != Some(old) {
             return Err(invalid("command workspace policy old version changed"));
         }
         document.set(&path, &json!(new));

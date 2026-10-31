@@ -34,7 +34,10 @@ pub(super) fn project(
 
 fn set_head(model: &mut Value, head: Option<&str>) -> io::Result<()> {
     let fields = model.as_object_mut().ok_or_else(|| invalid("lane reset Component"))?;
-    if let Some(head) = head {
+    if let Some(head) = head
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    {
         fields.insert("head".into(), Value::String(head.to_owned()));
     } else {
         fields.shift_remove("head");

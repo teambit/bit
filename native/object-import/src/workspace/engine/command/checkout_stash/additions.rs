@@ -109,13 +109,19 @@ fn addition(
 ) -> io::Result<Option<(String, String, Value)>> {
     let Some(scope) = entry["defaultScope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     else {
         return Ok(None);
     };
     let (scope_opt, name) = super::super::inbound::remote::file_list::row_id_parts(entry)
         .ok_or_else(|| invalid("stash new component name"))?;
+    let name = name.trim();
+    if name.is_empty() {
+        return Err(invalid("stash new component name"));
+    }
     let original_scope = scope_opt
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .unwrap_or(scope);
     if existing.contains(&format!("{original_scope}/{name}")) {
@@ -129,6 +135,7 @@ fn addition(
                 .as_str()
                 .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
         })
+        .map(str::trim)
         .ok_or_else(|| invalid("stash new version"))?;
     crate::merge_history::hash(version)?;
     let mut row = json!({"name":name,"scope":"","version":"","defaultScope":scope,"mainFile":entry["mainFile"],"rootDir":entry["rootDir"]});

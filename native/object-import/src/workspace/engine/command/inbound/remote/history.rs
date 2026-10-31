@@ -22,6 +22,9 @@ pub(in crate::workspace::engine::command) fn history_remote_at(
     remote_host: Option<&str>,
 ) -> io::Result<Option<(VirtualRemote, String)>> {
     id.validate()?;
+    if !root.is_absolute() {
+        return Err(invalid("lane history root"));
+    }
     let (remotes, network, _, _) = if bare {
         connection::bare(root, transport)?
     } else {

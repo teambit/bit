@@ -92,7 +92,12 @@ fn identity(value: Option<&Value>) -> io::Result<()> {
         || !segment(name, true)
         || value
             .get("version")
-            .is_some_and(|value| !value.is_string())
+            .is_some_and(|value| {
+                value
+                    .as_str()
+                    .map(str::trim)
+                    .is_none_or(|ver| ver.is_empty() || ver.len() > 256 || ver.contains('\0'))
+            })
     {
         return Err(invalid("unsupported component identity"));
     }
