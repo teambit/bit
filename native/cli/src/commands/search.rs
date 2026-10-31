@@ -182,7 +182,12 @@ fn apply_search_arg(str_arg: &str, parsed: &mut SearchArgs) -> Option<()> {
             (parsed.local_only, parsed.remote_only, parsed.json) = (true, true, true);
         }
         query if query.starts_with('-') => return None,
-        query => parsed.queries.push(query.to_owned()),
+        query => {
+            let trimmed = query.trim();
+            if !trimmed.is_empty() {
+                parsed.queries.push(trimmed.to_owned());
+            }
+        }
     }
     Some(())
 }
@@ -193,8 +198,11 @@ fn consume_trailing_search_queries<'a>(
 ) -> Option<()> {
     for arg in iter {
         let query = arg.to_str()?;
-        (!query.is_empty() && !query.starts_with('-')).then_some(())?;
-        queries.push(query.to_owned());
+        (!query.starts_with('-')).then_some(())?;
+        let trimmed = query.trim();
+        if !trimmed.is_empty() {
+            queries.push(trimmed.to_owned());
+        }
     }
     Some(())
 }

@@ -87,15 +87,19 @@ fn format_lifecycle_deps(deps: &[DepEntry], lifecycle: &str) -> String {
         return String::new();
     }
     filtered.sort_by(|left, right| left.id.cmp(&right.id));
-    let longest = filtered
+    let labels = filtered
         .iter()
-        .map(|dep| dep.id.len() + 1 + dep.version.len())
+        .copied()
+        .map(dep_label)
+        .collect::<Vec<_>>();
+    let longest = labels
+        .iter()
+        .map(String::len)
         .max()
         .unwrap_or(50);
     let pad_width = longest + 1;
     let mut out = Vec::with_capacity(filtered.len() * 2);
-    for dep in filtered {
-        let name_ver = format!("{}@{}", dep.id, dep.version);
+    for (dep, name_ver) in filtered.into_iter().zip(labels) {
         let padded = format!("{name_ver:-<pad_width$}");
         let opt_tag = if dep.optional { "(optional)" } else { "" };
         out.push(format!("{padded} ({}){opt_tag}", dep.dep_type));
@@ -104,6 +108,14 @@ fn format_lifecycle_deps(deps: &[DepEntry], lifecycle: &str) -> String {
         }
     }
     out.join("\n")
+}
+
+fn dep_label(dep: &DepEntry) -> String {
+    if dep.dep_type == "component" && dep.id.contains('@') {
+        dep.id.clone()
+    } else {
+        format!("{}@{}", dep.id, dep.version)
+    }
 }
 
 fn component_dep_list(deps: &[DepEntry], lifecycle: &str) -> Vec<Value> {

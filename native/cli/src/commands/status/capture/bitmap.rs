@@ -33,7 +33,11 @@ pub(super) fn record_remote(
 ) -> io::Result<()> {
     if enabled && extensions.iter().any(is_remotely_removed_extension) {
         let identity = text(target.get("identity"))?.trim();
-        if !identity.is_empty() {
+        if !identity.is_empty()
+            && !captured.remotely_removed
+                .iter()
+                .any(|existing| existing == identity)
+        {
             captured.remotely_removed.push(identity.to_string());
         }
     }
@@ -42,5 +46,5 @@ pub(super) fn record_remote(
 
 fn is_remotely_removed_extension(extension: &Value) -> bool {
     crate::commands::update_cmd::matches_aspect(extension, "teambit.component/remove")
-        && extension["config"]["removed"] == true
+        && (extension["config"]["removed"] == true || extension["data"]["removed"] == true)
 }

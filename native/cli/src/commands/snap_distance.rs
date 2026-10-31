@@ -38,24 +38,34 @@ fn is_hex40(text: &str) -> bool {
     trimmed.len() == 40 && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
+fn is_ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+        })
+}
+
 fn parse_options(args: &[&str]) -> Option<Options> {
     let positional = super::scope_set::collect_non_flag_tokens(args)?;
     match positional.as_slice() {
-        [id] if !id.is_empty() => {
-            Some(Options { id: (*id).to_owned(), source_snap: None, target_snap: None })
+        [id] if !id.trim().is_empty() => {
+            Some(Options { id: id.trim().to_owned(), source_snap: None, target_snap: None })
         }
-        [id, source_snap] if !id.is_empty() && !source_snap.is_empty() => Some(Options {
-            id: (*id).to_owned(),
-            source_snap: Some((*source_snap).to_owned()),
+        [id, src] if !id.trim().is_empty() && !src.trim().is_empty() => Some(Options {
+            id: id.trim().to_owned(),
+            source_snap: Some(src.trim().to_owned()),
             target_snap: None,
         }),
-        [id, source_snap, target_snap]
-            if !id.is_empty() && is_hex40(source_snap) && is_hex40(target_snap) =>
-        {
+        [id, src, dst] if !id.trim().is_empty() && is_hex40(src) && is_hex40(dst) => {
             Some(Options {
-                id: (*id).to_owned(),
-                source_snap: Some((*source_snap).to_owned()),
-                target_snap: Some((*target_snap).to_owned()),
+                id: id.trim().to_owned(),
+                source_snap: Some(src.trim().to_owned()),
+                target_snap: Some(dst.trim().to_owned()),
             })
         }
         _ => None,
@@ -78,8 +88,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(result) = evaluate_snap_distance(&root, &opts) else {
         return Ok(Outcome::Declined("snap-distance delegated".into()));
     };
-    let data = serde_json::to_string_pretty(&result)?;
-    emit_text(&root, args, "snap-distance", true, data)
+    emit_text(&root, args, "snap-distance", true, serde_json::to_string_pretty(&result)?)
 }
 
 fn validate_target(
@@ -94,7 +103,7 @@ fn validate_target(
         return emit_missing_target_error(root, args).map(Some);
     }
     if resolve_component_entry(&scope_dir, bare).is_none_or(|(sc, _, _)| sc.is_none()) {
-        if env::var_os("CI").is_none_or(|val| val.is_empty())
+        if !is_ci_active()
             && let Some(err) =
                 diagnose_component_lookup_error(&scope_dir, &opts.id, bare, Chalk::detect(args))
         {
@@ -102,19 +111,14 @@ fn validate_target(
         }
         return Ok(Some(Outcome::Declined("snap-distance component lookup delegated".into())));
     }
-    if missing_target {
-        return emit_missing_target_error(root, args).map(Some);
-    }
-    Ok(None)
+    missing_target.then(|| emit_missing_target_error(root, args)).transpose()
 }
 
 fn is_valid_scoped_id(raw_id: &str, bare: &str) -> bool {
     !raw_id.starts_with('@')
         && bare
             .split_once('/')
-            .is_some_and(|(scope, name)| {
-                !scope.is_empty() && !name.is_empty() && !name.contains('/')
-            })
+            .is_some_and(|(sc, nm)| !sc.is_empty() && !nm.is_empty() && !nm.contains('/'))
 }
 
 fn evaluate_snap_distance(root: &ScopeRoot, opts: &Options) -> Option<Value> {
@@ -125,13 +129,9 @@ fn evaluate_snap_distance(root: &ScopeRoot, opts: &Options) -> Option<Value> {
     };
     let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
     match (&opts.source_snap, &opts.target_snap) {
-        (Some(source), Some(target)) => {
-            let vh_val = load_version_history_with_local_versions(
-                &scope_dir,
-                &vh_hash,
-                &[source.as_str(), target.as_str()],
-            )?;
-            compute_snap_distance(&vh_val, source, target)
+        (Some(src), Some(dst)) => {
+            let vh = load_version_history_with_local_versions(&scope_dir, &vh_hash, &[src, dst])?;
+            compute_snap_distance(&vh, src, dst)
         }
         (None, None) => {
             compute_local_remote_distance(root, &scope_dir, &scope, &name, &comp_hash, &vh_hash)
@@ -141,7 +141,7 @@ fn evaluate_snap_distance(root: &ScopeRoot, opts: &Options) -> Option<Value> {
 }
 
 fn emit_missing_target_error(root: &ScopeRoot, args: &[OsString]) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if is_ci_active() {
         return Ok(Outcome::Declined("CI snap-distance error stack".into()));
     }
     emit_failure(

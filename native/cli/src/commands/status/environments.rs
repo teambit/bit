@@ -94,6 +94,15 @@ impl Environments {
         root: &Path,
         component_ids: &[String],
     ) -> io::Result<String> {
+        let component_ids = component_ids
+            .iter()
+            .map(String::as_str)
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .collect::<Vec<_>>();
+        if component_ids.is_empty() {
+            return Ok(String::new());
+        }
         let host = self.host(root)?;
         host.call("mergeLoadApps", &json!({"componentIds":component_ids}))?;
         Ok(host.take_stdout())

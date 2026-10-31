@@ -153,7 +153,13 @@ fn preflight_tracked(root: &Path, versions: &Value) -> io::Result<()> {
             .iter()
             .find(|target| target["identity"] == version["identity"])
             .ok_or_else(|| decline("stash tracked component requires canonical bitmap recovery"))?;
-        let directory = text(target.get("directory"))?;
+        let directory = text(
+            target
+                .get("directory")
+                .or_else(|| target.get("rootDir")),
+        )?
+        .trim()
+        .trim_start_matches("./");
         if target["version"].as_str().is_none_or(str::is_empty) {
             return Err(decline("stash tracked component requires canonical version recovery"));
         }

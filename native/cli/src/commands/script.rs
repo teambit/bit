@@ -40,10 +40,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native script grammar".into()));
     };
-    if !options.list
-        && options.script_name.is_none()
-        && env::var_os("CI").is_none_or(|val| val.is_empty())
-    {
+    if !options.list && options.script_name.is_none() && !is_ci_active() {
         return missing_script_outcome(args);
     }
     let cwd = env::current_dir()?;
@@ -111,7 +108,7 @@ fn finish_script_outcome(
             Ok(Report { data, code: 0, details: None })
         }),
         Err(ScriptFailure::User(message)) => {
-            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            if is_ci_active() {
                 return Ok(Outcome::Declined("CI script error stack".into()));
             }
             workspace_command::execute_without_loader(root, args, "script", |_| {
@@ -120,6 +117,18 @@ fn finish_script_outcome(
         }
         Err(ScriptFailure::Declined(reason)) => Ok(Outcome::Declined(format!("script: {reason}"))),
     }
+}
+
+fn is_ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+        })
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

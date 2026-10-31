@@ -34,7 +34,7 @@ fn presentation(argv: &[&str]) -> Option<(ExitCode, Option<&'static str>)> {
         rest => (false, rest),
     };
     let (help, flags) = match flags {
-        [rest @ .., "--help" | "-h"] => (true, rest),
+        [rest @ .., "--help" | "-h"] | ["--help" | "-h", rest @ ..] => (true, rest),
         rest => (false, rest),
     };
     if !flags

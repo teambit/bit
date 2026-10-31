@@ -31,7 +31,7 @@ fn snapshot_file_path(file: &Value) -> io::Result<String> {
         file.get("relativePath")
             .or_else(|| file.get("path"))
     };
-    let path = text(value)?.trim();
+    let path = text(value)?.trim().trim_start_matches("./");
     if path.is_empty() {
         return Err(decline("snapshot file path"));
     }

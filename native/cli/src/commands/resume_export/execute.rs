@@ -147,8 +147,9 @@ fn extract_export_id(value: &Value) -> Option<String> {
     value
         .as_str()
         .or_else(|| value.get("id").and_then(Value::as_str))
+        .or_else(|| value.get("componentId").and_then(Value::as_str))
         .or_else(|| value.get("name").and_then(Value::as_str))
-        .map(str::trim)
+        .map(|text| text.trim().trim_matches('/'))
         .filter(|text| !text.is_empty())
         .map(str::to_owned)
 }

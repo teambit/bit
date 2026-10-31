@@ -53,6 +53,7 @@ pub(super) fn probe(
     probe: &Answers,
     to_clear: &[String],
 ) -> String {
+    let export_id = export_id.trim();
     Formatter::join(&[
         formatter.section("pending objects to delete", &format!(r#"(of the export-id "{export_id}")"#), &to_clear.iter().map(|name| formatter.item(name)).collect::<Vec<_>>()),
         formatter.section(&format!("{} scopes that no longer hold these objects", formatter.warn_symbol()),
@@ -71,6 +72,7 @@ pub(super) fn result(
     probe: &Answers,
     result: Answers,
 ) -> io::Result<String> {
+    let export_id = export_id.trim();
     let mut failed = probe.failed.clone();
     failed.extend(result.failed);
     let cleared = result.present.len() + result.unknown.len();

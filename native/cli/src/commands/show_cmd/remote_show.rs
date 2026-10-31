@@ -49,9 +49,10 @@ pub(super) fn try_run(
 }
 
 pub(super) fn load_from_local_scope(scope_dir: &Path, raw_id: &str) -> Option<LoadedComponent> {
+    let raw_id = raw_id.trim();
     let (bare_id, explicit_ver) = raw_id
         .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+        .map_or((raw_id, None), |(id, ver)| (id.trim(), Some(ver.trim())));
     if bare_id.is_empty() || explicit_ver == Some("") {
         return None;
     }
@@ -74,18 +75,19 @@ pub(super) fn remote_has_version(root: &Path, scope_name: &str, name: &str, ver:
 }
 
 fn split_remote_id(raw_id: &str) -> Option<(&str, &str, Option<&str>)> {
-    let raw_id = raw_id.trim();
+    let raw_id = raw_id.trim().trim_matches('/');
     if raw_id.starts_with('@') {
         return None;
     }
     let (bare_id, explicit_ver) = raw_id
         .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+        .map_or((raw_id, None), |(id, ver)| (id.trim(), Some(ver.trim())));
     if explicit_ver == Some("") {
         return None;
     }
     let (scope_name, comp_name) = bare_id.split_once('/')?;
-    if scope_name.is_empty() || comp_name.is_empty() {
+    let (scope_name, comp_name) = (scope_name.trim(), comp_name.trim().trim_matches('/'));
+    if scope_name.is_empty() || comp_name.is_empty() || comp_name.contains("//") {
         return None;
     }
     Some((scope_name, comp_name, explicit_ver))

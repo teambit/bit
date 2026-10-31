@@ -27,9 +27,7 @@ pub fn commit(
     if capture.environment_facts["importDependencyCachePublished"] != true
         && !capture.cache.is_empty()
     {
-        let entries = capture.cache.entries();
-        let reset = checkout_reset(capture);
-        fresh::commit(engine, root, &entries, reset, !capture.cache.no_fs_cache)?;
+        commit_pending_cache(engine, root, capture)?;
     }
     if plans.is_empty() {
         return Ok(());
@@ -41,6 +39,15 @@ pub fn commit(
         || written.is_none_or(|written| written > plans.len() as u64)
     {
         return Err(decline("status history commit receipt"));
+    }
+    Ok(())
+}
+
+fn commit_pending_cache(engine: &mut Engine, root: &Path, capture: &Capture) -> io::Result<()> {
+    let entries = capture.cache.entries();
+    let reset = checkout_reset(capture);
+    if !entries.is_empty() || reset {
+        fresh::commit(engine, root, &entries, reset, !capture.cache.no_fs_cache)?;
     }
     Ok(())
 }

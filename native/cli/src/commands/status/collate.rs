@@ -26,7 +26,8 @@ pub fn root_locale() -> bool {
         })
         .unwrap_or_default();
     let language = locale
-        .split(['_', '.', '@', '-'])
+        .trim_start_matches(['_', '.', '@', '-', ':'])
+        .split(['_', '.', '@', '-', ':'])
         .next()
         .unwrap_or_default()
         .trim();
@@ -59,6 +60,8 @@ pub fn supported(text: &str) -> bool {
 /// The root collation order of two supported strings: primary weights
 /// first, then case, lowercase before uppercase.
 pub fn compare(left: &str, right: &str) -> Ordering {
+    let left = left.trim();
+    let right = right.trim();
     let weights = |text: &str| {
         text.chars()
             .filter_map(primary)

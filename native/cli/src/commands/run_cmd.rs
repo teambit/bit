@@ -116,7 +116,11 @@ pub(super) fn help_option(chalk: Chalk, short: &str, long: &str) -> String {
 pub(super) fn is_help_form(args: &[&str]) -> bool {
     match args {
         ["--help" | "-h"] => true,
-        [name, "--help" | "-h"] if !name.is_empty() && !name.starts_with('-') => true,
+        [name, "--help" | "-h"] | ["--help" | "-h", name]
+            if !name.trim().is_empty() && !name.starts_with('-') =>
+        {
+            true
+        }
         _ => false,
     }
 }

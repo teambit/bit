@@ -128,7 +128,10 @@ impl Session<'_> {
                 return Err(decline("switch callback continuation has no targets"));
             }
             for item in needed {
-                let needed_id = text(Some(item))?;
+                let needed_id = text(Some(item))?.trim();
+                if needed_id.is_empty() {
+                    return Err(decline("switch callback needed target identity"));
+                }
                 self.scan_once(needed_id, by_id, scanned, capture)?;
                 self.environments.switch_stage_row(self.context, capture, needed_id)?;
             }

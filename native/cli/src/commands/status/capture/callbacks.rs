@@ -38,7 +38,11 @@ impl CacheWrites {
     }
 
     pub(in crate::commands::status) fn retain_callback_proofs(&mut self, proofs: &[Value]) {
-        self.environment_reads.extend(proofs.iter().cloned());
+        for proof in proofs {
+            if !self.environment_reads.contains(proof) {
+                self.environment_reads.push(proof.clone());
+            }
+        }
     }
 
     pub(in crate::commands::status) fn retain_callback_stdout(&self, output: &str) {

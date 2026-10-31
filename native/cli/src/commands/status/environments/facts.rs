@@ -165,13 +165,18 @@ fn registered(component: &WorkspaceComponent, registrations: &Value) -> Vec<Valu
     component.config
         .keys()
         .filter_map(|id| {
+            let id = id.trim();
+            if id.is_empty() {
+                return None;
+            }
             registrations
                 .as_array()?
                 .iter()
                 .find(|entry| {
                     entry[0]
                         .as_str()
-                        .is_some_and(|registrar| registrar == id || registrar.contains(id.as_str()))
+                        .map(str::trim)
+                        .is_some_and(|registrar| registrar == id || registrar.contains(id))
                 })
                 .map(|entry| entry[1].clone())
         })

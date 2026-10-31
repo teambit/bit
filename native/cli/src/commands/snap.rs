@@ -54,7 +54,10 @@ fn outside_workspace_snap(
         .is_some_and(|val| {
             let text = val.to_string_lossy();
             let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            !trimmed.is_empty()
+                && trimmed != "0"
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
         })
     {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));

@@ -74,9 +74,9 @@ fn apply_arg<'a>(
 
 fn apply_scope_rename_flag(arg: &str, options: &mut Options) -> Option<()> {
     match arg {
-        "--preserve" | "--preserve=true" => options.preserve = true,
+        "-p" | "--preserve" | "--preserve=true" => options.preserve = true,
         "--preserve=false" => options.preserve = false,
-        "--deprecate" | "--deprecate=true" => options.deprecate = true,
+        "-d" | "--deprecate" | "--deprecate=true" => options.deprecate = true,
         "--deprecate=false" => options.deprecate = false,
         "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
             options.skip_install = true;

@@ -157,20 +157,25 @@ fn resolve_relative_import(
         .parent()
         .map_or_else(PathBuf::new, Path::to_path_buf);
     let resolved = normalize_rel_path(&base_dir.join(raw_spec));
-    if !entry.root_dir.is_empty() && resolved.starts_with(entry.root_dir.trim_end_matches('/')) {
+    if path_within_dir(&resolved, &entry.root_dir) {
         return;
     }
     let Some((_, other)) = ws
         .active()
-        .find(|(_, comp)| {
-            comp.id != entry.id
-                && !comp.root_dir.is_empty()
-                && resolved.starts_with(comp.root_dir.trim_end_matches('/'))
-        })
+        .find(|(_, comp)| comp.id != entry.id && path_within_dir(&resolved, &comp.root_dir))
     else {
         return;
     };
     add_workspace_component_dep(other, Some((rel_file, &other.main_file)), deps);
+}
+
+fn path_within_dir(resolved: &str, root_dir: &str) -> bool {
+    let dir = root_dir.trim().trim_matches('/');
+    !dir.is_empty()
+        && (resolved == dir
+            || resolved
+                .strip_prefix(dir)
+                .is_some_and(|rest| rest.starts_with('/')))
 }
 
 fn normalize_rel_path(path: &Path) -> String {

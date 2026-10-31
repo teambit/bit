@@ -75,13 +75,13 @@ fn mode(args: &[OsString]) -> Option<Mode> {
         .filter(|arg| !is_mode_flag(arg))
         .collect::<Vec<_>>();
     let flags = report::parse(&report_args)?;
-    if quick {
-        Some(Mode::Quick(json))
+    Some(if quick {
+        Mode::Quick(json)
     } else if json {
-        Some(Mode::Json(flags))
+        Mode::Json(flags)
     } else {
-        Some(Mode::Report(flags))
-    }
+        Mode::Report(flags)
+    })
 }
 
 fn is_mode_flag(arg: &str) -> bool {
@@ -96,7 +96,12 @@ fn is_mode_flag(arg: &str) -> bool {
             | "--quick=false"
             | "--no-color"
             | "--no-color=true"
-            | "--no-color=false",
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
     )
 }
 

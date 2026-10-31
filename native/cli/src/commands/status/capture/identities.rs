@@ -29,7 +29,7 @@ pub(super) fn record(
         entry["trackingVersion"] = version.clone();
     }
     captured.dependency_states.insert(
-        text(target.get("identity"))?.to_string(),
+        text(target.get("identity"))?.trim().to_string(),
         dependencies["state"].clone(),
     );
     let mut row = entry.clone();

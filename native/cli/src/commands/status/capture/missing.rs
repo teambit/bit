@@ -86,10 +86,10 @@ pub(super) fn status_invalid_files(
         record_status_invalid(target, error, captured)?;
         return Ok(true);
     }
-    let main = text(target.get("mainFile"))?.trim();
+    let main = text(target.get("mainFile"))?.trim().trim_start_matches("./");
     if files
         .iter()
-        .any(|file| file.trim() == main)
+        .any(|file| file.trim().trim_start_matches("./") == main)
         || !missing(&root.join(directory).join(main))?
     {
         return Ok(false);

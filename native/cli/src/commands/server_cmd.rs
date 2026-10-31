@@ -22,7 +22,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native server grammar".into()));
     }
-    if env::var_os("CI").is_none_or(|val| val.is_empty()) {
+    if !env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+        })
+    {
         let cwd = env::current_dir()?;
         if workspace::root(&cwd).is_none() {
             let msg = format!(
@@ -57,7 +66,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 if let Some(&next) = args.get(idx + 1)
                     && !next.starts_with('-')
                 {
-                    options.port = Some(next.trim().parse::<u16>().ok()?);
+                    let parsed = next.trim().parse::<u16>().ok()?;
+                    (parsed >= 1).then_some(())?;
+                    options.port = Some(parsed);
                     idx += 1;
                 }
             }
@@ -65,7 +76,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 .strip_prefix("--port=")
                 .or_else(|| val.strip_prefix("-p=")) =>
             {
-                options.port = Some(port.trim().parse::<u16>().ok()?);
+                let parsed = port.trim().parse::<u16>().ok()?;
+                (parsed >= 1).then_some(())?;
+                options.port = Some(parsed);
             }
             _ => return None,
         }

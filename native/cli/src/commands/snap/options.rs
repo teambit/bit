@@ -77,7 +77,7 @@ impl Options {
         if self.pattern.is_some() || !pattern(text) {
             return None;
         }
-        self.pattern = Some(text.to_string());
+        self.pattern = Some(text.trim().to_string());
         Some(())
     }
 

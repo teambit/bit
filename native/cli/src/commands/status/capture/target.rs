@@ -48,8 +48,15 @@ impl Scan<'_> {
         policy: &policy::Policy,
         captured: &mut Capture,
     ) -> io::Result<()> {
+        let files = files
+            .iter()
+            .map(String::as_str)
+            .map(str::trim)
+            .filter(|file| !file.is_empty())
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
         if self.behavior.missing_status_invalid
-            && missing::status_invalid_files(self.root, target, directory, files, captured)?
+            && missing::status_invalid_files(self.root, target, directory, &files, captured)?
         {
             return Ok(());
         }
@@ -58,17 +65,18 @@ impl Scan<'_> {
             self.behavior.missing_checkout_reset,
             target,
             directory,
-            files,
+            &files,
             captured,
         )? {
             return Ok(());
         }
-        let Some(mut dependencies) = self.dependencies(target, directory, files, policy, captured)?
+        let Some(mut dependencies) =
+            self.dependencies(target, directory, &files, policy, captured)?
         else {
             return Ok(());
         };
         super::super::environments::diagnostics::issues(self.context, target, &mut dependencies)?;
-        record(target, directory, files, policy, &dependencies, captured)?;
+        record(target, directory, &files, policy, &dependencies, captured)?;
         bitmap::record_remote(
             self.behavior.missing_status_invalid,
             target,

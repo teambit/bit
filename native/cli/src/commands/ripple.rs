@@ -115,16 +115,19 @@ fn diagnose_simulate_lane_flag(
     current_lane: Option<&str>,
     is_exported: bool,
 ) -> Option<String> {
+    let lane = lane.trim();
     if lane == "main" {
         return Some(default_lane_err(lane));
     }
     let Some((_, name)) = lane
         .split_once('/')
-        .filter(|(scope_str, name_str)| !scope_str.is_empty() && !name_str.is_empty())
+        .filter(|(scope_str, name_str)| {
+            !scope_str.trim().is_empty() && !name_str.trim().is_empty() && !name_str.contains('/')
+        })
     else {
         return Some(invalid_lane_err(lane));
     };
-    if name == "main" {
+    if name.trim() == "main" {
         return Some(default_lane_err(lane));
     }
     (current_lane == Some(lane) && !is_exported).then(|| never_exported_err(lane))

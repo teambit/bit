@@ -63,11 +63,10 @@ pub(super) async fn run(
 }
 
 fn confirm(formatter: &Formatter, export_id: &str, count: usize) -> io::Result<()> {
+    let export_id = export_id.trim();
     if !io::stdout().is_terminal()
         || !io::stdin().is_terminal()
-        || ["CI", "CLAUDECODE", "CLAUDE_CODE", "CURSOR_AGENT"]
-            .iter()
-            .any(|key| env::var_os(key).is_some())
+        || ["CI", "CLAUDECODE", "CLAUDE_CODE", "CURSOR_AGENT"].iter().any(|key| is_truthy_env(key))
     {
         return Err(io::Error::other(
             "unable to prompt for confirmation in a non-interactive terminal.\nreview the list above and re-run with \"--force\" to delete",
@@ -83,12 +82,25 @@ fn confirm(formatter: &Formatter, export_id: &str, count: usize) -> io::Result<(
     Ok(())
 }
 
+fn is_truthy_env(key: &str) -> bool {
+    env::var_os(key)
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+        })
+}
+
 async fn ask(
     plans: &[Arc<Plan>],
     names: &[String],
     export_id: &str,
     delete: bool,
 ) -> io::Result<Answers> {
+    let export_id = export_id.trim();
     let mut answers = Answers::default();
     let limit = plans
         .first()

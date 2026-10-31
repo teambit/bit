@@ -224,10 +224,11 @@ fn parse_diff_options(args: &[&str]) -> Option<DiffOptions> {
                 consume_trailing_schema_args(iter, &mut positional)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
+            val if !val.starts_with('-') && !val.trim().is_empty() => positional.push(val.trim()),
             _ => return None,
         }
     }
@@ -272,8 +273,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-rj" | "-jr" => (remote, json) = (true, true),
-            val if !val.starts_with('-') && !val.is_empty() && val != "diff" => {
-                positional.push(val);
+            val if !val.starts_with('-') && !val.trim().is_empty() && val.trim() != "diff" => {
+                positional.push(val.trim());
             }
             _ => return None,
         }

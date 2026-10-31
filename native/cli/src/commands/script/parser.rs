@@ -250,15 +250,20 @@ fn strip_leading_comments(mut text: &str) -> &str {
 
 fn find_top_level_colon(text: &str) -> Option<usize> {
     let bytes = text.as_bytes();
+    let mut depth = 0usize;
     let mut idx = 0usize;
     while idx < bytes.len() {
         if let Some(next_idx) = skip_token(bytes, idx) {
             idx = next_idx;
-        } else if bytes[idx] == b':' {
-            return Some(idx);
-        } else {
-            idx += 1;
+            continue;
         }
+        match bytes[idx] {
+            b'(' | b'[' | b'{' => depth += 1,
+            b')' | b']' | b'}' => depth = depth.saturating_sub(1),
+            b':' if depth == 0 => return Some(idx),
+            _ => {}
+        }
+        idx += 1;
     }
     None
 }

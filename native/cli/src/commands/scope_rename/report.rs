@@ -23,10 +23,18 @@ pub(super) fn render(
             plan.identity.target.trim(),
         )));
     }
-    let changed = refactored
+    let mut seen = Vec::new();
+    for id in refactored
         .iter()
         .map(|id| id.trim())
         .filter(|id| !id.is_empty())
+    {
+        if !seen.contains(&id) {
+            seen.push(id);
+        }
+    }
+    let changed = seen
+        .into_iter()
         .map(|id| format.item(id))
         .collect::<Vec<_>>();
     Ok(Formatter::join(&[

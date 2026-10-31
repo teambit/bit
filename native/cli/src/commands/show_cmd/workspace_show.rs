@@ -329,11 +329,14 @@ fn find_component<'a>(
 fn matches_entry(entry: &BitmapEntry, raw_id: &str) -> bool {
     let raw_id = raw_id.trim();
     let normalized = inventory::normalize(raw_id);
-    let dir = normalized.strip_prefix("./").unwrap_or(&normalized);
+    let dir = normalized
+        .strip_prefix("./")
+        .unwrap_or(&normalized)
+        .trim_end_matches('/');
     entry.id.to_string_without_version() == raw_id
         || entry.id.name == raw_id
         || entry.key == raw_id
-        || (!entry.root_dir.is_empty() && entry.root_dir == dir)
+        || (!entry.root_dir.is_empty() && entry.root_dir.trim_end_matches('/') == dir)
 }
 
 fn is_supported_component(entry: &BitmapEntry, component: &WorkspaceComponent) -> bool {

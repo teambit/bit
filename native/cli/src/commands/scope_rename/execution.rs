@@ -70,11 +70,14 @@ fn prepare(
 
 fn install(root: &Path, linker: &mut ProjectedLinker) -> io::Result<()> {
     if let Err(error) = linker.install_scope_rename(root) {
-        linker.call(
-            root,
-            "renameTooling",
-            &json!({"action":"installFailure","message":error.to_string().trim()}),
-        )?;
+        let text = error.to_string();
+        let trimmed = text.trim();
+        let message = if trimmed.is_empty() {
+            "scope rename dependency installation failed"
+        } else {
+            trimmed
+        };
+        linker.call(root, "renameTooling", &json!({"action":"installFailure","message":message}))?;
     }
     print!("{}", linker.take_stdout());
     Ok(())

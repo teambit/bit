@@ -18,14 +18,17 @@ pub(super) fn supported(
     aspects: &[String],
 ) -> bool {
     !component.is_env
-        && bit_install::policy::split_version(&component.env_id).0 == "teambit.react/react"
+        && bit_install::policy::split_version(component.env_id.trim()).0 == "teambit.react/react"
         && aspects.is_empty()
         && component.config
             .keys()
             .all(|id| {
-                let bare = bit_install::policy::split_version(id).0;
-                (core.contains(id) || core.iter().any(|item| item == bare))
-                    && (!bit_install::policy::is_core_env(id) || bare == "teambit.react/react")
+                let trimmed = id.trim();
+                let bare = bit_install::policy::split_version(trimmed).0;
+                (core
+                    .iter()
+                    .any(|item| item == trimmed || item == bare))
+                    && (!bit_install::policy::is_core_env(trimmed) || bare == "teambit.react/react")
             })
 }
 

@@ -99,9 +99,10 @@ pub(super) fn switch_begin(
 }
 
 fn switch_component(context: &Value, capture: &Capture, identity: &str) -> io::Result<Value> {
+    let identity = identity.trim();
     component_rows(capture, context)?
         .into_iter()
-        .find(|row| row["identity"] == identity)
+        .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
         .ok_or_else(|| decline("switch callback target missing"))
 }
 
@@ -143,8 +144,9 @@ pub(super) fn switch_accept(
     result: &Value,
     identity: &str,
 ) -> io::Result<()> {
+    let identity = identity.trim();
     let row = result.get("row").ok_or_else(|| decline("switch callback row receipt"))?;
-    if row["identity"] != identity {
+    if row["identity"].as_str().map(str::trim) != Some(identity) {
         return Err(decline("switch callback target changed"));
     }
     apply(capture, row)

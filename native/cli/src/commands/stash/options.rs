@@ -32,7 +32,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
         "save" | "s" => save(rest),
         "list" if matches!(rest, [] | ["--"]) => Some(Options::List),
         "load" | "pop" => load(rest),
-        sub if !sub.is_empty() && !sub.starts_with('-') && rest.is_empty() => {
+        sub if !sub.is_empty() && !sub.starts_with('-') && matches!(rest, [] | ["--"]) => {
             Some(Options::Unrecognized(sub.to_owned()))
         }
         _ => None,
@@ -73,7 +73,7 @@ fn apply_save_arg<'a>(
         return Some(());
     }
     match arg {
-        "--include-new" | "--include-new=true" => *include_new = true,
+        "-i" | "--include-new" | "--include-new=true" => *include_new = true,
         "--include-new=false" => *include_new = false,
         "-m" | "--message" => {
             let value = iter

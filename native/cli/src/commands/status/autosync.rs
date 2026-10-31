@@ -125,7 +125,7 @@ fn git_dir_head(git: &Path) -> Option<String> {
     let head = head.trim();
     if let Some(reference) = head.strip_prefix("ref:") {
         let reference = reference.trim();
-        if reference.is_empty() {
+        if reference.is_empty() || reference.starts_with('/') || reference.contains("..") {
             return None;
         }
         let value = fs::read_to_string(git.join(reference)).ok()?;

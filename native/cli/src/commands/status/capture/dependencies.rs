@@ -53,7 +53,8 @@ impl Scan<'_> {
                 .or_else(|| target.get("id")),
         )?
         .trim();
-        let mut dependencies = if directory.trim() == "."
+        let is_root = matches!(directory.trim().trim_start_matches("./"), "" | ".");
+        let mut dependencies = if is_root
             || captured.cache.no_fs_cache
             || captured.cache.reset
             || (!self.environments.is_checkout()

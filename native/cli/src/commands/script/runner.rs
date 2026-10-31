@@ -118,21 +118,22 @@ pub(super) fn read_allowed_envs(ws_jsonc: &Value) -> Vec<String> {
 }
 
 pub(super) fn is_env_allowed(env_id: &str, allowed_envs: &[String]) -> bool {
-    let env_id = env_id.trim();
+    let env_id = env_id.trim().trim_matches('/');
+    if env_id.is_empty() {
+        return false;
+    }
+    let bare_env = aspect_id_without_version(env_id);
     allowed_envs
         .iter()
         .any(|allowed| {
-            let allowed = allowed.trim();
+            let allowed = allowed.trim().trim_matches('/');
+            if allowed.is_empty() {
+                return false;
+            }
             if env_id == allowed {
                 return true;
             }
-            if !allowed.is_empty() && !allowed.contains('@') {
-                let prefix = format!("{allowed}@");
-                if env_id.starts_with(&prefix) {
-                    return true;
-                }
-            }
-            false
+            !allowed.contains('@') && bare_env == allowed
         })
 }
 

@@ -217,10 +217,14 @@ fn used_extensions(components: &[WorkspaceComponent]) -> Vec<Value> {
         .map(|component| {
             let mut used = component.config
                 .keys()
-                .cloned()
+                .map(String::as_str)
+                .map(str::trim)
+                .filter(|key| !key.is_empty())
+                .map(str::to_owned)
                 .collect::<Vec<_>>();
-            if !component.env_id.trim().is_empty() && !used.contains(&component.env_id) {
-                used.push(component.env_id.clone());
+            let env_id = component.env_id.trim();
+            if !env_id.is_empty() && !used.iter().any(|item| item == env_id) {
+                used.push(env_id.to_owned());
             }
             json!({"id":component.id.to_string_without_version(),"usedIds":used})
         })

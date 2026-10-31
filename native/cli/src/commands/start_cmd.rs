@@ -73,15 +73,22 @@ fn ci_enabled() -> bool {
         .is_some_and(|val| {
             let text = val.to_string_lossy();
             let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            !trimmed.is_empty()
+                && trimmed != "0"
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
         })
 }
 
 fn consume_trailing_start_pattern(rest: &[&str], pattern: &mut Option<String>) -> Option<()> {
     for &val in rest {
         let val = val.trim();
-        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
-            .then_some(())?;
+        (!val.is_empty()
+            && !val.starts_with('-')
+            && val.len() <= 4096
+            && !val.contains('\0')
+            && pattern.replace(val.to_owned()).is_none())
+        .then_some(())?;
     }
     Some(())
 }

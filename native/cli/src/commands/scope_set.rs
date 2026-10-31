@@ -93,22 +93,19 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?
         .into_iter()
-        .filter(|token| !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false"))
+        .filter(|tok| !tok.starts_with("--no-color") && !tok.starts_with("--color"))
         .collect::<Vec<_>>();
-    let (&"set", rest) = tokens.split_first()? else {
-        return None;
-    };
+    let (&"set", rest) = tokens.split_first()? else { return None };
     let positional = collect_non_flag_tokens(rest)?;
     let (scope_name, pattern) = match positional.as_slice() {
-        [scope] if !scope.is_empty() => ((*scope).to_owned(), None),
-        [scope, pattern] if !scope.is_empty() && !pattern.is_empty() => {
-            if pattern.contains(['$', ':', '@'])
-                || pattern.contains(" AND ")
-                || pattern.starts_with("teambit.")
+        [scope] if !scope.trim().is_empty() => (scope.trim().to_owned(), None),
+        [scope, pat] if !scope.trim().is_empty() && !pat.trim().is_empty() => {
+            let pat = pat.trim();
+            if pat.contains(['$', ':', '@']) || pat.contains(" AND ") || pat.starts_with("teambit.")
             {
                 return None;
             }
-            ((*scope).to_owned(), Some((*pattern).to_owned()))
+            (scope.trim().to_owned(), Some(pat.to_owned()))
         }
         _ => return None,
     };

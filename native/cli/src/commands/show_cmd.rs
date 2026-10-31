@@ -37,6 +37,7 @@ fn is_ci_active() -> bool {
             !trimmed.is_empty()
                 && !trimmed.eq_ignore_ascii_case("0")
                 && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
         })
 }
 

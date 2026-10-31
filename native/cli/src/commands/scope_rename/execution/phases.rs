@@ -185,10 +185,11 @@ fn order_changed(bitmap: &Value, order: &[String], changed: &[String]) -> io::Re
 fn row_version_or_id(id: &str, key: &str, row: &Value) -> String {
     row["version"]
         .as_str()
+        .map(str::trim)
         .filter(|version| !version.is_empty())
         .or_else(|| {
             key.rsplit_once('@')
-                .map(|(_, ver)| ver)
+                .map(|(_, ver)| ver.trim())
                 .filter(|ver| !ver.is_empty())
         })
         .map_or_else(|| id.to_owned(), |version| format!("{id}@{version}"))
@@ -199,6 +200,8 @@ fn requested(entries: &Entries, index: usize, owner: bool) -> io::Result<String>
     Ok(if owner {
         identity.source_version
             .as_deref()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
             .map_or_else(
                 || identity.target.clone(),
                 |version| format!("{}@{version}", identity.target),

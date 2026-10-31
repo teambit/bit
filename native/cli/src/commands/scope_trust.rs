@@ -105,9 +105,12 @@ fn parse_tokens(args: &[OsString]) -> Option<Vec<String>> {
 }
 
 fn parse_action(tokens: &[String]) -> Result<Action, Failure> {
-    let raw_action = tokens.first().map_or("list", String::as_str);
+    let raw_action = tokens.first().map_or("list", |action| action.trim());
     let pattern = tokens.get(1).cloned();
     match raw_action {
+        "list" | "enable" | "disable" if pattern.is_some() => {
+            Err(Failure::Declined("unexpected pattern argument".to_owned()))
+        }
         "list" => Ok(Action::List),
         "enable" => Ok(Action::Enable),
         "disable" => Ok(Action::Disable),

@@ -34,7 +34,12 @@ pub fn no_fs_cache(root: &Path) -> bool {
 fn mentions_no_fs_cache(value: &str) -> bool {
     value
         .split([',', ';', ' ', '\t', '\n', '\r'])
-        .any(|feature| feature.trim().eq_ignore_ascii_case(NO_FS_CACHE))
+        .any(|feature| {
+            feature
+                .trim()
+                .trim_matches(['"', '\''])
+                .eq_ignore_ascii_case(NO_FS_CACHE)
+        })
 }
 
 pub fn hex(bytes: &[u8]) -> String {

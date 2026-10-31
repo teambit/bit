@@ -54,18 +54,22 @@ fn run_unset(args: &[OsString]) -> io::Result<Outcome> {
     run_action(args, "unset-peer", &action)
 }
 
+fn is_ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+        })
+}
+
 fn run_action(args: &[OsString], label: &'static str, action: &PeerAction) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if env::var_os("CI")
-            .is_some_and(|value| {
-                let text = value.to_string_lossy();
-                let trimmed = text.trim();
-                !trimmed.is_empty()
-                    && !trimmed.eq_ignore_ascii_case("0")
-                    && !trimmed.eq_ignore_ascii_case("false")
-            })
-        {
+        if is_ci_active() {
             return Ok(Outcome::Declined(format!("CI {label} outside workspace")));
         }
         return workspace_command::execute_failure_scope(
@@ -83,7 +87,7 @@ fn run_action(args: &[OsString], label: &'static str, action: &PeerAction) -> io
             workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
         }
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if is_ci_active() {
                 return Ok(Outcome::Declined(format!("CI {label} error stack")));
             }
             workspace_command::execute_then(&root, args, label, |_output| {

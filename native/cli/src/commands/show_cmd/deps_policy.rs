@@ -85,19 +85,21 @@ fn apply_legacy_comp_dep(
     deps: &mut Vec<DepEntry>,
 ) {
     let id_obj = &item["id"];
-    let Some(name) = id_obj["name"].as_str() else {
+    let Some(name) = id_obj["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    else {
         return;
     };
-    let scope = id_obj["scope"].as_str().unwrap_or_default();
-    let ver = id_obj["version"].as_str().unwrap_or_default();
+    let scope = id_obj["scope"].as_str().map_or("", str::trim);
+    let ver = id_obj["version"].as_str().map_or("", str::trim);
     let bare_id = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
     if identity.is_self(&bare_id) {
         return;
     }
     let full_id = if ver.is_empty() { bare_id } else { format!("{bare_id}@{ver}") };
-    let pkg_name = item["packageName"]
-        .as_str()
-        .map_or_else(|| format!("@{scope}/{}", name.replace('/', ".")), str::to_owned);
+    let pkg_name = resolve_legacy_pkg_name(item, scope, name);
     let relative_paths = item["relativePaths"]
         .as_array()
         .cloned()
@@ -114,6 +116,20 @@ fn apply_legacy_comp_dep(
             relative_paths,
         },
     );
+}
+
+fn resolve_legacy_pkg_name(item: &Value, scope: &str, name: &str) -> String {
+    item["packageName"]
+        .as_str()
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
+        .map_or_else(
+            || {
+                let dotted = name.replace('/', ".");
+                if scope.is_empty() { dotted } else { format!("@{scope}/{dotted}") }
+            },
+            str::to_owned,
+        )
 }
 
 pub(super) fn apply_model_dependencies(

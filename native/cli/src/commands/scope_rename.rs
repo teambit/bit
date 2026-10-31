@@ -56,7 +56,16 @@ fn first_subcommand(args: &[OsString]) -> Option<String> {
 }
 
 fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+        })
+    {
         return Ok(Outcome::Declined("CI scope unrecognized subcommand".into()));
     }
     let cwd = env::current_dir()?;
@@ -83,7 +92,17 @@ pub(super) fn unrecognized_subcommand(args: &[OsString], in_ws: bool) -> Option<
         .map(str::trim)
         .filter(|token| {
             !token.is_empty()
-                && !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false")
+                && !matches!(
+                    *token,
+                    "--no-color"
+                        | "--no-color=true"
+                        | "--no-color=false"
+                        | "--color"
+                        | "--color=true"
+                        | "--color=false"
+                        | "--color=always"
+                        | "--color=never",
+                )
         })
         .collect::<Vec<_>>();
     match filtered.as_slice() {

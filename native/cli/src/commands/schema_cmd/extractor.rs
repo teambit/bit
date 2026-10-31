@@ -334,7 +334,12 @@ pub(super) fn is_entry_modified_on_disk(
 }
 
 fn file_matches_version(comp_dir: &Path, scope_dir: &Path, item: &Value) -> bool {
-    let Some(rel_path) = item["relativePath"].as_str() else {
+    let Some(rel_path) = item["relativePath"]
+        .as_str()
+        .or_else(|| item["path"].as_str())
+        .map(|path| path.trim().trim_start_matches("./"))
+        .filter(|path| !path.is_empty())
+    else {
         return false;
     };
     let Some(hash) = item["file"]

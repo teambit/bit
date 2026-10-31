@@ -61,6 +61,7 @@ fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Out
             !trimmed.is_empty()
                 && !trimmed.eq_ignore_ascii_case("0")
                 && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
         })
     {
         return Ok(Outcome::Declined("CI run-action outside scope delegated".into()));

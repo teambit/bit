@@ -97,12 +97,18 @@ fn snapshot_params_require_host(params: &Value) -> bool {
             .as_str()
             .is_some_and(|editor| {
                 let trimmed = editor.trim();
-                !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false")
+                !trimmed.is_empty()
+                    && !trimmed.eq_ignore_ascii_case("false")
+                    && !trimmed.eq_ignore_ascii_case("0")
+                    && !trimmed.eq_ignore_ascii_case("no")
             });
     let build_enabled = params["build"].as_bool() == Some(true)
         || params["build"]
             .as_str()
-            .is_some_and(|build| build.trim().eq_ignore_ascii_case("true"));
+            .is_some_and(|build| {
+                let trimmed = build.trim();
+                trimmed == "1" || trimmed.eq_ignore_ascii_case("true")
+            });
     editor_enabled || build_enabled
 }
 

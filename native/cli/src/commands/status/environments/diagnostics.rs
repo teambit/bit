@@ -23,11 +23,11 @@ pub(in crate::commands::status) fn issues(
     if facts["nonLoaded"] != true {
         return Ok(());
     }
-    let env = text(facts.get("envId"))?;
+    let env = text(facts.get("envId"))?.trim();
     let bare_env = bit_install::policy::split_version(env).0;
     let workspace_env = array(context.get("targets"), "env diagnostic targets")?
         .iter()
-        .any(|target| target["identity"] == bare_env);
+        .any(|target| target["identity"].as_str().map(str::trim) == Some(bare_env));
     let (kind, data) = if !env.contains('@') && !workspace_env {
         ("ExternalEnvWithoutVersion", json!({"envId":env,"componentId":full_identity(target)?}))
     } else {
@@ -58,7 +58,9 @@ fn load_failures(context: &Value, identity: &str, dependencies: &mut Value) -> i
         .filter(|entry| {
             entry["failedId"]
                 .as_str()
-                .is_some_and(|failed| bit_install::policy::split_version(failed).0 == identity)
+                .is_some_and(|failed| {
+                    bit_install::policy::split_version(failed.trim()).0 == identity
+                })
         })
         .cloned()
         .collect::<Vec<_>>();
@@ -69,10 +71,15 @@ fn load_failures(context: &Value, identity: &str, dependencies: &mut Value) -> i
 }
 
 fn removed(context: &Value, facts: &Value, dependencies: &mut Value) -> io::Result<()> {
-    if let Some(env) = facts["envId"].as_str() {
+    if let Some(env) = facts["envId"]
+        .as_str()
+        .map(str::trim)
+        .filter(|env| !env.is_empty())
+    {
+        let bare_env = bit_install::policy::split_version(env).0;
         for target in array(context.get("targets"), "removed environment targets")? {
             if target["locallyRemoved"] == true
-                && target["identity"].as_str() == Some(bit_install::policy::split_version(env).0)
+                && target["identity"].as_str().map(str::trim) == Some(bare_env)
             {
                 append_issue(dependencies, "RemovedEnv", &json!(full_identity(target)?))?;
             }

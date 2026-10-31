@@ -65,10 +65,15 @@ fn resolve_literal_entry<'a>(
         return Err(Failure::Declined("empty component id".to_owned()));
     }
     let normalized = inventory::normalize(bare);
-    let directory = normalized.strip_prefix("./").unwrap_or(&normalized);
+    let directory = normalized
+        .strip_prefix("./")
+        .unwrap_or(&normalized)
+        .trim_end_matches('/');
     let found = bitmap.entries
         .iter()
-        .find(|entry| !entry.root_dir.is_empty() && entry.root_dir == directory)
+        .find(|entry| {
+            !entry.root_dir.is_empty() && entry.root_dir.trim_end_matches('/') == directory
+        })
         .or_else(|| {
             bitmap.entries
                 .iter()
