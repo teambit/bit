@@ -50,17 +50,20 @@ fn unexported_lane_row<'a>(
     let full = format!("{scope}/{name}");
     rows.iter_mut()
         .find(|(key, row)| {
-            if key.starts_with('$')
-                || matches!(key.as_str(), "_bit_lane" | "version")
-                || !row.is_object()
-            {
+            let key = key.trim();
+            if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
                 return false;
             }
-            let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
-            let default_scope = row["defaultScope"].as_str().unwrap_or_default();
-            (key_id == name || key_id == full || row["name"] == name)
+            let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
+            let default_scope = row["defaultScope"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default();
+            let row_name = row["name"].as_str().map(str::trim);
+            (key_id == name || key_id == full || row_name == Some(name))
                 && row["scope"]
                     .as_str()
+                    .map(str::trim)
                     .unwrap_or_default()
                     .is_empty()
                 && (default_scope.is_empty() || default_scope == scope)
@@ -69,13 +72,14 @@ fn unexported_lane_row<'a>(
 }
 
 pub(super) fn export_scope(before: &[u8], name: &str) -> io::Result<Vec<u8>> {
+    let name = name.trim();
     let mut scope: Value = crate::parse_jsonc(before)?;
     let new =
         scope["lanes"]["new"].as_array_mut().ok_or_else(|| invalid("outbound lane scope state"))?;
     if new.len() > 4096 {
         return Err(invalid("outbound lane scope bounds"));
     }
-    new.retain(|entry| entry != name);
+    new.retain(|entry| entry.as_str().map(str::trim) != Some(name));
     bit_workspace_config::render_scope_json(&scope)
 }
 

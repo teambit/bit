@@ -39,9 +39,12 @@ fn head_for(rows: &[Value], scope: &str, name: &str) -> io::Result<Option<String
     for row in rows {
         let (row_scope, row_name) = super::row_id_parts(&row["id"]);
         if (row_scope == scope || row_scope.is_empty()) && row_name == name {
-            let head = row["head"].as_str().ok_or_else(|| invalid("lane reset remote head"))?;
-            crate::merge_history::hash(head)?;
-            if found.replace(head.to_owned()).is_some() {
+            let head = row["head"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("lane reset remote head"))?;
+            let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(head)?);
+            if found.replace(canonical).is_some() {
                 return Err(invalid("lane reset duplicate remote head"));
             }
         }
@@ -93,5 +96,10 @@ pub(super) fn baseline(
         }
     }
     Ok(remote_head(root, scope, "main", scope, name, reads)?
-        .or_else(|| model["head"].as_str().map(str::to_owned)))
+        .or_else(|| {
+            model["head"]
+                .as_str()
+                .and_then(|head| crate::merge_history::hash(head.trim()).ok())
+                .map(|bytes| crate::validate::hexadecimal(&bytes))
+        }))
 }

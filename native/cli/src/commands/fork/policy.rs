@@ -39,6 +39,8 @@ fn build_policy(
     for entry in dependencies(facts, old_packages, multiple)? {
         let id = entry["dependencyId"]
             .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
             .ok_or_else(|| io::Error::other("fork dependency identity"))?;
         let field =
             if entry["lifecycleType"] == "peer" { "peerDependencies" } else { "dependencies" };
@@ -66,9 +68,14 @@ fn dependencies(
         for entry in bit_object_import::component_fork::dependency_policy(source)? {
             let id = entry["dependencyId"]
                 .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
                 .ok_or_else(|| io::Error::other("fork dependency identity"))?;
             if multiple
-                && (old_packages.iter().any(|old| old == id) || seen.iter().any(|old| old == id))
+                && (old_packages
+                    .iter()
+                    .any(|old| old.trim() == id)
+                    || seen.iter().any(|old| old == id))
             {
                 continue;
             }

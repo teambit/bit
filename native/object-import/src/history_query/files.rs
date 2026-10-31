@@ -68,20 +68,35 @@ fn result(log: Value, index: usize, rows: &[Value], relative: &str) -> io::Resul
     Ok(Some(row))
 }
 fn version<'a>(rows: &'a [Value], hash: &str) -> io::Result<&'a Value> {
+    let target = hash.trim();
     rows.iter()
         .find(|row| {
-            row.get("hash").and_then(Value::as_str) == Some(hash) && row.get("missing").is_none()
+            row.get("hash")
+                .and_then(Value::as_str)
+                .is_some_and(|candidate| candidate.trim().eq_ignore_ascii_case(target))
+                && row.get("missing").is_none()
         })
         .ok_or_else(|| invalid("history file missing Version"))
 }
 fn file_hash(version: &Value, relative: &str) -> io::Result<Option<String>> {
+    let normalized = relative.trim().replace('\\', "/");
+    let normalized = normalized.trim_start_matches("./");
     let files = version
         .get("files")
         .and_then(Value::as_array)
         .ok_or_else(|| invalid("history file missing manifest"))?;
     let Some(file) = files
         .iter()
-        .find(|file| file.get("relativePath").and_then(Value::as_str) == Some(relative))
+        .find(|file| {
+            file.get("relativePath")
+                .and_then(Value::as_str)
+                .is_some_and(|cand| {
+                    cand.trim()
+                        .replace('\\', "/")
+                        .trim_start_matches("./")
+                        == normalized
+                })
+        })
     else {
         return Ok(None);
     };
@@ -89,8 +104,8 @@ fn file_hash(version: &Value, relative: &str) -> io::Result<Option<String>> {
         .get("file")
         .and_then(Value::as_str)
         .ok_or_else(|| invalid("history file Source ref"))?;
-    crate::merge_history::hash(hash)?;
-    Ok(Some(hash.to_owned()))
+    let digest = crate::merge_history::hash(hash)?;
+    Ok(Some(crate::validate::hexadecimal(&digest)))
 }
 fn parent_hash(
     rows: &[Value],

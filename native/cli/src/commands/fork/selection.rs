@@ -74,9 +74,10 @@ fn without_existing_targets(ids: Vec<String>, scope: &str, pool: &[Value]) -> Ve
     ids.into_iter()
         .filter(|id| {
             let name = bare(id).split_once('/').map_or_else(|| bare(id), |(_, name)| name);
+            let target = format!("{scope}/{name}");
             !pool
                 .iter()
-                .any(|row| row["identity"] == format!("{scope}/{name}"))
+                .any(|row| row_bare_id(row) == Some(target.as_str()))
         })
         .collect()
 }
@@ -98,10 +99,11 @@ fn scope_selection(
     for id in &remote {
         if let Some(existing) = pool
             .iter()
-            .find(|row| row["identity"] == bare(id))
+            .find(|row| row_bare_id(row) == Some(bare(id)))
         {
             let version = existing["version"]
                 .as_str()
+                .map(str::trim)
                 .filter(|version| !version.is_empty())
                 .map(|version| format!("@{version}"))
                 .unwrap_or_default();
@@ -134,8 +136,25 @@ fn matched(ids: &[String], pattern: &str) -> io::Result<Vec<String>> {
     }
     Ok(result)
 }
+fn row_bare_id(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+        })
+        .map(bare)
+}
 fn bare(id: &str) -> &str {
-    id.split('@').next().unwrap_or(id)
+    let trimmed = id.trim();
+    match trimmed.rsplit_once('@') {
+        Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
+        _ => trimmed,
+    }
 }
 fn invalid(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message.into())

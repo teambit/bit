@@ -38,7 +38,11 @@ impl Resolution {
         &self.global_remotes_file
     }
     fn configured(&self, local: &Value, scope: &str) -> io::Result<Option<String>> {
-        if let Some(host) = local["remotes"][scope].as_str() {
+        if let Some(host) = local["remotes"][scope]
+            .as_str()
+            .map(str::trim)
+            .filter(|host| !host.is_empty())
+        {
             return Ok(Some(host.to_owned()));
         }
         let globals: Value = match fs::read(&self.global_remotes_file) {
@@ -46,7 +50,11 @@ impl Resolution {
             Err(error) if error.kind() == io::ErrorKind::NotFound => Value::Null,
             Err(error) => return Err(error),
         };
-        Ok(globals[scope].as_str().map(str::to_owned))
+        Ok(globals[scope]
+            .as_str()
+            .map(str::trim)
+            .filter(|host| !host.is_empty())
+            .map(str::to_owned))
     }
     fn cache(&self) -> io::Result<std::sync::MutexGuard<'_, HashMap<String, Resolved>>> {
         self.resolved_hosts.lock().map_err(|_| invalid("outbound remote cache"))
@@ -54,6 +62,7 @@ impl Resolution {
 }
 
 pub(in super::super) fn resolve(input: &Prepare, scope: &str) -> io::Result<Resolved> {
+    let scope = scope.trim();
     if let Some(resolved) = input.resolution.cache()?.get(scope) {
         return Ok(resolved.clone());
     }
@@ -72,7 +81,11 @@ pub(in super::super) fn resolve(input: &Prepare, scope: &str) -> io::Result<Reso
 
 fn resolve_hub(input: &Prepare, local: &Value, scope: &str) -> io::Result<String> {
     let global = global(input)?;
-    let name = local["name"].as_str().ok_or_else(|| invalid("outbound local scope"))?;
+    let name = local["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("outbound local scope"))?;
     let resolver = Resolver::configured(
         local,
         input.transport.node_executable.clone(),

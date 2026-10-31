@@ -60,37 +60,50 @@ fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
     let rows = document
         .as_array()
         .or_else(|| document["components"].as_array())?;
+    let id = id.trim();
     let (target_scope, target_name) = id.split_once('/').unwrap_or(("", id));
     rows.iter()
         .filter(|row| row["type"].as_str().unwrap_or("Component") == "Component")
         .filter(|row| row["isSymlink"] != true)
         .find(|row| {
-            let (entry_scope, entry_name) = if let Some(id_str) = row["id"].as_str() {
+            let (entry_scope, entry_name) = if let Some(id_str) = row["id"].as_str().map(str::trim)
+            {
                 id_str
                     .split_once('/')
                     .unwrap_or(("", id_str))
             } else {
                 (
-                    row["id"]["scope"].as_str().unwrap_or_default(),
-                    row["id"]["name"].as_str().unwrap_or_default(),
+                    row["id"]["scope"]
+                        .as_str()
+                        .map(str::trim)
+                        .unwrap_or_default(),
+                    row["id"]["name"]
+                        .as_str()
+                        .map(str::trim)
+                        .unwrap_or_default(),
                 )
             };
             entry_name == target_name && (entry_scope == target_scope || entry_scope.is_empty())
         })
         .and_then(|row| row["hash"].as_str())
-        .and_then(|hash| merge_history::hash(hash).ok())
+        .and_then(|hash| merge_history::hash(hash.trim()).ok())
 }
 
 fn reference<'a>(model: &'a Value, target: &'a Target) -> io::Result<&'a str> {
-    let reference = if matches!(target.version.as_str(), "" | "latest" | "head") {
-        model["head"].as_str().ok_or_else(|| invalid("status unknown version"))?
-    } else if merge_history::hash(&target.version).is_ok() {
-        target.version.as_str()
+    let version = target.version.trim();
+    let reference = if matches!(version, "" | "latest" | "head") {
+        model["head"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("status unknown version"))?
+    } else if merge_history::hash(version).is_ok() {
+        version
     } else {
         model["orphanedVersions"]
-            .get(&target.version)
-            .unwrap_or_else(|| &model["versions"][&target.version])
+            .get(version)
+            .unwrap_or_else(|| &model["versions"][version])
             .as_str()
+            .map(str::trim)
             .ok_or_else(|| invalid("status unknown version"))?
     };
     Ok(reference)

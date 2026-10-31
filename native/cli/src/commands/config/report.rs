@@ -15,6 +15,7 @@ pub(super) fn render(stores: &Stores, options: &Options, chalk: Chalk) -> io::Re
 }
 
 fn get(stores: &Stores, key: &str) -> String {
+    let key = key.trim();
     let combined = stores.combined();
     let value = environment_value(key)
         .map(Value::String)
@@ -61,10 +62,14 @@ fn parse_git_config(text: &str, key: &str) -> String {
 
 fn list(stores: &Stores, options: &Options, chalk: Chalk) -> io::Result<String> {
     let combined = stores.combined();
-    if let Some(origin) = &options.origin {
+    if let Some(origin) = options.origin
+        .as_deref()
+        .map(str::trim)
+        .filter(|origin| !origin.is_empty())
+    {
         let store = stores.entries
             .iter()
-            .find(|store| store.origin == origin)
+            .find(|store| store.origin.eq_ignore_ascii_case(origin))
             .ok_or_else(|| io::Error::other("config origin is missing"))?;
         return formatted(&store.values, options.json);
     }

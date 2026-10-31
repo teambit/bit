@@ -53,10 +53,11 @@ fn apply_save_arg<'a>(
         .strip_prefix("--message=")
         .or_else(|| arg.strip_prefix("-m="))
     {
-        if val.is_empty() || val.starts_with('-') {
+        let trimmed = val.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') {
             return None;
         }
-        *message = Some(val.to_owned());
+        *message = Some(trimmed.to_owned());
         return Some(());
     }
     match arg {
@@ -65,6 +66,7 @@ fn apply_save_arg<'a>(
         "-m" | "--message" => {
             let value = iter
                 .next()
+                .map(str::trim)
                 .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
             *message = Some(value.to_owned());
         }
@@ -80,8 +82,11 @@ fn load(args: &[&str]) -> Option<Options> {
     while let Some(arg) = iter.next() {
         if arg == "--" {
             for rest in iter {
-                (!rest.is_empty() && !rest.starts_with('-') && flags.id.replace(rest).is_none())
-                    .then_some(())?;
+                let trimmed = rest.trim();
+                (!trimmed.is_empty()
+                    && !trimmed.starts_with('-')
+                    && flags.id.replace(trimmed).is_none())
+                .then_some(())?;
             }
             break;
         }
@@ -107,20 +112,28 @@ impl<'a> LoadFlags<'a> {
             .strip_prefix("--auto-merge-resolve=")
             .or_else(|| arg.strip_prefix("-r="))
         {
-            if val.is_empty() || val.starts_with('-') {
+            let trimmed = val.trim();
+            if trimmed.is_empty() || trimmed.starts_with('-') {
                 return None;
             }
-            self.strategy = Some(val);
+            self.strategy = Some(trimmed);
             return Some(());
         }
         match arg {
             "-r" | "--auto-merge-resolve" => {
                 self.strategy = Some(
                     iter.next()
+                        .map(str::trim)
                         .filter(|value| !value.is_empty() && !value.starts_with('-'))?,
                 );
             }
-            value if !value.starts_with('-') && self.id.is_none() => self.id = Some(value),
+            value
+                if !value.starts_with('-')
+                    && !value.trim().is_empty()
+                    && self.id.is_none() =>
+            {
+                self.id = Some(value.trim());
+            }
             _ => return None,
         }
         Some(())

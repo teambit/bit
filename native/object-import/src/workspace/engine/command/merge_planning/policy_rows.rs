@@ -40,16 +40,16 @@ fn binding_prefix(current: &capture::Captured, context: &Value) -> io::Result<St
         .ok_or_else(|| invalid("command FF model"))?;
     Ok(model["bindingPrefix"]
         .as_str()
+        .map(str::trim)
         .filter(|prefix| !prefix.is_empty())
         .map_or_else(
             || {
-                format!(
-                    "@{}",
-                    current.target.identity
-                        .split(['.', '/'])
-                        .next()
-                        .unwrap(),
-                )
+                let owner = current.target.identity
+                    .split(['.', '/'])
+                    .next()
+                    .unwrap_or_default()
+                    .trim();
+                format!("@{owner}")
             },
             str::to_owned,
         ))
@@ -64,7 +64,7 @@ fn append_fast_forward(
 ) -> io::Result<()> {
     prepared.policy
         .as_mut()
-        .unwrap()
+        .ok_or_else(|| invalid("command FF policy state"))?
         .rows
         .push(super::super::policy::Row {
             identity: identity.into(),
@@ -103,7 +103,7 @@ pub(super) fn divergent(
         .ok_or_else(|| invalid("command binding prefix"))?;
     prepared.policy
         .as_mut()
-        .unwrap()
+        .ok_or_else(|| invalid("command merge policy state"))?
         .rows
         .push(super::super::policy::Row {
             identity: current.target.identity.clone(),

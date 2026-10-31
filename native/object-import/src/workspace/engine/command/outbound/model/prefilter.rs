@@ -46,8 +46,11 @@ impl Prepared {
         Ok(())
     }
     fn capture_component(&mut self, objects: &Path, row: &Value) -> io::Result<()> {
-        let model = row["hash"].as_str().ok_or_else(|| invalid("outbound prefilter model"))?;
-        crate::merge_history::hash(model)?;
+        let model = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("outbound prefilter model"))?;
+        let model = crate::validate::hexadecimal(&crate::merge_history::hash(model)?);
         self.capture(
             objects
                 .join(&model[..2])

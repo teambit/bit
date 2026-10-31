@@ -46,6 +46,7 @@ fn target(
 ) -> io::Result<Option<Value>> {
     let Some(version) = component.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|version| !version.is_empty())
     else {
         return Ok(None);
@@ -64,6 +65,8 @@ fn target(
     ))
 }
 fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Value> {
+    let id = id.trim();
+    let version = version.trim();
     let model = context["models"]
         .as_array()
         .into_iter()
@@ -71,24 +74,30 @@ fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Val
         .find(|model| {
             format!(
                 "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
+                model["scope"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default(),
+                model["name"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default(),
             ) == id
         })
         .ok_or_else(|| io::Error::other("code predicate model"))?;
     let hash = if version.is_empty() || matches!(version, "latest" | "head") {
-        model["head"].as_str().unwrap_or(version)
+        model["head"].as_str().map_or(version, str::trim)
     } else {
         model["versions"][version]
             .as_str()
             .or_else(|| model["orphanedVersions"][version].as_str())
-            .unwrap_or(version)
+            .map_or(version, str::trim)
     };
     let stored = context["versions"]
         .as_array()
         .into_iter()
         .flatten()
-        .find(|row| row[0] == hash)
+        .find(|row| row[0].as_str().map(str::trim) == Some(hash))
         .ok_or_else(|| io::Error::other("code predicate version"))?;
     Ok(stored)
 }

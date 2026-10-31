@@ -52,11 +52,24 @@ impl Session<'_> {
 
     /// Bit's core aspect ids, `teambit.harmony/bit` included.
     pub fn core_ids(&self) -> Vec<String> {
-        self.info.core_aspects
+        let mut ids = Vec::with_capacity(self.info.core_aspects.len() + 1);
+        for aspect in &self.info.core_aspects {
+            let trimmed = aspect.id.trim();
+            if !trimmed.is_empty()
+                && !ids
+                    .iter()
+                    .any(|existing| existing == trimmed)
+            {
+                ids.push(trimmed.to_owned());
+            }
+        }
+        if !ids
             .iter()
-            .map(|aspect| aspect.id.clone())
-            .chain([BIT_ASPECT.to_string()])
-            .collect()
+            .any(|existing| existing == BIT_ASPECT)
+        {
+            ids.push(BIT_ASPECT.to_string());
+        }
+        ids
     }
 }
 
@@ -114,12 +127,17 @@ impl Loaded {
     /// `workspace.name`: the configured name, else the root directory's name.
     pub fn workspace_name(&self, root: &Path) -> String {
         self.config.workspace.name
-            .clone()
-            .unwrap_or_else(|| {
-                root.file_name()
-                    .map(|name| name.to_string_lossy().into_owned())
-                    .unwrap_or_default()
-            })
+            .as_deref()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .map_or_else(
+                || {
+                    root.file_name()
+                        .map(|name| name.to_string_lossy().into_owned())
+                        .unwrap_or_default()
+                },
+                str::to_owned,
+            )
     }
 
     /// `getComponentsDirectory([])`: the workspace components, without the one

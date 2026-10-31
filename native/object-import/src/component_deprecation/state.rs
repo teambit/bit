@@ -71,16 +71,23 @@ fn model_metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     Ok(config)
 }
 fn resolve_model_version<'a>(model: &'a Value, id: &'a str) -> Option<&'a str> {
-    let (_, ver) = id.rsplit_once('@')?;
+    let (_, raw_ver) = id.rsplit_once('@')?;
+    let ver = raw_ver.trim();
     if matches!(ver, "" | "latest" | "head") {
-        return model["head"]
-            .as_str()
-            .filter(|val| !val.is_empty());
+        return non_empty_str(&model["head"]);
     }
-    model["versions"][ver]
+    non_empty_str(&model["versions"][ver])
+        .or_else(|| non_empty_str(&model["orphanedVersions"][ver]))
+        .or_else(|| {
+            (ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit())).then_some(ver)
+        })
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
         .as_str()
-        .or_else(|| model["orphanedVersions"][ver].as_str())
-        .or_else(|| (ver.len() == 40).then_some(ver))
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 fn model_hash(plan: &mut Plan, id: &str) -> io::Result<Option<String>> {
     let index_path = crate::scope_path(&plan.root).join("index.json");

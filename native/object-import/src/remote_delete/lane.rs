@@ -36,10 +36,7 @@ fn select_lanes(
     let mut refs = Vec::new();
     let mut removed = Vec::new();
     for id in ids {
-        let (lane_scope, name) = id.split_once('/').ok_or_else(|| invalid("remote lane id"))?;
-        if name == "main" {
-            return Err(invalid(r#"unable to remove the default lane "main""#));
-        }
+        let (lane_scope, name) = parse_lane_id(id)?;
         let row = index["lanes"]
             .as_array()
             .and_then(|rows| {
@@ -49,7 +46,9 @@ fn select_lanes(
             .ok_or_else(|| invalid("remote lane not found"))?;
         let lane_hash = hash(&row["hash"])?;
         let lane = readset.read(lane_hash, "Lane")?;
-        if lane["scope"] != lane_scope || lane["name"] != name {
+        if lane["scope"].as_str().map(str::trim) != Some(lane_scope)
+            || lane["name"].as_str().map(str::trim) != Some(name)
+        {
             return Err(invalid("remote lane identity"));
         }
         if !force && !fully_merged(index, readset, &lane)? {
@@ -62,6 +61,21 @@ fn select_lanes(
         removed.push(id.to_owned());
     }
     Ok((refs, removed))
+}
+
+fn parse_lane_id(id: &str) -> io::Result<(&str, &str)> {
+    let (raw_scope, raw_name) = id
+        .trim()
+        .split_once('/')
+        .ok_or_else(|| invalid("remote lane id"))?;
+    let (lane_scope, name) = (raw_scope.trim(), raw_name.trim());
+    if lane_scope.is_empty() || name.is_empty() {
+        return Err(invalid("remote lane id"));
+    }
+    if name == "main" {
+        return Err(invalid(r#"unable to remove the default lane "main""#));
+    }
+    Ok((lane_scope, name))
 }
 
 fn fully_merged(index: &Value, readset: &mut Readset, lane: &Value) -> io::Result<bool> {
@@ -101,16 +115,19 @@ fn component_merged(index: &Value, readset: &mut Readset, row: &Value) -> io::Re
 }
 
 fn contains_head(readset: &mut Readset, main: Option<&str>, head: &str) -> io::Result<bool> {
+    let target = head.trim();
     let mut pending = main
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
         .into_iter()
         .collect::<Vec<_>>();
     let mut visited = std::collections::HashSet::new();
     while let Some(current) = pending.pop() {
-        if current == head {
+        if current.eq_ignore_ascii_case(target) {
             return Ok(true);
         }
-        if !visited.insert(current.clone()) {
+        if !visited.insert(current.to_ascii_lowercase()) {
             continue;
         }
         let version = readset.read(&current, "Version")?;
@@ -120,6 +137,8 @@ fn contains_head(readset: &mut Readset, main: Option<&str>, head: &str) -> io::R
                 .into_iter()
                 .flatten()
                 .filter_map(Value::as_str)
+                .map(str::trim)
+                .filter(|parent| !parent.is_empty())
                 .map(str::to_owned),
         );
     }

@@ -79,16 +79,24 @@ fn resolver_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Valu
     Ok(output)
 }
 fn target_version(id: &Value) -> io::Result<String> {
-    id["version"]
-        .as_str()
-        .or_else(|| id["head"].as_str())
+    non_empty_str(&id["version"])
+        .or_else(|| non_empty_str(&id["head"]))
         .or_else(|| {
             id.as_str()
-                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
+                .and_then(|raw| {
+                    raw.rsplit_once('@')
+                        .map(|(_, ver)| ver.trim())
+                        .filter(|ver| !ver.is_empty())
+                })
         })
-        .filter(|version| !version.is_empty())
         .map(str::to_owned)
         .ok_or_else(|| invalid("snapshot target version missing"))
+}
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 fn target(id: &Value, components: &[Value]) -> io::Result<Option<usize>> {
     let key = autotag::identity(id)?;
@@ -134,7 +142,10 @@ fn dependency_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Va
 fn extension_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Value>> {
     let mut extensions = Vec::new();
     for (index, extension) in array(component, "extensions")?.iter().enumerate() {
-        if let Some(id) = extension.get("id")
+        if let Some(id) = extension
+            .get("id")
+            .or_else(|| extension.get("extensionId"))
+            .filter(|value| !value.is_null())
             && let Some(target) = target(id, components)?
         {
             extensions.push(json!({"index":index,"target":target}));

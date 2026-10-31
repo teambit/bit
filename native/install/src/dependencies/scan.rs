@@ -122,11 +122,14 @@ fn style_specifier(target: &str) -> Option<String> {
     {
         return None;
     }
-    Some(match trimmed.strip_prefix('~') {
-        Some(package) => package.trim().to_owned(),
-        None if trimmed.starts_with('.') || trimmed.starts_with('/') => trimmed.to_owned(),
-        None => format!("./{trimmed}"),
-    })
+    match trimmed.strip_prefix('~') {
+        Some(package) => {
+            let pkg = package.trim();
+            (!pkg.is_empty()).then(|| pkg.to_owned())
+        }
+        None if trimmed.starts_with('.') || trimmed.starts_with('/') => Some(trimmed.to_owned()),
+        None => Some(format!("./{trimmed}")),
+    }
 }
 
 fn quoted(text: &str) -> Option<String> {
@@ -136,8 +139,8 @@ fn quoted(text: &str) -> Option<String> {
         .filter(|character| matches!(character, '\'' | '"' | '`'))?;
     let body = &text[1..];
     let end = body.find(quote)?;
-    let specifier = &body[..end];
-    (!specifier.is_empty() && !specifier.contains(['\n', '$'])).then(|| specifier.to_owned())
+    let specifier = body[..end].trim();
+    (!specifier.is_empty() && !specifier.contains(['\n', '\r', '$'])).then(|| specifier.to_owned())
 }
 
 /// `found` without repeated specifiers, keeping the first occurrence.

@@ -99,18 +99,23 @@ fn validate(
     writes: &[Value],
     observed: &BTreeMap<PathBuf, Source>,
 ) -> io::Result<Vec<(String, String)>> {
-    let mut total = 0;
+    let mut total = 0_usize;
+    let mut seen = std::collections::HashSet::new();
     let mut entries = Vec::new();
     for row in writes {
-        let path = row["path"].as_str().ok_or_else(|| io::Error::other("tracking docs path"))?;
-        if !observed.contains_key(Path::new(path)) {
+        let path = row["path"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| io::Error::other("tracking docs path"))?;
+        if !observed.contains_key(Path::new(path)) || !seen.insert(PathBuf::from(path)) {
             return Err(io::Error::other("tracking docs unknown source"));
         }
         let bytes = bit_object_import::stringify_json(&row["docs"], false)?;
-        total += bytes.len();
-        if total > 32 * 1024 * 1024 {
-            return Err(io::Error::other("tracking docs metadata budget"));
-        }
+        total = total
+            .checked_add(bytes.len())
+            .filter(|sum| *sum <= 32 * 1024 * 1024)
+            .ok_or_else(|| io::Error::other("tracking docs metadata budget"))?;
         entries.push((path.to_owned(), bytes));
     }
     Ok(entries)

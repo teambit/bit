@@ -47,22 +47,27 @@ pub fn validate(
 fn predicted(component: &Value, id: &str, errors: &[Value]) -> io::Result<bool> {
     let expected = errors
         .iter()
-        .find(|entry| {
-            let Some(entry_id) = entry.get("id") else {
-                return false;
-            };
-            if let Some(raw) = entry_id.as_str() {
-                without_version(raw) == id
-            } else {
-                let scope = entry_id["scope"].as_str().unwrap_or_default();
-                let name = entry_id["name"].as_str().unwrap_or_default();
-                format!("{scope}/{name}") == id
-            }
-        })
+        .find(|entry| entry.get("id").is_some_and(|entry_id| entry_matches_id(entry_id, id)))
         .and_then(|entry| entry.get("issues").cloned())
         .unwrap_or_else(|| json!([]));
     let actual = serde_json::to_string(&blockers(component)?).map_err(io::Error::other)?;
     Ok(actual == serde_json::to_string(&expected).map_err(io::Error::other)?)
+}
+
+fn entry_matches_id(entry_id: &Value, id: &str) -> bool {
+    let target = without_version(id.trim());
+    if let Some(raw) = entry_id.as_str() {
+        return without_version(raw.trim()) == target;
+    }
+    let scope = entry_id["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    let name = entry_id["name"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    if scope.is_empty() { name == target } else { format!("{scope}/{name}") == target }
 }
 
 /// The tag-blocking issues: their type and their data as JSON.

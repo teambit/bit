@@ -22,7 +22,13 @@ pub(super) struct Plan {
 }
 
 pub(super) fn prepare(context: &Context, options: &Options) -> io::Result<Option<Plan>> {
-    let Some(name) = &options.remote else { return Ok(None) };
+    let Some(name) = options.remote
+        .as_deref()
+        .map(str::trim)
+        .filter(|remote_name| !remote_name.is_empty())
+    else {
+        return Ok(None);
+    };
     let scope = context.scope
         .as_deref()
         .map(|scope| optional_json(&scope.join("scope.json")))
@@ -52,7 +58,7 @@ pub(super) fn prepare(context: &Context, options: &Options) -> io::Result<Option
     if let Remote::File(path) = &remote {
         preflight(context, options, path)?;
     }
-    Ok(Some(Plan { remote, network, name: name.clone() }))
+    Ok(Some(Plan { remote, network, name: name.to_owned() }))
 }
 
 fn global(context: &Context) -> GlobalConfig {
@@ -74,6 +80,8 @@ fn preflight(context: &Context, options: &Options, path: &Path) -> io::Result<()
     };
     if options.name
         .as_deref()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .is_none_or(|name| name == "validate scope objects")
     {
         store::preflight(&probe, Some("validate scope objects"))?;
@@ -86,19 +94,21 @@ pub(super) fn examine(
     options: &Options,
     plan: &Plan,
 ) -> io::Result<(Vec<Value>, Value)> {
+    let requested = options.name
+        .as_deref()
+        .map(str::trim)
+        .filter(|name| !name.is_empty());
     match &plan.remote {
         Remote::Http(url) => {
             let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
-            let mut response =
-                runtime.block_on(plan.network.doctor(url, &plan.name, options.name.as_deref()))?;
+            let mut response = runtime.block_on(plan.network.doctor(url, &plan.name, requested))?;
             let results = response["examineResults"]
                 .as_array_mut()
                 .ok_or_else(|| io::Error::other("remote doctor results"))?;
-            if options.name.is_some() && results.is_empty() {
-                return Err(io::Error::other(format!(
-                    "error: diagnosis {} not found",
-                    options.name.as_deref().unwrap_or_default(),
-                )));
+            if let Some(name) = requested
+                && results.is_empty()
+            {
+                return Err(io::Error::other(format!("error: diagnosis {name} not found")));
             }
             let results = std::mem::take(results);
             Ok((results, response["metaData"].take()))
@@ -108,18 +118,18 @@ pub(super) fn examine(
 }
 
 fn file(context: &Context, options: &Options, path: &Path) -> io::Result<(Vec<Value>, Value)> {
+    let requested = options.name
+        .as_deref()
+        .map(str::trim)
+        .filter(|name| !name.is_empty());
     let diagnoses: Vec<_> = catalog::DIAGNOSES
         .iter()
-        .filter(|diagnosis| {
-            options.name
-                .as_deref()
-                .is_none_or(|name| name == diagnosis.name)
-        })
+        .filter(|diagnosis| requested.is_none_or(|name| name == diagnosis.name))
         .collect();
     if diagnoses.is_empty() {
         return Err(io::Error::other(format!(
             r#"Diagnosis "{}" not found"#,
-            options.name.as_deref().unwrap_or_default(),
+            requested.unwrap_or_default(),
         )));
     }
     let mut results = Vec::new();

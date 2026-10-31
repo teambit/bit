@@ -43,7 +43,11 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
             decision::bucket(&input)
         }
         "mergeTransactionFinish" => {
-            let token = input["token"].as_str().ok_or_else(|| invalid("merge finish token"))?;
+            let token = input["token"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .ok_or_else(|| invalid("merge finish token"))?;
             let tokens = state.journal.finish(token)?;
             state.status.finish(&tokens);
             state.bodies.finish(&tokens)?;
@@ -60,20 +64,30 @@ pub(crate) fn prepare_with_workspace(
     state.bodies.prepare(input, &state.journal, Some(snapshots))
 }
 fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
-    let token = input["token"].as_str().ok_or_else(|| invalid("merge owner token"))?;
+    let token = input["token"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("merge owner token"))?;
     let index = input["index"]
         .as_u64()
         .filter(|index| *index < 4096)
+        .and_then(|index| usize::try_from(index).ok())
         .ok_or_else(|| invalid("merge component index"))?;
-    state.verify(token, index as usize)
+    state.verify(token, index)
 }
 fn verify_owner(input: &Value, state: &journal::State) -> io::Result<()> {
-    let token = input["token"].as_str().ok_or_else(|| invalid("merge owner token"))?;
+    let token = input["token"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("merge owner token"))?;
     let index = input["index"]
         .as_u64()
         .filter(|index| *index == 0)
+        .and_then(|index| usize::try_from(index).ok())
         .ok_or_else(|| invalid("merge operation index"))?;
-    state.verify_owner(token, index as usize)
+    state.verify_owner(token, index)
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

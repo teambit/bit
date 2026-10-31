@@ -81,6 +81,7 @@ fn section(ids: &[String], title: &str, format: &Formatter) -> String {
 }
 
 fn strip_latest_or_head(id: &str) -> &str {
+    let id = id.trim();
     id.strip_suffix("@latest")
         .or_else(|| id.strip_suffix("@head"))
         .unwrap_or(id)
@@ -92,6 +93,8 @@ fn list(value: &Value) -> Vec<String> {
         .into_iter()
         .flatten()
         .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
         .map(str::to_owned)
         .collect()
 }

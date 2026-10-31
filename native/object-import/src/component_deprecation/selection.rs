@@ -36,14 +36,18 @@ pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {
     ))
 }
 pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
-    let id = id.split('@').next().unwrap_or(id);
+    let trimmed = id.trim();
+    let id = match trimmed.rsplit_once('@') {
+        Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
+        _ => trimmed,
+    };
     bitmap
         .as_object()
         .ok_or_else(|| invalid("invalid component bitmap"))?
         .iter()
         .find_map(|(key, row)| {
             let full = identity(key, row)?;
-            let full = full.split('@').next()?;
+            let full = full.rsplit_once('@').map_or(full.as_str(), |(bare, _)| bare);
             let (_, name) = crate::reset_lane::bitmap::row_identity(key, row);
             let key_bare = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
             (full == id || name == id || key_bare == id).then_some(key.as_str())
@@ -110,13 +114,25 @@ fn matches_parts(key: &str, row: &Value, id: &str, parts: &[&str]) -> bool {
             .any(matches)
 }
 pub(crate) fn id_object(bitmap: &Value, id: &str) -> io::Result<Value> {
-    let (bare, version) = id
+    let trimmed = id.trim();
+    let (bare, version) = trimmed
         .rsplit_once('@')
-        .map_or((id, None), |(id, v)| (id, Some(v)));
-    let (scope, name) = bare.split_once('/').ok_or_else(|| invalid("replacement component ID"))?;
-    let authored = key(bitmap, id)
+        .map_or((trimmed, None), |(base, ver)| {
+            (base.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
+    let (scope, name) = bare
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("replacement component ID"))?;
+    let authored = key(bitmap, trimmed)
         .ok()
-        .is_some_and(|key| bitmap[key]["scope"].as_str().is_none_or(str::is_empty));
+        .is_some_and(|key| {
+            bitmap[key]["scope"]
+                .as_str()
+                .map(str::trim)
+                .is_none_or(str::is_empty)
+        });
     let mut value = if authored {
         serde_json::json!({"name":name})
     } else {

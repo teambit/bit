@@ -12,9 +12,16 @@ pub(super) fn save_artifacts_to_dir(
     results: &[ComponentArtifacts],
     out_dir: &str,
 ) -> Result<usize, Failure> {
+    let trimmed_dir = out_dir.trim();
+    if trimmed_dir.is_empty() {
+        return Err(Failure::Declined("empty artifacts output directory".into()));
+    }
     let cwd = env::current_dir().map_err(|err| Failure::Declined(err.to_string()))?;
-    let base_dir =
-        if Path::new(out_dir).is_absolute() { PathBuf::from(out_dir) } else { cwd.join(out_dir) };
+    let base_dir = if Path::new(trimmed_dir).is_absolute() {
+        PathBuf::from(trimmed_dir)
+    } else {
+        cwd.join(trimmed_dir)
+    };
     let mut total_saved = 0usize;
     for comp in results {
         total_saved += save_component_artifacts(scope_dir, &base_dir, comp)?;
@@ -101,7 +108,10 @@ pub(super) fn render_artifacts_report(
         .map(|comp| render_component_block(comp, formatter))
         .collect::<Vec<_>>()
         .join("\n\n");
-    if let Some(dir) = out_dir {
+    if let Some(dir) = out_dir
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+    {
         let footer =
             formatter.success_summary(&format!(r#"{saved_count} file(s) saved to "{dir}""#));
         format!("{blocks}\n\n{footer}")

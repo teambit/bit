@@ -116,6 +116,8 @@ pub(super) fn finish(
         .map(|file| {
             file["relativePath"]
                 .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("status manifest path"))
         })
@@ -130,7 +132,7 @@ pub(super) fn finish(
     })? {
         plan.modified.push(target.id.clone());
     }
-    if target.version.is_empty() {
+    if target.version.trim().is_empty() {
         plan.new.push(target.id.clone());
     }
     plan.cursor += 1;

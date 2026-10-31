@@ -65,12 +65,23 @@ fn eligible(options: &Options, retained: bool) -> bool {
     !retained && writing && without_install && ordinary
 }
 
+fn bare(raw: &str) -> &str {
+    let trimmed = raw.trim();
+    match trimmed.rsplit_once('@') {
+        Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
+        _ => trimmed,
+    }
+}
+
 fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
     let requested: HashSet<&str> = ids
         .iter()
         .filter_map(|id| {
-            id.split_once('/')
-                .map(|_| id.split('@').next().unwrap_or(id))
+            let clean = bare(id);
+            clean
+                .split_once('/')
+                .filter(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+                .map(|_| clean)
         })
         .collect();
     let targets =
@@ -80,8 +91,15 @@ fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
         .filter(|row| {
             row["identity"]
                 .as_str()
-                .or_else(|| row["id"].as_str())
-                .is_some_and(|id| requested.contains(id))
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .or_else(|| {
+                    row["id"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|id| !id.is_empty())
+                })
+                .is_some_and(|id| requested.contains(bare(id)))
         })
         .cloned()
         .collect())
@@ -124,7 +142,14 @@ fn documentation(
         .map(|target| {
             target["identity"]
                 .as_str()
-                .or_else(|| target["id"].as_str())
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .or_else(|| {
+                    target["id"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|id| !id.is_empty())
+                })
                 .map(str::to_owned)
                 .ok_or_else(|| io::Error::other("import documentation identity"))
         })

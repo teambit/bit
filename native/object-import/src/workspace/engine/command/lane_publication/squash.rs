@@ -38,8 +38,16 @@ pub(super) fn prepare(
         json!({"previousParents":policy["previousParents"],"laneId":lane["otherId"]});
     let identity = format!(
         "{}/{}",
-        model["scope"].as_str().ok_or_else(|| invalid("squash model scope"))?,
-        model["name"].as_str().ok_or_else(|| invalid("squash model name"))?,
+        model["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("squash model scope"))?,
+        model["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("squash model name"))?,
     );
     let replacement = replacement_message(title, distance, lane, repository)?;
     Ok(Some(Prepared { identity, hash: hash.to_owned(), version: value, replacement }))
@@ -81,7 +89,12 @@ fn replacement_message(
     lane: &Value,
     repository: &mut Repository,
 ) -> io::Result<Option<String>> {
-    let Some(title) = title.filter(|title| !title.is_empty()) else { return Ok(None) };
+    let Some(title) = title
+        .map(str::trim)
+        .filter(|title| !title.is_empty())
+    else {
+        return Ok(None);
+    };
     let references =
         distance["targetOnly"].as_array().ok_or_else(|| invalid("squash message references"))?;
     let references = references
@@ -89,15 +102,13 @@ fn replacement_message(
         .map(|reference| {
             reference
                 .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("squash message hash"))
         })
         .collect::<io::Result<Vec<_>>>()?;
-    let scope = lane["otherId"]
-        .as_str()
-        .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope))
-        .or_else(|| lane["otherId"]["scope"].as_str())
-        .ok_or_else(|| invalid("squash message remote"))?;
+    let scope = lane_scope(&lane["otherId"]).ok_or_else(|| invalid("squash message remote"))?;
     repository.prepare_lane_squash_messages(scope, &references)?;
     let mut messages = Vec::new();
     for hash in references {
@@ -113,6 +124,19 @@ fn replacement_message(
         }
     }
     Ok(Some(format!("{title}\n{}", messages.join("\n"))))
+}
+
+fn lane_scope(other_id: &Value) -> Option<&str> {
+    other_id
+        .as_str()
+        .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope.trim()))
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| {
+            other_id["scope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        })
 }
 fn replace_message(
     version: &mut Value,

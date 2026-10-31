@@ -126,7 +126,12 @@ fn parse(registry: &Value) -> Vec<Registration> {
         .into_iter()
         .flatten()
         .filter_map(|tuple| {
-            let registrar = tuple.get(0)?.as_str()?.to_owned();
+            let registrar = tuple
+                .get(0)?
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())?
+                .to_owned();
             Some((registrar, tuple.get(1)?.clone()))
         })
         .collect()
@@ -142,9 +147,13 @@ pub fn component_slots(
     let options = VariantOptions { source: Some("slots"), ..VariantOptions::default() };
     let mut slots: Vec<PolicyEntry> = Vec::new();
     for id in component.config.keys() {
+        let trimmed = id.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
         let registered = registry
             .iter()
-            .find(|(registrar, _)| registrar == id || registrar.contains(id.as_str()));
+            .find(|(registrar, _)| registrar == trimmed || registrar.contains(trimmed));
         if let Some((_, policy)) = registered.filter(|(_, policy)| entries::truthy(policy)) {
             slots = merge(vec![slots, entries::from_variant_config(policy, &options)]);
         }

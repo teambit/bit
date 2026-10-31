@@ -60,7 +60,7 @@ fn load_package(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<
         return Err(invalid("TypeScript package mappings require canonical lookup"));
     }
     let Some(main) = entry(&package, typed) else { return Ok(None) };
-    if main.contains(['\\', ':']) {
+    if main.contains(['\\', ':']) || main.chars().any(char::is_control) {
         return Err(invalid("TypeScript package entry spelling"));
     }
     let target = normalize(&file.join(main));
@@ -77,6 +77,7 @@ fn entry(package: &Value, typed: bool) -> Option<&str> {
             package
                 .get(field)?
                 .as_str()
+                .map(str::trim)
                 .filter(|value| !value.is_empty())
         })
 }

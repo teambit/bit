@@ -61,13 +61,15 @@ impl Recovery {
         } else {
             let (scope, name) = lane["currentId"]
                 .as_str()
-                .and_then(|raw| raw.split_once('/'))
+                .and_then(|raw| raw.trim().split_once('/'))
                 .or_else(|| {
                     Some((
                         lane["currentId"]["scope"].as_str()?,
                         lane["currentId"]["name"].as_str()?,
                     ))
                 })
+                .map(|(scope, name)| (scope.trim(), name.trim()))
+                .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
                 .ok_or_else(|| invalid("lane recovery identity"))?;
             format!("{scope}/{name}")
         };
@@ -135,7 +137,11 @@ impl Recovery {
     }
 }
 fn text(value: &Value) -> io::Result<&str> {
-    value.as_str().ok_or_else(|| invalid("lane recovery identity"))
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .ok_or_else(|| invalid("lane recovery identity"))
 }
 fn encode_lane(hash: &str, value: &Value) -> io::Result<Vec<u8>> {
     let object = snapshot::object("Lane", Some(hash), value.clone())?;

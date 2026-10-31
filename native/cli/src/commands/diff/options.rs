@@ -33,7 +33,6 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
         index += 1;
         if arg == "--" {
             for &rest in &args[index..] {
-                (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
                 push_positional(&mut options, rest)?;
             }
             break;
@@ -80,15 +79,16 @@ fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize)
 }
 
 fn push_positional(options: &mut Options, arg: &str) -> Option<()> {
-    if arg.is_empty() || arg.starts_with('-') {
+    let trimmed = arg.trim();
+    if trimmed.is_empty() || trimmed.starts_with('-') {
         return None;
     }
     if options.pattern.is_none() {
-        options.pattern = Some(arg.to_string());
+        options.pattern = Some(trimmed.to_string());
     } else if options.versions.from.is_none() {
-        options.versions.from = Some(arg.to_string());
+        options.versions.from = Some(trimmed.to_string());
     } else if options.versions.to.is_none() {
-        options.versions.to = Some(arg.to_string());
+        options.versions.to = Some(trimmed.to_string());
     } else {
         return None;
     }

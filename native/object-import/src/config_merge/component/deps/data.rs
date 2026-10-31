@@ -4,23 +4,7 @@ use std::io;
 
 pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     for (index, side) in ["current", "other", "base"].iter().enumerate() {
-        let entries = state.data[index]
-            .iter()
-            .filter(|dep| index == 0 || dep["source"] == "auto")
-            .collect::<Vec<_>>();
-        let lines = entries
-            .iter()
-            .map(|dep| {
-                format!(
-                    "{} {} {}",
-                    dep["__type"].as_str().unwrap_or("undefined"),
-                    dep["id"].as_str().unwrap_or("undefined"),
-                    dep["version"].as_str().unwrap_or("undefined"),
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-        state.engine.log("debug", format!("{side}Data, {}\n{lines}", entries.len()));
+        log_side_data(state, index, side);
     }
     let mut ids = Vec::new();
     for dep in state.data[0]
@@ -30,7 +14,14 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     {
         let id = dep["id"]
             .as_str()
-            .or_else(|| dep["componentId"].as_str())
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .or_else(|| {
+                dep["componentId"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|val| !val.is_empty())
+            })
             .ok_or_else(|| super::super::super::invalid("data id"))?;
         if !ids
             .iter()
@@ -43,6 +34,26 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
         one(state, &id)?;
     }
     Ok(())
+}
+
+fn log_side_data(state: &mut State<'_, '_>, index: usize, side: &str) {
+    let entries = state.data[index]
+        .iter()
+        .filter(|dep| index == 0 || dep["source"] == "auto")
+        .collect::<Vec<_>>();
+    let lines = entries
+        .iter()
+        .map(|dep| {
+            format!(
+                "{} {} {}",
+                dep["__type"].as_str().unwrap_or("undefined"),
+                dep["id"].as_str().unwrap_or("undefined"),
+                dep["version"].as_str().unwrap_or("undefined"),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    state.engine.log("debug", format!("{side}Data, {}\n{lines}", entries.len()));
 }
 fn one(state: &mut State<'_, '_>, id: &str) -> io::Result<()> {
     state.engine.log("trace", format!("depData.id, {id}"));
@@ -113,6 +124,8 @@ fn paired(
     let name = if current["__type"] == "component" {
         current["packageName"]
             .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
             .ok_or_else(|| super::super::super::invalid("packageName"))?
     } else {
         id

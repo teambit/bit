@@ -26,7 +26,7 @@ impl Captured {
     pub(super) fn parse(payload: &Value) -> Option<Self> {
         let mut vars = BTreeMap::new();
         for (key, value) in payload.get("environment")?.as_object()? {
-            if value.is_null() {
+            if key.is_empty() || key.contains(['=', '\0']) || value.is_null() {
                 continue;
             }
             let text = match value {
@@ -35,9 +35,12 @@ impl Captured {
                 Value::Number(number) => number.to_string(),
                 _ => return None,
             };
+            if text.contains('\0') {
+                return None;
+            }
             vars.insert(key.clone(), text);
         }
-        let cwd = PathBuf::from(payload.get("cwd")?.as_str()?);
+        let cwd = PathBuf::from(payload.get("cwd")?.as_str()?.trim());
         cwd.is_absolute()
             .then_some(Self { vars, cwd })
     }
@@ -114,14 +117,11 @@ impl EnvVarOs for CapturedHost {
 
 impl GetHomeDir for CapturedHost {
     fn home_dir() -> Option<PathBuf> {
-        if cfg!(unix) {
-            Self::var_os("HOME").map(PathBuf::from).or_else(Host::home_dir)
-        } else {
-            Self::var_os("USERPROFILE")
-                .filter(|value| !value.is_empty())
-                .map(PathBuf::from)
-                .or_else(Host::home_dir)
-        }
+        let key = if cfg!(unix) { "HOME" } else { "USERPROFILE" };
+        Self::var_os(key)
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from)
+            .or_else(Host::home_dir)
     }
 }
 

@@ -17,12 +17,13 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let mut plans = Vec::new();
     let mut names = Vec::new();
-    for name in &options.remotes {
-        if options.delete && names.contains(name) {
+    for raw_name in &options.remotes {
+        let name = raw_name.trim().to_owned();
+        if name.is_empty() || names.contains(&name) {
             continue;
         }
         names.push(name.clone());
-        match remote_action::prepare(&cwd, name, true, options.delete) {
+        match remote_action::prepare(&cwd, &name, true, options.delete) {
             Ok(Some(plan)) => plans.push(Arc::new(plan)),
             Ok(None) => {
                 return Ok(Outcome::Declined(
@@ -52,7 +53,7 @@ fn report(
         let data = runtime.block_on(super::deletion::run(plans, names, options, args, output))?;
         return Ok(Report { data, code: 0, details: None });
     }
-    let ids = runtime.block_on(persist(plans, options, output))?;
+    let ids = runtime.block_on(persist(plans, names, options, output))?;
     let data = if ids.is_empty() {
         Chalk::detect(args).yellow("no components were left to persist for this export-id")
     } else {
@@ -63,13 +64,14 @@ fn report(
 
 async fn persist(
     plans: &[Arc<Plan>],
+    names: &[String],
     options: &Options,
     output: &Output,
 ) -> io::Result<Vec<String>> {
     output.restart("verifying that objects can be merged on the remotes...");
     validate(plans, &options.export_id).await?;
     let mut ids = Vec::new();
-    for (plan, name) in plans.iter().zip(&options.remotes) {
+    for (plan, name) in plans.iter().zip(names) {
         output.restart(&format!(r#"persisting data on the remote "{name}"..."#));
         let value = persist_one(plan, name, &options.export_id).await?;
         append_ids(&mut ids, value)?;
@@ -110,7 +112,9 @@ fn append_ids(ids: &mut Vec<String>, value: Value) -> io::Result<()> {
     match value {
         Value::Null => {}
         Value::Array(values) => {
-            ids.extend(values.iter().filter_map(extract_export_id));
+            for id in values.iter().filter_map(extract_export_id) {
+                push_unique_id(ids, id);
+            }
         }
         Value::String(_) | Value::Object(_) => {
             if let Some(nested) = value
@@ -122,11 +126,17 @@ fn append_ids(ids: &mut Vec<String>, value: Value) -> io::Result<()> {
             }
             let id = extract_export_id(&value)
                 .ok_or_else(|| io::Error::other("invalid remote export result"))?;
-            ids.push(id);
+            push_unique_id(ids, id);
         }
         _ => return Err(io::Error::other("invalid remote export result")),
     }
     Ok(())
+}
+
+fn push_unique_id(ids: &mut Vec<String>, id: String) {
+    if !ids.contains(&id) {
+        ids.push(id);
+    }
 }
 
 fn extract_export_id(value: &Value) -> Option<String> {

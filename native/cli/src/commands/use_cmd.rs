@@ -94,10 +94,11 @@ fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
 fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<String, Failure> {
     let default_scope = super::aspect::workspace_default_scope(doc_val).ok();
     let bitmap = Bitmap::load(root, default_scope.as_deref())?;
-    let bare = target
-        .split('@')
-        .next()
-        .unwrap_or(target);
+    let trimmed = target.trim();
+    let bare = match trimmed.rsplit_once('@') {
+        Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
+        _ => trimmed,
+    };
     let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     let entry = bitmap.entries
         .iter()
@@ -122,10 +123,14 @@ fn is_extension_configured(value: &Value, id: &str) -> bool {
     let Some(obj) = value.as_object() else {
         return false;
     };
-    if obj.contains_key(id) {
+    let target = id.trim();
+    if obj.contains_key(target) {
         return true;
     }
-    let prefix = format!("{id}@");
+    let prefix = format!("{target}@");
     obj.keys()
-        .any(|key| key.starts_with(&prefix))
+        .any(|key| {
+            let trimmed = key.trim();
+            trimmed == target || trimmed.starts_with(&prefix)
+        })
 }

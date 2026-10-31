@@ -106,8 +106,9 @@ fn patterns(root: &Path, selected: &Component) -> io::Result<Patterns> {
 }
 
 fn absolute_pattern(directory: &Path, pattern: &str) -> String {
+    let pattern = pattern.trim();
     let (prefix, relative) = pattern
         .strip_prefix('!')
-        .map_or(("", pattern), |value| ("!", value));
+        .map_or(("", pattern), |value| ("!", value.trim()));
     format!("{prefix}{}", directory.join(relative).display())
 }

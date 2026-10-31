@@ -28,12 +28,14 @@ impl Control {
         Self {
             removed: removed
                 .and_then(|config| config["range"].as_str())
-                .and_then(|range| Range::parse(range).ok()),
+                .and_then(|range| Range::parse(range.trim()).ok()),
             snaps: removed
                 .and_then(|config| config["snaps"].as_array())
                 .into_iter()
                 .flatten()
                 .filter_map(Value::as_str)
+                .map(str::trim)
+                .filter(|snap| !snap.is_empty())
                 .map(str::to_owned)
                 .collect(),
             deprecated: deprecated
@@ -52,7 +54,7 @@ impl Control {
     fn removed(&self, row: &Value) -> bool {
         if let Some(tag) = row["tag"]
             .as_str()
-            .and_then(|tag| Version::parse(tag).ok())
+            .and_then(|tag| Version::parse(tag.trim()).ok())
         {
             return self.removed
                 .as_ref()
@@ -60,10 +62,11 @@ impl Control {
         }
         row["hash"]
             .as_str()
+            .map(str::trim)
             .is_some_and(|hash| {
                 self.snaps
                     .iter()
-                    .any(|snap| snap == hash)
+                    .any(|snap| snap.eq_ignore_ascii_case(hash))
             })
     }
 }

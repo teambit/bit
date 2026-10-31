@@ -43,10 +43,11 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
     let [sub] = tokens.as_slice() else {
         return None;
     };
-    if sub.is_empty() || sub.starts_with('-') || *sub == "tail-log" {
+    let sub = sub.trim();
+    if sub.is_empty() || sub.starts_with('-') || sub == "tail-log" {
         return None;
     }
-    if *sub == "log" { Some(Parsed::Log) } else { Some(Parsed::Unrecognized((*sub).to_owned())) }
+    if sub == "log" { Some(Parsed::Log) } else { Some(Parsed::Unrecognized(sub.to_owned())) }
 }
 
 fn run_log(args: &[OsString]) -> io::Result<Outcome> {

@@ -53,7 +53,8 @@ pub(super) fn write(
 }
 
 fn fill_repo(content: &str, repo: &str) -> String {
-    if repo == UNKNOWN {
+    let trimmed_repo = repo.trim();
+    if trimmed_repo.is_empty() || trimmed_repo == UNKNOWN {
         return content.to_owned();
     }
     let Some(start) = content.find(START) else {
@@ -66,7 +67,7 @@ fn fill_repo(content: &str, repo: &str) -> String {
     format!(
         "{}{}{}",
         &content[..start],
-        content[start..end].replace(UNKNOWN, repo),
+        content[start..end].replace(UNKNOWN, trimmed_repo),
         &content[end..],
     )
 }
@@ -79,7 +80,9 @@ fn starts_block(line: &str) -> bool {
 
 fn insertion_point(lines: &[&str]) -> usize {
     let mut at = 0;
-    if super::trim(lines[0]) == "---"
+    if lines
+        .first()
+        .is_some_and(|first| super::trim(first) == "---")
         && let Some(end) = lines
             .iter()
             .enumerate()

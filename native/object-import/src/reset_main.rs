@@ -57,8 +57,10 @@ pub struct Plan {
 
 impl Plan {
     pub fn prepare(root: &Path, identity: &str, head_only: bool, force: bool) -> io::Result<Self> {
+        let identity = identity.trim();
         let (scope, name) = identity
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("reset identity"))?;
         let bitmap = bitmap::Bitmap::load(root, scope, name)?;
@@ -92,19 +94,21 @@ impl Plan {
 fn validate_detached(component: &Value, selection: &Selection) -> io::Result<()> {
     if component["detachedHeads"]["heads"]
         .as_array()
-        .is_some_and(|heads| {
-            heads
-                .iter()
-                .any(|hash| {
-                    selection.removed
-                        .iter()
-                        .any(|removed| hash == removed)
-                })
-        })
+        .is_some_and(|heads| heads.iter().any(|hash| is_removed_detached(hash, selection)))
     {
         return Err(invalid("reset selected detached head"));
     }
     Ok(())
+}
+
+fn is_removed_detached(hash: &Value, selection: &Selection) -> bool {
+    hash.as_str()
+        .map(str::trim)
+        .is_some_and(|hash| {
+            selection.removed
+                .iter()
+                .any(|removed| hash.eq_ignore_ascii_case(removed.trim()))
+        })
 }
 
 fn invalid(message: &str) -> io::Error {

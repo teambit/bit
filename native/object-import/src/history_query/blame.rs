@@ -35,7 +35,12 @@ pub(super) fn blame(request: Request, cache: &mut Cache) -> io::Result<Value> {
         if pending.is_empty() {
             break;
         }
-        let Some(parent) = log.get("parentFileHash").and_then(Value::as_str) else {
+        let Some(parent) = log
+            .get("parentFileHash")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+        else {
             continue;
         };
         let new = sources.text(reference(log, "fileHash")?)?;
@@ -69,6 +74,8 @@ fn assign_remaining(
 fn reference<'a>(log: &'a Value, field: &str) -> io::Result<&'a str> {
     log.get(field)
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .ok_or_else(|| invalid("history blame Source ref"))
 }
 fn metadata(row: &mut Value, log: &Value) {

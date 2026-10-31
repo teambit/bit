@@ -21,16 +21,21 @@ pub(in super::super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
 
 fn parse_update_dependent(update: &Value) -> io::Result<Value> {
     if let Some(raw) = update.as_str() {
-        let (identity, head) =
-            raw.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+        let (identity, head) = raw
+            .trim()
+            .rsplit_once('@')
+            .ok_or_else(|| invalid("outbound lane update-dependent id"))?;
         let (scope, name) = identity
+            .trim()
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .ok_or_else(|| invalid("outbound lane update-dependent identity"))?;
-        crate::merge_history::hash(head)?;
+        let trimmed_head = head.trim();
+        crate::merge_history::hash(trimmed_head)?;
         if scope.is_empty() || name.is_empty() {
             return Err(invalid("outbound lane update-dependent identity"));
         }
-        return Ok(json!({"id":{"scope":scope,"name":name},"head":head}));
+        return Ok(json!({"id":{"scope":scope,"name":name},"head":trimmed_head}));
     }
     let parsed = ComponentId::parse(update)?;
     Ok(json!({"id":{"scope":parsed.scope,"name":parsed.name},"head":parsed.head}))
@@ -73,42 +78,47 @@ pub(super) fn workspace_entries(
 }
 
 fn workspace_entry_id(key: &str, entry: &Value) -> Option<Value> {
-    if key.starts_with('$')
-        || matches!(key, "_bit_lane" | "version")
+    let trimmed_key = key.trim();
+    if trimmed_key.starts_with('$')
+        || matches!(trimmed_key, "_bit_lane" | "version")
         || !entry.is_object()
         || entry["isAvailableOnCurrentLane"] == false
         || crate::workspace::engine::client_status::config::is_config_removed(&entry["config"])
     {
         return None;
     }
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
-    let scope = entry["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
+    let key_id = trimmed_key.rsplit_once('@').map_or(trimmed_key, |(bare, _)| bare.trim());
+    let scope = non_empty_field(entry, "scope")
+        .or_else(|| non_empty_field(entry, "defaultScope"))
         .or_else(|| {
-            entry["defaultScope"]
-                .as_str()
-                .filter(|val| !val.is_empty())
-        })
-        .or_else(|| key_id.split_once('/').map(|(scope_part, _)| scope_part))?;
-    let name = entry["name"]
-        .as_str()
-        .filter(|val| !val.is_empty())
+            key_id
+                .split_once('/')
+                .map(|(scope_part, _)| scope_part.trim())
+                .filter(|scope_part| !scope_part.is_empty())
+        })?;
+    let name = non_empty_field(entry, "name")
         .unwrap_or_else(|| {
             key_id
                 .strip_prefix(&format!("{scope}/"))
                 .unwrap_or(key_id)
+                .trim()
         });
-    let version = entry["version"]
-        .as_str()
-        .filter(|val| !val.is_empty())
+    let version = non_empty_field(entry, "version")
         .or_else(|| {
-            key.rsplit_once('@')
-                .map(|(_, ver)| ver)
+            trimmed_key
+                .rsplit_once('@')
+                .map(|(_, ver)| ver.trim())
                 .filter(|val| !val.is_empty())
         })?;
     let _ = version;
-    Some(json!({"scope":scope,"name":name}))
+    (!name.is_empty()).then(|| json!({"scope":scope,"name":name}))
+}
+
+fn non_empty_field<'a>(entry: &'a Value, field: &str) -> Option<&'a str> {
+    entry[field]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
 }
 
 /// `getAllVersionHashes` starts at the lane head and walks its complete

@@ -23,14 +23,21 @@ pub(super) fn select(
     owner: &Value,
     state: &mut crate::merge_transaction::State,
 ) -> io::Result<Value> {
-    let identity =
-        input.target["identity"].as_str().ok_or_else(|| invalid("command merge identity"))?;
-    let version =
-        input.target["version"].as_str().ok_or_else(|| invalid("command merge current version"))?;
+    let identity = input.target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("command merge identity"))?;
+    let version = input.target["version"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("command merge current version"))?;
+    let full_id =
+        if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") };
     let mut cursor = crate::merge_transaction::apply(
         "mergeStatusBegin",
         json!({
-            "token":owner,"index":input.index,"id":format!("{identity}@{version}"),"idWithoutVersion":identity,
+            "token":owner,"index":input.index,"id":full_id,"idWithoutVersion":identity,
             "hasConsumer":true,"hasWorkspace":true,
         }),
         state,
@@ -108,9 +115,14 @@ fn divergence(input: &Input<'_>) -> io::Result<Value> {
 }
 
 fn removed(version: &Value) -> io::Result<bool> {
-    let extensions = version["extensions"]
-        .as_array()
-        .ok_or_else(|| invalid("command merge Version extensions"))?;
+    let Some(extensions) = version
+        .get("extensions")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(false);
+    };
+    let extensions =
+        extensions.as_array().ok_or_else(|| invalid("command merge Version extensions"))?;
     Ok(extensions
         .iter()
         .any(|extension| {

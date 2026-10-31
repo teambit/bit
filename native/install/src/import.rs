@@ -84,6 +84,7 @@ async fn import(
     let scope_json = read_scope_json(scope_dir)?;
     let local_scope = scope_json["name"]
         .as_str()
+        .map(str::trim)
         .unwrap_or_default()
         .to_string();
     let (remotes, network) = connect(&scope_json, &local_scope, global, info)?;
@@ -130,8 +131,8 @@ fn connect(
     );
     let remotes =
         Remotes::load(scope_json, &info.global_config_dir, global)?.with_resolver(resolver);
-    let network =
-        Network::new(global, &info.bit_version, Some(local_scope), info.token.as_deref())?;
+    let requester = (!local_scope.is_empty()).then_some(local_scope);
+    let network = Network::new(global, &info.bit_version, requester, info.token.as_deref())?;
     Ok((remotes, network))
 }
 

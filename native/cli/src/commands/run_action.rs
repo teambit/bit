@@ -76,8 +76,13 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     if filtered.len() != 3 {
         return None;
     }
+    let action_name = filtered[0].trim();
+    let remote = filtered[1].trim();
+    if action_name.is_empty() || remote.is_empty() {
+        return None;
+    }
     let payload = serde_json::from_str::<Value>(filtered[2]).ok()?;
-    Some(Options { action_name: filtered[0].to_owned(), remote: filtered[1].to_owned(), payload })
+    Some(Options { action_name: action_name.to_owned(), remote: remote.to_owned(), payload })
 }
 
 fn report(value: &Value) -> io::Result<Report> {
@@ -114,7 +119,7 @@ fn report(value: &Value) -> io::Result<Report> {
                 Some(Value::Number(number)) => number
                     .as_i64()
                     .and_then(|code| i32::try_from(code).ok())
-                    .unwrap_or(0),
+                    .ok_or_else(|| io::Error::other("unsupported run-action exit code"))?,
                 Some(_) => return Err(io::Error::other("unsupported run-action exit code")),
             };
             Ok(Report { data, code, details: None })

@@ -98,15 +98,11 @@ fn references(
 
 fn dependent_identity(model: &Value, row: &Value) -> io::Result<String> {
     let (row_scope, row_name) = super::row_id_parts(&row["id"]);
-    let scope = model["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| (!row_scope.is_empty()).then_some(row_scope))
+    let scope = non_empty_str(&model["scope"])
+        .or_else(|| (!row_scope.trim().is_empty()).then(|| row_scope.trim()))
         .ok_or_else(|| invalid("lane dependent scope"))?;
-    let name = model["name"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| (!row_name.is_empty()).then_some(row_name))
+    let name = non_empty_str(&model["name"])
+        .or_else(|| (!row_name.trim().is_empty()).then(|| row_name.trim()))
         .ok_or_else(|| invalid("lane dependent name"))?;
     Ok(format!("{scope}/{name}"))
 }
@@ -122,32 +118,33 @@ fn tag(model: &Value, hash: &str) -> String {
 }
 
 fn dependency_id(value: &Value) -> Option<String> {
-    if let Some(id) = value
-        .as_str()
-        .filter(|id| !id.is_empty())
-    {
+    if let Some(id) = non_empty_str(value) {
         return Some(id.to_owned());
     }
     let id_obj = value
         .get("id")
         .filter(|sub| sub.is_object())
         .unwrap_or(value);
-    let scope = id_obj["scope"]
-        .as_str()
-        .or_else(|| value["scope"].as_str())
-        .filter(|val| !val.is_empty())?;
-    let raw_name = id_obj["name"]
-        .as_str()
-        .or_else(|| value["name"].as_str())
-        .filter(|val| !val.is_empty())?;
+    let scope = non_empty_str(&id_obj["scope"]).or_else(|| non_empty_str(&value["scope"]))?;
+    let raw_name = non_empty_str(&id_obj["name"]).or_else(|| non_empty_str(&value["name"]))?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
-    let version = value["version"]
-        .as_str()
-        .or_else(|| id_obj["version"].as_str())
-        .or_else(|| value["head"].as_str())
-        .filter(|val| !val.is_empty())
+        .map_or((raw_name, None), |(bare, ver)| {
+            (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
+    if name.is_empty() {
+        return None;
+    }
+    let version = non_empty_str(&value["version"])
+        .or_else(|| non_empty_str(&id_obj["version"]))
+        .or_else(|| non_empty_str(&value["head"]))
         .or(inline_ver)?;
     Some(format!("{scope}/{name}@{version}"))
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }

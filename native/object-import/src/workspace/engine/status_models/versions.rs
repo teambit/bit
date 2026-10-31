@@ -42,21 +42,24 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
     Ok(references)
 }
 pub(in crate::workspace::engine) fn reference(model: &Value, version: &str) -> io::Result<String> {
+    let version = version.trim();
     if matches!(version, "" | "latest" | "head") {
-        return model["head"]
+        let head = model["head"]
             .as_str()
-            .map(str::to_owned)
-            .ok_or_else(|| invalid("status model version absent"));
+            .map(str::trim)
+            .ok_or_else(|| invalid("status model version absent"))?;
+        return Ok(crate::validate::hexadecimal(&crate::merge_history::hash(head)?));
     }
-    if crate::merge_history::hash(version).is_ok() {
-        return Ok(version.to_owned());
+    if let Ok(digest) = crate::merge_history::hash(version) {
+        return Ok(crate::validate::hexadecimal(&digest));
     }
-    model["orphanedVersions"]
+    let resolved = model["orphanedVersions"]
         .get(version)
         .unwrap_or_else(|| &model["versions"][version])
         .as_str()
-        .map(str::to_owned)
-        .ok_or_else(|| invalid("status model version absent"))
+        .map(str::trim)
+        .ok_or_else(|| invalid("status model version absent"))?;
+    Ok(crate::validate::hexadecimal(&crate::merge_history::hash(resolved)?))
 }
 
 // The mutable Version body is read once per reference in this command.
@@ -115,10 +118,10 @@ pub(super) fn include_heads(models: &[Value], references: &mut Vec<String>) -> i
             .get("head")
             .filter(|head| !head.is_null())
         {
-            let head = head.as_str().ok_or_else(|| invalid("status model head"))?;
-            crate::merge_history::hash(head)?;
-            if seen.insert(head.to_owned()) {
-                references.push(head.to_owned());
+            let raw = head.as_str().ok_or_else(|| invalid("status model head"))?;
+            let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(raw)?);
+            if seen.insert(canonical.clone()) {
+                references.push(canonical);
             }
         }
     }
@@ -131,9 +134,9 @@ pub(super) fn include_lane_heads(
 ) -> io::Result<()> {
     let mut seen: HashSet<_> = references.iter().cloned().collect();
     for head in heads.values() {
-        crate::merge_history::hash(head)?;
-        if seen.insert(head.clone()) {
-            references.push(head.clone());
+        let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(head)?);
+        if seen.insert(canonical.clone()) {
+            references.push(canonical);
         }
     }
     Ok(())

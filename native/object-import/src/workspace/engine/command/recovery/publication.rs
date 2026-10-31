@@ -78,21 +78,41 @@ fn restore_models(
 fn model_identity(model: &Value) -> io::Result<String> {
     if let Some(identity) = model["identity"]
         .as_str()
-        .or_else(|| model["id"].as_str())
+        .map(str::trim)
         .filter(|id| !id.is_empty())
+        .or_else(|| {
+            model["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+        })
     {
-        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base);
-        return Ok(base.to_owned());
+        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
+        if !base.is_empty() {
+            return Ok(base.to_owned());
+        }
     }
     let name = model["name"]
         .as_str()
-        .or_else(|| model["id"]["name"].as_str())
+        .map(str::trim)
         .filter(|name| !name.is_empty())
+        .or_else(|| {
+            model["id"]["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+        })
         .ok_or_else(|| invalid("recovery model name"))?;
     let scope = model["scope"]
         .as_str()
-        .or_else(|| model["id"]["scope"].as_str())
-        .filter(|scope| !scope.is_empty());
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| {
+            model["id"]["scope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        });
     Ok(scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")))
 }
 

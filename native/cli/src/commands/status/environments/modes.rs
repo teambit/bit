@@ -81,6 +81,8 @@ pub(in crate::commands::status) fn dev_files(
     let facts = &context["environmentFacts"][text(target.get("identity"))?];
     comp.env_id = facts["envId"]
         .as_str()
+        .map(str::trim)
+        .filter(|env_id| !env_id.is_empty())
         .unwrap_or(&comp.env_id)
         .to_owned();
     let hooks = &facts["devPatterns"];
@@ -116,9 +118,14 @@ fn strings(value: &Value) -> Vec<String> {
         Value::Array(values) => values
             .iter()
             .filter_map(Value::as_str)
+            .map(str::trim)
+            .filter(|item| !item.is_empty())
             .map(str::to_owned)
             .collect(),
-        Value::String(value) => vec![value.clone()],
+        Value::String(value) => {
+            let trimmed = value.trim();
+            if trimmed.is_empty() { Vec::new() } else { vec![trimmed.to_owned()] }
+        }
         _ => Vec::new(),
     }
 }

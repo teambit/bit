@@ -112,20 +112,31 @@ fn valid_docs_options(rest: &[&str]) -> bool {
 fn docs_option_len(rest: &[&str]) -> Option<usize> {
     match rest {
         ["--"] => Some(1),
-        ["--skill" | "-s", value, ..] if !value.starts_with('-') => Some(2),
+        ["--skill" | "-s", value, ..]
+            if !value.trim().is_empty() && !value.trim().starts_with('-') =>
+        {
+            Some(2)
+        }
         [
             "-d" | "-dm" | "-md" | "--docs" | "--docs=true" | "--docs=false" | "-m" | "--metadata"
             | "--metadata=true" | "--metadata=false" | "--no-color" | "--no-color=true"
             | "--no-color=false",
             ..,
         ] => Some(1),
-        [arg, ..] if arg.starts_with("--metadata.") && arg.contains('=') => Some(1),
+        [arg, ..]
+            if arg
+                .strip_prefix("--metadata.")
+                .and_then(|rest| rest.split_once('='))
+                .is_some_and(|(key, _)| !key.trim().is_empty()) =>
+        {
+            Some(1)
+        }
         [arg, ..]
             if let Some(val) = arg
                 .strip_prefix("--skill=")
                 .or_else(|| arg.strip_prefix("-s="))
-                && !val.is_empty()
-                && !val.starts_with('-') =>
+                && !val.trim().is_empty()
+                && !val.trim().starts_with('-') =>
         {
             Some(1)
         }

@@ -13,14 +13,23 @@ impl Retained {
         identity: &str,
         version: Option<&str>,
     ) {
+        let trimmed = identity.trim();
+        let (bare, inline) = trimmed
+            .rsplit_once('@')
+            .map_or((trimmed, None), |(base, ver)| (base.trim(), Some(ver.trim())));
         let current = self.rows
-            .get(identity)
+            .get(bare)
+            .or_else(|| self.rows.get(trimmed))
             .and_then(|row| row["version"].as_str())
+            .map(str::trim)
             .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"));
-        let version =
-            version.filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"));
-        if current != version {
-            self.rows.remove(identity);
+        let requested = version
+            .map(str::trim)
+            .or(inline)
+            .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"));
+        if current != requested {
+            self.rows.remove(bare);
+            self.rows.remove(trimmed);
         }
     }
 
@@ -113,6 +122,7 @@ fn hash(value: &Value) -> bool {
     value.is_null()
         || value
             .as_str()
+            .map(str::trim)
             .is_some_and(|hash| {
                 hash.len() == 64
                     && hash

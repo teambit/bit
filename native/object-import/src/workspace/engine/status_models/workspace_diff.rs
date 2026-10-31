@@ -109,14 +109,16 @@ fn selected<'a>(
     models: &HashMap<String, &Value>,
     versions: &HashMap<&str, &'a Value>,
 ) -> io::Result<Option<&'a Value>> {
+    let identity = target.identity.trim();
     let model = models
-        .get(&target.identity)
+        .get(identity)
         .or_else(|| {
-            target.identity
+            identity
                 .split_once('/')
-                .and_then(|(_, name)| models.get(name))
+                .and_then(|(_, name)| models.get(name.trim()))
         });
-    if target.version.is_empty() {
+    let version = target.version.trim();
+    if version.is_empty() {
         return if model.is_none() {
             Ok(None)
         } else {
@@ -124,7 +126,7 @@ fn selected<'a>(
         };
     }
     let model = model.ok_or_else(|| invalid("workspace diff missing model"))?;
-    let reference = versions::reference(model, &target.version)?;
+    let reference = versions::reference(model, version)?;
     versions
         .get(reference.as_str())
         .copied()

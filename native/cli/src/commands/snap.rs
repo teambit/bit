@@ -50,16 +50,29 @@ fn outside_workspace_snap(
     options: &options::Options,
     workflow: &resolve::workflow::Workflow,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+    {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     }
-    let warn = options.message.is_none() && workflow.editor.is_none();
+    let warn = should_warn_message(options, workflow);
     workspace_command::execute_then_scope(cwd, args, "snap", |output| {
         if warn {
             output.warning(MESSAGE_WARNING);
         }
         Err(io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR))
     })
+}
+
+fn should_warn_message(options: &options::Options, workflow: &resolve::workflow::Workflow) -> bool {
+    options.message
+        .as_deref()
+        .is_none_or(|message| message.trim().is_empty())
+        && workflow.editor.is_none()
 }
 
 fn run_workspace(
@@ -71,7 +84,7 @@ fn run_workspace(
 ) -> io::Result<Outcome> {
     let mut startup = Startup::default();
     let prepared = prepare(root, args, options, workflow, policy, &mut startup);
-    let warn = options.message.is_none() && workflow.editor.is_none();
+    let warn = should_warn_message(options, workflow);
     let (mut planned, report, progress) = match prepared {
         Ok(prepared) => prepared,
         Err(error) if startup.committed => return failure(root, args, warn, &startup, error),

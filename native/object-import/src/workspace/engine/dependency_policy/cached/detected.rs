@@ -61,12 +61,13 @@ fn ignored(finish: &Value) -> io::Result<Vec<Vec<String>>> {
 }
 
 fn identity(value: &Value) -> io::Result<String> {
-    if let Some(raw) = value.as_str() {
+    if let Some(raw) = value.as_str().map(str::trim) {
         let (bare, ver) = raw
             .rsplit_once('@')
-            .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
+            .map_or((raw, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
         let (scope, name) = bare
             .split_once('/')
+            .map(|(sc, nm)| (sc.trim(), nm.trim()))
             .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
             .ok_or_else(|| invalid("status cached dependency scope"))?;
         return Ok(match ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")) {
@@ -76,10 +77,12 @@ fn identity(value: &Value) -> io::Result<String> {
     }
     let name = value["name"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid("status cached dependency name"))?;
     let scope = value["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid("status cached dependency scope"))?;
     let mut identity = format!("{scope}/{name}");
@@ -87,8 +90,10 @@ fn identity(value: &Value) -> io::Result<String> {
         .get("version")
         .filter(|value| !value.is_null())
     {
-        let version =
-            version.as_str().ok_or_else(|| invalid("status cached dependency version"))?;
+        let version = version
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("status cached dependency version"))?;
         if !version.is_empty() && !matches!(version, "latest" | "head") {
             identity.push('@');
             identity.push_str(version);

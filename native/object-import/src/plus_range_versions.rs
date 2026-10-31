@@ -42,14 +42,17 @@ fn dependency_usage(dependency: &Value) -> Option<String> {
                 format!("{}/{}", text(&target["scope"]), text(&target["name"]))
             },
             |id| {
-                id.split('@')
+                id.trim()
+                    .split('@')
                     .next()
                     .unwrap_or(id)
+                    .trim()
                     .to_owned()
             },
         );
     let name = dependency["packageName"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .unwrap_or(&identity);
     Some(format!(r#"{name}: "{}""#, text(&dependency["versionRange"])))
@@ -103,8 +106,8 @@ fn env_usage(usages: &mut Vec<String>, field: &str, name: &str, value: &Value) {
     }
 }
 fn is_range(value: &Value) -> bool {
-    matches!(value.as_str(), Some("+^" | "+~"))
+    matches!(value.as_str().map(str::trim), Some("+^" | "+~"))
 }
 fn text(value: &Value) -> &str {
-    value.as_str().unwrap_or("undefined")
+    value.as_str().map_or("undefined", str::trim)
 }

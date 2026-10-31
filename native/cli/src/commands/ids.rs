@@ -17,21 +17,24 @@ pub struct Id {
 impl Id {
     /// `ComponentID.fromString(text)` (`BitId.parse(text, true)`).
     pub fn parse(id: &str) -> io::Result<Self> {
+        let id = id.trim();
         let (id, version) = match id.rfind('@') {
             Some(index) if index > 0 => {
                 let mut parts = id.split('@');
-                let name = parts.next().unwrap_or_default();
+                let name = parts.next().unwrap_or_default().trim();
                 (
                     name,
                     parts
                         .next()
                         .unwrap_or_default()
+                        .trim()
                         .to_string(),
                 )
             }
             _ => (id, "latest".to_string()),
         };
         let (scope, name) = id.split_once('/').ok_or_else(|| decline("invalid component id"))?;
+        let (scope, name) = (scope.trim(), name.trim());
         if name.is_empty() || scope.is_empty() {
             return Err(decline("component id without scope or name"));
         }
@@ -44,15 +47,15 @@ impl Id {
         if let Some(raw) = id.as_str() {
             return Self::parse(raw);
         }
-        let scope = text(id.get("scope"))?;
-        let name = text(id.get("name"))?;
+        let scope = text(id.get("scope"))?.trim();
+        let name = text(id.get("name"))?.trim();
         if scope.is_empty() || name.is_empty() {
             return Err(decline("component id without scope or name"));
         }
         let version = match id.get("version") {
             None | Some(Value::Null) => None,
             Some(version) => {
-                Some(text(Some(version))?.to_string()).filter(|value| !value.is_empty())
+                Some(text(Some(version))?.trim().to_string()).filter(|value| !value.is_empty())
             }
         };
         Ok(Self { scope: scope.to_string(), name: name.to_string(), version })
@@ -60,7 +63,10 @@ impl Id {
 
     /// `id.changeVersion(version)`.
     pub fn with_version(&self, version: Option<String>) -> Self {
-        Self { version: version.filter(|value| !value.is_empty()), ..self.clone() }
+        let version = version
+            .map(|val| val.trim().to_owned())
+            .filter(|value| !value.is_empty());
+        Self { version, ..self.clone() }
     }
 
     /// `id.scope`.

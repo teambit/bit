@@ -32,14 +32,16 @@ fn load_files(
     }
     let mut files = Vec::new();
     for file in manifests {
+        let remaining =
+            MAX_BYTES.checked_sub(*total).ok_or_else(|| invalid("checkout prepared raw limit"))?;
         let body = crate::checkout::repository::source(
             directory,
             crate::merge_history::hash(&file.hash)?,
-            32 * 1024 * 1024 - *total,
+            remaining,
             compressed,
         )?;
         *total += body.len();
-        if *total > 32 * 1024 * 1024 {
+        if *total > MAX_BYTES {
             return Err(invalid("checkout prepared raw limit"));
         }
         files.push(body);
@@ -70,8 +72,14 @@ fn read_batch(
     total: usize,
     compressed: usize,
 ) -> io::Result<Vec<Source>> {
-    let raw = Budget::new(MAX_BYTES - total);
-    let packed = Budget::new(MAX_BYTES - compressed);
+    let raw = Budget::new(
+        MAX_BYTES.checked_sub(total).ok_or_else(|| invalid("checkout prepared raw limit"))?,
+    );
+    let packed = Budget::new(
+        MAX_BYTES
+            .checked_sub(compressed)
+            .ok_or_else(|| invalid("checkout prepared compressed limit"))?,
+    );
     batch
         .par_iter()
         .map(|file| {
@@ -91,12 +99,11 @@ fn serial_batch(
         .iter()
         .map(|file| {
             let hash = crate::merge_history::hash(&file.hash)?;
-            let record = repository::read_source_record(
-                directory,
-                hash,
-                MAX_BYTES - total,
-                &mut compressed,
-            )?;
+            let remaining = MAX_BYTES
+                .checked_sub(total)
+                .ok_or_else(|| invalid("checkout prepared raw limit"))?;
+            let record =
+                repository::read_source_record(directory, hash, remaining, &mut compressed)?;
             total += record.body.len();
             Ok((hash, record))
         })

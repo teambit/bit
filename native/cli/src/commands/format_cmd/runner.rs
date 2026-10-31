@@ -55,9 +55,9 @@ fn supported_writes(
     if check {
         return true;
     }
-    let mut offset = 0;
+    let mut offset = 0usize;
     for component in components {
-        let end = offset + component.files.len();
+        let end = offset.saturating_add(component.files.len());
         let (Some(in_rows), Some(out_rows)) = (inputs.get(offset..end), files.get(offset..end))
         else {
             return false;
@@ -88,6 +88,8 @@ fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
         .all(|(input, _)| {
             input["absolutePath"]
                 .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
                 .is_some_and(|path| {
                     std::fs::OpenOptions::new()
                         .write(true)

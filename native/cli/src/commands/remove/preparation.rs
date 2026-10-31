@@ -64,49 +64,63 @@ pub(in crate::commands) fn all(bitmap: &Value) -> Vec<String> {
         .collect()
 }
 pub(in crate::commands) fn row<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a Value> {
+    let target = bare(id);
     bitmap
         .as_object()
         .and_then(|rows| {
             rows.iter()
                 .find_map(|(key, row)| {
-                    (row_identity(key, row).as_deref() == Some(id)).then_some(row)
+                    (row_identity(key, row).as_deref() == Some(target)).then_some(row)
                 })
         })
         .ok_or_else(|| io::Error::other("remove component selection changed"))
 }
 pub(in crate::commands) fn is_new(bitmap: &Value, id: &str) -> bool {
+    let target = bare(id);
     bitmap
         .as_object()
         .and_then(|rows| {
             rows.iter()
-                .find(|(key, row)| row_identity(key, row).as_deref() == Some(id))
+                .find(|(key, row)| row_identity(key, row).as_deref() == Some(target))
         })
         .is_some_and(|(key, row)| {
-            row["version"].as_str().is_none_or(str::is_empty)
-                && key.rsplit_once('@').is_none_or(|(_, ver)| ver.is_empty())
+            row["version"]
+                .as_str()
+                .map(str::trim)
+                .is_none_or(str::is_empty)
+                && key
+                    .rsplit_once('@')
+                    .is_none_or(|(_, ver)| ver.trim().is_empty())
         })
 }
 fn row_identity(key: &str, row: &Value) -> Option<String> {
     let key_id = bare(key);
-    let key_scope = key_id.split_once('/').map(|(scope, _)| scope);
+    let key_scope = key_id
+        .split_once('/')
+        .map(|(scope, _)| scope.trim())
+        .filter(|scope| !scope.is_empty());
     let scope = row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
         })
         .or(key_scope)?;
     let name = row["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .unwrap_or_else(|| {
             key_id
                 .strip_prefix(&format!("{scope}/"))
                 .unwrap_or(key_id)
+                .trim()
         });
-    Some(format!("{scope}/{name}"))
+    (!name.is_empty()).then(|| format!("{scope}/{name}"))
 }
 fn main_exists(root: &Path, row: &Value) -> bool {
     row["rootDir"]
@@ -125,5 +139,9 @@ pub(in crate::commands) fn facts(rows: &[Value]) -> Vec<Value> {
     rows.iter().map(|row| json!({"identity":row["identity"],"extensions":row["current"]["extensions"],"packageName":row["packageName"]})).collect()
 }
 fn bare(id: &str) -> &str {
-    id.split('@').next().unwrap_or(id)
+    let trimmed = id.trim();
+    match trimmed.rsplit_once('@') {
+        Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
+        _ => trimmed,
+    }
 }

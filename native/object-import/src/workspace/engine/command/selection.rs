@@ -53,11 +53,17 @@ pub(super) fn select(
 }
 
 fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
-    let to = options.to.as_deref().unwrap_or("head");
+    let to = options.to
+        .as_deref()
+        .map(str::trim)
+        .filter(|to| !to.is_empty())
+        .unwrap_or("head");
     let identity = selection.target["identity"]
         .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("command checkout identity"))?;
-    let version = selection.target["version"].as_str().unwrap_or_default();
+    let version = selection.target["version"].as_str().map_or("", str::trim);
     let ancestor = to
         .strip_prefix("head~")
         .map(str::parse::<usize>)
@@ -79,6 +85,14 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
     }))
 }
 
+fn version_arg(directive: &Value) -> io::Result<&str> {
+    directive["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| invalid("command target version"))
+}
+
 fn observe(
     observation: &str,
     directive: &Value,
@@ -90,21 +104,15 @@ fn observe(
     match observation {
         "unmerged" => Ok(json!(false)),
         "resolveTarget" => versions::resolve(options, selection, repository).map(Value::String),
-        "hasVersion" => versions::has(
-            model,
-            directive["version"].as_str().unwrap_or_default(),
-            repository,
-            selection.lane_head,
-        )
-        .map(Value::Bool),
+        "hasVersion" => {
+            versions::has(model, version_arg(directive)?, repository, selection.lane_head)
+                .map(Value::Bool)
+        }
         "currentVersion" => Ok(json!({"value":selection.target["version"],"hasBitmap":true})),
         "mergePending" => Ok(json!(selection.merge_pending)),
         "modified" => Ok(json!({"modified":selection.modified,"isRemoved":false})),
         "targetRemoved" => {
-            let hash = versions::reference(
-                model,
-                directive["version"].as_str().ok_or_else(|| invalid("command target version"))?,
-            )?;
+            let hash = versions::reference(model, version_arg(directive)?)?;
             let removed = match repository.read(&hash, "Version") {
                 Ok(version) => removed(&version)?,
                 Err(error) if error.kind() == io::ErrorKind::NotFound => false,

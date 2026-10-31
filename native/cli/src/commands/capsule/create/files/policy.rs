@@ -97,7 +97,8 @@ pub(super) fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>)
         config
             .iter()
             .any(|(key, value)| {
-                (key == target || key.starts_with(&format!("{target}@")))
+                let trimmed = key.trim();
+                (trimmed == *target || trimmed.starts_with(&format!("{target}@")))
                     && value
                         .as_object()
                         .is_none_or(|env| !env.is_empty())
@@ -129,7 +130,16 @@ fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
 }
 
 pub(super) fn parse_builtin_env(env: Option<&str>) -> Option<BuiltinEnv> {
-    match env.map(|raw| raw.split('@').next().unwrap_or(raw)) {
+    let normalized = env
+        .map(str::trim)
+        .filter(|raw| !raw.is_empty())
+        .map(|raw| {
+            raw.split('@')
+                .next()
+                .unwrap_or(raw)
+                .trim()
+        });
+    match normalized {
         None | Some("teambit.harmony/node") => Some(BuiltinEnv::Node),
         Some("teambit.react/react") => Some(BuiltinEnv::React),
         Some("teambit.html/html") => Some(BuiltinEnv::Html),

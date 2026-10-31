@@ -43,9 +43,16 @@ impl Settings {
             }
             settings.files = selected.paths;
         } else if !options.json
-            && let Some(scope) = &options.scope
+            && let Some(scope) = options.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope_name| !scope_name.is_empty())
         {
-            let pattern = settings.selection.pattern.as_deref().unwrap_or("**");
+            let pattern = settings.selection.pattern
+                .as_deref()
+                .map(str::trim)
+                .filter(|pat| !pat.is_empty())
+                .unwrap_or("**");
             settings.selection.pattern = Some(format!("{scope}/{pattern}"));
         }
         Ok(settings)
@@ -65,18 +72,11 @@ impl Settings {
                     arguments.next().ok_or_else(|| invalid("tester scope"))?;
                 }
                 "--env" | "-e" => {
-                    self.environment = Some(
-                        arguments
-                            .next()
-                            .and_then(|value| value.to_str())
-                            .ok_or_else(|| invalid("tester environment"))?
-                            .to_owned(),
-                    );
+                    self.environment = Some(non_empty_arg(&mut arguments, "tester environment")?);
                 }
                 "--junit" => {
-                    self.junit = Some(PathBuf::from(
-                        arguments.next().ok_or_else(|| invalid("tester junit path"))?,
-                    ));
+                    self.junit =
+                        Some(PathBuf::from(non_empty_arg(&mut arguments, "tester junit path")?));
                 }
                 value => self.apply_inline_or_short(value)?,
             }
@@ -111,11 +111,19 @@ impl Settings {
             .strip_prefix("--env=")
             .or_else(|| value.strip_prefix("-e="))
         {
-            self.environment = Some(env_val.to_owned());
+            let trimmed = env_val.trim();
+            if trimmed.is_empty() {
+                return Err(invalid("tester environment"));
+            }
+            self.environment = Some(trimmed.to_owned());
             return Ok(());
         }
         if let Some(junit) = value.strip_prefix("--junit=") {
-            self.junit = Some(PathBuf::from(junit));
+            let trimmed = junit.trim();
+            if trimmed.is_empty() {
+                return Err(invalid("tester junit path"));
+            }
+            self.junit = Some(PathBuf::from(trimmed));
             return Ok(());
         }
         if let Some(flags) = value.strip_prefix('-') {
@@ -138,4 +146,17 @@ impl Settings {
         }
         Ok(())
     }
+}
+
+fn non_empty_arg<'a>(
+    arguments: &mut impl Iterator<Item = &'a OsString>,
+    label: &str,
+) -> io::Result<String> {
+    arguments
+        .next()
+        .and_then(|value| value.to_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| invalid(label))
 }

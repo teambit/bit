@@ -84,11 +84,16 @@ pub(super) fn bit_aspect(resolved: Resolved) -> Resolved {
 pub(super) fn from_manifest(manifest: &Value, name: &str) -> Resolved {
     let Some(package_name) = manifest["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
     else {
         return Resolved::Missing(name.to_owned());
     };
-    let concrete = manifest["version"].as_str().map(str::to_owned);
+    let concrete = manifest["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .map(str::to_owned);
     if manifest["componentId"].is_object() || manifest["componentId"].is_string() {
         return Resolved::Component(component_package(manifest, package_name, concrete));
     }
@@ -138,6 +143,7 @@ fn peer_range(manifest: &Value, concrete: Option<&str>) -> Option<String> {
     }
     let Some(default) = bit["defaultPeerRange"]
         .as_str()
+        .map(str::trim)
         .filter(|range| !range.is_empty())
     else {
         return Some("*".to_owned());
@@ -145,7 +151,7 @@ fn peer_range(manifest: &Value, concrete: Option<&str>) -> Option<String> {
     if !["~", "^", ">="].contains(&default) {
         return Some(default.to_owned());
     }
-    let concrete = concrete.unwrap_or_default();
+    let concrete = concrete.map(str::trim).unwrap_or_default();
     Some(if node_semver::Version::parse(concrete).is_ok() {
         format!("{default}{concrete}")
     } else {
@@ -156,5 +162,9 @@ fn peer_range(manifest: &Value, concrete: Option<&str>) -> Option<String> {
 pub(super) fn package_main(directory: &Path) -> Option<String> {
     let bytes = fs::read(directory.join("package.json")).ok()?;
     let manifest = bit_object_import::parse_jsonc(&bytes).ok()?;
-    manifest["main"].as_str().map(str::to_owned)
+    manifest["main"]
+        .as_str()
+        .map(str::trim)
+        .filter(|main| !main.is_empty())
+        .map(str::to_owned)
 }

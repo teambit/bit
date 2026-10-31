@@ -37,12 +37,17 @@ impl Id {
 
     /// Parse `scope/name[@version]` where `name` may contain `/`.
     pub fn parse(text: &str) -> io::Result<Self> {
-        let (path, version) = match text.rsplit_once('@') {
-            Some((path, version)) if !path.is_empty() => (path, Some(version.to_string())),
-            _ => (text, None),
+        let trimmed = text.trim();
+        let (path, version) = match trimmed.rsplit_once('@') {
+            Some((path, version)) if !path.trim().is_empty() => {
+                (path.trim(), Some(version.trim().to_string()))
+            }
+            _ => (trimmed, None),
         };
         let (scope, name) = path
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid(&format!("invalid component id {text}")))?;
         Ok(Self {
             scope: scope.to_string(),
@@ -144,14 +149,25 @@ fn exported_id(key: &str, entry: &Value) -> Option<Id> {
 
 fn lane(value: &Value) -> Option<LaneId> {
     let id = &value["id"];
-    let (scope, name) = if let Some(raw) = id.as_str().or_else(|| value.as_str()) {
+    let (scope, name) = if let Some(raw) = id
+        .as_str()
+        .map(str::trim)
+        .filter(|raw| !raw.is_empty())
+        .or_else(|| {
+            value
+                .as_str()
+                .map(str::trim)
+                .filter(|raw| !raw.is_empty())
+        }) {
         raw.split_once('/')?
     } else {
         (id["scope"].as_str()?, id["name"].as_str()?)
     };
-    (!scope.is_empty() && !name.is_empty()).then(|| LaneId {
-        scope: scope.to_string(),
-        name: name.to_string(),
+    let trimmed_scope = scope.trim();
+    let trimmed_name = name.trim();
+    (!trimmed_scope.is_empty() && !trimmed_name.is_empty()).then(|| LaneId {
+        scope: trimmed_scope.to_string(),
+        name: trimmed_name.to_string(),
         exported: value["exported"].as_bool().unwrap_or(false),
     })
 }

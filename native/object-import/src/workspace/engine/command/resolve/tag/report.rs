@@ -26,17 +26,17 @@ pub(in super::super) fn report(
 }
 
 fn versioned(id: &str, materials: &[Material]) -> io::Result<String> {
+    let id = id.trim();
     let material = materials
         .iter()
         .find(|material| material.identity == id)
         .ok_or_else(|| invalid("tag report material"))?;
-    Ok(format!(
-        "{}@{}",
-        id,
-        material.version_state.tagged_version
-            .as_deref()
-            .ok_or_else(|| invalid("tag report version"))?,
-    ))
+    let version = material.version_state.tagged_version
+        .as_deref()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("tag report version"))?;
+    Ok(format!("{id}@{version}"))
 }
 
 fn warnings(
@@ -87,12 +87,14 @@ fn latest_tag<'a>(material: &'a Material, semver: &Value) -> io::Result<Option<&
     {
         let candidate =
             semver[tag].get("version").ok_or_else(|| invalid("tag stored semver metadata"))?;
-        if latest.is_none()
-            || crate::config_merge::compare_versions(
-                candidate,
-                &semver[latest.unwrap()]["version"],
-            )? == Ordering::Greater
-        {
+        let dominated = match latest {
+            None => true,
+            Some(current) => {
+                crate::config_merge::compare_versions(candidate, &semver[current]["version"])?
+                    == Ordering::Greater
+            }
+        };
+        if dominated {
             latest = Some(tag);
         }
     }

@@ -51,20 +51,21 @@ fn batch(
     let mut versions = Vec::new();
     let mut hashes = HashSet::new();
     for (component, allocation) in retained.components.iter().zip(&input.versions) {
-        if allocation.identity != component.identity || !hashes.insert(&allocation.hash) {
+        let hash =
+            crate::validate::hexadecimal(&crate::merge_history::hash(allocation.hash.trim())?);
+        if allocation.identity.trim() != component.identity || !hashes.insert(hash.clone()) {
             return Err(invalid("stash allocation identity"));
         }
-        crate::merge_history::hash(&allocation.hash)?;
         let version =
             version::prepare(component, allocation, &input.bit_version, snapshots, &mut objects)?;
         let mut id = component.id.clone();
         id.as_object_mut()
             .ok_or_else(|| invalid("stash component ID"))?
             .remove("version");
-        rows.push(json!({"id":id,"hash":allocation.hash,"bitmapEntry":component.bitmap_entry,"isNew":component.new}));
-        versions.push(
-            json!({"identity":component.identity,"hash":allocation.hash,"version":version}),
+        rows.push(
+            json!({"id":id,"hash":hash,"bitmapEntry":component.bitmap_entry,"isNew":component.new}),
         );
+        versions.push(json!({"identity":component.identity,"hash":hash,"version":version}));
     }
     Ok((objects, rows, versions))
 }

@@ -8,7 +8,7 @@ pub(crate) fn validate(value: &Value) -> io::Result<()> {
         .is_some_and(|value| {
             value
                 .as_str()
-                .is_some_and(|text| !text.is_empty())
+                .is_some_and(|text| !text.trim().is_empty())
         })
         || !value.get("log").is_some_and(Value::is_object)
     {
@@ -74,6 +74,7 @@ fn is_builder_with_artifacts(extension: &Value) -> bool {
         "teambit.pipelines/builder",
     ) || extension["id"]
         .as_str()
+        .map(str::trim)
         .is_some_and(|id| {
             id == "teambit.pipelines/builder" || id.starts_with("teambit.pipelines/builder@")
         });
@@ -93,7 +94,10 @@ fn lane(value: &Value, field: &str) -> io::Result<()> {
         .get("laneId")
         .and_then(Value::as_object)
         .ok_or_else(|| invalid("history invalid lane metadata"))?;
-    if !lane.get("name").is_some_and(Value::is_string)
+    if lane
+        .get("name")
+        .and_then(Value::as_str)
+        .is_none_or(|name| name.trim().is_empty())
         || !lane.get("scope").is_some_and(Value::is_string)
     {
         return Err(invalid("history unsupported lane identity"));

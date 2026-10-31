@@ -51,7 +51,10 @@ fn selected_parents(
     parents
         .iter()
         .map(|parent| {
-            let hash = parent.as_str().ok_or_else(|| invalid("outbound lane parent"))?;
+            let hash = parent
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("outbound lane parent"))?;
             crate::merge_history::hash(hash)?;
             Ok(hash.to_owned())
         })
@@ -62,19 +65,24 @@ fn selected_parents(
 fn origin_lane_flags(origin: &Value, scope: &str, name: &str) -> (bool, bool) {
     if let Some((orig_scope, orig_name)) = origin
         .as_str()
-        .and_then(|raw| raw.split_once('/'))
+        .and_then(|raw| raw.trim().split_once('/'))
     {
-        let same = orig_scope == scope && orig_name == name;
-        let any = !orig_scope.is_empty() && !orig_name.is_empty();
+        let trimmed_scope = orig_scope.trim();
+        let trimmed_name = orig_name.trim();
+        let same = trimmed_scope == scope && trimmed_name == name;
+        let any = !trimmed_scope.is_empty() && !trimmed_name.is_empty();
         return (same, any);
     }
-    let same = origin["scope"] == scope && origin["name"] == name;
-    let any = origin["scope"]
+    let orig_scope = origin["scope"]
         .as_str()
-        .is_some_and(|value| !value.is_empty())
-        && origin["name"]
-            .as_str()
-            .is_some_and(|value| !value.is_empty());
+        .map(str::trim)
+        .unwrap_or_default();
+    let orig_name = origin["name"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    let same = orig_scope == scope && orig_name == name;
+    let any = !orig_scope.is_empty() && !orig_name.is_empty();
     (same, any)
 }
 

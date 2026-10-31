@@ -125,7 +125,11 @@ pub(in crate::commands) fn render_honeywell_table(rows: &[Vec<String>]) -> Strin
 }
 
 fn column_widths(rows: &[Vec<String>]) -> Vec<usize> {
-    let col_count = rows.first().map_or(0, Vec::len);
+    let col_count = rows
+        .iter()
+        .map(Vec::len)
+        .max()
+        .unwrap_or(0);
     let mut widths = vec![0usize; col_count];
     for row in rows {
         for (idx, cell) in row.iter().enumerate() {
@@ -142,7 +146,11 @@ fn render_honeywell_row(row: &[String], widths: &[usize]) -> String {
         .enumerate()
         .map(|(col_idx, cell)| {
             let visible_len = strip_sgr(cell).encode_utf16().count();
-            let pad = widths[col_idx].saturating_sub(visible_len);
+            let col_width = widths
+                .get(col_idx)
+                .copied()
+                .unwrap_or(0);
+            let pad = col_width.saturating_sub(visible_len);
             format!(" {cell}{} ", " ".repeat(pad))
         })
         .collect::<Vec<_>>()

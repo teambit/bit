@@ -81,7 +81,11 @@ impl Plan {
     /// Persist exactly one bitmap history entry after the caller completes linking.
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         self.validate()?;
-        if file_id.is_empty() || file_id.contains(['/', '\\', '\n', '\r']) {
+        let trimmed_id = file_id.trim();
+        if trimmed_id.is_empty()
+            || matches!(trimmed_id, "." | "..")
+            || trimmed_id.contains(['/', '\\', '\n', '\r', '\0'])
+        {
             return Err(unsupported("tracking bitmap history identifier"));
         }
         if !self.dirty {
@@ -90,7 +94,7 @@ impl Plan {
         let after = crate::inspection::render_workspace_bitmap(&self.bitmap)?;
         if self.before.is_some() {
             // Consumer.backupBitMap logs backup failures and still publishes the bitmap.
-            let _ = crate::component_remove::backup_bitmap(&self.root, file_id, "add");
+            let _ = crate::component_remove::backup_bitmap(&self.root, trimmed_id, "add");
         }
         fs::write(self.root.join(".bitmap"), after)
     }

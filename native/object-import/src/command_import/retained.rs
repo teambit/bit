@@ -43,7 +43,7 @@ impl PreparedImport {
         let mut files = HashMap::new();
         for (hash, object) in &self.overlay.objects {
             files.insert(
-                object_path(&self.environment.local_directory, hash),
+                object_path(&self.environment.local_directory, hash)?,
                 object.bytes.clone(),
             );
         }
@@ -55,7 +55,7 @@ impl PreparedImport {
                 continue;
             }
             files.insert(
-                object_path(directory, hash),
+                object_path(directory, hash)?,
                 publish::object(hash, "VersionHistory", value.clone())?.bytes,
             );
         }
@@ -108,10 +108,11 @@ impl super::capture::Capture {
         self.validate()
     }
 }
-fn object_path(directory: &Path, hash: &str) -> PathBuf {
-    directory
-        .join(&hash[..2])
-        .join(&hash[2..])
+fn object_path(directory: &Path, hash: &str) -> io::Result<PathBuf> {
+    let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash)?);
+    Ok(directory
+        .join(&canonical[..2])
+        .join(&canonical[2..]))
 }
 fn pretty(value: &Value, newline: bool) -> io::Result<Vec<u8>> {
     let mut bytes = serde_json::to_vec_pretty(value).map_err(io::Error::other)?;

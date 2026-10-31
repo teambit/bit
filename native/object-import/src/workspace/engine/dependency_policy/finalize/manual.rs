@@ -79,28 +79,27 @@ fn component(
     output.state.entries.push(Entry {
         identity: identity.clone(),
         package_name: Some(resolved.name.clone()),
-        version_range: value.as_str().map(str::to_owned),
+        version_range: value
+            .as_str()
+            .map(str::trim)
+            .filter(|range| !range.is_empty())
+            .map(str::to_owned),
         version_from_config: false,
     });
     true
 }
 fn package_version(request: &Request, name: &str, value: &Value) -> Option<String> {
-    if !value.as_str().is_some_and(crate::plus_version::is_plus) {
-        return value
-            .as_str()
-            .filter(|value| !value.is_empty())
-            .map(str::to_owned);
+    let trimmed = value
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())?;
+    if !crate::plus_version::is_plus(trimmed) {
+        return Some(trimmed.to_owned());
     }
     request.package_json
         .iter()
         .find(|map| map.contains_key(name))
-        .map(|map| {
-            crate::plus_version::resolve(
-                value.as_str().unwrap_or(""),
-                version(map, name).as_deref(),
-                "*",
-            )
-        })
+        .map(|map| crate::plus_version::resolve(trimmed, version(map, name).as_deref(), "*"))
 }
 fn promote(output: &mut Output, components: &[Vec<usize>; 3], packages: &[Map<String, Value>; 3]) {
     for field in 0..3 {

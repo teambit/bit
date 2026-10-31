@@ -31,10 +31,14 @@ fn configured_root_aspects(root: &Path) -> io::Result<bool> {
         return Ok(true);
     }
     let raw = bit_install::jsonc::parse(&std::fs::read_to_string(&config.path)?)?;
-    Ok(!raw["require"].is_null()
-        && raw["require"] != false
-        && raw["require"] != json!([])
-        && raw["require"] != "")
+    let require = &raw["require"];
+    Ok(!require.is_null()
+        && *require != false
+        && *require != json!([])
+        && *require != json!({})
+        && require
+            .as_str()
+            .is_none_or(|text| !text.trim().is_empty()))
 }
 
 fn scope_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Result<bool> {
@@ -55,6 +59,7 @@ fn scope_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Resu
 pub(super) fn lane_installation() -> bool {
     let arguments = std::env::args()
         .skip(1)
+        .filter(|arg| !arg.starts_with('-'))
         .take(2)
         .collect::<Vec<_>>();
     arguments

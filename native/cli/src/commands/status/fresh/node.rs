@@ -101,7 +101,9 @@ impl Node {
                 .map_err(io::Error::other)?;
         Ok(manifest
             .get("version")
-            .and_then(|v| v.as_str())
+            .and_then(serde_json::Value::as_str)
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
             .map(str::to_string))
     }
 }
@@ -131,9 +133,12 @@ fn builtin_names(modules: &[String]) -> Vec<String> {
 }
 
 fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
     let parent = path.parent().ok_or_else(|| decline("cache path"))?;
     fs::create_dir_all(parent)?;
-    let temporary = parent.join(format!(".{}.tmp", std::process::id()));
+    let serial = COUNTER.fetch_add(1, Ordering::Relaxed);
+    let temporary = parent.join(format!(".{}-{serial}.tmp", std::process::id()));
     fs::write(&temporary, bytes)?;
     fs::rename(&temporary, path)
 }

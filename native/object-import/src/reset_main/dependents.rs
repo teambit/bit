@@ -71,9 +71,15 @@ fn references(component: &Value) -> io::Result<HashSet<String>> {
                 .flat_map(serde_json::Map::values),
         )
         .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
         .collect();
-    if let Some(head) = component["head"].as_str() {
+    if let Some(head) = component["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    {
         refs.insert(head.to_owned());
     }
     if let Some(local) = component["state"]["versions"].as_object() {
@@ -105,39 +111,38 @@ fn uses_removed(version: &Value, scope: &str, name: &str, removed: &HashSet<&str
             })
 }
 
+fn non_empty(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn id_matches_removed(entry: &Value, scope: &str, name: &str, removed: &HashSet<&str>) -> bool {
-    if let Some(raw) = entry
-        .as_str()
-        .or_else(|| entry["id"].as_str())
-    {
+    if let Some(raw) = non_empty(entry).or_else(|| non_empty(&entry["id"])) {
         return raw
             .strip_prefix(scope)
             .and_then(|rest| rest.strip_prefix('/'))
             .and_then(|rest| rest.strip_prefix(name))
             .and_then(|rest| rest.strip_prefix('@'))
-            .is_some_and(|version| removed.contains(version));
+            .is_some_and(|version| removed.contains(version.trim()));
     }
     let id = entry
         .get("id")
         .filter(|sub| sub.is_object())
         .unwrap_or(entry);
-    let raw_name = id["name"]
-        .as_str()
-        .or_else(|| entry["name"].as_str())
+    let raw_name = non_empty(&id["name"])
+        .or_else(|| non_empty(&entry["name"]))
         .unwrap_or_default();
     let (bare_name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
-    let version = id["version"]
-        .as_str()
-        .or_else(|| entry["version"].as_str())
-        .or_else(|| entry["head"].as_str())
-        .filter(|ver| !ver.is_empty())
+        .map_or((raw_name, None), |(bare, ver)| {
+            (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
+    let version = non_empty(&id["version"])
+        .or_else(|| non_empty(&entry["version"]))
+        .or_else(|| non_empty(&entry["head"]))
         .or(inline_ver);
-    id["scope"]
-        .as_str()
-        .or_else(|| entry["scope"].as_str())
-        == Some(scope)
+    non_empty(&id["scope"]).or_else(|| non_empty(&entry["scope"])) == Some(scope)
         && bare_name == name
         && version.is_some_and(|ver| removed.contains(ver))
 }

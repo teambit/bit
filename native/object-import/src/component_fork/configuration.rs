@@ -70,11 +70,14 @@ fn copy(output: &mut Value, source: &Value) -> io::Result<()> {
     Ok(())
 }
 pub(super) fn extension_key(entry: &Value) -> Option<String> {
-    if let Some(key) = entry["id"]
-        .as_str()
-        .or_else(|| entry["name"].as_str())
-        .or_else(|| entry["legacyId"].as_str())
-        .or_else(|| entry["extensionId"].as_str())
+    if let Some(key) = ["id", "name", "legacyId", "extensionId"]
+        .into_iter()
+        .find_map(|field| {
+            entry[field]
+                .as_str()
+                .map(str::trim)
+                .filter(|key| !key.is_empty())
+        })
     {
         return Some(
             key.strip_suffix("@latest")
@@ -86,15 +89,18 @@ pub(super) fn extension_key(entry: &Value) -> Option<String> {
     let ext = &entry["extensionId"];
     let scope = ext["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())?;
     let raw_name = ext["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
+        .map_or((raw_name, None), |(base, ver)| (base.trim(), Some(ver.trim())));
     let version = ext["version"]
         .as_str()
+        .map(str::trim)
         .filter(|version| !version.is_empty())
         .or(inline_ver)
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"));
@@ -106,8 +112,11 @@ pub(super) fn extension_key(entry: &Value) -> Option<String> {
 fn copy_configs(output: &mut Value, configs: &Value) -> io::Result<()> {
     if let Some(entries) = configs.as_array() {
         for entry in entries {
-            let key =
-                entry["id"].as_str().ok_or_else(|| unsupported("fork source config identity"))?;
+            let key = entry["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|key| !key.is_empty())
+                .ok_or_else(|| unsupported("fork source config identity"))?;
             insert_config(output, key, &entry["config"]);
         }
         return Ok(());
@@ -118,13 +127,17 @@ fn copy_configs(output: &mut Value, configs: &Value) -> io::Result<()> {
     Ok(())
 }
 fn insert_config(output: &mut Value, key: &str, config: &Value) {
-    let bare = match key.split_once('@') {
+    let trimmed = key.trim();
+    if trimmed.is_empty() {
+        return;
+    }
+    let bare = match trimmed.split_once('@') {
         Some((prefix, _)) if !prefix.is_empty() => prefix,
-        _ => key,
+        _ => trimmed,
     };
     if !matches!(bare, "teambit.pkg/pkg" | "teambit.component/renaming")
         && bit_workspace_config::truthy(config)
     {
-        output[key] = config.clone();
+        output[trimmed] = config.clone();
     }
 }

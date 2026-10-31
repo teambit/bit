@@ -74,7 +74,8 @@ fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value
         .map(|index| {
             let entry = index
                 .as_u64()
-                .and_then(|index| entries.get(index as usize));
+                .and_then(|index| usize::try_from(index).ok())
+                .and_then(|index| entries.get(index));
             let entry = entry.ok_or_else(|| decline("status dependency entry"))?;
             let mut row = Map::new();
             row.insert("id".into(), identity_object(text(entry.get("identity"))?)?);
@@ -91,18 +92,20 @@ fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value
 
 /// `identityObject(value)`: `{ scope, name, version? }`.
 fn identity_object(value: &str) -> io::Result<Value> {
-    let mut parts = value.split('@');
-    let name = parts.next().unwrap_or_default();
+    let mut parts = value.trim().split('@');
+    let name = parts.next().unwrap_or_default().trim();
     let version = parts
         .next()
+        .map(str::trim)
         .filter(|version| !version.is_empty());
-    let slash = name
-        .find('/')
-        .filter(|slash| *slash >= 1);
-    let slash = slash.ok_or_else(|| decline("status unscoped dependency"))?;
+    let (scope, comp_name) = name
+        .split_once('/')
+        .map(|(scope, comp)| (scope.trim(), comp.trim()))
+        .filter(|(scope, comp)| !scope.is_empty() && !comp.is_empty())
+        .ok_or_else(|| decline("status unscoped dependency"))?;
     let mut id = Map::new();
-    id.insert("scope".into(), json!(&name[..slash]));
-    id.insert("name".into(), json!(&name[slash + 1..]));
+    id.insert("scope".into(), json!(scope));
+    id.insert("name".into(), json!(comp_name));
     if let Some(version) = version {
         id.insert("version".into(), json!(version));
     }

@@ -27,7 +27,11 @@ pub(super) fn json_report(rows: &[Row], ids: bool) -> Value {
                 if let Some(removed) = row.removed {
                     data.insert("removed".into(), json!(removed));
                 }
-                if let Some(root_dir) = &row.workspace.root_dir {
+                if let Some(root_dir) = row.workspace.root_dir
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|dir| !dir.is_empty())
+                {
                     data.insert("rootDir".into(), json!(root_dir));
                 }
                 Value::Object(data)
@@ -63,7 +67,9 @@ fn remote_version(row: &Row) -> &str {
 /// `ListCmd.report`: the count, then the ids or the table.
 pub(super) fn report(rows: &[Row], options: &Options, chalk: Chalk, colors: bool) -> String {
     let header = options.remote
-        .as_ref()
+        .as_deref()
+        .map(str::trim)
+        .filter(|remote| !remote.is_empty())
         .map_or_else(
             || format!("found {} components\n", rows.len()),
             |remote| {
@@ -89,7 +95,13 @@ pub(super) fn report(rows: &[Row], options: &Options, chalk: Chalk, colors: bool
 }
 
 fn render_table(rows: &[Row], options: &Options, chalk: Chalk, colors: bool) -> String {
-    let has_path = rows.iter().any(|row| row.workspace.root_dir.is_some());
+    let has_path = rows
+        .iter()
+        .any(|row| {
+            row.workspace.root_dir
+                .as_deref()
+                .is_some_and(|dir| !dir.trim().is_empty())
+        });
     let mut head = vec!["component ID", "latest in scope", "used in workspace"];
     if options.outdated {
         head.push("latest in remote scope");
@@ -109,7 +121,13 @@ fn render_table(rows: &[Row], options: &Options, chalk: Chalk, colors: bool) -> 
                 cells.push(colored_version(row, true, true, chalk));
             }
             if has_path {
-                cells.push(row.workspace.root_dir.clone().unwrap_or_default());
+                cells.push(
+                    row.workspace.root_dir
+                        .as_deref()
+                        .map(str::trim)
+                        .unwrap_or_default()
+                        .to_string(),
+                );
             }
             cells
         })

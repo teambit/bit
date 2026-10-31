@@ -59,10 +59,10 @@ pub(super) fn object(
     kind: &str,
     proofs: &mut ReadSet,
 ) -> io::Result<serde_json::Value> {
-    crate::merge_history::hash(hash)?;
-    let path = object_path(objects, hash);
+    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
+    let path = object_path(objects, &hash);
     let before = read(&path, proofs)?;
-    let value = super::outbound::read_object(objects, hash, kind)?;
+    let value = super::outbound::read_object(objects, &hash, kind)?;
     if read(&path, &mut Vec::new())? != before {
         return Err(invalid("lane reset object changed during capture"));
     }
@@ -94,26 +94,29 @@ pub(super) fn capture_heads(repository: &Repository, heads: &[String]) -> io::Re
     let records = super::history::records(repository, heads)?;
     let mut seen = HashSet::new();
     let mut proofs = repository.reads.clone();
-    let mut bytes = 0;
+    let mut bytes: usize = 0;
     for row in records.as_array().ok_or_else(|| invalid("lane reset graph proofs"))? {
-        let hash = row["hash"].as_str().ok_or_else(|| invalid("lane reset graph proof hash"))?;
-        if !seen.insert(hash.to_owned()) {
+        let raw_hash = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("lane reset graph proof hash"))?;
+        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
+        if !seen.insert(hash.clone()) {
             return Err(invalid("lane reset duplicate graph proof"));
         }
         if seen.len() > 4096 {
             return Err(invalid("lane reset graph proof limit"));
         }
-        crate::merge_history::hash(hash)?;
-        let raw = match fs::read(object_path(&repository.objects, hash)) {
+        let raw = match fs::read(object_path(&repository.objects, &hash)) {
             Ok(raw) => Some(raw),
             Err(error) if error.kind() == io::ErrorKind::NotFound => None,
             Err(error) => return Err(error),
         };
-        bytes += raw.as_ref().map_or(0, Vec::len);
+        bytes = bytes.saturating_add(raw.as_ref().map_or(0, Vec::len));
         if bytes > 96 * 1024 * 1024 {
             return Err(invalid("lane reset graph proof byte limit"));
         }
-        proofs.push((object_path(&repository.objects, hash), raw));
+        proofs.push((object_path(&repository.objects, &hash), raw));
     }
     Ok(proofs)
 }

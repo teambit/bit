@@ -22,7 +22,11 @@ pub(super) fn include(
         return Ok(false);
     }
     let Some(root) = target(&retained.record.context).cloned() else { return Ok(false) };
-    let identity = root["identity"].as_str().ok_or_else(|| invalid("workspace-root identity"))?;
+    let identity = root["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("workspace-root identity"))?;
     if selected.iter().any(|id| id == identity) {
         return Ok(false);
     }
@@ -73,8 +77,15 @@ fn provenance_data(
     in_batch: bool,
     member: &str,
 ) -> io::Result<Value> {
-    let (Some(root), Some(identity)) = (root, identity) else { return Ok(json!({})) };
-    if identity == member {
+    let (Some(root), Some(identity)) = (
+        root,
+        identity
+            .map(str::trim)
+            .filter(|id| !id.is_empty()),
+    ) else {
+        return Ok(json!({}));
+    };
+    if identity == member.trim() {
         return Ok(json!({"isRoot":true}));
     }
     let version = if in_batch {
@@ -82,6 +93,8 @@ fn provenance_data(
     } else {
         root["version"]
             .as_str()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
             .ok_or_else(|| invalid("workspace-root version"))?
             .to_string()
     };

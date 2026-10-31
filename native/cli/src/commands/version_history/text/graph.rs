@@ -18,7 +18,7 @@ impl Graph {
         let mut graph = Self { nodes: Vec::new(), indices: HashMap::new() };
         let mut seen_rows = HashSet::new();
         for row in rows {
-            let hash = row["hash"].as_str()?;
+            let hash = row["hash"].as_str().map(str::trim)?;
             if !seen_rows.insert(hash) {
                 return None;
             }
@@ -65,7 +65,7 @@ impl Graph {
     }
 
     fn add_edges(&mut self, row: &Value) -> Option<()> {
-        let source = *self.indices.get(row["hash"].as_str()?)?;
+        let source = *self.indices.get(row["hash"].as_str().map(str::trim)?)?;
         let parents = refs(row, "parents")?;
         for parent in &parents {
             self.edge(source, parent, "parent")?;
@@ -141,11 +141,7 @@ fn refs<'a>(row: &'a Value, key: &str) -> Option<Vec<&'a str>> {
         None | Some(Value::Null) if matches!(key, "parents" | "squashed") => Some(Vec::new()),
         Some(Value::Array(values)) => values
             .iter()
-            .map(|entry| {
-                entry
-                    .as_str()
-                    .or_else(|| entry.get("hash").and_then(Value::as_str))
-            })
+            .map(|entry| non_empty_str(entry).or_else(|| entry.get("hash").and_then(non_empty_str)))
             .collect(),
         _ => None,
     }
@@ -154,7 +150,17 @@ fn refs<'a>(row: &'a Value, key: &str) -> Option<Vec<&'a str>> {
 fn optional<'a>(row: &'a Value, key: &str) -> Option<Option<&'a str>> {
     match row.get(key) {
         None | Some(Value::Null) => Some(None),
-        Some(Value::String(value)) => Some(Some(value)),
+        Some(Value::String(value)) => {
+            let trimmed = value.trim();
+            Some((!trimmed.is_empty()).then_some(trimmed))
+        }
         _ => None,
     }
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }

@@ -8,7 +8,7 @@ use super::{Body, Descriptor, invalid};
 
 pub(super) fn name(item: &Descriptor) -> io::Result<String> {
     let hash = crate::validate::hexadecimal(&item.hash);
-    match &item.scope {
+    match item.scope.as_deref().map(str::trim) {
         None => Ok(hash),
         Some(scope)
             if !scope.is_empty()
@@ -42,11 +42,10 @@ pub(crate) fn read(
         return Ok((body, outcome.inflated_bytes, "Source".to_owned()));
     }
     metadata(&body, item.hash)?;
-    let size = crate::metadata::inflate(&body).ok_or_else(|| invalid("invalid metadata"))?.len();
-    let kind = crate::metadata::inflate(&body)
-        .and_then(|text| text.split_once(' ').map(|(kind, _)| kind.to_owned()))
-        .ok_or_else(|| invalid("missing object kind"))?;
-    Ok((body, size, kind))
+    let inflated = crate::metadata::inflate(&body).ok_or_else(|| invalid("invalid metadata"))?;
+    let size = inflated.len();
+    let (kind, _) = inflated.split_once(' ').ok_or_else(|| invalid("missing object kind"))?;
+    Ok((body, size, kind.to_owned()))
 }
 
 pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io::Result<Vec<u8>> {

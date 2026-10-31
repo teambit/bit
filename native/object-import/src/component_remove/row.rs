@@ -37,10 +37,12 @@ pub(super) fn supported_row<'a>(
 fn has_supported_version(key: &str, row: &Value, kind: RowKind) -> bool {
     let version = row["version"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .or_else(|| {
-            key.rsplit_once('@')
-                .map(|(_, ver)| ver)
+            key.trim()
+                .rsplit_once('@')
+                .map(|(_, ver)| ver.trim())
                 .filter(|val| !val.is_empty())
         });
     if kind == RowKind::New { version.is_none() } else { version.is_some() }
@@ -49,13 +51,19 @@ fn has_supported_version(key: &str, row: &Value, kind: RowKind) -> bool {
 fn scope<'a>(row: &'a Value, fallback: Option<&'a str>) -> io::Result<&'a str> {
     row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
         })
-        .or_else(|| fallback.filter(|scope| !scope.is_empty()))
+        .or_else(|| {
+            fallback
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        })
         .ok_or_else(|| invalid("component scope"))
 }
 

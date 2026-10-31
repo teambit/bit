@@ -12,16 +12,14 @@ impl Status<'_> {
             .iter()
             .map(|identity| {
                 let history = self
-                    .models.histories
+                    .models
+                    .histories
                     .iter()
-                    .find(|row| {
-                        row["identity"]
-                            .as_str()
-                            .or_else(|| row["id"].as_str())
-                            == Some(*identity)
-                    })
+                    .find(|row| history_identity(row) == Some(identity.trim()))
                     .ok_or_else(|| decline("status report history"))?;
-                let count = |side: &str| array(history["merge"].get(side), "merge distance").map(<[Value]>::len);
+                let count = |side: &str| {
+                    array(history["merge"].get(side), "merge distance").map(<[Value]>::len)
+                };
                 let text = format!(
                     "{} local and remote have diverged and have {} (source) and {} (target) uncommon snaps respectively",
                     self.format.chalk.cyan(identity),
@@ -131,8 +129,9 @@ impl Status<'_> {
 fn scope_counts<'i>(ids: &[&'i str]) -> io::Result<Vec<(&'i str, usize)>> {
     let mut counts: Vec<(&str, usize)> = Vec::new();
     for identity in ids {
-        let scope = identity.split_once('/').map_or(*identity, |(scope, _)| scope);
-        if scope.bytes().all(|byte| byte.is_ascii_digit()) {
+        let trimmed = identity.trim();
+        let scope = trimmed.split_once('/').map_or(trimmed, |(scope, _)| scope.trim());
+        if scope.is_empty() || scope.bytes().all(|byte| byte.is_ascii_digit()) {
             return Err(decline("status report numeric scope"));
         }
         match counts
@@ -145,4 +144,17 @@ fn scope_counts<'i>(ids: &[&'i str]) -> io::Result<Vec<(&'i str, usize)>> {
     }
     counts.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
     Ok(counts)
+}
+
+fn history_identity(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+        })
 }

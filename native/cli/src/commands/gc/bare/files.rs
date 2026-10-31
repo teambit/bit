@@ -4,14 +4,15 @@ use std::{fs, io, path::Path};
 
 pub(in crate::commands::gc) fn preflight_moves(scope: &Path, hashes: &[String]) -> io::Result<()> {
     for hash in hashes {
+        let (bucket, leaf) = split_hash(hash)?;
         let source = scope
             .join("objects")
-            .join(&hash[..2])
-            .join(&hash[2..]);
+            .join(bucket)
+            .join(leaf);
         let target = scope
             .join("deleted-objects")
-            .join(&hash[..2])
-            .join(&hash[2..]);
+            .join(bucket)
+            .join(leaf);
         let metadata = fs::symlink_metadata(&source)?;
         match metadata_if_present(&target, false) {
             Ok(existing) => check_target(&source, &target, &metadata, existing.as_ref())?,
@@ -23,14 +24,15 @@ pub(in crate::commands::gc) fn preflight_moves(scope: &Path, hashes: &[String]) 
 }
 
 pub(super) fn move_object(scope: &Path, hash: &str) -> io::Result<()> {
+    let (bucket, leaf) = split_hash(hash)?;
     let source = scope
         .join("objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
+        .join(bucket)
+        .join(leaf);
     let target = scope
         .join("deleted-objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
+        .join(bucket)
+        .join(leaf);
     let metadata = fs::symlink_metadata(&source).map_err(|error| failure(error, "lstat", &source))?;
     let existing = metadata_if_present(&target, false)?;
     check_target(&source, &target, &metadata, existing.as_ref())?;
@@ -97,6 +99,14 @@ fn identical(first: &fs::Metadata, second: &fs::Metadata) -> bool {
 #[cfg(not(unix))]
 fn identical(_: &fs::Metadata, _: &fs::Metadata) -> bool {
     false
+}
+
+fn split_hash(hash: &str) -> io::Result<(&str, &str)> {
+    let trimmed = hash.trim();
+    if !super::repository::hash(trimmed) {
+        return Err(super::repository::unsupported("invalid object hash"));
+    }
+    Ok(trimmed.split_at(2))
 }
 
 /// Every operation in a `pMapPool` chunk starts, even when another member fails.

@@ -14,7 +14,7 @@ pub(in crate::commands::status) fn context(root: &Path, context: &Value) -> io::
     let rows = array(Some(&input.unmerged), "unmerged configuration")?;
     let mut output = context.clone();
     for target in array(context.get("targets"), "pending targets")? {
-        let identity = text(target.get("identity"))?;
+        let identity = text(target.get("identity"))?.trim();
         if let Some(config) = configuration(&input.merge, rows, identity)? {
             output["pendingConfigurations"][identity] = config;
         }
@@ -75,9 +75,11 @@ fn optional(path: &Path) -> io::Result<Option<String>> {
 }
 
 fn unmerged_config(rows: &[Value], identity: &str) -> Option<Value> {
+    let identity = identity.trim();
     rows.iter()
         .find(|row| {
-            super::super::js::without_version(&super::extension_identity(&row["id"])) == identity
+            super::super::js::without_version(&super::extension_identity(&row["id"])).trim()
+                == identity
         })
         .and_then(|row| row.get("mergedConfig"))
         .filter(|config| !config.is_null())

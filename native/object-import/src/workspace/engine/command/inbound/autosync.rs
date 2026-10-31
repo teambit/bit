@@ -58,13 +58,19 @@ pub(in crate::workspace::engine) fn finalize(
     Ok((count, json!({"synced":count})))
 }
 
+fn bare_id(id: &str) -> &str {
+    let trimmed = id.trim();
+    trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
+}
+
 fn model_matches_id(model: &Value, id: &str) -> bool {
-    let model_scope = model["scope"].as_str().unwrap_or_default();
-    let model_name = model["name"].as_str().unwrap_or_default();
-    if let Some((scope, name)) = id.split_once('/') {
-        (model_scope == scope || model_scope.is_empty()) && model_name == name
+    let model_scope = model["scope"].as_str().map_or("", str::trim);
+    let model_name = model["name"].as_str().map_or("", str::trim);
+    let bare = bare_id(id);
+    if let Some((scope, name)) = bare.split_once('/') {
+        (model_scope == scope.trim() || model_scope.is_empty()) && model_name == name.trim()
     } else {
-        model_name == id
+        model_name == bare
     }
 }
 
@@ -73,13 +79,14 @@ fn read_component_model(
     repository: &mut Repository,
     id: &str,
 ) -> io::Result<Option<Value>> {
+    let bare = bare_id(id);
     let mut candidates = Vec::new();
-    if let Some(indexed) = indexed_component_hash(root, id) {
+    if let Some(indexed) = indexed_component_hash(root, bare) {
         candidates.push(indexed);
     }
-    candidates.push(hash(id.as_bytes()));
-    if let Some((_, name)) = id.split_once('/') {
-        candidates.push(hash(name.as_bytes()));
+    candidates.push(hash(bare.as_bytes()));
+    if let Some((_, name)) = bare.split_once('/') {
+        candidates.push(hash(name.trim().as_bytes()));
     }
     for candidate in candidates {
         match repository.read(&candidate, "Component") {
@@ -92,7 +99,10 @@ fn read_component_model(
 }
 
 fn indexed_component_hash(root: &Path, id: &str) -> Option<String> {
-    let (scope, name) = id.split_once('/').unwrap_or(("", id));
+    let bare = bare_id(id);
+    let (scope, name) = bare
+        .split_once('/')
+        .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     let bytes = fs::read(crate::scope_path(root).join("index.json")).ok()?;
     let index: Value = crate::parse_jsonc(&bytes).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
@@ -102,18 +112,21 @@ fn indexed_component_hash(root: &Path, id: &str) -> Option<String> {
             else {
                 return false;
             };
-            let row_scope = row_scope_opt.unwrap_or_default();
+            let row_scope = row_scope_opt.unwrap_or_default().trim();
             row["isSymlink"] != true
-                && row_name == name
+                && row_name.trim() == name
                 && (row_scope == scope || row_scope.is_empty())
         })
         .and_then(|row| row["hash"].as_str())
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
 }
 
 fn head(model: &Value) -> Option<String> {
     let head = model["head"]
         .as_str()
+        .map(str::trim)
         .filter(|head| !head.is_empty() && *head != "0")?;
     Some(
         model["versions"]
@@ -121,7 +134,11 @@ fn head(model: &Value) -> Option<String> {
             .into_iter()
             .chain(model["orphanedVersions"].as_object())
             .flat_map(|versions| versions.iter().rev())
-            .find(|(_, value)| value.as_str() == Some(head))
+            .find(|(_, value)| {
+                value
+                    .as_str()
+                    .is_some_and(|candidate| candidate.trim().eq_ignore_ascii_case(head))
+            })
             .map_or_else(|| head.to_owned(), |(tag, _)| tag.clone()),
     )
 }

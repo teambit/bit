@@ -31,28 +31,42 @@ pub fn project(kind: &str, fields: &Value) -> io::Result<Value> {
 pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Result<String> {
     object(fields)?;
     if kind == "LaneHistory" {
-        let id = format!("{}:LaneHistory", text(get(fields, "laneHash"))?);
-        return Ok(hexadecimal(&Sha1::digest(id.as_bytes())));
+        return lane_history_identity(fields);
     }
     if matches!(kind, "Version" | "Lane") {
-        let hash = allocated.ok_or_else(|| invalid("preallocated hash missing"))?;
-        if hash.len() != 40
-            || !hash
-                .bytes()
-                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-        {
+        let hash = allocated.map(str::trim).ok_or_else(|| invalid("preallocated hash missing"))?;
+        if !is_sha1_hex(hash) {
             return Err(invalid("invalid preallocated hash"));
         }
         return Ok(hash.to_owned());
     }
     let name = text(get(fields, "name"))?;
+    if name.trim().is_empty() {
+        return Err(invalid("snapshot empty component name"));
+    }
     let scope = get(fields, "scope");
     let scoped = if scope.truthy()? { format!("{}/{name}", text(scope)?) } else { name.clone() };
     let id = match kind {
         "Component" => scoped,
-        "VersionHistory" => format!("{}/{name}:VersionHistory", text(scope)?),
+        "VersionHistory" => {
+            let scope_text = text(scope)?;
+            if scope_text.trim().is_empty() {
+                return Err(invalid("snapshot empty history scope"));
+            }
+            format!("{scope_text}/{name}:VersionHistory")
+        }
         _ => return Err(invalid("unsupported object identity")),
     };
+    Ok(hexadecimal(&Sha1::digest(id.as_bytes())))
+}
+
+fn lane_history_identity(fields: &Value) -> io::Result<String> {
+    let lane_hash = text(get(fields, "laneHash"))?;
+    let trimmed = lane_hash.trim();
+    if !is_sha1_hex(trimmed) {
+        return Err(invalid("invalid laneHash"));
+    }
+    let id = format!("{trimmed}:LaneHistory");
     Ok(hexadecimal(&Sha1::digest(id.as_bytes())))
 }
 
@@ -122,6 +136,13 @@ fn hexadecimal(bytes: &[u8]) -> String {
         text.push(char::from(DIGITS[usize::from(byte & 15)]));
     }
     text
+}
+
+fn is_sha1_hex(hash: &str) -> bool {
+    hash.len() == 40
+        && hash
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 fn invalid(message: &str) -> io::Error {

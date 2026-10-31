@@ -85,10 +85,16 @@ impl Prepared {
 }
 
 fn promoted_identity(key: &str, row: &serde_json::Value) -> io::Result<String> {
-    let scope = row["scope"].as_str().ok_or_else(|| invalid("outbound lane promoted scope"))?;
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let scope = row["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("outbound lane promoted scope"))?;
+    let key = key.trim();
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
     let name = row["name"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .unwrap_or_else(|| {
             key_id

@@ -63,15 +63,7 @@ fn artifacts(value: &Value) -> io::Result<Vec<[u8; 20]>> {
     let Some(extensions) = value.get("extensions").and_then(Value::as_array) else {
         return Ok(Vec::new());
     };
-    let Some(builder) = extensions
-        .iter()
-        .find(|entry| {
-            crate::workspace::engine::client_status::config::is_extension_aspect(
-                entry,
-                "teambit.pipelines/builder",
-            )
-        })
-    else {
+    let Some(builder) = extensions.iter().find(|entry| is_builder_extension(entry)) else {
         return Ok(Vec::new());
     };
     let Some(artifacts) = builder
@@ -105,8 +97,23 @@ fn optional(value: &Value, field: &str) -> io::Result<Option<[u8; 20]>> {
     }
 }
 
+fn is_builder_extension(entry: &Value) -> bool {
+    crate::workspace::engine::client_status::config::is_extension_aspect(
+        entry,
+        "teambit.pipelines/builder",
+    ) || entry["id"]
+        .as_str()
+        .map(str::trim)
+        .is_some_and(|id| {
+            id == "teambit.pipelines/builder" || id.starts_with("teambit.pipelines/builder@")
+        })
+}
+
 fn hash(value: Option<&Value>) -> io::Result<[u8; 20]> {
-    let text = value.and_then(Value::as_str).ok_or_else(|| invalid("missing transfer ref"))?;
+    let text = value
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .ok_or_else(|| invalid("missing transfer ref"))?;
     if text.len() != 40
         || !text
             .bytes()

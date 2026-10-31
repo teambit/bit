@@ -52,32 +52,22 @@ fn existing_target(
         return Ok(());
     }
     let (scope, _) = crate::reset_lane::bitmap::row_identity(key, row);
-    let Some(scope) = scope else { return Ok(()) };
-    let hash =
-        crate::validate::hexadecimal(&Sha1::digest(format!("{scope}/{}", target.name).as_bytes()));
+    let Some(scope) = scope
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+    else {
+        return Ok(());
+    };
+    let hash = crate::validate::hexadecimal(&Sha1::digest(
+        format!("{scope}/{}", target.name.trim()).as_bytes(),
+    ));
     let Some(model) = super::super::details::local_object(root, &hash, "Component")? else {
         return Ok(());
     };
-    if options.merge_strategy.is_some()
-        && model["state"]["versions"]
-            .as_object()
-            .is_some_and(|versions| {
-                versions
-                    .values()
-                    .any(|entry| entry["local"] == true)
-            })
-    {
+    if options.merge_strategy.is_some() && has_local_versions(&model) {
         return Err(invalid("inbound existing component has local versions"));
     }
-    let requested = row["version"]
-        .as_str()
-        .filter(|ver| !ver.is_empty())
-        .or_else(|| {
-            key.rsplit_once('@')
-                .map(|(_, ver)| ver)
-                .filter(|ver| !ver.is_empty())
-        })
-        .ok_or_else(|| invalid("inbound existing version"))?;
+    let requested = requested_version(key, row)?;
     let (_, hash) = super::version(&model, requested)?;
     let Some(version) = super::super::details::local_object(root, &hash, "Version")? else {
         return Ok(());
@@ -88,9 +78,34 @@ fn existing_target(
     check_sources(root, row, &version)
 }
 
+fn has_local_versions(model: &Value) -> bool {
+    model["state"]["versions"]
+        .as_object()
+        .is_some_and(|versions| {
+            versions
+                .values()
+                .any(|entry| entry["local"] == true)
+        })
+}
+
+fn requested_version<'a>(key: &'a str, row: &'a Value) -> io::Result<&'a str> {
+    row["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver.trim())
+                .filter(|ver| !ver.is_empty())
+        })
+        .ok_or_else(|| invalid("inbound existing version"))
+}
+
 fn check_sources(root: &Path, row: &Value, version: &Value) -> io::Result<()> {
-    let directory =
-        row["rootDir"].as_str().ok_or_else(|| invalid("inbound existing root directory"))?;
+    let directory = row["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("inbound existing root directory"))?;
     crate::checkout::plan::relative_path(directory)?;
     let files = version["files"]
         .as_array()
@@ -99,8 +114,10 @@ fn check_sources(root: &Path, row: &Value, version: &Value) -> io::Result<()> {
     let mut compressed = 0;
     let mut bytes = 0_usize;
     for file in files {
-        let relative =
-            file["relativePath"].as_str().ok_or_else(|| invalid("inbound existing file path"))?;
+        let relative = file["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound existing file path"))?;
         crate::checkout::plan::relative_path(relative)?;
         let hash = file["file"].as_str().ok_or_else(|| invalid("inbound existing Source"))?;
         let body = crate::checkout::repository::source(

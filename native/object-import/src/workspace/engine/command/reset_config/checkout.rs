@@ -10,9 +10,15 @@ pub(super) fn document(
     version_name: &str,
     original: &Value,
 ) -> io::Result<Value> {
-    let identity =
-        target["identity"].as_str().ok_or_else(|| invalid("checkout config identity"))?;
-    let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("checkout config scope"))?;
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("checkout config identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("checkout config scope"))?;
     let mut extensions = Map::new();
     let mut seen = HashSet::new();
     add_config(&mut extensions, &mut seen, &target["componentConfig"], record)?;
@@ -91,35 +97,45 @@ fn insert(
 }
 
 fn identifier(row: &Value) -> io::Result<String> {
-    if let Some(id) = row.get("extensionId") {
-        if let Some(id) = id.as_str() {
+    if let Some(id) = row
+        .get("extensionId")
+        .filter(|val| !val.is_null())
+    {
+        if let Some(id) = non_empty_str(id) {
             return Ok(id
                 .strip_suffix("@latest")
                 .or_else(|| id.strip_suffix("@head"))
                 .unwrap_or(id)
                 .to_owned());
         }
-        let raw_name = id["name"].as_str().ok_or_else(|| invalid("checkout aspect name"))?;
+        let raw_name = non_empty_str(&id["name"]).ok_or_else(|| invalid("checkout aspect name"))?;
         let (name, inline_ver) = raw_name
             .rsplit_once('@')
             .map_or((raw_name, None), |(bare, ver)| {
-                (bare, Some(ver).filter(|ver| !ver.is_empty()))
+                (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
             });
-        let scope = id["scope"].as_str().unwrap_or_default();
+        if name.is_empty() {
+            return Err(invalid("checkout aspect name"));
+        }
+        let scope = non_empty_str(&id["scope"]).unwrap_or_default();
         let base = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
-        return Ok(id["version"]
-            .as_str()
-            .or_else(|| id["head"].as_str())
-            .filter(|version| !version.is_empty())
+        return Ok(non_empty_str(&id["version"])
+            .or_else(|| non_empty_str(&id["head"]))
             .or(inline_ver)
             .filter(|version| !matches!(*version, "latest" | "head"))
             .map_or_else(|| base.clone(), |version| format!("{base}@{version}")));
     }
-    row.get("name")
-        .or_else(|| row.get("legacyId"))
-        .and_then(Value::as_str)
+    non_empty_str(&row["name"])
+        .or_else(|| non_empty_str(&row["legacyId"]))
         .map(str::to_owned)
         .ok_or_else(|| invalid("checkout aspect identity"))
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 fn strip_local_env(extensions: &mut Map<String, Value>, record: &Record) {

@@ -9,6 +9,12 @@ pub(super) fn choose(
     explicit: Option<&str>,
     existing: Option<&str>,
 ) -> io::Result<String> {
+    let explicit = explicit
+        .map(str::trim)
+        .filter(|path| !path.is_empty());
+    let existing = existing
+        .map(str::trim)
+        .filter(|path| !path.is_empty());
     if explicit.is_none()
         && let Some(existing) = existing
     {
@@ -86,7 +92,10 @@ pub(super) fn resolve(
     main: Option<&str>,
     files: &[String],
 ) -> io::Result<Option<String>> {
-    let Some(main) = main else {
+    let Some(main) = main
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+    else {
         return Ok(None);
     };
     let main = resolve_dsl(main, files)?;

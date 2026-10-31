@@ -119,19 +119,21 @@ fn excluded(path: &Path, options: &Options) -> bool {
             .any(|part| matches!(*part, "objects" | "cache" | "tmp"))
 }
 fn previous_archive(name: &str) -> bool {
-    name.strip_prefix("doctor-results-")
-        .and_then(|name| {
-            name.strip_suffix(".tar.gz")
-                .or_else(|| name.strip_suffix(".tar"))
+    let lowered = name.to_ascii_lowercase();
+    lowered
+        .strip_prefix("doctor-results-")
+        .and_then(|rest| {
+            rest.strip_suffix(".tar.gz")
+                .or_else(|| rest.strip_suffix(".tar"))
         })
         .is_some_and(|stamp| !stamp.is_empty() && stamp.bytes().all(|byte| byte.is_ascii_digit()))
 }
 pub(super) fn filename(path: &Path, timestamp: i64) -> PathBuf {
-    if path == Path::new(".") {
+    if path.as_os_str().is_empty() || path == Path::new(".") {
         return PathBuf::from(format!("doctor-results-{timestamp}.tar"));
     }
-    let name = path.to_string_lossy();
-    if name.ends_with(".tar") || name.ends_with(".tar.gz") {
+    let lowered = path.to_string_lossy().to_ascii_lowercase();
+    if lowered.ends_with(".tar") || lowered.ends_with(".tar.gz") {
         return path.to_path_buf();
     }
     path.with_extension("tar")

@@ -93,18 +93,19 @@ fn body(
 }
 
 fn identity(object: &wire::Object) -> io::Result<String> {
+    let expected = object.hash
+        .as_deref()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty());
     if object.kind == "Source" {
-        return object.hash.clone().ok_or_else(|| invalid("Source hash missing"));
+        return expected.map(str::to_owned).ok_or_else(|| invalid("Source hash missing"));
     }
     let hash = crate::snapshot_projection::identity(
         &object.kind,
         object.fields.as_ref().ok_or_else(|| invalid("metadata fields missing"))?,
-        object.hash.as_deref(),
+        expected,
     )?;
-    if object.hash
-        .as_ref()
-        .is_some_and(|expected| *expected != hash)
-    {
+    if expected.is_some_and(|expected_hash| expected_hash != hash) {
         return Err(invalid("metadata identity differs"));
     }
     Ok(hash)

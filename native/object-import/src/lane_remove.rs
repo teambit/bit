@@ -31,8 +31,9 @@ impl Plan {
         let rows = index["lanes"].as_array_mut().ok_or_else(|| invalid("lane index"))?;
         let mut hashes = Vec::with_capacity(ids.len());
         let mut seen = HashSet::new();
-        for id in ids {
-            if !seen.insert(id) {
+        for raw_id in ids {
+            let id = raw_id.trim();
+            if !seen.insert(id.to_owned()) {
                 return Err(invalid("lane removal ID"));
             }
             hashes.push(select_one(root, rows, current, id)?);
@@ -71,7 +72,8 @@ fn lane_matches(row: &Value, scope: &str, name: &str) -> bool {
 }
 
 fn select_one(root: &Path, rows: &mut Vec<Value>, current: &Value, id: &str) -> io::Result<String> {
-    let (scope, name) = id.split_once('/').ok_or_else(|| invalid("lane ID"))?;
+    let (raw_scope, raw_name) = id.split_once('/').ok_or_else(|| invalid("lane ID"))?;
+    let (scope, name) = (raw_scope.trim(), raw_name.trim());
     if !valid_part(scope) || !valid_part(name) || name == "main" {
         return Err(invalid("lane removal ID"));
     }
@@ -90,12 +92,15 @@ fn select_one(root: &Path, rows: &mut Vec<Value>, current: &Value, id: &str) -> 
     {
         return Err(invalid("ambiguous lane index"));
     }
-    let hash = rows[position]["hash"].as_str().ok_or_else(|| invalid("lane hash"))?;
-    if !valid_hash(hash) {
-        return Err(invalid("lane hash"));
-    }
+    let hash = rows[position]["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| valid_hash(hash))
+        .ok_or_else(|| invalid("lane hash"))?;
     let lane = outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Lane")?;
-    if lane["scope"] != scope || lane["name"] != name {
+    if lane["scope"].as_str().map(str::trim) != Some(scope)
+        || lane["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("lane object identity"));
     }
     if trash(root, hash).try_exists()? {

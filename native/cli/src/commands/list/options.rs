@@ -21,9 +21,10 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     while index < args.len() {
         if args[index] == "--" {
             for &rest in &args[index + 1..] {
-                (!rest.is_empty()
-                    && !rest.starts_with('-')
-                    && options.remote.replace(rest.to_string()).is_none())
+                let trimmed = rest.trim();
+                (!trimmed.is_empty()
+                    && !trimmed.starts_with('-')
+                    && options.remote.replace(trimmed.to_string()).is_none())
                 .then_some(())?;
             }
             break;
@@ -59,10 +60,11 @@ impl Options {
             return Some(1);
         }
         if !raw.starts_with('-') {
-            if self.remote.is_some() || raw.is_empty() {
+            let trimmed = raw.trim();
+            if self.remote.is_some() || trimmed.is_empty() {
                 return None;
             }
-            self.remote = Some(raw.to_string());
+            self.remote = Some(trimmed.to_string());
             return Some(1);
         }
         let flag = long_flag(raw.split_once('=').map_or(raw, |(key, _)| key));
@@ -84,7 +86,9 @@ impl Options {
             "--local-scope" => self.local_scope = true,
             "--json" => self.json = true,
             "--scope" | "--namespace" => {
-                let value = next.filter(|value| !value.starts_with('-') && !value.is_empty())?;
+                let value = next
+                    .map(str::trim)
+                    .filter(|value| !value.starts_with('-') && !value.is_empty())?;
                 self.set_string(flag, value);
                 return Some(1);
             }
@@ -94,15 +98,16 @@ impl Options {
     }
 
     fn inline_flag(&mut self, raw: &str, flag: &str, inline: &str) -> Option<usize> {
+        let trimmed = inline.trim();
         if matches!(flag, "--scope" | "--namespace") {
-            (!inline.is_empty() && !inline.starts_with('-')).then_some(())?;
-            self.set_string(flag, inline);
+            (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+            self.set_string(flag, trimmed);
             return Some(0);
         }
         if !raw.starts_with("--") {
             return None;
         }
-        let val = match inline {
+        let val = match trimmed {
             "true" => true,
             "false" => false,
             _ => return None,

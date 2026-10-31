@@ -82,6 +82,12 @@ fn validate_changes(values: &Value) -> io::Result<()> {
     Ok(())
 }
 
+fn non_empty_dir(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+}
+
 fn cleanup(root: &Path, receipt: &Value) -> io::Result<()> {
     if receipt["cleanComponents"] != true {
         return Ok(());
@@ -91,10 +97,9 @@ fn cleanup(root: &Path, receipt: &Value) -> io::Result<()> {
         .filter(|entries| entries.len() <= 8192)
         .ok_or_else(|| io::Error::other("subscriber component directory receipt"))?;
     for entry in entries {
-        let directory = entry
-            .as_str()
-            .or_else(|| entry["directory"].as_str())
-            .or_else(|| entry["rootDir"].as_str())
+        let directory = non_empty_dir(entry)
+            .or_else(|| non_empty_dir(&entry["directory"]))
+            .or_else(|| non_empty_dir(&entry["rootDir"]))
             .map(Path::new)
             .filter(|directory| {
                 directory.is_absolute() && directory.starts_with(root) && *directory != root

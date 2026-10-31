@@ -37,7 +37,11 @@ fn first_subcommand(args: &[OsString]) -> Option<String> {
     args.iter()
         .skip(1)
         .filter_map(|arg| arg.to_str())
-        .find(|token| !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false"))
+        .map(str::trim)
+        .find(|token| {
+            !token.is_empty()
+                && !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false")
+        })
         .map(str::to_owned)
 }
 
@@ -66,7 +70,11 @@ pub(super) fn unrecognized_subcommand(args: &[OsString], in_ws: bool) -> Option<
         .collect::<Option<Vec<_>>>()?;
     let filtered = tokens
         .into_iter()
-        .filter(|token| !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false"))
+        .map(str::trim)
+        .filter(|token| {
+            !token.is_empty()
+                && !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false")
+        })
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         [sub] => {

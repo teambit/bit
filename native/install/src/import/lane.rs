@@ -37,7 +37,11 @@ impl RemoteLane {
             .flatten()
             .filter_map(|entry| {
                 let mut id = super::fs_remote::dependency_id(entry)?;
-                id.version = entry["head"].as_str().map(str::to_string);
+                id.version = entry["head"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|head| !head.is_empty())
+                    .map(str::to_string);
                 Some(id)
             })
             .collect()
@@ -113,7 +117,14 @@ pub fn sync_remote_refs(repo: &Repo, lane: &RemoteLane) -> io::Result<()> {
     let refs: Vec<RemoteRef> = lane
         .ids_with_update_dependents()
         .into_iter()
-        .filter_map(|id| Some(RemoteRef { head: id.version?, scope: id.scope, name: id.name }))
+        .filter_map(|id| {
+            let head = id.version
+                .as_deref()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())?
+                .to_owned();
+            Some(RemoteRef { head, scope: id.scope, name: id.name })
+        })
         .collect();
     repo.add_remote_refs(&lane.id.scope, &lane.id.name, &refs)
 }

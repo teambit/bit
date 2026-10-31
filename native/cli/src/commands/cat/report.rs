@@ -53,10 +53,19 @@ fn json_report(
 }
 
 pub(super) fn select(files: &[Value], requested: &str) -> io::Result<Value> {
-    let normalized = requested.replace('\\', "/");
+    let normalized = requested
+        .trim()
+        .replace('\\', "/")
+        .trim_start_matches("./")
+        .to_owned();
     files
         .iter()
-        .find(|file| file_path(file) == Some(normalized.as_str()))
+        .find(|file| {
+            file_path(file)
+                .is_some_and(|candidate| {
+                    candidate.replace('\\', "/").trim_start_matches("./") == normalized
+                })
+        })
         .cloned()
         .ok_or_else(|| decline("cat requested file absent"))
 }
@@ -76,8 +85,14 @@ fn text_files(files: &[Value], single: bool) -> io::Result<String> {
 fn file_path(file: &Value) -> Option<&str> {
     file["path"]
         .as_str()
-        .or_else(|| file["relativePath"].as_str())
+        .map(str::trim)
         .filter(|path| !path.is_empty())
+        .or_else(|| {
+            file["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+        })
 }
 
 fn text_config(config: &Value) -> io::Result<String> {

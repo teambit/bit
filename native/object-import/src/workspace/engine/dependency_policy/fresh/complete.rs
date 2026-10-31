@@ -124,7 +124,12 @@ fn apply_versions(detected: &mut Value, request: &Complete) -> io::Result<()> {
     Ok(())
 }
 fn select(version: Option<&str>, grammar: &Value) -> io::Result<Option<String>> {
-    let Some(version) = version.filter(|version| !version.is_empty()) else { return Ok(None) };
+    let Some(version) = version
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+    else {
+        return Ok(None);
+    };
     if let Some(hash) = version.strip_prefix("0.0.0-").filter(|hash| snap(hash)) {
         return Ok(Some(hash.to_owned()));
     }
@@ -133,7 +138,10 @@ fn select(version: Option<&str>, grammar: &Value) -> io::Result<Option<String>> 
         return Ok(Some(version.to_owned()));
     }
     if parsed["range"] == true
-        && let Some(coerced) = parsed["coerced"].as_str()
+        && let Some(coerced) = parsed["coerced"]
+            .as_str()
+            .map(str::trim)
+            .filter(|coerced| !coerced.is_empty())
     {
         return Ok(Some(coerced.to_owned()));
     }

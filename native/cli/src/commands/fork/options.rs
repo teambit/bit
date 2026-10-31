@@ -134,10 +134,13 @@ fn take_fork_val(arguments: &mut std::slice::Iter<'_, &str>) -> Option<String> {
     valid_fork_val(arguments.next()?)
 }
 fn valid_fork_val(val: &str) -> Option<String> {
-    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+    let trimmed = val.trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }
 impl Options {
     pub fn multiple(&self) -> bool {
-        self.scope_fork || self.source.contains(['*', '?', ','])
+        self.scope_fork
+            || self.source.contains(['*', '?', ',', '!'])
+            || self.source.starts_with('$')
     }
 }

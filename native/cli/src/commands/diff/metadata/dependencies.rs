@@ -44,28 +44,31 @@ pub(super) fn package_dependencies(
     if left.is_empty() && right.is_empty() {
         return Ok(None);
     }
-    let version = |map: &Map<String, Value>, name: &str| -> io::Result<Option<String>> {
-        map.get(name)
-            .map(|value| text(Some(value)).map(str::to_string))
-            .transpose()
-    };
     let mut changes = Vec::new();
     for name in left.keys() {
-        let (ours, theirs) = (version(left, name)?, version(right, name)?);
-        if ours == theirs {
+        let (ours, theirs) = (pkg_version(left, name)?, pkg_version(right, name)?);
+        if ours.is_none() || ours == theirs {
             continue;
         }
         check_change(ours.as_deref(), theirs.as_deref())?;
         changes.push(Change { name: name.clone(), left: ours, right: theirs });
     }
     for name in right.keys() {
-        if version(left, name)?.is_none_or(|value| value.is_empty()) {
-            let theirs = version(right, name)?;
-            check_change(None, theirs.as_deref())?;
-            changes.push(Change { name: name.clone(), left: None, right: theirs });
+        if pkg_version(left, name)?.is_none()
+            && let Some(theirs) = pkg_version(right, name)?
+        {
+            check_change(None, Some(theirs.as_str()))?;
+            changes.push(Change { name: name.clone(), left: None, right: Some(theirs) });
         }
     }
     Ok(plain_text(&changes, field, labels, chalk))
+}
+
+fn pkg_version(map: &Map<String, Value>, name: &str) -> io::Result<Option<String>> {
+    map.get(name)
+        .map(|value| text(Some(value)).map(|ver| ver.trim().to_string()))
+        .transpose()
+        .map(|opt| opt.filter(|ver| !ver.is_empty()))
 }
 
 /// `componentDependenciesOutput`.

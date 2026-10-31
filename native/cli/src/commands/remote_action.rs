@@ -129,11 +129,20 @@ fn resolve_target(
     global_only: bool,
     pending_deletion: bool,
 ) -> io::Result<Option<Target>> {
+    let trimmed_remote = remote.trim();
+    if trimmed_remote.is_empty() {
+        return Ok(None);
+    }
     let source = if global_only { &Value::Null } else { scope_json };
     let remotes = Remotes::load(source, config_dir, global)?;
-    let Some(remote) = remotes.configured(remote)? else { return Ok(None) };
+    let Some(remote) = remotes.configured(trimmed_remote)? else { return Ok(None) };
     let requester = (!global_only)
-        .then(|| scope_json["name"].as_str())
+        .then(|| {
+            scope_json["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+        })
         .flatten();
     target(remote, global, requester, pending_deletion)
 }

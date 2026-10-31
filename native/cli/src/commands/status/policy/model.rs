@@ -9,21 +9,24 @@ pub(in crate::commands::status) fn model_of<'c>(
     identity: &str,
 ) -> Option<&'c Value> {
     let models = context.get("models").and_then(Value::as_array)?;
-    let (_, target_name) = identity
+    let trimmed_id = identity.trim();
+    let (_, target_name) = trimmed_id
         .split_once('/')
-        .unwrap_or(("", identity));
+        .map_or(("", trimmed_id), |(scope, name)| (scope.trim(), name.trim()));
     models
         .iter()
         .find(|model| {
             let scope = model
                 .get("scope")
                 .and_then(Value::as_str)
+                .map(str::trim)
                 .unwrap_or_default();
             let name = model
                 .get("name")
                 .and_then(Value::as_str)
+                .map(str::trim)
                 .unwrap_or_default();
-            format!("{scope}/{name}") == identity || (scope.is_empty() && name == target_name)
+            format!("{scope}/{name}") == trimmed_id || (scope.is_empty() && name == target_name)
         })
 }
 
@@ -37,6 +40,7 @@ pub(super) fn stored_version<'c>(
     let tagged = target
         .get("version")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty());
     match (tagged, model) {
         (Some(_), None) => return Err(decline("status pending import")),
@@ -47,8 +51,21 @@ pub(super) fn stored_version<'c>(
     if projected.is_some() {
         return Ok(projected);
     }
-    let tag = tagged.unwrap_or_default();
-    let reference = if matches!(tag, "latest" | "head") {
+    let reference = resolve_tag_reference(model, tagged.unwrap_or_default());
+    let versions = array(context.get("versions"), "versions")?;
+    let version = versions
+        .iter()
+        .find(|row| {
+            reference
+                .as_ref()
+                .is_some_and(|reference| row.get(0) == Some(reference))
+        })
+        .and_then(|row| nullish(row.get(1)));
+    version.map(Some).ok_or_else(|| decline("status version absent"))
+}
+
+fn resolve_tag_reference(model: Option<&Value>, tag: &str) -> Option<Value> {
+    if matches!(tag, "latest" | "head") {
         model
             .and_then(|model_val| nullish(model_val.get("head")))
             .cloned()
@@ -63,17 +80,7 @@ pub(super) fn stored_version<'c>(
             )
         };
         lookup("orphanedVersions").or_else(|| lookup("versions")).cloned()
-    };
-    let versions = array(context.get("versions"), "versions")?;
-    let version = versions
-        .iter()
-        .find(|row| {
-            reference
-                .as_ref()
-                .is_some_and(|reference| row.get(0) == Some(reference))
-        })
-        .and_then(|row| nullish(row.get(1)));
-    version.map(Some).ok_or_else(|| decline("status version absent"))
+    }
 }
 
 fn validate_unscoped_model(target: &Value, model: &Value) -> io::Result<()> {
@@ -128,16 +135,27 @@ fn is_valid_harmony_dep_id(dependency: &Value) -> bool {
     let id = dependency.get("id").unwrap_or(dependency);
     if let Some(raw) = id.as_str() {
         return raw
+            .trim()
             .split_once('/')
-            .is_some_and(|(scope, rest)| !scope.is_empty() && !rest.is_empty());
+            .is_some_and(|(scope, rest)| !scope.trim().is_empty() && !rest.trim().is_empty());
     }
-    let part = |key| {
-        id.get(key)
-            .or_else(|| dependency.get(key))
-            .and_then(Value::as_str)
-            .filter(|value| !value.is_empty())
-    };
-    truthy(Some(id)) && part("scope").is_some() && part("name").is_some()
+    truthy(Some(id))
+        && non_empty_part(id, dependency, "scope").is_some()
+        && non_empty_part(id, dependency, "name").is_some()
+}
+
+fn non_empty_part<'a>(id: &'a Value, dependency: &'a Value, key: &str) -> Option<&'a str> {
+    id.get(key)
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .or_else(|| {
+            dependency
+                .get(key)
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+        })
 }
 
 /// `[...(version?.dependencies ?? []), ...(version?.devDependencies ?? [])]`.

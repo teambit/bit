@@ -17,7 +17,12 @@ use std::{collections::HashSet, io};
 /// The variable is set to anything but the empty string (`process.env` truthiness).
 #[must_use]
 pub fn refetch_requested() -> bool {
-    std::env::var_os("BIT_FETCH_INCOMPLETE_VERSION_HISTORY").is_some_and(|value| !value.is_empty())
+    std::env::var_os("BIT_FETCH_INCOMPLETE_VERSION_HISTORY")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
 }
 
 /// Versioned ids whose component exists locally and whose `VersionHistory` is
@@ -158,6 +163,11 @@ fn strings(value: &Value) -> Vec<String> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|item| item.as_str().map(str::to_string))
+        .filter_map(|item| {
+            item.as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+                .map(str::to_string)
+        })
         .collect()
 }

@@ -40,6 +40,7 @@ fn read(path: &Path, bare: bool) -> io::Result<ScopeRoot> {
     let scope = bit_object_import::parse_jsonc(&bytes)?;
     scope["name"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty() && !value.contains('/'))
         .ok_or_else(|| io::Error::other("lane scope name"))?;
     if bare {
@@ -118,10 +119,15 @@ fn diagnose_unscoped_component_error(
 }
 
 fn row_has_name(row: &Value, bare_id: &str) -> bool {
-    row["id"]["name"].as_str() == Some(bare_id)
+    let target = bare_id.trim();
+    row["id"]["name"].as_str().map(str::trim) == Some(target)
         || row["id"]
             .as_str()
-            .is_some_and(|id_str| id_str.rsplit_once('/').map_or(id_str, |(_, nm)| nm) == bare_id)
+            .is_some_and(|id_str| {
+                let trimmed = id_str.trim();
+                let without_ver = trimmed.rsplit_once('@').map_or(trimmed, |(bare, _)| bare.trim());
+                without_ver.rsplit_once('/').map_or(without_ver, |(_, nm)| nm.trim()) == target
+            })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Diagnostics share resolved head and version hashes")]

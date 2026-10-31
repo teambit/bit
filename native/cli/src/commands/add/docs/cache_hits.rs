@@ -88,11 +88,7 @@ fn classify(
         plan.hits.push(json!({"path":path,"docs":docs}));
         return Ok(true);
     }
-    let relative = file
-        .as_str()
-        .or_else(|| file["relativePath"].as_str())
-        .or_else(|| file["path"].as_str())
-        .unwrap_or_default();
+    let relative = file_relative_path(file).unwrap_or_default();
     if !bit_dependency_scanner::proves_empty_docs(source.bytes(), relative) {
         return Ok(false);
     }
@@ -134,15 +130,10 @@ fn hit(cache: &Path, path: &Path, mtime: f64, enabled: bool) -> io::Result<Optio
     Err(invalid("docs cache data"))
 }
 pub(super) fn source_path(root: &Path, component: &Value, file: &Value) -> io::Result<PathBuf> {
-    let directory = component["directory"]
-        .as_str()
-        .or_else(|| component["rootDir"].as_str())
+    let directory = non_empty_str(&component["directory"])
+        .or_else(|| non_empty_str(&component["rootDir"]))
         .ok_or_else(|| invalid("docs directory"))?;
-    let relative = file
-        .as_str()
-        .or_else(|| file["relativePath"].as_str())
-        .or_else(|| file["path"].as_str())
-        .ok_or_else(|| invalid("docs relative path"))?;
+    let relative = file_relative_path(file).ok_or_else(|| invalid("docs relative path"))?;
     // Node path.join normalizes both separator spellings on Windows and drops
     // a workspace-root "." segment. Cache keys use that exact absolute spelling.
     Ok(root
@@ -150,6 +141,19 @@ pub(super) fn source_path(root: &Path, component: &Value, file: &Value) -> io::R
         .join(relative)
         .components()
         .collect())
+}
+
+fn file_relative_path(file: &Value) -> Option<&str> {
+    non_empty_str(file)
+        .or_else(|| non_empty_str(&file["relativePath"]))
+        .or_else(|| non_empty_str(&file["path"]))
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)

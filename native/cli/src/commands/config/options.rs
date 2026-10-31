@@ -119,18 +119,24 @@ impl Options {
                 .strip_prefix("--origin=")
                 .or_else(|| flag.strip_prefix("-o="))?,
         };
-        if val.is_empty() || val.starts_with('-') {
+        let trimmed = val.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') {
             return None;
         }
-        self.origin = Some(val.to_owned());
+        self.origin = Some(trimmed.to_owned());
         Some(())
     }
 
     fn valid(&self) -> bool {
-        if matches!(self.command.as_str(), "set" | "del")
+        if matches!(self.command.as_str(), "get" | "set" | "del")
             && self.values
                 .first()
-                .is_some_and(|key| key == "__proto__")
+                .is_some_and(|key| {
+                    let trimmed = key.trim();
+                    trimmed.is_empty()
+                        || (matches!(self.command.as_str(), "set" | "del")
+                            && matches!(trimmed, "__proto__" | "constructor" | "prototype"))
+                })
         {
             return false;
         }

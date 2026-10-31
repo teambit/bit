@@ -16,27 +16,7 @@ pub(super) fn prepare(
         .join(&hash[..2])
         .join(&hash[2..]);
     let present = proof::read(&file, &mut proofs)?.is_some();
-    let (id_scope, _) = identity
-        .split_once('/')
-        .unwrap_or(("", identity));
-    let model_scope = model["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .unwrap_or(id_scope);
-    let mut history = if present {
-        reader.read(&hash, "VersionHistory")?
-    } else {
-        if !stage {
-            return Err(invalid("status history requires canonical population"));
-        }
-        json!({"name":model["name"],"scope":model_scope,"versions":[],"graphCompleteRefs":[]})
-    };
-    let history_scope = history["scope"].as_str().unwrap_or_default();
-    if history["name"] != model["name"]
-        || (!history_scope.is_empty() && !model_scope.is_empty() && history_scope != model_scope)
-    {
-        return Err(invalid("status history identity"));
-    }
+    let mut history = load_or_init_history(reader, model, identity, &hash, present, stage)?;
     let original = history.clone();
     for head in heads.iter().flatten() {
         populate(reader, &mut history, head, stage, &mut proofs)?;
@@ -49,6 +29,42 @@ pub(super) fn prepare(
         Some(json!({"identity":identity,"history":history,"readSet":proofs}))
     };
     Ok((history["versions"].clone(), pending))
+}
+
+fn load_or_init_history(
+    reader: &Reader<'_>,
+    model: &Value,
+    identity: &str,
+    hash: &str,
+    present: bool,
+    stage: bool,
+) -> io::Result<Value> {
+    let (id_scope, _) = identity
+        .split_once('/')
+        .unwrap_or(("", identity));
+    let model_scope = model["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .unwrap_or(id_scope);
+    let history = if present {
+        reader.read(hash, "VersionHistory")?
+    } else {
+        if !stage {
+            return Err(invalid("status history requires canonical population"));
+        }
+        json!({"name":model["name"],"scope":model_scope,"versions":[],"graphCompleteRefs":[]})
+    };
+    let history_scope = history["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    if history["name"] != model["name"]
+        || (!history_scope.is_empty() && !model_scope.is_empty() && history_scope != model_scope)
+    {
+        return Err(invalid("status history identity"));
+    }
+    Ok(history)
 }
 fn populate(
     reader: &Reader<'_>,
@@ -130,11 +146,14 @@ fn observe_model(
     use sha1::{Digest, Sha1};
     let stored_id = expected["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .map_or_else(
             || {
                 expected["name"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|name| !name.is_empty())
                     .unwrap_or(identity)
                     .to_owned()
             },

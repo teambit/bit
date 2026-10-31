@@ -87,15 +87,11 @@ fn unsupported(
     options: &options::Options,
     state: &serde_json::Value,
 ) -> Option<String> {
-    if options.source.contains('@')
-        && inventory::selected(
-            state,
-            options.source
-                .split('@')
-                .next()
-                .unwrap(),
-        )
-        .is_some()
+    let trimmed = options.source.trim();
+    if let Some((bare, version)) = trimmed.rsplit_once('@')
+        && !bare.trim().is_empty()
+        && !version.trim().is_empty()
+        && inventory::selected(state, bare.trim()).is_some()
     {
         return Some("forking a requested historical workspace version".into());
     }
@@ -117,11 +113,13 @@ fn preflight(
     let Some(source) = inventory::selected(state, &options.source) else {
         return Ok(());
     };
+    let source_id = source["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| io::Error::other("fork source identity"))?;
     let kernel = bit_object_import::component_fork::Options {
-        source: source["identity"]
-            .as_str()
-            .unwrap()
-            .into(),
+        source: source_id.into(),
         target: options.target.clone(),
         scope: options.scope.clone(),
         path: options.path.clone(),

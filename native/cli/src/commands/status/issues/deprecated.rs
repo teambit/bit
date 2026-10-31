@@ -78,12 +78,20 @@ fn head_deprecation<'c>(
 }
 
 fn range_matches(model: &Value, full_id: &str, config: &Value) -> io::Result<bool> {
-    let Some(range) = config["range"].as_str() else {
+    let Some(range) = config["range"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    else {
         return Ok(false);
     };
-    let Some((_, version)) = full_id.rsplit_once('@') else {
+    let Some((_, version)) = full_id.trim().rsplit_once('@') else {
         return Ok(false);
     };
+    let version = version.trim();
+    if version.is_empty() {
+        return Ok(false);
+    }
     let empty = serde_json::Map::new();
     let tags = match model.get("versions") {
         None | Some(Value::Null) => &empty,
@@ -96,8 +104,8 @@ fn range_matches(model: &Value, full_id: &str, config: &Value) -> io::Result<boo
     } else {
         tags.iter()
             .chain(orphaned.into_iter().flat_map(serde_json::Map::iter))
-            .find(|(_, reference)| reference.as_str() == Some(version))
-            .map(|(tag, _)| tag.as_str())
+            .find(|(_, reference)| reference.as_str().map(str::trim) == Some(version))
+            .map(|(tag, _)| tag.as_str().trim())
     };
     let Some(tag) = tag else {
         return Ok(false);

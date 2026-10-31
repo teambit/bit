@@ -92,24 +92,41 @@ fn unpublished(calculated: &Calculated, message: &str) -> IndexMap<String, (Stri
         .iter()
         .map(|component| component.id.to_string_without_version())
         .collect();
+    let lower_message = message.to_ascii_lowercase();
     let mut found: IndexMap<String, (String, Vec<String>)> = IndexMap::new();
     for (dependent, dependencies) in &calculated.dependencies {
         for dependency in &dependencies.components {
-            let Some(version) = dependency.id.version.as_deref().filter(|version| is_snap(version))
-            else {
-                continue;
-            };
-            let id = dependency.id.to_string_without_version();
-            if local.contains(&id) || !message.contains(version) {
-                continue;
-            }
-            let entry = found
-                .entry(id)
-                .or_insert_with(|| (version.to_string(), Vec::new()));
-            entry.1.push(dependent.clone());
+            record_unpublished_dep(&mut found, dependent, &dependency.id, &local, &lower_message);
         }
     }
     found
+}
+
+fn record_unpublished_dep(
+    found: &mut IndexMap<String, (String, Vec<String>)>,
+    dependent: &String,
+    dep_id: &crate::model::ComponentId,
+    local: &[String],
+    lower_message: &str,
+) {
+    let Some(version) = dep_id.version
+        .as_deref()
+        .map(str::trim)
+        .filter(|ver| is_snap(ver))
+    else {
+        return;
+    };
+    let id = dep_id.to_string_without_version();
+    let lower_version = version.to_ascii_lowercase();
+    if local.contains(&id) || !lower_message.contains(&lower_version) {
+        return;
+    }
+    let entry = found
+        .entry(id)
+        .or_insert_with(|| (lower_version, Vec::new()));
+    if !entry.1.contains(dependent) {
+        entry.1.push(dependent.clone());
+    }
 }
 
 fn is_snap(version: &str) -> bool {

@@ -20,15 +20,17 @@ pub(crate) struct Lane {
 
 pub(crate) fn lane_id_parts(id: &Value) -> (&str, &str) {
     if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let trimmed = raw.trim();
+        let bare = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
         return bare
             .split_once('/')
-            .unwrap_or(("", bare));
+            .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     }
-    let scope = id["scope"].as_str().unwrap_or_default();
+    let scope = id["scope"].as_str().map_or("", str::trim);
     let name = id["name"]
         .as_str()
-        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .map(str::trim)
+        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base.trim()))
         .unwrap_or_default();
     (scope, name)
 }
@@ -71,26 +73,20 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     if matches.len() != 1 {
         return Err(invalid("current lane is not uniquely indexed"));
     }
-    let hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("lane hash"))?;
-    crate::merge_history::hash(hash)?;
+    let raw_hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("lane hash"))?;
+    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
     let path = crate::scope_path(root)
         .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
     let before = fs::read(&path)?;
-    let value = outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Lane")?;
-    if value["scope"] != scope || value["name"] != name {
+    let value = outbound::read_object(&crate::scope_path(root).join("objects"), &hash, "Lane")?;
+    if value["scope"].as_str().map(str::trim) != Some(scope)
+        || value["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("current lane object identity"));
     }
-    Ok(Lane {
-        scope: scope.into(),
-        name: name.into(),
-        hash: hash.into(),
-        path,
-        before,
-        index_before,
-        value,
-    })
+    Ok(Lane { scope: scope.into(), name: name.into(), hash, path, before, index_before, value })
 }
 
 pub(crate) fn matches_component_entry(entry: &Value, scope: &str, name: &str) -> bool {
@@ -113,8 +109,16 @@ fn validate_component(
     if kind == RowKind::New && !matching.is_empty() {
         return Err(invalid("new component is already on lane"));
     }
+    let head = matching
+        .first()
+        .and_then(|entry| entry["head"].as_str())
+        .map(str::trim);
+    let expected = expected_version.map(str::trim);
     if matches!(kind, RowKind::LaneSnap | RowKind::ExportedLane)
-        && (matching.len() != 1 || matching[0]["head"].as_str() != expected_version)
+        && (matching.len() != 1
+            || head
+                .zip(expected)
+                .is_none_or(|(left, right)| !left.eq_ignore_ascii_case(right)))
     {
         return Err(invalid("lane head differs from workspace version"));
     }

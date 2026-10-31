@@ -10,19 +10,10 @@ pub(super) fn project(
     selection: &Selection,
 ) -> io::Result<Option<ObjectChange>> {
     let original = repository.model.clone();
-    let identity = format!(
-        "{}/{}",
-        original["scope"].as_str().unwrap_or_default(),
-        original["name"].as_str().unwrap_or_default(),
-    );
-    if original["head"]
-        .as_str()
-        .is_some_and(|head| {
-            selection.removed
-                .iter()
-                .any(|hash| hash == head)
-        })
-    {
+    let scope = original["scope"].as_str().map_or("", str::trim);
+    let name = original["name"].as_str().map_or("", str::trim);
+    let identity = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
+    if is_removed(&original["head"], &selection.removed) {
         set_head(&mut repository.model, selection.next.as_deref())?;
     }
     remove_versions(&mut repository.model, selection)?;
@@ -52,14 +43,7 @@ fn set_head(model: &mut Value, head: Option<&str>) -> io::Result<()> {
 }
 
 fn remove_versions(model: &mut Value, selection: &Selection) -> io::Result<()> {
-    let keep = |hash: &Value| {
-        hash.as_str()
-            .is_none_or(|hash| {
-                !selection.removed
-                    .iter()
-                    .any(|removed| removed == hash)
-            })
-    };
+    let keep = |hash: &Value| !is_removed(hash, &selection.removed);
     let versions =
         model["versions"].as_object_mut().ok_or_else(|| invalid("lane reset versions"))?;
     versions.retain(|_, hash| keep(hash));
@@ -98,11 +82,7 @@ fn remove_detached(model: &mut Value, removed: &[String]) -> io::Result<()> {
             fields.shift_remove("heads");
         }
     }
-    if fields
-        .get("current")
-        .and_then(Value::as_str)
-        .is_some_and(|head| removed.iter().any(|hash| hash == head))
-    {
+    if fields.get("current").is_some_and(|head| is_removed(head, removed)) {
         fields.shift_remove("current");
     }
     if Map::is_empty(fields) {
@@ -117,5 +97,10 @@ fn remove_detached(model: &mut Value, removed: &[String]) -> io::Result<()> {
 fn is_removed(value: &Value, removed: &[String]) -> bool {
     value
         .as_str()
-        .is_some_and(|head| removed.iter().any(|hash| hash == head))
+        .is_some_and(|head| {
+            let trimmed = head.trim();
+            removed
+                .iter()
+                .any(|hash| hash.trim().eq_ignore_ascii_case(trimmed))
+        })
 }

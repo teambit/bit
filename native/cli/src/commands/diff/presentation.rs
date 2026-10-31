@@ -55,20 +55,15 @@ pub(super) fn one(
     from_version: Option<&str>,
     to_version: Option<&str>,
 ) -> io::Result<Value> {
-    let identity = text(row.get("identity"))?;
-    let target = capture.captured
-        .iter()
-        .find(|item| item["identity"] == identity);
-    let target = target.ok_or_else(|| decline("diff row without a captured target"))?;
+    let identity = text(row.get("identity"))?.trim();
+    let target = find_captured_target(capture, identity)
+        .ok_or_else(|| decline("diff row without a captured target"))?;
     let version = target
         .get("version")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"));
-    let versions = Versions {
-        left: from_version.unwrap_or_else(|| version.unwrap_or("latest")),
-        right: to_version.unwrap_or_else(|| version.unwrap_or("latest")),
-        historical: to_version.is_some(),
-    };
+    let versions = resolve_versions(version, from_version, to_version);
     let files_diff = result_files::files_diff(row, versions.left, versions.right)?;
     let fields_diff = if target["_removed"] == true && !versions.historical {
         None
@@ -83,7 +78,7 @@ pub(super) fn one(
     };
     let mut output = json!({
         "id": identity,
-        "_fullId": version.map_or_else(|| identity.to_string(), |version| format!("{identity}@{version}")),
+        "_fullId": version.map_or_else(|| identity.to_string(), |ver| format!("{identity}@{ver}")),
         "hasDiff": !files_diff.is_empty() || fields_diff.is_some(),
         "filesDiff": files_diff,
     });
@@ -91,6 +86,39 @@ pub(super) fn one(
         output["fieldsDiff"] = json!(fields_diff);
     }
     Ok(output)
+}
+
+fn find_captured_target<'a>(capture: &'a Capture, identity: &str) -> Option<&'a Value> {
+    let bare = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
+    capture.captured
+        .iter()
+        .find(|item| {
+            item["identity"]
+                .as_str()
+                .map(str::trim)
+                .is_some_and(|cand| {
+                    cand == identity
+                        || cand.rsplit_once('@').map_or(cand, |(base, _)| base.trim()) == bare
+                })
+        })
+}
+
+fn resolve_versions<'a>(
+    version: Option<&'a str>,
+    from_version: Option<&'a str>,
+    to_version: Option<&'a str>,
+) -> Versions<'a> {
+    let from_clean = from_version
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    let to_clean = to_version
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    Versions {
+        left: from_clean.unwrap_or_else(|| version.unwrap_or("latest")),
+        right: to_clean.unwrap_or_else(|| version.unwrap_or("latest")),
+        historical: to_clean.is_some(),
+    }
 }
 
 /// `diffMetadata` of the stored version and the workspace's current state.

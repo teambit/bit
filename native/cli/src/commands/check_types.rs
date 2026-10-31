@@ -35,7 +35,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native check-types grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+    {
         return Ok(Outcome::Declined("CI check-types delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -115,8 +121,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--strict=false" => options.strict = false,
             "-j" | "--json" | "--json=true" => options.json = true,
             "--json=false" => options.json = false,
-            val if !val.starts_with('-') && !val.is_empty() && options.pattern.is_none() => {
-                options.pattern = Some(val.to_owned());
+            val if !val.starts_with('-')
+                && !val.trim().is_empty()
+                && options.pattern.is_none() =>
+            {
+                options.pattern = Some(val.trim().to_owned());
             }
             val => apply_short_flags(val, &mut options)?,
         }
@@ -129,8 +138,11 @@ fn consume_trailing_check_types_pattern<'a>(
     pattern: &mut Option<String>,
 ) -> Option<()> {
     for val in iter {
-        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
-            .then_some(())?;
+        let trimmed = val.trim();
+        (!trimmed.is_empty()
+            && !trimmed.starts_with('-')
+            && pattern.replace(trimmed.to_owned()).is_none())
+        .then_some(())?;
     }
     Some(())
 }

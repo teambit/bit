@@ -12,6 +12,7 @@ pub(super) fn chosen(
     let options = request.options.lane.as_ref().ok_or_else(|| invalid("switch lane missing"))?;
     let pattern = options.pattern
         .as_deref()
+        .map(str::trim)
         .filter(|pattern| !pattern.is_empty());
     let rows = bitmap.as_object().ok_or_else(|| invalid("switch bitmap"))?;
     let tracked = rows
@@ -30,7 +31,8 @@ pub(super) fn chosen(
     let visible = super::super::lane_context::visibility::targets(bitmap, &settings)?;
     let mut allowed = visible
         .iter()
-        .filter_map(|row| row["identity"].as_str())
+        .filter_map(|row| row["identity"].as_str().map(str::trim))
+        .filter(|id| !id.is_empty())
         .map(str::to_owned)
         .collect::<Vec<_>>();
     if let Some(matched) = matched {
@@ -95,6 +97,7 @@ pub(super) fn ordered(mut entries: Vec<Entry>, selected: Option<&[String]>) -> V
     entries
 }
 pub(super) fn attach(context: &mut Value, request: &Prepare) -> io::Result<()> {
+    let options = request.options.lane.as_ref().ok_or_else(|| invalid("switch lane missing"))?;
     let selected = context["targets"]
         .as_array()
         .ok_or_else(|| invalid("switch selected targets"))?
@@ -105,12 +108,12 @@ pub(super) fn attach(context: &mut Value, request: &Prepare) -> io::Result<()> {
                 .into_iter()
                 .flatten(),
         )
-        .filter_map(|row| row["identity"].as_str())
+        .filter_map(|row| row["identity"].as_str().map(str::trim))
+        .filter(|id| !id.is_empty())
         .map(str::to_owned)
         .collect::<Vec<_>>();
     context["lane"]["switchSelectedIds"] = serde_json::json!(selected);
-    context["lane"]["switchWorkspaceOnly"] =
-        serde_json::json!(request.options.lane.as_ref().unwrap().workspace_only);
+    context["lane"]["switchWorkspaceOnly"] = serde_json::json!(options.workspace_only);
     Ok(())
 }
 

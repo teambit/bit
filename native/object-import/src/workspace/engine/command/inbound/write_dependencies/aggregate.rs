@@ -46,18 +46,35 @@ fn component_rows(facts: &Value, root_names: &[Value], rows: &mut Vec<Value>) ->
     let components = array(&facts["components"])?;
     let local = components
         .iter()
-        .filter_map(|row| row["packageName"].as_str())
+        .filter_map(|row| {
+            row["packageName"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+        })
         .collect::<HashSet<_>>();
     for component in components {
         for dependency in array(&component["dependencies"])? {
-            let Some(name) = dependency["name"].as_str() else { continue };
-            let Some(version) = dependency["version"].as_str() else { continue };
+            let Some(name) = dependency["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+            else {
+                continue;
+            };
+            let Some(version) = dependency["version"]
+                .as_str()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+            else {
+                continue;
+            };
             if dependency["isExtension"] == true
                 || dependency["lifecycleType"] == "peer"
                 || local.contains(name)
                 || root_names
                     .iter()
-                    .any(|value| value == name)
+                    .any(|value| value.as_str().map(str::trim) == Some(name))
                 || npm::valid_range(version).is_none()
             {
                 continue;
@@ -76,12 +93,16 @@ fn dedupe(rows: &[Value]) -> io::Result<Map<String, Value>> {
     for row in rows {
         let name = row["name"]
             .as_str()
+            .map(str::trim)
             .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("inbound dependency name"))?;
-        let incoming = row["range"].as_str().ok_or_else(|| invalid("inbound dependency range"))?;
+        let incoming = row["range"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound dependency range"))?;
         let replace = match selected.get(name) {
             None => true,
-            Some(old) if old["range"] == incoming => false,
+            Some(old) if old["range"].as_str().map(str::trim) == Some(incoming) => false,
             Some(old) => overwrite(old, row)?,
         };
         if replace {
@@ -103,10 +124,18 @@ fn overwrite(old: &Value, incoming: &Value) -> io::Result<bool> {
     if old["root"] != true && incoming["root"] == true {
         return Ok(true);
     }
-    let left = npm::min_version(incoming["range"].as_str().unwrap())
-        .map_err(|_| invalid("inbound invalid dependency range"))?;
-    let right = npm::min_version(old["range"].as_str().unwrap())
-        .map_err(|_| invalid("inbound invalid dependency range"))?;
+    let incoming_range = incoming["range"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("inbound dependency range"))?;
+    let old_range = old["range"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("inbound dependency range"))?;
+    let left =
+        npm::min_version(incoming_range).map_err(|_| invalid("inbound invalid dependency range"))?;
+    let right =
+        npm::min_version(old_range).map_err(|_| invalid("inbound invalid dependency range"))?;
     Ok(left
         .zip(right)
         .is_some_and(|(left, right)| left.compare(&right) == Ordering::Greater))

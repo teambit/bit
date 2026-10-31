@@ -48,7 +48,10 @@ pub(super) fn results(
             }),
     );
     let full = errors(results, chalk);
-    let written = saved.map_or_else(String::new, |path| format!("File written to {path}"));
+    let written = saved
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map_or_else(String::new, |path| format!("File written to {path}"));
     format!("{}\n\n{}\n{full}\n{written}", metadata(meta), table(&rows))
 }
 fn text(value: &Value) -> &str {
@@ -58,6 +61,7 @@ fn metadata(meta: &Value) -> String {
     let version = |key: &str| {
         meta[key]
             .as_str()
+            .map(str::trim)
             .filter(|text| !text.is_empty())
             .unwrap_or("NA")
     };
@@ -133,7 +137,9 @@ fn line(row: &[String], widths: &[usize]) -> String {
         "║{}║\n",
         row.iter()
             .zip(widths)
-            .map(|(cell, length)| format!(" {cell}{}", " ".repeat(length - width(cell) - 1)))
+            .map(|(cell, length)| {
+                format!(" {cell}{}", " ".repeat(length.saturating_sub(width(cell) + 1)))
+            })
             .collect::<Vec<_>>()
             .join("│"),
     )

@@ -102,7 +102,11 @@ fn reason(record: &Record, plan: &planning::Planned) -> io::Result<String> {
     if plan.materials.iter().all(|material| material.keep_ours) {
         return Ok(format!(
             "checkout ({})",
-            record.request.options.pattern.as_deref().unwrap_or("undefined"),
+            record.request.options.pattern
+                .as_deref()
+                .map(str::trim)
+                .filter(|pattern| !pattern.is_empty())
+                .unwrap_or("undefined"),
         ));
     }
     Ok("checkout".to_owned())
@@ -125,6 +129,7 @@ pub(super) fn publish_bitmap(
     if let Some(bitmap) = &prepared.snap_bitmap {
         let message = record.request.options.message
             .as_deref()
+            .map(str::trim)
             .filter(|message| !message.is_empty())
             .unwrap_or("N/A");
         warning = bitmap

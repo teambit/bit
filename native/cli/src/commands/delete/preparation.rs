@@ -102,10 +102,14 @@ fn dependency_facts(rows: &[serde_json::Value]) -> io::Result<Vec<DependencyComp
             Ok(DependencyComponent {
                 identity: row["componentIdentity"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|identity| !identity.is_empty())
                     .ok_or_else(|| invalid("deletion graph identity"))?
                     .into(),
                 package_name: row["packageName"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|package| !package.is_empty())
                     .ok_or_else(|| invalid("deletion graph package"))?
                     .into(),
                 dependencies: serde_json::from_value(row["componentDependencies"].clone())?,
@@ -143,5 +147,14 @@ pub(in crate::commands::delete) fn can_prompt_user() -> bool {
         && std::io::stdin().is_terminal()
         && !["CI", "CLAUDECODE", "CLAUDE_CODE", "CURSOR_AGENT"]
             .iter()
-            .any(|key| std::env::var_os(key).is_some())
+            .any(|key| {
+                std::env::var_os(key)
+                    .is_some_and(|value| {
+                        let text = value.to_string_lossy();
+                        let trimmed = text.trim();
+                        !trimmed.is_empty()
+                            && trimmed != "0"
+                            && !trimmed.eq_ignore_ascii_case("false")
+                    })
+            })
 }

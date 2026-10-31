@@ -48,10 +48,10 @@ fn prepare(request: &Request) -> io::Result<Vec<(String, Vec<u8>)>> {
         .collect();
     proof::verify(&proofs)?;
     let mut objects = Vec::new();
-    let mut bytes = 0;
+    let mut bytes: usize = 0;
     for plan in &request.plans {
         let (hash, serialized) = serialize(plan)?;
-        bytes += serialized.len();
+        bytes = bytes.saturating_add(serialized.len());
         if bytes > 8 * 1024 * 1024
             || objects
                 .iter()
@@ -70,17 +70,7 @@ pub(super) fn serialized_plan(value: &Value) -> io::Result<(String, Vec<u8>)> {
 
 fn serialize(plan: &Plan) -> io::Result<(String, Vec<u8>)> {
     let history = &plan.history;
-    let name = history["name"].as_str().ok_or_else(|| invalid("status history name"))?;
-    let (id_scope, id_name) = plan.identity
-        .split_once('/')
-        .unwrap_or(("", &plan.identity));
-    let scope = history["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .unwrap_or(id_scope);
-    if name != id_name || (!scope.is_empty() && !id_scope.is_empty() && scope != id_scope) {
-        return Err(invalid("status history identity"));
-    }
+    let (name, scope) = history_identity(&plan.identity, history)?;
     let versions =
         history["versions"].as_array().ok_or_else(|| invalid("status history versions"))?;
     if versions.len() > 4096 {
@@ -91,11 +81,35 @@ fn serialize(plan: &Plan) -> io::Result<(String, Vec<u8>)> {
     let body = serde_json::to_string(&json!({"name":name,"scope":scope,"versions":versions,
         "graphCompleteRefs":history.get("graphCompleteRefs").filter(|value| !value.is_null()).cloned().unwrap_or(json!([]))}))
     .map_err(io::Error::other)?;
-    let hash = identity(&plan.identity);
+    let hash = identity(plan.identity.trim());
     let mut serialized =
         format!("VersionHistory {hash} {}\0", body.encode_utf16().count()).into_bytes();
     serialized.extend_from_slice(body.as_bytes());
     Ok((hash, serialized))
+}
+
+fn history_identity<'a>(
+    plan_identity: &'a str,
+    history: &'a Value,
+) -> io::Result<(&'a str, &'a str)> {
+    let name = history["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("status history name"))?;
+    let plan_identity = plan_identity.trim();
+    let (id_scope, id_name) = plan_identity
+        .split_once('/')
+        .map_or(("", plan_identity), |(sc, nm)| (sc.trim(), nm.trim()));
+    let scope = history["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .unwrap_or(id_scope);
+    if name != id_name || (!scope.is_empty() && !id_scope.is_empty() && scope != id_scope) {
+        return Err(invalid("status history identity"));
+    }
+    Ok((name, scope))
 }
 
 fn record(row: &Value) -> Value {

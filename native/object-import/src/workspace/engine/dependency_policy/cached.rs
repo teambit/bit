@@ -116,18 +116,26 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>
     let data = cache
         .get("data")
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|data| !data.is_empty())
         .ok_or_else(|| invalid("status dependency cache data"))?;
-    serde_json::from_str(data).map(Some).map_err(io::Error::other)
+    let parsed: Value = serde_json::from_str(data).map_err(io::Error::other)?;
+    if !parsed.is_object() {
+        return Err(invalid("status dependency cache data"));
+    }
+    Ok(Some(parsed))
 }
 
 fn validate(request: &Request) -> io::Result<()> {
     path(&request.root)?;
     path(&request.component_root)?;
-    if normalize(&request.root) != request.root
+    let identity = request.identity.trim();
+    if identity.is_empty()
+        || normalize(&request.root) != request.root
         || normalize(&request.component_root) != request.component_root
         || !request.component_root.starts_with(&request.root)
         || request.files.len() > 65536
-        || request.finish["selfIdentity"] != request.identity
+        || request.finish["selfIdentity"].as_str().map(str::trim) != Some(identity)
     {
         return Err(invalid("status dependency workspace boundary"));
     }

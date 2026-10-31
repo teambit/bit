@@ -75,7 +75,11 @@ fn finish_request(request: &Request, initial: &Value) -> io::Result<Value> {
     }
     let mut entries = request.initial.entries.clone();
     for (index, entry) in entries.iter_mut().enumerate() {
-        entry.version_range = initial["ranges"][index].as_str().map(str::to_owned);
+        entry.version_range = initial["ranges"][index]
+            .as_str()
+            .map(str::trim)
+            .filter(|range| !range.is_empty())
+            .map(str::to_owned);
     }
     finish["state"] = json!({"entries":entries,"packages":initial["packages"],
         "components":initial["components"]});
@@ -93,8 +97,9 @@ fn package_names(finish: &Value) -> io::Result<Vec<String>> {
     let mut seen = HashSet::new();
     let mut names = Vec::new();
     let mut add = |name: &str| {
-        if seen.insert(name.to_owned()) {
-            names.push(name.to_owned());
+        let trimmed = name.trim();
+        if !trimmed.is_empty() && seen.insert(trimmed.to_owned()) {
+            names.push(trimmed.to_owned());
         }
     };
     for (name, version) in environment {
@@ -105,15 +110,26 @@ fn package_names(finish: &Value) -> io::Result<Vec<String>> {
     for name in automatic_placeholder_names(finish)? {
         add(&name);
     }
+    for name in manual_package_names(finish)? {
+        add(&name);
+    }
+    Ok(names)
+}
+
+fn manual_package_names(finish: &Value) -> io::Result<Vec<String>> {
+    let mut names = Vec::new();
     for field in
         finish["manual"].as_array().ok_or_else(|| invalid("dependency pipeline manual policy"))?
     {
         let map = field.as_object().ok_or_else(|| invalid("dependency pipeline manual field"))?;
-        for (name, _) in map
-            .iter()
-            .filter(|(_, version)| *version != "-")
-        {
-            add(name);
+        for (name, version) in map {
+            if version
+                .as_str()
+                .map(str::trim)
+                .is_none_or(|text| !text.is_empty() && text != "-")
+            {
+                names.push(name.clone());
+            }
         }
     }
     Ok(names)

@@ -32,10 +32,16 @@ pub(in crate::commands::workspace_command) fn hidden_target(
 }
 
 fn target_identity(target: &Value) -> Option<&str> {
-    target["identity"]
-        .as_str()
-        .or_else(|| target["id"].as_str())
+    non_empty_str(&target["identity"])
+        .or_else(|| non_empty_str(&target["id"]))
         .map(without_version)
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 /// Lockfile graphs are produced only for workspace components, like `VersionMaker`.
@@ -99,9 +105,7 @@ fn visible_graphs(
 }
 
 fn env_id_str(value: &Value) -> Option<&str> {
-    value
-        .as_str()
-        .or_else(|| value["id"].as_str())
+    non_empty_str(value).or_else(|| non_empty_str(&value["id"]))
 }
 
 /// `componentIdByPkgName`: the snapped components under their new hashes,
@@ -128,11 +132,7 @@ fn workspace_components<'c>(
         {
             continue;
         }
-        let version = target
-            .get("version")
-            .or_else(|| target.get("head"))
-            .and_then(Value::as_str)
-            .filter(|version| !version.is_empty());
+        let version = non_empty_str(&target["version"]).or_else(|| non_empty_str(&target["head"]));
         components.push(graph::WorkspaceComponent {
             package_name: package_name(capture, identity)?,
             identity,

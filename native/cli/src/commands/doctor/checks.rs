@@ -74,10 +74,17 @@ fn latest_fact(context: &Context) -> io::Result<Value> {
     serde_json::from_slice(&output.stdout).map_err(io::Error::other)
 }
 fn compare(current: &str, latest: &str) -> bool {
-    match (current.parse::<node_semver::Version>(), latest.parse::<node_semver::Version>()) {
+    match (
+        clean_version(current).parse::<node_semver::Version>(),
+        clean_version(latest).parse::<node_semver::Version>(),
+    ) {
         (Ok(current), Ok(latest)) => current < latest,
         _ => false,
     }
+}
+fn clean_version(ver: &str) -> &str {
+    ver.trim()
+        .trim_start_matches(['v', 'V'])
 }
 fn environments(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> {
     let mut broken = Vec::new();
@@ -121,10 +128,12 @@ fn visit(directory: &Path, broken: &mut Vec<Value>) -> io::Result<()> {
     for entry in fs::read_dir(directory)? {
         let entry = entry?;
         let path = entry.path();
-        if entry.file_type()?.is_dir() {
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
             visit(&path, broken)?;
-        } else if let Ok(link) = fs::read_link(&path)
-            && !link.exists()
+        } else if file_type.is_symlink()
+            && !path.exists()
+            && let Ok(link) = fs::read_link(&path)
         {
             let marker = Path::new("node_modules").join("@bit");
             if let Some((prefix, _)) = path

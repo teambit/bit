@@ -105,7 +105,13 @@ fn component(row: &Value, pinned: &HashSet<String>) -> io::Result<Value> {
             .as_array()
             .into_iter()
             .flatten()
-            .filter_map(|extension| extension.get("extensionId").cloned()),
+            .filter_map(|extension| {
+                extension
+                    .get("extensionId")
+                    .or_else(|| extension.get("id"))
+                    .filter(|val| !val.is_null())
+                    .cloned()
+            }),
     );
     Ok(json!({"id":id(row)?,"dependencies":dependencies}))
 }
@@ -115,15 +121,26 @@ fn result_identity(row: &Value, ordered: &[&Value]) -> io::Result<String> {
     ordered
         .get(index)
         .and_then(|value| value["identity"].as_str())
+        .map(str::trim)
+        .filter(|identity| !identity.is_empty())
         .map(str::to_owned)
         .ok_or_else(|| invalid("resolve autotag component"))
 }
 
 fn id(row: &Value) -> io::Result<Value> {
-    let identity = row["identity"].as_str().ok_or_else(|| invalid("resolve capture identity"))?;
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("resolve scoped identity"))?;
-    let version = row["version"].as_str().ok_or_else(|| invalid("resolve capture version"))?;
+    let identity = row["identity"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("resolve capture identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("resolve scoped identity"))?;
+    let version = row["version"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("resolve capture version"))?;
     Ok(if version.is_empty() {
         json!({"scope":scope,"name":name})
     } else {
@@ -148,11 +165,13 @@ fn trigger(locator: &Value, rows: &[Value]) -> io::Result<String> {
     let identity = super::selection::identity(id)?;
     let version = id["version"]
         .as_str()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
         .or_else(|| {
             id.as_str()
-                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
-        })
-        .filter(|version| !version.is_empty());
+                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver.trim()))
+                .filter(|version| !version.is_empty())
+        });
     Ok(match version {
         Some(version) => format!("{identity}@{version}"),
         None => identity,

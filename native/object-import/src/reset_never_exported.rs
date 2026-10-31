@@ -75,14 +75,8 @@ impl Plan {
 }
 
 fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<SelectedRow>> {
-    if key.starts_with('$')
-        || key == "_bit_lane"
-        || key == "version"
-        || !row.is_object()
-        || row["scope"]
-            .as_str()
-            .is_some_and(|scope| !scope.is_empty())
-    {
+    let key = key.trim();
+    if is_ignored_row(key, row) {
         return Ok(None);
     }
     if row["isAvailableOnCurrentLane"] == false
@@ -91,14 +85,19 @@ fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<Selected
         return Err(invalid("never-exported unavailable component"));
     }
     let (row_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let name = name.trim();
     if name.is_empty() {
         return Err(invalid("never-exported name"));
     }
-    let scope = row_scope.ok_or_else(|| invalid("never-exported default scope"))?;
+    let scope = row_scope
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("never-exported default scope"))?;
     let version = row["version"]
         .as_str()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
-        .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
+        .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver.trim()))
         .unwrap_or_default();
     let identity = format!("{scope}/{name}");
     let label = if version.is_empty() { identity } else { format!("{identity}@{version}") };
@@ -113,6 +112,16 @@ fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<Selected
         Err(error) => return Err(error),
     };
     Ok(Some((label, path, data)))
+}
+
+fn is_ignored_row(key: &str, row: &Value) -> bool {
+    key.starts_with('$')
+        || key == "_bit_lane"
+        || key == "version"
+        || !row.is_object()
+        || row["scope"]
+            .as_str()
+            .is_some_and(|scope| !scope.trim().is_empty())
 }
 
 fn invalid(message: &str) -> io::Error {

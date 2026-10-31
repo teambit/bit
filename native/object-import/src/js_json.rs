@@ -85,6 +85,7 @@ pub fn stringify_indented(value: &Value, spaces: usize) -> io::Result<Vec<u8>> {
 }
 
 fn number(bits: &str) -> io::Result<f64> {
+    let bits = bits.trim();
     if bits.len() != 16 || !bits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(invalid("invalid JavaScript number bits"));
     }

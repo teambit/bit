@@ -44,22 +44,41 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     if let Some(name) = value["name"]
         .as_str()
         .or_else(|| value["legacyId"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
     {
         return Ok(name.to_owned());
     }
     let id = &value["extensionId"];
-    if let Some(id) = id.as_str() {
+    if let Some(id) = id
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    {
         return Ok(id
             .strip_suffix("@latest")
             .or_else(|| id.strip_suffix("@head"))
             .unwrap_or(id)
             .to_owned());
     }
-    let raw_name = id["name"].as_str().ok_or_else(|| invalid("scope aspect name"))?;
+    object_extension_identity(id)
+}
+
+fn object_extension_identity(id: &Value) -> io::Result<String> {
+    let raw_name = id["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("scope aspect name"))?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
-    let scope = id["scope"].as_str().unwrap_or_default();
+        .map_or((raw_name, None), |(bare, ver)| {
+            (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
+    let scope = id["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
     let base = if scope.is_empty() {
         if !name.contains('/') {
             return Err(invalid("scope aspect scope"));
@@ -71,6 +90,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     let version = id["version"]
         .as_str()
         .or_else(|| id["head"].as_str())
+        .map(str::trim)
         .filter(|version| !version.is_empty())
         .or(inline_ver)
         .filter(|version| !matches!(*version, "latest" | "head"));

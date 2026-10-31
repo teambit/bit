@@ -35,7 +35,11 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
 }
 fn current(engine: &mut Engine<'_>) -> io::Result<()> {
     for (index, entry) in array(engine.input, "current")?.iter().enumerate() {
-        let id = entry["stringId"].as_str().ok_or_else(|| invalid("extension id"))?;
+        let id = entry["stringId"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("extension id"))?;
         if engine.handled
             .iter()
             .any(|handled| handled == id)
@@ -59,6 +63,8 @@ fn other(engine: &mut Engine<'_>) -> io::Result<()> {
     for (index, entry) in array(engine.input, "other")?.iter().enumerate() {
         let mut id = entry["stringId"]
             .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("extension id"))?
             .to_owned();
         if engine.handled.contains(&id) {

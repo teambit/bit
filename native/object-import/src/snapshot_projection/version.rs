@@ -94,10 +94,10 @@ fn extensions(value: &Value) -> io::Result<Value> {
 
 fn is_builder(row: &Value) -> bool {
     const BUILDER: &str = "teambit.pipelines/builder";
-    for field in ["name", "legacyId", "extensionId"] {
+    for field in ["id", "name", "legacyId", "extensionId"] {
         if let Value::String(units) = get(row, field) {
             let text = String::from_utf16_lossy(units);
-            if text.split('@').next() == Some(BUILDER) {
+            if text.trim().split('@').next() == Some(BUILDER) {
                 return true;
             }
         }
@@ -106,8 +106,12 @@ fn is_builder(row: &Value) -> bool {
     let (Value::String(scope), Value::String(name)) = (get(id, "scope"), get(id, "name")) else {
         return false;
     };
-    String::from_utf16_lossy(scope) == "teambit.pipelines"
-        && String::from_utf16_lossy(name).split('@').next() == Some("builder")
+    String::from_utf16_lossy(scope).trim() == "teambit.pipelines"
+        && String::from_utf16_lossy(name)
+            .trim()
+            .split('@')
+            .next()
+            == Some("builder")
 }
 
 fn config(value: &Value) -> Value {

@@ -71,8 +71,14 @@ fn snapshot(import: &command_import::PreparedImport) -> HashMap<String, Vec<Stri
         .map(|model| {
             let id = format!(
                 "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
+                model["scope"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default(),
+                model["name"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default(),
             );
             let versions = model["versions"]
                 .as_object()
@@ -90,7 +96,10 @@ fn adjust(receipt: &mut Value, before: &HashMap<String, Vec<String>>) -> io::Res
     for row in
         receipt["importDetails"].as_array_mut().ok_or_else(|| invalid("inbound group details"))?
     {
-        let id = row["id"].as_str().ok_or_else(|| invalid("inbound group identity"))?;
+        let id = row["id"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound group identity"))?;
         let Some(previous) = before.get(id) else { continue };
         let versions =
             row["versions"].as_array_mut().ok_or_else(|| invalid("inbound group versions"))?;
@@ -109,8 +118,7 @@ fn adjust(receipt: &mut Value, before: &HashMap<String, Vec<String>>) -> io::Res
         });
         if !row["versions"]
             .as_array()
-            .unwrap()
-            .contains(&row["latestVersion"])
+            .is_some_and(|versions| versions.contains(&row["latestVersion"]))
         {
             row["latestVersion"] = Value::Null;
         }

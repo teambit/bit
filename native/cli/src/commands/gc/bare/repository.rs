@@ -122,10 +122,12 @@ pub(super) fn digest(value: &str) -> String {
 }
 pub(super) fn identity(value: &Value) -> io::Result<String> {
     if let Some(raw) = value.as_str() {
-        let (scope, name) = raw
+        let trimmed = raw.trim();
+        let (scope, name) = trimmed
             .rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
+            .map_or(trimmed, |(bare, _)| bare.trim())
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| unsupported("metadata string"))?;
         return Ok(format!("{scope}/{name}"));
@@ -135,6 +137,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
 pub(super) fn text(value: &Value) -> io::Result<&str> {
     value
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| unsupported("metadata string"))
 }

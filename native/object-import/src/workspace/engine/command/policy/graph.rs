@@ -71,7 +71,11 @@ fn direct(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
 
 fn extension_edges(source: &Value, version: &Value, edges: &mut Vec<Value>) -> io::Result<()> {
     for extension in projection::array(&version["extensions"])? {
-        if let Some(id) = extension.get("extensionId") {
+        if let Some(id) = extension
+            .get("extensionId")
+            .or_else(|| extension.get("id"))
+            .filter(|value| !value.is_null())
+        {
             key(id)?;
             let edge = json!({"source":source,"target":id,"type":"ext"});
             if let Some(existing) = edges
@@ -88,11 +92,23 @@ fn extension_edges(source: &Value, version: &Value, edges: &mut Vec<Value>) -> i
 }
 
 fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {
-    let version = id["version"].as_str().ok_or_else(|| invalid("command graph version"))?;
+    let version = id["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+        .ok_or_else(|| invalid("command graph version"))?;
     let identity = format!(
         "{}/{}",
-        id["scope"].as_str().ok_or_else(|| invalid("command graph scope"))?,
-        id["name"].as_str().ok_or_else(|| invalid("command graph name"))?,
+        id["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("command graph scope"))?,
+        id["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("command graph name"))?,
     );
     let reference = if crate::merge_history::hash(version).is_ok() {
         version.to_owned()
@@ -108,14 +124,17 @@ fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {
 fn key(id: &Value) -> io::Result<String> {
     let scope = id["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("command graph scope"))?;
     let name = id["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("command graph name"))?;
     let version = id["version"]
         .as_str()
+        .map(str::trim)
         .filter(|version| !version.is_empty())
         .ok_or_else(|| invalid("command graph version"))?;
     Ok(format!("{scope}/{name}@{version}"))
@@ -132,8 +151,12 @@ pub(super) fn validate_previous(
 }
 
 fn pending_root(identity: &str) -> io::Result<Value> {
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("command graph identity"))?;
+    let (scope, name) = identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("command graph identity"))?;
     Ok(
         json!({"scope":scope,"name":name,"version":super::super::merge::snapshot::PENDING_GRAPH_VERSION}),
     )

@@ -145,10 +145,14 @@ fn adler32(bytes: &[u8]) -> u32 {
 
 /// Write compressed object bytes to `<scope>/objects/<2>/<38>`.
 pub(super) fn write_object(scope: &Path, hash: &str, bytes: &[u8]) -> io::Result<()> {
+    let trimmed = hash.trim();
+    if trimmed.len() != 40 || !trimmed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid object hash"));
+    }
     let path = scope
         .join("objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
+        .join(&trimmed[..2])
+        .join(&trimmed[2..]);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }

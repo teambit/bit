@@ -44,7 +44,7 @@ impl Plan {
         if rows
             .get("$schema-version")
             .and_then(Value::as_str)
-            .is_none()
+            .is_none_or(|version| version.trim().is_empty())
         {
             return Err(invalid("soft reset bitmap schema"));
         }
@@ -82,7 +82,13 @@ fn select(
         if key.starts_with('$') || key == "_bit_lane" || key == "version" {
             continue;
         }
-        let Some(version) = row["nextVersion"]["version"].as_str() else { continue };
+        let Some(version) = row["nextVersion"]["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
+        else {
+            continue;
+        };
         let identity = identity(key, row)?;
         if !matches(&identity, pattern, selected) {
             continue;
@@ -100,20 +106,35 @@ fn select(
 
 fn identity(key: &str, row: &Value) -> io::Result<String> {
     let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
-    let scope = row_scope.ok_or_else(|| invalid("soft reset scope"))?;
-    if row_name.is_empty() {
+    let scope = row_scope
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("soft reset scope"))?;
+    let name = row_name.trim();
+    if name.is_empty() {
         return Err(invalid("soft reset name"));
     }
-    Ok(format!("{scope}/{row_name}"))
+    Ok(format!("{scope}/{name}"))
 }
 
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 
+fn bare(value: &str) -> &str {
+    let trimmed = value.trim();
+    match trimmed.rsplit_once('@') {
+        Some((base, _)) if !base.is_empty() => base.trim(),
+        _ => trimmed,
+    }
+}
+
 fn matches(identity: &str, pattern: Option<&str>, selected: Option<&[String]>) -> bool {
-    pattern.is_none_or(|pattern| pattern == identity)
-        && selected.is_none_or(|ids| ids.iter().any(|id| id == identity))
+    pattern.is_none_or(|pattern| bare(pattern) == identity)
+        && selected.is_none_or(|ids| {
+            ids.iter()
+                .any(|id| bare(id) == identity)
+        })
 }
 
 fn invalid_selection_count(

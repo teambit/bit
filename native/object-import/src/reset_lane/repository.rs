@@ -78,10 +78,14 @@ impl Repository {
     pub(super) fn project_lane(&mut self, selection: &Selection) -> io::Result<()> {
         let scope = self.model["scope"]
             .as_str()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
             .ok_or_else(|| invalid("lane reset model scope"))?
             .to_owned();
         let name = self.model["name"]
             .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("lane reset model name"))?
             .to_owned();
         membership::project(&mut self.lane, &scope, &name, selection)
@@ -137,6 +141,8 @@ fn current(
         }
         rows[unique_position(rows, scope, name)?]["head"]
             .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
             .ok_or_else(|| invalid("lane reset head"))?
             .to_owned()
     } else {

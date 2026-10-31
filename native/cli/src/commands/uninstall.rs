@@ -113,6 +113,7 @@ fn parse_arguments(args: &[OsString]) -> Option<Vec<String>> {
     while let Some(arg) = iter.next() {
         let string = arg
             .to_str()
+            .map(str::trim)
             .filter(|text| !text.is_empty())?;
         if string == "--" {
             consume_trailing_packages(iter, &mut packages)?;
@@ -130,7 +131,7 @@ fn consume_trailing_packages<'a>(
     packages: &mut Vec<String>,
 ) -> Option<()> {
     for rest in iter {
-        let text = rest.to_str()?;
+        let text = rest.to_str()?.trim();
         if text.is_empty() || text.starts_with('-') {
             return None;
         }

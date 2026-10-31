@@ -110,22 +110,31 @@ fn parse(entry: &Value) -> CustomDetection {
         Value::Array(items) => items
             .iter()
             .filter_map(specifier_str)
-            .filter(|specifier| !specifier.is_empty())
             .map(str::to_owned)
             .collect(),
-        Value::Object(map) => map.keys().cloned().collect(),
+        Value::Object(map) => map
+            .keys()
+            .map(|key| key.trim())
+            .filter(|key| !key.is_empty())
+            .map(str::to_owned)
+            .collect(),
         _ => Vec::new(),
     };
     let lookups = entry["lookups"]
         .as_object()
         .into_iter()
         .flatten()
-        .map(|(specifier, path)| {
-            let path = path
+        .filter_map(|(specifier, path)| {
+            let key = specifier.trim();
+            if key.is_empty() {
+                return None;
+            }
+            let resolved = path
                 .as_str()
+                .map(str::trim)
                 .filter(|path| !path.is_empty())
                 .map(PathBuf::from);
-            (specifier.clone(), path)
+            Some((key.to_owned(), resolved))
         })
         .collect();
     let typescript = entry["typescript"]
@@ -139,10 +148,16 @@ fn parse(entry: &Value) -> CustomDetection {
 }
 
 fn specifier_str(value: &Value) -> Option<&str> {
+    non_empty_str(value)
+        .or_else(|| value.get("specifier").and_then(non_empty_str))
+        .or_else(|| value.get("packageName").and_then(non_empty_str))
+        .or_else(|| value.get("id").and_then(non_empty_str))
+        .or_else(|| value.get("name").and_then(non_empty_str))
+}
+
+fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
-        .or_else(|| value.get("specifier").and_then(Value::as_str))
-        .or_else(|| value.get("packageName").and_then(Value::as_str))
-        .or_else(|| value.get("id").and_then(Value::as_str))
-        .or_else(|| value.get("name").and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }

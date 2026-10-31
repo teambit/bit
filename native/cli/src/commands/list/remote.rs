@@ -49,14 +49,26 @@ pub(super) fn list(
         .collect()
 }
 
-fn row(value: &Value) -> io::Result<Row> {
-    let id = value["id"].as_str().ok_or_else(|| decline("remote list component id"))?;
+fn parse_row_id(value: &Value) -> io::Result<(String, Option<String>)> {
+    let id = value["id"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| decline("remote list component id"))?;
     let (identity, version) = id
         .rsplit_once('@')
-        .map_or((id, None), |(id, version)| (id, Some(version.to_string())));
-    if !identity.contains('/') || version.as_ref().is_some_and(String::is_empty) {
+        .map_or((id, None), |(id, version)| (id.trim(), Some(version.trim().to_string())));
+    if !identity
+        .split_once('/')
+        .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+        || version.as_ref().is_some_and(String::is_empty)
+    {
         return Err(decline("remote list identity"));
     }
+    Ok((identity.to_string(), version))
+}
+
+fn row(value: &Value) -> io::Result<Row> {
+    let (identity, version) = parse_row_id(value)?;
     let boolean = |field| match value.get(field) {
         None | Some(Value::Null) => Ok(None),
         Some(Value::Bool(flag)) => Ok(Some(*flag)),
@@ -75,7 +87,7 @@ fn row(value: &Value) -> io::Result<Row> {
         _ => return Err(decline("remote list readme")),
     };
     Ok(Row {
-        identity: identity.to_string(),
+        identity,
         workspace: WorkspaceRow { has_scope: true, used: None, root_dir: None },
         version,
         deprecated: boolean("deprecated")?,
@@ -95,14 +107,18 @@ pub(super) fn versions(root: &Path, rows: &mut [Row], session: &mut Session) -> 
         return Err(decline("local scope configuration budget"));
     }
     let config: Value = bit_object_import::parse_jsonc(&bytes)?;
-    let local = config["name"].as_str().ok_or_else(|| decline("local scope name"))?;
+    let local = config["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| decline("local scope name"))?;
     let ids = rows
         .iter()
         .filter(|row| {
             row.workspace.has_scope
                 && row.identity
                     .split_once('/')
-                    .is_some_and(|(scope, _)| scope != local)
+                    .is_some_and(|(scope, _)| scope.trim() != local)
         })
         .map(Row::id)
         .collect::<Vec<_>>();
@@ -114,9 +130,22 @@ pub(super) fn versions(root: &Path, rows: &mut [Row], session: &mut Session) -> 
     query["ids"] = json!(ids);
     query["hosts"] = json!(session.overrides());
     let result: Value = Engine::new()?.request(&query)?;
-    for value in result["ids"].as_array().ok_or_else(|| decline("remote latest versions"))? {
-        let id = value.as_str().ok_or_else(|| decline("remote version id"))?;
-        let (identity, version) = id.rsplit_once('@').ok_or_else(|| decline("remote version"))?;
+    apply_latest_versions(
+        rows,
+        result["ids"].as_array().ok_or_else(|| decline("remote latest versions"))?,
+    )
+}
+
+fn apply_latest_versions(rows: &mut [Row], values: &[Value]) -> io::Result<()> {
+    for value in values {
+        let id = value
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| decline("remote version id"))?;
+        let (identity, version) = id
+            .rsplit_once('@')
+            .map(|(identity, version)| (identity.trim(), version.trim()))
+            .ok_or_else(|| decline("remote version"))?;
         let row = rows
             .iter_mut()
             .find(|row| row.identity == identity)

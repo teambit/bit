@@ -65,7 +65,11 @@ pub(super) fn resolve(request: &mut input::Prepare, state: &State) -> io::Result
     if options.phase != retained.next {
         return Err(invalid("history phase order changed"));
     }
-    if request.root != retained.root || options.token != retained.token {
+    let token = options.token.trim();
+    if token.is_empty()
+        || request.root != retained.root
+        || token != retained.token.trim()
+    {
         return Err(invalid("history phase owner changed"));
     }
     let phase =
@@ -123,7 +127,8 @@ pub(super) fn applied(
     if retained.next != options.phase {
         return Err(invalid("history apply phase order changed"));
     }
-    if retained.token != options.token {
+    let token = options.token.trim();
+    if token.is_empty() || request.root != retained.root || retained.token.trim() != token {
         return Err(invalid("history apply owner changed"));
     }
     selection::accept_bitmap(&mut retained.proofs, receipt)?;

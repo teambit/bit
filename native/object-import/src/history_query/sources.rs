@@ -36,11 +36,15 @@ impl Cache {
             32 * 1024 * 1024,
             compressed,
         )?;
-        let size = record.body.len().saturating_add(record.compressed.len());
-        if self.bytes.saturating_add(size) > self.limit {
-            return Err(invalid("history Source owner limit"));
-        }
-        self.bytes = self.bytes.saturating_add(size);
+        let size = record.body
+            .len()
+            .checked_add(record.compressed.len())
+            .ok_or_else(|| invalid("history Source owner limit"))?;
+        let next_bytes = self.bytes
+            .checked_add(size)
+            .filter(|bytes| *bytes <= self.limit)
+            .ok_or_else(|| invalid("history Source owner limit"))?;
+        self.bytes = next_bytes;
         self.records.insert(canonical, record.clone());
         Ok((record, true))
     }
@@ -85,6 +89,9 @@ impl Sources<'_> {
         })
     }
     pub(super) fn read(&mut self, hash: &str) -> io::Result<Vec<u8>> {
+        if self.loads.len() >= 16384 {
+            return Err(invalid("history Source load limit"));
+        }
         let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
         if let Some(value) = self.values.get(&canonical) {
             self.loads.push(value.index);
@@ -92,7 +99,9 @@ impl Sources<'_> {
         }
         let (record, fresh) = self.cache.read(&self.directory, &canonical, &mut self.compressed)?;
         if fresh {
-            self.raw = self.raw.saturating_add(record.body.len());
+            self.raw = self.raw
+                .checked_add(record.body.len())
+                .ok_or_else(|| invalid("history Source owner limit"))?;
         }
         let index = self.descriptors.len();
         self.descriptors.push(self.snapshot(&canonical, &record)?);

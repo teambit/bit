@@ -35,9 +35,10 @@ pub async fn resolve_remote_version(
     spec: &str,
     settings: &EngineSettings,
 ) -> io::Result<ResolvedVersion> {
-    let parsed = parse_package_name(spec);
+    let trimmed = spec.trim();
+    let parsed = parse_package_name(trimmed);
     let settings = settings.clone();
-    let spec = spec.to_string();
+    let spec = trimmed.to_string();
     let (sender, receiver) = tokio::sync::oneshot::channel();
     std::thread::Builder::new()
         .name("bit-install-resolve".to_string())
@@ -68,7 +69,8 @@ async fn resolve_package(
     version: String,
     settings: &EngineSettings,
 ) -> io::Result<ResolvedVersion> {
-    let bare_specifier = (!version.trim().is_empty()).then(|| version.clone());
+    let trimmed_ver = version.trim().to_string();
+    let bare_specifier = (!trimmed_ver.is_empty()).then(|| trimmed_ver.clone());
     let wanted =
         WantedDependency { alias: Some(name), bare_specifier, ..WantedDependency::default() };
     let resolved = resolve(&wanted, settings).await?;
@@ -76,8 +78,9 @@ async fn resolve_package(
     Ok(ResolvedVersion {
         package_name: manifest_field(&manifest, "name"),
         version: manifest_field(&manifest, "version"),
-        wanted_range: (!version.is_empty() && version.parse::<node_semver::Range>().is_ok())
-            .then_some(version),
+        wanted_range: (!trimmed_ver.is_empty()
+            && trimmed_ver.parse::<node_semver::Range>().is_ok())
+        .then_some(trimmed_ver),
         is_semver: true,
         resolved_via: resolved.resolved_via,
         manifest: Some(manifest),
@@ -141,6 +144,7 @@ fn manifest_field(manifest: &Value, field: &str) -> String {
     manifest
         .get(field)
         .and_then(Value::as_str)
+        .map(str::trim)
         .unwrap_or_default()
         .to_string()
 }

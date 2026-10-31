@@ -104,6 +104,7 @@ impl DepsObject {
 /// `map[name]` is set and not an empty string.
 pub(super) fn truthy(map: &DependencyMap, name: &str) -> bool {
     map.get(name)
+        .or_else(|| map.get(name.trim()))
         .map(|version| version.trim())
         .is_some_and(|version| !version.is_empty())
 }
@@ -113,7 +114,11 @@ pub(super) fn spread(maps: &[&DependencyMap]) -> DependencyMap {
     let mut result = DependencyMap::new();
     for map in maps {
         for (name, version) in *map {
-            result.insert(name.clone(), version.clone());
+            let trimmed_name = name.trim();
+            let trimmed_version = version.trim();
+            if !trimmed_name.is_empty() && !trimmed_version.is_empty() {
+                result.insert(trimmed_name.to_owned(), trimmed_version.to_owned());
+            }
         }
     }
     result

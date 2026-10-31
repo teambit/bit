@@ -17,11 +17,12 @@ struct Capsules {
 impl Capsules {
     fn reference(&mut self, input: &Value, side: &str, index: usize) -> io::Result<Value> {
         let field = if side == "other" { "target" } else { "base" };
-        let hash = input[field]["files"][index]["hash"]
+        let raw_hash = input[field]["files"][index]["hash"]
             .as_str()
             .ok_or_else(|| invalid("merge Source reference selector"))?;
+        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
         let source =
-            if let Some(index) = self.seen.get(hash) { *index } else { self.retain(hash)? };
+            if let Some(index) = self.seen.get(&hash) { *index } else { self.retain(&hash)? };
         Ok(json!({"source":source,"ref":{"side":side,"index":index}}))
     }
     fn retain(&mut self, hash: &str) -> io::Result<usize> {
@@ -94,6 +95,8 @@ impl Capsules {
 pub(super) fn receipts(input: &Value, output: &mut Value, trace: Trace) -> io::Result<()> {
     let token = output["token"]
         .as_str()
+        .map(str::trim)
+        .filter(|token| !token.is_empty())
         .ok_or_else(|| invalid("merge body token"))?
         .to_owned();
     let directory = PathBuf::from(
@@ -105,8 +108,11 @@ pub(super) fn receipts(input: &Value, output: &mut Value, trace: Trace) -> io::R
         .ok_or_else(|| invalid("merge body receipts"))?
         .iter()
         .filter_map(|body| {
+            let raw_hash = body["spoolHash"].as_str()?;
+            let canonical =
+                crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash).ok()?);
             Some((
-                body["spoolHash"].as_str()?.to_owned(),
+                canonical,
                 (PathBuf::from(body["spoolPath"].as_str()?), body["spoolOffset"].as_u64()),
             ))
         })

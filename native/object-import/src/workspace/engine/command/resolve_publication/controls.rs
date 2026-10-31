@@ -78,7 +78,7 @@ fn prepare_conflict(
 fn retained_sections(text: &str, identities: &HashSet<&str>) -> Vec<String> {
     let divider = "-".repeat(80);
     let clean = text
-        .split('\n')
+        .lines()
         .filter(|line| *line != divider && !line.starts_with('#'))
         .collect::<Vec<_>>()
         .join("\n");
@@ -89,10 +89,11 @@ fn retained_sections(text: &str, identities: &HashSet<&str>) -> Vec<String> {
                 .split_once('\n')
                 .unwrap_or((part, ""));
             let id = id.trim();
-            let base = id.rsplit_once('@').map_or(id, |(prefix, _)| prefix);
-            (!id.is_empty() && !identities.contains(id) && !identities.contains(base)).then(|| {
-                format!("{divider}\n[*] {id}\n{divider}\n{content}")
-            })
+            let base = id.rsplit_once('@').map_or(id, |(prefix, _)| prefix.trim());
+            (!id.is_empty()
+                && !matches_selected(id, identities)
+                && !matches_selected(base, identities))
+            .then(|| format!("{divider}\n[*] {id}\n{divider}\n{content}"))
         })
         .collect()
 }
@@ -102,12 +103,14 @@ fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Ve
         .filter(|row| {
             let id = &row["id"];
             let identity = if let Some(raw) = id.as_str() {
-                raw.rsplit_once('@')
-                    .map_or(raw, |(base, _)| base)
+                let trimmed = raw.trim();
+                trimmed
+                    .rsplit_once('@')
+                    .map_or(trimmed, |(base, _)| base.trim())
                     .to_owned()
             } else {
-                let scope = id["scope"].as_str().unwrap_or_default();
-                let name = id["name"].as_str().unwrap_or_default();
+                let scope = id["scope"].as_str().map_or("", str::trim);
+                let name = id["name"].as_str().map_or("", str::trim);
                 if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
             };
             !matches_selected(&identity, identities)

@@ -34,16 +34,19 @@ pub(super) fn load_selected(
 }
 
 fn heads(record: &mut Record, identity: &str, model: &Value) -> io::Result<(String, String)> {
+    let identity = identity.trim();
     let lane_target = record.context
         .get("lane")
         .and_then(|lane| lane["targets"].as_array())
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["identity"] == identity)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
         });
     let remote = if let Some(target) = lane_target {
         target["head"]
             .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
             .ok_or_else(|| invalid("lane incoming head"))?
             .to_owned()
     } else {
@@ -54,6 +57,7 @@ fn heads(record: &mut Record, identity: &str, model: &Value) -> io::Result<(Stri
     let current_head = lane_target
         .map_or(&model["head"], |target| &target["currentHead"])
         .as_str()
+        .map(str::trim)
         .unwrap_or_default()
         .to_owned();
     Ok((remote, current_head))
@@ -90,8 +94,14 @@ pub(super) fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::
     {
         let identity = format!(
             "{}/{}",
-            selected.model["scope"].as_str().unwrap_or_default(),
-            selected.model["name"].as_str().unwrap_or_default(),
+            selected.model["scope"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default(),
+            selected.model["name"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default(),
         );
         let model = record.repository.read_component(&identity)?;
         refresh_model(selected, model)?;

@@ -30,11 +30,32 @@ pub(in crate::command_import) fn settings_for_lane(
 fn is_non_main_lane(current: &Value) -> bool {
     let lane = current
         .as_str()
-        .or_else(|| current["name"].as_str())
-        .or_else(|| current["id"].as_str())
-        .or_else(|| current["id"]["name"].as_str());
+        .map(str::trim)
+        .filter(|lane| !lane.is_empty())
+        .or_else(|| {
+            current["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|lane| !lane.is_empty())
+        })
+        .or_else(|| {
+            current["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|lane| !lane.is_empty())
+        })
+        .or_else(|| {
+            current["id"]["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|lane| !lane.is_empty())
+        });
     lane.is_some_and(|name| {
-        let short = name.rsplit('/').next().unwrap_or(name);
+        let short = name
+            .rsplit('/')
+            .next()
+            .unwrap_or(name)
+            .trim();
         !short.is_empty() && short != "main"
     })
 }
@@ -100,7 +121,7 @@ pub(super) fn raw_remote(
         .json(&directory.join("scope.json"))?
         .ok_or_else(|| invalid("import remote scope absent"))?;
     settings(&scope)?;
-    if scope["name"] != name {
+    if scope["name"].as_str().map(str::trim) != Some(name) {
         return Err(invalid("import remote scope mismatch"));
     }
     validate_config(plan, &directory)?;
@@ -115,7 +136,7 @@ fn validate_virtual(
     let scope = plan.capture
         .json(&directory.join("scope.json"))?
         .ok_or_else(|| invalid("virtual remote scope absent"))?;
-    if scope["name"] != name {
+    if scope["name"].as_str().map(str::trim) != Some(name) {
         return Err(invalid("virtual remote scope mismatch"));
     }
     Ok(())

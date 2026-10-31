@@ -92,7 +92,7 @@ fn matches_comparator(candidate: &Value, comparator: &Value) -> io::Result<bool>
         return Ok(true);
     };
     let ordering = compare(candidate, version)?;
-    match comparator["operator"].as_str() {
+    match comparator["operator"].as_str().map(str::trim) {
         Some("" | "=") => Ok(ordering == Ordering::Equal),
         Some(">") => Ok(ordering == Ordering::Greater),
         Some(">=") => Ok(ordering != Ordering::Less),
@@ -109,7 +109,7 @@ fn numeric(value: &Value) -> Option<f64> {
     if let Some(number) = value.as_u64() {
         return Some(number as f64);
     }
-    let text = value.as_str()?;
+    let text = value.as_str()?.trim();
     if text.is_empty() || !text.bytes().all(|byte| byte.is_ascii_digit()) {
         return None;
     }

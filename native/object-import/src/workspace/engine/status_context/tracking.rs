@@ -87,27 +87,38 @@ fn component(root: &Path, mut target: Value, budget: &Budget) -> io::Result<Valu
 
 fn parse_component_id<'a>(id: &'a Value, default_scope: &'a str) -> (&'a str, &'a str) {
     if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        let trimmed = raw.trim();
+        let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());
         bare.split_once('/')
-            .unwrap_or((default_scope, bare))
-    } else {
-        let id_scope = id["scope"]
-            .as_str()
-            .filter(|val| !val.is_empty())
-            .or_else(|| {
-                id["defaultScope"]
-                    .as_str()
-                    .filter(|val| !val.is_empty())
+            .map_or((default_scope, bare), |(scope, name)| {
+                let trimmed_scope = scope.trim();
+                (if trimmed_scope.is_empty() { default_scope } else { trimmed_scope }, name.trim())
             })
+    } else {
+        let id_scope = non_empty_field(id, "scope")
+            .or_else(|| non_empty_field(id, "defaultScope"))
             .unwrap_or(default_scope);
-        (id_scope, id["name"].as_str().unwrap_or_default())
+        (id_scope, non_empty_field(id, "name").unwrap_or_default())
     }
 }
 
+fn non_empty_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
+    value[key]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+}
+
 fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
-    let identity = target["identity"].as_str().ok_or_else(|| invalid("tracking identity"))?;
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("tracking scoped identity"))?;
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("tracking identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("tracking scoped identity"))?;
     if let Some(id) = value
         .get("componentId")
         .filter(|val| !val.is_null())
