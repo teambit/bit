@@ -42,8 +42,10 @@ fn dep_paths(
 ) -> impl Iterator<Item = String> {
     entries(deps)
         .filter_map(move |(name, dep)| {
+            let name = name.trim();
             version_of(dep)
-                .filter(|version| !is_local(version))
+                .map(str::trim)
+                .filter(|version| !name.is_empty() && !version.is_empty() && !is_local(version))
                 .map(|version| format!("{name}@{version}"))
         })
 }

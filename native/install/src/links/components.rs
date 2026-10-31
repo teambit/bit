@@ -104,7 +104,7 @@ async fn link_components_with(
 ) -> io::Result<LinkResult> {
     let components: Vec<_> = components
         .iter()
-        .filter(|comp| comp.root_dir != ".")
+        .filter(|comp| valid_root_dir(&comp.root_dir))
         .collect();
     let injected = read_injected_deps(root)?;
     let envs = env_props(&components, host).await?;
@@ -359,4 +359,11 @@ fn root_component_modules_dirs(root_components_dir: &Path) -> io::Result<Vec<Pat
         }
     }
     Ok(dirs)
+}
+
+fn valid_root_dir(root_dir: &str) -> bool {
+    let trimmed = root_dir
+        .trim()
+        .trim_end_matches(['/', '\\']);
+    !trimmed.is_empty() && trimmed != "."
 }

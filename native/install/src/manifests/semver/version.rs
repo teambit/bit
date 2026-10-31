@@ -39,7 +39,7 @@ impl SemVer {
             prerelease: parts[4]
                 .map(|pre| {
                     pre.split('.')
-                        .map(str::to_string)
+                        .map(|part| part.trim().to_string())
                         .collect()
                 })
                 .unwrap_or_default(),

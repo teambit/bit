@@ -9,13 +9,19 @@ pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
     if value.is_null() {
         return Ok(Some(Duration::from_millis(200)));
     }
-    let number = value.as_f64().ok_or_else(|| invalid_type(value))?;
-    // napi_get_value_uint32 applies ECMAScript ToUint32, not Rust's saturating cast.
-    let milliseconds = if number.is_finite() {
-        const TWO_POW_32: f64 = 4_294_967_296.0;
-        number.trunc().rem_euclid(TWO_POW_32) as u32
+    let milliseconds = if let Some(integer) = value.as_u64() {
+        (integer & u64::from(u32::MAX)) as u32
+    } else if let Some(integer) = value.as_i64() {
+        integer as u32
     } else {
-        0
+        let number = value.as_f64().ok_or_else(|| invalid_type(value))?;
+        // napi_get_value_uint32 applies ECMAScript ToUint32, not Rust's saturating cast.
+        if number.is_finite() {
+            const TWO_POW_32: f64 = 4_294_967_296.0;
+            number.trunc().rem_euclid(TWO_POW_32) as u32
+        } else {
+            0
+        }
     };
     Ok(Some(Duration::from_millis(u64::from(milliseconds))))
 }

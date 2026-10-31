@@ -6,13 +6,16 @@
 /// matches an include pattern and no `!`-prefixed exclude pattern.
 #[must_use]
 pub fn match_patterns(file: &str, patterns: &[String]) -> bool {
-    let (excludes, includes): (Vec<&String>, Vec<&String>) = patterns
+    let (excludes, includes): (Vec<&str>, Vec<&str>) = patterns
         .iter()
+        .map(String::as_str)
+        .map(str::trim)
+        .filter(|pattern| !pattern.is_empty())
         .partition(|pattern| pattern.starts_with('!'));
     includes.iter().any(|pattern| matches(pattern, file))
         && excludes
             .iter()
-            .all(|pattern| !matches(&pattern[1..], file))
+            .all(|pattern| !matches(pattern[1..].trim_start(), file))
 }
 
 /// Whether `path` (`/`-separated, relative) matches `pattern`.

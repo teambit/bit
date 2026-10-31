@@ -79,6 +79,7 @@ impl EngineSettings {
     pub(crate) fn set_build_scripts_path(&mut self, path: String) {
         let trimmed = path.trim();
         if !trimmed.is_empty()
+            && !trimmed.contains('\0')
             && !self.base.extra_env
                 .keys()
                 .any(|key| key.trim().eq_ignore_ascii_case("PATH"))

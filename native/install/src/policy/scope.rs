@@ -167,15 +167,21 @@ impl Scope {
 
     /// The contents of the file at `relative_path` of a `Version` object.
     pub fn file(&self, version: &Value, relative_path: &str) -> io::Result<Option<Vec<u8>>> {
+        let relative_path = relative_path.trim().trim_start_matches("./");
         let Some(files) = version["files"].as_array() else { return Ok(None) };
         let Some(hash) = files
             .iter()
-            .find(|file| file["relativePath"].as_str() == Some(relative_path))
+            .find(|file| {
+                file["relativePath"]
+                    .as_str()
+                    .map(|path| path.trim().trim_start_matches("./"))
+                    == Some(relative_path)
+            })
             .and_then(|file| file["file"].as_str())
         else {
             return Ok(None);
         };
-        self.object(hash, "Source")
+        self.object(hash.trim(), "Source")
     }
 }
 

@@ -31,10 +31,10 @@ fn write(path: &Path, manifest: &Manifest, tracking: bool) -> io::Result<bool> {
     };
     fs::write(&temporary, text)?;
     if let Err(error) = fs::rename(&temporary, path) {
+        let _ = fs::remove_file(&temporary);
         if !tracking {
             return Err(error);
         }
-        let _ = fs::remove_file(&temporary);
         return Err(rename_error(&temporary, path, error));
     }
     Ok(changed)

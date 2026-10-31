@@ -41,10 +41,9 @@ impl<'a> Progress<'a> {
     pub fn new(output: &'a Output, message: &str) -> Option<Self> {
         if std::env::var_os("CI")
             .is_some_and(|value| {
-                !value
-                    .to_string_lossy()
-                    .trim()
-                    .is_empty()
+                let text = value.to_string_lossy();
+                let trimmed = text.trim();
+                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
             })
         {
             return None;

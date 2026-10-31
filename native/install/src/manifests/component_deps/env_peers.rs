@@ -17,14 +17,15 @@ use serde_json::Value;
 
 /// The `version` of a non-hidden dependency named `name` (`findByPkgNameOrCompId`).
 fn found_version(deps: &ComponentDependencies, name: &str) -> Option<String> {
+    let name = name.trim();
     dependency_list(deps)
         .into_iter()
         .filter(|dep| !dep.hidden)
         .find(|dep| {
-            dep.package_name == name
+            dep.package_name.trim() == name
                 || dep.component.is_some_and(|id| id.to_string_without_version() == name)
         })
-        .map(|dep| dep.version)
+        .map(|dep| dep.version.trim().to_owned())
         .filter(|version| !version.is_empty())
 }
 

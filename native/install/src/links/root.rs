@@ -173,9 +173,14 @@ fn link_bridges(hoisted: &Path, links: &DependencyMap) -> io::Result<()> {
 fn ensure_nested_package_dirs(root: &Path, components: &[WorkspaceComponent]) -> io::Result<()> {
     for component in components
         .iter()
-        .filter(|component| component.root_dir != ".")
+        .filter(|component| {
+            let root_dir = component.root_dir
+                .trim()
+                .trim_end_matches(['/', '\\']);
+            !root_dir.is_empty() && root_dir != "."
+        })
     {
-        let package_dir = root.join("node_modules").join(&component.package_name);
+        let package_dir = root.join("node_modules").join(component.package_name.trim());
         if component.dir.join("node_modules").exists() && !is_symlink(&package_dir) {
             fs::create_dir_all(package_dir)?;
         }

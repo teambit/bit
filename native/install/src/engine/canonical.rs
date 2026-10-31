@@ -44,7 +44,7 @@ impl CanonicalInstall {
         output: Option<OutputSink>,
     ) -> io::Result<EngineResult> {
         let build_scripts_path = build_scripts_path.trim().to_owned();
-        if build_scripts_path.is_empty() {
+        if build_scripts_path.is_empty() || build_scripts_path.contains('\0') {
             return Err(io::Error::other("retained build scripts PATH is empty"));
         }
         let environment = self.payload["environment"]

@@ -236,6 +236,7 @@ fn deduped(
 fn projects(manifests: IndexMap<PathBuf, Manifest>, root: &Path) -> Vec<Project> {
     let (roots, others): (Vec<_>, Vec<_>) = manifests
         .into_iter()
+        .filter(|(dir, _)| !dir.as_os_str().is_empty())
         .partition(|(dir, _)| dir.as_path() == root);
     roots
         .into_iter()

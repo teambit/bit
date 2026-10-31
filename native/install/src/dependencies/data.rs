@@ -127,8 +127,16 @@ pub fn legacy_dependencies(value: &Value) -> Vec<LegacyDependency> {
 fn legacy_dependency(value: &Value) -> Option<LegacyDependency> {
     Some(LegacyDependency {
         id: id_from_object(value)?,
-        package_name: value["packageName"].as_str().map(str::to_owned),
-        version_range: value["versionRange"].as_str().map(str::to_owned),
+        package_name: value["packageName"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .map(str::to_owned),
+        version_range: value["versionRange"]
+            .as_str()
+            .map(str::trim)
+            .filter(|range| !range.is_empty())
+            .map(str::to_owned),
     })
 }
 

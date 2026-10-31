@@ -55,7 +55,9 @@ fn relative(from: &Path, to: &Path) -> String {
         path.push("..");
     }
     for component in &to[common..] {
-        path.push(component.as_os_str());
+        if !component.as_os_str().is_empty() {
+            path.push(component.as_os_str());
+        }
     }
     path.to_string_lossy().replace(std::path::MAIN_SEPARATOR, "/")
 }

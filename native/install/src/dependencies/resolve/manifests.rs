@@ -118,7 +118,13 @@ fn component_package(
         });
     let scope = id.scope
         .clone()
-        .or_else(|| object["scope"].as_str().map(str::to_owned));
+        .or_else(|| {
+            object["scope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|sc| !sc.is_empty())
+                .map(str::to_owned)
+        });
     if manifest["exported"] == Value::Bool(false) {
         id.scope = None;
         object["scope"] = Value::Null;

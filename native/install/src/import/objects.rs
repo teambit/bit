@@ -252,11 +252,11 @@ pub struct RemoteRef {
 impl RemoteRef {
     fn from_json(value: &Value) -> Option<Self> {
         let (scope, name) = id_scope_and_name(&value["id"])?;
-        Some(Self {
-            scope: scope.to_string(),
-            name: name.to_string(),
-            head: value["head"].as_str()?.to_string(),
-        })
+        let head = value["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())?;
+        Some(Self { scope: scope.to_string(), name: name.to_string(), head: head.to_string() })
     }
 
     fn to_json(&self) -> Value {
@@ -266,16 +266,22 @@ impl RemoteRef {
 
 fn id_scope_and_name(id: &Value) -> Option<(&str, &str)> {
     if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let raw = raw.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
         let (scope, name) = bare.split_once('/')?;
+        let (scope, name) = (scope.trim(), name.trim());
         return (!scope.is_empty() && !name.is_empty()).then_some((scope, name));
     }
     let scope = id["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())?;
     let name = id["name"]
         .as_str()
-        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .map(|nm| {
+            let nm = nm.trim();
+            nm.rsplit_once('@').map_or(nm, |(base, _)| base.trim())
+        })
         .filter(|val| !val.is_empty())?;
     Some((scope, name))
 }

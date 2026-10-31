@@ -71,9 +71,14 @@ fn base(component: &WorkspaceComponent, context: &PackageJsonContext<'_>) -> Man
             .unwrap_or_else(|| "latest".into())
             .into(),
     );
-    if let Some(scope) = &id.scope {
+    if let Some(scope) = id.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+    {
         let path = scope.replacen('.', "/", 1);
-        let homepage = format!("https://{}/{path}/{}", context.cloud_domain, id.name);
+        let domain = context.cloud_domain.trim().trim_end_matches('/');
+        let homepage = format!("https://{domain}/{path}/{}", id.name.trim());
         manifest.insert("homepage".into(), homepage.into());
     }
     manifest.insert("main".into(), component.main_file.clone().into());

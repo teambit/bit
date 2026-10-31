@@ -43,21 +43,8 @@ pub fn serialize(detected: &Detected) -> Value {
 /// `Dependency.serialize()`. The relative paths of a relative cross-component import
 /// are not tracked natively; the cache reader ignores them.
 fn dependency(dependency: &LegacyDependency) -> Value {
-    let mut id = Map::new();
-    if let Some(scope) = &dependency.id.scope {
-        id.insert("scope".to_owned(), Value::String(scope.clone()));
-    }
-    id.insert("name".to_owned(), Value::String(dependency.id.name.clone()));
-    if let Some(version) = &dependency.id.version {
-        id.insert("version".to_owned(), Value::String(version.clone()));
-    }
-    if dependency.id.scope.is_none()
-        && let Some(scope) = &dependency.id.default_scope
-    {
-        id.insert("scope".to_owned(), Value::String(scope.clone()));
-    }
     let mut value = Map::new();
-    value.insert("id".to_owned(), Value::Object(id));
+    value.insert("id".to_owned(), dependency_id(dependency));
     value.insert("relativePaths".to_owned(), Value::Array(Vec::new()));
     if let Some(name) = dependency.package_name
         .as_deref()
@@ -74,6 +61,34 @@ fn dependency(dependency: &LegacyDependency) -> Value {
         value.insert("versionRange".to_owned(), Value::String(range.to_owned()));
     }
     Value::Object(value)
+}
+
+fn dependency_id(dependency: &LegacyDependency) -> Value {
+    let mut id = Map::new();
+    if let Some(scope) = dependency.id.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|sc| !sc.is_empty())
+    {
+        id.insert("scope".to_owned(), Value::String(scope.to_owned()));
+    }
+    id.insert("name".to_owned(), Value::String(dependency.id.name.trim().to_owned()));
+    if let Some(version) = dependency.id.version
+        .as_deref()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    {
+        id.insert("version".to_owned(), Value::String(version.to_owned()));
+    }
+    if !id.contains_key("scope")
+        && let Some(scope) = dependency.id.default_scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|sc| !sc.is_empty())
+    {
+        id.insert("scope".to_owned(), Value::String(scope.to_owned()));
+    }
+    Value::Object(id)
 }
 
 /// `IssuesList.serialize()`: `[{ type, data: "<json>" }]`.

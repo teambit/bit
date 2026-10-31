@@ -17,12 +17,17 @@ pub fn aspect_env_ids(
     objects: &ScopeObjects,
     core: &[&str],
 ) -> io::Result<Vec<String>> {
-    let mut ids: Vec<String> = core
-        .iter()
-        .map(|id| id.trim())
-        .filter(|id| !id.is_empty())
-        .map(str::to_owned)
-        .collect();
+    let mut ids: Vec<String> = Vec::new();
+    for raw_id in core {
+        let trimmed = raw_id.trim();
+        if !trimmed.is_empty()
+            && !ids
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
+            ids.push(trimmed.to_owned());
+        }
+    }
     for component in components {
         let env_id = component.env_id.trim();
         if env_id.is_empty()

@@ -59,14 +59,16 @@ pub fn component_package_name(
                 .get("packageJson")?
                 .get("name")?
                 .as_str()
+                .map(str::trim)
         });
     if let Some(template) = configured.filter(|template| !template.is_empty()) {
         let (owner, scope_name) = parse_scope(scope);
         return fill_placeholders(template, &id.name, scope_name, scope, owner);
     }
-    let name = id.name.replace('/', ".");
+    let name = id.name.trim().replace('/', ".");
     let mut without_prefix = format!("{}.{name}", scope.unwrap_or("undefined"));
     let prefix = binding_prefix
+        .map(str::trim)
         .filter(|prefix| !prefix.is_empty())
         .map_or_else(
             || binding_prefix_by_default_scope(scope.unwrap_or("undefined")),

@@ -129,7 +129,12 @@ impl EnvJsoncReader<'_> {
             ));
         }
         let Some((manifest, version)) = self.read(env_id, dependent)? else { return Ok(None) };
-        let Some(parent) = manifest.get("extends").and_then(Value::as_str) else {
+        let Some(parent) = manifest
+            .get("extends")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|parent| !parent.is_empty())
+        else {
             return Ok(Some(manifest));
         };
         // A core env parent contributes nothing (`resolveEnvManifest` returns `{}`).

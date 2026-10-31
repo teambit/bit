@@ -28,11 +28,12 @@ fn trailing_version() -> &'static Regex {
 /// version. Throws (`Err`) on a spec that is neither a range nor a hash,
 /// `workspace:`, `npm:` or `+`.
 pub(super) fn is_range(version: &str, origin: &str) -> io::Result<bool> {
-    let Some(valid) = valid_range(version) else {
-        let allowed = is_hash(version)
-            || version.starts_with("workspace:")
-            || version.starts_with("npm:")
-            || bit_object_import::plus_version::is_plus(version);
+    let trimmed = version.trim();
+    let Some(valid) = valid_range(trimmed) else {
+        let allowed = is_hash(trimmed)
+            || trimmed.starts_with("workspace:")
+            || trimmed.starts_with("npm:")
+            || bit_object_import::plus_version::is_plus(trimmed);
         if allowed {
             return Ok(false);
         }
@@ -63,10 +64,11 @@ pub(super) fn policy_version<'a>(
     name: &str,
     lifecycle: Lifecycle,
 ) -> Option<&'a str> {
+    let name = name.trim();
     entries
         .iter()
-        .find(|entry| entry.name == name && entry.lifecycle == lifecycle)
-        .map(|entry| entry.version.as_str())
+        .find(|entry| entry.name.trim() == name && entry.lifecycle == lifecycle)
+        .map(|entry| entry.version.trim())
 }
 
 /// `id@version` → `id`.

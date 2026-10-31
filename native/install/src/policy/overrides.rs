@@ -31,7 +31,9 @@ pub fn auto_detect(policy: &[PolicyEntry]) -> FieldMaps {
         let name = entry.name.trim();
         let version = entry.version.trim();
         if !name.is_empty() && !version.is_empty() {
-            result[field_index(entry.lifecycle)].insert(name.to_owned(), version.to_owned());
+            result[field_index(entry.lifecycle)]
+                .entry(name.to_owned())
+                .or_insert_with(|| version.to_owned());
         }
     }
     result

@@ -34,6 +34,8 @@ pub async fn cloud_username(global: &GlobalConfig, timeout: Duration) -> Option<
         .json(&json!({ "query": GET_CURRENT_USER }))
         .send()
         .await
+        .ok()?
+        .error_for_status()
         .ok()?;
     let body: Value = response.json().await.ok()?;
     body["data"]["me"]["username"]

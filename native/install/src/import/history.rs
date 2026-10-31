@@ -84,11 +84,13 @@ pub fn check(history: &Value, reference: &str) -> Completeness {
 
 /// `getAllHashesFrom(start).missing` is not empty.
 fn missing_from(history: &Value, start: &str) -> bool {
+    let start = start.trim();
     let versions = versions(history);
     let parents = |hash: &str| {
+        let hash = hash.trim();
         versions
             .iter()
-            .find(|version| version["hash"].as_str() == Some(hash))
+            .find(|version| version["hash"].as_str().map(str::trim) == Some(hash))
             .map(|version| strings(&version["parents"]))
     };
     let Some(first) = parents(start) else { return true };

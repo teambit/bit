@@ -153,8 +153,15 @@ fn is_match_item(root_dir: &str, name: &str, item: &str) -> io::Result<ItemMatch
 
 /// `isMatchDirPatternItem`: the root dir is the pattern dir or inside it.
 fn dir_match(root_dir: &str, item: &str) -> ItemMatch {
-    let pattern = item.trim_end_matches('/').trim();
-    let root_dir = root_dir.trim_end_matches('/');
+    let pattern = item
+        .trim()
+        .trim_start_matches("./")
+        .trim_end_matches('/')
+        .trim();
+    let root_dir = root_dir
+        .trim()
+        .trim_start_matches("./")
+        .trim_end_matches('/');
     let inside = root_dir
         .strip_prefix(pattern)
         .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'));

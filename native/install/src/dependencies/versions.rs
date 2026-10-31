@@ -180,6 +180,9 @@ fn coerce(text: &str) -> Option<String> {
         })
         .take_while(|part| !part.is_empty())
         .collect();
+    if numbers.is_empty() {
+        return None;
+    }
     let part = |index: usize| {
         numbers
             .get(index)

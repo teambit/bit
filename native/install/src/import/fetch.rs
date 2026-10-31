@@ -70,9 +70,15 @@ impl Fetcher<'_> {
             if error.kind() != io::ErrorKind::NotFound {
                 return error;
             }
+            let listed: Vec<&str> = ids
+                .iter()
+                .map(String::as_str)
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .collect();
             io::Error::other(format!(
                 "unable to import the following component(s): {}.\nthe remote scope \"{scope}\" was not found",
-                ids.join(", "),
+                listed.join(", "),
             ))
         })?;
         match remote {

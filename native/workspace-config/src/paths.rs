@@ -12,7 +12,9 @@ pub fn global_config_dir() -> PathBuf {
 pub fn cache_root() -> PathBuf {
     let home = || {
         PathBuf::from(
-            env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
+            env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
+                .or_else(|| env::var_os("HOME"))
+                .unwrap_or_default(),
         )
     };
     if let Some(dir) = env::var_os("BIT_GLOBALS_DIR").filter(|dir| !dir.is_empty()) {

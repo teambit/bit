@@ -21,7 +21,7 @@ impl EngineError {
                 .code()
                 .map(|code| code.to_string().trim().to_owned())
                 .filter(|code| !code.is_empty()),
-            message: error.to_string(),
+            message: error.to_string().trim().to_owned(),
             hint: error
                 .help()
                 .map(|help| help.to_string().trim().to_owned())

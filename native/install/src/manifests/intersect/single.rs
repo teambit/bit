@@ -159,7 +159,7 @@ pub(super) fn create_single(comparators: &[Comparator]) -> io::Result<Option<Sin
     for comparator in comparators.iter().filter(|comp| is_equals(comp)) {
         if !equals
             .iter()
-            .any(|existing| existing.value == comparator.value)
+            .any(|existing| existing.value.trim() == comparator.value.trim())
         {
             equals.push(comparator);
         }

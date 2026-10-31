@@ -28,12 +28,12 @@ impl ComponentId {
     pub fn effective_scope(&self) -> Option<&str> {
         self.scope
             .as_deref()
-            .map(str::trim)
+            .map(|scope| scope.trim().trim_matches('/'))
             .filter(|scope| !scope.is_empty())
             .or_else(|| {
                 self.default_scope
                     .as_deref()
-                    .map(str::trim)
+                    .map(|scope| scope.trim().trim_matches('/'))
                     .filter(|scope| !scope.is_empty())
             })
     }

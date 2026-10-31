@@ -56,7 +56,9 @@ impl ReporterSettings {
             append_only: false,
             throttle_progress: Duration::from_millis(200),
             hide_added_pkgs_progress: false,
-            width: info.columns.map_or(80, |columns| (columns as usize).saturating_sub(2).max(1)),
+            width: info.columns
+                .filter(|columns| *columns > 0)
+                .map_or(80, |columns| (columns as usize).saturating_sub(2).max(1)),
             color: info.color,
         }
     }

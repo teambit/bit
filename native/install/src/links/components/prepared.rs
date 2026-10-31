@@ -39,7 +39,9 @@ pub fn link_prepared_component(
     }
     let package = root
         .join("node_modules")
-        .join(Path::new(&component.package_name).components().collect::<std::path::PathBuf>());
+        .join(
+            Path::new(component.package_name.trim()).components().collect::<std::path::PathBuf>(),
+        );
     let (links, existing) = plan_file_links(root, component, &package);
     if is_symlink(&package) {
         remove_path(&package)?;

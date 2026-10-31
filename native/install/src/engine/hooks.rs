@@ -62,8 +62,10 @@ impl BitHooks {
 
     /// `readPackageHookForDeps`.
     pub(super) fn dependency_manifest(&self, manifest: Value, resolved_dir: Option<&str>) -> Value {
-        let raw =
-            resolved_dir.and_then(|dir| self.raw_manifests.get(&normalize(&self.root.join(dir))));
+        let raw = resolved_dir
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .and_then(|dir| self.raw_manifests.get(&normalize(&self.root.join(dir))));
         let manifest = self.apply(raw.cloned().unwrap_or(manifest), None);
         self.remove_never_built_scripts(manifest)
     }

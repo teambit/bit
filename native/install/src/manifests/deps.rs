@@ -86,7 +86,10 @@ impl DepsObject {
         };
         let meta: Map<String, Value> = self.peer_meta
             .iter()
-            .map(|(name, optional)| (name.clone(), json!({ "optional": optional })))
+            .filter_map(|(name, optional)| {
+                let trimmed = name.trim();
+                (!trimmed.is_empty()).then(|| (trimmed.to_owned(), json!({ "optional": optional })))
+            })
             .collect();
         let mut manifest = Map::new();
         manifest.insert("name".into(), name.trim().into());

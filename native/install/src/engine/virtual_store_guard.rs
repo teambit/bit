@@ -70,7 +70,12 @@ fn yaml_virtual_store_dir(line: &str) -> Option<String> {
         .trim_end();
     let value = value.strip_prefix('"').unwrap_or(value);
     let value = value.strip_suffix('"').unwrap_or(value);
-    (!value.is_empty() && !value.contains('"')).then(|| value.to_string())
+    let value = value.strip_prefix('\'').unwrap_or(value);
+    let value = value
+        .strip_suffix('\'')
+        .unwrap_or(value)
+        .trim();
+    (!value.is_empty() && !value.contains(['"', '\''])).then(|| value.to_string())
 }
 
 fn realpath(path: &Path) -> PathBuf {

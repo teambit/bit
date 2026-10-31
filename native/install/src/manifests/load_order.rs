@@ -96,8 +96,13 @@ fn extension_ids(components: &[&WorkspaceComponent]) -> Vec<String> {
     let mut ids: Vec<String> = Vec::new();
     for component in components {
         for id in component.config.keys() {
-            if !ids.contains(id) {
-                ids.push(id.clone());
+            let trimmed = id.trim();
+            if !trimmed.is_empty()
+                && !ids
+                    .iter()
+                    .any(|existing| existing == trimmed)
+            {
+                ids.push(trimmed.to_owned());
             }
         }
     }
@@ -105,6 +110,7 @@ fn extension_ids(components: &[&WorkspaceComponent]) -> Vec<String> {
 }
 
 fn by_id<'c>(components: &'c [WorkspaceComponent], id: &str) -> Option<&'c WorkspaceComponent> {
+    let id = id.trim();
     components
         .iter()
         .find(|component| full_id(component) == id)

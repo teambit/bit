@@ -39,15 +39,19 @@ fn collect(input: &ManifestInput<'_>) -> IndexMap<String, PeerVersions> {
         };
         let env = without_version(&component.env_id).to_string();
         for entry in &policy.self_policy {
-            if input.components
-                .iter()
-                .any(|local| local.package_name == entry.name)
+            let name = entry.name.trim();
+            let version = entry.version.trim();
+            if name.is_empty()
+                || version.is_empty()
+                || input.components
+                    .iter()
+                    .any(|local| local.package_name.trim() == name)
             {
                 continue;
             }
-            let peer = peers.entry(entry.name.clone()).or_default();
+            let peer = peers.entry(name.to_owned()).or_default();
             peer.versions
-                .entry(entry.version.clone())
+                .entry(version.to_owned())
                 .or_default()
                 .insert(env.clone());
             peer.singleton |= entry.workspace_singleton;

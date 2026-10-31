@@ -31,6 +31,9 @@ pub async fn missing_peers(
     overrides: &DependencyMap,
     settings: &EngineSettings,
 ) -> io::Result<MissingPeers> {
+    if projects.is_empty() {
+        return Ok(MissingPeers::new());
+    }
     let _guard = engine_call_lock().lock().await;
     let projects = projects.to_vec();
     let overrides = overrides.clone();

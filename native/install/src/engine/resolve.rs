@@ -97,7 +97,10 @@ async fn resolve_spec(spec: &str, settings: &EngineSettings) -> io::Result<Resol
     let resolved = resolve(&wanted, settings).await?;
     let manifest = manifest_of(&resolved)?;
     let version = resolved.normalized_bare_specifier
-        .clone()
+        .as_deref()
+        .map(str::trim)
+        .filter(|specifier| !specifier.is_empty())
+        .map(str::to_owned)
         .ok_or_else(|| io::Error::other("The resolved package has no version"))?;
     Ok(ResolvedVersion {
         package_name: manifest_field(&manifest, "name"),

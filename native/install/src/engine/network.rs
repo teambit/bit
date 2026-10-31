@@ -100,6 +100,7 @@ impl NetworkSettings {
             strict_ssl: tls.strict_ssl,
             local_address: tls.local_address
                 .as_deref()
+                .map(str::trim)
                 .and_then(|value| value.parse().ok()),
         }
     }

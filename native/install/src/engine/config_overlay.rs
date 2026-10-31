@@ -169,7 +169,10 @@ fn apply_manifest_rewrites(
         .collect();
     let mut overrides = call.overrides.clone();
     overrides.insert("@teambit/legacy@*".to_string(), "-".to_string());
-    if let Some(version) = call.forced_harmony_version {
+    if let Some(version) = call.forced_harmony_version
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+    {
         // Harmony is a singleton: a version the workspace forces holds across the graph.
         overrides.insert("@teambit/harmony".to_string(), version.to_string());
     } else {

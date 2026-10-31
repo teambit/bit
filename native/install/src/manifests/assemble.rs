@@ -149,7 +149,8 @@ pub(super) fn merge_linked_root(
         if let Some(name) = manifest
             .get("name")
             .and_then(Value::as_str)
-            .filter(|name| direct.iter().any(|dep| dep == name))
+            .map(str::trim)
+            .filter(|name| !name.is_empty() && direct.iter().any(|dep| dep == name))
         {
             linked.shift_remove(name);
         }

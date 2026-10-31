@@ -58,8 +58,11 @@ impl Document {
     pub fn get(&self, path: &[&str]) -> Option<Value> {
         let mut node = &self.root;
         for key in path {
-            let Node::Object(object) = node else { return None };
-            node = object.entries.get(*key)?;
+            node = match node {
+                Node::Object(object) => object.entries.get(*key)?,
+                Node::Array(items, _) => items.get(key.parse::<usize>().ok()?)?,
+                _ => return None,
+            };
         }
         Some(node.to_value())
     }

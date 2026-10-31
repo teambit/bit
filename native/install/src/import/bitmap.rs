@@ -143,7 +143,8 @@ fn exported_scope_and_name<'a>(bare: &'a str, entry: &'a Value) -> Option<(&'a s
             .and_then(|rest| rest.strip_prefix('/'))
             .unwrap_or(bare)
             .trim();
-        return Some((scope, entry_name.unwrap_or(fallback)));
+        let resolved_name = entry_name.unwrap_or(fallback);
+        return (!resolved_name.is_empty()).then_some((scope, resolved_name));
     }
     if entry.get("scope").is_none()
         && entry["defaultScope"]

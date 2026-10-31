@@ -49,7 +49,7 @@ impl Comparator {
     pub(crate) fn test(&self, version: &SemVer) -> bool {
         let Some(semver) = &self.semver else { return true };
         let order = version.compare(semver);
-        match self.operator.as_str() {
+        match self.operator.trim() {
             ">" => order == Ordering::Greater,
             ">=" => order != Ordering::Less,
             "<" => order == Ordering::Less,
@@ -59,15 +59,15 @@ impl Comparator {
     }
 
     fn increasing(&self) -> bool {
-        matches!(self.operator.as_str(), ">=" | ">")
+        matches!(self.operator.trim(), ">=" | ">")
     }
 
     fn decreasing(&self) -> bool {
-        matches!(self.operator.as_str(), "<=" | "<")
+        matches!(self.operator.trim(), "<=" | "<")
     }
 
     fn inclusive(&self) -> bool {
-        matches!(self.operator.as_str(), ">=" | "<=")
+        matches!(self.operator.trim(), ">=" | "<=")
     }
 
     /// `comparator.intersects(comp)` of semver 6.

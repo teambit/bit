@@ -158,7 +158,8 @@ impl Lexer<'_> {
             keep
         });
         if !is_json_number(raw) {
-            return Err(invalid(format!("Unexpected token {}", &raw[..1])));
+            let first = raw.chars().next().unwrap_or_default();
+            return Err(invalid(format!("Unexpected token {first}")));
         }
         raw.parse()
             .map(Kind::Number)
@@ -172,7 +173,10 @@ impl Lexer<'_> {
             "true" => Ok(Kind::Bool(true)),
             "false" => Ok(Kind::Bool(false)),
             "null" => Ok(Kind::Null),
-            _ => Err(invalid(format!("Unexpected token {}", &word[..1]))),
+            _ => {
+                let first = word.chars().next().unwrap_or_default();
+                Err(invalid(format!("Unexpected token {first}")))
+            }
         }
     }
 }

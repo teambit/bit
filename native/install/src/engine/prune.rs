@@ -41,8 +41,12 @@ pub fn prune_modules(root: &Path, keep: &HashSet<String>) -> io::Result<()> {
 
 /// `fs.remove`: a directory tree, or a file or symlink.
 fn remove(path: &Path) -> io::Result<()> {
-    let is_dir = fs::symlink_metadata(path)?.is_dir();
-    if is_dir { fs::remove_dir_all(path) } else { fs::remove_file(path) }
+    let meta = match fs::symlink_metadata(path) {
+        Ok(meta) => meta,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error),
+    };
+    if meta.is_dir() { fs::remove_dir_all(path) } else { fs::remove_file(path) }
 }
 
 /// The package directories of the virtual store. With the global virtual

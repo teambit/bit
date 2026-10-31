@@ -90,6 +90,7 @@ pub fn write(scope: &Scope, component: &WorkspaceComponent, detected: &Detected)
 /// `cacache.put(cache, key, data, { metadata: { timestamp } })`: the content
 /// under its digest and an index entry appended to the key's bucket.
 pub fn put(cache: &Path, key: &str, data: &str) -> io::Result<()> {
+    let key = key.trim();
     let integrity = put_content(cache, data.as_bytes())?;
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)

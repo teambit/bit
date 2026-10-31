@@ -19,7 +19,10 @@ pub(super) fn graph(serialized: &Value) -> Map<String, Value> {
             .get(source)
             .filter(|value| !value.is_null())
         {
-            context.insert(target.to_owned(), value.clone());
+            let normalized = value
+                .as_str()
+                .map_or_else(|| value.clone(), |text| Value::String(text.trim().to_owned()));
+            context.insert(target.to_owned(), normalized);
         }
     }
     if serialized

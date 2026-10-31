@@ -85,6 +85,10 @@ pub(super) fn dependency_list(deps: &ComponentDependencies) -> Vec<Dep<'_>> {
 pub(super) fn to_deps_object(list: &[Dep<'_>]) -> DepsObject {
     let mut object = DepsObject::default();
     for dep in list {
+        let name = dep.package_name.trim();
+        if name.is_empty() {
+            continue;
+        }
         let field = if dep.optional && dep.lifecycle == Lifecycle::Runtime {
             Field::OptionalDependencies
         } else {
@@ -92,9 +96,9 @@ pub(super) fn to_deps_object(list: &[Dep<'_>]) -> DepsObject {
         };
         object
             .get_mut(field)
-            .insert(dep.package_name.to_string(), snap_to_semver(&dep.version));
+            .insert(name.to_string(), snap_to_semver(&dep.version));
         if dep.optional && dep.lifecycle == Lifecycle::Peer {
-            object.peer_meta.insert(dep.package_name.to_string(), true);
+            object.peer_meta.insert(name.to_string(), true);
         }
     }
     object

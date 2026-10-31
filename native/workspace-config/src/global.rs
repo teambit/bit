@@ -23,6 +23,9 @@ pub fn read_global_config_with(
         }
         Err(error) => return Err(error),
     };
+    if text.trim().is_empty() {
+        return Ok(Value::Object(Map::new()));
+    }
     serde_json::from_str(&text).map_err(|error| parse_error(&path, error))
 }
 

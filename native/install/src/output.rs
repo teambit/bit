@@ -223,7 +223,7 @@ impl Output {
 
     /// `logger.consoleSuccess()` without a message uses the loader's retained text.
     pub fn success_status(&self) {
-        let message = lock().text.clone();
+        let message = lock().text.trim().to_owned();
         self.success(&message, None);
     }
 

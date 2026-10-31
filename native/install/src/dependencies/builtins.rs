@@ -1,8 +1,11 @@
 //! Node.js built-in modules (`require('module').builtinModules`), which are never
 //! package dependencies.
 
-const BUILTINS: [&str; 42] = [
+const BUILTINS: [&str; 45] = [
     "assert",
+    "sea",
+    "sqlite",
+    "test",
     "async_hooks",
     "buffer",
     "child_process",

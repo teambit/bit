@@ -36,10 +36,14 @@ pub(super) struct Deduped {
 pub(super) fn policy_manifest(policy: &[PolicyEntry]) -> DepsObject {
     let mut object = DepsObject::default();
     for entry in policy {
+        let name = entry.name.trim();
+        if name.is_empty() {
+            continue;
+        }
         let field = Field::of(entry.lifecycle);
         object
             .get_mut(field)
-            .insert(entry.name.clone(), super::versions::snap_to_semver(&entry.version));
+            .insert(name.to_owned(), super::versions::snap_to_semver(&entry.version));
     }
     object
 }

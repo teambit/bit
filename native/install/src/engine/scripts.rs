@@ -122,9 +122,14 @@ fn configured_builds(allow_scripts: Option<&IndexMap<String, Value>>) -> BTreeMa
         .into_iter()
         .flatten()
         .filter_map(|(name, allowed)| {
-            allowed
-                .as_bool()
-                .map(|allowed| (name.clone(), allowed))
+            let name = name.trim();
+            (!name.is_empty())
+                .then(|| {
+                    allowed
+                        .as_bool()
+                        .map(|allowed| (name.to_owned(), allowed))
+                })
+                .flatten()
         })
         .collect()
 }

@@ -116,7 +116,7 @@ fn style_specifier(target: &str) -> Option<String> {
         return None;
     }
     let lowered = trimmed.to_ascii_lowercase();
-    if ["http:", "https:", "sass:", "data:"]
+    if ["http:", "https:", "sass:", "data:", "file:"]
         .iter()
         .any(|prefix| lowered.starts_with(prefix))
     {

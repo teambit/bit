@@ -71,6 +71,12 @@ impl HostInfo {
         self.token
             .as_deref()
             .map(str::trim)
+            .map(|token| {
+                token
+                    .strip_prefix("Bearer ")
+                    .or_else(|| token.strip_prefix("bearer "))
+                    .map_or(token, str::trim)
+            })
             .filter(|token| !token.is_empty() && !token.chars().any(char::is_control))
     }
 }

@@ -158,7 +158,7 @@ fn truthy(value: Option<&Value>) -> bool {
         Some(Value::Bool(value)) => *value,
         Some(Value::Number(number)) => number
             .as_f64()
-            .is_some_and(|number| number != 0.0),
+            .is_some_and(|number| number != 0.0 && !number.is_nan()),
         Some(Value::String(text)) => !text.is_empty(),
         Some(_) => true,
     }

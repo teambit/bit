@@ -115,8 +115,8 @@ impl Importer<'_> {
             return Ok(None);
         }
         let (scope, lane) = match self.lane {
-            Some(lane) => (lane.id.scope.as_str(), lane.id.name.as_str()),
-            None => (id.scope.as_str(), MAIN),
+            Some(lane) => (lane.id.scope.trim(), lane.id.name.trim()),
+            None => (id.scope.trim(), MAIN),
         };
         let refs = self.repo.remote_refs(scope, lane)?;
         let head = refs

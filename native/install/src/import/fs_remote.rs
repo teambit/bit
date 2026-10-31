@@ -26,7 +26,11 @@ pub fn fetch(path: &Path, ids: &[String], options: &FetchOptions) -> io::Result<
         }
         Err(error) => return Err(error),
     };
-    let name = scope_json["name"].as_str().ok_or_else(|| invalid("scope.json without a name"))?;
+    let name = scope_json["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("scope.json without a name"))?;
     let mut collector =
         Collector { repo: Repo::new(path), items: Vec::new(), pushed: HashSet::new() };
     if options.kind == "lane" {

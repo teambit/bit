@@ -93,6 +93,7 @@ impl<'a> EnvPatterns<'a> {
 
     /// The patterns of `env_id`.
     pub async fn get(&mut self, env_id: &str) -> io::Result<EnvDevPatterns> {
+        let env_id = env_id.trim();
         if let Some(patterns) = self.cache.get(env_id) {
             return Ok(patterns.clone());
         }

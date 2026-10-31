@@ -41,11 +41,17 @@ impl Session {
         } else {
             LazyLockfile::disabled()
         };
+        let lockfile_name = config.wanted_lockfile_name().trim();
+        let lockfile_name = if lockfile_name.is_empty() {
+            pnpm_lockfile::Lockfile::FILE_NAME
+        } else {
+            lockfile_name
+        };
         Ok(Session {
             config,
             client: http_client(config)?,
             lockfile,
-            lockfile_path: root.join(config.wanted_lockfile_name().trim()),
+            lockfile_path: root.join(lockfile_name),
             resolved_packages: ResolvedPackages::new(),
             manifest: root_manifest(projects, root)?,
             runtime: tokio::runtime::Builder::new_multi_thread().enable_all().build()?,

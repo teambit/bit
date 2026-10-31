@@ -81,17 +81,13 @@ impl EngineCall {
         Ok(Outcome {
             added: stats.added,
             removed: stats.removed,
-            deps_requiring_build: sink
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .take()
-                .map(|deps| {
-                    deps.into_iter()
-                        .map(|dep| dep.trim().to_string())
-                        .filter(|dep| !dep.is_empty())
-                        .collect()
-                }),
-            store_dir: PathBuf::from(config.store_dir.clone()),
+            deps_requiring_build: take_deps_requiring_build(&sink),
+            store_dir: PathBuf::from(
+                config.store_dir
+                    .display()
+                    .to_string()
+                    .trim(),
+            ),
         })
     }
 
@@ -241,4 +237,16 @@ fn hooked(hooks: &BitHooks, project: &Project) -> Map<String, Value> {
         Value::Object(manifest) => manifest,
         _ => project.manifest.clone(),
     }
+}
+
+fn take_deps_requiring_build(sink: &DepsRequiringBuildSink) -> Option<Vec<String>> {
+    sink.lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .take()
+        .map(|deps| {
+            deps.into_iter()
+                .map(|dep| dep.trim().to_string())
+                .filter(|dep| !dep.is_empty())
+                .collect()
+        })
 }

@@ -61,6 +61,10 @@ fn legacy_peers(config: &Value) -> Vec<PolicyEntry> {
     peers
         .iter()
         .filter_map(|(name, value)| {
+            let name = name.trim();
+            if name.is_empty() {
+                return None;
+            }
             let created = entries::value_entry(name, value, Lifecycle::Runtime)?;
             Some(PolicyEntry {
                 force: true,

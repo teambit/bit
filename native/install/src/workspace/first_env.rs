@@ -43,16 +43,18 @@ fn first_env(
     core_aspect_ids: &[String],
 ) -> io::Result<Option<String>> {
     for id in component.config.keys() {
-        let without = aspect_id_without_version(id);
-        if without == ENVS_ASPECT
+        let trimmed = id.trim();
+        let without = aspect_id_without_version(trimmed);
+        if without.is_empty()
+            || without == ENVS_ASPECT
             || core_aspect_ids
                 .iter()
-                .any(|core| core == without)
+                .any(|core| core.trim() == without)
         {
             continue;
         }
-        if CORE_ENVS.contains(&without) || is_env_component(id, envs, objects)? {
-            return Ok(Some(id.clone()));
+        if CORE_ENVS.contains(&without) || is_env_component(trimmed, envs, objects)? {
+            return Ok(Some(trimmed.to_owned()));
         }
     }
     Ok(None)

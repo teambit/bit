@@ -60,8 +60,10 @@ impl<'a> Detectors<'a> {
         component: &WorkspaceComponent,
     ) -> io::Result<IndexMap<String, CustomDetection>> {
         let env = split_version(&component.env_id).0.trim();
+        let root_dir = component.root_dir.trim();
         // The workspace-root component is never detected.
-        if component.root_dir == "."
+        if root_dir.is_empty()
+            || root_dir == "."
             || env.is_empty()
             || component.files.is_empty()
             || self.without.contains(env)

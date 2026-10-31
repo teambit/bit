@@ -141,10 +141,11 @@ pub(super) fn split_whitespace(text: &str) -> Vec<&str> {
     let mut start = 0;
     let mut in_space = false;
     for (index, ch) in text.char_indices() {
-        if ch.is_whitespace() && !in_space {
+        let is_space = ch.is_whitespace() || ch == '\u{feff}';
+        if is_space && !in_space {
             parts.push(&text[start..index]);
             in_space = true;
-        } else if !ch.is_whitespace() && in_space {
+        } else if !is_space && in_space {
             start = index;
             in_space = false;
         }
@@ -155,7 +156,7 @@ pub(super) fn split_whitespace(text: &str) -> Vec<&str> {
 
 /// `text.trim().split(/\s+/).join(' ')`.
 pub(super) fn collapse_whitespace(text: &str) -> String {
-    let trimmed = text.trim();
+    let trimmed = text.trim_matches(|ch: char| ch.is_whitespace() || ch == '\u{feff}');
     if trimmed.is_empty() {
         return String::new();
     }

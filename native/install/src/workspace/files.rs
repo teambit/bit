@@ -241,7 +241,9 @@ fn scan(root: &Path, dir: &str, exclude_dirs: &[String]) -> io::Result<Vec<Strin
     let start = if workspace_root { String::new() } else { dir.trim_end_matches('/').to_owned() };
     let excluded: Vec<String> = exclude_dirs
         .iter()
-        .map(|dir| format!("{}/", dir.trim().trim_end_matches('/')))
+        .map(|dir| dir.trim().trim_end_matches('/'))
+        .filter(|dir| !dir.is_empty() && *dir != WORKSPACE_ROOT_DIR)
+        .map(|dir| format!("{dir}/"))
         .collect();
     let mut scan = Scan { root, workspace_root, start: start.clone(), excluded, files: Vec::new() };
     scan.walk(&start, 0)?;

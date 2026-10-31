@@ -55,9 +55,14 @@ pub fn candidates(
     let mut ids: Vec<String> = Vec::new();
     for component in components {
         for id in component.config.keys() {
-            if !ids.contains(id) && may_register(id, component, components, core_aspects, objects)?
+            let trimmed = id.trim();
+            if !trimmed.is_empty()
+                && !ids
+                    .iter()
+                    .any(|existing| existing == trimmed)
+                && may_register(trimmed, component, components, core_aspects, objects)?
             {
-                ids.push(id.clone());
+                ids.push(trimmed.to_owned());
             }
         }
     }

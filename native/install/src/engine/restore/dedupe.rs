@@ -11,13 +11,7 @@ pub(super) fn dedupe(
     root: Option<&Map<String, Value>>,
 ) -> io::Result<()> {
     let overridden = overridden(lockfile)?;
-    let mut root_deps = Map::new();
-    for field in ["devDependencies", "dependencies"] {
-        if let Some(entries) = root.and_then(|root| root.get(field).and_then(Value::as_object)) {
-            root_deps.extend(entries.clone());
-        }
-    }
-    root_deps.retain(|name, _| !overridden.contains(name));
+    let root_deps = root_dependencies(root, &overridden);
     let Some(mut snapshots) = lockfile.get_mut("snapshots").map(Value::take) else {
         return Ok(());
     };
@@ -38,6 +32,25 @@ pub(super) fn dedupe(
     }
     lockfile.insert("snapshots".into(), snapshots);
     Ok(())
+}
+
+fn root_dependencies(
+    root: Option<&Map<String, Value>>,
+    overridden: &HashSet<String>,
+) -> Map<String, Value> {
+    let mut root_deps = Map::new();
+    for field in ["devDependencies", "dependencies"] {
+        if let Some(entries) = root.and_then(|root| root.get(field).and_then(Value::as_object)) {
+            root_deps.extend(
+                entries
+                    .iter()
+                    .map(|(name, value)| (name.trim().to_owned(), value.clone()))
+                    .filter(|(name, _)| !name.is_empty()),
+            );
+        }
+    }
+    root_deps.retain(|name, _| !overridden.contains(name.trim()));
+    root_deps
 }
 
 fn overridden(lockfile: &Map<String, Value>) -> io::Result<HashSet<String>> {

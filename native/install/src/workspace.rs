@@ -224,10 +224,11 @@ impl Workspace {
 
 impl Loader<'_> {
     fn component(&mut self, entry: &BitmapEntry) -> io::Result<WorkspaceComponent> {
-        let dir = if entry.root_dir == WORKSPACE_ROOT_DIR {
+        let root_dir = entry.root_dir.trim();
+        let dir = if root_dir == WORKSPACE_ROOT_DIR || root_dir.is_empty() {
             self.root.to_owned()
         } else {
-            self.root.join(&entry.root_dir)
+            self.root.join(root_dir)
         };
         // Node's path.join renders bitmap separators using the platform separator.
         #[cfg(windows)]

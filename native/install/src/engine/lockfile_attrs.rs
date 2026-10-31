@@ -34,7 +34,12 @@ pub(super) fn merge(
 ) -> Option<Map<String, Value>> {
     let Some(deps) = deps_requiring_build else { return pre_install };
     let mut attrs = pre_install.unwrap_or_default();
-    attrs.insert("depsRequiringBuild".to_string(), Value::from(deps.to_vec()));
+    let cleaned: Vec<String> = deps
+        .iter()
+        .map(|dep| dep.trim().to_owned())
+        .filter(|dep| !dep.is_empty())
+        .collect();
+    attrs.insert("depsRequiringBuild".to_string(), Value::from(cleaned));
     Some(attrs)
 }
 

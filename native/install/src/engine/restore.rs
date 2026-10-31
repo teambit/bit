@@ -170,7 +170,11 @@ async fn resolve_all(
         async move {
             let resolved =
                 resolver.resolve(&wanted, options).await.map_err(|error| error.to_string())?;
-            Ok(resolved.resolution.integrity().map(ToString::to_string))
+            Ok(resolved.resolution
+                .integrity()
+                .map(ToString::to_string)
+                .map(|integrity| integrity.trim().to_string())
+                .filter(|integrity| !integrity.is_empty()))
         }
     };
     Ok(futures_util::future::join_all(packages.iter().map(resolve)).await)

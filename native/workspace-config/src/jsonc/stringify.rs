@@ -79,7 +79,8 @@ fn quote(value: &str) -> String {
 
 fn number(value: f64) -> String {
     if value.is_finite() {
-        ryu_js::Buffer::new().format_finite(value).to_owned()
+        let normalized = if value == 0.0 { 0.0 } else { value };
+        ryu_js::Buffer::new().format_finite(normalized).to_owned()
     } else {
         "null".to_owned()
     }

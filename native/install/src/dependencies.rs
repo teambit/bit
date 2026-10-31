@@ -239,6 +239,7 @@ async fn subject<'a>(
     );
     let version = component.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|version| !version.is_empty());
     let model = match (scope, version) {
         (Some(scope), Some(version)) => {

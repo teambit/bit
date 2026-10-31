@@ -123,11 +123,20 @@ pub fn from_model(extensions: &[Value]) -> Vec<AspectEntry> {
 
 /// A serialized `ComponentID` (`{ scope, name, version }`) as `toString()` prints it.
 fn serialized_id(id: &Map<String, Value>) -> Option<String> {
-    let raw_name = id.get("name")?.as_str()?;
+    let raw_name = id.get("name")?.as_str()?.trim();
+    if raw_name.is_empty() {
+        return None;
+    }
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
-    let scoped = match id.get("scope").and_then(Value::as_str) {
+        .map_or((raw_name, None), |(bare, ver)| {
+            (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
+    let scoped = match id
+        .get("scope")
+        .and_then(Value::as_str)
+        .map(str::trim)
+    {
         Some(scope) if !scope.is_empty() => format!("{scope}/{name}"),
         _ => name.to_owned(),
     };
@@ -135,6 +144,7 @@ fn serialized_id(id: &Map<String, Value>) -> Option<String> {
         .get("version")
         .or_else(|| id.get("head"))
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
         .or(inline_ver);
     Some(match version {

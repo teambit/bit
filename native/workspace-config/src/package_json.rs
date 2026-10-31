@@ -46,6 +46,7 @@ pub fn detect_indent(text: &str) -> String {
     let (mut tabs, mut spaces) = (0_usize, 0_usize);
     for line in text
         .split('\n')
+        .map(|line| line.strip_suffix('\r').unwrap_or(line))
         .filter(|line| !line.is_empty())
     {
         let width = match leading(line) {

@@ -266,18 +266,13 @@ fn components(value: &Value) -> Vec<LaneComponent> {
 
 fn parse_lane_component(entry: &Value) -> Option<LaneComponent> {
     if let Some(raw) = entry.as_str() {
-        let (id_part, head) = raw.rsplit_once('@')?;
-        let (scope, name) = id_part
-            .split_once('/')
-            .unwrap_or(("", id_part));
-        return (!name.is_empty() && !head.is_empty()).then(|| LaneComponent {
-            scope: scope.to_owned(),
-            name: name.to_owned(),
-            head: head.to_owned(),
-            is_deleted: false,
-        });
+        return parse_lane_component_str(raw);
     }
-    let head = entry["head"].as_str()?.to_string();
+    let head = entry["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())?
+        .to_string();
     let (scope, name) = if let Some(id_str) = entry["id"].as_str() {
         let (sc, nm) = id_str
             .split_once('/')
@@ -300,6 +295,21 @@ fn parse_lane_component(entry: &Value) -> Option<LaneComponent> {
         name,
         head,
         is_deleted: entry["isDeleted"].as_bool().unwrap_or(false),
+    })
+}
+
+fn parse_lane_component_str(raw: &str) -> Option<LaneComponent> {
+    let (id_part, head) = raw.trim().rsplit_once('@')?;
+    let head = head.trim();
+    let (scope, name) = id_part
+        .split_once('/')
+        .unwrap_or(("", id_part));
+    let (scope, name) = (scope.trim(), name.trim());
+    (!name.is_empty() && !head.is_empty()).then(|| LaneComponent {
+        scope: scope.to_owned(),
+        name: name.to_owned(),
+        head: head.to_owned(),
+        is_deleted: false,
     })
 }
 

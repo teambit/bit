@@ -46,13 +46,16 @@ pub fn resolved_from_env_links(
         };
         let env_dir = env_dir(root, info, components, env_packages, &component.env_id);
         for entry in data.policy.iter().filter(|entry| entry.resolve_from_env) {
-            match resolve_module_dir(&env_dir, &entry.name) {
+            let name = entry.name.trim();
+            if name.is_empty() {
+                continue;
+            }
+            match resolve_module_dir(&env_dir, name) {
                 Some(from) => {
-                    result.links.insert(entry.name.clone(), link_value(&from));
+                    result.links.insert(name.to_owned(), link_value(&from));
                 }
                 None => result.messages.push(format!(
-                    "could not resolve {} from env directory {}",
-                    entry.name,
+                    "could not resolve {name} from env directory {}",
                     env_dir.display(),
                 )),
             }

@@ -136,6 +136,8 @@ fn apply_layout(settings: &mut EngineSettings, request: &Request<'_>) -> Option<
     let options = request.options;
     settings.layout.bit_dir.clone_from(&request.paths.bit);
     settings.layout.node_linker = string(options, "nodeLinker")?
+        .map(|linker| linker.trim().to_owned())
+        .filter(|linker| !linker.is_empty())
         .or_else(|| match settings.base.node_linker {
             NodeLinker::Isolated => Some("isolated".to_string()),
             NodeLinker::Hoisted => Some("hoisted".to_string()),

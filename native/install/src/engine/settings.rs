@@ -106,7 +106,9 @@ fn layout_settings(
         // `config.globalVirtualStoreDir ?? <storeDir>/links`, as the cascade derives it.
         global_virtual_store_dir: enable_global_virtual_store.then(|| {
             config.global_virtual_store_dir
-                .as_ref()
+                .as_deref()
+                .map(str::trim)
+                .filter(|dir| !dir.is_empty())
                 .map_or_else(|| base.global_virtual_store_dir.clone(), Into::into)
         }),
         bit_dir: info.bit_dir.clone(),

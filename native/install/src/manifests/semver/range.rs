@@ -54,10 +54,11 @@ fn parse_part(range: &str, flavor: Flavor) -> io::Result<Vec<Comparator>> {
     }
     let mut by_value = IndexMap::new();
     for comparator in comparators {
-        if comparator.value == NULL_SET {
+        let value = comparator.value.trim();
+        if value == NULL_SET {
             return Ok(vec![comparator]);
         }
-        by_value.insert(comparator.value.clone(), comparator);
+        by_value.insert(value.to_owned(), comparator);
     }
     if by_value.len() > 1 {
         by_value.shift_remove("");

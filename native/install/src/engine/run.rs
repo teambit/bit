@@ -62,7 +62,7 @@ pub async fn install(
         lockfile_attrs::write(root, attrs)?;
     }
     Ok(EngineResult {
-        dependencies_changed: outcome.added + outcome.removed > 0,
+        dependencies_changed: outcome.added.saturating_add(outcome.removed) > 0,
         deps_requiring_build,
         store_dir: outcome.store_dir,
     })

@@ -65,7 +65,7 @@ impl Multi {
 
 /// `semver.intersects(a, b)` of semver 6 on two range strings.
 pub(crate) fn ranges_intersect(left: &str, right: &str) -> io::Result<bool> {
-    Range::parse(left, Flavor::V6)?.intersects(&Range::parse(right, Flavor::V6)?)
+    Range::parse(left.trim(), Flavor::V6)?.intersects(&Range::parse(right.trim(), Flavor::V6)?)
 }
 
 fn all_pairs_intersect(ranges: &[Range]) -> io::Result<bool> {

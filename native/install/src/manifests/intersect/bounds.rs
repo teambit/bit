@@ -44,7 +44,7 @@ pub(super) fn is_equals(comparator: &Comparator) -> bool {
 
 /// `stripComparatorOperator`.
 pub(super) fn strip_operator(comparator: &Comparator) -> io::Result<Comparator> {
-    if comparator.operator.is_empty() {
+    if comparator.operator.trim().is_empty() {
         return Ok(comparator.clone());
     }
     Comparator::parse(&version_text(comparator))

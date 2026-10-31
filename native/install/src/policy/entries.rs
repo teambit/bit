@@ -143,7 +143,9 @@ fn array_entry(
     let name = item
         .get("name")
         .or_else(|| item.get("packageName"))?
-        .as_str()?;
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())?;
     let version = string(
         item.get("version")
             .or_else(|| item.get("supportedRange")),

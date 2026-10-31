@@ -125,7 +125,7 @@ impl Node {
 /// integer range become integers.
 fn number(value: f64) -> Value {
     const SAFE: f64 = 9_007_199_254_740_991.0;
-    if value.fract() == 0.0 && value.abs() <= SAFE {
+    if value.is_finite() && value.fract() == 0.0 && value.abs() <= SAFE {
         return Value::Number(Number::from(value as i64));
     }
     Number::from_f64(value).map_or(Value::Null, Value::Number)

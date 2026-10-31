@@ -83,6 +83,7 @@ impl ModelData {
                     .get("data")?
                     .get("packageName")?
                     .as_str()
+                    .map(str::trim)
             });
         if let Some(name) = stored.filter(|name| !name.is_empty()) {
             return name.to_owned();

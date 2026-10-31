@@ -237,7 +237,10 @@ fn packages(
             version.clone_from(model);
         }
     }
-    let typescript = file.ends_with(".ts") || file.ends_with(".tsx");
+    let typescript = file.ends_with(".ts")
+        || file.ends_with(".tsx")
+        || file.ends_with(".mts")
+        || file.ends_with(".cts");
     if typescript {
         let names = found.keys().chain(tree.missing.iter());
         let types: Vec<(String, String)> =

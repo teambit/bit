@@ -33,10 +33,11 @@ fn set_root(deduped: &mut Deduped, field: Field, name: &str, version: &str) {
 /// `handlePreserved`: the workspace policy version goes to the root.
 fn handle_preserved(deduped: &mut Deduped, name: &str, entry: &IndexEntry) -> io::Result<bool> {
     let Some((version, field)) = &entry.preserved else { return Ok(true) };
+    let version = version.trim();
     set_root(deduped, *field, name, version);
     let mut intersecting = Vec::new();
     for item in &entry.items {
-        intersecting.push(intersect(&[&item.range, version])?.is_some());
+        intersecting.push(intersect(&[item.range.trim(), version])?.is_some());
     }
     let mut kept = intersecting.into_iter();
     keep_in_components(deduped, name, &entry.items, |_| kept.next().unwrap_or(false));

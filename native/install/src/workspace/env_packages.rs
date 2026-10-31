@@ -23,7 +23,10 @@ pub fn external_env_packages(
 ) -> io::Result<IndexMap<String, String>> {
     let mut packages = IndexMap::new();
     for component in components {
-        let env = aspect_id_without_version(&component.env_id);
+        let env = aspect_id_without_version(component.env_id.trim());
+        if env.is_empty() {
+            continue;
+        }
         let local = components
             .iter()
             .any(|candidate| candidate.id.to_string_without_version() == env);

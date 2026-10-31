@@ -89,7 +89,7 @@ fn apply_model_peers(model: &ComponentModel, deps: &FieldMaps, detected: &mut De
     let ignore = ignored(deps, Lifecycle::Peer);
     let mut peers = IndexMap::new();
     for (name, version) in &model_peers {
-        if ignore.contains(name) {
+        if is_ignored_name(&ignore, name) {
             continue;
         }
         for field in [RUNTIME, DEV] {

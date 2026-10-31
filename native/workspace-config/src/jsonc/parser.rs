@@ -219,6 +219,9 @@ impl Parser {
     }
 
     fn walk(&mut self) -> io::Result<Node> {
+        if self.hosts.len() > 512 {
+            return Err(invalid("Maximum JSONC nesting depth exceeded"));
+        }
         let kind = self
             .current()
             .map(|token| token.kind.clone())

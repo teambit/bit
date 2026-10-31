@@ -63,7 +63,12 @@ fn env_package(input: &ManifestInput<'_>, env_id: &str) -> DependencyMap {
     }
     match (input.context.env_packages.get(bare), version_of(env_id)) {
         (Some(package), Some(version)) => {
-            DependencyMap::from([(package.clone(), snap_to_semver(version))])
+            let package = package.trim();
+            if package.is_empty() {
+                DependencyMap::new()
+            } else {
+                DependencyMap::from([(package.to_owned(), snap_to_semver(version))])
+            }
         }
         _ => DependencyMap::new(),
     }

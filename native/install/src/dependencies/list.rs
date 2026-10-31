@@ -103,6 +103,7 @@ fn resolve_extension_id(
 }
 
 fn extension_id(workspace: &Workspace<'_>, key: &str) -> Option<ComponentId> {
+    let key = key.trim();
     if key.starts_with("file:") {
         return None;
     }
@@ -111,11 +112,18 @@ fn extension_id(workspace: &Workspace<'_>, key: &str) -> Option<ComponentId> {
         return None;
     }
     let (scope, name) = id.split_once('/')?;
+    let (scope, name) = (scope.trim(), name.trim());
+    if scope.is_empty() || name.is_empty() {
+        return None;
+    }
     Some(ComponentId {
         scope: Some(scope.to_owned()),
         default_scope: None,
         name: name.to_owned(),
-        version: version.map(str::to_owned),
+        version: version
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+            .map(str::to_owned),
     })
 }
 

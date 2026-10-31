@@ -150,7 +150,16 @@ fn lane_info(lane: &Value) -> Option<LaneInfo> {
             .split_once('/')?;
         (scope.trim().to_owned(), name.trim().to_owned())
     } else {
-        (id.get("scope")?.as_str()?.to_owned(), id.get("name")?.as_str()?.to_owned())
+        (
+            id.get("scope")?
+                .as_str()?
+                .trim()
+                .to_owned(),
+            id.get("name")?
+                .as_str()?
+                .trim()
+                .to_owned(),
+        )
     };
     if scope.is_empty() || name.is_empty() {
         return None;
@@ -165,7 +174,12 @@ fn lane_info(lane: &Value) -> Option<LaneInfo> {
 fn throw_for_duplicate_root_dirs(path: &Path, json: &Map<String, Value>) -> io::Result<()> {
     let mut seen = HashSet::new();
     for (key, value) in json {
-        let Some(root_dir) = value.get("rootDir").and_then(Value::as_str) else {
+        let Some(root_dir) = value
+            .get("rootDir")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|root_dir| !root_dir.is_empty())
+        else {
             continue;
         };
         if !seen.insert(root_dir) {

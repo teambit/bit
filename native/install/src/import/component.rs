@@ -85,12 +85,14 @@ fn detached(component: &Value, key: &str) -> Vec<String> {
 fn merge_conflict(component: &Value, conflicts: &[Value]) -> io::Error {
     let id = format!(
         "{}/{}",
-        component["scope"].as_str().unwrap_or_default(),
-        component["name"].as_str().unwrap_or_default(),
+        component["scope"].as_str().map_or("", str::trim),
+        component["name"].as_str().map_or("", str::trim),
     );
     let versions: Vec<&str> = conflicts
         .iter()
         .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
         .collect();
     io::Error::other(format!(
         "error: versions conflict occurred while importing the component {id}. conflict version(s): {}

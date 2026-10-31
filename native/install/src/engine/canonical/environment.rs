@@ -41,7 +41,11 @@ impl Captured {
             }
             vars.insert(key.to_owned(), text);
         }
-        let cwd = PathBuf::from(payload.get("cwd")?.as_str()?.trim());
+        let raw_cwd = payload.get("cwd")?.as_str()?.trim();
+        if raw_cwd.contains('\0') {
+            return None;
+        }
+        let cwd = PathBuf::from(raw_cwd);
         cwd.is_absolute()
             .then_some(Self { vars, cwd })
     }

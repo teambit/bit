@@ -13,12 +13,15 @@ pub fn component_package_copies(
     root_components: &Path,
 ) -> io::Result<Vec<PathBuf>> {
     let injected = read_injected_deps(root)?;
-    let key = format!("node_modules/{}", component.package_name);
+    let pkg_name = component.package_name.trim();
+    let key = format!("node_modules/{pkg_name}");
     let mut directories = vec![root.join(&key)];
     if let Some(copies) = injected_copy_paths(&injected, &key, &component.root_dir) {
         directories.extend(
             copies
                 .iter()
+                .map(|path| path.trim())
+                .filter(|path| !path.is_empty())
                 .map(|path| root.join(path)),
         );
     } else {
@@ -27,7 +30,7 @@ pub fn component_package_copies(
         directories.extend(
             roots
                 .into_iter()
-                .map(|path| path.join(&component.package_name)),
+                .map(|path| path.join(pkg_name)),
         );
     }
     Ok(directories)

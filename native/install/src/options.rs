@@ -227,6 +227,7 @@ const FLAGS: [(&str, Option<&str>, Arity); 22] = [
 ];
 
 fn flag(name: &str) -> io::Result<Flag> {
+    let name = name.trim();
     let dashed = dash_case(name);
     FLAGS
         .iter()

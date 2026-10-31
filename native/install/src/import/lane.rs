@@ -93,7 +93,11 @@ pub async fn fetch_remote_lane(
     fetcher: &Fetcher<'_>,
     lane: &LaneId,
 ) -> io::Result<Option<RemoteLane>> {
-    let grouped = IndexMap::from([(lane.scope.clone(), vec![lane.to_request()])]);
+    let scope = lane.scope.trim();
+    if scope.is_empty() || lane.name.trim().is_empty() {
+        return Ok(None);
+    }
+    let grouped = IndexMap::from([(scope.to_owned(), vec![lane.to_request()])]);
     let fetched = match fetcher.fetch(&grouped, &FetchOptions::lanes()).await {
         Ok(fetched) => fetched,
         Err(error) if error.kind() == io::ErrorKind::NotFound && !lane.exported => return Ok(None),

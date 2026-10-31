@@ -38,7 +38,12 @@ pub fn merge_layers(global: &Value, scope: &Value, workspace: &Value) -> Map<Str
 /// `toEnvVariableName` replaces periods only; hyphens remain significant.
 #[must_use]
 pub fn environment_key(key: &str) -> String {
-    format!("BIT_CONFIG_{}", key.replace('.', "_").to_uppercase())
+    format!(
+        "BIT_CONFIG_{}",
+        key.trim()
+            .replace('.', "_")
+            .to_uppercase(),
+    )
 }
 
 /// Empty environment variables do not override a configured value.

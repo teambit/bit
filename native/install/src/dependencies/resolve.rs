@@ -112,6 +112,10 @@ impl<'a> Resolver<'a> {
         specifier: &str,
         typescript: bool,
     ) -> io::Result<Resolved> {
+        let specifier = specifier.trim();
+        if specifier.is_empty() {
+            return Ok(Resolved::Ignored);
+        }
         if specifier.starts_with('.') || specifier.starts_with('/') {
             return Ok(self.relative(component, file, specifier, typescript));
         }

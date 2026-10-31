@@ -284,29 +284,41 @@ fn importers(graph: &Graph, projects: &[Project], root: &Path) -> Map<String, Va
 }
 
 fn importer(root_edge: &Value, project: &Project) -> Map<String, Value> {
-    let mut importer = Map::new();
-    for dep_type in ["dependencies", "devDependencies", "optionalDependencies"] {
-        let mut deps = Map::new();
-        for (name, specifier) in project.manifest
-            .get(dep_type)
-            .and_then(Value::as_object)
-            .into_iter()
-            .flatten()
-        {
-            let Some(specifier) = specifier.as_str() else { continue };
-            let version = match specifier.strip_prefix("link:") {
-                Some(target) => {
-                    Some(format!("link:{}", posix(&relative(&project.dir, Path::new(target)))))
-                }
-                None => direct_dependency_ref(root_edge, name, specifier),
-            };
-            if let Some(version) = version {
-                deps.insert(name.clone(), json!({ "version": version, "specifier": specifier }));
+    ["dependencies", "devDependencies", "optionalDependencies"]
+        .into_iter()
+        .map(|dep_type| {
+            (dep_type.to_string(), Value::Object(importer_deps(root_edge, project, dep_type)))
+        })
+        .collect()
+}
+
+fn importer_deps(root_edge: &Value, project: &Project, dep_type: &str) -> Map<String, Value> {
+    let mut deps = Map::new();
+    for (name, specifier) in project.manifest
+        .get(dep_type)
+        .and_then(Value::as_object)
+        .into_iter()
+        .flatten()
+    {
+        let name = name.trim();
+        let Some(specifier) = specifier
+            .as_str()
+            .map(str::trim)
+            .filter(|spec| !spec.is_empty() && !name.is_empty())
+        else {
+            continue;
+        };
+        let version = match specifier.strip_prefix("link:") {
+            Some(target) => {
+                Some(format!("link:{}", posix(&relative(&project.dir, Path::new(target.trim())))))
             }
+            None => direct_dependency_ref(root_edge, name, specifier),
+        };
+        if let Some(version) = version {
+            deps.insert(name.to_owned(), json!({ "version": version, "specifier": specifier }));
         }
-        importer.insert(dep_type.to_string(), Value::Object(deps));
     }
-    importer
+    deps
 }
 
 fn direct_dependency_ref(root_edge: &Value, name: &str, specifier: &str) -> Option<String> {

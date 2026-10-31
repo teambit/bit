@@ -40,7 +40,11 @@ pub(super) fn persist(
     for component in components {
         let package = root
             .join("node_modules")
-            .join(Path::new(&component.package_name).components().collect::<std::path::PathBuf>());
+            .join(
+                Path::new(component.package_name.trim())
+                    .components()
+                    .collect::<std::path::PathBuf>(),
+            );
         if is_symlink(&package) {
             remove_path(&package)?;
         }

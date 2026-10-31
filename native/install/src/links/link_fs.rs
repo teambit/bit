@@ -265,7 +265,12 @@ pub(super) fn hard_link_directory(src: &Path, dest_dirs: &[PathBuf]) -> io::Resu
     if dest_dirs.is_empty() {
         return Ok(());
     }
-    for entry in fs::read_dir(src)? {
+    let entries = match fs::read_dir(src) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error),
+    };
+    for entry in entries {
         let entry = entry?;
         if entry.file_name() == "node_modules" {
             continue;

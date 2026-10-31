@@ -247,7 +247,11 @@ impl<'a> Parents<'a> {
             .into_iter()
             .flatten()
         {
-            if let Some(hash) = version["hash"].as_str() {
+            if let Some(hash) = version["hash"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+            {
                 known.insert(hash.to_string(), hashes(&version["parents"]));
             }
         }

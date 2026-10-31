@@ -31,7 +31,13 @@ struct Parts<'a> {
 
 impl<'a> Parts<'a> {
     fn new(groups: &[Option<&'a str>], offset: usize) -> Self {
-        let group = |index: usize| groups.get(index).copied().flatten();
+        let group = |index: usize| {
+            groups
+                .get(index)
+                .copied()
+                .flatten()
+                .map(str::trim)
+        };
         Parts {
             major: group(offset).unwrap_or_default(),
             minor: group(offset + 1),
