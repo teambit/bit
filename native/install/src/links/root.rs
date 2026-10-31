@@ -269,7 +269,7 @@ fn core_aspect_source_dir(info: &HostInfo, aspect: &CoreAspect, root: &Path) -> 
 /// `hasCompiledMain`: the package's `main` (default `index.js`) exists.
 fn has_compiled_main(package_dir: &Path) -> bool {
     let Ok(text) = fs::read_to_string(package_dir.join("package.json")) else { return false };
-    let Ok(manifest) = serde_json::from_str::<serde_json::Value>(&text) else { return false };
+    let Ok(manifest) = crate::jsonc::parse(&text) else { return false };
     let main = manifest
         .get("main")
         .and_then(|main| main.as_str())

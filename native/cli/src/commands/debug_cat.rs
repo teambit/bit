@@ -61,7 +61,7 @@ fn parse_object_options(args: &[&str]) -> Option<ObjectOptions> {
             "-ps" | "-sp" => (opts.pretty, opts.stringify) = (true, true),
             "--headers" | "--headers=true" => opts.headers = true,
             "--headers=false" => opts.headers = false,
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             val if !val.starts_with('-') && !val.is_empty() && opts.hash.is_empty() => {
                 val.clone_into(&mut opts.hash);
             }
@@ -90,7 +90,7 @@ fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
             }
             "-j" | "--json" | "--json=true" => opts.json = true,
             "--json=false" => opts.json = false,
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             val if !val.starts_with('-') && !val.is_empty() && opts.id.is_empty() => {
                 val.clone_into(&mut opts.id);
             }

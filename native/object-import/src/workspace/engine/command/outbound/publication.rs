@@ -331,7 +331,8 @@ impl Prepared {
 
 fn prepare_refs(before: Option<&[u8]>, scope: &str, selected: &[Selected]) -> io::Result<Vec<u8>> {
     let mut rows: Vec<Value> = match before {
-        Some(bytes) => serde_json::from_slice(bytes)?,
+        Some(bytes) => crate::parse_jsonc(bytes)
+            .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))?,
         None => Vec::new(),
     };
     if rows.len() > 4096 {
@@ -351,7 +352,11 @@ fn set_ref(rows: &mut Vec<Value>, scope: &str, item: &Selected) -> io::Result<()
     let matches: Vec<usize> = rows
         .iter()
         .enumerate()
-        .filter(|(_, row)| row["id"]["scope"] == scope && row["id"]["name"] == item.name)
+        .filter(|(_, row)| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, &item.name,
+            )
+        })
         .map(|(index, _)| index)
         .collect();
     let value = json!({"id":{"scope":scope,"name":item.name},"head":item.head});

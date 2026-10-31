@@ -71,7 +71,7 @@ fn check_file_remote(path: &Path, scope: &str) -> io::Result<()> {
     if !path.is_absolute() || !fs::symlink_metadata(path)?.is_dir() {
         return Err(invalid("outbound file remote path"));
     }
-    let config: Value = serde_json::from_slice(&fs::read(path.join("scope.json"))?)?;
+    let config: Value = crate::parse_jsonc(&fs::read(path.join("scope.json"))?)?;
     if config["name"] != scope {
         return Err(invalid("outbound file remote scope"));
     }
@@ -214,7 +214,7 @@ impl Actions {
 
 pub(super) fn network(retained: &Retained) -> io::Result<Network> {
     let config = &retained.network.global;
-    let local: Value = serde_json::from_slice(&fs::read(
+    let local: Value = crate::parse_jsonc(&fs::read(
         crate::scope_path(&retained.network.root).join("scope.json"),
     )?)?;
     let local_name = local["name"].as_str().ok_or_else(|| invalid("outbound local scope"))?;

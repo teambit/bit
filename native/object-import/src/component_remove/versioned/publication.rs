@@ -82,12 +82,10 @@ fn write_lanes(plans: &[VersionedPlan]) -> io::Result<()> {
         !plans
             .iter()
             .any(|plan| {
-                plan.workspace.identity
-                    == format!(
-                        "{}/{}",
-                        row["id"]["scope"].as_str().unwrap_or_default(),
-                        row["id"]["name"].as_str().unwrap_or_default(),
-                    )
+                let (scope, name) = plan.workspace.identity
+                    .split_once('/')
+                    .unwrap_or(("", &plan.workspace.identity));
+                crate::component_remove::lane::matches_component_entry(row, scope, name)
             })
     });
     fs::write(&first.path, outbound::encode_object(&first.hash, "Lane", &value)?)

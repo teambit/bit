@@ -25,7 +25,7 @@ fn read_remote_model(scope: &Path, bare: &str, id: &str) -> io::Result<Value> {
         .unwrap_or(("", bare));
     if let Ok(file) = std::fs::File::open(scope.join("index.json")) {
         let index: Value =
-            serde_json::from_slice(&crate::read_budget::Budget::new(32 * 1024 * 1024).read(file)?)?;
+            crate::parse_jsonc(&crate::read_budget::Budget::new(32 * 1024 * 1024).read(file)?)?;
         let rows = index["components"]
             .as_array()
             .or_else(|| index.as_array())
@@ -33,9 +33,10 @@ fn read_remote_model(scope: &Path, bare: &str, id: &str) -> io::Result<Value> {
         if let Some(row) = rows
             .iter()
             .find(|row| {
-                let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+                let (row_scope, row_name) =
+                    super::super::batch::repository::row_id_parts(&row["id"]);
                 row["isSymlink"] != true
-                    && row["id"]["name"].as_str() == Some(target_name)
+                    && row_name == target_name
                     && (row_scope == target_scope || row_scope.is_empty())
             })
         {
@@ -80,7 +81,7 @@ pub(super) fn http(items: &[ObjectItem], id: &str) -> io::Result<bool> {
     if kind != "Version" {
         return Err(invalid("recovery remote Version type"));
     }
-    let version: Value = serde_json::from_slice(body)?;
+    let version: Value = crate::parse_jsonc(body)?;
     for file in
         version["files"].as_array().ok_or_else(|| invalid("recovery remote Version sources"))?
     {
@@ -127,7 +128,7 @@ pub(crate) fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Opt
     Ok((objects, model))
 }
 fn matching_model(body: &[u8], id: &str) -> io::Result<Option<Value>> {
-    let value: Value = serde_json::from_slice(body)?;
+    let value: Value = crate::parse_jsonc(body)?;
     let bare = id.split('@').next().unwrap_or(id);
     let (target_scope, target_name) = bare
         .split_once('/')
@@ -141,7 +142,7 @@ pub(crate) fn version_hash(model: &Value, id: &str) -> io::Result<String> {
     let version = id
         .rsplit_once('@')
         .map(|(_, version)| version)
-        .filter(|version| !version.is_empty() && *version != "latest");
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"));
     let hash = version
         .map(|version| {
             model["versions"][version]

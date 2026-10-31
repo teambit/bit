@@ -43,13 +43,7 @@ fn selected_parents(
         return Err(invalid("outbound rewritten lane history"));
     }
     let origin = &version["origin"]["lane"];
-    let same_lane = origin["scope"] == scope && origin["name"] == name;
-    let any_lane = origin["scope"]
-        .as_str()
-        .is_some_and(|value| !value.is_empty())
-        && origin["name"]
-            .as_str()
-            .is_some_and(|value| !value.is_empty());
+    let (same_lane, any_lane) = origin_lane_flags(origin, scope, name);
     if hash != head && !same_lane && !any_lane {
         return Ok(None);
     }
@@ -63,6 +57,25 @@ fn selected_parents(
         })
         .collect::<io::Result<Vec<_>>>()
         .map(Some)
+}
+
+fn origin_lane_flags(origin: &Value, scope: &str, name: &str) -> (bool, bool) {
+    if let Some((orig_scope, orig_name)) = origin
+        .as_str()
+        .and_then(|raw| raw.split_once('/'))
+    {
+        let same = orig_scope == scope && orig_name == name;
+        let any = !orig_scope.is_empty() && !orig_name.is_empty();
+        return (same, any);
+    }
+    let same = origin["scope"] == scope && origin["name"] == name;
+    let any = origin["scope"]
+        .as_str()
+        .is_some_and(|value| !value.is_empty())
+        && origin["name"]
+            .as_str()
+            .is_some_and(|value| !value.is_empty());
+    (same, any)
 }
 
 pub(super) fn selected_versions(
@@ -128,7 +141,7 @@ pub(super) fn check_new_cross_scope_conflict(
     let Ok(bytes) = std::fs::read(root.join("index.json")) else {
         return Ok(());
     };
-    let index: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+    let index: Value = crate::parse_jsonc(&bytes).map_err(io::Error::other)?;
     if index["components"]
         .as_array()
         .or_else(|| index.as_array())

@@ -61,6 +61,19 @@ fn ignored(finish: &Value) -> io::Result<Vec<Vec<String>>> {
 }
 
 fn identity(value: &Value) -> io::Result<String> {
+    if let Some(raw) = value.as_str() {
+        let (bare, ver) = raw
+            .rsplit_once('@')
+            .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
+        let (scope, name) = bare
+            .split_once('/')
+            .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
+            .ok_or_else(|| invalid("status cached dependency scope"))?;
+        return Ok(match ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")) {
+            Some(ver) => format!("{scope}/{name}@{ver}"),
+            None => format!("{scope}/{name}"),
+        });
+    }
     let name = value["name"]
         .as_str()
         .filter(|text| !text.is_empty())
@@ -76,7 +89,7 @@ fn identity(value: &Value) -> io::Result<String> {
     {
         let version =
             version.as_str().ok_or_else(|| invalid("status cached dependency version"))?;
-        if !version.is_empty() && version != "latest" {
+        if !version.is_empty() && !matches!(version, "latest" | "head") {
             identity.push('@');
             identity.push_str(version);
         }

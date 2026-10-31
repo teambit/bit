@@ -11,18 +11,21 @@ pub(super) struct Reported {
 
 impl Reported {
     pub(super) fn prepare(selected: &LaneSelected) -> io::Result<Self> {
-        let removed = selected.lane["components"]
-            .as_array()
-            .ok_or_else(|| invalid("outbound lane components"))?
-            .iter()
-            .filter(|row| row["isDeleted"] == true || row["isRemoved"] == true)
-            .filter_map(|row| {
-                let scope = row["id"]["scope"].as_str()?;
-                let name = row["id"]["name"].as_str()?;
-                let identity = format!("{scope}/{name}");
-                selected.components.ids.contains(&identity).then_some(identity)
-            })
-            .collect();
+        let removed =
+            selected.lane["components"]
+                .as_array()
+                .ok_or_else(|| invalid("outbound lane components"))?
+                .iter()
+                .filter(|row| row["isDeleted"] == true || row["isRemoved"] == true)
+                .filter_map(|row| {
+                    let (scope, name) =
+                        crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(
+                            row,
+                        )?;
+                    let identity = format!("{scope}/{name}");
+                    selected.components.ids.contains(&identity).then_some(identity)
+                })
+                .collect();
         Ok(Self { updates: selected_update_ids(selected)?, removed })
     }
 }

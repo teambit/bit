@@ -148,15 +148,37 @@ fn exists_in_scope_index(root: &Path, bare: &str) -> bool {
     let Ok(bytes) = fs::read(index_path) else {
         return false;
     };
-    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else {
+    let Ok(index) = bit_object_import::parse_jsonc(&bytes) else {
         return false;
     };
     let Some(rows) = index["components"].as_array().or_else(|| index.as_array()) else {
         return false;
     };
-    let target_name = bare.split_once('/').map_or(bare, |(_, name)| name);
+    let (target_scope, target_name) = bare
+        .split_once('/')
+        .map_or((None, bare), |(scope, name)| (Some(scope), name));
     rows.iter()
-        .any(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(target_name))
+        .any(|row| row["isSymlink"] != true && row_matches_bare(row, target_scope, target_name))
+}
+
+fn row_matches_bare(row: &Value, target_scope: Option<&str>, target_name: &str) -> bool {
+    let (row_scope, row_name) = if let Some(name) = row["id"]["name"].as_str() {
+        (row["id"]["scope"].as_str(), name)
+    } else if let Some(raw) = row["id"]
+        .as_str()
+        .map(|raw| raw.split('@').next().unwrap_or(raw))
+    {
+        raw.split_once('/')
+            .map_or((None, raw), |(scope, name)| (Some(scope), name))
+    } else {
+        return false;
+    };
+    row_name == target_name
+        && target_scope.is_none_or(|expected| {
+            row_scope
+                .filter(|scope| !scope.is_empty())
+                .is_none_or(|actual| actual == expected)
+        })
 }
 
 fn read_logs(root: &Path, id: &ComponentId) -> Result<Vec<Value>, Failure> {

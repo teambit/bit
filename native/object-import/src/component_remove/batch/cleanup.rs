@@ -113,7 +113,7 @@ fn manifest(root: &Path, packages: &[String]) -> io::Result<Option<Change>> {
     let Some(before) = read_optional(&path)? else {
         return Ok(None);
     };
-    let mut value: Value = serde_json::from_slice(&before).map_err(io::Error::other)?;
+    let mut value: Value = crate::parse_jsonc(&before)?;
     let Some(dependencies) = value.get_mut("dependencies") else {
         return Ok(None);
     };
@@ -136,12 +136,11 @@ fn staged(root: &Path, bitmap: &Value, identities: &[&str]) -> io::Result<Option
     let Some(before) = read_optional(&path)? else {
         return Ok(None);
     };
-    let mut value: Value = serde_json::from_slice(&before).map_err(io::Error::other)?;
+    let mut value: Value = crate::parse_jsonc(&before)?;
     let rows = value.as_array_mut().ok_or_else(|| invalid("stash staged configuration"))?;
     let length = rows.len();
     rows.retain(|row| {
-        let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-        let row_name = row["id"]["name"].as_str().unwrap_or_default();
+        let (row_scope, row_name) = crate::component_remove::lane::lane_id_parts(&row["id"]);
         let scoped = format!("{row_scope}/{row_name}");
         !identities
             .iter()
@@ -177,8 +176,7 @@ fn staged_path(root: &Path, bitmap: &Value) -> io::Result<PathBuf> {
         .get("_bit_lane")
         .and_then(|lane| lane.get("id"))
     {
-        let scope = id["scope"].as_str().ok_or_else(|| invalid("stash staged lane scope"))?;
-        let name = id["name"].as_str().ok_or_else(|| invalid("stash staged lane name"))?;
+        let (scope, name) = crate::component_remove::lane::lane_id_parts(id);
         if [scope, name]
             .iter()
             .any(|part| {

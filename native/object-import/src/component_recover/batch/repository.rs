@@ -6,7 +6,7 @@ pub(super) fn index(batch: &mut Batch) -> io::Result<Value> {
         .read(&path)?
         .map_or_else(
             || Ok(serde_json::json!({"components":[],"lanes":[]})),
-            |bytes| serde_json::from_slice(&bytes).map_err(io::Error::other),
+            |bytes| crate::parse_jsonc(&bytes),
         )
 }
 pub(super) fn object(batch: &mut Batch, hash: &str, kind: &str) -> io::Result<Option<Value>> {
@@ -37,15 +37,12 @@ pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> 
     let rows: Vec<_> = rows
         .iter()
         .filter(|row| {
+            let (row_scope, row_name) = row_id_parts(&row["id"]);
             row["isSymlink"] != true
-                && (format!(
-                    "{}/{}",
-                    row["id"]["scope"].as_str().unwrap_or_default(),
-                    row["id"]["name"].as_str().unwrap_or_default(),
-                ) == bare
+                && (format!("{row_scope}/{row_name}") == bare
                     || (local_name.is_some()
-                        && local_name == row["id"]["name"].as_str()
-                        && row["id"]["scope"].as_str().is_none_or(str::is_empty)))
+                        && local_name == Some(row_name)
+                        && row_scope.is_empty()))
         })
         .collect();
     if rows.len() > 1 {
@@ -56,6 +53,21 @@ pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> 
         return object(batch, hash, "Component");
     }
     fallback_model(batch, bare, local_name)
+}
+
+pub(crate) fn row_id_parts(id: &Value) -> (&str, &str) {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        return bare
+            .split_once('/')
+            .unwrap_or(("", bare));
+    }
+    let scope = id["scope"].as_str().unwrap_or_default();
+    let name = id["name"]
+        .as_str()
+        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .unwrap_or_default();
+    (scope, name)
 }
 
 fn fallback_model(
@@ -88,9 +100,14 @@ pub(super) fn lane(batch: &mut Batch) -> io::Result<Option<Value>> {
     } else {
         index["lanes"].as_array().ok_or_else(|| invalid("recovery lane index"))?
     };
+    let (target_scope, target_name) = row_id_parts(&id);
     let row = rows
         .iter()
-        .find(|row| row["id"] == id)
+        .find(|row| {
+            row["id"] == id
+                || (!target_name.is_empty()
+                    && row_id_parts(&row["id"]) == (target_scope, target_name))
+        })
         .ok_or_else(|| unsupported("recovery current lane unavailable"))?;
     object(batch, row["hash"].as_str().ok_or_else(|| invalid("recovery Lane hash"))?, "Lane")
 }
@@ -102,8 +119,8 @@ pub(super) fn head(batch: &mut Batch, bare: &str, model: &Value) -> io::Result<O
             .and_then(|rows| {
                 rows.iter()
                     .find(|row| {
-                        let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-                        (row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name
+                        let (row_scope, row_name) = row_id_parts(&row["id"]);
+                        (row_scope == scope || row_scope.is_empty()) && row_name == name
                     })
             })
         {
@@ -117,7 +134,7 @@ pub(super) fn version(batch: &mut Batch, id: &str, model: &Value) -> io::Result<
         .rsplit_once('@')
         .map_or((id, None), |(id, version)| (id, Some(version)));
     let hash = version
-        .filter(|version| !version.is_empty() && *version != "latest")
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
         .map(|version| {
             model["versions"][version]
                 .as_str()

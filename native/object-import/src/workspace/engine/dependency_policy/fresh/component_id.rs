@@ -16,7 +16,7 @@ pub(super) fn serialize(raw: &Value, unscoped: bool) -> io::Result<Value> {
     id.insert("name".into(), Value::String(name.into()));
     if let Some(version) = raw["version"]
         .as_str()
-        .filter(|version| !version.is_empty() && *version != "latest")
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
     {
         id.insert("version".into(), Value::String(version.into()));
     }

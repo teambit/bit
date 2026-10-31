@@ -11,7 +11,7 @@ pub(super) fn validate(
 ) -> io::Result<()> {
     let bytes = proofs::read(&crate::scope_path(root).join("index.json"), reads)?
         .ok_or_else(|| invalid("lane dependent index absent"))?;
-    let index: Value = serde_json::from_slice(&bytes)?;
+    let index: Value = crate::parse_jsonc(&bytes)?;
     let objects = crate::scope_path(root).join("objects");
     let references = references(&objects, &index, reads)?;
     let (scope, name) = identity
@@ -97,23 +97,16 @@ fn references(
 }
 
 fn dependent_identity(model: &Value, row: &Value) -> io::Result<String> {
+    let (row_scope, row_name) = super::row_id_parts(&row["id"]);
     let scope = model["scope"]
         .as_str()
         .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["id"]["scope"]
-                .as_str()
-                .filter(|val| !val.is_empty())
-        })
+        .or_else(|| (!row_scope.is_empty()).then_some(row_scope))
         .ok_or_else(|| invalid("lane dependent scope"))?;
     let name = model["name"]
         .as_str()
         .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["id"]["name"]
-                .as_str()
-                .filter(|val| !val.is_empty())
-        })
+        .or_else(|| (!row_name.is_empty()).then_some(row_name))
         .ok_or_else(|| invalid("lane dependent name"))?;
     Ok(format!("{scope}/{name}"))
 }

@@ -72,7 +72,7 @@ impl Reader {
         if !has_history {
             return Ok(Some(false));
         }
-        let reference = if version.is_empty() || version == "latest" {
+        let reference = if matches!(version, "" | "latest" | "head") {
             model["head"].as_str().unwrap_or(version)
         } else {
             model["versions"][version]
@@ -180,10 +180,11 @@ fn pending(context: &Value, identity: &str) -> bool {
         .into_iter()
         .flatten()
         .any(|entry| {
-            format!(
-                "{}/{}",
-                entry["id"]["scope"].as_str().unwrap_or_default(),
-                entry["id"]["name"].as_str().unwrap_or_default(),
-            ) == identity
+            entry["id"].as_str() == Some(identity)
+                || format!(
+                    "{}/{}",
+                    entry["id"]["scope"].as_str().unwrap_or_default(),
+                    entry["id"]["name"].as_str().unwrap_or_default(),
+                ) == identity
         })
 }

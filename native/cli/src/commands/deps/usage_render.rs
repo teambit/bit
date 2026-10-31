@@ -3,7 +3,6 @@
 use super::usage::{MatchedTree, NodeId, TreeNode};
 use crate::commands::color::Chalk;
 use pnpm_lockfile::{Lockfile, PkgNameVerPeer, ProjectSnapshot};
-use serde_json::Value;
 use std::{collections::HashMap, fs, path::Path};
 
 pub(super) fn importer_tree_node(
@@ -44,9 +43,9 @@ fn importer_dep_field(importer: &ProjectSnapshot, alias: &str) -> Option<&'stati
 
 pub(super) fn read_importer_manifest(root: &Path, importer_id: &str) -> (String, String) {
     let dir = if importer_id == "." { root.to_path_buf() } else { root.join(importer_id) };
-    let parsed = fs::read_to_string(dir.join("package.json"))
+    let parsed = fs::read(dir.join("package.json"))
         .ok()
-        .and_then(|text| serde_json::from_str::<Value>(&text).ok());
+        .and_then(|bytes| bit_object_import::parse_jsonc(&bytes).ok());
     let name = parsed
         .as_ref()
         .and_then(|val| val["name"].as_str())
@@ -73,10 +72,10 @@ pub(super) fn resolve_display_name(root: &Path, pkg_name: &str) -> String {
         .join("node_modules")
         .join(pkg_name)
         .join("package.json");
-    if let Ok(text) = fs::read_to_string(pkg_json)
-        && let Ok(parsed) = serde_json::from_str::<Value>(&text)
-        && let (Some(scope), Some(name)) =
-            (parsed["componentId"]["scope"].as_str(), parsed["componentId"]["name"].as_str())
+    if let Ok(bytes) = fs::read(pkg_json)
+        && let Ok(parsed) = bit_object_import::parse_jsonc(&bytes)
+        && let Some(comp_id) = parsed.get("componentId")
+        && let Some((scope, name, _)) = super::resolve::parse_manifest_comp_id(comp_id)
     {
         return format!("{scope}/{name}");
     }

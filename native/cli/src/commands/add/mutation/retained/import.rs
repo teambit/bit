@@ -16,8 +16,9 @@ impl Retained {
         let current = self.rows
             .get(identity)
             .and_then(|row| row["version"].as_str())
-            .filter(|value| !value.is_empty() && *value != "latest");
-        let version = version.filter(|value| !value.is_empty() && *value != "latest");
+            .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"));
+        let version =
+            version.filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"));
         if current != version {
             self.rows.remove(identity);
         }

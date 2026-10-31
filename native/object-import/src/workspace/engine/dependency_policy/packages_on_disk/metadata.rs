@@ -21,7 +21,9 @@ pub(super) fn resolved(
         let identity = identity(id)?;
         let version = optional_string(id.get("version"))?;
         if concrete.is_some_and(|version| !version.is_empty())
-            && version.is_some_and(|version| !version.is_empty() && version != "latest")
+            && version.is_some_and(|version| {
+                !version.is_empty() && !matches!(version, "latest" | "head")
+            })
         {
             concrete = version;
         }
@@ -41,10 +43,14 @@ fn identity(value: &Value) -> io::Result<String> {
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("package component scope"))?;
     let version = optional_string(value.get("version"))?;
-    Ok(match version.filter(|version| !version.is_empty() && *version != "latest") {
-        Some(version) => format!("{scope}/{name}@{version}"),
-        None => format!("{scope}/{name}"),
-    })
+    Ok(
+        match version.filter(|version| {
+            !version.is_empty() && !matches!(*version, "latest" | "head")
+        }) {
+            Some(version) => format!("{scope}/{name}@{version}"),
+            None => format!("{scope}/{name}"),
+        },
+    )
 }
 fn optional_string(value: Option<&Value>) -> io::Result<Option<&str>> {
     match value {

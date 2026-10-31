@@ -65,8 +65,16 @@ fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
         .filter(|row| row["type"].as_str().unwrap_or("Component") == "Component")
         .filter(|row| row["isSymlink"] != true)
         .find(|row| {
-            let entry_scope = row["id"]["scope"].as_str().unwrap_or_default();
-            let entry_name = row["id"]["name"].as_str().unwrap_or_default();
+            let (entry_scope, entry_name) = if let Some(id_str) = row["id"].as_str() {
+                id_str
+                    .split_once('/')
+                    .unwrap_or(("", id_str))
+            } else {
+                (
+                    row["id"]["scope"].as_str().unwrap_or_default(),
+                    row["id"]["name"].as_str().unwrap_or_default(),
+                )
+            };
             entry_name == target_name && (entry_scope == target_scope || entry_scope.is_empty())
         })
         .and_then(|row| row["hash"].as_str())
@@ -74,7 +82,7 @@ fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
 }
 
 fn reference<'a>(model: &'a Value, target: &'a Target) -> io::Result<&'a str> {
-    let reference = if target.version.is_empty() || target.version == "latest" {
+    let reference = if matches!(target.version.as_str(), "" | "latest" | "head") {
         model["head"].as_str().ok_or_else(|| invalid("status unknown version"))?
     } else if merge_history::hash(&target.version).is_ok() {
         target.version.as_str()

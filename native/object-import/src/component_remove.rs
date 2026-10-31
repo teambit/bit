@@ -165,7 +165,7 @@ fn select_row_lane(
     version: Option<&str>,
     kind: RowKind,
 ) -> io::Result<Option<Lane>> {
-    let lane_name = bitmap["_bit_lane"]["id"]["name"].as_str().unwrap_or_default();
+    let (_, lane_name) = lane::lane_id_parts(&bitmap["_bit_lane"]["id"]);
     if bitmap["_bit_lane"].is_null() || lane_name.is_empty() || lane_name == "main" {
         if matches!(kind, RowKind::LaneSnap | RowKind::ExportedLane) {
             return Err(invalid("component is not on a lane"));
@@ -234,17 +234,14 @@ fn validate_no_model(root: &Path, scope: &str, name: &str) -> io::Result<()> {
     if !path.try_exists()? {
         return Ok(());
     }
-    let index: Value = serde_json::from_slice(&fs::read(path)?)?;
+    let index: Value = crate::parse_jsonc(&fs::read(path)?)?;
     let Some(rows) = index["components"].as_array().or_else(|| index.as_array()) else {
         return Err(invalid("component index"));
     };
     if rows
         .iter()
         .any(|component| {
-            let row_scope = component["id"]["scope"].as_str().unwrap_or_default();
-            component["isSymlink"] != true
-                && (row_scope == scope || row_scope.is_empty())
-                && component["id"]["name"] == name
+            component["isSymlink"] != true && lane::matches_component_entry(component, scope, name)
         })
     {
         return Err(invalid("component already has a local model"));

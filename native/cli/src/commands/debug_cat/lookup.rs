@@ -1,5 +1,8 @@
 pub(in crate::commands) use crate::commands::lane::scope_root::diagnose_component_lookup_error;
-use crate::commands::{color::Chalk, lane::scope_root::ScopeRoot};
+use crate::commands::{
+    color::Chalk,
+    lane::scope_root::{ScopeRoot, diagnose_version_error},
+};
 use serde_json::Value;
 use std::{fs, path::Path};
 
@@ -362,42 +365,14 @@ pub(in crate::commands) fn diagnose_cat_component_error(
     let lane_head = is_head_alias(ver)
         .then(|| current_lane_head(root, scope_dir, comp_scope.as_deref(), &comp_name))
         .flatten();
-    diagnose_version_error(scope_dir, &comp_id, &comp_val, ver, lane_head.as_deref(), chalk)
-}
-
-fn diagnose_version_error(
-    scope_dir: &Path,
-    comp_id: &str,
-    comp_val: &Value,
-    ver: &str,
-    lane_head: Option<&str>,
-    chalk: Chalk,
-) -> Option<String> {
-    if is_head_alias(ver) {
-        let ver_hash = lane_head
-            .map(str::to_owned)
-            .or_else(|| comp_val["head"].as_str().map(str::to_owned))?;
-        let ver_label = resolve_head_version_label(comp_val).unwrap_or_else(|| ver_hash.clone());
-        return bit_object_import::read_scope_object(scope_dir, &ver_hash)
-            .ok()?
-            .is_none()
-            .then(|| missing_version_on_fs_msg(&ver_label, comp_id));
-    }
-    let Some(ver_hash) = resolve_version_hash(comp_val, ver) else {
-        return Some(format!(
-            r#"error: version "{}" of component {} was not found."#,
-            chalk.bold(ver),
-            chalk.bold(comp_id),
-        ));
-    };
-    bit_object_import::read_scope_object(scope_dir, &ver_hash)
-        .ok()?
-        .is_none()
-        .then(|| missing_version_on_fs_msg(ver, comp_id))
-}
-
-fn missing_version_on_fs_msg(ver: &str, comp_id: &str) -> String {
-    format!(
-        "error: version \"{ver}\" of component {comp_id} was not found on the filesystem.\ntry running \"bit import\". if it doesn't help, try running \"bit import {comp_id} --objects\"",
+    diagnose_version_error(
+        scope_dir,
+        &comp_id,
+        &comp_val,
+        ver,
+        lane_head.as_deref(),
+        resolve_head_version_label(&comp_val).as_deref(),
+        resolve_version_hash(&comp_val, ver).as_deref(),
+        chalk,
     )
 }

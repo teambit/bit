@@ -118,7 +118,11 @@ fn component(
         .ok_or_else(|| invalid("export package index"))?;
     let Some(row) = rows
         .iter()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .filter(|row| row["isSymlink"] != true)
+        .find(|row| {
+            row["id"].as_str() == Some(identity)
+                || (row["id"]["scope"] == scope && row["id"]["name"] == name)
+        })
     else {
         return Ok(None);
     };
@@ -135,7 +139,7 @@ fn component(
     )?;
     let model = model::read_object(&objects, hash, "Component")?;
     let version_id = target["version"].as_str().ok_or_else(|| invalid("export package version"))?;
-    let hash = if version_id.is_empty() || version_id == "latest" {
+    let hash = if matches!(version_id, "" | "latest" | "head") {
         model["head"].as_str().unwrap_or(version_id)
     } else {
         model["versions"][version_id]

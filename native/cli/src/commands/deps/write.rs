@@ -205,7 +205,8 @@ fn write_to_package_json(root: &Path, dependencies: &Map<String, Value>) -> io::
         Err(err) if err.kind() == io::ErrorKind::NotFound => String::from("{}"),
         Err(err) => return Err(err),
     };
-    let mut value: Value = serde_json::from_str(&text).map_err(io::Error::other)?;
+    let mut value: Value =
+        bit_object_import::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?;
     let obj = value
         .as_object_mut()
         .ok_or_else(|| io::Error::other("package.json must hold an object"))?;

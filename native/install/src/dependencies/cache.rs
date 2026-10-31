@@ -47,7 +47,7 @@ pub fn read(
         return Ok(None);
     }
     let data: Value = match entry["data"].as_str() {
-        Some(text) => serde_json::from_str(text).map_err(io::Error::other)?,
+        Some(text) => bit_object_import::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?,
         None => return Ok(None),
     };
     Ok(Some(Detected::from_cache(&data)))
@@ -58,7 +58,7 @@ fn key(component: &WorkspaceComponent) -> String {
     let id = component.id.to_string_without_version();
     match component.id.version
         .as_deref()
-        .filter(|version| !version.is_empty() && *version != "latest")
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
     {
         Some(version) => format!("{id}@{version}"),
         None => id,

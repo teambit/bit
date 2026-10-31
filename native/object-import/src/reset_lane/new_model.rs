@@ -10,7 +10,7 @@ pub(super) fn remove_new_model(
     name: &str,
 ) -> io::Result<(ObjectChange, BytesChange)> {
     let before = fs::read(crate::scope_path(root).join("index.json"))?;
-    let mut index: Value = serde_json::from_slice(&before)?;
+    let mut index: Value = crate::parse_jsonc(&before)?;
     let rows =
         if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
             .ok_or_else(|| invalid("lane reset index components"))?;

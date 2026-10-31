@@ -1,4 +1,7 @@
-use super::{Kind, Versions, auto_snap_report, pattern_ids, squash_logs, validate_preparation};
+use super::{
+    Kind,
+    receipts::{Versions, auto_snap_report, pattern_ids, squash_logs, validate_preparation},
+};
 use serde_json::json;
 
 #[test]

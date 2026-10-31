@@ -33,7 +33,7 @@ pub(super) fn project(
     let rows = lane["components"].as_array_mut().ok_or_else(|| invalid("lane reset components"))?;
     if let Some(position) = rows
         .iter()
-        .position(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .position(|row| matches_component_row(&row["id"], scope, name))
     {
         if selection.keep_lane {
             rows[position]["head"] =
@@ -43,6 +43,15 @@ pub(super) fn project(
         }
         return Ok(());
     }
+    project_hidden(lane, &identity, selection)
+}
+
+fn matches_component_row(id: &Value, scope: &str, name: &str) -> bool {
+    let (row_scope, row_name) = super::row_id_parts(id);
+    (row_scope == scope || row_scope.is_empty()) && row_name == name
+}
+
+fn project_hidden(lane: &mut Value, identity: &str, selection: &Selection) -> io::Result<()> {
     let rows =
         lane["updateDependents"].as_array_mut().ok_or_else(|| invalid("lane reset hidden rows"))?;
     let position = rows

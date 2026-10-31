@@ -53,7 +53,7 @@ impl Objects<'_> {
         }
         if let Some(hash) = version["flattenedDependenciesRef"].as_str() {
             let body = self.body(hash, "Source")?;
-            let parsed = serde_json::from_slice::<Value>(&body).ok()?;
+            let parsed = crate::parse_jsonc(&body).ok()?;
             return parsed.as_array().cloned();
         }
         version["flattenedDependencies"].as_array().cloned()
@@ -98,7 +98,7 @@ impl Objects<'_> {
         version["flattenedEdgesRef"]
             .as_str()
             .and_then(|hash| self.body(hash, "Source"))
-            .and_then(|body| serde_json::from_slice::<Value>(&body).ok())
+            .and_then(|body| crate::parse_jsonc(&body).ok())
             .and_then(|edges| {
                 edges
                     .as_array()
@@ -108,7 +108,7 @@ impl Objects<'_> {
     }
 
     fn object(&self, hash: &str, kind: &str) -> Option<Value> {
-        serde_json::from_slice(&self.body(hash, kind)?).ok()
+        crate::parse_jsonc(&self.body(hash, kind)?).ok()
     }
 
     /// The body of the `kind` object `hash`, fetched or local.

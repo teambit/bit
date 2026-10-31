@@ -131,21 +131,14 @@ impl Scope {
 
     fn index_hash(&self, id: &str) -> Option<String> {
         let bytes = fs::read(self.path.join("index.json")).ok()?;
-        let index: Value = serde_json::from_slice(&bytes).ok()?;
+        let index = bit_object_import::parse_jsonc(&bytes).ok()?;
         let rows = index["components"].as_array().or_else(|| index.as_array())?;
         let (target_scope, target_name) = id
             .split_once('/')
             .map_or((None, id), |(scope, name)| (Some(scope), name));
         rows.iter()
             .find(|row| {
-                row["isSymlink"] != true
-                    && row["id"]["name"].as_str() == Some(target_name)
-                    && match target_scope {
-                        Some(scope) => row["id"]["scope"]
-                            .as_str()
-                            .is_none_or(|row_scope| row_scope == scope),
-                        None => true,
-                    }
+                row["isSymlink"] != true && index_row_matches(row, target_scope, target_name)
             })
             .and_then(|row| row["hash"].as_str())
             .map(str::to_owned)
@@ -154,7 +147,7 @@ impl Scope {
     /// The `Version` object of `scope/name` at `version` (a tag or a snap hash),
     /// or at the head when `version` is `None`.
     pub fn version(&self, id: &str, version: Option<&str>) -> io::Result<Option<Value>> {
-        let version = version.filter(|ver| !ver.is_empty() && *ver != "latest");
+        let version = version.filter(|ver| !matches!(*ver, "" | "latest" | "head"));
         let Some(model) = self.model(id)? else {
             return match version.filter(|version| is_hash(version)) {
                 Some(hash) => self.json(hash, "Version"),
@@ -184,6 +177,22 @@ impl Scope {
         };
         self.object(hash, "Source")
     }
+}
+
+fn index_row_matches(row: &Value, target_scope: Option<&str>, target_name: &str) -> bool {
+    if let Some(id_str) = row["id"].as_str() {
+        let (row_scope, row_name) = id_str
+            .split_once('/')
+            .unwrap_or(("", id_str));
+        return row_name == target_name
+            && target_scope.is_none_or(|scope| row_scope.is_empty() || row_scope == scope);
+    }
+    row["id"]["name"].as_str() == Some(target_name)
+        && target_scope.is_none_or(|scope| {
+            row["id"]["scope"]
+                .as_str()
+                .is_none_or(|row_scope| row_scope.is_empty() || row_scope == scope)
+        })
 }
 
 /// `isHash` of `@teambit/component-version`: 3 to 40 lowercase hex characters.

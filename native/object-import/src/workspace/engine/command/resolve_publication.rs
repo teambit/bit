@@ -124,14 +124,6 @@ struct Batch<'a> {
     removed_paths: Vec<PathBuf>,
 }
 
-#[cfg_attr(
-    dylint_lib = "perfectionist",
-    expect(
-        perfectionist::excessive_cognitive_complexity,
-        perfectionist::overly_long_function,
-        reason = "The publication batch checks selected and removed components together before any workspace write"
-    )
-)]
 fn batch<'a>(
     context: &'a Value,
     materials: &'a [resolve_snapshot::Material],
@@ -148,37 +140,44 @@ fn batch<'a>(
         removed_paths: Vec::new(),
     };
     for (material, version) in materials.iter().zip(versions) {
-        if version["identity"] != material.identity
-            || !output.identities.insert(material.identity.as_str())
-        {
-            return Err(invalid("resolve publication identity"));
-        }
-        let hash = version["hash"].as_str().ok_or_else(|| invalid("resolve publication hash"))?;
-        crate::merge_history::hash(hash)?;
-        let directory = directory(context, material)?;
-        if !material.hidden && resolve_snapshot::is_removed(&version["version"]) {
-            crate::checkout::plan::relative_path(directory)?;
-            if directory == "." || directory.is_empty() {
-                return Err(invalid("resolve removed directory"));
-            }
-            output.removed.push(material.identity.clone());
-            output.removed_paths.push(PathBuf::from(directory));
-        } else if !material.hidden {
-            output.updates.push(bitmap_update(
-                material,
-                version,
-                material.version_state.tagged_version.as_deref().unwrap_or(hash),
-            ));
-        }
-        output.inputs.push(finalization::Input {
-            identity: &material.identity,
-            directory,
-            hash,
-            semantic_version: material.version_state.tagged_version.as_deref(),
-            version: &version["version"],
-        });
+        add_material_to_batch(context, material, version, &mut output)?;
     }
     Ok(output)
+}
+
+fn add_material_to_batch<'a>(
+    context: &'a Value,
+    material: &'a resolve_snapshot::Material,
+    version: &'a Value,
+    output: &mut Batch<'a>,
+) -> io::Result<()> {
+    if version["identity"] != material.identity
+        || !output.identities.insert(material.identity.as_str())
+    {
+        return Err(invalid("resolve publication identity"));
+    }
+    let hash = version["hash"].as_str().ok_or_else(|| invalid("resolve publication hash"))?;
+    crate::merge_history::hash(hash)?;
+    let directory = directory(context, material)?;
+    if !material.hidden && resolve_snapshot::is_removed(&version["version"]) {
+        crate::checkout::plan::relative_path(directory)?;
+        if directory == "." || directory.is_empty() {
+            return Err(invalid("resolve removed directory"));
+        }
+        output.removed.push(material.identity.clone());
+        output.removed_paths.push(PathBuf::from(directory));
+    } else if !material.hidden {
+        let ver_str = material.version_state.tagged_version.as_deref().unwrap_or(hash);
+        output.updates.push(bitmap_update(material, version, ver_str));
+    }
+    output.inputs.push(finalization::Input {
+        identity: &material.identity,
+        directory,
+        hash,
+        semantic_version: material.version_state.tagged_version.as_deref(),
+        version: &version["version"],
+    });
+    Ok(())
 }
 
 fn bitmap_update(
@@ -236,13 +235,6 @@ fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Ve
         .collect()
 }
 
-#[cfg_attr(
-    dylint_lib = "perfectionist",
-    expect(
-        perfectionist::overly_long_function,
-        reason = "The resolution publication prepares bitmap, staged objects, and source removal as one validated transaction"
-    )
-)]
 pub(super) fn prepare(
     root: &Path,
     context: &Value,
@@ -254,35 +246,66 @@ pub(super) fn prepare(
 ) -> io::Result<Prepared> {
     let batch = batch(context, materials, versions)?;
     let lane_new = lane_new_ids(context, materials);
+    let bitmap = prepare_resolve_bitmap(root, context, materials, &batch, &lane_new, options)?;
+    let finalization = prepare_resolve_finalization(root, materials, &batch, &lane_new, options)?;
+    let mut proofs = Vec::new();
+    let controls = controls::prepare(root, pending, &batch.identities, &mut proofs)?;
+    let is_tag =
+        materials.iter().any(|material| material.version_state.tagged_version.is_some());
+    let output = Prepared {
+        bitmap,
+        finalization,
+        controls,
+        proofs,
+        reason: reason(receipt, is_tag),
+        removed_root: root.to_path_buf(),
+        removed: batch.removed_paths,
+    };
+    output.validate()?;
+    Ok(output)
+}
+
+fn prepare_resolve_bitmap(
+    root: &Path,
+    context: &Value,
+    materials: &[resolve_snapshot::Material],
+    batch: &Batch<'_>,
+    lane_new: &[String],
+    options: Options<'_>,
+) -> io::Result<bitmap::Prepared> {
     let original = fs::read(root.join(".bitmap"))?;
     let mut bitmap = bitmap::prepare_bytes(root, original, context, &batch.updates, &batch.removed)
         .map_err(|error| io::Error::new(error.kind(), format!("resolve bitmap: {error}")))?;
+    let update_ids = || {
+        batch.updates
+            .iter()
+            .map(|update| update.identity.clone())
+            .collect::<Vec<_>>()
+    };
     if materials.iter().any(|material| material.version_state.tagged_version.is_some()) {
-        bitmap.clear_next_versions(
-            context,
-            &batch.updates
-                .iter()
-                .map(|update| update.identity.clone())
-                .collect::<Vec<_>>(),
-        )?;
+        bitmap.clear_next_versions(context, &update_ids())?;
     }
     if options.snapshot {
-        bitmap.clear_config(
-            context,
-            &batch.updates
-                .iter()
-                .map(|update| update.identity.clone())
-                .collect::<Vec<_>>(),
-        )?;
+        bitmap.clear_config(context, &update_ids())?;
     }
-    bitmap.mark_lane_new(context, &lane_new)?;
+    bitmap.mark_lane_new(context, lane_new)?;
+    Ok(bitmap)
+}
+
+fn prepare_resolve_finalization(
+    root: &Path,
+    materials: &[resolve_snapshot::Material],
+    batch: &Batch<'_>,
+    lane_new: &[String],
+    options: Options<'_>,
+) -> io::Result<finalization::Prepared> {
     let mut finalization = if options.snapshot {
         finalization::prepare_snapshot_publication(root, &batch.inputs, &batch.removed)
     } else {
         finalization::prepare_publication(root, &batch.inputs, true, &batch.removed)
     }
     .map_err(|error| io::Error::new(error.kind(), format!("resolve finalization: {error}")))?;
-    finalization.mark_lane_new(root, &lane_new)?;
+    finalization.mark_lane_new(root, lane_new)?;
     finalization.resolve_licenses(root, &batch.inputs, &batch.removed)?;
     finalization.imported_index(root, options.imported_index)?;
     finalization.snapshot_index(
@@ -292,24 +315,7 @@ pub(super) fn prepare(
             .filter(|material| material.version_state.current_head.is_empty())
             .map(|material| material.identity.as_str()),
     )?;
-    let mut proofs = Vec::new();
-    let controls = controls::prepare(root, pending, &batch.identities, &mut proofs)?;
-    let output = Prepared {
-        bitmap,
-        finalization,
-        controls,
-        proofs,
-        reason: reason(
-            receipt,
-            materials
-                .iter()
-                .any(|material| material.version_state.tagged_version.is_some()),
-        ),
-        removed_root: root.to_path_buf(),
-        removed: batch.removed_paths,
-    };
-    output.validate()?;
-    Ok(output)
+    Ok(finalization)
 }
 
 impl Prepared {

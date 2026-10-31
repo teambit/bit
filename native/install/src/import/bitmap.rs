@@ -47,7 +47,9 @@ impl Id {
         Ok(Self {
             scope: scope.to_string(),
             name: name.to_string(),
-            version: version.filter(|version| !version.is_empty() && version != "latest"),
+            version: version.filter(|version| {
+                !version.is_empty() && !matches!(version.as_str(), "latest" | "head")
+            }),
         })
     }
 }
@@ -132,7 +134,7 @@ fn exported_id(key: &str, entry: &Value) -> Option<Id> {
         .as_str()
         .filter(|val| !val.is_empty())
         .or_else(|| key.split_once('@').map(|(_, ver)| ver))
-        .filter(|version| !version.is_empty() && *version != "latest");
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"));
     Some(Id {
         scope: scope.to_string(),
         name: name.to_string(),
@@ -142,9 +144,14 @@ fn exported_id(key: &str, entry: &Value) -> Option<Id> {
 
 fn lane(value: &Value) -> Option<LaneId> {
     let id = &value["id"];
-    Some(LaneId {
-        scope: id["scope"].as_str()?.to_string(),
-        name: id["name"].as_str()?.to_string(),
+    let (scope, name) = if let Some(raw) = id.as_str().or_else(|| value.as_str()) {
+        raw.split_once('/')?
+    } else {
+        (id["scope"].as_str()?, id["name"].as_str()?)
+    };
+    (!scope.is_empty() && !name.is_empty()).then(|| LaneId {
+        scope: scope.to_string(),
+        name: name.to_string(),
         exported: value["exported"].as_bool().unwrap_or(false),
     })
 }

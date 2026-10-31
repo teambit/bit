@@ -89,16 +89,11 @@ fn current_identity(input: &Prepare) -> io::Result<Option<(String, String)>> {
     if !input.ids.is_empty() {
         return Err(invalid("outbound explicit lane IDs require canonical stack"));
     }
-    let scope = current["id"]["scope"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .ok_or_else(|| invalid("outbound lane scope"))?
-        .to_owned();
-    let name = current["id"]["name"]
-        .as_str()
-        .filter(|value| !value.is_empty() && *value != "main")
-        .ok_or_else(|| invalid("outbound lane name"))?
-        .to_owned();
+    let (scope, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(current)
+            .filter(|(_, name)| *name != "main")
+            .map(|(scope, name)| (scope.to_owned(), name.to_owned()))
+            .ok_or_else(|| invalid("outbound lane identity"))?;
     Ok(Some((scope, name)))
 }
 
@@ -113,12 +108,16 @@ struct Loaded {
 
 fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
     let index: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("index.json"))?)?;
+        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("index.json"))?)?;
     let lane_row = index["lanes"]
         .as_array()
         .ok_or_else(|| invalid("outbound lane index"))?
         .iter()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .find(|row| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, name,
+            )
+        })
         .ok_or_else(|| invalid("outbound current lane missing"))?;
     let hash = lane_row["hash"]
         .as_str()
@@ -145,16 +144,18 @@ fn forked_from(lane: &Value, scope: &str, new_scope: bool) -> io::Result<Option<
         .get("forkedFrom")
         .filter(|value| !value.is_null())
         .map(|parent| {
-            let parent_scope = parent["scope"]
-                .as_str()
-                .filter(|val| !val.is_empty());
-            let parent_name = parent["name"]
-                .as_str()
-                .filter(|val| !val.is_empty());
-            parent_scope
-                .zip(parent_name)
-                .map(|(par_scope, par_name)| (par_scope.to_owned(), par_name.to_owned()))
-                .ok_or_else(|| invalid("outbound lane fork identity"))
+            let (parent_scope, parent_name) = if let Some(raw) = parent.as_str() {
+                raw.split_once('/').unwrap_or(("", raw))
+            } else {
+                (
+                    parent["scope"].as_str().unwrap_or_default(),
+                    parent["name"].as_str().unwrap_or_default(),
+                )
+            };
+            if parent_scope.is_empty() || parent_name.is_empty() {
+                return Err(invalid("outbound lane fork identity"));
+            }
+            Ok((parent_scope.to_owned(), parent_name.to_owned()))
         })
         .transpose()?;
     let cross_scope = forked_from
@@ -316,7 +317,9 @@ impl<'a> ComponentId<'a> {
         Ok(Self { scope, name, head, id: format!("{scope}/{name}") })
     }
     fn matches(&self, row: &Value) -> bool {
-        row["id"]["scope"] == self.scope && row["id"]["name"] == self.name
+        crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+            row, self.scope, self.name,
+        )
     }
 }
 
@@ -383,7 +386,8 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
         .join(scope)
         .join(name);
     match fs::read(path) {
-        Ok(bytes) => serde_json::from_slice(&bytes).map_err(io::Error::other),
+        Ok(bytes) => crate::parse_jsonc(&bytes)
+            .and_then(|val| serde_json::from_value(val).map_err(io::Error::other)),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(error) => Err(error),
     }

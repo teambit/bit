@@ -2,6 +2,8 @@
 
 pub(super) mod models;
 
+pub(super) use models::version_refs_without_parents;
+
 use super::inventory::ScopeInventory;
 use serde_json::Value;
 use std::{
@@ -313,59 +315,6 @@ fn version_parents(ver_val: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-pub(super) fn version_refs_without_parents(ver_val: &Value) -> Vec<String> {
-    let mut refs = Vec::new();
-    collect_file_refs(&ver_val["files"], &mut refs);
-    if let Some(exts) = ver_val["extensions"].as_array() {
-        for ext in exts {
-            collect_artifact_refs(&ext["artifacts"], &mut refs);
-            collect_artifact_refs(&ext["data"]["artifacts"], &mut refs);
-        }
-    }
-    for field in ["flattenedEdgesRef", "dependenciesGraphRef", "flattenedDependenciesRef"] {
-        if let Some(hash) = ver_val[field]
-            .as_str()
-            .filter(|val| !val.is_empty())
-        {
-            refs.push(hash.to_owned());
-        }
-    }
-    refs
-}
-
-fn collect_file_refs(files_val: &Value, refs: &mut Vec<String>) {
-    let Some(files) = files_val.as_array() else { return };
-    for file in files {
-        if let Some(hash) = file["file"]
-            .as_str()
-            .or_else(|| file["file"]["hash"].as_str())
-        {
-            refs.push(hash.to_owned());
-        }
-    }
-}
-
-fn collect_artifact_refs(artifacts_val: &Value, refs: &mut Vec<String>) {
-    let Some(artifacts) = artifacts_val.as_array() else { return };
-    for art in artifacts {
-        let Some(arr) = art["files"]["refs"]
-            .as_array()
-            .or_else(|| art["files"].as_array())
-        else {
-            continue;
-        };
-        for item in arr {
-            if let Some(hash) = item["ref"]
-                .as_str()
-                .or_else(|| item["ref"]["hash"].as_str())
-                .or_else(|| item["file"].as_str())
-            {
-                refs.push(hash.to_owned());
-            }
-        }
-    }
-}
-
 fn version_dependencies(scope_dir: &Path, ver_val: &Value) -> Vec<CompIdSpec> {
     let mut specs = collect_flattened_deps(scope_dir, ver_val);
     let Some(exts) = ver_val["extensions"].as_array() else { return specs };
@@ -383,7 +332,7 @@ fn collect_flattened_deps(scope_dir: &Path, ver_val: &Value) -> Vec<CompIdSpec> 
         else {
             return Vec::new();
         };
-        let Ok(Value::Array(items)) = serde_json::from_slice::<Value>(&body) else {
+        let Ok(Value::Array(items)) = bit_object_import::parse_jsonc(&body) else {
             return Vec::new();
         };
         return items

@@ -204,7 +204,7 @@ fn current_version(context: &Value, model: &Value, identity: &str) -> io::Result
         })
         .and_then(|row| row["version"].as_str());
     let reference = selected.and_then(|selected| {
-        if selected.is_empty() || selected == "latest" {
+        if selected.is_empty() || matches!(selected, "latest" | "head") {
             model["head"].as_str()
         } else {
             model["versions"]

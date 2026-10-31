@@ -41,7 +41,7 @@ pub(super) fn prepare(
 ) -> io::Result<Reconciled> {
     let mut exported = loaded.lane.clone();
     let scope_file: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
+        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
     let is_new = scope_file["lanes"]["new"]
         .as_array()
         .is_some_and(|rows| rows.iter().any(|row| row == name));
@@ -95,6 +95,10 @@ fn visible(lane: &Value, id: &str) -> bool {
                         .as_str()
                         .zip(row["id"]["name"].as_str())
                         .is_some_and(|(scope, name)| format!("{scope}/{name}") == id)
+                        || row["id"]
+                            .as_str()
+                            .map(|raw| raw.split('@').next().unwrap_or(raw))
+                            .is_some_and(|raw| raw == id)
                 })
         })
 }
@@ -175,7 +179,7 @@ fn decode_history(bytes: &[u8], hash: &str) -> io::Result<Value> {
         crate::merge_history::hash(hash)?,
         "VersionHistory",
     )?;
-    serde_json::from_slice(body).map_err(io::Error::other)
+    crate::parse_jsonc(body).map_err(io::Error::other)
 }
 fn reachable(rows: &[Value], local: &str, remote: &str) -> bool {
     let mut pending = vec![local];
@@ -228,7 +232,7 @@ fn fetch(input: &Prepare, host: &str, scope: &str, name: &str) -> io::Result<Opt
     }
 }
 fn file(path: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
-    let index: Value = serde_json::from_slice(&fs::read(path.join("index.json"))?)?;
+    let index: Value = crate::parse_jsonc(&fs::read(path.join("index.json"))?)?;
     let Some(rows) = index["lanes"].as_array() else {
         return if index.is_array() {
             Ok(None)
@@ -238,7 +242,11 @@ fn file(path: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
     };
     let Some(row) = rows
         .iter()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .find(|row| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, name,
+            )
+        })
     else {
         return Ok(None);
     };
@@ -249,7 +257,7 @@ fn file(path: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
 fn http(input: &Prepare, url: &str, scope: &str, name: &str) -> io::Result<Option<Value>> {
     let config = super::super::hub::configuration(input)?;
     let local: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
+        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
     let local_name = local["name"].as_str().ok_or_else(|| invalid("outbound local scope"))?;
     let network = Network::new(
         &config,
@@ -293,7 +301,7 @@ fn fetch_http(network: &Network, url: &str, scope: &str, name: &str) -> io::Resu
             crate::merge_history::hash(&item.hash)?,
             "Lane",
         )?;
-        let lane = validate_lane(serde_json::from_slice(body)?, scope, name)?;
+        let lane = validate_lane(crate::parse_jsonc(body)?, scope, name)?;
         if result.replace(lane).is_some() {
             return Err(invalid("outbound duplicate remote lane"));
         }

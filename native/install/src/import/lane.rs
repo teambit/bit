@@ -36,11 +36,9 @@ impl RemoteLane {
             .into_iter()
             .flatten()
             .filter_map(|entry| {
-                Some(Id {
-                    scope: entry["id"]["scope"].as_str()?.to_string(),
-                    name: entry["id"]["name"].as_str()?.to_string(),
-                    version: entry["head"].as_str().map(str::to_string),
-                })
+                let mut id = super::fs_remote::dependency_id(entry)?;
+                id.version = entry["head"].as_str().map(str::to_string);
+                Some(id)
             })
             .collect()
     }

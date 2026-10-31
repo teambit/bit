@@ -7,6 +7,7 @@
 //! aspect data holds after the component loads.
 
 pub mod cache;
+pub(crate) mod data;
 pub mod glob;
 
 pub use detect::definitely_typed;
@@ -18,7 +19,6 @@ mod apply;
 mod apply_late;
 mod builtins;
 mod component_model;
-mod data;
 mod detect;
 mod detectors;
 mod dev_files;

@@ -309,7 +309,7 @@ fn has_license(value: &Value) -> bool {
     }
 }
 fn json(bytes: &[u8]) -> io::Result<Value> {
-    serde_json::from_slice(bytes).map_err(io::Error::other)
+    crate::parse_jsonc(bytes)
 }
 fn pretty(value: &Value, newline: bool) -> io::Result<Vec<u8>> {
     let mut bytes = serde_json::to_vec_pretty(value).map_err(io::Error::other)?;

@@ -78,7 +78,7 @@ impl MergeConfig {
         else {
             return Ok(None);
         };
-        match serde_json::from_str(content) {
+        match crate::jsonc::parse(content) {
             Ok(value) => Ok(Some(value)),
             Err(_) if content.contains("<<<<<<<") || content.contains(">>>>>>>") => Ok(None),
             Err(error) => Err(io::Error::new(
@@ -101,7 +101,7 @@ impl MergeConfig {
         self.conflicts
             .get(id)
             .is_some_and(|content| {
-                serde_json::from_str::<Value>(content).is_err()
+                crate::jsonc::parse(content).is_err()
                     && (content.contains("<<<<<<<") || content.contains(">>>>>>>"))
             })
     }
@@ -149,9 +149,7 @@ fn load_unmerged(scope: &Path) -> io::Result<IndexMap<String, Value>> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(IndexMap::new()),
         Err(error) => return Err(error),
     };
-    let Value::Array(entries) = serde_json::from_str(&text)
-        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?
-    else {
+    let Value::Array(entries) = crate::jsonc::parse(&text)? else {
         return Ok(IndexMap::new());
     };
     let mut unmerged = IndexMap::new();
@@ -165,6 +163,17 @@ fn load_unmerged(scope: &Path) -> io::Result<IndexMap<String, Value>> {
 }
 
 fn unmerged_id(id: &Value) -> Option<String> {
+    if let Some(raw) = id
+        .as_str()
+        .filter(|raw| !raw.is_empty())
+    {
+        return Some(
+            raw.split('@')
+                .next()
+                .unwrap_or(raw)
+                .to_owned(),
+        );
+    }
     let name = id
         .get("name")?
         .as_str()

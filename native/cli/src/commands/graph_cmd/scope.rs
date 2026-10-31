@@ -103,8 +103,8 @@ fn validate_bare_scope(scope_dir: &Path) -> Result<String, Failure> {
     }
     let bytes =
         fs::read(scope_dir.join("scope.json")).map_err(|err| Failure::Declined(err.to_string()))?;
-    let val: Value =
-        serde_json::from_slice(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
+    let val =
+        bit_object_import::parse_jsonc(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
     val["name"]
         .as_str()
         .filter(|name| !name.is_empty())
@@ -121,8 +121,8 @@ fn load_local_scope_components(
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
         Err(err) => return Err(Failure::Declined(err.to_string())),
     };
-    let index: Value =
-        serde_json::from_slice(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
+    let index =
+        bit_object_import::parse_jsonc(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -135,23 +135,35 @@ fn load_local_scope_components(
         .iter()
         .filter(|row| row["isSymlink"] != true)
     {
-        if row["id"]["scope"].as_str() != Some(scope_name) {
+        let (row_scope, row_name) = index_row_scope_and_name(row);
+        if row_scope != Some(scope_name) {
             continue;
         }
-        if let Some(entry) = load_index_row_version(scope_dir, scope_name, row)? {
+        if let Some(entry) = load_index_row_version(scope_dir, scope_name, row, row_name)? {
             list.push(entry);
         }
     }
     Ok(list)
 }
 
+fn index_row_scope_and_name(row: &Value) -> (Option<&str>, Option<&str>) {
+    if let Some(id_str) = row["id"].as_str() {
+        return match id_str.split_once('/') {
+            Some((sc, nm)) => (Some(sc), Some(nm)),
+            None => (None, Some(id_str)),
+        };
+    }
+    (row["id"]["scope"].as_str(), row["id"]["name"].as_str())
+}
+
 fn load_index_row_version(
     scope_dir: &Path,
     scope_name: &str,
     row: &Value,
+    row_name: Option<&str>,
 ) -> Result<Option<(String, Value)>, Failure> {
-    let name = row["id"]["name"]
-        .as_str()
+    let name = row_name
+        .filter(|name| !name.is_empty())
         .ok_or_else(|| Failure::Declined("missing component name".into()))?;
     let hash =
         row["hash"].as_str().ok_or_else(|| Failure::Declined("missing component hash".into()))?;
@@ -249,8 +261,11 @@ fn read_flattened_dependencies(scope_dir: &Path, ver_val: &Value) -> Result<Vec<
             .ok()
             .flatten()
             .ok_or_else(|| Failure::Declined("missing flattenedDependenciesRef object".into()))?;
-        let items: Vec<Value> =
-            serde_json::from_slice(&body).map_err(|err| Failure::Declined(err.to_string()))?;
+        let Value::Array(items) = bit_object_import::parse_jsonc(&body)
+            .map_err(|err| Failure::Declined(err.to_string()))?
+        else {
+            return Err(Failure::Declined("invalid flattenedDependenciesRef array".into()));
+        };
         return items
             .iter()
             .map(parse_dep_item)
@@ -279,8 +294,11 @@ fn read_flattened_edges(
             .ok()
             .flatten()
             .ok_or_else(|| Failure::Declined("missing flattenedEdgesRef object".into()))?;
-        let items: Vec<Value> =
-            serde_json::from_slice(&body).map_err(|err| Failure::Declined(err.to_string()))?;
+        let Value::Array(items) = bit_object_import::parse_jsonc(&body)
+            .map_err(|err| Failure::Declined(err.to_string()))?
+        else {
+            return Err(Failure::Declined("invalid flattenedEdgesRef array".into()));
+        };
         return items
             .iter()
             .map(parse_edge_item)

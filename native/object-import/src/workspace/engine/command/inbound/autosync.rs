@@ -94,13 +94,17 @@ fn read_component_model(
 fn indexed_component_hash(root: &Path, id: &str) -> Option<String> {
     let (scope, name) = id.split_once('/').unwrap_or(("", id));
     let bytes = fs::read(crate::scope_path(root).join("index.json")).ok()?;
-    let index: Value = serde_json::from_slice(&bytes).ok()?;
+    let index: Value = crate::parse_jsonc(&bytes).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
     rows.iter()
         .find(|row| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            let Some((row_scope_opt, row_name)) = super::remote::file_list::row_id_parts(row)
+            else {
+                return false;
+            };
+            let row_scope = row_scope_opt.unwrap_or_default();
             row["isSymlink"] != true
-                && row["id"]["name"].as_str() == Some(name)
+                && row_name == name
                 && (row_scope == scope || row_scope.is_empty())
         })
         .and_then(|row| row["hash"].as_str())

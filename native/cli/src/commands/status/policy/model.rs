@@ -48,7 +48,7 @@ pub(super) fn stored_version<'c>(
         return Ok(projected);
     }
     let tag = tagged.unwrap_or_default();
-    let reference = if tag == "latest" {
+    let reference = if matches!(tag, "latest" | "head") {
         model
             .and_then(|model_val| nullish(model_val.get("head")))
             .cloned()

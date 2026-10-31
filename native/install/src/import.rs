@@ -148,9 +148,8 @@ fn ids_to_import(bitmap: &Bitmap, lane: Option<&RemoteLane>) -> Vec<Id> {
 
 fn read_scope_json(scope_dir: &Path) -> io::Result<Value> {
     match fs::read(scope_dir.join("scope.json")) {
-        Ok(bytes) => {
-            serde_json::from_slice(&bytes).map_err(|_| objects::invalid("invalid scope.json"))
-        }
+        Ok(bytes) => bit_object_import::parse_jsonc(&bytes)
+            .map_err(|_| objects::invalid("invalid scope.json")),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Value::Null),
         Err(error) => Err(error),
     }

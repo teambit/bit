@@ -155,12 +155,22 @@ fn prepare_scope_get(
     let Some(version) = explicit_ver.or(entry.id.version.as_deref()) else {
         return Err(Failure::Declined("deps get --scope requires a stored version".into()));
     };
-    if version.is_empty() || version == "latest" || version == "0.0.1-new" {
+    if version.is_empty() || version == "0.0.1-new" {
         return Err(Failure::Declined("deps get --scope requires a stored version".into()));
     }
-    let id_without_ver = entry.id.to_string_without_version();
-    let id_with_ver = format!("{id_without_ver}@{version}");
     let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
+    let id_without_ver = entry.id.to_string_without_version();
+    let id_with_ver = if matches!(version, "latest" | "head") {
+        resolve_scope_target_id(
+            &scope_root,
+            &ctx.ws.scope_path,
+            &format!("{id_without_ver}@{version}"),
+        )
+        .map(|(with_ver, _)| with_ver)
+        .ok_or_else(|| Failure::Declined("deps get --scope head version absent".into()))?
+    } else {
+        format!("{id_without_ver}@{version}")
+    };
     let rows = collect_scope_rows_from_dir(
         &scope_root,
         &ctx.ws.scope_path,

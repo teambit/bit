@@ -254,7 +254,7 @@ fn make_remote_workspace_component(
     }
 }
 
-pub(super) fn resolve_scope_version(
+pub(in crate::commands) fn resolve_scope_version(
     comp_val: &Value,
     explicit_ver: Option<&str>,
 ) -> Option<(String, String)> {

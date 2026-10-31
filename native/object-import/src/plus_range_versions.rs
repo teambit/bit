@@ -32,8 +32,15 @@ fn dependency_usage(dependency: &Value) -> Option<String> {
     }
     let identity = dependency["id"]
         .as_str()
+        .or_else(|| dependency.as_str())
         .map_or_else(
-            || format!("{}/{}", text(&dependency["id"]["scope"]), text(&dependency["id"]["name"])),
+            || {
+                let target = dependency
+                    .get("id")
+                    .filter(|sub| sub.is_object())
+                    .unwrap_or(dependency);
+                format!("{}/{}", text(&target["scope"]), text(&target["name"]))
+            },
             |id| {
                 id.split('@')
                     .next()

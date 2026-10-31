@@ -22,7 +22,7 @@ pub struct Parsed {
 
 impl Parsed {
     pub fn json(&self) -> io::Result<Value> {
-        serde_json::from_slice(&self.content)
+        bit_object_import::parse_jsonc(&self.content)
             .map_err(|_| invalid(&format!("invalid {} object", self.kind)))
     }
 }
@@ -156,10 +156,7 @@ impl Repo {
             .as_array()
             .into_iter()
             .flatten()
-            .find(|row| {
-                row["id"]["scope"].as_str() == Some(scope)
-                    && row["id"]["name"].as_str() == Some(name)
-            })
+            .find(|row| id_scope_and_name(&row["id"]) == Some((scope, name)))
             .and_then(|row| row["hash"].as_str())
             .map(str::to_owned))
     }
@@ -203,14 +200,16 @@ impl Repo {
     /// `refs/remotes/<scope>/<lane>` entries: `[{ id: { scope, name }, head }]`.
     pub fn remote_refs(&self, scope: &str, lane: &str) -> io::Result<Vec<RemoteRef>> {
         match fs::read(self.remote_ref_path(scope, lane)?) {
-            Ok(bytes) => serde_json::from_slice::<Vec<Value>>(&bytes)
-                .map_err(|_| invalid("invalid remote lane refs"))
-                .map(|entries| {
-                    entries
-                        .iter()
-                        .filter_map(RemoteRef::from_json)
-                        .collect()
-                }),
+            Ok(bytes) => {
+                let parsed = bit_object_import::parse_jsonc(&bytes)
+                    .map_err(|_| invalid("invalid remote lane refs"))?;
+                let entries =
+                    parsed.as_array().ok_or_else(|| invalid("invalid remote lane refs"))?;
+                Ok(entries
+                    .iter()
+                    .filter_map(RemoteRef::from_json)
+                    .collect())
+            }
             Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Vec::new()),
             Err(error) => Err(error),
         }
@@ -250,9 +249,10 @@ pub struct RemoteRef {
 
 impl RemoteRef {
     fn from_json(value: &Value) -> Option<Self> {
+        let (scope, name) = id_scope_and_name(&value["id"])?;
         Some(Self {
-            scope: value["id"]["scope"].as_str()?.to_string(),
-            name: value["id"]["name"].as_str()?.to_string(),
+            scope: scope.to_string(),
+            name: name.to_string(),
             head: value["head"].as_str()?.to_string(),
         })
     }
@@ -260,6 +260,22 @@ impl RemoteRef {
     fn to_json(&self) -> Value {
         json!({ "id": { "scope": self.scope, "name": self.name }, "head": self.head })
     }
+}
+
+fn id_scope_and_name(id: &Value) -> Option<(&str, &str)> {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let (scope, name) = bare.split_once('/')?;
+        return (!scope.is_empty() && !name.is_empty()).then_some((scope, name));
+    }
+    let scope = id["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    let name = id["name"]
+        .as_str()
+        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .filter(|val| !val.is_empty())?;
+    Some((scope, name))
 }
 
 /// A Component or Lane row of `index.json`.
@@ -272,8 +288,8 @@ pub enum IndexRow {
 fn read_index(path: &Path) -> io::Result<Value> {
     match fs::read(path) {
         Ok(bytes) => {
-            let value: Value =
-                serde_json::from_slice(&bytes).map_err(|_| invalid("invalid scope index.json"))?;
+            let value = bit_object_import::parse_jsonc(&bytes)
+                .map_err(|_| invalid("invalid scope index.json"))?;
             Ok(match value {
                 Value::Array(components) => json!({ "components": components, "lanes": [] }),
                 other => other,

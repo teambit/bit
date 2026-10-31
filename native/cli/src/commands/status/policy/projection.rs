@@ -130,7 +130,7 @@ fn component_id(target: &Value) -> io::Result<ComponentId> {
         name: name.to_string(),
         version: target["version"]
             .as_str()
-            .filter(|version| !version.is_empty() && *version != "latest")
+            .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
             .map(str::to_string),
     })
 }
@@ -157,7 +157,9 @@ pub(super) fn extension_id(id: &str) -> io::Result<Value> {
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| decline("projection extension scope"))?;
     let mut value = json!({"scope":scope,"name":name});
-    if let Some(version) = version {
+    if let Some(version) =
+        version.filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
+    {
         value["version"] = json!(version);
     }
     Ok(value)

@@ -24,9 +24,9 @@ impl Origin {
         new_scope: bool,
     ) -> io::Result<Self> {
         if let Some(parent) = documents.bitmap.get("_bit_lane")
-            && parent["id"]["name"]
-                .as_str()
-                .is_some_and(|name| !name.is_empty() && name != "main")
+            && let (_, name) = id_scope_and_name(&parent["id"])
+            && !name.is_empty()
+            && name != "main"
         {
             return Self::from_parent(
                 root,
@@ -49,8 +49,10 @@ impl Origin {
         new_scope: bool,
     ) -> io::Result<Self> {
         let parent_id = &parent["id"];
-        let parent_name = parent_id["name"].as_str().ok_or_else(invalid)?;
-        let parent_scope = parent_id["scope"].as_str().unwrap_or_default();
+        let (parent_scope, parent_name) = id_scope_and_name(parent_id);
+        if parent_name.is_empty() {
+            return Err(invalid());
+        }
         let row = index["lanes"]
             .as_array()
             .ok_or_else(invalid)?
@@ -82,23 +84,37 @@ impl Origin {
         new_scope: bool,
     ) -> io::Result<Self> {
         let parent_id = &parent["id"];
-        let parent_name = parent_id["name"]
-            .as_str()
-            .ok_or_else(invalid)?
-            .to_owned();
-        let parent_scope = parent_id["scope"].as_str().ok_or_else(invalid)?;
+        let (parent_scope, parent_name) = id_scope_and_name(parent_id);
+        if parent_scope.is_empty() || parent_name.is_empty() {
+            return Err(invalid());
+        }
         if scope != parent_scope && !new_scope {
             return Err(invalid());
         }
         let objects_dir = bit_workspace_config::scope_path(root).join("objects");
         let components = active_lane_components(&objects_dir, lane, bitmap)?;
         let forked_from = if parent["exported"] == true {
-            Some(parent_id.clone())
+            Some(json!({"scope":parent_scope,"name":parent_name}))
         } else {
             lane.get("forkedFrom").cloned()
         };
-        Ok(Self { parent_name: Some(parent_name), components, forked_from })
+        Ok(Self { parent_name: Some(parent_name.to_owned()), components, forked_from })
     }
+}
+
+pub(super) fn id_scope_and_name(id: &Value) -> (&str, &str) {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        return bare
+            .split_once('/')
+            .unwrap_or(("", bare));
+    }
+    let scope = id["scope"].as_str().unwrap_or_default();
+    let name = id["name"]
+        .as_str()
+        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .unwrap_or_default();
+    (scope, name)
 }
 
 pub(super) fn read_merge_move_backup(
@@ -107,8 +123,10 @@ pub(super) fn read_merge_move_backup(
     bitmap: &Value,
 ) -> io::Result<(String, Vec<u8>, Value)> {
     let parent_id = &bitmap.get("_bit_lane").ok_or_else(invalid)?["id"];
-    let parent_name = parent_id["name"].as_str().ok_or_else(invalid)?;
-    let parent_scope = parent_id["scope"].as_str().unwrap_or_default();
+    let (parent_scope, parent_name) = id_scope_and_name(parent_id);
+    if parent_name.is_empty() {
+        return Err(invalid());
+    }
     let row = index["lanes"]
         .as_array()
         .ok_or_else(invalid)?
@@ -118,7 +136,8 @@ pub(super) fn read_merge_move_backup(
     let expected_hash = row["hash"].as_str().ok_or_else(invalid)?;
     let backup_bytes = fs::read(bit_workspace_config::scope_path(root).join("last-merged/lane"))?;
     let value = decode_backup_lane(&backup_bytes, expected_hash)?;
-    if value["name"] != parent_id["name"] || value["scope"] != parent_id["scope"] {
+    if value["name"].as_str() != Some(parent_name) || value["scope"].as_str() != Some(parent_scope)
+    {
         return Err(invalid());
     }
     Ok((expected_hash.to_owned(), backup_bytes, value))
@@ -152,7 +171,7 @@ fn decode_backup_lane(backup_bytes: &[u8], expected_hash: &str) -> io::Result<Va
     if fields.len() != 3 || fields[0] != "Lane" || fields[1] != expected_hash {
         return Err(invalid());
     }
-    serde_json::from_slice(&raw[nul + 1..]).map_err(|_| invalid())
+    crate::parse_jsonc(&raw[nul + 1..]).map_err(|_| invalid())
 }
 
 fn active_lane_components(
@@ -187,8 +206,10 @@ fn active_lane_components(
 }
 
 fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
-    let scope = id["scope"].as_str()?;
-    let name = id["name"].as_str()?;
+    let (scope, name) = id_scope_and_name(id);
+    if scope.is_empty() || name.is_empty() {
+        return None;
+    }
     let full = format!("{scope}/{name}");
     bitmap
         .as_object()?

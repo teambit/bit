@@ -35,7 +35,11 @@ pub(super) fn update(
     }
     if let Some(entry) = entries
         .iter_mut()
-        .find(|entry| entry["id"]["scope"] == scope && entry["id"]["name"] == name)
+        .find(|entry| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                entry, scope, name,
+            )
+        })
     {
         *entry = next;
     } else {
@@ -102,10 +106,9 @@ fn history_log(receipt: &Value, message: &str) -> io::Result<serde_json::Map<Str
 }
 
 fn component_id(entry: &Value) -> io::Result<String> {
-    let scope =
-        entry["id"]["scope"].as_str().ok_or_else(|| invalid("lane history component scope"))?;
-    let name =
-        entry["id"]["name"].as_str().ok_or_else(|| invalid("lane history component name"))?;
+    let (scope, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(entry)
+            .ok_or_else(|| invalid("lane history component id"))?;
     let head = entry["head"].as_str().ok_or_else(|| invalid("lane history component head"))?;
     Ok(format!("{scope}/{name}@{head}"))
 }
@@ -140,7 +143,11 @@ pub(super) fn snapshot_update(
         lane["components"]
             .as_array_mut()
             .ok_or_else(|| invalid("lane snapshot components"))?
-            .retain(|entry| entry["id"]["scope"] != scope || entry["id"]["name"] != name);
+            .retain(|entry| {
+                !crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                    entry, scope, name,
+                )
+            });
         if !was_hidden {
             lane["overrideUpdateDependents"] = json!(true);
         }

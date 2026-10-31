@@ -27,8 +27,10 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
         });
     let version = row["version"]
         .as_str()
-        .filter(|version| !version.is_empty())
-        .or_else(|| key_ver.filter(|version| !version.is_empty()));
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
+        .or_else(|| {
+            key_ver.filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
+        });
     Some(format!(
         "{scope}/{name}{}",
         version.map_or_else(String::new, |version| format!("@{version}")),
@@ -114,21 +116,16 @@ fn single(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
         .into_iter()
         .flatten()
         .filter(|row| {
-            row["id"]["name"] == bare(pattern)
-                || format!(
-                    "{}/{}",
-                    row["id"]["scope"].as_str().unwrap_or_default(),
-                    row["id"]["name"].as_str().unwrap_or_default(),
-                ) == bare(pattern)
+            if row["isSymlink"] == true {
+                return false;
+            }
+            let (row_scope, row_name) = repository::row_id_parts(&row["id"]);
+            row_name == bare(pattern) || format!("{row_scope}/{row_name}") == bare(pattern)
         })
         .collect();
     if rows.len() == 1 {
-        let row = rows[0];
-        return Ok(vec![format!(
-            "{}/{}",
-            row["id"]["scope"].as_str().unwrap_or_default(),
-            row["id"]["name"].as_str().unwrap_or_default(),
-        )]);
+        let (row_scope, row_name) = repository::row_id_parts(&rows[0]["id"]);
+        return Ok(vec![format!("{row_scope}/{row_name}")]);
     }
     if !pattern.contains('/') {
         return Err(invalid(format!("component {pattern} was not found")));
@@ -142,26 +139,20 @@ fn lane_component(batch: &mut Batch, pattern: &str) -> io::Result<Option<String>
         .into_iter()
         .flatten()
         .filter(|row| {
-            row["id"]["name"] == bare(pattern)
-                || format!(
-                    "{}/{}",
-                    row["id"]["scope"].as_str().unwrap_or_default(),
-                    row["id"]["name"].as_str().unwrap_or_default(),
-                ) == bare(pattern)
+            let (row_scope, row_name) = repository::row_id_parts(&row["id"]);
+            row_name == bare(pattern) || format!("{row_scope}/{row_name}") == bare(pattern)
         })
         .collect();
     if rows.len() > 1 {
         return Err(invalid("ambiguous recovery component identity"));
     }
     let Some(row) = rows.first() else { return Ok(None) };
-    let bare = format!(
-        "{}/{}",
-        row["id"]["scope"].as_str().unwrap_or_default(),
-        row["id"]["name"].as_str().unwrap_or_default(),
-    );
+    let (row_scope, row_name) = repository::row_id_parts(&row["id"]);
+    let bare = format!("{row_scope}/{row_name}");
     let version = pattern
         .split_once('@')
         .map(|(_, version)| version)
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
         .or_else(|| row["head"].as_str())
         .ok_or_else(|| invalid("recovery lane head"))?;
     Ok(Some(format!("{bare}@{version}")))
@@ -179,11 +170,8 @@ fn staged(batch: &mut Batch, result: &mut Vec<String>) -> io::Result<()> {
         .into_iter()
         .flatten()
     {
-        let bare = format!(
-            "{}/{}",
-            row["id"]["scope"].as_str().unwrap_or_default(),
-            row["id"]["name"].as_str().unwrap_or_default(),
-        );
+        let (row_scope, row_name) = repository::row_id_parts(&row["id"]);
+        let bare = format!("{row_scope}/{row_name}");
         if key(&batch.bitmap, &bare)?.is_some() || !removed_head(batch, &bare)? {
             continue;
         }
@@ -195,19 +183,13 @@ fn staged(batch: &mut Batch, result: &mut Vec<String>) -> io::Result<()> {
 fn staged_main(batch: &mut Batch, result: &mut Vec<String>) -> io::Result<()> {
     let path = crate::scope_path(&batch.root).join("staged-config/main.json");
     let Some(bytes) = batch.proofs.read(&path)? else { return Ok(()) };
-    let rows: Value = serde_json::from_slice(&bytes)?;
+    let rows: Value = crate::parse_jsonc(&bytes)?;
     for row in rows.as_array().ok_or_else(|| invalid("recovery staged configuration"))? {
         if !crate::workspace::engine::client_status::config::is_config_removed(&row["config"]) {
             continue;
         }
-        append(
-            result,
-            format!(
-                "{}/{}",
-                row["id"]["scope"].as_str().unwrap_or_default(),
-                row["id"]["name"].as_str().unwrap_or_default(),
-            ),
-        );
+        let (row_scope, row_name) = repository::row_id_parts(&row["id"]);
+        append(result, format!("{row_scope}/{row_name}"));
     }
     Ok(())
 }

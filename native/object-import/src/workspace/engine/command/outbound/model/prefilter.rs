@@ -22,7 +22,7 @@ pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
     for path in [root.join(".bitmap"), scope.join("scope.json"), scope.join("index.json")] {
         prepared.capture(path)?;
     }
-    let index: Value = serde_json::from_slice(
+    let index: Value = crate::parse_jsonc(
         prepared.preimages[&scope.join("index.json")]
             .as_deref()
             .ok_or_else(|| invalid("outbound prefilter index absent"))?,
@@ -53,9 +53,9 @@ impl Prepared {
                 .join(&model[..2])
                 .join(&model[2..]),
         )?;
-        let scope =
-            row["id"]["scope"].as_str().ok_or_else(|| invalid("outbound prefilter scope"))?;
-        let name = row["id"]["name"].as_str().ok_or_else(|| invalid("outbound prefilter name"))?;
+        let (scope, name) =
+            crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)
+                .ok_or_else(|| invalid("outbound prefilter id"))?;
         let hash =
             crate::validate::hexadecimal(&Sha1::digest(format!("{scope}/{name}:VersionHistory")));
         self.capture(

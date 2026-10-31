@@ -38,7 +38,7 @@ pub(super) fn write(
 }
 
 fn package(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> {
-    let mut value: Value = serde_json::from_str(text).map_err(io::Error::other)?;
+    let mut value: Value = crate::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?;
     let object = value.as_object_mut().ok_or_else(|| invalid("inbound package object"))?;
     let policy = object
         .entry("dependencies")

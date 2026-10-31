@@ -21,14 +21,19 @@ impl Models {
                     hashes.insert(object.hash.clone(), object.value.clone());
                 }
                 "Symlink" => {
-                    aliases.insert(
-                        object.hash.clone(),
-                        digest(&format!(
-                            "{}/{}",
-                            object.value["realScope"].as_str().unwrap(),
-                            object.value["name"].as_str().unwrap(),
-                        )),
-                    );
+                    if let (Some(real_scope), Some(name)) = (
+                        object.value["realScope"]
+                            .as_str()
+                            .filter(|val| !val.is_empty()),
+                        object.value["name"]
+                            .as_str()
+                            .filter(|val| !val.is_empty()),
+                    ) {
+                        aliases.insert(
+                            object.hash.clone(),
+                            digest(&format!("{real_scope}/{name}")),
+                        );
+                    }
                 }
                 _ => {}
             }
@@ -146,7 +151,8 @@ fn parse_stash_file(file_path: &Path) -> Result<Vec<String>, String> {
         )
     };
     let text = fs::read_to_string(file_path).map_err(|err| unusable(&err.to_string()))?;
-    let val: Value = serde_json::from_str(&text).map_err(|err| unusable(&err.to_string()))?;
+    let val =
+        bit_object_import::parse_jsonc(text.as_bytes()).map_err(|err| unusable(&err.to_string()))?;
     let Some(comps_data) = val.get("stashCompsData").and_then(Value::as_array) else {
         return Err(unusable(r#""stashCompsData" is missing or is not an array"#));
     };
@@ -173,8 +179,8 @@ pub(in crate::commands::gc) fn load_unmerged_roots(
     if !unmerged_path.exists() {
         return Ok(Vec::new());
     }
-    let val: Value =
-        serde_json::from_slice(&fs::read(&unmerged_path).map_err(|err| err.to_string())?)
+    let val =
+        bit_object_import::parse_jsonc(&fs::read(&unmerged_path).map_err(|err| err.to_string())?)
             .map_err(|err| err.to_string())?;
     let Some(arr) = val.as_array() else { return Ok(Vec::new()) };
     let mut roots = Vec::new();
@@ -197,6 +203,59 @@ fn collect_unmerged_item(item: &Value, roots: &mut Vec<String>) {
     for key in ["headOnCurrentLane", "unrelatedHead"] {
         if let Some(hash) = unrel.get(key).and_then(Value::as_str) {
             roots.push(hash.to_owned());
+        }
+    }
+}
+
+pub(in crate::commands::gc) fn version_refs_without_parents(ver_val: &Value) -> Vec<String> {
+    let mut refs = Vec::new();
+    collect_file_refs(&ver_val["files"], &mut refs);
+    if let Some(exts) = ver_val["extensions"].as_array() {
+        for ext in exts {
+            collect_artifact_refs(&ext["artifacts"], &mut refs);
+            collect_artifact_refs(&ext["data"]["artifacts"], &mut refs);
+        }
+    }
+    for field in ["flattenedEdgesRef", "dependenciesGraphRef", "flattenedDependenciesRef"] {
+        if let Some(hash) = ver_val[field]
+            .as_str()
+            .filter(|val| !val.is_empty())
+        {
+            refs.push(hash.to_owned());
+        }
+    }
+    refs
+}
+
+fn collect_file_refs(files_val: &Value, refs: &mut Vec<String>) {
+    let Some(files) = files_val.as_array() else { return };
+    for file in files {
+        if let Some(hash) = file["file"]
+            .as_str()
+            .or_else(|| file["file"]["hash"].as_str())
+        {
+            refs.push(hash.to_owned());
+        }
+    }
+}
+
+fn collect_artifact_refs(artifacts_val: &Value, refs: &mut Vec<String>) {
+    let Some(artifacts) = artifacts_val.as_array() else { return };
+    for art in artifacts {
+        let Some(arr) = art["files"]["refs"]
+            .as_array()
+            .or_else(|| art["files"].as_array())
+        else {
+            continue;
+        };
+        for item in arr {
+            if let Some(hash) = item["ref"]
+                .as_str()
+                .or_else(|| item["ref"]["hash"].as_str())
+                .or_else(|| item["file"].as_str())
+            {
+                refs.push(hash.to_owned());
+            }
         }
     }
 }

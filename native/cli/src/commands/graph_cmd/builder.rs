@@ -124,7 +124,7 @@ fn npm_bit_dep_id(root: &Path, raw_spec: &str) -> Option<String> {
             .join("package.json"),
     )
     .ok()?;
-    let val: Value = serde_json::from_slice(&bytes).ok()?;
+    let val = bit_object_import::parse_jsonc(&bytes).ok()?;
     format_dep_id(&val["componentId"])
 }
 
@@ -144,7 +144,7 @@ fn resolve_seeder_id(ws: &Workspace, raw_id: &str) -> Result<String, Failure> {
     else {
         return Err(Failure::Declined("graph target id not found in workspace".into()));
     };
-    if let Some(ver) = explicit_ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+    if let Some(ver) = explicit_ver.filter(|ver| !matches!(*ver, "" | "latest" | "head")) {
         return Ok(format!("{}@{ver}", entry.id.to_string_without_version()));
     }
     Ok(selection::entry_full_id(entry))
@@ -329,7 +329,7 @@ fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<Strin
 }
 
 pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
-    if ver.is_empty() || ver == "latest" {
+    if matches!(ver, "" | "latest" | "head") {
         return comp_val["head"].as_str().map(str::to_owned);
     }
     comp_val["versions"]
@@ -357,6 +357,7 @@ pub(crate) fn format_dep_id(id_val: &Value) -> Option<String> {
         .unwrap_or(id_val);
     let raw_name = inner["name"]
         .as_str()
+        .or_else(|| id_val["name"].as_str())
         .filter(|name| !name.is_empty())?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
@@ -370,6 +371,7 @@ pub(crate) fn format_dep_id(id_val: &Value) -> Option<String> {
         .unwrap_or(inline_ver);
     let base = match inner["scope"]
         .as_str()
+        .or_else(|| id_val["scope"].as_str())
         .filter(|scope| !scope.is_empty())
     {
         Some(scope) => format!("{scope}/{name}"),

@@ -148,7 +148,7 @@ fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> i
         &mut compressed,
     )?;
     proof::verify(&proofs[proofs.len() - 1..])?;
-    serde_json::from_slice(&bytes).map_err(io::Error::other)
+    crate::parse_jsonc(&bytes)
 }
 
 fn rekey(rows: &mut [Value], identity: &str, hash: &str) {

@@ -177,13 +177,12 @@ fn dependency_version(dependent: Option<&Value>, id: &str) -> Option<String> {
         .iter()
         .filter_map(|field| dependent[field].as_array())
         .flatten()
-        .find(|dependency| {
-            let scope = dependency["id"]["scope"].as_str().unwrap_or_default();
-            let name = dependency["id"]["name"].as_str().unwrap_or_default();
-            format!("{scope}/{name}") == id
+        .find_map(|dependency| {
+            let parsed = crate::dependencies::data::id_from_object(
+                dependency.get("id").unwrap_or(dependency),
+            )?;
+            (parsed.to_string_without_version() == id).then_some(parsed.version)?
         })
-        .and_then(|dependency| dependency["id"]["version"].as_str())
-        .map(str::to_owned)
 }
 
 fn read_dir(dir: &Path) -> io::Result<Option<Value>> {

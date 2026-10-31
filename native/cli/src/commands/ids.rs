@@ -41,6 +41,9 @@ impl Id {
 
     /// `ComponentID.fromObject({ scope, name, version })`.
     pub fn from_object(id: &Value) -> io::Result<Self> {
+        if let Some(raw) = id.as_str() {
+            return Self::parse(raw);
+        }
         let scope = text(id.get("scope"))?;
         let name = text(id.get("name"))?;
         if scope.is_empty() || name.is_empty() {
@@ -65,11 +68,11 @@ impl Id {
         &self.scope
     }
 
-    /// `hasVersion()`: a version other than `latest`.
+    /// `hasVersion()`: a version other than `latest` or `head`.
     pub fn has_version(&self) -> bool {
         self.version
             .as_deref()
-            .is_some_and(|version| version != "latest")
+            .is_some_and(|version| !matches!(version, "latest" | "head"))
     }
 
     pub fn without_version(&self) -> String {

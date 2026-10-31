@@ -56,7 +56,11 @@ impl ScopeJson {
     pub fn load(scope: &Path) -> io::Result<Self> {
         let path = scope.join("scope.json");
         match fs::read_to_string(&path) {
-            Ok(text) => serde_json::from_str(&text)
+            Ok(text) => crate::jsonc::parse(&text)
+                .and_then(|val| {
+                    serde_json::from_value(val)
+                        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
+                })
                 .map_err(|error| {
                     io::Error::new(
                         io::ErrorKind::InvalidData,

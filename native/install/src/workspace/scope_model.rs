@@ -209,16 +209,10 @@ impl ScopeObjects {
 
     fn index_hash(&self, scope: &str, name: &str) -> Option<String> {
         let bytes = fs::read(self.scope.join("index.json")).ok()?;
-        let index: Value = serde_json::from_slice(&bytes).ok()?;
+        let index = bit_object_import::parse_jsonc(&bytes).ok()?;
         let rows = index["components"].as_array().or_else(|| index.as_array())?;
         rows.iter()
-            .find(|row| {
-                row["isSymlink"] != true
-                    && row["id"]["name"].as_str() == Some(name)
-                    && row["id"]["scope"]
-                        .as_str()
-                        .is_none_or(|row_scope| row_scope == scope)
-            })
+            .find(|row| row["isSymlink"] != true && scope_row_matches(row, scope, name))
             .and_then(|row| row["hash"].as_str())
             .map(str::to_owned)
     }
@@ -277,10 +271,23 @@ impl ScopeObjects {
     }
 }
 
+fn scope_row_matches(row: &Value, scope: &str, name: &str) -> bool {
+    if let Some(id_str) = row["id"].as_str() {
+        let (row_scope, row_name) = id_str
+            .split_once('/')
+            .unwrap_or(("", id_str));
+        return row_name == name && (row_scope.is_empty() || row_scope == scope);
+    }
+    row["id"]["name"].as_str() == Some(name)
+        && row["id"]["scope"]
+            .as_str()
+            .is_none_or(|row_scope| row_scope.is_empty() || row_scope == scope)
+}
+
 /// The Version hash of `version`: a snap hash as is, a tag through the model's
 /// `versions` or `orphanedVersions`, and the model `head` when no version is given.
 fn version_hash(model: Option<&Value>, version: Option<&str>) -> Option<String> {
-    match version.filter(|ver| !ver.is_empty() && *ver != "latest") {
+    match version.filter(|ver| !matches!(*ver, "" | "latest" | "head")) {
         Some(version) if is_hash(version) => Some(version.to_owned()),
         Some(version) => {
             let model = model?;

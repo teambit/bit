@@ -158,7 +158,7 @@ fn resolve_scope_pattern_schemas(scope_dir: &Path, pattern: &str) -> Option<Vec<
 }
 
 fn scope_pattern_candidates(scope_dir: &Path) -> Option<Vec<(String, String)>> {
-    let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
     if rows.len() > 128 {
         return None;
@@ -176,7 +176,14 @@ fn scope_pattern_candidates(scope_dir: &Path) -> Option<Vec<(String, String)>> {
         if comp_val["head"].as_str().is_none() {
             continue;
         }
-        let identity = format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?);
+        let identity = if let Some(id_str) = row["id"]
+            .as_str()
+            .filter(|id| id.contains('/'))
+        {
+            id_str.to_owned()
+        } else {
+            format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?)
+        };
         candidates.push((identity, comp_hash));
     }
     Some(candidates)
@@ -213,7 +220,7 @@ fn load_unmodified_entry_schema(
 }
 
 fn resolve_version_hash(comp_val: &Value, req_ver: &str) -> Option<String> {
-    if req_ver == "latest" {
+    if matches!(req_ver, "" | "latest" | "head") {
         return comp_val["head"].as_str().map(str::to_owned);
     }
     if let Some(hash) = comp_val["versions"].get(req_ver).and_then(Value::as_str) {
@@ -243,7 +250,7 @@ pub(super) fn extract_stored_schema(scope_dir: &Path, ver_val: &Value) -> Option
         })?;
     let file_hash = find_schema_artifact_hash(builder_ext)?;
     let (_, body) = bit_object_import::read_raw_scope_object(scope_dir, &file_hash).ok()??;
-    serde_json::from_slice(&body).ok()
+    bit_object_import::parse_jsonc(&body).ok()
 }
 
 fn extract_direct_schema_data(data: &Value) -> Option<Value> {

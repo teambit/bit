@@ -152,7 +152,7 @@ pub fn id_from_object(value: &Value) -> Option<ComponentId> {
         .or_else(|| value["head"].as_str())
         .filter(|text| !text.is_empty())
         .or(inline_ver)
-        .filter(|ver| *ver != "latest")
+        .filter(|ver| !matches!(*ver, "latest" | "head"))
         .map(str::to_owned);
     Some(ComponentId {
         scope: inner["scope"]
@@ -176,7 +176,7 @@ fn id_from_str(raw: &str) -> Option<ComponentId> {
         default_scope: None,
         name: name.to_owned(),
         version: version
-            .filter(|ver| !ver.is_empty() && *ver != "latest")
+            .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
             .map(str::to_owned),
     })
 }
@@ -209,7 +209,9 @@ fn issue_data(issues: &Value, kind: &str) -> Value {
         return Value::Null;
     };
     match &issue["data"] {
-        Value::String(text) => serde_json::from_str(text).unwrap_or(Value::Null),
+        Value::String(text) => {
+            bit_object_import::parse_jsonc(text.as_bytes()).unwrap_or(Value::Null)
+        }
         other => other.clone(),
     }
 }

@@ -59,7 +59,7 @@ fn missing(receipt: &Value, format: &Formatter) -> String {
         let symbol = format.error_symbol();
         let rows = missing
             .iter()
-            .map(|id| Formatter::item_with(id.trim_end_matches("@latest"), &symbol))
+            .map(|id| Formatter::item_with(strip_latest_or_head(id), &symbol))
             .collect::<Vec<_>>()
             .join("\n");
         format!("{symbol} {}\n{rows}", format.title("missing components"))
@@ -74,10 +74,16 @@ fn section(ids: &[String], title: &str, format: &Formatter) -> String {
         "{}\n{}",
         format.success_summary(title),
         ids.iter()
-            .map(|id| format.item(id.trim_end_matches("@latest")))
+            .map(|id| format.item(strip_latest_or_head(id)))
             .collect::<Vec<_>>()
             .join("\n"),
     )
+}
+
+fn strip_latest_or_head(id: &str) -> &str {
+    id.strip_suffix("@latest")
+        .or_else(|| id.strip_suffix("@head"))
+        .unwrap_or(id)
 }
 
 fn list(value: &Value) -> Vec<String> {

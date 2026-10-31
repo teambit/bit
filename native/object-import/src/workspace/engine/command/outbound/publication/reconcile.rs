@@ -26,7 +26,8 @@ fn prepare_staged_config_ids(
     if selected.is_empty() {
         return Ok(bytes.to_vec());
     }
-    let mut rows: Vec<Value> = serde_json::from_slice(bytes)?;
+    let mut rows: Vec<Value> = crate::parse_jsonc(bytes)
+        .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))?;
     if rows.len() > 4096 {
         return Err(invalid("outbound staged configuration bounds"));
     }

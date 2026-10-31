@@ -28,7 +28,7 @@ fn name(config: &Value) -> io::Result<Option<&str>> {
 }
 
 pub(super) fn owner(scope: &Path, pending: &Path) -> io::Result<Option<(u32, u32)>> {
-    let config: Value = serde_json::from_slice(&fs::read(scope.join("scope.json"))?)?;
+    let config: Value = crate::parse_jsonc(&fs::read(scope.join("scope.json"))?)?;
     let Some(gid) = id(&config)? else { return Ok(None) };
     #[cfg(unix)]
     {

@@ -235,15 +235,30 @@ fn indexed_hash(index: &Value, section: &str, scope: &str, name: &str) -> io::Re
     Ok(hash.to_owned())
 }
 
+pub(super) fn row_id_parts(id: &Value) -> (&str, &str) {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        return bare
+            .split_once('/')
+            .unwrap_or(("", bare));
+    }
+    let scope = id["scope"].as_str().unwrap_or_default();
+    let name = id["name"]
+        .as_str()
+        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .unwrap_or_default();
+    (scope, name)
+}
+
 fn unique_position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize> {
     let mut positions = rows
         .iter()
         .enumerate()
         .filter_map(|(index, row)| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            let (row_scope, row_name) = row_id_parts(&row["id"]);
             (row["isSymlink"] != true
                 && (row_scope == scope || row_scope.is_empty())
-                && row["id"]["name"] == name)
+                && row_name == name)
                 .then_some(index)
         });
     let position = positions.next().ok_or_else(|| invalid("lane reset indexed identity absent"))?;

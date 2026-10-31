@@ -141,15 +141,33 @@ fn find_readme_bitmap_entry<'a>(
     bitmap: &'a mut Value,
     readme: &Value,
 ) -> io::Result<&'a mut Value> {
-    let readme_name = readme["id"]["name"].as_str().ok_or_else(invalid)?;
-    let readme_scope = readme["id"]["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty());
+    let (readme_scope, readme_name) = readme_identity(readme).ok_or_else(invalid)?;
     let map = bitmap.as_object_mut().ok_or_else(invalid)?;
     map.iter_mut()
         .find(|(key, value)| readme_row_matches(key, value, readme_name, readme_scope))
         .map(|(_, value)| value)
         .ok_or_else(invalid)
+}
+
+fn readme_identity(readme: &Value) -> Option<(Option<&str>, &str)> {
+    if let Some(raw) = readme["id"].as_str().or_else(|| readme.as_str()) {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let (sc, nm) = bare
+            .split_once('/')
+            .map_or((None, bare), |(sc, nm)| ((!sc.is_empty()).then_some(sc), nm));
+        return (!nm.is_empty()).then_some((sc, nm));
+    }
+    let target = readme
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(readme);
+    let name = target["name"]
+        .as_str()
+        .filter(|nm| !nm.is_empty())?;
+    let scope = target["scope"]
+        .as_str()
+        .filter(|sc| !sc.is_empty());
+    Some((scope, name))
 }
 
 fn readme_row_matches(
@@ -172,8 +190,9 @@ fn readme_row_matches(
 }
 
 pub(super) fn lane_row_identity(row: &Value) -> Option<(String, String)> {
-    if let Some(raw) = row["id"].as_str() {
-        let (scope, name) = raw.split_once('/')?;
+    if let Some(raw) = row["id"].as_str().or_else(|| row.as_str()) {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let (scope, name) = bare.split_once('/')?;
         return (!scope.is_empty() && !name.is_empty()).then(|| {
             (name.to_owned(), scope.to_owned())
         });

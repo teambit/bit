@@ -37,7 +37,7 @@ fn read(path: &Path, bare: bool) -> io::Result<ScopeRoot> {
     if bytes.len() > 1024 * 1024 {
         return Err(io::Error::other("lane scope configuration limit"));
     }
-    let scope: Value = serde_json::from_slice(&bytes)?;
+    let scope = bit_object_import::parse_jsonc(&bytes)?;
     scope["name"]
         .as_str()
         .filter(|value| !value.is_empty() && !value.contains('/'))
@@ -60,7 +60,7 @@ fn validate_bare_index(directory: &Path) -> io::Result<()> {
     if bytes.len() > 4 * 1024 * 1024 {
         return Err(io::Error::other("lane scope index limit"));
     }
-    let index: Value = serde_json::from_slice(&bytes)?;
+    let index = bit_object_import::parse_jsonc(&bytes)?;
     if !index.is_array() && (!index["components"].is_array() || !index["lanes"].is_array()) {
         return Err(io::Error::other("lane scope index"));
     }
@@ -76,7 +76,7 @@ pub(in crate::commands) fn diagnose_component_lookup_error(
     if raw_id.starts_with('@') || bare_id.is_empty() {
         return None;
     }
-    let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     let comps = index["components"].as_array().or_else(|| index.as_array())?;
     let object_exists = bit_object_import::read_scope_object(scope_dir, &sha1_hex(bare_id))
         .ok()
@@ -89,7 +89,10 @@ pub(in crate::commands) fn diagnose_component_lookup_error(
         if scope.is_empty() || name.is_empty() || name.contains('/') {
             return None;
         }
-        let display_id = raw_id.strip_suffix("@latest").unwrap_or(raw_id);
+        let display_id = raw_id
+            .strip_suffix("@latest")
+            .or_else(|| raw_id.strip_suffix("@head"))
+            .unwrap_or(raw_id);
         return Some(format!(r#"error: component "{}" was not found"#, chalk.bold(display_id)));
     }
     diagnose_unscoped_component_error(comps, raw_id, bare_id)
@@ -105,11 +108,56 @@ fn diagnose_unscoped_component_error(
     }
     match comps
         .iter()
-        .filter(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(bare_id))
+        .filter(|row| row["isSymlink"] != true && row_has_name(row, bare_id))
         .count()
     {
         0 => Some(format!("scope.getParsedId, the component {raw_id} must include a scope-name")),
         count if count > 2 => Some("getHashFromIndex expect to get zero or one result".to_owned()),
         _ => None,
     }
+}
+
+fn row_has_name(row: &Value, bare_id: &str) -> bool {
+    row["id"]["name"].as_str() == Some(bare_id)
+        || row["id"]
+            .as_str()
+            .is_some_and(|id_str| id_str.rsplit_once('/').map_or(id_str, |(_, nm)| nm) == bare_id)
+}
+
+#[expect(clippy::too_many_arguments, reason = "Diagnostics share resolved head and version hashes")]
+pub(in crate::commands) fn diagnose_version_error(
+    scope_dir: &Path,
+    comp_id: &str,
+    comp_val: &Value,
+    ver: &str,
+    lane_head: Option<&str>,
+    head_label: Option<&str>,
+    resolved_hash: Option<&str>,
+    chalk: Chalk,
+) -> Option<String> {
+    if matches!(ver, "latest" | "head") {
+        let ver_hash = lane_head.or_else(|| comp_val["head"].as_str())?;
+        let ver_label = head_label.unwrap_or(ver_hash);
+        return bit_object_import::read_scope_object(scope_dir, ver_hash)
+            .ok()?
+            .is_none()
+            .then(|| missing_version_on_fs_msg(ver_label, comp_id));
+    }
+    let Some(ver_hash) = resolved_hash else {
+        return Some(format!(
+            r#"error: version "{}" of component {} was not found."#,
+            chalk.bold(ver),
+            chalk.bold(comp_id),
+        ));
+    };
+    bit_object_import::read_scope_object(scope_dir, ver_hash)
+        .ok()?
+        .is_none()
+        .then(|| missing_version_on_fs_msg(ver, comp_id))
+}
+
+fn missing_version_on_fs_msg(ver: &str, comp_id: &str) -> String {
+    format!(
+        "error: version \"{ver}\" of component {comp_id} was not found on the filesystem.\ntry running \"bit import\". if it doesn't help, try running \"bit import {comp_id} --objects\"",
+    )
 }

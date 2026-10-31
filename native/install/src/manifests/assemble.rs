@@ -6,12 +6,18 @@ use super::{
     dedupe::Deduped,
     deps::{DepsObject, Field, manifest_field, map_value, spread, truthy},
     env_root::EnvRoot,
+    projects,
     versions::snap_to_semver,
 };
-use crate::model::{DependencyMap, Manifest};
+use crate::model::{DependencyMap, InstallPlan, Manifest, Project};
 use indexmap::IndexMap;
 use serde_json::Value;
-use std::path::{Path, PathBuf};
+use std::{
+    collections::BTreeMap,
+    hash::{DefaultHasher, Hash, Hasher},
+    io,
+    path::{Path, PathBuf},
+};
 
 /// The component's manifest version: its snap as semver, `0.0.1-new` when new.
 fn component_version(version: Option<&str>) -> String {
@@ -191,4 +197,79 @@ pub(super) fn external_dependencies(
         }
     }
     names
+}
+
+/// Apply only the mutable `installComponents` links; policy/manifests stay precomputed.
+pub fn subscriber_links(
+    root: &Path,
+    plan: &mut InstallPlan,
+    original: &[Project],
+    options: &Value,
+) -> io::Result<()> {
+    let mut manifests = original
+        .iter()
+        .map(|project| (project.dir.clone(), project.manifest.clone()))
+        .collect::<IndexMap<_, _>>();
+    plan.forced_harmony_version = options
+        .get("forcedHarmonyVersion")
+        .filter(|value| !value.is_null())
+        .map(|value| serde_json::from_value(value.clone()))
+        .transpose()
+        .map_err(io::Error::other)?;
+    if let Some(links) = options
+        .get("linkedDependencies")
+        .filter(|value| !value.is_null())
+    {
+        merge_subscriber_projects(
+            root,
+            &mut manifests,
+            links,
+            plan.forced_harmony_version.as_deref(),
+        )?;
+    }
+    plan.projects = projects(manifests, root);
+    Ok(())
+}
+
+fn merge_subscriber_projects(
+    root: &Path,
+    manifests: &mut IndexMap<PathBuf, Manifest>,
+    links: &Value,
+    forced_harmony_version: Option<&str>,
+) -> io::Result<()> {
+    let links: IndexMap<PathBuf, DependencyMap> =
+        serde_json::from_value(links.clone()).map_err(io::Error::other)?;
+    for (directory, dependencies) in links {
+        if !directory.is_absolute() || !directory.starts_with(root) {
+            return Err(io::Error::other("subscriber linked project outside workspace"));
+        }
+        if directory == root {
+            merge_linked_root(manifests, root, dependencies, forced_harmony_version);
+        } else {
+            let manifest = manifests.entry(directory).or_default();
+            let merged = spread(&[&dependencies, &manifest_field(manifest, "dependencies")]);
+            manifest.insert(
+                "dependencies".into(),
+                serde_json::to_value(merged).map_err(io::Error::other)?,
+            );
+        }
+    }
+    Ok(())
+}
+
+/// `manifestsHash`: the dependencies (with dev dependencies) of every project.
+/// The type of a dependency is left out: it does not change `node_modules`.
+#[must_use]
+pub fn manifests_hash(plan: &InstallPlan) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    let by_dir: BTreeMap<&Path, BTreeMap<String, String>> = plan.projects
+        .iter()
+        .map(|project| {
+            let mut deps = manifest_field(&project.manifest, "devDependencies");
+            deps.extend(manifest_field(&project.manifest, "dependencies"));
+            (project.dir.as_path(), deps.into_iter().collect())
+        })
+        .collect();
+    by_dir.hash(&mut hasher);
+    hasher.finish()
 }

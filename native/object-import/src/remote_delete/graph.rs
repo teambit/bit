@@ -132,17 +132,16 @@ fn extend_dependents(
 }
 
 fn row_identity(row: &Value, model: &Value) -> Option<String> {
-    let scope = row["id"]["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
+    let (row_scope, row_name) = super::row_id_parts(&row["id"]);
+    let scope = (!row_scope.is_empty())
+        .then_some(row_scope)
         .or_else(|| {
             model["scope"]
                 .as_str()
                 .filter(|val| !val.is_empty())
         })?;
-    let name = row["id"]["name"]
-        .as_str()
-        .filter(|val| !val.is_empty())
+    let name = (!row_name.is_empty())
+        .then_some(row_name)
         .or_else(|| {
             model["name"]
                 .as_str()
@@ -194,12 +193,14 @@ fn id(value: &Value) -> Option<String> {
         .filter(|name| !name.is_empty())?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+        .map_or((raw_name, None), |(bare, ver)| {
+            (bare, Some(ver).filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")))
+        });
     let version = id_obj["version"]
         .as_str()
         .or_else(|| value["version"].as_str())
         .or_else(|| value["head"].as_str())
-        .filter(|version| !version.is_empty())
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
         .or(inline_ver);
     Some(version.map_or_else(
         || format!("{scope}/{name}"),

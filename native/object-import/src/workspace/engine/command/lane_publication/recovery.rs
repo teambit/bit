@@ -60,7 +60,7 @@ impl Recovery {
         crate::checkout::plan::relative_path(&config)?;
         let config_path = crate::scope_path(root).join(format!("staged-config/{config}.json"));
         if let Some(bytes) = proof::read(&config_path, &mut self.proofs)? {
-            let rows: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+            let rows: Value = crate::parse_jsonc(&bytes)?;
             if !rows
                 .as_array()
                 .ok_or_else(|| invalid("lane recovery staged config"))?

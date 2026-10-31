@@ -89,6 +89,7 @@ pub fn from_model(extensions: &[Value]) -> Vec<AspectEntry> {
             let (id, core) = match extension.get("extensionId") {
                 Some(Value::String(id)) => (
                     id.strip_suffix("@latest")
+                        .or_else(|| id.strip_suffix("@head"))
                         .unwrap_or(id)
                         .to_owned(),
                     false,
@@ -128,11 +129,12 @@ fn serialized_id(id: &Map<String, Value>) -> Option<String> {
     };
     let version = id
         .get("version")
+        .or_else(|| id.get("head"))
         .and_then(Value::as_str)
         .filter(|ver| !ver.is_empty())
         .or(inline_ver);
     Some(match version {
-        Some(ver) if ver != "latest" => format!("{scoped}@{ver}"),
+        Some(ver) if !matches!(ver, "latest" | "head") => format!("{scoped}@{ver}"),
         _ => scoped,
     })
 }

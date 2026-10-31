@@ -177,7 +177,7 @@ impl Importer<'_> {
         };
         let edges = self.repo
             .read(reference)?
-            .and_then(|edges| serde_json::from_slice::<Value>(&edges.content).ok());
+            .and_then(|edges| bit_object_import::parse_jsonc(&edges.content).ok());
         Ok(edges
             .and_then(|edges| {
                 edges

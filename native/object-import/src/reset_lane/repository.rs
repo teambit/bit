@@ -101,7 +101,7 @@ fn load_objects(
 ) -> io::Result<Loaded> {
     let bytes = proofs::read(&crate::scope_path(root).join("index.json"), reads)?
         .ok_or_else(|| invalid("lane reset scope index absent"))?;
-    let index: Value = serde_json::from_slice(&bytes)?;
+    let index: Value = crate::parse_jsonc(&bytes)?;
     let lane_hash = indexed_hash(&index, "lanes", &bitmap.lane_scope, &bitmap.lane_name)?;
     let model_hash = indexed_hash(&index, "components", scope, name)?;
     let objects = crate::scope_path(root).join("objects");
@@ -127,7 +127,10 @@ fn current(
         lane["components"].as_array().ok_or_else(|| invalid("lane reset Lane components"))?;
     let visible = rows
         .iter()
-        .any(|row| row["id"]["scope"] == scope && row["id"]["name"] == name);
+        .any(|row| {
+            let (row_scope, row_name) = super::row_id_parts(&row["id"]);
+            (row_scope == scope || row_scope.is_empty()) && row_name == name
+        });
     let current = if visible {
         if require_bitmap && bitmap.key.is_empty() {
             return Err(invalid("lane reset visible bitmap absent"));

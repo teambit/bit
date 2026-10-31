@@ -1,8 +1,19 @@
 //! `SnappingMain.snap` and `tag` parameters visible to published lifecycle hooks.
 
-use super::{ResolveRequest, Selection, workflow::Workflow};
+use super::{
+    Planned, ResolveRequest, Selection, receipts::validate_preparation, workflow::Workflow,
+};
+use crate::commands::{
+    engine::Engine,
+    status::{
+        autosync::Startup,
+        cache, capture, environments,
+        fresh::dependency_grammar,
+        js::{array, decline},
+    },
+};
 use serde_json::{Value, json};
-use std::path::Path;
+use std::{io, path::Path};
 
 pub(super) fn planned(
     root: &Path,
@@ -69,4 +80,82 @@ fn tag(params: &mut Value, options: &Value) {
         params["build"] = json!(false);
     }
     params["skipPublishedVersions"] = json!(false);
+}
+
+pub(super) fn session_environment(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    startup: Option<&mut Startup>,
+    build: bool,
+    inherited: Option<environments::Environments>,
+) -> io::Result<Option<environments::Environments>> {
+    if let Some(environment) = inherited {
+        return environment.continue_snapshot(build).map(Some);
+    }
+    startup
+        .map(|startup| {
+            environments::read_snapshot_context(engine, root, home, build, startup)
+                .map(|(_, environments)| environments)
+        })
+        .transpose()
+}
+
+/// `listTagPendingIds` populates missing lane history while checking staged snaps.
+/// Stage the same read-proven write before the soft bitmap publication.
+pub(super) fn stage_soft_history(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    context: &mut Value,
+) -> io::Result<()> {
+    let status: Value =
+        engine.request(&json!({"kind":"statusContext","root":root,"home":home,"history":true}))?;
+    if status["models"] != context["models"] {
+        return Err(decline("soft tag history models changed"));
+    }
+    context["pendingHistory"] =
+        json!(array(status.get("pendingHistory"), "soft tag pending history")?);
+    Ok(())
+}
+
+pub(super) fn preparation(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    request: &ResolveRequest<'_>,
+    callbacks: bool,
+) -> io::Result<Value> {
+    let mut prepare = json!({
+        "kind": request.kind.request("Prepare"),
+        "root": root,
+        "home": home,
+        "options": request.options,
+        "dependencyGrammar": dependency_grammar()?,
+        "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),
+    });
+    if callbacks && request.kind == super::Kind::Resolve {
+        prepare["options"]["callbackLifecycle"] = json!(true);
+    }
+    if let Selection::Tag { tag_options, .. } = &request.selection {
+        prepare["tagOptions"] = tag_options.clone();
+    }
+    let prepared: Value = engine.request(&prepare)?;
+    validate_preparation(&prepared, request.kind)?;
+    Ok(prepared)
+}
+
+impl Planned {
+    pub(in crate::commands) fn has_captured_components(&self) -> bool {
+        !self.capture.components.is_empty()
+    }
+
+    /// Move configured callbacks across native merge materialization and resolution.
+    pub(in crate::commands) fn take_environment(&mut self) -> Option<environments::Environments> {
+        capture::take_callback_environment(&mut self.capture)
+    }
+
+    pub(in crate::commands) fn restore_host(&mut self, host: crate::host::Host) {
+        capture::restore_callback_host(&mut self.capture, host);
+    }
 }

@@ -168,7 +168,7 @@ pub(super) fn extend_model_targets(context: &Value, targets: &mut Vec<Value>) {
 }
 
 fn version_ref(model: &Value, version: &str) -> io::Result<String> {
-    let reference = if version.is_empty() || version == "latest" {
+    let reference = if matches!(version, "" | "latest" | "head") {
         model["head"].as_str()
     } else {
         model["orphanedVersions"]

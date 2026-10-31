@@ -125,11 +125,8 @@ impl Plan {
         self.moved.components
             .iter()
             .map(|row| {
-                format!(
-                    "{}/{}",
-                    row["id"]["scope"].as_str().unwrap_or_default(),
-                    row["id"]["name"].as_str().unwrap_or_default(),
-                )
+                let (row_scope, row_name) = origin::id_scope_and_name(&row["id"]);
+                format!("{row_scope}/{row_name}")
             })
             .collect()
     }
@@ -143,7 +140,7 @@ impl Plan {
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
         let mut index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
-            Ok(bytes) => match serde_json::from_slice(&bytes)? {
+            Ok(bytes) => match crate::parse_jsonc(&bytes)? {
                 Value::Array(components) => json!({"components":components,"lanes":[]}),
                 value => value,
             },
@@ -175,7 +172,7 @@ impl Documents {
         let lanes = self.index["lanes"].as_array_mut().ok_or_else(invalid)?;
         if lanes
             .iter()
-            .any(|row| row["id"]["name"] == name && row["id"]["scope"] == scope)
+            .any(|row| origin::id_scope_and_name(&row["id"]) == (scope, name))
         {
             return Err(invalid());
         }
@@ -268,7 +265,10 @@ fn history_components(components: &[Value]) -> io::Result<Vec<String>> {
         .iter()
         .map(|entry| {
             let id = if let Some(raw_id) = entry["id"].as_str() {
-                raw_id.to_owned()
+                raw_id
+                    .rsplit_once('@')
+                    .map_or(raw_id, |(bare, _)| bare)
+                    .to_owned()
             } else {
                 let name = entry["id"]["name"].as_str().ok_or_else(invalid)?;
                 match entry["id"]["scope"]

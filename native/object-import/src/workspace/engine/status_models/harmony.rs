@@ -93,7 +93,7 @@ fn identity(value: &Value) -> io::Result<Value> {
     let mut output = json!({"scope":scope,"name":name});
     if let Some(version) = value.get("version") {
         let version = version.as_str().ok_or_else(|| invalid("Harmony dependency version"))?;
-        if !version.is_empty() && version != "latest" {
+        if !version.is_empty() && !matches!(version, "latest" | "head") {
             output["version"] = json!(version);
         }
     }

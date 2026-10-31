@@ -54,7 +54,7 @@ impl Reader {
         if self.bytes > 32 * 1024 * 1024 {
             return Err(invalid("fresh package byte budget"));
         }
-        let value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+        let value = crate::parse_jsonc(&bytes)?;
         Ok(Some(value))
     }
     pub(super) fn package(&mut self, resolved: &str) -> io::Result<Package> {
@@ -160,7 +160,7 @@ fn concrete(package: &Value, component: Option<&Value>) -> io::Result<Option<Str
         .is_some_and(|version| !version.is_empty())
         && let Some(component) = component
         && let Some(id_version) = optional(component.get("version"))?
-            .filter(|version| !version.is_empty() && version != "latest")
+            .filter(|version| !version.is_empty() && !matches!(version.as_str(), "latest" | "head"))
     {
         version = Some(id_version);
     }

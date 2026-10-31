@@ -99,10 +99,13 @@ pub(super) fn header(context: &Value, bitmap: &Value) -> io::Result<Option<Value
         }
         return Ok(None);
     };
+    let (scope, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(header)
+            .unwrap_or_default();
     if !on_lane(context)
-        || header["id"]["scope"].as_str().is_none_or(str::is_empty)
-        || header["id"]["scope"] != context["lane"]["currentId"]["scope"]
-        || header["id"]["name"] != context["lane"]["currentId"]["name"]
+        || scope.is_empty()
+        || scope != context["lane"]["currentId"]["scope"].as_str().unwrap_or_default()
+        || name != context["lane"]["currentId"]["name"].as_str().unwrap_or_default()
         || header
             .get("exported")
             .is_some_and(|value| !value.is_boolean())
@@ -110,7 +113,7 @@ pub(super) fn header(context: &Value, bitmap: &Value) -> io::Result<Option<Value
         return Err(invalid("command lane bitmap header mismatch"));
     }
     // LaneId's enumerable instance fields are name then scope; getContent adds exported last.
-    Ok(Some(json!({"id":{"name":header["id"]["name"],"scope":header["id"]["scope"]},
+    Ok(Some(json!({"id":{"name":name,"scope":scope},
         "exported":header["exported"].as_bool().unwrap_or(false)})))
 }
 

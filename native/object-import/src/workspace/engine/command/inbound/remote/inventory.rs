@@ -209,9 +209,8 @@ fn identity(id: &str) -> io::Result<(&str, &str)> {
 }
 
 fn scope_file(path: &Path, scope: &str) -> io::Result<()> {
-    let value: Value = serde_json::from_slice(
-        &Budget::new(1024 * 1024).read(File::open(path.join("scope.json"))?)?,
-    )?;
+    let value: Value =
+        crate::parse_jsonc(&Budget::new(1024 * 1024).read(File::open(path.join("scope.json"))?)?)?;
     if value["name"] != scope {
         return Err(invalid("remote file scope identity"));
     }

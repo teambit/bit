@@ -26,7 +26,7 @@ pub(super) fn remote_head(
     if bytes.len() > 4 * 1024 * 1024 {
         return Err(invalid("lane reset remote refs oversized"));
     }
-    let refs: Value = serde_json::from_slice(&bytes)?;
+    let refs: Value = crate::parse_jsonc(&bytes)?;
     let rows = refs
         .as_array()
         .filter(|rows| rows.len() <= 4096)
@@ -37,7 +37,8 @@ pub(super) fn remote_head(
 fn head_for(rows: &[Value], scope: &str, name: &str) -> io::Result<Option<String>> {
     let mut found = None;
     for row in rows {
-        if row["id"]["scope"] == scope && row["id"]["name"] == name {
+        let (row_scope, row_name) = super::row_id_parts(&row["id"]);
+        if (row_scope == scope || row_scope.is_empty()) && row_name == name {
             let head = row["head"].as_str().ok_or_else(|| invalid("lane reset remote head"))?;
             crate::merge_history::hash(head)?;
             if found.replace(head.to_owned()).is_some() {
@@ -76,10 +77,14 @@ pub(super) fn baseline(
         return Ok(Some(head.to_owned()));
     }
     if !bitmap.exported
-        && let Some(fork) = lane.get("forkedFrom")
+        && let Some(fork) = lane
+            .get("forkedFrom")
+            .filter(|val| !val.is_null())
     {
-        let fork_scope = fork["scope"].as_str().ok_or_else(|| invalid("lane reset fork scope"))?;
-        let fork_name = fork["name"].as_str().ok_or_else(|| invalid("lane reset fork name"))?;
+        let (fork_scope, fork_name) = super::row_id_parts(fork);
+        if fork_scope.is_empty() || fork_name.is_empty() {
+            return Err(invalid("lane reset fork scope"));
+        }
         if let Some(head) = remote_head(root, fork_scope, fork_name, scope, name, reads)? {
             return Ok(Some(head));
         }

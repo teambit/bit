@@ -63,7 +63,7 @@ pub(super) fn one(
     let version = target
         .get("version")
         .and_then(Value::as_str)
-        .filter(|value| !value.is_empty());
+        .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"));
     let versions = Versions {
         left: from_version.unwrap_or_else(|| version.unwrap_or("latest")),
         right: to_version.unwrap_or_else(|| version.unwrap_or("latest")),

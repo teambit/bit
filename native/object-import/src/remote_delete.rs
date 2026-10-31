@@ -47,7 +47,7 @@ impl ScopeGuard {
         if legacy.len() > 1024 * 1024 {
             return Err(invalid("remote scope metadata budget"));
         }
-        let value: Value = serde_json::from_slice(&legacy)?;
+        let value: Value = crate::parse_jsonc(&legacy)?;
         if value["hooksPath"] != Value::Null
             || value["resolverPath"] != Value::Null
             || (!value["config"].is_null()
@@ -178,7 +178,7 @@ impl Plan {
     }
 
     fn publish(&self, store: &Store) -> io::Result<()> {
-        if self.index != serde_json::from_slice::<Value>(&self.before_index)? {
+        if self.index != crate::parse_jsonc(&self.before_index)? {
             let mut bytes = serde_json::to_vec_pretty(&self.index)?;
             bytes.push(b'\n');
             store.write_index(&bytes)?;
@@ -265,7 +265,7 @@ pub(super) fn read_index(scope: &Path) -> io::Result<(Vec<u8>, Value)> {
     if bytes.len() > 16 * 1024 * 1024 {
         return Err(invalid("remote index budget"));
     }
-    let index = serde_json::from_slice(&bytes)?;
+    let index = crate::parse_jsonc(&bytes)?;
     Ok((bytes, index))
 }
 pub(super) fn identity(id: &str) -> io::Result<&str> {
@@ -276,12 +276,26 @@ pub(super) fn identity(id: &str) -> io::Result<&str> {
     }
     Ok(plain)
 }
+pub(super) fn row_id_parts(id: &Value) -> (&str, &str) {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        return bare
+            .split_once('/')
+            .unwrap_or(("", bare));
+    }
+    let scope = id["scope"].as_str().unwrap_or_default();
+    let name = id["name"]
+        .as_str()
+        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .unwrap_or_default();
+    (scope, name)
+}
 pub(super) fn component_row<'a>(index: &'a Value, id: &str) -> Option<&'a Value> {
     let (scope, name) = id.split_once('/')?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
     let matches_id = |row: &&Value| {
-        let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-        (row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name
+        let (row_scope, row_name) = row_id_parts(&row["id"]);
+        (row_scope == scope || row_scope.is_empty()) && row_name == name
     };
     rows.iter()
         .find(|row| row["isSymlink"] != true && matches_id(row))

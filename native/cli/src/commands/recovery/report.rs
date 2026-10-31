@@ -2,7 +2,7 @@
 use super::{
     Chalk, Engine, Formatter, HostInfo, Id, Installer, Kind, Options, Path, Report, Startup, Value,
     array, cache, checkout, decline, dependency_grammar, environments, installation, io, json,
-    object, text,
+    object, text, workspace_command,
 };
 
 pub(super) fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>> {
@@ -41,13 +41,6 @@ pub(super) fn format_component(result: &Value, chalk: Chalk) -> io::Result<Repor
     Ok(Report { data: format.section("merge aborted", "", &items), code: 0, details: None })
 }
 
-#[cfg_attr(
-    dylint_lib = "perfectionist",
-    expect(
-        perfectionist::too_many_local_bindings,
-        reason = "Existing CLI orchestration is retained until its operation is decomposed"
-    )
-)]
 fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
     let map = object(result)?;
     let items = array(map.get("restoredItems"), "restored items")?;
@@ -58,37 +51,51 @@ fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
     {
         return Err(decline("lane recovery result"));
     }
-    let format = Formatter::new(chalk);
+    let summary = lane_restored_summary(items, &Formatter::new(chalk))?;
+    let checkout = lane_checkout_report(map, chalk)?;
+    let error = lane_checkout_error(map, chalk)?;
+    Ok(Report {
+        data: Formatter::join(&[checkout.data, summary.clone(), error.clone()]),
+        code: checkout.code,
+        details: checkout.details.map(|details| Formatter::join(&[details, summary, error])),
+    })
+}
+
+fn lane_restored_summary(items: &[Value], format: &Formatter) -> io::Result<String> {
     let restored = items
         .iter()
         .map(|item| text(Some(item)).map(|item| format.item(item)))
         .collect::<io::Result<Vec<_>>>()?;
-    let summary = format!(
+    Ok(format!(
         "{}\n{}",
         format.success_summary("The following have been restored successfully"),
         restored.join("\n"),
-    );
-    let checkout = match map
+    ))
+}
+
+fn lane_checkout_report(map: &serde_json::Map<String, Value>, chalk: Chalk) -> io::Result<Report> {
+    match map
         .get("checkoutResults")
         .filter(|value| !value.is_null())
     {
         Some(result) => {
             let options = checkout::options::parse(&["reset", "--all", "-x"])
                 .ok_or_else(|| decline("recovery checkout options"))?;
-            checkout::report::format(result, &options, chalk)?
+            checkout::report::format(result, &options, chalk)
         }
-        None => Report { data: String::new(), code: 0, details: None },
-    };
-    let error = map.get("checkoutError").filter(|value| !value.is_null())
+        None => Ok(Report { data: String::new(), code: 0, details: None }),
+    }
+}
+
+fn lane_checkout_error(map: &serde_json::Map<String, Value>, chalk: Chalk) -> io::Result<String> {
+    let message = map
+        .get("checkoutError")
+        .filter(|value| !value.is_null())
         .map(|value| text(value.get("message")))
-        .transpose()?
-        .map(|message| chalk.red(&format!("\n\nFailed to change component files to the pre-merge state due to an error:\n{message}\nplease fix the error and then run \"bit checkout reset --all\" to revert the components to the pre-merge state")))
-        .unwrap_or_default();
-    Ok(Report {
-        data: Formatter::join(&[checkout.data, summary.clone(), error.clone()]),
-        code: checkout.code,
-        details: checkout.details.map(|details| Formatter::join(&[details, summary, error])),
-    })
+        .transpose()?;
+    Ok(message
+        .map(|msg| chalk.red(&format!("\n\nFailed to change component files to the pre-merge state due to an error:\n{msg}\nplease fix the error and then run \"bit checkout reset --all\" to revert the components to the pre-merge state")))
+        .unwrap_or_default())
 }
 
 pub(super) fn consume_trailing_recovery<'a>(
@@ -151,4 +158,32 @@ pub(super) fn prepare_request(root: &Path, home: &Path, options: &Options) -> io
         request["options"]["pattern"] = json!(pattern);
     }
     Ok(request)
+}
+
+pub(super) fn prepare_recovery_context(
+    engine: &mut Engine,
+    request: &Value,
+    options: &Options,
+    startup: &mut Startup,
+) -> io::Result<(String, Value, Vec<Value>)> {
+    let prepared: Value = engine.request(request)?;
+    let token = text(prepared.get("token"))?.to_string();
+    let mut context = prepared
+        .get("context")
+        .filter(|value| value.is_object())
+        .ok_or_else(|| decline("recovery context"))?
+        .clone();
+    let targets = array(prepared.get("captureTargets"), "recovery capture targets")?.to_vec();
+    if targets.len() > 4096 {
+        return Err(decline("recovery target limit"));
+    }
+    if options.kind == Kind::Lane {
+        startup.committed = true;
+        let file_id = workspace_command::file_id();
+        let _: Value = engine.request(
+            &json!({"kind":"commandRecoveryRestore","token":token,"fileId":file_id}),
+        )?;
+        context["recoveryRestoredFileId"] = json!(file_id);
+    }
+    Ok((token, context, targets))
 }

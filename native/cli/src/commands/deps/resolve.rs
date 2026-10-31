@@ -237,12 +237,11 @@ impl WorkspaceDepsContext {
             .join("node_modules")
             .join(pkg_name)
             .join("package.json");
-        let parsed: Value = serde_json::from_str(&fs::read_to_string(pkg_json).ok()?).ok()?;
+        let parsed: Value = bit_object_import::parse_jsonc(&fs::read(pkg_json).ok()?).ok()?;
         let comp_id = parsed.get("componentId")?;
-        let scope = comp_id["scope"].as_str()?;
-        let name = comp_id["name"].as_str()?;
+        let (scope, name, id_ver) = parse_manifest_comp_id(comp_id)?;
         let ver = override_ver
-            .or_else(|| comp_id["version"].as_str())
+            .or(id_ver)
             .or_else(|| parsed["version"].as_str())?;
         let bare = format!("{scope}/{name}");
         Some(ResolvedDep {
@@ -269,9 +268,25 @@ impl WorkspaceDepsContext {
             .join("node_modules")
             .join(pkg_name)
             .join("package.json");
-        let parsed: Value = serde_json::from_str(&fs::read_to_string(pkg_json).ok()?).ok()?;
+        let parsed: Value = bit_object_import::parse_jsonc(&fs::read(pkg_json).ok()?).ok()?;
         parsed["version"].as_str().map(str::to_owned)
     }
+}
+
+pub(super) fn parse_manifest_comp_id(comp_id: &Value) -> Option<(&str, &str, Option<&str>)> {
+    if let (Some(scope), Some(name)) = (comp_id["scope"].as_str(), comp_id["name"].as_str()) {
+        return Some((scope, name, comp_id["version"].as_str()));
+    }
+    let raw = comp_id.as_str()?;
+    let (bare, ver) = raw
+        .rsplit_once('@')
+        .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
+    let (scope, name) = bare.split_once('/')?;
+    (!scope.is_empty() && !name.is_empty()).then_some((
+        scope,
+        name,
+        ver.filter(|val| !val.is_empty()),
+    ))
 }
 
 pub(super) fn scanned_specifiers(comp_dir: &Path, rel_file: &str) -> Vec<String> {

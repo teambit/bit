@@ -15,7 +15,9 @@ use std::{collections::HashSet, fs, io, path::Path};
 /// Serve one fetch request from the bare scope at `path`.
 pub fn fetch(path: &Path, ids: &[String], options: &FetchOptions) -> io::Result<Vec<ObjectItem>> {
     let scope_json: Value = match fs::read(path.join("scope.json")) {
-        Ok(bytes) => serde_json::from_slice(&bytes).map_err(|_| invalid("invalid scope.json"))?,
+        Ok(bytes) => {
+            bit_object_import::parse_jsonc(&bytes).map_err(|_| invalid("invalid scope.json"))?
+        }
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
@@ -182,7 +184,7 @@ impl Collector {
     fn has_graph(&self, version: &Value) -> io::Result<bool> {
         if let Some(reference) = version["flattenedEdgesRef"].as_str() {
             let Some(edges) = self.repo.read(reference)? else { return Ok(false) };
-            return Ok(serde_json::from_slice::<Value>(&edges.content)
+            return Ok(bit_object_import::parse_jsonc(&edges.content)
                 .ok()
                 .and_then(|edges| {
                     edges
@@ -200,6 +202,9 @@ impl Collector {
 /// `ModelComponent.getRef(version)`: a tag (also orphaned) or a snap hash.
 #[must_use]
 pub fn resolve_version(component: &Value, version: &str) -> Option<String> {
+    if matches!(version, "latest" | "head") {
+        return latest(component);
+    }
     if let Some(hash) = component["versions"][version]
         .as_str()
         .or_else(|| component["orphanedVersions"][version].as_str())
@@ -276,7 +281,7 @@ pub(super) fn dependency_id(value: &Value) -> Option<Id> {
         .or_else(|| target["head"].as_str())
         .or_else(|| value["head"].as_str())
         .or(inline_ver)
-        .filter(|val| !val.is_empty() && *val != "latest")
+        .filter(|val| !val.is_empty() && !matches!(*val, "latest" | "head"))
         .map(str::to_string);
     Some(Id {
         scope: target["scope"]
@@ -292,7 +297,7 @@ pub(super) fn dependency_id(value: &Value) -> Option<Id> {
 fn lane_hash(repo: &Repo, lane: &str) -> io::Result<Option<String>> {
     let index: Value = match fs::read(repo.root().join("index.json")) {
         Ok(bytes) => {
-            serde_json::from_slice(&bytes).map_err(|_| invalid("invalid scope index.json"))?
+            bit_object_import::parse_jsonc(&bytes).map_err(|_| invalid("invalid scope index.json"))?
         }
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
@@ -304,12 +309,21 @@ fn lane_hash(repo: &Repo, lane: &str) -> io::Result<Option<String>> {
         .as_array()
         .into_iter()
         .flatten()
-        .find(|row| {
-            lane_scope.is_none_or(|sc| row["id"]["scope"].as_str() == Some(sc))
-                && row["id"]["name"].as_str() == Some(name)
-        })
+        .find(|row| matches_id_scope_name(&row["id"], lane_scope, name))
         .and_then(|row| row["hash"].as_str())
         .map(str::to_string))
+}
+
+fn matches_id_scope_name(id: &Value, expected_scope: Option<&str>, expected_name: &str) -> bool {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let (sc, nm) = bare
+            .split_once('/')
+            .map_or((None, bare), |(sc, nm)| (Some(sc), nm));
+        return expected_scope.is_none_or(|exp| sc == Some(exp)) && nm == expected_name;
+    }
+    expected_scope.is_none_or(|sc| id["scope"].as_str() == Some(sc))
+        && id["name"].as_str() == Some(expected_name)
 }
 
 fn find_lane(repo: &Repo, lane: &str) -> io::Result<Option<Value>> {
@@ -323,17 +337,14 @@ fn find_lane(repo: &Repo, lane: &str) -> io::Result<Option<Value>> {
 fn lane_head(lane: &Value, id: &Id) -> Option<Id> {
     if id.version
         .as_deref()
-        .is_some_and(|ver| !ver.is_empty())
+        .is_some_and(|ver| !ver.is_empty() && !matches!(ver, "latest" | "head"))
     {
         return None;
     }
     lane["components"]
         .as_array()?
         .iter()
-        .find(|entry| {
-            entry["id"]["scope"].as_str() == Some(&id.scope)
-                && entry["id"]["name"].as_str() == Some(&id.name)
-        })
+        .find(|entry| matches_id_scope_name(&entry["id"], Some(&id.scope), &id.name))
         .and_then(|entry| entry["head"].as_str())
         .map(|head| id.with_version(Some(head.to_string())))
 }

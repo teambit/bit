@@ -51,6 +51,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     if let Some(id) = id.as_str() {
         return Ok(id
             .strip_suffix("@latest")
+            .or_else(|| id.strip_suffix("@head"))
             .unwrap_or(id)
             .to_owned());
     }
@@ -69,9 +70,10 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     };
     let version = id["version"]
         .as_str()
+        .or_else(|| id["head"].as_str())
         .filter(|version| !version.is_empty())
         .or(inline_ver)
-        .filter(|version| *version != "latest");
+        .filter(|version| !matches!(*version, "latest" | "head"));
     Ok(version.map_or_else(|| base.clone(), |version| format!("{base}@{version}")))
 }
 

@@ -211,7 +211,7 @@ pub(super) fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Op
         Err(error) => return Err(error),
     };
     let (_, body) = crate::checkout::repository::split(&raw, identity, kind)?;
-    serde_json::from_slice(body).map(Some).map_err(io::Error::other)
+    crate::parse_jsonc(body).map(Some).map_err(io::Error::other)
 }
 
 fn local_component_model(root: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
@@ -237,16 +237,20 @@ pub(crate) fn candidate_component_hashes(scope_dir: &Path, scope: &str, name: &s
 
 fn indexed_component_hashes(scope_dir: &Path, scope: &str, name: &str) -> Vec<String> {
     let Ok(bytes) = std::fs::read(scope_dir.join("index.json")) else { return Vec::new() };
-    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else { return Vec::new() };
+    let Ok(index) = crate::parse_jsonc(&bytes) else { return Vec::new() };
     index
         .as_array()
         .or_else(|| index["components"].as_array())
         .into_iter()
         .flatten()
         .filter(|row| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            let Some((row_scope_opt, row_name)) = super::remote::file_list::row_id_parts(row)
+            else {
+                return false;
+            };
+            let row_scope = row_scope_opt.unwrap_or_default();
             row["isSymlink"] != true
-                && row["id"]["name"].as_str() == Some(name)
+                && row_name == name
                 && (row_scope == scope || row_scope.is_empty())
         })
         .filter_map(|row| {

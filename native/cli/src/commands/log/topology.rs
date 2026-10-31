@@ -73,39 +73,32 @@ fn resolve_from_scope_index(root: &Path, id: &str) -> io::Result<Option<String>>
     let Ok(bytes) = fs::read(index_path) else {
         return Ok(None);
     };
-    let index: Value = serde_json::from_slice(&bytes).map_err(|_| decline("log index json"))?;
+    let index = bit_object_import::parse_jsonc(&bytes).map_err(|_| decline("log index json"))?;
     let Some(rows) = index["components"].as_array().or_else(|| index.as_array()) else {
         return Ok(None);
     };
     let matches = rows
         .iter()
-        .filter(|row| {
-            row["isSymlink"] != true
-                && (row["id"]["name"].as_str() == Some(id)
-                    || match (row["id"]["scope"].as_str(), row["id"]["name"].as_str()) {
-                        (Some(scope), Some(name)) if !scope.is_empty() => {
-                            format!("{scope}/{name}") == id
-                        }
-                        _ => false,
-                    })
-        })
+        .filter(|row| row["isSymlink"] != true)
+        .filter_map(|row| row_identity_matching(row, id))
         .collect::<Vec<_>>();
     match matches.as_slice() {
         [] => Ok(None),
-        [row] => {
-            let name = row["id"]["name"].as_str().ok_or_else(|| decline("log index name"))?;
-            Ok(Some(
-                match row["id"]["scope"]
-                    .as_str()
-                    .filter(|scope| !scope.is_empty())
-                {
-                    Some(scope) => format!("{scope}/{name}"),
-                    None => name.to_owned(),
-                },
-            ))
-        }
+        [identity] => Ok(Some(identity.clone())),
         _ => Err(decline("log index identity ambiguous")),
     }
+}
+
+fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
+    let (scope, name) = if let Some(id_str) = row["id"].as_str() {
+        id_str
+            .split_once('/')
+            .unwrap_or(("", id_str))
+    } else {
+        (row["id"]["scope"].as_str().unwrap_or_default(), row["id"]["name"].as_str()?)
+    };
+    let full = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
+    (name == target || full == target).then_some(full)
 }
 
 fn diagnose_missing_local_target(
@@ -128,7 +121,10 @@ fn diagnose_missing_local_target(
         if let Err(Failure::User(err)) = validate_component_name(name) {
             return Ok(LocalTarget::UserError(err));
         }
-        let display_id = raw_id.strip_suffix("@latest").unwrap_or(raw_id);
+        let display_id = raw_id
+            .strip_suffix("@latest")
+            .or_else(|| raw_id.strip_suffix("@head"))
+            .unwrap_or(raw_id);
         return Ok(LocalTarget::UserError(format!(
             r#"error: component "{}" was not found"#,
             chalk.bold(display_id),

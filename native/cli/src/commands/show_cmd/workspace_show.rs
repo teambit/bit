@@ -45,7 +45,9 @@ impl LoadedComponent {
             format!("{}/{}", self.scope, self.entry.id.name)
         };
         match self.entry.id.version.as_deref() {
-            Some(ver) if !ver.is_empty() && ver != "latest" => format!("{base}@{ver}"),
+            Some(ver) if !ver.is_empty() && !matches!(ver, "latest" | "head") => {
+                format!("{base}@{ver}")
+            }
             _ => base,
         }
     }

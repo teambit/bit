@@ -6,6 +6,8 @@
 
 pub(crate) mod semver;
 
+pub use assemble::{manifests_hash, subscriber_links};
+
 mod assemble;
 mod component_deps;
 mod dedupe;
@@ -30,10 +32,7 @@ use crate::{
 use component_deps::RootPolicy;
 use deps::Field;
 use indexmap::IndexMap;
-use serde_json::Value;
 use std::{
-    collections::BTreeMap,
-    hash::{DefaultHasher, Hash, Hasher},
     io,
     path::{Path, PathBuf},
 };
@@ -312,65 +311,6 @@ pub fn plan(input: &ManifestInput<'_>) -> io::Result<ManifestOutcome> {
     })
 }
 
-/// Apply only the mutable `installComponents` links; policy/manifests stay precomputed.
-pub fn subscriber_links(
-    root: &Path,
-    plan: &mut InstallPlan,
-    original: &[crate::model::Project],
-    options: &Value,
-) -> io::Result<()> {
-    let mut manifests = original
-        .iter()
-        .map(|project| (project.dir.clone(), project.manifest.clone()))
-        .collect::<IndexMap<_, _>>();
-    plan.forced_harmony_version = options
-        .get("forcedHarmonyVersion")
-        .filter(|value| !value.is_null())
-        .map(|value| serde_json::from_value(value.clone()))
-        .transpose()
-        .map_err(io::Error::other)?;
-    if let Some(links) = options
-        .get("linkedDependencies")
-        .filter(|value| !value.is_null())
-    {
-        merge_subscriber_projects(
-            root,
-            &mut manifests,
-            links,
-            plan.forced_harmony_version.as_deref(),
-        )?;
-    }
-    plan.projects = projects(manifests, root);
-    Ok(())
-}
-
-fn merge_subscriber_projects(
-    root: &Path,
-    manifests: &mut IndexMap<PathBuf, Manifest>,
-    links: &Value,
-    forced_harmony_version: Option<&str>,
-) -> io::Result<()> {
-    let links: IndexMap<PathBuf, DependencyMap> =
-        serde_json::from_value(links.clone()).map_err(io::Error::other)?;
-    for (directory, dependencies) in links {
-        if !directory.is_absolute() || !directory.starts_with(root) {
-            return Err(io::Error::other("subscriber linked project outside workspace"));
-        }
-        if directory == root {
-            assemble::merge_linked_root(manifests, root, dependencies, forced_harmony_version);
-        } else {
-            let manifest = manifests.entry(directory).or_default();
-            let merged =
-                deps::spread(&[&dependencies, &deps::manifest_field(manifest, "dependencies")]);
-            manifest.insert(
-                "dependencies".into(),
-                serde_json::to_value(merged).map_err(io::Error::other)?,
-            );
-        }
-    }
-    Ok(())
-}
-
 /// What `writeDependenciesToPackageJson` writes to the root `package.json`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PackageJsonDependencies {
@@ -399,23 +339,6 @@ pub fn package_json_dependencies(input: &ManifestInput<'_>) -> io::Result<Packag
         warnings: env_root.warnings,
         messages: env_root.messages,
     })
-}
-
-/// `manifestsHash`: the dependencies (with dev dependencies) of every project.
-/// The type of a dependency is left out: it does not change `node_modules`.
-#[must_use]
-pub fn manifests_hash(plan: &InstallPlan) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    let by_dir: BTreeMap<&Path, BTreeMap<String, String>> = plan.projects
-        .iter()
-        .map(|project| {
-            let mut deps = deps::manifest_field(&project.manifest, "devDependencies");
-            deps.extend(deps::manifest_field(&project.manifest, "dependencies"));
-            (project.dir.as_path(), deps.into_iter().collect())
-        })
-        .collect();
-    by_dir.hash(&mut hasher);
-    hasher.finish()
 }
 
 #[cfg(test)]

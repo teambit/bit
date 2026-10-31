@@ -1,5 +1,4 @@
 //! Typed action errors and the released remote error messages.
-use super::remote_error;
 use reqwest::Response;
 use serde_json::Value;
 use std::io;
@@ -96,3 +95,81 @@ impl std::fmt::Display for ActionNotFound {
 }
 
 impl std::error::Error for ActionNotFound {}
+
+/// `throwForNonOkStatus` with `remoteErrorHandler`'s messages.
+pub(super) async fn throw_for_status(response: Response) -> io::Result<Response> {
+    if response.status().is_success() {
+        return Ok(response);
+    }
+    let fallback = format!(
+        "url: {}. status: {}. text: {}",
+        response.url(),
+        response.status().as_u16(),
+        response
+            .status()
+            .canonical_reason()
+            .unwrap_or_default(),
+    );
+    let url = response.url().to_string();
+    let parsed: Value = response.json().await.unwrap_or(Value::Null);
+    let error =
+        if parsed["error"]["code"].is_null() { parsed.clone() } else { parsed["error"].clone() };
+    let message = error["message"]
+        .as_str()
+        .or_else(|| parsed["message"].as_str())
+        .map(str::to_string);
+    let message = message.unwrap_or_else(|| {
+        if crate::tar::truthy(&error) { "unknown error".to_owned() } else { fallback }
+    });
+    Err(remote_error(error["code"].as_u64(), &error, &url, message))
+}
+
+pub(super) fn remote_error(
+    code: Option<u64>,
+    error: &Value,
+    url: &str,
+    message: String,
+) -> io::Error {
+    let text = |key: &str| error[key].as_str().map_or_else(|| message.clone(), str::to_string);
+    match code {
+        Some(127) => io::Error::new(
+            io::ErrorKind::NotFound,
+            format!(r#"error: component "{}" was not found"#, text("id")),
+        ),
+        Some(128 | 130) => io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            format!(
+                "error: permission to scope {url} was denied\nsee troubleshooting at https://legacy-docs.bit.dev/setup-authentication#authentication-issues",
+            ),
+        ),
+        Some(129) => io::Error::new(
+            io::ErrorKind::NotFound,
+            format!(r#"error: remote scope "{}" was not found."#, text("name")),
+        ),
+        Some(132 | 133) => io::Error::other(message),
+        Some(138) => io::Error::new(io::ErrorKind::NotFound, LaneNotFound(message)),
+        _ => io::Error::new(io::ErrorKind::ConnectionAborted, message),
+    }
+}
+
+/// A remote explicitly reported that the requested lane does not exist.
+#[derive(Debug)]
+pub struct LaneNotFound(String);
+impl std::fmt::Display for LaneNotFound {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+impl std::error::Error for LaneNotFound {}
+
+/// `UnexpectedNetworkError`.
+pub(super) fn unexpected(message: &str) -> io::Error {
+    io::Error::new(
+        io::ErrorKind::ConnectionAborted,
+        format!("unexpected network error has occurred.\nserver responded with: \"{message}\""),
+    )
+}
+
+pub(super) fn network_error(error: &reqwest::Error) -> io::Error {
+    unexpected(&error.to_string())
+}

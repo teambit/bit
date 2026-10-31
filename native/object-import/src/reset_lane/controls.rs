@@ -23,15 +23,12 @@ pub(crate) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Cont
     if before.len() > 4 * 1024 * 1024 {
         return Err(invalid("lane reset unmerged budget"));
     }
-    let mut value: Value = serde_json::from_slice(&before)?;
+    let mut value: Value = crate::parse_jsonc(&before)?;
     let rows = value.as_array_mut().ok_or_else(|| invalid("lane reset unmerged records"))?;
     let count = rows.len();
     rows.retain(|row| {
-        !identities.contains(&format!(
-            "{}/{}",
-            row["id"]["scope"].as_str().unwrap_or_default(),
-            row["id"]["name"].as_str().unwrap_or_default(),
-        ))
+        let (row_scope, row_name) = super::row_id_parts(&row["id"]);
+        !identities.contains(&format!("{row_scope}/{row_name}"))
     });
     if count == rows.len() {
         return Ok(Vec::new());

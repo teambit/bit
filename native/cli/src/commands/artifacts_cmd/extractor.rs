@@ -215,9 +215,17 @@ fn load_component_artifacts(
 
 fn resolve_target_version(comp_val: &Value, req_ver: &str) -> Option<(String, String)> {
     if matches!(req_ver, "latest" | "head") {
-        let head = comp_val["head"].as_str()?;
-        let tag = find_tag_for_hash(comp_val, head).unwrap_or_else(|| head.to_owned());
-        return Some((tag, head.to_owned()));
+        if let Some(head) = comp_val["head"]
+            .as_str()
+            .filter(|val| !val.is_empty())
+        {
+            let tag = find_tag_for_hash(comp_val, head).unwrap_or_else(|| head.to_owned());
+            return Some((tag, head.to_owned()));
+        }
+        return crate::commands::show_cmd::remote_show::resolve_scope_version(
+            comp_val,
+            Some("latest"),
+        );
     }
     if let Some(hash) = comp_val["versions"].get(req_ver).and_then(Value::as_str) {
         return Some((req_ver.to_owned(), hash.to_owned()));

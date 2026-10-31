@@ -22,9 +22,8 @@ pub(super) fn with_home(
     transport: &Transport,
     home: &Path,
 ) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
-    let scope: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(root).join("scope.json"))?)
-            .map_err(io::Error::other)?;
+    let scope: Value = crate::parse_jsonc(&fs::read(crate::scope_path(root).join("scope.json"))?)
+        .map_err(io::Error::other)?;
     let local = scope["name"].as_str().ok_or_else(|| invalid("inbound local scope"))?;
     let workspace = crate::effective_workspace_configuration(root, home)?;
     let global = bit_client_transfer::config::effective(
@@ -52,7 +51,7 @@ pub(super) fn bare(
     transport: &Transport,
 ) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
     let scope: Value =
-        serde_json::from_slice(&fs::read(directory.join("scope.json"))?).map_err(io::Error::other)?;
+        crate::parse_jsonc(&fs::read(directory.join("scope.json"))?).map_err(io::Error::other)?;
     let local = scope["name"].as_str().ok_or_else(|| invalid("bare inbound local scope"))?;
     if !directory.join("objects").is_dir() {
         return Err(invalid("bare inbound objects"));

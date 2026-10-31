@@ -199,7 +199,7 @@ fn index_change(
     let path = crate::scope_path(root).join("index.json");
     regular_file(root, &path)?;
     let before = fs::read(&path)?;
-    let mut index: Value = serde_json::from_slice(&before)?;
+    let mut index: Value = crate::parse_jsonc(&before)?;
     let rows =
         if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
             .ok_or_else(|| invalid("scope components"))?;
@@ -223,10 +223,7 @@ fn unique_index_position(rows: &[Value], scope: &str, name: &str) -> io::Result<
         .iter()
         .enumerate()
         .filter_map(|(position, row)| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-            (row["isSymlink"] != true
-                && (row_scope == scope || row_scope.is_empty())
-                && row["id"]["name"] == name)
+            (row["isSymlink"] != true && super::lane::matches_component_entry(row, scope, name))
                 .then_some(position)
         });
     let position = matching.next().ok_or_else(|| invalid("tagged scope model absent"))?;
@@ -301,7 +298,7 @@ fn staged_change(
     };
     regular_file(root, &path)?;
     let before = fs::read(&path)?;
-    let mut staged: Value = serde_json::from_slice(&before)?;
+    let mut staged: Value = crate::parse_jsonc(&before)?;
     let rows = staged.as_array_mut().ok_or_else(|| invalid("staged component config"))?;
     let position = unique_position(rows, scope, name)?;
     let staged_version = rows[position]["id"]["version"]
@@ -326,7 +323,7 @@ fn validate_no_staged(root: &Path, scope: &str, name: &str) -> io::Result<()> {
         return Ok(());
     }
     regular_file(root, &path)?;
-    let value: Value = serde_json::from_slice(&fs::read(path)?)?;
+    let value: Value = crate::parse_jsonc(&fs::read(path)?)?;
     let rows = value.as_array().ok_or_else(|| invalid("staged component config"))?;
     if rows.iter().any(|row| super::lane::matches_component_entry(row, scope, name)) {
         return Err(invalid("imported component has staged config"));

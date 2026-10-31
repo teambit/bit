@@ -47,9 +47,11 @@ fn config(
         .ok_or_else(|| invalid("merge bitmap missing"))?;
     let bitmap = crate::recovery::jsonc::parse(&bitmap)?;
     let identity = if let Some(lane) = bitmap.get("_bit_lane") {
-        let scope =
-            lane["id"]["scope"].as_str().ok_or_else(|| invalid("merge staged lane scope"))?;
-        let name = lane["id"]["name"].as_str().ok_or_else(|| invalid("merge staged lane name"))?;
+        let (scope, name) =
+            crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(
+                lane,
+            )
+            .ok_or_else(|| invalid("merge staged lane id"))?;
         format!("{scope}/{name}")
     } else {
         "main".to_owned()
@@ -95,7 +97,11 @@ pub(super) fn mark_lane_new(
             identity.split_once('/').ok_or_else(|| invalid("snap staged lane identity"))?;
         let row = rows_array
             .iter_mut()
-            .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+            .find(|row| {
+                crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                    row, scope, name,
+                )
+            })
             .ok_or_else(|| invalid("snap staged lane component absent"))?;
         let component = row["componentMapObject"]
             .as_object_mut()
@@ -125,7 +131,11 @@ fn update(rows: &mut Value, bitmap: &Value, input: &Input<'_>, snapshot: bool) -
     }
     if let Some(row) = rows
         .iter_mut()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .find(|row| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, name,
+            )
+        })
     {
         merge_config(row, entry)?;
         return Ok(());

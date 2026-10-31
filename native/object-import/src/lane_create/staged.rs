@@ -154,7 +154,8 @@ fn remote(moved: &mut Moved, scope_path: &Path, model: &Value) -> io::Result<Opt
     let Some(bytes) = bytes else {
         return Ok(None);
     };
-    let rows: Vec<Value> = serde_json::from_slice(&bytes)?;
+    let parsed = crate::parse_jsonc(&bytes)?;
+    let rows = parsed.as_array().ok_or_else(invalid)?;
     let full = format!("{scope}/{name}");
     rows.iter()
         .find(|row| {
@@ -172,6 +173,17 @@ fn remote(moved: &mut Moved, scope_path: &Path, model: &Value) -> io::Result<Opt
         .transpose()
 }
 
+fn resolve_workspace_hash<'a>(model: &'a Value, workspace: &'a str, head: &'a str) -> &'a str {
+    if workspace.is_empty() || matches!(workspace, "latest" | "head") {
+        head
+    } else {
+        model["versions"][workspace]
+            .as_str()
+            .or_else(|| model["orphanedVersions"][workspace].as_str())
+            .unwrap_or(workspace)
+    }
+}
+
 fn component(
     moved: &mut Moved,
     scope_path: &Path,
@@ -182,10 +194,7 @@ fn component(
 ) -> io::Result<()> {
     let Some(head) = model["head"].as_str() else { return Ok(()) };
     let remote = remote(moved, scope_path, model)?;
-    let workspace_hash = model["versions"][workspace]
-        .as_str()
-        .or_else(|| model["orphanedVersions"][workspace].as_str())
-        .unwrap_or(workspace);
+    let workspace_hash = resolve_workspace_hash(model, workspace, head);
     let source = if remote.as_deref() == Some(head) { workspace_hash } else { head };
     let directory = scope_path.join("objects");
     let heads = [Some(source), remote.as_deref()]
@@ -199,7 +208,7 @@ fn component(
     if refs.is_empty() {
         return Ok(());
     }
-    if source != head || workspace != head || has_tags(model, refs) {
+    if source != head || workspace_hash != head || has_tags(model, refs) {
         return Err(invalid());
     }
     for row in graph.as_array().ok_or_else(invalid)? {

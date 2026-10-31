@@ -155,7 +155,7 @@ fn active_index_rows(scope_dir: &Path) -> Vec<Value> {
     let Ok(bytes) = fs::read(scope_dir.join("index.json")) else {
         return Vec::new();
     };
-    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else {
+    let Ok(index) = bit_object_import::parse_jsonc(&bytes) else {
         return Vec::new();
     };
     index["components"]
@@ -308,12 +308,20 @@ fn match_ws_target(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<St
 }
 
 fn component_identity(comp_val: &Value, row: &Value) -> Option<String> {
+    let row_raw = row["id"]
+        .as_str()
+        .map(|raw| raw.split('@').next().unwrap_or(raw));
     let name = comp_val["name"]
         .as_str()
         .filter(|val| !val.is_empty())
         .or_else(|| {
             row["id"]["name"]
                 .as_str()
+                .filter(|val| !val.is_empty())
+        })
+        .or_else(|| {
+            row_raw
+                .map(|raw| raw.split_once('/').map_or(raw, |(_, name)| name))
                 .filter(|val| !val.is_empty())
         })?;
     match comp_val["scope"]
@@ -322,6 +330,11 @@ fn component_identity(comp_val: &Value, row: &Value) -> Option<String> {
         .or_else(|| {
             row["id"]["scope"]
                 .as_str()
+                .filter(|scope| !scope.is_empty())
+        })
+        .or_else(|| {
+            row_raw
+                .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope))
                 .filter(|scope| !scope.is_empty())
         }) {
         Some(scope) => Some(format!("{scope}/{name}")),

@@ -18,6 +18,21 @@ pub(crate) struct Lane {
     pub(super) value: Value,
 }
 
+pub(crate) fn lane_id_parts(id: &Value) -> (&str, &str) {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        return bare
+            .split_once('/')
+            .unwrap_or(("", bare));
+    }
+    let scope = id["scope"].as_str().unwrap_or_default();
+    let name = id["name"]
+        .as_str()
+        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .unwrap_or_default();
+    (scope, name)
+}
+
 pub(super) fn select_lane(
     root: &Path,
     bitmap: &Value,
@@ -26,9 +41,13 @@ pub(super) fn select_lane(
     expected_version: Option<&str>,
     kind: RowKind,
 ) -> io::Result<Lane> {
-    let id = &bitmap["_bit_lane"]["id"];
-    let lane_scope = id["scope"].as_str().ok_or_else(|| invalid("current lane scope"))?;
-    let lane_name = id["name"].as_str().ok_or_else(|| invalid("current lane name"))?;
+    let (lane_scope, lane_name) = lane_id_parts(&bitmap["_bit_lane"]["id"]);
+    if lane_scope.is_empty() {
+        return Err(invalid("current lane scope"));
+    }
+    if lane_name.is_empty() {
+        return Err(invalid("current lane name"));
+    }
     if (kind == RowKind::ExportedLane && bitmap["_bit_lane"]["exported"] != true)
         || !valid_scope(lane_scope)
         || !valid_name(lane_name)
@@ -43,16 +62,11 @@ pub(super) fn select_lane(
 
 fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     let index_before = fs::read(crate::scope_path(root).join("index.json"))?;
-    let index: Value = serde_json::from_slice(&index_before)?;
+    let index: Value = crate::parse_jsonc(&index_before)?;
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("lane index"))?;
     let matches: Vec<_> = rows
         .iter()
-        .filter(|entry| {
-            entry["id"]
-                .as_str()
-                .is_some_and(|raw| raw == format!("{scope}/{name}"))
-                || (entry["id"]["scope"] == scope && entry["id"]["name"] == name)
-        })
+        .filter(|entry| lane_id_parts(&entry["id"]) == (scope, name))
         .collect();
     if matches.len() != 1 {
         return Err(invalid("current lane is not uniquely indexed"));
@@ -79,13 +93,9 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     })
 }
 
-pub(super) fn matches_component_entry(entry: &Value, scope: &str, name: &str) -> bool {
-    if let Some(raw) = entry["id"].as_str() {
-        let base = raw.split('@').next().unwrap_or(raw);
-        return base == name || base == format!("{scope}/{name}");
-    }
-    let entry_scope = entry["id"]["scope"].as_str().unwrap_or_default();
-    (entry_scope == scope || entry_scope.is_empty()) && entry["id"]["name"] == name
+pub(crate) fn matches_component_entry(entry: &Value, scope: &str, name: &str) -> bool {
+    let (entry_scope, entry_name) = lane_id_parts(&entry["id"]);
+    entry_name == name && (entry_scope == scope || entry_scope.is_empty())
 }
 
 fn validate_component(

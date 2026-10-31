@@ -176,7 +176,8 @@ fn edges(input: &Prepare, imported: &PreparedImport, version: &Value) -> io::Res
                 &mut compressed,
             )?
         };
-        serde_json::from_slice::<Vec<Value>>(&bytes).map_err(io::Error::other)?
+        crate::parse_jsonc(&bytes)
+            .and_then(|val| serde_json::from_value::<Vec<Value>>(val).map_err(io::Error::other))?
     } else {
         Vec::new()
     };

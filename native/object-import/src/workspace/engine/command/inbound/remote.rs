@@ -1,8 +1,8 @@
 //! Bounded scope acquisition and listing across HTTP and file remotes.
+pub(in crate::workspace::engine) mod file_list;
 pub(in crate::workspace::engine) mod inventory;
 pub(in crate::workspace::engine::command) use history::{history_remote, history_remote_at};
 mod connection;
-mod file_list;
 mod history;
 mod lane_list;
 mod list_order;

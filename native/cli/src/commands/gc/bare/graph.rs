@@ -195,7 +195,7 @@ impl<'a> Collector<'a> {
             return Ok(());
         };
         self.retained.insert(digest(&identity(&model.value)?));
-        let target = if version.is_empty() || version == "latest" {
+        let target = if matches!(version, "" | "latest" | "head") {
             model.value["head"].as_str()
         } else if repository::hash(version) {
             Some(version)
@@ -220,7 +220,13 @@ fn lane_entries(lane: &Value) -> io::Result<Vec<(String, String)>> {
     for component in
         lane["components"].as_array().ok_or_else(|| unsupported("lane component list"))?
     {
-        result.push((identity(&component["id"])?, text(&component["head"])?.to_owned()));
+        if let Some(raw) = component.as_str() {
+            let (id, head) =
+                raw.rsplit_once('@').ok_or_else(|| unsupported("lane string identity"))?;
+            result.push((id.to_owned(), head.to_owned()));
+        } else {
+            result.push((identity(&component["id"])?, text(&component["head"])?.to_owned()));
+        }
     }
     for id in strings(&lane["updateDependents"])? {
         let (id, head) = id.rsplit_once('@').ok_or_else(|| unsupported("hidden lane identity"))?;
@@ -232,7 +238,7 @@ fn flattened(scope: &Path, version: &Value) -> io::Result<Vec<String>> {
     if let Some(hash) = version["flattenedDependenciesRef"].as_str() {
         let (_, bytes) = bit_object_import::read_raw_scope_object(scope, hash)?
             .ok_or_else(|| unsupported("flattened dependency object missing"))?;
-        return flattened_values(&serde_json::from_slice::<Value>(&bytes)?);
+        return flattened_values(&bit_object_import::parse_jsonc(&bytes)?);
     }
     let mut result = flattened_values(&version["flattenedDependencies"])?;
     result.extend(flattened_values(&version["flattenedDevDependencies"])?);
@@ -251,11 +257,11 @@ fn flattened_values(value: &Value) -> io::Result<Vec<String>> {
 }
 
 fn flattened_entry(value: &Value) -> io::Result<String> {
-    if let Some(raw) = value
-        .as_str()
-        .or_else(|| value["id"].as_str())
-    {
+    if let Some(raw) = value.as_str() {
         return Ok(raw.to_owned());
+    }
+    if let Some(id_str) = value["id"].as_str() {
+        return flattened_str_id(id_str, value);
     }
     let inner = value
         .get("id")
@@ -277,7 +283,24 @@ fn flattened_entry(value: &Value) -> io::Result<String> {
     if name.is_empty() {
         return Err(unsupported("empty flattened dependency name"));
     }
-    let ver = inner
+    let ver = flattened_ver(inner, value, inline_ver)?;
+    Ok(format!("{}/{name}@{ver}", text(scope)?))
+}
+
+fn flattened_str_id(id_str: &str, value: &Value) -> io::Result<String> {
+    if id_str.contains('@') {
+        return Ok(id_str.to_owned());
+    }
+    let ver = flattened_ver(value, value, None)?;
+    Ok(format!("{id_str}@{ver}"))
+}
+
+fn flattened_ver<'a>(
+    inner: &'a Value,
+    value: &'a Value,
+    inline_ver: Option<&'a str>,
+) -> io::Result<&'a str> {
+    inner
         .get("version")
         .or_else(|| value.get("version"))
         .or_else(|| inner.get("head"))
@@ -285,6 +308,5 @@ fn flattened_entry(value: &Value) -> io::Result<String> {
         .and_then(Value::as_str)
         .filter(|ver| !ver.is_empty())
         .or(inline_ver)
-        .ok_or_else(|| unsupported("missing flattened dependency version"))?;
-    Ok(format!("{}/{name}@{ver}", text(scope)?))
+        .ok_or_else(|| unsupported("missing flattened dependency version"))
 }

@@ -7,9 +7,8 @@ use sha1::{Digest, Sha1};
 use std::{collections::HashSet, fs::File, io, path::Path};
 
 pub(super) fn list(path: &Path, scope: &str, namespaces: &str) -> io::Result<Vec<Listed>> {
-    let config: Value = serde_json::from_slice(
-        &Budget::new(1024 * 1024).read(File::open(path.join("scope.json"))?)?,
-    )?;
+    let config: Value =
+        crate::parse_jsonc(&Budget::new(1024 * 1024).read(File::open(path.join("scope.json"))?)?)?;
     if config["name"] != scope
         || config["lanes"]["current"]
             .as_str()
@@ -21,7 +20,7 @@ pub(super) fn list(path: &Path, scope: &str, namespaces: &str) -> io::Result<Vec
 }
 
 pub(super) fn index(path: &Path) -> io::Result<Vec<Value>> {
-    let index: Value = serde_json::from_slice(
+    let index: Value = crate::parse_jsonc(
         &Budget::new(4 * 1024 * 1024).read(File::open(path.join("index.json"))?)?,
     )?;
     let rows = if index.is_array() { &index } else { &index["components"] };
@@ -80,7 +79,7 @@ pub(super) fn lane(path: &Path, id: &lane::Id) -> io::Result<Vec<Listed>> {
 }
 
 fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
-    let index: Value = serde_json::from_slice(
+    let index: Value = crate::parse_jsonc(
         &Budget::new(4 * 1024 * 1024).read(File::open(path.join("index.json"))?)?,
     )?;
     let rows = if index.is_array() {
@@ -92,7 +91,7 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
     };
     let matching = rows
         .iter()
-        .filter(|row| row["id"]["scope"] == id.scope && row["id"]["name"] == id.name)
+        .filter(|row| row_lane_matches(row, &id.scope, &id.name))
         .collect::<Vec<_>>();
     if matching.len() != 1 {
         return Err(invalid("inbound file lane identity"));
@@ -103,15 +102,25 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
         .ok_or_else(|| invalid("inbound file lane hash"))
 }
 
+pub(in crate::workspace::engine) fn row_lane_matches(row: &Value, scope: &str, name: &str) -> bool {
+    if row["id"]["scope"] == scope && row["id"]["name"] == name {
+        return true;
+    }
+    row["id"]
+        .as_str()
+        .map(|raw| raw.split('@').next().unwrap_or(raw))
+        .is_some_and(|raw| raw == format!("{scope}/{name}"))
+}
+
 pub(super) fn indexed(
     row: &Value,
     scope: &str,
     seen: &mut HashSet<String>,
 ) -> io::Result<(String, String)> {
-    let name = row["id"]["name"].as_str().ok_or_else(|| invalid("inbound file index name"))?;
+    let (row_scope_opt, name) =
+        row_id_parts(row).ok_or_else(|| invalid("inbound file index name"))?;
     let hash = row["hash"].as_str().ok_or_else(|| invalid("inbound file index hash"))?;
-    let row_scope = row["id"]["scope"]
-        .as_str()
+    let row_scope = row_scope_opt
         .filter(|val| !val.is_empty())
         .unwrap_or(scope);
     let scoped_hash =
@@ -127,6 +136,26 @@ pub(super) fn indexed(
     Ok((name.to_owned(), hash.to_owned()))
 }
 
+pub(in crate::workspace::engine) fn row_id_parts(row: &Value) -> Option<(Option<&str>, &str)> {
+    if let Some(name) = row["id"]["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+    {
+        return Some((row["id"]["scope"].as_str(), name));
+    }
+    let raw = row["id"].as_str()?.split('@').next()?;
+    let (scope, name) = raw
+        .split_once('/')
+        .map_or((None, raw), |(scope, name)| (Some(scope), name));
+    (!name.is_empty()).then_some((scope, name))
+}
+
+pub(in crate::workspace::engine) fn row_scoped_id_parts(row: &Value) -> Option<(&str, &str)> {
+    let (scope, name) = row_id_parts(row)?;
+    let scope = scope.filter(|val| !val.is_empty())?;
+    (!name.is_empty()).then_some((scope, name))
+}
+
 pub(super) fn object(
     path: &Path,
     hash: &str,
@@ -136,7 +165,7 @@ pub(super) fn object(
     let identity = crate::merge_history::hash(hash)?;
     let raw = repository::read(&path.join("objects"), identity, 32 * 1024 * 1024, compressed)?;
     let (_, body) = repository::split(&raw, identity, kind)?;
-    serde_json::from_slice(body).map_err(io::Error::other)
+    crate::parse_jsonc(body).map_err(io::Error::other)
 }
 
 fn component(

@@ -76,7 +76,7 @@ fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Val
             ) == id
         })
         .ok_or_else(|| io::Error::other("code predicate model"))?;
-    let hash = if version.is_empty() || version == "latest" {
+    let hash = if version.is_empty() || matches!(version, "latest" | "head") {
         model["head"].as_str().unwrap_or(version)
     } else {
         model["versions"][version]

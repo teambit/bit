@@ -212,7 +212,9 @@ fn on_lane(
     repository: &mut Repository,
     history: &mut history::State,
 ) -> io::Result<bool> {
-    let identity = format!("{}/{}", text(dependency, "scope")?, text(dependency, "name")?);
+    let dep_scope = text(dependency, "scope")?;
+    let dep_name = text(dependency, "name")?;
+    let identity = format!("{dep_scope}/{dep_name}");
     let model = repository.read_component(&identity)?;
     let Some(main) = model["head"].as_str() else { return Ok(true) };
     let version = text(dependency, "version")?;
@@ -225,8 +227,9 @@ fn on_lane(
         .and_then(|rows| {
             rows.iter()
                 .find(|row| {
-                    row["id"]["scope"] == dependency["scope"]
-                        && row["id"]["name"] == dependency["name"]
+                    crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                        row, dep_scope, dep_name,
+                    )
                 })
         })
     else {

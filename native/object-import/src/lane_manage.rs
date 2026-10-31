@@ -78,7 +78,7 @@ impl Plan {
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
         let mut index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
-            Ok(bytes) => match serde_json::from_slice(&bytes)? {
+            Ok(bytes) => match crate::parse_jsonc(&bytes)? {
                 Value::Array(components) => json!({ "components": components, "lanes": [] }),
                 other => other,
             },
@@ -105,15 +105,7 @@ impl Documents {
     }
 
     fn current(&self) -> io::Result<Original> {
-        let id = &self.bitmap["_bit_lane"]["id"];
-        let name = id["name"]
-            .as_str()
-            .ok_or_else(invalid)?
-            .to_owned();
-        let scope = id["scope"]
-            .as_str()
-            .ok_or_else(invalid)?
-            .to_owned();
+        let (name, scope) = lane_row_identity(&self.bitmap["_bit_lane"]).ok_or_else(invalid)?;
         if self.bitmap["_bit_lane"]["exported"] != false
             || !self.scope_json["lanes"]["new"]
                 .as_array()
@@ -128,12 +120,8 @@ impl Documents {
     }
 
     fn current_or_default(&self) -> io::Result<(String, String)> {
-        let id = &self.bitmap["_bit_lane"]["id"];
-        if let (Some(name), Some(scope)) = (id["name"].as_str(), id["scope"].as_str())
-            && !name.is_empty()
-            && !scope.is_empty()
-        {
-            return Ok((name.to_owned(), scope.to_owned()));
+        if let Some((name, scope)) = lane_row_identity(&self.bitmap["_bit_lane"]) {
+            return Ok((name, scope));
         }
         let scope = self.scope_json["name"]
             .as_str()

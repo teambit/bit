@@ -131,7 +131,7 @@ fn identity(value: &Value) -> io::Result<Value> {
     if object
         .get("version")
         .and_then(Value::as_str)
-        .is_some_and(|version| version.is_empty() || version == "latest")
+        .is_some_and(|version| version.is_empty() || matches!(version, "latest" | "head"))
     {
         object.remove("version");
     }
@@ -147,7 +147,7 @@ fn identity_from_str(text: &str) -> io::Result<Value> {
         .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
         .ok_or_else(|| invalid("status Version dependency scope"))?;
     let mut out = json!({"scope":scope,"name":name});
-    if let Some(ver) = ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+    if let Some(ver) = ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")) {
         out["version"] = json!(ver);
     }
     Ok(out)

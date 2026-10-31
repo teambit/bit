@@ -27,8 +27,8 @@ use super::{
 use crate::native::Outcome;
 use bit_install::{HostInfo, output::Output};
 use report::{
-    consume_trailing_recovery, format_result, install_ids, installation_session, prepare_request,
-    read_environment, valid_pattern,
+    consume_trailing_recovery, format_result, install_ids, installation_session,
+    prepare_recovery_context, prepare_request, read_environment, valid_pattern,
 };
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path, sync::Arc};
@@ -54,60 +54,62 @@ pub(super) fn parse_lane(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Lane)
 }
 
-#[cfg_attr(
-    dylint_lib = "perfectionist",
-    expect(
-        perfectionist::excessive_cognitive_complexity,
-        reason = "Existing CLI orchestration is retained until its operation is decomposed"
-    )
-)]
 fn parse(args: &[&str], kind: Kind) -> Option<Options> {
-    let (mut pattern, mut abort, mut silent, mut skip_install, mut verbose) =
-        (None, false, false, false, false);
+    let mut opts =
+        Options { kind, pattern: None, skip_install: false, verbose: false, silent: false };
+    let mut abort = false;
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
-        match arg {
-            "--" => {
-                consume_trailing_recovery(iter, kind, &mut pattern)?;
-                break;
-            }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            "--abort" | "--abort=true" if kind == Kind::Component && !abort => abort = true,
-            "-s" | "--silent" | "--silent=true" if kind == Kind::Lane && !silent => silent = true,
-            "--silent=false" if kind == Kind::Lane && !silent => {}
-            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
-                if !skip_install =>
-            {
-                skip_install = true;
-            }
-            "--skip-dependency-installation=false" if !skip_install => {}
-            "-sx" | "-xs" if kind == Kind::Lane && !silent && !skip_install => {
-                (silent, skip_install) = (true, true);
-            }
-            "--verbose" | "--verbose=true" if !verbose => verbose = true,
-            "--verbose=false" if !verbose => {}
-            value if kind == Kind::Component && pattern.is_none() && valid_pattern(value) => {
-                pattern = Some(value.to_string());
-            }
-            _ => return None,
+        if arg == "--" {
+            consume_trailing_recovery(iter, kind, &mut opts.pattern)?;
+            break;
         }
+        apply_recovery_flag(arg, &mut opts, &mut abort)?;
     }
-    (kind != Kind::Component || abort).then_some(Options {
-        kind,
-        pattern,
-        skip_install,
-        verbose,
-        silent,
-    })
+    (kind != Kind::Component || abort).then_some(opts)
 }
 
-#[cfg_attr(
-    dylint_lib = "perfectionist",
-    expect(
-        perfectionist::excessive_cognitive_complexity,
-        reason = "Existing CLI orchestration is retained until its operation is decomposed"
-    )
-)]
+fn apply_recovery_flag(arg: &str, opts: &mut Options, abort: &mut bool) -> Option<()> {
+    match arg {
+        "--no-color" | "--no-color=true" | "--no-color=false" => Some(()),
+        "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
+            if !opts.skip_install =>
+        {
+            opts.skip_install = true;
+            Some(())
+        }
+        "--skip-dependency-installation=false" if !opts.skip_install => Some(()),
+        "--verbose" | "--verbose=true" if !opts.verbose => {
+            opts.verbose = true;
+            Some(())
+        }
+        "--verbose=false" if !opts.verbose => Some(()),
+        _ if opts.kind == Kind::Component => apply_component_flag(arg, opts, abort),
+        _ => apply_lane_flag(arg, opts),
+    }
+}
+
+fn apply_component_flag(arg: &str, opts: &mut Options, abort: &mut bool) -> Option<()> {
+    if matches!(arg, "--abort" | "--abort=true") && !*abort {
+        *abort = true;
+        return Some(());
+    }
+    (opts.pattern.is_none() && valid_pattern(arg)).then(|| opts.pattern = Some(arg.to_string()))
+}
+
+fn apply_lane_flag(arg: &str, opts: &mut Options) -> Option<()> {
+    if opts.silent {
+        return None;
+    }
+    match arg {
+        "-s" | "--silent" | "--silent=true" => opts.silent = true,
+        "--silent=false" => {}
+        "-sx" | "-xs" if !opts.skip_install => (opts.silent, opts.skip_install) = (true, true),
+        _ => return None,
+    }
+    Some(())
+}
+
 pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
@@ -117,17 +119,9 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
         Ok(root) => root,
         Err(outcome) => return Ok(outcome),
     };
-    // Component abort calls checkout(reset) without forwarding -x; the Node
-    // command installs even when -x was supplied to merge.
-    let installer = if options.kind == Kind::Lane && options.skip_install {
-        None
-    } else {
-        match Installer::start(&root, &argv) {
-            Ok(installer) => Some(installer),
-            Err(err) => {
-                return Ok(Outcome::Declined(format!("merge recovery installation: {err}")));
-            }
-        }
+    let installer = match start_recovery_installer(&root, &argv, options) {
+        Ok(installer) => installer,
+        Err(outcome) => return Ok(outcome),
     };
     if options.kind == Kind::Lane && !options.silent {
         return interactive::run(&root, args, options, installer);
@@ -136,21 +130,42 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let mut startup = Startup::default();
     let prepared = match Prepared::plan(&root, options, &mut startup, environment) {
         Ok(prepared) => prepared,
-        Err(error) if failure::result(&error).is_some() => {
-            return workspace_command::execute_then(&root, args, "merge-abort", |_output| {
-                workspace_command::checkout_lifecycle::before(&startup)?;
-                workspace_command::checkout_lifecycle::loaded(&startup);
-                format_result(failure::result(&error).unwrap(), Kind::Lane, Chalk::detect(args))
-            });
-        }
-        Err(error) if startup.committed => {
-            return workspace_command::checkout_lifecycle::failure(
-                &root, args, command, &startup, error,
-            );
-        }
-        Err(error) => return Ok(Outcome::Declined(format!("merge recovery: {error}"))),
+        Err(error) => return handle_plan_error(&root, args, command, &startup, error),
     };
     execute_prepared(&root, args, options, &startup, prepared, installation)
+}
+
+fn start_recovery_installer(
+    root: &Path,
+    argv: &[&str],
+    options: &Options,
+) -> Result<Option<Installer>, Outcome> {
+    if options.kind == Kind::Lane && options.skip_install {
+        return Ok(None);
+    }
+    Installer::start(root, argv)
+        .map(Some)
+        .map_err(|err| Outcome::Declined(format!("merge recovery installation: {err}")))
+}
+
+fn handle_plan_error(
+    root: &Path,
+    args: &[OsString],
+    command: &str,
+    startup: &Startup,
+    error: io::Error,
+) -> io::Result<Outcome> {
+    if let Some(res) = failure::result(&error) {
+        return workspace_command::execute_then(root, args, "merge-abort", |_output| {
+            workspace_command::checkout_lifecycle::before(startup)?;
+            workspace_command::checkout_lifecycle::loaded(startup);
+            format_result(res, Kind::Lane, Chalk::detect(args))
+        });
+    }
+    if startup.committed {
+        return workspace_command::checkout_lifecycle::failure(root, args, command, startup, error);
+    }
+    Ok(Outcome::Declined(format!("merge recovery: {error}")))
 }
 
 fn execute_prepared(
@@ -187,14 +202,6 @@ struct Prepared {
 }
 
 impl Prepared {
-    #[cfg_attr(
-        dylint_lib = "perfectionist",
-        expect(
-            perfectionist::overly_long_function,
-            perfectionist::too_many_local_bindings,
-            reason = "Existing CLI orchestration is retained until its operation is decomposed"
-        )
-    )]
     fn plan(
         root: &Path,
         options: &Options,
@@ -210,52 +217,34 @@ impl Prepared {
         } else {
             None
         };
-        let prepared: Value = engine.request(&request)?;
-        let token = text(prepared.get("token"))?.to_string();
-        let mut context = prepared
-            .get("context")
-            .filter(|value| value.is_object())
-            .ok_or_else(|| decline("recovery context"))?
-            .clone();
-        let targets = array(prepared.get("captureTargets"), "recovery capture targets")?;
-        if targets.len() > 4096 {
-            return Err(decline("recovery target limit"));
-        }
-        if options.kind == Kind::Lane {
-            startup.committed = true;
-            let file_id = workspace_command::file_id();
-            let _: Value = engine.request(
-                &json!({"kind":"commandRecoveryRestore","token":token,"fileId":file_id}),
-            )?;
-            context["recoveryRestoredFileId"] = json!(file_id);
-        }
+        let (token, context, targets) =
+            prepare_recovery_context(&mut engine, &request, options, startup)?;
         let environments = match environments {
             Some(environment) => environment,
             None => read_environment(&mut engine, root, &home, startup, inherited.take())?,
         };
-        let captured = capture::capture_with(
+        let capture = capture_recovery_targets(
             &mut engine,
             root,
             &home,
+            &token,
             &context,
-            targets,
-            capture::CaptureOptions {
-                environments: Some(environments),
-                incomplete_reset: options.kind == Kind::Component,
-                ..Default::default()
-            },
-        );
-        let capture = match captured {
-            Ok(capture) => capture,
-            Err(error) if context["recoveryRestoredFileId"].is_string() => {
-                failure::retain(startup, &error);
-                let applied:Value=engine.request(&json!({"kind":"commandRecoveryApply","token":token,
-                    "fileId":context["recoveryRestoredFileId"],"checkoutError":{"message":error.to_string()}}))?;
-                return Err(failure::restored(applied["result"].clone()));
-            }
-            Err(error) => return Err(error),
-        };
+            &targets,
+            options,
+            startup,
+            environments,
+        )?;
         workspace_command::checkout_lifecycle::retain(Some(startup), &capture);
+        Self::finalize_plan(engine, token, context, capture, options.kind)
+    }
+
+    fn finalize_plan(
+        mut engine: Engine,
+        token: String,
+        context: Value,
+        capture: Capture,
+        kind: Kind,
+    ) -> io::Result<Self> {
         let versions = workspace_command::semver_values(Some("reset"), &context)?;
         let semver = grammar::snapshot(versions.iter().map(String::as_str))
             .ok_or_else(|| decline("recovery semver grammar"))?;
@@ -270,10 +259,10 @@ impl Prepared {
             .get("result")
             .ok_or_else(|| decline("recovery result"))?
             .clone();
-        format_result(&result, options.kind, Chalk::detect(&[]))?;
+        format_result(&result, kind, Chalk::detect(&[]))?;
         let progress = Progress::parse(plan.get("progress"))?;
-        let ids = install_ids(&result, options.kind)?;
-        Ok(Self { engine, token, context, capture, progress, ids, kind: options.kind })
+        let ids = install_ids(&result, kind)?;
+        Ok(Self { engine, token, context, capture, progress, ids, kind })
     }
 
     fn commit(&mut self, root: &Path) -> io::Result<Value> {
@@ -358,4 +347,47 @@ fn install_retained(
         .with_initialized_cache(!prepared.capture.components.is_empty())
         .install(root, false, &prepared.ids);
     Ok((installed, host))
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Recovery capture forwards engine, token, context, and environments"
+)]
+fn capture_recovery_targets(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    token: &str,
+    context: &Value,
+    targets: &[Value],
+    options: &Options,
+    startup: &mut Startup,
+    environments: environments::Environments,
+) -> io::Result<Capture> {
+    let captured = capture::capture_with(
+        engine,
+        root,
+        home,
+        context,
+        targets,
+        capture::CaptureOptions {
+            environments: Some(environments),
+            incomplete_reset: options.kind == Kind::Component,
+            ..Default::default()
+        },
+    );
+    match captured {
+        Ok(capture) => Ok(capture),
+        Err(error) if context["recoveryRestoredFileId"].is_string() => {
+            failure::retain(startup, &error);
+            let applied: Value = engine.request(&json!({
+                "kind":"commandRecoveryApply",
+                "token":token,
+                "fileId":context["recoveryRestoredFileId"],
+                "checkoutError":{"message":error.to_string()},
+            }))?;
+            Err(failure::restored(applied["result"].clone()))
+        }
+        Err(error) => Err(error),
+    }
 }

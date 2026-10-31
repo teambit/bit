@@ -60,7 +60,7 @@ impl Manifests {
     }
 }
 fn serialized(path: &Path) -> Option<String> {
-    let value: serde_json::Value = serde_json::from_slice(&fs::read(path).ok()?).ok()?;
+    let value: serde_json::Value = bit_object_import::parse_jsonc(&fs::read(path).ok()?).ok()?;
     bit_object_import::stringify_json(&value, false).ok()
 }
 
@@ -76,7 +76,7 @@ pub(in crate::commands) fn invalidate(
         let id = component.id.to_string_without_version();
         let key = match component.id.version
             .as_deref()
-            .filter(|version| !version.is_empty() && *version != "latest")
+            .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
         {
             Some(version) => format!("{id}@{version}"),
             None => id,

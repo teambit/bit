@@ -95,6 +95,7 @@ fn identifier(row: &Value) -> io::Result<String> {
         if let Some(id) = id.as_str() {
             return Ok(id
                 .strip_suffix("@latest")
+                .or_else(|| id.strip_suffix("@head"))
                 .unwrap_or(id)
                 .to_owned());
         }
@@ -108,9 +109,10 @@ fn identifier(row: &Value) -> io::Result<String> {
         let base = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
         return Ok(id["version"]
             .as_str()
+            .or_else(|| id["head"].as_str())
             .filter(|version| !version.is_empty())
             .or(inline_ver)
-            .filter(|version| *version != "latest")
+            .filter(|version| !matches!(*version, "latest" | "head"))
             .map_or_else(|| base.clone(), |version| format!("{base}@{version}")));
     }
     row.get("name")

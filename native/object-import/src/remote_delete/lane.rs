@@ -44,7 +44,7 @@ fn select_lanes(
             .as_array()
             .and_then(|rows| {
                 rows.iter()
-                    .find(|row| row["id"]["scope"] == lane_scope && row["id"]["name"] == name)
+                    .find(|row| super::row_id_parts(&row["id"]) == (lane_scope, name))
             })
             .ok_or_else(|| invalid("remote lane not found"))?;
         let lane_hash = hash(&row["hash"])?;
@@ -75,11 +75,13 @@ fn fully_merged(index: &Value, readset: &mut Readset, lane: &Value) -> io::Resul
 }
 
 fn component_merged(index: &Value, readset: &mut Readset, row: &Value) -> io::Result<bool> {
-    let (Some(component_scope), Some(name), Some(head)) =
-        (row["id"]["scope"].as_str(), row["id"]["name"].as_str(), row["head"].as_str())
-    else {
+    let (component_scope, name) = super::row_id_parts(&row["id"]);
+    let Some(head) = row["head"].as_str() else {
         return Err(invalid("lane member"));
     };
+    if component_scope.is_empty() || name.is_empty() {
+        return Err(invalid("lane member"));
+    }
     let model = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -87,10 +89,10 @@ fn component_merged(index: &Value, readset: &mut Readset, row: &Value) -> io::Re
             items
                 .iter()
                 .find(|item| {
-                    let item_scope = item["id"]["scope"].as_str().unwrap_or_default();
+                    let (item_scope, item_name) = super::row_id_parts(&item["id"]);
                     item["isSymlink"] != true
                         && (item_scope == component_scope || item_scope.is_empty())
-                        && item["id"]["name"] == name
+                        && item_name == name
                 })
         });
     let Some(model) = model else { return Ok(false) };

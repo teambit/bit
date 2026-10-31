@@ -282,8 +282,8 @@ fn build_manifest(package_dir: &Path, component: &WorkspaceComponent) -> Option<
         "bit.cloud",
         is_aspect,
     );
-    if let Ok(text) = fs::read_to_string(package_dir.join("package.json"))
-        && let Ok(Value::Object(existing)) = serde_json::from_str::<Value>(&text)
+    if let Ok(bytes) = fs::read(package_dir.join("package.json"))
+        && let Ok(Value::Object(existing)) = bit_object_import::parse_jsonc(&bytes)
     {
         for &key in PRESERVED_MANIFEST_KEYS {
             if let Some(val) = existing.get(key) {
@@ -346,7 +346,7 @@ pub(super) fn format_component_id(id: &ComponentId) -> String {
     let bare = id.to_string_without_version();
     match id.version
         .as_deref()
-        .filter(|ver| !ver.is_empty() && *ver != "latest")
+        .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
     {
         Some(ver) => format!("{bare}@{ver}"),
         None => bare,

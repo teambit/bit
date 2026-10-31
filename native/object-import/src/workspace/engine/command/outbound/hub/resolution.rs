@@ -42,7 +42,7 @@ impl Resolution {
             return Ok(Some(host.to_owned()));
         }
         let globals: Value = match fs::read(&self.global_remotes_file) {
-            Ok(bytes) => serde_json::from_slice(&bytes)?,
+            Ok(bytes) => crate::parse_jsonc(&bytes)?,
             Err(error) if error.kind() == io::ErrorKind::NotFound => Value::Null,
             Err(error) => return Err(error),
         };
@@ -58,7 +58,7 @@ pub(in super::super) fn resolve(input: &Prepare, scope: &str) -> io::Result<Reso
         return Ok(resolved.clone());
     }
     let local: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
+        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
     let resolved = match input.resolution.configured(&local, scope)? {
         Some(host) => Resolved { host, hub: false },
         None if input.resolution.preflight() => {
@@ -101,7 +101,7 @@ pub(in super::super) fn global(input: &Prepare) -> io::Result<GlobalConfig> {
     )?)
     .map_err(io::Error::other)?;
     let scope: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
+        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
     let workspace =
         crate::workspace::engine::effective_workspace_configuration(&input.root, &input.home)?;
     Ok(bit_client_transfer::config::effective(
