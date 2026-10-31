@@ -88,9 +88,10 @@ fn all_with(
 pub(super) fn lane_visibility(captured: &mut [Captured], context: &Value) -> io::Result<()> {
     let Some(rows) = context["lane"]["targets"].as_array() else { return Ok(()) };
     for component in captured {
+        let target_id = component.target.identity.trim();
         let row = rows
             .iter()
-            .find(|row| row["identity"] == component.target.identity)
+            .find(|row| row["identity"].as_str().map(str::trim) == Some(target_id))
             .ok_or_else(|| invalid("captured component outside lane selection"))?;
         component.hidden = row["hidden"] == true;
     }

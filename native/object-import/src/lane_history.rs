@@ -12,6 +12,7 @@ pub fn read(root: &Path, lane_hash: &str) -> io::Result<Value> {
 }
 
 pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
+    let lane_hash = lane_hash.trim();
     if lane_hash.len() != 40
         || !lane_hash
             .bytes()
@@ -23,7 +24,7 @@ pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
     let value = outbound::read_object(&directory.join("objects"), &hash, "LaneHistory")?;
     // A rename or scope change preserves the Lane hash and the history object's
     // original name/scope, so only the stable identity can be checked here.
-    if value["laneHash"] != lane_hash {
+    if value["laneHash"].as_str().map(str::trim) != Some(lane_hash) {
         return Err(invalid());
     }
     let history = value["history"].as_object().ok_or_else(invalid)?;
@@ -35,7 +36,7 @@ pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
             || !entry["log"].is_object()
             || entry["log"]["date"]
                 .as_str()
-                .and_then(|date| date.parse::<i64>().ok())
+                .and_then(|date| date.trim().parse::<i64>().ok())
                 .is_none()
             || !entry["components"].is_array()
         {

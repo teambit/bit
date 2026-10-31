@@ -142,15 +142,15 @@ fn prepare_targets(
     for target in targets {
         plan_target(&context, target, &mut directories, rows, &mut changes, &mut written)?;
     }
-    let added: usize = changes.additions
+    let added = changes.additions
         .iter()
         .map(|(_, bytes)| bytes.len())
-        .sum();
-    let replaced: usize = changes.replacements
+        .fold(0_usize, usize::saturating_add);
+    let replaced = changes.replacements
         .iter()
         .map(|item| item.after.len())
-        .sum();
-    if added + replaced > MAX_WRITTEN_BYTES {
+        .fold(0_usize, usize::saturating_add);
+    if added.saturating_add(replaced) > MAX_WRITTEN_BYTES {
         return Err(invalid("inbound workspace materialization bytes"));
     }
     changes.component_order = metadata::component_order(root, rows)?;

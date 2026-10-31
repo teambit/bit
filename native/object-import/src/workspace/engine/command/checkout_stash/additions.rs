@@ -51,6 +51,13 @@ fn identities(bitmap: &Value) -> io::Result<HashSet<String>> {
         .collect())
 }
 
+fn trimmed_field<'a>(row: &'a Value, key: &str, message: &str) -> io::Result<&'a str> {
+    row[key]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid(message))
+}
+
 pub(in crate::workspace::engine::command) fn materialize(
     record: &mut Record,
     plan: &mut planning::Planned,
@@ -61,10 +68,10 @@ pub(in crate::workspace::engine::command) fn materialize(
         .cloned()
         .unwrap_or_default();
     for row in additions {
-        let name = row["name"].as_str().ok_or_else(|| invalid("stash name"))?;
-        let scope = row["defaultScope"].as_str().ok_or_else(|| invalid("stash default scope"))?;
+        let name = trimmed_field(&row, "name", "stash name")?;
+        let scope = trimmed_field(&row, "defaultScope", "stash default scope")?;
         let identity = format!("{scope}/{name}");
-        let hash = row["stashVersion"].as_str().ok_or_else(|| invalid("stash snapshot"))?;
+        let hash = trimmed_field(&row, "stashVersion", "stash snapshot")?;
         let version = record.repository.read(hash, "Version")?;
         let destination = json!({"scope":scope,"name":name,"rootDir":row["rootDir"]});
         let current = capture::addition(&identity, &destination)?;

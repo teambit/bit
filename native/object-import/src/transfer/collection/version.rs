@@ -15,17 +15,19 @@ pub(super) fn load(directory: &Path, versions: &[Version]) -> io::Result<Vec<Loa
     let mut result = Vec::new();
     let mut records = versions.len();
     for version in versions {
-        let compressed = object::repository(directory, version.hash, MAX_BYTES - bytes)?;
-        bytes += compressed.len();
+        let compressed =
+            object::repository(directory, version.hash, MAX_BYTES.saturating_sub(bytes))?;
+        bytes = bytes.saturating_add(compressed.len());
         if !crate::metadata::inflate(&compressed).is_some_and(|text| text.starts_with("Version ")) {
             return Err(invalid("transfer manifest is not a Version"));
         }
         let value = object::metadata(&compressed, version.hash)?;
         let references = extract(&value)?;
-        records += references.sources.len()
-            + references.artifacts.len()
-            + usize::from(references.edges.is_some())
-            + usize::from(references.graph.is_some());
+        records = records
+            .saturating_add(references.sources.len())
+            .saturating_add(references.artifacts.len())
+            .saturating_add(usize::from(references.edges.is_some()))
+            .saturating_add(usize::from(references.graph.is_some()));
         if records > MAX_OBJECTS {
             return Err(invalid("transfer references exceed bounds"));
         }

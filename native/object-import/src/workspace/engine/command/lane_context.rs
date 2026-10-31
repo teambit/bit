@@ -38,7 +38,7 @@ pub(super) fn prepare(
     };
     let mut context = status_context::metadata_with_targets(&input, pool, &settings, targets)?;
     refresh_other_main(request, &mut lanes, &bitmap, &context["targets"])?;
-    let options = request.options.lane.as_ref().unwrap();
+    let options = request.options.lane.as_ref().ok_or_else(|| invalid("command lane options"))?;
     let identities = visibility::identity_bitmap(&bitmap, &settings)?;
     let selected = visibility::selected(
         &mut lanes.imported,

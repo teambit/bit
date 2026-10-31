@@ -41,16 +41,19 @@ pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Resu
         return Ok(hash.to_owned());
     }
     let name = text(get(fields, "name"))?;
-    if name.trim().is_empty() {
+    let name = name.trim();
+    if name.is_empty() {
         return Err(invalid("snapshot empty component name"));
     }
     let scope = get(fields, "scope");
-    let scoped = if scope.truthy()? { format!("{}/{name}", text(scope)?) } else { name.clone() };
+    let scoped =
+        if scope.truthy()? { format!("{}/{name}", text(scope)?.trim()) } else { name.to_owned() };
     let id = match kind {
         "Component" => scoped,
         "VersionHistory" => {
             let scope_text = text(scope)?;
-            if scope_text.trim().is_empty() {
+            let scope_text = scope_text.trim();
+            if scope_text.is_empty() {
                 return Err(invalid("snapshot empty history scope"));
             }
             format!("{scope_text}/{name}:VersionHistory")

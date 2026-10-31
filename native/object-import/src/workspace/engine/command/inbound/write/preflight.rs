@@ -119,7 +119,10 @@ fn check_sources(root: &Path, row: &Value, version: &Value) -> io::Result<()> {
             .map(str::trim)
             .ok_or_else(|| invalid("inbound existing file path"))?;
         crate::checkout::plan::relative_path(relative)?;
-        let hash = file["file"].as_str().ok_or_else(|| invalid("inbound existing Source"))?;
+        let hash = file["file"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound existing Source"))?;
         let body = crate::checkout::repository::source(
             &crate::scope_path(root).join("objects"),
             crate::merge_history::hash(hash)?,

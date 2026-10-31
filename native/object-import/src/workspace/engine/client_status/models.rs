@@ -55,7 +55,11 @@ fn read_component(scope: &Path, directory: &Path, id: &str) -> io::Result<Option
 }
 
 fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
-    let bytes = std::fs::read(scope.join("index.json")).ok()?;
+    let index_path = scope.join("index.json");
+    if std::fs::metadata(&index_path).ok()?.len() > 16 * 1024 * 1024 {
+        return None;
+    }
+    let bytes = std::fs::read(index_path).ok()?;
     let document = crate::recovery::jsonc::parse(&bytes).ok()?;
     let rows = document
         .as_array()
@@ -73,14 +77,8 @@ fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
                     .unwrap_or(("", id_str))
             } else {
                 (
-                    row["id"]["scope"]
-                        .as_str()
-                        .map(str::trim)
-                        .unwrap_or_default(),
-                    row["id"]["name"]
-                        .as_str()
-                        .map(str::trim)
-                        .unwrap_or_default(),
+                    row["id"]["scope"].as_str().map_or("", str::trim),
+                    row["id"]["name"].as_str().map_or("", str::trim),
                 )
             };
             entry_name == target_name && (entry_scope == target_scope || entry_scope.is_empty())

@@ -242,7 +242,7 @@ pub(crate) fn serve(
         },
     };
     let mut output = Output(Vec::new());
-    if serde_json::to_writer(&mut output, &response).is_err() {
+    if serde_json::to_writer(&mut output, &response).is_err() || output.0.len() > MAX_OUTPUT {
         return protocol::respond(writer, &failure(id));
     }
     writer.write_all(&output.0)?;

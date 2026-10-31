@@ -31,9 +31,12 @@ pub(super) fn results(input: &Value) -> io::Result<Value> {
 fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
     let target = value.get("id").unwrap_or(value);
     if let Some(raw) = target.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        let raw = raw.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
         let (scope, name) = match bare.split_once('/') {
-            Some((scope, name)) => (Some(scope).filter(|scope| !scope.is_empty()), name),
+            Some((scope, name)) => {
+                (Some(scope.trim()).filter(|scope| !scope.is_empty()), name.trim())
+            }
             None => (None, bare),
         };
         if name.is_empty() || name.len() > 4096 {
@@ -43,11 +46,12 @@ fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
     }
     let scope = match target.get("scope") {
         None | Some(Value::Null) => None,
-        Some(Value::String(scope)) => Some(scope.as_str()),
+        Some(Value::String(scope)) => Some(scope.trim()).filter(|scope| !scope.is_empty()),
         _ => return Err(invalid("merge identity scope")),
     };
     let name = target["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty() && name.len() <= 4096)
         .ok_or_else(|| invalid("merge identity name"))?;
     Ok((scope, name))

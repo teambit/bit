@@ -51,12 +51,12 @@ impl Lane {
 }
 
 pub(super) fn plan(input: &Plan) -> io::Result<Value> {
-    hash(&input.entry.head)?;
+    hash(input.entry.head.trim())?;
     if input.current_parents.len() > 4096 {
         return Err(invalid("snapshot parent limit"));
     }
     for parent in &input.current_parents {
-        hash(parent)?;
+        hash(parent.trim())?;
     }
     let lane = input.entry.lane.value()?;
     match &input.entry.unrelated {

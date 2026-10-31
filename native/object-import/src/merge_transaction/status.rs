@@ -293,13 +293,14 @@ impl State {
     }
     pub(super) fn receipt(&mut self, input: Value, owner: &journal::State) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
+        let token = request.token.trim().to_owned();
         let mut cursor = self.records
-            .get(&request.token)
+            .get(&token)
             .cloned()
             .ok_or_else(|| invalid("stale merge status"))?;
         owner.verify(&cursor.identity.token, cursor.identity.index)?;
         if cursor.revision != request.revision
-            || cursor.observe != request.observe
+            || cursor.observe != request.observe.trim()
             || cursor.result.is_some()
         {
             return Err(invalid("stale merge status receipt"));
@@ -308,8 +309,8 @@ impl State {
         cursor.revision = cursor.revision
             .checked_add(1)
             .ok_or_else(|| invalid("merge status revision overflow"))?;
-        let output = cursor.output(&request.token);
-        self.records.insert(request.token, cursor);
+        let output = cursor.output(&token);
+        self.records.insert(token, cursor);
         Ok(output)
     }
     pub(super) fn finish(&mut self, tokens: &[String]) {

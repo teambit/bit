@@ -61,7 +61,7 @@ impl Plan {
         let (scope, name) = identity
             .split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))
-            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty() && !name.contains(".."))
             .ok_or_else(|| invalid("reset identity"))?;
         let bitmap = bitmap::Bitmap::load(root, scope, name)?;
         let repository = repository::Repository::load(root, scope, name)?;

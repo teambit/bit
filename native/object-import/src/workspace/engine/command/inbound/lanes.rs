@@ -89,10 +89,12 @@ fn select(
 }
 
 fn parse_id(text: &str, seen: &mut HashSet<String>) -> io::Result<lane::Id> {
+    let text = text.trim();
     let (scope, name) = text.split_once('/').ok_or_else(|| invalid("inbound lane ID"))?;
+    let (scope, name) = (scope.trim(), name.trim());
     let id = lane::Id { scope: scope.to_owned(), name: name.to_owned() };
     id.validate()?;
-    if id.is_main() || !seen.insert(text.to_owned()) {
+    if id.is_main() || !seen.insert(format!("{scope}/{name}")) {
         return Err(invalid("inbound lane requires distinct non-main IDs"));
     }
     Ok(id)

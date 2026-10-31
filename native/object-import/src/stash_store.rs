@@ -19,7 +19,7 @@ impl PreparedLoad {
     /// Select an explicit stash ID or the lexically latest published filename.
     pub fn prepare(scope: &Path, id: Option<&str>) -> io::Result<Self> {
         let observation = Observation::read(scope)?;
-        let filename = match id {
+        let filename = match id.map(str::trim) {
             Some(id) => {
                 validate_id(id)?;
                 format!("{id}.json")

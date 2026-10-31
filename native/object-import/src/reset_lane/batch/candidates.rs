@@ -167,6 +167,7 @@ fn identity(id: &Value) -> io::Result<String> {
     let name = id["name"]
         .as_str()
         .map(str::trim)
+        .map(|name| name.rsplit_once('@').map_or(name, |(bare, _)| bare.trim()))
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("lane candidate name"))?;
     Ok(format!("{scope}/{name}"))

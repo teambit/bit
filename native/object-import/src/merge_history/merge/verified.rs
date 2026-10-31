@@ -15,7 +15,8 @@ pub(crate) fn verified(input: Value, prepared: &Prepared<'_>) -> io::Result<Valu
     let mut seen = HashSet::new();
     for file in &request.current {
         text(&file.path)?;
-        if !seen.insert(normalize_path(&file.path)) {
+        let normalized = normalize_path(&file.path);
+        if normalized.is_empty() || !seen.insert(normalized) {
             return Err(invalid("merge duplicate current path"));
         }
     }
@@ -43,8 +44,9 @@ fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()>
         let mut seen = HashSet::new();
         for model in models {
             text(&model.path)?;
-            hash(&model.hash)?;
-            if !seen.insert(normalize_path(&model.path)) {
+            hash(model.hash.trim())?;
+            let normalized = normalize_path(&model.path);
+            if normalized.is_empty() || !seen.insert(normalized) {
                 return Err(invalid("merge duplicate model path"));
             }
         }

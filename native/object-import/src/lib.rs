@@ -78,7 +78,10 @@ mod workspace;
 
 /// Serialize workspace component rows with the published bitmap header and property order.
 pub fn render_workspace_bitmap(value: &serde_json::Value) -> std::io::Result<Vec<u8>> {
-    if !value.is_object() {
+    if value
+        .as_object()
+        .is_none_or(|rows| rows.len() > 65_536)
+    {
         return Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             "workspace bitmap must be a JSON object",

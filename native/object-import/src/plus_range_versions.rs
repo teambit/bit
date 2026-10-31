@@ -97,7 +97,12 @@ fn environment_usages(usages: &mut Vec<String>, field: &str, entries: &Value) {
         .into_iter()
         .flatten()
     {
-        env_usage(usages, field, name, if value.is_string() { value } else { &value["version"] });
+        env_usage(
+            usages,
+            field,
+            name.trim(),
+            if value.is_string() { value } else { &value["version"] },
+        );
     }
 }
 fn env_usage(usages: &mut Vec<String>, field: &str, name: &str, value: &Value) {

@@ -24,14 +24,14 @@ pub(super) fn prepare(root: &Path, file_id: Option<&str>) -> io::Result<History>
         }
         Err(error) => return Err(error),
     };
-    let metadata_before = match fs::read(&metadata) {
-        Ok(bytes) => Some(bytes),
+    let metadata_before = match fs::symlink_metadata(&metadata) {
+        Ok(info) if info.is_file() => Some(
+            crate::read_budget::Budget::new(16 * 1024 * 1024).read(fs::File::open(&metadata)?)?,
+        ),
+        Ok(_) => return Err(invalid("inbound bitmap history metadata type")),
         Err(error) if error.kind() == io::ErrorKind::NotFound => None,
         Err(error) => return Err(error),
     };
-    if metadata_before.is_some() && !fs::symlink_metadata(&metadata)?.is_file() {
-        return Err(invalid("inbound bitmap history metadata type"));
-    }
     Ok(History {
         backup,
         metadata,

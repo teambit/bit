@@ -81,10 +81,12 @@ fn identity(value: Option<&Value>) -> io::Result<()> {
     let scope = value
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .ok_or_else(|| invalid("missing component scope"))?;
     let name = value
         .get("name")
         .and_then(Value::as_str)
+        .map(str::trim)
         .ok_or_else(|| invalid("missing component name"))?;
     if !segment(scope, false)
         || !segment(name, true)

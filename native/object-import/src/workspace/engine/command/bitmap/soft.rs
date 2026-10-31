@@ -49,14 +49,17 @@ fn normalized_row(key: &str, entry: &Value) -> io::Result<Value> {
 pub(super) fn identity(entry: &Value) -> io::Result<String> {
     let name = entry["name"]
         .as_str()
+        .map(str::trim)
         .filter(|nm| !nm.is_empty())
         .ok_or_else(|| invalid("command bitmap name"))?;
     let scope = entry["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .or_else(|| {
             entry["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
         })
         .ok_or_else(|| invalid("command bitmap scope"))?;
@@ -77,6 +80,7 @@ impl Prepared {
         let mut entries = rows(&bitmap)?;
         let mut seen = HashSet::new();
         for (id, version) in versions {
+            let version = version.trim();
             if !seen.insert(id) || version.is_empty() {
                 return Err(invalid("soft tag version"));
             }

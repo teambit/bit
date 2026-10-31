@@ -31,8 +31,14 @@ pub(super) fn file_order(rows: &mut [Listed]) {
     }
     rows.sort_by(|left, right| {
         left.name
+            .trim()
             .to_uppercase()
             .encode_utf16()
-            .cmp(right.name.to_uppercase().encode_utf16())
+            .cmp(
+                right.name
+                    .trim()
+                    .to_uppercase()
+                    .encode_utf16(),
+            )
     });
 }

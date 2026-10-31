@@ -14,6 +14,7 @@ pub(super) fn write(
     dependencies: &Map<String, Value>,
     file_id: &str,
 ) -> io::Result<()> {
+    let target = target.trim();
     let path = root.join(if target == "package.json" { "package.json" } else { "workspace.jsonc" });
     let before = read(&path)?;
     if before.is_none() && target != "package.json" {

@@ -33,10 +33,14 @@ impl ReadmePlan {
         log: Value,
         history_key: &str,
     ) -> io::Result<Self> {
+        let history_key = history_key.trim();
         if history_key.is_empty() {
             return Err(invalid());
         }
         let documents = Documents::read(root)?;
+        let lane_name = lane_name
+            .map(str::trim)
+            .filter(|name| !name.is_empty());
         let (label, target) = resolve_target(&documents, lane_name)?;
         if target.name == "main" {
             return Ok(Self::NoReadme(label));

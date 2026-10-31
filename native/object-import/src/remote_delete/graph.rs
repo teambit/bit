@@ -51,6 +51,8 @@ fn add_component(
     let Some(head) = model["laneHeadLocal"]
         .as_str()
         .or_else(|| model["head"].as_str())
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
     else {
         return Ok(());
     };

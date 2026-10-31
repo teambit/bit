@@ -28,12 +28,14 @@ pub(in crate::workspace::engine::command) fn from_model(
         .map(|row| {
             row["file"]
                 .as_str()
+                .map(str::trim)
+                .filter(|reference| !reference.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("hidden Source reference"))
         })
         .collect::<io::Result<Vec<_>>>()?;
     let contents = repository.source_batch(&references)?;
-    let (files, paths) = retain_files(private_root, version, rows, contents, state)?;
+    let (files, paths) = retain_files(private_root, version.trim(), rows, contents, state)?;
     Ok(Captured {
         added: false,
         hidden: true,

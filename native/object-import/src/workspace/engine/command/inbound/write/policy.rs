@@ -60,7 +60,7 @@ impl super::Prepared {
     }
 
     pub(in super::super) fn conflicts(&self, id: &str) -> Option<&[String]> {
-        self.changes.conflicts.get(id).map(Vec::as_slice)
+        self.changes.conflicts.get(id.trim()).map(Vec::as_slice)
     }
 }
 
@@ -71,7 +71,8 @@ impl super::Prepared {
     pub(in super::super) fn dependency_target(&self) -> io::Result<&str> {
         self.write_deps
             .as_deref()
-            .filter(|target| !target.trim().is_empty())
+            .map(str::trim)
+            .filter(|target| !target.is_empty())
             .ok_or_else(|| invalid("inbound dependency target absent"))
     }
     pub(in super::super) fn root(&self) -> &Path {

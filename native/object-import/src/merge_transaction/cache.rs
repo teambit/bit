@@ -20,7 +20,7 @@ impl Capsules {
         let raw_hash = input[field]["files"][index]["hash"]
             .as_str()
             .ok_or_else(|| invalid("merge Source reference selector"))?;
-        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
+        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash.trim())?);
         let source =
             if let Some(index) = self.seen.get(&hash) { *index } else { self.retain(&hash)? };
         Ok(json!({"source":source,"ref":{"side":side,"index":index}}))

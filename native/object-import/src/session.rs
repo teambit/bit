@@ -54,7 +54,7 @@ impl WorkspaceSession {
     }
 
     fn dispatch(&mut self, frame: &[u8]) -> io::Result<Vec<u8>> {
-        if frame.len() > crate::protocol::MAX_BATCH_BYTES {
+        if frame.len() < 4 || frame.len() > crate::protocol::MAX_BATCH_BYTES {
             return Err(io::Error::other("workspace frame exceeds byte limit"));
         }
         let mut reader = Cursor::new(frame);

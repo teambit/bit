@@ -10,6 +10,8 @@ pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
         let path = receipt["path"]
             .as_str()
             .or_else(|| receipt["filePath"].as_str())
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
             .ok_or_else(|| invalid("inbound owned path"))?
             .to_owned();
         super::super::super::path(std::path::Path::new(&path))?;

@@ -16,7 +16,7 @@ pub(in crate::workspace::engine) fn complete(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.inbound.as_mut().ok_or_else(|| invalid("inbound policy owner absent"))?;
-    if retained.token != input.token {
+    if retained.token != input.token.trim() {
         return Err(invalid("inbound policy token"));
     }
     let workspace =

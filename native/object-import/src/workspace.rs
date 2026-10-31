@@ -62,7 +62,7 @@ fn request(reader: &mut impl Read) -> io::Result<Vec<File>> {
         return Err(invalid("workspace file count out of bounds"));
     }
     let mut files = Vec::with_capacity(count as usize);
-    let mut total = 0;
+    let mut total = 0_usize;
     for _ in 0..count {
         let path = filename(reader)?;
         let overwrite = match protocol::word(reader)? {
@@ -71,7 +71,7 @@ fn request(reader: &mut impl Read) -> io::Result<Vec<File>> {
             _ => return Err(invalid("invalid workspace overwrite flag")),
         };
         let length = protocol::word(reader)? as usize;
-        total += length + path.as_os_str().len();
+        total = total.saturating_add(length.saturating_add(path.as_os_str().len()));
         if total > MAX_BYTES {
             return Err(invalid("workspace batch bytes out of bounds"));
         }
@@ -91,7 +91,7 @@ fn filename(reader: &mut impl Read) -> io::Result<PathBuf> {
     reader.read_exact(&mut bytes)?;
     let name = String::from_utf8(bytes).map_err(|_| invalid("workspace path is not UTF-8"))?;
     let path = PathBuf::from(&name);
-    if !path.is_absolute() || name.contains('\0') {
+    if name.trim().is_empty() || !path.is_absolute() || name.contains('\0') {
         return Err(invalid("workspace path must be absolute and contain no NUL"));
     }
     Ok(path)

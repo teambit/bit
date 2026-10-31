@@ -12,6 +12,7 @@ pub(super) fn remote_head(
     name: &str,
     reads: &mut proofs::ReadSet,
 ) -> io::Result<Option<String>> {
+    let (lane_scope, lane_name) = (lane_scope.trim(), lane_name.trim());
     if [lane_scope, lane_name]
         .iter()
         .any(|part| part.is_empty() || *part == "." || *part == ".." || part.contains(['/', '\\']))

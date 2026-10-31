@@ -75,12 +75,12 @@ pub(super) fn prepare_into(
         let Some(reason) = unavailable(root, directory, rows, &mut retained.observed)? else {
             continue;
         };
-        let mut number = 1;
+        let mut number: usize = 1;
         let mut candidate = format!("{directory}_{number}");
         while taken.contains(&candidate)
             || unavailable(root, &candidate, rows, &mut retained.observed)?.is_some()
         {
-            number += 1;
+            number = number.saturating_add(1);
             candidate = format!("{directory}_{number}");
             if number > 65536 {
                 return Err(super::invalid("inbound directory relocation limit"));

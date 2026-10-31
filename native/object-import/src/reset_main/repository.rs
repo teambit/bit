@@ -109,8 +109,10 @@ fn position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize> {
 }
 
 fn validate_component(component: &Value, scope: &str, name: &str) -> io::Result<()> {
-    let comp_scope = component["scope"].as_str().unwrap_or_default();
-    if (!comp_scope.is_empty() && comp_scope != scope) || component["name"] != name {
+    let comp_scope = component["scope"].as_str().map_or("", str::trim);
+    if (!comp_scope.is_empty() && comp_scope != scope)
+        || component["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("reset Component identity"));
     }
     if component

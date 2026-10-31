@@ -89,7 +89,7 @@ fn source(
         let status = decoder
             .decompress(&compressed[before_in as usize..], &mut chunk, FlushDecompress::None)
             .map_err(|_| "invalid-compression")?;
-        let count = (decoder.total_out() - before_out) as usize;
+        let count = decoder.total_out().saturating_sub(before_out) as usize;
         update_digest(
             &chunk[..count],
             &mut has_header,

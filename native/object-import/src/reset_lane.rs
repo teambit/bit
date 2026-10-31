@@ -236,17 +236,17 @@ fn indexed_hash(index: &Value, section: &str, scope: &str, name: &str) -> io::Re
 }
 
 pub(super) fn row_id_parts(id: &Value) -> (&str, &str) {
-    if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+    if let Some(raw) = id.as_str().map(str::trim) {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
         return bare
             .split_once('/')
-            .unwrap_or(("", bare));
+            .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     }
-    let scope = id["scope"].as_str().unwrap_or_default();
+    let scope = id["scope"].as_str().map_or("", str::trim);
     let name = id["name"]
         .as_str()
-        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
-        .unwrap_or_default();
+        .map(str::trim)
+        .map_or("", |nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base.trim()));
     (scope, name)
 }
 

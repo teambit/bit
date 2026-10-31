@@ -81,7 +81,7 @@ pub(in crate::workspace::engine) fn read(input: &Request) -> io::Result<(usize, 
 }
 
 fn validate(input: &Request) -> io::Result<()> {
-    if input.transport.bit_version.is_empty()
+    if input.transport.bit_version.trim().is_empty()
         || !input.transport.node_executable.is_absolute()
         || !input.transport.global_config_dir.is_absolute()
         || input.root

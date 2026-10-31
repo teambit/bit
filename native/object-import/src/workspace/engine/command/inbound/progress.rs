@@ -73,12 +73,13 @@ fn adjust(
 }
 
 fn format_target_id(root: &Target) -> String {
+    let (name, version) = (root.name.trim(), root.version.trim());
     match root.scope
         .as_deref()
         .map(str::trim)
         .filter(|scope| !scope.is_empty())
     {
-        Some(scope) => format!("{scope}/{}@{}", root.name, root.version),
-        None => format!("{}@{}", root.name, root.version),
+        Some(scope) => format!("{scope}/{name}@{version}"),
+        None => format!("{name}@{version}"),
     }
 }

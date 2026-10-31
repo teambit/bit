@@ -28,7 +28,10 @@ pub(crate) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Cont
     let count = rows.len();
     rows.retain(|row| {
         let (row_scope, row_name) = super::row_id_parts(&row["id"]);
-        !identities.contains(&format!("{row_scope}/{row_name}"))
+        let candidate = format!("{row_scope}/{row_name}");
+        !identities
+            .iter()
+            .any(|id| id.trim() == candidate)
     });
     if count == rows.len() {
         return Ok(Vec::new());

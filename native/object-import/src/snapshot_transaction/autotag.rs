@@ -77,8 +77,8 @@ fn walk(
     Ok(())
 }
 fn qualifies(changed: &Value, dependency: &Value, semver: &Value) -> io::Result<bool> {
-    let left = changed["version"].as_str();
-    let right = dependency["version"].as_str();
+    let left = changed["version"].as_str().map(str::trim);
+    let right = dependency["version"].as_str().map(str::trim);
     if let (Some(left), Some(right)) = (left, right)
         && let (Some(left), Some(right)) =
             (semver[left].get("version"), semver[right].get("version"))
@@ -99,6 +99,7 @@ pub(super) fn identity(id: &Value) -> io::Result<String> {
     let name = id["name"]
         .as_str()
         .map(str::trim)
+        .map(|name| name.rsplit_once('@').map_or(name, |(prefix, _)| prefix.trim()))
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("autotag identity"))?;
     match id.get("scope") {

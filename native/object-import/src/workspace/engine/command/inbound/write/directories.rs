@@ -18,7 +18,13 @@ pub(super) fn assign(
 ) -> io::Result<Vec<String>> {
     let existing: Vec<String> = rows
         .values()
-        .filter_map(|row| row["rootDir"].as_str().map(str::to_owned))
+        .filter_map(|row| {
+            row["rootDir"]
+                .as_str()
+                .map(str::trim)
+                .filter(|dir| !dir.is_empty())
+                .map(str::to_owned)
+        })
         .collect();
     let mut directories = targets
         .iter()

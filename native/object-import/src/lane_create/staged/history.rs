@@ -48,10 +48,11 @@ fn populate(
     history: &mut Value,
     head: &str,
 ) -> io::Result<()> {
+    let head = head.trim();
     let rows = history["versions"].as_array_mut().ok_or_else(invalid)?;
     if rows
         .iter()
-        .any(|row| row["hash"] == head)
+        .any(|row| row["hash"].as_str().map(str::trim) == Some(head))
     {
         return Ok(());
     }
@@ -65,7 +66,11 @@ fn populate(
         return Err(invalid());
     }
     for row in result["added"].as_array().ok_or_else(invalid)? {
-        let reference = row["hash"].as_str().ok_or_else(invalid)?;
+        let reference = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .ok_or_else(invalid)?;
         moved.object(directory, reference, "Version")?;
         let mut record = json!({"hash":reference,"parents":row["parents"]});
         for key in ["unrelated", "squashed"] {

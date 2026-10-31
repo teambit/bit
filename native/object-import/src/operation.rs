@@ -71,14 +71,24 @@ fn execute(operation: Operation) -> Value {
     }
 }
 fn history(plan: &HistoryPlan) -> Value {
-    let hashes: HashSet<_> = plan.incoming.iter().collect();
-    let original: HashSet<_> = plan.stored.iter().collect();
+    let hashes: HashSet<_> = plan.incoming
+        .iter()
+        .map(String::as_str)
+        .map(str::trim)
+        .collect();
+    let original: HashSet<_> = plan.stored
+        .iter()
+        .map(String::as_str)
+        .map(str::trim)
+        .collect();
     json!(
         plan.existing
             .iter()
             .enumerate()
-            .filter_map(|(index, hash)| (original.contains(hash) && !hashes.contains(hash))
-                .then_some(index))
+            .filter_map(|(index, hash)| {
+                let hash = hash.trim();
+                (original.contains(hash) && !hashes.contains(hash)).then_some(index)
+            })
             .collect::<Vec<_>>()
     )
 }
@@ -92,7 +102,7 @@ fn unique(existing: &[String], incoming: &[String]) -> Vec<[usize; 2]> {
             values
                 .iter()
                 .enumerate()
-                .map(move |(index, value)| (side, index, value))
+                .map(move |(index, value)| (side, index, value.trim()))
         })
         .filter_map(|(side, index, value)| {
             seen.insert(value)

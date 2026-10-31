@@ -18,6 +18,9 @@ impl PreparedSave {
         let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
         let mut serializer = serde_json::Serializer::with_formatter(&mut bytes, formatter);
         data.serialize(&mut serializer).map_err(io::Error::other)?;
+        if bytes.len() > 32 * 1024 * 1024 {
+            return Err(invalid("stash metadata exceeds write budget"));
+        }
         Ok(Self { observation, filename, bytes })
     }
     #[must_use]

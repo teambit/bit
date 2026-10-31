@@ -63,12 +63,12 @@ pub(crate) fn source_parts(
         let Some(trace) = active.as_mut() else {
             return Ok(());
         };
-        trace.source_reads += 1;
-        trace.source_bytes += body.len();
+        trace.source_reads = trace.source_reads.saturating_add(1);
+        trace.source_bytes = trace.source_bytes.saturating_add(body.len());
         let hash = crate::validate::hexadecimal(&hash);
         if !trace.records.contains_key(&hash) {
-            trace.compressed += compressed_size;
-            trace.retained_bytes += body.len();
+            trace.compressed = trace.compressed.saturating_add(compressed_size);
+            trace.retained_bytes = trace.retained_bytes.saturating_add(body.len());
             if trace.compressed > 32 * 1024 * 1024
                 || trace.retained_bytes > 32 * 1024 * 1024
                 || trace.records.len() >= 4096

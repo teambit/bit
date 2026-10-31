@@ -16,7 +16,7 @@ fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
         super::super::super::path(path)?;
     }
     if !input.transport.node_executable.is_absolute()
-        || input.transport.bit_version.is_empty()
+        || input.transport.bit_version.trim().is_empty()
         || input.ids.len() > 4096
     {
         return Err(invalid("inbound command requires canonical lifecycle"));

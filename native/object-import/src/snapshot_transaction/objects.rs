@@ -29,8 +29,8 @@ pub(super) fn prepare(objects: Vec<wire::Object>, pretty: bool) -> io::Result<Ve
     let mut hashes = HashSet::new();
     let mut inputs = Vec::with_capacity(objects.len());
     for object in objects {
-        let body = body(&object, pretty, MAX_RAW - total, &mut input_compressed)?;
-        total += body.len();
+        let body = body(&object, pretty, MAX_RAW.saturating_sub(total), &mut input_compressed)?;
+        total = total.saturating_add(body.len());
         if total > MAX_RAW {
             return Err(invalid("snapshot raw budget"));
         }
@@ -59,12 +59,12 @@ fn compress(inputs: Vec<(String, String, Vec<u8>)>, bytes: usize) -> io::Result<
             .map(encode_input)
             .collect()
     };
-    let mut compressed = 0;
+    let mut compressed: usize = 0;
     results
         .into_iter()
         .map(|result| {
             let prepared = result?;
-            compressed += prepared.compressed.len();
+            compressed = compressed.saturating_add(prepared.compressed.len());
             if compressed > MAX_RAW {
                 return Err(invalid("snapshot compressed budget"));
             }

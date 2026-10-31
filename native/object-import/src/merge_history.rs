@@ -54,7 +54,7 @@ struct Response {
 struct Output(Vec<u8>);
 impl Write for Output {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        if self.0.len() + bytes.len() > MAX_RAW {
+        if self.0.len().saturating_add(bytes.len()) > MAX_RAW {
             return Err(invalid("history output limit"));
         }
         self.0.extend_from_slice(bytes);

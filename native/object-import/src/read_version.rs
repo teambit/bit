@@ -48,7 +48,7 @@ impl<'a> Reader<'a> {
         if self.records >= MAX_RECORDS {
             return Err(invalid("Version read count limit"));
         }
-        let hash = merge_history::hash(reference)?;
+        let hash = merge_history::hash(reference.trim())?;
         let before = self.compressed;
         let budget =
             MAX_BYTES.checked_sub(self.raw).ok_or_else(|| invalid("Version read byte limit"))?;
@@ -70,7 +70,7 @@ impl<'a> Reader<'a> {
             self.metadata = Some((
                 String::from_utf8(body.to_vec()).map_err(io::Error::other)?,
                 object.len(),
-                self.compressed - before,
+                self.compressed.saturating_sub(before),
             ));
         }
         Ok(value)
@@ -92,7 +92,12 @@ pub(crate) fn parents(value: &Value) -> io::Result<()> {
         return Err(invalid("Version parent count limit"));
     }
     for parent in parents {
-        merge_history::hash(parent.as_str().ok_or_else(|| invalid("invalid Version parent"))?)?;
+        merge_history::hash(
+            parent
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("invalid Version parent"))?,
+        )?;
     }
     Ok(())
 }

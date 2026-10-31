@@ -248,7 +248,7 @@ pub(in crate::workspace::engine) fn list(input: &List) -> io::Result<(usize, Val
         super::super::path(path)?;
     }
     if !input.transport.node_executable.is_absolute()
-        || input.transport.bit_version.is_empty()
+        || input.transport.bit_version.trim().is_empty()
         || input.patterns.is_empty()
         || input.patterns.len() > 4096
     {
@@ -273,7 +273,7 @@ pub(in crate::workspace::engine) fn apply(
 ) -> io::Result<(usize, Value)> {
     validate_receipt_mode(input, state)?;
     let mut retained = state.inbound.take().ok_or_else(|| invalid("inbound owner missing"))?;
-    if input.token != retained.token || retained.applied {
+    if input.token.trim() != retained.token || retained.applied {
         return Err(invalid("inbound owner token"));
     }
     if let Some(workspace) = &retained.workspace {

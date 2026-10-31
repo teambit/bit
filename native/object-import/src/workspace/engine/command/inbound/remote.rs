@@ -209,8 +209,11 @@ pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
         )?;
         (remotes, network)
     };
-    let (scope, name) =
-        input.identity.split_once('/').ok_or_else(|| invalid("remote log identity"))?;
+    let (scope, name) = input.identity
+        .trim()
+        .split_once('/')
+        .ok_or_else(|| invalid("remote log identity"))?;
+    let (scope, name) = (scope.trim(), name.trim());
     if scope.is_empty() || name.is_empty() || name.starts_with('/') || name.contains("..") {
         return Err(invalid("remote log identity"));
     }

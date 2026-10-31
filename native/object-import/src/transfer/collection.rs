@@ -129,7 +129,7 @@ fn artifacts(
                 _ => 0,
             })
             .sum::<usize>();
-        match object::repository(directory, *hash, MAX_BYTES - bytes) {
+        match object::repository(directory, *hash, MAX_BYTES.saturating_sub(bytes)) {
             Ok(bytes) => result.push(snapshot(*hash, bytes, scope, seconds)),
             Err(error) if !strict && error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error),

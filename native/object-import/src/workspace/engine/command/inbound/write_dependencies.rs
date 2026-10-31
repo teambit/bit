@@ -21,7 +21,7 @@ pub(in crate::workspace::engine) fn complete(
 ) -> io::Result<(usize, Value)> {
     let retained =
         state.inbound.as_mut().ok_or_else(|| invalid("inbound dependencies owner absent"))?;
-    if retained.token != request.token || !retained.applied {
+    if retained.token != request.token.trim() || !retained.applied {
         return Err(invalid("inbound dependencies owner phase"));
     }
     let workspace =

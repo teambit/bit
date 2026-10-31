@@ -49,6 +49,13 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
     }
 }
 
+fn object_bytes(objects: &[objects::Prepared]) -> usize {
+    objects
+        .iter()
+        .map(|object| object.compressed.len() + object.inflated_size)
+        .sum()
+}
+
 fn serialize(input: &Value, state: &mut State) -> io::Result<Value> {
     let request = wire::Serialize::deserialize(input).map_err(io::Error::other)?;
     if request.objects.len() > MAX_OBJECTS {
@@ -59,21 +66,18 @@ fn serialize(input: &Value, state: &mut State) -> io::Result<Value> {
         .values()
         .map(|plan| plan.objects.len())
         .sum();
-    if state.plans.len() >= MAX_OBJECTS || retained_count + request.objects.len() > MAX_OBJECTS {
+    if state.plans.len() >= MAX_OBJECTS
+        || retained_count.saturating_add(request.objects.len()) > MAX_OBJECTS
+    {
         return Err(invalid("snapshot retained manifest budget"));
     }
     let objects = objects::prepare(request.objects, request.pretty)?;
     let retained: usize = state.plans
         .values()
-        .flat_map(|plan| &plan.objects)
-        .map(|object| object.compressed.len() + object.inflated_size)
-        .sum();
-    let added: usize = objects
-        .iter()
-        .map(|object| object.compressed.len() + object.inflated_size)
+        .map(|plan| object_bytes(&plan.objects))
         .sum();
     if retained
-        .checked_add(added)
+        .checked_add(object_bytes(&objects))
         .is_none_or(|size| size > MAX_RAW * 2)
     {
         return Err(invalid("snapshot retained object budget"));

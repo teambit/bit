@@ -22,28 +22,32 @@ pub(super) fn bitmap_key(rows: &Map<String, Value>, scope: &str, name: &str) -> 
 }
 
 pub(crate) fn row_identity<'a>(key: &'a str, row: &'a Value) -> (Option<&'a str>, &'a str) {
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let key = key.trim();
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
     let explicit_scope = row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         });
     let (row_scope, fallback_name) = if let Some(sc) = explicit_scope {
         let stripped = key_id
             .strip_prefix(sc)
             .and_then(|rest| rest.strip_prefix('/'))
-            .unwrap_or(key_id);
+            .map_or(key_id, str::trim);
         (Some(sc), stripped)
     } else {
         key_id
             .split_once('/')
-            .map_or((None, key_id), |(sc, nm)| (Some(sc), nm))
+            .map_or((None, key_id), |(sc, nm)| (Some(sc.trim()), nm.trim()))
     };
     let row_name = row["name"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .unwrap_or(fallback_name);
     (row_scope, row_name)

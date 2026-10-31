@@ -151,7 +151,13 @@ fn identity(entry: &Value) -> io::Result<Identity> {
     identity.scope = identity.scope
         .map(|scope| scope.trim().to_owned())
         .filter(|scope| !scope.is_empty());
-    if identity.name.is_empty() || identity.name.contains('\0') {
+    if identity.name.is_empty()
+        || identity.name.len() > 4096
+        || identity.name.contains('\0')
+        || identity.scope
+            .as_ref()
+            .is_some_and(|scope| scope.len() > 4096 || scope.contains('\0'))
+    {
         return Err(invalid("invalid unmerged name"));
     }
     Ok(identity)

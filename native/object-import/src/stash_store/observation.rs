@@ -64,7 +64,7 @@ fn read_entry(
         .file_name()
         .into_string()
         .map_err(|_| invalid("stash filename is not UTF-8"))?;
-    if !name.starts_with("stash-") {
+    if !name.starts_with("stash-") || !name.ends_with(".json") {
         return Ok(None);
     }
     let metadata = fs::symlink_metadata(entry.path())?;

@@ -352,12 +352,15 @@ fn relative(value: &str, root: bool) -> io::Result<()> {
 fn optional_text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
     match value.get(key) {
         None | Some(Value::Null) => Ok(""),
-        Some(Value::String(text)) => Ok(text),
+        Some(Value::String(text)) => Ok(text.trim()),
         Some(_) => Err(invalid("status invalid component field")),
     }
 }
 fn text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
-    value[key].as_str().ok_or_else(|| invalid("status invalid component field"))
+    value[key]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("status invalid component field"))
 }
 
 pub(in crate::workspace::engine) fn context_targets(

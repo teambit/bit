@@ -17,7 +17,7 @@ pub(crate) fn inflate(compressed: &[u8]) -> Option<String> {
             .decompress(&compressed[before_in as usize..], &mut chunk, FlushDecompress::None)
             .ok()?;
         let count = (decoder.total_out() - before_out) as usize;
-        if output.len() + count > MAX_BYTES {
+        if output.len().saturating_add(count) > MAX_BYTES {
             return None;
         }
         output.extend_from_slice(&chunk[..count]);

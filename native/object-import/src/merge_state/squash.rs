@@ -71,7 +71,7 @@ fn validate(input: &Policy) -> io::Result<()> {
         references_valid(parents)?;
     }
     for reference in [&input.common, &input.model.main_head].into_iter().flatten() {
-        hash(reference)?;
+        hash(reference.trim())?;
     }
     Ok(())
 }
@@ -80,7 +80,7 @@ pub(super) fn references_valid(references: &[String]) -> io::Result<()> {
         return Err(invalid("squash reference count limit"));
     }
     for reference in references {
-        hash(reference)?;
+        hash(reference.trim())?;
     }
     Ok(())
 }

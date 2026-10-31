@@ -19,6 +19,9 @@ fn prepare_one(
     after: Vec<u8>,
     changes: &mut WorkspaceFiles,
 ) -> io::Result<()> {
+    if after.len() > super::MAX_WRITTEN_BYTES {
+        return Err(invalid("inbound workspace materialization bytes"));
+    }
     match fs::symlink_metadata(&path) {
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             safe_destination(context.root, &path)?;

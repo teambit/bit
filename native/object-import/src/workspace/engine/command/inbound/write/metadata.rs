@@ -28,16 +28,17 @@ pub(super) fn component_order(
     rows: &Map<String, Value>,
 ) -> io::Result<Vec<String>> {
     let workspace = super::super::config::configuration(root)?;
-    ordered_ids(rows, workspace["defaultScope"].as_str().unwrap_or_default())
+    ordered_ids(rows, workspace["defaultScope"].as_str().map_or("", str::trim))
 }
 fn ordered_ids(rows: &Map<String, Value>, default_scope: &str) -> io::Result<Vec<String>> {
     rows.iter()
         .map(|(key, row)| {
             let (row_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+            let name = name.trim();
             if name.is_empty() {
                 return Err(invalid("inbound ordered component name"));
             }
-            let scope = row_scope.unwrap_or(default_scope);
+            let scope = row_scope.unwrap_or(default_scope).trim();
             Ok(if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") })
         })
         .collect()

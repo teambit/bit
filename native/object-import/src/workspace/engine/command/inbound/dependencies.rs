@@ -197,21 +197,23 @@ fn edges(input: &Prepare, imported: &PreparedImport, version: &Value) -> io::Res
     Ok(rows)
 }
 
+fn parse_target_str(text: &str) -> io::Result<Target> {
+    let (identity, version) = text
+        .rsplit_once('@')
+        .map(|(identity, version)| (identity.trim(), version.trim()))
+        .filter(|(_, version)| !version.is_empty())
+        .ok_or_else(|| invalid("inbound dependency version"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("inbound dependency scope"))?;
+    Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
+}
+
 pub(super) fn target(value: &Value) -> io::Result<Target> {
-    if let Some(text) = value.as_str() {
-        let (identity, version) = text
-            .rsplit_once('@')
-            .filter(|(_, version)| !version.is_empty())
-            .ok_or_else(|| invalid("inbound dependency version"))?;
-        let (scope, name) = identity
-            .split_once('/')
-            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
-            .ok_or_else(|| invalid("inbound dependency scope"))?;
-        return Ok(Target {
-            scope: Some(scope.to_owned()),
-            name: name.to_owned(),
-            version: version.to_owned(),
-        });
+    if let Some(text) = value.as_str().map(str::trim) {
+        return parse_target_str(text);
     }
     let id_obj = value
         .get("id")
@@ -220,11 +222,13 @@ pub(super) fn target(value: &Value) -> io::Result<Target> {
     let scope = id_obj["scope"]
         .as_str()
         .or_else(|| value["scope"].as_str())
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("inbound dependency scope"))?;
     let raw_name = id_obj["name"]
         .as_str()
         .or_else(|| value["name"].as_str())
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("inbound dependency name"))?;
     let (name, inline_ver) = raw_name

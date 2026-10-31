@@ -16,7 +16,7 @@ pub fn read_object_directory(
     directory: &Path,
     identity: &str,
 ) -> io::Result<Option<(String, Value)>> {
-    let hash = merge_history::hash(identity)?;
+    let hash = merge_history::hash(identity.trim())?;
     let raw = match repository::read(directory, hash, 32 * 1024 * 1024, &mut 0) {
         Ok(raw) => raw,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
@@ -50,7 +50,7 @@ pub fn read_raw_scope_object(
     scope: &Path,
     identity: &str,
 ) -> io::Result<Option<(Vec<String>, Vec<u8>)>> {
-    let hash = merge_history::hash(identity)?;
+    let hash = merge_history::hash(identity.trim())?;
     let raw = match repository::read(&scope.join("objects"), hash, 32 * 1024 * 1024, &mut 0) {
         Ok(raw) => raw,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),

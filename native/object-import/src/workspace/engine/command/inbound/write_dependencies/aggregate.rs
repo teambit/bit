@@ -157,6 +157,7 @@ fn push(rows: &mut Vec<Value>, row: Value) -> io::Result<()> {
 }
 
 fn array_index(name: &str) -> Option<u32> {
+    let name = name.trim();
     let index = name.parse::<u32>().ok()?;
     (index != u32::MAX && index.to_string() == name).then_some(index)
 }

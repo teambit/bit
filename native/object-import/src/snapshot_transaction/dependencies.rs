@@ -59,7 +59,7 @@ fn normalize_component_id(id: &Value, version: String) -> io::Result<Value> {
 fn resolver_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Value>> {
     let mut output = Vec::new();
     for (index, dependency) in array(component, "resolver")?.iter().enumerate() {
-        if dependency["type"].as_str() != Some("component") {
+        if dependency["type"].as_str().map(str::trim) != Some("component") {
             continue;
         }
         let id = dependency

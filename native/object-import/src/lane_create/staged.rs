@@ -27,8 +27,8 @@ impl Moved {
             .iter()
             .filter_map(|(_, bytes)| bytes.as_ref())
             .map(Vec::len)
-            .sum::<usize>();
-        if total + bytes.as_ref().map_or(0, Vec::len) > 32 * 1024 * 1024 {
+            .fold(0_usize, usize::saturating_add);
+        if total.saturating_add(bytes.as_ref().map_or(0, Vec::len)) > 32 * 1024 * 1024 {
             return Err(invalid());
         }
         self.reads.push((path.to_owned(), bytes.clone()));

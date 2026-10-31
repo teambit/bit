@@ -36,10 +36,14 @@ pub(super) fn validate(request: &Prepare) -> io::Result<()> {
     }
     let mut seen = HashSet::new();
     for row in &stash.versions {
-        if !seen.insert(&row.identity) || !row.identity.contains('/') {
+        let (scope, name) = row.identity
+            .trim()
+            .split_once('/')
+            .unwrap_or_default();
+        if !seen.insert(&row.identity) || scope.trim().is_empty() || name.trim().is_empty() {
             return Err(invalid("stash checkout duplicate identity"));
         }
-        crate::merge_history::hash(&row.version)?;
+        crate::merge_history::hash(row.version.trim())?;
     }
     validate_reset(&request.options, stash)?;
     Ok(())

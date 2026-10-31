@@ -17,10 +17,10 @@ pub(super) fn plan(existing: &[String], incoming: &[Version]) -> io::Result<Valu
         return Err(super::invalid("history rebase count limit"));
     }
     for version in incoming {
-        hash(&version.hash)?;
+        hash(version.hash.trim())?;
         references_valid(&version.parents)?;
         if let Some(unrelated) = &version.unrelated {
-            hash(unrelated)?;
+            hash(unrelated.trim())?;
         }
         if let Some(squashed) = &version.squashed {
             references_valid(squashed)?;

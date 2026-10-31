@@ -20,6 +20,10 @@ impl Queue {
         Ok(queue)
     }
     pub(super) fn push(&mut self, path: &[String], id: &str) -> io::Result<()> {
+        let id = id.trim();
+        if id.is_empty() {
+            return Err(invalid("inbound dependent path"));
+        }
         let nodes = self.nodes
             .checked_add(path.len())
             .and_then(|nodes| nodes.checked_add(1));

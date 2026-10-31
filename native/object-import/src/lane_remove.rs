@@ -50,7 +50,11 @@ impl Plan {
             return Err(invalid("lane workspace changed before removal"));
         }
         for hash in &self.hashes {
-            if trash(&self.root, hash).try_exists()? || !object(&self.root, hash).try_exists()? {
+            let source = object(&self.root, hash);
+            if trash(&self.root, hash).try_exists()?
+                || !source.try_exists()?
+                || fs::symlink_metadata(&source)?.file_type().is_symlink()
+            {
                 return Err(invalid("lane object changed before removal"));
             }
         }

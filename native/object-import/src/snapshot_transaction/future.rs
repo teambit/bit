@@ -110,6 +110,7 @@ fn raw<'a>(
     pre: Option<&'a str>,
     semver: &'a Value,
 ) -> io::Result<Choice<'a>> {
+    let text = text.trim();
     if matches!(text, "major" | "minor" | "patch" | "prerelease") {
         return Ok(Choice { release: text, exact: None, count, pre, soft: false });
     }

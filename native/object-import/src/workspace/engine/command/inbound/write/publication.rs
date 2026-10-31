@@ -105,8 +105,9 @@ impl Prepared {
 
     fn rollback_replacements(&self, replaced: Vec<usize>) {
         for index in replaced.into_iter().rev() {
-            let replacement = &self.changes.replacements[index];
-            let _ = fs::write(&replacement.path, &replacement.before);
+            if let Some(replacement) = self.changes.replacements.get(index) {
+                let _ = fs::write(&replacement.path, &replacement.before);
+            }
         }
     }
 

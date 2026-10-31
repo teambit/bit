@@ -26,11 +26,15 @@ pub struct Plan {
 
 impl Plan {
     pub fn prepare(root: &Path, pattern: Option<&str>) -> io::Result<Self> {
-        Self::prepare_with(root, pattern, None)
+        Self::prepare_with(root, pattern.map(str::trim), None)
     }
 
     pub fn prepare_selected(root: &Path, identities: &[String]) -> io::Result<Self> {
-        Self::prepare_with(root, None, Some(identities.to_vec()))
+        let selected = identities
+            .iter()
+            .map(|id| id.trim().to_owned())
+            .collect();
+        Self::prepare_with(root, None, Some(selected))
     }
 
     fn prepare_with(

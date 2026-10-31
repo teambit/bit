@@ -11,13 +11,22 @@ pub(in crate::workspace::engine::command) fn capture(
     identity: &str,
     destination: &Value,
 ) -> io::Result<Captured> {
-    let scope = destination["scope"].as_str().ok_or_else(|| invalid("lane addition scope"))?;
-    let name = destination["name"].as_str().ok_or_else(|| invalid("lane addition name"))?;
-    if identity != format!("{scope}/{name}") {
+    let identity = identity.trim();
+    let scope = destination["scope"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("lane addition scope"))?;
+    let name = destination["name"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("lane addition name"))?;
+    if scope.is_empty() || name.is_empty() || identity != format!("{scope}/{name}") {
         return Err(invalid("lane addition identity"));
     }
-    let directory =
-        destination["rootDir"].as_str().ok_or_else(|| invalid("lane addition directory"))?;
+    let directory = destination["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("lane addition directory"))?;
     crate::checkout::plan::relative_path(directory)?;
     if directory == "." || directory.is_empty() {
         return Err(invalid("lane addition workspace root"));

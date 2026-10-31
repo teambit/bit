@@ -1,5 +1,9 @@
 use serde_json::{Value, json};
-use std::{fs, io};
+use sha1::Digest;
+use std::{
+    fs,
+    io::{self, Write},
+};
 
 use super::{Plan, wire};
 use crate::transfer::{Archive, Body, Descriptor, header, invalid, object, prepare};
@@ -10,7 +14,9 @@ pub(super) fn write(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
         Some("fetch") => true,
         _ => return Err(invalid("unsupported archive mode")),
     };
-    let expected = plan.entries.len() + if fetch { 2 } else { 0 };
+    let expected = plan.entries
+        .len()
+        .saturating_add(if fetch { 2 } else { 0 });
     if request.mtime_seconds.len() != expected
         || request.mtime_seconds
             .iter()
@@ -121,10 +127,8 @@ fn fetch_archive(
     )?;
     writer.entry(&end, &wrappers.1)?;
     writer.write(&[0; 1024])?;
-    use std::io::Write;
     writer.file.flush()?;
     writer.complete = true;
-    use sha1::Digest;
     Ok(
         json!({"path":request.path,"count":plan.entries.len(),"objectsHash":plan.objects_hash,"bytes":writer.bytes,"sha1":crate::validate::hexadecimal(&writer.digest.clone().finalize())}),
     )

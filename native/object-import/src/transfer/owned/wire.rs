@@ -86,6 +86,11 @@ impl Version {
 
 impl References {
     fn convert(&self) -> std::io::Result<collection::References> {
+        if self.sources.len() > super::super::MAX_OBJECTS
+            || self.artifacts.len() > super::super::MAX_OBJECTS
+        {
+            return Err(invalid("collection reference count limit"));
+        }
         Ok(collection::References {
             sources: self.sources
                 .iter()

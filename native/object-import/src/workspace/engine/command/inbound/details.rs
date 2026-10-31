@@ -236,7 +236,14 @@ pub(crate) fn candidate_component_hashes(scope_dir: &Path, scope: &str, name: &s
 }
 
 fn indexed_component_hashes(scope_dir: &Path, scope: &str, name: &str) -> Vec<String> {
-    let Ok(bytes) = std::fs::read(scope_dir.join("index.json")) else { return Vec::new() };
+    let index_path = scope_dir.join("index.json");
+    if std::fs::metadata(&index_path)
+        .ok()
+        .is_none_or(|meta| meta.len() > 16 * 1024 * 1024)
+    {
+        return Vec::new();
+    }
+    let Ok(bytes) = std::fs::read(index_path) else { return Vec::new() };
     let Ok(index) = crate::parse_jsonc(&bytes) else { return Vec::new() };
     index
         .as_array()
@@ -248,14 +255,15 @@ fn indexed_component_hashes(scope_dir: &Path, scope: &str, name: &str) -> Vec<St
             else {
                 return false;
             };
-            let row_scope = row_scope_opt.unwrap_or_default();
+            let row_scope = row_scope_opt.unwrap_or_default().trim();
             row["isSymlink"] != true
-                && row_name == name
+                && row_name.trim() == name
                 && (row_scope == scope || row_scope.is_empty())
         })
         .filter_map(|row| {
             row["hash"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
                 .map(str::to_owned)
         })

@@ -12,11 +12,10 @@ pub(super) mod resolve;
 pub(super) mod stash;
 pub(super) mod switch_completion;
 
-mod checkout_stash;
-
 mod apply_command;
 mod bitmap;
 mod capture;
+mod checkout_stash;
 mod finalize_command;
 mod history;
 mod lane_context;

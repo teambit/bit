@@ -19,7 +19,7 @@ pub(super) fn prepare_targets(
         let imported = prepare_recovery(input, &targets)?;
         return Ok((targets, imported));
     }
-    if input.operation == "import"
+    if input.operation.trim() == "import"
         && let Some(lane) = remote::active_lane(&input.root)?
     {
         return lane_workspace::prepare(input, roots, &lane);

@@ -61,11 +61,12 @@ fn file_remote(root: &Path, global: &Path, scope: &str) -> io::Result<bool> {
         .unwrap_or_else(|| &global[scope]);
     Ok(host
         .as_str()
-        .is_some_and(|host| host.starts_with("file://")))
+        .is_some_and(|host| host.trim().starts_with("file://")))
 }
 
 fn document(path: &Path) -> io::Result<Value> {
-    if !fs::symlink_metadata(path)?.is_file() {
+    let metadata = fs::symlink_metadata(path)?;
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
         return Err(super::invalid());
     }
     let mut bytes = Vec::new();

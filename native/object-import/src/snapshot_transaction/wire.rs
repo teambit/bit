@@ -53,7 +53,9 @@ where
     Deser: serde::Deserializer<'de>,
 {
     let token = String::deserialize(deserializer)?;
-    Ok(token.trim_end_matches('\0').to_owned())
+    Ok(token
+        .trim_matches(|ch: char| ch.is_ascii_whitespace() || ch == '\0')
+        .to_owned())
 }
 
 #[derive(Deserialize)]

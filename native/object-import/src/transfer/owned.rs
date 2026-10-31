@@ -162,7 +162,7 @@ fn fragment_entry(state: &State, fragment: wire::Fragment) -> io::Result<Entry> 
     match fragment {
         wire::Fragment::Collection(reference) => {
             let mut entry = state.collections
-                .get(&reference.collection_token)
+                .get(reference.collection_token.trim())
                 .and_then(|entries| entries.get(reference.index))
                 .cloned()
                 .ok_or_else(|| invalid("unknown collection provenance"))?;
@@ -185,8 +185,9 @@ fn fragment_entry(state: &State, fragment: wire::Fragment) -> io::Result<Entry> 
             let mut entries = freeze(Path::new("/"), vec![descriptor])?;
             let entry = entries.pop().ok_or_else(|| invalid("empty metadata"))?;
             if metadata.kind
-                .as_ref()
-                .is_some_and(|kind| entry.kind != *kind)
+                .as_deref()
+                .map(str::trim)
+                .is_some_and(|kind| entry.kind != kind)
             {
                 return Err(invalid("metadata type differs"));
             }

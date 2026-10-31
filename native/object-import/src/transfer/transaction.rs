@@ -44,11 +44,11 @@ impl Transaction {
     pub(super) fn initialize(input: Initialize, token: String) -> io::Result<Self> {
         if input.scopes.is_empty()
             || input.scopes.len() > MAX_OBJECTS
-            || input.client_id.is_empty()
+            || input.client_id.trim().is_empty()
             || input.client_id.len() > 4096
             || input.scopes
                 .iter()
-                .any(|scope| scope.is_empty() || scope.len() > 4096)
+                .any(|scope| scope.trim().is_empty() || scope.len() > 4096)
         {
             return Err(invalid("unsupported transfer transaction"));
         }
@@ -57,7 +57,7 @@ impl Transaction {
     }
 
     pub(super) fn receipt(&mut self, input: &Receipt) -> io::Result<Value> {
-        if input.token != self.token
+        if input.token.trim() != self.token
             || input.revision != self.revision
             || matches!(self.phase, Phase::Done | Phase::Failed(_))
         {

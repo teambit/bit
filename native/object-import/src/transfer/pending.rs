@@ -37,7 +37,7 @@ pub(super) fn write(state: &State, input: &Value) -> io::Result<Value> {
     }
     let owner = request.chown.map(|owner| (owner.uid, owner.gid));
     let store = crate::store::Store::new(request.pending_dir, owner)?;
-    let mut completed = 0;
+    let mut completed: usize = 0;
     for entry in &plan.entries {
         if store
             .write(&crate::validate::hexadecimal(&entry.hash), &entry.compressed)
@@ -45,7 +45,7 @@ pub(super) fn write(state: &State, input: &Value) -> io::Result<Value> {
         {
             break;
         }
-        completed += 1;
+        completed = completed.saturating_add(1);
     }
     Ok(
         json!({"completed":completed,"count":plan.entries.len(),"failed":completed != plan.entries.len()}),

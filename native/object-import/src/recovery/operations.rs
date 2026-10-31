@@ -49,9 +49,9 @@ impl State {
         Ok(json!({"token":self.token}))
     }
     pub(crate) fn advance(&mut self, token: &str, count: usize) -> io::Result<Value> {
-        if self.token.as_deref() != Some(token)
+        if self.token.as_deref() != Some(token.trim())
             || count == 0
-            || count > self.operations.len() - self.index
+            || count > self.operations.len().saturating_sub(self.index)
         {
             return Err(invalid("stale recovery operation"));
         }

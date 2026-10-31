@@ -55,11 +55,12 @@ fn jobs(input: &Request) -> io::Result<Vec<(String, Vec<String>)>> {
     }
     let mut grouped = IndexMap::<String, Vec<String>>::new();
     for id in &input.selection.ids {
+        let id = id.trim();
         let (scope, _) = identity(id)?;
         grouped
             .entry(scope.to_owned())
             .or_default()
-            .push(id.clone());
+            .push(id.to_owned());
     }
     Ok(grouped.into_iter().collect())
 }

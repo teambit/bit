@@ -54,13 +54,13 @@ pub(super) fn plan(input: &Plan) -> io::Result<Value> {
     Ok(output)
 }
 fn validate(input: &Plan) -> io::Result<()> {
-    hash(&input.version)?;
-    hash(&input.version_hash)?;
+    hash(input.version.trim())?;
+    hash(input.version_hash.trim())?;
     for reference in [&input.parent, &input.lane.existing_visible_head, &input.lane.model_head]
         .into_iter()
         .flatten()
     {
-        hash(reference)?;
+        hash(reference.trim())?;
     }
     if input.options.detach_head && input.options.override_head {
         return Err(invalid("conflicting lane head options"));

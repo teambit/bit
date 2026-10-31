@@ -294,6 +294,8 @@ pub(super) fn diverge(
     target: &str,
     unrelated: bool,
 ) -> io::Result<Value> {
+    let source = source.trim();
+    let target = target.trim();
     validate(versions)?;
     hash(source)?;
     hash(target)?;

@@ -269,25 +269,26 @@ pub(super) fn read_index(scope: &Path) -> io::Result<(Vec<u8>, Value)> {
     Ok((bytes, index))
 }
 pub(super) fn identity(id: &str) -> io::Result<&str> {
-    let plain = id.split_once('@').map_or(id, |(name, _)| name);
+    let trimmed = id.trim();
+    let plain = trimmed.split_once('@').map_or(trimmed, |(name, _)| name.trim());
     let (scope, name) = plain.split_once('/').ok_or_else(|| invalid("remote component id"))?;
-    if scope.is_empty() || name.is_empty() || name.contains("..") {
+    if scope.trim().is_empty() || name.trim().is_empty() || name.contains("..") {
         return Err(invalid("remote component id"));
     }
     Ok(plain)
 }
 pub(super) fn row_id_parts(id: &Value) -> (&str, &str) {
-    if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+    if let Some(raw) = id.as_str().map(str::trim) {
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
         return bare
             .split_once('/')
-            .unwrap_or(("", bare));
+            .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     }
-    let scope = id["scope"].as_str().unwrap_or_default();
+    let scope = id["scope"].as_str().map_or("", str::trim);
     let name = id["name"]
         .as_str()
-        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
-        .unwrap_or_default();
+        .map(str::trim)
+        .map_or("", |nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base.trim()));
     (scope, name)
 }
 pub(super) fn component_row<'a>(index: &'a Value, id: &str) -> Option<&'a Value> {

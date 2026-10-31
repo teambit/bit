@@ -43,6 +43,12 @@ pub(super) fn dispatch(
     }
 }
 
+fn import_token(token: Option<&str>) -> Option<&str> {
+    token
+        .map(str::trim)
+        .filter(|candidate| !candidate.is_empty())
+}
+
 fn overlay_reads(
     request: Request,
     snapshots: &mut snapshots::State,
@@ -54,10 +60,7 @@ fn overlay_reads(
             pool,
             command::inbound::overlay(
                 &snapshots.command,
-                input.import_token
-                    .as_deref()
-                    .map(str::trim)
-                    .filter(|token| !token.is_empty()),
+                import_token(input.import_token.as_deref()),
             )?,
         ),
         Request::VersionDiff(input) => super::status_models::version_diff::read_overlay(
@@ -65,10 +68,7 @@ fn overlay_reads(
             pool,
             command::inbound::overlay(
                 &snapshots.command,
-                input.import_token
-                    .as_deref()
-                    .map(str::trim)
-                    .filter(|token| !token.is_empty()),
+                import_token(input.import_token.as_deref()),
             )?,
         ),
         Request::VersionParentChain(input) => super::status_models::parent_diff::read_overlay(
@@ -76,10 +76,7 @@ fn overlay_reads(
             pool,
             command::inbound::overlay(
                 &snapshots.command,
-                input.import_token
-                    .as_deref()
-                    .map(str::trim)
-                    .filter(|token| !token.is_empty()),
+                import_token(input.import_token.as_deref()),
             )?,
         ),
         Request::StatusLaneUpdates(input) => {

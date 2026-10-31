@@ -43,17 +43,15 @@ fn capture_remotes(
         let main = roots
             .iter()
             .filter(|target| {
+                let name = target.name.trim();
                 let identity = target.scope
                     .as_deref()
                     .map(str::trim)
                     .filter(|scope| !scope.is_empty())
-                    .map_or_else(
-                        || target.name.clone(),
-                        |scope| format!("{scope}/{}", target.name),
-                    );
+                    .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
                 !entries
                     .iter()
-                    .any(|entry| entry.identity == identity)
+                    .any(|entry| entry.identity.trim() == identity)
             })
             .cloned()
             .collect::<Vec<_>>();

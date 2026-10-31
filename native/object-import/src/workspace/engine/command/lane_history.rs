@@ -93,7 +93,7 @@ fn validate_lane(request: &input::Prepare, retained: &Retained) -> io::Result<()
     if current != retained.lane_id
         || imported
             .load_lane(&current)?
-            .is_none_or(|lane| lane.hash != retained.lane_hash)
+            .is_none_or(|lane| lane.hash.trim() != retained.lane_hash.trim())
     {
         return Err(invalid("history current lane changed"));
     }

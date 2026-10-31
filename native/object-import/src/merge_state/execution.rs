@@ -23,6 +23,7 @@ const fn uses_thread_pool(request: &Request) -> bool {
             | Request::SnapshotSerialize(_)
             | Request::InspectionBegin(_)
             | Request::InspectionDiff(_)
+            | Request::HistoryQueryBlame(_)
             | Request::HistoryQueryDiff(_),
     )
 }

@@ -104,7 +104,7 @@ pub(super) fn finish(
         return Err(invalid("status stale inventory"));
     }
     plan.pending = None;
-    let target = &plan.targets[plan.cursor];
+    let target = plan.targets.get(plan.cursor).ok_or_else(|| invalid("status scan exhausted"))?;
     let request = serde_json::from_value(json!({"token":input.token,"combined":input.combined,
         "hard":input.hard,"own":input.own,"ignoredRoot":input.ignored_root}))
     .map_err(io::Error::other)?;

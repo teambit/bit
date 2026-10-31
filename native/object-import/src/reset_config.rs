@@ -48,8 +48,14 @@ pub(crate) fn removed_lane_row(
 ) -> io::Result<Option<Value>> {
     let path = file(root, Some((lane_scope, lane_name)))?;
     let bytes = fs::read(path)?;
+    if bytes.len() > 4 * 1024 * 1024 {
+        return Err(invalid("reset staged config oversized"));
+    }
     let rows: Value = crate::parse_jsonc(&bytes)?;
-    let rows = rows.as_array().ok_or_else(|| invalid("reset removed staged rows"))?;
+    let rows = rows
+        .as_array()
+        .filter(|rows| rows.len() <= 4096)
+        .ok_or_else(|| invalid("reset removed staged rows"))?;
     let staged = rows
         .iter()
         .find(|row| {

@@ -41,7 +41,7 @@ pub(super) fn git(
         [&request.labels.current, &request.labels.other],
         [currentpath, basepath, otherpath],
     )?;
-    if output.fetch_add(stdout.len(), Ordering::Relaxed) + stdout.len() > MAX_RAW {
+    if output.fetch_add(stdout.len(), Ordering::Relaxed).saturating_add(stdout.len()) > MAX_RAW {
         return Err(invalid("merge aggregate Git output limit"));
     }
     interpret(status, &stdout, &stderr)

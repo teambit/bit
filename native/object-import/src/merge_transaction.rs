@@ -24,6 +24,7 @@ pub(crate) struct State {
     bodies: bodies::State,
 }
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
+    let kind = kind.trim();
     match kind {
         "mergePrepare" => state.bodies.prepare(input, &state.journal, None),
         "mergeApply" => state.bodies.apply(&input, &state.journal),

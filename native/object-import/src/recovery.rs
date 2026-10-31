@@ -27,7 +27,7 @@ pub(crate) fn path(path: &Path) -> io::Result<()> {
     if !path.is_absolute()
         || path
             .to_str()
-            .is_none_or(|name| name.len() > 32768 || name.contains('\0'))
+            .is_none_or(|name| name.trim().is_empty() || name.len() > 32768 || name.contains('\0'))
     {
         return Err(invalid("invalid recovery path"));
     }

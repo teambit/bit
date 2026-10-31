@@ -124,6 +124,9 @@ pub(super) fn history(fields: &Value) -> io::Result<Value> {
     let Value::Array(versions) = get(fields, "versions") else {
         return Err(invalid("history versions required"));
     };
+    if versions.len() > 65536 {
+        return Err(invalid("history versions limit"));
+    }
     let rows = versions
         .iter()
         .map(|row| {

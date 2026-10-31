@@ -103,7 +103,11 @@ fn indexed_component_hash(root: &Path, id: &str) -> Option<String> {
     let (scope, name) = bare
         .split_once('/')
         .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
-    let bytes = fs::read(crate::scope_path(root).join("index.json")).ok()?;
+    let index_path = crate::scope_path(root).join("index.json");
+    if fs::metadata(&index_path).ok()?.len() > 16 * 1024 * 1024 {
+        return None;
+    }
+    let bytes = fs::read(index_path).ok()?;
     let index: Value = crate::parse_jsonc(&bytes).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
     rows.iter()

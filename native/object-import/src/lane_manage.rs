@@ -47,6 +47,7 @@ impl Plan {
         log: Value,
         history_key: &str,
     ) -> io::Result<Self> {
+        let history_key = history_key.trim();
         if history_key.is_empty() {
             return Err(invalid());
         }

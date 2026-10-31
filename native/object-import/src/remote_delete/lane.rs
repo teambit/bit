@@ -90,7 +90,11 @@ fn fully_merged(index: &Value, readset: &mut Readset, lane: &Value) -> io::Resul
 
 fn component_merged(index: &Value, readset: &mut Readset, row: &Value) -> io::Result<bool> {
     let (component_scope, name) = super::row_id_parts(&row["id"]);
-    let Some(head) = row["head"].as_str() else {
+    let Some(head) = row["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
         return Err(invalid("lane member"));
     };
     if component_scope.is_empty() || name.is_empty() {

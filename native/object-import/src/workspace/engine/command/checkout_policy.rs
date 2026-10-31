@@ -66,7 +66,7 @@ pub(in crate::workspace::engine) fn complete(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command policy owner absent"))?;
-    if record.token != input.token {
+    if record.token != input.token.trim() {
         return Err(invalid("command policy token"));
     }
     let mut planned = record.planned.take().ok_or_else(|| invalid("command policy plan absent"))?;

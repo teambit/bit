@@ -96,8 +96,8 @@ pub(super) fn commit(
     })
 }
 fn preflight(objects: &[Object]) -> io::Result<Vec<Prepared>> {
-    let mut total = 0;
-    let mut bodies = 0;
+    let mut total = 0_usize;
+    let mut bodies = 0_usize;
     let mut found = HashSet::new();
     let mut prepared = Vec::with_capacity(objects.len());
     for object in objects {
@@ -105,9 +105,9 @@ fn preflight(objects: &[Object]) -> io::Result<Vec<Prepared>> {
         if !found.insert(&object.hash) {
             return Err(invalid("snapshot duplicate object hash"));
         }
-        let body = body(object, MAX_RAW - total)?;
-        total += body.0;
-        bodies += body.1.len();
+        let body = body(object, MAX_RAW.saturating_sub(total))?;
+        total = total.saturating_add(body.0);
+        bodies = bodies.saturating_add(body.1.len());
         if total > MAX_RAW || bodies > MAX_RAW {
             return Err(invalid("snapshot raw byte limit"));
         }

@@ -43,7 +43,7 @@ pub(in crate::workspace::engine::command) fn prepare_switch(
         relocate_nested(&mut addition, &rows.values().chain(additions.iter()))?;
         validate_overlap(&addition, rows.values().chain(additions.iter()))?;
         let directory =
-            addition["rootDir"].as_str().ok_or_else(|| invalid("switch destination"))?;
+            trimmed_str(&addition["rootDir"]).ok_or_else(|| invalid("switch destination"))?;
         if root.join(directory).try_exists()? {
             return Err(invalid("switch occupied destination requires canonical writer"));
         }

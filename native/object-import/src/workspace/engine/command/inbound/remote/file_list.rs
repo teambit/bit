@@ -139,14 +139,20 @@ pub(super) fn indexed(
 pub(crate) fn row_id_parts(row: &Value) -> Option<(Option<&str>, &str)> {
     if let Some(name) = row["id"]["name"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
     {
-        return Some((row["id"]["scope"].as_str(), name));
+        return Some((row["id"]["scope"].as_str().map(str::trim), name));
     }
-    let raw = row["id"].as_str()?.split('@').next()?;
+    let raw = row["id"]
+        .as_str()?
+        .trim()
+        .split('@')
+        .next()?
+        .trim();
     let (scope, name) = raw
         .split_once('/')
-        .map_or((None, raw), |(scope, name)| (Some(scope), name));
+        .map_or((None, raw), |(scope, name)| (Some(scope.trim()), name.trim()));
     (!name.is_empty()).then_some((scope, name))
 }
 

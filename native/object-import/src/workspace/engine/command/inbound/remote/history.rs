@@ -21,6 +21,7 @@ pub(in crate::workspace::engine::command) fn history_remote_at(
     bare: bool,
     remote_host: Option<&str>,
 ) -> io::Result<Option<(VirtualRemote, String)>> {
+    id.validate()?;
     let (remotes, network, _, _) = if bare {
         connection::bare(root, transport)?
     } else {

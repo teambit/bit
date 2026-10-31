@@ -56,7 +56,7 @@ pub(crate) fn validate_existing(path: &Path) -> io::Result<()> {
         return Err(invalid("invalid merge state path"));
     }
     let metadata = fs::symlink_metadata(path)?;
-    if !metadata.is_file() {
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
         return Err(invalid("unsupported merge state file"));
     }
     drop(existing_file(path, &metadata)?);
@@ -70,7 +70,7 @@ fn open(path: &Path, existing: Option<&fs::Metadata>) -> io::Result<fs::File> {
             .create_new(true)
             .open(path);
     };
-    if !metadata.is_file() {
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
         return Err(invalid("unsupported merge state file"));
     }
     existing_file(path, metadata)

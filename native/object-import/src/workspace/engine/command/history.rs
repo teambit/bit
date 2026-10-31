@@ -92,22 +92,30 @@ impl State {
         Ok(())
     }
 }
+fn existing_hashes(history: &Value) -> io::Result<HashSet<String>> {
+    history["versions"]
+        .as_array()
+        .ok_or_else(|| invalid("command history records"))?
+        .iter()
+        .map(|row| {
+            row["hash"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+                .map(str::to_owned)
+                .ok_or_else(|| invalid("command history reference"))
+        })
+        .collect()
+}
+
 pub(super) fn populate(
     root: &Path,
     history: &mut Value,
     head: &str,
     repository: &mut Repository,
 ) -> io::Result<bool> {
-    let rows = history["versions"].as_array().ok_or_else(|| invalid("command history records"))?;
-    let existing = rows
-        .iter()
-        .map(|row| {
-            row["hash"]
-                .as_str()
-                .map(str::to_owned)
-                .ok_or_else(|| invalid("command history reference"))
-        })
-        .collect::<io::Result<HashSet<_>>>()?;
+    let head = head.trim();
+    let existing = existing_hashes(history)?;
     if existing.contains(head) {
         return Ok(false);
     }

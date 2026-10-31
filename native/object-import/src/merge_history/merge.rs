@@ -203,16 +203,17 @@ fn workspace_bytes(workspace: &Workspace, total: &mut usize) -> io::Result<Vec<u
         return Err(invalid("merge workspace type"));
     }
     let file = fs::File::open(&workspace.path)?;
-    if !file.metadata()?.is_file() || file.metadata()?.len() > (MAX_RAW - *total) as u64 {
+    let remaining = MAX_RAW.saturating_sub(*total);
+    if !file.metadata()?.is_file() || file.metadata()?.len() > remaining as u64 {
         return Err(invalid("merge raw limit"));
     }
     let mut raw = Vec::new();
-    file.take((MAX_RAW - *total + 1) as u64)
+    file.take((remaining.saturating_add(1)) as u64)
         .read_to_end(&mut raw)?;
-    if raw.len() > MAX_RAW - *total || digest(&raw) != workspace.hash {
+    if raw.len() > remaining || digest(&raw) != workspace.hash {
         return Err(invalid("merge workspace snapshot changed"));
     }
-    *total += raw.len();
+    *total = total.saturating_add(raw.len());
     let raw = if raw.starts_with(b"\xef\xbb\xbf") { raw[3..].to_vec() } else { raw };
     let bytes = crate::checkout::eol::normalize(raw, false);
     if digest(&bytes) != workspace.linux_hash {

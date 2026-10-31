@@ -115,6 +115,7 @@ fn workspace_settings(config: &Value) -> io::Result<Value> {
         workspace
             .get("defaultScope")
             .and_then(Value::as_str)
+            .map(str::trim)
             .ok_or_else(|| invalid("status workspace default scope"))?,
         false,
     )?;

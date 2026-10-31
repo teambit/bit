@@ -101,8 +101,11 @@ fn enqueue(
     visited: &HashSet<String>,
     queue: &mut traversal::Queue,
 ) -> io::Result<()> {
+    let Some(last) = path.last() else {
+        return Ok(());
+    };
     for target in adjacency
-        .get(path.last().unwrap())
+        .get(last)
         .into_iter()
         .flatten()
     {
@@ -118,7 +121,11 @@ fn enqueue(
     Ok(())
 }
 fn bare(id: &str) -> &str {
-    id.split('@').next().unwrap_or(id)
+    let id = id.trim();
+    id.split('@')
+        .next()
+        .unwrap_or(id)
+        .trim()
 }
 
 #[cfg(test)]

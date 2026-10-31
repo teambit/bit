@@ -54,7 +54,8 @@ pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io
         .join(&identity[..2])
         .join(&identity[2..]);
     let file = File::open(path)?;
-    if !file.metadata()?.is_file() || file.metadata()?.len() > maximum as u64 {
+    let metadata = file.metadata()?;
+    if !metadata.is_file() || metadata.len() > maximum as u64 {
         return Err(invalid("transfer object exceeds bounds"));
     }
     let mut bytes = Vec::new();

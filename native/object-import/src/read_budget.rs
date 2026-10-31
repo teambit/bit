@@ -28,7 +28,7 @@ impl Budget {
     /// Reserve before allocating; growth or shrinkage takes the read-only retry path.
     pub(crate) fn read(&self, mut input: File) -> io::Result<Vec<u8>> {
         let metadata = input.metadata()?;
-        if !metadata.is_file() {
+        if !metadata.is_file() || metadata.file_type().is_symlink() {
             return Err(io::Error::other("parallel read requires a regular file"));
         }
         let length = usize::try_from(metadata.len()).map_err(io::Error::other)?;

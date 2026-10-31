@@ -34,11 +34,11 @@ impl Batch {
         head_only: bool,
         force: bool,
     ) -> io::Result<Self> {
-        Self::prepare_with(
-            root,
-            head_only,
-            Some(Selected { identities: identities.to_vec(), force }),
-        )
+        let identities = identities
+            .iter()
+            .map(|id| id.trim().to_owned())
+            .collect();
+        Self::prepare_with(root, head_only, Some(Selected { identities, force }))
     }
 
     fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {

@@ -10,9 +10,12 @@ fn rows<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
 fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
     let target = value.get("id").unwrap_or(value);
     if let Some(raw) = target.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        let raw = raw.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
         let (scope, name) = match bare.split_once('/') {
-            Some((scope, name)) => (Some(scope).filter(|scope| !scope.is_empty()), name),
+            Some((scope, name)) => {
+                (Some(scope.trim()).filter(|scope| !scope.is_empty()), name.trim())
+            }
             None => (None, bare),
         };
         if name.is_empty() || name.len() > 4096 {
@@ -22,11 +25,12 @@ fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
     }
     let scope = match target.get("scope") {
         None | Some(Value::Null) => None,
-        Some(Value::String(scope)) => Some(scope.as_str()),
+        Some(Value::String(scope)) => Some(scope.trim()).filter(|scope| !scope.is_empty()),
         _ => return Err(invalid("merge dependency scope")),
     };
     let name = target["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty() && name.len() <= 4096)
         .ok_or_else(|| invalid("merge dependency name"))?;
     Ok((scope, name))
@@ -35,7 +39,10 @@ fn hashes(input: &Value, field: &str) -> io::Result<HashSet<String>> {
     rows(input, field)?
         .iter()
         .map(|value| {
-            let hash = value.as_str().ok_or_else(|| invalid("merge dependency hash"))?;
+            let hash = value
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("merge dependency hash"))?;
             crate::merge_history::hash(hash)?;
             Ok(hash.to_owned())
         })
@@ -43,13 +50,15 @@ fn hashes(input: &Value, field: &str) -> io::Result<HashSet<String>> {
 }
 fn dependency_version(dependency: &Value) -> Option<&str> {
     if let Some(ver) = dependency.get("version").and_then(Value::as_str) {
-        return Some(ver);
+        return Some(ver.trim());
     }
     let raw = dependency
         .get("id")
         .unwrap_or(dependency)
         .as_str()?;
-    raw.rsplit_once('@').map(|(_, ver)| ver)
+    raw.trim()
+        .rsplit_once('@')
+        .map(|(_, ver)| ver.trim())
 }
 pub(super) fn candidates(input: &Value) -> io::Result<Value> {
     let scope = identity(&input["owner"])?.0;

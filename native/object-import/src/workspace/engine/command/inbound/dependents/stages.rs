@@ -108,6 +108,8 @@ fn overlay(rows: &[Value], graph: &mut HashMap<String, Vec<Target>>) -> io::Resu
     for row in rows {
         let identity = row["componentIdentity"]
             .as_str()
+            .map(str::trim)
+            .filter(|identity| !identity.is_empty())
             .ok_or_else(|| invalid("inbound graph current identity"))?;
         sources.push(identity.to_owned());
         let dependencies = current_dependencies(row)?;

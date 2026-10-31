@@ -16,6 +16,7 @@ pub(super) fn validate(
         .iter()
         .chain(&selection.labels)
         .map(String::as_str)
+        .map(str::trim)
         .collect();
     for row in components {
         validate_row(objects, row, scope, name, &removed, selected_model)?;

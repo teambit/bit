@@ -24,7 +24,11 @@ pub(super) fn with_home(
 ) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
     let scope: Value = crate::parse_jsonc(&fs::read(crate::scope_path(root).join("scope.json"))?)
         .map_err(io::Error::other)?;
-    let local = scope["name"].as_str().ok_or_else(|| invalid("inbound local scope"))?;
+    let local = scope["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("inbound local scope"))?;
     let workspace = crate::effective_workspace_configuration(root, home)?;
     let global = bit_client_transfer::config::effective(
         global_config(transport)?,

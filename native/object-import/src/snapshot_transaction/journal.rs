@@ -78,9 +78,11 @@ impl State {
         if self.journals.len() >= 4096 {
             return Err(invalid("snapshot active journal limit"));
         }
-        if token.trim().is_empty() {
+        let trimmed = token.trim();
+        if trimmed.is_empty() {
             return Err(invalid("snapshot journal token"));
         }
+        let token = if trimmed.len() == token.len() { token } else { trimmed.to_owned() };
         let phases = if repository {
             REPOSITORY
         } else if request.soft {

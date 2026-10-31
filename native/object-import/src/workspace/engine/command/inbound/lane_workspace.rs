@@ -167,9 +167,10 @@ fn check_head_update(
     name: &str,
     head: &str,
 ) -> io::Result<bool> {
+    let head = head.trim();
     let head_changed = bitmap
         .get(name)
-        .is_some_and(|row| row["version"] != head);
+        .is_some_and(|row| row["version"].as_str().map(str::trim) != Some(head));
     if head_changed
         && !input.options.resolution.override_existing
         && input.options.resolution.merge_strategy.is_none()

@@ -119,6 +119,7 @@ impl Objects<'_> {
 
     /// The body of the `kind` object `hash`, fetched or local.
     fn body(&self, hash: &str, kind: &str) -> Option<Vec<u8>> {
+        let hash = hash.trim();
         let identity = merge_history::hash(hash).ok()?;
         let raw = match self.fetched.get(hash) {
             Some(compressed) => repository::inflate(compressed, LIMIT).ok()?,

@@ -17,6 +17,7 @@ pub(super) fn remove_new_model(
     let position = unique_position(rows, scope, name)?;
     let hash = rows[position]["hash"]
         .as_str()
+        .map(str::trim)
         .ok_or_else(|| invalid("lane reset model hash"))?
         .to_owned();
     crate::merge_history::hash(&hash)?;

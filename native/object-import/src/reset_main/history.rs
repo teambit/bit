@@ -13,14 +13,19 @@ pub(super) fn pending(
 ) -> io::Result<Option<ObjectChange>> {
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| invalid("reset history identity"))?;
-    let current = component["head"].as_str().ok_or_else(|| invalid("reset history head"))?;
+    let current = component["head"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("reset history head"))?;
     crate::merge_history::hash(current)?;
     let hash = format!("{:x}", Sha1::digest(format!("{identity}:VersionHistory").as_bytes()));
     let objects = crate::scope_path(root).join("objects");
     let path = super::repository::object_path(root, &hash);
     let (mut history, before) = load_or_init_history(&path, &objects, &hash, scope, name)?;
-    let hist_scope = history["scope"].as_str().unwrap_or_default();
-    if (!hist_scope.is_empty() && hist_scope != scope) || history["name"] != name {
+    let hist_scope = history["scope"].as_str().map_or("", str::trim);
+    if (!hist_scope.is_empty() && hist_scope != scope)
+        || history["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("reset VersionHistory identity"));
     }
     if !append_removed(&objects, &mut history, selection)? {

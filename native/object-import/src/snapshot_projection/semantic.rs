@@ -71,6 +71,9 @@ fn files(value: &Value) -> io::Result<Value> {
     let Value::Array(rows) = value else {
         return Err(invalid("Version files required"));
     };
+    if rows.len() > 65536 {
+        return Err(invalid("Version files limit"));
+    }
     Ok(Value::Array(
         rows.iter()
             .map(|row| choose(row, &["file", "relativePath", "name", "test"], false))
@@ -82,6 +85,9 @@ fn dependencies(value: &Value) -> io::Result<Value> {
     let Value::Array(rows) = value else {
         return Err(invalid("dependencies required"));
     };
+    if rows.len() > 65536 {
+        return Err(invalid("dependencies limit"));
+    }
     Ok(Value::Array(
         rows.iter()
             .map(|row| {

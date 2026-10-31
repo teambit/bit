@@ -18,7 +18,7 @@ pub(in crate::workspace::engine) fn select(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let record = state.record.as_mut().ok_or_else(|| invalid("checkout selection owner absent"))?;
-    if record.token != input.token
+    if record.token != input.token.trim()
         || !matches!(record.request.operation, Operation::Checkout | Operation::Merge)
         || !record.request.defer_checkout_pattern
         || record.planned.is_some()
@@ -31,7 +31,10 @@ pub(in crate::workspace::engine) fn select(
         .collect::<HashSet<_>>();
     let selected = input.identities
         .iter()
-        .map(|id| id.rsplit_once('@').map_or(id.as_str(), |(base, _)| base))
+        .map(|id| {
+            let trimmed = id.trim();
+            trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
+        })
         .collect::<HashSet<_>>();
     if selected.is_empty()
         || selected.len() != input.identities.len()

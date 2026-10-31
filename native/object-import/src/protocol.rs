@@ -28,40 +28,24 @@ pub(crate) fn serve_extension(
     checkout: &mut crate::checkout::cache::State,
     merge: &mut crate::merge_state::State,
 ) -> io::Result<bool> {
-    if magic == *b"BMT1" {
-        crate::merge_state::serve(reader, writer, merge, pool)?;
-        return Ok(true);
-    }
-    if magic == *b"BMH1" {
-        crate::merge_history::serve(reader, writer, pool)?;
-        return Ok(true);
-    }
-    if magic == *b"BSS1" {
-        crate::snapshot::serve(reader, writer)?;
-        return Ok(true);
-    }
-    if magic == *b"BWS1" {
-        crate::workspace::engine::serve(
+    match &magic {
+        b"BMT1" => crate::merge_state::serve(reader, writer, merge, pool)?,
+        b"BMH1" => crate::merge_history::serve(reader, writer, pool)?,
+        b"BSS1" => crate::snapshot::serve(reader, writer)?,
+        b"BWS1" => crate::workspace::engine::serve(
             reader,
             writer,
             pool,
             &mut merge.operations.workspace_reads,
-        )?;
-        return Ok(true);
+        )?,
+        b"BCK1" => crate::checkout::plan::serve(reader, writer, checkout)?,
+        b"BWC2" => crate::checkout::read_sources(reader, writer, checkout, pool)?,
+        b"BWC0" | b"BWC1" => {
+            crate::checkout::serve(reader, writer, magic == *b"BWC0", checkout, pool)?;
+        }
+        _ => return serve_workspace(magic, reader, writer),
     }
-    if magic == *b"BCK1" {
-        crate::checkout::plan::serve(reader, writer, checkout)?;
-        return Ok(true);
-    }
-    if magic == *b"BWC2" {
-        crate::checkout::read_sources(reader, writer, checkout, pool)?;
-        return Ok(true);
-    }
-    if magic == *b"BWC0" || magic == *b"BWC1" {
-        crate::checkout::serve(reader, writer, magic == *b"BWC0", checkout, pool)?;
-        return Ok(true);
-    }
-    serve_workspace(magic, reader, writer)
+    Ok(true)
 }
 
 fn serve_workspace(

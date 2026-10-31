@@ -41,10 +41,14 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
 }
 
 pub(super) fn requested_target(id: &str) -> io::Result<Target> {
-    let (scope, rest) = id.split_once('/').ok_or_else(|| invalid("inbound unscoped id"))?;
+    let (scope, rest) = id
+        .trim()
+        .split_once('/')
+        .ok_or_else(|| invalid("inbound unscoped id"))?;
     let (name, raw_version) = rest
         .rsplit_once('@')
         .unwrap_or((rest, "latest"));
+    let (scope, name, raw_version) = (scope.trim(), name.trim(), raw_version.trim());
     if scope.is_empty() || name.is_empty() || name.contains('*') || raw_version.is_empty() {
         return Err(invalid("inbound unsupported id"));
     }
@@ -53,5 +57,6 @@ pub(super) fn requested_target(id: &str) -> io::Result<Target> {
 }
 
 fn normalize_target_version(raw_version: &str) -> &str {
+    let raw_version = raw_version.trim();
     if raw_version == "head" { "latest" } else { raw_version }
 }

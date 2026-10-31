@@ -173,6 +173,7 @@ fn part_text(value: &Value) -> io::Result<String> {
 }
 
 fn parsed_part(part: &str) -> Value {
+    let part = part.trim();
     part.parse::<u64>()
         .ok()
         .filter(|number| *number < 9_007_199_254_740_991)

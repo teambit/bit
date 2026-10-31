@@ -115,6 +115,7 @@ fn validate_other_local(
         .map_or(&[][..], Vec::as_slice)
         .iter()
         .filter_map(Value::as_str)
+        .map(str::trim)
         .collect();
     let selected: HashSet<_> = removed
         .iter()
@@ -147,7 +148,8 @@ fn labels(component: &Value, removed: &[String]) -> io::Result<Vec<String>> {
                 .get(label)
                 .or_else(|| orphaned.and_then(|map| map.get(label)))
                 .and_then(Value::as_str)
-                .unwrap_or(label);
+                .unwrap_or(label)
+                .trim();
             (row["local"] == true && selected.contains(hash)).then_some(label.clone())
         })
         .collect())
@@ -161,7 +163,9 @@ impl Selection {
             .into_iter()
             .chain(component["orphanedVersions"].as_object())
             .flat_map(|versions| versions.iter())
-            .find_map(|(label, value)| (value.as_str() == Some(head)).then_some(label.clone()))
+            .find_map(|(label, value)| {
+                (value.as_str().map(str::trim) == Some(head)).then_some(label.clone())
+            })
             .unwrap_or_else(|| head.to_owned())
     }
 

@@ -40,17 +40,13 @@ pub(super) fn with_population(
     changes: Vec<ObjectChange>,
     proofs: super::proofs::ReadSet,
 ) -> io::Error {
-    let Some(message) = diagnostic(&error).map(str::to_owned) else { return error };
-    let existing = error
-        .get_ref()
-        .and_then(|error| error.downcast_ref::<CanonicalError>())
-        .map(|error| error.prefix.clone())
-        .unwrap_or_default();
-    let existing_proofs = error
-        .get_ref()
-        .and_then(|error| error.downcast_ref::<CanonicalError>())
-        .map(|error| error.proofs.clone())
-        .unwrap_or_default();
+    let Some(canonical) = error.get_ref().and_then(|error| error.downcast_ref::<CanonicalError>())
+    else {
+        return error;
+    };
+    let message = canonical.message.clone();
+    let existing = canonical.prefix.clone();
+    let existing_proofs = canonical.proofs.clone();
     let writes = changes
         .into_iter()
         .filter_map(|change| {

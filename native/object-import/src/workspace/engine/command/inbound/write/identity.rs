@@ -8,7 +8,8 @@ pub(super) fn matches_target(key: &str, row: &Value, target: &Target) -> bool {
         return false;
     }
     let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
-    row_name == target.name && row_scope == target.scope.as_deref()
+    row_name.trim() == target.name.trim()
+        && row_scope.map(str::trim) == target.scope.as_deref().map(str::trim)
 }
 
 fn is_component_bitmap_entry(key: &str, row: &Value) -> bool {

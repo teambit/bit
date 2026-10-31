@@ -78,17 +78,17 @@ fn collect(directory: &Path, items: Vec<Descriptor>) -> io::Result<Vec<([u8; 512
         return Err(invalid("transfer object count exceeds bounds"));
     }
     let mut seen = HashSet::new();
-    let mut bytes = 0;
-    let mut inflated = 0;
+    let mut bytes = 0_usize;
+    let mut inflated = 0_usize;
     let mut entries = Vec::new();
     for item in items {
         let name = object::name(&item)?;
         if !seen.insert(name.clone()) {
             continue;
         }
-        let (body, raw, _) = object::read(directory, &item, MAX_BYTES - bytes)?;
-        bytes += body.len();
-        inflated += raw;
+        let (body, raw, _) = object::read(directory, &item, MAX_BYTES.saturating_sub(bytes))?;
+        bytes = bytes.saturating_add(body.len());
+        inflated = inflated.saturating_add(raw);
         if inflated > MAX_BYTES {
             return Err(invalid("transfer inflated bytes exceed bounds"));
         }
@@ -105,7 +105,7 @@ fn paths(directory: &Path, archive: &Path) -> io::Result<()> {
     for path in [directory, archive] {
         if path
             .to_str()
-            .is_none_or(|text| text.len() > 32768 || text.contains('\0'))
+            .is_none_or(|text| text.trim().is_empty() || text.len() > 32768 || text.contains('\0'))
         {
             return Err(invalid("unsupported transfer path"));
         }

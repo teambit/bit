@@ -32,6 +32,7 @@ impl Store {
     }
 
     pub(crate) fn write(&self, hash: &str, compressed: &[u8]) -> io::Result<()> {
+        let hash = hash.trim();
         if hash.len() != 40
             || !hash
                 .bytes()

@@ -57,7 +57,7 @@ fn request(reader: &mut impl Read) -> io::Result<Vec<Action>> {
 
 fn action_path(reader: &mut impl Read, total: &mut usize) -> io::Result<Option<PathBuf>> {
     let length = protocol::word(reader)? as usize;
-    *total += length;
+    *total = total.saturating_add(length);
     if length > MAX_PATH || *total > MAX_BYTES {
         return Err(invalid("workspace action path bytes out of bounds"));
     }
@@ -68,7 +68,7 @@ fn action_path(reader: &mut impl Read, total: &mut usize) -> io::Result<Option<P
     reader.read_exact(&mut bytes)?;
     let name = String::from_utf8(bytes).map_err(|_| invalid("workspace action path is not UTF-8"))?;
     let path = PathBuf::from(&name);
-    if !path.is_absolute() || name.contains('\0') {
+    if name.trim().is_empty() || !path.is_absolute() || name.contains('\0') {
         return Err(invalid("workspace action path must be absolute and contain no NUL"));
     }
     Ok(Some(path))

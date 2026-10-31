@@ -40,7 +40,10 @@ fn validate(plan: &Plan) -> io::Result<()> {
     if let Some(parent) = &plan.parent {
         hash(parent)?;
     }
-    if plan.version.is_empty() || plan.version.len() > 256 || plan.version.contains('\0') {
+    if plan.version.trim().is_empty()
+        || plan.version.len() > 256
+        || plan.version.contains('\0')
+    {
         return Err(invalid("snapshot invalid version"));
     }
     if plan.head_policy.detach_head && plan.head_policy.override_head {

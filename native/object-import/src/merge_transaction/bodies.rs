@@ -34,6 +34,9 @@ impl State {
         snapshots: Option<&crate::workspace::snapshots::State>,
         overlay: Option<&crate::command_import::Overlay>,
     ) -> io::Result<Value> {
+        if self.bindings.len() >= 4096 {
+            return Err(invalid("merge body plan limit"));
+        }
         let owner = text(&input, "token")?.to_owned();
         let index = input["index"]
             .as_u64()

@@ -58,7 +58,10 @@ fn append_missing_ancestors(
             version["parents"].as_array().ok_or_else(|| invalid("lane history parents"))?;
         versions.push(parent_entry(&current, &version, parents));
         for parent in parents.iter().rev() {
-            let parent = parent.as_str().ok_or_else(|| invalid("lane history parent"))?;
+            let parent = parent
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("lane history parent"))?;
             crate::merge_history::hash(parent)?;
             pending.push(parent.to_owned());
         }

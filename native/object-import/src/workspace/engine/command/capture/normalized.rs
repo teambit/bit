@@ -41,9 +41,10 @@ fn is_root_bitmap(directory: &str, file: &str) -> bool {
     let clean_dir = directory
         .trim()
         .trim_end_matches(['/', '\\']);
-    let clean_file = file
-        .trim()
+    let trimmed_file = file.trim();
+    let clean_file = trimmed_file
         .strip_prefix("./")
-        .unwrap_or_else(|| file.trim());
+        .or_else(|| trimmed_file.strip_prefix(r".\"))
+        .unwrap_or(trimmed_file);
     (clean_dir.is_empty() || clean_dir == ".") && clean_file == ".bitmap"
 }

@@ -85,7 +85,13 @@ pub(super) fn capture(repository: &Repository) -> io::Result<ReadSet> {
         .as_array()
         .is_some_and(|rows| !rows.is_empty())
     {
-        heads.extend(repository.model["head"].as_str().map(str::to_owned));
+        heads.extend(
+            repository.model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+                .map(str::to_owned),
+        );
     }
     capture_heads(repository, &heads)
 }

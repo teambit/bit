@@ -74,7 +74,10 @@ fn references(
         if row["isSymlink"] == true {
             continue;
         }
-        let hash = row["hash"].as_str().ok_or_else(|| invalid("lane dependent model hash"))?;
+        let hash = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("lane dependent model hash"))?;
         let model = proofs::object(objects, hash, "Component", reads)?;
         let identity = dependent_identity(&model, row)?;
         let mut versions = model["versions"]
@@ -88,9 +91,12 @@ fn references(
             if refs.len() >= 32768 {
                 return Err(invalid("lane dependent reference limit"));
             }
-            let hash = hash.as_str().ok_or_else(|| invalid("lane dependent version reference"))?;
+            let hash = hash
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("lane dependent version reference"))?;
             crate::merge_history::hash(hash)?;
-            refs.push((hash.to_owned(), format!("{identity}@{label}")));
+            refs.push((hash.to_owned(), format!("{identity}@{}", label.trim())));
         }
     }
     Ok(refs)
@@ -108,13 +114,16 @@ fn dependent_identity(model: &Value, row: &Value) -> io::Result<String> {
 }
 
 fn tag(model: &Value, hash: &str) -> String {
+    let target = hash.trim();
     model["versions"]
         .as_object()
         .into_iter()
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter())
-        .find_map(|(tag, value)| (value.as_str() == Some(hash)).then(|| tag.clone()))
-        .unwrap_or_else(|| hash.to_owned())
+        .find_map(|(tag, value)| {
+            (value.as_str().map(str::trim) == Some(target)).then(|| tag.clone())
+        })
+        .unwrap_or_else(|| target.to_owned())
 }
 
 fn dependency_id(value: &Value) -> Option<String> {

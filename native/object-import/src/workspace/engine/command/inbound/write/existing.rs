@@ -185,7 +185,10 @@ fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, Stri
 
 fn validate_new(new: &Value) -> io::Result<&str> {
     crate::history_query::validate_version(new)?;
-    let main = new["mainFile"].as_str().ok_or_else(|| invalid("inbound existing main file"))?;
+    let main = new["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("inbound existing main file"))?;
     checkout::plan::relative_path(main)?;
     Ok(main)
 }

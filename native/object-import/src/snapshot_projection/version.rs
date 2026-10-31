@@ -67,6 +67,9 @@ fn rows(value: &Value, names: &[&str]) -> io::Result<Value> {
     let Value::Array(rows) = value else {
         return Err(invalid("snapshot array required"));
     };
+    if rows.len() > 65536 {
+        return Err(invalid("snapshot array limit"));
+    }
     Ok(Value::Array(
         rows.iter()
             .map(|row| {
@@ -81,6 +84,9 @@ fn extensions(value: &Value) -> io::Result<Value> {
     let Value::Array(rows) = value else {
         return Err(invalid("snapshot extensions required"));
     };
+    if rows.len() > 65536 {
+        return Err(invalid("snapshot extensions limit"));
+    }
     let mut output = Vec::new();
     let mut builder_found = false;
     for row in rows {

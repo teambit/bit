@@ -63,14 +63,21 @@ impl Prepared {
     /// Re-render the post-checkout bytes for Consumer.onDestroy after installation.
     pub(super) fn switch_lane(&mut self, context: &Value) -> io::Result<()> {
         let id = &context["lane"]["switchId"];
-        let (scope, name) = if let Some(raw) = id.as_str() {
+        let (scope, name) = if let Some(raw) = id.as_str().map(str::trim) {
             raw.split_once('/').unwrap_or(("", raw))
         } else {
             (
-                id["scope"].as_str().ok_or_else(|| invalid("switch lane scope"))?,
-                id["name"].as_str().ok_or_else(|| invalid("switch lane name"))?,
+                id["scope"]
+                    .as_str()
+                    .map(str::trim)
+                    .ok_or_else(|| invalid("switch lane scope"))?,
+                id["name"]
+                    .as_str()
+                    .map(str::trim)
+                    .ok_or_else(|| invalid("switch lane name"))?,
             )
         };
+        let (scope, name) = (scope.trim(), name.trim());
         if name.is_empty() || (name != "main" && scope.is_empty()) {
             return Err(invalid("switch lane identity"));
         }

@@ -71,14 +71,8 @@ fn snapshot(import: &command_import::PreparedImport) -> HashMap<String, Vec<Stri
         .map(|model| {
             let id = format!(
                 "{}/{}",
-                model["scope"]
-                    .as_str()
-                    .map(str::trim)
-                    .unwrap_or_default(),
-                model["name"]
-                    .as_str()
-                    .map(str::trim)
-                    .unwrap_or_default(),
+                model["scope"].as_str().map_or("", str::trim),
+                model["name"].as_str().map_or("", str::trim),
             );
             let versions = model["versions"]
                 .as_object()

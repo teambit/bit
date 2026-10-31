@@ -119,17 +119,17 @@ impl Record {
         }
         if self.serial() {
             self.batch = next.unwrap_or(self.batch);
-            if self.index + 1 < self.batch {
-                self.index += 1;
+            if self.index.saturating_add(1) < self.batch {
+                self.index = self.index.saturating_add(1);
                 return Ok(());
             }
         }
-        self.cursor += 1;
+        self.cursor = self.cursor.saturating_add(1);
         self.index = 0;
         if self.serial() {
             self.batch = next.unwrap_or(self.batch);
             if self.batch == 0 {
-                self.cursor += 1;
+                self.cursor = self.cursor.saturating_add(1);
             }
         }
         Ok(())

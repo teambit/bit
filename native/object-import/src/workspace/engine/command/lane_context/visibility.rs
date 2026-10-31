@@ -20,18 +20,18 @@ pub(in crate::workspace::engine::command) fn identity_bitmap(
         {
             continue;
         }
-        let name = crate::reset_lane::bitmap::row_identity(key, row).1.to_owned();
+        let name = crate::reset_lane::bitmap::row_identity(key, row).1.trim().to_owned();
         let unexported = row["scope"]
             .as_str()
-            .unwrap_or_default()
+            .map_or("", str::trim)
             .is_empty();
         let missing_default = row["defaultScope"]
             .as_str()
-            .unwrap_or_default()
+            .map_or("", str::trim)
             .is_empty();
         let missing_name = row["name"]
             .as_str()
-            .unwrap_or_default()
+            .map_or("", str::trim)
             .is_empty();
         let object = row.as_object_mut().ok_or_else(|| invalid("command lane bitmap component"))?;
         if unexported && missing_default {

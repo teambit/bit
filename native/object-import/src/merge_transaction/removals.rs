@@ -5,7 +5,8 @@ fn relative_path(file: &Value) -> io::Result<&str> {
     file.as_str()
         .or_else(|| file["relativePath"].as_str())
         .or_else(|| file["path"].as_str())
-        .filter(|value| !value.is_empty())
+        .map(str::trim)
+        .filter(|value| !value.is_empty() && !value.contains('\0'))
         .ok_or_else(|| invalid("merge current relative path"))
 }
 fn removed_entry(file: &Value, path: &str) -> Value {

@@ -1,7 +1,7 @@
 use std::io;
 
 pub(super) fn encode(name: &str, size: usize, seconds: u32) -> io::Result<[u8; 512]> {
-    let name = name.trim_matches('/');
+    let name = name.trim().trim_matches('/');
     if name.is_empty() || !name.is_ascii() || name.contains('\0') || seconds > i32::MAX as u32 {
         return Err(super::invalid("unsupported tar header"));
     }

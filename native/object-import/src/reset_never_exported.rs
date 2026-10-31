@@ -55,6 +55,9 @@ impl Plan {
         }
         for (path, before) in &self.objects {
             if before.is_some() {
+                if fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+                    return Err(invalid("never-exported object symlink"));
+                }
                 fs::remove_file(path)?;
             }
         }

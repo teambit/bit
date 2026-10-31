@@ -168,7 +168,7 @@ pub(crate) fn serve(
 struct Output(Vec<u8>, usize);
 impl Write for Output {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        if self.0.len() + bytes.len() > self.1 {
+        if self.0.len().saturating_add(bytes.len()) > self.1 {
             return Err(invalid("merge state output budget"));
         }
         self.0.extend_from_slice(bytes);

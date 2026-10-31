@@ -114,7 +114,7 @@ fn report(logs: &[Value], mapped: Map<String, Value>, conflicts: &Map<String, Va
     report
 }
 
-fn ordinary(path: &PathBuf) -> io::Result<()> {
+fn ordinary(path: &std::path::Path) -> io::Result<()> {
     if !path.is_absolute() || !fs::symlink_metadata(path)?.is_file() {
         return Err(invalid("command workspace config path"));
     }

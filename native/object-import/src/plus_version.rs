@@ -20,7 +20,7 @@ pub fn resolve(version: &str, resolved: Option<&str>, fallback: &str) -> String 
         return fallback.to_owned();
     };
     if !resolved.starts_with("0.0.0-") && node_semver::npm::valid(resolved).is_some() {
-        format!("{}{resolved}", &trimmed_version[1..])
+        format!("{}{resolved}", trimmed_version.strip_prefix('+').unwrap_or_default())
     } else {
         resolved.to_owned()
     }

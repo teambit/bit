@@ -37,19 +37,22 @@ impl State {
         if snapshot.contents.len() > MAX_BYTES || self.next >= MAX_TOKEN {
             return None;
         }
-        while self.bytes + snapshot.contents.len() > MAX_BYTES || self.records.len() >= MAX_FILES {
+        while self.bytes.saturating_add(snapshot.contents.len()) > MAX_BYTES
+            || self.records.len() >= MAX_FILES
+        {
             let oldest = self.order.pop_front()?;
             let removed = self.records.remove(&oldest)?;
-            self.bytes -= removed.contents.len();
+            self.bytes = self.bytes.saturating_sub(removed.contents.len());
         }
         self.next += 1;
-        self.bytes += snapshot.contents.len();
+        self.bytes = self.bytes.saturating_add(snapshot.contents.len());
         self.order.push_back(self.next);
         self.records.insert(self.next, snapshot);
         Some(self.next)
     }
 
     pub(crate) fn get(&self, token: u64, path: &Path, raw_hash: &str) -> Option<&Observation> {
+        let raw_hash = raw_hash.trim();
         self.records
             .get(&token)
             .filter(|snapshot| snapshot.path == path && snapshot.raw_hash == raw_hash)

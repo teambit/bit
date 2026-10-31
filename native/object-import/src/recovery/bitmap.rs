@@ -12,7 +12,7 @@ pub(super) fn plan(filename: &Path, current: &[String]) -> io::Result<Value> {
     if current.len() > 4096
         || current
             .iter()
-            .any(|dir| !directory(dir))
+            .any(|dir| !directory(dir.trim()))
     {
         return Err(invalid("bitmap current roots"));
     }
@@ -30,7 +30,7 @@ pub(super) fn plan(filename: &Path, current: &[String]) -> io::Result<Value> {
     let previous = roots(&parsed)?;
     let remove: Vec<_> = current
         .iter()
-        .filter(|dir| !previous.contains(dir.as_str()))
+        .filter(|dir| !previous.contains(dir.trim()))
         .collect();
     Ok(json!({"removeDirs":remove}))
 }

@@ -25,6 +25,7 @@ impl Readset {
     }
 
     pub(super) fn read(&mut self, hash: &str, kind: &str) -> io::Result<Value> {
+        let hash = hash.trim();
         validate_hash(hash)?;
         let path = object_path(&self.objects, hash);
         let before = optional(&path)?;
@@ -37,6 +38,7 @@ impl Readset {
     }
 
     pub(super) fn watch_hash(&mut self, hash: &str) -> io::Result<()> {
+        let hash = hash.trim();
         validate_hash(hash)?;
         self.watch(&object_path(&self.objects, hash))
     }

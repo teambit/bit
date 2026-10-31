@@ -110,11 +110,15 @@ fn load_objects(
     let model_hash = indexed_hash(&index, "components", scope, name)?;
     let objects = crate::scope_path(root).join("objects");
     let model = proofs::object(&objects, &model_hash, "Component", reads)?;
-    if model["scope"] != scope || model["name"] != name {
+    if model["scope"].as_str().map(str::trim) != Some(scope)
+        || model["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("lane reset Component identity"));
     }
     let lane = proofs::object(&objects, &lane_hash, "Lane", reads)?;
-    if lane["scope"] != bitmap.lane_scope || lane["name"] != bitmap.lane_name {
+    if lane["scope"].as_str().map(str::trim) != Some(bitmap.lane_scope.as_str())
+        || lane["name"].as_str().map(str::trim) != Some(bitmap.lane_name.as_str())
+    {
         return Err(invalid("lane reset Lane identity"));
     }
     Ok(Loaded { objects, lane_hash, model, lane })

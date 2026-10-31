@@ -22,7 +22,7 @@ impl Bitmap {
         if fields
             .get("$schema-version")
             .and_then(Value::as_str)
-            .is_none()
+            .is_none_or(|schema| schema.trim().is_empty())
         {
             return Err(invalid("reset bitmap schema"));
         }

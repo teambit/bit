@@ -50,10 +50,11 @@ pub(super) fn boolean(input: &Value, key: &str) -> io::Result<bool> {
         return Ok(flag);
     }
     if let Some(raw) = input[key].as_str() {
-        if raw.trim().eq_ignore_ascii_case("true") {
+        let raw = raw.trim();
+        if raw.eq_ignore_ascii_case("true") {
             return Ok(true);
         }
-        if raw.trim().eq_ignore_ascii_case("false") {
+        if raw.eq_ignore_ascii_case("false") {
             return Ok(false);
         }
     }

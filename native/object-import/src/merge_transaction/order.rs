@@ -17,14 +17,13 @@ pub(super) fn permutation(input: &Value, groups: &[Value], count: usize) -> io::
             .iter()
             .copied()
             .collect::<HashSet<_>>();
+        let selected_set = selected
+            .iter()
+            .copied()
+            .collect::<HashSet<_>>();
         if rows.len() != selected.len()
-            || source != selected.iter().copied().collect()
-            || selected
-                .iter()
-                .copied()
-                .collect::<HashSet<_>>()
-                .len()
-                != selected.len()
+            || source != selected_set
+            || selected_set.len() != selected.len()
             || (expected["stage"] == "modified" && rows != selected)
         {
             return Err(invalid("merge invalid completion permutation"));

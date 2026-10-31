@@ -11,22 +11,30 @@ pub(super) fn ids(input: &Prepare) -> io::Result<Vec<String>> {
     let scope = config::document(&crate::scope_path(&input.root).join("scope.json"))?;
     input.ids
         .iter()
-        .filter(|id| id.as_str() != "main")
+        .map(String::as_str)
+        .map(str::trim)
+        .filter(|id| *id != "main")
         .map(|id| {
             if id.contains('/') {
-                return Ok(id.clone());
+                return Ok(id.to_owned());
             }
             let row = scope["lanes"]["tracking"]
                 .as_array()
                 .into_iter()
                 .flatten()
-                .find(|row| row["localLane"] == *id)
+                .find(|row| row["localLane"].as_str().map(str::trim) == Some(id))
                 .ok_or_else(|| invalid("inbound lane alias not tracked"))?;
-            Ok(format!(
-                "{}/{}",
-                row["remoteScope"].as_str().ok_or_else(|| invalid("inbound lane alias scope"))?,
-                row["remoteLane"].as_str().ok_or_else(|| invalid("inbound lane alias name"))?,
-            ))
+            let remote_scope = row["remoteScope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .ok_or_else(|| invalid("inbound lane alias scope"))?;
+            let remote_lane = row["remoteLane"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .ok_or_else(|| invalid("inbound lane alias name"))?;
+            Ok(format!("{remote_scope}/{remote_lane}"))
         })
         .collect()
 }

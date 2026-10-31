@@ -7,6 +7,9 @@ pub(super) fn configs(value: &Value) -> io::Result<(Value, Vec<(usize, Value)>)>
     let Value::Array(entries) = value else {
         return Err(invalid("extensions required"));
     };
+    if entries.len() > 4096 {
+        return Err(invalid("extensions limit"));
+    }
     let mut rows = entries
         .iter()
         .enumerate()

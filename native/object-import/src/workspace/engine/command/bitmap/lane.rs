@@ -185,10 +185,16 @@ fn prepared_addition<'a>(
 }
 
 fn validate_addition(addition: &Value, rows: &[Value]) -> io::Result<()> {
-    let directory =
-        addition["rootDir"].as_str().ok_or_else(|| invalid("command bitmap addition root"))?;
+    let directory = addition["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("command bitmap addition root"))?;
     crate::checkout::plan::relative_path(directory)?;
-    if directory == "." || addition["scope"].as_str().is_none_or(str::is_empty) {
+    if directory == "."
+        || addition["scope"]
+            .as_str()
+            .is_none_or(|scope| scope.trim().is_empty())
+    {
         return Err(invalid("command bitmap addition scope or root"));
     }
     let fields = addition.as_object().ok_or_else(|| invalid("command bitmap addition"))?;
@@ -208,8 +214,10 @@ pub(super) fn validate_roots(directory: &str, rows: &[Value]) -> io::Result<()> 
         {
             continue;
         }
-        let other =
-            row["rootDir"].as_str().ok_or_else(|| invalid("command bitmap existing root"))?;
+        let other = row["rootDir"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("command bitmap existing root"))?;
         if other != "."
             && (directory == other
                 || directory.starts_with(&format!("{other}/"))

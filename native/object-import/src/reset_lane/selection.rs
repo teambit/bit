@@ -102,7 +102,12 @@ fn replacement(
     distance: &Value,
     head_only: bool,
 ) -> io::Result<Option<String>> {
-    if !head_only && let Some(common) = distance["common"].as_str() {
+    if !head_only
+        && let Some(common) = distance["common"]
+            .as_str()
+            .map(str::trim)
+            .filter(|common| !common.is_empty())
+    {
         return Ok(Some(common.to_owned()));
     }
     let mut current = repository.heads.current.clone();
@@ -112,7 +117,11 @@ fn replacement(
         let parents = version["parents"].as_array().ok_or_else(|| invalid("lane reset parents"))?;
         let parent = match parents.as_slice() {
             [] => return Ok(None),
-            [parent] => parent.as_str().ok_or_else(|| invalid("lane reset parent"))?,
+            [parent] => parent
+                .as_str()
+                .map(str::trim)
+                .filter(|parent| !parent.is_empty())
+                .ok_or_else(|| invalid("lane reset parent"))?,
             _ => {
                 return Err(diagnostics::error(format!(
                     "removeComponentVersions found multiple parents for a local (un-exported) version {current} of {}/{}",

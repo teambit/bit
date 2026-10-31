@@ -12,6 +12,7 @@ pub(crate) fn persist_serialized(
     serialized: &[u8],
     models: bool,
 ) -> io::Result<usize> {
+    let hash = hash.trim();
     check_header(hash, serialized, models)?;
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     encoder.write_all(serialized)?;

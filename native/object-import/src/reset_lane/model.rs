@@ -58,7 +58,7 @@ fn remove_pending_state(model: &mut Value, labels: &[String]) -> io::Result<()> 
     let Some(state) = model.get_mut("state") else { return Ok(()) };
     if let Some(versions) = state.get_mut("versions").and_then(Value::as_object_mut) {
         for label in labels {
-            versions.shift_remove(label);
+            versions.shift_remove(label.trim());
         }
     }
     // Component.removeVersion changes only an existing state.versions entry;

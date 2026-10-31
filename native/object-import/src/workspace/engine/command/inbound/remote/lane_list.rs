@@ -32,7 +32,7 @@ pub(super) fn lane_targets(
     let (hash, entries) = remote_lane(id, items)?;
     let targets = entries
         .into_iter()
-        .map(|entry| format!("{}@{}", entry.identity, entry.head))
+        .map(|entry| format!("{}@{}", entry.identity.trim(), entry.head.trim()))
         .collect();
     Ok((hash, targets))
 }

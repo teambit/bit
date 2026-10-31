@@ -65,9 +65,12 @@ fn export_row_matches(key: &str, row: &Value, full: &str, scope: &str, name: &st
 fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bool> {
     if row["name"]
         .as_str()
+        .map(str::trim)
         .filter(|row_name| !row_name.is_empty())
         .is_some_and(|row_name| row_name != name)
-        || row["version"].as_str().is_none_or(str::is_empty)
+        || row["version"]
+            .as_str()
+            .is_none_or(|ver| ver.trim().is_empty())
     {
         return Err(invalid("export bitmap lifecycle"));
     }
@@ -77,7 +80,7 @@ fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bo
         fields.shift_remove("defaultScope");
         return Ok(true);
     }
-    if row["scope"] != scope || !row["defaultScope"].is_null() {
+    if row["scope"].as_str().map(str::trim) != Some(scope) || !row["defaultScope"].is_null() {
         return Err(invalid("export bitmap lifecycle"));
     }
     Ok(false)
@@ -86,7 +89,8 @@ fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bo
 fn can_promote_default_scope(row: &Value, scope: &str) -> bool {
     row["scope"]
         .as_str()
-        .unwrap_or_default()
+        .map_or("", str::trim)
         .is_empty()
-        && (row["defaultScope"].is_null() || row["defaultScope"] == scope)
+        && (row["defaultScope"].is_null()
+            || row["defaultScope"].as_str().map(str::trim) == Some(scope))
 }

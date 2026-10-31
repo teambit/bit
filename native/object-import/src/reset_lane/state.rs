@@ -50,19 +50,20 @@ impl BitmapState {
     pub(super) fn component_is_exported(&self, model: &Value) -> bool {
         model["scope"]
             .as_str()
-            .is_some_and(|scope| !scope.is_empty())
+            .is_some_and(|scope| !scope.trim().is_empty())
             && (self.key.is_empty()
                 || self.document[&self.key]["scope"]
                     .as_str()
-                    .is_some_and(|scope| !scope.is_empty()))
+                    .is_some_and(|scope| !scope.trim().is_empty()))
     }
 
     pub(super) fn validate_head(&self, model: &Value, head: &str) -> io::Result<()> {
         if !self.key.is_empty()
             && !self.restored
-            && self.document[&self.key]["version"] != head
+            && self.document[&self.key]["version"].as_str().map(str::trim) != Some(head)
             && self.document[&self.key]["version"]
                 .as_str()
+                .map(str::trim)
                 .is_none_or(|version| {
                     model["versions"][version] != head && model["orphanedVersions"][version] != head
                 })

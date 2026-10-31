@@ -11,7 +11,7 @@ pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)
     bitmap::validate_history_file_id(&input.file_id)?;
     proof::verify(&input.dependency_read_set)?;
     let mut record = state.record.take().ok_or_else(|| invalid("command owner absent"))?;
-    if record.token != input.token {
+    if record.token != input.token.trim() {
         return Err(invalid("command apply token"));
     }
     let mut prepared = record.planned.take().ok_or_else(|| invalid("command not planned"))?;

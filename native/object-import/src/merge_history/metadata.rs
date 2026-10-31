@@ -43,7 +43,11 @@ pub(crate) fn validate(value: &Value) -> io::Result<()> {
     lane(value, "squashed")
 }
 fn truthy(value: &Value) -> bool {
-    !value.is_null() && value != &Value::Bool(false) && value.as_str() != Some("")
+    !value.is_null()
+        && value != &Value::Bool(false)
+        && value
+            .as_str()
+            .is_none_or(|text| !text.trim().is_empty())
 }
 fn empty_array(value: &Value, field: &str) -> io::Result<()> {
     match value.get(field) {

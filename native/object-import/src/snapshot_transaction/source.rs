@@ -29,9 +29,12 @@ pub(super) fn read(
         (None, None, Some(body), None) => hex(body, maximum)?,
         _ => return Err(invalid("unsupported Source input")),
     };
-    let hash = object.hash.as_ref().ok_or_else(|| invalid("Source hash missing"))?;
+    let hash = object.hash
+        .as_deref()
+        .map(str::trim)
+        .ok_or_else(|| invalid("Source hash missing"))?;
     crate::merge_history::hash(hash)?;
-    if crate::validate::hexadecimal(&Sha1::digest(&bytes)) != *hash {
+    if crate::validate::hexadecimal(&Sha1::digest(&bytes)) != hash {
         return Err(invalid("snapshot Source identity differs"));
     }
     Ok(bytes)

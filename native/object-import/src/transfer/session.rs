@@ -60,6 +60,9 @@ impl State {
     }
 
     pub(super) fn token(&mut self, bytes: &[u8]) -> io::Result<String> {
+        if bytes.len() > super::MAX_BYTES {
+            return Err(invalid("transfer identity input limit"));
+        }
         self.revision =
             self.revision.checked_add(1).ok_or_else(|| invalid("transfer identity limit"))?;
         let mut digest = Sha1::new();

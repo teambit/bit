@@ -45,8 +45,7 @@ fn reference(reference: &Value) -> io::Result<Value> {
     Ok(Value::Object(fields))
 }
 fn replace(value: &Value, name: &str, replacement: &Value) -> io::Result<Value> {
-    object(value)?;
-    let Value::Object(fields) = value else { unreachable!() };
+    let fields = object(value)?;
     let key: Vec<_> = name.encode_utf16().collect();
     Ok(Value::Object(
         fields

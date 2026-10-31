@@ -288,7 +288,10 @@ fn hash(value: &Value) -> io::Result<()> {
     Ok(())
 }
 fn text(value: &Value) -> io::Result<&str> {
-    value.as_str().ok_or_else(|| invalid("reset string"))
+    value
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("reset string"))
 }
 fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
     input[field]

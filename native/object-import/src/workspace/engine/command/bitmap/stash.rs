@@ -24,6 +24,7 @@ pub(super) fn append(prepared: &mut Prepared, context: &Value) -> io::Result<()>
         let root = entry["rootDir"]
             .as_str()
             .or_else(|| entry["directory"].as_str())
+            .map(str::trim)
             .filter(|value| !value.is_empty())
             .ok_or_else(|| invalid("stash bitmap root"))?
             .to_owned();
