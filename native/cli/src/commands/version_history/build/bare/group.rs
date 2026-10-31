@@ -69,7 +69,7 @@ fn parse_group_gid(bytes: &[u8], name: &str) -> Option<u32> {
     let contents = std::str::from_utf8(bytes).ok()?;
     let line = contents
         .lines()
-        .find(|line| line.split(':').next() == Some(name))?;
+        .find(|line| line.split(':').next().map(str::trim) == Some(name))?;
     line.split(':')
         .nth(2)?
         .trim()

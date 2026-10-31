@@ -156,6 +156,7 @@ impl Workflow {
                 return Some(());
             }
             "--skip-tasks" => {
+                let val = val.trim();
                 if val.is_empty() || val.starts_with('-') {
                     return None;
                 }
@@ -164,7 +165,7 @@ impl Workflow {
             }
             _ => {}
         }
-        let enabled = match val {
+        let enabled = match val.trim() {
             "true" => true,
             "false" => false,
             _ => return None,

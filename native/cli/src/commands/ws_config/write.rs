@@ -344,7 +344,8 @@ fn is_user_authored(file_path: &Path, marker: &str) -> bool {
 }
 
 fn relative_to_cache(rel_dir: &str, target_name: &str) -> String {
-    let rel_dir = rel_dir.trim();
+    let normalized = rel_dir.replace('\\', "/");
+    let rel_dir = normalized.trim();
     if rel_dir == "." || rel_dir.is_empty() {
         return format!("./node_modules/.cache/{target_name}");
     }

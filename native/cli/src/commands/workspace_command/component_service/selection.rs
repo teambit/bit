@@ -35,12 +35,16 @@ fn matches(row: &Value, selector: &str) -> bool {
     else {
         return false;
     };
-    let identity = raw_identity.rsplit_once('@').map_or(raw_identity, |(base, _)| base);
-    let component_name = identity.split_once('/').map_or(identity, |(_, name)| name);
+    let raw_identity = raw_identity.trim();
+    let identity = raw_identity.rsplit_once('@').map_or(raw_identity, |(base, _)| base.trim());
+    let component_name = identity.split_once('/').map_or(identity, |(_, name)| name.trim());
     let normalized = name.replace('\\', "/");
     let directory = normalized
         .strip_prefix("./")
         .unwrap_or(&normalized)
         .trim_end_matches('/');
-    identity == name || component_name == name || row["directory"].as_str() == Some(directory)
+    let row_dir = row["directory"]
+        .as_str()
+        .map(|dir| dir.trim().trim_end_matches('/'));
+    identity == name || component_name == name || row_dir == Some(directory)
 }

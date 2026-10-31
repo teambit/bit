@@ -94,7 +94,9 @@ pub(in crate::commands) fn retain(startup: Option<&mut Startup>, capture: &captu
 
 /// Provider output precedes `CommandRunner`; component onLoad output follows its status line.
 pub(in crate::commands) fn before(startup: &Startup) -> io::Result<()> {
-    io::stdout().write_all(startup.stdout.as_bytes())
+    let mut stdout = io::stdout().lock();
+    stdout.write_all(startup.stdout.as_bytes())?;
+    stdout.flush()
 }
 
 pub(in crate::commands) fn loaded(startup: &Startup) {

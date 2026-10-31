@@ -143,6 +143,7 @@ fn visit(
 }
 
 fn scrub_own(lockfile: &mut Map<String, Value>, package: &str) {
+    let package = package.trim();
     let prefix = format!("{package}@file:");
     for field in ["packages", "snapshots"] {
         if let Some(entries) = lockfile.get_mut(field).and_then(Value::as_object_mut) {

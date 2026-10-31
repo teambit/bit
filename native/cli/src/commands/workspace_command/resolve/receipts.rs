@@ -390,7 +390,8 @@ fn squash_lane_id(lane: &Value) -> io::Result<(&str, &str)> {
             .next()
             .unwrap_or(raw)
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .ok_or_else(|| decline("resolve snapshot squash receipt"));
     }
-    Ok((text(lane.get("scope"))?, text(lane.get("name"))?))
+    Ok((text(lane.get("scope"))?.trim(), text(lane.get("name"))?.trim()))
 }

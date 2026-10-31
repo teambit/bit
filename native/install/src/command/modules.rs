@@ -308,7 +308,13 @@ fn persist_allow_scripts(
         "update allowScripts configuration",
         |document| {
             for (name, allowed) in allow_scripts {
-                document.set(&[DEPENDENCY_RESOLVER_ASPECT, "allowScripts", name], &json!(allowed));
+                let name = name.trim();
+                if !name.is_empty() {
+                    document.set(
+                        &[DEPENDENCY_RESOLVER_ASPECT, "allowScripts", name],
+                        &json!(allowed),
+                    );
+                }
             }
             if document
                 .get(&[DEPENDENCY_RESOLVER_ASPECT, "policy"])

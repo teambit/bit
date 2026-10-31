@@ -80,7 +80,7 @@ fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(Pat
     let config_path = root.join("scope.json");
     let config_bytes = fs::read(&config_path).ok()?;
     let config = bit_object_import::parse_jsonc(&config_bytes).ok()?;
-    if config["name"].as_str() != Some(scope) {
+    if config["name"].as_str().map(str::trim) != Some(scope.trim()) {
         return None;
     }
     let index_path = root.join("index.json");
@@ -95,8 +95,12 @@ fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(Pat
         return None;
     }
     let mut proofs = vec![(config_path, config_bytes), (index_path, index_bytes)];
-    if !config["groupName"].is_null() && config["groupName"] != "" {
-        proofs.push(group::resolve(config["groupName"].as_str()?)?);
+    if let Some(group_name) = config["groupName"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    {
+        proofs.push(group::resolve(group_name)?);
     }
     Some(proofs)
 }
@@ -106,7 +110,8 @@ fn absent(path: &Path) -> bool {
 }
 
 fn safe_parent(root: &Path, path: &Path) -> bool {
-    for directory in [root.join("objects"), path.parent().unwrap().to_owned()] {
+    let Some(parent) = path.parent() else { return false };
+    for directory in [root.join("objects"), parent.to_owned()] {
         match fs::symlink_metadata(directory) {
             Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {}
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}

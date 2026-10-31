@@ -5,7 +5,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Work-steal across the whole request while bounding retained output independently.
 pub(crate) fn process(input: &str, pool: &ThreadPool) -> Result<Value, serde_json::Error> {
-    let request: Request = serde_json::from_str(input.trim())?;
+    let cleaned = input.trim_start_matches('\u{feff}').trim();
+    let request: Request = serde_json::from_str(cleaned)?;
     if request.version != 1 || request.files.len() > limits::BATCH_FILES {
         return Ok(invalid_request("unsupported scanner request"));
     }

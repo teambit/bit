@@ -45,7 +45,9 @@ fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>
             row["head"]
                 .as_str()
                 .map(str::trim)
-                .filter(|head| !head.is_empty())?
+                .filter(|head| {
+                    head.len() == 40 && head.bytes().all(|byte| byte.is_ascii_hexdigit())
+                })?
                 .to_owned(),
         )),
         None => Some(None),

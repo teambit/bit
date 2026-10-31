@@ -17,7 +17,7 @@ pub(super) fn apply(
 ) -> io::Result<(InstallPlan, EngineSettings)> {
     let mut plan = calculated.outcome.plan.clone();
     let mut settings = loaded.engine.clone();
-    if let Some(receipt) = receipt {
+    if let Some(receipt) = receipt.filter(|value| !value.is_null()) {
         validate_changes(&receipt["packageManagerChanges"])?;
         crate::manifests::subscriber_links(
             root,

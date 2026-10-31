@@ -178,7 +178,8 @@ fn env_peer_version(
         .find(|dependency| dependency.package_name.as_deref() == Some(name))
         .and_then(|dependency| dependency.id.version)
         .or_else(|| subject.model.packages()[RUNTIME].get(name).cloned())
-        .filter(|version| !version.trim().is_empty());
+        .map(|version| version.trim().to_owned())
+        .filter(|version| !version.is_empty());
     Ok(from_model.unwrap_or_else(|| "*".to_owned()))
 }
 

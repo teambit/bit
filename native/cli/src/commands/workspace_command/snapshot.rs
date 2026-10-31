@@ -255,11 +255,17 @@ fn cache_versions(value: Option<&Value>, targets: &[Value]) -> io::Result<HashMa
     }
     let mut versions = HashMap::new();
     for update in updates {
-        let identity = text(update.get("identity"))?;
-        let version = text(update.get("version"))?;
+        let identity = text(update.get("identity"))?.trim();
+        let version = text(update.get("version"))?.trim();
         let known = targets
             .iter()
-            .any(|target| target.get("identity").and_then(Value::as_str) == Some(identity));
+            .any(|target| {
+                target
+                    .get("identity")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    == Some(identity)
+            });
         let hash = version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit());
         let valid = hash || node_semver::npm::valid(version).is_some();
         if !known || versions.contains_key(identity) || version.len() > 256 || !valid {

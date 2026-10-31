@@ -34,7 +34,7 @@ pub(super) fn lane_head(lane: &Value, scope: &str, name: &str) -> Option<Option<
     }
     let mut visible = None;
     for component in lane["components"].as_array()? {
-        let head = component["head"].as_str()?;
+        let head = component["head"].as_str()?.trim();
         if head.len() != 40 || !head.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return None;
         }

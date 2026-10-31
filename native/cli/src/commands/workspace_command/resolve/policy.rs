@@ -106,7 +106,7 @@ impl Policy {
             self.ignore_issues = Some(val.to_string());
             return Some(());
         }
-        let enabled = match val {
+        let enabled = match val.trim() {
             "true" => true,
             "false" => false,
             _ => return None,

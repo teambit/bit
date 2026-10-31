@@ -248,7 +248,7 @@ fn import(row: &Value) -> io::Result<Import> {
     };
     let ids = array(row.get("ids"), "import ids")?
         .iter()
-        .map(|id| text(Some(id)).map(str::to_string))
+        .map(|id| text(Some(id)).map(|raw| raw.trim().to_string()))
         .collect::<io::Result<Vec<_>>>()?;
     let objects_only = match row.get("objectRequest") {
         None => false,

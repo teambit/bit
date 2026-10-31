@@ -87,7 +87,8 @@ fn graph(
     environment: &str,
 ) -> io::Result<Option<String>> {
     let importers = &lockfile["importers"];
-    let importer = if component.directory.is_empty() { "." } else { component.directory };
+    let directory = component.directory.trim();
+    let importer = if directory.is_empty() { "." } else { directory };
     if importers.get(importer).is_none() {
         return Ok(None);
     }

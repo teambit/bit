@@ -80,14 +80,16 @@ impl Planned {
         let targets = self.context["lane"]["targets"].as_array();
         let mut ids = Vec::new();
         for row in rows {
-            let current = text(row.get("id"))?;
+            let current = text(row.get("id"))?.trim();
             ids.push(current.to_owned());
-            let identity = current.rsplit_once('@').map_or(current, |(identity, _)| identity);
+            let identity =
+                current.rsplit_once('@').map_or(current, |(identity, _)| identity.trim());
             let incoming = targets
                 .into_iter()
                 .flatten()
-                .find(|target| target["identity"] == identity)
-                .and_then(|target| target["head"].as_str());
+                .find(|target| target["identity"].as_str().map(str::trim) == Some(identity))
+                .and_then(|target| target["head"].as_str().map(str::trim))
+                .filter(|head| !head.is_empty());
             if let Some(head) = incoming {
                 let incoming = format!("{identity}@{head}");
                 if incoming != current {

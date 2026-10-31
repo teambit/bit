@@ -100,9 +100,13 @@ impl User {
                 })
         };
         let username = cloud
-            .filter(|username| !username.is_empty())
-            .or_else(|| get("user.name"));
-        Ok(Self { username, email: get("user.email") })
+            .or_else(|| get("user.name"))
+            .map(|name| name.trim().to_owned())
+            .filter(|name| !name.is_empty());
+        let email = get("user.email")
+            .map(|email| email.trim().to_owned())
+            .filter(|email| !email.is_empty());
+        Ok(Self { username, email })
     }
 
     /// `getBasicLog()`: `undefined` fields are left out, as `JSON.stringify` does.

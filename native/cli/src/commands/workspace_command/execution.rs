@@ -77,7 +77,7 @@ pub fn workspace_or_fail(
     if let Some(root) = crate::workspace::root(&cwd) {
         return Ok(Ok(root));
     }
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
         return Ok(Err(Outcome::Declined("not inside a workspace".into())));
     }
     let msg = match command {

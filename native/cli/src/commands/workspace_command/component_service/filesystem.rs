@@ -51,6 +51,8 @@ pub(in crate::commands) fn message(
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("service error syscall"))?;
+    let service = service.trim();
+    let environment = environment.trim();
     Ok(format!(
         r#"service "{service}" of env "{environment}" has failed. error: {code}: {description}, {syscall} '{path}'"#,
     ))

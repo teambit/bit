@@ -162,7 +162,7 @@ fn apply_validate_token<'a>(
         }
         "--continue-on-error=false" => options.continue_on_error = false,
         "--skip-tasks" => {
-            let val = iter.next()?;
+            let val = iter.next()?.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             options.skip_tasks = Some(val.to_owned());
         }

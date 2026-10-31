@@ -32,7 +32,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let username = resolve_user(cli_token.as_deref())?;
     output.stop();
     let formatter = Formatter::new(chalk);
-    let message = match username {
+    let message = match username
+        .as_deref()
+        .map(str::trim)
+        .filter(|user| !user.is_empty())
+    {
         Some(user) => formatter.success_summary(&format!("logged in as {user}")),
         None => formatter.hint("not logged in. please run `bit login` to log in to bit cloud"),
     };

@@ -21,7 +21,10 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
     for directory in [&trash, &parent] {
         valid_directory(directory, device)?;
     }
-    let destination = parent.join(source.file_name()?);
+    let file_name = source
+        .file_name()
+        .filter(|name| !name.is_empty())?;
+    let destination = parent.join(file_name);
     match fs::symlink_metadata(&destination) {
         Ok(metadata)
             if metadata.is_file()

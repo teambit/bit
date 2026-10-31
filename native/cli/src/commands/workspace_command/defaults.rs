@@ -187,7 +187,7 @@ pub(in crate::commands) fn semver_values(
     to: Option<&str>,
     context: &Value,
 ) -> io::Result<Vec<String>> {
-    let mut values = vec![to.unwrap_or_default().to_string()];
+    let mut values = vec![to.map_or("", str::trim).to_string()];
     for model in array(context.get("models"), "models")? {
         for field in ["versions", "orphanedVersions"] {
             if let Some(versions) = model

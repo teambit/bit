@@ -46,7 +46,11 @@ pub fn is_valid_package_name(name: &str) -> bool {
 /// `/^(?:@([^/]+?)\/)?([^/]+?)$/` for a scoped name.
 fn scoped_parts(name: &str) -> Option<(&str, &str)> {
     let (user, package) = name.strip_prefix('@')?.split_once('/')?;
-    (!user.is_empty() && !package.is_empty() && !package.contains('/')).then_some((user, package))
+    (!user.is_empty()
+        && !package.is_empty()
+        && !package.starts_with(['.', '_'])
+        && !package.contains('/'))
+    .then_some((user, package))
 }
 
 /// `encodeURIComponent(part) === part`.

@@ -30,7 +30,10 @@ impl Cache {
         self.value
             .get_or_init(|| {
                 factory()
-                    .map_err(|error| Failure { kind: error.kind(), message: error.to_string() })
+                    .map_err(|error| Failure {
+                        kind: error.kind(),
+                        message: error.to_string().trim().to_owned(),
+                    })
             })
             .as_ref()
             .cloned()

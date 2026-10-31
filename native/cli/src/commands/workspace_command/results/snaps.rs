@@ -113,7 +113,12 @@ pub fn snap_error(value: Option<&Value>) -> io::Result<Option<SnapError>> {
 /// The packages of one `MissingManuallyConfiguredPackages` issue.
 fn packages(issue: &Value) -> io::Result<Vec<String>> {
     let issue = record(issue, &["type", "data"])?;
-    if issue.get("type").and_then(Value::as_str) != Some("MissingManuallyConfiguredPackages") {
+    if issue
+        .get("type")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        != Some("MissingManuallyConfiguredPackages")
+    {
         return Err(decline("native command snap issue type"));
     }
     let data: Value = serde_json::from_str(text(issue.get("data"))?)

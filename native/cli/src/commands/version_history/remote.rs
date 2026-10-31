@@ -14,6 +14,9 @@ pub(super) fn run(
     from: Option<&str>,
     remote: &str,
 ) -> io::Result<Outcome> {
+    let pattern = pattern.trim();
+    let remote = remote.trim();
+    let from = from.map(str::trim);
     if pattern.is_empty()
         || remote.is_empty()
         || remote.starts_with('-')

@@ -273,12 +273,12 @@ fn strings(value: &Value) -> io::Result<Vec<String>> {
 pub(super) fn messages(receipt: &mut Value, messages: &Value) -> io::Result<()> {
     receipt["messages"] = messages.clone();
     for message in array(Some(messages), "snapshot editor messages")? {
-        let id = text(message.get("identity"))?;
+        let id = text(message.get("identity"))?.trim();
         let text = text(message.get("message"))?;
         if let Some(versions) = receipt["versions"].as_array_mut() {
             let version = versions
                 .iter_mut()
-                .find(|row| row["identity"] == id)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(id))
                 .ok_or_else(|| std::io::Error::other("snapshot editor component absent"))?;
             version["log"] = json!({"message":text});
         }

@@ -220,6 +220,7 @@ pub(super) fn run_lint_step(
 fn lint_component_files(comp: &WorkspaceComponent, total_errors: &mut usize) -> Vec<String> {
     let mut comp_lines = Vec::new();
     for rel_file in &comp.files {
+        let rel_file = rel_file.trim();
         if !is_lintable_source(rel_file) {
             continue;
         }

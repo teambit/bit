@@ -104,10 +104,11 @@ fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<Strin
     let entry = bitmap.entries
         .iter()
         .find(|entry| {
+            let root_dir = entry.root_dir.trim().trim_end_matches('/');
             entry.owns_its_dir()
                 && (entry.id.to_string_without_version() == bare
                     || entry.id.name == bare
-                    || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
+                    || (!root_dir.is_empty() && root_dir == normalized))
         });
     let Some(entry) = entry else {
         if super::unuse_cmd::is_unscoped_unknown(root, bare) {

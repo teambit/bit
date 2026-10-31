@@ -165,22 +165,25 @@ fn load_unmerged(scope: &Path) -> io::Result<IndexMap<String, Value>> {
 fn unmerged_id(id: &Value) -> Option<String> {
     if let Some(raw) = id
         .as_str()
+        .map(str::trim)
         .filter(|raw| !raw.is_empty())
     {
-        return Some(
-            raw.split('@')
-                .next()
-                .unwrap_or(raw)
-                .to_owned(),
-        );
+        let bare = raw
+            .split('@')
+            .next()
+            .unwrap_or(raw)
+            .trim();
+        return (!bare.is_empty()).then(|| bare.to_owned());
     }
     let name = id
         .get("name")?
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())?;
     match id
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     {
         Some(scope) => Some(format!("{scope}/{name}")),

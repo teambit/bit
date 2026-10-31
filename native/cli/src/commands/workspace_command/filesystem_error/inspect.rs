@@ -17,6 +17,7 @@ pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
     }
     if let Some(destination) = error.destination
         .as_deref()
+        .map(str::trim)
         .filter(|dest| !dest.is_empty())
     {
         fields.push(format!("dest: {}", chalk.green(&quote(destination))));

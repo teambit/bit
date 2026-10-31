@@ -5,7 +5,7 @@ pub(super) fn note(file: &str) -> &'static str {
     let extension = std::path::Path::new(file.trim())
         .extension()
         .and_then(std::ffi::OsStr::to_str)
-        .map_or("", str::trim);
+        .map_or("", |ext| ext.trim().trim_start_matches('.'));
     if !extension.is_empty()
         && EXTENSIONS
             .lines()

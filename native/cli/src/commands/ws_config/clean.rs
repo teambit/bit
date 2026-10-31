@@ -179,6 +179,7 @@ pub(in crate::commands::ws_config) fn collect_active_component_dirs(ws: &Workspa
     ws.active()
         .map(|(_, comp)| {
             comp.root_dir
+                .replace('\\', "/")
                 .trim()
                 .trim_start_matches("./")
                 .trim_matches('/')

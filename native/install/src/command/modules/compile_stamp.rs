@@ -273,7 +273,7 @@ fn normalize(path: &Path) -> PathBuf {
 fn fingerprint(inputs: &Inputs<'_>) -> io::Result<String> {
     let mut hasher = Sha256::new();
     hash_str(&mut hasher, &format!("bit-native-after-install/{VERSION}"));
-    hash_str(&mut hasher, inputs.bit_version);
+    hash_str(&mut hasher, inputs.bit_version.trim());
     for file in ["workspace.jsonc", ".bitmap", "pnpm-lock.yaml"] {
         hash_str(&mut hasher, file);
         match fs::read(inputs.root.join(file)) {

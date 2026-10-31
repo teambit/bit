@@ -278,7 +278,12 @@ fn pick(package: &Value) -> io::Result<Map<String, Value>> {
     }
     let resolution =
         picked.get("resolution").ok_or_else(|| decline("lockfile package resolution"))?;
-    if resolution.get("type").and_then(Value::as_str) == Some("directory") {
+    if resolution
+        .get("type")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        == Some("directory")
+    {
         picked.shift_remove("resolution");
     }
     Ok(picked)

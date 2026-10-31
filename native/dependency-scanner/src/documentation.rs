@@ -50,7 +50,7 @@ fn source_type(path: &str) -> Option<SourceType> {
     if path.is_empty() {
         return None;
     }
-    let lower = path.to_ascii_lowercase();
+    let lower = path.replace('\\', "/").to_ascii_lowercase();
     if lower.ends_with(".js.snap") {
         return Some(SourceType::cjs());
     }

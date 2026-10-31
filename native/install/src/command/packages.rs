@@ -89,9 +89,10 @@ pub fn version_with_save_prefix(
     prefix: Option<&str>,
     wanted_range: Option<&str>,
 ) -> io::Result<String> {
+    let version = version.trim();
     let prerelease =
         semver::SemVer::parse(version).is_ok_and(|parsed| !parsed.prerelease.is_empty());
-    if prerelease || wanted_range == Some(version) {
+    if prerelease || wanted_range.map(str::trim) == Some(version) {
         return Ok(version.to_string());
     }
     if let Some(range) = wanted_range.filter(|range| range.starts_with(['~', '^'])) {

@@ -177,6 +177,7 @@ fn squash_hashes(preparation: &Value) -> io::Result<Vec<String>> {
     let hash = |value: &Value| -> Option<String> {
         value
             .as_str()
+            .map(str::trim)
             .filter(|hash| {
                 hash.len() == 40
                     && hash

@@ -178,6 +178,7 @@ fn reachable(root: &Value, by_id: &HashMap<String, Value>) -> (HashSet<String>, 
         if let Some(package) = edge["attr"]["pkgId"]
             .as_str()
             .or_else(|| edge["pkgId"].as_str())
+            .map(str::trim)
             .filter(|value| !value.is_empty())
         {
             packages.insert(package.to_owned());

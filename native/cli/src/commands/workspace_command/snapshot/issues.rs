@@ -88,13 +88,13 @@ fn selected<'p>(plan: &'p Value, policy: Option<&'p Value>) -> io::Result<HashSe
     let Some(policy) = policy else {
         return array(plan.get("needsSnap"), "needs snap")?
             .iter()
-            .map(|id| text(Some(id)))
+            .map(|id| text(Some(id)).map(str::trim))
             .collect();
     };
     array(policy.get("targets"), "policy targets")?
         .iter()
         .filter(|target| !truthy(target.get("fastForward")))
-        .map(|target| text(target.get("identity")))
+        .map(|target| text(target.get("identity")).map(str::trim))
         .collect()
 }
 

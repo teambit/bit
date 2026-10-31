@@ -133,7 +133,9 @@ fn parse_show(rest: &[&str]) -> Option<Subcommand> {
                 json = true;
                 short = true;
             }
-            val if !val.starts_with('-') && id.is_none() => id = Some(val.to_owned()),
+            val if !val.trim().starts_with('-') && !val.trim().is_empty() && id.is_none() => {
+                id = Some(val.trim().to_owned());
+            }
             _ => return None,
         }
     }

@@ -154,7 +154,12 @@ fn remove_postinstall_script(root: &Path) -> io::Result<()> {
     let Some(scripts) = manifest.get_mut("scripts").and_then(Value::as_object_mut) else {
         return Ok(());
     };
-    if scripts.get("postinstall").and_then(Value::as_str) != Some(POSTINSTALL) {
+    if scripts
+        .get("postinstall")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        != Some(POSTINSTALL)
+    {
         return Ok(());
     }
     scripts.remove("postinstall");

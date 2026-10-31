@@ -72,6 +72,8 @@ fn enrich(error: io::Error, calculated: &Calculated, output: &Output) -> io::Err
     };
     let candidate = code
         .as_deref()
+        .map(str::trim)
+        .filter(|code| !code.is_empty())
         .map_or_else(
             || message.contains("No matching version found"),
             |code| NO_MATCHING_VERSION.contains(&code),

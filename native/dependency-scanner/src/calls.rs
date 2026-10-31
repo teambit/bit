@@ -44,16 +44,23 @@ pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
             Expression::Identifier(id) => id.name == "require",
             Expression::StaticMemberExpression(member) => {
                 member.property.name == "resolve"
-                    && match &member.object {
+                    && match member.object.without_parentheses() {
                         Expression::Identifier(id) => id.name == "require",
                         Expression::ImportMeta(_) => true,
                         _ => false,
                     }
             }
             Expression::ComputedMemberExpression(member) => {
-                matches!(&member.expression, Expression::Identifier(id) if id.name == "resolve")
-                    && (matches!(&member.object, Expression::Identifier(id) if id.name == "require")
-                        || matches!(&member.object, Expression::ImportMeta(_)))
+                matches!(
+                    member.expression.without_parentheses(),
+                    Expression::Identifier(id) if id.name == "resolve",
+                ) && matches!(
+                    member.object.without_parentheses(),
+                    Expression::Identifier(id) if id.name == "require",
+                ) || (matches!(
+                    member.expression.without_parentheses(),
+                    Expression::Identifier(id) if id.name == "resolve",
+                ) && matches!(member.object.without_parentheses(), Expression::ImportMeta(_)))
             }
             _ => false,
         }

@@ -126,6 +126,7 @@ fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
             target["identity"]
                 .as_str()
                 .or_else(|| target["id"].as_str())
+                .map(str::trim)
                 .is_some_and(|id| selected.contains(&id))
         })
         .cloned()

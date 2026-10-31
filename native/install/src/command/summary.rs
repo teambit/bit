@@ -35,11 +35,16 @@ fn another_install_required(
     recurring: bool,
     non_loaded: &[String],
 ) -> Option<String> {
-    let envs_list: Vec<&str> = non_loaded
+    let mut envs_list: Vec<&str> = Vec::new();
+    for env in non_loaded
         .iter()
         .map(|env| env.trim())
         .filter(|env| !env.is_empty())
-        .collect();
+    {
+        if !envs_list.contains(&env) {
+            envs_list.push(env);
+        }
+    }
     if envs_list.is_empty() {
         return None;
     }

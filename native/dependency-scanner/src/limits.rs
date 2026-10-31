@@ -32,6 +32,9 @@ pub(crate) fn source<'source>(
             "source exceeds 1 MiB limit; use legacy fallback",
         )),
         Some(source) => Ok(std::borrow::Cow::Borrowed(source)),
-        None => read_source(path).map(std::borrow::Cow::Owned),
+        None => {
+            let trimmed = path.to_str().map_or(path, |raw| Path::new(raw.trim()));
+            read_source(trimmed).map(std::borrow::Cow::Owned)
+        }
     }
 }

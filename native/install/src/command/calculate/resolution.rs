@@ -22,6 +22,9 @@ pub(super) async fn resolve(
     loaded: &Loaded,
     components: &[WorkspaceComponent],
 ) -> io::Result<Resolved> {
+    if session.root.as_os_str().is_empty() || loaded.workspace.scope_path.as_os_str().is_empty() {
+        return Err(io::Error::other("workspace or scope path is empty"));
+    }
     // `InstallMain.install` loads the components before the manifests; the envs that
     // registers are the only ones the env requests see until the package manager ran.
     session.host.prepare_install(&workspace_aspects(session, loaded)).await?;

@@ -114,12 +114,12 @@ fn lane_name(row: &Import) -> Option<&str> {
 }
 
 fn latest_request(row: &Import) -> bool {
-    row.reason.as_deref() == Some(REASONS[0]) || lane_name(row).is_some()
+    row.reason.as_deref().map(str::trim) == Some(REASONS[0]) || lane_name(row).is_some()
 }
 
 fn dependency_request(row: &Import) -> bool {
     matches!(
-        row.reason.as_deref(),
+        row.reason.as_deref().map(str::trim),
         Some("for getting missing versions and dependencies" | "for getting all dependencies"),
     )
 }

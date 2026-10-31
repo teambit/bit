@@ -44,8 +44,9 @@ pub fn update_document(
         .unwrap_or(Value::Null);
     let mut policy = config_entries(&initial);
     for (name, version) in entries {
-        if admits(&policy, name, existing)? {
-            policy.push((0, name.clone(), json!(version)));
+        let name = name.trim();
+        if !name.is_empty() && admits(&policy, name, existing)? {
+            policy.push((0, name.to_owned(), json!(version)));
         }
     }
     update_config_policy(document, &to_config_object(&policy));

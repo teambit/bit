@@ -16,6 +16,7 @@ pub(super) fn valid_rows(rows: &[Value]) -> Option<bool> {
 }
 
 fn canonical(row: &Value) -> Option<&str> {
+    row.as_object()?;
     let hash = valid_hash(row["hash"].as_str()?)?;
     let parents = refs(&row["parents"])?;
     let mut value = json!({"hash":hash,"parents":parents});

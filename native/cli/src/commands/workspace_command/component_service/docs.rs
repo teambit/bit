@@ -10,25 +10,10 @@ pub(super) fn prepare(root: &Path, components: &[Value]) -> io::Result<Vec<CatDo
             let files = component["files"]
                 .as_array()
                 .ok_or_else(|| invalid("component service documentation files"))?;
-            let directory = if component["directory"].is_null() {
-                &component["rootDir"]
-            } else {
-                &component["directory"]
-            };
+            let directory = component_directory(component);
             let normalized = files
                 .iter()
-                .map(|file| {
-                    let path = file
-                        .as_str()
-                        .or_else(|| file["relativePath"].as_str())
-                        .or_else(|| file["path"].as_str())
-                        .map(str::trim)
-                        .filter(|path| !path.is_empty());
-                    match path {
-                        Some(path) => json!({"relativePath":path,"test":file["test"] == true}),
-                        None => json!({"relativePath":file,"test":false}),
-                    }
-                })
+                .map(normalize_file)
                 .collect::<Vec<_>>();
             let plan = cat_prepare(root, json!({"directory":directory,"files":normalized}))
                 .ok_or_else(|| invalid("component service documentation cache"))?;
@@ -38,4 +23,35 @@ pub(super) fn prepare(root: &Path, components: &[Value]) -> io::Result<Vec<CatDo
             Ok(plan)
         })
         .collect()
+}
+
+fn component_directory(component: &Value) -> Value {
+    component["directory"]
+        .as_str()
+        .or_else(|| component["rootDir"].as_str())
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .map_or_else(
+            || {
+                if component["directory"].is_null() {
+                    component["rootDir"].clone()
+                } else {
+                    component["directory"].clone()
+                }
+            },
+            Value::from,
+        )
+}
+
+fn normalize_file(file: &Value) -> Value {
+    let path = file
+        .as_str()
+        .or_else(|| file["relativePath"].as_str())
+        .or_else(|| file["path"].as_str())
+        .map(str::trim)
+        .filter(|path| !path.is_empty());
+    match path {
+        Some(path) => json!({"relativePath":path,"test":file["test"] == true}),
+        None => json!({"relativePath":file,"test":false}),
+    }
 }

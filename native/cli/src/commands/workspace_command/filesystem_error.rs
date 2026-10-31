@@ -94,7 +94,7 @@ fn make(error: io::Error, operation: &str, path: &Path, destination: Option<&Pat
         errno: error.raw_os_error().map(|errno| -errno),
         code,
         message,
-        operation: operation.into(),
+        operation: operation.trim().into(),
         path: path.to_string_lossy().into_owned(),
         destination: destination.map(|path| path.to_string_lossy().into_owned()),
     };

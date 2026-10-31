@@ -44,5 +44,6 @@ fn list(engine: &mut Engine, root: &Path, scope: &str) -> io::Result<Vec<Value>>
     Ok(array(listed["lists"][0].get("components"), "checkout scope components")?
         .iter()
         .map(|component| component["id"].clone())
+        .filter(|id| !id.is_null())
         .collect())
 }

@@ -99,6 +99,7 @@ fn match_by_pattern<'a>(
     ws: &'a Workspace,
     pattern: &str,
 ) -> Option<Vec<(&'a BitmapEntry, &'a WorkspaceComponent)>> {
+    let pattern = pattern.trim();
     if let Ok(selected) = select_ids(root, pattern) {
         let matched: Vec<_> = ws
             .active()
@@ -122,7 +123,7 @@ fn match_by_pattern<'a>(
         ws.active()
             .filter(|(entry, _)| {
                 let no_ver = entry.id.to_string_without_version();
-                let root_dir = entry.root_dir.trim_end_matches('/');
+                let root_dir = entry.root_dir.trim().trim_end_matches('/');
                 no_ver == pattern
                     || entry.id.name == pattern
                     || entry.key == pattern

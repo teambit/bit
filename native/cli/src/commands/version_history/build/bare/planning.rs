@@ -37,7 +37,10 @@ pub(super) fn prepare(
         return None;
     }
     let model = read(&root.path, &target.model_hash, "Component", &mut proofs)?;
-    let head = from.or_else(|| model["head"].as_str())?;
+    let head = from
+        .or_else(|| model["head"].as_str())
+        .map(str::trim)
+        .filter(|val| !val.is_empty())?;
     finish(root, &target, head, proofs, lane_heads, delete_existing)
 }
 

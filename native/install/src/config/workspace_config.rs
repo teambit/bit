@@ -199,6 +199,8 @@ impl WorkspaceConfig {
     pub fn root_components_path(&self, root: &Path) -> PathBuf {
         let base = self.workspace.root_components_directory
             .as_deref()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
             .map_or_else(|| root.join("node_modules"), |dir| root.join(dir));
         base.join(".bit_roots")
     }

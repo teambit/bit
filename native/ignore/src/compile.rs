@@ -74,6 +74,9 @@ impl Compiler {
 
     /// `_checkPattern` then `_createRule`; `None` for blank lines and comments.
     pub fn rule(&mut self, origin: &str) -> Result<Option<Rule>, UnsupportedPattern> {
+        if origin.contains('\0') {
+            return Err(UnsupportedPattern(origin.to_string()));
+        }
         if origin.is_empty() || self.blank_line.find(origin).is_some() || origin.starts_with('#') {
             return Ok(None);
         }

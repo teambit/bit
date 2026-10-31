@@ -85,7 +85,7 @@ fn format_row(
             .filter(|(_, head)| head == hash)
             .map(|(name, _)| name.as_str()),
     );
-    if model["head"].as_str() == Some(hash) {
+    if model["head"].as_str().map(str::trim) == Some(hash) {
         pointers.push("main");
     }
     if let Some(tag) = tags(model, hash) {

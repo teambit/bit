@@ -165,12 +165,20 @@ fn targets(value: &Value, context: &Value) -> io::Result<Vec<Value>> {
     let rows = rows.ok_or_else(|| decline("command dependency target receipt"))?;
     let mut seen = Vec::new();
     for row in rows {
-        let identity = row.get("identity").and_then(Value::as_str);
+        let identity = row
+            .get("identity")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|id| !id.is_empty());
         let known = row["scopeOnly"] == true
             || originals
                 .iter()
                 .any(|original| {
-                    original.get("identity").and_then(Value::as_str) == identity
+                    original
+                        .get("identity")
+                        .and_then(Value::as_str)
+                        .map(str::trim)
+                        == identity
                         && original.get("directory") == row.get("directory")
                 });
         let files = row.get("files").and_then(Value::as_array);

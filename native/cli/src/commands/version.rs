@@ -28,11 +28,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let text = render_version(version, json)?;
     let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
+    let mut stdout = io::stdout().lock();
     if json {
-        write!(io::stdout(), "{text}")?;
+        write!(stdout, "{text}")?;
     } else {
-        writeln!(io::stdout(), "{text}")?;
+        writeln!(stdout, "{text}")?;
     }
+    stdout.flush()?;
     if let Some(history) = history {
         history.end(true);
     }

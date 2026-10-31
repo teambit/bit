@@ -121,7 +121,7 @@ impl Loaded {
 
     /// Yarn is a JavaScript package manager: such workspaces keep the TypeScript command.
     pub fn uses_yarn(&self) -> bool {
-        self.config.dependency_resolver.package_manager.as_deref() == Some(YARN)
+        self.config.dependency_resolver.package_manager.as_deref().map(str::trim) == Some(YARN)
     }
 
     /// `workspace.name`: the configured name, else the root directory's name.

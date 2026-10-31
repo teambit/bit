@@ -58,8 +58,13 @@ impl Ignore {
         patterns: impl IntoIterator<Item = &'pattern str>,
     ) -> Result<&mut Self, UnsupportedPattern> {
         for pattern in patterns {
-            if let Some(rule) = compiler.rule(pattern)? {
-                self.rules.push(rule);
+            for line in pattern
+                .split('\n')
+                .map(|line| line.strip_suffix('\r').unwrap_or(line))
+            {
+                if let Some(rule) = compiler.rule(line)? {
+                    self.rules.push(rule);
+                }
             }
         }
         Ok(self)

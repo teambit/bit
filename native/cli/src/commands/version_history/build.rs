@@ -116,12 +116,21 @@ fn index_candidates(scope: &std::path::Path) -> Option<Vec<(String, String)>> {
 }
 
 fn candidate_row(scope: &std::path::Path, row: &Value) -> Option<Option<(String, String)>> {
-    let hash = row["hash"].as_str()?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())?;
     let (kind, model) = bit_object_import::read_scope_object(scope, hash).ok()??;
     if kind != "Component" {
         return None;
     }
-    let Some(head) = model["head"].as_str() else { return Some(None) };
+    let Some(head) = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    else {
+        return Some(None);
+    };
     let (row_scope, row_name) = row_scope_and_name(row)?;
     let identity = format!("{row_scope}/{row_name}");
     let version = super::text::tags(&model, head).unwrap_or(head);

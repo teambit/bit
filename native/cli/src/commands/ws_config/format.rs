@@ -298,7 +298,7 @@ pub(super) fn finish_one_writer(
     let total_real = real_config_files.len();
     let total_extending = extending_config_file.file_paths.len();
     OneConfigWriterIdResult {
-        writer_id: writer_id.to_owned(),
+        writer_id: writer_id.trim().to_owned(),
         total_written_files: total_real + total_extending,
         real_config_files,
         total_real_config_files: total_real,

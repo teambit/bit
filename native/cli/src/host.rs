@@ -290,6 +290,6 @@ fn progress_mode() -> &'static str {
         .nth(1)
         .is_some_and(|arg| matches!(arg.trim(), "status" | "s" | "diff" | "d"))
         && !env::args().any(|arg| matches!(arg.trim(), "--json" | "-j"))
-        && env::var_os("CI").is_none();
+        && env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty());
     if progress { "1" } else { "0" }
 }

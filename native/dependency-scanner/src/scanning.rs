@@ -129,7 +129,9 @@ fn normalized_kind(file: &File) -> String {
         .as_deref()
         .map(str::trim)
         .filter(|kind| !kind.is_empty())
-        .or_else(|| file.path.trim().rsplit('.').next())
+        .or_else(|| {
+            std::path::Path::new(file.path.trim()).extension().and_then(std::ffi::OsStr::to_str)
+        })
         .unwrap_or("")
         .trim_start_matches('.')
         .to_ascii_lowercase()

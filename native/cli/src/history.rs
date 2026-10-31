@@ -57,7 +57,7 @@ impl History {
 
     /// Best effort, as in Node: a scope that cannot be written loses the line.
     fn write(&self, state: &str) {
-        let line = format!("{} {} {}, {state}\n", iso_now(), process::id(), self.command);
+        let line = format!("{} {} {}, {}\n", iso_now(), process::id(), self.command, state.trim());
         if let Ok(mut file) = OpenOptions::new()
             .append(true)
             .create(true)

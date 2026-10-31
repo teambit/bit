@@ -20,6 +20,9 @@ impl Progress {
             || completed.is_none()
             || requested != Some(row.ids.len() as u64)
             || performed != Some(!row.ids.is_empty())
+            || row.ids
+                .iter()
+                .any(|id| id.trim().is_empty())
         {
             return Err(decline("lane history pending import receipt"));
         }

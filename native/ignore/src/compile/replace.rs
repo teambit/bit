@@ -29,6 +29,7 @@ impl Step {
         Self { regex, global, replacement }
     }
 
+    #[must_use]
     pub fn apply(&self, text: &str, anchored: bool) -> String {
         if text.is_empty() {
             return String::new();
@@ -39,6 +40,7 @@ impl Step {
 
 /// `text.replace(regex, fn)`: the first match, or every match for a global
 /// regex, advancing past empty matches as `lastIndex` does.
+#[must_use]
 pub fn js_replace(
     text: &str,
     regex: &Regex,

@@ -14,7 +14,7 @@ pub(in crate::command) async fn calculate_linked(
     loaded: &Loaded,
     linked_root_deps: &DependencyMap,
 ) -> io::Result<Calculated> {
-    if session.root.as_os_str().is_empty() {
+    if session.root.as_os_str().is_empty() || loaded.workspace.scope_path.as_os_str().is_empty() {
         return Err(io::Error::other("workspace root path is empty"));
     }
     let components =

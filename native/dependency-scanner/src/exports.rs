@@ -2,11 +2,8 @@ use oxc_ast::ast::{AssignmentTarget, Expression};
 
 // Match ast-module-types' Babel shapes, including computed identifier properties.
 // A string property named "exports" intentionally does not match that classifier.
-fn peel<'a>(mut expression: &'a Expression<'a>) -> &'a Expression<'a> {
-    while let Expression::ParenthesizedExpression(paren) = expression {
-        expression = &paren.expression;
-    }
-    expression
+fn peel<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
+    expression.without_parentheses()
 }
 fn identifier(expression: &Expression<'_>, name: &str) -> bool {
     matches!(peel(expression), Expression::Identifier(value) if value.name == name)

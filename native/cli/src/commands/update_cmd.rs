@@ -199,13 +199,14 @@ pub(in crate::commands) fn bitmap_entry_aspect<'a>(
     entry: &'a bit_install::workspace::BitmapEntry,
     bare_id: &str,
 ) -> Option<&'a Value> {
+    let bare_id = bare_id.trim();
     let map = entry.config.as_ref()?;
     if let Some(val) = map.get(bare_id) {
         return Some(val);
     }
     let prefix = format!("{bare_id}@");
     map.iter()
-        .find(|(key, _)| key.starts_with(&prefix))
+        .find(|(key, _)| key.trim() == bare_id || key.trim().starts_with(&prefix))
         .map(|(_, val)| val)
 }
 
@@ -213,13 +214,14 @@ pub(in crate::commands) fn aspect_entry<'a>(
     map_val: &'a Value,
     bare_id: &str,
 ) -> Option<(&'a str, &'a Value)> {
+    let bare_id = bare_id.trim();
     let obj = map_val.as_object()?;
     if let Some((key, val)) = obj.get_key_value(bare_id) {
         return Some((key.as_str(), val));
     }
     let prefix = format!("{bare_id}@");
     obj.iter()
-        .find(|(key, _)| key.starts_with(&prefix))
+        .find(|(key, _)| key.trim() == bare_id || key.trim().starts_with(&prefix))
         .map(|(key, val)| (key.as_str(), val))
 }
 

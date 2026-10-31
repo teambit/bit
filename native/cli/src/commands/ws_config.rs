@@ -381,11 +381,13 @@ fn parse_writers_arg(rest: &[&str], idx: &mut usize) -> Option<Vec<String>> {
 
 fn split_writers(raw: &str) -> Option<Vec<String>> {
     let raw = raw.trim();
-    (!raw.is_empty() && !raw.starts_with('-')).then(|| {
-        raw.split(',')
-            .map(str::trim)
-            .filter(|item| !item.is_empty())
-            .map(str::to_owned)
-            .collect()
-    })
+    (!raw.is_empty() && !raw.starts_with('-'))
+        .then(|| {
+            raw.split(',')
+                .map(str::trim)
+                .filter(|item| !item.is_empty())
+                .map(str::to_owned)
+                .collect()
+        })
+        .filter(|writers: &Vec<String>| !writers.is_empty())
 }

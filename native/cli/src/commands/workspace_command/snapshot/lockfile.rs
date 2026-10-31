@@ -12,6 +12,7 @@ pub(in crate::commands::workspace_command) fn hidden_target(
     context: &Value,
     identity: &str,
 ) -> bool {
+    let identity = without_version(identity.trim());
     let visible = context["targets"]
         .as_array()
         .is_some_and(|targets| {

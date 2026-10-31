@@ -151,7 +151,7 @@ pub fn pending_versions(context: &Value) -> Vec<String> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|target| target["nextVersion"]["version"].as_str())
+        .filter_map(|target| target["nextVersion"]["version"].as_str().map(str::trim))
         .filter(|version| node_semver::npm::valid(version).is_some())
         .map(str::to_owned)
         .collect()

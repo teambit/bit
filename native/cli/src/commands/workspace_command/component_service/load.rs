@@ -43,6 +43,8 @@ impl Loaded {
                     .ok_or_else(|| invalid("component service identity"))?;
                 let directory = captured["directory"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|dir| !dir.is_empty())
                     .ok_or_else(|| invalid("component service directory"))?
                     .to_owned();
                 let files = self.files[offset..offset + count].to_vec();

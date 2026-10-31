@@ -53,11 +53,13 @@ fn classify_call(mut callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Cla
             Classification::Fallback
         }
         Expression::Identifier(identifier) if identifier.name == "require" => {
-            if matches!(arguments.first(), Some(Argument::ArrayExpression(_))) {
-                Classification::Fallback
-            } else {
-                Classification::Supported
-            }
+            let is_amd_array = arguments
+                .first()
+                .and_then(Argument::as_expression)
+                .is_some_and(|expr| {
+                    matches!(expr.without_parentheses(), Expression::ArrayExpression(_))
+                });
+            if is_amd_array { Classification::Fallback } else { Classification::Supported }
         }
         Expression::StaticMemberExpression(member) if member.property.name == "require" => {
             Classification::Fallback

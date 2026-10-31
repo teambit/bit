@@ -286,9 +286,12 @@ fn stored_package_name(
     id: &ComponentId,
     version: Option<&str>,
 ) -> io::Result<Option<String>> {
-    let versioned = ComponentId { version: version.map(str::to_owned), ..id.clone() };
+    let version = version
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .map(str::to_owned);
     Ok(objects
-        .component_or_head(&versioned)?
+        .component_or_head(&ComponentId { version, ..id.clone() })?
         .map(|model| model.package_name(id)))
 }
 

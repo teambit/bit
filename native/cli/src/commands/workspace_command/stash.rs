@@ -152,11 +152,13 @@ impl Captured {
         let removal = self.capture.captured
             .iter()
             .map(|row| {
-                let row_id = row["identity"].as_str().or_else(|| row["id"].as_str());
+                let row_id =
+                    row["identity"].as_str().or_else(|| row["id"].as_str()).map(str::trim);
                 let component = components.iter().find(|component| {
                     component["identity"]
                         .as_str()
                         .or_else(|| component["id"].as_str())
+                        .map(str::trim)
                         == row_id
                 });
                 json!({"identity":row_id,"extensions":row["current"]["extensions"],"packageName":component.map(|component|&component["packageName"])})

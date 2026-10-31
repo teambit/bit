@@ -26,7 +26,7 @@ fn main() -> ExitCode {
     match run(&args) {
         Ok(code) => code,
         Err(error) => {
-            eprintln!("bit: {error}");
+            eprintln!("bit: {}", error.to_string().trim());
             ExitCode::FAILURE
         }
     }

@@ -123,10 +123,10 @@ pub(super) fn validate(rows: &[Value], selected: &[String], ignored: &Value) -> 
     let chalk = Chalk::detect(&std::env::args_os().collect::<Vec<_>>());
     let mut components = Vec::new();
     for row in rows {
-        let id = text(row.get("id"))?;
+        let id = text(row.get("id"))?.trim();
         if !selected
             .iter()
-            .any(|selected| selected == id)
+            .any(|selected| selected.trim() == id)
         {
             continue;
         }

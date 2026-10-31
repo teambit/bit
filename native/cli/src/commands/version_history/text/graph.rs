@@ -46,6 +46,12 @@ impl Graph {
     }
 
     fn unique_short_hashes(&self) -> bool {
+        if self.nodes
+            .iter()
+            .any(|node| node.hash.len() < 9)
+        {
+            return false;
+        }
         let unique: HashSet<_> = self.nodes
             .iter()
             .map(|node| &node.hash[..9])

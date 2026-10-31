@@ -42,8 +42,12 @@ pub(super) fn snapshot(root: &Path, request: &ResolveRequest<'_>, workflow: &Wor
         params["rebuildDepsGraph"] = json!(true);
     }
     for field in ["ignoreIssues"] {
-        if !request.options["policy"][field].is_null() {
-            params[field] = request.options["policy"][field].clone();
+        if let Some(val) = request.options["policy"][field]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        {
+            params[field] = json!(val);
         }
     }
     match &request.selection {

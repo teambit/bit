@@ -164,7 +164,14 @@ impl EffectiveConfig {
     pub fn get_number(&self, key: &str) -> io::Result<Option<f64>> {
         let Some(value) = self.get(key) else { return Ok(None) };
         let trimmed = value.trim();
-        let number = if trimmed.is_empty() { Some(0.0) } else { trimmed.parse::<f64>().ok() };
+        let number = if trimmed.is_empty() {
+            Some(0.0)
+        } else {
+            trimmed
+                .parse::<f64>()
+                .ok()
+                .filter(|num| !num.is_nan())
+        };
         number
             .map(Some)
             .ok_or_else(|| {

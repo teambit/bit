@@ -236,6 +236,9 @@ async fn add_missing_peers(session: &Session<'_>, loaded: Loaded) -> io::Result<
 
 /// `publishIpcEvent('onPostInstall')`: watchers (`bit start`, `bit watch`) reload on it.
 fn publish_post_install_event(scope_path: &Path) -> io::Result<()> {
+    if scope_path.as_os_str().is_empty() {
+        return Ok(());
+    }
     let events = scope_path.join("events");
     fs::create_dir_all(&events)?;
     fs::write(events.join("onPostInstall"), "")

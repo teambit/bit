@@ -45,6 +45,9 @@ impl Progress {
 fn initial_loads(counts: [usize; 2], options: &Selection) -> Vec<usize> {
     let has_pattern = options.pattern
         .as_deref()
-        .is_some_and(|pat| !pat.trim().is_empty());
+        .is_some_and(|pat| !pat.trim().is_empty())
+        || options.exact
+            .as_ref()
+            .is_some_and(|list| !list.is_empty());
     if options.changed && !has_pattern { counts.to_vec() } else { vec![counts[1]] }
 }

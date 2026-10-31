@@ -9,8 +9,10 @@ pub(super) async fn run(
     calculated: &Calculated,
     phase: &str,
 ) -> io::Result<Option<Value>> {
-    let components = calculated.components.iter().filter(|component| component.root_dir != ".")
-        .map(|component| json!({"id":component_id(&component.id),"directory":session.root.join(&component.root_dir)}))
+    let components = calculated.components
+        .iter()
+        .filter(|component| component.root_dir.trim() != "." && !component.root_dir.trim().is_empty())
+        .map(|component| json!({"id":component_id(&component.id),"directory":session.root.join(component.root_dir.trim())}))
         .collect::<Vec<_>>();
     let mut options = json!({"linkedDependencies":{session.root.to_string_lossy().as_ref():calculated.subscriber_links},"installTeambitBit":false});
     if let Some(version) = calculated.outcome.plan.forced_harmony_version

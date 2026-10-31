@@ -36,17 +36,22 @@ fn prefixed_ranges(entry: &Value, dependencies: &[Value]) -> io::Result<Vec<Valu
         .map(str::trim)
         .ok_or_else(|| decline("checkout policy entry version"))?;
     let Some(prefix) = version.chars().next() else { return Ok(Vec::new()) };
-    let target_name = entry
+    let Some(target_name) = entry
         .get("dependencyId")
         .or_else(|| entry.get("name"))
-        .unwrap_or(&Value::Null);
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    else {
+        return Ok(Vec::new());
+    };
     let mut inputs = Vec::new();
     for dependency in dependencies
         .iter()
         .filter(|dependency| {
-            dependency["name"] == *target_name
-                || dependency["id"] == *target_name
-                || dependency["packageName"] == *target_name
+            dependency["name"].as_str().map(str::trim) == Some(target_name)
+                || dependency["id"].as_str().map(str::trim) == Some(target_name)
+                || dependency["packageName"].as_str().map(str::trim) == Some(target_name)
         })
     {
         for value in array(dependency.get("versions"), "checkout policy versions")? {

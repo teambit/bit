@@ -44,8 +44,11 @@ impl Rewriter<'_> {
 
     fn edge(&self, edge: &Value) -> Value {
         let edge_id = id(edge);
-        let package =
-            edge["attr"]["pkgId"].as_str().unwrap_or_else(|| without_peer_suffix(edge_id));
+        let package = edge["attr"]["pkgId"]
+            .as_str()
+            .map(str::trim)
+            .filter(|pkg| !pkg.is_empty())
+            .unwrap_or_else(|| without_peer_suffix(edge_id));
         let peers = if edge_id == ROOT { None } else { self.peer_dependencies(package) };
         let peer_ids_by_name = self.peer_ids_by_name(edge_id, peers);
         let mut rewritten = edge.clone();

@@ -100,6 +100,7 @@ impl Replacer {
 /// `snapToSemver`: a hash (`isHash`: 3 to 40 hexadecimal digits) as a
 /// prerelease of `0.0.0`.
 fn snap_to_semver(version: &str) -> String {
+    let version = version.trim();
     let hash =
         (3..=40).contains(&version.len()) && version.bytes().all(|byte| byte.is_ascii_hexdigit());
     if hash { format!("{SNAP_PREFIX}{version}") } else { version.to_string() }

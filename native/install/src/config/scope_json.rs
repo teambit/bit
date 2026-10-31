@@ -76,6 +76,9 @@ impl ScopeJson {
     #[must_use]
     pub fn tracking(&self, local_lane: &str) -> Option<&TrackLane> {
         let local_lane = local_lane.trim();
+        if local_lane.is_empty() {
+            return None;
+        }
         self.lanes.tracking
             .iter()
             .find(|lane| lane.local_lane.trim() == local_lane)

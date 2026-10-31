@@ -124,7 +124,7 @@ impl Scanner {
     }
 }
 fn string(expr: &Expression<'_>) -> Option<String> {
-    match expr {
+    match expr.without_parentheses() {
         Expression::StringLiteral(s) => Some(s.value.to_string()),
         Expression::TemplateLiteral(t) if t.expressions.is_empty() && t.quasis.len() == 1 => {
             Some(t.quasis[0].value.raw.to_string())

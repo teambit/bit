@@ -68,6 +68,7 @@ pub async fn link_components(
         let ids = components
             .iter()
             .map(super::super::session::installation_components::identity)
+            .filter(|id| !id.trim().is_empty())
             .collect::<Vec<_>>();
         for id in &ids {
             let _ = crate::dependencies::cache::remove_entry(&cache, id);

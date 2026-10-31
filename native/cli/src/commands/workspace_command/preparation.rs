@@ -104,7 +104,7 @@ fn load_docs(
         })
         .map(|target| super::text(target.get("identity")).map(|id| id.trim().to_owned()))
         .collect::<io::Result<Vec<_>>>()?;
-    if identities.is_empty() {
+    if identities.is_empty() || identities.iter().any(String::is_empty) {
         return Ok(None);
     }
     let deferred =

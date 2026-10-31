@@ -46,6 +46,7 @@ pub(crate) fn identity(component: &WorkspaceComponent) -> String {
     let id = component.id.to_string_without_version();
     match component.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|version| !version.is_empty())
     {
         Some(version) => format!("{id}@{version}"),

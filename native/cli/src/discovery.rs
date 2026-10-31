@@ -259,7 +259,7 @@ fn is_bit_package(dir: &Path) -> bool {
     fs::read(dir.join("package.json"))
         .ok()
         .and_then(|bytes| bit_workspace_config::parse_jsonc(&bytes).ok())
-        .is_some_and(|manifest| manifest["name"].as_str() == Some("@teambit/bit"))
+        .is_some_and(|manifest| manifest["name"].as_str().map(str::trim) == Some("@teambit/bit"))
 }
 
 /// `findBvmDir` of `@teambit/bvm.path`: the ancestor whose parent is `links`

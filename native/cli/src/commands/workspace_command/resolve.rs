@@ -79,7 +79,8 @@ pub fn plan_snapshot(
 ) -> io::Result<Planned> {
     if let Some(ignored) = request.options["policy"]["ignoreIssues"]
         .as_str()
-        .filter(|ignored| *ignored != "*")
+        .map(str::trim)
+        .filter(|ignored| !ignored.is_empty() && *ignored != "*")
     {
         for name in ignored.split(',').map(str::trim) {
             issues::validate_name(name)?;

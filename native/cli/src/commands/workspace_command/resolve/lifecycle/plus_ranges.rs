@@ -144,7 +144,7 @@ fn environment(root: &Path, component: &Value) -> io::Result<Option<Value>> {
                 .or_else(|| non_empty_str(&file["relativePath"]))
                 .or_else(|| non_empty_str(&file["path"]))
         })
-        .find(|file| matches!(*file, "env.jsonc" | "env.json"));
+        .find(|file| matches!(file.trim_start_matches("./"), "env.jsonc" | "env.json"));
     let Some(file) = file else { return Ok(None) };
     let directory = non_empty_str(&component["directory"])
         .or_else(|| non_empty_str(&component["rootDir"]))

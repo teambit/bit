@@ -65,7 +65,7 @@ impl Formatter {
 
     /// `formatDetailsHint(subject)`.
     pub fn details_hint(&self, subject: &str) -> String {
-        self.hint(&format!(r#"(run "bit details" to see {subject})"#))
+        self.hint(&format!(r#"(run "bit details" to see {})"#, subject.trim()))
     }
 
     /// `formatSuccessSummary(msg)`.

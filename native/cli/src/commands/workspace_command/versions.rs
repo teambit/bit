@@ -97,7 +97,7 @@ fn pinned_dependents(value: Option<&Value>) -> io::Result<Vec<(Id, Vec<String>)>
             let id = Id::from_object(raw_id)?;
             let deps = array(map.get("pinnedDependencies"), "pinned dependencies")?
                 .iter()
-                .map(|dep| text(Some(dep)).map(str::to_string))
+                .map(|dep| text(Some(dep)).map(|raw| raw.trim().to_string()))
                 .collect::<io::Result<Vec<_>>>()?;
             Ok((id, deps))
         })
