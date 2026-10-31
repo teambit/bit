@@ -28,6 +28,7 @@ pub(in crate::commands) fn complete(planned: &mut Planned, receipt: &Value) -> i
 
 fn valid_switch_receipt(receipt: &Value, flag_key: &str, expected_token: &str) -> bool {
     let flag_ok = receipt.is_object()
+        && receipt.get("error").is_none_or(Value::is_null)
         && (receipt[flag_key] == true
             || receipt[flag_key]
                 .as_str()

@@ -166,8 +166,18 @@ fn literal_arrow(arrow: &ArrowFunctionExpression<'_>) -> bool {
         ArrowFunctionBody::StringLiteral(_)
         | ArrowFunctionBody::NumericLiteral(_)
         | ArrowFunctionBody::BooleanLiteral(_) => true,
-        ArrowFunctionBody::FunctionBody(body) => {
-            matches!(body.statements.as_slice(), [Statement::ReturnStatement(statement)] if statement.argument.as_ref().is_some_and(|value| matches!(value, Expression::StringLiteral(_) | Expression::NumericLiteral(_) | Expression::BooleanLiteral(_))))
+        ArrowFunctionBody::FunctionBody(body) if body.directives.is_empty() => {
+            let [Statement::ReturnStatement(statement)] = body.statements.as_slice() else {
+                return false;
+            };
+            matches!(
+                statement.argument.as_ref(),
+                Some(
+                    Expression::StringLiteral(_)
+                        | Expression::NumericLiteral(_)
+                        | Expression::BooleanLiteral(_)
+                ),
+            )
         }
         _ => false,
     }

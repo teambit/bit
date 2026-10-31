@@ -10,7 +10,12 @@ pub(super) async fn read(
     maximum: usize,
     cancellation: &Cancellation,
 ) -> io::Result<Vec<ObjectItem>> {
-    if maximum == 0 || maximum > tar::MAX_ARCHIVE_BYTES {
+    if maximum == 0
+        || maximum > tar::MAX_ARCHIVE_BYTES
+        || response
+            .content_length()
+            .is_some_and(|len| len > maximum as u64)
+    {
         return Err(invalid("remote fetch archive exceeds bounds"));
     }
     let (sender, receiver) = mpsc::channel(2);
@@ -39,7 +44,7 @@ async fn feed(
         count += chunk.len();
         if !chunk.is_empty()
             && cancellation
-                .run(sender.send(chunk.to_vec()))
+                .run(sender.send(Vec::from(chunk)))
                 .await?
                 .is_err()
         {

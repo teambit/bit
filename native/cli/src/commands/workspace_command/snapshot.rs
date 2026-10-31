@@ -16,7 +16,7 @@ use super::{Request, Steps, defaults::app_file};
 use crate::commands::status::{
     capture::{self, Capture, CaptureOptions},
     fresh::Pending,
-    js::{array, decline, text, truthy},
+    js::{array, decline, text, truthy, without_version},
 };
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
@@ -304,6 +304,10 @@ fn depends_on(capture: &Capture, needs_snap: &[String]) -> bool {
 /// `<scope>/<name>` of a dependency's id.
 fn dependency_identity(dependency: &Value) -> Option<String> {
     let id = &dependency["id"];
+    if let Some(raw) = id.as_str() {
+        let bare = without_version(raw.trim()).trim();
+        return (!bare.is_empty()).then(|| bare.to_owned());
+    }
     let scope = id["scope"].as_str()?.trim();
     let name = id["name"].as_str()?.trim();
     (!scope.is_empty() && !name.is_empty()).then(|| format!("{scope}/{name}"))

@@ -113,10 +113,13 @@ fn scan_config_dir(
         if matches!(name_str, "node_modules" | ".git" | ".bit") {
             continue;
         }
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
         let path = entry.path();
-        if path.is_dir() {
+        if file_type.is_dir() {
             scan_config_dir(root, &path, writers, found_by_writer)?;
-        } else if path.is_file() {
+        } else if file_type.is_file() {
             check_config_file(root, &path, name_str, writers, found_by_writer);
         }
     }

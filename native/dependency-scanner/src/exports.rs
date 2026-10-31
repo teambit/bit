@@ -11,10 +11,14 @@ fn identifier(expression: &Expression<'_>, name: &str) -> bool {
 fn module_exports(expression: &Expression<'_>) -> bool {
     match peel(expression) {
         Expression::StaticMemberExpression(member) => {
-            identifier(&member.object, "module") && member.property.name == "exports"
+            !member.optional
+                && identifier(&member.object, "module")
+                && member.property.name == "exports"
         }
         Expression::ComputedMemberExpression(member) => {
-            identifier(&member.object, "module") && identifier(&member.expression, "exports")
+            !member.optional
+                && identifier(&member.object, "module")
+                && identifier(&member.expression, "exports")
         }
         _ => false,
     }
@@ -26,17 +30,19 @@ pub(crate) fn is_exports(target: &AssignmentTarget<'_>) -> bool {
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(value) => value.name == "exports",
         AssignmentTarget::StaticMemberExpression(member) => {
-            attached(&member.object)
-                || (identifier(&member.object, "module") && member.property.name == "exports")
+            !member.optional
+                && (attached(&member.object)
+                    || (identifier(&member.object, "module") && member.property.name == "exports"))
         }
         AssignmentTarget::ComputedMemberExpression(member) => {
-            attached(&member.object)
-                || (identifier(&member.object, "module")
-                    && identifier(&member.expression, "exports"))
+            !member.optional
+                && (attached(&member.object)
+                    || (identifier(&member.object, "module")
+                        && identifier(&member.expression, "exports")))
         }
-        AssignmentTarget::PrivateFieldExpression(member) => attached(&member.object),
-        _ => target
-            .get_expression()
-            .is_some_and(|expr| identifier(expr, "exports") || module_exports(expr)),
+        AssignmentTarget::PrivateFieldExpression(member) => {
+            !member.optional && attached(&member.object)
+        }
+        _ => target.get_expression().is_some_and(attached),
     }
 }

@@ -23,7 +23,7 @@ use crate::{
     workspace::{ScopeObjects, external_env_packages},
 };
 use indexmap::IndexMap;
-use resolution::{Resolved, resolve, resolve_initialized};
+use resolution::{resolve, resolve_initialized};
 use serde_json::Value;
 use std::io;
 
@@ -62,24 +62,19 @@ pub async fn calculate(
     session.host.configured_aspect_classes().await?;
     let components =
         super::session::installation_components::load(session, loaded, "manifests").await?;
-    let Resolved {
-        env_policies,
-        workspace_policy,
-        dependencies,
-    } = resolve_initialized(session, loaded, &components, true).await?;
+    let resolved = resolve_initialized(session, loaded, &components, true).await?;
     let (linked_root_deps, env_packages) =
-        &with_env_links(session, loaded, linked_root_deps, &components, &dependencies)?;
+        &with_env_links(session, loaded, linked_root_deps, &components, &resolved.dependencies)?;
     let apps = apps(session, loaded, &components).await?;
-    let root_policy = root_policy(session, loaded, workspace_policy)?;
-    // `getWorkspaceManifest` announces the manifest creation (`createFromComponents`).
+    let root_policy = root_policy(session, loaded, resolved.workspace_policy)?;
     session.output.status(DEDUPING);
     let outcome = plan(
         session,
         loaded,
         &Inputs {
             components: &components,
-            dependencies: &dependencies,
-            env_policies: &env_policies,
+            dependencies: &resolved.dependencies,
+            env_policies: &resolved.env_policies,
             root_policy: &root_policy,
             linked_root_deps,
             apps: &apps,
@@ -91,8 +86,8 @@ pub async fn calculate(
     Ok(Calculated {
         engine_components: components.clone(),
         components,
-        env_policies,
-        dependencies,
+        env_policies: resolved.env_policies,
+        dependencies: resolved.dependencies,
         outcome,
         subscriber_policy: root_policy,
         subscriber_links: linked_root_deps.clone(),
@@ -100,7 +95,6 @@ pub async fn calculate(
 }
 
 async fn root_manifest_loading(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
-    // Node loads env and app root manifests only when root components are enabled.
     if loaded.config.dependency_resolver.has_root_components() {
         super::session::installation_components::load(session, loaded, "root-envs").await?;
         super::session::installation_components::load(session, loaded, "root-apps").await?;
@@ -108,22 +102,15 @@ async fn root_manifest_loading(session: &Session<'_>, loaded: &Loaded) -> io::Re
     Ok(())
 }
 
-/// `writeDependenciesToPackageJson`: the root manifest `_getComponentsManifests`
-/// calculates with `{ dedupe: true, includeAllEnvPeers: false }`, without the
-/// dependency filter and the linked root dependencies of an installation.
+/// `writeDependenciesToPackageJson`: root manifest with `{ dedupe: true, includeAllEnvPeers: false }`.
 pub async fn package_json_dependencies(
     session: &Session<'_>,
     loaded: &Loaded,
 ) -> io::Result<PackageJsonDependencies> {
-    // `getComponentsDirectory` in `_getComponentsManifests`.
     session.loading(loaded);
     let components = loaded.components();
-    let Resolved {
-        env_policies,
-        workspace_policy,
-        dependencies,
-    } = resolve(session, loaded, &components).await?;
-    let root_policy = root_policy(session, loaded, workspace_policy)?;
+    let resolved = resolve(session, loaded, &components).await?;
+    let root_policy = root_policy(session, loaded, resolved.workspace_policy)?;
     session.output.status(DEDUPING);
     let config = &loaded.config.dependency_resolver;
     let options = ManifestOptions::for_package_json(
@@ -135,8 +122,8 @@ pub async fn package_json_dependencies(
     let result = manifests::package_json_dependencies(&ManifestInput {
         root: &session.root,
         components: &components,
-        dependencies: &dependencies,
-        policies: Policies { workspace: &root_policy, envs: &env_policies },
+        dependencies: &resolved.dependencies,
+        policies: Policies { workspace: &root_policy, envs: &resolved.env_policies },
         config,
         options: &options,
         context: ManifestContext {
@@ -230,10 +217,7 @@ fn workspace_policy(loaded: &Loaded) -> io::Result<Vec<PolicyEntry>> {
     ))
 }
 
-/// `addConfiguredAspectsToWorkspacePolicy` and `addConfiguredGeneratorEnvsToWorkspacePolicy`:
-/// aspects and envs configured in `workspace.jsonc` but not in the workspace are installed
-/// at the root (`skipIfExisting`), under the package name their scope objects record
-/// (`getPackageName`), or the default name when the scope does not hold them.
+/// Aspects and generator envs configured in `workspace.jsonc` but not in the workspace.
 fn root_policy(
     session: &Session<'_>,
     loaded: &Loaded,
@@ -251,21 +235,18 @@ fn root_policy(
         if component_id.name.is_empty() || in_workspace(loaded, &component_id) {
             continue;
         }
-        let package = stored_package_name(&objects, &component_id, version)?
-            .unwrap_or_else(|| default_package_name(&component_id));
-        if policy
-            .iter()
-            .any(|entry| entry.name == package)
+        let package = stored_package_name(&objects, &component_id, version)?;
+        if package.is_empty()
+            || policy
+                .iter()
+                .any(|entry| entry.name.trim() == package)
         {
             continue;
         }
+        let ver = version.unwrap_or("").trim();
         policy.push(PolicyEntry {
             name: package,
-            version: version
-                .map(str::trim)
-                .filter(|ver| !ver.is_empty())
-                .unwrap_or("*")
-                .to_string(),
+            version: if ver.is_empty() { "*" } else { ver }.to_string(),
             lifecycle: Lifecycle::Runtime,
             force: false,
             optional: false,
@@ -285,14 +266,17 @@ fn stored_package_name(
     objects: &ScopeObjects,
     id: &ComponentId,
     version: Option<&str>,
-) -> io::Result<Option<String>> {
+) -> io::Result<String> {
     let version = version
         .map(str::trim)
         .filter(|ver| !ver.is_empty())
         .map(str::to_owned);
-    Ok(objects
-        .component_or_head(&ComponentId { version, ..id.clone() })?
-        .map(|model| model.package_name(id)))
+    let model = objects.component_or_head(&ComponentId { version, ..id.clone() })?;
+    let pkg = model
+        .map(|item| item.package_name(id))
+        .filter(|pkg| !pkg.trim().is_empty())
+        .unwrap_or_else(|| default_package_name(id));
+    Ok(pkg.trim().to_string())
 }
 
 fn in_workspace(loaded: &Loaded, id: &ComponentId) -> bool {

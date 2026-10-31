@@ -341,14 +341,20 @@ fn drop_orphan_file_packages(packages: &mut Map<String, Value>, edges: &mut Vec<
 fn is_file_package(pkg_id: &str) -> bool {
     package_name(pkg_id)
         .is_some_and(|name| {
-            pnpm_deps_path::remove_suffix(pkg_id)[name.len() + 1..].starts_with("file:")
+            pnpm_deps_path::remove_suffix(pkg_id)
+                .get(name.len() + 1..)
+                .is_some_and(|rest| rest.starts_with("file:"))
         })
 }
 
 /// `dp.parse(depPath).name`.
 fn package_name(dep_path: &str) -> Option<&str> {
-    let separator = dep_path.get(1..)?.find('@')? + 1;
-    Some(&dep_path[..separator])
+    let mut chars = dep_path.char_indices();
+    let (_, first_len) = chars
+        .next()
+        .map(|(_, ch)| (ch, ch.len_utf8()))?;
+    let separator = dep_path.get(first_len..)?.find('@')? + first_len;
+    dep_path.get(..separator)
 }
 
 /// `refToRelative(reference, pkgName)` of `@pnpm/deps.path`.

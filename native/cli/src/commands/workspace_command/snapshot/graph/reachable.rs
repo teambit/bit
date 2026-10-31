@@ -71,10 +71,11 @@ fn selected_importers(
     if let Some(root) = root.filter(|root| *root != importer) {
         importers.insert(root.to_owned(), lockfile["importers"][root].clone());
     }
+    let own_name = component.package_name.trim();
     for (id, entry) in &mut importers {
         for name in workspace
             .package_names()
-            .filter(|name| *name != component.package_name)
+            .filter(|name| *name != own_name)
         {
             remove_workspace_package(entry, name, id == importer);
         }

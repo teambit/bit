@@ -66,8 +66,12 @@ fn warn_fallback(name: &str, reason: &str, args: &[OsString]) {
     let quiet = env::var_os("BIT_NATIVE_QUIET")
         .is_some_and(|value| {
             let text = value.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            !matches!(
+                text.trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false" | "off" | "no",
+            )
         });
     let help = args
         .iter()
@@ -77,8 +81,14 @@ fn warn_fallback(name: &str, reason: &str, args: &[OsString]) {
         return;
     }
     let message = fallback_message(name, reason);
-    let colored = io::stderr().is_terminal() && env::var_os("NO_COLOR").is_none();
-    if colored {
+    let no_color = env::var_os("NO_COLOR").is_some_and(|val| !val.is_empty())
+        || args
+            .iter()
+            .skip(1)
+            .any(|arg| {
+                matches!(arg.to_str().map(str::trim), Some("--no-color" | "--no-color=true"))
+            });
+    if io::stderr().is_terminal() && !no_color {
         eprintln!("\u{1b}[33m{message}\u{1b}[39m");
     } else {
         eprintln!("{message}");

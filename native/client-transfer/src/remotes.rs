@@ -37,10 +37,18 @@ impl Remote {
                 "ssh protocol is not supported anymore, please use http or fs protocols",
             ));
         }
-        if let Some(path) = host.strip_prefix("file://") {
-            return Ok(Self::File(PathBuf::from(path.trim())));
+        if let Some(path) = host
+            .strip_prefix("file://")
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+        {
+            return Ok(Self::File(PathBuf::from(path)));
         }
-        if host.starts_with("http://") || host.starts_with("https://") {
+        if let Some(rest) = host
+            .strip_prefix("http://")
+            .or_else(|| host.strip_prefix("https://"))
+            && !rest.trim_matches('/').trim().is_empty()
+        {
             return Ok(Self::Http(host.trim_end_matches('/').to_string()));
         }
         Err(invalid(

@@ -10,17 +10,20 @@ pub(crate) const BATCH_FILES: usize = 4096;
 
 pub(crate) fn read_source(path: &Path) -> io::Result<String> {
     let file = File::open(path)?;
-    if file
+    let size = file
         .metadata()
         .ok()
-        .is_some_and(|meta| meta.len() > SOURCE_BYTES as u64)
-    {
+        .map(|meta| meta.len());
+    if size.is_some_and(|len| len > SOURCE_BYTES as u64) {
         return Err(io::Error::new(
             io::ErrorKind::FileTooLarge,
             "source exceeds 1 MiB limit; use legacy fallback",
         ));
     }
-    let mut bytes = Vec::new();
+    let capacity = size
+        .and_then(|len| usize::try_from(len).ok())
+        .unwrap_or(0);
+    let mut bytes = Vec::with_capacity(capacity);
     file.take((SOURCE_BYTES + 1) as u64)
         .read_to_end(&mut bytes)?;
     if bytes.len() > SOURCE_BYTES {

@@ -221,11 +221,12 @@ fn prepare_directories(loaded: &Loaded, calculated: &Calculated) -> io::Result<(
 }
 
 fn remove_path(path: &Path) -> io::Result<()> {
-    if path.is_dir() && !path.is_symlink() {
-        fs::remove_dir_all(path)
-    } else {
-        fs::remove_file(path)
-    }
+    let meta = match fs::symlink_metadata(path) {
+        Ok(meta) => meta,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error),
+    };
+    if meta.is_dir() { fs::remove_dir_all(path) } else { fs::remove_file(path) }
 }
 
 /// `--add-missing-deps`: missing packages not provided by the root are added to the

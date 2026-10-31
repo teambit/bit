@@ -1,23 +1,9 @@
 //! Skipping the JavaScript `afterInstall` step when a repeat install changed nothing.
 //!
-//! `afterInstall` loads Harmony to compile the workspace and write its config files.
 //! After a compilation without errors and a complete config write, a stamp records a
-//! fingerprint of everything both read, and a snapshot of what they wrote: the dist
-//! directories and the config files. The next install skips the step only when both
-//! still match: the sources, the configuration, the installed packages and the output
-//! are the ones the last run saw and produced, so running again would write the same files.
-//! Outputs the install itself drops, the dist of injected package copies, are copied
-//! back from an intact output with the same content (see [`check`]).
-//!
-//! The fingerprint covers:
-//! - the bit version (core envs and their compilers ship with bit);
-//! - `workspace.jsonc`, `.bitmap` and `pnpm-lock.yaml` (configuration, envs and the
-//!   installed packages);
-//! - every file under each component directory except `node_modules`, by size and
-//!   modification time: the component loader also picks up files `.bitmap` does not list.
-//!
-//! Packages linked from outside the workspace (`link:`/`file:` dependencies) can change
-//! without any of these changing, so a workspace with such a dependency is never skipped.
+//! fingerprint of the inputs (`bit` version, `workspace.jsonc`, `.bitmap`,
+//! `pnpm-lock.yaml`, and component files) and a snapshot of the dist and config outputs.
+//! Workspaces with external `link:`/`file:` dependencies are never skipped.
 
 #[cfg(test)]
 mod tests;
@@ -285,7 +271,7 @@ fn fingerprint(inputs: &Inputs<'_>) -> io::Result<String> {
         }
     }
     let mut components: Vec<&WorkspaceComponent> = inputs.components.iter().collect();
-    components.sort_by(|a, b| a.root_dir.cmp(&b.root_dir));
+    components.sort_by(|left, right| left.root_dir.cmp(&right.root_dir));
     for component in components {
         hash_str(&mut hasher, &component.root_dir);
         hash_tree(&mut hasher, &component.dir, &component.dir, true)?;

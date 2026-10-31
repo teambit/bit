@@ -19,12 +19,13 @@ pub fn validate(packages: &[String], loaded: &Loaded) -> io::Result<Vec<String>>
     packages
         .iter()
         .map(|package| {
-            let name = extract_package_name(package);
+            let trimmed = package.trim();
+            let name = extract_package_name(trimmed);
             if is_valid_package_name(&name) {
-                return Ok(package.clone());
+                return Ok(trimmed.to_owned());
             }
             if !name.starts_with('@')
-                && let Some(package_name) = component_package_name(package, loaded)
+                && let Some(package_name) = component_package_name(trimmed, loaded)
             {
                 return Ok(package_name);
             }
@@ -51,7 +52,8 @@ fn component_package_name(argument: &str, loaded: &Loaded) -> Option<String> {
                     .as_deref()
                     .is_some_and(|scope| format!("{scope}/{}", component.id.name) == id)
         })
-        .map(|component| component.package_name.clone())
+        .map(|component| component.package_name.trim().to_owned())
+        .filter(|name| !name.is_empty())
 }
 
 /// `_addPackages`: resolve each package, add it to the workspace policy and persist it.

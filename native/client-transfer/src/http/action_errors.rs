@@ -12,12 +12,13 @@ pub(super) async fn throw_for_action_status(response: Response) -> io::Result<Re
     }
     let url = response.url().to_string();
     let parsed: Value = response.json().await.unwrap_or(Value::Null);
-    let error = if parsed["error"]["code"].is_null() { &parsed } else { &parsed["error"] };
+    let error = if parsed["error"].is_object() { &parsed["error"] } else { &parsed };
     let message = non_empty_str(&error["message"])
         .or_else(|| non_empty_str(&parsed["message"]))
+        .or_else(|| non_empty_str(&parsed["error"]))
         .unwrap_or("unknown error")
         .to_owned();
-    Err(action_error(error_code(error), error, &url, message))
+    Err(action_error(error_code(error).or_else(|| error_code(&parsed)), error, &url, message))
 }
 
 fn error_code(error: &Value) -> Option<u64> {

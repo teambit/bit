@@ -48,7 +48,7 @@ impl History {
         args.iter()
             .map(|arg| {
                 arg.to_string_lossy()
-                    .replace(['\r', '\n'], " ")
+                    .replace(['\r', '\n', '\0'], " ")
             })
             .collect::<Vec<_>>()
             .join(" ")

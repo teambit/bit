@@ -76,14 +76,22 @@ impl Workflow {
         self.build |= EffectiveConfig::new(&global, &scope.config, &workspace.config_store)
             .get_bool("force_local_build")?
             .unwrap_or(false);
-        if kind == Kind::Tag {
-            for (index, argument) in args.iter().enumerate() {
-                match *argument {
-                    "--" => break,
-                    "--persist=skip-build" => self.build = false,
-                    "--persist" => self.build = args.get(index + 1) != Some(&"skip-build"),
-                    _ => {}
+        if kind != Kind::Tag {
+            return Ok(());
+        }
+        for (index, argument) in args.iter().enumerate() {
+            match argument.trim() {
+                "--" => break,
+                "--persist=skip-build" | "--persist=false" => self.build = false,
+                "--persist=true" => self.build = true,
+                "--persist" => {
+                    let next = args
+                        .get(index + 1)
+                        .copied()
+                        .map(str::trim);
+                    self.build = !matches!(next, Some("skip-build" | "false"));
                 }
+                _ => {}
             }
         }
         Ok(())

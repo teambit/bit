@@ -59,17 +59,7 @@ pub(super) fn tls(
     let strict =
         ["network.strict-ssl", "network.strict_ssl", "proxy.strict_ssl", "proxy.strict-ssl"]
             .iter()
-            .find_map(|key| global.get(*key))
-            .map(|value| {
-                value
-                    .as_bool()
-                    .unwrap_or_else(|| {
-                        value
-                            .as_str()
-                            .map(str::trim)
-                            .is_some_and(|raw| raw.eq_ignore_ascii_case("true") || raw == "1")
-                    })
-            });
+            .find_map(|key| global.get(*key).and_then(strict_bool));
     let mut pem = config_str(global, "network.ca")
         .or_else(|| config_str(global, "proxy.ca"))
         .map(|ca| ca.as_bytes().to_vec());
@@ -86,6 +76,22 @@ pub(super) fn tls(
     Ok(builder.tls_certs_merge(certificates))
 }
 
+fn strict_bool(value: &Value) -> Option<bool> {
+    if let Some(flag) = value.as_bool() {
+        return Some(flag);
+    }
+    match value
+        .as_str()?
+        .trim()
+        .to_ascii_lowercase()
+        .as_str()
+    {
+        "true" | "1" => Some(true),
+        "false" | "0" => Some(false),
+        _ => None,
+    }
+}
+
 pub(super) fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a str> {
     global
         .get(key)
@@ -96,13 +102,15 @@ pub(super) fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a 
 
 fn config_u64(global: &GlobalConfig, keys: &[&str]) -> Option<u64> {
     keys.iter()
-        .find_map(|key| global.get(*key))
-        .and_then(|value| match value {
-            Value::Number(number) => number.as_u64(),
-            Value::String(text) => text.trim().parse().ok(),
-            _ => None,
+        .find_map(|key| {
+            let value = global.get(*key)?;
+            match value {
+                Value::Number(number) => number.as_u64(),
+                Value::String(text) => text.trim().parse().ok(),
+                _ => None,
+            }
+            .filter(|parsed| *parsed > 0)
         })
-        .filter(|value| *value > 0)
 }
 
 fn identity(

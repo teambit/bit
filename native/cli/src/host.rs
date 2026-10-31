@@ -228,7 +228,11 @@ impl Session {
 impl Response {
     fn into_result(self) -> io::Result<Value> {
         match self.error {
-            Some(error) => Err(io::Error::other(error.trim().to_owned())),
+            Some(error) => {
+                let trimmed = error.trim();
+                let message = if trimmed.is_empty() { "JavaScript host error" } else { trimmed };
+                Err(io::Error::other(message.to_owned()))
+            }
             None => Ok(self.result.unwrap_or(Value::Null)),
         }
     }
@@ -291,7 +295,7 @@ fn progress_mode() -> &'static str {
     let progress = env::args()
         .nth(1)
         .is_some_and(|arg| matches!(arg.trim(), "status" | "s" | "diff" | "d"))
-        && !env::args().any(|arg| matches!(arg.trim(), "--json" | "-j"))
+        && !env::args().any(|arg| matches!(arg.trim(), "--json" | "--json=true" | "-j"))
         && env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty());
     if progress { "1" } else { "0" }
 }

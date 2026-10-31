@@ -14,18 +14,17 @@ impl Network {
             .map(str::trim)
             .filter(|id| !id.is_empty())
             .map(|id| vec![id]);
-        let body = json!({"query": LANES_QUERY, "variables": {"ids": ids}});
         let endpoint = format!("{}/graphql", url.trim().trim_end_matches('/'));
         let response = self.send(
             self.headers(self.client.post(&endpoint), "read")?
-                .json(&body),
+                .json(&json!({"query": LANES_QUERY, "variables": {"ids": ids}})),
         )
         .await?;
         let response = self.cancellation.run(throw_for_status(response)).await??;
         let mut stream = response.bytes_stream();
         let mut bytes = Vec::new();
         while let Some(chunk) = self.cancellation.run(stream.next()).await? {
-            let chunk = chunk.map_err(io::Error::other)?;
+            let chunk = chunk.map_err(|error| super::network_error(&error))?;
             if chunk.len() > MAX_LANE_BYTES.saturating_sub(bytes.len()) {
                 return Err(invalid("remote lane response budget"));
             }

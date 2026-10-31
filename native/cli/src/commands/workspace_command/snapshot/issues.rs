@@ -35,7 +35,9 @@ pub fn validate(
     };
     for component in &found {
         let id = text(component.get("id"))?.trim();
-        if selected.contains(id) && !predicted(component, id, errors)? {
+        let bare = without_version(id);
+        if (selected.contains(id) || selected.contains(bare)) && !predicted(component, id, errors)?
+        {
             return Err(decline("command unsupported snapshot issue"));
         }
     }

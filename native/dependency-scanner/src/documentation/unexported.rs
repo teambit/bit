@@ -34,7 +34,9 @@ impl<'a> Visit<'a> for Proof {
     fn visit_statement(&mut self, node: &Statement<'a>) {
         if matches!(
             node,
-            Statement::TSExportAssignment(_) | Statement::TSNamespaceExportDeclaration(_),
+            Statement::TSExportAssignment(_)
+                | Statement::TSNamespaceExportDeclaration(_)
+                | Statement::WithStatement(_),
         ) {
             self.accepted = false;
             return;

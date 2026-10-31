@@ -5,7 +5,11 @@ pub(super) fn note(file: &str) -> &'static str {
     let cleaned = file
         .trim()
         .trim_end_matches(['/', '\\']);
-    let extension = std::path::Path::new(cleaned)
+    let file_name = cleaned
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(cleaned);
+    let extension = std::path::Path::new(file_name)
         .extension()
         .and_then(std::ffi::OsStr::to_str)
         .map_or("", |ext| ext.trim().trim_start_matches('.'));

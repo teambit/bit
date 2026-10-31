@@ -48,6 +48,7 @@ impl Network {
             .header("x-objects-hash", objects_hash.trim())
             .body(archive);
         for attempt in 0..=3 {
+            messages.clear();
             let request =
                 request.try_clone().ok_or_else(|| invalid("central hub request replay"))?;
             let result = async {

@@ -48,6 +48,12 @@ impl Cache {
             })
             .as_ref()
             .cloned()
-            .map_err(|failure| io::Error::new(failure.kind, failure.message.clone()))
+            .map_err(|failure| {
+                if failure.message.is_empty() {
+                    io::Error::from(failure.kind)
+                } else {
+                    io::Error::new(failure.kind, failure.message.clone())
+                }
+            })
     }
 }

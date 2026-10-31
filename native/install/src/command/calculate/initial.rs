@@ -23,7 +23,7 @@ pub(in crate::command) async fn calculate_linked(
             .trim()
             .is_empty()
     {
-        return Err(io::Error::other("workspace root path is empty"));
+        return Err(io::Error::other("workspace or scope path is empty"));
     }
     let components =
         crate::command::session::installation_components::load(session, loaded, LINKING_PHASE)

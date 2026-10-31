@@ -86,10 +86,13 @@ impl Network {
         )
         .await?;
         graphql_error(&response)?;
-        response["data"]["scope"]["_legacyLatestVersions"]
+        let rows = response["data"]["scope"]["_legacyLatestVersions"]
             .as_array()
-            .ok_or_else(|| invalid("remote latest versions response"))?
-            .iter()
+            .ok_or_else(|| invalid("remote latest versions response"))?;
+        if rows.len() > 4096 {
+            return Err(invalid("remote latest versions limit"));
+        }
+        rows.iter()
             .map(|id| {
                 id.as_str()
                     .map(str::trim)

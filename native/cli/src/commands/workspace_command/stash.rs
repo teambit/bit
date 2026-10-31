@@ -78,7 +78,13 @@ impl Save {
 fn identities(value: &Value) -> io::Result<Vec<String>> {
     array(Some(value), "stash identities")?
         .iter()
-        .map(|id| text(Some(id)).map(|raw| raw.trim().to_owned()))
+        .map(|id| {
+            let trimmed = text(Some(id))?.trim();
+            if trimmed.is_empty() {
+                return Err(decline("stash identity empty"));
+            }
+            Ok(trimmed.to_owned())
+        })
         .collect()
 }
 

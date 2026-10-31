@@ -240,12 +240,20 @@ fn node_in(dir: &Path) -> Option<PathBuf> {
 
 /// Numeric `major.minor.patch` ordering, with the text as a tie-breaker.
 fn version_key(name: &str) -> (Vec<u64>, String) {
-    let numbers = name
-        .trim_start_matches('v')
+    let trimmed = name.trim();
+    let numbers = trimmed
+        .trim_start_matches(['v', 'V'])
         .split('.')
-        .map(|part| part.parse().unwrap_or(0))
+        .map(|part| {
+            let digits = part
+                .split(['-', '+'])
+                .next()
+                .unwrap_or(part)
+                .trim();
+            digits.parse().unwrap_or(0)
+        })
         .collect();
-    (numbers, name.to_string())
+    (numbers, trimmed.to_string())
 }
 
 /// The `@teambit/bit` package: the entry's own package, or the one a

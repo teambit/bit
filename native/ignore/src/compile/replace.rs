@@ -80,9 +80,8 @@ fn arguments<'text>(text: &'text str, found: &Match, length: usize) -> Found<'te
 }
 
 fn next_boundary(text: &str, index: usize) -> usize {
-    text[index..]
-        .chars()
-        .next()
+    text.get(index..)
+        .and_then(|rest| rest.chars().next())
         .map_or(index + 1, |next| index + next.len_utf8())
 }
 

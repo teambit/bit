@@ -55,20 +55,22 @@ pub fn pack(items: &[ObjectItem], max_bytes: usize) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+fn valid_scope(scope: &str) -> bool {
+    !scope.is_empty()
+        && scope != "."
+        && scope != ".."
+        && scope
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte))
+}
+
 fn outbound_name(item: &ObjectItem) -> io::Result<String> {
     let hash = item.hash.trim();
     if !is_hash(hash) || item.compressed.len() > MAX_OBJECT_BYTES {
         return Err(invalid("remote push object identity or bytes"));
     }
     match item.scope.as_deref().map(str::trim) {
-        Some(scope)
-            if !scope.is_empty()
-                && scope
-                    .bytes()
-                    .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte)) =>
-        {
-            Ok(format!("{scope}/{hash}"))
-        }
+        Some(scope) if valid_scope(scope) => Ok(format!("{scope}/{hash}")),
         None => Ok(hash.to_owned()),
         _ => Err(invalid("remote push scope")),
     }
@@ -162,7 +164,11 @@ fn item(name: &str, compressed: Vec<u8>) -> io::Result<ObjectItem> {
         Some((scope, hash)) => (Some(scope.trim().to_string()), hash.trim()),
         None => (None, trimmed),
     };
-    if !is_hash(hash) || scope.as_deref().is_some_and(str::is_empty) {
+    if !is_hash(hash)
+        || scope
+            .as_deref()
+            .is_some_and(|sc| !valid_scope(sc))
+    {
         return Err(invalid(&format!("invalid object ref: {name:?}")));
     }
     Ok(ObjectItem { hash: hash.to_string(), compressed, scope })

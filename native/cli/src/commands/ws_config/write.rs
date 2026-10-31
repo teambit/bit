@@ -58,15 +58,14 @@ fn finalize_clean_results(
         .iter()
         .flat_map(|writer| &writer.extending_config_files)
         .flat_map(|ext| &ext.extending_config_file.file_paths)
-        .cloned()
+        .map(|path| path.replace('\\', "/"))
         .collect();
     clean_results.retain(|rel| {
-        !written.contains(
-            &root
-                .join(rel)
-                .to_string_lossy()
-                .into_owned(),
-        )
+        let candidate = root
+            .join(rel)
+            .to_string_lossy()
+            .replace('\\', "/");
+        !written.contains(&candidate)
     });
     if !is_dry {
         for rel in clean_results {

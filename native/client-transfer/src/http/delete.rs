@@ -182,7 +182,7 @@ fn status_error(bytes: &[u8], url: &str, status: reqwest::StatusCode) -> io::Err
         status.canonical_reason().unwrap_or_default(),
     );
     let parsed: Value = serde_json::from_slice(bytes).unwrap_or(Value::Null);
-    let error = if parsed["error"]["code"].is_null() { &parsed } else { &parsed["error"] };
+    let error = if parsed["error"].is_object() { &parsed["error"] } else { &parsed };
     let message = error["message"]
         .as_str()
         .map(str::trim)
@@ -194,5 +194,12 @@ fn status_error(bytes: &[u8], url: &str, status: reqwest::StatusCode) -> io::Err
                 .filter(|msg| !msg.is_empty())
         })
         .map_or_else(|| fallback.clone(), str::to_owned);
-    remote_error(error["code"].as_u64(), error, url, message)
+    let code = error["code"]
+        .as_u64()
+        .or_else(|| {
+            error["code"]
+                .as_str()
+                .and_then(|raw| raw.trim().parse().ok())
+        });
+    remote_error(code, error, url, message)
 }

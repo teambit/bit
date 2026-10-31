@@ -19,6 +19,7 @@ fn is_active_trace_value(value: &std::ffi::OsStr) -> bool {
 
 pub fn log(message: impl Display) {
     if enabled() {
-        eprintln!("bit-native: {message}");
+        let rendered = message.to_string();
+        eprintln!("bit-native: {}", rendered.trim_end_matches(['\r', '\n']));
     }
 }

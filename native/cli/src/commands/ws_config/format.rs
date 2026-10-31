@@ -249,12 +249,19 @@ fn write_summary(skipped_paths: &[String]) -> String {
 
 fn rel_display(ws_dir: &Path, full_path: &str) -> String {
     let full_path = full_path.trim();
-    Path::new(full_path)
-        .strip_prefix(ws_dir)
-        .map_or_else(
-            |_| full_path.replace('\\', "/"),
-            |rel| rel.to_string_lossy().replace('\\', "/"),
-        )
+    if let Ok(rel) = Path::new(full_path).strip_prefix(ws_dir) {
+        let rel = rel.to_string_lossy().replace('\\', "/");
+        return if rel.is_empty() { ".".to_owned() } else { rel };
+    }
+    let normalized_ws = ws_dir.to_string_lossy().replace('\\', "/");
+    let normalized_full = full_path.replace('\\', "/");
+    if let Some(rest) = normalized_full
+        .strip_prefix(normalized_ws.trim_end_matches('/'))
+        .and_then(|rest| rest.strip_prefix('/'))
+    {
+        return if rest.is_empty() { ".".to_owned() } else { rest.to_owned() };
+    }
+    normalized_full
 }
 
 pub(super) fn strip_dry_run_contents(write_results: &mut WriteResults) {

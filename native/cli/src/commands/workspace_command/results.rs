@@ -132,16 +132,19 @@ pub fn hydrate(value: &Value) -> io::Result<Results> {
         return Err(decline("native command report shape"));
     }
     let version = match map.get("version") {
-        None => None,
-        Some(version) => Some(text(Some(version))?.trim().to_string()),
+        None | Some(Value::Null) => None,
+        Some(version) => {
+            let trimmed = text(Some(version))?.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_string())
+        }
     };
     let conflicts = match map.get("leftUnresolvedConflicts") {
-        None => false,
+        None | Some(Value::Null) => false,
         Some(Value::Bool(conflicts)) => *conflicts,
         Some(_) => return Err(decline("native command report conflicts")),
     };
     let new_from_lane_added = match map.get("newFromLaneAdded") {
-        None => false,
+        None | Some(Value::Null) => false,
         Some(Value::Bool(added)) => *added,
         Some(_) => return Err(decline("native command report lane addition")),
     };

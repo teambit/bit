@@ -87,7 +87,7 @@ fn visible_graphs(
     let snapped = needs_snap
         .iter()
         .map(|identity| {
-            let identity = identity.trim();
+            let identity = without_version(identity.trim()).trim();
             let target = targets
                 .iter()
                 .find(|target| target_identity(target) == Some(identity))
@@ -122,6 +122,7 @@ fn workspace_components<'c>(
         .iter()
         .zip(hashes)
         .map(|(identity, hash)| {
+            let identity = without_version(identity.trim()).trim();
             let package_name = package_name(capture, identity)?;
             Ok(graph::WorkspaceComponent { package_name, identity, version: Some(hash) })
         })
@@ -130,7 +131,7 @@ fn workspace_components<'c>(
         let identity = target_identity(target).ok_or_else(|| decline("command snapshot target"))?;
         if needs_snap
             .iter()
-            .any(|snapped| snapped == identity)
+            .any(|snapped| without_version(snapped.trim()).trim() == identity)
         {
             continue;
         }

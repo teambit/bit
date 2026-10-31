@@ -126,17 +126,18 @@ const DEFAULT_CONCURRENCY: usize = 15;
 /// `concurrentFetchLimit()`: `concurrency.fetch` from the bit config, else 15.
 #[must_use]
 pub fn concurrency(global: &GlobalConfig) -> usize {
-    global
-        .get("concurrency.fetch")
-        .or_else(|| global.get("concurrency_fetch"))
-        .or_else(|| global.get("network.concurrency"))
-        .or_else(|| global.get("network_concurrency"))
-        .and_then(|value| match value {
-            Value::Number(number) => number.as_u64(),
-            Value::String(text) => text.trim().parse().ok(),
-            _ => None,
+    ["concurrency.fetch", "concurrency_fetch", "network.concurrency", "network_concurrency"]
+        .into_iter()
+        .find_map(|key| {
+            let value = global.get(key)?;
+            let parsed = match value {
+                Value::Number(number) => number.as_u64()?,
+                Value::String(text) => text.trim().parse().ok()?,
+                _ => return None,
+            };
+            usize::try_from(parsed)
+                .ok()
+                .filter(|limit| *limit > 0)
         })
-        .and_then(|limit| usize::try_from(limit).ok())
-        .filter(|limit| *limit > 0)
         .unwrap_or(DEFAULT_CONCURRENCY)
 }

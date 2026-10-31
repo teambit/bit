@@ -245,6 +245,7 @@ impl Network {
 
     /// POST a symphony GraphQL query.
     pub async fn graphql(&self, url: &str, body: &Value) -> io::Result<Value> {
+        let url = url.trim();
         let response = self.send(
             self.headers(self.client.post(url), "read")?
                 .json(body),
@@ -290,11 +291,14 @@ impl Network {
     /// remote scope's components whose names match `namespaces`, matched by the
     /// remote, with their head versions and deprecation.
     pub async fn list(&self, url: &str, namespaces: Option<&str>) -> io::Result<Vec<Listed>> {
+        let namespaces = namespaces
+            .map(str::trim)
+            .filter(|ns| !ns.is_empty());
         let body = json!({
             "query": LIST_QUERY,
-            "variables": { "namespaces": namespaces.map(|namespaces| [namespaces]) },
+            "variables": { "namespaces": namespaces.map(|ns| [ns]) },
         });
-        let endpoint = format!("{url}/graphql");
+        let endpoint = format!("{}/graphql", url.trim().trim_end_matches('/'));
         let response = self.send(
             self.headers(self.client.post(&endpoint), "read")?
                 .json(&body),

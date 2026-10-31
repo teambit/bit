@@ -65,7 +65,8 @@ impl Resolver {
             .as_str()
             .map(str::trim)
             .filter(|path| !path.is_empty())?;
-        let token = global
+        let effective = crate::config::effective(global.clone(), &Value::Null, &Value::Null);
+        let token = effective
             .get(CFG_USER_TOKEN)
             .and_then(Value::as_str)
             .map(str::trim)
@@ -88,7 +89,11 @@ impl Resolver {
     }
 
     fn run(&self, scope: &str) -> io::Result<String> {
-        let node = if self.node.as_os_str().is_empty() {
+        let node = if self.node
+            .to_string_lossy()
+            .trim()
+            .is_empty()
+        {
             PathBuf::from("node")
         } else {
             self.node.clone()
@@ -108,7 +113,9 @@ impl Resolver {
             return Err(io::Error::other(detail.to_string()));
         }
         String::from_utf8(output.stdout)
+            .ok()
             .map(|url| url.trim().to_string())
-            .map_err(|_| invalid("the remote resolver returned a non UTF-8 URL"))
+            .filter(|url| !url.is_empty() && url != "undefined")
+            .ok_or_else(|| invalid("the remote resolver returned an invalid URL"))
     }
 }

@@ -14,7 +14,8 @@ pub(crate) fn in_optional_chain(node: &CallExpression<'_>) -> bool {
             Expression::ComputedMemberExpression(member) if !member.optional => &member.object,
             Expression::PrivateFieldExpression(member) if !member.optional => &member.object,
             Expression::CallExpression(call) if !call.optional => &call.callee,
-            Expression::StaticMemberExpression(_)
+            Expression::ChainExpression(_)
+            | Expression::StaticMemberExpression(_)
             | Expression::ComputedMemberExpression(_)
             | Expression::PrivateFieldExpression(_)
             | Expression::CallExpression(_) => return true,
@@ -35,10 +36,7 @@ pub(crate) fn nonstring_literal(argument: Option<&Argument<'_>>) -> bool {
     )
 }
 pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
-    let mut callee = &node.callee;
-    while let Expression::ParenthesizedExpression(paren) = callee {
-        callee = &paren.expression;
-    }
+    let callee = node.callee.without_parentheses();
     (ts || !in_optional_chain(node))
         && match callee {
             Expression::Identifier(id) => id.name == "require",

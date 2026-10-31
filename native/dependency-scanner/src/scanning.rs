@@ -118,7 +118,7 @@ fn scanner_for_source(
         ts,
         no_check: comments
             .iter()
-            .any(|(_, c)| c.contains("@bit-no-check")),
+            .any(|(_, comment)| comment.contains("@bit-no-check")),
         comments,
         deps: IndexMap::new(),
         unsupported: false,
@@ -133,7 +133,11 @@ fn normalized_kind(file: &File) -> String {
             let path = file.path
                 .trim()
                 .trim_end_matches(['/', '\\']);
-            std::path::Path::new(path).extension().and_then(std::ffi::OsStr::to_str)
+            let file_name = path
+                .rsplit(['/', '\\'])
+                .next()
+                .unwrap_or(path);
+            std::path::Path::new(file_name).extension().and_then(std::ffi::OsStr::to_str)
         })
         .unwrap_or("")
         .trim_start_matches('.')

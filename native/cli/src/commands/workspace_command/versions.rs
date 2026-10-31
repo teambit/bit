@@ -83,7 +83,7 @@ fn lane_name(map: &serde_json::Map<String, Value>) -> Option<String> {
     map.get("laneName")
         .and_then(Value::as_str)
         .map(str::trim)
-        .filter(|lane| !lane.is_empty())
+        .filter(|ln| !ln.is_empty())
         .map(str::to_string)
 }
 
@@ -93,12 +93,21 @@ fn pinned_dependents(value: Option<&Value>) -> io::Result<Vec<(Id, Vec<String>)>
         .iter()
         .map(|row| {
             let map = object(row)?;
+            if map
+                .keys()
+                .any(|key| key != "id" && key != "pinnedDependencies")
+            {
+                return Err(decline("native snap pinned dependent"));
+            }
             let raw_id = map.get("id").ok_or_else(|| decline("native snap identity"))?;
             let id = Id::from_object(raw_id)?;
             let deps = array(map.get("pinnedDependencies"), "pinned dependencies")?
                 .iter()
                 .map(|dep| text(Some(dep)).map(|raw| raw.trim().to_string()))
                 .collect::<io::Result<Vec<_>>>()?;
+            if deps.is_empty() || deps.iter().any(String::is_empty) {
+                return Err(decline("native snap pinned dependencies"));
+            }
             Ok((id, deps))
         })
         .collect()

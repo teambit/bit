@@ -51,6 +51,7 @@ fn projection(value: &Value, scope: &str) -> io::Result<Value> {
     let scope = scope.trim();
     if let Some(message) = value["errors"][0]["message"]
         .as_str()
+        .or_else(|| value["error"]["message"].as_str())
         .or_else(|| value["error"].as_str())
         .or_else(|| value["message"].as_str())
         .map(str::trim)

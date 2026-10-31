@@ -53,7 +53,7 @@ fn entry_command(cli: &NodeCli, args: &[OsString]) -> Command {
 }
 
 pub fn path_with(dir: &Path, path: Option<OsString>) -> OsString {
-    if dir.as_os_str().is_empty() {
+    if dir.to_string_lossy().trim().is_empty() {
         return path.unwrap_or_default();
     }
     let Some(path) = path.filter(|path| !path.to_string_lossy().trim().is_empty()) else {

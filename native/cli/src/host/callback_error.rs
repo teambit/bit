@@ -10,6 +10,16 @@ pub(crate) struct CallbackError {
 
 impl CallbackError {
     pub(crate) fn wrap(cause: io::Error, mut startup: String, mut output: String) -> io::Error {
+        let cause = match cause.downcast::<Self>() {
+            Ok(inner) => {
+                if startup.is_empty() {
+                    startup = inner.startup;
+                }
+                output.push_str(&inner.output);
+                inner.cause
+            }
+            Err(cause) => cause,
+        };
         startup.truncate(
             startup
                 .trim_end_matches(['\0', '\r'])

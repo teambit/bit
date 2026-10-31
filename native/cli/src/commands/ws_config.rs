@@ -271,7 +271,7 @@ fn parse_list(rest: &[&str]) -> Option<Subcommand> {
 fn parse_clean(rest: &[&str]) -> Option<Subcommand> {
     let (mut silent, mut dry_run, mut writers, mut json, mut idx) = (false, false, None, false, 0);
     while idx < rest.len() {
-        match rest[idx] {
+        match rest[idx].trim() {
             "-s" | "--silent" | "--silent=true" => silent = true,
             "--silent=false" => silent = false,
             "--dry-run" | "--dry-run=true" => dry_run = true,
@@ -290,7 +290,7 @@ fn parse_write(rest: &[&str]) -> Option<Subcommand> {
     let mut opts = WriteOptions::default();
     let mut idx = 0usize;
     while idx < rest.len() {
-        if !apply_write_flag(rest[idx], &mut opts) {
+        if !apply_write_flag(rest[idx].trim(), &mut opts) {
             opts.writers = Some(parse_writers_arg(rest, &mut idx)?);
         }
         idx += 1;
@@ -299,6 +299,7 @@ fn parse_write(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn apply_write_flag(token: &str, opts: &mut WriteOptions) -> bool {
+    let token = token.trim();
     if apply_write_combined_short(token, opts) || apply_write_bool(token, opts) {
         return true;
     }

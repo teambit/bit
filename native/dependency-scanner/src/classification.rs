@@ -44,11 +44,8 @@ impl<'ast> Visit<'ast> for Classifier {
         };
     }
 }
-fn classify_call(mut callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classification {
-    while let Expression::ParenthesizedExpression(paren) = callee {
-        callee = &paren.expression;
-    }
-    match callee {
+fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classification {
+    match callee.without_parentheses() {
         Expression::Identifier(identifier) if identifier.name == "define" => {
             Classification::Fallback
         }

@@ -99,8 +99,9 @@ impl Scanner {
         let node_line = line(&self.line_starts, span.start);
         self.comments
             .iter()
-            .find(|(l, _)| *l + 1 == node_line)
-            .is_some_and(|(_, c)| c.contains("@bit-ignore"))
+            .any(|(comment_line, text)| {
+                *comment_line + 1 == node_line && text.contains("@bit-ignore")
+            })
     }
     fn add(&mut self, name: &str, span: Span) -> Option<&mut Dependency> {
         if name.is_empty() || (self.ts && self.ignored(span)) {

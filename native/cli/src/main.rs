@@ -26,7 +26,13 @@ fn main() -> ExitCode {
     match run(&args) {
         Ok(code) => code,
         Err(error) => {
-            eprintln!("bit: {}", error.to_string().trim());
+            let text = error.to_string();
+            let detail = text.trim();
+            if detail.is_empty() {
+                eprintln!("bit: {}", error.kind());
+            } else {
+                eprintln!("bit: {detail}");
+            }
             let _ = std::io::Write::flush(&mut std::io::stderr());
             ExitCode::FAILURE
         }

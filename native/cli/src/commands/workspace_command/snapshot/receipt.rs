@@ -127,7 +127,7 @@ impl User {
 /// `getBitCloudUser()?.username`: `GET https://api.<domain>/user` with the
 /// token, read without a proxy like Node's `fetch`. Any failure is `None`.
 fn cloud_username(domain: &str, token: &str) -> Option<String> {
-    let (domain, token) = (domain.trim(), token.trim());
+    let (domain, token) = (domain.trim().trim_end_matches('/'), token.trim());
     if domain.is_empty() || token.is_empty() {
         return None;
     }
@@ -147,6 +147,8 @@ fn cloud_username(domain: &str, token: &str) -> Option<String> {
             .header("Content-Type", "application/json")
             .send()
             .await
+            .ok()?
+            .error_for_status()
             .ok()?;
         let body: Value = response.json().await.ok()?;
         body["payload"]["username"]

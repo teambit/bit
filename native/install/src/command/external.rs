@@ -168,7 +168,6 @@ fn remove_postinstall_script(root: &Path) -> io::Result<()> {
             .as_object_mut()
             .map(|object| object.remove("scripts"));
     }
-    let mut written = serde_json::to_string_pretty(&manifest).map_err(io::Error::other)?;
-    written.push('\n');
+    let written = stringify_package(&manifest, &detect_indent(&text), detect_newline(&text))?;
     fs::write(&path, written)
 }

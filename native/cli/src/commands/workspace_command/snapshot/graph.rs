@@ -122,11 +122,12 @@ fn narrow(
     workspace: &Replacer,
 ) -> Value {
     let mut narrowed = lockfile.clone();
+    let own_name = component.package_name.trim();
     for id in ids {
         let entry = &mut narrowed["importers"][id.as_str()];
         for name in workspace
             .package_names()
-            .filter(|name| *name != component.package_name)
+            .filter(|name| *name != own_name)
         {
             remove_workspace_package(entry, name, id == importer);
         }
@@ -148,7 +149,7 @@ fn remove_workspace_package(importer: &mut Value, name: &str, own: bool) {
     let injected = reference
         .and_then(|reference| reference.get("version"))
         .and_then(Value::as_str)
-        .is_some_and(|version| version.starts_with("file:"));
+        .is_some_and(|version| version.trim().starts_with("file:"));
     if own && injected {
         return;
     }

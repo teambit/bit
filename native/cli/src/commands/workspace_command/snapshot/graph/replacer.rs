@@ -102,6 +102,9 @@ impl Replacer {
 /// prerelease of `0.0.0`.
 fn snap_to_semver(version: &str) -> String {
     let version = version.trim();
+    if version.is_empty() {
+        return "undefined".to_owned();
+    }
     let hash =
         (3..=40).contains(&version.len()) && version.bytes().all(|byte| byte.is_ascii_hexdigit());
     if hash { format!("{SNAP_PREFIX}{version}") } else { version.to_string() }
