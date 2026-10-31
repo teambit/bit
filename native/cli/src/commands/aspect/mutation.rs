@@ -1,5 +1,9 @@
-pub(in crate::commands) use self::update::{
-    find_component_aspect, resolve_latest_aspect_version, update_in_bitmap_row, update_in_comp_json,
+pub(in crate::commands) use self::{
+    comp_json::serialize_json_preserving_newline,
+    update::{
+        find_component_aspect, resolve_latest_aspect_version, update_in_bitmap_row,
+        update_in_comp_json,
+    },
 };
 
 mod comp_json;
@@ -49,7 +53,7 @@ pub(super) struct MutationBatch {
 }
 
 pub(super) enum Prepared {
-    Set(MutationBatch),
+    Set { pattern: String, batch: MutationBatch },
     Unset { pattern: String, batch: MutationBatch },
     Update(UpdatePlan),
     Unrecognized(String),
@@ -140,15 +144,18 @@ fn prepare_set(
         }
         ids.push(selection::entry_full_id(entry));
     }
-    Ok(Prepared::Set(MutationBatch {
-        root: ctx.root,
-        aspect_id: aspect_id.to_owned(),
-        ids,
-        bitmap_before: ctx.bitmap_before,
-        bitmap_val: ctx.bitmap_val,
-        bitmap_changed,
-        comp_json_edits,
-    }))
+    Ok(Prepared::Set {
+        pattern: pattern.to_owned(),
+        batch: MutationBatch {
+            root: ctx.root,
+            aspect_id: aspect_id.to_owned(),
+            ids,
+            bitmap_before: ctx.bitmap_before,
+            bitmap_val: ctx.bitmap_val,
+            bitmap_changed,
+            comp_json_edits,
+        },
+    })
 }
 
 fn apply_set_to_entry(
@@ -234,16 +241,24 @@ pub(in crate::commands) fn resolve_aspect_identity(
     let (bare, ver) = raw
         .split_once('@')
         .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
+    let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     if let Some(entry) = bitmap.entries
         .iter()
         .find(|entry| {
             entry.owns_its_dir()
                 && (entry.id.to_string_without_version() == bare
                     || entry.id.name == bare
-                    || (!entry.root_dir.is_empty() && entry.root_dir == bare))
+                    || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
         })
     {
-        return Ok((selection::entry_full_id(entry), entry.id.to_string_without_version()));
+        let scoped_bare = entry.id.to_string_without_version();
+        let full = ver
+            .filter(|ver_str| !ver_str.is_empty())
+            .map_or_else(
+                || selection::entry_full_id(entry),
+                |ver_str| format!("{scoped_bare}@{ver_str}"),
+            );
+        return Ok((full, scoped_bare));
     }
     if bare.contains('/') {
         return Ok((raw.to_owned(), bare.to_owned()));
@@ -316,23 +331,14 @@ pub(in crate::commands) fn deep_merge(target: &mut Value, source: &Value) {
     }
 }
 
-pub(in crate::commands) fn serialize_json_preserving_newline(
-    original: &str,
-    parsed: &Value,
-) -> Result<Vec<u8>, Failure> {
-    comp_json::serialize_json_preserving_newline(original, parsed)
-}
-
 impl Prepared {
     pub(super) fn commit(self, chalk: Chalk) -> io::Result<Report> {
         let formatter = Formatter::new(chalk);
+        let is_set = matches!(self, Self::Set { .. });
         let data = match self {
-            Self::Set(batch) => {
-                persist_aspect_edits(&batch, &format!("aspect-set ({})", batch.aspect_id))?;
-                render_updated(&formatter, &batch.ids)
-            }
-            Self::Unset { pattern, batch } => {
-                persist_aspect_edits(&batch, &format!("aspect-unset ({})", batch.aspect_id))?;
+            Self::Set { pattern, batch } | Self::Unset { pattern, batch } => {
+                let op = if is_set { "aspect-set" } else { "aspect-unset" };
+                persist_aspect_edits(&batch, &format!("{op} ({})", batch.aspect_id))?;
                 if batch.ids.is_empty() {
                     formatter.hint(&format!(
                         "unable to find any matching components for {} pattern",

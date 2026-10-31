@@ -10,6 +10,7 @@ pub(in crate::commands) struct Prepared {
     pub(in crate::commands) facts: Value,
 }
 pub(in crate::commands) fn prepare(root: &Path, options: &Options) -> io::Result<Prepared> {
+    bit_object_import::component_rename::validate_name(&options.target)?;
     let (workspace, mut facts, mut engine) = inventory(root)?;
     packages(&workspace, options, &mut facts)?;
     let plan = Plan::prepare(root, options, &facts)?;

@@ -109,7 +109,7 @@ pub(super) fn render_env_get(
 ) -> Result<String, Failure> {
     let (_, ws) =
         resolve_workspace_components(root).map_err(|err| Failure::Declined(err.to_string()))?;
-    let (_, comp) = find_target_component(&ws, component)?;
+    let (_, comp) = find_target_component(root, &ws, component)?;
     let env_id = &comp.env_id;
     let bare = aspect_id_without_version(env_id);
     if !CORE_ENVS.contains(&bare) && find_workspace_env_component(&ws, bare).is_none() {
@@ -134,18 +134,52 @@ pub(super) fn render_env_get(
 }
 
 fn find_target_component<'a>(
+    root: &Path,
     ws: &'a Workspace,
     query: &str,
 ) -> Result<(&'a BitmapEntry, &'a WorkspaceComponent), Failure> {
-    let normalized = query.trim_start_matches("./").trim_end_matches('/');
-    ws.active()
+    let (bare, explicit_ver) = query
+        .split_once('@')
+        .map_or((query, None), |(bare, ver)| (bare, Some(ver)));
+    let normalized = bare.trim_start_matches("./").trim_end_matches('/');
+    if let Some((entry, comp)) = ws
+        .active()
         .find(|(entry, comp)| {
             (!entry.root_dir.is_empty() && entry.root_dir == normalized)
-                || comp.id.to_string_without_version() == query
-                || comp.id.name == query
+                || comp.id.to_string_without_version() == bare
+                || comp.id.name == bare
                 || selection::entry_full_id(entry) == query
         })
-        .ok_or_else(|| Failure::User(format!("component for env {query} was not found")))
+    {
+        if explicit_ver
+            .filter(|ver| !ver.is_empty() && *ver != "latest")
+            .is_some_and(|ver| Some(ver) != entry.id.version.as_deref())
+        {
+            return Err(Failure::Declined("historical version env get delegated".into()));
+        }
+        return Ok((entry, comp));
+    }
+    if is_in_scope_index(root, bare) {
+        return Err(Failure::Declined("scope-only component env get delegated".into()));
+    }
+    if !bare.contains('/') {
+        return Err(Failure::User(format!(
+            r#"Failed parsing the string "{query}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
+        )));
+    }
+    Err(Failure::Declined("missing scoped component env get delegated".into()))
+}
+
+fn is_in_scope_index(root: &Path, bare: &str) -> bool {
+    let scope_dir = crate::workspace::scope_path(root);
+    load_bare_scope_index(&scope_dir)
+        .is_some_and(|rows| {
+            let target_name = bare.split_once('/').map_or(bare, |(_, name)| name);
+            rows.iter()
+                .any(|row| {
+                    row["isSymlink"] != true && row["id"]["name"].as_str() == Some(target_name)
+                })
+        })
 }
 
 fn render_scripts_service(

@@ -305,21 +305,21 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
 
 fn parse_list_core(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
+    let mut positional = Vec::new();
     let mut iter = rest.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
             "--" => {
-                return iter
-                    .next()
-                    .is_none()
-                    .then_some(Subcommand::ListCore { json });
+                consume_trailing(iter, &mut positional)?;
+                break;
             }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
+            val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
             _ => return None,
         }
     }
-    Some(Subcommand::ListCore { json })
+    (positional.len() <= 1).then_some(Subcommand::ListCore { json })
 }
 
 fn parse_update(rest: &[&str]) -> Option<Subcommand> {

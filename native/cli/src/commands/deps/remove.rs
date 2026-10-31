@@ -64,9 +64,14 @@ fn remove_for_entry(
         .find_workspace_component(entry)
         .ok_or_else(|| Failure::Declined("missing workspace component".into()))?;
     let (deps, missing) = ctx.collect_component_deps(entry, component, current_cfg.get("policy"));
+    let lifecycle = match dep_field {
+        "devDependencies" => "dev",
+        "peerDependencies" => "peer",
+        _ => "runtime",
+    };
     let mut removed_for_comp = Vec::new();
     for raw_pkg in spec.packages {
-        let Some((dep_name, dep_ver)) = match_pkg(raw_pkg, &deps, &missing) else {
+        let Some((dep_name, dep_ver)) = match_pkg(raw_pkg, &deps, &missing, lifecycle)? else {
             continue;
         };
         if apply_pkg_removal(&mut new_cfg, dep_field, &dep_name, spec.remove_only_if_exists)? {
@@ -79,15 +84,31 @@ fn remove_for_entry(
     Ok(removed_for_comp)
 }
 
-fn match_pkg(raw_pkg: &str, deps: &[ResolvedDep], missing: &[String]) -> Option<(String, String)> {
+fn match_pkg(
+    raw_pkg: &str,
+    deps: &[ResolvedDep],
+    missing: &[String],
+    lifecycle: &str,
+) -> Result<Option<(String, String)>, Failure> {
     let (name, req_ver) = split_pkg_to_name_and_ver(raw_pkg);
-    if let Some(dep) = deps.iter().find(|dep| dep_matches(dep, name, req_ver)) {
-        return Some((dep.package_name.clone(), dep.version.clone()));
+    if name.is_empty() || req_ver.is_some_and(|ver| ver.contains('@')) {
+        return Err(Failure::User(format!(
+            r#"invalid package "{raw_pkg}" syntax, expected "package[@version]""#,
+        )));
+    }
+    if let Some(dep) = deps
+        .iter()
+        .find(|dep| dep.lifecycle == lifecycle && dep_matches(dep, name, req_ver))
+    {
+        return Ok(Some((dep.package_name.clone(), dep.version.clone())));
     }
     if missing.iter().any(|item| item == name) {
-        return Some((name.to_owned(), "*".to_owned()));
+        let ver = req_ver
+            .filter(|ver| !ver.is_empty())
+            .unwrap_or("latest");
+        return Ok(Some((name.to_owned(), ver.to_owned())));
     }
-    None
+    Ok(None)
 }
 
 fn dep_matches(dep: &ResolvedDep, name: &str, req_ver: Option<&str>) -> bool {
