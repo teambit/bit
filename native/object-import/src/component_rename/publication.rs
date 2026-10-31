@@ -15,7 +15,13 @@ fn write(
     reason: &str,
 ) -> io::Result<()> {
     crate::component_remove::validate_file_id(file_id)?;
-    if fs::read(plan.root.join(".bitmap"))? != plan.controls.expected {
+    let path = plan.root.join(".bitmap");
+    let metadata = fs::symlink_metadata(&path)?;
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.len() != plan.controls.expected.len() as u64
+        || fs::read(&path)? != plan.controls.expected
+    {
         return Err(invalid("rename bitmap changed before publication"));
     }
     if crate::inspection::render_workspace_bitmap(bitmap)? == plan.controls.expected {
@@ -28,7 +34,7 @@ fn write(
         file_id,
         reason,
     )?;
-    plan.controls.expected = fs::read(plan.root.join(".bitmap"))?;
+    plan.controls.expected = fs::read(&path)?;
     Ok(())
 }
 pub(super) fn finish_original(

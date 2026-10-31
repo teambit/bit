@@ -11,15 +11,20 @@ pub(super) struct Tree {
     observed: crate::component_tracking::observe::Observed,
 }
 pub(super) fn prepare(plan: &mut Plan) -> io::Result<()> {
+    let source_dir = plan.identity.source_directory.trim().trim_matches('/');
+    let target_dir = plan.identity.target_directory.trim().trim_matches('/');
     if plan.identity.exported
-        || plan.identity.source_directory.trim().is_empty()
-        || plan.identity.source_directory.trim()
-            == plan.identity.target_directory.trim()
+        || source_dir.is_empty()
+        || source_dir == "."
+        || source_dir == target_dir
     {
         return Ok(());
     }
     let mut tree = Tree { directories: BTreeMap::new(), observed: Observed::default() };
-    let root = plan.root.join(plan.identity.source_directory.trim());
+    let root = plan.root.join(source_dir);
+    if !root.starts_with(&plan.root) || root == plan.root {
+        return Err(unsupported("rename cleanup root path"));
+    }
     let mut pending = vec![root];
     while let Some(directory) = pending.pop() {
         if tree.directories.len() >= 65536 {

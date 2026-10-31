@@ -25,7 +25,7 @@ pub(super) fn apply(
             let next = directory.replacen(&from, &to, 1);
             row["rootDir"] = json!(next);
             vec![json!({"from":directory,"to":next})]
-        } else if from.starts_with(&directory) {
+        } else if from.starts_with(&format!("{directory}/")) {
             internal(root, &directory, row, &from, &to, &inventory_bitmap, observed)?
         } else {
             vec![]

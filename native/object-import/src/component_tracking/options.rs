@@ -48,7 +48,7 @@ impl Options {
         {
             return Err(error(format!(
                 "the --id flag ({id}) is used for a single component only, however, got {} paths",
-                self.paths.len(),
+                directories.len().max(self.paths.len()),
             )));
         }
         Ok(())

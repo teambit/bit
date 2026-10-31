@@ -67,12 +67,21 @@ fn root_owner(
 }
 
 fn contains_root_main_file(row: &Value, directory: &str) -> bool {
-    row["mainFile"]
-        .as_str()
-        .map(str::trim)
-        .filter(|main| !main.is_empty())
-        .is_some_and(|main| {
-            main.to_lowercase()
-                .starts_with(&format!("{}/", directory.trim().to_lowercase()))
-        })
+    let dir = directory
+        .trim()
+        .replace('\\', "/")
+        .trim_start_matches("./")
+        .trim_matches('/')
+        .to_lowercase();
+    !dir.is_empty()
+        && row["mainFile"]
+            .as_str()
+            .map(str::trim)
+            .filter(|main| !main.is_empty())
+            .is_some_and(|main| {
+                main.replace('\\', "/")
+                    .trim_start_matches("./")
+                    .to_lowercase()
+                    .starts_with(&format!("{dir}/"))
+            })
 }

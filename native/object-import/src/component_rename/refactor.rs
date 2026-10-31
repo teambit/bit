@@ -83,10 +83,20 @@ pub(super) struct PackageMatcher {
 }
 impl PackageMatcher {
     pub(super) fn new(source: &str, target: &str) -> Self {
-        Self { source: source.into(), target: target.into(), regex: None, cache: None }
+        Self {
+            source: source.trim().into(),
+            target: target.trim().into(),
+            regex: None,
+            cache: None,
+        }
     }
     pub(super) fn with_cache(source: &str, target: &str, cache: Arc<PatternCache>) -> Self {
-        Self { source: source.into(), target: target.into(), regex: None, cache: Some(cache) }
+        Self {
+            source: source.trim().into(),
+            target: target.trim().into(),
+            regex: None,
+            cache: Some(cache),
+        }
     }
     pub(super) fn apply(&mut self, bytes: &[u8]) -> io::Result<Vec<u8>> {
         Ok(self
@@ -108,7 +118,7 @@ impl PackageMatcher {
             return Ok(bytes);
         }
         let text = String::from_utf8_lossy(bytes.as_ref());
-        if !self.source.is_empty() {
+        if !self.source.is_empty() && !self.target.is_empty() && self.source != self.target {
             let target = self.target.clone();
             let regex = self.compiled_regex()?;
             if let Some(result) = replace_package_matches(regex, &text, &target) {

@@ -29,6 +29,12 @@ pub struct Selection {
 }
 impl Selection {
     pub fn prepare(root: &Path, options: &Options) -> io::Result<Self> {
+        if !root.is_absolute() || options.old.trim().is_empty() || options.new.trim().is_empty() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "scope rename requires workspace root and non-empty old/new scopes",
+            ));
+        }
         let before = fs::read(root.join("workspace.jsonc"))?;
         let bitmap = fs::read(root.join(".bitmap"))?;
         let workspace = crate::parse_jsonc(&before)?;
@@ -51,13 +57,12 @@ impl Selection {
                 selection::validate_scope(scope)?;
             }
         }
-
         if entries.is_empty() && default_scope.is_none() {
+            let old = options.old.trim();
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 format!(
-                    r#"none of the components is using "{}". also, the workspace is not configured with "{}""#,
-                    options.old, options.old,
+                    r#"none of the components is using "{old}". also, the workspace is not configured with "{old}""#,
                 ),
             ));
         }

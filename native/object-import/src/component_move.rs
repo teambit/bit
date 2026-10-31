@@ -110,6 +110,9 @@ fn change_identity(row: &Value) -> Option<String> {
         .map(str::trim)
         .filter(|value| !value.is_empty())?;
     let name = raw_name.rsplit_once('@').map_or(raw_name, |(prefix, _)| prefix.trim());
+    if name.is_empty() {
+        return None;
+    }
     match object
         .get("scope")
         .and_then(Value::as_str)

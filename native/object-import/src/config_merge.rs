@@ -61,7 +61,7 @@ fn truthy(value: &Value) -> bool {
         Value::Number(value) => value
             .as_f64()
             .is_some_and(|num| num != 0.0 && !num.is_nan()),
-        Value::String(value) => !value.is_empty(),
+        Value::String(value) => !value.trim().is_empty(),
         _ => true,
     }
 }
@@ -78,6 +78,9 @@ pub(crate) fn conflict_commit(input: &Value, state: &mut Option<Conflict>) -> io
     conflict::commit(input, state)
 }
 pub(crate) fn render_workspace_conflict(contents: &str, conflicts: &Value) -> io::Result<String> {
+    if contents.len() > 32 * 1024 * 1024 || contents.contains('\0') {
+        return Err(invalid("conflict workspace contents"));
+    }
     validate::fields(conflicts, &["dependencies", "devDependencies", "peerDependencies"])?;
     conflict::render(contents, conflicts)
 }

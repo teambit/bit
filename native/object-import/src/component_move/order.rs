@@ -25,7 +25,7 @@ pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Resul
             let relative = paths::relative(root, &child)?;
             if remaining.remove(&relative) {
                 ordered.push(relative);
-            } else if child.is_dir() && contains_files(&remaining, &relative) {
+            } else if is_real_directory(&child) && contains_files(&remaining, &relative) {
                 directories.push(child);
             }
         }
@@ -35,6 +35,9 @@ pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Resul
         return Err(unsupported("move tracked inventory changed"));
     }
     Ok(ordered)
+}
+fn is_real_directory(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink())
 }
 fn contains_files(files: &HashSet<String>, directory: &str) -> bool {
     let trimmed = directory.trim().trim_matches('/');

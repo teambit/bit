@@ -287,12 +287,14 @@ fn resolve_version_hash<'a>(
         .ok_or_else(|| invalid("component version is not in model"))
 }
 fn matches_index_row(row: &Value, scope: &str, name: &str) -> bool {
+    let (scope, name) = (scope.trim(), name.trim());
     let (row_scope, row_name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
-            .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
+            .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default().trim(), nm.trim()));
     row["isSymlink"] != true && row_name == name && (row_scope == scope || row_scope.is_empty())
 }
 fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Object, Value)> {
+    let (scope, name) = (scope.trim(), name.trim());
     let index = fs::read(crate::scope_path(root).join("index.json"))?;
     let value: Value = crate::parse_jsonc(&index)?;
     let rows = value["components"]
@@ -306,12 +308,18 @@ fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Obje
     if matches.len() != 1 {
         return Err(invalid("component is not uniquely indexed"));
     }
-    let model_hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))?;
+    let model_hash = matches[0]["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("Component hash"))?;
     let model = frozen(root, model_hash)?;
     let model_value =
         outbound::read_object(&crate::scope_path(root).join("objects"), model_hash, "Component")?;
-    let model_scope = model_value["scope"].as_str().unwrap_or_default();
-    if (!model_scope.is_empty() && model_scope != scope) || model_value["name"] != name {
+    let model_scope = model_value["scope"].as_str().map_or("", str::trim);
+    if (!model_scope.is_empty() && model_scope != scope)
+        || model_value["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("Component model identity"));
     }
     Ok((index, model, model_value))
@@ -331,12 +339,18 @@ fn source_files(
     let mut sources = Vec::with_capacity(manifest.len());
     let mut total = 0;
     for item in manifest {
-        let relative = item["relativePath"].as_str().ok_or_else(|| invalid("Version file path"))?;
+        let relative = item["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("Version file path"))?;
         crate::checkout::plan::relative_path(relative)?;
         if relative == ".bitmap" || !seen.insert(relative) {
             return Err(invalid("Version file path"));
         }
-        let hash = item["file"].as_str().ok_or_else(|| invalid("Version Source"))?;
+        let hash = item["file"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("Version Source"))?;
         sources.push(frozen(root, hash)?);
         let mut compressed = 0;
         let bytes = repository::source(
@@ -351,11 +365,11 @@ fn source_files(
     Ok((files, sources))
 }
 fn frozen(root: &Path, hash: &str) -> io::Result<Object> {
-    merge_history::hash(hash)?;
+    let canonical = crate::validate::hexadecimal(&merge_history::hash(hash.trim())?);
     let path = crate::scope_path(root)
         .join("objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
+        .join(&canonical[..2])
+        .join(&canonical[2..]);
     let kind = fs::symlink_metadata(&path)?.file_type();
     if !kind.is_file() || kind.is_symlink() || fs::metadata(&path)?.len() > MAX_BYTES as u64 {
         return Err(invalid("component object path"));

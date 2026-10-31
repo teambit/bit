@@ -30,18 +30,20 @@ pub(super) fn commit(batch: &Batch, file_id: &str) -> io::Result<()> {
 fn publish_files(batch: &Batch) -> io::Result<()> {
     for item in &batch.items {
         for file in &item.files {
-            destination(&batch.root, &file.path)?;
-            if let Some(parent) = file.path.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            fs::write(&file.path, &file.bytes)?;
+            write_verified_file(&batch.root, &file.path, &file.bytes)?;
         }
         if let Some(config) = &item.configuration {
-            destination(&batch.root, &config.path)?;
-            fs::write(&config.path, &config.bytes)?;
+            write_verified_file(&batch.root, &config.path, &config.bytes)?;
         }
     }
     Ok(())
+}
+fn write_verified_file(root: &Path, path: &Path, bytes: &[u8]) -> io::Result<()> {
+    destination(root, path)?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(path, bytes)
 }
 pub(super) fn destination(root: &Path, target: &Path) -> io::Result<()> {
     let relative = target.strip_prefix(root).map_err(io::Error::other)?;

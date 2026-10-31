@@ -35,7 +35,7 @@ impl Configuration {
         self.0.validate()
     }
     pub(super) fn write(&self, root: &Path, file_id: &str) -> io::Result<()> {
-        let _ = self.backup(root, file_id);
+        self.backup(root, file_id)?;
         self.0.write()
     }
     fn backup(&self, root: &Path, file_id: &str) -> io::Result<()> {

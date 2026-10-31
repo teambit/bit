@@ -11,6 +11,16 @@ pub(super) fn dependent(
     matcher: &mut refactor::PackageMatcher,
 ) -> io::Result<()> {
     let (directory, relative) = (directory.trim(), relative.trim());
+    let valid_part = |part: &str| {
+        !part.is_empty()
+            && !part.contains('\\')
+            && Path::new(part)
+                .components()
+                .all(|comp| matches!(comp, std::path::Component::Normal(_)))
+    };
+    if !valid_part(directory) || !valid_part(relative) {
+        return Err(unsupported("rename dependent path"));
+    }
     let path = plan.root.join(directory).join(relative);
     plan.observed.ancestors(
         &plan.root,
@@ -19,7 +29,10 @@ pub(super) fn dependent(
     let before = super::super::required(&mut plan.observed, &path)?;
     let loaded = overlaid(plan, component, relative, before)?;
     matcher.apply(&loaded)?;
-    fs::metadata(&path)?;
+    let metadata = fs::symlink_metadata(&path)?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() {
+        return Err(unsupported("rename dependent target is not a regular file"));
+    }
     Ok(())
 }
 

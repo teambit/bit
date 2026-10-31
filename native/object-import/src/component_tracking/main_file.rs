@@ -103,19 +103,24 @@ pub(super) fn resolve(
     };
     let main = resolve_dsl(main, files)?;
     let absolute = paths::normalize(&cwd.join(&main));
-    if absolute.is_dir() {
-        return Err(error(format!(
-            "error: the specified main path {} is a directory, please specify a file or a pattern DSL",
-            absolute.display(),
-        )));
-    }
-    if absolute.is_file() {
-        let relative = paths::relative(root, &absolute)?;
-        let folded = relative.to_lowercase();
-        let found = files
-            .iter()
-            .find(|file| file.to_lowercase() == folded);
-        return Ok(Some(found.cloned().unwrap_or(relative)));
+    if let Ok(metadata) = std::fs::symlink_metadata(&absolute) {
+        if metadata.file_type().is_symlink() {
+            return Err(unsupported("tracking symlink main path"));
+        }
+        if metadata.is_dir() {
+            return Err(error(format!(
+                "error: the specified main path {} is a directory, please specify a file or a pattern DSL",
+                absolute.display(),
+            )));
+        }
+        if metadata.is_file() {
+            let relative = paths::relative(root, &absolute)?;
+            let folded = relative.to_lowercase();
+            let found = files
+                .iter()
+                .find(|file| file.to_lowercase() == folded);
+            return Ok(Some(found.cloned().unwrap_or(relative)));
+        }
     }
     Ok(Some(main))
 }

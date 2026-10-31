@@ -77,9 +77,12 @@ impl Batch {
             let id = self.items[index].id.clone();
             let key = selection::key(&self.bitmap, &id)?;
             let exported = key.is_none_or(|key| {
-                self.bitmap[key]["scope"]
+                self.bitmap[&key]["scope"]
                     .as_str()
-                    .is_some_and(|scope| !scope.trim().is_empty())
+                    .map_or_else(
+                        || selection::bare(&key).contains('/'),
+                        |scope| !scope.trim().is_empty(),
+                    )
             });
             if exported && repository::model(self, selection::bare(&id))?.is_none() {
                 ids.push(id);

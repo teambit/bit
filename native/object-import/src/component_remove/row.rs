@@ -108,7 +108,15 @@ fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
     shape
         && lane_fields
         && !crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
-        && row.get("localOnly").is_none_or(Value::is_boolean)
+        && valid_optional_row_fields(row)
+}
+fn valid_optional_row_fields(row: &Value) -> bool {
+    row.get("localOnly").is_none_or(Value::is_boolean)
+        && row.get("exported").is_none_or(Value::is_boolean)
+        && row.get("files").is_none_or(Value::is_array)
+        && row
+            .get("wrapDir")
+            .is_none_or(|value| value.is_null() || value.is_string())
         && row
             .get("nextVersion")
             .is_none_or(|value| value.is_null() || value.is_object())

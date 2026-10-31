@@ -121,7 +121,13 @@ pub(crate) fn workspace_aspect(workspace: &Value) -> &Value {
         .as_object()
         .and_then(|rows| {
             rows.iter()
-                .find(|(id, _)| id.split('@').next() == Some("teambit.workspace/workspace"))
+                .find(|(id, _)| {
+                    id.trim()
+                        .split('@')
+                        .next()
+                        .map(str::trim)
+                        == Some("teambit.workspace/workspace")
+                })
                 .map(|(_, val)| val)
         })
         .unwrap_or(&Value::Null)
@@ -129,14 +135,27 @@ pub(crate) fn workspace_aspect(workspace: &Value) -> &Value {
 pub(super) fn vendor(workspace: &Value, directory: &str) -> bool {
     let parent = workspace_aspect(workspace)["vendor"]["directory"]
         .as_str()
+        .map(str::trim)
         .filter(|parent| !parent.is_empty())
         .unwrap_or("vendor");
-    let parent = parent.trim_end_matches(std::path::MAIN_SEPARATOR);
-    let directory = directory.trim_end_matches(std::path::MAIN_SEPARATOR);
+    let parent = parent
+        .replace('\\', "/")
+        .trim_start_matches("./")
+        .trim_matches('/')
+        .to_owned();
+    let directory = directory
+        .trim()
+        .replace('\\', "/")
+        .trim_start_matches("./")
+        .trim_matches('/')
+        .to_owned();
+    if parent.is_empty() || directory.is_empty() {
+        return false;
+    }
     let (parent, directory) = if cfg!(windows) {
         (parent.to_lowercase(), directory.to_lowercase())
     } else {
-        (parent.into(), directory.into())
+        (parent, directory)
     };
     directory == parent || directory.starts_with(&format!("{parent}/"))
 }
@@ -146,7 +165,13 @@ fn variant_scope(workspace: &Value, directory: &str, name: &str) -> io::Result<O
         .as_object()
         .and_then(|rows| {
             rows.iter()
-                .find(|(id, _)| id.split('@').next() == Some("teambit.workspace/variants"))
+                .find(|(id, _)| {
+                    id.trim()
+                        .split('@')
+                        .next()
+                        .map(str::trim)
+                        == Some("teambit.workspace/variants")
+                })
         })
         .map(|(_, value)| value);
     let variants = config

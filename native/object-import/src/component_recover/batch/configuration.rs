@@ -30,6 +30,30 @@ fn projection(parsed: &Value) -> io::Result<Value> {
     if !parsed.is_object() {
         return Err(invalid("recovery component.json must be an object"));
     }
+    if !has_scoped_component_id(parsed) {
+        return Err(invalid("recovery component.json requires a scoped componentId"));
+    }
+    let mut extensions = parsed["extensions"]
+        .as_object()
+        .cloned()
+        .unwrap_or_default();
+    extensions.retain(|key, _| {
+        let trimmed = key.trim();
+        trimmed != REMOVE && !trimmed.starts_with(&format!("{REMOVE}@"))
+    });
+    extensions.insert(REMOVE.into(), serde_json::json!({"removed":false}));
+    let mut value = serde_json::json!({
+        "componentId":parsed["componentId"],
+        "propagate":parsed["propagate"] == true,
+    });
+    if let Some(default_scope) = parsed.get("defaultScope") {
+        value["defaultScope"] = default_scope.clone();
+    }
+    value["extensions"] = Value::Object(extensions);
+    Ok(value)
+}
+
+fn has_scoped_component_id(parsed: &Value) -> bool {
     let str_scoped = parsed["componentId"]
         .as_str()
         .map(str::trim)
@@ -48,22 +72,5 @@ fn projection(parsed: &Value) -> io::Result<Value> {
             || parsed["defaultScope"]
                 .as_str()
                 .is_some_and(|val| !val.trim().is_empty()));
-    if !str_scoped && !obj_scoped {
-        return Err(invalid("recovery component.json requires a scoped componentId"));
-    }
-    let mut extensions = parsed["extensions"]
-        .as_object()
-        .cloned()
-        .unwrap_or_default();
-    extensions.retain(|key, _| !key.starts_with(&format!("{REMOVE}@")));
-    extensions.insert(REMOVE.into(), serde_json::json!({"removed":false}));
-    let mut value = serde_json::json!({
-        "componentId":parsed["componentId"],
-        "propagate":parsed["propagate"] == true,
-    });
-    if let Some(default_scope) = parsed.get("defaultScope") {
-        value["defaultScope"] = default_scope.clone();
-    }
-    value["extensions"] = Value::Object(extensions);
-    Ok(value)
+    str_scoped || obj_scoped
 }

@@ -47,6 +47,7 @@ fn matching(bitmap: &serde_json::Value, parts: &[&str]) -> io::Result<Vec<String
             || row["isAvailableOnCurrentLane"]
                 .as_str()
                 .is_some_and(|val| val.trim().eq_ignore_ascii_case("false"))
+            || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         {
             continue;
         }

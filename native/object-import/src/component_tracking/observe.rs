@@ -77,6 +77,9 @@ impl Observed {
             {
                 return Err(unsupported("tracking ancestor changed during planning"));
             }
+            if !self.ancestors.contains_key(parent) && self.ancestors.len() >= 65536 {
+                return Err(unsupported("tracking ancestor limit"));
+            }
             self.ancestors.entry(parent.to_owned()).or_insert(real);
         }
         Ok(())

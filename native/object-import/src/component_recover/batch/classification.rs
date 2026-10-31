@@ -37,11 +37,13 @@ fn tracked(
                 .or_else(|| {
                     cfg.iter()
                         .find_map(|(key, value)| {
-                            key.starts_with("teambit.component/remove@").then_some(value)
+                            key.trim()
+                                .starts_with("teambit.component/remove@")
+                                .then_some(value)
                         })
                 })
         })
-        .is_some_and(|value| !value.is_null() && value != &Value::Bool(false))
+        .is_some_and(has_remove_info)
     {
         let version = model
             .map(|model| repository::version(batch, id, model))

@@ -35,18 +35,21 @@ pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Re
 }
 
 fn is_removed_row(row: &Value) -> bool {
-    row["config"]
-        .as_object()
-        .and_then(|cfg| {
-            cfg.get("teambit.component/remove")
-                .or_else(|| {
-                    cfg.iter()
-                        .find_map(|(key, value)| {
-                            key.starts_with("teambit.component/remove@").then_some(value)
-                        })
-                })
-        })
-        .is_some_and(|rem| bit_workspace_config::truthy(&rem["removed"]))
+    crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
+        || row["config"]
+            .as_object()
+            .and_then(|cfg| {
+                cfg.get("teambit.component/remove")
+                    .or_else(|| {
+                        cfg.iter()
+                            .find_map(|(key, value)| {
+                                key.trim()
+                                    .starts_with("teambit.component/remove@")
+                                    .then_some(value)
+                            })
+                    })
+            })
+            .is_some_and(|rem| bit_workspace_config::truthy(&rem["removed"]))
 }
 
 fn is_nested_root_dir(directory: &str, candidate: &str) -> bool {

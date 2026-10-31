@@ -2,9 +2,14 @@ use super::{Options, Value};
 use std::io;
 pub(super) fn scope(scope: &str, options: &Options) -> Option<String> {
     let (scope, old, new) = (scope.trim(), options.old.trim(), options.new.trim());
+    if scope.is_empty() || old.is_empty() || new.is_empty() {
+        return None;
+    }
     if options.owner {
         scope
             .strip_prefix(&format!("{old}."))
+            .map(str::trim)
+            .filter(|suffix| !suffix.is_empty())
             .map(|suffix| format!("{new}.{suffix}"))
     } else {
         (scope == old).then(|| new.to_owned())
@@ -15,13 +20,14 @@ pub(super) fn entries_with_default(
     default_scope: &str,
     options: &Options,
 ) -> io::Result<Vec<crate::component_rename::Options>> {
-    let rows = bitmap.as_object().ok_or_else(|| io::Error::other("scope rename bitmap"))?;
+    let rows = bitmap
+        .as_object()
+        .filter(|rows| rows.len() <= 4096)
+        .ok_or_else(|| io::Error::other("scope rename bitmap"))?;
+    let default_scope = default_scope.trim();
     let mut entries = Vec::new();
     for (key, row) in rows {
-        if !row["rootDir"].is_string()
-            || row["isAvailableOnCurrentLane"] == false
-            || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
-        {
+        if is_skipped_row(key.trim(), row) {
             continue;
         }
         let (raw_scope, name) = row_scope_and_name(key, row);
@@ -39,6 +45,15 @@ pub(super) fn entries_with_default(
         });
     }
     Ok(entries)
+}
+
+fn is_skipped_row(trimmed_key: &str, row: &Value) -> bool {
+    trimmed_key.is_empty()
+        || trimmed_key.starts_with('$')
+        || matches!(trimmed_key, "_bit_lane" | "version")
+        || !row["rootDir"].is_string()
+        || row["isAvailableOnCurrentLane"] == false
+        || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
 }
 
 fn row_scope_and_name<'a>(key: &'a str, row: &'a Value) -> (&'a str, &'a str) {

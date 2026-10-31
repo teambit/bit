@@ -6,6 +6,9 @@ use std::{
 };
 pub(super) fn package(root: &Path, scope: &str, name: &str) -> io::Result<PathBuf> {
     let (scope, name) = (scope.trim(), name.trim());
+    if !super::valid_scope(scope) || !super::valid_name(name) {
+        return Err(invalid("component package path"));
+    }
     let (owner, rest) = scope
         .split_once('.')
         .map_or((scope, ""), |(owner, rest)| (owner.trim(), rest.trim()));

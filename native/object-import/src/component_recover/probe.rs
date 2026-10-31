@@ -32,19 +32,19 @@ pub fn probe_remote(
                     .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
                     .ok_or_else(|| super::batch::invalid("recovery remote identity"))?;
                 let deleted = match remotes.resolve(scope, network).await? {
-                    Remote::File(path) => objects::file(&path, id)?,
+                    Remote::File(path) => objects::file(&path, trimmed)?,
                     Remote::Http(url) => {
                         let items = network.fetch_bounded(
                             &url,
-                            std::slice::from_ref(id),
+                            &[trimmed.to_owned()],
                             &FetchOptions::without_dependencies(None),
                             128 * 1024 * 1024,
                         )
                         .await?;
-                        objects::http(&items, id)?
+                        objects::http(&items, trimmed)?
                     }
                 };
-                result.insert(id.trim().to_owned(), deleted);
+                result.insert(trimmed.to_owned(), deleted);
             }
             Ok(result)
         })

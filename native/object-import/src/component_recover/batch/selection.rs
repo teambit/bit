@@ -1,10 +1,10 @@
 use super::{Batch, Value, invalid, repository};
 use std::io;
 pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
+    let key = key.trim();
     if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
         return None;
     }
-    let key = key.trim();
     let (key_id, key_ver) = key
         .rsplit_once('@')
         .map_or((key, None), |(id, ver)| (id.trim(), Some(ver.trim())));
@@ -22,6 +22,9 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
                 .unwrap_or(key_id)
                 .trim()
         });
+    if name.is_empty() {
+        return None;
+    }
     let version = non_empty_field(row, "version")
         .filter(|version| !matches!(*version, "latest" | "head"))
         .or_else(|| {

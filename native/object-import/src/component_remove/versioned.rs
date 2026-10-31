@@ -266,23 +266,25 @@ fn model_hashes(model: &Value, selection: &ModelSelection<'_>) -> io::Result<Vec
     validate_model(model, selection)?;
     let versions = model["versions"].as_object();
     let orphaned = model["orphanedVersions"].as_object();
-    let mut hashes = vec![selection.model_hash.to_owned()];
+    let mut hashes = vec![crate::validate::hexadecimal(&crate::merge_history::hash(
+        selection.model_hash.trim(),
+    )?)];
     for value in versions
         .into_iter()
         .chain(orphaned)
         .flat_map(serde_json::Map::values)
     {
-        let hash = value
+        let raw_hash = value
             .as_str()
             .map(str::trim)
             .filter(|hash| !hash.is_empty())
             .ok_or_else(|| invalid("tagged version ref"))?;
-        crate::merge_history::hash(hash)?;
+        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
         if !hashes
             .iter()
-            .any(|current| current == hash)
+            .any(|current| current == &hash)
         {
-            hashes.push(hash.to_owned());
+            hashes.push(hash);
         }
     }
     Ok(hashes)

@@ -176,19 +176,35 @@ pub(in crate::component_recover) fn removal(version: &Value) -> Value {
                     )
                 })
         })
-        .map_or_else(|| serde_json::json!({}), |row| row["config"].clone())
+        .map_or_else(
+            || serde_json::json!({}),
+            |row| {
+                if row["config"].is_object()
+                    && !row["config"].as_object().is_none_or(serde_json::Map::is_empty)
+                {
+                    row["config"].clone()
+                } else if row["data"].is_object() {
+                    row["data"].clone()
+                } else {
+                    row["config"].clone()
+                }
+            },
+        )
 }
 pub(super) fn sources(
     batch: &mut Batch,
     row: &Value,
     version: &Value,
 ) -> io::Result<Vec<super::File>> {
-    let directory = row["rootDir"].as_str().ok_or_else(|| invalid("recovery component root"))?;
+    let directory = row["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| invalid("recovery component root"))?;
     if directory != "." {
         crate::checkout::plan::relative_path(directory)?;
     }
     let directory = batch.root.join(directory);
-
     let rows = version["files"].as_array().ok_or_else(|| invalid("recovery Version files"))?;
     if rows.len() > 4096 {
         return Err(unsupported("recovery source inventory budget"));
@@ -197,13 +213,18 @@ pub(super) fn sources(
     let mut total = 0;
     rows.iter()
         .map(|row| {
-            let relative =
-                row["relativePath"].as_str().ok_or_else(|| invalid("recovery source path"))?;
+            let relative = row["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("recovery source path"))?;
             crate::checkout::plan::relative_path(relative)?;
             if !seen.insert(relative) {
                 return Err(invalid("duplicate recovery source path"));
             }
-            let hash = row["file"].as_str().ok_or_else(|| invalid("recovery Source hash"))?;
+            let hash = row["file"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("recovery Source hash"))?;
             crate::merge_history::hash(hash)?;
             let Source { path: source, proof, bytes } =
                 source(batch, hash, 32 * 1024 * 1024 - total)?;
@@ -222,15 +243,16 @@ struct Source {
     bytes: Vec<u8>,
 }
 fn source(batch: &mut Batch, hash: &str, budget: usize) -> io::Result<Source> {
+    let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
     let scope = crate::scope_path(&batch.root);
     let source = scope
         .join("objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
+        .join(&canonical[..2])
+        .join(&canonical[2..]);
     let proof = required(&mut batch.proofs, &source)?;
     let bytes = crate::checkout::repository::source(
         &scope.join("objects"),
-        crate::merge_history::hash(hash)?,
+        crate::merge_history::hash(&canonical)?,
         budget,
         &mut 0,
     )?;

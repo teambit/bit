@@ -13,11 +13,10 @@ use std::{
 };
 
 pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
-    let mut current = head.trim().to_owned();
+    let mut current = crate::validate::hexadecimal(&crate::merge_history::hash(head.trim())?);
     let mut seen = HashSet::new();
     let mut versions = Vec::new();
     loop {
-        crate::merge_history::hash(&current)?;
         if !seen.insert(current.clone()) || seen.len() > 32 {
             return Err(invalid("unsupported lane snap ancestry"));
         }
@@ -30,14 +29,14 @@ pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
             versions.push(json!({"hash":current,"parents":[]}));
             break;
         };
-        let next = parent
+        let raw_next = parent
             .as_str()
             .or_else(|| parent["ref"].as_str())
             .or_else(|| parent["hash"].as_str())
             .map(str::trim)
             .filter(|hash| !hash.is_empty())
-            .ok_or_else(|| invalid("lane snap parent"))?
-            .to_owned();
+            .ok_or_else(|| invalid("lane snap parent"))?;
+        let next = crate::validate::hexadecimal(&crate::merge_history::hash(raw_next)?);
         versions.push(json!({"hash":current,"parents":[next]}));
         current = next;
     }

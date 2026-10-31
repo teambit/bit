@@ -42,7 +42,8 @@ pub(super) fn write(
     crate::component_remove::validate_file_id(file_id)?;
     let bitmap_path = root.join(".bitmap");
     let metadata = fs::symlink_metadata(&bitmap_path)?;
-    if !metadata.is_file()
+    if expected.len() > 32 * 1024 * 1024
+        || !metadata.is_file()
         || metadata.file_type().is_symlink()
         || metadata.len() != expected.len() as u64
         || fs::read(&bitmap_path)? != *expected
@@ -53,6 +54,6 @@ pub(super) fn write(
         return Ok(());
     }
     crate::component_deprecation::write_bitmap(root, expected, bitmap, file_id, reason)?;
-    *expected = fs::read(root.join(".bitmap"))?;
+    *expected = fs::read(&bitmap_path)?;
     Ok(())
 }

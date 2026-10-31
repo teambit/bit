@@ -139,6 +139,9 @@ fn remove_empty_parent(parent: &Path) -> io::Result<()> {
 }
 
 fn select_all(root: &Path, bitmap: &Value, identities: &[String]) -> io::Result<Vec<Selected>> {
+    if identities.len() > 4096 {
+        return Err(invalid("stash removal batch limit"));
+    }
     let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
     let mut keys = HashSet::new();
     let mut selected = Vec::new();
@@ -165,15 +168,18 @@ fn row_matches_identity(key: &str, row: &Value, identity: &str) -> bool {
     if key_trimmed.starts_with('$')
         || matches!(key_trimmed, "_bit_lane" | "version")
         || !row.is_object()
+        || row["isAvailableOnCurrentLane"] == false
+        || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
     {
         return false;
     }
+    let key_bare = key_trimmed.rsplit_once('@').map_or(key_trimmed, |(prefix, _)| prefix.trim());
     let (scope, name) = crate::reset_lane::bitmap::row_identity(key_trimmed, row);
     let full = match scope {
         Some(sc) => format!("{sc}/{name}"),
         None => name.to_owned(),
     };
-    key_trimmed == identity || name == bare || full == bare
+    key_trimmed == identity || key_bare == bare || name == bare || full == bare
 }
 fn select(root: &Path, bitmap: &Value, key: &str, row: &Value) -> io::Result<Selected> {
     let mut shape = row.clone();
@@ -183,7 +189,11 @@ fn select(root: &Path, bitmap: &Value, key: &str, row: &Value) -> io::Result<Sel
         .remove("config");
     let (name, scope) = supported_row(key, &shape, RowKind::New)?;
     let (main_exists, files) = component_files(root, bitmap, key, row, false)?;
-    let package = if row["rootDir"] == "." { PathBuf::new() } else { package(root, scope, name)? };
+    let package = if row["rootDir"].as_str().map(str::trim) == Some(".") {
+        PathBuf::new()
+    } else {
+        package(root, scope, name)?
+    };
     if package.try_exists()? {
         validate_directory(&package)?;
     }

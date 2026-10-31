@@ -67,7 +67,7 @@ fn filtered(
     paths: &[String],
     settings: &Value,
 ) -> io::Result<Vec<String>> {
-    let track_all = settings["trackAllFiles"] == true;
+    let track_all = bit_workspace_config::truthy(&settings["trackAllFiles"]);
     let patterns = patterns(plan, settings, track_all)?;
     let mut paths = inventory::tracking_filter(paths, &patterns)?;
     if !track_all {
@@ -96,6 +96,9 @@ fn patterns(plan: &mut Plan, settings: &Value, track_all: bool) -> io::Result<Ve
         patterns.extend(GENERATED.iter().map(|pattern| (*pattern).to_owned()));
     }
     if let Some(ignored) = settings["ignoredFiles"].as_array() {
+        if ignored.len() > 4096 {
+            return Err(unsupported("tracking ignoredFiles limit"));
+        }
         patterns.extend(
             ignored
                 .iter()

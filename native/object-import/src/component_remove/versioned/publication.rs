@@ -75,6 +75,11 @@ fn write_lanes(plans: &[VersionedPlan]) -> io::Result<()> {
     let Some(first) = plans.iter().find_map(|plan| plan.workspace.lane.as_ref()) else {
         return Ok(());
     };
+    for lane in plans.iter().filter_map(|plan| plan.workspace.lane.as_ref()) {
+        if lane.path != first.path || lane.before != first.before {
+            return Err(invalid("lane removal preimages differ"));
+        }
+    }
     let mut value = first.value.clone();
     let rows =
         value["components"].as_array_mut().ok_or_else(|| invalid("lane component removal"))?;

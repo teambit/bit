@@ -86,7 +86,10 @@ fn other(engine: &mut Engine<'_>) -> io::Result<()> {
 }
 
 fn other_id(engine: &Engine<'_>, entry: &Value, id: &str) -> io::Result<Option<String>> {
-    if entry["componentId"].get("version").is_some() {
+    if entry["componentId"]["version"]
+        .as_str()
+        .is_some_and(|version| !version.trim().is_empty())
+    {
         let base = entry["componentId"]["base"]
             .as_str()
             .map(str::trim)

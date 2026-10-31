@@ -29,12 +29,7 @@ impl RemoteCapture {
             .build()?
             .block_on(async {
                 for id in ids {
-                    let scope = id
-                        .trim()
-                        .split_once('/')
-                        .map(|(scope, _)| scope.trim())
-                        .filter(|scope| !scope.is_empty())
-                        .ok_or_else(|| unsupported("fork remote scoped identity"))?;
+                    let scope = remote_scope(id)?;
                     let (version, files, identity, objects) =
                         match remotes.resolve(scope, network).await? {
                             Remote::File(path) => objects::file(&path, id, &mut capture.observed)
@@ -43,7 +38,7 @@ impl RemoteCapture {
                                 let items = network
                                     .fetch_bounded(
                                         &url,
-                                        std::slice::from_ref(id),
+                                        &[id.trim().to_owned()],
                                         &FetchOptions::without_dependencies(None),
                                         128 * 1024 * 1024,
                                     )
@@ -173,15 +168,20 @@ impl RemoteCapture {
     }
 }
 
+fn remote_scope(id: &str) -> io::Result<&str> {
+    id.trim()
+        .split_once('/')
+        .map(|(scope, rest)| (scope.trim(), rest.trim().trim_start_matches('@')))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .map(|(scope, _)| scope)
+        .ok_or_else(|| unsupported("fork remote scoped identity"))
+}
+
 fn groups(ids: &[String]) -> io::Result<Vec<(String, Vec<String>)>> {
     let mut groups: Vec<(String, Vec<String>)> = Vec::new();
     for id in ids {
         let id_trimmed = id.trim();
-        let scope = id_trimmed
-            .split_once('/')
-            .map(|(scope, _)| scope.trim())
-            .filter(|scope| !scope.is_empty())
-            .ok_or_else(|| unsupported("fork remote scoped identity"))?;
+        let scope = remote_scope(id_trimmed)?;
         if let Some((_, rows)) = groups
             .iter_mut()
             .find(|(name, _)| name == scope)
@@ -195,6 +195,7 @@ fn groups(ids: &[String]) -> io::Result<Vec<(String, Vec<String>)>> {
 }
 
 fn single_error(error: io::Error, id: &str) -> io::Error {
+    let id = id.trim();
     if error.kind() == io::ErrorKind::NotFound
         || error.to_string() == "checkout invalid compressed object"
     {

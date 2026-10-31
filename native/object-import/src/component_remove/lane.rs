@@ -63,8 +63,30 @@ pub(super) fn select_lane(
 }
 
 fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
+    let (scope, name) = (scope.trim(), name.trim());
     let index_before = fs::read(crate::scope_path(root).join("index.json"))?;
-    let index: Value = crate::parse_jsonc(&index_before)?;
+    let hash = find_lane_hash(&index_before, scope, name)?;
+    let path = crate::scope_path(root)
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    let metadata = fs::symlink_metadata(&path)?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > 32 * 1024 * 1024
+    {
+        return Err(invalid("current lane object path"));
+    }
+    let before = fs::read(&path)?;
+    let value = outbound::read_object(&crate::scope_path(root).join("objects"), &hash, "Lane")?;
+    if value["scope"].as_str().map(str::trim) != Some(scope)
+        || value["name"].as_str().map(str::trim) != Some(name)
+    {
+        return Err(invalid("current lane object identity"));
+    }
+    Ok(Lane { scope: scope.into(), name: name.into(), hash, path, before, index_before, value })
+}
+
+fn find_lane_hash(index_before: &[u8], scope: &str, name: &str) -> io::Result<String> {
+    let index: Value = crate::parse_jsonc(index_before)?;
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("lane index"))?;
     let matches: Vec<_> = rows
         .iter()
@@ -78,23 +100,7 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
         .map(str::trim)
         .filter(|hash| !hash.is_empty())
         .ok_or_else(|| invalid("lane hash"))?;
-    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
-    let path = crate::scope_path(root)
-        .join("objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
-    let metadata = fs::symlink_metadata(&path)?;
-    if !metadata.is_file() || metadata.file_type().is_symlink() {
-        return Err(invalid("current lane object path"));
-    }
-    let before = fs::read(&path)?;
-    let value = outbound::read_object(&crate::scope_path(root).join("objects"), &hash, "Lane")?;
-    if value["scope"].as_str().map(str::trim) != Some(scope)
-        || value["name"].as_str().map(str::trim) != Some(name)
-    {
-        return Err(invalid("current lane object identity"));
-    }
-    Ok(Lane { scope: scope.into(), name: name.into(), hash, path, before, index_before, value })
+    Ok(crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?))
 }
 
 pub(crate) fn matches_component_entry(entry: &Value, scope: &str, name: &str) -> bool {

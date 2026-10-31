@@ -127,11 +127,11 @@ fn source(row: &Value) -> io::Result<(&str, &str)> {
     Ok((path, file_hash))
 }
 fn retain(scope: &Path, hash: &str, observed: &mut Observed) -> io::Result<Vec<u8>> {
-    crate::merge_history::hash(hash)?;
+    let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
     let path = scope
         .join("objects")
-        .join(&hash[..2])
-        .join(&hash[2..]);
+        .join(&canonical[..2])
+        .join(&canonical[2..]);
     observed.ancestors(
         scope,
         path.parent().ok_or_else(|| unsupported("fork remote object parent"))?,
@@ -169,13 +169,17 @@ pub(super) fn configs(version: &Value) -> io::Result<Value> {
     Ok(configs)
 }
 fn missing(id: &str) -> io::Error {
+    let id = id.trim();
     io::Error::new(io::ErrorKind::NotFound, format!(r#"error: component "{id}" was not found"#))
 }
 
 fn validate_sources(objects: &shared::Objects) -> io::Result<()> {
     use sha1::{Digest, Sha1};
     for (hash, (kind, bytes)) in objects {
-        if kind == "Source" && crate::validate::hexadecimal(&Sha1::digest(bytes)) != *hash {
+        if kind.trim() == "Source"
+            && crate::validate::hexadecimal(&Sha1::digest(bytes))
+                != hash.trim().to_ascii_lowercase()
+        {
             return Err(unsupported("fork remote Source identity differs"));
         }
     }

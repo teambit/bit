@@ -9,18 +9,7 @@ pub(super) fn prepare(root: &Path, selected: &[Selected]) -> io::Result<Option<C
     let mut value: Value = crate::parse_jsonc(&before)?;
     let rows = value.as_array_mut().ok_or_else(|| invalid("unmerged component records"))?;
     let length = rows.len();
-    rows.retain(|row| {
-        !selected
-            .iter()
-            .filter(|selected| selected.version.is_some())
-            .any(|selected| {
-                let identity = selected.identity.trim();
-                let (scope, name) = identity
-                    .split_once('/')
-                    .map_or(("", identity), |(scope, name)| (scope.trim(), name.trim()));
-                crate::component_remove::lane::matches_component_entry(row, scope, name)
-            })
-    });
+    rows.retain(|row| !matches_selected_record(row, selected));
     if rows.len() == length {
         return Ok(None);
     }
@@ -35,4 +24,21 @@ pub(super) fn prepare(root: &Path, selected: &[Selected]) -> io::Result<Option<C
         text = text.replace('\n', "\r\n");
     }
     Ok(Some(Change { path, before, after: text.into_bytes() }))
+}
+
+fn matches_selected_record(row: &Value, selected: &[Selected]) -> bool {
+    selected
+        .iter()
+        .filter(|entry| {
+            entry.version
+                .as_deref()
+                .is_some_and(|version| !version.trim().is_empty())
+        })
+        .any(|entry| {
+            let identity = entry.identity.trim();
+            let (scope, name) = identity
+                .split_once('/')
+                .map_or(("", identity), |(scope, name)| (scope.trim(), name.trim()));
+            crate::component_remove::lane::matches_component_entry(row, scope, name)
+        })
 }

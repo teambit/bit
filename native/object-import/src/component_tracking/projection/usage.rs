@@ -60,14 +60,13 @@ fn existing_root(candidate: &Candidate, existing: Option<&Value>) -> io::Result<
 
 fn warning(warnings: &mut Value, name: &str, row: &Value, file: &str) {
     let scope = rows::scope(row).unwrap_or_default();
-    let key = format!("{scope}/{name}");
+    let key = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
     if !warnings["alreadyUsed"][&key].is_array() {
         warnings["alreadyUsed"][&key] = json!([]);
     }
-    warnings["alreadyUsed"][&key]
-        .as_array_mut()
-        .unwrap()
-        .push(json!(file));
+    if let Some(entries) = warnings["alreadyUsed"][&key].as_array_mut() {
+        entries.push(json!(file));
+    }
 }
 
 fn is_owned_by_other(
@@ -77,7 +76,8 @@ fn is_owned_by_other(
     row: &Value,
     file: &str,
 ) -> bool {
-    (name != candidate_name || rows::scope(row) != Some(candidate_scope))
+    let row_scope = rows::scope(row).unwrap_or_default();
+    (name != candidate_name || row_scope != candidate_scope.trim())
         && root != "."
         && file.starts_with(&format!("{root}/"))
 }

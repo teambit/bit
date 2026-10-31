@@ -159,16 +159,24 @@ fn dependent(
     matcher: &mut refactor::PackageMatcher,
     validate_only: bool,
 ) -> io::Result<()> {
-    let directory =
-        component["rootDir"].as_str().ok_or_else(|| unsupported("rename dependent root"))?;
+    let directory = component["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| unsupported("rename dependent root"))?;
+    let files = component["files"]
+        .as_array()
+        .filter(|files| files.len() <= 16_384)
+        .ok_or_else(|| unsupported("rename dependent files"))?;
     let mut changes = Vec::new();
     let mut changed = false;
-    for file in
-        component["files"].as_array().ok_or_else(|| unsupported("rename dependent files"))?
-    {
+    for file in files {
         let relative = file
             .as_str()
             .or_else(|| file["relativePath"].as_str())
+            .or_else(|| file["path"].as_str())
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
             .ok_or_else(|| unsupported("rename dependent path"))?;
         if validate_only {
             preflight::dependent(plan, component, directory, relative, matcher)?;

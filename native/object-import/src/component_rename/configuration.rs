@@ -138,27 +138,34 @@ fn copy_config(config: &mut serde_json::Map<String, Value>, name: &str, value: &
 fn aspect_id(value: &Value) -> Option<String> {
     if let Some(id) = value
         .as_str()
+        .map(str::trim)
         .filter(|id| !id.is_empty())
     {
-        return Some(
-            id.strip_suffix("@latest")
-                .or_else(|| id.strip_suffix("@head"))
-                .unwrap_or(id)
-                .to_owned(),
-        );
+        let stripped = id
+            .strip_suffix("@latest")
+            .or_else(|| id.strip_suffix("@head"))
+            .unwrap_or(id)
+            .trim();
+        return (!stripped.is_empty()).then(|| stripped.to_owned());
     }
     let raw_name = value["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())?;
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
+        .map_or((raw_name, None), |(base, ver)| (base.trim(), Some(ver.trim())));
+    if name.is_empty() {
+        return None;
+    }
     let mut id = value["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
     if let Some(version) = value["version"]
         .as_str()
+        .map(str::trim)
         .filter(|version| !version.is_empty())
         .or(inline_ver)
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))

@@ -152,8 +152,11 @@ pub(crate) fn select(
         validate_no_model(root, scope, component_name)?;
     }
     let (main_exists, files) = component_files(root, bitmap, key, row, keep_files)?;
-    let package =
-        if row["rootDir"] == "." { PathBuf::new() } else { package(root, scope, component_name)? };
+    let package = if row["rootDir"].as_str().map(str::trim) == Some(".") {
+        PathBuf::new()
+    } else {
+        package(root, scope, component_name)?
+    };
     Ok(Selected { key: key.clone(), identity, files, package, main_exists, version, lane })
 }
 

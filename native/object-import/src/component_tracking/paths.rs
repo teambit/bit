@@ -14,6 +14,9 @@ pub(super) fn select(
     patterns: &[String],
     observed: &mut Observed,
 ) -> io::Result<Vec<String>> {
+    if patterns.len() > 4096 {
+        return Err(unsupported("tracking pattern limit"));
+    }
     let root = normalize(root);
     let cwd = normalize(cwd);
     let mut selected = Vec::new();
@@ -24,6 +27,9 @@ pub(super) fn select(
             if seen.insert(relative.clone()) {
                 selected.push(relative);
             }
+        }
+        if selected.len() > 4096 {
+            return Err(unsupported("tracking directory selection limit"));
         }
     }
     if selected.is_empty() {

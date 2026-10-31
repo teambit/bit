@@ -14,6 +14,11 @@ pub(super) fn locations(
     }
     let source = normalize(&cwd.join(from.trim()));
     let destination = normalize(&cwd.join(to.trim()));
+    if fs::symlink_metadata(&source).is_ok_and(|meta| meta.file_type().is_symlink())
+        || fs::symlink_metadata(&destination).is_ok_and(|meta| meta.file_type().is_symlink())
+    {
+        return Err(unsupported("move source symlinks"));
+    }
     let first = source.try_exists()?;
     let second = destination.try_exists()?;
     validate_existing(&source, &destination, from, to, first, second)?;
@@ -24,7 +29,7 @@ pub(super) fn locations(
     {
         return Err(unsupported("move outside component workspace paths"));
     }
-    if first && destination.starts_with(&source) {
+    if destination.starts_with(&source) {
         return Err(invalid(format!(
             "unable to move '{}' into itself '{}'",
             source.display(),

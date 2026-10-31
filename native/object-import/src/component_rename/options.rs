@@ -24,10 +24,11 @@ impl Options {
             path: self.path
                 .as_deref()
                 .map(|val| {
-                    val.trim()
-                        .replace('\\', "/")
-                        .trim_matches('/')
-                        .to_owned()
+                    let mut normalized = val.trim().replace('\\', "/");
+                    while let Some(rest) = normalized.strip_prefix("./") {
+                        normalized = rest.to_owned();
+                    }
+                    normalized.trim_matches('/').to_owned()
                 })
                 .filter(|val| !val.is_empty()),
             ..*self

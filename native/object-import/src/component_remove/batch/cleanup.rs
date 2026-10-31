@@ -96,11 +96,10 @@ impl Cleanup {
     }
 }
 fn package_name(root: &Path, row: &Selected, components: &[Value]) -> io::Result<String> {
+    let target = row.identity.trim();
     if let Some(name) = components
         .iter()
-        .find(|component| {
-            component["identity"].as_str().map(str::trim) == Some(row.identity.trim())
-        })
+        .find(|component| super::component_matches_identity(component, target))
         .and_then(|component| component["packageName"].as_str())
         .map(str::trim)
         .filter(|name| !name.is_empty())

@@ -149,7 +149,7 @@ fn apply(
     let version = existing
         .as_ref()
         .and_then(|row| row["version"].as_str())
-        .unwrap_or_default();
+        .map_or("", str::trim);
     let id = identity::id(&candidate.name, &candidate.scope, version);
     if candidate.files.is_empty() {
         plan.components.push(json!({"id":id,"identity":id,"files":[]}));
@@ -160,10 +160,16 @@ fn apply(
     let row = bitmap_row(&candidate, &main, existing.as_ref(), options);
     let scope = row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        })
         .unwrap_or(&candidate.scope);
-    let id = identity::id(&candidate.name, scope, row["version"].as_str().unwrap_or_default());
+    let id = identity::id(&candidate.name, scope, row["version"].as_str().map_or("", str::trim));
     plan.components.push(json!({"id":id,"identity":format!("{scope}/{}",candidate.name),"rootDir":candidate.directory,"mainFile":main,"defaultScope":scope,"files":sorted(relative),"version":row["version"],"loadVersion":load_version(existing.as_ref(),options),"config":row.get("config").cloned().unwrap_or(json!({}))}));
     rows::publish(&mut plan.bitmap, row)?;
     plan.dirty = true;

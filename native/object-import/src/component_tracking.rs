@@ -135,7 +135,9 @@ pub(crate) fn source_inventory(
         std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
     );
     observed.read(&root.join("workspace.jsonc"))?;
-    observed.read(&home.join(".bitrc.jsonc"))?;
+    if !home.as_os_str().is_empty() && home.is_absolute() {
+        observed.read(&home.join(".bitrc.jsonc"))?;
+    }
     let workspace = crate::effective_workspace_configuration(root, &home)?;
     let mut plan = Plan {
         root: root.into(),

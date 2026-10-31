@@ -54,7 +54,11 @@ impl LocalBatch {
     pub fn check_aspect_usage(&self, components: &[Value]) -> io::Result<()> {
         let new = self.selected
             .iter()
-            .filter(|row| row.version.is_none())
+            .filter(|row| {
+                row.version
+                    .as_deref()
+                    .is_none_or(|ver| ver.trim().is_empty())
+            })
             .map(|row| row.identity.clone())
             .collect::<Vec<_>>();
         batch::usage::validate(&new, components)
@@ -104,7 +108,7 @@ impl LocalBatch {
                 }
             }
             self.cleanup.configuration(&self.root, file_id)?;
-            let _ = backup_bitmap(&self.root, file_id, "remove");
+            backup_bitmap(&self.root, file_id, "remove")?;
             fs::write(self.root.join(".bitmap"), &self.after)?;
         }
         Ok(())

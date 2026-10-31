@@ -15,17 +15,21 @@ pub(super) fn publish(
     let key = key.trim();
     let scope = scope.trim();
     let file_id = file_id.trim();
+    let path = root.join("workspace.jsonc");
+    let metadata = fs::symlink_metadata(&path)?;
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.len() != before.len() as u64
+        || fs::read(&path)? != before
+    {
+        return Err(io::Error::other("scope rename workspace.jsonc target changed before write"));
+    }
     let text = std::str::from_utf8(before).map_err(io::Error::other)?;
     let mut document = crate::jsonc::Document::parse(text)?;
     document.set(&[key, "defaultScope"], &serde_json::json!(scope));
-    let _ = backup(root, before, scope, file_id);
+    backup(root, before, scope, file_id)?;
     let bytes =
         crate::checkout::eol::normalize(format!("{document}\n").into_bytes(), cfg!(windows));
-    let path = root.join("workspace.jsonc");
-    let metadata = fs::symlink_metadata(&path)?;
-    if !metadata.is_file() || metadata.file_type().is_symlink() {
-        return Err(io::Error::other("scope rename workspace.jsonc target is not a regular file"));
-    }
     fs::write(path, bytes)
 }
 fn backup(root: &Path, before: &[u8], scope: &str, file_id: &str) -> io::Result<()> {

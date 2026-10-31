@@ -99,7 +99,10 @@ fn batch_component(
         .ok_or_else(|| unsupported("scope rename loaded directory"))?;
     let mut component = row.clone();
     component["rootDir"] = Value::String(directory.into());
-    let files = row["files"].as_array().ok_or_else(|| unsupported("scope rename loaded files"))?;
+    let files = row["files"]
+        .as_array()
+        .filter(|rows| rows.len() <= 16_384)
+        .ok_or_else(|| unsupported("scope rename loaded files"))?;
     let mut changes = Vec::new();
     let mut changed = false;
     for file in files {

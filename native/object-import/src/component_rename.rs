@@ -209,10 +209,11 @@ impl Plan {
     /// Private AST adapter inputs; file bodies stay outside the JSON protocol.
     #[must_use]
     pub fn ast_inputs(&self) -> Vec<(PathBuf, Vec<u8>)> {
+        let target_dir = self.root.join(self.identity.target_directory.trim());
         self.files
             .iter()
             .filter(|file| {
-                file.destination.starts_with(self.root.join(&self.identity.target_directory))
+                file.destination.starts_with(&target_dir)
                     && !crate::checkout::eol::binary(&file.bytes)
             })
             .map(|file| (file.destination.clone(), file.bytes.clone()))
@@ -228,6 +229,13 @@ impl Plan {
             .find(|file| file.destination == path)
             .ok_or_else(|| unsupported("rename transformed path"))?;
         file.bytes = bytes;
+        let total = self.files
+            .iter()
+            .try_fold(0usize, |sum, entry| sum.checked_add(entry.bytes.len()))
+            .ok_or_else(|| unsupported("rename transformed source overflow"))?;
+        if total > 128 * 1024 * 1024 {
+            return Err(unsupported("rename transformed aggregate source limit"));
+        }
         Ok(())
     }
     /// Captured target metadata for the published on-add/compiler adapters.

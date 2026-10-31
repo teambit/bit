@@ -44,9 +44,15 @@ impl Batch {
         results.into_iter().collect()
     }
     pub fn prepare(root: &Path, mut plans: Vec<Plan>) -> io::Result<Self> {
+        if plans.len() > 4096 {
+            return Err(invalid("rename batch plan count limit"));
+        }
         let expected = fs::read(root.join(".bitmap"))?;
         let original = crate::parse_jsonc(&expected)?;
         for plan in &mut plans {
+            if plan.root != root || plan.controls.expected != expected {
+                return Err(invalid("rename batch plan preimages differ"));
+            }
             plan.validate()?;
             let directory = plan.root.join(&plan.identity.source_directory);
             plan.files.retain(|file| file.source.starts_with(&directory));

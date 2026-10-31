@@ -12,10 +12,14 @@ pub(super) fn prepare(
 ) -> io::Result<LocalBatch> {
     let before = fs::read(root.join(".bitmap"))?;
     let mut bitmap = crate::parse_jsonc(&before)?;
+    let mut keys = std::collections::HashSet::new();
     let mut selected = Vec::new();
     let mut models = Vec::new();
     for id in identities {
         let (row, model) = entry(root, &bitmap, id, keep)?;
+        if !keys.insert(row.key.clone()) {
+            return Err(invalid("duplicate component removal selection"));
+        }
         selected.push(row);
         if let Some(model) = model {
             models.push(model);

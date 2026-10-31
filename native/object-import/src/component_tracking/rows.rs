@@ -102,6 +102,9 @@ fn normalize(rows: &mut Map<String, Value>) -> io::Result<()> {
         } else {
             name.into()
         };
+        if rows.contains_key(&key) {
+            return Err(unsupported("tracking duplicate component key"));
+        }
         rows.insert(key, row.clone());
     }
     Ok(())

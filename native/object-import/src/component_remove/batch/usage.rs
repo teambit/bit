@@ -9,6 +9,7 @@ pub(in crate::component_remove) fn validate(
     for component in components {
         let Some(identity) = component["identity"]
             .as_str()
+            .or_else(|| component["id"].as_str())
             .map(str::trim)
             .filter(|id| !id.is_empty())
         else {
@@ -16,7 +17,7 @@ pub(in crate::component_remove) fn validate(
         };
         if identities
             .iter()
-            .any(|removed| removed.trim() == identity)
+            .any(|removed| bare_id(removed) == bare_id(identity))
         {
             continue;
         }
@@ -32,11 +33,16 @@ pub(in crate::component_remove) fn validate(
     Ok(())
 }
 
+fn bare_id(id: &str) -> &str {
+    let trimmed = id.trim();
+    trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim())
+}
+
 fn used_removed_aspect<'a>(identities: &'a [String], extensions: &[Value]) -> Option<&'a str> {
     identities
         .iter()
         .find(|removed| {
-            let target = removed.trim();
+            let target = bare_id(removed);
             extensions
                 .iter()
                 .filter_map(extension_id)

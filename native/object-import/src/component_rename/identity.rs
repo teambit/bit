@@ -115,36 +115,41 @@ fn select_row<'a>(
 pub(crate) fn row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {
     if let Some(name) = row["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
     {
         return name;
     }
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let key = key.trim();
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
     if let Some(row_scope) = scope(row) {
         return key_id
             .strip_prefix(row_scope)
             .and_then(|rest| rest.strip_prefix('/'))
-            .unwrap_or(key_id);
+            .map_or(key_id, str::trim);
     }
-    key_id.split_once('/').map_or(key_id, |(_, name)| name)
+    key_id.split_once('/').map_or(key_id, |(_, name)| name.trim())
 }
 pub(crate) fn scope(row: &Value) -> Option<&str> {
     row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
         })
 }
 pub(crate) fn row_scope<'a>(key: &'a str, row: &'a Value) -> Option<&'a str> {
     scope(row)
         .or_else(|| {
+            let key = key.trim();
             key.rsplit_once('@')
-                .map_or(key, |(bare, _)| bare)
+                .map_or(key, |(bare, _)| bare.trim())
                 .split_once('/')
-                .map(|(sc, _)| sc)
+                .map(|(sc, _)| sc.trim())
                 .filter(|sc| !sc.is_empty())
         })
 }

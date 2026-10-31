@@ -28,29 +28,8 @@ fn read_remote_model(scope: &Path, bare: &str, id: &str) -> io::Result<Value> {
     let (target_scope, target_name) = bare
         .split_once('/')
         .unwrap_or(("", bare));
-    if let Ok(file) = std::fs::File::open(scope.join("index.json")) {
-        let index: Value =
-            crate::parse_jsonc(&crate::read_budget::Budget::new(32 * 1024 * 1024).read(file)?)?;
-        let rows = index["components"]
-            .as_array()
-            .or_else(|| index.as_array())
-            .ok_or_else(|| invalid("recovery remote scope index"))?;
-        if let Some(row) = rows
-            .iter()
-            .find(|row| {
-                let (row_scope, row_name) =
-                    super::super::batch::repository::row_id_parts(&row["id"]);
-                row["isSymlink"] != true
-                    && row_name == target_name
-                    && (row_scope == target_scope || row_scope.is_empty())
-            })
-        {
-            let comp_hash =
-                row["hash"].as_str().ok_or_else(|| invalid("recovery remote Component hash"))?;
-            let (_, model) =
-                crate::read_scope_object(scope, comp_hash)?.ok_or_else(|| missing(id))?;
-            return Ok(model);
-        }
+    if let Some(model) = read_indexed_remote_model(scope, target_scope, target_name, id)? {
+        return Ok(model);
     }
     for candidate in [bare, target_name] {
         let comp_hash = crate::validate::hexadecimal(&Sha1::digest(candidate.as_bytes()));
@@ -62,12 +41,52 @@ fn read_remote_model(scope: &Path, bare: &str, id: &str) -> io::Result<Value> {
     }
     Err(missing(id))
 }
+
+fn read_indexed_remote_model(
+    scope: &Path,
+    target_scope: &str,
+    target_name: &str,
+    id: &str,
+) -> io::Result<Option<Value>> {
+    let Ok(file) = std::fs::File::open(scope.join("index.json")) else {
+        return Ok(None);
+    };
+    let index: Value =
+        crate::parse_jsonc(&crate::read_budget::Budget::new(32 * 1024 * 1024).read(file)?)?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("recovery remote scope index"))?;
+    let Some(row) = rows
+        .iter()
+        .find(|row| {
+            let (row_scope, row_name) = super::super::batch::repository::row_id_parts(&row["id"]);
+            row["isSymlink"] != true
+                && row_name == target_name
+                && (row_scope == target_scope || row_scope.is_empty())
+        })
+    else {
+        return Ok(None);
+    };
+    let comp_hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("recovery remote Component hash"))?;
+    let (_, model) = crate::read_scope_object(scope, comp_hash)?.ok_or_else(|| missing(id))?;
+    Ok(Some(model))
+}
 fn validate_file_sources(scope: &Path, version: &Value) -> io::Result<()> {
     let mut total = 0;
-    for file in
-        version["files"].as_array().ok_or_else(|| invalid("recovery remote Version sources"))?
+    for file in version["files"]
+        .as_array()
+        .filter(|files| files.len() <= 4096)
+        .ok_or_else(|| invalid("recovery remote Version sources"))?
     {
-        let hash = file["file"].as_str().ok_or_else(|| invalid("recovery remote Source hash"))?;
+        let hash = file["file"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("recovery remote Source hash"))?;
         let bytes = repository::source(
             &scope.join("objects"),
             crate::merge_history::hash(hash)?,
@@ -87,10 +106,15 @@ pub(super) fn http(items: &[ObjectItem], id: &str) -> io::Result<bool> {
         return Err(invalid("recovery remote Version type"));
     }
     let version: Value = crate::parse_jsonc(body)?;
-    for file in
-        version["files"].as_array().ok_or_else(|| invalid("recovery remote Version sources"))?
+    for file in version["files"]
+        .as_array()
+        .filter(|files| files.len() <= 4096)
+        .ok_or_else(|| invalid("recovery remote Version sources"))?
     {
-        let hash = file["file"].as_str().ok_or_else(|| invalid("recovery remote Source hash"))?;
+        let hash = file["file"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("recovery remote Source hash"))?;
         if objects
             .get(hash)
             .is_none_or(|(kind, _)| kind != "Source")
