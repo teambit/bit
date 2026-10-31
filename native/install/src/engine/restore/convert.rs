@@ -353,8 +353,14 @@ pub(super) fn importer_id(root: &Path, dir: &Path) -> String {
 
 /// `path.relative(from, to)` for absolute, normalized paths.
 pub(super) fn relative(from: &Path, to: &Path) -> PathBuf {
-    let from: Vec<Component> = from.components().collect();
-    let to: Vec<Component> = to.components().collect();
+    let from: Vec<Component> = from
+        .components()
+        .filter(|comp| !matches!(comp, Component::CurDir))
+        .collect();
+    let to: Vec<Component> = to
+        .components()
+        .filter(|comp| !matches!(comp, Component::CurDir))
+        .collect();
     let common = from
         .iter()
         .zip(&to)

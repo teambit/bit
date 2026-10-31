@@ -56,6 +56,8 @@ fn scoped_parts(name: &str) -> Option<(&str, &str)> {
 
 /// `encodeURIComponent(part) === part`.
 fn is_url_safe(part: &str) -> bool {
-    part.chars()
-        .all(|character| character.is_ascii_alphanumeric() || "-_.!~*'()".contains(character))
+    !part.is_empty()
+        && part
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || "-_.!~*'()".contains(character))
 }

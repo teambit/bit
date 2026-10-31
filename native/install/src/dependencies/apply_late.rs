@@ -267,8 +267,9 @@ fn add_component(
 
 /// `_manuallyAddPackage`: the value, or for `+` the version in the workspace `package.json`.
 fn manual_version(workspace: &Workspace<'_>, name: &str, value: &str) -> Option<String> {
+    let value = value.trim();
     if value != overrides::ADD {
-        return Some(value.to_owned());
+        return (!value.is_empty()).then(|| value.to_owned());
     }
     let package_json = workspace.root_package_json?;
     ["dependencies", "devDependencies", "peerDependencies"]

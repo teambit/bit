@@ -47,7 +47,14 @@ fn strings<'de, Source: serde::Deserializer<'de>>(
     Ok(map
         .unwrap_or_default()
         .into_iter()
-        .filter_map(|(key, value)| Some((key, super::workspace_config::config_string(&value)?)))
+        .filter_map(|(key, value)| {
+            let trimmed = key.trim();
+            (!trimmed.is_empty())
+                .then(|| {
+                    Some((trimmed.to_owned(), super::workspace_config::config_string(&value)?))
+                })
+                .flatten()
+        })
         .collect())
 }
 

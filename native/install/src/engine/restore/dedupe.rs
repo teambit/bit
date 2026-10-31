@@ -27,7 +27,7 @@ pub(super) fn dedupe(
             };
             deps.retain(|name, reference| {
                 let trimmed = name.trim();
-                !wins(trimmed, reference, root_deps.get(trimmed), peers.get(trimmed).is_some())
+                !wins(trimmed, reference, root_deps.get(trimmed), !peers[trimmed].is_null())
             });
         }
     }

@@ -29,8 +29,10 @@ pub fn build(
     for (index, lifecycle) in LIFECYCLES.iter().enumerate() {
         for dependency in &detected.components[index] {
             let package_name = dependency.package_name
-                .clone()
-                .unwrap_or_else(|| workspace.package_name(&dependency.id));
+                .as_deref()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .map_or_else(|| workspace.package_name(&dependency.id), str::to_owned);
             list.components.push(component(dependency.id.clone(), package_name, *lifecycle, false));
         }
     }

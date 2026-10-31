@@ -87,18 +87,16 @@ fn apply_model_peers(model: &ComponentModel, deps: &FieldMaps, detected: &mut De
         return;
     }
     let ignore = ignored(deps, Lifecycle::Peer);
-    let mut peers = IndexMap::new();
     for (name, version) in &model_peers {
         if is_ignored_name(&ignore, name) {
             continue;
         }
         for field in [RUNTIME, DEV] {
             if detected.packages[field].shift_remove(name).is_some() {
-                peers.insert(name.clone(), version.clone());
+                detected.packages[PEER].insert(name.clone(), version.clone());
             }
         }
     }
-    detected.packages[PEER] = peers;
 }
 
 /// `applyPackageJson`: the workspace `package.json` makes a package a peer or sets its version.

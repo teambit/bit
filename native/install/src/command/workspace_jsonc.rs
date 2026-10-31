@@ -32,7 +32,14 @@ pub fn edit(
 
 fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Result<()> {
     let file_id = file_id.trim();
-    if file_id.is_empty() || matches!(file_id, "." | "..") || file_id.contains(['/', '\\']) {
+    if scope_path
+        .to_string_lossy()
+        .trim()
+        .is_empty()
+        || file_id.is_empty()
+        || matches!(file_id, "." | "..")
+        || file_id.contains(['/', '\\'])
+    {
         return Err(io::Error::new(io::ErrorKind::InvalidInput, "backup file_id is invalid"));
     }
     let reason = reason

@@ -146,7 +146,11 @@ impl Loaded {
         self.workspace
             .active()
             .filter(|(entry, _)| {
-                let rel = entry.root_dir.trim().trim_start_matches("./");
+                let rel = entry.root_dir
+                    .trim()
+                    .trim_start_matches("./")
+                    .trim_start_matches(r".\")
+                    .trim_matches(['/', '\\']);
                 !rel.is_empty() && rel != "."
             })
             .map(|(_, component)| component.clone())

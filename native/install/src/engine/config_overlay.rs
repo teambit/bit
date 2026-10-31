@@ -307,7 +307,8 @@ fn pin_unkeyed_header(settings: &EngineSettings) -> HashMap<String, String> {
             by_uri.insert(normalize_auth_key(uri.clone()), header.clone());
         }
     }
-    let default_uri = nerf_dart(&settings.registry.registries.to_map()["default"]);
+    let default_uri =
+        normalize_auth_key(nerf_dart(&settings.registry.registries.to_map()["default"]));
     if let Some(header) = unkeyed
         && !default_uri.is_empty()
     {

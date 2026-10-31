@@ -227,7 +227,8 @@ pub fn parse_package_id(package: &str) -> Option<(String, String)> {
 /// `getVersionFromNodeId`: a valid or coerced semver.
 pub fn version_of(node: &str) -> Option<String> {
     let base = without_peer_suffix(node);
-    let version = base[base.rfind('@')? + 1..].trim();
+    let at = base.rfind('@').filter(|at| *at > 0)?;
+    let version = base[at + 1..].trim();
     if SemVer::parse(version).is_ok() { Some(version.to_owned()) } else { semver::coerce(version) }
 }
 

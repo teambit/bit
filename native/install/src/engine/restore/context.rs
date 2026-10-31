@@ -35,7 +35,7 @@ pub(super) fn graph(serialized: &Value) -> Map<String, Value> {
         .and_then(Value::as_str)
         .map(str::trim)
         == Some("bit-1")
-        && serialized["overrides"].is_null()
+        && !context.contains_key("overrides")
     {
         context.remove("pnpmfileChecksum");
         context.insert(

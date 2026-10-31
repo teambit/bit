@@ -125,7 +125,7 @@ fn has_resolutions(graph: &Value) -> bool {
         || edges(graph)
             .iter()
             .any(|edge| {
-                edge["id"] != ROOT
+                id(edge) != ROOT
                     || edge["neighbours"]
                         .as_array()
                         .is_some_and(|neighbours| !neighbours.is_empty())
@@ -136,14 +136,14 @@ fn has_resolutions(graph: &Value) -> bool {
 fn prune_unreachable_from_root(graph: &mut Value) {
     let Some(root) = edges(graph)
         .iter()
-        .find(|edge| edge["id"] == ROOT)
+        .find(|edge| id(edge) == ROOT)
         .cloned()
     else {
         return;
     };
     let by_id: HashMap<String, Value> = edges(graph)
         .iter()
-        .filter(|edge| edge["id"] != ROOT)
+        .filter(|edge| id(edge) != ROOT)
         .map(|edge| (id(edge).to_owned(), edge.clone()))
         .collect();
     let (reachable_edges, reachable_packages) = reachable(&root, &by_id);
@@ -151,7 +151,7 @@ fn prune_unreachable_from_root(graph: &mut Value) {
     kept.extend(
         edges(graph)
             .iter()
-            .filter(|edge| edge["id"] != ROOT && reachable_edges.contains(id(edge)))
+            .filter(|edge| id(edge) != ROOT && reachable_edges.contains(id(edge)))
             .cloned(),
     );
     graph["edges"] = Value::Array(dedupe_by_id(kept));

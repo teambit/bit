@@ -138,11 +138,16 @@ pub(super) fn intersections(issues: &PeerDependencyIssues) -> MissingPeers {
 /// Intersect semver ranges pairwise; `None` when one fails to parse or the
 /// intersection is empty. A single range passes through verbatim.
 pub(super) fn safe_intersect<'a>(ranges: impl Iterator<Item = &'a str>) -> Option<String> {
-    let mut ranges = ranges
+    let mut unique: Vec<&str> = Vec::new();
+    for range in ranges
         .map(str::trim)
-        .filter(|range| !range.is_empty());
-    let first = ranges.next()?;
-    let rest: Vec<&str> = ranges.collect();
+        .filter(|range| !range.is_empty())
+    {
+        if !unique.contains(&range) {
+            unique.push(range);
+        }
+    }
+    let (&first, rest) = unique.split_first()?;
     if rest.is_empty() {
         return Some(first.to_string());
     }

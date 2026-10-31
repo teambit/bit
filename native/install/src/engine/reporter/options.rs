@@ -10,7 +10,7 @@ pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
         return Ok(Some(Duration::from_millis(200)));
     }
     let milliseconds = if let Some(integer) = value.as_u64() {
-        (integer & u64::from(u32::MAX)) as u32
+        integer as u32
     } else if let Some(integer) = value.as_i64() {
         integer as u32
     } else {
@@ -31,7 +31,8 @@ fn invalid_type(value: &Value) -> io::Error {
         Value::Null => "Null",
         Value::String(_) => "String",
         Value::Bool(_) => "Boolean",
-        _ => "Object",
+        Value::Number(_) => "Number",
+        Value::Array(_) | Value::Object(_) => "Object",
     };
     io::Error::other(format!(
         "Failed to convert napi value {kind} into rust type `u32` on ReporterOptions.throttleProgress on InstallOptions.reporter",

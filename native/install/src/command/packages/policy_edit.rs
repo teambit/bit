@@ -111,9 +111,10 @@ pub fn add_to_root_policy(
 /// `WorkspacePolicy.add`: an entry with the same name in any lifecycle is
 /// updated, kept, or an error.
 fn admits(policy: &[Entry], name: &str, existing: ExistingEntries) -> io::Result<bool> {
+    let name = name.trim();
     if !policy
         .iter()
-        .any(|(_, entry_name, _)| entry_name == name)
+        .any(|(_, entry_name, _)| entry_name.trim() == name)
     {
         return Ok(true);
     }
@@ -133,11 +134,13 @@ fn config_entries(policy: &Value) -> Vec<Entry> {
     for (index, field) in FIELDS.iter().enumerate() {
         let Some(Value::Object(object)) = policy.get(field) else { continue };
         for (name, value) in object {
-            if !entries
-                .iter()
-                .any(|(existing, entry_name, _)| *existing == index && entry_name == name)
+            let trimmed = name.trim();
+            if !trimmed.is_empty()
+                && !entries
+                    .iter()
+                    .any(|(existing, entry_name, _)| *existing == index && entry_name == trimmed)
             {
-                entries.push((index, name.clone(), entry_value(value)));
+                entries.push((index, trimmed.to_owned(), entry_value(value)));
             }
         }
     }

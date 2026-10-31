@@ -71,15 +71,7 @@ impl Detected {
         detected.missing = missing_from_issues(issues);
         detected.missing_files = missing_files_from_issues(issues);
         detected.untracked = untracked_from_issues(issues);
-        detected.core_aspects = data["coreAspects"]
-            .as_array()
-            .map(|aspects| {
-                aspects
-                    .iter()
-                    .filter_map(|aspect| aspect.as_str().map(str::to_owned))
-                    .collect()
-            })
-            .unwrap_or_default();
+        detected.core_aspects = string_list(&data["coreAspects"]);
         detected
     }
 
@@ -304,7 +296,10 @@ fn string_list(value: &Value) -> Vec<String> {
         .map(|items| {
             items
                 .iter()
-                .filter_map(|item| item.as_str().map(str::to_owned))
+                .filter_map(|item| {
+                    let trimmed = item.as_str()?.trim();
+                    (!trimmed.is_empty()).then(|| trimmed.to_owned())
+                })
                 .collect()
         })
         .unwrap_or_default()

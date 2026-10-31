@@ -71,7 +71,9 @@ pub fn resolve(
         },
         &|| {
             versioned(from_package())
-                .filter(|_| package.is_some_and(|name| workspace.manifest[0].contains_key(name)))
+                .filter(|_| {
+                    package.is_some_and(|name| workspace.manifest[0].contains_key(name.trim()))
+                })
         },
         &|| versioned(from_merge_config(inputs.merge_config, package?)),
         &|| {

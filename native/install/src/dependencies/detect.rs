@@ -176,6 +176,12 @@ fn add_missing_files(
 
 /// `removeFileExtension` of a `/`-separated path.
 fn without_extension(path: &Path) -> String {
+    let text = path.to_string_lossy().replace('\\', "/");
+    for suffix in [".d.ts", ".d.mts", ".d.cts"] {
+        if let Some(stem) = text.strip_suffix(suffix) {
+            return stem.to_owned();
+        }
+    }
     path.with_extension("")
         .to_string_lossy()
         .replace('\\', "/")

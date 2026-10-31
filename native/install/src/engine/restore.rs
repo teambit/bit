@@ -184,7 +184,8 @@ async fn resolve_all(
 /// their messages, so the message is what identifies it.
 fn is_no_matching_version(message: &str) -> bool {
     message.contains("ERR_PNPM_NO_MATCHING_VERSION")
-        || message.contains("No matching version found")
+        || message.contains("SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER")
+        || message.to_ascii_lowercase().contains("no matching version found")
 }
 
 /// Packages with no resolution or a directory one, except the workspace's

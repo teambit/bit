@@ -151,7 +151,7 @@ pub fn dev_patterns(
     let mut compositions = env.compositions.clone().unwrap_or_default();
     compositions.extend(config.compositions.iter().cloned());
     patterns.insert(COMPOSITIONS.to_owned(), compositions);
-    let env_id = split_version(&component.env_id).0;
+    let env_id = split_version(&component.env_id).0.trim();
     match &env.patterns {
         Some(Value::Object(named)) => {
             for (name, value) in named {
@@ -181,7 +181,7 @@ fn configured_dev_patterns(component: &WorkspaceComponent) -> Vec<String> {
         .or_else(|| {
             component.config
                 .iter()
-                .find_map(|(id, cfg)| (split_version(id).0 == DEV_FILES).then_some(cfg))
+                .find_map(|(id, cfg)| (split_version(id).0.trim() == DEV_FILES).then_some(cfg))
         })
         .and_then(|config| config.get("devFilePatterns"))
         .map(strings)

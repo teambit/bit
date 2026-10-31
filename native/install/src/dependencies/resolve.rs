@@ -357,9 +357,12 @@ fn with_extensions(base: &Path, extensions: &[&str]) -> Option<PathBuf> {
 
 /// `./file.js` may name `./file.ts` (TypeScript's extension substitution).
 fn strip_script_extension(target: &Path) -> Option<PathBuf> {
-    let extension = target.extension()?.to_str()?;
+    let extension = target
+        .extension()?
+        .to_str()?
+        .to_ascii_lowercase();
     ["js", "jsx", "mjs", "cjs"]
-        .contains(&extension)
+        .contains(&extension.as_str())
         .then(|| target.with_extension(""))
 }
 

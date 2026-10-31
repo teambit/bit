@@ -31,9 +31,14 @@ pub fn serialize(detected: &Detected) -> Value {
             .collect();
         components.insert((*field).to_owned(), Value::Array(entries));
     }
+    let core_aspects: Vec<&str> = detected.core_aspects
+        .iter()
+        .map(|aspect| aspect.trim())
+        .filter(|aspect| !aspect.is_empty())
+        .collect();
     json!({
         "allPackagesDependencies": packages,
-        "coreAspects": detected.core_aspects,
+        "coreAspects": core_aspects,
         "issues": issues(detected),
         "allDependencies": components,
         // for backward compatibility. version < 1.5.1 expected this to be saved in the fs cache.

@@ -44,18 +44,18 @@ pub async fn run(
     };
     let (plan, mut settings) =
         effective::apply(&session.root, calculated, loaded, receipt.as_ref(), &mut options)?;
-    output.status(RUNNING);
-    // `PnpmPackageManager.install` turns the logger off for the package manager's output.
-    output.loader_off();
     if let Some(path) = session.host.prepare_build_scripts_path().await? {
         settings.set_build_scripts_path(path);
     }
+    output.status(RUNNING);
+    // `PnpmPackageManager.install` turns the logger off for the package manager's output.
+    output.loader_off();
     let started = Instant::now();
-    let result = engine::install(&plan, &settings, &options).await
-        .map_err(|error| enrich(error, calculated, output))?;
+    let result = engine::install(&plan, &settings, &options).await;
     // `PnpmPackageManager.install` turns the logger back on after the engine,
     // which starts Bit's loader even when the command runs without one.
     output.loader_on();
+    let result = result.map_err(|error| enrich(error, calculated, output))?;
     output.success(&format!("done {RUNNING}"), Some(started));
     output.status(POST_SUBSCRIBERS);
     subscribers::run(session, loaded, calculated, "post").await?;

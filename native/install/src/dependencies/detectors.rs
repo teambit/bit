@@ -60,7 +60,11 @@ impl<'a> Detectors<'a> {
         component: &WorkspaceComponent,
     ) -> io::Result<IndexMap<String, CustomDetection>> {
         let env = split_version(&component.env_id).0.trim();
-        let root_dir = component.root_dir.trim().trim_start_matches("./");
+        let root_dir = component.root_dir
+            .trim()
+            .trim_start_matches("./")
+            .trim_start_matches(r".\")
+            .trim_matches(['/', '\\']);
         // The workspace-root component is never detected.
         if root_dir.is_empty()
             || root_dir == "."

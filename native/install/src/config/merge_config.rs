@@ -73,6 +73,7 @@ impl MergeConfig {
     /// conflict markers (Bit logs those and ignores the entry); invalid JSON
     /// without markers is an error.
     fn parsed(&self, id: &str) -> io::Result<Option<Value>> {
+        let id = id.trim();
         let Some(content) = self.conflicts
             .get(id)
             .filter(|content| !content.is_empty())
@@ -100,7 +101,7 @@ impl MergeConfig {
     #[must_use]
     pub fn has_conflict(&self, id: &str) -> bool {
         self.conflicts
-            .get(id)
+            .get(id.trim())
             .is_some_and(|content| {
                 crate::jsonc::parse(content).is_err()
                     && (content.contains("<<<<<<<") || content.contains(">>>>>>>"))
@@ -109,6 +110,7 @@ impl MergeConfig {
 
     /// The entry of a component, by id without version.
     pub fn component(&self, id: &str) -> io::Result<Option<MergeConfigComponent>> {
+        let id = id.trim();
         let combined = match (self.parsed(id)?, self.unmerged.get(id).cloned()) {
             (None, None) => return Ok(None),
             (Some(value), None) | (None, Some(value)) => value,

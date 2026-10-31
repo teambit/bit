@@ -110,7 +110,7 @@ impl DependencyResolverConfig {
                 .as_deref()
                 .map(str::trim)
                 .filter(|linker| !linker.is_empty()),
-            self.package_manager.as_deref().map(str::trim),
+            self.package_manager.as_deref().map(aspect_id_without_version),
         ) {
             (Some(linker), _) => linker,
             (None, Some(pm))

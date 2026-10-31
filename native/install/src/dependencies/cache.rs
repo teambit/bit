@@ -91,6 +91,14 @@ pub fn write(scope: &Scope, component: &WorkspaceComponent, detected: &Detected)
 /// under its digest and an index entry appended to the key's bucket.
 pub fn put(cache: &Path, key: &str, data: &str) -> io::Result<()> {
     let key = key.trim();
+    if key.is_empty()
+        || cache
+            .to_string_lossy()
+            .trim()
+            .is_empty()
+    {
+        return Ok(());
+    }
     let integrity = put_content(cache, data.as_bytes())?;
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -119,6 +127,14 @@ pub fn put(cache: &Path, key: &str, data: &str) -> io::Result<()> {
 /// `cacache.rm.entry`: append a null-integrity tombstone without creating content.
 pub fn remove_entry(cache: &Path, key: &str) -> io::Result<()> {
     let key = key.trim();
+    if key.is_empty()
+        || cache
+            .to_string_lossy()
+            .trim()
+            .is_empty()
+    {
+        return Ok(());
+    }
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(io::Error::other)?

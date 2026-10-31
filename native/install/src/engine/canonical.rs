@@ -53,6 +53,7 @@ impl CanonicalInstall {
         environment.retain(|key, _| !key.trim().eq_ignore_ascii_case("PATH"));
         environment.insert("PATH".to_string(), Value::String(build_scripts_path.clone()));
         let request = parse::Request::new(&self.payload)
+            .filter(|request| request.environment.can_inherit_parent())
             .ok_or_else(|| io::Error::other("retained package inputs changed after PATH setup"))?;
         let (settings, options, plan) = settings::prepare(&request, &self.info)
             .ok_or_else(|| {

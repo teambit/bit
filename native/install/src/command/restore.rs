@@ -83,6 +83,9 @@ pub fn stored_graphs(
     root: &std::path::Path,
     ids: &[(String, String)],
 ) -> io::Result<Option<Value>> {
+    if ids.is_empty() {
+        return Ok(None);
+    }
     let Some(scope) = Scope::find(root) else { return Ok(None) };
     let mut merged: Option<Value> = None;
     for (id, version) in ids {

@@ -39,7 +39,10 @@ pub fn validate(packages: &[String], loaded: &Loaded) -> io::Result<Vec<String>>
 /// `workspace.resolveComponentId` + `componentPackageName` for a component id argument.
 fn component_package_name(argument: &str, loaded: &Loaded) -> Option<String> {
     let argument = argument.trim();
-    let id = argument.split_once('@').map_or(argument, |(id, _)| id.trim());
+    let id = argument
+        .split_once('@')
+        .map_or(argument, |(id, _)| id.trim())
+        .trim_matches('/');
     if id.is_empty() {
         return None;
     }

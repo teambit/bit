@@ -86,12 +86,23 @@ fn entry_times(cache: &Path) -> io::Result<Vec<f64>> {
     for bucket in read_dir_or_empty(&cache.join("index-v5"))? {
         for sub_bucket in read_dir_or_empty(&bucket)? {
             for file in read_dir_or_empty(&sub_bucket)? {
-                let text = String::from_utf8_lossy(&fs::read(&file)?).into_owned();
-                times.extend(bucket_times(&text));
+                times.extend(file_times(&file)?);
             }
         }
     }
     Ok(times)
+}
+
+fn file_times(file: &Path) -> io::Result<Vec<f64>> {
+    match fs::read(file) {
+        Ok(bytes) => Ok(bucket_times(&String::from_utf8_lossy(&bytes))),
+        Err(error)
+            if matches!(error.kind(), io::ErrorKind::NotFound | io::ErrorKind::IsADirectory) =>
+        {
+            Ok(Vec::new())
+        }
+        Err(error) => Err(error),
+    }
 }
 
 /// `_bucketEntries`, reduced to the latest entry per key, deletions dropped.

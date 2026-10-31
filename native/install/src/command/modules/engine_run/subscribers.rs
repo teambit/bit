@@ -12,7 +12,11 @@ pub(super) async fn run(
     let components = calculated.components
         .iter()
         .filter_map(|component| {
-            let rel = component.root_dir.trim().trim_start_matches("./");
+            let rel = component.root_dir
+                .trim()
+                .trim_start_matches("./")
+                .trim_start_matches(r".\")
+                .trim_matches(['/', '\\']);
             (!rel.is_empty() && rel != ".").then(
                 || json!({"id":component_id(&component.id),"directory":session.root.join(rel)}),
             )

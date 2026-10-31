@@ -351,6 +351,7 @@ fn strings(map: &Map<String, Value>, key: &str) -> Option<Option<Vec<String>>> {
 
 fn string_map(map: &Map<String, Value>) -> Option<IndexMap<String, String>> {
     map.iter()
+        .filter(|(_, value)| !value.is_null())
         .map(|(key, value)| Some((key.clone(), value.as_str()?.to_string())))
         .collect()
 }

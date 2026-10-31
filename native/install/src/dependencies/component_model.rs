@@ -77,7 +77,7 @@ fn is_dependency_resolver_extension(extension: &Value) -> bool {
         .as_deref()
         .is_some_and(|name| {
             matches!(
-                crate::policy::split_version(name).0.trim(),
+                crate::policy::split_version(name).0.trim().trim_matches('/'),
                 DEPENDENCY_RESOLVER | "@teambit/dependencies.dependency-resolver",
             )
         })

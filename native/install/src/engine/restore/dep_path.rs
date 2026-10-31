@@ -31,25 +31,28 @@ impl DependencyPath {
 
 pub(super) fn parse(dep_path: &str) -> DependencyPath {
     let dep_path = dep_path.trim();
-    let Some(separator) = dep_path
+    let Some(at) = dep_path
         .get(1..)
         .and_then(|rest| rest.find('@'))
-        .map(|index| index + 1)
     else {
         return DependencyPath::default();
     };
-    let name = dep_path[..separator].trim();
-    let mut version = dep_path[separator + 1..].trim();
+    let (name, mut version) = (dep_path[..=at].trim(), dep_path[at + 2..].trim());
     if name.is_empty() || version.is_empty() {
         return DependencyPath::default();
     }
     let mut parsed = DependencyPath { name: Some(name.to_string()), ..DependencyPath::default() };
     let DepPathSuffixIndex { peers_index, patch_hash_index } = index_of_dep_path_suffix(version);
     match (patch_hash_index, peers_index) {
-        (Some(patch), Some(peers)) => {
+        (Some(patch), Some(peers)) if patch <= peers => {
             parsed.patch_hash = Some(version[patch..peers].to_string());
             parsed.peer_dep_graph_hash = Some(version[peers..].to_string());
             version = &version[..patch];
+        }
+        (Some(patch), Some(peers)) => {
+            parsed.peer_dep_graph_hash = Some(version[peers..patch].to_string());
+            parsed.patch_hash = Some(version[patch..].to_string());
+            version = &version[..peers];
         }
         (Some(patch), None) => {
             parsed.patch_hash = Some(version[patch..].to_string());

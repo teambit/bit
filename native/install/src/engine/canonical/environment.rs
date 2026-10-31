@@ -62,7 +62,10 @@ impl Captured {
         env::vars_os()
             .all(|(key, _)| {
                 key.to_str()
-                    .is_some_and(|key| self.get(key).is_some())
+                    .is_some_and(|key| {
+                        let trimmed = key.trim();
+                        trimmed.is_empty() || trimmed.contains('=') || self.get(trimmed).is_some()
+                    })
             })
     }
 

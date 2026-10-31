@@ -73,19 +73,16 @@ fn projects(manifests: &Map<String, Value>, root: &Path) -> Option<Vec<Project>>
     if manifests.is_empty() {
         return None;
     }
-    let root_str = root.to_str()?;
-    if !manifests
-        .keys()
-        .any(|key| key.trim() == root_str)
-    {
-        return None;
-    }
-    manifests
+    let parsed: Vec<Project> = manifests
         .iter()
         .map(|(dir, manifest)| {
             Some(Project { dir: parse_absolute_str(dir)?, manifest: manifest.as_object()?.clone() })
         })
-        .collect()
+        .collect::<Option<_>>()?;
+    parsed
+        .iter()
+        .any(|project| project.dir == root)
+        .then_some(parsed)
 }
 
 const OPTIONS: &[&str] = &[

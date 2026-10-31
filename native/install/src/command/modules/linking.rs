@@ -65,23 +65,30 @@ pub async fn link_components(
     let result = links::link_components(&session.root, components, session.host, &options).await?;
     if result.package_json_changed {
         let cache = loaded.workspace.scope_path.join("cache/components/deps");
-        let mut ids = Vec::new();
-        for id in components.iter().map(super::super::session::installation_components::identity) {
-            let trimmed = id.trim();
-            if !trimmed.is_empty()
-                && !ids
-                    .iter()
-                    .any(|existing| existing == trimmed)
-            {
-                ids.push(trimmed.to_owned());
-            }
-        }
+        let ids = unique_component_ids(components);
         for id in &ids {
             let _ = crate::dependencies::cache::remove_entry(&cache, id);
         }
-        session.host.component_links_changed(&ids).await?;
+        if !ids.is_empty() {
+            session.host.component_links_changed(&ids).await?;
+        }
     }
     Ok(())
+}
+
+fn unique_component_ids(components: &[WorkspaceComponent]) -> Vec<String> {
+    let mut ids = Vec::new();
+    for id in components.iter().map(super::super::session::installation_components::identity) {
+        let trimmed = id.trim();
+        if !trimmed.is_empty()
+            && !ids
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
+            ids.push(trimmed.to_owned());
+        }
+    }
+    ids
 }
 
 /// `syncCoreAspectLinksForEnvs`, only for workspaces that author the core aspects.

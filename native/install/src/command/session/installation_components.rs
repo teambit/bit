@@ -93,15 +93,22 @@ fn ordered_row(
         .filter(|value| !value.is_empty())
         .ok_or_else(invalid)?;
     let actual = if Path::new(directory).is_absolute() {
-        Path::new(directory).to_path_buf()
+        Path::new(directory.trim_end_matches(['/', '\\'])).to_path_buf()
     } else {
-        root.join(directory.trim_start_matches("./"))
+        root.join(trim_rel(directory))
     };
-    let expected = root.join(component.root_dir.trim().trim_start_matches("./"));
+    let expected = root.join(trim_rel(&component.root_dir));
     if actual != expected {
         return Err(invalid());
     }
     Ok(component)
+}
+
+fn trim_rel(rel: &str) -> &str {
+    rel.trim()
+        .trim_start_matches("./")
+        .trim_start_matches(r".\")
+        .trim_end_matches(['/', '\\'])
 }
 
 fn remove_matching(
@@ -111,13 +118,14 @@ fn remove_matching(
     if let Some(component) = remaining.remove(id) {
         return Some(component);
     }
-    if id.contains('@') {
-        let bare = id.split('@').next().unwrap_or(id);
-        return remaining.remove(bare);
+    if let Some((bare, _)) = id.rsplit_once('@') {
+        return remaining.remove(bare.trim());
     }
     let key = remaining
         .keys()
-        .find(|candidate| candidate.split('@').next() == Some(id))?
+        .find(|candidate| {
+            candidate.rsplit_once('@').map_or(candidate.as_str(), |(bare, _)| bare.trim()) == id
+        })?
         .clone();
     remaining.remove(&key)
 }

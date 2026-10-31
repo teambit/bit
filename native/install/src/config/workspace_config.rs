@@ -174,7 +174,12 @@ impl WorkspaceConfig {
         };
         store
             .iter()
-            .filter_map(|(key, value)| Some((key.clone(), config_string(value)?)))
+            .filter_map(|(key, value)| {
+                let trimmed = key.trim();
+                (!trimmed.is_empty())
+                    .then(|| Some((trimmed.to_owned(), config_string(value)?)))
+                    .flatten()
+            })
             .collect()
     }
 

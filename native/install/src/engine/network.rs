@@ -23,14 +23,25 @@ pub struct ProxySettings {
 
 impl ProxySettings {
     fn is_set(&self) -> bool {
-        self.http_proxy.is_some() || self.https_proxy.is_some()
+        self.http_proxy
+            .as_deref()
+            .is_some_and(|url| !url.trim().is_empty())
+            || self.https_proxy
+                .as_deref()
+                .is_some_and(|url| !url.trim().is_empty())
     }
 
     /// The engine's proxy config. The engine replaces its own wholesale.
     pub(super) fn to_engine(&self) -> pnpm_network::ProxyConfig {
+        let non_empty = |url: &Option<String>| {
+            url.as_deref()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .map(str::to_owned)
+        };
         pnpm_network::ProxyConfig {
-            https_proxy: self.https_proxy.clone(),
-            http_proxy: self.http_proxy.clone(),
+            https_proxy: non_empty(&self.https_proxy),
+            http_proxy: non_empty(&self.http_proxy),
             no_proxy: self.no_proxy.as_ref().and_then(parse_no_proxy),
         }
     }

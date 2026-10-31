@@ -36,6 +36,9 @@ pub async fn resolve_remote_version(
     settings: &EngineSettings,
 ) -> io::Result<ResolvedVersion> {
     let trimmed = spec.trim();
+    if trimmed.is_empty() {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "package specifier is empty"));
+    }
     let parsed = parse_package_name(trimmed);
     let settings = settings.clone();
     let spec = trimmed.to_string();

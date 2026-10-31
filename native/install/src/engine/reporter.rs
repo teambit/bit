@@ -145,9 +145,13 @@ impl Renderer {
                 if lines.is_empty() {
                     return false;
                 }
+                let capacity = lines
+                    .iter()
+                    .map(|line| line.len() + 1)
+                    .sum();
                 let chunk = lines
                     .iter()
-                    .fold(String::new(), |mut chunk, line| {
+                    .fold(String::with_capacity(capacity), |mut chunk, line| {
                         chunk.push_str(line);
                         chunk.push('\n');
                         chunk

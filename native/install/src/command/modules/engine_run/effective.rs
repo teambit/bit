@@ -41,39 +41,43 @@ pub(super) fn apply(
     Ok((plan, settings))
 }
 
+const SUPPORTED_PM_CHANGES: &[&str] = &[
+    "updateAll",
+    "lockfileOnly",
+    "includeOptionalDeps",
+    "overrides",
+    "forcedHarmonyVersion",
+    "nodeLinker",
+    "rootComponents",
+    "hoistPatterns",
+    "hoistInjectedDependencies",
+    "enableGlobalVirtualStore",
+    "globalVirtualStoreDir",
+    "packageImportMethod",
+    "cacheRootDir",
+    "autoInstallPeers",
+    "dedupePeers",
+    "dedupeInjectedDeps",
+    "engineStrict",
+    "nodeVersion",
+    "patchedDependencies",
+    "packageExtensions",
+    "preferOffline",
+    "minimumReleaseAge",
+    "minimumReleaseAgeExclude",
+    "peerDependencyRules",
+    "throttleProgress",
+];
+
 fn validate_changes(values: &Value) -> io::Result<()> {
-    let supported = [
-        "updateAll",
-        "lockfileOnly",
-        "includeOptionalDeps",
-        "overrides",
-        "forcedHarmonyVersion",
-        "nodeLinker",
-        "rootComponents",
-        "hoistPatterns",
-        "hoistInjectedDependencies",
-        "enableGlobalVirtualStore",
-        "globalVirtualStoreDir",
-        "packageImportMethod",
-        "cacheRootDir",
-        "autoInstallPeers",
-        "dedupePeers",
-        "dedupeInjectedDeps",
-        "engineStrict",
-        "nodeVersion",
-        "patchedDependencies",
-        "packageExtensions",
-        "preferOffline",
-        "minimumReleaseAge",
-        "minimumReleaseAgeExclude",
-        "peerDependencyRules",
-        "throttleProgress",
-    ];
+    if values.is_null() {
+        return Ok(());
+    }
     let fields =
         values.as_object().ok_or_else(|| io::Error::other("subscriber PM change receipt"))?;
     if let Some(key) = fields
         .keys()
-        .find(|key| !supported.contains(&key.as_str()))
+        .find(|key| !SUPPORTED_PM_CHANGES.contains(&key.as_str()))
     {
         return Err(io::Error::other(format!(
             "native lane installation subscriber mutation is not yet supported: {key}",

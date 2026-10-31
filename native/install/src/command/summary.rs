@@ -41,7 +41,7 @@ fn another_install_required(
     let mut envs_list: Vec<&str> = Vec::new();
     for env in non_loaded
         .iter()
-        .map(|env| env.trim())
+        .map(|env| env.trim().trim_matches('/'))
         .filter(|env| !env.is_empty())
     {
         if !envs_list.contains(&env) {

@@ -43,8 +43,14 @@ pub(super) fn ordered(imports: &mut [Import]) -> Vec<String> {
 }
 
 fn relative(from: &Path, to: &Path) -> String {
-    let from: Vec<_> = from.components().collect();
-    let to: Vec<_> = to.components().collect();
+    let from: Vec<_> = from
+        .components()
+        .filter(|comp| !matches!(comp, std::path::Component::CurDir))
+        .collect();
+    let to: Vec<_> = to
+        .components()
+        .filter(|comp| !matches!(comp, std::path::Component::CurDir))
+        .collect();
     let common = from
         .iter()
         .zip(&to)

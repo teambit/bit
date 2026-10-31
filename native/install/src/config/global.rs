@@ -171,7 +171,7 @@ impl EffectiveConfig {
             trimmed
                 .parse::<f64>()
                 .ok()
-                .filter(|num| !num.is_nan())
+                .filter(|num| num.is_finite())
         };
         number
             .map(Some)

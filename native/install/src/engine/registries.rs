@@ -108,8 +108,8 @@ pub(super) fn resolve(
 
 /// The default registry is npmjs or unset, so Bit's registry proxies it.
 fn is_npmjs(uri: &str) -> bool {
-    let trimmed = uri.trim();
-    trimmed.is_empty() || trimmed == NPM_REGISTRY || NPM_REGISTRY.starts_with(trimmed)
+    let trimmed = uri.trim().trim_end_matches('/');
+    trimmed.is_empty() || trimmed.eq_ignore_ascii_case(NPM_REGISTRY.trim_end_matches('/'))
 }
 
 /// `getRegistries(config)` plus the `bit` scope registry when it is missing.

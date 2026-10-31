@@ -84,7 +84,11 @@ pub(super) fn remove_for_update(root: &Path, update_all: bool) -> io::Result<Opt
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
     };
-    fs::remove_file(&path)?;
+    match fs::remove_file(&path) {
+        Ok(()) => {}
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error),
+    }
     Ok(Some(contents))
 }
 

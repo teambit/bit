@@ -38,7 +38,7 @@ pub fn specifiers(path: &Path) -> io::Result<Vec<String>> {
 
 fn read(path: &Path) -> io::Result<Option<String>> {
     match fs::metadata(path) {
-        Ok(metadata) if metadata.len() > MAX_SOURCE => return Ok(None),
+        Ok(metadata) if metadata.len() > MAX_SOURCE || !metadata.is_file() => return Ok(None),
         Ok(_) => {}
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
@@ -46,7 +46,12 @@ fn read(path: &Path) -> io::Result<Option<String>> {
     let bytes = fs::read(path)?;
     Ok(String::from_utf8(bytes)
         .ok()
-        .map(|text| text.strip_prefix('\u{feff}').map_or_else(|| text.clone(), str::to_owned)))
+        .map(|mut text| {
+            if text.starts_with('\u{feff}') {
+                text.remove(0);
+            }
+            text
+        }))
 }
 
 fn script(path: &Path, source: String) -> Vec<String> {

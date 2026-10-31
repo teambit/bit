@@ -46,11 +46,12 @@ impl EngineError {
 /// never applies.
 impl fmt::Display for EngineError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.message.trim())?;
+        let message = self.message.trim();
+        formatter.write_str(message)?;
         match self.hint
             .as_deref()
             .map(str::trim)
-            .filter(|hint| !hint.is_empty())
+            .filter(|hint| !hint.is_empty() && !message.ends_with(hint))
         {
             Some(hint) => write!(formatter, "\n\n{hint}"),
             None => Ok(()),

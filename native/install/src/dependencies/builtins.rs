@@ -54,7 +54,10 @@ const BUILTINS: [&str; 45] = [
 pub fn is_builtin(specifier: &str) -> bool {
     let trimmed = specifier.trim();
     if let Some(rest) = trimmed.strip_prefix("node:") {
-        return !rest.trim().is_empty();
+        return !rest
+            .trim()
+            .trim_matches(['/', '\\'])
+            .is_empty();
     }
     let root = trimmed
         .split(['/', '\\'])
