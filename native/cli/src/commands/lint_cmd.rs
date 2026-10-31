@@ -324,7 +324,7 @@ fn apply_token<'a>(
         "--fix=false" => options.fix = false,
         "-j" | "--json" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
-        "--fix-type" => {
+        "--fix-type" if options.fix_type.is_none() => {
             let val = iter.next()?.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             options.fix_type = Some(val.to_owned());
@@ -340,7 +340,7 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
     }
     if let Some(val) = arg.strip_prefix("--fix-type=") {
         let val = val.trim();
-        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+        (options.fix_type.is_none() && !val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.fix_type = Some(val.to_owned());
     } else if !arg.trim().starts_with('-')
         && !arg.trim().is_empty()

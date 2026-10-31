@@ -31,7 +31,7 @@ fn consume_trailing_id<'a>(
 ) -> Option<()> {
     for rest in iter {
         let trimmed = rest.trim();
-        if trimmed.is_empty() || trimmed.starts_with('-') || id.is_some() {
+        if trimmed.is_empty() || trimmed.len() > 1024 || trimmed.starts_with('-') || id.is_some() {
             return None;
         }
         *id = Some(trimmed);
@@ -40,8 +40,9 @@ fn consume_trailing_id<'a>(
 }
 
 fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
+    let trimmed = arg.trim();
     if matches!(
-        arg,
+        trimmed,
         "--no-color"
             | "--no-color=true"
             | "--no-color=false"
@@ -50,16 +51,19 @@ fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
             | "--color=false"
             | "--color=always"
             | "--color=never",
-    ) || apply_log_combined_short(options, arg)
+    ) || apply_log_combined_short(options, trimmed)
     {
         return Some(());
     }
-    let trimmed = arg.trim();
-    if !trimmed.starts_with('-') && !trimmed.is_empty() && options.id.is_none() {
+    if !trimmed.starts_with('-')
+        && !trimmed.is_empty()
+        && trimmed.len() <= 1024
+        && options.id.is_none()
+    {
         options.id = Some(trimmed);
         return Some(());
     }
-    let (flag, val) = parse_log_flag_value(arg)?;
+    let (flag, val) = parse_log_flag_value(trimmed)?;
     let field = match flag {
         "-j" | "--json" => &mut options.json,
         "--parents" => &mut options.parents,

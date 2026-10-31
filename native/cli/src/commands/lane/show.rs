@@ -215,12 +215,18 @@ fn matches_http_lane(row: &Value, scope: &str, target: &str) -> bool {
 }
 
 fn remote_scope(local: &[LaneData], target: &str) -> io::Result<String> {
+    let target = target.trim();
     let scope = target
         .split_once('/')
-        .map(|(scope, _)| scope.to_owned())
+        .and_then(|(scope, lane)| {
+            let (scope, lane) = (scope.trim(), lane.trim());
+            (!scope.is_empty() && !lane.is_empty()).then(|| scope.to_owned())
+        })
         .or_else(|| {
             find(local, target)
                 .and_then(|lane| lane.id["scope"].as_str())
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
                 .map(str::to_owned)
         });
     scope.ok_or_else(|| io::Error::other("remote lane identity"))
@@ -241,7 +247,8 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
                 consume_trailing_show_lane(iter, &mut name)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "--json" | "-j" | "--json=true" => json = true,
             "--json=false" => json = false,
             "--remote" | "-r" | "--remote=true" => remote = true,

@@ -28,14 +28,14 @@ pub(super) fn component_ids(result: &Value) -> io::Result<Vec<String>> {
     ids.extend(
         array(result.get("addedComponents"), "added components")?
             .iter()
-            .map(|id| text(Some(id)).map(str::to_string))
+            .map(|id| text(Some(id)).map(|val| val.trim().to_string()))
             .collect::<io::Result<Vec<_>>>()?,
     );
     if result.get("newFromLaneAdded") == Some(&Value::Bool(true)) {
         ids.extend(
             array(result.get("newFromLane"), "new lane components")?
                 .iter()
-                .map(|id| text(Some(id)).map(str::to_string))
+                .map(|id| text(Some(id)).map(|val| val.trim().to_string()))
                 .collect::<io::Result<Vec<_>>>()?,
         );
     }
@@ -49,7 +49,7 @@ pub(super) fn component_ids(result: &Value) -> io::Result<Vec<String>> {
 pub(super) fn changed_component_ids(result: &Value) -> io::Result<Vec<String>> {
     array(result.get("components"), "changed components")?
         .iter()
-        .map(|row| text(row.get("id")).map(str::to_string))
+        .map(|row| text(row.get("id")).map(|val| val.trim().to_string()))
         .collect()
 }
 

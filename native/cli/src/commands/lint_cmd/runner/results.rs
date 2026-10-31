@@ -48,10 +48,16 @@ pub(super) fn component(id: &Value, tool: &Value) -> io::Result<Value> {
 }
 
 fn file(raw: &Value) -> Value {
-    json!({"filePath":raw["filePath"],"errorCount":raw["errorCount"],
-        "fatalErrorCount":raw["fatalErrorCount"],"fixableErrorCount":raw["fixableErrorCount"],
-        "fixableWarningCount":raw["fixableWarningCount"],"warningCount":raw["warningCount"],
-        "messages":raw["messages"],"raw":raw})
+    json!({
+        "filePath": raw["filePath"],
+        "errorCount": raw["errorCount"].as_u64().unwrap_or(0),
+        "fatalErrorCount": raw["fatalErrorCount"].as_u64().unwrap_or(0),
+        "fixableErrorCount": raw["fixableErrorCount"].as_u64().unwrap_or(0),
+        "fixableWarningCount": raw["fixableWarningCount"].as_u64().unwrap_or(0),
+        "warningCount": raw["warningCount"].as_u64().unwrap_or(0),
+        "messages": raw["messages"],
+        "raw": raw,
+    })
 }
 
 pub(super) fn aggregate(rows: Vec<Value>, errors: Vec<Value>) -> Value {

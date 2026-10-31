@@ -213,13 +213,15 @@ impl Read {
     fn trailing_positionals(&mut self, trailing: &[&str]) -> Option<()> {
         trailing
             .iter()
-            .all(|item| !item.is_empty() && !item.starts_with('-'))
+            .all(|item| {
+                let trimmed = item.trim();
+                !trimmed.is_empty() && !trimmed.starts_with('-')
+            })
             .then_some(())?;
         self.positionals.extend(
             trailing
                 .iter()
-                .copied()
-                .map(str::to_string),
+                .map(|item| item.trim().to_string()),
         );
         Some(())
     }
@@ -267,8 +269,9 @@ fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
         } else if arg.starts_with('-') {
             index += read.flag(arg, args.get(index).copied(), allow_extra)?;
         } else {
-            (!arg.is_empty()).then_some(())?;
-            read.positionals.push(arg.to_string());
+            let trimmed = arg.trim();
+            (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+            read.positionals.push(trimmed.to_string());
         }
     }
     Some(read)

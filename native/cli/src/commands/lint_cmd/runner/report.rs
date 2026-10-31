@@ -55,8 +55,9 @@ fn text(result: &Value, progress: &Progress, chalk: Chalk, elapsed: u64) -> io::
 fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
     let id = &row["componentId"];
     let (scope, name) = if let Some(raw) = id.as_str() {
+        let raw = raw.trim();
         raw.rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
+            .map_or(raw, |(bare, _)| bare.trim())
             .split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
@@ -71,6 +72,7 @@ fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
             .ok_or_else(|| invalid("linter report scope"))?;
         let name = id["_legacy"]["name"]
             .as_str()
+            .or_else(|| id["_name"].as_str())
             .or_else(|| id["name"].as_str())
             .map(str::trim)
             .filter(|name| !name.is_empty())

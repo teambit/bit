@@ -166,17 +166,17 @@ fn select(names: &[String], lanes: &[list::LaneData], force: bool) -> io::Result
         if !force && lane.is_merged != Some(true) {
             return Err(io::Error::other("lane is not fully merged"));
         }
-        let id = format!(
-            "{}/{}",
-            lane.id["scope"]
-                .as_str()
-                .map(str::trim)
-                .unwrap_or_default(),
-            lane.id["name"]
-                .as_str()
-                .map(str::trim)
-                .unwrap_or_default(),
-        );
+        let scope = lane.id["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .ok_or_else(|| io::Error::other("lane scope is missing"))?;
+        let lane_name = lane.id["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .ok_or_else(|| io::Error::other("lane name is missing"))?;
+        let id = format!("{scope}/{lane_name}");
         if !ids.contains(&id) {
             ids.push(id);
         }

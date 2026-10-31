@@ -26,12 +26,16 @@ fn log_field<'a>(row: &'a Value, field: &str) -> &'a str {
     };
     row.get(field)
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
         .or_else(|| {
             alias
                 .and_then(|key| row.get(key))
                 .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
         })
-        .map_or("", str::trim)
+        .unwrap_or("")
 }
 
 pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {

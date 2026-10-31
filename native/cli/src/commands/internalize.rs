@@ -96,7 +96,17 @@ fn handle_outside_workspace(
     args: &[OsString],
     options: &Options,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            !matches!(
+                val.to_string_lossy()
+                    .trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false" | "no" | "off",
+            )
+        })
+    {
         return Ok(Outcome::Declined("CI internalize outside workspace delegated".into()));
     }
     let msg = if !options.list && options.pattern.is_none() {

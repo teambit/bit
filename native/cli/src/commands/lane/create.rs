@@ -59,7 +59,8 @@ fn apply_create_flag<'a>(
         return applied;
     }
     match flag {
-        "--no-color" | "--no-color=true" | "--no-color=false" => true,
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => true,
         "--fork-lane-new-scope=false" => {
             options.fork_lane_new_scope = false;
             true

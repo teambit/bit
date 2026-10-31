@@ -146,15 +146,26 @@ pub(in crate::commands) fn diagnose_version_error(
     resolved_hash: Option<&str>,
     chalk: Chalk,
 ) -> Option<String> {
+    let ver = ver.trim();
+    let comp_id = comp_id.trim();
     if matches!(ver, "latest" | "head") {
-        let ver_hash = lane_head.or_else(|| comp_val["head"].as_str())?;
-        let ver_label = head_label.unwrap_or(ver_hash);
+        let ver_hash = lane_head
+            .or_else(|| comp_val["head"].as_str())
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())?;
+        let ver_label = head_label
+            .map(str::trim)
+            .filter(|label| !label.is_empty())
+            .unwrap_or(ver_hash);
         return bit_object_import::read_scope_object(scope_dir, ver_hash)
             .ok()?
             .is_none()
             .then(|| missing_version_on_fs_msg(ver_label, comp_id));
     }
-    let Some(ver_hash) = resolved_hash else {
+    let Some(ver_hash) = resolved_hash
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+    else {
         return Some(format!(
             r#"error: version "{}" of component {} was not found."#,
             chalk.bold(ver),

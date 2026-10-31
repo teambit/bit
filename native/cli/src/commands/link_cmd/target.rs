@@ -206,15 +206,19 @@ pub(super) fn link_core_aspects(
 fn collect_core_package_names(core_ids: &[String], authored: &[String]) -> Vec<String> {
     let mut names = vec!["bit".to_owned(), "legacy".to_owned(), "harmony".to_owned()];
     for id in core_ids {
-        if authored
-            .iter()
-            .any(|existing| existing == id)
+        let id = id.trim();
+        if id.is_empty()
+            || authored
+                .iter()
+                .any(|existing| existing.trim() == id)
         {
             continue;
         }
         let sub_name = id
             .split('/')
             .skip(1)
+            .map(str::trim)
+            .filter(|seg| !seg.is_empty())
             .collect::<Vec<_>>()
             .join(".");
         push_unique(&mut names, &sub_name);

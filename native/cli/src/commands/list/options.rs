@@ -55,7 +55,7 @@ impl Options {
         index: usize,
         seen: &mut Vec<&'a str>,
     ) -> Option<usize> {
-        let raw = args[index];
+        let raw = args[index].trim();
         if matches!(
             raw,
             "--no-color"
@@ -70,11 +70,10 @@ impl Options {
             return Some(1);
         }
         if !raw.starts_with('-') {
-            let trimmed = raw.trim();
-            if self.remote.is_some() || trimmed.is_empty() {
+            if self.remote.is_some() || raw.is_empty() {
                 return None;
             }
-            self.remote = Some(trimmed.to_string());
+            self.remote = Some(raw.to_string());
             return Some(1);
         }
         let flag = long_flag(raw.split_once('=').map_or(raw, |(key, _)| key));

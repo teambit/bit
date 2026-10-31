@@ -96,7 +96,7 @@ fn copy_current(scope: &mut Value, current: &Value) {
         {
             continue;
         }
-        if key == "remotes" && !value.is_object() {
+        if matches!(key, "remotes" | "lanes") && !value.is_object() {
             continue;
         }
         scope[key] = value.clone();

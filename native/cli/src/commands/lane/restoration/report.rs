@@ -109,8 +109,11 @@ fn project_statuses(components: Option<&mut Value>, chalk: Chalk) -> io::Result<
             continue;
         };
         for status in statuses.values_mut() {
-            let key =
-                status.as_str().ok_or_else(|| io::Error::other("lane revert JSON file status"))?;
+            let key = status
+                .as_str()
+                .map(str::trim)
+                .filter(|key| !key.is_empty())
+                .ok_or_else(|| io::Error::other("lane revert JSON file status"))?;
             *status = Value::String(Status::parse(key)?.label(chalk));
         }
     }

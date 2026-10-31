@@ -126,7 +126,9 @@ fn widths(head: &[String], rows: &[Vec<String>]) -> Vec<usize> {
         .collect();
     for row in rows {
         for (index, cell) in row.iter().enumerate() {
-            widths[index] = widths[index].max(strlen(cell) + 2);
+            if let Some(width) = widths.get_mut(index) {
+                *width = (*width).max(strlen(cell) + 2);
+            }
         }
     }
     widths

@@ -286,7 +286,12 @@ fn shorten_hashes(row: &mut Value) -> io::Result<()> {
 }
 
 fn paint(row: &Value, chalk: Chalk) -> io::Result<String> {
-    let title = match row.get("tag").and_then(Value::as_str) {
+    let title = match row
+        .get("tag")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|tag| !tag.is_empty())
+    {
         Some(tag) => format!("tag {tag} ({})", text(row.get("hash"))?),
         None => format!("snap {}", text(row.get("hash"))?),
     };
@@ -298,24 +303,15 @@ fn paint(row: &Value, chalk: Chalk) -> io::Result<String> {
         String::new()
     };
     let mut output = format!("{}{suffix}\n", chalk.yellow(&title));
-    let username = row
-        .get("username")
-        .and_then(Value::as_str)
-        .filter(|username| !username.is_empty());
-    let email = row
-        .get("email")
-        .and_then(Value::as_str)
-        .filter(|email| !email.is_empty());
-    let author = match (username, email) {
-        (Some(username), Some(email)) => Some(format!("author: {username} <{email}>\n")),
-        (Some(username), None) => Some(format!("author: {username}\n")),
-        (None, Some(email)) => Some(format!("author: <{email}>\n")),
-        (None, None) => None,
-    };
-    if let Some(author) = author {
+    if let Some(author) = paint_author(row) {
         output.push_str(&chalk.white(&author));
     }
-    if let Some(date) = row.get("date").and_then(Value::as_str) {
+    if let Some(date) = row
+        .get("date")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|date| !date.is_empty())
+    {
         output.push_str(&chalk.white(&format!("date: {date}\n")));
     }
     let message = text(row.get("message"))?;
@@ -323,6 +319,25 @@ fn paint(row: &Value, chalk: Chalk) -> io::Result<String> {
         output.push_str(&chalk.white(&format!("\n      {message}\n")));
     }
     Ok(output)
+}
+
+fn paint_author(row: &Value) -> Option<String> {
+    let username = row
+        .get("username")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|username| !username.is_empty());
+    let email = row
+        .get("email")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|email| !email.is_empty());
+    match (username, email) {
+        (Some(username), Some(email)) => Some(format!("author: {username} <{email}>\n")),
+        (Some(username), None) => Some(format!("author: {username}\n")),
+        (None, Some(email)) => Some(format!("author: <{email}>\n")),
+        (None, None) => None,
+    }
 }
 
 fn parents_report(logs: &[Value], chalk: Chalk) -> io::Result<Vec<String>> {

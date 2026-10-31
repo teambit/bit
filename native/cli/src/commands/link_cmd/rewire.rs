@@ -173,6 +173,9 @@ fn strip_trailing_segment(input: &str, segment: &str) -> Option<String> {
 }
 
 fn strip_extension(path_str: &str) -> String {
+    if let Some(stem) = path_str.strip_suffix(".d.ts") {
+        return stem.to_owned();
+    }
     let path = Path::new(path_str);
     let Some(ext) = path.extension().and_then(|os| os.to_str()) else {
         return path_str.to_owned();

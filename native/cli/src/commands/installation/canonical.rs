@@ -112,7 +112,7 @@ pub(super) fn canonical_workspace(root: &Path, react_service: bool) -> io::Resul
     ))?;
     let custom = |id: &str| {
         let base = bit_install::config::aspect_id_without_version(id.trim()).trim();
-        !core.iter().any(|core| core == base)
+        !core.iter().any(|core| core == base) && !bit_install::policy::is_core_env(base)
     };
     if config.aspects.keys().any(|id| custom(id)) || scope_has_custom_aspects(root, &custom)? {
         return Ok(true);

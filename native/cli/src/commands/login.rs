@@ -109,9 +109,15 @@ fn apply_login_arg<'a>(
         "--no-browser=false" | "--suppress-browser-launch=false" => options.no_browser = false,
         "-j" | "--json" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
-        "-d" | "--cloud-domain" => options.cloud_domain = Some(take_val(iter.next()?)?),
-        "-p" | "--port" => options.port = Some(take_val(iter.next()?)?),
-        "--machine-name" => options.machine_name = Some(take_val(iter.next()?)?),
+        "-d" | "--cloud-domain" if options.cloud_domain.is_none() => {
+            options.cloud_domain = Some(take_val(iter.next()?)?);
+        }
+        "-p" | "--port" if options.port.is_none() => {
+            options.port = Some(take_val(iter.next()?)?);
+        }
+        "--machine-name" if options.machine_name.is_none() => {
+            options.machine_name = Some(take_val(iter.next()?)?);
+        }
         _ => apply_inline_login_arg(arg, options)?,
     }
     Some(())
@@ -122,14 +128,21 @@ fn apply_inline_login_arg(arg: &str, options: &mut Options) -> Option<()> {
         .strip_prefix("--cloud-domain=")
         .or_else(|| arg.strip_prefix("-d="))
     {
+        options.cloud_domain
+            .is_none()
+            .then_some(())?;
         options.cloud_domain = Some(take_val(val)?);
     } else if let Some(val) = arg
         .strip_prefix("--port=")
         .or_else(|| arg.strip_prefix("-p="))
     {
+        options.port.is_none().then_some(())?;
         options.port = Some(take_val(val)?);
     } else {
         let val = arg.strip_prefix("--machine-name=")?;
+        options.machine_name
+            .is_none()
+            .then_some(())?;
         options.machine_name = Some(take_val(val)?);
     }
     Some(())

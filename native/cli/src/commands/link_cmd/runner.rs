@@ -348,6 +348,7 @@ pub(super) fn format_component_id(id: &ComponentId) -> String {
     let bare = id.to_string_without_version();
     match id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
     {
         Some(ver) => format!("{bare}@{ver}"),
@@ -375,7 +376,8 @@ fn resolve_workspace_name(root: &Path, ws_config: &WorkspaceConfig) -> String {
         .map(str::to_owned)
         .or_else(|| {
             root.file_name()
-                .map(|name| name.to_string_lossy().into_owned())
+                .map(|name| name.to_string_lossy().trim().to_owned())
+                .filter(|name| !name.is_empty())
         })
         .unwrap_or_else(|| "workspace".into())
 }

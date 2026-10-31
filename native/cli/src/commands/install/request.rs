@@ -67,7 +67,7 @@ pub(super) fn lane_installation() -> bool {
         .is_some_and(|command| command == "switch")
         || arguments
             .first()
-            .is_some_and(|command| command == "lane")
+            .is_some_and(|command| matches!(command.as_str(), "lane" | "l"))
             && arguments
                 .get(1)
                 .is_some_and(|command| matches!(command.as_str(), "import" | "checkout" | "revert"))

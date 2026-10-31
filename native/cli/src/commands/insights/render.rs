@@ -165,6 +165,9 @@ fn horizontal(names: &[String], chalk: Chalk) -> String {
 }
 
 fn vertical(names: &[String], chalk: Chalk) -> String {
+    let Some(first) = names.first() else {
+        return String::new();
+    };
     let mut lines = Vec::new();
     for (index, name) in names.iter().enumerate() {
         lines.push(chalk.cyan(name));
@@ -176,7 +179,7 @@ fn vertical(names: &[String], chalk: Chalk) -> String {
     lines.push(format!(
         "{}{}{}",
         chalk.red("  ╰───▶ "),
-        chalk.cyan(&names[0]),
+        chalk.cyan(first),
         chalk.dim("  (back to start)"),
     ));
     lines.join("\n")

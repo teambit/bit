@@ -7,7 +7,7 @@ pub(super) fn requires_node(root: &Path, history: &str) -> bool {
         return false;
     }
     let history = history.trim();
-    if history.is_empty() {
+    if history.is_empty() || history.starts_with('-') {
         return true;
     }
     let remotes = cache_root().join("config/global-remotes.json");
@@ -24,5 +24,6 @@ fn is_ci_enabled() -> bool {
                 && trimmed != "0"
                 && !trimmed.eq_ignore_ascii_case("false")
                 && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
 }

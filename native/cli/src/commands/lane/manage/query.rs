@@ -163,8 +163,14 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
     let mut iter = lane_args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
-            "--" => break,
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--" => {
+                for rest in iter {
+                    non_flag(rest)?;
+                }
+                break;
+            }
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-l" | "--lane" => lane_name = Some(non_flag(iter.next()?)?),
@@ -180,7 +186,9 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
             _ if let Some(val) = arg.strip_prefix("--pattern=") => {
                 non_flag(val)?;
             }
-            val if !val.starts_with('-') => {}
+            val if !val.trim().starts_with('-') => {
+                non_flag(val)?;
+            }
             _ => return None,
         }
     }
@@ -208,5 +216,5 @@ fn unscoped_lane_error(scope_dir: &Path, name: &str) -> Option<String> {
 
 fn is_checked_out_to_main(root: &Path) -> io::Result<bool> {
     let (current, _) = list::read_current(root)?;
-    Ok(current["name"] == "main")
+    Ok(current["name"].as_str().map(str::trim) == Some("main"))
 }

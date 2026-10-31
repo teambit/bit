@@ -210,7 +210,17 @@ fn evaluate_duplicate_dependencies(
 }
 
 fn emit_host_not_found() -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            !matches!(
+                val.to_string_lossy()
+                    .trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false" | "no" | "off",
+            )
+        })
+    {
         return Ok(Outcome::Declined("CI insights error stack".into()));
     }
     let mut stdout = io::stdout().lock();

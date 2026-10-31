@@ -210,7 +210,12 @@ fn preflight_fixes(
         let fixed_paths = rows
             .iter()
             .filter(|row| row["output"].is_string())
-            .filter_map(|row| row["filePath"].as_str())
+            .filter_map(|row| {
+                row["filePath"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|path| !path.is_empty())
+            })
             .collect::<Vec<_>>();
         if fixed_paths.len() > 1
             && !fixed_paths

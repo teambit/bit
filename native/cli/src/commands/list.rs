@@ -306,29 +306,38 @@ fn model(value: &Value) -> io::Result<Model> {
     let versions = value["versions"].as_object().ok_or_else(|| decline("model versions"))?;
     let orphaned_empty =
         value["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty);
-    let version = match value["head"].as_str() {
+    let version = match value["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    {
         // `getTagOfRefIfExists(head) || head`.
         Some(head) => crate::commands::show_cmd::remote_show::find_tag_for_hash(value, head)
             .unwrap_or_else(|| head.to_string()),
         None if versions.is_empty() && orphaned_empty => "0.0.0".to_string(),
         None => return Err(decline("model with tags but no head")),
     };
-    let lane_readme_of = value["laneReadmeOf"]
+    Ok(Model {
+        identity: format!("{scope}/{name}"),
+        version,
+        deprecated: value["deprecated"] == true,
+        lane_readme_of: parse_lane_readme_of(value)?,
+    })
+}
+
+fn parse_lane_readme_of(value: &Value) -> io::Result<Vec<String>> {
+    value["laneReadmeOf"]
         .as_array()
         .ok_or_else(|| decline("lane readme"))?
         .iter()
         .map(|lane| {
             lane.as_str()
+                .map(str::trim)
+                .filter(|lane| !lane.is_empty())
                 .map(str::to_string)
                 .ok_or_else(|| decline("lane readme"))
         })
-        .collect::<io::Result<_>>()?;
-    Ok(Model {
-        identity: format!("{scope}/{name}"),
-        version,
-        deprecated: value["deprecated"] == true,
-        lane_readme_of,
-    })
+        .collect()
 }
 
 /// `getNamespaceWithWildcard`, then `**/<namespace>` of `listAll`.

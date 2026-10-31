@@ -55,17 +55,14 @@ pub(super) fn current(args: &[OsString], lane_args: &[&str]) -> io::Result<Outco
 
 fn write_current(stdout: &mut impl Write, id: &Value, alias: &str, json: bool) -> io::Result<()> {
     let name = text(id.get("name"))?.trim();
-    let alias = alias.trim();
+    let alias = Some(alias.trim())
+        .filter(|val| !val.is_empty())
+        .unwrap_or(name);
     let is_main = name == "main";
     let scope = if is_main { "" } else { text(id.get("scope"))?.trim() };
     let full = if is_main { "main".to_string() } else { format!("{scope}/{name}") };
-    let data = if is_main {
-        json!({"name":"main","scope":null,"id":"main","isDefault":true,"alias":null})
-    } else {
-        json!({"name":name,"scope":scope,"id":full,"isDefault":false,
-            "alias":(alias != name).then_some(alias)})
-    };
     if json {
+        let data = current_json(name, scope, &full, alias, is_main);
         stdout.write_all(serde_json::to_string_pretty(&data)?.as_bytes())?;
     } else if is_main || alias == name {
         writeln!(stdout, "{full}")?;
@@ -74,6 +71,15 @@ fn write_current(stdout: &mut impl Write, id: &Value, alias: &str, json: bool) -
     }
     stdout.flush()?;
     Ok(())
+}
+
+fn current_json(name: &str, scope: &str, full: &str, alias: &str, is_main: bool) -> Value {
+    if is_main {
+        json!({"name":"main","scope":null,"id":"main","isDefault":true,"alias":null})
+    } else {
+        json!({"name":name,"scope":scope,"id":full,"isDefault":false,
+            "alias":(alias != name).then_some(alias)})
+    }
 }
 
 pub(super) fn scope(root: &Path) -> io::Result<Value> {
@@ -87,8 +93,12 @@ pub(super) fn scope_for(root: &Path, bare: bool) -> io::Result<Value> {
 
 pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {
     let scope = scope(root)?;
+    let scope_name = scope["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty());
     let current =
-        bitmap::read(root)?.lane.unwrap_or_else(|| json!({"name":"main","scope":scope["name"]}));
+        bitmap::read(root)?.lane.unwrap_or_else(|| json!({"name":"main","scope":scope_name}));
     with_alias(current, &Tracking::read(&scope))
 }
 

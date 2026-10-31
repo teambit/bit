@@ -79,11 +79,11 @@ impl Inventory {
         let patterns = options.patterns
             .iter()
             .map(|pattern| pattern.trim())
-            .filter(|pattern| !pattern.is_empty());
+            .filter(|pattern| !pattern.is_empty() && !pattern.starts_with('#'));
         let ignored_files = options.ignored_files
             .iter()
             .map(|ignored| ignored.trim())
-            .filter(|ignored| !ignored.is_empty());
+            .filter(|ignored| !ignored.is_empty() && !ignored.starts_with('#'));
         let mut root = Ignore::new();
         root.add(
             patterns

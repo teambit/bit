@@ -187,15 +187,30 @@ fn resolve_bare_remote(
     lane: Option<&str>,
     session: &mut Session,
 ) -> io::Result<Option<String>> {
-    let Some(lane) = lane else { return Ok(None) };
+    let Some(lane) = lane
+        .map(str::trim)
+        .filter(|lane| !lane.is_empty())
+    else {
+        return Ok(None);
+    };
     let scope: Value = bit_object_import::parse_jsonc(&std::fs::read(root.join("scope.json"))?)?;
-    let local = scope["name"].as_str().ok_or_else(invalid)?;
+    let local = scope["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(invalid)?;
     let (remote, name) = lane
         .split_once('/')
-        .unwrap_or((local, lane));
+        .map_or((local, lane), |(remote, name)| (remote.trim(), name.trim()));
+    if remote.is_empty() || name.is_empty() {
+        return Err(invalid());
+    }
     if scope["lanes"]["new"]
         .as_array()
-        .is_some_and(|rows| rows.iter().any(|row| row == name))
+        .is_some_and(|rows| {
+            rows.iter()
+                .any(|row| row.as_str().map(str::trim) == Some(name))
+        })
     {
         return Ok(None);
     }

@@ -30,7 +30,7 @@ impl Options {
             }
             options.apply_arg(value)?;
         }
-        (!options.id.is_empty()).then_some(options)
+        (!options.id.is_empty() && options.id.len() <= 256).then_some(options)
     }
 
     fn apply_arg(&mut self, value: &str) -> Option<()> {
@@ -53,6 +53,7 @@ impl Options {
             }
             id if !id.trim().starts_with('-')
                 && !id.trim().is_empty()
+                && id.trim().len() <= 256
                 && self.id.is_empty() =>
             {
                 self.id = id.trim().into();

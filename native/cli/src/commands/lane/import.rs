@@ -177,10 +177,10 @@ fn apply(engine: &mut Engine, prepared: &Value) -> io::Result<()> {
 }
 
 fn progress(output: &Output, row: &Value) {
-    let reason = row["reason"].as_str().unwrap();
-    let count = row["ids"].as_array().unwrap().len();
-    let imported = row["components"].as_u64().unwrap();
-    let objects = row["objects"].as_u64().unwrap();
+    let reason = row["reason"].as_str().map_or("", str::trim);
+    let count = row["ids"].as_array().map_or(0, Vec::len);
+    let imported = row["components"].as_u64().unwrap_or(0);
+    let objects = row["objects"].as_u64().unwrap_or(0);
     output.restart(&format!("importing {count} components {reason}"));
     let (number, kind) = if imported > 0 { (imported, "components") } else { (objects, "objects") };
     output.restart(&format!("successfully imported {number} {kind} {reason}"));

@@ -113,11 +113,13 @@ impl Session {
     }
 
     fn phase_request(&self, phase: &Value) -> Request<'static> {
+        let token = self.selection["historyToken"].as_str().map_or("", str::trim);
+        let phase_name = phase["phase"].as_str().map_or("", str::trim);
         Request {
             operation: "checkout",
             to: None,
             verify_fresh: false,
-            options: json!({"laneHistory":{"token":self.selection["historyToken"],"phase":phase["phase"]},
+            options: json!({"laneHistory":{"token":token,"phase":phase_name},
                 "to":null,"pattern":null,"all":false,"revert":phase["revert"],"skipDependencyInstallation":true}),
         }
     }

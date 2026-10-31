@@ -70,25 +70,35 @@ fn apply_lane_target_arg<'a>(
     target: &mut Option<&'a str>,
     lane_name: &mut Option<&'a str>,
 ) -> Option<()> {
-    if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+    if matches!(
+        arg,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    ) {
         return Some(());
     }
     if matches!(arg, "-l" | "--lane-name") {
         let val = iter.next()?;
-        return (!val.starts_with('-') && set_unique(lane_name, val)).then_some(());
+        return set_unique(lane_name, val).then_some(());
     }
     if let Some(val) = arg
         .strip_prefix("--lane-name=")
         .or_else(|| arg.strip_prefix("-l="))
     {
-        return (!val.starts_with('-') && set_unique(lane_name, val)).then_some(());
+        return set_unique(lane_name, val).then_some(());
     }
-    (!arg.starts_with('-') && set_unique(target, arg)).then_some(())
+    set_unique(target, arg).then_some(())
 }
 
 fn set_unique<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
     let trimmed = val.trim();
-    !trimmed.is_empty() && slot.replace(trimmed).is_none()
+    !trimmed.is_empty() && !trimmed.starts_with('-') && slot.replace(trimmed).is_none()
 }
 
 pub(super) fn remove_readme(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {

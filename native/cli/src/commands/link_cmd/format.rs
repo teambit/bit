@@ -164,7 +164,13 @@ fn format_verbose_component_link(chalk: Chalk, item: &ComponentLinkItem) -> Stri
     let links: Vec<String> = item.bound
         .iter()
         .map(|link| {
-            format!("{}: {}\n{}: {}\n", chalk.bold("from"), link.from, chalk.bold("to"), link.to)
+            format!(
+                "{}: {}\n{}: {}\n",
+                chalk.bold("from"),
+                link.from.trim(),
+                chalk.bold("to"),
+                link.to.trim(),
+            )
         })
         .collect();
     format!("{title}\n{}\n", links.join("\n"))
@@ -193,7 +199,7 @@ fn format_target_links(chalk: Chalk, target_links: &[LinkToDirResult]) -> String
     let title = chalk.bold(&chalk.cyan("Target Links"));
     let rows: Vec<String> = target_links
         .iter()
-        .map(|item| format_link_row(chalk, &item.component_id, &item.links_detail.to))
+        .map(|item| format_link_row(chalk, item.component_id.trim(), item.links_detail.to.trim()))
         .collect();
     format!("{title}\n{}", rows.join("\n"))
 }

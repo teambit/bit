@@ -144,13 +144,15 @@ fn formatted_id(row: &Row, chalk: Chalk) -> String {
     if row.removed == Some(true) {
         id = chalk.red(&format!("{id} [Deleted]"));
     }
-    if !row.lane_readme_of.is_empty() {
+    let lanes: Vec<_> = row.lane_readme_of
+        .iter()
+        .map(|lane| lane.trim())
+        .filter(|lane| !lane.is_empty())
+        .collect();
+    if !lanes.is_empty() {
         id.push('\n');
-        for lane in &row.lane_readme_of {
-            let lane = lane.trim();
-            if !lane.is_empty() {
-                id.push_str(&chalk.yellow(&format!("[Lane Readme]: {lane}\n")));
-            }
+        for lane in lanes {
+            id.push_str(&chalk.yellow(&format!("[Lane Readme]: {lane}\n")));
         }
     }
     id

@@ -229,13 +229,14 @@ fn format_failures(failures: &[(String, String)], chalk: Chalk) -> String {
 }
 
 fn find_model<'a>(models: &'a [Value], identity: &str) -> Option<&'a Value> {
+    let identity = identity.trim();
     models
         .iter()
         .find(|model| {
             format!(
                 "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
+                model["scope"].as_str().map_or("", str::trim),
+                model["name"].as_str().map_or("", str::trim),
             ) == identity
         })
 }
@@ -245,15 +246,20 @@ fn resolve_from_head<'a>(
     model: &'a Value,
     identity: &str,
 ) -> Option<&'a str> {
+    let identity = identity.trim();
     if !from_lane.is_main()
         && let Some(head) = from_lane.components
             .iter()
-            .find(|comp| comp["id"].as_str() == Some(identity))
-            .and_then(|comp| comp["head"].as_str())
+            .find(|comp| comp["id"].as_str().map(str::trim) == Some(identity))
+            .and_then(|comp| comp["head"].as_str().map(str::trim))
+            .filter(|head| !head.is_empty())
     {
         return Some(head);
     }
-    model["head"].as_str()
+    model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
 }
 
 fn has_object(objects_dir: &Path, hash: &str) -> bool {

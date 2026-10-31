@@ -77,7 +77,7 @@ impl Session {
         if bytes.last() != Some(&b'\n') {
             return Err(invalid("linter tool response limit"));
         }
-        serde_json::from_slice(&bytes).map_err(io::Error::other)
+        serde_json::from_slice(&bytes).map_err(|_| invalid("linter tool response json"))
     }
 
     fn stderr(&mut self) -> io::Result<Vec<u8>> {

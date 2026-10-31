@@ -108,15 +108,19 @@ fn entry_scope<'a>(key_id: &'a str, name: &str, value: &'a Value) -> io::Result<
     }
 }
 
+fn split_key_version(key: &str) -> (&str, Option<&str>) {
+    match key.trim().rsplit_once('@') {
+        Some((bare, ver)) => (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty())),
+        None => (key.trim(), None),
+    }
+}
+
 fn entry(key: &str, value: &Value) -> io::Result<Entry> {
-    let name = crate::commands::update_cmd::bitmap_row_name(key, value);
+    let name = crate::commands::update_cmd::bitmap_row_name(key.trim(), value);
     if name.is_empty() || !matches!(value["version"], Value::String(_) | Value::Null) {
         return Err(decline("bitmap entry"));
     }
-    let (key_id, key_ver) = match key.rsplit_once('@') {
-        Some((bare, ver)) => (bare, Some(ver).filter(|ver| !ver.is_empty())),
-        None => (key, None),
-    };
+    let (key_id, key_ver) = split_key_version(key);
     let (scope, has_scope) = entry_scope(key_id, name, value)?;
     let root_dir = text(value, "rootDir").ok_or_else(|| decline("bitmap root dir"))?;
     let dep_entry = crate::commands::update_cmd::aspect_entry(

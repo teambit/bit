@@ -7,7 +7,10 @@ pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
     let selected = lanes
         .iter()
         .filter(|lane| {
-            lane.is_merged == Some(merged) || !merged && lane.is_merged.is_none()
+            let name = lane_name(&lane.id);
+            !name.is_empty()
+                && name != "main"
+                && (lane.is_merged == Some(merged) || !merged && lane.is_merged.is_none())
         });
     let items = selected
         .map(|lane| format.item(lane_name(&lane.id)))

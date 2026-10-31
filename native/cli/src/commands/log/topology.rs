@@ -40,10 +40,14 @@ pub(super) fn resolve_local_target(
 }
 
 fn resolve_from_bitmap(bitmap: &bitmap::Bitmap, id: &str) -> io::Result<Option<LocalTarget>> {
-    let norm_dir = id.trim_start_matches("./").trim_end_matches('/');
+    let normalized = id.replace('\\', "/");
+    let norm_dir = normalized.trim_start_matches("./").trim_end_matches('/');
     let dir_matches = bitmap.entries
         .iter()
-        .filter(|entry| !norm_dir.is_empty() && entry.root_dir.trim_end_matches('/') == norm_dir)
+        .filter(|entry| {
+            !norm_dir.is_empty()
+                && entry.root_dir.replace('\\', "/").trim_end_matches('/') == norm_dir
+        })
         .collect::<Vec<_>>();
     let matches = if dir_matches.is_empty() {
         bitmap.entries

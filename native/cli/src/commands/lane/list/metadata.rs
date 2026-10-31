@@ -135,11 +135,15 @@ pub(super) fn readme(value: &Value) -> io::Result<Option<Value>> {
 
 pub(super) fn readme_report(lane: &LaneData, chalk: Chalk) -> String {
     let Some(readme) = &lane.readme_component else { return String::new() };
-    let id = readme["id"].as_str().unwrap_or_default();
-    if let Some(head) = readme["head"].as_str() {
+    let id = readme["id"].as_str().map_or("", str::trim);
+    if let Some(head) = readme["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    {
         return format!(" readme: {id} - {head}");
     }
-    let full_name = id.split_once('/').map_or(id, |(_, name)| name);
+    let full_name = id.split_once('/').map_or(id, |(_, name)| name.trim());
     format!(
         r#" {} readme: {id} - (unsnapped) - use "bit snap {full_name}" to snap before exporting"#,
         Formatter::new(chalk).warn_symbol(),
@@ -152,8 +156,8 @@ pub(in crate::commands::lane) fn components_report(lane: &LaneData, format: &For
         .map(|component| {
             format.item(&format!(
                 "{} - {}",
-                component["id"].as_str().unwrap_or_default(),
-                component["head"].as_str().unwrap_or_default(),
+                component["id"].as_str().map_or("", str::trim),
+                component["head"].as_str().map_or("", str::trim),
             ))
         })
         .collect();

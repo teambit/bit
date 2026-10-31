@@ -84,6 +84,7 @@ fn row(value: &Value) -> io::Result<Row> {
             .map(|lane| {
                 lane.as_str()
                     .map(str::trim)
+                    .filter(|lane| !lane.is_empty())
                     .map(str::to_string)
                     .ok_or_else(|| decline("remote list readme"))
             })

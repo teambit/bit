@@ -94,32 +94,44 @@ fn invalid_alias_error(name: &str, alias: &str) -> Option<&'static str> {
     }
 }
 
-fn prepare(root: &std::path::Path, name: &str, alias: &str) -> io::Result<(Value, String)> {
+fn resolve_lane_name_and_scope(root: &std::path::Path, name: &str) -> io::Result<(String, String)> {
     let (lanes, _) = list::read(root)?;
-    let Some(lane) = show::find(&lanes, name).filter(|lane| !lane.is_main()) else {
-        return Err(invalid());
-    };
-    let (Some(lane_name), Some(scope)) = (lane.id["name"].as_str(), lane.id["scope"].as_str())
-    else {
-        return Err(invalid());
-    };
+    let lane = show::find(&lanes, name)
+        .filter(|lane| !lane.is_main())
+        .ok_or_else(invalid)?;
+    let lane_name = lane.id["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(invalid)?;
+    let scope = lane.id["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(invalid)?;
+    Ok((lane_name.to_owned(), scope.to_owned()))
+}
+
+fn prepare(root: &std::path::Path, name: &str, alias: &str) -> io::Result<(Value, String)> {
+    let (lane_name, scope) = resolve_lane_name_and_scope(root, name)?;
     let mut config: Value = bit_object_import::parse_jsonc(&fs::read(
         bit_workspace_config::scope_path(root).join("scope.json"),
     )?)?;
     let Some(tracking) = config["lanes"]["tracking"].as_array_mut() else {
         return Err(invalid());
     };
-    let local_name = name.split_once('/').map_or(name, |(_, value)| value);
+    let local_name = name.split_once('/').map_or_else(|| name.trim(), |(_, value)| value.trim());
+    let alias = alias.trim();
     if let Some(index) = tracking
         .iter()
-        .position(|row| row["localLane"] == local_name)
+        .position(|row| row["localLane"].as_str().map(str::trim) == Some(local_name))
     {
         tracking.remove(index);
     }
     let data = json!({"localLane":alias,"remoteLane":lane_name,"remoteScope":scope});
     if let Some(existing) = tracking
         .iter_mut()
-        .find(|row| row["localLane"] == *alias)
+        .find(|row| row["localLane"].as_str().map(str::trim) == Some(alias))
     {
         *existing = data;
     } else {

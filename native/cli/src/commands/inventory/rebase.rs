@@ -4,6 +4,9 @@
 /// `pattern` from the ignore file in `dir` (a Linux-style relative path).
 pub fn pattern(pattern: &str, dir: &str) -> String {
     let pattern = pattern.trim();
+    if pattern.starts_with('#') {
+        return String::new();
+    }
     let (negated, body) = match pattern.strip_prefix('!') {
         Some(body) => (true, body.trim()),
         None => (false, pattern),

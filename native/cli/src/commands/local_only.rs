@@ -204,6 +204,7 @@ fn is_entry_staged_for_local_only(
 ) -> Result<bool, Failure> {
     let Some(version) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
     else {
         return Ok(false);
@@ -211,6 +212,7 @@ fn is_entry_staged_for_local_only(
     let row = find_bitmap_row_ref(bitmap_val, entry)?;
     let Some(scope) = row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     else {
         return Ok(true);

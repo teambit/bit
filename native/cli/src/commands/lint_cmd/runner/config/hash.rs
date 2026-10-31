@@ -65,7 +65,8 @@ fn object(
     let mut keys: Vec<_> = values.keys().collect();
     keys.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     for key in keys {
-        if matches!(key.trim(), "" | "prototype" | "__proto__" | "constructor") {
+        let trimmed = key.trim();
+        if trimmed != key || matches!(trimmed, "" | "prototype" | "__proto__" | "constructor") {
             return Err(super::invalid("linter configuration prototype"));
         }
         string(key, output);

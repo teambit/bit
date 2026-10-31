@@ -195,7 +195,11 @@ pub(in crate::commands::lane) fn current(root: &Path, bare: bool) -> io::Result<
     if bare {
         let scope: Value =
             bit_object_import::parse_jsonc(&std::fs::read(root.join("scope.json"))?)?;
-        Ok((json!({"name":"main","scope":scope["name"]}), "main".to_owned()))
+        let scope_name = scope["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty());
+        Ok((json!({"name":"main","scope":scope_name}), "main".to_owned()))
     } else {
         read_current(root)
     }

@@ -347,15 +347,22 @@ fn bare_main_components(
     Ok(models
         .iter()
         .filter_map(|model| {
-            let head = model["head"].as_str()?;
+            let head = model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())?;
             let scope = model["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
                 .unwrap_or(default_scope);
-            let identity = format!("{scope}/{}", model["name"].as_str()?);
+            let name = model["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())?;
             let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
                 .unwrap_or_else(|| head.to_owned());
-            Some(json!({"id":format!("{identity}@{label}"),"head":label}))
+            Some(json!({"id":format!("{scope}/{name}@{label}"),"head":label}))
         })
         .collect())
 }
@@ -382,12 +389,18 @@ fn main_components(
         let model = models
             .iter()
             .find(|model| {
-                let model_scope = model["scope"].as_str().unwrap_or_default();
-                model["name"].as_str() == Some(entry_name)
-                    && (model_scope.is_empty() || model_scope == entry_scope)
+                let model_scope = model["scope"].as_str().map_or("", str::trim);
+                model["name"].as_str().map(str::trim) == Some(entry_name.trim())
+                    && (model_scope.is_empty() || model_scope == entry_scope.trim())
             })
             .ok_or_else(|| decline("a component without a model"))?;
-        let Some(head) = model["head"].as_str() else { continue };
+        let Some(head) = model["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        else {
+            continue;
+        };
         let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
             .unwrap_or_else(|| head.to_owned());
         components.push(json!({"id": format!("{}@{label}", entry.identity), "head": label}));
