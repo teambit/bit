@@ -20,12 +20,7 @@ pub(super) struct Freshness {
     timestamp: f64,
 }
 pub(super) fn read(request: &Read) -> io::Result<(usize, Value)> {
-    path(&request.cache)?;
-    let key = request.key.trim();
-    if key.is_empty() || key.len() > 4096 {
-        return Err(invalid("dependency cache key limit"));
-    }
-    let cache = reader::read(&request.cache, key)?;
+    let cache = read_cache(&request.cache, &request.key)?;
     Ok((1, json!({"cache":cache})))
 }
 pub(super) fn freshness(
@@ -49,6 +44,11 @@ pub(super) fn freshness(
 
 /// Read one entry of Bit's `cacache` dependency cache: `{ timestamp, data }`.
 pub fn read_cache(cache: &std::path::Path, key: &str) -> io::Result<Option<Value>> {
+    path(cache)?;
+    let key = key.trim();
+    if key.is_empty() || key.len() > 4096 || key.contains('\0') {
+        return Err(invalid("dependency cache key limit"));
+    }
     reader::read(cache, key)
 }
 

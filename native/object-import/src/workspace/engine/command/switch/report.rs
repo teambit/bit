@@ -16,15 +16,20 @@ pub(in super::super) fn append_skipped(
     let failed = result["failedComponents"]
         .as_array_mut()
         .ok_or_else(|| invalid("switch failure result"))?;
-    for identity in lane_only.iter().filter_map(Value::as_str) {
-        if targets
-            .iter()
-            .any(|target| target["identity"] == identity)
+    for identity in lane_only
+        .iter()
+        .filter_map(Value::as_str)
+        .map(str::trim)
+    {
+        if identity.is_empty()
+            || targets
+                .iter()
+                .any(|target| target["identity"].as_str().map(str::trim) == Some(identity))
             || context["lane"]["addedTargets"]
                 .as_array()
                 .is_some_and(|rows| {
                     rows.iter()
-                        .any(|row| row["identity"] == identity)
+                        .any(|row| row["identity"].as_str().map(str::trim) == Some(identity))
                 })
         {
             continue;

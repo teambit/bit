@@ -36,11 +36,12 @@ fn policy(policy: &Policy, plan: &mut Plan) {
             .cloned()
             .collect();
         for name in names {
-            if let Some(value) = version(&policy.peer_dependencies, &name) {
+            let trimmed = name.trim();
+            if let Some(value) = version(&policy.peer_dependencies, trimmed) {
                 plan.packages[field].shift_remove(&name);
-                plan.packages[2].insert(name, Value::String(value));
-            } else if let Some(value) = version(&policy.dependencies, &name) {
-                plan.packages[2].shift_remove(&name);
+                plan.packages[2].insert(trimmed.to_owned(), Value::String(value));
+            } else if let Some(value) = version(&policy.dependencies, trimmed) {
+                plan.packages[2].shift_remove(trimmed);
                 plan.packages[field].insert(name, Value::String(value));
             }
         }
@@ -82,6 +83,7 @@ fn legacy(plan: &mut Plan) {
         plan.packages[1].shift_remove(name);
     }
     if let Some(value) = regular.or(dev) {
+        let value = value.trim();
         // Canonical Number.isNaN(version[0]) is false for every string character.
         plan.packages[2].insert(name.to_owned(), Value::String(format!("^{value}")));
     }

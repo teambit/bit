@@ -31,7 +31,8 @@ pub(super) struct Request {
 }
 
 pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
-    if !matches!(request.mode.as_str(), "commonjs" | "typescript5.9") {
+    let mode = request.mode.trim();
+    if !matches!(mode, "commonjs" | "typescript5.9") {
         return Err(invalid("dependency resolution mode"));
     }
     path(&request.filename)?;
@@ -56,7 +57,7 @@ pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result
         request.dependencies
             .par_iter()
             .map(|dependency| {
-                resolve_one(dependency, parent, request.home.as_deref(), &budget, &request.mode)
+                resolve_one(dependency, parent, request.home.as_deref(), &budget, mode)
             })
             .collect::<io::Result<Vec<_>>>()
     })?;

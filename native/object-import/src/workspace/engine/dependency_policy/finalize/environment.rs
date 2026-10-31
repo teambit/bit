@@ -13,8 +13,10 @@ pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
         }
     }
     for (name, value) in &request.environment.policy {
-        let value = if let Some(placeholder) =
-            value.as_str().filter(|value| crate::plus_version::is_plus(value))
+        let value = if let Some(placeholder) = value
+            .as_str()
+            .map(str::trim)
+            .filter(|value| crate::plus_version::is_plus(value))
         {
             let resolved = resolve(request, name)?;
             Value::String(crate::plus_version::resolve(placeholder, resolved.as_str(), "*"))
@@ -26,6 +28,7 @@ pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
     Ok(())
 }
 fn resolve(request: &Request, name: &str) -> io::Result<Value> {
+    let name = name.trim();
     if let Some(value) = request.resolved
         .get(name)
         .and_then(|package| package.concrete_version.as_deref())
@@ -41,7 +44,7 @@ fn resolve(request: &Request, name: &str) -> io::Result<Value> {
     }
     if let Some(entry) = request.environment.model_components
         .iter()
-        .find(|entry| entry.package_name.as_deref() == Some(name))
+        .find(|entry| entry.package_name.as_deref().map(str::trim) == Some(name))
     {
         let value = extract_model_component_version(&entry.identity)
             .ok_or_else(|| invalid("dependency policy model version unavailable"))?;
@@ -63,8 +66,10 @@ fn extract_model_component_version(identity: &str) -> Option<&str> {
 pub(super) fn automatic(request: &Request, output: &mut Output) -> io::Result<()> {
     for packages in &mut output.state.packages {
         for (name, value) in packages {
-            let Some(placeholder) =
-                value.as_str().filter(|value| crate::plus_version::is_plus(value))
+            let Some(placeholder) = value
+                .as_str()
+                .map(str::trim)
+                .filter(|value| crate::plus_version::is_plus(value))
             else {
                 continue;
             };

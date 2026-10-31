@@ -48,15 +48,25 @@ fn authored(value: &Value) -> io::Result<()> {
     for record in records {
         let valid_id = record["componentId"]
             .as_str()
-            .is_some_and(|raw| !raw.is_empty())
+            .is_some_and(|raw| !raw.trim().is_empty())
             || record["componentId"]
                 .get("_legacy")
                 .unwrap_or_else(|| &record["componentId"])["name"]
-                .is_string();
-        if !record["importSource"].is_string()
+                .as_str()
+                .is_some_and(|name| !name.trim().is_empty());
+        if record["importSource"]
+            .as_str()
+            .map(str::trim)
+            .is_none_or(str::is_empty)
             || !valid_id
-            || !record["relativePath"]["sourceRelativePath"].is_string()
-            || !record["relativePath"]["destinationRelativePath"].is_string()
+            || record["relativePath"]["sourceRelativePath"]
+                .as_str()
+                .map(str::trim)
+                .is_none_or(str::is_empty)
+            || record["relativePath"]["destinationRelativePath"]
+                .as_str()
+                .map(str::trim)
+                .is_none_or(str::is_empty)
         {
             return Err(invalid("relative authored issue record"));
         }

@@ -7,23 +7,20 @@ pub(super) fn resolve(
     selection: &Selection<'_>,
     repository: &mut Repository,
 ) -> io::Result<String> {
-    let identity =
-        selection.target["identity"].as_str().ok_or_else(|| invalid("stash target identity"))?;
-    if let Some(version) = super::super::checkout_stash::version(options, identity) {
-        return Ok(version.to_owned());
+    if let Some(version) = target_version(options, selection)? {
+        return Ok(version);
     }
     let model = selection.model.ok_or_else(|| invalid("command checkout model"))?;
-    if let Some(version) = selection.target
-        .get("historicalVersion")
-        .and_then(Value::as_str)
-        .or_else(|| selection.target["switchVersion"].as_str())
-    {
-        return Ok(version.to_owned());
-    }
-    let to = options.to.as_deref().ok_or_else(|| invalid("command checkout target"))?;
+    let to = options.to
+        .as_deref()
+        .map(str::trim)
+        .filter(|to| !to.is_empty())
+        .ok_or_else(|| invalid("command checkout target"))?;
     if to == "reset" {
         return selection.target["version"]
             .as_str()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
             .map(str::to_owned)
             .ok_or_else(|| invalid("command reset version"));
     }
@@ -47,6 +44,25 @@ pub(super) fn resolve(
         return recent(selection, repository);
     }
     explicit(selection, to, repository)
+}
+
+fn target_version(options: &Options, selection: &Selection<'_>) -> io::Result<Option<String>> {
+    let identity = selection.target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("stash target identity"))?;
+    if let Some(version) = super::super::checkout_stash::version(options, identity) {
+        return Ok(Some(version.to_owned()));
+    }
+    let _ = selection.model.ok_or_else(|| invalid("command checkout model"))?;
+    Ok(selection.target
+        .get("historicalVersion")
+        .and_then(Value::as_str)
+        .or_else(|| selection.target["switchVersion"].as_str())
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .map(str::to_owned))
 }
 
 fn explicit(

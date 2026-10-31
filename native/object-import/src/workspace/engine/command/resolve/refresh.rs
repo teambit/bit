@@ -141,6 +141,9 @@ fn replace_owned_proofs(
     before: &[proof::Proof],
     changes: &[SourceChange],
 ) -> io::Result<()> {
+    if changes.len() > before.len() {
+        return Err(invalid("snapshot callback source ownership"));
+    }
     let mut paths = std::collections::HashSet::new();
     for change in changes {
         if !change.after.is_content()

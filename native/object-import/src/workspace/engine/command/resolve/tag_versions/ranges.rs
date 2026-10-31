@@ -12,9 +12,12 @@ pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
         .iter()
         .map(|material| {
             Ok((
-                material.identity.clone(),
+                material.identity.trim().to_owned(),
                 material.version_state.tagged_version
-                    .clone()
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|ver| !ver.is_empty())
+                    .map(str::to_owned)
                     .ok_or_else(|| invalid("tag missing semantic version"))?,
             ))
         })

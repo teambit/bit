@@ -50,7 +50,9 @@ impl Reader {
             None => proof::read(file, &mut self.proofs)?,
         };
         let Some(bytes) = bytes else { return Ok(None) };
-        self.bytes += bytes.len();
+        self.bytes = self.bytes
+            .checked_add(bytes.len())
+            .ok_or_else(|| invalid("fresh package byte budget"))?;
         if self.bytes > 32 * 1024 * 1024 {
             return Err(invalid("fresh package byte budget"));
         }
@@ -95,6 +97,7 @@ impl Reader {
         let resolved = resolved.replace(std::path::MAIN_SEPARATOR, "/");
         let Some(main) = package.manifest["main"]
             .as_str()
+            .map(str::trim)
             .filter(|main| !main.is_empty())
         else {
             return Ok(None);

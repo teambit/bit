@@ -236,7 +236,7 @@ pub(crate) fn serve(
         },
         Err(error) => Response {
             data: response::failure_data(&error),
-            error: Some(error.to_string()),
+            error: Some(error.to_string().trim().to_owned()),
             canonical_error: response::is_canonical(&error).then_some(true),
             ..failure(id)
         },

@@ -165,10 +165,13 @@ pub(in crate::workspace::engine) fn plan(
 ) -> io::Result<(usize, Value)> {
     let mut retained =
         snapshots.command.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
-    if retained.record.token != input.token.trim()
+    let token = input.token.trim();
+    if token.is_empty()
+        || retained.record.token != token
         || !retained.materials.is_empty()
         || !matches!(retained.finalized, publication::Phase::Pending(_))
     {
+        snapshots.command.resolve = Some(retained);
         return Err(invalid("resolve planning state"));
     }
     let result = planning::prepare(&mut retained, input, snapshots, pool);
@@ -185,9 +188,12 @@ pub(in crate::workspace::engine) fn tag_candidates(
     let mut retained =
         snapshots.command.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
     let result = (|| {
-        if retained.record.token != input.token.trim()
+        let token = input.token.trim();
+        if token.is_empty()
+            || retained.record.token != token
             || retained.tag.is_none()
             || !retained.materials.is_empty()
+            || !matches!(retained.finalized, publication::Phase::Pending(_))
         {
             return Err(invalid("tag candidates state"));
         }

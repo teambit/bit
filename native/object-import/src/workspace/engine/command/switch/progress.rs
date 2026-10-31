@@ -42,6 +42,11 @@ fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> 
         .map(str::trim)
         .filter(|ver| !ver.is_empty())
         .ok_or_else(|| invalid("switch addition version"))?;
+    let (scope, name) = identity_parts(target)?;
+    Ok(crate::command_import::Target { scope: Some(scope), name, version: version.into() })
+}
+
+fn identity_parts(target: &Value) -> io::Result<(String, String)> {
     if let Some(identity) = target["identity"]
         .as_str()
         .or_else(|| target["id"].as_str())
@@ -49,12 +54,12 @@ fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> 
         .filter(|id| !id.is_empty())
     {
         let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
-        let (scope, name) = base.split_once('/').ok_or_else(|| invalid("switch addition scope"))?;
-        return Ok(crate::command_import::Target {
-            scope: Some(scope.into()),
-            name: name.into(),
-            version: version.into(),
-        });
+        let (scope, name) = base
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("switch addition scope"))?;
+        return Ok((scope.into(), name.into()));
     }
     let scope = target["scope"]
         .as_str()
@@ -68,11 +73,7 @@ fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> 
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("switch addition identity"))?;
-    Ok(crate::command_import::Target {
-        scope: Some(scope.into()),
-        name: name.into(),
-        version: version.into(),
-    })
+    Ok((scope.into(), name.into()))
 }
 
 pub(in crate::workspace::engine::command) fn failure(

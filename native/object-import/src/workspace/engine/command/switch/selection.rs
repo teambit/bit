@@ -64,7 +64,9 @@ fn filter(pattern: &str, entries: &[Entry]) -> io::Result<Vec<String>> {
         let (exclude, pattern) = pattern
             .strip_prefix('!')
             .map_or((false, pattern), |rest| (true, rest.trim()));
-        update_selection(&mut selected, entries, pattern, exclude);
+        if !pattern.is_empty() {
+            update_selection(&mut selected, entries, pattern, exclude);
+        }
     }
     if selected.is_empty() {
         return Err(canonical(format!(
@@ -75,13 +77,15 @@ fn filter(pattern: &str, entries: &[Entry]) -> io::Result<Vec<String>> {
 }
 
 fn update_selection(selected: &mut Vec<String>, entries: &[Entry], pattern: &str, exclude: bool) {
-    for entry in
-        entries.iter().filter(|entry| bit_workspace_config::glob::matches(pattern, &entry.identity))
+    for entry in entries
+        .iter()
+        .filter(|entry| bit_workspace_config::glob::matches(pattern, entry.identity.trim()))
     {
+        let entry_id = entry.identity.trim();
         if exclude {
-            selected.retain(|id| id != &entry.identity);
-        } else if !selected.contains(&entry.identity) {
-            selected.push(entry.identity.clone());
+            selected.retain(|id| id != entry_id);
+        } else if !selected.iter().any(|id| id == entry_id) {
+            selected.push(entry_id.to_owned());
         }
     }
 }
@@ -89,9 +93,10 @@ fn update_selection(selected: &mut Vec<String>, entries: &[Entry], pattern: &str
 pub(super) fn ordered(mut entries: Vec<Entry>, selected: Option<&[String]>) -> Vec<Entry> {
     if let Some(selected) = selected {
         entries.sort_by_key(|entry| {
+            let entry_id = entry.identity.trim();
             selected
                 .iter()
-                .position(|id| id == &entry.identity)
+                .position(|id| id.trim() == entry_id)
         });
     }
     entries

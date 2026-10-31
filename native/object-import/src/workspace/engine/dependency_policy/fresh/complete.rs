@@ -13,7 +13,15 @@ pub(super) fn detected(request: &Complete) -> io::Result<Value> {
     let mut detected = request.capture.detected.clone();
     if !detected["coreAspects"]
         .as_array()
-        .is_some_and(|ids| ids.len() <= 4096 && ids.iter().all(Value::is_string))
+        .is_some_and(|ids| {
+            ids.len() <= 4096
+                && ids
+                    .iter()
+                    .all(|id| {
+                        id.as_str()
+                            .is_some_and(|val| !val.trim().is_empty())
+                    })
+        })
     {
         return Err(invalid("fresh detection issue boundary"));
     }

@@ -40,11 +40,20 @@ pub(super) struct Grammar {
 }
 pub(super) fn unversioned(value: &str) -> &str {
     let trimmed = value.trim();
-    trimmed.rsplit_once('@').map_or(trimmed, |(identity, _)| identity.trim())
+    trimmed
+        .rsplit_once('@')
+        .map(|(identity, _)| identity.trim())
+        .filter(|identity| !identity.is_empty())
+        .unwrap_or(trimmed)
 }
 pub(super) fn version(value: &str) -> &str {
     let trimmed = value.trim();
-    trimmed.rsplit_once('@').map_or("latest", |(_, version)| version.trim())
+    trimmed
+        .rsplit_once('@')
+        .filter(|(identity, _)| !identity.trim().is_empty())
+        .map(|(_, version)| version.trim())
+        .filter(|version| !version.is_empty())
+        .unwrap_or("latest")
 }
 pub(super) fn identity(base: &str, version: &str) -> String {
     let version = version.trim();

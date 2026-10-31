@@ -42,9 +42,13 @@ fn select(
     let mut components = Vec::new();
     let bitmap = crate::parse_jsonc(&fs::read(retained.root.join(".bitmap"))?)?;
     for current in captured {
+        let current_id = current.target.identity.trim();
         if input.selected_ids
             .as_ref()
-            .is_some_and(|ids| !ids.contains(&current.target.identity))
+            .is_some_and(|ids| {
+                !ids.iter()
+                    .any(|id| id.trim() == current_id)
+            })
         {
             continue;
         }

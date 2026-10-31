@@ -236,7 +236,11 @@ fn pattern_groups(count: usize, rows: &[Value]) -> io::Result<Vec<Vec<&str>>> {
             .and_then(|value| usize::try_from(value).ok())
             .filter(|index| *index < count)
             .ok_or_else(|| invalid("tag pattern index"))?;
-        let identity = row["identity"].as_str().ok_or_else(|| invalid("tag pattern identity"))?;
+        let identity = row["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|identity| !identity.is_empty())
+            .ok_or_else(|| invalid("tag pattern identity"))?;
         if groups[index].contains(&identity) {
             return Err(invalid("tag duplicate pattern match"));
         }
@@ -256,7 +260,11 @@ pub(super) fn versions(
         "soft":options.soft,"persist":options.persist,"hasTagData":options.versions_file.is_some(),"versionsFile":options.versions_file,"autoAddedWorkspaceRoot":super::root::added(retained)});
     let mut entered = serde_json::Map::new();
     for row in input.tag_selections.as_deref().unwrap_or_default() {
-        let id = row["identity"].as_str().ok_or_else(|| invalid("tag selected identity"))?;
+        let id = row["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("tag selected identity"))?;
         if !entered.contains_key(id) {
             entered.insert(id.into(), row["version"].clone());
         }
@@ -266,6 +274,8 @@ pub(super) fn versions(
         .filter_map(|target| {
             target["identity"]
                 .as_str()
+                .map(str::trim)
+                .filter(|identity| !identity.is_empty())
                 .map(|identity| (identity.to_owned(), &target["nextVersion"]))
         })
         .collect();

@@ -110,7 +110,8 @@ fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Ve
                     .to_owned()
             } else {
                 let scope = id["scope"].as_str().map_or("", str::trim);
-                let name = id["name"].as_str().map_or("", str::trim);
+                let raw_name = id["name"].as_str().map_or("", str::trim);
+                let name = raw_name.rsplit_once('@').map_or(raw_name, |(base, _)| base.trim());
                 if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
             };
             !matches_selected(&identity, identities)
@@ -131,7 +132,8 @@ fn matches_selected(identity: &str, identities: &HashSet<&str>) -> bool {
         && identities
             .iter()
             .any(|cand| {
-                cand.split_once('/')
-                    .is_some_and(|(_, name)| name == identity)
+                cand.trim()
+                    .split_once('/')
+                    .is_some_and(|(_, name)| name.trim() == identity)
             })
 }

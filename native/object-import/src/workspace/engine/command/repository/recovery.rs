@@ -12,7 +12,7 @@ impl Repository {
             imported.accept_recovery_objects(root, objects)?;
         }
         for (hash, bytes) in objects {
-            let hash = hash.trim();
+            let hash = hash.trim().to_ascii_lowercase();
             if hash.len() < 3 || !hash.is_char_boundary(2) {
                 continue;
             }
@@ -25,7 +25,7 @@ impl Repository {
             {
                 *row = proof::restored_control(row, Some(bytes))?;
             }
-            self.values.remove(&(hash.to_owned(), "Component".into()));
+            self.values.remove(&(hash, "Component".into()));
         }
         Ok(())
     }

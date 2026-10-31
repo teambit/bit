@@ -15,10 +15,11 @@ pub(super) fn apply(request: &Request, plan: &mut Plan) {
     }
 }
 fn detected(request: &Request, plan: &Plan, name: &str, seen: &HashSet<String>) -> bool {
+    let name = name.trim();
     plan.components
         .iter()
         .flatten()
-        .any(|index| request.entries[*index].package_name.as_deref() == Some(name))
+        .any(|index| request.entries[*index].package_name.as_deref().map(str::trim) == Some(name))
         || request.packages
             .iter()
             .any(|map| version(map, name).is_some())
@@ -26,14 +27,17 @@ fn detected(request: &Request, plan: &Plan, name: &str, seen: &HashSet<String>) 
         || plan.missing
             .iter()
             .flatten()
-            .any(|missing| missing == name)
+            .any(|missing| missing.trim() == name)
 }
 fn update(request: &Request, plan: &mut Plan, field: usize, name: &str, value: &Value) {
+    let name = name.trim();
     let existing: [Option<usize>; 3] = std::array::from_fn(|field| {
         plan.components[field]
             .iter()
             .copied()
-            .find(|index| request.entries[*index].package_name.as_deref() == Some(name))
+            .find(|index| {
+                request.entries[*index].package_name.as_deref().map(str::trim) == Some(name)
+            })
     });
     if field == 2 && peers(request, plan, name, &existing) {
         return;
@@ -41,7 +45,9 @@ fn update(request: &Request, plan: &mut Plan, field: usize, name: &str, value: &
     for packages in &mut plan.packages {
         packages.shift_remove(name);
     }
-    if value == "-" || ((existing[0].is_some() || existing[1].is_some()) && field != 2) {
+    if value.as_str().map(str::trim) == Some("-")
+        || ((existing[0].is_some() || existing[1].is_some()) && field != 2)
+    {
         return;
     }
     assign(plan, field, name, value, &existing);

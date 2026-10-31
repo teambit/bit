@@ -12,7 +12,11 @@ pub(super) fn range(package: &Package) -> Option<Value> {
         return Some(json!("*"));
     }
     let Some(prefix @ ("~" | "^" | ">=")) = range.as_str().map(str::trim) else {
-        return Some(range.clone());
+        return Some(
+            range
+                .as_str()
+                .map_or_else(|| range.clone(), |text| json!(text.trim())),
+        );
     };
     let concrete = package.concrete
         .as_deref()

@@ -36,7 +36,7 @@ fn newer(path: &Path, timestamp: f64) -> io::Result<bool> {
         Ok(time) => milliseconds(time),
         Err(error) => -milliseconds(error.duration()),
     };
-    Ok(milliseconds > timestamp)
+    Ok(!milliseconds.is_finite() || milliseconds > timestamp)
 }
 #[expect(clippy::suboptimal_flops, reason = "match Node Stats' unfused timestamp arithmetic")]
 fn milliseconds(time: Duration) -> f64 {
@@ -54,7 +54,7 @@ fn directories(root: &Path) -> io::Result<Vec<PathBuf>> {
     let text = root
         .to_str()
         .map(str::trim)
-        .filter(|text| !text.is_empty())
+        .filter(|text| !text.is_empty() && !text.contains('\0'))
         .ok_or_else(|| invalid("dependency cache directory UTF-8"))?;
     if text.contains(['*', '?', '[', ']', '{', '}', '!', '(', ')']) {
         return Err(invalid("dependency cache glob directory"));

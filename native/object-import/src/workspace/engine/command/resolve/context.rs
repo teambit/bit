@@ -76,14 +76,16 @@ fn initial(
     selected: Vec<String>,
     request: &Prepare,
 ) -> Retained {
+    let finalized = super::publication::Phase::Pending(super::refresh::Callbacks::default());
+    let snap = request.ordinary_snap.then(|| request.options.clone());
     Retained {
         record,
         pending,
         selected,
         materials: Vec::new(),
         result: Value::Null,
-        finalized: super::publication::Phase::Pending(super::refresh::Callbacks::default()),
-        snap: request.ordinary_snap.then(|| request.options.clone()),
+        finalized,
+        snap,
         tag: request.tag_options.clone(),
     }
 }
@@ -115,16 +117,13 @@ fn metadata(
     } else {
         recovery::bitmap::project(&bitmap)?
     };
-    let mut context = status_context::metadata_for_recovery(
-        &status_context::Request {
-            root: request.root.clone(),
-            home: request.home.clone(),
-            history: false,
-        },
-        pool,
-        &settings,
-        super::super::lane_context::visibility::targets(&structural, &settings)?,
-    )?;
+    let status_req = status_context::Request {
+        root: request.root.clone(),
+        home: request.home.clone(),
+        history: false,
+    };
+    let visible = super::super::lane_context::visibility::targets(&structural, &settings)?;
+    let mut context = status_context::metadata_for_recovery(&status_req, pool, &settings, visible)?;
     context["workspace"] = workspace;
     if request.tag_options.as_ref().is_some_and(|options| options.persist) {
         bind_next_versions(&bitmap, &mut context)?;
@@ -140,13 +139,11 @@ fn filter_pending_tag_targets(request: &Prepare, context: &mut Value) -> io::Res
         .as_ref()
         .is_some_and(|options| options.soft || options.persist)
     {
-        context["targets"]
-            .as_array_mut()
-            .ok_or_else(|| invalid("snapshot targets"))?
-            .retain(|target| {
-                target["locallyRemoved"] != true
-                    && !config::is_config_removed(&target["bitmapConfig"])
-            });
+        let targets =
+            context["targets"].as_array_mut().ok_or_else(|| invalid("snapshot targets"))?;
+        targets.retain(|row| {
+            row["locallyRemoved"] != true && !config::is_config_removed(&row["bitmapConfig"])
+        });
     }
     Ok(())
 }
@@ -173,23 +170,22 @@ fn attach_configuration(
 fn bind_next_versions(bitmap: &Value, context: &mut Value) -> io::Result<()> {
     let entries = bitmap.as_object().ok_or_else(|| invalid("tag persist bitmap"))?;
     for target in context["targets"].as_array_mut().ok_or_else(|| invalid("tag persist targets"))? {
-        let directory =
-            target["directory"].as_str().ok_or_else(|| invalid("tag persist directory"))?;
-        let next = entries
+        let dir = target["directory"].as_str().ok_or_else(|| invalid("tag persist directory"))?;
+        let matches = |entry: &&Value| {
+            entry["rootDir"]
+                .as_str()
+                .map(|raw| {
+                    raw.strip_prefix("./")
+                        .unwrap_or(raw)
+                        .trim_end_matches('/')
+                })
+                == Some(dir)
+        };
+        let entry = entries
             .values()
-            .find(|entry| {
-                entry["rootDir"]
-                    .as_str()
-                    .map(|dir| {
-                        dir.strip_prefix("./")
-                            .unwrap_or(dir)
-                            .trim_end_matches('/')
-                    })
-                    == Some(directory)
-            })
-            .map(|entry| &entry["nextVersion"])
+            .find(matches)
             .ok_or_else(|| invalid("tag persist bitmap entry"))?;
-        target["nextVersion"] = next.clone();
+        target["nextVersion"] = entry["nextVersion"].clone();
     }
     Ok(())
 }
@@ -221,23 +217,12 @@ fn validate_request(request: &Prepare) -> io::Result<()> {
 
 fn control_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
     let mut proofs = Vec::new();
-    for name in [
-        ".bitmap",
-        "workspace.jsonc",
-        "package.json",
-        ".bit/scope.json",
-        ".bit/index.json",
-        ".bit/unmerged.json",
-        ".bit/staged-snaps",
-        "merge-conflict",
-    ] {
-        let path = name
-            .strip_prefix(".bit/")
-            .map_or_else(
-                || request.root.join(name),
-                |name| crate::scope_path(&request.root).join(name),
-            );
-        proof::read(&path, &mut proofs)?;
+    for name in [".bitmap", "workspace.jsonc", "package.json", "merge-conflict"] {
+        proof::read(&request.root.join(name), &mut proofs)?;
+    }
+    let scope = crate::scope_path(&request.root);
+    for name in ["scope.json", "index.json", "unmerged.json", "staged-snaps"] {
+        proof::read(&scope.join(name), &mut proofs)?;
     }
     if request.ordinary_snap {
         proof::read(&request.home.join(".bitrc.jsonc"), &mut proofs)?;
@@ -283,13 +268,7 @@ fn validate_extensions(context: &Value) -> io::Result<()> {
             .into_iter()
             .flatten()
         {
-            let identity = row
-                .get("name")
-                .or_else(|| row.get("legacyId"))
-                .or_else(|| row.get("extensionId"))
-                .or_else(|| row.get("id"))
-                .ok_or_else(|| invalid("resolve extension identity"))?;
-            if !seen.insert(identity.to_string()) {
+            if !seen.insert(extension_identity(row)?) {
                 return Err(invalid("resolve duplicate extension identity"));
             }
         }
@@ -297,14 +276,28 @@ fn validate_extensions(context: &Value) -> io::Result<()> {
     Ok(())
 }
 
+fn extension_identity(row: &Value) -> io::Result<String> {
+    [row.get("name"), row.get("legacyId"), row.get("extensionId"), row.get("id")]
+        .into_iter()
+        .flatten()
+        .find(|val| {
+            val.as_str()
+                .is_some_and(|text| !text.trim().is_empty())
+                || val
+                    .as_object()
+                    .is_some_and(|map| !map.is_empty())
+        })
+        .map(ToString::to_string)
+        .ok_or_else(|| invalid("resolve extension identity"))
+}
+
 fn pending_configuration(context: &mut Value, pending: &[Value], snapshot: bool) -> io::Result<()> {
     for target in context["targets"].as_array_mut().ok_or_else(|| invalid("resolve targets"))? {
         target["resolveConfig"] = json!(true);
+        let id = target["identity"].as_str().map(str::trim);
         if let Some(row) = pending
             .iter()
-            .find(|row| {
-                selection::identity(&row["id"]).ok().as_deref() == target["identity"].as_str()
-            })
+            .find(|row| selection::identity(&row["id"]).ok().as_deref() == id)
             && let Some(config) = row
                 .get("mergedConfig")
                 .filter(|value| !value.is_null())
@@ -324,7 +317,12 @@ fn validate_snapshot_config(config: &Value) -> io::Result<()> {
     let rows = config.as_object().ok_or_else(|| invalid("snapshot merged configuration"))?;
     if rows
         .iter()
-        .any(|(name, value)| !name.contains('/') || (!value.is_object() && value != "-"))
+        .any(|(name, value)| {
+            name.trim()
+                .split_once('/')
+                .is_none_or(|(scope, part)| scope.trim().is_empty() || part.trim().is_empty())
+                || (!value.is_object() && value != "-")
+        })
     {
         return Err(invalid("snapshot merged aspect configuration"));
     }
@@ -334,7 +332,12 @@ fn validate_snapshot_config(config: &Value) -> io::Result<()> {
 fn validate_pending_config(config: &Value) -> io::Result<()> {
     let rows = config.as_object().ok_or_else(|| invalid("resolve merged configuration"))?;
     for (name, value) in rows {
-        let bare = name.split('@').next().unwrap_or(name);
+        let name = name.trim();
+        let bare = name
+            .split('@')
+            .next()
+            .unwrap_or(name)
+            .trim();
         let dependency_policy = bare == "teambit.dependencies/dependency-resolver"
             && value
                 .as_object()
@@ -372,10 +375,8 @@ fn load_models(
             targets.push(target);
         }
     }
-    let input = serde_json::from_value(
-        json!({"root":request.root,"history":false,"includeHeads":false,"targets":targets}),
-    )
-    .map_err(io::Error::other)?;
+    let raw = json!({"root":request.root,"history":false,"includeHeads":false,"targets":targets});
+    let input = serde_json::from_value(raw).map_err(io::Error::other)?;
     let (_, models) =
         crate::workspace::engine::status_models::read_overlay(&input, pool, &imported.overlay)?;
     let models = models.as_object().ok_or_else(|| invalid("resolve models"))?;
@@ -391,13 +392,13 @@ fn bind_models(context: &Value, repository: &mut repository::Repository) -> io::
         let name = model["name"]
             .as_str()
             .map(str::trim)
-            .filter(|name| !name.is_empty())
-            .ok_or_else(|| invalid("resolve model name"))?;
-        let identity = model["scope"]
+            .filter(|name| !name.is_empty());
+        let name = name.ok_or_else(|| invalid("resolve model name"))?;
+        let scope = model["scope"]
             .as_str()
             .map(str::trim)
-            .filter(|scope| !scope.is_empty())
-            .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+            .filter(|scope| !scope.is_empty());
+        let identity = scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
         if repository.read_component(&identity)? != *model {
             return Err(invalid("resolve model changed"));
         }
@@ -406,8 +407,8 @@ fn bind_models(context: &Value, repository: &mut repository::Repository) -> io::
         let hash = version[0]
             .as_str()
             .map(str::trim)
-            .filter(|hash| !hash.is_empty())
-            .ok_or_else(|| invalid("resolve version reference"))?;
+            .filter(|hash| !hash.is_empty());
+        let hash = hash.ok_or_else(|| invalid("resolve version reference"))?;
         if repository.read(hash, "Version")? != version[1] {
             return Err(invalid("resolve version changed"));
         }

@@ -93,12 +93,16 @@ impl Snapshot {
     ) -> io::Result<HashMap<std::path::PathBuf, Vec<u8>>> {
         let mut files = HashMap::new();
         for object in self.staged_objects() {
-            let hash =
-                object["hash"].as_str().ok_or_else(|| invalid("snapshot staged object hash"))?;
+            let hash = object["hash"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("snapshot staged object hash"))?;
             crate::merge_history::hash(hash)?;
             let expected = std::fs::read(
                 object["compressedPath"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|path| !path.is_empty())
                     .ok_or_else(|| invalid("snapshot staged object path"))?,
             )?;
             let path = crate::scope_path(root)

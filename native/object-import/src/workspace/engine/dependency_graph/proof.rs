@@ -91,7 +91,12 @@ fn verify_one(proof: &Proof) -> io::Result<usize> {
         return Ok(0);
     }
     let content = contents(&proof.path)?;
-    if content.as_ref().map(|data| hash(data)) != proof.hash {
+    if content
+        .as_ref()
+        .map(|data| hash(data))
+        .as_deref()
+        != proof.hash.as_deref().map(str::trim)
+    {
         return Err(invalid("dependency capture changed"));
     }
     Ok(content.as_ref().map_or(0, Vec::len))

@@ -184,20 +184,32 @@ pub(super) fn prepare_graph_imports(
             {
                 continue;
             }
-            targets.push(crate::command_import::Target {
-                scope: id["scope"].as_str().map(str::to_owned),
-                name: id["name"]
-                    .as_str()
-                    .ok_or_else(|| invalid("snap dependency name"))?
-                    .to_owned(),
-                version: id["version"]
-                    .as_str()
-                    .ok_or_else(|| invalid("snap dependency version"))?
-                    .to_owned(),
-            });
+            targets.push(dependency_target(id)?);
         }
     }
     retained.record.repository.prepare_versions(&targets)
+}
+
+fn dependency_target(id: &Value) -> io::Result<crate::command_import::Target> {
+    Ok(crate::command_import::Target {
+        scope: id["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .map(str::to_owned),
+        name: id["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("snap dependency name"))?
+            .to_owned(),
+        version: id["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
+            .ok_or_else(|| invalid("snap dependency version"))?
+            .to_owned(),
+    })
 }
 
 fn material_graph_source(material: &super::super::resolve_snapshot::Material) -> Value {
@@ -206,10 +218,12 @@ fn material_graph_source(material: &super::super::resolve_snapshot::Material) ->
         .unwrap_or(("", material.identity.as_str()));
     let scope = material.model["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .unwrap_or(target_scope);
     let name = material.model["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .unwrap_or(target_name);
     serde_json::json!({"scope":scope,"name":name,"version":material.version_state.current_head})
@@ -283,6 +297,7 @@ pub(super) fn new_material(
         identity.split_once('/').ok_or_else(|| invalid("snap new scoped identity"))?;
     let binding = current.target.current["bindingPrefix"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("snap new binding prefix"))?;
     // ModelComponent.from(getPropsFromConsumerComp) for a newly tracked Harmony component.

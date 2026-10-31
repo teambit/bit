@@ -69,7 +69,12 @@ fn targets(context: &Value, selected: Option<&[String]>) -> io::Result<Vec<Value
     Ok(targets
         .iter()
         .filter(|target| selected.is_none_or(|ids| contains(ids, target)))
-        .map(|target| json!({"identity":target["identity"],"version":target["version"]}))
+        .map(|target| {
+            json!({
+                "identity":target["identity"].as_str().map_or_else(|| target["identity"].clone(), |id| json!(id.trim())),
+                "version":target["version"].as_str().map_or_else(|| target["version"].clone(), |ver| json!(ver.trim())),
+            })
+        })
         .collect())
 }
 

@@ -160,7 +160,11 @@ pub(super) fn finish(
                     .to_owned()
             }
         })
-        .filter(|path| !input.ignored_root.contains(path))
+        .filter(|path| {
+            !input.ignored_root
+                .iter()
+                .any(|ignored| ignored.trim().trim_start_matches("./") == path)
+        })
         .collect::<Vec<_>>();
     if !plan.workspace_root {
         paths = own.filter(&paths, pool);
@@ -168,7 +172,9 @@ pub(super) fn finish(
     paths.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     let files: Vec<_> = paths
         .iter()
-        .map(|path| json!({"relativePath":path,"name":path.rsplit('/').next(),"test":false}))
+        .map(|path| {
+            json!({"relativePath":path,"name":path.rsplit('/').next().unwrap_or(path),"test":false})
+        })
         .collect();
     Ok((files.len(), json!({"files":files})))
 }

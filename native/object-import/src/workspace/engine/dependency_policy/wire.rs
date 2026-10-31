@@ -146,7 +146,7 @@ impl Request {
 pub(super) fn name(value: &str) -> bool {
     let value = value.trim();
     !value.is_empty()
-        && !value.contains('\0')
+        && !value.chars().any(char::is_control)
         && !matches!(
             value,
             "__proto__"
@@ -166,6 +166,7 @@ pub(super) fn name(value: &str) -> bool {
 }
 pub(in crate::workspace::engine) fn version(map: &Packages, name: &str) -> Option<String> {
     map.get(name)
+        .or_else(|| map.get(name.trim()))
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|value| !value.is_empty())

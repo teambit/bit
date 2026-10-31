@@ -18,7 +18,7 @@ fn matching_for_separator(
     overlay: impl Iterator<Item = String>,
     separator: char,
 ) -> io::Result<Vec<String>> {
-    let prefix = prefix.trim();
+    let prefix = prefix.trim().to_ascii_lowercase();
     if !(3..40).contains(&prefix.len()) || !prefix.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(invalid("checkout short reference"));
     }
@@ -28,8 +28,8 @@ fn matching_for_separator(
         return Ok(Vec::new());
     }
     let mut refs = overlay
-        .map(|hash| hash.trim().to_owned())
-        .filter(|hash| hash.starts_with(prefix))
+        .map(|hash| hash.trim().to_ascii_lowercase())
+        .filter(|hash| hash.starts_with(&prefix))
         .collect::<BTreeSet<_>>();
     let entries = match fs::read_dir(directory.join(&prefix[..2])) {
         Ok(entries) => entries,
@@ -38,7 +38,7 @@ fn matching_for_separator(
         }
         Err(error) => return Err(error),
     };
-    collect(entries, prefix, &mut refs)?;
+    collect(entries, &prefix, &mut refs)?;
     Ok(refs.into_iter().collect())
 }
 
@@ -49,7 +49,7 @@ fn collect(entries: fs::ReadDir, prefix: &str, refs: &mut BTreeSet<String>) -> i
         }
         let name = entry?.file_name();
         let Some(name) = name.to_str() else { continue };
-        let hash = format!("{}{name}", &prefix[..2]);
+        let hash = format!("{}{}", &prefix[..2], name.to_ascii_lowercase());
         if hash.starts_with(prefix) && crate::merge_history::hash(&hash).is_ok() {
             refs.insert(hash);
         }

@@ -50,6 +50,7 @@ fn import_token(token: Option<&str>) -> Option<&str> {
             !candidate.is_empty()
                 && candidate.len() <= 256
                 && !candidate.chars().any(char::is_control)
+                && !candidate.contains(['/', '\\'])
         })
 }
 

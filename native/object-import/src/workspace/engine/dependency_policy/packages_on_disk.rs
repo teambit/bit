@@ -130,7 +130,10 @@ fn dependent_manifest(directory: &Path, budget: &Budget) -> io::Result<Option<Va
 fn locate(request: &Request, name: &str, budget: &Budget) -> io::Result<Option<PathBuf>> {
     for ancestor in request.component_root.ancestors() {
         let candidate = ancestor.join("node_modules").join(name);
-        if budget.metadata(&candidate)?.is_some() {
+        if budget
+            .metadata(&candidate)?
+            .is_some_and(|meta| !meta.is_file())
+        {
             return Ok(Some(candidate));
         }
         if ancestor == request.root {

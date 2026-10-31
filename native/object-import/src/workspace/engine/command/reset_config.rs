@@ -133,7 +133,7 @@ fn configuration_target<'a>(record: &'a Record, identity: &str) -> io::Result<&'
                 .into_iter()
                 .flatten(),
         )
-        .find(|target| target["identity"] == identity)
+        .find(|target| target["identity"].as_str().map(str::trim) == Some(identity.trim()))
         .ok_or_else(|| invalid("reset configuration target"))
 }
 
@@ -153,21 +153,33 @@ fn projected_document(
             original,
         );
     }
-    let identity =
-        target["identity"].as_str().ok_or_else(|| invalid("reset configuration identity"))?;
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("reset configuration identity"))?;
     document(identity, &material.version_name, &material.version, original)
 }
 
 fn document(identity: &str, version: &str, stored: &Value, original: &Value) -> io::Result<Value> {
-    let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("reset config identity"))?;
+    let (scope, name) = identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("reset config identity"))?;
     let mut extensions = Map::new();
     for row in ordered_extensions(stored, original)? {
-        let name = row["name"].as_str().ok_or_else(|| invalid("reset custom extension"))?;
+        let aspect = row["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|aspect| !aspect.is_empty())
+            .ok_or_else(|| invalid("reset custom extension"))?;
         if row.get("extensionId").is_some() || row.get("legacyId").is_some() {
             return Err(invalid("reset custom extension identity"));
         }
-        let config = configurations::plain(name, &row["config"])?;
-        extensions.entry(name).or_insert(config);
+        let config = configurations::plain(aspect, &row["config"])?;
+        extensions.entry(aspect).or_insert(config);
     }
     Ok(
         json!({"componentId":{"scope":scope,"name":name,"version":version},"propagate":false,"extensions":extensions}),

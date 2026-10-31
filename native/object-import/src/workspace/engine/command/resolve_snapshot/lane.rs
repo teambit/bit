@@ -9,7 +9,10 @@ pub(super) fn lane_objects(
     objects: &mut Vec<Value>,
     repository: &mut Repository,
 ) -> io::Result<()> {
-    let hash = lane["hash"].as_str().ok_or_else(|| invalid("resolve lane hash"))?;
+    let hash = lane["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("resolve lane hash"))?;
     crate::merge_history::hash(hash)?;
     let mut value = lane["value"].clone();
     if value
@@ -160,7 +163,11 @@ fn history(
         }
         Err(error) => return Err(error),
     };
-    let key = receipt["batchId"].as_str().ok_or_else(|| invalid("resolve lane history key"))?;
+    let key = receipt["batchId"]
+        .as_str()
+        .map(str::trim)
+        .filter(|key| !key.is_empty())
+        .ok_or_else(|| invalid("resolve lane history key"))?;
     let log = history_log(receipt)?;
     let components = lane["components"]
         .as_array()
@@ -178,7 +185,11 @@ fn history(
 
 fn history_log(receipt: &Value) -> io::Result<Value> {
     let mut log = receipt["laneLog"].clone();
-    if log["date"].as_str().is_none() {
+    if log["date"]
+        .as_str()
+        .map(str::trim)
+        .is_none_or(str::is_empty)
+    {
         return Err(invalid("resolve lane history log"));
     }
     let message = receipt["log"]["message"].as_str().map_or("", str::trim);
@@ -190,6 +201,10 @@ fn history_log(receipt: &Value) -> io::Result<Value> {
 fn component_id(row: &Value) -> io::Result<String> {
     let (scope, name) = super::super::inbound::remote::file_list::row_scoped_id_parts(row)
         .ok_or_else(|| invalid("resolve lane component scope"))?;
-    let head = row["head"].as_str().ok_or_else(|| invalid("resolve lane component head"))?;
+    let head = row["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .ok_or_else(|| invalid("resolve lane component head"))?;
     Ok(format!("{scope}/{name}@{head}"))
 }

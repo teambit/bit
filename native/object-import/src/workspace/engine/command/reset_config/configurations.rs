@@ -7,7 +7,12 @@ pub(super) fn plain(name: &str, value: &Value) -> io::Result<Value> {
         .cloned()
         .ok_or_else(|| invalid("reset aspect config"))?;
     config.remove("__specific");
-    match name.split('@').next().unwrap_or(name) {
+    let name = name.trim();
+    match name
+        .split('@')
+        .next()
+        .map_or(name, str::trim)
+    {
         "teambit.dependencies/dependency-resolver" => {
             if config.keys().any(|key| key != "policy") {
                 return Err(invalid("reset resolver config"));

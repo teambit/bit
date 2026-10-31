@@ -71,7 +71,11 @@ fn owned_status_command(
 }
 
 fn validate_read_set(proofs: &[dependency_graph::proof::Proof]) -> io::Result<(usize, Value)> {
-    if proofs.len() > 16384 {
+    let bytes: usize = proofs
+        .iter()
+        .map(|proof| proof.path.as_os_str().len())
+        .sum();
+    if proofs.len() > 16384 || bytes > super::MAX_RAW {
         return Err(super::invalid("read set proof count limit"));
     }
     dependency_graph::proof::verify(proofs)?;

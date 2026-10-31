@@ -8,7 +8,10 @@ pub(super) fn reconcile(
     allocation: &Value,
 ) -> io::Result<()> {
     let Some(pending) = &material.pending else { return Ok(()) };
-    let remote = pending["head"].as_str().ok_or_else(|| invalid("resolve pending head"))?;
+    let remote = pending["head"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("resolve pending head"))?;
     crate::merge_history::hash(remote)?;
     if pending["unrelated"].is_object() || pending["unrelated"] == true {
         unrelated(version, material, pending, remote)?;
@@ -29,8 +32,11 @@ fn unrelated(
 ) -> io::Result<()> {
     let previous = pending["previouslyUsedVersion"]
         .as_str()
-        .or(Some(material.version_state.current_head.as_str()))
+        .map(str::trim)
         .filter(|value| !value.is_empty())
+        .or_else(|| {
+            Some(material.version_state.current_head.trim()).filter(|head| !head.is_empty())
+        })
         .ok_or_else(|| invalid("resolve unrelated prior version"))?;
     if pending["unrelated"] == true {
         version["unrelated"] = json!({"head":previous,"laneId":pending["laneId"]});
@@ -84,7 +90,7 @@ fn merge_parent(version: &mut Value, remote: &str) {
 fn default_message(version: &mut Value, pending: &Value) {
     if version["log"]["message"]
         .as_str()
-        .is_some_and(|message| !message.is_empty())
+        .is_some_and(|message| !message.trim().is_empty())
     {
         return;
     }
@@ -94,12 +100,14 @@ fn default_message(version: &mut Value, pending: &Value) {
     let id = &pending["laneId"];
     let lane_id = id
         .as_str()
+        .map(str::trim)
+        .filter(|lane| !lane.is_empty())
         .map_or_else(
             || {
                 format!(
                     "{}/{}",
-                    id["scope"].as_str().unwrap_or_default(),
-                    id["name"].as_str().unwrap_or_default(),
+                    id["scope"].as_str().map_or("", str::trim),
+                    id["name"].as_str().map_or("", str::trim),
                 )
             },
             str::to_owned,

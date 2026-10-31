@@ -6,10 +6,17 @@ pub(super) fn capture(
     destination: &Path,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
-    if !destination.starts_with(root) || destination == root {
+    if !destination.starts_with(root) || destination == root || destination.file_name().is_none() {
         return Err(invalid("reset config outside workspace"));
     }
-    for parent in destination.ancestors().skip(1) {
+    for (depth, parent) in destination
+        .ancestors()
+        .skip(1)
+        .enumerate()
+    {
+        if depth > 64 {
+            return Err(invalid("reset config ancestor depth"));
+        }
         let metadata = ordinary_directory_metadata(parent)?;
         proofs.push(proof::metadata(parent, Some(&metadata))?);
         if parent == root {

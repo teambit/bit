@@ -55,7 +55,7 @@ fn update(retained: &mut Retained, input: &Overrides) -> io::Result<HashMap<Stri
 fn replace_ids(value: &mut Value, replacements: &HashMap<String, String>) {
     match value {
         Value::String(text) => {
-            if let Some(replacement) = replacements.get(text) {
+            if let Some(replacement) = replacements.get(text.trim()) {
                 *text = replacement.clone();
             }
         }
@@ -68,7 +68,10 @@ fn replace_ids(value: &mut Value, replacements: &HashMap<String, String>) {
 }
 
 fn can_apply_overrides(retained: &Retained, token: &str) -> bool {
-    retained.record.token == token
+    let token = token.trim();
+    !token.is_empty()
+        && retained.record.token == token
+        && !retained.materials.is_empty()
         && retained.tag
             .as_ref()
             .is_some_and(|options| {

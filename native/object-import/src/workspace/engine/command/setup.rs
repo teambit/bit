@@ -70,7 +70,7 @@ fn prepare_licenses(
 fn checkout_targets(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
     let mut targets = prepare::selected(request, context)?;
     if request.operation == Operation::Checkout
-        && request.options.to.as_deref() == Some("head")
+        && request.options.to.as_deref().map(str::trim) == Some("head")
         && let Some(tracked) = context["lane"]["trackedTargets"].as_array()
     {
         targets.extend(tracked.iter().cloned());
@@ -105,7 +105,12 @@ fn validate_license(scope: &str, repository: &mut repository::Repository) -> io:
         Ok(metadata)
             if metadata
                 .get("license")
-                .is_some_and(|value| !value.is_null() && value != "") =>
+                .is_some_and(|value| {
+                    !value.is_null()
+                        && value
+                            .as_str()
+                            .is_none_or(|lic| !lic.trim().is_empty())
+                }) =>
         {
             return Err(invalid("command scope license requires writer"));
         }

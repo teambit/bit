@@ -8,12 +8,15 @@ pub(in super::super) fn options(request: &Prepare) -> io::Result<()> {
     let options = request.options.lane.as_ref().ok_or_else(|| invalid("switch lane missing"))?;
     if request.options.strategy
         .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
         .is_some_and(|value| !matches!(value, "ours" | "theirs" | "manual"))
     {
         return Err(canonical("merge must be one of the following: ours, theirs, manual".into()));
     }
     if let Some(alias) = options.alias
         .as_deref()
+        .map(str::trim)
         .filter(|alias| !alias.is_empty())
     {
         validate_alias(alias)?;
@@ -124,4 +127,34 @@ fn is_version_removed(
             .and_then(|(kind, value)| (kind == "Version").then_some(value))
     };
     value.map_or(Ok(false), |version| super::super::selection::removed(&version))
+}
+
+pub(super) fn staged_main(root: &Path, context: &Value) -> io::Result<bool> {
+    let bytes = match std::fs::read(crate::scope_path(root).join("staged-snaps")) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error),
+    };
+    let staged = std::str::from_utf8(&bytes).map_err(io::Error::other)?;
+    let staged = staged
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect::<std::collections::HashSet<_>>();
+    let models = context["models"].as_array().ok_or_else(|| invalid("switch models"))?;
+    Ok(models.iter().any(|model| model_staged(model, &staged)))
+}
+
+fn model_staged(model: &Value, staged: &std::collections::HashSet<&str>) -> bool {
+    let versions = ["versions", "orphanedVersions"]
+        .into_iter()
+        .filter_map(|field| model[field].as_object())
+        .flat_map(serde_json::Map::values)
+        .filter_map(Value::as_str);
+    model["head"]
+        .as_str()
+        .into_iter()
+        .chain(versions)
+        .map(str::trim)
+        .any(|hash| staged.contains(hash))
 }

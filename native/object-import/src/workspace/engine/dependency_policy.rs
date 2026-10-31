@@ -45,8 +45,15 @@ fn ignored(request: &Request, plan: &mut Plan) {
     for field in 0..2 {
         plan.packages[field].retain(|name, _| !request.ignore(field, name, &mut plan.removed));
     }
-    let regular = plan.packages[0].clone();
-    plan.packages[1].retain(|name, _| !regular.contains_key(name));
+    let regular: Vec<_> = plan.packages[0]
+        .keys()
+        .map(|name| name.trim().to_owned())
+        .collect();
+    plan.packages[1].retain(|name, _| {
+        !regular
+            .iter()
+            .any(|existing| existing == name.trim())
+    });
     let identities: Vec<_> = plan.components[0]
         .iter()
         .map(|index| request.entries[*index].identity.trim())

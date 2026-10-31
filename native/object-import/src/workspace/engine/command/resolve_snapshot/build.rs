@@ -60,7 +60,11 @@ pub(super) fn artifacts(
     if artifacts.len() > 4096 {
         return Err(invalid("snapshot artifact count"));
     }
-    let root = receipt["artifactRoot"].as_str().ok_or_else(|| invalid("snapshot artifact root"))?;
+    let root = receipt["artifactRoot"]
+        .as_str()
+        .map(str::trim)
+        .filter(|root| !root.is_empty())
+        .ok_or_else(|| invalid("snapshot artifact root"))?;
     let root = PathBuf::from(root);
     if !root.is_absolute() || !fs::symlink_metadata(&root)?.is_dir() {
         return Err(invalid("snapshot artifact root"));
@@ -106,11 +110,12 @@ fn regular(root: &Path, path: &Path) -> io::Result<()> {
 
 fn reference(receipt: &mut Value, artifact: &GeneratedFile, hash: &str) -> io::Result<()> {
     crate::checkout::plan::relative_path(&artifact.relative_path)?;
+    let identity = artifact.identity.trim();
     let version = receipt["versions"]
         .as_array_mut()
         .ok_or_else(|| invalid("snapshot build versions"))?
         .iter_mut()
-        .find(|version| version["identity"] == artifact.identity)
+        .find(|version| version["identity"].as_str().map(str::trim) == Some(identity))
         .ok_or_else(|| invalid("snapshot artifact component"))?;
     let builder = version["buildData"]["extensions"]
         .as_array_mut()
@@ -130,7 +135,11 @@ fn reference(receipt: &mut Value, artifact: &GeneratedFile, hash: &str) -> io::R
         return Err(invalid("snapshot artifact reference binding"));
     }
     file["file"] = json!(hash);
-    if let Some(url) = &artifact.url {
+    if let Some(url) = artifact.url
+        .as_deref()
+        .map(str::trim)
+        .filter(|url| !url.is_empty())
+    {
         file["url"] = json!(url);
     }
     Ok(())

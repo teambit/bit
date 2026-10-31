@@ -74,7 +74,7 @@ fn merge(log: &mut Value, values: &Value) -> io::Result<()> {
     for field in ["message", "username", "email"] {
         if let Some(value) = values.get(field) {
             let text = value.as_str().ok_or_else(|| invalid("snapshot log field"))?;
-            if !text.is_empty() {
+            if !text.trim().is_empty() {
                 log[field] = value.clone();
             }
         }
@@ -86,7 +86,7 @@ fn automatic(log: &mut Value, explicit_message: bool) {
     let message = log["message"].as_str().unwrap_or_default();
     if explicit_message {
         log["message"] = json!(format!("{message} (bump dependencies versions)"));
-    } else if message.is_empty() {
+    } else if message.trim().is_empty() {
         log["message"] = json!("bump dependencies versions");
     }
 }

@@ -27,7 +27,7 @@ pub(super) fn status_load_order(
         .collect::<io::Result<Vec<_>>>()?;
     let lane_ids = lane
         .iter()
-        .map(|entry| entry.identity.as_str())
+        .map(|entry| entry.identity.trim())
         .collect::<HashSet<_>>();
     let tracked_ids = tracked
         .iter()
@@ -40,8 +40,8 @@ pub(super) fn status_load_order(
         .collect::<Vec<_>>();
     ordered.extend(
         lane.iter()
-            .filter(|entry| tracked_ids.contains(entry.identity.as_str()))
-            .map(|entry| entry.identity.clone()),
+            .filter(|entry| tracked_ids.contains(entry.identity.trim()))
+            .map(|entry| entry.identity.trim().to_owned()),
     );
     if ordered.len() != tracked.len() {
         return Err(invalid("switch ordered target identities"));

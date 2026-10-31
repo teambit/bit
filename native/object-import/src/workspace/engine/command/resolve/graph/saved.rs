@@ -40,14 +40,14 @@ pub(super) fn append(graph: &mut Graph, edges: &Value) -> io::Result<()> {
     for edge in edges {
         let source = key(&edge["source"])?;
         let target = key(&edge["target"])?;
-        if !matches!(edge["type"].as_str(), Some("prod" | "dev" | "ext")) {
+        if !matches!(edge["type"].as_str().map(str::trim), Some("prod" | "dev" | "ext")) {
             return Err(invalid("resolve saved graph lifecycle"));
         }
-        graph.entry(target).or_default();
+        graph.entry(target.clone()).or_default();
         let outgoing = graph.entry(source).or_default();
         if let Some(previous) = outgoing
             .iter_mut()
-            .find(|row| row["target"] == edge["target"])
+            .find(|row| key(&row["target"]).ok().as_deref() == Some(target.as_str()))
         {
             *previous = edge.clone();
         } else {

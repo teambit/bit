@@ -114,10 +114,12 @@ fn report_items(prepared: &mut Prepared) {
 fn staged_controls(prepared: &mut Prepared, proofs: &mut Vec<proof::Proof>) -> io::Result<()> {
     let root = &prepared.root;
     let backup = crate::scope_path(root).join("last-merged");
-    let staged_config = format!(
-        "staged-config/{}.json",
-        prepared.objects.lane.as_ref().map_or("main", |lane| lane.id.as_str()),
-    );
+    let lane_id = prepared.objects.lane
+        .as_ref()
+        .map(|lane| lane.id.trim())
+        .filter(|id| !id.is_empty())
+        .unwrap_or("main");
+    let staged_config = format!("staged-config/{lane_id}.json");
     for (source, destination) in
         [("staged-snaps", "staged-snaps"), ("staged-config.json", staged_config.as_str())]
     {

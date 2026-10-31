@@ -95,7 +95,7 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>
     }
     let input = serde_json::from_value(
         json!({"cache":crate::scope_path(&request.root).join("cache/components/deps"),
-        "key":request.identity}),
+        "key":request.identity.trim()}),
     )
     .map_err(io::Error::other)?;
     let (_, result) = read_dependency_cache::read(&input)?;

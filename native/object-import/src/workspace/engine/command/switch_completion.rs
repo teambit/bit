@@ -75,20 +75,25 @@ pub(in crate::workspace::engine) fn complete(
     input: &Complete,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
-    bitmap::validate_history_file_id(&input.file_id)?;
+    let file_id = input.file_id.trim();
+    bitmap::validate_history_file_id(file_id)?;
     if !input.owned_workspace_writes.is_empty() {
         return Err(invalid("switch completion has no acknowledged installer bitmap writes"));
     }
-    let record = state.record.take().ok_or_else(|| invalid("switch completion owner absent"))?;
     let token = input.token.trim();
-    if token.is_empty() || record.token != token {
+    if token.is_empty()
+        || state.record
+            .as_ref()
+            .is_none_or(|record| record.token != token)
+    {
         return Err(invalid("switch completion token"));
     }
+    let record = state.record.take().ok_or_else(|| invalid("switch completion owner absent"))?;
     let retained = record.planned
         .as_ref()
         .and_then(|plan| plan.switch_completion.as_ref())
         .ok_or_else(|| invalid("switch completion plan absent"))?;
-    let mut output = retained.commit(&input.file_id)?;
+    let mut output = retained.commit(file_id)?;
     output["token"] = json!(record.token);
     Ok((1, output))
 }

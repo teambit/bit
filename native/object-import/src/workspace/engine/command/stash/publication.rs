@@ -29,11 +29,14 @@ impl Prepared {
 
 fn metadata(
     retained: &Retained,
-    message: Option<String>,
+    message: Option<&str>,
     rows: &[Value],
 ) -> io::Result<PreparedSave> {
     let mut metadata = json!({});
-    if let Some(message) = message {
+    if let Some(message) = message
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+    {
         metadata["message"] = json!(message);
     }
     PreparedSave::prepare(
@@ -50,6 +53,7 @@ fn batch(
     let mut rows = Vec::new();
     let mut versions = Vec::new();
     let mut hashes = HashSet::new();
+    let bit_version = input.bit_version.trim();
     for (component, allocation) in retained.components.iter().zip(&input.versions) {
         let hash =
             crate::validate::hexadecimal(&crate::merge_history::hash(allocation.hash.trim())?);
@@ -57,7 +61,7 @@ fn batch(
             return Err(invalid("stash allocation identity"));
         }
         let version =
-            version::prepare(component, allocation, &input.bit_version, snapshots, &mut objects)?;
+            version::prepare(component, allocation, bit_version, snapshots, &mut objects)?;
         let mut id = component.id.clone();
         id.as_object_mut()
             .ok_or_else(|| invalid("stash component ID"))?
@@ -72,7 +76,7 @@ fn batch(
 
 pub(super) fn prepare(
     retained: &mut Retained,
-    input: Finalize,
+    input: &Finalize,
     snapshots: &snapshots::State,
 ) -> io::Result<Value> {
     retained.check(&input.token)?;
@@ -89,8 +93,8 @@ pub(super) fn prepare(
     if input.versions.len() != retained.components.len() {
         return Err(invalid("stash allocation count"));
     }
-    let (mut objects, rows, versions) = batch(retained, &input, snapshots)?;
-    let metadata = metadata(retained, input.message, &rows)?;
+    let (mut objects, rows, versions) = batch(retained, input, snapshots)?;
+    let metadata = metadata(retained, input.message.as_deref(), &rows)?;
     let directory = scratch::Directory::create()?;
     let mut seen = HashSet::new();
     objects.retain(|object| object["type"] != "Source" || seen.insert(object["hash"].clone()));

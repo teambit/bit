@@ -42,7 +42,7 @@ pub(super) fn prepare(
         return Err(invalid("stash existing log override"));
     }
     validate_log(&version["log"])?;
-    version["bitVersion"] = json!(bit_version);
+    version["bitVersion"] = json!(bit_version.trim());
     version["modified"] = json!([]);
     version["parents"] = json!(component.previous.iter().collect::<Vec<_>>());
     // StashMain ignores the returned graph Sources; only the Version references them.
@@ -51,15 +51,18 @@ pub(super) fn prepare(
     let bytes = serde_json::to_vec(graph).map_err(io::Error::other)?;
     version["flattenedEdgesRef"] = json!(crate::validate::hexadecimal(&Sha1::digest(bytes)));
     if let Some(graph) = component.version.get("dependenciesGraph") {
-        let serialized =
-            graph.as_str().ok_or_else(|| invalid("stash dependency graph serialization"))?;
+        let serialized = graph
+            .as_str()
+            .map(str::trim)
+            .filter(|serialized| !serialized.is_empty())
+            .ok_or_else(|| invalid("stash dependency graph serialization"))?;
         let _: Value = serde_json::from_str(serialized).map_err(io::Error::other)?;
         version["dependenciesGraphRef"] =
             json!(crate::validate::hexadecimal(&Sha1::digest(serialized.as_bytes())));
     }
 
     let sources = capture_files(&mut version, component, snapshots)?;
-    objects.push(snapshot::object("Version", Some(&allocation.hash), version.clone())?);
+    objects.push(snapshot::object("Version", Some(allocation.hash.trim()), version.clone())?);
     objects.extend(sources);
     Ok(version)
 }

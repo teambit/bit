@@ -72,8 +72,10 @@ fn validate_graph(root: &Path, material: &Material) -> io::Result<()> {
     if material.version.get("flattenedEdges").is_some() {
         return Ok(());
     }
-    let old =
-        material.version["flattenedEdgesRef"].as_str().ok_or_else(|| invalid("resolve graph"))?;
+    let old = material.version["flattenedEdgesRef"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("resolve graph"))?;
     crate::merge_history::hash(old)?;
     if !crate::scope_path(root)
         .join("objects")
@@ -98,13 +100,21 @@ fn validate_files(material: &Material, snapshots: &snapshots::State) -> io::Resu
 }
 
 fn validate_file(file: &Value, snapshots: &snapshots::State) -> io::Result<usize> {
-    let path = file["path"].as_str().ok_or_else(|| invalid("resolve file path"))?;
-    let raw = file["rawHash"].as_str().ok_or_else(|| invalid("resolve raw hash"))?;
+    let path = file["path"]
+        .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .ok_or_else(|| invalid("resolve file path"))?;
+    let raw = file["rawHash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|raw| !raw.is_empty())
+        .ok_or_else(|| invalid("resolve raw hash"))?;
     let token = file["readToken"].as_u64().ok_or_else(|| invalid("resolve file token"))?;
     let observed = snapshots
         .get(token, Path::new(path), raw)
         .ok_or_else(|| invalid("resolve lost capture"))?;
-    if observed.snapshot_hash != file["snapshotHash"] {
+    if observed.snapshot_hash != file["snapshotHash"].as_str().map_or("", str::trim) {
         return Err(invalid("resolve capture content"));
     }
     Ok(observed.contents.len())

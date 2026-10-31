@@ -60,17 +60,27 @@ fn component_dependencies(state: &Value, output: &mut Vec<String>) -> io::Result
         state["components"].as_array().ok_or_else(|| invalid("issue component indices"))?
     {
         for index in indices.as_array().ok_or_else(|| invalid("issue lifecycle indices"))? {
-            let index = index.as_u64().ok_or_else(|| invalid("issue dependency index"))? as usize;
-            let id = state["entries"]
-                .get(index)
-                .and_then(|row| row["identity"].as_str())
-                .map(str::trim)
-                .filter(|id| !id.is_empty())
-                .ok_or_else(|| invalid("issue dependency identity"))?;
-            output.push(id.to_owned());
+            output.push(dependency_id(state, index)?);
         }
     }
     Ok(())
+}
+
+fn dependency_id(state: &Value, index: &Value) -> io::Result<String> {
+    let index = index.as_u64().ok_or_else(|| invalid("issue dependency index"))? as usize;
+    let row = state["entries"].get(index).ok_or_else(|| invalid("issue dependency identity"))?;
+    let id = row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("issue dependency identity"))?;
+    Ok(match id.rsplit_once('@') {
+        Some((base, ver)) if !base.trim().is_empty() && !ver.trim().is_empty() => {
+            format!("{}@{}", base.trim(), ver.trim())
+        }
+        _ => id.to_owned(),
+    })
 }
 
 fn external(

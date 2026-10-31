@@ -76,7 +76,7 @@ impl Projection<'_> {
         let field = usize::from(
             self.request.detection.dev_files
                 .iter()
-                .any(|dev| dev == &relative),
+                .any(|dev| dev.trim() == relative),
         );
         let mut edges: Vec<String> =
             serde_json::from_value(self.graph["tree"][path].clone()).map_err(io::Error::other)?;
@@ -93,7 +93,7 @@ impl Projection<'_> {
         self.missing_packages(path, &relative, field, &mut packages)?;
         self.packages(&relative, field, packages)?;
         for (package, edge) in components {
-            self.component(package, &edge, field, &relative)?;
+            self.component(&package, &edge, field, &relative)?;
         }
         Ok(())
     }
@@ -143,19 +143,25 @@ impl Projection<'_> {
     }
     fn core_aspect(&mut self, name: &str, component: bool) -> io::Result<bool> {
         let detection = &self.request.detection;
-        if detection.core_aspect_ids.contains(&unversioned(&self.request.identity).to_owned()) {
+        let current = unversioned(&self.request.identity);
+        if detection.core_aspect_ids
+            .iter()
+            .any(|id| id.trim() == current)
+        {
             return Ok(false);
         }
         let Some(index) = detection.core_packages
             .iter()
-            .position(|package| package == name)
+            .position(|package| package.trim() == name.trim())
         else {
             return Ok(false);
         };
         let id = detection.core_aspect_ids
             .get(index)
+            .map(|id| id.trim())
+            .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("fresh core aspect identity mapping"))?;
-        self.metadata.file_core_aspects[usize::from(component)].push(id.clone());
+        self.metadata.file_core_aspects[usize::from(component)].push(id.to_owned());
         Ok(true)
     }
 

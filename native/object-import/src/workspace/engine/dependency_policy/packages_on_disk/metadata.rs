@@ -15,12 +15,19 @@ pub(super) fn resolved(
             || json!({"name":name,"componentIdentity":null,"concreteVersion":null}),
         ));
     };
-    let name = package["name"].as_str().ok_or_else(|| invalid("dependency package name"))?;
+    let name = package["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("dependency package name"))?;
     let mut concrete = optional_string(package.get("version"))?;
     let identity = if let Some(id) = package.get("componentId").filter(|value| truthy(value)) {
         let identity = identity(id)?;
         let version = match id.as_str() {
-            Some(raw) => raw.rsplit_once('@').map(|(_, ver)| ver),
+            Some(raw) => raw
+                .trim()
+                .rsplit_once('@')
+                .map(|(_, ver)| ver.trim()),
             None => optional_string(id.get("version"))?,
         };
         if concrete.is_some_and(|version| !version.is_empty())
@@ -37,12 +44,13 @@ pub(super) fn resolved(
     Ok(Some(json!({"name":name,"componentIdentity":identity,"concreteVersion":concrete})))
 }
 fn identity(value: &Value) -> io::Result<String> {
-    if let Some(raw) = value.as_str() {
+    if let Some(raw) = value.as_str().map(str::trim) {
         let (bare, version) = raw
             .rsplit_once('@')
-            .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
+            .map_or((raw, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
         let (scope, name) = bare
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("package component scope"))?;
         return Ok(
@@ -54,10 +62,12 @@ fn identity(value: &Value) -> io::Result<String> {
     }
     let name = value["name"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("package component name"))?;
     let scope = value["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("package component scope"))?;
     let version = optional_string(value.get("version"))?;

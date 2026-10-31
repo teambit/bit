@@ -93,7 +93,9 @@ fn read(path: &Path, missing: bool) -> io::Result<Vec<String>> {
     Ok(parse(&String::from_utf8_lossy(&bytes)))
 }
 fn parse(text: &str) -> Vec<String> {
-    text.split_inclusive('\n')
+    text.strip_prefix('\u{feff}')
+        .unwrap_or(text)
+        .split_inclusive('\n')
         .map(|line| {
             line.strip_suffix('\n')
                 .map_or(line, |line| line.strip_suffix('\r').unwrap_or(line))

@@ -38,8 +38,10 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
 
 fn custom(request: &Request) -> io::Result<()> {
     for (file, custom) in request.detector.custom.iter().flat_map(|custom| custom.iter()) {
-        path(Path::new(file))?;
-        if !request.files.contains(&Path::new(file).to_owned())
+        let file_path = Path::new(file);
+        path(file_path)?;
+        if normalize(file_path) != file_path
+            || !request.files.contains(&file_path.to_owned())
             || custom.source_hash.trim().is_empty()
             || custom.dependencies.len() > MAX_FILES
             || custom.lookups.len() > MAX_FILES
@@ -48,13 +50,20 @@ fn custom(request: &Request) -> io::Result<()> {
         }
         for resolved in custom.lookups.values().flatten() {
             path(resolved)?;
+            if normalize(resolved) != *resolved {
+                return Err(invalid("custom detector boundary"));
+            }
         }
     }
     Ok(())
 }
 
 fn cached_row(file: &str, cached: &Value) -> io::Result<()> {
-    path(Path::new(file))?;
+    let file_path = Path::new(file);
+    path(file_path)?;
+    if normalize(file_path) != file_path {
+        return Err(invalid("dependency graph cached path map"));
+    }
     if cached
         .get("error")
         .is_some_and(|error| !error.is_null())
@@ -66,7 +75,11 @@ fn cached_row(file: &str, cached: &Value) -> io::Result<()> {
         return Err(invalid("dependency graph cached path map"));
     }
     for dependency in row.dependencies {
-        path(Path::new(&dependency.resolved_dep))?;
+        let resolved = Path::new(&dependency.resolved_dep);
+        path(resolved)?;
+        if normalize(resolved) != resolved {
+            return Err(invalid("dependency graph cached path map"));
+        }
     }
     if let Some(missing) = cached.get("missing") {
         let _: Vec<String> = serde_json::from_value(missing.clone()).map_err(io::Error::other)?;

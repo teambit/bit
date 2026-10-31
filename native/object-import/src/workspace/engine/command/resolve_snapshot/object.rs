@@ -183,8 +183,12 @@ fn component_message(version: &mut Value, allocation: &Value, automatic: bool) -
 fn component_log(version: &mut Value, log: &Value) -> io::Result<()> {
     for field in ["message", "username", "email"] {
         if let Some(value) = log.get(field) {
-            version["log"][field] =
-                json!(value.as_str().ok_or_else(|| invalid("snapshot component log field"))?);
+            version["log"][field] = json!(
+                value
+                    .as_str()
+                    .map(str::trim)
+                    .ok_or_else(|| invalid("snapshot component log field"))?
+            );
         }
     }
     Ok(())

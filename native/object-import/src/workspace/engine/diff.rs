@@ -102,22 +102,27 @@ pub(super) fn diff(files: &[InputFile], git: &str, color: bool) -> io::Result<Ve
 }
 pub(crate) type Frozen = (String, Option<Vec<u8>>, Option<Vec<u8>>);
 pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
+    count(files.len())?;
     let git = git.trim();
     if git.is_empty() || git.len() > 32768 || git.contains('\0') {
         return Err(invalid("workspace invalid Git executable"));
     }
-    let prepared = files
-        .into_iter()
-        .map(|(relative_path, left, right)| {
-            let same = equivalent(left.as_deref(), right.as_deref());
-            Prepared {
-                relative_path,
-                left: left.unwrap_or_default(),
-                right: right.unwrap_or_default(),
-                same,
-            }
-        })
-        .collect::<Vec<_>>();
+    let mut prepared = Vec::with_capacity(files.len());
+    for (relative_path, left, right) in files {
+        if relative_path.trim().is_empty()
+            || relative_path.len() > 32768
+            || relative_path.contains('\0')
+        {
+            return Err(invalid("workspace invalid relative path"));
+        }
+        let same = equivalent(left.as_deref(), right.as_deref());
+        prepared.push(Prepared {
+            relative_path,
+            left: left.unwrap_or_default(),
+            right: right.unwrap_or_default(),
+            same,
+        });
+    }
     if prepared.is_empty() {
         return Ok(Vec::new());
     }

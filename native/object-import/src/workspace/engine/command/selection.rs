@@ -80,7 +80,7 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
     Ok(json!({
         "component":{"id":if version.is_empty(){identity.to_owned()}else{format!("{identity}@{version}")},
             "idWithoutVersion":identity,"componentVersion":version,"hasBitmap":true,"currentExists":true,"isRemoved":false},
-        "model":selection.model.map(|model|json!({"hasMainHead":model["head"].is_string()})),
+        "model":selection.model.map(|model|json!({"hasMainHead":model["head"].as_str().is_some_and(|head| !head.trim().is_empty())})),
         "options":{"reset":to=="reset","head":to=="head" && !load_stash && !historical,"main":to=="main","latest":to=="latest",
             "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":options.revert,"loadStash":load_stash,
             "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":(historical || load_stash || selection.target.get("switchVersion").is_some()).then(||json!({}))},
@@ -110,7 +110,9 @@ fn observe(
             versions::has(model, version_arg(directive)?, repository, selection.lane_head)
                 .map(Value::Bool)
         }
-        "currentVersion" => Ok(json!({"value":selection.target["version"],"hasBitmap":true})),
+        "currentVersion" => Ok(
+            json!({"value":selection.target["version"].as_str().map(str::trim),"hasBitmap":true}),
+        ),
         "mergePending" => Ok(json!(selection.merge_pending)),
         "modified" => Ok(json!({"modified":selection.modified,"isRemoved":false})),
         "targetRemoved" => {

@@ -56,16 +56,22 @@ fn target(context: &Value) -> Option<&Value> {
     context["targets"]
         .as_array()?
         .iter()
-        .find(|target| target["directory"] == "." && target["locallyRemoved"] != true)
+        .find(|target| {
+            target["directory"].as_str().map(str::trim) == Some(".")
+                && target["locallyRemoved"] != true
+        })
 }
 
 pub(super) fn provenance(retained: &Retained, materials: &mut [Material]) -> io::Result<()> {
     let root = target(&retained.record.context);
-    let identity = root.and_then(|root| root["identity"].as_str());
+    let identity = root
+        .and_then(|root| root["identity"].as_str())
+        .map(str::trim)
+        .filter(|id| !id.is_empty());
     let root_in_batch = identity.is_some_and(|identity| {
         materials
             .iter()
-            .any(|material| material.identity == identity)
+            .any(|material| material.identity.trim() == identity)
     });
     for material in materials.iter_mut().filter(|material| !material.hidden) {
         let data = provenance_data(root, identity, root_in_batch, &material.identity)?;

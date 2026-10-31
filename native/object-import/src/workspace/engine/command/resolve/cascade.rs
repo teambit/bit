@@ -15,13 +15,13 @@ pub(super) fn reports(
 ) -> io::Result<Vec<Value>> {
     let selected_set: HashSet<_> = selected
         .iter()
-        .map(String::as_str)
+        .map(|id| id.trim())
         .collect();
     let ordered = ordered(current, selected, &selected_set)?;
     let rows = build_rows(&ordered, components)?;
     let changed = ordered
         .iter()
-        .filter(|row| selected_set.contains(row["identity"].as_str().unwrap_or_default()))
+        .filter(|row| selected_set.contains(row["identity"].as_str().map_or("", str::trim)))
         .map(|row| id(row))
         .collect::<io::Result<Vec<_>>>()?;
     let result = crate::snapshot_transaction::apply(

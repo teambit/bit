@@ -74,8 +74,12 @@ fn saved(
 }
 
 fn previous_graph(previous: &str, repository: &mut Repository) -> io::Result<Value> {
-    let version = repository.read(previous, "Version")?;
-    match version["flattenedEdgesRef"].as_str() {
+    let version = repository.read(previous.trim(), "Version")?;
+    match version["flattenedEdgesRef"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+    {
         Some(hash) => repository.source_json(hash),
         None => Ok(version
             .get("flattenedEdges")

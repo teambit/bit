@@ -31,6 +31,7 @@ fn read(
     }
     let old = material.version["flattenedEdgesRef"]
         .as_str()
+        .map(str::trim)
         .ok_or_else(|| invalid("resolve graph ref"))?;
     let digest = crate::merge_history::hash(old)?;
     proof::read(
@@ -56,11 +57,12 @@ fn rekey(rows: &mut Value, identity: &str, hash: &str) -> io::Result<()> {
         return Err(invalid("resolve graph budget"));
     }
     let identity = identity.trim();
+    let hash = hash.trim();
     for edge in edges {
         let source = &mut edge["source"];
         let scope = source["scope"].as_str().map_or("", str::trim);
         let name = source["name"].as_str().map_or("", str::trim);
-        if format!("{scope}/{name}") == identity {
+        if !scope.is_empty() && !name.is_empty() && format!("{scope}/{name}") == identity {
             source["version"] = json!(hash);
         }
     }

@@ -64,11 +64,13 @@ fn identities(request: &Request) -> io::Result<()> {
 }
 fn identity(value: &str) -> bool {
     let trimmed = value.trim();
+    let invalid_affix = trimmed.starts_with('@') || trimmed.ends_with('@');
     if trimmed.is_empty()
         || value.len() > 4096
-        || value.contains('\0')
-        || trimmed.starts_with('@')
-        || trimmed.ends_with('@')
+        || value.chars().any(char::is_control)
+        || trimmed.contains('\\')
+        || trimmed.contains("//")
+        || invalid_affix
     {
         return false;
     }

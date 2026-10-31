@@ -37,12 +37,16 @@ pub(super) fn missing(issues: &Value) -> io::Result<Vec<Value>> {
 pub(super) fn apply(issues: &Value, output: &Value) -> io::Result<Value> {
     let mut result = Vec::new();
     for issue in rows(issues)? {
-        if issue["type"] != MISSING {
+        if issue["type"].as_str().map(str::trim) != Some(MISSING) {
             result.push(issue.clone());
             continue;
         }
         let data: Value = serde_json::from_str(
-            issue["data"].as_str().ok_or_else(|| invalid("status cached missing issue"))?,
+            issue["data"]
+                .as_str()
+                .map(str::trim)
+                .filter(|data| !data.is_empty())
+                .ok_or_else(|| invalid("status cached missing issue"))?,
         )
         .map_err(io::Error::other)?;
         let mut updated = Vec::new();
@@ -75,7 +79,7 @@ fn add_manual(issues: &mut Vec<Value>, missing: &Value) -> io::Result<()> {
     let replacement = serialized(MANUAL, &json!(values))?;
     if let Some(issue) = issues
         .iter_mut()
-        .find(|issue| issue["type"] == MANUAL)
+        .find(|issue| issue["type"].as_str().map(str::trim) == Some(MANUAL))
     {
         *issue = replacement;
     } else {

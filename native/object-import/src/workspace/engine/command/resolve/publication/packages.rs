@@ -21,9 +21,13 @@ pub(in crate::workspace::engine::command::resolve) fn finalize(
     let token = input.token.trim();
     if token.is_empty()
         || retained.record.token != token
+        || retained.materials.is_empty()
         || (retained.snap.is_none() && retained.record.context["callbackLifecycle"] != true)
     {
         return Err(invalid("snapshot package token"));
+    }
+    if input.manifests.len() > retained.materials.len() {
+        return Err(invalid("snapshot package manifest count"));
     }
     proof::verify(&input.dependency_read_set)?;
     super::validate(retained)?;
@@ -53,6 +57,7 @@ pub(in crate::workspace::engine::command::resolve) fn stage(
     let token = input.token.trim();
     if token.is_empty()
         || retained.record.token != token
+        || retained.materials.is_empty()
         || (retained.snap.is_none() && retained.record.context["callbackLifecycle"] != true)
     {
         return Err(invalid("snapshot package token"));

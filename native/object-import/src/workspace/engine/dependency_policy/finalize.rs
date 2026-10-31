@@ -49,7 +49,11 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     }
     if request.resolved
         .iter()
-        .any(|(key, value)| !super::wire::name(key) || !super::wire::name(&value.name))
+        .any(|(key, value)| {
+            !super::wire::name(key)
+                || !super::wire::name(&value.name)
+                || key.trim() != value.name.trim()
+        })
     {
         return Err(invalid("dependency finalization resolved name"));
     }

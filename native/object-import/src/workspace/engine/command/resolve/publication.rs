@@ -31,7 +31,9 @@ pub(super) fn finalize(
     retained: &mut Retained,
     snapshots: &snapshots::State,
 ) -> io::Result<Value> {
-    if retained.record.token != input.token
+    let token = input.token.trim();
+    if token.is_empty()
+        || retained.record.token != token
         || retained.materials.is_empty()
         || !matches!(retained.finalized, Phase::Pending(_))
     {
@@ -42,7 +44,7 @@ pub(super) fn finalize(
     let mut receipt = input.snap_receipt;
     validate_graph_receipt(retained, &receipt)?;
     receipt["log"]["message"] =
-        json!(retained.record.request.options.message.as_deref().unwrap_or_default());
+        json!(retained.record.request.options.message.as_deref().map_or("", str::trim));
     super::logs::apply(retained, &mut receipt)?;
     if retained.tag.as_ref().is_some_and(|options| options.soft) {
         return finalize_soft(retained, &receipt);

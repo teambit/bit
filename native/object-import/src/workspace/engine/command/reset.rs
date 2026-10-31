@@ -27,7 +27,7 @@ pub(super) fn plan(
         || record.request.options.force_theirs
         || record.request.options.strategy.is_some()
         || !record.request.options.skip_dependency_installation
-        || bitmap_bytes.is_empty()
+        || bitmap_bytes.iter().all(u8::is_ascii_whitespace)
     {
         return Err(invalid("recovery requires an ordinary reset plan"));
     }

@@ -84,7 +84,7 @@ fn insert(
     config.remove("__specific");
     let workspace = record.targets
         .iter()
-        .find(|target| target["identity"] == base);
+        .find(|target| target["identity"].as_str().map(str::trim) == Some(base));
     let id = if let Some(target) = workspace.filter(|_| prefer_workspace || id == base) {
         target["version"]
             .as_str()

@@ -178,7 +178,9 @@ impl Capture {
     }
     fn reserve(&mut self, file: &Path, budget: &Budget) -> io::Result<bool> {
         let Some(metadata) = budget.metadata(file)? else { return Ok(false) };
-        self.bytes += metadata.len();
+        self.bytes = self.bytes
+            .checked_add(metadata.len())
+            .ok_or_else(|| invalid("dependency graph source budget"))?;
         if !metadata.is_file() || self.bytes > MAX_BYTES {
             return Err(invalid("dependency graph source budget"));
         }
@@ -193,6 +195,6 @@ fn retain(scanned: Vec<Row>, rows: &mut HashMap<String, Row>, pending: &mut Vec<
                 pending.push(PathBuf::from(resolved_dep));
             }
         }
-        rows.insert(row.path_map.file.clone(), row);
+        rows.insert(row.path_map.file.trim().to_owned(), row);
     }
 }

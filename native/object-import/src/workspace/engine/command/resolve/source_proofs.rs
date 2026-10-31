@@ -56,17 +56,24 @@ pub(super) fn owned_paths(
     current
         .iter()
         .filter(|row| {
-            materials
-                .iter()
-                .any(|material| material.identity == row["identity"])
+            row["identity"]
+                .as_str()
+                .map(str::trim)
+                .is_some_and(|identity| {
+                    materials
+                        .iter()
+                        .any(|material| material.identity == identity)
+                })
         })
         .flat_map(|row| {
-            let directory = root.join(row["directory"].as_str().unwrap_or(""));
+            let directory = root.join(row["directory"].as_str().map_or("", str::trim));
             row["files"]
                 .as_array()
                 .into_iter()
                 .flatten()
                 .filter_map(Value::as_str)
+                .map(str::trim)
+                .filter(|file| !file.is_empty())
                 .map(move |file| directory.join(file))
         })
         .collect()

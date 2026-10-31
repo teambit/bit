@@ -46,13 +46,14 @@ pub(super) fn for_component(
     identity: &str,
     automatic_root: bool,
 ) -> io::Result<Value> {
+    let identity = identity.trim();
     if automatic_root
         && !file
             .and_then(|file| file["entries"].as_array())
             .is_some_and(|entries| {
                 entries
                     .iter()
-                    .any(|entry| entry["identity"] == identity)
+                    .any(|entry| entry["identity"].as_str().map(str::trim) == Some(identity))
             })
     {
         return Ok(Value::Null);

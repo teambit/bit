@@ -62,7 +62,10 @@ impl Scan<'_> {
         }
         let file = entry.path();
         let name = entry.file_name();
-        let name = name.to_str().ok_or_else(|| invalid("workspace non-UTF8 filename"))?;
+        let name = name
+            .to_str()
+            .filter(|name| !name.is_empty() && !name.chars().any(char::is_control))
+            .ok_or_else(|| invalid("workspace non-UTF8 filename"))?;
         if self.excluded(&file, name) {
             return Ok(());
         }

@@ -16,7 +16,7 @@ pub(super) fn dispatch(
         Request::CommandStashStageHistory(input) => {
             command::stash::stage_history(&input, state, pool)
         }
-        Request::CommandStashFinalize(input) => command::stash::finalize(input, snapshots),
+        Request::CommandStashFinalize(input) => command::stash::finalize(&input, snapshots),
         Request::CommandStashStageGraph(input) => command::stash::stage_graph(&input, state),
         Request::CommandStashPersist(input) => command::stash::persist(&input, state),
         request => dispatch_resolve(request, snapshots, pool),

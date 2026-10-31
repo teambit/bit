@@ -109,15 +109,19 @@ impl Replay {
         }
         let mut dependencies = Vec::new();
         for dep in &row.path_map.dependencies {
-            if dep.resolved_dep.contains("node_modules") {
+            let resolved = dep.resolved_dep.trim();
+            if resolved.is_empty() {
+                continue;
+            }
+            if resolved.contains("node_modules") {
                 if include_npm {
                     self.npm
                         .entry(file.clone())
                         .or_default()
-                        .push(dep.resolved_dep.clone());
+                        .push(resolved.to_owned());
                 }
             } else {
-                dependencies.push(dep.resolved_dep.clone());
+                dependencies.push(resolved.to_owned());
             }
         }
         let value = serde_json::to_value(&row.path_map).map_err(io::Error::other)?;
@@ -179,6 +183,9 @@ impl Replay {
 }
 impl Diagnostics {
     fn cached(&mut self, file: &str, cached: &Value) {
+        if let Some(value) = cached.get("error") {
+            self.errors.insert(file.to_owned(), value.clone());
+        }
         if let Some(value) = cached.get("missing") {
             self.missing.insert(file.to_owned(), value.clone());
         }

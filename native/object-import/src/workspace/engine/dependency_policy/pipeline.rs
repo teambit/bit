@@ -103,7 +103,11 @@ fn package_names(finish: &Value) -> io::Result<Vec<String>> {
         }
     };
     for (name, version) in environment {
-        if version.as_str().is_some_and(crate::plus_version::is_plus) {
+        if version
+            .as_str()
+            .map(str::trim)
+            .is_some_and(crate::plus_version::is_plus)
+        {
             add(name);
         }
     }
@@ -123,12 +127,14 @@ fn manual_package_names(finish: &Value) -> io::Result<Vec<String>> {
     {
         let map = field.as_object().ok_or_else(|| invalid("dependency pipeline manual field"))?;
         for (name, version) in map {
-            if version
-                .as_str()
-                .map(str::trim)
-                .is_none_or(|text| !text.is_empty() && text != "-")
+            let trimmed = name.trim();
+            if !trimmed.is_empty()
+                && version
+                    .as_str()
+                    .map(str::trim)
+                    .is_none_or(|text| !text.is_empty() && text != "-")
             {
-                names.push(name.clone());
+                names.push(trimmed.to_owned());
             }
         }
     }

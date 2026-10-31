@@ -254,9 +254,9 @@ pub(super) fn validate_current(
         return Err(invalid("resolve capture count"));
     }
     for (current, target) in current.iter().zip(targets) {
-        if current["identity"] != target["identity"]
-            || current["version"] != target["version"]
-            || current["directory"] != target["directory"]
+        if ["identity", "version", "directory"]
+            .iter()
+            .any(|key| current[key].as_str().map(str::trim) != target[key].as_str().map(str::trim))
         {
             return Err(invalid("resolve capture binding"));
         }
@@ -266,18 +266,18 @@ pub(super) fn validate_current(
 
 pub(super) fn material(
     retained: &mut Retained,
-    identity: &String,
+    identity: &str,
     participation: Participation,
     captured: &[capture::Captured],
     components: &[projection::Component],
 ) -> io::Result<Material> {
     let current = captured
         .iter()
-        .find(|row| row.target.identity == *identity)
+        .find(|row| row.target.identity.trim() == identity.trim())
         .ok_or_else(|| invalid("resolve capture absent"))?;
     let receipt = components
         .iter()
-        .find(|row| row.identity == *identity)
+        .find(|row| row.identity.trim() == identity.trim())
         .ok_or_else(|| invalid("resolve policy receipt absent"))?;
     let model = repository::model(&retained.record.context, identity)?;
     if model.is_none() && retained.snap.is_some() && current.target.version.is_empty() {
@@ -289,14 +289,15 @@ pub(super) fn material(
     let version =
         projection::version(&stored, &current.target.current, &current.metadata, receipt)?;
     let pending = ensure_attached_or_unrelated(retained, identity, &reference, &model)?;
+    let files = current.files
+        .as_array()
+        .ok_or_else(|| invalid("resolve files"))?
+        .clone();
     Ok(Material {
-        identity: identity.clone(),
+        identity: identity.to_owned(),
         model,
         version,
-        files: current.files
-            .as_array()
-            .ok_or_else(|| invalid("resolve files"))?
-            .clone(),
+        files,
         version_state: VersionState { current_head: reference, tagged_version: None },
         pending,
         hidden: false,
@@ -306,7 +307,7 @@ pub(super) fn material(
 
 fn ensure_attached_or_unrelated(
     retained: &Retained,
-    identity: &String,
+    identity: &str,
     reference: &str,
     model: &Value,
 ) -> io::Result<Option<Value>> {
@@ -314,7 +315,7 @@ fn ensure_attached_or_unrelated(
     let head = lane_targets
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["identity"] == *identity)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.trim()))
         })
         .and_then(|row| row["currentHead"].as_str())
         .map(str::trim)
@@ -336,7 +337,7 @@ fn ensure_attached_or_unrelated(
         .ok_or_else(|| invalid("resolve current head"))?;
     let pending = retained.pending
         .iter()
-        .find(|row| selection::identity(&row["id"]).ok().as_ref() == Some(identity))
+        .find(|row| selection::identity(&row["id"]).ok().as_deref() == Some(identity.trim()))
         .cloned();
     if reference != head
         && pending
@@ -359,19 +360,16 @@ pub(super) fn preflight(
     } else {
         graph::project(materials, &mut retained.record.repository)?;
     }
+    let root = &retained.record.request.root;
     let is_snap = retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true;
-    super::super::resolve_snapshot::preflight(
-        &retained.record.request.root,
-        materials,
-        snapshots,
-        is_snap,
-    )?;
+    super::super::resolve_snapshot::preflight(root, materials, snapshots, is_snap)?;
+    let index = retained.record.repository.imported_index();
     super::super::resolve_publication::preflight(
-        &retained.record.request.root,
+        root,
         &retained.record.context,
         materials,
         &retained.pending,
-        retained.record.repository.imported_index(),
+        index,
         is_snap,
     )
 }

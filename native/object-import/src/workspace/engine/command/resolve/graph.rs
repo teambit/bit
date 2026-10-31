@@ -216,11 +216,11 @@ pub(super) fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
 }
 
 fn add_edge(edges: &mut Vec<Value>, source: &Value, target: &Value, kind: &str) -> io::Result<()> {
-    key(target)?;
+    let target_key = key(target)?;
     let edge = json!({"source":source,"target":target,"type":kind});
     if let Some(previous) = edges
         .iter_mut()
-        .find(|row| row["target"] == *target)
+        .find(|row| key(&row["target"]).ok().as_deref() == Some(target_key.as_str()))
     {
         *previous = edge;
     } else {
@@ -230,7 +230,11 @@ fn add_edge(edges: &mut Vec<Value>, source: &Value, target: &Value, kind: &str) 
 }
 
 fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {
-    let version = id["version"].as_str().ok_or_else(|| invalid("resolve dependency version"))?;
+    let version = id["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| invalid("resolve dependency version"))?;
     let reference = if crate::merge_history::hash(version).is_ok() {
         version.to_owned()
     } else {

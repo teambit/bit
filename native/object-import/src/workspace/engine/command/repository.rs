@@ -37,6 +37,7 @@ impl Repository {
         }
     }
     pub(super) fn prepare_checkout_license(&mut self, scope: &str) -> io::Result<()> {
+        let scope = scope.trim();
         let metadata = match self.read(&super::super::hash(scope.as_bytes()), "ScopeMeta") {
             Ok(metadata) => metadata,
             Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
@@ -45,7 +46,7 @@ impl Repository {
         match metadata.get("license") {
             None | Some(Value::Null) => {}
             Some(Value::String(text)) => {
-                if !text.is_empty() {
+                if !text.trim().is_empty() {
                     self.checkout_license.insert(scope.to_owned(), text.clone());
                 }
             }
@@ -54,14 +55,15 @@ impl Repository {
         Ok(())
     }
     pub(super) fn checkout_license(&self, identity: &str) -> Option<&str> {
-        let (scope, _) = identity.split_once('/')?;
-        self.checkout_license.get(scope).map(String::as_str)
+        let (scope, _) = identity.trim().split_once('/')?;
+        self.checkout_license.get(scope.trim()).map(String::as_str)
     }
     pub(in crate::workspace::engine) fn read(
         &mut self,
         reference: &str,
         kind: &str,
     ) -> io::Result<Value> {
+        let reference = reference.trim();
         let hash = crate::merge_history::hash(reference)?;
         if let Some(imported) = &self.imported
             && let Some(value) = imported.overlay.read(reference, kind)?
@@ -87,7 +89,7 @@ impl Repository {
         &mut self,
         identity: &str,
     ) -> io::Result<Value> {
-        let normalized = identity.trim_start_matches('/');
+        let normalized = identity.trim().trim_start_matches('/');
         match self.read(&super::super::hash(normalized.as_bytes()), "Component") {
             Ok(model) => Ok(model),
             Err(error) if error.kind() == io::ErrorKind::NotFound => {

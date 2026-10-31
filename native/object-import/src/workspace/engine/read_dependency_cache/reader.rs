@@ -75,10 +75,14 @@ fn latest(text: &str, key: &str) -> io::Result<Option<Value>> {
         if index > 65536 {
             return Err(invalid("dependency cache index entries"));
         }
+        let line = line.strip_suffix('\r').unwrap_or(line);
         let mut pieces = line.split('\t');
-        let checksum = pieces.next().unwrap_or_default();
+        let checksum = pieces.next().unwrap_or_default().trim();
         let Some(body) = pieces.next() else { continue };
-        if body.is_empty() || format!("{:x}", Sha1::digest(body.as_bytes())) != checksum {
+        if pieces.next().is_some()
+            || body.is_empty()
+            || format!("{:x}", Sha1::digest(body.as_bytes())) != checksum
+        {
             continue;
         }
         let entry: Value =

@@ -100,7 +100,7 @@ fn apply_view(
         .is_some_and(|issues| {
             issues
                 .iter()
-                .any(|issue| issue["type"] != "ImportFromDirectory")
+                .any(|issue| issue["type"].as_str().map(str::trim) != Some("ImportFromDirectory"))
         });
     output["cacheable"] = json!(request.root != request.component_root && !blocking_issue);
     Ok((1, output))
@@ -108,11 +108,16 @@ fn apply_view(
 fn validate(request: &Detect) -> io::Result<()> {
     path(&request.root)?;
     path(&request.component_root)?;
+    let normalized = normalize(&request.root) == request.root
+        && normalize(&request.component_root) == request.component_root;
+    let within_bounds = request.files.len() <= 4096
+        && request.detection.core_packages.len() <= 4096
+        && request.detection.core_aspect_ids.len() <= 4096
+        && request.detection.workspace_components.len() <= 4096;
     if request.identity.trim().is_empty()
         || !request.component_root.starts_with(&request.root)
-        || normalize(&request.root) != request.root
-        || normalize(&request.component_root) != request.component_root
-        || request.files.len() > 4096
+        || !normalized
+        || !within_bounds
     {
         return Err(invalid("fresh dependency workspace boundary"));
     }
@@ -122,7 +127,11 @@ fn validate(request: &Detect) -> io::Result<()> {
             return Err(invalid("fresh dependency source boundary"));
         }
     }
-    for file in &request.detection.dev_files {
+    validate_dev_files(&request.detection.dev_files)
+}
+
+fn validate_dev_files(files: &[String]) -> io::Result<()> {
+    for file in files {
         let trimmed = file.trim();
         if trimmed.is_empty()
             || trimmed.contains('\\')

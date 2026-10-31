@@ -82,7 +82,7 @@ fn reports(
     for identity in selected {
         let row = current
             .iter()
-            .find(|row| row["identity"] == *identity)
+            .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.trim()))
             .ok_or_else(|| invalid("hidden cascade trigger"))?;
         // Changed IDs are graph nodes, but their own dependencies are not scope candidates.
         rows.push(json!({"identity":identity,"version":row["version"],"current":{}}));

@@ -23,8 +23,12 @@ pub(super) fn initial(detected: &Value, finish: &Value) -> io::Result<Value> {
                 .or_else(|| row.get("peerVersionRange"))
                 .cloned()
                 .unwrap_or(Value::Null);
+            let pkg_name = row["packageName"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty());
             entries.push(json!({"identity":identity(&row["id"])? ,
-                "packageName":row["packageName"],"versionRange":range}));
+                "packageName":pkg_name,"versionRange":range}));
         }
     }
     let packages: Vec<_> =
@@ -53,7 +57,7 @@ fn ignored(finish: &Value) -> io::Result<Vec<Vec<String>>> {
             let map = field.as_object().ok_or_else(|| invalid("status manual dependency map"))?;
             Ok(map
                 .iter()
-                .filter(|(_, version)| *version == "-")
+                .filter(|(_, version)| version.as_str().map(str::trim) == Some("-"))
                 .map(|(name, _)| name.trim().to_owned())
                 .filter(|name| !name.is_empty())
                 .collect())

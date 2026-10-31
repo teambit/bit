@@ -12,12 +12,19 @@ pub(super) fn select(
 ) -> io::Result<Vec<String>> {
     let unresolved = pending_identities(pending)?;
     let mut seen = HashSet::new();
-    let selected = pattern.map_or_else(|| unresolved.clone(), <[String]>::to_vec);
+    let selected = pattern.map_or_else(
+        || unresolved.clone(),
+        |list| {
+            list.iter()
+                .map(|id| id.trim().to_owned())
+                .collect()
+        },
+    );
     if selected.is_empty() || selected.len() > 4096 {
         return Err(invalid("resolve empty or excessive selection"));
     }
     for id in &selected {
-        if !seen.insert(id.clone()) || !unresolved.contains(id) {
+        if id.is_empty() || !seen.insert(id.clone()) || !unresolved.contains(id) {
             return Err(invalid("resolve selection is not pending"));
         }
         if !has_target_identity(targets, id) {
@@ -67,7 +74,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
 fn has_target_identity(targets: &[Value], id: &str) -> bool {
     targets
         .iter()
-        .any(|target| target["identity"] == id)
+        .any(|target| target["identity"].as_str().map(str::trim) == Some(id))
 }
 
 #[cfg(test)]

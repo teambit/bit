@@ -14,19 +14,19 @@ pub(super) fn serialize(raw: &Value, unscoped: bool) -> io::Result<Value> {
         let (scope, name) = bare
             .split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))
-            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty() && !name.contains('@'))
             .ok_or_else(|| invalid("fresh component scope"))?;
         (scope, name, ver)
     } else {
         let name = raw["name"]
             .as_str()
             .map(str::trim)
-            .filter(|name| !name.is_empty())
+            .filter(|name| !name.is_empty() && !name.contains('@'))
             .ok_or_else(|| invalid("fresh component name"))?;
         let scope = raw["scope"]
             .as_str()
             .map(str::trim)
-            .filter(|scope| !scope.is_empty())
+            .filter(|scope| !scope.is_empty() && !scope.contains('/'))
             .ok_or_else(|| invalid("fresh component scope"))?;
         (scope, name, raw["version"].as_str().map(str::trim))
     };

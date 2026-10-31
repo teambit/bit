@@ -159,7 +159,7 @@ pub(in crate::workspace::engine) fn apply(
             write_pending(&retained.record.request.root, &retained.pending)?;
         }
         (Operation::LaneAbort, Err(error)) => {
-            retained.result = json!({"restoredItems":retained.restore.items,"checkoutError":{"message":error.to_string()}});
+            retained.result = json!({"restoredItems":retained.restore.items,"checkoutError":{"message":error.to_string().trim()}});
         }
         (Operation::LaneAbort, Ok(_)) => {}
     }

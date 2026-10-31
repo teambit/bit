@@ -30,7 +30,11 @@ fn add(
     value: &Value,
     additions: &mut Additions,
 ) {
-    if value == "-" || component(request, output, field, name, value, &mut additions.components) {
+    let name = name.trim();
+    if name.is_empty()
+        || value.as_str().map(str::trim) == Some("-")
+        || component(request, output, field, name, value, &mut additions.components)
+    {
         return;
     }
     if let Some(value) = package_version(request, name, value) {

@@ -7,7 +7,8 @@ use std::{
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
 pub(super) fn validate(path: &Path) -> io::Result<()> {
-    if path.is_symlink() || has_non_selinux_xattr(path)? {
+    let meta = fs::symlink_metadata(path)?;
+    if meta.file_type().is_symlink() || !meta.is_file() || has_non_selinux_xattr(path)? {
         return Err(invalid("reset config extended attributes"));
     }
     let parent = path.parent().ok_or_else(|| invalid("reset config parent"))?;

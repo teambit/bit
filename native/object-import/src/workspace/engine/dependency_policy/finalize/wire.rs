@@ -54,7 +54,8 @@ impl Output {
             ignored_self: Vec::new(),
             env_own: request.environment.policy
                 .keys()
-                .cloned()
+                .map(|key| key.trim().to_owned())
+                .filter(|key| !key.is_empty())
                 .collect(),
         }
     }

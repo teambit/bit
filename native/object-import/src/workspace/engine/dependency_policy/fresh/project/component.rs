@@ -9,7 +9,7 @@ use std::io;
 impl Projection<'_> {
     pub(super) fn component(
         &mut self,
-        package: Package,
+        package: &Package,
         edge: &str,
         field: usize,
         origin: &str,
@@ -19,7 +19,7 @@ impl Projection<'_> {
             self.metadata.issues.self_reference.insert(origin.to_owned(), json!(package.name));
             return Ok(());
         }
-        if let Some(path) = self.reader.check_main(&package, edge)? {
+        if let Some(path) = self.reader.check_main(package, edge)? {
             self.metadata.issues.non_main
                 .entry(origin.to_owned())
                 .or_insert_with(|| json!([]))
@@ -38,21 +38,31 @@ impl Projection<'_> {
         }
         self.component_dependency(package, field)
     }
-    fn component_dependency(&mut self, package: Package, field: usize) -> io::Result<()> {
+    fn component_dependency(&mut self, package: &Package, field: usize) -> io::Result<()> {
         let id = package.component.as_ref().ok_or_else(|| invalid("fresh component metadata"))?;
+        let concrete = package.concrete
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+            .map(str::to_owned);
+        let dependent = package.dependent
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+            .map(str::to_owned);
         self.grammar.extend(
-            package.concrete
+            concrete
                 .iter()
-                .chain(package.dependent.iter())
+                .chain(dependent.iter())
                 .cloned(),
         );
-        let peer = peer::range(&package);
+        let peer = peer::range(package);
         let field = if field == 0 && peer.is_some() { 2 } else { field };
         self.versions.push(ComponentVersion {
             field,
             index: self.dependencies[field].len(),
-            concrete: package.concrete,
-            dependent: package.dependent,
+            concrete,
+            dependent,
         });
         let id = super::super::component_id::serialize(id, package.manifest["exported"] == false)?;
         let mut dependency = json!({"id":id,"relativePaths":[],"packageName":package.name});

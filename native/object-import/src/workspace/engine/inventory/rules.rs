@@ -28,26 +28,15 @@ impl Matcher {
             return Err(invalid("inventory ignore policy limit"));
         }
         let rules = policy.rules
-            .into_iter()
-            .map(|rule| {
-                if !rule.source.is_ascii()
-                    || rule.source.contains(r"\u")
-                    || rule.source.contains(r"\x")
-                {
-                    return Err(invalid("inventory requires ASCII ignore expressions"));
-                }
-                if rule.source.is_empty() || rule.source.len() > 32768 {
-                    return Err(invalid("inventory ignore expression limit"));
-                }
-                let regex = Regex::with_flags(&rule.source, "i").map_err(io::Error::other)?;
-                Ok((regex, rule.negative))
-            })
+            .iter()
+            .map(compile_rule)
             .collect::<io::Result<Vec<_>>>()?;
+        validate_cache(&policy.cache)?;
         Ok(Self {
             rules: rules.into(),
             cache: policy.cache
                 .into_iter()
-                .filter(|(path, _)| !path.is_empty())
+                .filter(|(path, _)| !path.trim().is_empty())
                 .collect(),
             changes: Vec::new(),
         })
@@ -122,6 +111,32 @@ impl Matcher {
         }
         !ignored
     }
+}
+fn compile_rule(rule: &Rule) -> io::Result<(Regex, bool)> {
+    if !rule.source.is_ascii() || rule.source.contains(r"\u") || rule.source.contains(r"\x") {
+        return Err(invalid("inventory requires ASCII ignore expressions"));
+    }
+    if rule.source.is_empty() || rule.source.len() > 32768 {
+        return Err(invalid("inventory ignore expression limit"));
+    }
+    let regex = Regex::with_flags(&rule.source, "i").map_err(io::Error::other)?;
+    Ok((regex, rule.negative))
+}
+fn validate_cache(cache: &[(String, bool)]) -> io::Result<()> {
+    if cache
+        .iter()
+        .any(|(path, _)| {
+            !path.is_ascii() || path.contains('\\') || path.chars().any(char::is_control)
+        })
+        || cache
+            .iter()
+            .map(|(path, _)| path.len())
+            .sum::<usize>()
+            > 1024 * 1024
+    {
+        return Err(invalid("inventory ignore policy limit"));
+    }
+    Ok(())
 }
 fn inherited(path: &str) -> bool {
     matches!(

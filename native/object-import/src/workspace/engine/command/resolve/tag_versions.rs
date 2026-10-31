@@ -52,9 +52,12 @@ fn components(
     entered: &Value,
     next: &HashMap<String, &Value>,
 ) -> io::Result<Vec<Value>> {
+    let auto_root = params["autoAddedWorkspaceRoot"].as_str().map(str::trim);
     materials
         .iter()
         .map(|material| {
+            let identity = material.identity.trim();
+            let is_auto_root = auto_root == Some(identity);
             let tags = material.model["versions"]
                 .as_object()
                 .ok_or_else(|| invalid("tag model versions"))?;
@@ -68,13 +71,13 @@ fn components(
                 )
                 .collect();
             let pending = next
-                .get(&material.identity)
+                .get(identity)
                 .copied()
                 .unwrap_or(&Value::Null);
             Ok(json!({"versions":all_tags,
             "isAutoTag":material.participation.automatic && !material.participation.selected,
-            "isAutoAddedRoot":params["autoAddedWorkspaceRoot"] == material.identity,"enteredVersion":entered.get(&material.identity),
-            "nextVersion":pending["version"],"nextPreRelease":pending["preRelease"],"tagData":file::for_component(params.get("versionsFile"),&material.identity,params["autoAddedWorkspaceRoot"] == material.identity)?}))
+            "isAutoAddedRoot":is_auto_root,"enteredVersion":entered.get(identity),
+            "nextVersion":pending["version"],"nextPreRelease":pending["preRelease"],"tagData":file::for_component(params.get("versionsFile"),identity,is_auto_root)?}))
         })
         .collect::<io::Result<Vec<_>>>()
 }

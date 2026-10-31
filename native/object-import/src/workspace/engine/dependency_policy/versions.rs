@@ -47,7 +47,8 @@ fn update(
     } else if field != 2
         && entry.version_range
             .as_deref()
-            .is_some_and(|range| !range.is_empty() && !crate::plus_version::is_plus(range))
+            .map(str::trim)
+            .is_some_and(|range| range.is_empty() || !crate::plus_version::is_plus(range))
     {
         entry.version_range = None;
     }

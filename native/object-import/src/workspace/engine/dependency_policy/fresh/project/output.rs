@@ -5,9 +5,20 @@ use std::io;
 impl Projection<'_> {
     pub(super) fn finish(self) -> io::Result<Value> {
         let issues = self.collect_issues()?;
+        let mut grammar = Vec::new();
+        for item in self.grammar {
+            let trimmed = item.trim();
+            if !trimmed.is_empty()
+                && !grammar
+                    .iter()
+                    .any(|existing| existing == trimmed)
+            {
+                grammar.push(trimmed.to_owned());
+            }
+        }
         let detected = json!({"allPackagesDependencies":{"packageDependencies":self.packages[0],"devPackageDependencies":self.packages[1],"peerPackageDependencies":self.packages[2]},"coreAspects":self.metadata.core_aspects,"issues":issues,"allDependencies":{"dependencies":self.dependencies[0],"devDependencies":self.dependencies[1],"peerDependencies":self.dependencies[2]},"overridesDependencies":{"manuallyRemovedDependencies":{},"manuallyAddedDependencies":{},"missingPackageDependencies":[]}});
         Ok(
-            json!({"identity":self.request.identity.trim(),"detected":detected,"componentVersions":self.versions,"grammarInputs":self.grammar,"readSet":self.reader.proofs}),
+            json!({"identity":self.request.identity.trim(),"detected":detected,"componentVersions":self.versions,"grammarInputs":grammar,"readSet":self.reader.proofs}),
         )
     }
 

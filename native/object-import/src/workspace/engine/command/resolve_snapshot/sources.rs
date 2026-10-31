@@ -40,7 +40,12 @@ pub(in crate::workspace::engine::command) fn capture_file(
     file: &Value,
     snapshots: &snapshots::State,
 ) -> io::Result<(Value, Value)> {
-    let relative = file["relativePath"].as_str().ok_or_else(|| invalid("resolve file path"))?;
+    let relative = file["relativePath"]
+        .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .ok_or_else(|| invalid("resolve file path"))?;
+    crate::checkout::plan::relative_path(relative)?;
     let observation = observation(file, snapshots)?;
     let bytes = observation.contents.as_ref();
     let bytes = if bytes.starts_with(&[239, 187, 191]) { &bytes[3..] } else { bytes };
@@ -55,7 +60,7 @@ pub(in crate::workspace::engine::command) fn capture_file(
         .as_array()
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["relativePath"] == relative)
+                .find(|row| row["relativePath"].as_str().map(str::trim) == Some(relative))
         })
         .map(|row| row["test"].clone())
         .unwrap_or(json!(false));

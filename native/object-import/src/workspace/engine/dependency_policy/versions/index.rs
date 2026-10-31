@@ -16,11 +16,17 @@ impl<'a> Index<'a> {
     pub(super) fn new(request: &'a Request) -> Self {
         let mut bitmap = HashMap::new();
         for id in &request.sources.bitmap {
+            let base = unversioned(id);
+            if base.is_empty() {
+                continue;
+            }
             let ver = version(id).trim();
             bitmap
-                .entry(unversioned(id))
+                .entry(base)
                 .and_modify(|value| *value = None)
-                .or_insert_with(|| (!ver.is_empty()).then_some(ver));
+                .or_insert_with(|| {
+                    (!ver.is_empty() && !matches!(ver, "latest" | "head")).then_some(ver)
+                });
         }
         Self {
             request,

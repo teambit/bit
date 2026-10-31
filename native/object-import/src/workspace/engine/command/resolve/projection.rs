@@ -114,14 +114,15 @@ fn pinned_dependent_row(
 ) -> Option<Value> {
     let raw = target["identity"]
         .as_str()
-        .or_else(|| target["id"].as_str())?;
-    let identity = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
-    if ids_to_tag.contains(identity) {
+        .or_else(|| target["id"].as_str())
+        .map(str::trim)?;
+    let identity = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
+    if identity.is_empty() || ids_to_tag.contains(identity) {
         return None;
     }
     let component = components
         .iter()
-        .find(|comp| comp.identity == identity)?;
+        .find(|comp| comp.identity.trim() == identity)?;
     let pinned = component.pinned_packages_for(ids_with_new_version);
     if pinned.is_empty() {
         return None;
@@ -129,7 +130,7 @@ fn pinned_dependent_row(
     let version = target["version"]
         .as_str()
         .or_else(|| target["head"].as_str())
-        .unwrap_or_default();
+        .map_or("", str::trim);
     let id = if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") };
     Some(json!({"id": id, "pinnedDependencies": pinned}))
 }

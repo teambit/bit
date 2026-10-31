@@ -147,7 +147,10 @@ fn add_material_to_batch<'a>(
     {
         return Err(invalid("resolve publication identity"));
     }
-    let hash = version["hash"].as_str().ok_or_else(|| invalid("resolve publication hash"))?;
+    let hash = version["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("resolve publication hash"))?;
     crate::merge_history::hash(hash)?;
     let directory = directory(context, material)?;
     if !material.hidden && resolve_snapshot::is_removed(&version["version"]) {
@@ -178,7 +181,7 @@ fn bitmap_update(
 ) -> bitmap::Update {
     let main_file = version["version"]["mainFile"]
         .as_str()
-        .unwrap_or_default()
+        .map_or("", str::trim)
         .to_owned();
     bitmap::Update {
         identity: material.identity.clone(),
@@ -192,17 +195,20 @@ fn directory<'a>(context: &'a Value, material: &resolve_snapshot::Material) -> i
     if material.hidden {
         return Ok("");
     }
-    let rows = context["targets"].as_array();
-    rows.and_then(|list| {
-        list.iter()
-            .find(|row| row["identity"] == material.identity)
-    })
-    .and_then(|row| row["directory"].as_str())
-    .ok_or_else(|| invalid("resolve publication directory"))
+    context["targets"]
+        .as_array()
+        .and_then(|list| {
+            list.iter()
+                .find(|row| row["identity"] == material.identity)
+        })
+        .and_then(|row| row["directory"].as_str())
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| invalid("resolve publication directory"))
 }
 
 fn reason(receipt: &Value, tag: bool) -> String {
-    let message = receipt["log"]["message"].as_str().unwrap_or_default();
+    let message = receipt["log"]["message"].as_str().map_or("", str::trim);
     let label = if tag { "tag" } else { "snap" };
     let msg = if message.is_empty() { "N/A" } else { message };
     format!("{label} (message: {msg})")

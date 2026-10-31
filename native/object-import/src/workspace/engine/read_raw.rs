@@ -48,6 +48,9 @@ fn prepare(
         file.offset = bytes;
         bytes = bytes.checked_add(file.bytes).ok_or_else(|| invalid("workspace output limit"))?;
     }
+    if bytes > MAX_OUTPUT {
+        return Err(invalid("workspace output limit"));
+    }
     retain(&mut files, snapshots);
     let response = Response {
         version: 1,

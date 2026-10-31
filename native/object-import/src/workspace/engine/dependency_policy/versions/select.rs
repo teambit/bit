@@ -14,15 +14,19 @@ pub(super) fn select(
 ) -> io::Result<Selected> {
     let request = index.request;
     let base = unversioned(identity);
+    let package = package
+        .map(str::trim)
+        .filter(|name| !name.is_empty());
     let bitmap = index.bitmap
         .get(base)
         .copied()
         .flatten();
     if let Some(value) = request.sources.component_config
         .get(base)
+        .map(|value| value.trim())
         .filter(|value| !value.is_empty())
     {
-        return Ok(Some((value.clone(), None, true)));
+        return Ok(Some((value.to_owned(), None, true)));
     }
     if let Some(name) = package
         && !(index.env.contains(name) && bitmap.is_some())

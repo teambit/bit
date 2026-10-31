@@ -28,7 +28,13 @@ pub(super) fn removals(
         .map(|row| {
             let directory = row
                 .as_str()
-                .map(str::trim)
+                .map(|dir| {
+                    let trimmed = dir.trim();
+                    trimmed
+                        .strip_prefix("./")
+                        .unwrap_or(trimmed)
+                        .trim_end_matches('/')
+                })
                 .filter(|dir| !dir.is_empty())
                 .or_else(|| row_directory(row))
                 .ok_or_else(|| invalid("recovery removal directory"))?;
@@ -43,7 +49,13 @@ fn row_directory(row: &Value) -> Option<&str> {
     row["rootDir"]
         .as_str()
         .or_else(|| row["directory"].as_str())
-        .map(str::trim)
+        .map(|dir| {
+            let trimmed = dir.trim();
+            trimmed
+                .strip_prefix("./")
+                .unwrap_or(trimmed)
+                .trim_end_matches('/')
+        })
         .filter(|dir| !dir.is_empty())
 }
 fn validate(root: &Path, directory: &str, previous: &Value) -> io::Result<()> {

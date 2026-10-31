@@ -146,11 +146,13 @@ impl Resolver<'_> {
             error: None,
         };
         for dependency in dependencies {
-            if !builtins.contains(dependency.as_str())
+            let dependency = dependency.trim();
+            if !dependency.is_empty()
+                && !builtins.contains(dependency)
                 && !dependency.starts_with("http://")
                 && !dependency.starts_with("https://")
             {
-                self.classify(&dependency, filename, &mut row)?;
+                self.classify(dependency, filename, &mut row)?;
             }
         }
         Ok(row)

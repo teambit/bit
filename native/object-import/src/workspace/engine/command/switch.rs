@@ -44,7 +44,7 @@ pub(super) fn context(
     selection.remove_without_main_head(&mut context)?;
     load_order::apply(&mut context, &entries(selection.lane.as_ref())?)?;
     selection::attach(&mut context, request)?;
-    if selection.current.is_main() && staged_main(&request.root, &context)? {
+    if selection.current.is_main() && validation::staged_main(&request.root, &context)? {
         return Err(invalid("switch staged main components require export or reset"));
     }
     attach_versions(&mut context)?;
@@ -338,11 +338,21 @@ pub(super) fn plan(
         .ok_or_else(|| invalid("switch additions"))?
         .clone();
     for destination in &additions {
-        let scope =
-            destination["scope"].as_str().ok_or_else(|| invalid("switch addition scope"))?;
-        let name = destination["name"].as_str().ok_or_else(|| invalid("switch addition name"))?;
-        let head =
-            destination["version"].as_str().ok_or_else(|| invalid("switch addition head"))?;
+        let scope = destination["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("switch addition scope"))?;
+        let name = destination["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("switch addition name"))?;
+        let head = destination["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+            .ok_or_else(|| invalid("switch addition head"))?;
         let identity = format!("{scope}/{name}");
         planned.captured.push(capture::addition(&identity, destination)?);
         let selected = json!({"kind":"target","version":head,"merge":false});
@@ -350,34 +360,6 @@ pub(super) fn plan(
         planning::prepare_one(record, &mut planned, index, &selected, snapshots)?;
     }
     Ok(planned)
-}
-
-fn staged_main(root: &std::path::Path, context: &Value) -> io::Result<bool> {
-    let bytes = match std::fs::read(crate::scope_path(root).join("staged-snaps")) {
-        Ok(bytes) => bytes,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
-        Err(error) => return Err(error),
-    };
-    let staged = std::str::from_utf8(&bytes).map_err(io::Error::other)?;
-    let staged = staged
-        .lines()
-        .map(str::trim)
-        .collect::<HashSet<_>>();
-    let models = context["models"].as_array().ok_or_else(|| invalid("switch models"))?;
-    Ok(models.iter().any(|model| model_staged(model, &staged)))
-}
-
-fn model_staged(model: &Value, staged: &HashSet<&str>) -> bool {
-    let versions = ["versions", "orphanedVersions"]
-        .into_iter()
-        .filter_map(|field| model[field].as_object())
-        .flat_map(serde_json::Map::values)
-        .filter_map(Value::as_str);
-    model["head"]
-        .as_str()
-        .into_iter()
-        .chain(versions)
-        .any(|hash| staged.contains(hash))
 }
 
 fn refresh_main(
@@ -395,6 +377,8 @@ fn refresh_main(
         .map(|target| {
             target["identity"]
                 .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
                 .ok_or_else(|| invalid("switch main refresh identity"))
                 .map(str::to_owned)
         })

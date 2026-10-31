@@ -96,30 +96,32 @@ fn owners(request: &Detect) -> io::Result<Vec<Owner>> {
 }
 
 fn owner(request: &Detect, key: &str, row: &Value) -> io::Result<Option<Owner>> {
-    let Some(directory) = row["rootDir"].as_str() else { return Ok(None) };
-    let name = row["name"].as_str().unwrap_or(key);
-    let suffix = format!("/{name}");
-    let mut ids = request.detection.workspace_components
-        .iter()
-        .filter(|id| {
-            unversioned(id).ends_with(&suffix)
-                && row["scope"]
-                    .as_str()
-                    .is_none_or(|scope| scope.is_empty() || id.starts_with(&format!("{scope}/")))
-        });
-    let Some(identity) = ids.next() else { return Ok(None) };
-    if ids.next().is_some() {
-        return Err(invalid("ambiguous relative component ownership"));
-    }
+    let Some(directory) = row["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+    else {
+        return Ok(None);
+    };
+    let Some(identity) = matching_identity(request, key, row)? else { return Ok(None) };
     let (base, version) = identity
         .rsplit_once('@')
-        .map_or((identity.as_str(), None), |(id, version)| (id, Some(version)));
-    let (scope, name) = base.split_once('/').ok_or_else(|| invalid("relative owner identity"))?;
+        .map_or((identity, None), |(id, version)| (id.trim(), Some(version.trim())));
+    let (scope, name) = base
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("relative owner identity"))?;
+    let version = version.filter(|ver| !ver.is_empty());
     let mut id = json!({"scope":scope,"name":name});
-    if let Some(version) = version {
-        id["version"] = json!(version);
+    if let Some(ver) = version {
+        id["version"] = json!(ver);
     }
-    let issue_id = if row["scope"].as_str().is_none_or(str::is_empty) {
+    let row_scope = row["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    let issue_id = if row_scope.is_empty() {
         json!({"_legacy":{"scope":null,"name":name,"version":version.unwrap_or("latest")},"_scope":scope})
     } else {
         id.clone()
@@ -130,6 +132,38 @@ fn owner(request: &Detect, key: &str, row: &Value) -> io::Result<Option<Owner>> 
         id,
         issue_id,
     }))
+}
+
+fn matching_identity<'a>(
+    request: &'a Detect,
+    key: &str,
+    row: &Value,
+) -> io::Result<Option<&'a str>> {
+    let name = row["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| key.trim());
+    if name.is_empty() {
+        return Ok(None);
+    }
+    let suffix = format!("/{name}");
+    let row_scope = row["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    let mut ids = request.detection.workspace_components
+        .iter()
+        .filter(|id| {
+            let trimmed = id.trim();
+            unversioned(trimmed).ends_with(&suffix)
+                && (row_scope.is_empty() || trimmed.starts_with(&format!("{row_scope}/")))
+        });
+    let Some(identity) = ids.next().map(|id| id.trim()) else { return Ok(None) };
+    if ids.next().is_some() {
+        return Err(invalid("ambiguous relative component ownership"));
+    }
+    Ok(Some(identity))
 }
 
 pub(super) fn path(base: &Path, file: &Path) -> io::Result<String> {

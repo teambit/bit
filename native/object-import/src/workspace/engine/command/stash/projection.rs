@@ -70,7 +70,8 @@ fn clean_resolver_dependency(dependency: &mut Value) {
     remove_empty_version(dependency);
     if let Some(id) = dependency["id"]
         .as_str()
-        .and_then(|id| id.strip_suffix('@'))
+        .and_then(|id| id.trim().strip_suffix('@'))
+        .map(str::trim)
     {
         dependency["id"] = Value::String(id.to_owned());
     }
@@ -82,12 +83,15 @@ fn clean_resolver_dependency(dependency: &mut Value) {
 fn remove_empty_version(value: &mut Value) {
     if let Some(stripped) = value
         .as_str()
-        .and_then(|raw| raw.strip_suffix('@'))
+        .and_then(|raw| raw.trim().strip_suffix('@'))
+        .map(str::trim)
     {
         *value = Value::String(stripped.to_owned());
         return;
     }
-    if value["version"] == ""
+    if value["version"]
+        .as_str()
+        .is_some_and(|ver| ver.trim().is_empty())
         && let Some(value) = value.as_object_mut()
     {
         value.remove("version");

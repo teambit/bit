@@ -17,7 +17,13 @@ impl std::fmt::Display for CanonicalError {
 }
 impl std::error::Error for CanonicalError {}
 
-pub(super) fn canonical(message: String) -> io::Error {
+pub(super) fn canonical(mut message: String) -> io::Error {
+    while message.ends_with(char::is_whitespace) {
+        message.pop();
+    }
+    while message.starts_with(char::is_whitespace) {
+        message.remove(0);
+    }
     io::Error::other(CanonicalError { message, progress: None })
 }
 
@@ -25,7 +31,10 @@ pub(super) fn with_progress(error: io::Error, progress: serde_json::Value) -> io
     if !is_canonical(&error) || progress.is_null() {
         return error;
     }
-    io::Error::other(CanonicalError { message: error.to_string(), progress: Some(progress) })
+    io::Error::other(CanonicalError {
+        message: error.to_string().trim().to_owned(),
+        progress: Some(progress),
+    })
 }
 
 pub(super) fn failure_data(error: &io::Error) -> Option<serde_json::Value> {

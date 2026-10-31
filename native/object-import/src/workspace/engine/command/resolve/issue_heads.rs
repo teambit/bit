@@ -38,12 +38,13 @@ pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Resul
 fn model_identity(context: &Value, model: &Value) -> io::Result<String> {
     if model["scope"]
         .as_str()
-        .is_some_and(|scope| !scope.is_empty())
+        .is_some_and(|scope| !scope.trim().is_empty())
     {
         return super::selection::identity(model);
     }
     let name = model["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty() && !name.contains('@'))
         .ok_or_else(|| invalid("resolve identity name"))?;
     if let Some(identity) = context["targets"]
@@ -51,9 +52,9 @@ fn model_identity(context: &Value, model: &Value) -> io::Result<String> {
         .and_then(|targets| {
             targets
                 .iter()
-                .filter_map(|target| target["identity"].as_str())
+                .filter_map(|target| target["identity"].as_str().map(str::trim))
                 .find(|identity| {
-                    identity.split_once('/').map_or(*identity, |(_, bare)| bare) == name
+                    identity.split_once('/').map_or(*identity, |(_, bare)| bare.trim()) == name
                 })
         })
     {
@@ -61,6 +62,7 @@ fn model_identity(context: &Value, model: &Value) -> io::Result<String> {
     }
     if let Some(scope) = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty() && !scope.contains('/'))
     {
         return Ok(format!("{scope}/{name}"));
@@ -72,7 +74,7 @@ fn find_lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
     context["lane"]["targets"]
         .as_array()?
         .iter()
-        .find(|row| row["identity"] == identity)?["currentHead"]
+        .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.trim()))?["currentHead"]
         .as_str()
 }
 

@@ -30,7 +30,8 @@ pub(in crate::workspace::engine::command::resolve) fn stage(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot builder owner"))?;
-    if retained.record.token != input.token {
+    let token = input.token.trim();
+    if token.is_empty() || retained.record.token != token {
         return Err(invalid("snapshot builder token"));
     }
     super::validate(retained)?;
@@ -55,7 +56,8 @@ fn rebuild(
     retained: &mut super::super::Retained,
     snapshots: &snapshots::State,
 ) -> io::Result<Value> {
-    if retained.record.token != input.token {
+    let token = input.token.trim();
+    if token.is_empty() || retained.record.token != token {
         return Err(invalid("snapshot builder token"));
     }
     proof::verify(&input.dependency_read_set)?;

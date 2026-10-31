@@ -64,9 +64,10 @@ fn warnings(
         semver[exact].get("version").ok_or_else(|| invalid("tag exact semver metadata"))?;
     let mut output = Vec::new();
     for identity in selected {
+        let identity = identity.trim();
         let material = materials
             .iter()
-            .find(|material| material.identity == *identity)
+            .find(|material| material.identity == identity)
             .ok_or_else(|| invalid("tag warning material"))?;
         let Some(latest) = latest_tag(material, semver)? else { continue };
         if crate::config_merge::compare_versions(&semver[latest]["version"], target)?
