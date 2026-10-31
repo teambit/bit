@@ -46,6 +46,20 @@ pub(super) fn run_report(
     })
 }
 
+fn target_version(target: &Value) -> Option<&str> {
+    for key in ["version", "head"] {
+        if let Some(val) = target
+            .get(key)
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"))
+        {
+            return Some(val);
+        }
+    }
+    None
+}
+
 /// One `DiffJson` row.
 pub(super) fn one(
     context: &Value,
@@ -55,21 +69,15 @@ pub(super) fn one(
     from_version: Option<&str>,
     to_version: Option<&str>,
 ) -> io::Result<Value> {
-    let identity = text(row.get("identity"))?.trim();
+    let raw_id = text(
+        row.get("identity")
+            .or_else(|| row.get("id")),
+    )?
+    .trim();
+    let identity = raw_id.rsplit_once('@').map_or(raw_id, |(base, _)| base.trim());
     let target = find_captured_target(capture, identity)
         .ok_or_else(|| decline("diff row without a captured target"))?;
-    let version = target
-        .get("version")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"))
-        .or_else(|| {
-            target
-                .get("head")
-                .and_then(Value::as_str)
-                .map(str::trim)
-                .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"))
-        });
+    let version = target_version(target);
     let versions = resolve_versions(version, from_version, to_version);
     let files_diff = result_files::files_diff(row, versions.left, versions.right)?;
     let fields_diff = if target["_removed"] == true && !versions.historical {

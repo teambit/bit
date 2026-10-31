@@ -65,8 +65,13 @@ pub(super) fn package_dependencies(
 }
 
 fn pkg_version(map: &Map<String, Value>, name: &str) -> io::Result<Option<String>> {
+    let trimmed = name.trim();
     map.get(name)
-        .or_else(|| map.get(name.trim()))
+        .or_else(|| map.get(trimmed))
+        .or_else(|| {
+            map.iter()
+                .find_map(|(key, val)| (key.trim() == trimmed).then_some(val))
+        })
         .map(|value| text(Some(value)).map(|ver| ver.trim().to_string()))
         .transpose()
         .map(|opt| opt.filter(|ver| !ver.is_empty()))

@@ -85,7 +85,8 @@ fn errors(results: &[Value], chalk: Chalk) -> String {
     let sections = results
         .iter()
         .map(|row| {
-            if row["bareResult"]["valid"] == true {
+            let bare = &row["bareResult"];
+            if bare["valid"] == true || bare["pass"] == true || bare["passed"] == true {
                 String::new()
             } else {
                 format!(

@@ -93,13 +93,18 @@ pub(in crate::commands) fn eject_from_lane(
 
 fn resolve_main_version(models: &[Value], id: &str) -> io::Result<String> {
     let id = id.trim();
-    let identity = id.split('@').next().unwrap_or(id);
+    let identity = id
+        .split('@')
+        .next()
+        .unwrap_or(id)
+        .trim();
     let model = models
         .iter()
         .find(|model| {
-            let name = model["name"].as_str().unwrap_or_default();
+            let name = model["name"].as_str().map_or("", str::trim);
             let model_id = model["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
                 .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
             model_id == identity || name == identity
@@ -109,7 +114,8 @@ fn resolve_main_version(models: &[Value], id: &str) -> io::Result<String> {
         })?;
     let head_hash = model["head"]
         .as_str()
-        .filter(|hash| !hash.trim().is_empty())
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .ok_or_else(|| {
             io::Error::other(format!(r#"unable to eject "{id}" as it has no main version"#))
         })?;

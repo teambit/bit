@@ -64,8 +64,8 @@ impl Diagnosis {
 fn is_valid(bare: &Value) -> bool {
     ["valid", "pass", "passed"]
         .into_iter()
-        .find_map(|key| bare.get(key))
-        .is_some_and(|value| {
+        .filter_map(|key| bare.get(key))
+        .any(|value| {
             value.as_bool().unwrap_or(false)
                 || value.as_u64() == Some(1)
                 || value

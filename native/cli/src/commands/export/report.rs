@@ -293,6 +293,8 @@ fn lane_update_ids(receipt: &Value) -> HashSet<&str> {
         .into_iter()
         .flatten()
         .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
         .collect()
 }
 
@@ -311,8 +313,9 @@ fn render_item(
         .into_iter()
         .flatten()
         .filter_map(Value::as_str)
-        .filter_map(|value| value.rsplit_once('@'))
-        .filter(|(identity, _)| *identity == id)
+        .filter_map(|value| value.trim().rsplit_once('@'))
+        .map(|(identity, version)| (identity.trim(), version.trim()))
+        .filter(|(identity, version)| *identity == id && !version.is_empty())
         .map(|(_, version)| version)
         .collect::<Vec<_>>();
     let versions = if versions.is_empty() { "n/a".to_owned() } else { versions.join(", ") };

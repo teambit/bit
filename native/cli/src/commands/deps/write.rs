@@ -61,17 +61,28 @@ pub(super) fn prepare_write(
     Ok((root.to_path_buf(), target, deduped))
 }
 
+fn collect_variant_policies(ctx: &WorkspaceDepsContext, rows: &mut Vec<CandidateRow>) {
+    for (_, variant_map) in &ctx.ws_config.variants {
+        for (key, cfg) in variant_map {
+            let bare_key = key
+                .trim()
+                .split('@')
+                .next()
+                .unwrap_or("");
+            if bare_key == DEPENDENCY_RESOLVER_ASPECT && cfg.is_object() {
+                push_policy_rows(&cfg["policy"], rows);
+            }
+        }
+    }
+}
+
 fn collect_variant_and_comp_policies(
     root: &Path,
     ctx: &WorkspaceDepsContext,
     bitmap_val: &Value,
     rows: &mut Vec<CandidateRow>,
 ) -> Result<(), Failure> {
-    for (_, variant_map) in &ctx.ws_config.variants {
-        if let Some(cfg) = variant_map.get(DEPENDENCY_RESOLVER_ASPECT) {
-            push_policy_rows(&cfg["policy"], rows);
-        }
-    }
+    collect_variant_policies(ctx, rows);
     for entry in &ctx.ws.entries {
         if !entry.owns_its_dir() {
             continue;

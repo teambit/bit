@@ -238,15 +238,21 @@ fn cells(
 }
 
 fn effective_parent(row: &Value, hidden: &HashMap<&str, &Value>) -> Value {
-    let parents = row["log"]["parents"].as_array();
-    if let Some([parent]) = parents.map(Vec::as_slice)
-        && let Some(ancestor) = parent
+    let mut current = row;
+    for _ in 0..=hidden.len() {
+        let parents = current["log"]["parents"].as_array();
+        let Some([parent]) = parents.map(Vec::as_slice) else {
+            break;
+        };
+        let Some(ancestor) = parent
             .as_str()
             .and_then(|hash| hidden.get(hash))
-    {
-        return ancestor["parentFileHash"].clone();
+        else {
+            break;
+        };
+        current = ancestor;
     }
-    row["parentFileHash"].clone()
+    current["parentFileHash"].clone()
 }
 
 fn assign_changed(owners: &mut [Option<usize>], index: usize, parent: &str, current: &str) {

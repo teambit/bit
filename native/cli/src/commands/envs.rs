@@ -214,24 +214,27 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
 fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [pattern, env] = tokens.as_slice() else { return None };
+    let (pattern, env) = (pattern.trim(), env.trim());
     (is_supported_pattern(pattern) && !env.is_empty()).then(|| Subcommand::Set {
-        pattern: (*pattern).to_owned(),
-        env: (*env).to_owned(),
+        pattern: pattern.to_owned(),
+        env: env.to_owned(),
     })
 }
 
 fn parse_unset(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [pattern] = tokens.as_slice() else { return None };
-    is_supported_pattern(pattern).then(|| Subcommand::Unset { pattern: (*pattern).to_owned() })
+    let pattern = pattern.trim();
+    is_supported_pattern(pattern).then(|| Subcommand::Unset { pattern: pattern.to_owned() })
 }
 
 fn parse_replace(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [old_env, new_env] = tokens.as_slice() else { return None };
+    let (old_env, new_env) = (old_env.trim(), new_env.trim());
     (!old_env.is_empty() && !new_env.is_empty()).then(|| Subcommand::Replace {
-        old_env: (*old_env).to_owned(),
-        new_env: (*new_env).to_owned(),
+        old_env: old_env.to_owned(),
+        new_env: new_env.to_owned(),
     })
 }
 
@@ -240,12 +243,14 @@ fn parse_update(rest: &[&str]) -> Option<Subcommand> {
     match tokens.as_slice() {
         [] => Some(Subcommand::Update { env_id: None, pattern: None }),
         [env_id] if is_valid_update_env_id(env_id) => {
-            Some(Subcommand::Update { env_id: Some((*env_id).to_owned()), pattern: None })
+            Some(Subcommand::Update { env_id: Some(env_id.trim().to_owned()), pattern: None })
         }
-        [env_id, pattern] if is_valid_update_env_id(env_id) && is_supported_pattern(pattern) => {
+        [env_id, pattern]
+            if is_valid_update_env_id(env_id) && is_supported_pattern(pattern.trim()) =>
+        {
             Some(Subcommand::Update {
-                env_id: Some((*env_id).to_owned()),
-                pattern: Some((*pattern).to_owned()),
+                env_id: Some(env_id.trim().to_owned()),
+                pattern: Some(pattern.trim().to_owned()),
             })
         }
         _ => None,

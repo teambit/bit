@@ -84,7 +84,10 @@ fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {
 }
 
 fn version<'a>(line: Option<&'a str>, prefix: &str, name: &str) -> Option<&'a str> {
-    let rest = line?.strip_prefix(prefix)?.strip_prefix(name)?;
+    let rest = line?
+        .trim()
+        .strip_prefix(prefix)?
+        .strip_prefix(name)?;
     rest.strip_prefix('@')
         .or_else(|| rest.strip_prefix(' '))
         .map(str::trim)

@@ -108,7 +108,8 @@ fn response_error(input: &Value, response: &Response) -> io::Error {
     if response.canonical_error == Some(true)
         && let Some(message) = response.error
             .as_deref()
-            .filter(|msg| !msg.trim().is_empty())
+            .map(str::trim)
+            .filter(|msg| !msg.is_empty())
             .map(str::to_owned)
     {
         return io::Error::other(CanonicalError {
@@ -124,6 +125,8 @@ fn response_error(input: &Value, response: &Response) -> io::Error {
         .unwrap_or("request");
     let reason = response.error
         .as_deref()
+        .or_else(|| response.data.get("error").and_then(Value::as_str))
+        .or_else(|| response.failed.as_ref().and_then(Value::as_str))
         .map(str::trim)
         .filter(|error| !error.is_empty())
         .map_or_else(String::new, |error| format!(": {error}"));

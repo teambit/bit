@@ -47,11 +47,18 @@ pub(super) fn untracked(receipt: &Value, format: &Formatter) -> String {
 }
 
 pub(super) fn cloud(receipt: &Value, chalk: Chalk) -> String {
-    let urls = ids(receipt, "rippleJobUrls");
+    let mut urls = ids(receipt, "rippleJobUrls");
+    if urls.is_empty() {
+        urls = ids(receipt, "rippleJobs");
+    }
     if urls.is_empty() {
         return String::new();
     }
-    let prefix = if receipt["browserOpened"] == true {
+    let browser_opened = receipt["browserOpened"] == true
+        || receipt["browserOpened"]
+            .as_str()
+            .is_some_and(|val| val.trim().eq_ignore_ascii_case("true"));
+    let prefix = if browser_opened {
         "Your browser has been opened to the following link"
     } else {
         "Visit the link below"

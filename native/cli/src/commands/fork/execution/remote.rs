@@ -105,7 +105,19 @@ fn loaded_source_ids(captured: &RemoteCapture) -> Vec<String> {
         .iter()
         .filter_map(|row| {
             let identity = row_bare_id(row)?;
-            let version = row["version"].as_str().map_or("", str::trim);
+            let version = row["version"]
+                .as_str()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+                .or_else(|| {
+                    row["identity"]
+                        .as_str()
+                        .or_else(|| row["id"].as_str())
+                        .and_then(|raw| raw.trim().rsplit_once('@'))
+                        .map(|(_, ver)| ver.trim())
+                        .filter(|ver| !ver.is_empty())
+                })
+                .unwrap_or("");
             Some(if version.is_empty() {
                 identity.to_owned()
             } else {

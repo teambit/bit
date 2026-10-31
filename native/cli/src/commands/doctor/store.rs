@@ -45,6 +45,7 @@ pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<V
         total += 1;
         if let Some(head) = model["head"]
             .as_str()
+            .map(str::trim)
             .filter(|head| !head.is_empty())
             && object(scope, head)?.is_none()
         {

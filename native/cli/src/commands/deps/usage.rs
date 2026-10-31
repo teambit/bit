@@ -304,7 +304,7 @@ fn version_matches_query(version: &str, query_ver: Option<&str>) -> bool {
         return true;
     };
     let version = version.trim();
-    if version == req {
+    if version == req || version == snap_to_semver(req) {
         return true;
     }
     node_semver::Range::parse(req)

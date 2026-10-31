@@ -41,7 +41,10 @@ fn literal(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     }
     let normalized = inventory::normalize(pattern);
     let directory = normalized.strip_prefix("./").unwrap_or(&normalized);
-    let by_directory = matching(targets, |target| field(target, "directory") == directory);
+    let by_directory = matching(targets, |target| {
+        let cand = inventory::normalize(field(target, "directory"));
+        cand.strip_prefix("./").unwrap_or(&cand) == directory
+    });
     let selected = if by_directory.is_empty() {
         matching(targets, |target| {
             let identity = field(target, "identity");

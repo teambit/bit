@@ -74,7 +74,13 @@ pub(super) fn validate(prepared: &Value) -> io::Result<()> {
 }
 
 fn plans(receipt: &Value) -> io::Result<Vec<Plan>> {
-    let mut plans: Vec<Plan> = serde_json::from_value(receipt["packageManifestPlans"].clone())?;
+    let Some(raw_plans) = receipt
+        .get("packageManifestPlans")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(Vec::new());
+    };
+    let mut plans: Vec<Plan> = serde_json::from_value(raw_plans.clone())?;
     for plan in &mut plans {
         plan.component.config = crate::commands::status::policy::export_package_config(
             &receipt["configurationContext"],
@@ -82,9 +88,13 @@ fn plans(receipt: &Value) -> io::Result<Vec<Plan>> {
             &plan.version_data,
         )?;
         if has_custom_pkg_name(&plan.component.config) {
+            let binding_prefix = plan.version_data["bindingPrefix"]
+                .as_str()
+                .map(str::trim)
+                .filter(|prefix| !prefix.is_empty());
             plan.component.package_name = bit_install::workspace::component_package_name(
                 &plan.component.id,
-                plan.version_data["bindingPrefix"].as_str(),
+                binding_prefix,
                 &plan.component.config,
             );
         }

@@ -44,7 +44,7 @@ fn valid_args(args: &[OsString]) -> bool {
 
 fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {
     let content_path = dir.join("content");
-    if !content_path.exists() {
+    if !content_path.is_file() {
         return Ok(chalk.yellow(
             r#"no details available. run a command like "bit tag" or "bit snap" first."#,
         ));

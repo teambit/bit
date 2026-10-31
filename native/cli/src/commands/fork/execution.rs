@@ -60,6 +60,22 @@ pub(super) fn run(
     output.stop();
     Ok(report::render(options, &results.ids, chalk))
 }
+fn apply_inventory_fields(root: &Path, id: &str, source: &mut Value) -> io::Result<()> {
+    let state = inventory::read(root)?;
+    let inventory = inventory::selected(&state, id)
+        .ok_or_else(|| io::Error::other("fork source inventory changed"))?;
+    source["rootDir"] = inventory["rootDir"].clone();
+    if let Some(main_file) = source["current"]["mainFile"]
+        .as_str()
+        .or_else(|| inventory["mainFile"].as_str())
+        .map(str::trim)
+        .filter(|file| !file.is_empty())
+    {
+        source["mainFile"] = Value::String(main_file.to_owned());
+    }
+    Ok(())
+}
+
 fn local(
     root: &Path,
     options: &Options,
@@ -85,11 +101,7 @@ fn local(
                 .is_some_and(|candidate| candidate.trim() == id)
         })
         .ok_or_else(|| io::Error::other("fork captured source missing"))?;
-    let state = inventory::read(root)?;
-    let inventory = inventory::selected(&state, id)
-        .ok_or_else(|| io::Error::other("fork source inventory changed"))?;
-    source["rootDir"] = inventory["rootDir"].clone();
-    source["mainFile"] = source["current"]["mainFile"].clone();
+    apply_inventory_fields(root, id, &mut source)?;
     let facts = source_facts(root, linker, &mut source, false)?;
     let target = copy::run(root, options, scope, &source, false, linker, chalk)?;
     if options.flags.refactor {

@@ -88,6 +88,7 @@ fn environment(
             "forkEnvironment",
             &json!({"env":env,"config":plan.configuration()}),
         )?;
+        print!("{}", linker.take_stdout());
         plan.set_config(config)?;
     }
     Ok(())

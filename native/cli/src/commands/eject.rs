@@ -32,6 +32,19 @@ pub(super) struct Options {
     pub keep_files: bool,
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            !matches!(
+                val.to_string_lossy()
+                    .trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false",
+            )
+        })
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("eject arguments are not UTF-8".into()));
@@ -39,7 +52,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native eject grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_enabled() {
         return Ok(Outcome::Declined("CI eject delegated".into()));
     }
     let cwd = env::current_dir()?;

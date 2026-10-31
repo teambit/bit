@@ -3,18 +3,29 @@ use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
 pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Result<()> {
-    let Some(jobs) = receipt["rippleJobs"]
+    let jobs: Vec<Value> = receipt["rippleJobs"]
         .as_array()
-        .filter(|jobs| !jobs.is_empty())
-    else {
+        .or_else(|| metadata["lastExport"]["rippleJobs"].as_array())
+        .into_iter()
+        .flatten()
+        .filter(|job| {
+            !job.is_null()
+                && job
+                    .as_str()
+                    .is_none_or(|text| !text.trim().is_empty())
+        })
+        .cloned()
+        .collect();
+    if jobs.is_empty() {
         return Ok(());
-    };
+    }
     let mut last = json!({"timestamp":crate::history::iso_now(),"rippleJobs":jobs});
     if let Some(lane) = metadata["lastExport"]
         .get("lane")
         .filter(|lane| !lane.is_null())
+        .and_then(|lane| exported_lane(lane).or_else(|| lane.is_object().then(|| lane.clone())))
     {
-        last["lane"] = lane.clone();
+        last["lane"] = lane;
     } else if let Some(lane) = exported_lane(&receipt["exportedLanes"][0]) {
         last["lane"] = lane;
     }

@@ -172,17 +172,20 @@ impl WorkspaceDepsContext {
             .parent()
             .map_or_else(PathBuf::new, Path::to_path_buf);
         let resolved = normalize_rel_path(&base_dir.join(raw_spec));
-        if !entry.root_dir.is_empty() && resolved.starts_with(entry.root_dir.trim_end_matches('/'))
-        {
+        let under_dir = |dir: &str| {
+            let trimmed = dir.trim_end_matches('/');
+            !trimmed.is_empty()
+                && (resolved == trimmed
+                    || resolved
+                        .strip_prefix(trimmed)
+                        .is_some_and(|rest| rest.starts_with('/')))
+        };
+        if under_dir(&entry.root_dir) {
             return;
         }
         if let Some(other) = self.ws.components
             .iter()
-            .find(|comp| {
-                comp.id != entry.id
-                    && !comp.root_dir.is_empty()
-                    && resolved.starts_with(comp.root_dir.trim_end_matches('/'))
-            })
+            .find(|comp| comp.id != entry.id && under_dir(&comp.root_dir))
         {
             upsert_dep(deps, workspace_comp_dep(other, "runtime", None));
         }

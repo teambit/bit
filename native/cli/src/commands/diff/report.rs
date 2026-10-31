@@ -76,10 +76,10 @@ fn project_file(mut file: Value, options: &Options) -> io::Result<Value> {
 }
 
 fn matches_file(path: &str, filter: &str) -> bool {
-    let path = path.trim();
-    let path = path.strip_prefix("./").unwrap_or(path);
-    let filter = filter.trim();
-    let filter = filter.strip_prefix("./").unwrap_or(filter);
+    let path = path.trim().replace('\\', "/");
+    let path = path.strip_prefix("./").unwrap_or(&path);
+    let filter = filter.trim().replace('\\', "/");
+    let filter = filter.strip_prefix("./").unwrap_or(&filter);
     !filter.is_empty() && (path == filter || path.ends_with(&format!("/{filter}")))
 }
 

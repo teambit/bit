@@ -188,7 +188,7 @@ fn file_list(files: &[Value], tests: bool) -> io::Result<Value> {
     let paths = files
         .iter()
         .filter(|file| truthy(file.get("test")) == tests)
-        .map(|file| Ok(json!(text(file.get("relativePath"))?.replace('\\', "/"))))
+        .map(|file| Ok(json!(text(file.get("relativePath"))?.trim().replace('\\', "/"))))
         .collect::<io::Result<Vec<_>>>()?;
     Ok(Value::Array(paths))
 }

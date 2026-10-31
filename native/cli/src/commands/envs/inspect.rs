@@ -341,25 +341,8 @@ fn bare_row_full_id_with_ver(scope_dir: &Path, row: &Value) -> Option<String> {
     Some(format!("{base}@{ver}"))
 }
 
-fn bare_row_core_env(scope_dir: &Path, row: &Value, req_ver: Option<&str>) -> Option<String> {
-    let hash = row["hash"].as_str()?;
-    let (kind, comp_obj) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
-    if kind != "Component" {
-        return None;
-    }
-    let ver_hash = match req_ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
-    {
-        Some(ver) => comp_obj["versions"][ver]
-            .as_str()
-            .or_else(|| comp_obj["orphanedVersions"][ver].as_str())
-            .unwrap_or(ver),
-        None => comp_obj["head"].as_str()?,
-    };
-    let (ver_kind, ver_obj) = bit_object_import::read_scope_object(scope_dir, ver_hash).ok()??;
-    if ver_kind != "Version" {
-        return None;
-    }
-    let env_id = ver_obj["extensions"]
+fn extract_version_env_id(ver_obj: &Value) -> &str {
+    ver_obj["extensions"]
         .as_array()
         .and_then(|exts| {
             exts.iter()
@@ -370,7 +353,33 @@ fn bare_row_core_env(scope_dir: &Path, row: &Value, req_ver: Option<&str>) -> Op
                         .or_else(|| ext["data"]["id"].as_str())
                 })
         })
-        .unwrap_or("teambit.harmony/node");
-    let bare_env = aspect_id_without_version(env_id);
-    CORE_ENVS.contains(&bare_env).then(|| env_id.to_owned())
+        .map(str::trim)
+        .filter(|env| !env.is_empty() && *env != "-")
+        .unwrap_or("teambit.harmony/node")
+}
+
+fn bare_row_core_env(scope_dir: &Path, row: &Value, req_ver: Option<&str>) -> Option<String> {
+    let hash = row["hash"].as_str()?.trim();
+    let (kind, comp_obj) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let ver_hash = match req_ver.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
+    {
+        Some(ver) => comp_obj["versions"][ver]
+            .as_str()
+            .or_else(|| comp_obj["orphanedVersions"][ver].as_str())
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .unwrap_or(ver),
+        None => comp_obj["head"].as_str()?.trim(),
+    };
+    let (ver_kind, ver_obj) = bit_object_import::read_scope_object(scope_dir, ver_hash).ok()??;
+    if ver_kind != "Version" {
+        return None;
+    }
+    let env_id = extract_version_env_id(&ver_obj);
+    CORE_ENVS
+        .contains(&aspect_id_without_version(env_id))
+        .then(|| env_id.to_owned())
 }

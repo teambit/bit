@@ -35,11 +35,15 @@ pub(in crate::commands) fn captured(
 }
 
 pub(super) fn filesystem(root: &Path, files: &[String]) -> io::Result<Vec<String>> {
-    let mut remaining: HashSet<&str> = files
+    let normalized: Vec<String> = files
+        .iter()
+        .map(|file| file.trim().replace('\\', "/"))
+        .collect();
+    let mut remaining: HashSet<&str> = normalized
         .iter()
         .map(String::as_str)
         .collect();
-    let parents: HashSet<PathBuf> = files
+    let parents: HashSet<PathBuf> = normalized
         .iter()
         .flat_map(|file| {
             Path::new(file)

@@ -122,8 +122,8 @@ fn set_boolean(options: &mut Options, flag: &str) -> bool {
         return true;
     }
     let (key, val) = match flag.split_once('=') {
-        Some((key, raw)) if key.starts_with("--") && raw.trim() == "true" => (key.trim(), true),
-        Some((key, raw)) if key.starts_with("--") && raw.trim() == "false" => (key.trim(), false),
+        Some((key, raw)) if key.starts_with('-') && raw.trim() == "true" => (key.trim(), true),
+        Some((key, raw)) if key.starts_with('-') && raw.trim() == "false" => (key.trim(), false),
         None => (flag, true),
         _ => return false,
     };

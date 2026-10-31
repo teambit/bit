@@ -50,12 +50,12 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
     }
     let input = input.trim();
     let normalized = if cfg!(windows) { input.replace('\\', "/") } else { input.to_string() };
-    let requested = normalized.strip_prefix("./").unwrap_or(&normalized);
+    let requested = normalized.trim_start_matches("./");
     if !is_valid_relative_file_path(requested) {
         return Err(decline("file history path"));
     }
     let bitmap = bitmap::read(root)?;
-    let Some((entry, relative)) = bitmap.entries
+    let Some((entry, relative, _)) = bitmap.entries
         .iter()
         .filter_map(|entry| {
             let dir = entry.root_dir.trim_start_matches("./").trim_end_matches('/');
@@ -63,9 +63,9 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
                 .strip_prefix(dir)
                 .and_then(|relative| relative.strip_prefix('/'))
                 .filter(|relative| !relative.is_empty())
-                .map(|relative| (entry, relative))
+                .map(|relative| (entry, relative, dir.len()))
         })
-        .max_by_key(|(entry, _)| entry.root_dir.len())
+        .max_by_key(|(_, _, dir_len)| *dir_len)
     else {
         return Ok(Target::Unowned);
     };

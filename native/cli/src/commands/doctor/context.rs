@@ -51,7 +51,7 @@ impl Context {
         let bit_version = package["version"]
             .as_str()
             .map_or_else(|| package["version"].clone(), |ver| json!(ver.trim()));
-        Ok(json!({"nodeVersion":String::from_utf8(node.stdout).map_err(io::Error::other)?.trim(),
+        Ok(json!({"nodeVersion":String::from_utf8_lossy(&node.stdout).trim(),
             "runningTimestamp":self.timestamp,"platform":platform,"bitVersion":bit_version,
             "npmVersion":vendors::version("npm","--version",true),"yarnVersion":vendors::version("yarn","-v",false),
             "userDetails":format!("{}<{}>",self.setting("user.name",""),self.setting("user.email",""))}))

@@ -316,7 +316,8 @@ impl State<'_> {
                     .find(|id| without_version(id) == without_version(env))
             })
             .map_or(env, String::as_str);
-        Ok(resolved == requested || without_version(resolved) == requested)
+        let requested = requested.trim();
+        Ok(resolved == requested || without_version(resolved) == without_version(requested))
     }
 }
 

@@ -147,7 +147,7 @@ impl Options {
                 *cursor += 1;
                 let Some(val) = args
                     .get(*cursor)
-                    .copied()
+                    .map(|val| val.trim())
                     .filter(|val| !val.is_empty() && !val.starts_with('-'))
                 else {
                     return false;
@@ -155,8 +155,11 @@ impl Options {
                 self.remote = Some(val.into());
                 true
             }
-            name if !name.starts_with('-') && !name.is_empty() && self.name.is_none() => {
-                self.name = Some(name.into());
+            name if !name.trim().starts_with('-')
+                && !name.trim().is_empty()
+                && self.name.is_none() =>
+            {
+                self.name = Some(name.trim().into());
                 true
             }
             _ => false,

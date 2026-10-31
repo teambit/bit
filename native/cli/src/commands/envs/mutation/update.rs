@@ -267,22 +267,29 @@ fn has_versioned_specific_config(
             && let Ok(parsed) = bit_object_import::parse_jsonc(&bytes)
             && let Some(ext_obj) = parsed["extensions"].as_object()
         {
-            return find_matching_aspect_key(ext_obj, bare)
-                .is_some_and(|key| {
-                    key.contains('@') && ext_obj.get(&key) != Some(&Value::String("-".into()))
-                });
+            return map_has_versioned_config(ext_obj, bare);
         }
     }
     find_bitmap_row_ref(bitmap_val, entry)
         .ok()
         .and_then(|row| row["config"].as_object())
-        .and_then(|cfg_obj| {
-            let key = find_matching_aspect_key(cfg_obj, bare)?;
-            (key.contains('@') && cfg_obj.get(&key) != Some(&Value::String("-".into()))).then_some(
-                (),
-            )
+        .is_some_and(|cfg_obj| map_has_versioned_config(cfg_obj, bare))
+}
+
+fn map_has_versioned_config(map: &serde_json::Map<String, Value>, bare: &str) -> bool {
+    if find_matching_aspect_key(map, bare)
+        .is_some_and(|key| key.contains('@') && map.get(&key) != Some(&Value::String("-".into())))
+    {
+        return true;
+    }
+    let prefix = format!("{bare}@");
+    map.iter()
+        .find(|(key, val)| {
+            (key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@"))
+                && val.as_str() != Some("-")
         })
-        .is_some()
+        .and_then(|(_, val)| val["env"].as_str())
+        .is_some_and(|env| env.trim().starts_with(&prefix))
 }
 
 fn write_updated_env(

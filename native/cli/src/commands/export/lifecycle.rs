@@ -163,9 +163,12 @@ fn root_aspects(context: &Value) -> io::Result<bool> {
 }
 
 fn external_resolver(root: &Path) -> io::Result<bool> {
-    let config: Value = bit_object_import::parse_jsonc(&std::fs::read(
-        bit_object_import::scope_path(root).join("scope.json"),
-    )?)?;
+    let bytes = match std::fs::read(bit_object_import::scope_path(root).join("scope.json")) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error),
+    };
+    let config: Value = bit_object_import::parse_jsonc(&bytes)?;
     Ok(config["resolverPath"]
         .as_str()
         .is_some_and(|path| !path.trim().is_empty()))
@@ -182,6 +185,7 @@ fn file_action_response(response: &Value) -> io::Result<Value> {
         Err(io::Error::other(
             response["message"]
                 .as_str()
+                .or_else(|| response["error"].as_str())
                 .map(str::trim)
                 .filter(|msg| !msg.is_empty())
                 .unwrap_or("file action failed"),

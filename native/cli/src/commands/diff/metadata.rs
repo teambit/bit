@@ -159,7 +159,12 @@ fn extension_configs(
     names.extend(
         right.configs
             .keys()
-            .filter(|name| !left.configs.contains_key(*name)),
+            .filter(|name| {
+                let trimmed = name.trim();
+                !left.configs
+                    .keys()
+                    .any(|existing| existing.trim() == trimmed)
+            }),
     );
     let mut output = Vec::new();
     for name in names {

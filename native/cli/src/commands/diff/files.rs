@@ -74,6 +74,9 @@ fn replace_first(text: &str, regex: &Regex, replacement: &str) -> String {
 /// `diffFiles(a, b, true)` of two texts, written to temporary `.js` files as
 /// `tempy.write` does: git's stdout without its final newline.
 pub fn diff_texts(left: &str, right: &str) -> io::Result<String> {
+    if left == right {
+        return Ok(String::new());
+    }
     let dir = TempDir::new()?;
     let (a, b) = (dir.0.join("a").join("config.js"), dir.0.join("b").join("config.js"));
     for (path, text) in [(&a, left), (&b, right)] {

@@ -157,6 +157,7 @@ fn set_combined_short(options: &mut Options, arg: &str) -> bool {
 
 pub(super) fn is_pattern(pattern: &str) -> bool {
     !pattern.is_empty()
+        && pattern.len() <= 4096
         && !pattern.starts_with('-')
         && pattern.contains('*')
         && !pattern.contains('\0')
@@ -185,6 +186,7 @@ fn valid_id(id: &str) -> bool {
     !identity.is_empty()
         && !identity.contains('@')
         && !identity.ends_with('/')
+        && !identity.contains("//")
         && version.is_none_or(|version| !version.is_empty() && !version.contains('@'))
 }
 

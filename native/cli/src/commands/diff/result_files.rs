@@ -48,12 +48,11 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
     if diff.is_empty() {
         return Ok(None);
     }
-    let status = if truthy(file.get("fromEmpty")) {
-        "NEW"
-    } else if truthy(file.get("toEmpty")) {
-        "DELETED"
-    } else {
-        "MODIFIED"
+    let status = match file["status"].as_str().map(str::trim) {
+        Some(explicit @ ("NEW" | "DELETED" | "MODIFIED")) => explicit,
+        _ if truthy(file.get("fromEmpty")) => "NEW",
+        _ if truthy(file.get("toEmpty")) => "DELETED",
+        _ => "MODIFIED",
     };
     Ok(Some(json!({ "filePath": path, "status": status, "diffOutput": diff })))
 }

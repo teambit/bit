@@ -126,11 +126,16 @@ fn preflight(
         .map(str::trim)
         .filter(|id| !id.is_empty())
         .ok_or_else(|| io::Error::other("fork source identity"))?;
+    let clean = |opt: Option<&str>| {
+        opt.map(str::trim)
+            .filter(|val| !val.is_empty())
+            .map(str::to_owned)
+    };
     let kernel = bit_object_import::component_fork::Options {
         source: source_id.into(),
-        target: options.target.clone(),
-        scope: options.scope.clone(),
-        path: options.path.clone(),
+        target: clean(options.target.as_deref()),
+        scope: clean(options.scope.as_deref()),
+        path: clean(options.path.as_deref()),
         remote: false,
         preserve: options.flags.preserve,
         ast: options.flags.ast,

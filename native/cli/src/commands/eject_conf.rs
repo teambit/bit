@@ -85,8 +85,11 @@ fn parse_options(args: &[&str]) -> Option<Options> {
             "--override=false" => opts.override_existing = false,
             "-j" | "--json" | "--json=true" => opts.json = true,
             "--json=false" | "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            val if !val.starts_with('-') && !val.is_empty() && opts.pattern.is_empty() => {
-                val.clone_into(&mut opts.pattern);
+            val if !val.trim().starts_with('-')
+                && !val.trim().is_empty()
+                && opts.pattern.is_empty() =>
+            {
+                val.trim().clone_into(&mut opts.pattern);
             }
             val => apply_short_flags(val, &mut opts)?,
         }

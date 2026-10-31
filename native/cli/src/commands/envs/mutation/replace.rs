@@ -158,22 +158,29 @@ fn entry_uses_env(
 fn map_uses_env(map: &Map<String, Value>, old_bare: &str, raw_old_env: &str) -> bool {
     if let Some(configured) = map
         .iter()
-        .find(|(key, _)| {
-            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
+        .find(|(key, val)| {
+            (key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@"))
+                && val.as_str() != Some("-")
         })
         .and_then(|(_, val)| val["env"].as_str())
+        .map(str::trim)
+        .filter(|env| !env.is_empty() && *env != "-")
     {
         let cfg_bare = configured
             .split('@')
             .next()
-            .unwrap_or(configured);
+            .unwrap_or(configured)
+            .trim();
         if configured == raw_old_env || cfg_bare == old_bare {
             return true;
         }
     }
     let prefix = format!("{old_bare}@");
-    map.keys()
-        .any(|key| key == old_bare || key == raw_old_env || key.starts_with(&prefix))
+    map.iter()
+        .any(|(key, val)| {
+            val.as_str() != Some("-")
+                && (key == old_bare || key == raw_old_env || key.starts_with(&prefix))
+        })
 }
 
 pub(super) fn resolve_verified_env(

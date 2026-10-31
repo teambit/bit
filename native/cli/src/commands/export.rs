@@ -273,6 +273,7 @@ fn transfer(
 }
 
 fn owned_failure(error: &str, scopes: &[String], persisted: &mut Vec<String>) -> String {
+    let error = error.trim();
     if let Some((index, message)) = persist_failure(error, scopes) {
         persisted.truncate(index + 1);
         message
@@ -281,6 +282,9 @@ fn owned_failure(error: &str, scopes: &[String], persisted: &mut Vec<String>) ->
         message
     } else {
         persisted.clear();
+        if scopes.is_empty() {
+            return error.to_owned();
+        }
         let involved =
             format!("the following scopes were used for this export: {}", scopes.join(", "));
         if error.ends_with(&involved) { error.to_owned() } else { format!("{error}\n{involved}") }

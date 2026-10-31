@@ -27,16 +27,19 @@ impl Guard {
         if ACTIVE.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return Err(io::Error::other("export interrupt owner already active"));
         }
-        let disabled = env::var("BIT_DISABLE_SPINNER")
-            .is_ok_and(|value| {
-                let trimmed = value
-                    .trim()
-                    .trim_matches(['"', '\''])
-                    .trim();
-                ["true", "1", "yes", "y", "on"]
-                    .iter()
-                    .any(|truthy| trimmed.eq_ignore_ascii_case(truthy))
-            });
+        let is_truthy_env = |name: &str| {
+            env::var(name)
+                .is_ok_and(|value| {
+                    let trimmed = value
+                        .trim()
+                        .trim_matches(['"', '\''])
+                        .trim();
+                    ["true", "1", "yes", "y", "on"]
+                        .iter()
+                        .any(|truthy| trimmed.eq_ignore_ascii_case(truthy))
+                })
+        };
+        let disabled = is_truthy_env("BIT_DISABLE_SPINNER") || is_truthy_env("BIT_DISABLE_CONSOLE");
         ENABLED.store(!quiet && !disabled, Ordering::Release);
         COLOR.store(
             Chalk::detect(&env::args_os().collect::<Vec<_>>()).enabled(),

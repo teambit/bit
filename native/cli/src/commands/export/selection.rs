@@ -4,6 +4,22 @@ use crate::commands::engine::Engine;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+fn compile_pattern(pattern: &str) -> io::Result<regress::Regex> {
+    let mut expr = String::from("^");
+    for ch in pattern.trim().chars() {
+        if ch == '*' {
+            expr.push_str(".*");
+        } else if r".+?()[]{}^$|\".contains(ch) {
+            expr.push('\\');
+            expr.push(ch);
+        } else {
+            expr.push(ch);
+        }
+    }
+    expr.push('$');
+    regress::Regex::new(&expr).map_err(|error| io::Error::other(error.to_string()))
+}
+
 pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Result<Vec<String>> {
     if !options.ids.iter().any(|id| options::is_pattern(id)) {
         return Ok(options.ids.clone());
@@ -20,28 +36,15 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
     let ids = candidate_ids(&candidates)?;
     let patterns = options.ids
         .iter()
-        .map(|pattern| {
-            let mut expr = String::from("^");
-            for ch in pattern.trim().chars() {
-                if ch == '*' {
-                    expr.push_str(".*");
-                } else if r".+?()[]{}^$|\".contains(ch) {
-                    expr.push('\\');
-                    expr.push(ch);
-                } else {
-                    expr.push(ch);
-                }
-            }
-            expr.push('$');
-            regress::Regex::new(&expr).map_err(|error| io::Error::other(error.to_string()))
-        })
+        .map(|pattern| compile_pattern(pattern))
         .collect::<io::Result<Vec<_>>>()?;
     Ok(ids
         .into_iter()
         .filter(|id| {
+            let bare = id.split('@').next().unwrap_or(id);
             patterns
                 .iter()
-                .any(|pattern| pattern.find(id).is_some())
+                .any(|pattern| pattern.find(id).is_some() || pattern.find(bare).is_some())
         })
         .collect())
 }

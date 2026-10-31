@@ -156,5 +156,10 @@ fn debug_log(builder: &mut tar::Builder<fs::File>) -> io::Result<()> {
 }
 
 fn excluded_entry(path: &Path, relative: &Path, output: &Path, options: &Options) -> bool {
-    path == output || excluded(relative, options)
+    path == output
+        || excluded(relative, options)
+        || fs::canonicalize(path)
+            .ok()
+            .zip(fs::canonicalize(output).ok())
+            .is_some_and(|(left, right)| left == right)
 }

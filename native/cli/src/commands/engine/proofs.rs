@@ -21,8 +21,11 @@ impl Engine {
         let mut seen = HashSet::new();
         let unique = proofs
             .iter()
-            .filter(|proof| seen.insert(*proof))
+            .filter(|proof| !proof.is_null() && seen.insert(*proof))
             .collect::<Vec<_>>();
+        if unique.is_empty() {
+            return Ok(());
+        }
         let frames = frames(&unique)?;
         crate::trace::log(format!(
             "dependency proofs: {} receipts, {} distinct, {} frame(s)",

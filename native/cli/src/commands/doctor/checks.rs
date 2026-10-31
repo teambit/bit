@@ -147,7 +147,7 @@ fn visit(directory: &Path, broken: &mut Vec<Value>) -> io::Result<()> {
                 .to_string_lossy()
                 .split_once(marker.to_string_lossy().as_ref())
             {
-                broken.push(json!({"symlinkPath":path,"brokePath":link,"pathToDelete":prefix.trim_end_matches(std::path::MAIN_SEPARATOR)}));
+                broken.push(json!({"symlinkPath":path,"brokePath":link,"pathToDelete":prefix.trim_end_matches(['/', '\\'])}));
             }
         }
     }

@@ -105,6 +105,16 @@ fn preflight(context: &Context, options: &Options, path: &Path) -> io::Result<()
     Ok(())
 }
 
+fn take_examine_results(response: &mut Value) -> io::Result<Vec<Value>> {
+    if let Some(arr) = response["examineResults"].as_array_mut() {
+        Ok(std::mem::take(arr))
+    } else if response["examineResult"].is_object() {
+        Ok(vec![response["examineResult"].take()])
+    } else {
+        Err(io::Error::other("remote doctor results"))
+    }
+}
+
 pub(super) fn examine(
     context: &Context,
     options: &Options,
@@ -118,15 +128,12 @@ pub(super) fn examine(
         Remote::Http(url) => {
             let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
             let mut response = runtime.block_on(plan.network.doctor(url, &plan.name, requested))?;
-            let results = response["examineResults"]
-                .as_array_mut()
-                .ok_or_else(|| io::Error::other("remote doctor results"))?;
+            let results = take_examine_results(&mut response)?;
             if let Some(name) = requested
                 && results.is_empty()
             {
                 return Err(io::Error::other(format!("error: diagnosis {name} not found")));
             }
-            let results = std::mem::take(results);
             let meta = if response["metaData"].is_null() {
                 response["metadata"].take()
             } else {

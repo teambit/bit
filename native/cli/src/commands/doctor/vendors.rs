@@ -59,10 +59,11 @@ pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
 
 #[cfg(not(windows))]
 fn executable(command: &str) -> std::path::PathBuf {
-    command.into()
+    command.trim().into()
 }
 #[cfg(windows)]
 fn executable(command: &str) -> std::path::PathBuf {
+    let command = command.trim();
     let command_path = std::path::Path::new(command);
     if command_path.extension().is_some() {
         return command_path.into();

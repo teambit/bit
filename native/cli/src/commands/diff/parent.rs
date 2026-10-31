@@ -65,7 +65,11 @@ fn selected_identities(
     rows(&result, false)?
         .iter()
         .map(|row| {
-            let identity = text(row.get("identity"))?.trim();
+            let identity = text(
+                row.get("identity")
+                    .or_else(|| row.get("id")),
+            )?
+            .trim();
             selected
                 .iter()
                 .find(|target| {

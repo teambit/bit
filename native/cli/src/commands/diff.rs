@@ -124,8 +124,8 @@ impl Prepared {
 
 fn import_token(capture: &Capture) -> Option<&Value> {
     capture.captured
-        .first()
-        .and_then(|target| target.get("_importToken"))
+        .iter()
+        .find_map(|target| target.get("_importToken"))
         .filter(|token| {
             !token.is_null()
                 && token

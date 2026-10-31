@@ -43,6 +43,7 @@ fn importer_dep_field(importer: &ProjectSnapshot, alias: &str) -> Option<&'stati
 }
 
 pub(super) fn read_importer_manifest(root: &Path, importer_id: &str) -> (String, String) {
+    let importer_id = importer_id.trim();
     let dir = if importer_id == "." { root.to_path_buf() } else { root.join(importer_id) };
     let parsed = fs::read(dir.join("package.json"))
         .ok()

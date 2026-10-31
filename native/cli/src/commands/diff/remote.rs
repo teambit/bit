@@ -8,6 +8,24 @@ use crate::commands::{
 use serde_json::Value;
 use std::{io, path::Path};
 
+fn push_target_versions(target: &Value, identity: &str, options: &Options, ids: &mut Vec<String>) {
+    let from = options.versions.from
+        .as_deref()
+        .or_else(|| target["version"].as_str())
+        .or_else(|| target["head"].as_str());
+    for version in [from, options.versions.to.as_deref()]
+        .into_iter()
+        .flatten()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    {
+        let full_id = format!("{identity}@{version}");
+        if !ids.contains(&full_id) {
+            ids.push(full_id);
+        }
+    }
+}
+
 pub(super) fn prepare(
     engine: &mut Engine,
     root: &Path,
@@ -26,20 +44,8 @@ pub(super) fn prepare(
                 .or_else(|| target.get("id")),
         )?
         .trim();
-        if !exported.iter().any(|id| id == identity) {
-            continue;
-        }
-        let from = options.versions.from
-            .as_deref()
-            .or_else(|| target["version"].as_str())
-            .or_else(|| target["head"].as_str());
-        for version in [from, options.versions.to.as_deref()]
-            .into_iter()
-            .flatten()
-            .map(str::trim)
-            .filter(|ver| !ver.is_empty())
-        {
-            ids.push(format!("{identity}@{version}"));
+        if exported.iter().any(|id| id == identity) {
+            push_target_versions(target, identity, options, &mut ids);
         }
     }
     if ids.is_empty() {
