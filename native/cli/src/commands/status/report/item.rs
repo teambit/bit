@@ -142,10 +142,10 @@ fn solution(issue: &Value) -> String {
 
 fn display_id(value: &Value) -> String {
     if let Some(raw) = value.as_str() {
-        return raw.to_owned();
+        return raw.trim().to_owned();
     }
-    let scope = value["scope"].as_str().unwrap_or_default();
-    let name = value["name"].as_str().unwrap_or_default();
+    let scope = value["scope"].as_str().map_or("", str::trim);
+    let name = value["name"].as_str().map_or("", str::trim);
     if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 

@@ -5,7 +5,7 @@ use std::fs;
 pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> {
     let roots: Vec<_> = components
         .iter()
-        .map(|component| super::super::paths::normalized(&root.join(&component.directory)))
+        .map(|component| super::super::paths::normalized(&root.join(component.directory.trim())))
         .collect();
     for (index, directory) in roots.iter().enumerate() {
         if has_glob_metacharacters(directory) {

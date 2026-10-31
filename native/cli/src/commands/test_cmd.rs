@@ -199,7 +199,7 @@ fn file_belongs_to_any_component(
     active_entries
         .iter()
         .any(|comp| {
-            let root_dir = comp.root_dir.trim_end_matches('/');
+            let root_dir = comp.root_dir.trim().trim_end_matches('/');
             !root_dir.is_empty()
                 && (rel_path == root_dir || rel_path.starts_with(&format!("{root_dir}/")))
         })

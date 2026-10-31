@@ -219,7 +219,7 @@ fn used_extensions(components: &[WorkspaceComponent]) -> Vec<Value> {
                 .keys()
                 .cloned()
                 .collect::<Vec<_>>();
-            if !used.contains(&component.env_id) {
+            if !component.env_id.trim().is_empty() && !used.contains(&component.env_id) {
                 used.push(component.env_id.clone());
             }
             json!({"id":component.id.to_string_without_version(),"usedIds":used})

@@ -90,6 +90,9 @@ impl Environments {
         bitmap: &Value,
         components: &[Value],
     ) -> io::Result<String> {
+        if root.as_os_str().is_empty() {
+            return Err(io::Error::other("tracking workspace root is empty"));
+        }
         let host = self.host(root)?;
         host.call("trackingProjectBitmap", &json!({"bitmap":bitmap,"components":components}))?;
         Ok(host.take_stdout())

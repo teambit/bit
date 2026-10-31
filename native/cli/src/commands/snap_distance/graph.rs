@@ -7,6 +7,8 @@ use std::{
 };
 
 pub(super) fn compute_snap_distance(vh_val: &Value, source: &str, target: &str) -> Option<Value> {
+    let source = source.trim();
+    let target = target.trim();
     let parents_map = build_parents_map(vh_val)?;
     if !parents_map.contains_key(source) || !parents_map.contains_key(target) {
         return None;

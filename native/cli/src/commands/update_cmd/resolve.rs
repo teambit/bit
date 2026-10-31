@@ -141,7 +141,8 @@ fn sync_remote_component_objects(
 }
 
 fn copy_loose_object(src_scope: &Path, dst_scope: &Path, hash: &str) {
-    if hash.len() < 3 {
+    let hash = hash.trim();
+    if hash.len() < 3 || !hash.chars().all(|ch| ch.is_ascii_hexdigit()) {
         return;
     }
     let rel = Path::new("objects")

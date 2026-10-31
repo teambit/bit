@@ -29,7 +29,7 @@ pub(super) fn request(
 }
 fn validate_patterns(root: &Path, component: &Component, request: &Value) -> io::Result<()> {
     let prefix = root
-        .join(&component.directory)
+        .join(component.directory.trim())
         .to_string_lossy()
         .replace('\\', "/");
     let patterns = request["config"]["testMatch"]
@@ -38,6 +38,8 @@ fn validate_patterns(root: &Path, component: &Component, request: &Value) -> io:
     for pattern in patterns {
         let pattern = pattern
             .as_str()
+            .map(str::trim)
+            .filter(|pat| !pat.is_empty())
             .ok_or_else(|| invalid("tester match pattern"))?
             .replace('\\', "/");
         let relative = pattern

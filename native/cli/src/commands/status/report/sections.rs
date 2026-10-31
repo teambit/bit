@@ -181,10 +181,11 @@ impl<'r> Status<'r> {
         });
         rows.iter()
             .map(|(identity, current, row)| {
-                let head = text(row.get("headVersion"))?;
+                let head = text(row.get("headVersion"))?.trim();
                 let latest = row["latestVersion"]
                     .as_str()
-                    .filter(|latest| *latest != head)
+                    .map(str::trim)
+                    .filter(|latest| !latest.is_empty() && *latest != head)
                     .map_or_else(String::new, |latest| format!(" latest: {latest}"));
                 let text =
                     format!("{} current: {current} head: {head}{latest}", chalk.cyan(identity));

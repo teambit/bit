@@ -74,11 +74,11 @@ pub(super) fn tests(component: &Component, patterns: &[String]) -> io::Result<Ve
 fn any_existing_file(values: &[String]) -> bool {
     values
         .iter()
-        .any(|value| Path::new(value).is_file())
+        .any(|value| Path::new(value.trim()).is_file())
 }
 
 fn all_existing_files(values: &[String]) -> bool {
     values
         .iter()
-        .all(|value| Path::new(value).is_file())
+        .all(|value| Path::new(value.trim()).is_file())
 }

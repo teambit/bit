@@ -156,7 +156,7 @@ fn non_empty_arg<'a>(
         .next()
         .and_then(|value| value.to_str())
         .map(str::trim)
-        .filter(|value| !value.is_empty())
+        .filter(|value| !value.is_empty() && !value.starts_with('-'))
         .map(str::to_owned)
         .ok_or_else(|| invalid(label))
 }

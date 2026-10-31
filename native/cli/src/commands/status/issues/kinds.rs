@@ -211,7 +211,8 @@ fn missing_packages_to_string(data: &Value) -> io::Result<String> {
                 row.get("filePath")
                     .or_else(|| row.get("file"))
                     .or_else(|| row.get("path")),
-            )?;
+            )?
+            .trim();
             let packages = row
                 .get("missingPackages")
                 .or_else(|| row.get("packages"))

@@ -28,7 +28,8 @@ pub fn root_locale() -> bool {
     let language = locale
         .split(['_', '.', '@', '-'])
         .next()
-        .unwrap_or_default();
+        .unwrap_or_default()
+        .trim();
     ROOT_LANGUAGES.contains(&language.to_ascii_lowercase().as_str())
 }
 

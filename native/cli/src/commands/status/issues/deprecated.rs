@@ -27,7 +27,7 @@ fn deprecated(context: &Value, full_id: &str) -> io::Result<bool> {
     let identity = without_version(full_id.trim());
     let target = array(context.get("targets"), "deprecation targets")?
         .iter()
-        .find(|target| target["identity"] == identity);
+        .find(|target| target["identity"].as_str().map(str::trim) == Some(identity));
     if let Some(value) = target
         .and_then(|target| {
             crate::commands::update_cmd::aspect_entry(&target["componentConfig"], DEPRECATION)

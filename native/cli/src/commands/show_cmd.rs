@@ -29,6 +29,17 @@ pub(super) struct Options {
     pub compare: bool,
 }
 
+fn is_ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("show arguments are not UTF-8".into()));
@@ -39,7 +50,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native show grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if is_ci_active() {
         return Ok(Outcome::Declined("CI show delegated".into()));
     }
     let cwd = env::current_dir()?;

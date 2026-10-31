@@ -70,10 +70,12 @@ pub fn issue_callbacks(
         Some(host) => {
             let (rows, stdout) =
                 super::super::environments::callbacks::issue_callbacks(host, rows, context)?;
-            capture.cache.callbacks.issue_stdout
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .push_str(&stdout);
+            if !stdout.is_empty() {
+                capture.cache.callbacks.issue_stdout
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .push_str(&stdout);
+            }
             Ok(rows)
         }
         None => Ok(rows.to_vec()),

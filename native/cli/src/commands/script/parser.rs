@@ -83,7 +83,7 @@ fn collect_subdir_files(path: &Path) -> Vec<PathBuf> {
 fn is_script_source_file(path: &Path) -> bool {
     path.extension()
         .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| matches!(ext, "ts" | "tsx" | "js" | "jsx" | "mjs" | "cjs"))
+        .is_some_and(|ext| matches!(ext.trim(), "ts" | "tsx" | "js" | "jsx" | "mjs" | "cjs"))
 }
 
 pub(in crate::commands) fn parse_scripts_from_source(source: &str) -> EnvScripts {

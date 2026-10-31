@@ -65,6 +65,7 @@ pub(super) fn stored_version<'c>(
 }
 
 fn resolve_tag_reference(model: Option<&Value>, tag: &str) -> Option<Value> {
+    let tag = tag.trim();
     if matches!(tag, "latest" | "head") {
         model
             .and_then(|model_val| nullish(model_val.get("head")))

@@ -46,13 +46,15 @@ pub(super) fn render(
 }
 
 fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progress) {
-    for index in 0..loads {
+    let mut printed_load_stdout = false;
+    for _ in 0..loads {
         output.status(&format!("loading {loaded} component(s)"));
-        if index == 0 && !progress.load_stdout.is_empty() {
+        if !printed_load_stdout && !progress.load_stdout.is_empty() {
             output.raw(&progress.load_stdout);
+            printed_load_stdout = true;
         }
     }
-    if loads == 0 && !progress.load_stdout.is_empty() {
+    if !printed_load_stdout && !progress.load_stdout.is_empty() {
         output.raw(&progress.load_stdout);
     }
     if !progress.issue_stdout.is_empty() {

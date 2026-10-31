@@ -93,6 +93,7 @@ fn model_identity(context: &Value, model: &Value) -> Option<String> {
         .or_else(|| {
             let scope = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())?;
             Some(format!("{scope}/{name}"))
         })

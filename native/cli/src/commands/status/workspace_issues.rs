@@ -14,8 +14,13 @@ pub(super) fn collect(root: &Path, capture: &Capture) -> io::Result<Vec<String>>
         ));
     }
     for message in capture::workspace_issues(capture)? {
-        if !issues.contains(&message) {
-            issues.push(message);
+        let trimmed = message.trim();
+        if !trimmed.is_empty()
+            && !issues
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
+            issues.push(trimmed.to_owned());
         }
     }
     Ok(issues)

@@ -42,7 +42,7 @@ pub(super) fn facts(component: &WorkspaceComponent, issues: bool) -> Value {
                 })
         })
         .and_then(|config| config["env"].as_str())
-        .is_some();
+        .is_some_and(|env| !env.trim().is_empty());
     let multiple = if explicit {
         Vec::new()
     } else {

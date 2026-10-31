@@ -62,7 +62,11 @@ pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
         .iter()
         .enumerate()
     {
-        let name = file["file"].as_str().ok_or_else(|| io::Error::other("JUnit filename"))?;
+        let name = file["file"]
+            .as_str()
+            .map(str::trim)
+            .filter(|file_name| !file_name.is_empty())
+            .ok_or_else(|| io::Error::other("JUnit filename"))?;
         if file.get("error").is_some() {
             cases.push(Case {
                 file: name.to_owned(),
@@ -74,26 +78,32 @@ pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
             });
         }
         for test in file["tests"].as_array().ok_or_else(|| io::Error::other("JUnit assertions"))? {
-            cases.push(Case {
-                file: name.to_owned(),
-                name: test["name"]
-                    .as_str()
-                    .ok_or_else(|| io::Error::other("JUnit test name"))?
-                    .to_owned(),
-                duration: test["duration"].as_u64(),
-                failure: test["failureErrOrStr"]
-                    .as_str()
-                    .filter(|value| !value.is_empty())
-                    .map(str::to_owned),
-                error: test["error"]
-                    .as_str()
-                    .filter(|value| !value.is_empty())
-                    .map(str::to_owned),
-                skipped: matches!(test["status"].as_str(), Some("pending" | "skipped")),
-            });
+            cases.push(test_case(name, test)?);
         }
     }
     Ok(cases)
+}
+
+fn test_case(file_name: &str, test: &Value) -> io::Result<Case> {
+    Ok(Case {
+        file: file_name.to_owned(),
+        name: test["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|test_name| !test_name.is_empty())
+            .ok_or_else(|| io::Error::other("JUnit test name"))?
+            .to_owned(),
+        duration: test["duration"].as_u64(),
+        failure: test["failureErrOrStr"]
+            .as_str()
+            .filter(|value| !value.is_empty())
+            .map(str::to_owned),
+        error: test["error"]
+            .as_str()
+            .filter(|value| !value.is_empty())
+            .map(str::to_owned),
+        skipped: matches!(test["status"].as_str(), Some("pending" | "skipped")),
+    })
 }
 fn source_rows<'a>(component: &Value, raw: &'a Value) -> &'a Value {
     let id = &component["componentId"];

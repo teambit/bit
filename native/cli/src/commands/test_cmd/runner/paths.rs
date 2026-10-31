@@ -2,6 +2,9 @@
 use std::path::{Path, PathBuf};
 
 pub(super) fn normalized(path: &Path) -> PathBuf {
+    if path.as_os_str().is_empty() {
+        return PathBuf::new();
+    }
     let mut result = PathBuf::new();
     for component in path.components() {
         match component {

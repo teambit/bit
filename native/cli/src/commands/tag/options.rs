@@ -169,7 +169,17 @@ fn read(args: &[&str]) -> Option<Flags> {
         if raw == "--" {
             return append_trailing_patterns(&mut flags, &args[index..]).then_some(flags);
         }
-        if matches!(raw, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if matches!(
+            raw,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             continue;
         }
         if !raw.starts_with('-') {

@@ -51,8 +51,9 @@ impl Scan<'_> {
             target
                 .get("identity")
                 .or_else(|| target.get("id")),
-        )?;
-        let mut dependencies = if directory == "."
+        )?
+        .trim();
+        let mut dependencies = if directory.trim() == "."
             || captured.cache.no_fs_cache
             || captured.cache.reset
             || (!self.environments.is_checkout()

@@ -81,7 +81,8 @@ pub(in crate::commands::status) fn dev_files(
     use bit_install::dependencies::{DevPatternConfig, EnvDevPatterns, dev_files, dev_patterns};
     let mut comp = component(root, context, target)?;
     comp.files = files.to_vec();
-    let facts = &context["environmentFacts"][text(target.get("identity"))?];
+    let identity = text(target.get("identity"))?.trim();
+    let facts = &context["environmentFacts"][identity];
     comp.env_id = facts["envId"]
         .as_str()
         .map(str::trim)

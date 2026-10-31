@@ -3,7 +3,7 @@ use crate::commands::workspace_command::filesystem_error::failure;
 use std::{fs, io, path::Path};
 
 pub(super) fn directory(path: &Path) -> io::Result<()> {
-    if path.as_os_str().is_empty() {
+    if path.as_os_str().is_empty() || path.to_string_lossy().trim().is_empty() {
         return Ok(());
     }
     let metadata = match fs::symlink_metadata(path) {

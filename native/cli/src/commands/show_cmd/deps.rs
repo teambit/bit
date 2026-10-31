@@ -320,6 +320,7 @@ fn lookup_package_version(
 }
 
 pub(super) fn remove_dep(deps: &mut Vec<DepEntry>, target: &str) {
+    let target = target.trim();
     deps.retain(|dep| dep.id != target && dep.package_name.as_deref() != Some(target));
 }
 

@@ -51,13 +51,12 @@ fn apply_workspace_jsonc_updates(root: &Path, updates: &[ResolvedUpdate]) -> io:
 }
 
 fn apply_single_ws_update(doc: &mut Document, upd: &ResolvedUpdate) {
+    let field = upd.field.trim();
+    let name = upd.name.trim();
+    let latest_range = upd.latest_range.trim();
     match &upd.target {
         Target::RootPolicy | Target::ModelRoot => {
-            set_doc_policy_entry(
-                doc,
-                &[DEP_RESOLVER_ID, "policy", &upd.field, &upd.name],
-                &upd.latest_range,
-            );
+            set_doc_policy_entry(doc, &[DEP_RESOLVER_ID, "policy", field, name], latest_range);
         }
         Target::Variant(pattern) => {
             set_doc_policy_entry(
@@ -67,10 +66,10 @@ fn apply_single_ws_update(doc: &mut Document, upd: &ResolvedUpdate) {
                     pattern.trim(),
                     DEP_RESOLVER_ID,
                     "policy",
-                    &upd.field,
-                    &upd.name,
+                    field,
+                    name,
                 ],
-                &upd.latest_range,
+                latest_range,
             );
         }
         _ => {}

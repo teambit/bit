@@ -177,12 +177,17 @@ fn result_sections(value: &Value, chalk: Chalk, sections: &mut Vec<String>) {
         let symbol = chalk.red("✖");
         let mut section = format!("{symbol} {}", chalk.bold_white("tester errors"));
         for error in errors {
-            let _ = write!(
-                section,
-                "\n   {symbol} {}: {}",
-                error["envId"].as_str().unwrap_or("unknown env"),
-                error["message"].as_str().unwrap_or("undefined"),
-            );
+            let env_id = error["envId"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .unwrap_or("unknown env");
+            let msg = error["message"]
+                .as_str()
+                .map(str::trim)
+                .filter(|msg| !msg.is_empty())
+                .unwrap_or("undefined");
+            let _ = write!(section, "\n   {symbol} {env_id}: {msg}");
         }
         sections.push(section);
     }

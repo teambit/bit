@@ -35,6 +35,7 @@ impl Status<'_> {
     pub(super) fn workspace_issues(&self) -> io::Result<String> {
         let issues: Vec<&str> = ids(self.result, "workspaceIssues")?
             .into_iter()
+            .map(str::trim)
             .filter(|issue| !issue.is_empty())
             .collect();
         if issues.is_empty() {

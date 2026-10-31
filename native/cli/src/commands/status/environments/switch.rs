@@ -24,7 +24,8 @@ impl Environments {
         capture: &Capture,
         identity: &str,
     ) -> io::Result<Value> {
-        if identity.trim().is_empty() {
+        let identity = identity.trim();
+        if identity.is_empty() {
             return Err(decline("switch callback identity"));
         }
         let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;

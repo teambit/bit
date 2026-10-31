@@ -327,6 +327,7 @@ fn find_component<'a>(
 }
 
 fn matches_entry(entry: &BitmapEntry, raw_id: &str) -> bool {
+    let raw_id = raw_id.trim();
     let normalized = inventory::normalize(raw_id);
     let dir = normalized.strip_prefix("./").unwrap_or(&normalized);
     entry.id.to_string_without_version() == raw_id

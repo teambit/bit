@@ -57,7 +57,15 @@ fn run_unset(args: &[OsString]) -> io::Result<Outcome> {
 fn run_action(args: &[OsString], label: &'static str, action: &PeerAction) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        if env::var_os("CI")
+            .is_some_and(|value| {
+                let text = value.to_string_lossy();
+                let trimmed = text.trim();
+                !trimmed.is_empty()
+                    && !trimmed.eq_ignore_ascii_case("0")
+                    && !trimmed.eq_ignore_ascii_case("false")
+            })
+        {
             return Ok(Outcome::Declined(format!("CI {label} outside workspace")));
         }
         return workspace_command::execute_failure_scope(

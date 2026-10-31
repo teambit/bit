@@ -57,7 +57,11 @@ fn apply_legacy_pkg_dep(
     if identity.is_self(pkg_name) {
         return;
     }
-    let Some(ver) = ver_item.as_str() else {
+    let Some(ver) = ver_item
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    else {
         return;
     };
     upsert_dep(

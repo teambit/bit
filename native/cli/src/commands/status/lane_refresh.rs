@@ -23,7 +23,7 @@ impl Refreshes {
         result: &Value,
         lanes: bool,
     ) -> io::Result<Self> {
-        let current = text(result.get("currentLaneId"))?;
+        let current = text(result.get("currentLaneId"))?.trim();
         let main = if lanes && !current.ends_with("/main") {
             prepare(engine, root, context, result, current)?
         } else {

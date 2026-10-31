@@ -15,7 +15,9 @@ pub(in crate::commands::status) fn context(root: &Path, context: &Value) -> io::
     let mut output = context.clone();
     for target in array(context.get("targets"), "pending targets")? {
         let identity = text(target.get("identity"))?.trim();
-        if let Some(config) = configuration(&input.merge, rows, identity)? {
+        if !identity.is_empty()
+            && let Some(config) = configuration(&input.merge, rows, identity)?
+        {
             output["pendingConfigurations"][identity] = config;
         }
     }

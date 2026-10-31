@@ -117,6 +117,7 @@ pub(in crate::commands) fn exists_in_scope_index(root: &Path, name: &str) -> boo
 }
 
 pub(in crate::commands) fn row_has_name(row: &Value, name: &str) -> bool {
+    let name = name.trim();
     row["id"]["name"].as_str().map(str::trim) == Some(name)
         || row["id"]
             .as_str()

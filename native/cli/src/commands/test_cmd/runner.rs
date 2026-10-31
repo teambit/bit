@@ -73,6 +73,9 @@ fn format_execution(
     if !options.json && execution.empty {
         report.data = empty_test_message(args);
     } else if !options.json && !execution.terminated {
+        if report.data.trim().is_empty() {
+            return Err(invalid("empty tester report data"));
+        }
         let value = serde_json::from_str(&report.data)?;
         report.data = text_summary::format_report(
             &value,

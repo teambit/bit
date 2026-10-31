@@ -59,10 +59,9 @@ impl Quiet {
             return Err(invalid("tester tool request limit"));
         }
         bytes.push(b'\n');
-        session.input
-            .as_mut()
-            .ok_or_else(|| invalid("tester input closed"))?
-            .write_all(&bytes)?;
+        let stdin = session.input.as_mut().ok_or_else(|| invalid("tester input closed"))?;
+        stdin.write_all(&bytes)?;
+        stdin.flush()?;
         if session
             .read()?
             .is_none_or(|value| value["ready"] != true)

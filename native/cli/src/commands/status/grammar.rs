@@ -118,6 +118,7 @@ fn comparator_set(set: &[npm::Comparator]) -> Value {
 }
 
 fn config_input(text: &str) -> Option<Value> {
+    let text = text.trim();
     let mut input = Map::new();
     if let Some(version) = npm::parse(text) {
         input.insert("version".into(), version_parts(&version));

@@ -84,13 +84,13 @@ impl Plan {
             output.console(&format!(
                 "testing total of {} components in workspace '{}'",
                 self.loaded.progress.identities.len(),
-                chalk.cyan(&self.loaded.progress.name),
+                chalk.cyan(self.loaded.progress.name.trim()),
             ));
             if self.tool.is_some() {
                 output.console(&format!(
                     "testing {} components with environment {}\n",
                     self.runnable,
-                    chalk.cyan(&self.loaded.progress.environment),
+                    chalk.cyan(self.loaded.progress.environment.trim()),
                 ));
             }
         }

@@ -91,6 +91,7 @@ pub fn full_identity(target: &Value) -> io::Result<String> {
         .or_else(|| target.get("head"))
         .or_else(|| target["id"].get("version"))
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|version| !version.is_empty())
     {
         Some(version) => Ok(format!("{identity}@{version}")),

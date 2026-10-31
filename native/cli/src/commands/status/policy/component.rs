@@ -30,7 +30,7 @@ struct Entry {
 
 impl Policy {
     pub(super) fn read(context: &Value, target: &Value, extensions: &[Value]) -> io::Result<Self> {
-        let identity = text(target.get("identity"))?;
+        let identity = text(target.get("identity"))?.trim();
         let facts = &context["environmentFacts"][identity];
         let default = default_environment();
         let raw = facts.get("envPolicy").unwrap_or(&default);

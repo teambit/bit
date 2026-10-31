@@ -286,9 +286,9 @@ fn stored_env(context: &Value, target: &Value) -> String {
 }
 
 fn stored_extensions<'a>(context: &'a Value, target: &Value) -> Option<&'a Vec<Value>> {
-    let identity = target["identity"].as_str().unwrap_or_default();
+    let identity = target["identity"].as_str().map_or("", str::trim);
     let model = super::policy::model_of(context, identity);
-    let version = target["version"].as_str().unwrap_or_default();
+    let version = target["version"].as_str().map_or("", str::trim);
     let hash = model
         .and_then(|model| {
             if matches!(version, "" | "latest" | "head") {

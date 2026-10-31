@@ -51,18 +51,18 @@ fn build(results: &Results, options: &Options, formatter: &Formatter, minimal: b
             .collect();
         formatter.section("switch skipped", "", &items)
     };
+    let lane_name = options.lane.trim();
     let lane_success = formatter.success_summary(&format!(
         r#"successfully set "{}" as the active lane"#,
-        formatter.chalk.bold(&options.lane),
+        formatter.chalk.bold(lane_name),
     ));
     let success = if results.components.is_empty() {
         format!("No components have been changed.\n{lane_success}")
     } else {
         let head = if options.skip_fetch { "local head" } else { "head" };
         let title = formatter.success_summary(&format!(
-            "successfully switched {} components to the {head} of lane {}",
+            "successfully switched {} components to the {head} of lane {lane_name}",
             results.components.len(),
-            options.lane,
         ));
         join_lines(&[title, results.apply_version_report(formatter, true, false), lane_success])
     };

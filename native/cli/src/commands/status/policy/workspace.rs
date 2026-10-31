@@ -61,5 +61,8 @@ fn configured_policy(context: &Value) -> io::Result<Value> {
 }
 
 fn is_valid_policy_version_entry(value: &Value) -> bool {
-    value.is_string() || value.get("version").is_some_and(Value::is_string)
+    value
+        .as_str()
+        .or_else(|| value.get("version").and_then(Value::as_str))
+        .is_some_and(|ver| !ver.trim().is_empty())
 }

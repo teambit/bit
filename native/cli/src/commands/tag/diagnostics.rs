@@ -82,11 +82,12 @@ fn entry_missing_main(root: &Path, bitmap: &Value, key: &str, value: &Value) -> 
     }
     let Some(root_dir) = value["rootDir"]
         .as_str()
+        .map(str::trim)
         .filter(|dir| !dir.is_empty())
     else {
         return Ok(false);
     };
-    let main_file = value["mainFile"].as_str().unwrap_or_default();
+    let main_file = value["mainFile"].as_str().map_or("", str::trim);
     let main_missing = main_file.is_empty()
         || !root
             .join(root_dir)

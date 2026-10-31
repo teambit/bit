@@ -110,6 +110,10 @@ impl Node {
 
 /// Node's `node_modules` lookup: the closest `<ancestor>/node_modules/<name>`.
 fn resolve_package(from: &Path, name: &str) -> Option<PathBuf> {
+    let name = name.trim();
+    if name.is_empty() {
+        return None;
+    }
     from.ancestors()
         .map(|dir| dir.join("node_modules").join(name))
         .find(|dir| dir.join("package.json").is_file())

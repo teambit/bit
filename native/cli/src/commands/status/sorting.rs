@@ -93,6 +93,9 @@ fn sort_id(row: &Value) -> io::Result<String> {
     }
     let object = row["id"].as_object().ok_or_else(|| decline("status expected a string"))?;
     let name = text(object.get("name"))?.trim();
+    if name.is_empty() {
+        return Err(decline("status sort id name is empty"));
+    }
     match object
         .get("scope")
         .and_then(Value::as_str)

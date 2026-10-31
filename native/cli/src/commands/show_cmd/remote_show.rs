@@ -74,6 +74,7 @@ pub(super) fn remote_has_version(root: &Path, scope_name: &str, name: &str, ver:
 }
 
 fn split_remote_id(raw_id: &str) -> Option<(&str, &str, Option<&str>)> {
+    let raw_id = raw_id.trim();
     if raw_id.starts_with('@') {
         return None;
     }

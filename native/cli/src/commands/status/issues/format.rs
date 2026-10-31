@@ -30,6 +30,7 @@ fn item_text(value: &Value) -> io::Result<&str> {
             .or_else(|| object.get("name"))
             .or_else(|| object.get("componentId"))
             .and_then(Value::as_str)
+            .filter(|found| !found.trim().is_empty())
     {
         return Ok(found);
     }

@@ -77,7 +77,7 @@ fn matches(file: &str, regexes: &[Regex]) -> bool {
     let name = segments.pop().unwrap_or_default();
     if segments
         .iter()
-        .any(|dir| matches!(*dir, "." | "..") || dir.starts_with('.'))
+        .any(|dir| matches!(dir.trim(), "." | "..") || dir.trim().starts_with('.'))
     {
         return false;
     }

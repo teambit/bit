@@ -42,11 +42,14 @@ fn missing_packages(rows: &[Value]) -> HashSet<&str> {
 fn removed_id(target: &Value, component: &Component, packages: &HashSet<&str>) -> Option<String> {
     let raw = target["identity"]
         .as_str()
-        .or_else(|| target["id"].as_str())?;
+        .or_else(|| target["id"].as_str())?
+        .trim();
     let identity = without_version(raw);
     let version = target["version"]
         .as_str()
-        .or_else(|| target["head"].as_str())?;
+        .or_else(|| target["head"].as_str())
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())?;
     let (scope, name) = identity.split_once('/')?;
     let package = format!("@{scope}/{}", name.replace('/', "."));
     let referenced = component.dependencies

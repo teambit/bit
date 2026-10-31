@@ -174,7 +174,11 @@ fn attach_removed(
     result["remotelySoftRemoved"] = json!(
         capture.remotely_removed
             .iter()
-            .filter(|id| !during.contains(id))
+            .map(|id| id.trim())
+            .filter(|id| !id.is_empty()
+                && !during
+                    .iter()
+                    .any(|merged| merged == *id))
             .collect::<Vec<_>>()
     );
     Ok(())

@@ -44,7 +44,10 @@ pub(super) fn run(
     }
     let compiled =
         host.call("switchCompile", &json!({"installationSucceeded":installation_succeeded}));
-    print!("{}", host.take_stdout());
+    let compile_stdout = host.take_stdout();
+    if !compile_stdout.is_empty() {
+        print!("{compile_stdout}");
+    }
     let compiled = compiled?;
     if let Some(error) = compiler_error(&compiled["error"])? {
         output.failure(&format!("compilation failed with the following error: {error}"));

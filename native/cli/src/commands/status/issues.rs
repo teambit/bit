@@ -183,7 +183,11 @@ impl Checks<'_> {
         let module = runtime_module_path(self.root, component, self.root_components, env);
         let compiler =
             &self.context["environmentFacts"][without_version(&component.identity)]["compiler"];
-        let dist = compiler["distDir"].as_str().unwrap_or("dist");
+        let dist = compiler["distDir"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .unwrap_or("dist");
         Ok(compiler["hasCompiler"] != false && !exists(&module.join(dist))?)
     }
 

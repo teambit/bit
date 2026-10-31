@@ -16,7 +16,10 @@ pub(super) fn try_run(args: &[OsString], argv: &[&str]) -> io::Result<Option<Out
     };
     let chalk = Chalk::detect(args);
     let mut output = command_help(chalk);
-    if let Some(error) = error {
+    if let Some(error) = error
+        .map(str::trim)
+        .filter(|err| !err.is_empty())
+    {
         output.push('\n');
         output.push_str(&chalk.yellow(error));
         output.push('\n');

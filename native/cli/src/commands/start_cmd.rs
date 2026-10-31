@@ -86,25 +86,39 @@ fn consume_trailing_start_pattern(rest: &[&str], pattern: &mut Option<String>) -
     Some(())
 }
 
+fn is_ignored_start_flag(arg: &str) -> bool {
+    matches!(
+        arg,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never"
+            | "-v"
+            | "--verbose"
+            | "--verbose=true"
+            | "--verbose=false"
+            | "--show-internal-urls"
+            | "--show-internal-urls=true"
+            | "--show-internal-urls=false"
+            | "--use-root-modules"
+            | "--use-root-modules=true"
+            | "--use-root-modules=false"
+            | "--use-source"
+            | "--use-source=true"
+            | "--use-source=false",
+    )
+}
+
 fn apply_start_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
     let arg = args[*idx];
+    if is_ignored_start_flag(arg) {
+        return Some(());
+    }
     match arg {
-        "--no-color"
-        | "--no-color=true"
-        | "--no-color=false"
-        | "-v"
-        | "--verbose"
-        | "--verbose=true"
-        | "--verbose=false"
-        | "--show-internal-urls"
-        | "--show-internal-urls=true"
-        | "--show-internal-urls=false"
-        | "--use-root-modules"
-        | "--use-root-modules=true"
-        | "--use-root-modules=false"
-        | "--use-source"
-        | "--use-source=true"
-        | "--use-source=false" => {}
         "-d" | "--dev" | "--dev=true" => options.dev = true,
         "--dev=false" => options.dev = false,
         "-r" | "--rebuild" | "--rebuild=true" => options.rebuild = true,

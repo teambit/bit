@@ -266,9 +266,9 @@ fn build_dev_files_map(loaded: &LoadedComponent) -> Value {
 fn matching_files(files: &[String], predicate: impl Fn(&str) -> bool) -> Vec<Value> {
     files
         .iter()
-        .filter(|file| predicate(file))
-        .cloned()
-        .map(Value::String)
+        .map(|file| file.trim())
+        .filter(|file| !file.is_empty() && predicate(file))
+        .map(|file| Value::String(file.to_owned()))
         .collect()
 }
 

@@ -203,8 +203,13 @@ pub fn snapshot_workspace_issues(
         capture.cache.retain_callback_stdout(&host.take_stdout());
         let extra: Vec<String> = serde_json::from_value(result?).map_err(io::Error::other)?;
         for issue in extra {
-            if !issues.contains(&issue) {
-                issues.push(issue);
+            let trimmed = issue.trim();
+            if !trimmed.is_empty()
+                && !issues
+                    .iter()
+                    .any(|existing| existing == trimmed)
+            {
+                issues.push(trimmed.to_owned());
             }
         }
     }

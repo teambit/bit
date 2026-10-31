@@ -10,6 +10,9 @@ pub(in crate::commands) fn run(
     home: &Path,
     startup: &mut crate::commands::status::autosync::Startup,
 ) -> io::Result<()> {
+    if root.as_os_str().is_empty() || home.as_os_str().is_empty() {
+        return Err(io::Error::other("quick status root or home path is empty"));
+    }
     let workspace = bit_object_import::effective_workspace_configuration(root, home)?;
     let core = core_aspect_ids()?;
     let aspects = root_aspects(&json!({"workspace":workspace}), &core);

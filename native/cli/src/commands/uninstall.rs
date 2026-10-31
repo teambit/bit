@@ -144,10 +144,15 @@ fn consume_trailing_packages<'a>(
 }
 
 fn update_workspace_policy(root: &Path, packages: &[String]) -> io::Result<()> {
-    if packages.is_empty() {
+    let to_remove: Vec<String> = packages
+        .iter()
+        .map(|pkg| pkg.trim())
+        .filter(|pkg| !pkg.is_empty())
+        .map(str::to_owned)
+        .collect();
+    if to_remove.is_empty() {
         return Ok(());
     }
-    let to_remove = packages.to_vec();
     bit_install::command::edit_workspace_config(
         root,
         &workspace::scope_path(root),

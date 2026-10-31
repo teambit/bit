@@ -25,7 +25,10 @@ pub fn no_fs_cache(root: &Path) -> bool {
     from_env
         || files
             .iter()
-            .any(|file| fs::read_to_string(file).is_ok_and(|text| text.contains(NO_FS_CACHE)))
+            .any(|file| {
+                fs::read_to_string(file)
+                    .is_ok_and(|text| text.to_ascii_lowercase().contains(NO_FS_CACHE))
+            })
 }
 
 fn mentions_no_fs_cache(value: &str) -> bool {

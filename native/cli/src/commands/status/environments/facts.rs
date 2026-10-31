@@ -107,7 +107,9 @@ fn selected_env(
                     )
                 })
         })
-        .and_then(|config| config["env"].as_str());
+        .and_then(|config| config["env"].as_str())
+        .map(str::trim)
+        .filter(|env| !env.is_empty());
     let selected = explicit
         .map_or_else(
             || {

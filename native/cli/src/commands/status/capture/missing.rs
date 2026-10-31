@@ -86,8 +86,12 @@ pub(super) fn status_invalid_files(
         record_status_invalid(target, error, captured)?;
         return Ok(true);
     }
-    let main = text(target.get("mainFile"))?;
-    if files.iter().any(|file| file == main) || !missing(&root.join(directory).join(main))? {
+    let main = text(target.get("mainFile"))?.trim();
+    if files
+        .iter()
+        .any(|file| file.trim() == main)
+        || !missing(&root.join(directory).join(main))?
+    {
         return Ok(false);
     }
     record_status_invalid(

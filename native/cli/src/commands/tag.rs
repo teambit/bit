@@ -147,7 +147,15 @@ fn outside_workspace_tag(
     options: &Options,
     workflow: &resolve::workflow::Workflow,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+        })
+    {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     }
     let warn = options.message.is_none()

@@ -271,7 +271,9 @@ pub(super) fn select_templates(
     source
         .iter()
         .copied()
-        .filter(|tpl| (show_all || !tpl.hidden) && aspect.is_none_or(|id| tpl.aspect_id == id))
+        .filter(|tpl| {
+            (show_all || !tpl.hidden) && aspect.is_none_or(|id| tpl.aspect_id.trim() == id)
+        })
         .collect()
 }
 

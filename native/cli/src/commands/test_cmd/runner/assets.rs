@@ -75,7 +75,7 @@ fn validate(root: &Path, files: &[(&str, String)]) -> io::Result<()> {
         return Err(io::Error::other("tester assets directory"));
     }
     for (name, source) in files {
-        let path = root.join(name);
+        let path = root.join(name.trim());
         if !fs::symlink_metadata(&path)?.file_type().is_file()
             || fs::read(&path)? != source.as_bytes()
         {

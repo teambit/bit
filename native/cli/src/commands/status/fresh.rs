@@ -143,7 +143,13 @@ pub fn dependency_grammar() -> io::Result<Value> {
 
 /// `getCoreAspectPackageName`: `teambit.x/a/b` is `@teambit/a.b`.
 fn core_package_name(id: &str) -> String {
-    let name: Vec<&str> = id.split('/').skip(1).collect();
+    let name: Vec<&str> = id
+        .trim()
+        .split('/')
+        .skip(1)
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .collect();
     format!("@teambit/{}", name.join("."))
 }
 

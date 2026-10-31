@@ -20,22 +20,26 @@ pub(super) fn default_prefix(identity: &str) -> String {
 
 /// `packageName(id, storedPrefix)`.
 pub(super) fn package_name(identity: &str, stored_prefix: Option<&str>) -> String {
+    let identity = identity.trim();
     let scope = identity
         .split('/')
         .next()
         .unwrap_or_default();
-    let prefix = stored_prefix.map_or_else(
-        || {
-            format!(
-                "@{}",
-                scope
-                    .split('.')
-                    .next()
-                    .unwrap_or_default(),
-            )
-        },
-        str::to_string,
-    );
+    let prefix = stored_prefix
+        .map(str::trim)
+        .filter(|prefix| !prefix.is_empty())
+        .map_or_else(
+            || {
+                format!(
+                    "@{}",
+                    scope
+                        .split('.')
+                        .next()
+                        .unwrap_or_default(),
+                )
+            },
+            str::to_string,
+        );
     let name = identity.replace('/', ".");
     let owner = format!("{}.", prefix.replacen('@', "", 1));
     let name = match name.strip_prefix(&owner) {

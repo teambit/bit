@@ -167,7 +167,8 @@ fn parse_args(args: &[OsString]) -> Option<SearchArgs> {
 
 fn apply_search_arg(str_arg: &str, parsed: &mut SearchArgs) -> Option<()> {
     match str_arg {
-        "--no-color" | "--no-color=true" | "--no-color=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "--local-only" | "-l" | "--local-only=true" => parsed.local_only = true,
         "--local-only=false" => parsed.local_only = false,
         "--remote-only" | "-r" | "--remote-only=true" => parsed.remote_only = true,

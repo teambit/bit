@@ -192,7 +192,11 @@ fn legacy(id: &Value) -> io::Result<Value> {
             legacy.insert(key.to_string(), value.clone());
         }
     }
-    if !legacy.contains_key("name") {
+    if legacy
+        .get("name")
+        .and_then(Value::as_str)
+        .is_none_or(|name| name.trim().is_empty())
+    {
         return Err(decline("relative component id without name"));
     }
     Ok(Value::Object(legacy))

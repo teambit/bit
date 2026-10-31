@@ -114,7 +114,8 @@ fn add_variants(
         .iter()
         .map(|(pattern, value)| Ok((pattern.clone(), object(value)?.clone())))
         .collect::<io::Result<Vec<_>>>()?;
-    let matched = by_root_dir_and_name(&variants, text(target.get("directory"))?, name)?;
+    let directory = text(target.get("directory"))?.trim();
+    let matched = by_root_dir_and_name(&variants, directory, name)?;
     let lists = matched.extensions
         .iter()
         .map(|config| aspects::from_config_object(config, core))

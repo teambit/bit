@@ -19,6 +19,9 @@ impl Scan<'_> {
                 .or_else(|| target.get("rootDir")),
         )?
         .trim();
+        if directory.is_empty() {
+            return Err(super::decline("target directory is empty"));
+        }
         if self.behavior.missing_status_invalid
             && missing::status_invalid(self.root, target, directory, captured)?
         {

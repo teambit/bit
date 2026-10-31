@@ -143,6 +143,7 @@ impl Session<'_> {
         scanned: &mut HashSet<String>,
         capture: &mut Capture,
     ) -> io::Result<()> {
+        let identity = identity.trim();
         if scanned.insert(identity.to_owned()) {
             let target =
                 by_id.get(identity).ok_or_else(|| decline("switch callback target absent"))?;

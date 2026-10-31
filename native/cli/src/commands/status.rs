@@ -257,7 +257,10 @@ fn active_components(
 
 fn current_lane_id(context: &Value) -> io::Result<String> {
     if let Some(id) = context.get("currentLaneId") {
-        return Ok(text(Some(id))?.trim().to_string());
+        let trimmed = text(Some(id))?.trim();
+        if !trimmed.is_empty() {
+            return Ok(trimmed.to_string());
+        }
     }
     let scope = text(
         context

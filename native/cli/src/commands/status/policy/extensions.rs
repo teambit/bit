@@ -112,16 +112,27 @@ fn validate_removal_config(config: &Map<String, Value>) -> io::Result<()> {
             "removed" | "removeOnMain" => value.is_boolean(),
             "range" => value
                 .as_str()
-                .is_some_and(|range| node_semver::Range::parse(range).is_ok()),
-            "snaps" => value
-                .as_array()
-                .is_some_and(|snaps| snaps.iter().all(Value::is_string)),
+                .is_some_and(|range| node_semver::Range::parse(range.trim()).is_ok()),
+            "snaps" => valid_snap_list(value),
             _ => false,
         })
     {
         return Err(decline("status unsupported removal configuration"));
     }
     Ok(())
+}
+
+fn valid_snap_list(value: &Value) -> bool {
+    value
+        .as_array()
+        .is_some_and(|snaps| {
+            snaps
+                .iter()
+                .all(|snap| {
+                    snap.as_str()
+                        .is_some_and(|hash| !hash.trim().is_empty())
+                })
+        })
 }
 
 fn core_aspect(name: &str) -> bool {

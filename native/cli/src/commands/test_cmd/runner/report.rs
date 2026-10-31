@@ -53,6 +53,8 @@ fn file(row: &Value) -> io::Result<Value> {
     let name = Path::new(path)
         .file_name()
         .and_then(|name| name.to_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("test file name"))?;
     let tests = row["testResults"]
         .as_array()

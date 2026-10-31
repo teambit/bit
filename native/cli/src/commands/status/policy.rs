@@ -57,7 +57,7 @@ impl Policy {
             "component ignoreIssues",
         )?
         .iter()
-        .map(|value| text(Some(value)).map(str::to_string))
+        .map(|value| text(Some(value)).map(|item| item.trim().to_string()))
         .collect()
     }
 

@@ -124,10 +124,12 @@ fn resolve_configured_aspect_key(
     doc_val: &Value,
     target: &str,
 ) -> Result<Option<(Option<String>, String)>, Failure> {
+    let target = target.trim();
     let bare = target
         .split('@')
         .next()
-        .unwrap_or(target);
+        .unwrap_or(target)
+        .trim();
     if let Some(key) =
         find_extension_key(doc_val, target).or_else(|| find_extension_key(doc_val, bare))
     {

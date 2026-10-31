@@ -14,12 +14,13 @@ impl Status<'_> {
     pub(super) fn updates_from_forked(&self) -> io::Result<Vec<String>> {
         let name = if let Some(name) = self.result["forkedLaneId"]["name"]
             .as_str()
+            .map(str::trim)
             .filter(|name| !name.is_empty())
         {
             name
         } else {
-            let id = text(self.result.get("forkedLaneId"))?;
-            id.split_once('/').map_or(id, |(_, name)| name)
+            let id = text(self.result.get("forkedLaneId"))?.trim();
+            id.split_once('/').map_or(id, |(_, name)| name.trim())
         };
         self.updates("updatesFromForked", name)
     }

@@ -3,9 +3,11 @@ use serde_json::{Value, json};
 
 fn project(data: &Value, identity: &str, environment: &str, message: Option<&str>) -> Value {
     let identity = identity
+        .trim()
         .split('@')
         .next()
-        .unwrap_or(identity);
+        .unwrap_or(identity)
+        .trim();
     let components = data[0]["data"]["components"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
@@ -20,8 +22,11 @@ fn project(data: &Value, identity: &str, environment: &str, message: Option<&str
     let affected = if tested.is_empty() && environment_error { vec![identity] } else { Vec::new() };
     let mut errors = Vec::new();
     if environment_error {
-        let mut error = json!({"envId":environment});
-        if let Some(message) = message {
+        let mut error = json!({"envId":environment.trim()});
+        if let Some(message) = message
+            .map(str::trim)
+            .filter(|msg| !msg.is_empty())
+        {
             error["message"] = json!(message);
         }
         errors.push(error);

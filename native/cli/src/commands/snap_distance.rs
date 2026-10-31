@@ -240,16 +240,22 @@ pub(super) fn is_component_staged_on_lane(
 pub(in crate::commands) fn bitmap_lane_scope_and_name(bitmap: &Value) -> Option<(&str, &str)> {
     let id = bitmap.get("_bit_lane")?.get("id")?;
     if let Some(raw) = id.as_str() {
-        let bare = raw.split('@').next().unwrap_or(raw);
+        let bare = raw
+            .trim()
+            .split('@')
+            .next()
+            .unwrap_or_default()
+            .trim();
         let (scope, name) = bare
             .split_once('/')
             .unwrap_or(("", bare));
-        return (!name.is_empty()).then_some((scope, name));
+        return (!name.trim().is_empty()).then_some((scope.trim(), name.trim()));
     }
     let name = id["name"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())?;
-    Some((id["scope"].as_str().unwrap_or_default(), name))
+    Some((id["scope"].as_str().map_or("", str::trim), name))
 }
 
 pub(in crate::commands) fn is_on_non_main_lane(bitmap: &Value) -> bool {

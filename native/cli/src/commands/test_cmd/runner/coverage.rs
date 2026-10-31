@@ -119,6 +119,9 @@ pub(super) struct Coverage {
 impl Coverage {
     pub(super) fn prepare(root: &Path, directory: &str) -> io::Result<Self> {
         let directory = directory.trim();
+        if directory.is_empty() {
+            return Err(io::Error::other("tester coverage component"));
+        }
         let bitmap = bit_install::workspace::Bitmap::load(root, None)?;
         let entry = bitmap.entries
             .iter()

@@ -12,6 +12,8 @@ pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
         let directory = target["directory"]
             .as_str()
             .or_else(|| target["rootDir"].as_str())
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
             .ok_or_else(|| decline("snapshot directory"))?;
         target["files"] = json!(crate::commands::diff::order::captured(
             &root.join(directory),

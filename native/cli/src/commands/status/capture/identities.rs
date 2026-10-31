@@ -83,7 +83,8 @@ fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
 
 /// The identity without its `@version`.
 pub(super) fn base_identity(identity: &str) -> &str {
+    let identity = identity.trim();
     identity
         .rfind('@')
-        .map_or(identity, |separator| &identity[..separator])
+        .map_or(identity, |separator| identity[..separator].trim())
 }

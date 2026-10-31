@@ -69,6 +69,9 @@ fn suite(output: &mut String, component: &Value, raw: &Value) -> io::Result<()> 
 /// Write the report after tests complete, preserving filesystem errors without replay.
 pub(super) fn write(path: &std::path::Path, data: &str, raw: &Value) -> io::Result<()> {
     use crate::commands::workspace_command::filesystem_error;
+    if path.as_os_str().is_empty() {
+        return Err(io::Error::other("JUnit output path cannot be empty"));
+    }
     let xml = render(data, raw)?;
     if let Some(parent) = path
         .parent()

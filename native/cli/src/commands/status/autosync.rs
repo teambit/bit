@@ -193,5 +193,5 @@ fn progress(startup: &mut Startup, ids: usize, prepared: &Value, synced: u64) ->
 }
 
 fn presentation() -> bool {
-    !std::env::args().any(|argument| matches!(argument.as_str(), "--json" | "-j"))
+    !std::env::args().any(|argument| matches!(argument.as_str(), "--json" | "--json=true" | "-j"))
 }

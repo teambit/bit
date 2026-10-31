@@ -15,11 +15,15 @@ pub(super) fn merge(
     let Some(raw) = raw.as_array() else { return Ok(()) };
     let mut insertion = raw
         .iter()
-        .filter_map(|row| row.get("type").and_then(Value::as_str))
+        .filter_map(|row| {
+            row.get("type")
+                .and_then(Value::as_str)
+                .map(str::trim)
+        })
         .filter(|kind| {
             issues
                 .iter()
-                .any(|issue| issue["type"] == *kind)
+                .any(|issue| issue["type"].as_str().map(str::trim) == Some(*kind))
         })
         .count();
     for object in raw

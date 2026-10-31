@@ -7,6 +7,7 @@ pub(super) fn attribute(value: &str) -> String {
         .collect::<String>()
         .replace('&', "&amp;")
         .replace('<', "&lt;")
+        .replace('>', "&gt;")
         .replace('"', "&quot;")
         .replace('\t', "&#x9;")
         .replace('\n', "&#xA;")

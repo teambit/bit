@@ -245,6 +245,7 @@ fn run_named_script(
     script_name: &str,
     chalk: Chalk,
 ) -> Result<String, ScriptFailure> {
+    let script_name = script_name.trim();
     let mut results = Vec::new();
     for group in groups {
         if !group.env_scripts.has_scripts_method {

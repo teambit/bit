@@ -275,15 +275,13 @@ fn prepare(
 }
 
 fn writer_ids(plan: &Value) -> io::Result<Vec<String>> {
-    let rows = plan
-        .get("switchWriterIds")
-        .and_then(Value::as_array)
-        .ok_or_else(|| decline("switch writer identities"))?;
+    let rows =
+        plan["switchWriterIds"].as_array().ok_or_else(|| decline("switch writer identities"))?;
     if rows.len() > 8192 {
         return Err(decline("switch writer identity count"));
     }
     rows.iter()
-        .map(|id| text(Some(id)).map(str::to_owned))
+        .map(|id| text(Some(id)).map(|val| val.trim().to_owned()))
         .collect()
 }
 

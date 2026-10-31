@@ -72,7 +72,9 @@ fn should_warn_message(options: &options::Options, workflow: &resolve::workflow:
     options.message
         .as_deref()
         .is_none_or(|message| message.trim().is_empty())
-        && workflow.editor.is_none()
+        && workflow.editor
+            .as_deref()
+            .is_none_or(|editor| editor.trim().is_empty())
 }
 
 fn run_workspace(

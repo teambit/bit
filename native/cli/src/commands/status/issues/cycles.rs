@@ -10,6 +10,9 @@ pub fn cyclic(components: &[Component]) -> HashSet<&str> {
     let mut index: HashMap<&str, usize> = HashMap::with_capacity(components.len() * 2);
     for (position, component) in components.iter().enumerate() {
         let raw = component.identity.as_str().trim();
+        if raw.is_empty() {
+            continue;
+        }
         index.insert(raw, position);
         index
             .entry(strip_version(raw))

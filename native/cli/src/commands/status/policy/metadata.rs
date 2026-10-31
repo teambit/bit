@@ -95,12 +95,12 @@ fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value
 
 /// `identityObject(value)`: `{ scope, name, version? }`.
 fn identity_object(value: &str) -> io::Result<Value> {
-    let mut parts = value.trim().split('@');
-    let name = parts.next().unwrap_or_default().trim();
-    let version = parts
-        .next()
-        .map(str::trim)
-        .filter(|version| !version.is_empty());
+    let value = value.trim();
+    let (name, version) = value
+        .split_once('@')
+        .map_or((value, None), |(name, ver)| {
+            (name.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty()))
+        });
     let (scope, comp_name) = name
         .split_once('/')
         .map(|(scope, comp)| (scope.trim(), comp.trim()))

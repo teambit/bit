@@ -202,7 +202,8 @@ fn current_version(context: &Value, model: &Value, identity: &str) -> io::Result
             rows.iter()
                 .find(|row| row["identity"] == identity)
         })
-        .and_then(|row| row["version"].as_str());
+        .and_then(|row| row["version"].as_str())
+        .map(str::trim);
     let reference = selected.and_then(|selected| {
         if selected.is_empty() || matches!(selected, "latest" | "head") {
             model["head"].as_str()

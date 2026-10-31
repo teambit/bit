@@ -25,7 +25,7 @@ pub(super) fn request_with_empty(
 ) -> io::Result<(Value, bool)> {
     let patterns = patterns(root, selected)?;
     let tests = files::tests(selected, &patterns.tests)?;
-    let directory = super::paths::normalized(&root.join(&selected.directory));
+    let directory = super::paths::normalized(&root.join(selected.directory.trim()));
     let requested: Vec<_> = settings.files
         .iter()
         .filter(|file| file.starts_with(&directory))

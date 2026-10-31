@@ -57,8 +57,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 break;
             }
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            val if !val.starts_with('-') && !val.is_empty() && ui_root_name.is_none() => {
-                ui_root_name = Some(val.to_owned());
+            val if !val.trim().starts_with('-')
+                && !val.trim().is_empty()
+                && ui_root_name.is_none() =>
+            {
+                ui_root_name = Some(val.trim().to_owned());
             }
             _ => return None,
         }
@@ -71,6 +74,7 @@ fn consume_trailing_ui_type<'a>(
     ui_root_name: &mut Option<String>,
 ) -> Option<()> {
     for rest in iter {
+        let rest = rest.trim();
         if rest.starts_with('-') || rest.is_empty() || ui_root_name.is_some() {
             return None;
         }

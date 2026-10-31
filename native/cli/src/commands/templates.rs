@@ -194,7 +194,7 @@ fn apply_templates_token<'a>(
             options.json = true;
         }
         "--aspect" | "-a" => {
-            let val = iter.next()?;
+            let val = iter.next()?.trim();
             options.aspect =
                 Some((!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())?);
         }
@@ -202,6 +202,7 @@ fn apply_templates_token<'a>(
             .strip_prefix("--aspect=")
             .or_else(|| token.strip_prefix("-a=")) =>
         {
+            let val = val.trim();
             options.aspect =
                 Some((!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())?);
         }

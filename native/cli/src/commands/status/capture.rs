@@ -330,6 +330,7 @@ struct ScanBehavior {
 impl Scan<'_> {
     /// The component's files, relative to its directory.
     fn files(&mut self, directory: &str) -> io::Result<Vec<String>> {
+        let directory = directory.trim();
         let others: Vec<_> = if directory == "." {
             array(self.context.get("targets"), "targets")?
                 .iter()

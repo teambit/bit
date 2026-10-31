@@ -35,9 +35,11 @@ impl Environments {
         target: &Value,
         files: &[String],
     ) -> io::Result<Value> {
-        let identity = text(target.get("identity"))?;
+        let identity = text(target.get("identity"))?.trim();
         let env = context["environmentFacts"][identity]["envId"]
             .as_str()
+            .map(str::trim)
+            .filter(|env| !env.is_empty())
             .unwrap_or("teambit.harmony/node");
         let bare_env = bit_install::policy::split_version(env).0;
         if self.builtin_services != super::builtin::Services::Disabled

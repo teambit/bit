@@ -53,7 +53,7 @@ fn source_callbacks(
     target: &Value,
     inventory: &Inventory,
 ) -> io::Result<bool> {
-    let directory = text(target.get("directory"))?;
+    let directory = text(target.get("directory"))?.trim();
     let location = root.join(directory);
     if !location.try_exists()? {
         return Ok(false);
@@ -62,7 +62,8 @@ fn source_callbacks(
         array(context.get("targets"), "snapshot inventory targets")?
             .iter()
             .filter_map(|target| target["directory"].as_str())
-            .filter(|dir| *dir != ".")
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty() && *dir != ".")
             .map(|dir| root.join(dir))
             .collect::<Vec<_>>()
     } else {
