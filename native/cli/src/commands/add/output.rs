@@ -18,9 +18,7 @@ pub(super) fn failure(
         return workspace_command::checkout_lifecycle::failure(root, args, "add", startup, error);
     }
     workspace_command::checkout_lifecycle::before(startup)?;
-    let callback = error
-        .get_ref()
-        .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>());
+    let callback = downcast_callback(&error);
     if let Some(callback) = callback {
         print!("{}", callback.startup);
     }
@@ -30,6 +28,12 @@ pub(super) fn failure(
         print!("{captured}");
         Err(error)
     })
+}
+
+fn downcast_callback(error: &io::Error) -> Option<&crate::host::callback_error::CallbackError> {
+    error
+        .get_ref()
+        .and_then(|inner| inner.downcast_ref::<crate::host::callback_error::CallbackError>())
 }
 
 /// Released filesystem error formatting nests red within the command handler's red.

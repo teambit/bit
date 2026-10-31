@@ -27,9 +27,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("recover: {error}"))),
     };
-    let installation = !options.skip_installation
-        && (!preview.import_ids().is_empty() || !preview.probe_ids().is_empty());
-    let mut linker = if installation {
+    let mut linker = if needs_installation(&options, &preview) {
         ProjectedLinker::prepare_with_installation(&root, args)?
     } else {
         ProjectedLinker::prepare(&root)?
@@ -38,4 +36,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     workspace_command::execute_then(&root, args, "recover", |output| {
         execution::execute(&root, args, &options, &mut linker, output)
     })
+}
+
+fn needs_installation(options: &options::Options, preview: &Batch) -> bool {
+    !options.skip_installation
+        && (!preview.import_ids().is_empty() || !preview.probe_ids().is_empty())
 }

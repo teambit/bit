@@ -15,11 +15,7 @@ pub fn component_package_copies(
     let injected = read_injected_deps(root)?;
     let key = format!("node_modules/{}", component.package_name);
     let mut directories = vec![root.join(&key)];
-    if let Some(copies) = injected
-        .get(&key)
-        .or_else(|| injected.get(&component.root_dir))
-        .filter(|copies| !copies.is_empty())
-    {
+    if let Some(copies) = injected_copy_paths(&injected, &key, &component.root_dir) {
         directories.extend(
             copies
                 .iter()
@@ -35,4 +31,16 @@ pub fn component_package_copies(
         );
     }
     Ok(directories)
+}
+
+fn injected_copy_paths<'a>(
+    injected: &'a std::collections::BTreeMap<String, Vec<String>>,
+    key: &str,
+    root_dir: &str,
+) -> Option<&'a [String]> {
+    injected
+        .get(key)
+        .or_else(|| injected.get(root_dir))
+        .map(Vec::as_slice)
+        .filter(|copies| !copies.is_empty())
 }

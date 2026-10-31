@@ -25,15 +25,7 @@ pub(super) fn compile(files: &[Value]) -> io::Result<Vec<Value>> {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;
-    let input = child.stdin
-        .take()
-        .ok_or_else(|| io::Error::other("compiler tool stdin"))?
-        .write_all(&request);
-    if let Err(error) = input {
-        let _ = child.kill();
-        let _ = child.wait();
-        return Err(error);
-    }
+    write_compiler_request(&mut child, &request)?;
     let output = child.wait_with_output()?;
     if !output.status.success() || !output.stderr.is_empty() {
         return Err(io::Error::other("compiler tool rejected source"));
@@ -43,4 +35,17 @@ pub(super) fn compile(files: &[Value]) -> io::Result<Vec<Value>> {
         return Err(io::Error::other("compiler tool response count"));
     }
     Ok(rows)
+}
+
+fn write_compiler_request(child: &mut std::process::Child, request: &[u8]) -> io::Result<()> {
+    let input = child.stdin
+        .take()
+        .ok_or_else(|| io::Error::other("compiler tool stdin"))?
+        .write_all(request);
+    if let Err(error) = input {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(error);
+    }
+    Ok(())
 }

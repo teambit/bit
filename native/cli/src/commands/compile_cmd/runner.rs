@@ -40,13 +40,7 @@ pub(super) fn try_run(
         Err(error) => return Ok(Some(Outcome::Declined(format!("compiler preparation: {error}")))),
     };
     let work = |output: &bit_install::output::Output| {
-        plan.run(root, options, output)
-            .map_err(|error| {
-                workspace_command::filesystem_error::report(
-                    &error,
-                    crate::commands::color::Chalk::detect(args),
-                )
-            })?;
+        plan.run(root, options, output).map_err(|error| format_compile_error(&error, args))?;
         report::create(&plan.compiled, options, args, started.elapsed())
     };
     let outcome = if options.json {
@@ -55,4 +49,8 @@ pub(super) fn try_run(
         workspace_command::execute_then(root, args, "compile", work)
     }?;
     Ok(Some(outcome))
+}
+
+fn format_compile_error(error: &io::Error, args: &[OsString]) -> io::Error {
+    workspace_command::filesystem_error::report(error, crate::commands::color::Chalk::detect(args))
 }

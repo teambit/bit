@@ -4,11 +4,15 @@ use serde_json::{Map, Value};
 use std::io;
 
 pub(super) fn matches_target(key: &str, row: &Value, target: &Target) -> bool {
-    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
+    if !is_component_bitmap_entry(key, row) {
         return false;
     }
     let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
     row_name == target.name && row_scope == target.scope.as_deref()
+}
+
+fn is_component_bitmap_entry(key: &str, row: &Value) -> bool {
+    !key.starts_with('$') && !matches!(key, "_bit_lane" | "version") && row.is_object()
 }
 
 pub(super) fn bitmap_key(
@@ -19,9 +23,7 @@ pub(super) fn bitmap_key(
     if !rows
         .iter()
         .any(|(key, row)| {
-            !key.starts_with('$')
-                && !matches!(key.as_str(), "_bit_lane" | "version")
-                && row.is_object()
+            is_component_bitmap_entry(key, row)
                 && crate::reset_lane::bitmap::row_identity(key, row).1 == name
         })
     {
@@ -30,10 +32,7 @@ pub(super) fn bitmap_key(
     let previous = std::mem::take(rows);
     for (key, row) in previous {
         let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(&key, &row);
-        let is_same_name = !key.starts_with('$')
-            && !matches!(key.as_str(), "_bit_lane" | "version")
-            && row.is_object()
-            && row_name == name;
+        let is_same_name = is_component_bitmap_entry(&key, &row) && row_name == name;
         let key = if is_same_name {
             format!("{}/{name}", row_scope.ok_or_else(|| invalid("inbound bitmap scope"))?)
         } else {

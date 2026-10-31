@@ -3,10 +3,7 @@ use std::sync::LazyLock;
 pub(super) fn attribute(value: &str) -> String {
     value
         .chars()
-        .filter(|ch| {
-            matches!(ch, '\t' | '\n' | '\r')
-                || (*ch >= ' ' && !matches!(ch, '\u{fffe}' | '\u{ffff}'))
-        })
+        .filter(|character| is_allowed_xml_char(*character))
         .collect::<String>()
         .replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -25,4 +22,9 @@ pub(super) fn strip_ansi(value: &str) -> String {
         .unwrap()
     });
     ANSI.replace_all(value, "").into_owned()
+}
+
+const fn is_allowed_xml_char(character: char) -> bool {
+    matches!(character, '\t' | '\n' | '\r')
+        || (character >= ' ' && !matches!(character, '\u{fffe}' | '\u{ffff}'))
 }

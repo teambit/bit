@@ -10,5 +10,9 @@ pub(super) fn single(path: &Path) -> io::Result<bool> {
         .custom_flags(OPEN_REPARSE_POINT)
         .open(path)?;
     let info = winapi_util::file::information(&file)?;
-    Ok(info.number_of_links() == 1 && info.file_attributes() & REPARSE_POINT == 0)
+    Ok(is_single_regular_handle(&info))
+}
+
+fn is_single_regular_handle(info: &winapi_util::file::Information) -> bool {
+    info.number_of_links() == 1 && info.file_attributes() & REPARSE_POINT == 0
 }

@@ -11,6 +11,8 @@ pub(super) fn publish(
     scope: &str,
     file_id: &str,
 ) -> io::Result<()> {
+    let scope = scope.trim();
+    let file_id = file_id.trim();
     let text = std::str::from_utf8(before).map_err(io::Error::other)?;
     let mut document = crate::jsonc::Document::parse(text)?;
     document.set(&[key, "defaultScope"], &serde_json::json!(scope));

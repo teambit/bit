@@ -31,10 +31,7 @@ impl Links {
             .filter(|(_, component)| {
                 loaded.progress.identities
                     .iter()
-                    .any(|identity| {
-                        identity.split('@').next()
-                            == Some(component.id.to_string_without_version().as_str())
-                    })
+                    .any(|identity| matches_component_identity(identity, component))
             })
             .map(|(_, component)| component.clone())
             .collect();
@@ -59,10 +56,7 @@ impl Links {
             .map(|identity| {
                 let component = self.components
                     .iter()
-                    .find(|component| {
-                        identity.split('@').next()
-                            == Some(component.id.to_string_without_version().as_str())
-                    })
+                    .find(|component| matches_component_identity(identity, component))
                     .ok_or_else(|| io::Error::other("compiler component link identity"))?;
                 bit_install::links::component_package_copies(root, component, &self.roots)
                     .map(|dirs| {
@@ -90,4 +84,8 @@ impl Links {
         }
         Ok(())
     }
+}
+
+fn matches_component_identity(identity: &str, component: &WorkspaceComponent) -> bool {
+    identity.split('@').next() == Some(component.id.to_string_without_version().as_str())
 }

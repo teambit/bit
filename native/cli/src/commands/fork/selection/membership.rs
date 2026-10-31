@@ -36,5 +36,9 @@ fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
                 .find(|row| row["identity"] == id)
                 .and_then(|row| row["version"].as_str())
         })
-        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
+        .filter(|candidate| is_concrete_version(candidate))
+}
+
+fn is_concrete_version(version: &str) -> bool {
+    !version.is_empty() && !matches!(version, "latest" | "head")
 }

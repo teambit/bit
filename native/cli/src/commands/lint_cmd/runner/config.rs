@@ -29,14 +29,7 @@ impl Config {
         excludes.push(json!("./dist"));
         for key in ["include", "exclude"] {
             let patterns = config[key].as_array().ok_or_else(|| invalid("linter patterns"))?;
-            let mut expanded = Vec::new();
-            for pattern in patterns {
-                let value = pattern.as_str().ok_or_else(|| invalid("linter pattern"))?;
-                for directory in directories {
-                    expanded.push(json!(format!("../../{directory}/{value}")));
-                }
-            }
-            config[key] = json!(expanded);
+            config[key] = json!(expand_patterns(patterns, directories)?);
         }
         let name = format!("bit.tsconfig.eslint.{}.json", hash::hash(&config)?);
         let path = root.join("node_modules/.cache").join(name);
@@ -61,4 +54,15 @@ impl Config {
         }
         Ok(None)
     }
+}
+
+fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<Value>> {
+    let mut expanded = Vec::new();
+    for pattern in patterns {
+        let value = pattern.as_str().ok_or_else(|| invalid("linter pattern"))?;
+        for directory in directories {
+            expanded.push(json!(format!("../../{directory}/{value}")));
+        }
+    }
+    Ok(expanded)
 }

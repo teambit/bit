@@ -16,13 +16,7 @@ pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
         let extensions = row["current"]["extensions"]
             .as_array()
             .ok_or_else(|| invalid("recovery loaded aspect receipt"))?;
-        if let Some(config) = extensions
-            .iter()
-            .find(|row| {
-                crate::workspace::engine::client_status::config::is_extension_aspect(row, REMOVE)
-            })
-            .map(|row| &row["config"])
-        {
+        if let Some(config) = remove_extension_config(extensions) {
             item.action = if super::classification::has_remove_info(config) {
                 Action::UpdateConfig
             } else {
@@ -33,4 +27,13 @@ pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
     }
     batch.items = items;
     Ok(())
+}
+
+fn remove_extension_config(extensions: &[Value]) -> Option<&Value> {
+    extensions
+        .iter()
+        .find(|row| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(row, REMOVE)
+        })
+        .map(|row| &row["config"])
 }

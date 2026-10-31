@@ -11,6 +11,10 @@ pub(super) fn remove(path: &Path) -> io::Result<()> {
         Err(error) => return Err(error),
     }
     let parent = path.parent().ok_or_else(|| invalid("lane reset object parent"))?;
+    prune_empty_parent(parent)
+}
+
+fn prune_empty_parent(parent: &Path) -> io::Result<()> {
     let mut entries = match fs::read_dir(parent) {
         Ok(entries) => entries,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),

@@ -14,7 +14,10 @@ impl fmt::Display for Failure {
 }
 impl std::error::Error for Failure {}
 pub(super) fn mark(scope: Option<&str>, error: io::Error) -> io::Error {
-    match scope {
+    match scope
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    {
         Some(scope) if crate::checkout::repository::inflate_message(&error).is_some() => {
             io::Error::new(error.kind(), Failure { scope: scope.to_owned(), cause: error })
         }

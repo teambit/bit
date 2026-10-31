@@ -18,7 +18,10 @@ impl Drop for Pending {
 pub(super) fn write(entries: &[Entry]) -> io::Result<Vec<PathBuf>> {
     let mut pending = Pending::default();
     for entry in entries {
-        let path = entry.path.as_ref().ok_or_else(|| invalid("missing private spool path"))?;
+        let path = entry.path
+            .as_ref()
+            .filter(|candidate| candidate.file_name().is_some())
+            .ok_or_else(|| invalid("missing private spool path"))?;
         let mut file = fs::OpenOptions::new()
             .write(true)
             .create_new(true)

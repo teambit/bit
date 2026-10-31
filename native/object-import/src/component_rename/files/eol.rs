@@ -1,11 +1,11 @@
 //! `RenamingMain` uses `ComponentWriter` only for an unversioned, non-preserved target.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Writer {
     Component,
     Workspace,
 }
 impl Writer {
-    pub(super) fn target(exported: bool, preserve: bool) -> Self {
+    pub(super) const fn target(exported: bool, preserve: bool) -> Self {
         if exported || preserve { Self::Workspace } else { Self::Component }
     }
     pub(super) fn contents(self, bytes: Vec<u8>, windows: bool) -> Vec<u8> {

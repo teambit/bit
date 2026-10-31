@@ -7,7 +7,7 @@ use std::{io, path::Path};
 impl ProjectedLinker {
     pub(in crate::commands) fn fork_bitmap_preimage(&self, root: &Path) -> io::Result<Value> {
         self.retained.validate()?;
-        controls::refresh(&root.join(".bitmap"))
+        controls::refresh(&bitmap_path(root))
     }
 
     pub(in crate::commands) fn fork_bitmap_committed(
@@ -16,11 +16,11 @@ impl ProjectedLinker {
         before: &Value,
         bitmap: &Value,
     ) -> io::Result<()> {
+        let path = bitmap_path(root);
         let bytes = bit_object_import::render_workspace_bitmap(bitmap)?;
-        let after =
-            bit_install::policy::scope::proof_from_bytes(&root.join(".bitmap"), Some(&bytes));
+        let after = bit_install::policy::scope::proof_from_bytes(&path, Some(&bytes));
         // The acknowledged publisher must have written exactly its planned bytes.
-        let observed = controls::refresh(&root.join(".bitmap"))?;
+        let observed = controls::refresh(&path)?;
         if observed != after {
             return Err(io::Error::other("fork bitmap publication changed"));
         }
@@ -29,4 +29,8 @@ impl ProjectedLinker {
         self.retained.advance_bitmap(before, &after)?;
         self.retained.validate()
     }
+}
+
+fn bitmap_path(root: &Path) -> std::path::PathBuf {
+    root.join(".bitmap")
 }

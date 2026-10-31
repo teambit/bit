@@ -21,7 +21,14 @@ pub fn with_error_details(error: io::Error, details: String) -> io::Error {
 
 pub(in crate::commands) fn print(error: &io::Error, chalk: Chalk) {
     eprintln!("{}", chalk.red(&error.to_string()));
-    if let Some(error) = error.get_ref().and_then(|error| error.downcast_ref::<WithDetails>()) {
-        eprintln!("{}", error.details);
+    if let Some(details) = downcast_details(error) {
+        eprintln!("{details}");
     }
+}
+
+fn downcast_details(error: &io::Error) -> Option<&str> {
+    error
+        .get_ref()
+        .and_then(|inner| inner.downcast_ref::<WithDetails>())
+        .map(|with_details| with_details.details.as_str())
 }

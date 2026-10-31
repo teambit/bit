@@ -11,14 +11,16 @@ pub(super) fn qualify_parents(
     if !super::safe_parent(root, object) {
         return None;
     }
-    if proofs
-        .iter()
-        .any(|(path, _)| path == Path::new("/etc/group"))
-        && !safe_parents(root, object)?
-    {
+    if has_etc_group_proof(proofs) && !safe_parents(root, object)? {
         return None;
     }
     Some(())
+}
+
+fn has_etc_group_proof(proofs: &[(PathBuf, Vec<u8>)]) -> bool {
+    proofs
+        .iter()
+        .any(|(path, _)| path == Path::new("/etc/group"))
 }
 
 #[cfg(unix)]
@@ -28,11 +30,7 @@ pub(super) fn resolve(name: &str) -> Option<(PathBuf, Vec<u8>)> {
     if bytes.len() > 1024 * 1024 {
         return None;
     }
-    let contents = std::str::from_utf8(&bytes).ok()?;
-    let line = contents
-        .lines()
-        .find(|line| line.split(':').next() == Some(name))?;
-    let gid: u32 = line.split(':').nth(2)?.parse().ok()?;
+    let gid = parse_group_gid(&bytes, name)?;
     // SAFETY: process identity queries take no arguments and have no side effects.
     let (uid, effective_uid, effective_gid) =
         unsafe { (libc::getuid(), libc::geteuid(), libc::getegid()) };
@@ -60,6 +58,15 @@ pub(super) fn safe_parents(root: &Path, object: &Path) -> Option<bool> {
         }
     }
     Some(true)
+}
+
+#[cfg(unix)]
+fn parse_group_gid(bytes: &[u8], name: &str) -> Option<u32> {
+    let contents = std::str::from_utf8(bytes).ok()?;
+    let line = contents
+        .lines()
+        .find(|line| line.split(':').next() == Some(name))?;
+    line.split(':').nth(2)?.parse().ok()
 }
 
 #[cfg(not(unix))]

@@ -8,11 +8,7 @@ pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> 
         .map(|component| super::super::paths::normalized(&root.join(&component.directory)))
         .collect();
     for (index, directory) in roots.iter().enumerate() {
-        if directory
-            .to_string_lossy()
-            .chars()
-            .any(|character| "*?[]{}()!".contains(character))
-        {
+        if has_glob_metacharacters(directory) {
             return Err(invalid("tester glob metacharacters in component root"));
         }
         if roots
@@ -65,6 +61,13 @@ fn reject_symlinks(directory: &Path) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+fn has_glob_metacharacters(directory: &Path) -> bool {
+    directory
+        .to_string_lossy()
+        .chars()
+        .any(|character| "*?[]{}()!".contains(character))
 }
 
 fn overlaps(left: &Path, right: &Path) -> bool {

@@ -24,11 +24,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let output = workspace_command::loader_output(chalk, false);
     output.restart(r#"running command "npmrc"..."#);
     output.stop();
-    let message = chalk.red(&format!(
-        r#""{subcommand}" is not a subcommand of "npmrc", please run "bit npmrc --help" to list the subcommands"#,
-    ));
+    let message = unknown_subcommand_message(&subcommand, chalk);
     writeln!(io::stdout(), "{message}")?;
     Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+fn unknown_subcommand_message(subcommand: &str, chalk: Chalk) -> String {
+    chalk.red(&format!(
+        r#""{subcommand}" is not a subcommand of "npmrc", please run "bit npmrc --help" to list the subcommands"#,
+    ))
 }
 
 fn parse_subcommand(args: &[OsString]) -> Option<String> {

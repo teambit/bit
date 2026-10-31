@@ -30,8 +30,17 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
         );
         hashes.push(hash);
     }
-    let orphaned = model["orphanedVersions"].as_object();
-    let labels = hashes
+    let labels = resolve_version_labels(&hashes, tags, model["orphanedVersions"].as_object());
+    labels.first().ok_or_else(|| invalid("outbound all-versions head"))?;
+    Ok(Staged { head: head.to_owned(), hashes, labels })
+}
+
+fn resolve_version_labels(
+    hashes: &[String],
+    tags: &serde_json::Map<String, Value>,
+    orphaned: Option<&serde_json::Map<String, Value>>,
+) -> Vec<String> {
+    hashes
         .iter()
         .map(|hash| {
             tags.iter()
@@ -39,7 +48,5 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
                 .find(|(_, ref_hash)| ref_hash.as_str() == Some(hash))
                 .map_or_else(|| hash.clone(), |(tag, _)| tag.clone())
         })
-        .collect::<Vec<_>>();
-    labels.first().ok_or_else(|| invalid("outbound all-versions head"))?;
-    Ok(Staged { head: head.to_owned(), hashes, labels })
+        .collect()
 }

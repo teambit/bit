@@ -63,7 +63,7 @@ pub const PERSIST_TAG: Labels = Labels { nothing: "no soft-tag found", ..TAG };
 
 impl Labels {
     pub(super) fn soft(&self) -> bool {
-        self.verb == "soft-tagged"
+        self.verb.trim() == "soft-tagged"
     }
     pub(super) fn section(&self, new: bool) -> (&'static str, &'static str) {
         match (self.soft(), new) {

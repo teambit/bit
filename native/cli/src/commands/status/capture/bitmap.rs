@@ -31,15 +31,13 @@ pub(super) fn record_remote(
     extensions: &[Value],
     captured: &mut Capture,
 ) -> io::Result<()> {
-    if enabled
-        && extensions
-            .iter()
-            .any(|extension| {
-                crate::commands::update_cmd::matches_aspect(extension, "teambit.component/remove")
-                    && extension["config"]["removed"] == true
-            })
-    {
+    if enabled && extensions.iter().any(is_remotely_removed_extension) {
         captured.remotely_removed.push(text(target.get("identity"))?.to_string());
     }
     Ok(())
+}
+
+fn is_remotely_removed_extension(extension: &Value) -> bool {
+    crate::commands::update_cmd::matches_aspect(extension, "teambit.component/remove")
+        && extension["config"]["removed"] == true
 }

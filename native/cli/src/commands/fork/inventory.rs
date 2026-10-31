@@ -32,17 +32,19 @@ pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Val
     inventory["components"]
         .as_array()?
         .iter()
-        .find(|row| {
-            let id_matches = row["identity"] == bare
-                || row["identity"]
-                    .as_str()
-                    .and_then(|id| id.split_once('/').map(|(_, name)| name))
-                    == Some(bare);
-            let ver_matches = explicit_ver.is_none_or(|ver| {
-                matches!(ver, "latest" | "head") || row["version"].as_str() == Some(ver)
-            });
-            id_matches && ver_matches
-        })
+        .find(|row| matches_source_row(row, bare, explicit_ver))
+}
+
+fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bool {
+    let id_matches = row["identity"] == bare
+        || row["identity"]
+            .as_str()
+            .and_then(|id| id.split_once('/').map(|(_, name)| name))
+            == Some(bare);
+    let ver_matches = explicit_ver.is_none_or(|ver| {
+        matches!(ver, "latest" | "head") || row["version"].as_str() == Some(ver)
+    });
+    id_matches && ver_matches
 }
 pub(super) fn default_scope(inventory: &Value) -> io::Result<String> {
     crate::commands::update_cmd::aspect_entry(

@@ -15,9 +15,7 @@ pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Re
         .filter(|row| row["isAvailableOnCurrentLane"] != false)
         .filter(|row| !is_removed_row(row))
         .filter_map(|row| row["rootDir"].as_str())
-        .filter(|other| {
-            *other != directory && (directory == "." || other.starts_with(&format!("{directory}/")))
-        })
+        .filter(|other| is_nested_root_dir(directory, other))
         .map(|directory| root.join(directory))
         .chain(std::iter::once(crate::scope_path(root)))
         .collect::<Vec<_>>();
@@ -37,4 +35,8 @@ fn is_removed_row(row: &Value) -> bool {
                 })
         })
         .is_some_and(|rem| bit_workspace_config::truthy(&rem["removed"]))
+}
+
+fn is_nested_root_dir(directory: &str, candidate: &str) -> bool {
+    candidate != directory && (directory == "." || candidate.starts_with(&format!("{directory}/")))
 }

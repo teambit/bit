@@ -35,7 +35,7 @@ fn all_targets(bitmap: &Value, settings: &Value) -> io::Result<Vec<Value>> {
         .clone();
     bitmap.remove("_bit_lane");
     for (key, row) in &mut bitmap {
-        if key.starts_with('$') || key == "version" {
+        if is_metadata_bitmap_key(key) {
             continue;
         }
         let Some(row) = row.as_object_mut() else {
@@ -45,4 +45,8 @@ fn all_targets(bitmap: &Value, settings: &Value) -> io::Result<Vec<Value>> {
         row.remove("onLanesOnly");
     }
     config::context_bitmap_targets(&Value::Object(bitmap), settings)
+}
+
+fn is_metadata_bitmap_key(key: &str) -> bool {
+    key.starts_with('$') || key == "version"
 }

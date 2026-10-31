@@ -24,12 +24,18 @@ pub(super) fn open(path: &Path) -> io::Result<fs::File> {
         .open(path)?;
     let after = winapi_util::file::information(&file)?;
     validate(&after)?;
-    if before.volume_serial_number() != after.volume_serial_number()
-        || before.file_index() != after.file_index()
-    {
+    if !same_file_identity(&before, &after) {
         return Err(invalid("merge state file changed"));
     }
     Ok(file)
+}
+
+fn same_file_identity(
+    before: &winapi_util::file::Information,
+    after: &winapi_util::file::Information,
+) -> bool {
+    before.volume_serial_number() == after.volume_serial_number()
+        && before.file_index() == after.file_index()
 }
 
 fn validate(info: &winapi_util::file::Information) -> io::Result<()> {

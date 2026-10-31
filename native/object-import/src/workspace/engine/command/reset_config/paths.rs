@@ -10,14 +10,19 @@ pub(super) fn capture(
         return Err(invalid("reset config outside workspace"));
     }
     for parent in destination.ancestors().skip(1) {
-        let metadata = fs::symlink_metadata(parent)?;
-        if !metadata.is_dir() || metadata.file_type().is_symlink() {
-            return Err(invalid("reset config ancestor is not ordinary"));
-        }
+        let metadata = ordinary_directory_metadata(parent)?;
         proofs.push(proof::metadata(parent, Some(&metadata))?);
         if parent == root {
             return Ok(());
         }
     }
     Err(invalid("reset config workspace ancestor"))
+}
+
+fn ordinary_directory_metadata(parent: &Path) -> io::Result<fs::Metadata> {
+    let metadata = fs::symlink_metadata(parent)?;
+    if !metadata.is_dir() || metadata.file_type().is_symlink() {
+        return Err(invalid("reset config ancestor is not ordinary"));
+    }
+    Ok(metadata)
 }

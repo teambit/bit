@@ -27,7 +27,7 @@ fn smaller(
         .iter()
         .map(|file| {
             let captured = capture_file(file, request, remaining, snapshots)?;
-            remaining -= captured.1;
+            remaining = remaining.saturating_sub(captured.1);
             Ok(captured.0)
         })
         .collect()

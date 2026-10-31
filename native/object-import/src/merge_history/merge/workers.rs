@@ -4,7 +4,7 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn classify_all(execution: &Execution<'_>) -> io::Result<Vec<Value>> {
-    if execution.request.current.len() < 2 || rayon::current_thread_index().is_none() {
+    if should_classify_serially(execution) {
         execution.request.current
             .iter()
             .enumerate()
@@ -17,4 +17,8 @@ pub(super) fn classify_all(execution: &Execution<'_>) -> io::Result<Vec<Value>> 
             .map(|(index, file)| classify(index, file, execution))
             .collect::<io::Result<Vec<_>>>()
     }
+}
+
+fn should_classify_serially(execution: &Execution<'_>) -> bool {
+    execution.request.current.len() < 2 || rayon::current_thread_index().is_none()
 }

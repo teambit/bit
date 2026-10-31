@@ -39,14 +39,18 @@ fn missing_ids(options: &Options) -> Option<&'static str> {
 }
 fn dependencies_depth(options: &Options) -> Option<String> {
     let raw = options.write.dependencies.raw_depth.as_deref()?;
-    let deps = &options.write.dependencies;
-    if !deps.import_dependencies && !deps.import_head_dependencies {
+    if !has_dependency_import_flag(options) {
         return Some(
             r#""--dependencies-depth" flag requires "--dependencies" or "--dependencies-head""#
                 .to_owned(),
         );
     }
-    deps.depth
+    options.write.dependencies.depth
         .is_none()
         .then(|| format!(r#""--dependencies-depth" must be a positive integer, got "{raw}""#))
+}
+
+const fn has_dependency_import_flag(options: &Options) -> bool {
+    options.write.dependencies.import_dependencies
+        || options.write.dependencies.import_head_dependencies
 }

@@ -11,9 +11,14 @@ pub(super) fn directory(path: &Path) -> io::Result<()> {
     if !metadata.is_dir() {
         return fs::remove_file(path).map_err(|error| failure(error, "unlink", path));
     }
+    remove_directory_entries(path)?;
+    fs::remove_dir(path).map_err(|error| failure(error, "rmdir", path))
+}
+
+fn remove_directory_entries(path: &Path) -> io::Result<()> {
     for entry in fs::read_dir(path).map_err(|error| failure(error, "scandir", path))? {
         let entry = entry.map_err(|error| failure(error, "scandir", path))?;
         directory(&entry.path())?;
     }
-    fs::remove_dir(path).map_err(|error| failure(error, "rmdir", path))
+    Ok(())
 }

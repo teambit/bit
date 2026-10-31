@@ -30,7 +30,7 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
                     .filter(|ver| !ver.is_empty())
             })
             .unwrap_or("latest");
-        let version = if raw_version == "head" { "latest" } else { raw_version };
+        let version = normalize_target_version(raw_version);
         targets.push(Target {
             scope: Some(scope.to_owned()),
             name: name.to_owned(),
@@ -48,6 +48,10 @@ pub(super) fn requested_target(id: &str) -> io::Result<Target> {
     if scope.is_empty() || name.is_empty() || name.contains('*') || raw_version.is_empty() {
         return Err(invalid("inbound unsupported id"));
     }
-    let version = if raw_version == "head" { "latest" } else { raw_version };
+    let version = normalize_target_version(raw_version);
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
+}
+
+fn normalize_target_version(raw_version: &str) -> &str {
+    if raw_version == "head" { "latest" } else { raw_version }
 }

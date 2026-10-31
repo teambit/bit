@@ -11,7 +11,8 @@ pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
     }
     let number = value.as_f64().ok_or_else(|| invalid_type(value))?;
     // napi_get_value_uint32 applies ECMAScript ToUint32, not Rust's saturating cast.
-    let milliseconds = number.trunc().rem_euclid(4294967296.0) as u32;
+    let milliseconds =
+        if number.is_finite() { number.trunc().rem_euclid(4294967296.0) as u32 } else { 0 };
     Ok(Some(Duration::from_millis(u64::from(milliseconds))))
 }
 

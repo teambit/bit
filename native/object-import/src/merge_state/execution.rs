@@ -7,8 +7,16 @@ pub(super) fn run(
     bytes: &[u8],
     pool: &rayon::ThreadPool,
 ) -> io::Result<Value> {
-    if matches!(
-        &request,
+    if uses_thread_pool(&request) {
+        pool.install(|| apply(request, state, bytes))
+    } else {
+        apply(request, state, bytes)
+    }
+}
+
+const fn uses_thread_pool(request: &Request) -> bool {
+    matches!(
+        request,
         Request::MergePrepare(_)
             | Request::MergeApply(_)
             | Request::CheckoutPrepare(_)
@@ -16,9 +24,5 @@ pub(super) fn run(
             | Request::InspectionBegin(_)
             | Request::InspectionDiff(_)
             | Request::HistoryQueryDiff(_),
-    ) {
-        pool.install(|| apply(request, state, bytes))
-    } else {
-        apply(request, state, bytes)
-    }
+    )
 }

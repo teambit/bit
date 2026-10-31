@@ -13,17 +13,10 @@ pub(super) struct Selected {
 }
 
 pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Selected>> {
-    if values.is_empty()
-        || !values
-            .iter()
-            .any(|value| Path::new(value).is_file())
-    {
+    if !any_existing_file(values) {
         return Ok(None);
     }
-    if !values
-        .iter()
-        .all(|value| Path::new(value).is_file())
-    {
+    if !all_existing_files(values) {
         return Err(invalid("tester mixed file selection"));
     }
     let cwd = env::current_dir()?;
@@ -69,4 +62,16 @@ pub(super) fn tests(component: &Component, patterns: &[String]) -> io::Result<Ve
         }
     }
     Ok(paths)
+}
+
+fn any_existing_file(values: &[String]) -> bool {
+    values
+        .iter()
+        .any(|value| Path::new(value).is_file())
+}
+
+fn all_existing_files(values: &[String]) -> bool {
+    values
+        .iter()
+        .all(|value| Path::new(value).is_file())
 }

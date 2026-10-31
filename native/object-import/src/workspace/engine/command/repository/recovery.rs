@@ -12,6 +12,9 @@ impl Repository {
             imported.accept_recovery_objects(root, objects)?;
         }
         for (hash, bytes) in objects {
+            if hash.len() < 3 || !hash.is_char_boundary(2) {
+                continue;
+            }
             let path = self.directory
                 .join(&hash[..2])
                 .join(&hash[2..]);

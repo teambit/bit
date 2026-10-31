@@ -9,7 +9,7 @@ pub(super) fn lane(
     targets: &[command_import::Target],
 ) -> io::Result<Option<command_import::PreparedImport>> {
     let bitmap = config::document(&request.root.join(".bitmap"))?;
-    if bitmap.get("_bit_lane").is_none() {
+    if !has_lane_assignment(&bitmap) {
         return Ok(None);
     }
     let mut imported = command_import::prepare_lane(&request.root, &request.global_remotes_file)?;
@@ -19,4 +19,10 @@ pub(super) fn lane(
     }
     imported.prepare_checkout_lane(&request.root, &id, targets)?;
     Ok(Some(imported))
+}
+
+fn has_lane_assignment(bitmap: &Value) -> bool {
+    bitmap
+        .get("_bit_lane")
+        .is_some_and(|lane| !lane.is_null())
 }

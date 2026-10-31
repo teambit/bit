@@ -23,16 +23,7 @@ pub(super) fn replay(
         .as_array()
         .ok_or_else(|| invalid("command selection observations"))?;
     for stage in observations {
-        let heads = match stage.as_str() {
-            Some("resolveTarget") if to.starts_with("head~") => Some([head, None]),
-            Some("resolveTarget") if resolves_heads(to, model, head, remote) => {
-                Some([head, remote])
-            }
-            Some("hasVersion") if crate::merge_history::hash(to).is_ok() => Some([head, None]),
-            Some("mergePending") => Some([head, remote]),
-            _ => None,
-        };
-        if let Some(heads) = heads {
+        if let Some(heads) = stage_heads(stage.as_str(), to, model, head, remote) {
             histories.distance(
                 &record.request.root,
                 identity,
@@ -43,6 +34,22 @@ pub(super) fn replay(
         }
     }
     Ok(())
+}
+
+fn stage_heads<'a>(
+    stage: Option<&str>,
+    to: &str,
+    model: &Value,
+    head: Option<&'a str>,
+    remote: Option<&'a str>,
+) -> Option<[Option<&'a str>; 2]> {
+    match stage {
+        Some("resolveTarget") if to.starts_with("head~") => Some([head, None]),
+        Some("resolveTarget") if resolves_heads(to, model, head, remote) => Some([head, remote]),
+        Some("hasVersion") if crate::merge_history::hash(to).is_ok() => Some([head, None]),
+        Some("mergePending") => Some([head, remote]),
+        _ => None,
+    }
 }
 
 fn resolves_heads(to: &str, model: &Value, head: Option<&str>, remote: Option<&str>) -> bool {

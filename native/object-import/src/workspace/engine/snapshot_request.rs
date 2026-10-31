@@ -19,6 +19,17 @@ pub(super) fn dispatch(
         Request::CommandStashFinalize(input) => command::stash::finalize(input, snapshots),
         Request::CommandStashStageGraph(input) => command::stash::stage_graph(&input, state),
         Request::CommandStashPersist(input) => command::stash::persist(&input, state),
+        request => dispatch_resolve(request, snapshots, pool),
+    }
+}
+
+fn dispatch_resolve(
+    request: Request,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    let state = &mut snapshots.command;
+    match request {
         Request::CommandSnapshotStagePackages(input) => {
             command::resolve::stage_packages(&input, state)
         }
@@ -38,7 +49,6 @@ pub(super) fn dispatch(
         Request::CommandTagVersionOverrides(input) => {
             command::resolve::override_versions(&input, state)
         }
-
         Request::CommandTagCandidates(input) => {
             pool.install(|| command::resolve::tag_candidates(input, snapshots, pool))
         }

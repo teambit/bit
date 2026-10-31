@@ -22,8 +22,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return run_outside_workspace(&cwd, args, &options);
     };
     if let Err(error) = preparation::prepare(&root, &options)
-        && (error.kind() != io::ErrorKind::InvalidInput
-            || env::var_os("CI").is_some_and(|value| !value.is_empty()))
+        && (error.kind() != io::ErrorKind::InvalidInput || is_ci_active())
     {
         return Ok(Outcome::Declined(format!("component rename: {error}")));
     }
@@ -36,12 +35,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
+fn is_ci_active() -> bool {
+    env::var_os("CI").is_some_and(|value| !value.is_empty())
+}
+
 fn run_outside_workspace(
     cwd: &std::path::Path,
     args: &[OsString],
     options: &bit_object_import::component_rename::Options,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+    if is_ci_active() {
         return Ok(Outcome::Declined("component rename requires a workspace".into()));
     }
     let err = bit_object_import::component_rename::validate_name(&options.target)

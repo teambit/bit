@@ -7,7 +7,7 @@ use std::{
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
 pub(super) fn validate(path: &Path) -> io::Result<()> {
-    if xattr::list(path)?.any(|name| name != "security.selinux") {
+    if has_non_selinux_xattr(path)? {
         return Err(invalid("reset config extended attributes"));
     }
     let parent = path.parent().ok_or_else(|| invalid("reset config parent"))?;
@@ -26,8 +26,12 @@ pub(super) fn validate(path: &Path) -> io::Result<()> {
     result.and(removed)
 }
 
+fn has_non_selinux_xattr(path: &Path) -> io::Result<bool> {
+    Ok(xattr::list(path)?.any(|name| name != "security.selinux"))
+}
+
 fn equivalent(original: &Path, temporary: &Path) -> io::Result<()> {
-    if xattr::list(temporary)?.any(|name| name != "security.selinux")
+    if has_non_selinux_xattr(temporary)?
         || xattr::get(original, "security.selinux")? != xattr::get(temporary, "security.selinux")?
     {
         return Err(invalid("reset config nondefault metadata attributes"));

@@ -17,7 +17,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     };
     let work = |output: &bit_install::output::Output| {
         let result = plan.run(root, output, options.fix)?;
-        let elapsed = u64::try_from(started.elapsed().as_millis()).map_err(io::Error::other)?;
+        let elapsed = elapsed_millis(&started)?;
         report::create(&result, &plan.loaded.progress, args, options.json, elapsed)
     };
     if options.json {
@@ -25,6 +25,10 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     } else {
         workspace_command::execute_then(root, args, "lint", work)
     }
+}
+
+fn elapsed_millis(started: &Instant) -> io::Result<u64> {
+    u64::try_from(started.elapsed().as_millis()).map_err(io::Error::other)
 }
 
 fn invalid(message: &str) -> io::Error {

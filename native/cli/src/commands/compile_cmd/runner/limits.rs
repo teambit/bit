@@ -15,11 +15,15 @@ pub(super) fn batch_size(root: &Path) -> io::Result<usize> {
         .get("concurrency.io")
         .and_then(config_string)
         .unwrap_or_default();
-    let number = if value.trim().is_empty() {
+    parse_concurrency_limit(&value)
+}
+
+fn parse_concurrency_limit(value: &str) -> io::Result<usize> {
+    let trimmed = value.trim();
+    let number = if trimmed.is_empty() {
         100
     } else {
-        value
-            .trim()
+        trimmed
             .parse::<usize>()
             .map_err(|_| io::Error::other("compiler I/O concurrency configuration"))?
     };

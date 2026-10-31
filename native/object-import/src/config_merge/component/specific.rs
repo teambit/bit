@@ -29,17 +29,17 @@ fn incoming<'a>(input: &'a Value, row: &Value) -> io::Result<Option<&'a Value>> 
     }
     if row["id"]
         .as_str()
-        .is_none_or(|id| id.split('@').next() != Some("teambit.envs/envs"))
+        .is_none_or(|id| !is_envs_aspect_id(id))
     {
         return Ok(None);
     }
     Ok(array(input, "other")?
         .iter()
-        .find(|entry| {
-            entry["name"]
-                .as_str()
-                .is_some_and(|name| name.split('@').next() == Some("teambit.envs/envs"))
-        }))
+        .find(|entry| entry["name"].as_str().is_some_and(is_envs_aspect_id)))
+}
+
+fn is_envs_aspect_id(id: &str) -> bool {
+    id.split('@').next() == Some("teambit.envs/envs")
 }
 
 fn preserve(merged: &mut Value, entry: &Value) {

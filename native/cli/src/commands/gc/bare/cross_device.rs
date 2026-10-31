@@ -14,9 +14,16 @@ pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
 }
 fn copy_link(source: &Path, target: &Path) -> io::Result<()> {
     let link = fs::read_link(source).map_err(|error| failure(error, "readlink", source))?;
+    create_symlink(&link, target).map_err(|error| paired_failure(error, "symlink", &link, target))
+}
+
+fn create_symlink(link: &Path, target: &Path) -> io::Result<()> {
     #[cfg(unix)]
-    let result = std::os::unix::fs::symlink(&link, target);
+    {
+        std::os::unix::fs::symlink(link, target)
+    }
     #[cfg(windows)]
-    let result = std::os::windows::fs::symlink_file(&link, target);
-    result.map_err(|error| paired_failure(error, "symlink", &link, target))
+    {
+        std::os::windows::fs::symlink_file(link, target)
+    }
 }

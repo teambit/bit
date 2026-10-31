@@ -22,7 +22,7 @@ fn main() -> ExitCode {
     #[cfg(unix)]
     let _ = pnpm_fs::file_mode::current_umask();
     pnpm_diagnostics::enable_tracing_by_env();
-    let args: Vec<OsString> = env::args_os().skip(1).collect();
+    let args = collect_cli_args();
     match run(&args) {
         Ok(code) => code,
         Err(error) => {
@@ -30,6 +30,10 @@ fn main() -> ExitCode {
             ExitCode::FAILURE
         }
     }
+}
+
+fn collect_cli_args() -> Vec<OsString> {
+    env::args_os().skip(1).collect()
 }
 
 fn run(args: &[OsString]) -> std::io::Result<ExitCode> {

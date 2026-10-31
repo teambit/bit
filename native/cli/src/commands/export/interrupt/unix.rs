@@ -3,6 +3,9 @@ pub(super) type Previous = libc::sigaction;
 
 extern "C" fn interrupt(_signal: libc::c_int) {
     let bytes = super::message();
+    if bytes.is_empty() {
+        return;
+    }
     // SAFETY: write is async-signal-safe and the immutable byte slice has static lifetime.
     unsafe {
         libc::write(libc::STDOUT_FILENO, bytes.as_ptr().cast(), bytes.len());

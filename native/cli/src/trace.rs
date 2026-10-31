@@ -4,7 +4,11 @@
 use std::{env, fmt::Display};
 
 pub fn enabled() -> bool {
-    env::var_os("BIT_NATIVE_TRACE").is_some_and(|value| !value.is_empty() && value != "0")
+    env::var_os("BIT_NATIVE_TRACE").is_some_and(|value| is_active_trace_value(&value))
+}
+
+fn is_active_trace_value(value: &std::ffi::OsStr) -> bool {
+    !value.is_empty() && value != "0"
 }
 
 pub fn log(message: impl Display) {

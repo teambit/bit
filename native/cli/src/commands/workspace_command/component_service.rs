@@ -38,15 +38,10 @@ fn invalid(message: &str) -> io::Error {
 
 impl Progress {
     fn new(name: String, environment: String, counts: [usize; 2], options: &Selection) -> Self {
-        Self {
-            name,
-            environment,
-            identities: Vec::new(),
-            loads: if options.changed && options.pattern.is_none() {
-                counts.to_vec()
-            } else {
-                vec![counts[1]]
-            },
-        }
+        Self { name, environment, identities: Vec::new(), loads: initial_loads(counts, options) }
     }
+}
+
+fn initial_loads(counts: [usize; 2], options: &Selection) -> Vec<usize> {
+    if options.changed && options.pattern.is_none() { counts.to_vec() } else { vec![counts[1]] }
 }

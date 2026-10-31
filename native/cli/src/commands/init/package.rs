@@ -4,10 +4,14 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn render(value: &Value, original: Option<&[u8]>) -> io::Result<Vec<u8>> {
-    let original = original
+    let original = decode_original(original)?;
+    Ok(stringify_package(value, &detect_indent(original), detect_newline(original))?.into_bytes())
+}
+
+fn decode_original(original: Option<&[u8]>) -> io::Result<&str> {
+    original
         .map(std::str::from_utf8)
         .transpose()
-        .map_err(io::Error::other)?
-        .unwrap_or("");
-    Ok(stringify_package(value, &detect_indent(original), detect_newline(original))?.into_bytes())
+        .map_err(io::Error::other)
+        .map(Option::unwrap_or_default)
 }

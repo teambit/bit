@@ -55,14 +55,7 @@ pub(super) fn target(_root: &Path, _source: &Path) -> Option<PathBuf> {
 }
 
 pub(super) fn move_history(plan: &mut Plan, root: &Path) -> io::Result<()> {
-    for (path, bytes) in &plan.proofs {
-        if fs::read(path)? != *bytes {
-            return Err(io::Error::other("version-history input changed"));
-        }
-    }
-    if existing_mode(&plan.path) != plan.mode {
-        return Err(io::Error::other("version-history mode changed"));
-    }
+    verify_proofs(plan)?;
     let target =
         target(root, &plan.path).ok_or_else(|| io::Error::other("version-history trash changed"))?;
     let expected = plan.proofs
@@ -86,5 +79,17 @@ pub(super) fn move_history(plan: &mut Plan, root: &Path) -> io::Result<()> {
         }
     }
     plan.mode = None;
+    Ok(())
+}
+
+fn verify_proofs(plan: &Plan) -> io::Result<()> {
+    for (path, bytes) in &plan.proofs {
+        if fs::read(path)? != *bytes {
+            return Err(io::Error::other("version-history input changed"));
+        }
+    }
+    if existing_mode(&plan.path) != plan.mode {
+        return Err(io::Error::other("version-history mode changed"));
+    }
     Ok(())
 }
