@@ -102,7 +102,7 @@ pub(in crate::workspace::engine) fn prepare(
     state: &mut super::State,
 ) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command policy owner absent"))?;
-    if record.token != input.token {
+    if input.token.trim().is_empty() || record.token.trim() != input.token.trim() {
         return Err(invalid("command policy token"));
     }
     let mut planned = record.planned.take().ok_or_else(|| invalid("command policy plan absent"))?;
@@ -250,11 +250,12 @@ fn projected_context(policy: &Prepared, record: &Record) -> io::Result<Value> {
     for target in
         context["targets"].as_array_mut().ok_or_else(|| invalid("command context targets"))?
     {
+        let target_id = target["identity"].as_str().map(str::trim);
         if let Some(row) = policy.rows
             .iter()
-            .find(|row| row.fast_forward && target["identity"] == row.identity)
+            .find(|row| row.fast_forward && target_id == Some(row.identity.trim()))
         {
-            target["version"] = json!(row.baseline.version);
+            target["version"] = json!(row.baseline.version.trim());
         }
     }
     Ok(context)

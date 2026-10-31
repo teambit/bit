@@ -93,15 +93,24 @@ pub(super) fn attach(
         &settings,
         &selected,
     )?;
-    for (addition, name) in additions.iter_mut().zip(&names) {
-        addition["version"] =
-            json!(name.rsplit_once('@').ok_or_else(|| invalid("checkout scope version"))?.1);
-    }
+    assign_addition_versions(&mut additions, &names)?;
     validate_lane_overlap(context, &additions)?;
     context["scopeAdditions"] = json!(additions);
     context["scopeAddedTargets"] =
         json!(super::super::lane_context::additions::targets(&additions, &selected));
     context["newFromScope"] = json!(names);
+    Ok(())
+}
+
+fn assign_addition_versions(additions: &mut [Value], names: &[String]) -> io::Result<()> {
+    for (addition, name) in additions.iter_mut().zip(names) {
+        addition["version"] = json!(
+            name.rsplit_once('@')
+                .ok_or_else(|| invalid("checkout scope version"))?
+                .1
+                .trim()
+        );
+    }
     Ok(())
 }
 
@@ -183,7 +192,10 @@ pub(super) fn extend_model_targets(context: &Value, targets: &mut Vec<Value>) {
 
 fn version_ref(model: &Value, version: &str) -> io::Result<String> {
     let version = version.trim();
-    let reference = if matches!(version, "" | "latest" | "head") {
+    let reference = if version.is_empty()
+        || version.eq_ignore_ascii_case("latest")
+        || version.eq_ignore_ascii_case("head")
+    {
         model["head"].as_str().map(str::trim)
     } else {
         model["orphanedVersions"]

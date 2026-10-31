@@ -55,17 +55,25 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
         .map(str::trim)
         .filter(|id| !id.is_empty())
     {
-        let normalized = id
-            .strip_suffix("@latest")
-            .or_else(|| id.strip_suffix("@head"))
-            .unwrap_or(id)
-            .trim();
+        let normalized = strip_head_or_latest(id);
         if normalized.is_empty() {
             return Err(invalid("scope aspect name"));
         }
         return Ok(normalized.to_owned());
     }
     object_extension_identity(id)
+}
+
+fn strip_head_or_latest(id: &str) -> &str {
+    match id.rsplit_once('@') {
+        Some((base, ver))
+            if ver.trim().eq_ignore_ascii_case("latest")
+                || ver.trim().eq_ignore_ascii_case("head") =>
+        {
+            base.trim()
+        }
+        _ => id,
+    }
 }
 
 fn object_extension_identity(id: &Value) -> io::Result<String> {
@@ -97,7 +105,7 @@ fn object_extension_identity(id: &Value) -> io::Result<String> {
         .map(str::trim)
         .filter(|version| !version.is_empty())
         .or(inline_ver)
-        .filter(|version| !matches!(*version, "latest" | "head"));
+        .filter(|ver| !ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head"));
     Ok(version.map_or_else(|| base.clone(), |version| format!("{base}@{version}")))
 }
 

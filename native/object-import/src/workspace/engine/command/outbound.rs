@@ -232,7 +232,10 @@ fn resume_context(
     input: &Prepare,
     selected: &[model::Selected],
 ) -> io::Result<Option<ResumeContext>> {
-    if input.options.resume.is_none() {
+    if input.options.resume
+        .as_deref()
+        .is_none_or(|resume| resume.trim().is_empty())
+    {
         return Ok(None);
     }
     Ok(Some(ResumeContext {
@@ -349,13 +352,17 @@ fn validate(input: &Prepare) -> io::Result<()> {
         || input.transport.bit_version.trim().is_empty()
         || input.transport.client_id.trim().is_empty()
         || input.transport.export_date.trim().is_empty()
-        || input.transport.token.is_some()
+        || input.transport.token
+            .as_deref()
+            .is_some_and(|token| !token.trim().is_empty())
     {
         return Err(invalid("outbound command requires canonical lifecycle"));
     }
     if input.options.resume
         .as_deref()
-        .is_some_and(|resume| resume.trim() != input.transport.client_id.trim())
+        .map(str::trim)
+        .filter(|resume| !resume.is_empty())
+        .is_some_and(|resume| resume != input.transport.client_id.trim())
     {
         return Err(invalid("outbound command requires canonical lifecycle"));
     }

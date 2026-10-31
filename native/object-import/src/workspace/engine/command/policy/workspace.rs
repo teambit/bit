@@ -19,9 +19,11 @@ pub(super) fn prepare(
                 .as_array()
                 .and_then(|rows| {
                     rows.iter()
-                        .find(|entry| entry["id"] == projection::RESOLVER)
+                        .find(|entry| {
+                            entry["id"].as_str().map(str::trim) == Some(projection::RESOLVER)
+                        })
                 });
-            json!({"compId":row.identity,
+            json!({"compId":row.identity.trim(),
                 "mergedPolicy":policy.map(|policy| &policy["merged"]["value"]["policy"]),
                 "conflict":policy.map(|policy| &policy["conflict"]["value"])})
         })

@@ -13,7 +13,7 @@ pub(in crate::workspace::engine) fn apply(
         return Err(invalid("outbound owner token"));
     }
     let retained = state.outbound.as_mut().ok_or_else(|| invalid("outbound owner missing"))?;
-    if retained.token != token || retained.transfer.ids.is_some() {
+    if retained.token.trim() != token || retained.transfer.ids.is_some() {
         return Err(invalid("outbound owner token"));
     }
     if retained.transfer.failed.is_some() {
@@ -168,8 +168,9 @@ pub(in crate::workspace::engine) fn finalize(
     input: &Finalize,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
+    let token = input.token.trim();
     let mut retained = state.outbound.take().ok_or_else(|| invalid("outbound owner missing"))?;
-    if retained.token != input.token.trim() {
+    if token.is_empty() || retained.token.trim() != token {
         return Err(invalid("outbound owner token"));
     }
     let exported_ids =

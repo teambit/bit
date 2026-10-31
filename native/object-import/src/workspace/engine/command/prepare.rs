@@ -50,7 +50,12 @@ fn ordinary_context(
             Some(command_import::prepare_cached(&request.root, &request.global_remotes_file)?)
         }
     };
-    if request.operation == Operation::Checkout && request.options.to.as_deref() == Some("head") {
+    if request.operation == Operation::Checkout
+        && request.options.to
+            .as_deref()
+            .map(str::trim)
+            .is_some_and(|to| to.eq_ignore_ascii_case("head"))
+    {
         imported
             .as_mut()
             .ok_or_else(|| invalid("command import owner"))?
@@ -79,11 +84,7 @@ fn prepare_checkout_import(
     let local_target = request.options.to
         .as_deref()
         .map(str::trim)
-        .is_some_and(|to| {
-            !to.is_empty()
-                && (request.options.revert && to == "main"
-                    || !matches!(to, "head" | "latest" | "main") && !to.starts_with("head~"))
-        });
+        .is_some_and(|to| is_local_checkout_target(to, request.options.revert));
     if local_target {
         let cached = command_import::prepare_cached(&request.root, &request.global_remotes_file)?;
         let default_scope = crate::component_tracking::identity::workspace_aspect(
@@ -99,6 +100,12 @@ fn prepare_checkout_import(
     }
     command_import::prepare(&request.root, &request.global_remotes_file, &targets)
 }
+fn is_local_checkout_target(to: &str, revert: bool) -> bool {
+    let lower = to.to_ascii_lowercase();
+    !lower.is_empty()
+        && (revert && lower == "main"
+            || !matches!(lower.as_str(), "head" | "latest" | "main") && !lower.starts_with("head~"))
+}
 fn unexported_targets(
     request: &Prepare,
     context: &Value,
@@ -108,18 +115,14 @@ fn unexported_targets(
     Ok(selected(request, context)?
         .iter()
         .filter_map(|target| {
-            let (scope, name) = target["identity"].as_str()?.split_once('/')?;
+            let (scope, name) = target["identity"]
+                .as_str()?
+                .trim()
+                .split_once('/')?;
+            let (scope, name) = (scope.trim(), name.trim());
+            let dir = target["directory"].as_str().map(str::trim);
             rows.iter()
-                .any(|(key, row)| {
-                    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
-                    !key.starts_with('$')
-                        && !matches!(key.as_str(), "_bit_lane" | "version")
-                        && row.is_object()
-                        && row_name == name
-                        && (row_scope.is_none()
-                            || (row_scope == Some(scope) && row["exported"] == false))
-                        && row["rootDir"] == target["directory"]
-                })
+                .any(|(key, row)| matches_unexported_row(key, row, scope, name, dir))
                 .then(|| command_import::Target {
                     scope: Some(scope.to_owned()),
                     name: name.to_owned(),
@@ -127,6 +130,27 @@ fn unexported_targets(
                 })
         })
         .collect())
+}
+fn matches_unexported_row(
+    key: &str,
+    row: &Value,
+    scope: &str,
+    name: &str,
+    dir: Option<&str>,
+) -> bool {
+    if key.trim().starts_with('$')
+        || matches!(key.trim(), "_bit_lane" | "version")
+        || !row.is_object()
+    {
+        return false;
+    }
+    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+    let row_scope = row_scope
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
+    row_name.trim() == name
+        && (row_scope.is_none() || (row_scope == Some(scope) && row["exported"] == false))
+        && row["rootDir"].as_str().map(str::trim) == dir
 }
 pub(super) fn extend_models(
     request: &Prepare,
@@ -213,17 +237,22 @@ fn invalid_lifecycle_options(request: &Prepare) -> io::Result<bool> {
 }
 
 fn validate_revert(request: &Prepare) -> io::Result<()> {
-    if request.options.revert
-        && super::lane_history::phase(&request.options).is_none()
-        && (request.operation != Operation::Checkout
-            || request.options.pattern.is_none()
-            || request.options.all
-            || !request.options.to
-                .as_deref()
-                .is_some_and(|to| {
-                    to == "main"
-                        || (!matches!(to, "head" | "latest" | "reset") && !to.starts_with("head~"))
-                }))
+    if !request.options.revert || super::lane_history::phase(&request.options).is_some() {
+        return Ok(());
+    }
+    let has_pattern = request.options.pattern
+        .as_deref()
+        .is_some_and(|pat| !pat.trim().is_empty());
+    let valid_to = request.options.to
+        .as_deref()
+        .is_some_and(|to| {
+            let lower = to.trim().to_ascii_lowercase();
+            lower == "main"
+                || (!lower.is_empty()
+                    && !matches!(lower.as_str(), "head" | "latest" | "reset")
+                    && !lower.starts_with("head~"))
+        });
+    if request.operation != Operation::Checkout || !has_pattern || request.options.all || !valid_to
     {
         return Err(invalid("command revert requires a selected version"));
     }
@@ -272,46 +301,55 @@ fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> 
 pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
     let targets = context["targets"].as_array().ok_or_else(|| invalid("command targets"))?;
     roots::validate(targets)?;
-    if super::lane_history::phase(&request.options).is_some() {
+    if super::lane_history::phase(&request.options).is_some()
+        || request.operation == Operation::Switch
+        || request.defer_checkout_pattern
+    {
         return Ok(targets.clone());
     }
     if let Some(selected) = super::checkout_stash::selected(&request.options, targets)? {
         return Ok(selected);
     }
-    if request.operation == Operation::Switch {
-        return Ok(targets.clone());
-    }
     if request.options.lane.is_some() {
         return lane_selected(context, targets);
     }
-
-    if request.defer_checkout_pattern {
-        return Ok(targets.clone());
-    }
-    if let Some(pattern) = &request.options.pattern {
+    if let Some(pattern) = request.options.pattern
+        .as_deref()
+        .map(str::trim)
+        .filter(|pat| !pat.is_empty())
+    {
         return selected_pattern(request, targets, pattern);
     }
+    selected_checkout(request, context, targets)
+}
+
+fn selected_checkout(
+    request: &Prepare,
+    context: &Value,
+    targets: &[Value],
+) -> io::Result<Vec<Value>> {
+    let to = request.options.to.as_deref().map(str::trim);
     if request.operation == Operation::Checkout
         && !request.options.all
-        && !matches!(request.options.to.as_deref(), Some("head" | "latest"))
+        && !to.is_some_and(|to| {
+            to.eq_ignore_ascii_case("head") || to.eq_ignore_ascii_case("latest")
+        })
     {
         return Err(invalid("command checkout requires selection"));
     }
     if request.operation == Operation::Checkout
-        && request.options.to.as_deref() == Some("head")
+        && to.is_some_and(|to| to.eq_ignore_ascii_case("head"))
         && !context["lane"]["current"].is_null()
     {
-        return selected_checkout_lane_heads(context, targets);
+        return checkout_lane::selected_heads(context, targets);
     }
-    Ok(targets.clone())
+    Ok(targets.to_vec())
 }
 
 fn selected_pattern(request: &Prepare, targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     if request.options.all {
         return Err(invalid("command ambiguous selection"));
     }
-    // Canonical multimatch treats ** as all scoped IDs. An explicit pattern
-    // also selects fast-forward targets, unlike bare merge's divergent set.
     if (request.operation == Operation::Merge || request.options.revert)
         && pattern == "**"
         && !targets.is_empty()
@@ -319,24 +357,6 @@ fn selected_pattern(request: &Prepare, targets: &[Value], pattern: &str) -> io::
         return Ok(targets.to_vec());
     }
     roots::select_pattern(targets, pattern)
-}
-
-fn selected_checkout_lane_heads(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
-    let entries = command_import::lane::entries(&context["lane"]["current"]["value"])?;
-    let heads = entries
-        .into_iter()
-        .filter(|entry| !entry.hidden)
-        .map(|entry| entry.identity)
-        .collect::<std::collections::HashSet<_>>();
-    Ok(targets
-        .iter()
-        .filter(|target| {
-            target["identity"]
-                .as_str()
-                .is_some_and(|id| heads.contains(id))
-        })
-        .cloned()
-        .collect())
 }
 
 fn lane_selected(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
@@ -350,9 +370,10 @@ fn lane_selected(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
     Ok(pool
         .into_iter()
         .filter(|target| {
+            let target_id = target["identity"].as_str().map(str::trim);
             selected
                 .iter()
-                .any(|row| row["identity"] == target["identity"])
+                .any(|row| row["identity"].as_str().map(str::trim) == target_id)
         })
         .collect())
 }

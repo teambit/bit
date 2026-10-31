@@ -19,7 +19,9 @@ pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
     let name = format!("{scope}/{lane_name}");
     let count = lane.components.ids.len();
     let resume = input.options.resume
-        .as_ref()
+        .as_deref()
+        .map(str::trim)
+        .filter(|resume| !resume.is_empty())
         .map(|_| {
             lane.components.expected_ids
                 .iter()

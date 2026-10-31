@@ -25,12 +25,13 @@ impl Main {
         for name in &names {
             let bytes = proof::read(&directory.join(name), proofs)?
                 .ok_or_else(|| invalid("main recovery backup disappeared"))?;
-            let object = decode(&bytes)?;
-            total += object.1.len();
-            if total > 32 * 1024 * 1024 || !identities.insert(object.0.clone()) {
+            let (hash, encoded) = decode(&bytes)?;
+            let hash = hash.trim().to_ascii_lowercase();
+            total += encoded.len();
+            if total > 32 * 1024 * 1024 || !identities.insert(hash.clone()) {
                 return Err(invalid("main recovery duplicate identity or byte limit"));
             }
-            objects.push(object);
+            objects.push((hash, encoded));
         }
         validate_index(root, &objects, proofs)?;
         Ok(Some(Self { directory, names, objects }))
@@ -100,7 +101,12 @@ fn validate_index(
         .any(|(hash, _)| {
             !entries
                 .iter()
-                .any(|entry| entry["hash"].as_str().map(str::trim) == Some(hash.as_str()))
+                .any(|entry| {
+                    entry["hash"]
+                        .as_str()
+                        .map(str::trim)
+                        .is_some_and(|entry_hash| entry_hash.eq_ignore_ascii_case(hash))
+                })
         })
     {
         return Err(invalid("main recovery index repair requires the published runtime"));

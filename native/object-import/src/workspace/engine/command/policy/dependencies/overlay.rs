@@ -23,8 +23,13 @@ pub(super) fn prepare(record: &Record, planned: &planning::Planned) -> io::Resul
             .find(|current| current.target.identity.trim() == row.identity.trim())
             .ok_or_else(|| invalid("command overlay capture"))?;
         for file in &current.target.files {
-            if !row.files.contains(file) {
-                overlay.remove(&root.join(file))?;
+            let trimmed = file.trim();
+            if !trimmed.is_empty()
+                && !row.files
+                    .iter()
+                    .any(|item| item.trim() == trimmed)
+            {
+                overlay.remove(&root.join(trimmed))?;
             }
         }
     }

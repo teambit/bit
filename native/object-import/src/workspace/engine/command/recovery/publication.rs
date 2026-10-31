@@ -67,7 +67,7 @@ fn restore_models(
         let hash = super::super::super::hash(identity.as_bytes());
         if objects
             .iter()
-            .any(|(restored, _)| *restored == hash)
+            .any(|(restored, _)| restored.trim().eq_ignore_ascii_case(&hash))
         {
             *model = record.repository.read(&hash, "Component")?;
         }
@@ -129,7 +129,7 @@ pub(super) fn validate_apply(
         retained.restore.validate()?;
         return Ok(None);
     }
-    if !retained.restored || retained.restored_file_id.as_deref() != Some(&input.file_id) {
+    if !retained.restored || retained.restored_file_id.as_deref() != Some(input.file_id.trim()) {
         return Err(invalid("lane recovery requires restoration"));
     }
     let Some(error) = &input.checkout_error else {
@@ -151,7 +151,7 @@ pub(super) fn failed_checkout(
     let Some(error) = &input.checkout_error else { return Ok(None) };
     if retained.operation != Operation::LaneAbort
         || !retained.restored
-        || retained.restored_file_id.as_deref() != Some(&input.file_id)
+        || retained.restored_file_id.as_deref() != Some(input.file_id.trim())
         || error.message.len() > 16384
     {
         return Err(invalid("recovery checkout error receipt"));

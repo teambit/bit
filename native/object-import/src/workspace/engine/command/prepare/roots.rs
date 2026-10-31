@@ -37,7 +37,7 @@ pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
 }
 
 pub(super) fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
-    let normalized = pattern.replace('\\', "/");
+    let normalized = pattern.trim().replace('\\', "/");
     let directory = normalized
         .strip_prefix("./")
         .unwrap_or(&normalized)
@@ -55,7 +55,13 @@ pub(super) fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec
             target["directory"]
                 .as_str()
                 .or_else(|| target["rootDir"].as_str())
-                .is_some_and(|dir| dir.trim_end_matches('/') == directory)
+                .map(str::trim)
+                .map(|dir| {
+                    dir.strip_prefix("./")
+                        .unwrap_or(dir)
+                        .trim_end_matches('/')
+                })
+                .is_some_and(|dir| dir == directory)
         })
     {
         return Ok(vec![target.clone()]);

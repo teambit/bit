@@ -132,7 +132,9 @@ pub(super) fn check_new_cross_scope_conflict(
         || component["remotes"]
             .as_array()
             .is_some_and(|list| !list.is_empty())
-        || component["head"].is_string()
+        || component["head"]
+            .as_str()
+            .is_some_and(|head| !head.trim().is_empty())
     {
         return Ok(());
     }

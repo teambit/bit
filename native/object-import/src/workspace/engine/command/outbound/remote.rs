@@ -92,6 +92,7 @@ pub(super) fn push(retained: &Retained, pending: &Pending) -> io::Result<()> {
 }
 
 fn check_client_id(client: &str) -> io::Result<()> {
+    let client = client.trim();
     if client.len() > 128
         || client.is_empty()
         || !client

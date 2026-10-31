@@ -63,7 +63,10 @@ pub(super) fn attach(
     }
     let current_id = super::super::lane_context::current_id(&bitmap, &context["scope"])?;
     let imported = imported.ok_or_else(|| invalid("checkout lane import owner"))?;
-    let to_head = request.options.to.as_deref().map(str::trim) == Some("head");
+    let to_head = request.options.to
+        .as_deref()
+        .map(str::trim)
+        .is_some_and(|to| to.eq_ignore_ascii_case("head"));
     let current = if to_head {
         imported.resolve_other_lane(&current_id, false)?
     } else {
@@ -110,9 +113,10 @@ fn inactive_targets(
     let selected = projected
         .into_iter()
         .filter(|row| {
+            let row_id = row["identity"].as_str().map(str::trim);
             !active
                 .iter()
-                .any(|target| target["identity"] == row["identity"])
+                .any(|target| target["identity"].as_str().map(str::trim) == row_id)
         })
         .collect::<Vec<_>>();
     if selected.is_empty() {
@@ -137,10 +141,7 @@ fn additions(
     bitmap: &Value,
     current: &command_import::lane::Record,
 ) -> io::Result<Additions> {
-    let selected = selected(request, context)?
-        .into_iter()
-        .filter_map(|target| target["identity"].as_str().map(str::to_owned))
-        .collect::<std::collections::HashSet<_>>();
+    let selected = selected_identities(request, context)?;
     let settings = config::configuration_value(
         &request.root,
         &status_context::configuration::effective(&request.root, &request.home)?,
@@ -176,42 +177,60 @@ fn additions(
     Ok(result)
 }
 
+fn selected_identities(
+    request: &Prepare,
+    context: &Value,
+) -> io::Result<std::collections::HashSet<String>> {
+    Ok(selected(request, context)?
+        .into_iter()
+        .filter_map(|target| {
+            target["identity"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .map(str::to_owned)
+        })
+        .collect())
+}
+
 fn collect_candidate(
     entry: &command_import::lane::Entry,
     imported: &mut command_import::PreparedImport,
     candidates: &Candidates<'_>,
     result: &mut Additions,
 ) -> io::Result<()> {
-    if candidates.selected.contains(&entry.identity) || entry.hidden {
+    let identity = entry.identity.trim();
+    if candidates.selected.contains(identity) || entry.hidden {
         return Ok(());
     }
-    let version = imported.lane_version(&entry.head)?;
+    let version = imported.lane_version(entry.head.trim())?;
     if super::super::selection::removed(&version)? {
         return Ok(());
     }
-    result.names.push(format!("{}@{}", entry.identity, entry.head));
+    result.names.push(format!("{identity}@{}", entry.head.trim()));
     if candidates.workspace_only {
         return Ok(());
     }
-    if candidates.tracked.contains(&entry.identity) {
+    if candidates.tracked.contains(identity) {
         let target = candidates.targets
             .iter()
             .chain(candidates.inactive)
-            .find(|row| row["identity"] == entry.identity)
+            .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
             .ok_or_else(|| invalid("checkout inactive lane row requires canonical writer"))?;
         let directory = target["directory"]
             .as_str()
-            .filter(|dir| !dir.trim().is_empty())
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
             .ok_or_else(|| invalid("checkout tracked lane directory"))?;
         if missing_root(&candidates.root.join(directory))? {
-            result.prospective.push(json!({"identity":entry.identity,"head":entry.head,
+            result.prospective.push(json!({"identity":identity,"head":entry.head.trim(),
                 "visible":false,"hidden":false,"currentIdPresent":false,"bitmapPresent":true}));
             return Ok(());
         }
         result.tracked.push(target.clone());
         return Ok(());
     }
-    result.prospective.push(json!({"identity":entry.identity,"head":entry.head,
+    result.prospective.push(json!({"identity":identity,"head":entry.head.trim(),
         "visible":false,"hidden":false,"currentIdPresent":false,"bitmapPresent":false}));
     Ok(())
 }
@@ -243,4 +262,22 @@ pub(super) fn bitmap_identities(bitmap: &Value) -> io::Result<std::collections::
             Ok(format!("{scope}/{name}"))
         })
         .collect()
+}
+
+pub(super) fn selected_heads(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
+    let entries = command_import::lane::entries(&context["lane"]["current"]["value"])?;
+    let heads = entries
+        .into_iter()
+        .filter(|entry| !entry.hidden)
+        .map(|entry| entry.identity.trim().to_owned())
+        .collect::<std::collections::HashSet<_>>();
+    Ok(targets
+        .iter()
+        .filter(|target| {
+            target["identity"]
+                .as_str()
+                .is_some_and(|id| heads.contains(id.trim()))
+        })
+        .cloned()
+        .collect())
 }

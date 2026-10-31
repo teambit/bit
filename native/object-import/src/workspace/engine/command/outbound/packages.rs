@@ -24,18 +24,14 @@ pub(super) fn prepare(input: &Prepare, plan: &Plan) -> io::Result<Prepared> {
     let mut prepared = Prepared {
         proofs,
         context: json!({"workspace":workspace,"targets":targets}),
-        cloud: super::hub::configuration(input)?
-            .get("cloud_domain")
-            .and_then(Value::as_str)
-            .unwrap_or("bit.cloud")
-            .to_owned(),
+        cloud: cloud_domain(input)?,
         ..Prepared::default()
     };
     prepared.roots = roots(input, &workspace)?;
     let index = config::document(&crate::scope_path(&input.root).join("index.json"))?;
     let hashes = plan.pending
         .iter()
-        .flat_map(|batch| batch.objects.iter().map(|object| object.hash.as_str()))
+        .flat_map(|batch| batch.objects.iter().map(|object| object.hash.trim()))
         .collect::<HashSet<_>>();
     for target in &targets {
         if eligible(target)
@@ -53,6 +49,16 @@ pub(super) fn prepare(input: &Prepare, plan: &Plan) -> io::Result<Prepared> {
     }
     prepared.validate()?;
     Ok(prepared)
+}
+
+fn cloud_domain(input: &Prepare) -> io::Result<String> {
+    Ok(super::hub::configuration(input)?
+        .get("cloud_domain")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|domain| !domain.is_empty())
+        .unwrap_or("bit.cloud")
+        .to_owned())
 }
 
 fn roots(input: &Prepare, workspace: &Value) -> io::Result<Option<std::path::PathBuf>> {
@@ -117,6 +123,7 @@ fn component(
     let (scope, name) = identity
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .ok_or_else(|| invalid("export package scope"))?;
     let rows = index["components"]
         .as_array()
@@ -129,7 +136,11 @@ fn component(
     else {
         return Ok(None);
     };
-    let hash = row["hash"].as_str().ok_or_else(|| invalid("export package model"))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| hash.len() >= 3)
+        .ok_or_else(|| invalid("export package model"))?;
     if !resume && !hashes.contains(hash) {
         return Ok(None);
     }
@@ -226,8 +237,11 @@ fn files(version: &Value) -> io::Result<Vec<String>> {
         .ok_or_else(|| invalid("export package files"))?
         .iter()
         .map(|file| {
-            let path =
-                file["relativePath"].as_str().ok_or_else(|| invalid("export package file"))?;
+            let path = file["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+                .ok_or_else(|| invalid("export package file"))?;
             crate::checkout::plan::relative_path(path)?;
             Ok(path.to_owned())
         })
@@ -290,8 +304,9 @@ impl Prepared {
             .iter()
             .filter(|row| {
                 ids.is_none_or(|ids| {
+                    let row_id = row["target"]["identity"].as_str().map(str::trim);
                     ids.iter()
-                        .any(|id| row["target"]["identity"] == *id)
+                        .any(|id| row_id == Some(id.trim()))
                 })
             })
             .cloned()

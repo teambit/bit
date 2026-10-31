@@ -63,14 +63,14 @@ impl Repository {
         reference: &str,
         kind: &str,
     ) -> io::Result<Value> {
-        let reference = reference.trim();
-        let hash = crate::merge_history::hash(reference)?;
+        let hash = crate::merge_history::hash(reference.trim())?;
+        let reference = crate::validate::hexadecimal(&hash);
         if let Some(imported) = &self.imported
-            && let Some(value) = imported.overlay.read(reference, kind)?
+            && let Some(value) = imported.overlay.read(&reference, kind)?
         {
             return Ok(value.clone());
         }
-        let key = (reference.to_owned(), kind.to_owned());
+        let key = (reference.clone(), kind.to_owned());
         if let Some(value) = self.values.get(&key) {
             return Ok(value.clone());
         }
@@ -95,17 +95,18 @@ impl Repository {
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
                 let (_, name) = normalized
                     .split_once('/')
-                    .filter(|(scope, _)| !scope.is_empty())
+                    .filter(|(scope, _)| !scope.trim().is_empty())
                     .ok_or(error)?;
-                self.read(&super::super::hash(name.as_bytes()), "Component")
+                self.read(&super::super::hash(name.trim().as_bytes()), "Component")
             }
             Err(error) => Err(error),
         }
     }
     pub(super) fn resolve_short(&mut self, prefix: &str) -> io::Result<String> {
-        let refs = self.matching_short(prefix)?;
-        let resolved = short_refs::unique(prefix, &refs)?;
-        self.short_refs.insert(prefix.to_string(), refs);
+        let prefix = prefix.trim().to_ascii_lowercase();
+        let refs = self.matching_short(&prefix)?;
+        let resolved = short_refs::unique(&prefix, &refs)?;
+        self.short_refs.insert(prefix, refs);
         Ok(resolved)
     }
 

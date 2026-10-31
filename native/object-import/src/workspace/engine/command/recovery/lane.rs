@@ -62,9 +62,9 @@ fn read_backup(root: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<(Strin
     if fields.len() != 3 || fields[0] != "Lane" {
         return Err(invalid("recovery Lane type"));
     }
-    crate::merge_history::hash(fields[1])?;
+    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(fields[1])?);
     let value: Value = crate::parse_jsonc(&raw[nul + 1..]).map_err(io::Error::other)?;
-    Ok((fields[1].to_owned(), value))
+    Ok((hash, value))
 }
 fn validate_index(
     root: &Path,
@@ -83,7 +83,10 @@ fn validate_index(
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| {
-                    row["hash"] == hash
+                    row["hash"]
+                        .as_str()
+                        .map(str::trim)
+                        .is_some_and(|row_hash| row_hash.eq_ignore_ascii_case(hash))
                         && super::super::inbound::remote::file_list::row_lane_matches(
                             row, scope, name,
                         )

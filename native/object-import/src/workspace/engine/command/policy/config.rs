@@ -14,6 +14,10 @@ pub(super) fn merge(
     semver: &Value,
     labels: &Value,
 ) -> io::Result<(Value, Value)> {
+    let identity = identity.trim();
+    let strategy = strategy
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
     let entries = projection::entries;
     let input = json!({"compIdStr":identity,"current":entries(current)?,
         "base":entries(&versions[0]["extensions"])?,

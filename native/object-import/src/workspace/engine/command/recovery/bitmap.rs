@@ -40,7 +40,8 @@ fn project_with(
     let mut projected = bitmap.clone();
     let mut configs = HashMap::new();
     for (key, row) in projected.as_object_mut().ok_or_else(|| invalid("recovery bitmap"))? {
-        if key.starts_with('$') || matches!(key.as_str(), "_bit_lane" | "version") {
+        let trimmed_key = key.trim();
+        if trimmed_key.starts_with('$') || matches!(trimmed_key, "_bit_lane" | "version") {
             continue;
         }
         let object = row.as_object_mut().ok_or_else(|| invalid("recovery bitmap component"))?;
@@ -52,6 +53,11 @@ fn project_with(
             .get("rootDir")
             .and_then(Value::as_str)
             .map(str::trim)
+            .map(|dir| {
+                dir.strip_prefix("./")
+                    .unwrap_or(dir)
+                    .trim_end_matches('/')
+            })
             .filter(|directory| !directory.is_empty())
             .ok_or_else(|| invalid("recovery bitmap directory"))?;
         if configs.insert(directory.to_owned(), config).is_some() {
@@ -90,7 +96,7 @@ fn validate(config: &Value) -> io::Result<()> {
         // custom provider configuration remains outside this command boundary.
         if object
             .keys()
-            .any(|key| bare != "teambit.dependencies/dependency-resolver" || key != "policy")
+            .any(|key| bare != "teambit.dependencies/dependency-resolver" || key.trim() != "policy")
         {
             return Err(invalid("recovery bitmap provider configuration"));
         }

@@ -73,7 +73,10 @@ fn checkout_captured(
     }
     missing_reset::report_if_applicable(record, &mut plan, recovery_reset)?;
     if record.request.operation == input::Operation::Checkout
-        && record.request.options.to.as_deref() == Some("head")
+        && record.request.options.to
+            .as_deref()
+            .map(str::trim)
+            .is_some_and(|to| to.eq_ignore_ascii_case("head"))
         && record.context.get("lane").is_some()
     {
         checkout_lane::prepare(record, &mut plan, snapshots)?;
@@ -81,12 +84,16 @@ fn checkout_captured(
     checkout_scope::prepare_if_enabled(record, &mut plan, snapshots)?;
     if let Some(to) = record.request.options.to.as_deref().map(str::trim)
         && !to.is_empty()
-        && !matches!(to, "head" | "latest" | "reset" | "main")
-        && !to.starts_with("head~")
+        && !is_keyword_target(to)
     {
         plan.result["version"] = json!(to);
     }
     Ok(plan)
+}
+
+fn is_keyword_target(to: &str) -> bool {
+    let lower = to.to_ascii_lowercase();
+    matches!(lower.as_str(), "head" | "latest" | "reset" | "main") || lower.starts_with("head~")
 }
 
 pub(super) fn validate_current(record: &Record, current: &[Value]) -> io::Result<()> {
@@ -172,9 +179,15 @@ fn failure(result: &mut Value, target: &Value, selected: &Value) -> io::Result<(
     if selected["legitimate"] != true || selected["shouldBeRemoved"] == true {
         return Err(invalid("command checkout failure requires canonical error"));
     }
-    let identity =
-        target["identity"].as_str().ok_or_else(|| invalid("command failure identity"))?;
-    let version = target["version"].as_str().unwrap_or_default();
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("command failure identity"))?;
+    let version = target["version"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
     result["failedComponents"]
         .as_array_mut()
         .ok_or_else(|| invalid("command failures"))?
@@ -221,7 +234,9 @@ pub(super) fn prepare_one(
         .as_array_mut()
         .ok_or_else(|| invalid("command results"))?
         .push(material.output.clone());
-    if material.has_conflicts && record.request.options.strategy.as_deref() == Some("manual") {
+    if material.has_conflicts
+        && record.request.options.strategy.as_deref().map(str::trim) == Some("manual")
+    {
         plan.result["leftUnresolvedConflicts"] = json!(true);
     }
     plan.materials.push(material);
@@ -243,11 +258,19 @@ pub(super) fn validate_sources(plan: &Planned) -> io::Result<()> {
     let mut total = 0;
     for file in files {
         let path = std::path::Path::new(
-            file["path"].as_str().ok_or_else(|| invalid("command source path"))?,
+            file["path"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+                .ok_or_else(|| invalid("command source path"))?,
         );
         let bytes = super::super::read::raw(path, crate::workspace::snapshots::MAX_BYTES - total)?;
         total += bytes.len();
-        if super::super::hash(&bytes) != file["rawHash"] {
+        let expected = file["rawHash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("command workspace source changed"))?;
+        if !super::super::hash(&bytes).eq_ignore_ascii_case(expected) {
             return Err(invalid("command workspace source changed"));
         }
     }

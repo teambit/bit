@@ -57,6 +57,22 @@ fn staged_row_matches(row: &Value, scope: &str, name: &str) -> bool {
         && (row_scope.is_empty() || row_scope == scope)
 }
 
+fn resume_promotions(
+    selected: &[(String, String, String)],
+    acknowledged: &HashSet<String>,
+) -> Vec<(String, String)> {
+    let mut promotions = selected
+        .iter()
+        .filter(|(scope, name, version)| {
+            acknowledged.contains(&format!("{}/{}@{}", scope.trim(), name.trim(), version.trim()))
+        })
+        .map(|(scope, name, _)| (scope.trim().to_owned(), name.trim().to_owned()))
+        .collect::<Vec<_>>();
+    let mut seen = HashSet::new();
+    promotions.retain(|identity| seen.insert(identity.clone()));
+    promotions
+}
+
 impl Prepared {
     pub(in super::super) fn resume_acknowledgement(
         &mut self,
@@ -65,27 +81,23 @@ impl Prepared {
     ) -> io::Result<()> {
         let selected_ids = selected
             .iter()
-            .map(|(scope, name, version)| format!("{scope}/{name}@{version}"))
+            .map(|(scope, name, version)| {
+                format!("{}/{}@{}", scope.trim(), name.trim(), version.trim())
+            })
             .collect::<HashSet<_>>();
         if selected_ids != self.expected_ids {
             return Err(invalid("outbound resume selection changed"));
         }
         let acknowledged = exported_ids
             .iter()
-            .cloned()
+            .map(|id| id.trim())
+            .filter(|id| !id.is_empty())
+            .map(str::to_owned)
             .collect::<HashSet<_>>();
         if acknowledged.len() != exported_ids.len() || !acknowledged.is_subset(&selected_ids) {
             return Err(invalid("outbound resume acknowledgement"));
         }
-        let mut promotions = selected
-            .iter()
-            .filter(|(scope, name, version)| {
-                acknowledged.contains(&format!("{scope}/{name}@{version}"))
-            })
-            .map(|(scope, name, _)| (scope.clone(), name.clone()))
-            .collect::<Vec<_>>();
-        let mut seen = HashSet::new();
-        promotions.retain(|identity| seen.insert(identity.clone()));
+        let promotions = resume_promotions(selected, &acknowledged);
         let bitmap = crate::recovery::jsonc::parse(&fs::read(self.root.join(".bitmap"))?)?;
         let tracked = promotions
             .iter()
@@ -154,6 +166,7 @@ pub(in super::super) fn present(bitmap: &Value, scope: &str, name: &str) -> bool
 }
 
 fn row_matches_present(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
+    let key = key.trim();
     if key.starts_with('$')
         || matches!(key, "_bit_lane" | "version")
         || !row.is_object()
@@ -162,25 +175,29 @@ fn row_matches_present(key: &str, row: &Value, scope: &str, name: &str, full: &s
     {
         return false;
     }
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
-    let name_matches = row["name"] == name || key_id == name || key_id == full;
-    let scope_matches = row["scope"] == scope
-        || (row["scope"]
-            .as_str()
-            .unwrap_or_default()
-            .is_empty()
-            && (row["defaultScope"] == scope || key_id == full));
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
+    let row_scope = row["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    let default_scope = row["defaultScope"].as_str().map(str::trim);
+    let name_matches =
+        row["name"].as_str().map(str::trim) == Some(name) || key_id == name || key_id == full;
+    let scope_matches = row_scope == scope
+        || (row_scope.is_empty() && (default_scope == Some(scope) || key_id == full));
     name_matches && scope_matches
 }
 
 fn row_is_promoted(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
-    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let key = key.trim();
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
     row_matches_present(key, row, scope, name, full)
         && row["scope"]
             .as_str()
+            .map(str::trim)
             .unwrap_or_default()
             .is_empty()
-        && (row["defaultScope"] == scope || key_id == full)
+        && (row["defaultScope"].as_str().map(str::trim) == Some(scope) || key_id == full)
 }
 
 fn updates(bitmap: &Value, promotions: &[(String, String)]) -> Vec<String> {

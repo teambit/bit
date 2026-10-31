@@ -159,6 +159,12 @@ fn attach(
     {
         if let Some(config) = target["directory"]
             .as_str()
+            .map(str::trim)
+            .map(|dir| {
+                dir.strip_prefix("./")
+                    .unwrap_or(dir)
+                    .trim_end_matches('/')
+            })
             .and_then(|directory| bitmap_configs.get(directory))
         {
             target["bitmapConfig"] = config.clone();
@@ -174,7 +180,11 @@ fn capture_controls(
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
     for target in targets {
-        let directory = target["directory"].as_str().ok_or_else(|| invalid("recovery root"))?;
+        let directory = target["directory"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+            .ok_or_else(|| invalid("recovery root"))?;
         let path = request.root.join(directory);
         let metadata = std::fs::symlink_metadata(&path);
         match metadata {
@@ -197,12 +207,19 @@ fn select(context: &Value, pending: &Value, request: &Prepare) -> io::Result<(Ve
     if request.operation == Operation::LaneAbort {
         return Ok((targets.clone(), json!([])));
     }
-    if request.options.pattern.is_none() {
+    if request.options.pattern
+        .as_deref()
+        .is_none_or(|pat| pat.trim().is_empty())
+    {
         return pending_targets(targets, rows);
     }
     let mut selected = Vec::new();
     for target in targets {
-        let identity = target["identity"].as_str().ok_or_else(|| invalid("recovery identity"))?;
+        let identity = target["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("recovery identity"))?;
         let marked = rows
             .iter()
             .any(|row| pending_id(row).as_deref() == Some(identity));
@@ -218,16 +235,19 @@ fn select(context: &Value, pending: &Value, request: &Prepare) -> io::Result<(Ve
     if selected.len() != 1 {
         return Err(invalid("recovery unresolved selection empty"));
     }
-    let remaining = rows
-        .iter()
+    Ok((selected.clone(), json!(remaining_rows(rows, &selected))))
+}
+
+fn remaining_rows(rows: &[Value], selected: &[Value]) -> Vec<Value> {
+    rows.iter()
         .filter(|row| {
+            let row_id = pending_id(row);
             !selected
                 .iter()
-                .any(|target| pending_id(row).as_deref() == target["identity"].as_str())
+                .any(|target| row_id.as_deref() == target["identity"].as_str().map(str::trim))
         })
         .cloned()
-        .collect::<Vec<_>>();
-    Ok((selected, json!(remaining)))
+        .collect()
 }
 fn pending_targets(targets: &[Value], rows: &[Value]) -> io::Result<(Vec<Value>, Value)> {
     if rows.is_empty() {
@@ -243,7 +263,9 @@ fn pending_targets(targets: &[Value], rows: &[Value]) -> io::Result<(Vec<Value>,
             }
             targets
                 .iter()
-                .find(|target| target["identity"] == identity)
+                .find(|target| {
+                    target["identity"].as_str().map(str::trim) == Some(identity.as_str())
+                })
                 .cloned()
                 .ok_or_else(|| invalid("recovery unresolved component outside workspace"))
         })
@@ -262,9 +284,10 @@ fn validate_pending_configuration(
         return Err(invalid("recovery pending configuration conflict"));
     }
     for row in pending.as_array().ok_or_else(|| invalid("recovery pending records"))? {
+        let row_id = pending_id(row);
         let selected = targets
             .iter()
-            .any(|target| pending_id(row).as_deref() == target["identity"].as_str());
+            .any(|target| row_id.as_deref() == target["identity"].as_str().map(str::trim));
         if selected
             && !row["mergedConfig"].is_null()
             && !row["mergedConfig"].as_object().is_some_and(serde_json::Map::is_empty)

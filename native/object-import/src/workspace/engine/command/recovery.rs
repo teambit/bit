@@ -105,7 +105,7 @@ pub(in crate::workspace::engine) fn plan(
     let mut retained =
         snapshots.command.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
     let token = input.token.trim();
-    if retained.record.token != token {
+    if token.is_empty() || retained.record.token.trim() != token {
         return Err(invalid("recovery token changed"));
     }
     proof::verify(&input.dependency_read_set)?;
@@ -140,7 +140,8 @@ pub(in crate::workspace::engine) fn apply(
     let file_id = input.file_id.trim();
     super::bitmap::validate_history_file_id(file_id)?;
     let mut retained = state.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
-    if retained.record.token != input.token.trim() {
+    let token = input.token.trim();
+    if token.is_empty() || retained.record.token.trim() != token {
         return Err(invalid("recovery token changed"));
     }
     if let Some(result) = publication::failed_checkout(input, &retained)? {

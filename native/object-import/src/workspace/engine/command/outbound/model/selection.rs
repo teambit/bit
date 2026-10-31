@@ -32,7 +32,7 @@ fn head_only(model: &Value) -> io::Result<Staged> {
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter())
         .filter(|(_, hash)| hash.as_str().map(str::trim) == Some(head))
-        .map(|(tag, _)| tag.as_str())
+        .map(|(tag, _)| tag.trim())
         .collect::<Vec<_>>();
     let version = match labels.as_slice() {
         [] => head,

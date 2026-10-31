@@ -49,7 +49,7 @@ fn collect(entries: fs::ReadDir, prefix: &str, refs: &mut BTreeSet<String>) -> i
         }
         let name = entry?.file_name();
         let Some(name) = name.to_str() else { continue };
-        let hash = format!("{}{}", &prefix[..2], name.to_ascii_lowercase());
+        let hash = format!("{}{}", &prefix[..2], name.trim().to_ascii_lowercase());
         if hash.starts_with(prefix) && crate::merge_history::hash(&hash).is_ok() {
             refs.insert(hash);
         }
@@ -58,6 +58,7 @@ fn collect(entries: fs::ReadDir, prefix: &str, refs: &mut BTreeSet<String>) -> i
 }
 
 pub(super) fn unique(prefix: &str, refs: &[String]) -> io::Result<String> {
+    let prefix = prefix.trim();
     match refs {
         [reference] => Ok(reference.clone()),
         [] => Err(super::super::super::response::canonical(format!(

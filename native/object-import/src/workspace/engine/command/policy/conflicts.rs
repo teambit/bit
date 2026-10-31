@@ -43,12 +43,12 @@ pub(super) fn prepare(policy: &mut Prepared, root: &Path) -> io::Result<Vec<Valu
             continue;
         }
         let divider = "-".repeat(80);
+        let identity = row.identity.trim();
         sections.push(format!(
-            "{divider}\n[*] {}\n{divider}\n{{\n{}\n}}",
-            row.identity,
+            "{divider}\n[*] {identity}\n{divider}\n{{\n{}\n}}",
             concatenate(conflicts),
         ));
-        results.push(json!({"compIdStr":row.identity,"hasConflicts":true}));
+        results.push(json!({"compIdStr":identity,"hasConflicts":true}));
     }
     if !sections.is_empty() {
         let file = File {

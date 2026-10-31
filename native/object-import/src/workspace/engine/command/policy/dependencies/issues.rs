@@ -37,9 +37,10 @@ pub(super) fn capture(
         }
     }
     if !row.fast_forward {
-        output.push(
-            json!({"id":format!("{}@{}", row.identity, row.baseline.version),"issues":issues}),
-        );
+        output.push(json!({
+            "id":format!("{}@{}", row.identity.trim(), row.baseline.version.trim()),
+            "issues":issues,
+        }));
     }
     Ok(())
 }
@@ -85,7 +86,10 @@ pub(super) fn target(row: &Row, state: &Value, issues: &Value) -> io::Result<Val
             dependencies.push(identity);
         }
     }
-    Ok(
-        json!({"identity":format!("{}@{}", row.identity, row.baseline.version),"packageName":row.baseline.package_name,"dependencies":dependencies,"issues":issues}),
-    )
+    Ok(json!({
+        "identity":format!("{}@{}", row.identity.trim(), row.baseline.version.trim()),
+        "packageName":row.baseline.package_name.trim(),
+        "dependencies":dependencies,
+        "issues":issues,
+    }))
 }

@@ -43,9 +43,12 @@ fn stage_heads<'a>(
     head: Option<&'a str>,
     remote: Option<&'a str>,
 ) -> Option<[Option<&'a str>; 2]> {
+    let lower = to.to_ascii_lowercase();
     match stage {
-        Some("resolveTarget") if to.starts_with("head~") => Some([head, None]),
-        Some("resolveTarget") if resolves_heads(to, model, head, remote) => Some([head, remote]),
+        Some("resolveTarget") if lower.starts_with("head~") => Some([head, None]),
+        Some("resolveTarget") if resolves_heads(&lower, model, head, remote) => {
+            Some([head, remote])
+        }
         Some("hasVersion") if crate::merge_history::hash(to).is_ok() => Some([head, None]),
         Some("mergePending") => Some([head, remote]),
         _ => None,
@@ -59,8 +62,11 @@ fn resolves_heads(to: &str, model: &Value, head: Option<&str>, remote: Option<&s
     let remote = remote
         .map(str::trim)
         .filter(|val| !val.is_empty());
-    let latest_without_tags = to == "latest"
+    let latest_without_tags = to.eq_ignore_ascii_case("latest")
         && model["versions"].as_object().is_none_or(serde_json::Map::is_empty)
         && model["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty);
-    (to == "head" || latest_without_tags) && head.is_some() && remote.is_some() && head != remote
+    (to.eq_ignore_ascii_case("head") || latest_without_tags)
+        && head.is_some()
+        && remote.is_some()
+        && head != remote
 }

@@ -116,7 +116,7 @@ fn staged_controls(prepared: &mut Prepared, proofs: &mut Vec<proof::Proof>) -> i
     let backup = crate::scope_path(root).join("last-merged");
     let lane_id = prepared.objects.lane
         .as_ref()
-        .map(|lane| lane.id.trim())
+        .map(|lane| lane.id.trim().trim_matches('/'))
         .filter(|id| !id.is_empty())
         .unwrap_or("main");
     let staged_config = format!("staged-config/{lane_id}.json");

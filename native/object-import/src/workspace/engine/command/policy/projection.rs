@@ -41,19 +41,27 @@ pub(in crate::workspace::engine::command) fn extensions(
     defaults: &Defaults,
     package_name: &str,
 ) -> io::Result<Value> {
-    if !defaults.env["id"].is_string() || !defaults.env["data"].is_object() {
+    if defaults.env["id"]
+        .as_str()
+        .is_none_or(|id| id.trim().is_empty())
+        || !defaults.env["data"].is_object()
+    {
         return Err(invalid("command default Node descriptor"));
     }
+    let prefix = defaults.component_range_prefix
+        .as_deref()
+        .map(str::trim)
+        .filter(|prefix| !prefix.is_empty());
     let mut entries = configured_entries(stored, configs)?;
     upsert(&mut entries, "teambit.envs/envs", &defaults.env["data"])?;
     upsert(
         &mut entries,
         RESOLVER,
-        &json!({"packageName":package_name,
+        &json!({"packageName":package_name.trim(),
         "dependencies":dependencies(state, &defaults.policy_entries)?,
-        "policy":defaults.policy_entries,"componentRangePrefix":defaults.component_range_prefix}),
+        "policy":defaults.policy_entries,"componentRangePrefix":prefix}),
     )?;
-    if defaults.component_range_prefix.is_none() {
+    if prefix.is_none() {
         entries
             .iter_mut()
             .find(|row| row["name"] == RESOLVER)
@@ -233,17 +241,7 @@ fn dependencies(state: &Value, policies: &[Value]) -> io::Result<Vec<Value>> {
 
 fn tag_dependencies(rows: &mut [Value], policies: &[Value]) {
     for row in rows {
-        let policy = policies
-            .iter()
-            .find(|policy| policy["dependencyId"] == row["id"])
-            .or_else(|| {
-                policies
-                    .iter()
-                    .find(|policy| {
-                        !row["packageName"].is_null()
-                            && policy["dependencyId"] == row["packageName"]
-                    })
-            });
+        let policy = matching_policy(row, policies);
         row["source"] = policy
             .and_then(|policy| policy.get("source"))
             .cloned()
@@ -254,6 +252,24 @@ fn tag_dependencies(rows: &mut [Value], policies: &[Value]) {
             }
         }
     }
+}
+
+fn matching_policy<'a>(row: &Value, policies: &'a [Value]) -> Option<&'a Value> {
+    let id = row["id"].as_str().map(str::trim);
+    let pkg = row["packageName"]
+        .as_str()
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty());
+    policies
+        .iter()
+        .find(|policy| policy["dependencyId"].as_str().map(str::trim) == id)
+        .or_else(|| {
+            pkg.and_then(|pkg| {
+                policies
+                    .iter()
+                    .find(|policy| policy["dependencyId"].as_str().map(str::trim) == Some(pkg))
+            })
+        })
 }
 
 fn order_dependencies(rows: &mut [Value]) {

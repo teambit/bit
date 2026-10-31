@@ -90,12 +90,15 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
     safe_segment(&selected.scope)?;
     safe_segment(&selected.name)?;
     super::super::bitmap::validate_history_file_id(&input.transport.bitmap_history_file_id)?;
-    if selected.lane["scope"] != selected.scope || selected.lane["name"] != selected.name {
+    if selected.lane["scope"].as_str().map(str::trim) != Some(selected.scope.trim())
+        || selected.lane["name"].as_str().map(str::trim) != Some(selected.name.trim())
+    {
         return Err(invalid("outbound lane publication identity"));
     }
     let expected_ids = selected.components.expected_ids
         .iter()
-        .cloned()
+        .map(|id| id.trim().to_owned())
+        .filter(|id| !id.is_empty())
         .collect::<HashSet<_>>();
     if expected_ids.len() != selected.components.expected_ids.len() {
         return Err(invalid("outbound lane publication acknowledgement"));
@@ -105,7 +108,10 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
             root: root.clone(),
             file_id: input.transport.bitmap_history_file_id.clone(),
         },
-        lane: Lane { scope: selected.scope.clone(), name: selected.name.clone() },
+        lane: Lane {
+            scope: selected.scope.trim().to_owned(),
+            name: selected.name.trim().to_owned(),
+        },
         acknowledgement: Acknowledgement { expected: expected_ids },
         objects: prepare_objects(root, selected)?,
         models: selected.components.models
@@ -214,12 +220,13 @@ fn prepare_staged(root: &Path, selected: &LaneSelected) -> io::Result<Staged> {
     }
     let config_path = crate::scope_path(root)
         .join("staged-config")
-        .join(&selected.scope)
-        .join(format!("{}.json", selected.name));
+        .join(selected.scope.trim())
+        .join(format!("{}.json", selected.name.trim()));
     let before = read_optional(&config_path)?;
     let expected = selected.components.expected_ids
         .iter()
-        .cloned()
+        .map(|id| id.trim().to_owned())
+        .filter(|id| !id.is_empty())
         .collect::<HashSet<_>>();
     let config = before
         .map(|before| -> io::Result<Change> {

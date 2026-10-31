@@ -68,7 +68,7 @@ pub(super) fn selection_history(input: &Prepare) -> io::Result<prefilter::Prepar
 
 pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
     let scope = crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
-    if scope["lanes"]["current"] != "main" {
+    if scope["lanes"]["current"].as_str().map(str::trim) != Some("main") {
         return Err(invalid("outbound lane export"));
     }
     let Some(rows) = read_index_rows(&input.root)? else { return Ok(Vec::new()) };
@@ -217,31 +217,21 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
     let (identity, version) = id
         .rsplit_once('@')
         .map_or((id, None), |(identity, version)| (identity.trim(), Some(version.trim())));
-    let matching_version = |model: &Value| {
-        version.is_none_or(|version| {
-            version.is_empty()
-                || matches!(version, "latest" | "head")
-                || Some(version) == model["head"].as_str()
-                || model["versions"][version]
-                    .as_str()
-                    .or_else(|| model["orphanedVersions"][version].as_str())
-                    == model["head"].as_str()
-        })
-    };
-    let scoped = staged
+    if let Some(scoped) = staged
         .iter()
         .find(|(row, model)| {
             row_scoped_id_parts(row)
                 .is_some_and(|(scope, name)| format!("{scope}/{name}") == identity)
-                && matching_version(model)
-        });
-    if let Some(scoped) = scoped {
+                && matches_requested_version(model, version)
+        })
+    {
         return Ok(scoped);
     }
     let unscoped: Vec<&(Value, Value)> = staged
         .iter()
         .filter(|(row, model)| {
-            row_id_parts(row).is_some_and(|(_, name)| name == identity) && matching_version(model)
+            row_id_parts(row).is_some_and(|(_, name)| name == identity)
+                && matches_requested_version(model, version)
         })
         .collect();
     match unscoped.as_slice() {
@@ -249,6 +239,21 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
         [] => Err(invalid("outbound requested component is not staged")),
         _ => Err(invalid("outbound ambiguous unscoped component")),
     }
+}
+
+fn matches_requested_version(model: &Value, version: Option<&str>) -> bool {
+    let head = model["head"].as_str().map(str::trim);
+    version.is_none_or(|ver| {
+        ver.is_empty()
+            || ver.eq_ignore_ascii_case("latest")
+            || ver.eq_ignore_ascii_case("head")
+            || Some(ver) == head
+            || model["versions"][ver]
+                .as_str()
+                .or_else(|| model["orphanedVersions"][ver].as_str())
+                .map(str::trim)
+                == head
+    })
 }
 
 fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Selected> {

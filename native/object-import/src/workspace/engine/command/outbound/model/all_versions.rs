@@ -29,7 +29,9 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
                 .iter()
                 .rev()
                 .filter_map(Value::as_str)
-                .map(|ancestor| ancestor.trim().to_owned()),
+                .map(str::trim)
+                .filter(|ancestor| !ancestor.is_empty())
+                .map(str::to_owned),
         );
         hashes.push(hash);
     }

@@ -11,7 +11,8 @@ pub(super) fn run(
 ) -> io::Result<(usize, Value)> {
     let mut record =
         snapshots.command.record.take().ok_or_else(|| invalid("command owner absent"))?;
-    if record.token != input.token || record.planned.is_some() {
+    let token = input.token.trim();
+    if token.is_empty() || record.token.trim() != token || record.planned.is_some() {
         return Err(invalid("command plan token"));
     }
     proof::verify(&input.dependency_read_set)?;
@@ -239,12 +240,13 @@ pub(super) fn prepare_bitmap_bytes(
         .collect::<io::Result<Vec<_>>>()?;
     if let Some(tracked) = record.context["lane"]["trackedTargets"].as_array() {
         updates.retain(|update| {
+            let (id, ver) = (update.identity.trim(), update.version.trim());
             !tracked
                 .iter()
                 .any(|row| {
-                    row["identity"] == update.identity
-                        && row["version"] == update.version
-                        && bitmap::active_tracked_checkout(&record.context, &update.identity)
+                    row["identity"].as_str().map(str::trim) == Some(id)
+                        && row["version"].as_str().map(str::trim) == Some(ver)
+                        && bitmap::active_tracked_checkout(&record.context, id)
                 })
         });
     }
@@ -300,7 +302,7 @@ fn bitmap_update(
     let main_file = if material.keep_ours {
         record.targets
             .iter()
-            .find(|target| target["identity"] == identity)
+            .find(|target| target["identity"].as_str().map(str::trim) == Some(identity))
             .and_then(|target| target["mainFile"].as_str())
     } else {
         material.version["mainFile"].as_str()
@@ -310,7 +312,7 @@ fn bitmap_update(
     .ok_or_else(|| invalid("command bitmap main file"))?;
     Ok(bitmap::Update {
         identity: identity.to_owned(),
-        version: material.version_name.clone(),
+        version: material.version_name.trim().to_owned(),
         main_file: main_file.to_owned(),
         keep_ours: material.keep_ours,
     })

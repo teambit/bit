@@ -34,7 +34,9 @@ fn history(
     } else {
         json!({"name":name,"scope":scope,"versions":[],"graphCompleteRefs":[]})
     };
-    if value["name"] != name || value["scope"] != scope {
+    if value["name"].as_str().map(str::trim) != Some(name)
+        || value["scope"].as_str().map(str::trim) != Some(scope)
+    {
         return Err(invalid("outbound VersionHistory identity"));
     }
     let rows =
@@ -42,7 +44,13 @@ fn history(
     populate(rows, dir, head)?;
     let hashes = rows
         .iter()
-        .filter_map(|row| row["hash"].as_str().map(str::to_owned))
+        .filter_map(|row| {
+            row["hash"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+        })
+        .map(str::to_owned)
         .collect();
     Ok((encode(history_hash, "VersionHistory", &value)?, hashes))
 }

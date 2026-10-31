@@ -101,9 +101,10 @@ fn collect_known_ids(expected_ids: &HashSet<String>, selected: &[Selected]) -> H
         selected
             .iter()
             .flat_map(|item| {
+                let (scope, name) = (item.scope.trim(), item.name.trim());
                 item.history.hashes
                     .iter()
-                    .map(|hash| format!("{}/{}@{}", item.scope, item.name, hash.trim()))
+                    .map(move |hash| format!("{scope}/{name}@{}", hash.trim()))
             }),
     );
     known_ids
@@ -142,7 +143,7 @@ fn validate_selected(
     }
     let mut scopes = selected
         .iter()
-        .map(|item| item.scope.clone())
+        .map(|item| item.scope.trim().to_owned())
         .collect::<Vec<_>>();
     scopes.sort_unstable();
     scopes.dedup();
@@ -169,11 +170,12 @@ fn expected_ids(selected: &[Selected]) -> io::Result<HashSet<String>> {
     let ids = selected
         .iter()
         .flat_map(|item| {
+            let (scope, name) = (item.scope.trim(), item.name.trim());
             item.labels
                 .iter()
                 .map(|label| label.trim())
                 .filter(|label| !label.is_empty())
-                .map(|label| format!("{}/{}@{label}", item.scope, item.name))
+                .map(move |label| format!("{scope}/{name}@{label}"))
         })
         .collect::<HashSet<_>>();
     if ids.len() != count {
@@ -191,9 +193,10 @@ fn prepare_bitmap(
     let identities = selected
         .iter()
         .filter(|item| {
-            !item.labels.is_empty() && reconcile::present(&bitmap, &item.scope, &item.name)
+            !item.labels.is_empty()
+                && reconcile::present(&bitmap, item.scope.trim(), item.name.trim())
         })
-        .map(|item| (item.scope.clone(), item.name.clone()))
+        .map(|item| (item.scope.trim().to_owned(), item.name.trim().to_owned()))
         .collect::<Vec<_>>();
     super::super::bitmap::prepare_export_scopes(&input.root, original, &identities)
 }
@@ -382,7 +385,7 @@ fn read_optional(path: &Path) -> io::Result<Option<Vec<u8>>> {
 fn refs_path(root: &Path, scope: &str) -> PathBuf {
     crate::scope_path(root)
         .join("refs/remotes")
-        .join(scope)
+        .join(scope.trim())
         .join("main")
 }
 fn write_refs(path: &Path, bytes: &[u8]) -> io::Result<()> {

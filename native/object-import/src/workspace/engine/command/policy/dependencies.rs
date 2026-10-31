@@ -51,7 +51,7 @@ pub(in crate::workspace::engine) fn detect(
 ) -> io::Result<(usize, Value)> {
     let mut record =
         state.record.take().ok_or_else(|| invalid("command dependency owner absent"))?;
-    if record.token != input.token {
+    if input.token.trim().is_empty() || record.token.trim() != input.token.trim() {
         return Err(invalid("command dependency token"));
     }
     let mut prepared = record.planned.take().ok_or_else(|| invalid("command dependency plan"))?;
@@ -118,7 +118,7 @@ pub(in crate::workspace::engine) fn complete(
 ) -> io::Result<(usize, Value)> {
     let mut record =
         state.record.take().ok_or_else(|| invalid("command dependency owner absent"))?;
-    if record.token != input.token {
+    if input.token.trim().is_empty() || record.token.trim() != input.token.trim() {
         return Err(invalid("command dependency token"));
     }
     let mut prepared = record.planned.take().ok_or_else(|| invalid("command dependency plan"))?;
@@ -265,13 +265,13 @@ fn complete_row(
     changed: &HashSet<String>,
     issues: &mut Vec<Value>,
 ) -> io::Result<(Value, Value)> {
-    if row.identity != receipt.identity {
+    if row.identity.trim() != receipt.identity.trim() {
         return Err(invalid("command dependency completion identity"));
     }
     let capture = row.receipts.dependencies
         .take()
         .ok_or_else(|| invalid("command dependency capture absent"))?;
-    let request = serde_json::from_value(json!({"root":record.request.root,"componentRoot":record.request.root.join(&row.baseline.directory),
+    let request = serde_json::from_value(json!({"root":record.request.root,"componentRoot":record.request.root.join(row.baseline.directory.trim()),
             "capture":capture,"policies":receipt.policies,"finish":receipt.finish,"resolution":receipt.resolution})).map_err(io::Error::other)?;
     let (_, output) = fresh::apply_overlay(&request, pool, overlay)?;
     let ignored = ignored_issues_at(&record.request.root)?;
@@ -291,7 +291,7 @@ fn complete_row(
     let read_set = crate::workspace::engine::dependency_graph::proof::unique(read_set);
     record.proofs.extend(read_set.iter().cloned());
     Ok((
-        json!({"identity":format!("{}@{}",row.identity,row.baseline.version),"rawData":output["rawData"],"cacheable":output["cacheable"],"readSet":read_set}),
+        json!({"identity":format!("{}@{}",row.identity.trim(),row.baseline.version.trim()),"rawData":output["rawData"],"cacheable":output["cacheable"],"readSet":read_set}),
         issues::target(row, &output["state"], &output["issues"])?,
     ))
 }
