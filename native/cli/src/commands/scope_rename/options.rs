@@ -3,7 +3,19 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let filtered: Vec<&str> = args
         .iter()
         .copied()
-        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
+        .filter(|arg| {
+            !matches!(
+                *arg,
+                "--no-color"
+                    | "--no-color=true"
+                    | "--no-color=false"
+                    | "--color"
+                    | "--color=true"
+                    | "--color=false"
+                    | "--color=always"
+                    | "--color=never",
+            )
+        })
         .collect();
     let (kind, args) = filtered.split_first()?;
     let owner = match *kind {

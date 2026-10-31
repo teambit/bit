@@ -221,6 +221,7 @@ fn load_unmodified_entry_schema(
 }
 
 fn resolve_version_hash(comp_val: &Value, req_ver: &str) -> Option<String> {
+    let req_ver = req_ver.trim();
     if matches!(req_ver, "" | "latest" | "head") {
         return comp_val["head"].as_str().map(str::to_owned);
     }

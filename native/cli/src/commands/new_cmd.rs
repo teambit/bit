@@ -140,7 +140,8 @@ fn apply_new_token<'a>(
     positionals: &mut Vec<String>,
 ) -> Option<()> {
     match token {
-        "--no-color" | "--no-color=true" | "--no-color=false" | "--standalone"
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" | "--standalone"
         | "--standalone=true" | "--standalone=false" | "--skip-git" | "--skip-git=true"
         | "--skip-git=false" | "-s" | "--empty" | "--empty=true" | "--empty=false" | "-e" => {}
         "--current-dir" | "--current-dir=true" | "-c" => *current_dir = true,

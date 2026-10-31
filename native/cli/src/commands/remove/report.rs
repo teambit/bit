@@ -20,10 +20,10 @@ fn removed_section(format: &Formatter, ids: &[String], location: &str) -> String
         .filter(|id| !id.is_empty())
         .map(|id| format.item(id))
         .collect();
-    if items.is_empty() {
+    let location = location.trim();
+    if items.is_empty() || location.is_empty() {
         return String::new();
     }
-    let location = location.trim();
     format!(
         "{}\n{}",
         format.success_summary(&format!(

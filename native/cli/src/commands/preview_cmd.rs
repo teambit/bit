@@ -122,7 +122,8 @@ pub(super) fn parse_generate_options(args: &[&str]) -> Option<GenerateOptions> {
                 consume_trailing_preview_pattern(iter, &mut options.pattern)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-n" | "--name" => {
                 let val = iter.next()?.trim();
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;

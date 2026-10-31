@@ -315,7 +315,8 @@ fn apply_token<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match arg {
-        "--no-color" | "--no-color=true" | "--no-color=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "-c" | "--changed" | "--changed=true" => options.changed = true,
         "--changed=false" => options.changed = false,
         "-f" | "--fix" | "--fix=true" => options.fix = true,

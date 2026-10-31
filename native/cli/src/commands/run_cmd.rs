@@ -232,7 +232,7 @@ fn apply_inline_or_app(arg: &str, options: &mut Options) -> Option<()> {
         && !arg.trim().is_empty()
         && options.app_name.is_none()
     {
-        options.app_name = Some(arg.to_owned());
+        options.app_name = Some(arg.trim().to_owned());
     } else {
         return None;
     }

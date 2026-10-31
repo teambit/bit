@@ -43,7 +43,11 @@ pub(super) fn retain(startup: &mut Startup, error: &io::Error) {
         .get_ref()
         .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>())
     {
-        startup.stdout.push_str(&error.startup);
-        startup.build_stdout.push_str(&error.output);
+        if !error.startup.is_empty() {
+            startup.stdout.push_str(&error.startup);
+        }
+        if !error.output.is_empty() {
+            startup.build_stdout.push_str(&error.output);
+        }
     }
 }

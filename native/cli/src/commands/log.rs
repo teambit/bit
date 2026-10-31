@@ -117,7 +117,10 @@ fn emit(
 }
 
 fn read_remote(root: Option<&Path>, options: &Options<'_>) -> io::Result<Vec<Value>> {
-    let id = options.id.ok_or_else(|| decline("remote log id"))?;
+    let id = options.id
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| decline("remote log id"))?;
     let cli = NodeCli::find()?;
     let response: Value = Engine::new()?
         .request(&json!({

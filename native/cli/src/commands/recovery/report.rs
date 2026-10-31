@@ -100,6 +100,8 @@ fn lane_checkout_error(map: &serde_json::Map<String, Value>, chalk: Chalk) -> io
         .map(|value| text(value.get("message")))
         .transpose()?;
     Ok(message
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
         .map(|msg| chalk.red(&format!("\n\nFailed to change component files to the pre-merge state due to an error:\n{msg}\nplease fix the error and then run \"bit checkout reset --all\" to revert the components to the pre-merge state")))
         .unwrap_or_default())
 }

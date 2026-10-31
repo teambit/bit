@@ -86,7 +86,8 @@ fn prepared_rows(
     let mut rows = if options.remote.is_some() {
         remote::list(root, options, session)?
     } else {
-        list(root.unwrap(), options, session)?
+        let root = root.ok_or_else(|| decline("not inside a workspace"))?;
+        list(root, options, session)?
     };
     sort(&mut rows)?;
     if options.outdated && !options.json && !options.ids {

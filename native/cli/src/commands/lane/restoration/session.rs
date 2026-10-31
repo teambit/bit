@@ -164,7 +164,7 @@ fn select(
             "kind":"commandLaneHistoryPrepare","root":root,"home":workspace_command::home(),
             "globalRemotesFile":config.join("global-remotes.json"),
             "globalConfigDir":config,"nodeExecutable":cli.node,"bitDir":cli.bit_dir,"bitVersion":cli.version,
-            "id":options.id,"revert":options.revert,"restoreDeleted":options.restore_deleted,
+            "id":options.id.trim(),"revert":options.revert,"restoreDeleted":options.restore_deleted,
         })).inspect_err(|error| {
             if let Some(progress)=crate::commands::engine::canonical_progress(error)
                 && progress["bitmapCount"].is_u64() {

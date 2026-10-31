@@ -40,6 +40,9 @@ pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {
 
 /// `cli-table` styles its middle border separately from plain cell padding.
 pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &str) -> String {
+    if rows.is_empty() {
+        return String::new();
+    }
     let widths = column_widths(rows);
     let mut lines = Vec::new();
     for row in rows {

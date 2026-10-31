@@ -74,7 +74,7 @@ impl Session {
 
     pub(super) fn add_warning(&mut self, warning: &str) {
         self.owned = true;
-        self.warning = Some(warning.to_owned());
+        self.warning = Some(warning.trim().to_owned());
     }
 
     pub(super) fn resolve(&mut self, scopes: &[String]) -> io::Result<()> {

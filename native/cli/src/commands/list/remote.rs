@@ -80,6 +80,7 @@ fn row(value: &Value) -> io::Result<Row> {
             .iter()
             .map(|lane| {
                 lane.as_str()
+                    .map(str::trim)
                     .map(str::to_string)
                     .ok_or_else(|| decline("remote list readme"))
             })

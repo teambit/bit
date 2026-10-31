@@ -40,8 +40,17 @@ fn consume_trailing_id<'a>(
 }
 
 fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
-    if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false")
-        || apply_log_combined_short(options, arg)
+    if matches!(
+        arg,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    ) || apply_log_combined_short(options, arg)
     {
         return Some(());
     }

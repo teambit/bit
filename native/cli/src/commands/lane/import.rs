@@ -139,7 +139,9 @@ fn decline_or_fail(
 fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {
     if prepared["laneImport"] != true
         || prepared["laneFetch"] != true
-        || prepared["token"].as_str().is_none()
+        || prepared["token"]
+            .as_str()
+            .is_none_or(|tok| tok.trim().is_empty())
     {
         return None;
     }

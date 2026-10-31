@@ -23,6 +23,7 @@ pub(super) fn complex(pattern: &str) -> bool {
 }
 
 pub(super) fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)> {
+    let pattern = pattern.trim();
     let bitmap = bitmap::read(root)?;
     let matched: Vec<_> = bitmap.entries
         .iter()

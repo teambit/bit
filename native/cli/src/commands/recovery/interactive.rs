@@ -28,10 +28,10 @@ pub(super) fn run(
         workspace_command::checkout_lifecycle::loaded(&startup);
         let report = match prepared {
             Ok(prepared) => execute(root, args, output, prepared, installation)?,
-            Err(error) if failure::result(&error).is_some() => {
-                format_result(failure::result(&error).unwrap(), Kind::Lane, Chalk::detect(args))?
-            }
-            Err(error) => return Err(error),
+            Err(error) => match failure::result(&error) {
+                Some(result) => format_result(result, Kind::Lane, Chalk::detect(args))?,
+                None => return Err(error),
+            },
         };
         crate::commands::status::cleanup_temporary(root)?;
         Ok(report)

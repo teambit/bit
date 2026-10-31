@@ -155,7 +155,10 @@ pub(super) fn write_object(scope: &Path, hash: &str, bytes: &[u8]) -> io::Result
         .join("objects")
         .join(&trimmed[..2])
         .join(&trimmed[2..]);
-    if let Some(parent) = path.parent() {
+    if let Some(parent) = path
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+    {
         fs::create_dir_all(parent)?;
     }
     fs::write(path, bytes)

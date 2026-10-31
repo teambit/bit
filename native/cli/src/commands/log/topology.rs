@@ -25,7 +25,8 @@ pub(super) fn resolve_local_target(
     raw_id: &str,
     chalk: Chalk,
 ) -> io::Result<LocalTarget> {
-    let id = raw_id.split_once('@').map_or(raw_id, |(name, _)| name);
+    let raw_id = raw_id.trim();
+    let id = raw_id.split_once('@').map_or(raw_id, |(name, _)| name.trim());
     if id.is_empty() {
         return Err(decline("empty log id"));
     }

@@ -83,10 +83,7 @@ fn packages(workspace: &Workspace, options: &Options, facts: &mut Value) -> io::
             component.id.name == bare || component.id.to_string_without_version() == bare
         })
         .ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format!("component {} was not found", options.source),
-            )
+            io::Error::new(io::ErrorKind::InvalidInput, format!("component {source} was not found"))
         })?;
     facts["sourcePackage"] = json!(component.package_name);
     let mut id = component.id.clone();

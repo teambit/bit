@@ -251,6 +251,7 @@ fn resolve_from_head<'a>(
 }
 
 fn has_object(objects_dir: &Path, hash: &str) -> bool {
+    let hash = hash.trim();
     hash.len() > 2
         && objects_dir
             .join(&hash[..2])

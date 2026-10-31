@@ -106,6 +106,7 @@ fn diagnose_unscoped_component_error(
     raw_id: &str,
     bare_id: &str,
 ) -> Option<String> {
+    let raw_id = raw_id.trim();
     if bare_id.contains('.') {
         return None;
     }

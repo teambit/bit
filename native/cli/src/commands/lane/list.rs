@@ -260,7 +260,8 @@ fn apply_list_arg<'a>(
         return Some(());
     }
     match arg {
-        "--no-color" | "--no-color=true" | "--no-color=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "--json" | "-j" | "--json=true" => flags.json = true,
         "--json=false" => flags.json = false,
         "--details" | "-d" | "--details=true" => flags.details = true,

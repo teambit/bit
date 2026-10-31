@@ -193,7 +193,9 @@ fn non_flag(val: &str) -> Option<&str> {
 }
 
 fn unscoped_lane_error(scope_dir: &Path, name: &str) -> Option<String> {
-    if name.contains('/')
+    let name = name.trim();
+    if name.is_empty()
+        || name.contains('/')
         || name == "main"
         || env::var_os("CI").is_some_and(|val| !val.is_empty())
         || resolve_lane_entry(scope_dir, name).is_some()

@@ -10,7 +10,8 @@ pub(super) fn render(
     let kind = if options.owner { "owner" } else { "scope" };
     let summary = format.success_summary(&format!(
         r#"replaced "{}" {kind} with "{}""#,
-        options.old, options.new,
+        options.old.trim(),
+        options.new.trim(),
     ));
     let mut affected = Vec::new();
     for index in 0..batch.len() {

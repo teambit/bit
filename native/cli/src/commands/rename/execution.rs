@@ -91,12 +91,12 @@ fn refactor_load(
 }
 
 fn source_display(prepared: &Prepared) -> String {
-    let source = &prepared.plan.identity.source;
+    let source = prepared.plan.identity.source.trim();
     prepared.facts["sourceVersion"]
         .as_str()
         .map(str::trim)
         .filter(|version| !version.is_empty())
-        .map_or_else(|| source.clone(), |version| format!("{source}@{version}"))
+        .map_or_else(|| source.to_owned(), |version| format!("{source}@{version}"))
 }
 
 pub(in crate::commands) fn hydrate(

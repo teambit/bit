@@ -73,7 +73,7 @@ fn install(root: &Path, linker: &mut ProjectedLinker) -> io::Result<()> {
         linker.call(
             root,
             "renameTooling",
-            &json!({"action":"installFailure","message":error.to_string()}),
+            &json!({"action":"installFailure","message":error.to_string().trim()}),
         )?;
     }
     print!("{}", linker.take_stdout());

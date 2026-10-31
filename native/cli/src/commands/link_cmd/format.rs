@@ -160,7 +160,7 @@ fn format_verbose_component_link(chalk: Chalk, item: &ComponentLinkItem) -> Stri
     if item.bound.is_empty() {
         return String::new();
     }
-    let title = chalk.bold(&chalk.cyan(&item.id));
+    let title = chalk.bold(&chalk.cyan(item.id.trim()));
     let links: Vec<String> = item.bound
         .iter()
         .map(|link| {

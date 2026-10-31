@@ -25,9 +25,12 @@ pub(super) fn classify(selected: &[String], rows: &[Value]) -> (Vec<String>, Vec
         .iter()
         .cloned()
         .partition(|id| {
+            let id = id.trim();
             !rows
                 .iter()
-                .any(|row| row["identity"] == *id && row["modified"] == true)
+                .any(|row| {
+                    row["identity"].as_str().map(str::trim) == Some(id) && row["modified"] == true
+                })
         })
 }
 pub(in crate::commands) fn loadable(

@@ -90,6 +90,7 @@ fn text<'a>(value: &'a Value, field: &str) -> Option<&'a str> {
 fn entry_scope<'a>(key_id: &'a str, name: &str, value: &'a Value) -> io::Result<(&'a str, bool)> {
     let key_scope = key_id
         .strip_suffix(&format!("/{name}"))
+        .map(str::trim)
         .filter(|sc| !sc.is_empty());
     match text(value, "scope").or(key_scope) {
         Some(scope) => Ok((scope, true)),

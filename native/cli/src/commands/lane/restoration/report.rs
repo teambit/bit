@@ -95,7 +95,7 @@ fn project(result: &Value, id: &str, chalk: Chalk) -> io::Result<Value> {
     {
         projected.insert("workspaceConfigUpdateResult".into(), json!({"logs":logs}));
     }
-    projected.insert("historyId".into(), json!(id));
+    projected.insert("historyId".into(), json!(id.trim()));
     Ok(Value::Object(projected))
 }
 

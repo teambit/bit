@@ -108,6 +108,7 @@ fn parse_subcommand(args: &[OsString]) -> Option<Subcommand> {
 }
 
 fn is_supported_pattern(pattern: &str) -> bool {
+    let pattern = pattern.trim();
     !pattern.is_empty()
         && !pattern.starts_with(['-', '@'])
         && !pattern.contains(['$', ':'])

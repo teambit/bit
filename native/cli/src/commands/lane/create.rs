@@ -42,6 +42,7 @@ fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
 }
 
 fn set_lane_name<'a>(slot: &mut &'a str, name: &'a str) -> bool {
+    let name = name.trim();
     if !slot.is_empty() || name.is_empty() {
         return false;
     }

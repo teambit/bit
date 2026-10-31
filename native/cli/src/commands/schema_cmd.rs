@@ -265,7 +265,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_schema_args(iter, &mut positional)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-r" | "--remote" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
             "-j" | "--json" | "--json=true" => json = true,

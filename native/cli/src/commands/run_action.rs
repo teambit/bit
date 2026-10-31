@@ -54,7 +54,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+        })
+    {
         return Ok(Outcome::Declined("CI run-action outside scope delegated".into()));
     }
     let msg = format!(

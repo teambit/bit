@@ -30,7 +30,7 @@ pub(super) fn transform(
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed),
         ));
-    fs::create_dir(&path)?;
+    fs::create_dir_all(&path)?;
     let spool = Spool(path);
     let mut rows = Vec::new();
     for (index, (path, bytes)) in inputs.iter().enumerate() {

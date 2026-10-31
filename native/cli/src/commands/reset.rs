@@ -47,7 +47,8 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
 
 fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
     match arg {
-        "--no-color" | "--no-color=true" | "--no-color=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "--head" | "--head=true" => options.head = true,
         "--head=false" => options.head = false,
         "--force" | "-f" | "--force=true" => options.force = true,

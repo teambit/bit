@@ -93,7 +93,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_pack_positions(iter, &mut options)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-o" | "--override" | "--override=true" => options.override_existing = true,
             "--override=false" => options.override_existing = false,
             "-k" | "--keep" | "--keep=true" => options.keep = true,

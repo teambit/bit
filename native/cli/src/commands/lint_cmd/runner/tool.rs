@@ -81,6 +81,9 @@ impl Session {
         self.errors.seek(SeekFrom::Start(0))?;
         let mut bytes = Vec::new();
         Read::by_ref(&mut self.errors).take(LIMIT).read_to_end(&mut bytes)?;
+        if bytes.iter().all(u8::is_ascii_whitespace) {
+            bytes.clear();
+        }
         Ok(bytes)
     }
 }

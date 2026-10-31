@@ -90,7 +90,9 @@ async fn ask(
     delete: bool,
 ) -> io::Result<Answers> {
     let mut answers = Answers::default();
-    let limit = plans.first().map_or(15, |plan| plan.concurrency);
+    let limit = plans
+        .first()
+        .map_or(15, |plan| plan.concurrency.max(1));
     let mut pending = plans.iter().zip(names);
     let mut tasks = JoinSet::new();
     loop {

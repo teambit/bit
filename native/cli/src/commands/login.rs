@@ -89,7 +89,8 @@ fn apply_login_arg<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match arg {
-        "--no-color" | "--no-color=true" | "--no-color=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "--skip-config-update" | "--skip-config-update=true" => options.skip_config_update = true,
         "--skip-config-update=false" => options.skip_config_update = false,
         "--refresh-token" | "--refresh-token=true" => options.refresh_token = true,

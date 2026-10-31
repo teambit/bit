@@ -270,6 +270,7 @@ fn consume_trailing_show_lane<'a>(
 }
 
 pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneData> {
+    let target = target.trim();
     let matches: Vec<_> = lanes
         .iter()
         .filter(|lane| {

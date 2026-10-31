@@ -7,8 +7,12 @@ pub(super) fn requires_node(root: &Path, history: &str) -> bool {
         return false;
     }
     let remotes = cache_root().join("config/global-remotes.json");
-    bit_object_import::lane_history::ci_requires_published_diagnostic(root, &remotes, history)
-        .unwrap_or(true)
+    bit_object_import::lane_history::ci_requires_published_diagnostic(
+        root,
+        &remotes,
+        history.trim(),
+    )
+    .unwrap_or(true)
 }
 
 fn is_ci_enabled() -> bool {

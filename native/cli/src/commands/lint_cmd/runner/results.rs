@@ -88,4 +88,5 @@ fn clean(result: &Value) -> bool {
     ["totalErrorCount", "totalFatalErrorCount", "totalWarningCount"]
         .iter()
         .all(|key| result[key].as_u64().unwrap_or(0) == 0)
+        && result["errors"].as_array().is_none_or(Vec::is_empty)
 }

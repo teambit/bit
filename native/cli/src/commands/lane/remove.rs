@@ -99,7 +99,8 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
                 consume_trailing_remove_names(iter, &mut names)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-f" | "--force" | "--force=true" => force = true,
             "--force=false" => force = false,
             "-s" | "--silent" | "--silent=true" => silent = true,

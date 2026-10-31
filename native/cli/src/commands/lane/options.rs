@@ -245,7 +245,17 @@ fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
             read.trailing_positionals(&args[index..])?;
             break;
         }
-        if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if matches!(
+            arg,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             continue;
         }
         if let Some((flag, value)) = arg.split_once('=') {

@@ -31,7 +31,7 @@ fn text(result: &Value, progress: &Progress, chalk: Chalk, elapsed: u64) -> io::
     let mut sections = vec![formatter.title(&format!(
         "linting total of {} component(s) in workspace '{}'",
         progress.identities.len(),
-        progress.name,
+        progress.name.trim(),
     ))];
     let dirty: Vec<_> = rows
         .iter()

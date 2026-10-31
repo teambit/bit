@@ -74,5 +74,12 @@ fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outc
 }
 
 fn is_ci_environment() -> bool {
-    std::env::var_os("CI").is_some_and(|val| !val.is_empty())
+    std::env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+        })
 }

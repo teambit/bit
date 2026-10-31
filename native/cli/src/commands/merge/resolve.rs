@@ -45,7 +45,17 @@ pub fn parse(args: &[&str]) -> Option<Options> {
             consume_trailing_resolve(&args[index..], &mut options)?;
             break;
         }
-        if matches!(raw, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if matches!(
+            raw,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             continue;
         }
         if !raw.starts_with('-') {

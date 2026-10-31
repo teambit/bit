@@ -38,12 +38,14 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
         .iter()
         .map(|pattern| {
             let pattern = pattern
+                .trim()
                 .split('@')
                 .next()
-                .unwrap_or_default();
+                .unwrap_or_default()
+                .trim();
             let (negated, glob) = pattern
                 .strip_prefix('!')
-                .map_or((false, pattern), |glob| (true, glob));
+                .map_or((false, pattern), |glob| (true, glob.trim()));
             supported(glob)?;
             Ok((negated, glob))
         })

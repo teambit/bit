@@ -361,7 +361,7 @@ fn relative_display(root: &Path, path: &Path) -> String {
 }
 
 fn resolve_target_dir(cwd: &Path, target_arg: &str) -> PathBuf {
-    let target_path = Path::new(target_arg);
+    let target_path = Path::new(target_arg.trim());
     if target_path.is_absolute() { target_path.to_path_buf() } else { cwd.join(target_path) }
 }
 

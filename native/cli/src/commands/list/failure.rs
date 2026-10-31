@@ -172,7 +172,11 @@ fn json_output(
     // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
     let mut stdout = io::stdout().lock();
     stdout.write_all(session.output().as_bytes())?;
-    if let Some(warning) = session.warning() {
+    if let Some(warning) = session
+        .warning()
+        .map(str::trim)
+        .filter(|warn| !warn.is_empty())
+    {
         writeln!(stdout, "{}", Chalk::detect(args).red(warning))?;
     }
     stdout.write_all(serde_json::to_string_pretty(&json_report(rows, ids))?.as_bytes())?;

@@ -71,7 +71,8 @@ fn parse(args: &[&str], kind: Kind) -> Option<Options> {
 
 fn apply_recovery_flag(arg: &str, opts: &mut Options, abort: &mut bool) -> Option<()> {
     match arg {
-        "--no-color" | "--no-color=true" | "--no-color=false" => Some(()),
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => Some(()),
         "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
             if !opts.skip_install =>
         {

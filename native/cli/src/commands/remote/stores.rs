@@ -35,7 +35,10 @@ pub(super) struct Prepared {
 impl Prepared {
     pub(super) fn commit(&self) -> io::Result<()> {
         for (path, bytes) in &self.writes {
-            if let Some(parent) = path.parent() {
+            if let Some(parent) = path
+                .parent()
+                .filter(|dir| !dir.as_os_str().is_empty())
+            {
                 fs::create_dir_all(parent)?;
             }
             fs::write(path, bytes)?;

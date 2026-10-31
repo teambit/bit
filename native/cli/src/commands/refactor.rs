@@ -77,7 +77,19 @@ fn parse_options(args: &[OsString]) -> Option<Action> {
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?
         .into_iter()
-        .filter(|token| !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false"))
+        .filter(|token| {
+            !matches!(
+                *token,
+                "--no-color"
+                    | "--no-color=true"
+                    | "--no-color=false"
+                    | "--color"
+                    | "--color=true"
+                    | "--color=false"
+                    | "--color=always"
+                    | "--color=never",
+            )
+        })
         .collect();
     let tokens = super::scope_set::collect_non_flag_tokens(&raw)?;
     match tokens.as_slice() {

@@ -32,5 +32,5 @@ fn elapsed_millis(started: &Instant) -> io::Result<u64> {
 }
 
 fn invalid(message: &str) -> io::Error {
-    io::Error::other(message)
+    io::Error::other(message.trim())
 }

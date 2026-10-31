@@ -64,12 +64,10 @@ fn text_report(
     details: bool,
     args: &[OsString],
 ) -> String {
-    match merged {
-        Some(merged) if raw.is_some() => {
-            report_http_merged(raw.unwrap(), merged, Chalk::detect(args))
-        }
-        Some(merged) => super::merged::report(lanes, merged, Chalk::detect(args)),
-        None => report(lanes, current, Chalk::detect(args), details),
+    match (merged, raw) {
+        (Some(merged), Some(raw)) => report_http_merged(raw, merged, Chalk::detect(args)),
+        (Some(merged), None) => super::merged::report(lanes, merged, Chalk::detect(args)),
+        (None, _) => report(lanes, current, Chalk::detect(args), details),
     }
 }
 

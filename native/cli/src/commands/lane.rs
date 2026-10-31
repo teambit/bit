@@ -24,13 +24,27 @@ use std::{ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "lane", aliases: &["l"], run };
 
+fn is_color_flag(arg: &str) -> bool {
+    matches!(
+        arg,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    )
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(raw_argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
     let argv: Vec<&str> = raw_argv
         .into_iter()
-        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
+        .filter(|arg| !is_color_flag(arg))
         .collect();
     match argv.get(1).copied() {
         None => list::run_default(args, &argv[1..]),

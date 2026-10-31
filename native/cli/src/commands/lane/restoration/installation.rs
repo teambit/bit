@@ -54,7 +54,7 @@ fn compile(
     print!("{}", host.take_stdout());
     let compiled = compiled?;
     if let Some(error) = compiler_error(&compiled["error"])? {
-        output.failure(&format!("compilation failed with the following error: {error}"));
+        output.failure(&format!("compilation failed with the following error: {}", error.trim()));
         result["compilationError"] = json!(error);
     }
     Ok(())

@@ -68,12 +68,13 @@ async fn persist(
     options: &Options,
     output: &Output,
 ) -> io::Result<Vec<String>> {
+    let export_id = options.export_id.trim();
     output.restart("verifying that objects can be merged on the remotes...");
-    validate(plans, &options.export_id).await?;
+    validate(plans, export_id).await?;
     let mut ids = Vec::new();
     for (plan, name) in plans.iter().zip(names) {
         output.restart(&format!(r#"persisting data on the remote "{name}"..."#));
-        let value = persist_one(plan, name, &options.export_id).await?;
+        let value = persist_one(plan, name, export_id).await?;
         append_ids(&mut ids, value)?;
     }
     Ok(ids)

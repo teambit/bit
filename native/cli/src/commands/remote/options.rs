@@ -84,7 +84,17 @@ fn consume_trailing_values<'a>(
 }
 
 fn is_no_color_flag(token: &str) -> bool {
-    matches!(token, "--no-color" | "--no-color=true" | "--no-color=false")
+    matches!(
+        token,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    )
 }
 
 fn valid_target(value: &str) -> bool {

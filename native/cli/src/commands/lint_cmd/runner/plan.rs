@@ -135,6 +135,8 @@ fn request(component: &Component, config: &Config, options: &Options) -> io::Res
         .as_deref()
         .unwrap_or("layout,problem,suggestion")
         .split(',')
+        .map(str::trim)
+        .filter(|fix| !fix.is_empty())
         .collect();
     Ok(json!({"files":files,"options":{"overrideConfig":defaults,"extensions":extensions,
         "useEslintrc":false,"fix":options.fix,"fixTypes":fixes}}))

@@ -44,7 +44,11 @@ fn supported_workspace(
     if workspace["bitmapAutoSync"] == true {
         return Ok(false);
     }
-    let bitmap = bit_install::workspace::Bitmap::load(root, workspace["defaultScope"].as_str())?;
+    let default_scope = workspace["defaultScope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
+    let bitmap = bit_install::workspace::Bitmap::load(root, default_scope)?;
     Ok(bitmap.lane.as_ref().is_none_or(|lane| is_main_lane(&lane.name)))
 }
 

@@ -66,7 +66,9 @@ fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<V
             .ok_or_else(|| invalid("linter pattern"))?;
         for directory in directories {
             let directory = directory.trim();
-            expanded.push(json!(format!("../../{directory}/{value}")));
+            if !directory.is_empty() {
+                expanded.push(json!(format!("../../{directory}/{value}")));
+            }
         }
     }
     Ok(expanded)

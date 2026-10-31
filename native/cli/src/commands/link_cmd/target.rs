@@ -249,7 +249,10 @@ pub(super) fn create_dir_symlink(from: &Path, to: &Path) -> io::Result<()> {
     if fs::read_link(to).is_ok_and(|existing| existing == from) && to.exists() {
         return Ok(());
     }
-    if let Some(parent) = to.parent() {
+    if let Some(parent) = to
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+    {
         fs::create_dir_all(parent)?;
     }
     remove_existing_target(to)?;

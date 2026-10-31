@@ -52,6 +52,8 @@ fn apply_history_arg<'a>(
         return Some(());
     }
     match arg {
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
         "--json" | "-j" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
         "--id" if options.id.is_none() => {

@@ -27,7 +27,9 @@ fn parse_move_args<'a>(args: &[&'a str]) -> Option<(&'a str, &'a str)> {
     let [from, to] = positionals.as_slice() else {
         return None;
     };
-    (!from.is_empty() && !to.is_empty()).then_some((*from, *to))
+    let from = from.trim();
+    let to = to.trim();
+    (!from.is_empty() && !to.is_empty()).then_some((from, to))
 }
 fn run_workspace(
     root: &std::path::Path,

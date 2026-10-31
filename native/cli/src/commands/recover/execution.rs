@@ -79,7 +79,7 @@ fn report(options: &Options<'_>, plan: &Batch, args: &[OsString]) -> io::Result<
     let format = Formatter::new(Chalk::detect(args));
     let items = ids
         .iter()
-        .map(|id| format.item(id))
+        .map(|id| format.item(id.trim()))
         .collect::<Vec<_>>()
         .join("\n");
     Ok(Report {

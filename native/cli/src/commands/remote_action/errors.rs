@@ -71,6 +71,7 @@ fn update_report(updates: &[Value], chalk: Chalk, output: &mut Vec<String>) {
             let lane = value["lane"]
                 .as_str()
                 .or_else(|| value["lane"]["name"].as_str())
+                .map(str::trim)
                 .filter(|lane| !lane.is_empty())
                 .map_or_else(String::new, |lane| format!(" (lane: {lane})"));
             format!("{}{lane}", id(value, chalk))

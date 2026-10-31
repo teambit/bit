@@ -297,7 +297,10 @@ fn write_tarball_and_build_result(
         "tarName": tar_name,
     });
     if errors.is_empty() {
-        if let Some(parent) = tar_path.parent() {
+        if let Some(parent) = tar_path
+            .parent()
+            .filter(|dir| !dir.as_os_str().is_empty())
+        {
             fs::create_dir_all(parent)?;
         }
         let tgz_bytes = build_tgz_bytes(pkg_json, &comp.files)?;

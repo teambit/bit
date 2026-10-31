@@ -137,7 +137,7 @@ fn render_table(rows: &[Row], options: &Options, chalk: Chalk, colors: bool) -> 
 
 /// `getFormattedId` of `listTemplate`.
 fn formatted_id(row: &Row, chalk: Chalk) -> String {
-    let mut id = chalk.white(&row.identity);
+    let mut id = chalk.white(row.identity.trim());
     if row.deprecated == Some(true) {
         id = chalk.yellow(&format!("{id} [Deprecated]"));
     }

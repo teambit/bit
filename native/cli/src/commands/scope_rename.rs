@@ -40,7 +40,17 @@ fn first_subcommand(args: &[OsString]) -> Option<String> {
         .map(str::trim)
         .find(|token| {
             !token.is_empty()
-                && !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false")
+                && !matches!(
+                    *token,
+                    "--no-color"
+                        | "--no-color=true"
+                        | "--no-color=false"
+                        | "--color"
+                        | "--color=true"
+                        | "--color=false"
+                        | "--color=always"
+                        | "--color=never",
+                )
         })
         .map(str::to_owned)
 }

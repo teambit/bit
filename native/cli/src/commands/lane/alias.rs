@@ -82,6 +82,8 @@ fn run_in_workspace(
 }
 
 fn invalid_alias_error(name: &str, alias: &str) -> Option<&'static str> {
+    let name = name.trim();
+    let alias = alias.trim();
     if alias.contains('/') {
         Some(r#"an alias cannot include a delimiter "/""#)
     } else if alias == name {

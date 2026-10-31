@@ -15,6 +15,7 @@ pub(super) fn check(result: &Value, chalk: Chalk, lane: bool) -> io::Result<()> 
             .or_else(|| row["unchangedMessage"]["message"].as_str())
             .or_else(|| row["message"].as_str())
             .or_else(|| row["error"].as_str())
+            .map(str::trim)
             .filter(|value| !value.is_empty())
             .ok_or_else(|| io::Error::other("merge failure message"))?;
         failures.push(format!("{} - {}", chalk.bold(&identity), chalk.red(message)));

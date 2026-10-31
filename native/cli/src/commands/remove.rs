@@ -76,10 +76,7 @@ fn load(
     if removed.is_empty() {
         return Ok(Vec::new());
     }
-    let has_new = !options.force
-        && removed
-            .iter()
-            .any(|id| preparation::row(bitmap, id).is_ok_and(|row| row["version"] == ""));
+    let has_new = !options.force && removed.iter().any(|id| preparation::is_new(bitmap, id));
     let ids = if has_new { preparation::all(bitmap) } else { removed.to_vec() };
     let (mut rows, pending) = metadata(ids, reader);
     if !pending.is_empty() {

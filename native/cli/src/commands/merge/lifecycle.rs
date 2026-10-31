@@ -145,7 +145,8 @@ fn execute(
         && let Err(error) = install_retained(root, &mut planned, info)
     {
         output.failure(&format!(
-            "failed installing packages, see the log for full stacktrace. error: {error}",
+            "failed installing packages, see the log for full stacktrace. error: {}",
+            error.to_string().trim(),
         ));
     }
     let mut result = planned.plan["result"].clone();

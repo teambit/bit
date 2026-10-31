@@ -98,7 +98,8 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
                 super::internalize::consume_trailing_internalize(iter, &mut pattern)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-r" | "--remote" | "--remote=true" => remote = true,

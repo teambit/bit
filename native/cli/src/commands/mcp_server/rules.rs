@@ -123,7 +123,10 @@ fn write_rules_file(cwd: &Path, opts: &RulesOptions, base: &str) -> Result<PathB
             (claude_code_prompts_path(opts.is_global, cwd), format!("{CLAUDE_CODE_PREAMBLE}{base}"))
         }
     };
-    if let Some(parent) = path.parent() {
+    if let Some(parent) = path
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+    {
         fs::create_dir_all(parent).map_err(|err| err.to_string())?;
     }
     fs::write(&path, content).map_err(|err| err.to_string())?;

@@ -108,6 +108,6 @@ fn execute_error(
     if let Some(history) = history {
         history.end(false);
     }
-    writeln!(io::stderr().lock(), "{}", chalk.red(message))?;
+    writeln!(io::stderr().lock(), "{}", chalk.red(message.trim()))?;
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }

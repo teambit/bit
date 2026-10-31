@@ -44,7 +44,8 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
 }
 
 fn matches(identity: &str, pattern: &str) -> bool {
-    if pattern.starts_with('#') {
+    let pattern = pattern.trim();
+    if pattern.is_empty() || pattern.starts_with('#') {
         return false;
     }
     let positive = pattern.trim_start_matches('!');

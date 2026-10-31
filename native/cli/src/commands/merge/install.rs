@@ -7,7 +7,7 @@ pub(in crate::commands) fn start(
     argv: &[&str],
     skip: bool,
 ) -> io::Result<Option<Installer>> {
-    if skip || root.as_os_str().is_empty() {
+    if skip || root.as_os_str().is_empty() || argv.is_empty() {
         Ok(None)
     } else {
         Installer::start(root, argv).map(Some)

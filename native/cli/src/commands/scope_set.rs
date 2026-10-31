@@ -122,7 +122,17 @@ pub(super) fn collect_non_flag_tokens<'a>(rest: &[&'a str]) -> Option<Vec<&'a st
         if token == "--" {
             return collect_trailing(&mut positional, iter).then_some(positional);
         }
-        if matches!(token, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if matches!(
+            token,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             continue;
         }
         if token.is_empty() || token.starts_with('-') {

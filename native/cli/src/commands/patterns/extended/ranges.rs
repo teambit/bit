@@ -103,8 +103,9 @@ impl Sequence {
     }
 
     fn values(&self) -> io::Result<Vec<String>> {
+        let step = i128::from(self.step.max(1));
         let distance = (i128::from(self.end) - i128::from(self.start)).abs();
-        if distance / i128::from(self.step) >= LIMIT as i128 {
+        if distance / step >= LIMIT as i128 {
             return Err(decline("component pattern expansion limit"));
         }
         let direction = if self.end < self.start { -1 } else { 1 };
@@ -116,7 +117,7 @@ impl Sequence {
             value >= i128::from(self.end)
         } {
             output.push(self.format(value)?);
-            value += direction * i128::from(self.step);
+            value += direction * step;
         }
         Ok(output)
     }

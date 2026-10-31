@@ -131,7 +131,11 @@ impl Merge<'_> {
             .other_skipped()
             .iter()
             .map(|(id, message)| {
-                self.format.item(&format!("{} - {message}", self.chalk().bold(&id.display())))
+                self.format.item(&format!(
+                    "{} - {}",
+                    self.chalk().bold(&id.display()),
+                    message.trim(),
+                ))
             })
             .collect();
         self.format.section("merge skipped", "", &items)

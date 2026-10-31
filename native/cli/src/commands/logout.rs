@@ -49,7 +49,17 @@ fn valid_args(args: &[OsString]) -> bool {
         if str_arg == "--" {
             return idx + 1 == rest.len();
         }
-        if !matches!(str_arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if !matches!(
+            str_arg,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             return false;
         }
     }

@@ -19,7 +19,8 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
                 )?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "-s" | "--silent" | "--silent=true" => silent = true,
             "--silent=false" => silent = false,
             "--keep-files" | "--keep-files=true" => options.keep = true,

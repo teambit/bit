@@ -22,7 +22,7 @@ pub(super) fn run(
     options: &Options,
 ) -> io::Result<()> {
     if let Err(error) = continue_snapshot(root, output, materialized, result, options) {
-        result["mergeSnapError"] = json!({"kind":"message","message":error.to_string()});
+        result["mergeSnapError"] = json!({"kind":"message","message":error.to_string().trim()});
         if let Some(map) = result.as_object_mut() {
             map.remove("mergeSnapResults");
         }

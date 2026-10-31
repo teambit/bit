@@ -316,6 +316,7 @@ fn with_extensions(base: &Path, extensions: &[&str]) -> Option<PathBuf> {
 fn file_extension(path: &Path) -> String {
     path.extension()
         .and_then(|ext| ext.to_str())
+        .map(str::trim)
         .unwrap_or_default()
         .to_ascii_lowercase()
 }

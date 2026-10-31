@@ -35,6 +35,7 @@ fn warning(formatter: &Formatter, message: &str) -> String {
 }
 
 pub(super) fn nothing(formatter: &Formatter, export_id: &str, probe: &Answers) -> String {
+    let export_id = export_id.trim();
     let message = format!(r#"no pending objects of "{export_id}" were found, nothing to delete"#);
     Formatter::join(&[
         failed_section(formatter, &probe.failed),

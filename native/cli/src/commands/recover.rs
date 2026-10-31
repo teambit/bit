@@ -23,7 +23,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(root) => root,
         Err(outcome) => return Ok(outcome),
     };
-    let preview = match Batch::prepare(&root, options.pattern) {
+    let preview = match Batch::prepare(&root, options.pattern.trim()) {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("recover: {error}"))),
     };

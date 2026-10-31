@@ -28,6 +28,7 @@ fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::R
     let rows = object(value)?
         .iter()
         .map(|(name, value)| {
+            let name = name.trim();
             let value = if updates { update_pair(value)? } else { text(Some(value))?.to_owned() };
             Ok(format!("  {name}: {value}"))
         })

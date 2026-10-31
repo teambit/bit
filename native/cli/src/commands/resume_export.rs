@@ -42,7 +42,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_resume_args(iter, &mut export_id, &mut remotes)?;
                 break;
             }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" | "--color=never" => {}
             "--delete" | "--delete=true" => delete = true,
             "--delete=false" => delete = false,
             "--force" | "--force=true" => force = true,

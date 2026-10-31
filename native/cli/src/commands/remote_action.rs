@@ -43,6 +43,7 @@ impl Plan {
         }
     }
     pub(super) async fn action(&self, name: &str, payload: &Value) -> io::Result<Value> {
+        let name = name.trim();
         match &self.target {
             Target::Http { url, network } => {
                 network.action(url, name, payload).await.map_err(errors::format)

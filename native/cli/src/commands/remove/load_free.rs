@@ -122,10 +122,11 @@ impl Reader {
                 .is_some_and(|versions| !versions.is_empty())
     }
     fn target(&self, identity: &str) -> Option<&Value> {
+        let identity = identity.trim();
         self.context["targets"]
             .as_array()?
             .iter()
-            .find(|target| target["identity"] == identity)
+            .find(|target| target["identity"].as_str().map(str::trim) == Some(identity))
     }
     fn files(&mut self, root: &Path, directory: &str) -> io::Result<Vec<String>> {
         let options: Options =

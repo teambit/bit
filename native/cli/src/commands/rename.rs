@@ -54,7 +54,7 @@ fn run_outside_workspace(
     if is_ci_active() {
         return Ok(Outcome::Declined("component rename requires a workspace".into()));
     }
-    let err = bit_object_import::component_rename::validate_name(&options.target)
+    let err = bit_object_import::component_rename::validate_name(options.target.trim())
         .err()
         .unwrap_or_else(|| {
             io::Error::other("Cannot read properties of undefined (reading 'resolveComponentId')")

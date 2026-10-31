@@ -97,15 +97,17 @@ pub(super) fn updates(value: &Value) -> io::Result<Option<Vec<Value>>> {
 
 fn scoped_id(id: &Value) -> io::Result<String> {
     if let Some(raw) = id.as_str() {
+        let raw = raw.trim();
         let (scope, name) = raw
             .rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
+            .map_or(raw, |(bare, _)| bare.trim())
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| decline("lane component identity"))?;
         return Ok(format!("{scope}/{name}"));
     }
-    Ok(format!("{}/{}", text(id.get("scope"))?, text(id.get("name"))?))
+    Ok(format!("{}/{}", text(id.get("scope"))?.trim(), text(id.get("name"))?.trim()))
 }
 
 pub(super) fn readme(value: &Value) -> io::Result<Option<Value>> {

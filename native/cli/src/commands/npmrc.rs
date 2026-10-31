@@ -30,6 +30,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn unknown_subcommand_message(subcommand: &str, chalk: Chalk) -> String {
+    let subcommand = subcommand.trim();
     chalk.red(&format!(
         r#""{subcommand}" is not a subcommand of "npmrc", please run "bit npmrc --help" to list the subcommands"#,
     ))

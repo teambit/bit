@@ -325,5 +325,12 @@ fn outside_workspace_failure(
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     }
-    workspace_command::execute_failure_scope(cwd, args, command, false, "", io::Error::other(msg))
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        command,
+        false,
+        "",
+        io::Error::other(msg.trim()),
+    )
 }

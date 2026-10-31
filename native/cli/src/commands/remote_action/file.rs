@@ -9,7 +9,7 @@ use std::{
 };
 
 pub(super) fn supports(name: &str) -> bool {
-    matches!(name, "PendingDirStatus" | "RemovePendingDir")
+    matches!(name.trim(), "PendingDirStatus" | "RemovePendingDir")
 }
 
 pub(super) fn prepare(path: &Path) -> io::Result<Option<PathBuf>> {

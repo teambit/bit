@@ -242,6 +242,9 @@ pub const COMMANDS: &[Command] = &[
 
 pub fn find(name: &str) -> Option<&'static Command> {
     let trimmed = name.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
     COMMANDS
         .iter()
         .find(|command| command.name == trimmed || command.aliases.contains(&trimmed))

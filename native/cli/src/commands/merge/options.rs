@@ -125,7 +125,17 @@ pub fn parse(args: &[&str]) -> Option<Options> {
             consume_trailing_positionals(&args[index..], &mut positionals)?;
             break;
         }
-        if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if matches!(
+            arg,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             continue;
         }
         if !arg.starts_with('-') {
