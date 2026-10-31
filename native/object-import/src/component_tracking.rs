@@ -1,10 +1,10 @@
 //! Retained component tracking plans publish the bitmap only after linking succeeds.
+pub(crate) mod identity;
 pub(crate) mod observe;
 
 pub use options::Options;
 
 mod files;
-mod identity;
 mod main_file;
 mod options;
 mod paths;

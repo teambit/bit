@@ -51,7 +51,10 @@ pub(in crate::commands) fn read(root: &Path) -> io::Result<Bitmap> {
     let entries = document
         .iter()
         .filter(|(key, value)| {
-            !key.starts_with('$') && key.as_str() != "_bit_lane" && value.is_object()
+            !key.starts_with('$')
+                && key.as_str() != "version"
+                && key.as_str() != "_bit_lane"
+                && value.is_object()
         })
         .map(|(_, value)| entry(value))
         .collect::<io::Result<_>>()?;
@@ -84,9 +87,11 @@ fn entry(value: &Value) -> io::Result<Entry> {
         None => (text("defaultScope").ok_or_else(|| decline("bitmap default scope"))?, false),
     };
     let root_dir = text("rootDir").ok_or_else(|| decline("bitmap root dir"))?;
-    let removed = value["config"]["teambit.component/remove"]["removed"] == true;
-    let staged_deprecation = value["config"]["teambit.component/deprecation"].is_object();
-    let available = value["isAvailableOnCurrentLane"] != false;
+    let dep_entry = crate::commands::update_cmd::aspect_entry(
+        &value["config"],
+        "teambit.component/deprecation",
+    )
+    .map(|(_, dep)| dep);
     if !matches!(value["version"], Value::String(_) | Value::Null) {
         return Err(decline("bitmap entry version"));
     }
@@ -95,11 +100,15 @@ fn entry(value: &Value) -> io::Result<Entry> {
         has_scope,
         version: text("version").map(str::to_string),
         root_dir: root_dir.to_string(),
-        staged_deprecation,
-        deprecation: value["config"]["teambit.component/deprecation"]
-            .as_object()
+        staged_deprecation: dep_entry.is_some_and(Value::is_object),
+        deprecation: dep_entry
+            .and_then(Value::as_object)
             .map(|config| Value::Object(config.clone())),
-        removed,
-        available,
+        removed: crate::commands::update_cmd::aspect_entry(
+            &value["config"],
+            "teambit.component/remove",
+        )
+        .is_some_and(|(_, rem)| rem["removed"] == true),
+        available: value["isAvailableOnCurrentLane"] != false,
     })
 }

@@ -38,8 +38,11 @@ pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Val
         })
 }
 pub(super) fn default_scope(inventory: &Value) -> io::Result<String> {
-    inventory["workspace"]["teambit.workspace/workspace"]["defaultScope"]
-        .as_str()
-        .map(str::to_owned)
-        .ok_or_else(|| io::Error::other("fork workspace defaultScope"))
+    crate::commands::update_cmd::aspect_entry(
+        &inventory["workspace"],
+        "teambit.workspace/workspace",
+    )
+    .and_then(|(_, ws)| ws["defaultScope"].as_str())
+    .map(str::to_owned)
+    .ok_or_else(|| io::Error::other("fork workspace defaultScope"))
 }

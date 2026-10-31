@@ -44,7 +44,7 @@ pub(super) fn read(
         )));
     }
     let kept =
-        filtered(plan, directory, &paths, &facts["workspace"]["teambit.workspace/workspace"])?;
+        filtered(plan, directory, &paths, super::identity::workspace_aspect(&facts["workspace"]))?;
     let original = paths;
     let mut kept = kept;
     if kept.is_empty() {

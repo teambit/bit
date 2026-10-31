@@ -56,12 +56,24 @@ pub(super) fn prepare(input: &Prepare, plan: &Plan) -> io::Result<Prepared> {
 }
 
 fn roots(input: &Prepare, workspace: &Value) -> io::Result<Option<std::path::PathBuf>> {
-    if workspace["teambit.dependencies/dependency-resolver"]["rootComponents"] != true {
+    let has_root_components = workspace
+        .as_object()
+        .and_then(|map| {
+            map.iter()
+                .find_map(|(key, val)| {
+                    (key == "teambit.dependencies/dependency-resolver"
+                        || key.starts_with("teambit.dependencies/dependency-resolver@"))
+                    .then_some(val)
+                })
+        })
+        .is_some_and(|resolver| resolver["rootComponents"] == true);
+    if !has_root_components {
         return Ok(None);
     }
-    let base = workspace["teambit.workspace/workspace"]["rootComponentsDirectory"]
-        .as_str()
-        .unwrap_or("node_modules");
+    let base =
+        crate::component_tracking::identity::workspace_aspect(workspace)["rootComponentsDirectory"]
+            .as_str()
+            .unwrap_or("node_modules");
     crate::checkout::plan::relative_path(base)?;
     Ok(Some(input.root.join(base).join(".bit_roots")))
 }

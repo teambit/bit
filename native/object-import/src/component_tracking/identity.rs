@@ -95,7 +95,7 @@ pub(super) fn scope(
     }
     let scope = variants
         .as_deref()
-        .or_else(|| facts["workspace"]["teambit.workspace/workspace"]["defaultScope"].as_str())
+        .or_else(|| workspace_aspect(&facts["workspace"])["defaultScope"].as_str())
         .or_else(|| facts["defaultScope"].as_str())
         .unwrap_or_default();
     if scope.is_empty() {
@@ -105,8 +105,18 @@ pub(super) fn scope(
     }
     Ok(scope.into())
 }
+pub(crate) fn workspace_aspect(workspace: &Value) -> &Value {
+    workspace
+        .as_object()
+        .and_then(|rows| {
+            rows.iter()
+                .find(|(id, _)| id.split('@').next() == Some("teambit.workspace/workspace"))
+                .map(|(_, val)| val)
+        })
+        .unwrap_or(&Value::Null)
+}
 pub(super) fn vendor(workspace: &Value, directory: &str) -> bool {
-    let parent = workspace["teambit.workspace/workspace"]["vendor"]["directory"]
+    let parent = workspace_aspect(workspace)["vendor"]["directory"]
         .as_str()
         .filter(|parent| !parent.is_empty())
         .unwrap_or("vendor");

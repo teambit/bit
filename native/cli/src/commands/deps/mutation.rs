@@ -147,7 +147,9 @@ fn update_comp_json(
         serde_json::from_str(&content).map_err(|err| Failure::Declined(err.to_string()))?;
     let current = parsed
         .get("extensions")
-        .and_then(|ext| ext.get(DEP_RESOLVER_ID));
+        .and_then(|ext| {
+            crate::commands::update_cmd::aspect_entry(ext, DEP_RESOLVER_ID).map(|(_, val)| val)
+        });
     if current == Some(&effective) {
         return Ok(None);
     }
@@ -171,10 +173,12 @@ fn insert_comp_json_dep_resolver(parsed: &mut Value, new_cfg: Value) -> Result<(
     let ext_val = root_obj
         .entry("extensions")
         .or_insert_with(|| json!({}));
+    let key = crate::commands::update_cmd::aspect_entry(ext_val, DEP_RESOLVER_ID)
+        .map_or_else(|| DEP_RESOLVER_ID.to_owned(), |(key, _)| key.to_owned());
     let ext_obj = ext_val
         .as_object_mut()
         .ok_or_else(|| Failure::Declined("component.json extensions object".into()))?;
-    ext_obj.insert(DEP_RESOLVER_ID.into(), new_cfg);
+    ext_obj.insert(key, new_cfg);
     Ok(())
 }
 
@@ -187,7 +191,9 @@ fn update_bitmap_row(
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
     let current = row
         .get("config")
-        .and_then(|cfg| cfg.get(DEP_RESOLVER_ID));
+        .and_then(|cfg| {
+            crate::commands::update_cmd::aspect_entry(cfg, DEP_RESOLVER_ID).map(|(_, val)| val)
+        });
     if current == Some(&effective) {
         return Ok(false);
     }
@@ -204,9 +210,11 @@ fn update_bitmap_row(
     let cfg_val = row_obj
         .entry("config")
         .or_insert_with(|| json!({}));
+    let key = crate::commands::update_cmd::aspect_entry(cfg_val, DEP_RESOLVER_ID)
+        .map_or_else(|| DEP_RESOLVER_ID.to_owned(), |(key, _)| key.to_owned());
     let cfg_obj =
         cfg_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
-    cfg_obj.insert(DEP_RESOLVER_ID.into(), new_cfg);
+    cfg_obj.insert(key, new_cfg);
     Ok(true)
 }
 

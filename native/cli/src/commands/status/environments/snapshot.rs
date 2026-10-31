@@ -8,7 +8,12 @@ use serde_json::{Value, json};
 use std::{io, path::Path};
 
 pub(super) fn configured(engine: &mut Engine, root: &Path, context: &Value) -> io::Result<bool> {
-    if context["workspace"]["teambit.defender/formatter"]["formatOnPreSnap"] == true {
+    if crate::commands::update_cmd::aspect_entry(
+        &context["workspace"],
+        "teambit.defender/formatter",
+    )
+    .is_some_and(|(_, fmt)| fmt["formatOnPreSnap"] == true)
+    {
         return Ok(true);
     }
     let options: Options =

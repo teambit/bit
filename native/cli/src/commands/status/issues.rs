@@ -247,9 +247,8 @@ fn ignored(context: &Value) -> io::Result<HashSet<&str>> {
     let workspace = context
         .get("workspace")
         .ok_or_else(|| decline("status issues without the workspace configuration"))?;
-    let Some(names) = workspace
-        .get(ISSUES)
-        .and_then(|issues| issues.get("ignoreIssues"))
+    let Some(names) = crate::commands::update_cmd::aspect_entry(workspace, ISSUES)
+        .and_then(|(_, issues)| issues.get("ignoreIssues"))
     else {
         return Ok(HashSet::new());
     };

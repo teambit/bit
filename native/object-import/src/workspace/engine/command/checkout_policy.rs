@@ -115,8 +115,16 @@ pub(super) fn receipt_versions<'a>(
     if strategy == Some("ours") {
         return Ok(None);
     }
-    let policy = &context["workspace"][RESOLVER]["policy"];
-    let Some(policy) = policy.as_object() else { return Ok(None) };
+    let policy = context["workspace"]
+        .as_object()
+        .and_then(|ws| {
+            ws.iter()
+                .find(|(key, _)| {
+                    key.as_str() == RESOLVER || key.starts_with(&format!("{RESOLVER}@"))
+                })
+                .and_then(|(_, val)| val["policy"].as_object())
+        });
+    let Some(policy) = policy else { return Ok(None) };
     let entries = workspace_entries(policy)?;
     if entries.is_empty() {
         return Ok(None);

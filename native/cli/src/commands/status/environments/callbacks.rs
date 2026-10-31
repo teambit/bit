@@ -271,10 +271,13 @@ pub(in crate::commands::status) fn issue_callbacks(
     rows: &[Value],
     context: &Value,
 ) -> io::Result<(Vec<Value>, String)> {
-    let mut ignored = context["workspace"]["teambit.component/issues"]
-        .get("ignoreIssues")
-        .cloned()
-        .unwrap_or_else(|| json!([]));
+    let mut ignored = crate::commands::update_cmd::aspect_entry(
+        &context["workspace"],
+        "teambit.component/issues",
+    )
+    .and_then(|(_, issues)| issues.get("ignoreIssues"))
+    .cloned()
+    .unwrap_or_else(|| json!([]));
     if let Some(extra) = context["snapshotIgnoreIssues"].as_array() {
         let mut combined = extra.clone();
         for issue in ignored.as_array().into_iter().flatten() {

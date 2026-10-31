@@ -66,8 +66,10 @@ pub(super) fn attach(
         return Ok(());
     }
     let imported = imported.ok_or_else(|| invalid("checkout scope import owner"))?;
-    let default_scope =
-        context["workspace"]["teambit.workspace/workspace"]["defaultScope"].as_str();
+    let default_scope = crate::component_tracking::identity::workspace_aspect(
+        &context["workspace"],
+    )["defaultScope"]
+        .as_str();
     let bitmap = config::document(&request.root.join(".bitmap"))?;
     let settings = config::configuration_value(
         &request.root,

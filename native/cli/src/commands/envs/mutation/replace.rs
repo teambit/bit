@@ -155,8 +155,11 @@ fn entry_uses_env(
 
 fn map_uses_env(map: &Map<String, Value>, old_bare: &str, raw_old_env: &str) -> bool {
     if let Some(configured) = map
-        .get("teambit.envs/envs")
-        .and_then(|val| val["env"].as_str())
+        .iter()
+        .find(|(key, _)| {
+            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
+        })
+        .and_then(|(_, val)| val["env"].as_str())
     {
         let cfg_bare = configured
             .split('@')
@@ -225,18 +228,23 @@ fn is_env_config(cfg: &Value) -> bool {
     let Some(obj) = cfg.as_object() else {
         return false;
     };
-    if obj.contains_key("teambit.envs/env")
-        || obj
-            .keys()
-            .any(|key| key.starts_with("bitdev.general/envs/bit-env"))
+    if obj
+        .keys()
+        .any(|key| {
+            key == "teambit.envs/env"
+                || key.starts_with("teambit.envs/env@")
+                || key.starts_with("bitdev.general/envs/bit-env")
+        })
     {
         return true;
     }
-    matches!(
-        obj.get("teambit.envs/envs")
-            .and_then(|val| val["env"].as_str()),
-        Some("teambit.envs/env" | "bitdev.general/envs/bit-env"),
-    )
+    obj.iter()
+        .find(|(key, _)| {
+            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
+        })
+        .and_then(|(_, val)| val["env"].as_str())
+        .map(|env| env.split('@').next().unwrap_or(env))
+        .is_some_and(|bare| matches!(bare, "teambit.envs/env" | "bitdev.general/envs/bit-env"))
 }
 
 fn dir_has_bit_env_plugin(dir: &Path) -> bool {

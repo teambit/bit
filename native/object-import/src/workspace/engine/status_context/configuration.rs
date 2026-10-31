@@ -12,6 +12,18 @@ pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
     effective_value(workspace, home)
 }
 
+fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
+    let prefix = format!("{id}@");
+    doc.as_object()
+        .and_then(|map| {
+            map.get(id)
+                .or_else(|| {
+                    map.iter()
+                        .find_map(|(key, val)| key.starts_with(&prefix).then_some(val))
+                })
+        })
+}
+
 /// Apply global aspect settings to an already retained workspace document.
 pub(crate) fn effective_value(workspace: Value, home: &Path) -> io::Result<Value> {
     let path = home.join(".bitrc.jsonc");
@@ -19,7 +31,7 @@ pub(crate) fn effective_value(workspace: Value, home: &Path) -> io::Result<Value
         return Ok(workspace);
     }
     let mut global = config::document(&path)?;
-    let resolver = merge(global.get(RESOLVER), workspace.get(RESOLVER))?;
+    let resolver = merge(aspect_value(&global, RESOLVER), aspect_value(&workspace, RESOLVER))?;
     let combined =
         global.as_object_mut().ok_or_else(|| super::invalid("global aspect configuration"))?;
     combined.extend(

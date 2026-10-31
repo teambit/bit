@@ -27,7 +27,10 @@ pub(super) fn prepare(
     crate::component_rename::copy_refactor::validate_name(name)?;
     let scope = options.scope
         .as_deref()
-        .or_else(|| workspace["teambit.workspace/workspace"]["defaultScope"].as_str())
+        .or_else(|| {
+            crate::component_tracking::identity::workspace_aspect(workspace)["defaultScope"].as_str(
+            )
+        })
         .ok_or_else(|| invalid("failed finding defaultScope"))?;
     scope_name(scope)?;
     let target = format!("{scope}/{name}");
@@ -51,7 +54,10 @@ pub(super) fn prepare(
         .as_object()
         .is_some_and(|rows| {
             rows.iter()
-                .any(|(key, row)| row["name"].as_str().unwrap_or(key) == name)
+                .any(|(key, row)| {
+                    let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
+                    row["name"].as_str().unwrap_or(key_id) == name
+                })
         });
     let key = if duplicate_name { target.clone() } else { name.into() };
     Ok(Identity { target, key, name: name.into(), scope: scope.into(), directory, main })
@@ -60,9 +66,11 @@ fn available(bitmap: &Value, name: &str, scope: &str, target: &str) -> io::Resul
     let found = bitmap
         .as_object()
         .is_some_and(|rows| {
-            rows.values()
-                .any(|row| {
-                    row["name"] == name
+            rows.iter()
+                .any(|(key, row)| {
+                    let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
+                    let row_name = row["name"].as_str().unwrap_or(key_id);
+                    row_name == name
                         && row["scope"]
                             .as_str()
                             .filter(|value| !value.is_empty())
@@ -110,9 +118,10 @@ fn directory(
     bitmap: &Value,
     increment: bool,
 ) -> io::Result<String> {
-    let template = workspace["teambit.workspace/workspace"]["defaultDirectory"]
-        .as_str()
-        .unwrap_or("components/{name}");
+    let template =
+        crate::component_tracking::identity::workspace_aspect(workspace)["defaultDirectory"]
+            .as_str()
+            .unwrap_or("components/{name}");
     let template =
         if template.contains("{name}") { template.into() } else { format!("{template}/{{name}}") };
     let (owner, short_scope) = scope

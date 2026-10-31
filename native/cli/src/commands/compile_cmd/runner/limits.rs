@@ -7,12 +7,10 @@ pub(super) fn batch_size(root: &Path) -> io::Result<usize> {
     let global = read_global_config(&global_config_dir())?;
     let scope = read(&bit_object_import::scope_path(root).join("scope.json"))?;
     let workspace = read(&root.join("workspace.jsonc"))?;
-    let values = effective(
-        &global,
-        &scope["config"],
-        &workspace["teambit.harmony/config-store"],
-        &["concurrency.io"],
-    );
+    let ws_store =
+        crate::commands::update_cmd::aspect_entry(&workspace, "teambit.harmony/config-store")
+            .map_or(&Value::Null, |(_, val)| val);
+    let values = effective(&global, &scope["config"], ws_store, &["concurrency.io"]);
     let value = values
         .get("concurrency.io")
         .and_then(config_string)

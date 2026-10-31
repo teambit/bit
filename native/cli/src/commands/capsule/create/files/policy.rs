@@ -78,3 +78,29 @@ fn react_like(
 fn insert(map: &mut Map<String, Value>, name: &str, version: &str) {
     map.insert(name.to_owned(), Value::String(version.to_owned()));
 }
+
+pub(super) fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>) -> bool {
+    let Some(config) = config else { return false };
+    [
+        "teambit.react/react",
+        "teambit.html/html",
+        "teambit.react/react-native",
+        "teambit.harmony/aspect",
+        "teambit.mdx/mdx",
+        "teambit.envs/env",
+        "teambit.mdx/readme",
+        "teambit.harmony/bit-custom-aspect",
+        "teambit.harmony/empty-env",
+    ]
+    .iter()
+    .any(|target| {
+        config
+            .iter()
+            .any(|(key, value)| {
+                (key == target || key.starts_with(&format!("{target}@")))
+                    && value
+                        .as_object()
+                        .is_none_or(|env| !env.is_empty())
+            })
+    })
+}

@@ -124,11 +124,13 @@ fn remove_readme_from_bitmap(
         return Err(invalid());
     }
     let remote_lane_id = format!("{}/{}", target.scope, target.name);
-    if let Some(readme_cfg) = entry
-        .get_mut("config")
-        .and_then(|config| config.get_mut("teambit.lanes/lanes"))
-        .and_then(|lanes| lanes.get_mut("readme"))
-        .and_then(Value::as_object_mut)
+    if let Some(cfg_obj) = entry.get_mut("config").and_then(Value::as_object_mut)
+        && let Some((_, lanes)) = cfg_obj
+            .iter_mut()
+            .find(|(key, _)| {
+                key.as_str() == "teambit.lanes/lanes" || key.starts_with("teambit.lanes/lanes@")
+            })
+        && let Some(readme_cfg) = lanes.get_mut("readme").and_then(Value::as_object_mut)
     {
         readme_cfg.remove(&remote_lane_id);
     }
@@ -145,13 +147,27 @@ fn find_readme_bitmap_entry<'a>(
         .filter(|scope| !scope.is_empty());
     let map = bitmap.as_object_mut().ok_or_else(invalid)?;
     map.iter_mut()
-        .find(|(key, value)| {
-            *key != "$schema-version"
-                && *key != "_bit_lane"
-                && value.is_object()
-                && (*key == readme_name
-                    || readme_scope.is_some_and(|scope| *key == &format!("{scope}/{readme_name}")))
-        })
+        .find(|(key, value)| readme_row_matches(key, value, readme_name, readme_scope))
         .map(|(_, value)| value)
         .ok_or_else(invalid)
+}
+
+fn readme_row_matches(
+    key: &str,
+    value: &Value,
+    readme_name: &str,
+    readme_scope: Option<&str>,
+) -> bool {
+    if key.starts_with('$') || key == "version" || key == "_bit_lane" || !value.is_object() {
+        return false;
+    }
+    let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare);
+    let row_name = value["name"].as_str().unwrap_or(key_id);
+    let row_scope = value["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| value["defaultScope"].as_str());
+    key_id == readme_name
+        || (row_name == readme_name && (readme_scope.is_none() || row_scope == readme_scope))
+        || readme_scope.is_some_and(|scope| key_id == format!("{scope}/{readme_name}"))
 }

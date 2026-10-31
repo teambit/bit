@@ -218,7 +218,12 @@ fn remove_env_from_map_with_fallback(
     map: &mut Map<String, Value>,
     fallback_env: Option<&str>,
 ) -> bool {
-    let curr_env = match map.get("teambit.envs/envs") {
+    let envs_entry = map
+        .iter()
+        .find(|(key, _)| {
+            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
+        });
+    let curr_env = match envs_entry.map(|(_, val)| val) {
         Some(val) if val.as_str() == Some("-") => None,
         Some(val) => val["env"]
             .as_str()
@@ -237,13 +242,16 @@ fn remove_env_from_map_with_fallback(
     let prefix = format!("{bare_env}@");
     let versioned_keys = map
         .keys()
-        .filter(|key| key.starts_with(&prefix))
+        .filter(|key| {
+            key.starts_with(&prefix)
+                || key.as_str() == "teambit.envs/envs"
+                || key.starts_with("teambit.envs/envs@")
+        })
         .cloned()
         .collect::<Vec<_>>();
     for key in versioned_keys {
         any_removed |= map.remove(&key).is_some();
     }
-    any_removed |= map.remove("teambit.envs/envs").is_some();
     any_removed
 }
 

@@ -205,7 +205,18 @@ impl Prepared {
                 })
             })
             .collect::<io::Result<Vec<_>>>()?;
-        let roots = record.context["workspace"]["teambit.dependencies/dependency-resolver"]["rootComponents"].as_bool().unwrap_or(false);
+        let roots = record.context["workspace"]
+            .as_object()
+            .and_then(|map| {
+                map.iter()
+                    .find_map(|(key, val)| {
+                        (key == "teambit.dependencies/dependency-resolver"
+                            || key.starts_with("teambit.dependencies/dependency-resolver@"))
+                        .then_some(val)
+                    })
+            })
+            .and_then(|resolver| resolver["rootComponents"].as_bool())
+            .unwrap_or(false);
         let mut prepared = merge::finalization::prepare(&record.request.root, &inputs, roots, &[])?;
         prepared.imported_index(&record.request.root, record.repository.imported_index())?;
         Ok(prepared)

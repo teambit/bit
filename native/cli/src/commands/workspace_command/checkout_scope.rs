@@ -15,10 +15,12 @@ pub(super) fn candidates(
     }
     let context: Value =
         engine.request(&json!({"kind":"statusContext","root":root,"home":home,"history":false}))?;
-    let Some(scope) = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-    else {
+    let Some(scope) = crate::commands::update_cmd::aspect_entry(
+        &context["workspace"],
+        "teambit.workspace/workspace",
+    )
+    .and_then(|(_, ws)| ws["defaultScope"].as_str())
+    .filter(|scope| !scope.is_empty()) else {
         return Ok(Vec::new());
     };
     // Node logs listing failures to its file logger and continues normal checkout.

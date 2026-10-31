@@ -64,8 +64,9 @@ pub(in crate::workspace::engine) fn configuration_value(
     if object
         .keys()
         .any(|key| {
+            let bare = key.split('@').next().unwrap_or(key);
             !matches!(
-                key.as_str(),
+                bare,
                 "$schema"
                     | "teambit.workspace/workspace"
                     | "teambit.generator/generator"
@@ -92,9 +93,21 @@ pub(in crate::workspace::engine) fn configuration_value(
     Ok(workspace)
 }
 
+fn aspect_value<'a>(config: &'a Value, id: &str) -> Option<&'a Value> {
+    let prefix = format!("{id}@");
+    config
+        .as_object()
+        .and_then(|map| {
+            map.get(id)
+                .or_else(|| {
+                    map.iter()
+                        .find_map(|(key, val)| key.starts_with(&prefix).then_some(val))
+                })
+        })
+}
+
 fn workspace_settings(config: &Value) -> io::Result<Value> {
-    let workspace = config
-        .get("teambit.workspace/workspace")
+    let workspace = aspect_value(config, "teambit.workspace/workspace")
         .and_then(Value::as_object)
         .ok_or_else(|| invalid("status workspace settings"))?;
     identifier(
@@ -130,25 +143,21 @@ fn extensions(config: &Value) -> io::Result<()> {
     for name in
         ["teambit.generator/generator", "teambit.workspace/workspace-config-files", PREVIEW, ISSUES]
     {
-        if config
-            .get(name)
-            .is_some_and(|value| !value.is_object())
-        {
+        if aspect_value(config, name).is_some_and(|value| !value.is_object()) {
             return Err(invalid("status aspect settings"));
         }
     }
     // Resolver installation options do not change read-side dependency policy.
     // Policy and package resolution are validated by their native readers.
-    if config
-        .get("teambit.dependencies/dependency-resolver")
+    if aspect_value(config, "teambit.dependencies/dependency-resolver")
         .is_some_and(|resolver| !resolver.is_object())
     {
         return Err(invalid("status dependency resolver settings"));
     }
     configured_environments(config)?;
     // Only previews and builds read the preview settings.
-    if config[PREVIEW]
-        .get("disabled")
+    if aspect_value(config, PREVIEW)
+        .and_then(|preview| preview.get("disabled"))
         .is_some_and(|disabled| !disabled.is_boolean())
     {
         return Err(invalid("status preview settings require Harmony"));
@@ -158,7 +167,8 @@ fn extensions(config: &Value) -> io::Result<()> {
 }
 
 fn configured_environments(config: &Value) -> io::Result<()> {
-    if let Some(envs) = config["teambit.generator/generator"].get("envs")
+    if let Some(envs) =
+        aspect_value(config, "teambit.generator/generator").and_then(|gen_cfg| gen_cfg.get("envs"))
         && !envs
             .as_array()
             .is_some_and(|envs| envs.iter().all(Value::is_string))
@@ -172,7 +182,8 @@ fn configured_environments(config: &Value) -> io::Result<()> {
 /// `teambit.component/issues` removes from every component. A name outside
 /// `IssuesClasses` makes the Node.js CLI throw `NonExistIssueError`, so it declines.
 pub(in crate::workspace::engine) fn ignored_issues(config: &Value) -> io::Result<Vec<String>> {
-    let Some(names) = config[ISSUES].get("ignoreIssues") else {
+    let Some(names) = aspect_value(config, ISSUES).and_then(|issues| issues.get("ignoreIssues"))
+    else {
         return Ok(Vec::new());
     };
     let names = names.as_array().ok_or_else(|| invalid("status ignoreIssues"))?;

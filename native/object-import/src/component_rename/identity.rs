@@ -54,13 +54,15 @@ pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, 
         .ok_or_else(|| unsupported("rename bitmap"))?
         .iter()
         .filter(|(key, row)| {
+            let key_id = key.rsplit_once('@').map_or(key.as_str(), |(bare, _)| bare);
+            let row_name = row["name"].as_str().unwrap_or(key_id);
             row["rootDir"].is_string()
-                && (*key == id
-                    || row["name"] == id
-                    || scope(row)
-                        .is_some_and(|scope| {
-                            format!("{scope}/{}", row["name"].as_str().unwrap_or(key)) == id
-                        }))
+                && row["isAvailableOnCurrentLane"] != false
+                && row["config"]["teambit.component/remove"]["removed"] != true
+                && (key_id == id
+                    || *key == id
+                    || row_name == id
+                    || scope(row).is_some_and(|scope| format!("{scope}/{row_name}") == id))
         });
     let (key, row) = rows
         .next()
@@ -131,10 +133,11 @@ fn directory(
     if options.preserve && !exported {
         return Ok(source.into());
     }
-    let template = workspace["teambit.workspace/workspace"]["defaultDirectory"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("components/{name}");
+    let template =
+        crate::component_tracking::identity::workspace_aspect(workspace)["defaultDirectory"]
+            .as_str()
+            .filter(|value| !value.is_empty())
+            .unwrap_or("components/{name}");
     let template = if template.contains("{name}") {
         template.to_owned()
     } else {

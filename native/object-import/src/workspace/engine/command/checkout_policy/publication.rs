@@ -108,6 +108,18 @@ fn ordinary(path: &PathBuf) -> io::Result<()> {
     Ok(())
 }
 
+fn resolver_key(document: &crate::jsonc::Document) -> String {
+    document
+        .value()
+        .as_object()
+        .and_then(|map| {
+            map.keys()
+                .find(|key| key.as_str() == RESOLVER || key.starts_with(&format!("{RESOLVER}@")))
+        })
+        .cloned()
+        .unwrap_or_else(|| RESOLVER.to_owned())
+}
+
 fn render_updates_kind(
     original: &str,
     updates: &Map<String, Value>,
@@ -115,21 +127,22 @@ fn render_updates_kind(
     defaults: bool,
 ) -> io::Result<String> {
     let mut document = crate::jsonc::Document::parse(original)?;
+    let key = resolver_key(&document);
     if !document
-        .get(&[RESOLVER])
+        .get(&[&key])
         .is_some_and(|value| value.is_object())
         || !document
-            .get(&[RESOLVER, "policy"])
+            .get(&[&key, "policy"])
             .is_some_and(|value| value.is_object())
     {
         return Err(invalid("command workspace policy fields"));
     }
     for (name, pair) in updates {
-        update_one(&mut document, name, pair)?;
+        update_one(&mut document, &key, name, pair)?;
     }
     for (path, value) in [
-        (vec![RESOLVER, "policy", "peerDependencies"], json!({})),
-        (vec![RESOLVER, "linkCoreAspects"], json!(true)),
+        (vec![key.as_str(), "policy", "peerDependencies"], json!({})),
+        (vec![key.as_str(), "linkCoreAspects"], json!(true)),
     ] {
         if defaults && document.get(&path).is_none() {
             document.set(&path, &value);
@@ -145,12 +158,17 @@ fn render_updates_kind(
     Ok(output)
 }
 
-fn update_one(document: &mut crate::jsonc::Document, name: &str, pair: &Value) -> io::Result<()> {
+fn update_one(
+    document: &mut crate::jsonc::Document,
+    resolver_key: &str,
+    name: &str,
+    pair: &Value,
+) -> io::Result<()> {
     let old = pair[0].as_str().ok_or_else(|| invalid("command policy old value"))?;
     let new = pair[1].as_str().ok_or_else(|| invalid("command policy new value"))?;
     let mut found = 0;
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
-        let mut path = vec![RESOLVER, "policy", field, name];
+        let mut path = vec![resolver_key, "policy", field, name];
         let Some(entry) = document.get(&path) else { continue };
         if !entry.is_string() {
             path.push("version");

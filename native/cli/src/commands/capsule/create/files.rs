@@ -134,7 +134,10 @@ pub(super) fn supported_builtin_manifests(
 fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<ManifestConfig>> {
     let config = entry.config.as_ref();
     let env = effective_env(ws_root, entry)?;
-    let builtin = match env.as_deref() {
+    let bare_env = env
+        .as_deref()
+        .map(|raw| raw.split('@').next().unwrap_or(raw));
+    let builtin = match bare_env {
         None | Some("teambit.harmony/node") => BuiltinEnv::Node,
         Some("teambit.react/react") => BuiltinEnv::React,
         Some("teambit.html/html") => BuiltinEnv::Html,
@@ -150,14 +153,19 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
     let model_package_json =
         if entry.id.version.is_some() { model_package_json(ws_root, entry)? } else { None };
     let bitmap_package_json = config
-        .and_then(|config| config.get("teambit.pkg/pkg"))
+        .and_then(|cfg| {
+            cfg.iter()
+                .find_map(|(key, val)| {
+                    (key == "teambit.pkg/pkg" || key.starts_with("teambit.pkg/pkg@")).then_some(val)
+                })
+        })
         .and_then(|pkg| pkg.get("packageJson"));
     let Some(overrides) =
         additional_package_metadata(bitmap_package_json.or(model_package_json.as_ref()))
     else {
         return Ok(None);
     };
-    if has_custom_builtin_env_config(config) {
+    if policy::has_custom_builtin_env_config(config) {
         return Ok(None);
     }
     Ok(Some(ManifestConfig { env: builtin, overrides }))
@@ -259,35 +267,18 @@ fn take_nonempty_string(metadata: &mut Map<String, Value>, key: &str) -> Option<
     }
 }
 
-fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>) -> bool {
-    let Some(config) = config else { return false };
-    [
-        "teambit.react/react",
-        "teambit.html/html",
-        "teambit.react/react-native",
-        "teambit.harmony/aspect",
-        "teambit.mdx/mdx",
-        "teambit.envs/env",
-        "teambit.mdx/readme",
-        "teambit.harmony/bit-custom-aspect",
-        "teambit.harmony/empty-env",
-    ]
-    .iter()
-    .any(|key| {
-        config
-            .get(*key)
-            .is_some_and(|value| {
-                value
-                    .as_object()
-                    .is_none_or(|env| !env.is_empty())
-            })
-    })
-}
-
 fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<String>> {
     let bitmap_env = entry.config
         .as_ref()
-        .and_then(|config| config.get("teambit.envs/envs"))
+        .and_then(|config| {
+            config
+                .iter()
+                .find_map(|(key, val)| {
+                    (key == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")).then_some(
+                        val,
+                    )
+                })
+        })
         .and_then(|env| env.get("env"))
         .and_then(Value::as_str);
     if entry.id.version.is_none() {

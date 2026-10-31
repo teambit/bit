@@ -35,12 +35,7 @@ pub fn graphs(
     snapped: &[Snapped<'_>],
     components: &[WorkspaceComponent<'_>],
 ) -> io::Result<Vec<Option<String>>> {
-    let config = WorkspaceConfig::load(root)?;
-    let root_directory = config.aspects
-        .get("teambit.workspace/workspace")
-        .and_then(|workspace| workspace["rootComponentsDirectory"].as_str())
-        .unwrap_or("node_modules");
-    let roots = root.join(root_directory).join(".bit_roots");
+    let roots = roots_dir(root)?;
     let loaded = Lockfile::load_from_path(&root.join(Lockfile::FILE_NAME))
         .map_err(|error| decline(format!("lockfile: {error}")))?;
     let Some(lockfile) = loaded else { return Ok(vec![None; snapped.len()]) };
@@ -63,6 +58,20 @@ pub fn graphs(
             }
         })
         .collect()
+}
+
+fn roots_dir(root: &Path) -> io::Result<std::path::PathBuf> {
+    let config = WorkspaceConfig::load(root)?;
+    let root_directory = config.aspects
+        .iter()
+        .find_map(|(key, val)| {
+            (key == "teambit.workspace/workspace"
+                || key.starts_with("teambit.workspace/workspace@"))
+            .then_some(val)
+        })
+        .and_then(|workspace| workspace["rootComponentsDirectory"].as_str())
+        .unwrap_or("node_modules");
+    Ok(root.join(root_directory).join(".bit_roots"))
 }
 
 /// One component's graph: its importers, without the other workspace

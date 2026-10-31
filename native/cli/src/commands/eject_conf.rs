@@ -351,8 +351,12 @@ fn load_version_extensions(
 
 fn strip_local_env_version(bitmap: &Bitmap, cfg_map: Map<String, Value>) -> Map<String, Value> {
     let local_env = cfg_map
-        .get("teambit.envs/envs")
-        .and_then(|val| val["env"].as_str())
+        .iter()
+        .find(|(key, _)| {
+            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
+        })
+        .and_then(|(_, val)| val["env"].as_str())
+        .map(|env| env.split('@').next().unwrap_or(env))
         .filter(|bare| {
             !bare.is_empty()
                 && bitmap.entries

@@ -14,14 +14,30 @@ const FIELDS: [&str; 2] = ["dependencies", "peerDependencies"];
 /// One `WorkspacePolicyEntry`: field index (0 runtime, 1 peer), name, config value.
 type Entry = (usize, String, Value);
 
+fn resolver_key(document: &Document) -> String {
+    document
+        .value()
+        .as_object()
+        .and_then(|map| {
+            map.keys()
+                .find(|key| {
+                    key.as_str() == DEPENDENCY_RESOLVER_ASPECT
+                        || key.starts_with(&format!("{DEPENDENCY_RESOLVER_ASPECT}@"))
+                })
+        })
+        .cloned()
+        .unwrap_or_else(|| DEPENDENCY_RESOLVER_ASPECT.to_owned())
+}
+
 /// Add runtime entries to a comment-preserving document using `WorkspacePolicy.add` semantics.
 pub fn update_document(
     document: &mut Document,
     entries: &[(String, String)],
     existing: ExistingEntries,
 ) -> io::Result<()> {
+    let key = resolver_key(document);
     let initial = document
-        .get(&[DEPENDENCY_RESOLVER_ASPECT, "policy"])
+        .get(&[&key, "policy"])
         .unwrap_or(Value::Null);
     let mut policy = config_entries(&initial);
     for (name, version) in entries {
@@ -35,8 +51,9 @@ pub fn update_document(
 
 /// Remove `packages` from `dependencies` and `peerDependencies` in the workspace policy.
 pub fn remove_from_document(document: &mut Document, packages: &[String]) -> bool {
+    let key = resolver_key(document);
     let initial = document
-        .get(&[DEPENDENCY_RESOLVER_ASPECT, "policy"])
+        .get(&[&key, "policy"])
         .unwrap_or(Value::Null);
     let policy = config_entries(&initial);
     let original_len = policy.len();
@@ -149,10 +166,8 @@ fn to_config_object(entries: &[Entry]) -> [IndexMap<String, Value>; 2] {
 
 /// `updateConfigPolicy` and `setExtension(..., { mergeIntoExisting: true })`.
 fn update_config_policy(document: &mut Document, fields: &[IndexMap<String, Value>; 2]) {
-    if document
-        .get(&[DEPENDENCY_RESOLVER_ASPECT])
-        .is_none()
-    {
+    let key = resolver_key(document);
+    if document.get(&[&key]).is_none() {
         let policy: Map<String, Value> = FIELDS
             .iter()
             .zip(fields)
@@ -160,14 +175,11 @@ fn update_config_policy(document: &mut Document, fields: &[IndexMap<String, Valu
                 ((*name).to_string(), Value::Object(entries.clone().into_iter().collect()))
             })
             .collect();
-        document.set(
-            &[DEPENDENCY_RESOLVER_ASPECT],
-            &json!({ "policy": policy, "linkCoreAspects": true }),
-        );
+        document.set(&[&key], &json!({ "policy": policy, "linkCoreAspects": true }));
         return;
     }
     for (name, entries) in FIELDS.iter().zip(fields) {
-        let path = [DEPENDENCY_RESOLVER_ASPECT, "policy", name];
+        let path = [key.as_str(), "policy", name];
         if matches!(document.get(&path), Some(Value::Object(_))) {
             document.replace_entries(&path, entries);
         } else {
@@ -175,10 +187,10 @@ fn update_config_policy(document: &mut Document, fields: &[IndexMap<String, Valu
         }
     }
     if document
-        .get(&[DEPENDENCY_RESOLVER_ASPECT, "linkCoreAspects"])
+        .get(&[&key, "linkCoreAspects"])
         .is_none()
     {
-        document.set(&[DEPENDENCY_RESOLVER_ASPECT, "linkCoreAspects"], &json!(true));
+        document.set(&[&key, "linkCoreAspects"], &json!(true));
     }
 }
 

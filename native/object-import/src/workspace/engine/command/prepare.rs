@@ -84,7 +84,9 @@ fn prepare_checkout_import(
         });
     if local_target {
         let cached = command_import::prepare_cached(&request.root, &request.global_remotes_file)?;
-        let default_scope = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
+        let default_scope = crate::component_tracking::identity::workspace_aspect(
+            &context["workspace"],
+        )["defaultScope"]
             .as_str()
             .ok_or_else(|| invalid("command default scope"))?;
         if targets.iter().all(|target| target.scope.is_none())

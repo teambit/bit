@@ -104,10 +104,18 @@ fn validate_finalization(
             version,
         })
         .collect::<Vec<_>>();
-    let roots =
-        record.context["workspace"]["teambit.dependencies/dependency-resolver"]["rootComponents"]
-            .as_bool()
-            .unwrap_or(false);
+    let roots = record.context["workspace"]
+        .as_object()
+        .and_then(|map| {
+            map.iter()
+                .find_map(|(key, val)| {
+                    (key == "teambit.dependencies/dependency-resolver"
+                        || key.starts_with("teambit.dependencies/dependency-resolver@"))
+                    .then_some(val)
+                })
+        })
+        .and_then(|resolver| resolver["rootComponents"].as_bool())
+        .unwrap_or(false);
     merge::finalization::prepare(&record.request.root, &inputs, roots, &[])?;
     Ok(())
 }

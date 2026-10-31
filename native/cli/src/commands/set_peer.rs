@@ -168,7 +168,7 @@ fn set_bitmap_dep_resolver_config(
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
     let current = row
         .get("config")
-        .and_then(|cfg| cfg.get(DEP_RESOLVER_ID));
+        .and_then(|cfg| super::update_cmd::aspect_entry(cfg, DEP_RESOLVER_ID).map(|(_, val)| val));
     if current == Some(&config) {
         return Ok(false);
     }
@@ -182,9 +182,11 @@ fn insert_dep_resolver_config(row: &mut Value, config: Value) -> Result<(), Fail
     let cfg_val = row_obj
         .entry("config")
         .or_insert_with(|| json!({}));
+    let key = super::update_cmd::aspect_entry(cfg_val, DEP_RESOLVER_ID)
+        .map_or_else(|| DEP_RESOLVER_ID.to_owned(), |(key, _)| key.to_owned());
     let cfg_obj =
         cfg_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
-    cfg_obj.insert(DEP_RESOLVER_ID.into(), config);
+    cfg_obj.insert(key, config);
     Ok(())
 }
 
@@ -199,9 +201,8 @@ pub(in crate::commands) fn load_dep_resolver_config(
         return Err(Failure::Declined("merge state active".into()));
     }
     let row = find_bitmap_row_ref(bitmap_val, entry)?;
-    if let Some(val) = row
-        .get("config")
-        .and_then(|cfg| cfg.get(DEP_RESOLVER_ID))
+    if let Some((_, val)) =
+        row.get("config").and_then(|cfg| super::update_cmd::aspect_entry(cfg, DEP_RESOLVER_ID))
     {
         return clean_dep_resolver_value(val);
     }
@@ -212,7 +213,9 @@ pub(in crate::commands) fn load_dep_resolver_config(
             let parsed: Value = serde_json::from_slice(&fs::read(&comp_json_path)?)
                 .map_err(|err| Failure::Declined(err.to_string()))?;
             comp_json_propagate = parsed["propagate"].as_bool().unwrap_or(false);
-            if let Some(val) = parsed["extensions"].get(DEP_RESOLVER_ID) {
+            if let Some((_, val)) =
+                super::update_cmd::aspect_entry(&parsed["extensions"], DEP_RESOLVER_ID)
+            {
                 return clean_dep_resolver_value(val);
             }
         }

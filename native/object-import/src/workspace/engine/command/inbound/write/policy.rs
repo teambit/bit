@@ -9,7 +9,17 @@ pub(super) fn receipt(
     imported: &mut crate::command_import::PreparedImport,
 ) -> io::Result<Option<Value>> {
     let workspace = config::document(&root.join("workspace.jsonc"))?;
-    let policy = &workspace["teambit.dependencies/dependency-resolver"]["policy"];
+    let policy = workspace
+        .as_object()
+        .and_then(|ws| {
+            ws.iter()
+                .find_map(|(key, val)| {
+                    (key == "teambit.dependencies/dependency-resolver"
+                        || key.starts_with("teambit.dependencies/dependency-resolver@"))
+                    .then_some(&val["policy"])
+                })
+        })
+        .unwrap_or(&Value::Null);
     if ["dependencies", "devDependencies", "peerDependencies"]
         .iter()
         .all(|field| policy[*field].as_object().is_none_or(serde_json::Map::is_empty))

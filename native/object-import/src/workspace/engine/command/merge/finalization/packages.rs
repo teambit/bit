@@ -296,7 +296,8 @@ fn roots_path(root: &Path, snapshot: bool, output: &mut Prepared) -> io::Result<
     let base = config
         .as_ref()
         .and_then(|config| {
-            config["teambit.workspace/workspace"]["rootComponentsDirectory"].as_str()
+            crate::component_tracking::identity::workspace_aspect(config)["rootComponentsDirectory"]
+                .as_str()
         })
         .unwrap_or("node_modules");
     crate::checkout::plan::relative_path(base)?;
