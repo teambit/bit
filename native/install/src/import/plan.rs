@@ -170,7 +170,11 @@ impl Importer<'_> {
 
     /// `Version.getFlattenedEdges()` is not empty.
     fn has_graph(&self, version: &Value) -> io::Result<bool> {
-        let Some(reference) = version["flattenedEdgesRef"].as_str() else {
+        let Some(reference) = version["flattenedEdgesRef"]
+            .as_str()
+            .map(str::trim)
+            .filter(|reference| !reference.is_empty())
+        else {
             return Ok(version["flattenedEdges"]
                 .as_array()
                 .is_some_and(|edges| !edges.is_empty()));
@@ -178,13 +182,11 @@ impl Importer<'_> {
         let edges = self.repo
             .read(reference)?
             .and_then(|edges| bit_object_import::parse_jsonc(&edges.content).ok());
-        Ok(edges
-            .and_then(|edges| {
-                edges
-                    .as_array()
-                    .map(|edges| !edges.is_empty())
-            })
-            .unwrap_or(false))
+        Ok(edges.is_some_and(|edges| {
+            edges
+                .as_array()
+                .is_some_and(|list| !list.is_empty())
+        }))
     }
 
     fn flattened_exist(&self, version: &Value) -> bool {

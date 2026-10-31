@@ -116,6 +116,9 @@ fn from_overrides(
 
 fn from_merge_config(merge_config: &FieldMaps, package: &str) -> Option<String> {
     let package = package.trim();
+    if package.is_empty() {
+        return None;
+    }
     let found = merge_config
         .iter()
         .filter_map(|field| field.get(package))

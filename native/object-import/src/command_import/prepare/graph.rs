@@ -5,7 +5,7 @@ use std::{io, path::Path};
 impl PreparedImport {
     pub(super) fn prime_versionless_graph_ids(&mut self, targets: &[&Target]) -> io::Result<()> {
         for target in targets {
-            if target.version == "latest" {
+            if target.version.trim() == "latest" {
                 self.cache.unbuilt.insert(format!("{}@latest", super::identity(target)?));
             }
         }

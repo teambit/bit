@@ -20,10 +20,10 @@ pub fn extract_package_name(argument: &str) -> String {
         if rest[at + 1..].contains('/') {
             return argument.to_string();
         }
-        return argument[..=at].to_string();
+        return argument[..=at].trim().to_string();
     }
     match argument.rfind('@') {
-        Some(at) if at > 0 => argument[..at].to_string(),
+        Some(at) if at > 0 => argument[..at].trim().to_string(),
         _ => argument.to_string(),
     }
 }

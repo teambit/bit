@@ -17,9 +17,15 @@ impl EngineError {
     /// Capture a pacquet diagnostic.
     pub fn from_diagnostic<Diag: Diagnostic + ?Sized>(error: &Diag) -> Self {
         EngineError {
-            code: error.code().map(|code| code.to_string()),
+            code: error
+                .code()
+                .map(|code| code.to_string().trim().to_owned())
+                .filter(|code| !code.is_empty()),
             message: error.to_string(),
-            hint: error.help().map(|help| help.to_string()),
+            hint: error
+                .help()
+                .map(|help| help.to_string().trim().to_owned())
+                .filter(|help| !help.is_empty()),
         }
     }
 

@@ -77,12 +77,14 @@ impl EngineSettings {
     /// Supply the published build-script PATH to child processes without changing
     /// the environment of already-running native workers.
     pub(crate) fn set_build_scripts_path(&mut self, path: String) {
-        if !path.trim().is_empty()
+        let trimmed = path.trim();
+        if !trimmed.is_empty()
             && !self.base.extra_env
                 .keys()
                 .any(|key| key.trim().eq_ignore_ascii_case("PATH"))
         {
-            self.base.extra_env.insert("PATH".to_string(), path);
+            let value = if trimmed.len() == path.len() { path } else { trimmed.to_owned() };
+            self.base.extra_env.insert("PATH".to_string(), value);
         }
     }
 }

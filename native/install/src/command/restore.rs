@@ -98,8 +98,20 @@ pub fn stored_graphs(
 /// `getDependenciesGraphByComponentId`: the Version's `dependenciesGraphRef` Source,
 /// when its schema is supported and it is not empty.
 fn stored_graph(scope: &Scope, id: &str, version: Option<&str>) -> io::Result<Option<Value>> {
+    let id = id.trim();
+    if id.is_empty() {
+        return Ok(None);
+    }
+    let version = version
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty());
     let Ok(Some(object)) = scope.version(id, version) else { return Ok(None) };
-    let Some(reference) = object.get("dependenciesGraphRef").and_then(Value::as_str) else {
+    let Some(reference) = object
+        .get("dependenciesGraphRef")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|reference| !reference.is_empty())
+    else {
         return Ok(None);
     };
     let Some(bytes) = scope.object(reference, "Source")? else { return Ok(None) };

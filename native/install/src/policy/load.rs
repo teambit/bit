@@ -41,8 +41,11 @@ pub fn is_core_env(id: &str) -> bool {
 /// `scope/name@version` → (`scope/name`, `version`).
 #[must_use]
 pub fn split_version(id: &str) -> (&str, Option<&str>) {
+    let id = id.trim();
     match id.rfind('@') {
-        Some(index) if index > 0 => (&id[..index], Some(&id[index + 1..])),
+        Some(index) if index > 0 => {
+            (id[..index].trim(), Some(id[index + 1..].trim()).filter(|version| !version.is_empty()))
+        }
         _ => (id, None),
     }
 }

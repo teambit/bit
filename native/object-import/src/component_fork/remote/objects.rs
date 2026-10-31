@@ -115,8 +115,9 @@ fn source_rows(version: &Value) -> io::Result<&[Value]> {
     Ok(files)
 }
 fn source(row: &Value) -> io::Result<(&str, &str)> {
-    let path =
-        trimmed_str(&row["relativePath"]).ok_or_else(|| unsupported("fork remote source path"))?;
+    let path = trimmed_str(&row["relativePath"])
+        .or_else(|| trimmed_str(&row["path"]))
+        .ok_or_else(|| unsupported("fork remote source path"))?;
     if path.is_empty()
         || Path::new(path)
             .components()

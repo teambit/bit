@@ -71,7 +71,7 @@ impl HostInfo {
         self.token
             .as_deref()
             .map(str::trim)
-            .filter(|token| !token.is_empty())
+            .filter(|token| !token.is_empty() && !token.chars().any(char::is_control))
     }
 }
 

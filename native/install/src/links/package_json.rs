@@ -242,9 +242,10 @@ fn add_exports_types(manifest: &mut Manifest) {
 
 /// `snapToSemver`: a hash version becomes `0.0.0-<hash>`.
 pub(super) fn snap_to_semver(version: &str) -> String {
+    let trimmed = version.trim();
     let is_hash =
-        (3..=40).contains(&version.len()) && version.bytes().all(|byte| byte.is_ascii_hexdigit());
-    if is_hash { format!("0.0.0-{version}") } else { version.to_owned() }
+        (3..=40).contains(&trimmed.len()) && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit());
+    if is_hash { format!("0.0.0-{trimmed}") } else { trimmed.to_owned() }
 }
 
 /// JavaScript truthiness of an optional JSON value.

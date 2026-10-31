@@ -166,10 +166,9 @@ fn prune_hidden(value: &mut Value, incoming: &Value) -> io::Result<bool> {
 }
 fn set_hidden(value: &mut Value, rows: Vec<Value>) {
     if rows.is_empty() {
-        value
-            .as_object_mut()
-            .unwrap()
-            .remove("updateDependents");
+        if let Some(object) = value.as_object_mut() {
+            object.remove("updateDependents");
+        }
     } else {
         value["updateDependents"] = Value::Array(rows);
     }

@@ -128,7 +128,9 @@ fn read_entry<Reader: Read>(
     if entry.size() > MAX_OBJECT_BYTES.min(max_bytes.saturating_sub(*total_bytes)) as u64 {
         return Err(invalid("remote fetch object exceeds bounds"));
     }
-    let name = String::from_utf8_lossy(&entry.path_bytes()).into_owned();
+    let name = String::from_utf8_lossy(&entry.path_bytes())
+        .trim_matches(|ch: char| ch.is_whitespace() || ch == '\0')
+        .to_owned();
     let mut data = Vec::new();
     entry.read_to_end(&mut data)?;
     if data.len() > max_bytes.saturating_sub(*total_bytes) {

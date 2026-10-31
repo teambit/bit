@@ -309,6 +309,7 @@ fn staged_change(
                 .as_str()
                 .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
         })
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("staged version"))?
         .to_owned();

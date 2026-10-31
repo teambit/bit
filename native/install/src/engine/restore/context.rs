@@ -22,7 +22,13 @@ pub(super) fn graph(serialized: &Value) -> Map<String, Value> {
             context.insert(target.to_owned(), value.clone());
         }
     }
-    if serialized["pnpmfileChecksum"] == "bit-1" && serialized["overrides"].is_null() {
+    if serialized
+        .get("pnpmfileChecksum")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        == Some("bit-1")
+        && serialized["overrides"].is_null()
+    {
         context.remove("pnpmfileChecksum");
         context.insert(
             "overrides".into(),

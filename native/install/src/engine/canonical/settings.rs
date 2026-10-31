@@ -53,7 +53,9 @@ pub(super) fn prepare(request: &Request<'_>, info: &HostInfo) -> Option<Prepared
 fn apply_store(settings: &mut EngineSettings, request: &Request<'_>) -> Option<()> {
     settings.store.store_dir.clone_from(&request.paths.store);
     settings.store.cache_dir.clone_from(&request.paths.cache);
-    settings.store.package_import_method = string(request.options, "packageImportMethod")?;
+    settings.store.package_import_method = string(request.options, "packageImportMethod")?
+        .map(|method| method.trim().to_owned())
+        .filter(|method| !method.is_empty());
     if settings.store.package_import_method
         .as_deref()
         .is_some_and(|method| {

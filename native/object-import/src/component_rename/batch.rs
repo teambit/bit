@@ -216,7 +216,10 @@ impl Batch {
                     .find(|row| {
                         row["name"].as_str().map(str::trim)
                             == Some(plan.identity.target_name.trim())
-                            && row["scope"].as_str().map(str::trim) == Some("")
+                            && row["scope"]
+                                .as_str()
+                                .map_or("", str::trim)
+                                .is_empty()
                             && row["rootDir"].as_str().map(str::trim)
                                 == Some(plan.identity.target_directory.trim())
                     })

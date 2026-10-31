@@ -246,12 +246,12 @@ fn project_bitmap(
 fn validate_scope(_root: &Path, scope: &Scope) -> io::Result<()> {
     match scope {
         Scope::Entire => Ok(()),
-        Scope::Range(range) if !range.is_empty() && range.len() <= 65536 => Ok(()),
+        Scope::Range(range) if !range.trim().is_empty() && range.len() <= 65536 => Ok(()),
         Scope::Snaps(snaps)
             if snaps.len() <= 4096
                 && snaps
                     .iter()
-                    .all(|snap| snap.len() <= 4096) =>
+                    .all(|snap| !snap.trim().is_empty() && snap.len() <= 4096) =>
         {
             Ok(())
         }

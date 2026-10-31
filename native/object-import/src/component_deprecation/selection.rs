@@ -8,32 +8,33 @@ pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {
         .rsplit_once('@')
         .map_or((key, None), |(id, ver)| (id, Some(ver)));
     let key_scope = key_id.split_once('/').map(|(scope, _)| scope);
-    let scope = row["scope"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .or_else(|| {
-            row["defaultScope"]
-                .as_str()
-                .filter(|value| !value.is_empty())
-        })
+    let scope = non_empty_field(row, "scope")
+        .or_else(|| non_empty_field(row, "defaultScope"))
         .or(key_scope)?;
-    let name = row["name"]
-        .as_str()
-        .filter(|value| !value.is_empty())
+    let name = non_empty_field(row, "name")
         .unwrap_or_else(|| {
             key_id
                 .strip_prefix(&format!("{scope}/"))
                 .unwrap_or(key_id)
         });
-    let version = row["version"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .or_else(|| key_ver.filter(|value| !value.is_empty()))
+    let version = non_empty_field(row, "version")
+        .or_else(|| {
+            key_ver
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+        })
         .unwrap_or_default();
     Some(format!(
         "{scope}/{name}{}",
         if version.is_empty() { String::new() } else { format!("@{version}") },
     ))
+}
+
+fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
+    row[field]
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
 }
 pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
     let trimmed = id.trim();

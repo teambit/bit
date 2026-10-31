@@ -27,7 +27,8 @@ fn strip_prerelease(comparator: &Comparator) -> String {
 /// `isSameVersionEqualsLikeComparator`.
 pub(super) fn same_version_equals_like(left: &Comparator, right: &Comparator) -> bool {
     let equals_like = |comparator: &Comparator| {
-        comparator.operator.is_empty() || comparator.operator.contains('=')
+        let operator = comparator.operator.trim();
+        operator.is_empty() || operator.contains('=')
     };
     if !equals_like(left) || !equals_like(right) {
         return false;
@@ -38,7 +39,7 @@ pub(super) fn same_version_equals_like(left: &Comparator, right: &Comparator) ->
 
 /// `isEqualsComparator`.
 pub(super) fn is_equals(comparator: &Comparator) -> bool {
-    comparator.semver.is_some() && matches!(comparator.operator.as_str(), "" | "=")
+    comparator.semver.is_some() && matches!(comparator.operator.trim(), "" | "=")
 }
 
 /// `stripComparatorOperator`.

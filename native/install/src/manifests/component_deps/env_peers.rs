@@ -97,7 +97,8 @@ fn section_packages(section: Option<&Value>) -> Vec<String> {
         Some(Value::Object(entries)) => entries
             .iter()
             .filter(|(_, spec)| !is_removal(spec))
-            .map(|(name, _)| name.clone())
+            .map(|(name, _)| name.trim().to_owned())
+            .filter(|name| !name.is_empty())
             .collect(),
         Some(Value::Array(items)) => items
             .iter()
@@ -106,6 +107,7 @@ fn section_packages(section: Option<&Value>) -> Vec<String> {
                 item.get("name")
                     .or_else(|| item.get("packageName"))
                     .and_then(Value::as_str)
+                    .map(str::trim)
                     .filter(|name| !name.is_empty())
                     .map(str::to_owned)
             })
@@ -115,7 +117,15 @@ fn section_packages(section: Option<&Value>) -> Vec<String> {
 }
 
 fn is_removal(spec: &Value) -> bool {
-    spec.as_str() == Some("-")
-        || spec.get("version").and_then(Value::as_str) == Some("-")
-        || spec.get("supportedRange").and_then(Value::as_str) == Some("-")
+    spec.as_str().map(str::trim) == Some("-")
+        || spec
+            .get("version")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            == Some("-")
+        || spec
+            .get("supportedRange")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            == Some("-")
 }

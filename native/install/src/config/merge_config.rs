@@ -252,7 +252,11 @@ fn extract_auto_deps(config: &mut Map<String, Value>) -> Map<String, Value> {
 fn entries_to_object<'a>(entries: impl Iterator<Item = &'a Value>) -> Map<String, Value> {
     entries
         .filter_map(|entry| {
-            let name = entry.get("name")?.as_str()?;
+            let name = entry
+                .get("name")?
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())?;
             Some((
                 name.to_owned(),
                 entry

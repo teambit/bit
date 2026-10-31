@@ -47,7 +47,9 @@ pub(super) fn recorded_virtual_store_dir(modules_manifest: &str) -> Option<Strin
     if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(modules_manifest) {
         return parsed
             .get("virtualStoreDir")
-            .and_then(|value| value.as_str())
+            .and_then(serde_json::Value::as_str)
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
             .map(str::to_string);
     }
     modules_manifest.lines().find_map(yaml_virtual_store_dir)

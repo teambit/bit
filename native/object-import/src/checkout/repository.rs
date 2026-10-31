@@ -49,7 +49,7 @@ pub(crate) fn read_source_record(
     compressed_total: &mut usize,
 ) -> io::Result<SourceRecord> {
     let compressed = packed(directory, hash, compressed_total)?;
-    let object = inflate(&compressed, maximum + 256)?;
+    let object = inflate(&compressed, maximum.saturating_add(256))?;
     source_contents(compressed, &object, hash, maximum)
 }
 

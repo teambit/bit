@@ -31,6 +31,7 @@ impl Plan {
     ) -> io::Result<Self> {
         let mut proofs = crate::component_tracking::observe::Observed::default();
         proofs.ancestors(root, root)?;
+        let pattern = pattern.trim();
         let before = proofs
             .read(&root.join(".bitmap"))?
             .ok_or_else(|| invalid("component bitmap missing"))?;

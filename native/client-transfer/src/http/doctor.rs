@@ -12,12 +12,15 @@ impl Network {
     /// Request the published remote doctor's complete results and runtime metadata.
     pub async fn doctor(&self, url: &str, scope: &str, name: Option<&str>) -> io::Result<Value> {
         let mut variables = json!({});
-        if let Some(name) = name {
+        if let Some(name) = name
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+        {
             variables["diagnosisName"] = json!(name);
         }
         let query = QUERY.replace("\r\n", "\n");
         let request = self.client
-            .post(format!("{url}/graphql"))
+            .post(format!("{}/graphql", url.trim().trim_end_matches('/')))
             .header("x-verb", "read");
         let request = match &self.token {
             Some(token) => request.header("authorization", format!("Bearer {token}")),

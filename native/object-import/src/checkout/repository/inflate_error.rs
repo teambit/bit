@@ -21,4 +21,6 @@ pub(crate) fn message(error: &io::Error) -> Option<&str> {
         .downcast_ref::<Failure>()?
         .0
         .message()
+        .map(str::trim)
+        .filter(|message| !message.is_empty())
 }

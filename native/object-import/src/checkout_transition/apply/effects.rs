@@ -40,7 +40,7 @@ fn effect(
     files: &mut Vec<File>,
     status: &mut Map<String, Value>,
 ) -> io::Result<Option<String>> {
-    match kind {
+    match kind.trim() {
         "modifiedFiles" => modified(plan, row, path, files, status),
         "addFiles" | "deletedConflictFiles" => {
             add(plan, row, path, files, status)?;

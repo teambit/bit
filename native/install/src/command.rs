@@ -222,8 +222,13 @@ async fn add_missing_peers(session: &Session<'_>, loaded: Loaded) -> io::Result<
     }
     let packages: Vec<String> = missing
         .iter()
+        .filter(|(name, range)| !name.trim().is_empty() && !range.trim().is_empty())
         .map(|(name, range)| format!("{}@{}", name.trim(), range.trim()))
         .collect();
+    if packages.is_empty() {
+        session.output.console("No missing peer dependencies found.");
+        return Ok(loaded);
+    }
     // `_addPackages(missingPeerPackages, options)`: `lifecycleType || 'runtime'`.
     packages::add(session, &loaded, &packages, session.options.lifecycle()).await?;
     Loaded::load(session)

@@ -16,7 +16,7 @@ pub(super) fn import(
     lookup: Option<&Option<PathBuf>>,
     id: String,
 ) -> io::Result<Import> {
-    let name = super::super::resolve::package_name(specifier);
+    let name = super::super::resolve::package_name(specifier.trim());
     let (is_component, package) = resolver.core_metadata(&component.dir, &name)?;
     let path = lookup.and_then(Option::as_deref).unwrap_or(&package);
     Ok(Import { component: is_component, path: relative(&component.dir, path), id })

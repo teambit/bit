@@ -65,7 +65,7 @@ fn decision(input: &Value) -> io::Result<Value> {
         .as_bool()
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "checkout conflict flag"))?;
     Ok(
-        json!({"keepOurs":current && (force || (conflicts && input["strategy"].as_str()==Some("ours")))}),
+        json!({"keepOurs":current && (force || (conflicts && input["strategy"].as_str().map(str::trim)==Some("ours")))}),
     )
 }
 
@@ -79,7 +79,8 @@ pub(crate) fn order(
     indexed: bool,
     state: &mut State,
 ) -> io::Result<Value> {
-    if token.trim().is_empty() {
+    let token = token.trim();
+    if token.is_empty() {
         return Err(invalid("stale merge order plan"));
     }
     let plan = state.plans.plans.get_mut(token).ok_or_else(|| invalid("stale merge order plan"))?;

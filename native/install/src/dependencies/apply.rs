@@ -62,7 +62,7 @@ fn is_ignored_name(ignore: &[String], name: &str) -> bool {
 fn remove_ignored_packages(deps: &FieldMaps, detected: &mut Detected) {
     for lifecycle in [Lifecycle::Runtime, Lifecycle::Dev] {
         let ignore = ignored(deps, lifecycle);
-        detected.packages[field_index(lifecycle)].retain(|name, _| !ignore.contains(name));
+        detected.packages[field_index(lifecycle)].retain(|name, _| !is_ignored_name(&ignore, name));
     }
 }
 

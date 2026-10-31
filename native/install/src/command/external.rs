@@ -45,21 +45,7 @@ pub async fn write_dependencies(session: &Session<'_>, loaded: &Loaded) -> io::R
 /// (`PackageJsonFile.load` and `write`).
 fn write_package_json_dependencies(root: &Path, dependencies: &DependencyMap) -> io::Result<()> {
     let path = root.join("package.json");
-    let text = match fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(error),
-    };
-    let mut manifest = if text.is_empty() {
-        Value::Object(Map::new())
-    } else {
-        crate::jsonc::parse(&text)
-            .map_err(|error| {
-                io::Error::other(format!(
-                    "failed parsing package.json file at . original error: {error}",
-                ))
-            })?
-    };
+    let (text, mut manifest) = load_package_json(&path)?;
     let Some(object) = manifest.as_object_mut() else {
         return Err(io::Error::other("package.json must hold an object"));
     };
@@ -71,9 +57,31 @@ fn write_package_json_dependencies(root: &Path, dependencies: &DependencyMap) ->
         return Err(io::Error::other(r#"package.json "dependencies" must be an object"#));
     };
     for (name, range) in dependencies {
-        field.insert(name.clone(), Value::String(range.clone()));
+        let (name, range) = (name.trim(), range.trim());
+        if !name.is_empty() && !range.is_empty() {
+            field.insert(name.to_owned(), Value::String(range.to_owned()));
+        }
     }
     fs::write(&path, stringify_package(&manifest, &detect_indent(&text), detect_newline(&text))?)
+}
+
+fn load_package_json(path: &Path) -> io::Result<(String, Value)> {
+    let text = match fs::read_to_string(path) {
+        Ok(text) => text,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(error),
+    };
+    let manifest = if text.is_empty() {
+        Value::Object(Map::new())
+    } else {
+        crate::jsonc::parse(&text)
+            .map_err(|error| {
+                io::Error::other(format!(
+                    "failed parsing package.json file at . original error: {error}",
+                ))
+            })?
+    };
+    Ok((text, manifest))
 }
 
 /// Ask whether to switch to Bit's package manager; switch or fail.

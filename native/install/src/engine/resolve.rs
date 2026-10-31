@@ -144,8 +144,7 @@ fn manifest_field(manifest: &Value, field: &str) -> String {
     manifest
         .get(field)
         .and_then(Value::as_str)
-        .map(str::trim)
-        .unwrap_or_default()
+        .map_or("", str::trim)
         .to_string()
 }
 
@@ -161,7 +160,7 @@ pub(super) fn parse_package_name(input: &str) -> Option<(String, String)> {
     let group = |index| {
         found
             .group(index)
-            .map_or("", |range| &input[range])
+            .map_or("", |range| input[range].trim())
     };
     Some((group(1).to_string(), group(3).to_string()))
 }

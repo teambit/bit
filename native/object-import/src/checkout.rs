@@ -175,7 +175,7 @@ fn materialize(
         return Err(invalid("checkout target is not a regular file"));
     }
     let parent = path.parent().ok_or_else(|| invalid("checkout target has no parent"))?;
-    if !directories.contains(parent) {
+    if !parent.as_os_str().is_empty() && !directories.contains(parent) {
         fs::create_dir_all(parent)?;
         directories.insert(parent.to_path_buf());
     }

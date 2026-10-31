@@ -321,7 +321,10 @@ fn symlink_each(source: &Path, targets: &[PathBuf]) -> io::Result<()> {
 /// `resolve-link-target`: the absolute target of one symlink level.
 fn resolve_link_target(link: &Path) -> io::Result<PathBuf> {
     let target = fs::read_link(link)?;
-    let parent = link.parent().unwrap_or_else(|| Path::new(""));
+    let parent = link
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
     Ok(parent.join(target))
 }
 

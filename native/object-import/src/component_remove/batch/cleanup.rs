@@ -179,8 +179,12 @@ fn staged_path(root: &Path, bitmap: &Value) -> io::Result<PathBuf> {
     if let Some(id) = bitmap
         .get("_bit_lane")
         .and_then(|lane| lane.get("id"))
+        .filter(|id| !id.is_null())
     {
         let (scope, name) = crate::component_remove::lane::lane_id_parts(id);
+        if scope.is_empty() && (name.is_empty() || name == "main") {
+            return Ok(base.join("main.json"));
+        }
         if [scope, name]
             .iter()
             .any(|part| {

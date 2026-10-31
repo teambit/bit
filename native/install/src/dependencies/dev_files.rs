@@ -209,10 +209,11 @@ fn strings(value: &Value) -> Vec<String> {
         Value::Array(items) => items
             .iter()
             .filter_map(Value::as_str)
-            .filter(|item| !item.trim().is_empty())
+            .map(str::trim)
+            .filter(|item| !item.is_empty())
             .map(str::to_owned)
             .collect(),
-        Value::String(text) if !text.trim().is_empty() => vec![text.clone()],
+        Value::String(text) if !text.trim().is_empty() => vec![text.trim().to_owned()],
         _ => Vec::new(),
     }
 }

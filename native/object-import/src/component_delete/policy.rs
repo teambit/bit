@@ -129,16 +129,19 @@ fn bitmap_row_identity(key: &str, row: &Value) -> io::Result<String> {
     let key_scope = key_id.split_once('/').map(|(scope_part, _)| scope_part);
     let scope = row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
         })
         .or(key_scope)
         .ok_or_else(|| invalid("dependency component scope"))?;
     let name = row["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .unwrap_or_else(|| {
             key_id
@@ -147,6 +150,7 @@ fn bitmap_row_identity(key: &str, row: &Value) -> io::Result<String> {
         });
     let version = row["version"]
         .as_str()
+        .map(str::trim)
         .or(key_ver)
         .ok_or_else(|| invalid("dependency component version"))?;
     Ok(if version.is_empty() {

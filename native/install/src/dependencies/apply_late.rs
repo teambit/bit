@@ -282,12 +282,13 @@ fn manual_version(workspace: &Workspace<'_>, name: &str, value: &str) -> Option<
 
 /// `removeCompDepsFromPackages`.
 pub fn remove_components_from_packages(detected: &mut Detected) {
-    let names: Vec<String> = detected.components
+    let names: Vec<&str> = detected.components
         .iter()
         .flatten()
-        .filter_map(|dependency| dependency.package_name.clone())
+        .filter_map(|dependency| dependency.package_name.as_deref().map(str::trim))
+        .filter(|name| !name.is_empty())
         .collect();
     for packages in &mut detected.packages {
-        packages.retain(|name, _| !names.contains(name));
+        packages.retain(|name, _| !names.contains(&name.trim()));
     }
 }

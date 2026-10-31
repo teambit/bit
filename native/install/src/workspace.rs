@@ -111,9 +111,14 @@ fn owning_dirs(entries: &[BitmapEntry]) -> Vec<String> {
     entries
         .iter()
         .filter(|entry| {
-            entry.owns_its_dir() && !matches!(entry.root_dir.as_str(), WORKSPACE_ROOT_DIR | "")
+            entry.owns_its_dir() && !matches!(entry.root_dir.trim(), WORKSPACE_ROOT_DIR | "")
         })
-        .map(|entry| entry.root_dir.trim_end_matches('/').to_owned())
+        .map(|entry| {
+            entry.root_dir
+                .trim()
+                .trim_end_matches('/')
+                .to_owned()
+        })
         .collect()
 }
 

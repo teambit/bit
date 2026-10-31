@@ -241,8 +241,14 @@ async fn add_missing_deps(
     for dependencies in calculated.dependencies.values() {
         let packages = &dependencies.missing_packages;
         for name in packages.runtime.iter().chain(&packages.dev) {
-            if !provided.contains(name) && !missing.contains(name) {
-                missing.push(name.clone());
+            let trimmed = name.trim();
+            if !trimmed.is_empty()
+                && !provided.contains(trimmed)
+                && !missing
+                    .iter()
+                    .any(|existing| existing == trimmed)
+            {
+                missing.push(trimmed.to_owned());
             }
         }
     }

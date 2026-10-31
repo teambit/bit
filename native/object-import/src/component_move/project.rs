@@ -84,10 +84,11 @@ fn identity(key: &str, row: &Value) -> io::Result<String> {
 fn id(key: &str, identity: &str, row: &Value) -> String {
     row["version"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .or_else(|| {
             key.rsplit_once('@')
-                .map(|(_, ver)| ver)
+                .map(|(_, ver)| ver.trim())
                 .filter(|ver| !ver.is_empty())
         })
         .map_or_else(|| identity.into(), |version| format!("{identity}@{version}"))

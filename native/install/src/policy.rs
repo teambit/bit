@@ -67,8 +67,12 @@ pub fn component_policy(
 pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String, String>; 2] {
     let mut manifest: [indexmap::IndexMap<String, String>; 2] = Default::default();
     for entry in policy {
+        let name = entry.name.trim();
+        if name.is_empty() {
+            continue;
+        }
         let index = usize::from(entry.lifecycle == crate::model::Lifecycle::Peer);
-        manifest[index].insert(entry.name.clone(), scope::snap_to_semver(&entry.version));
+        manifest[index].insert(name.to_owned(), scope::snap_to_semver(&entry.version));
     }
     manifest
 }

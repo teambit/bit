@@ -193,8 +193,16 @@ fn packages_to_resolve(
         .iter()
         .filter_map(|project| {
             Some((
-                project.manifest.get("name")?.as_str()?,
-                project.manifest.get("version")?.as_str()?,
+                project.manifest
+                    .get("name")?
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|name| !name.is_empty())?,
+                project.manifest
+                    .get("version")?
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|version| !version.is_empty())?,
             ))
         })
         .collect();
@@ -210,6 +218,7 @@ fn packages_to_resolve(
             || resolution
                 .and_then(|resolution| resolution.get("type"))
                 .and_then(Value::as_str)
+                .map(str::trim)
                 == Some("directory");
         let parsed = dep_path::parse(pkg_id);
         if let (true, Some(name), Some(version)) = (unresolved, parsed.name, parsed.version)

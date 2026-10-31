@@ -126,7 +126,11 @@ fn lane_targets(value: &serde_json::Value) -> io::Result<Vec<Target>> {
             let (scope, name) = entry.identity
                 .split_once('/')
                 .ok_or_else(|| invalid("checkout lane component identity"))?;
-            Ok(Target { scope: Some(scope.into()), name: name.into(), version: entry.head })
+            Ok(Target {
+                scope: Some(scope.trim().into()),
+                name: name.trim().into(),
+                version: entry.head.trim().to_owned(),
+            })
         })
         .collect()
 }

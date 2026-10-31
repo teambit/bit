@@ -83,8 +83,9 @@ pub fn version_history_hash(scope: &str, name: &str) -> String {
 
 #[must_use]
 pub fn is_hash(text: &str) -> bool {
-    text.len() == 40
-        && text
+    let trimmed = text.trim();
+    trimmed.len() == 40
+        && trimmed
             .bytes()
             .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
@@ -107,13 +108,14 @@ impl Repo {
     }
 
     fn object_path(&self, hash: &str) -> io::Result<PathBuf> {
-        if !is_hash(hash) {
+        let trimmed = hash.trim();
+        if !is_hash(trimmed) {
             return Err(invalid(&format!("invalid object ref: {hash}")));
         }
         Ok(self.root
             .join("objects")
-            .join(&hash[..2])
-            .join(&hash[2..]))
+            .join(&trimmed[..2])
+            .join(&trimmed[2..]))
     }
 
     #[must_use]

@@ -75,8 +75,9 @@ impl ScopeJson {
     /// The remote lane a local lane tracks.
     #[must_use]
     pub fn tracking(&self, local_lane: &str) -> Option<&TrackLane> {
+        let local_lane = local_lane.trim();
         self.lanes.tracking
             .iter()
-            .find(|lane| lane.local_lane == local_lane)
+            .find(|lane| lane.local_lane.trim() == local_lane)
     }
 }

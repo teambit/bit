@@ -65,6 +65,7 @@ impl Fetcher<'_> {
         ids: &[String],
         options: &FetchOptions,
     ) -> io::Result<Vec<ObjectItem>> {
+        let scope = scope.trim();
         let remote = self.remotes.resolve(scope, self.network).await.map_err(|error| {
             if error.kind() != io::ErrorKind::NotFound {
                 return error;

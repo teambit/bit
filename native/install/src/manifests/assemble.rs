@@ -171,6 +171,8 @@ pub(super) fn forced_harmony_version(input: &ManifestInput<'_>) -> Option<String
             value
                 .as_str()
                 .or_else(|| value.get("version")?.as_str())
+                .map(str::trim)
+                .filter(|version| !version.is_empty())
                 .map(str::to_string)
         })
 }
@@ -185,7 +187,12 @@ pub(super) fn external_dependencies(
     }
     let mut names: Vec<String> = Vec::new();
     for (dir, manifest) in manifests {
-        let Some(name) = manifest.get("name").and_then(Value::as_str) else {
+        let Some(name) = manifest
+            .get("name")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+        else {
             continue;
         };
         if dir.as_path() != input.root

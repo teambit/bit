@@ -12,7 +12,7 @@ pub(crate) fn binary(bytes: &[u8]) -> bool {
 
 fn suspicious_prefix(bytes: &[u8]) -> bool {
     let total = bytes.len();
-    let mut suspicious = 0;
+    let mut suspicious = 0_usize;
     let mut index = 0;
     while index < total {
         let byte = bytes[index];
@@ -24,12 +24,12 @@ fn suspicious_prefix(bytes: &[u8]) -> bool {
             continue;
         }
         suspicious += 1;
-        if index > 32 && suspicious * 100 > total * 10 {
+        if index > 32 && suspicious.saturating_mul(100) > total.saturating_mul(10) {
             return true;
         }
         index += 1;
     }
-    suspicious * 100 > total * 10
+    suspicious.saturating_mul(100) > total.saturating_mul(10)
 }
 
 fn ordinary(byte: u8) -> bool {

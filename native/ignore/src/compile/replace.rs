@@ -124,10 +124,9 @@ fn suffix() -> Vec<Step> {
         }),
         // Trailing wildcard.
         Step::new(r"(\^|\\\/)?\\\*$", false, |found, _| {
-            let body = match found.group {
-                Some(prefix) if !prefix.is_empty() => format!("{prefix}[^/]+"),
-                _ => "[^/]*".to_string(),
-            };
+            let body = found.group
+                .filter(|prefix| !prefix.is_empty())
+                .map_or_else(|| "[^/]*".to_string(), |prefix| format!("{prefix}[^/]+"));
             format!(r"{body}(?=$|\/$)")
         }),
         // Unescape.

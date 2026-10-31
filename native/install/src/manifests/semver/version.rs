@@ -114,8 +114,9 @@ pub(crate) fn gt(left: &str, right: &str) -> io::Result<bool> {
 
 /// `semver.coerce(version)?.version` (semver 7, left-to-right, no prereleases).
 pub(crate) fn coerce(version: &str) -> Option<String> {
-    let found = re(Token::Coerce).find(version)?;
-    let parts = groups(&found, version);
+    let trimmed = version.trim();
+    let found = re(Token::Coerce).find(trimmed)?;
+    let parts = groups(&found, trimmed);
     let major = parts[2]?;
     let minor = parts[3].unwrap_or("0");
     let patch = parts[4].unwrap_or("0");

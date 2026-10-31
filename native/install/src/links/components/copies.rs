@@ -40,7 +40,7 @@ fn injected_copy_paths<'a>(
 ) -> Option<&'a [String]> {
     injected
         .get(key)
-        .or_else(|| injected.get(root_dir))
+        .or_else(|| injected.get(root_dir.trim()))
         .map(Vec::as_slice)
         .filter(|copies| !copies.is_empty())
 }

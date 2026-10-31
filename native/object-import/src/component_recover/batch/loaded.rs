@@ -11,7 +11,7 @@ pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
         let identity = selection::bare(&item.id);
         let row = rows
             .iter()
-            .find(|row| row["identity"] == identity)
+            .find(|row| row["identity"].as_str().map_or("", str::trim) == identity)
             .ok_or_else(|| invalid("recovery loaded component receipt missing"))?;
         let extensions = row["current"]["extensions"]
             .as_array()

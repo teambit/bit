@@ -45,8 +45,9 @@ impl Overlay {
         self.objects.keys().map(String::as_str)
     }
     pub(crate) fn read(&self, hash: &str, kind: &str) -> io::Result<Option<&Value>> {
+        let kind = kind.trim();
         self.objects
-            .get(hash)
+            .get(hash.trim())
             .map(|record| {
                 if record.kind != kind {
                     return Err(invalid("import overlay object type"));
@@ -56,9 +57,10 @@ impl Overlay {
             .transpose()
     }
     pub(crate) fn source(&self, hash: &str) -> Option<&[u8]> {
-        self.objects.get(hash).and_then(|record| record.source.as_deref())
+        self.objects.get(hash.trim()).and_then(|record| record.source.as_deref())
     }
     pub(crate) fn trace_source(&self, hash: &str) -> io::Result<()> {
+        let hash = hash.trim();
         let record = self.objects.get(hash).ok_or_else(|| invalid("import Source receipt"))?;
         let body = record.source.as_deref().ok_or_else(|| invalid("import Source body"))?;
         crate::merge_transaction::reads::source_parts(

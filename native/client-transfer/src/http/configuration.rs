@@ -62,7 +62,11 @@ pub(super) fn tls(
         .map(|value| {
             value
                 .as_bool()
-                .unwrap_or_else(|| value.as_str() == Some("true"))
+                .unwrap_or_else(|| {
+                    value
+                        .as_str()
+                        .is_some_and(|raw| raw.trim().eq_ignore_ascii_case("true"))
+                })
         });
     let mut pem = config_str(global, "network.ca")
         .or_else(|| config_str(global, "proxy.ca"))

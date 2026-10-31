@@ -185,8 +185,9 @@ fn row_version(key: &str, row: &Value, kind: RowKind) -> Option<String> {
     (kind != RowKind::New).then(|| {
         row["version"]
             .as_str()
+            .map(str::trim)
             .filter(|version| !version.is_empty())
-            .or_else(|| key.rsplit_once('@').map(|(_, version)| version))
+            .or_else(|| key.rsplit_once('@').map(|(_, version)| version.trim()))
             .unwrap_or_default()
             .to_owned()
     })
@@ -197,14 +198,20 @@ pub(super) fn find_row<'a>(
     name: &str,
     _kind: RowKind,
 ) -> io::Result<(&'a String, &'a Value)> {
+    let name = name.trim();
+    let bare_name = name
+        .split('@')
+        .next()
+        .unwrap_or(name)
+        .trim();
     bitmap
         .as_object()
         .ok_or_else(|| invalid("component bitmap"))?
         .iter()
         .find(|(key, row)| {
-            *key == name
+            key.trim() == name
                 || crate::component_deprecation::selection::identity(key, row)
-                    .is_some_and(|id| id.split('@').next() == Some(name))
+                    .is_some_and(|id| id == name || id.split('@').next() == Some(bare_name))
         })
         .ok_or_else(|| invalid("component not tracked"))
 }

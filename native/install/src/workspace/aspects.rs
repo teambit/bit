@@ -41,11 +41,15 @@ impl AspectEntry {
     }
 
     fn is_removed(&self) -> bool {
-        self.config.as_str() == Some("-")
+        self.config.as_str().map(str::trim) == Some("-")
     }
 
     fn env_config(&self) -> Option<&str> {
-        self.config.get("env").and_then(Value::as_str)
+        self.config
+            .get("env")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|env| !env.is_empty())
     }
 }
 

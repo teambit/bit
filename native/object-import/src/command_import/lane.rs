@@ -258,10 +258,11 @@ pub fn resolve_lane_identity(root: &std::path::Path, name: &str) -> io::Result<S
     Ok(format!("{}/{}", id.scope, id.name))
 }
 fn resolved(name: &str, scope: &Value, index: &Value) -> io::Result<Id> {
+    let name = name.trim();
     let id = if let Some((scope, name)) = name.split_once('/') {
-        Id { scope: scope.into(), name: name.into() }
+        Id { scope: scope.trim().into(), name: name.trim().into() }
     } else if name == "main" {
-        Id { scope: text(scope, "name")?.into(), name: name.into() }
+        Id { scope: text(scope, "name")?.trim().into(), name: name.into() }
     } else {
         resolve_local(name, scope, index)?
     };

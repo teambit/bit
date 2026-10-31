@@ -97,8 +97,13 @@ impl Detected {
     pub fn missing_packages(&self) -> Vec<String> {
         let mut names: Vec<String> = Vec::new();
         for name in self.missing.iter().flat_map(|file| &file.packages) {
-            if !names.contains(name) {
-                names.push(name.clone());
+            let trimmed = name.trim();
+            if !trimmed.is_empty()
+                && !names
+                    .iter()
+                    .any(|existing| existing == trimmed)
+            {
+                names.push(trimmed.to_owned());
             }
         }
         names

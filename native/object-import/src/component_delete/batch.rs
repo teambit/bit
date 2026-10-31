@@ -64,9 +64,12 @@ impl Batch {
                     row["identity"]
                         .as_str()
                         .or_else(|| row["id"].as_str())
+                        .map(str::trim)
                         == Some(identity)
                 })
                 .and_then(|row| row["packageName"].as_str())
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
             else {
                 continue;
             };

@@ -14,9 +14,10 @@ pub(super) fn prepare(root: &Path, selected: &[Selected]) -> io::Result<Option<C
             .iter()
             .filter(|selected| selected.version.is_some())
             .any(|selected| {
-                let (scope, name) = selected.identity
+                let identity = selected.identity.trim();
+                let (scope, name) = identity
                     .split_once('/')
-                    .unwrap_or(("", &selected.identity));
+                    .map_or(("", identity), |(scope, name)| (scope.trim(), name.trim()));
                 crate::component_remove::lane::matches_component_entry(row, scope, name)
             })
     });

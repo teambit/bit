@@ -109,8 +109,13 @@ fn verify_unimported_rows(batch: &Batch, bitmap: &serde_json::Value) -> io::Resu
         let imported = batch.items
             .iter()
             .any(|item| {
-                item.key.as_ref() == Some(key)
-                    && matches!(item.action, Action::Import | Action::DeleteConfigAndImport)
+                matches!(item.action, Action::Import | Action::DeleteConfigAndImport)
+                    && (item.key.as_ref() == Some(key)
+                        || super::selection::key(&batch.bitmap, &item.id)
+                            .ok()
+                            .flatten()
+                            .as_ref()
+                            == Some(key))
             });
         if !imported && bitmap.get(key) != Some(row) {
             return Err(invalid("recovery import changed an unrelated bitmap row"));

@@ -67,7 +67,7 @@ impl Remotes {
     /// A locally configured file/HTTP remote, without a resolver or hub request.
     pub fn configured(&self, scope: &str) -> io::Result<Option<Remote>> {
         self.hosts
-            .get(scope)
+            .get(scope.trim())
             .map(|host| Remote::from_host(host))
             .transpose()
     }

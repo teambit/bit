@@ -47,7 +47,7 @@ fn overridden(lockfile: &Map<String, Value>) -> io::Result<HashSet<String>> {
         .into_iter()
         .flatten()
         .map(|(selector, _)| {
-            pnpm_config_parse_overrides::parse_pkg_and_parent_selector(selector)
+            pnpm_config_parse_overrides::parse_pkg_and_parent_selector(selector.trim())
                 .map(|(_, target)| target.name)
                 .map_err(io::Error::other)
         })
@@ -57,7 +57,13 @@ fn overridden(lockfile: &Map<String, Value>) -> io::Result<HashSet<String>> {
 fn wins(name: &str, reference: &Value, root: Option<&Value>, peer: bool) -> bool {
     let Some((reference, root)) = reference
         .as_str()
-        .zip(root.and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .zip(
+            root.and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|value| !value.is_empty()),
+        )
     else {
         return false;
     };

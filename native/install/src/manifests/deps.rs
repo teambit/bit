@@ -89,8 +89,8 @@ impl DepsObject {
             .map(|(name, optional)| (name.clone(), json!({ "optional": optional })))
             .collect();
         let mut manifest = Map::new();
-        manifest.insert("name".into(), name.into());
-        manifest.insert("version".into(), version.into());
+        manifest.insert("name".into(), name.trim().into());
+        manifest.insert("version".into(), version.trim().into());
         manifest.insert("dependencies".into(), map_value(&dependencies));
         for field in [Field::OptionalDependencies, Field::DevDependencies, Field::PeerDependencies]
         {

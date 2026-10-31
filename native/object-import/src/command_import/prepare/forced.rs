@@ -59,5 +59,6 @@ fn has_matching_phase_id(ids: &[String], identities: &HashSet<String>) -> bool {
 }
 
 fn without_version(id: &str) -> &str {
-    id.rsplit_once('@').map_or(id, |(identity, _)| identity)
+    let id = id.trim();
+    id.rsplit_once('@').map_or(id, |(identity, _)| identity.trim())
 }

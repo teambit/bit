@@ -53,6 +53,8 @@ impl Identity {
     pub fn source_id(&self) -> String {
         self.source_version
             .as_deref()
+            .map(str::trim)
+            .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
             .map_or_else(|| self.source.clone(), |version| format!("{}@{version}", self.source))
     }
 }

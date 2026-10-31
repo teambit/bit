@@ -107,7 +107,7 @@ impl Ignore {
 
 fn is_object_prototype_key(path: &str) -> bool {
     matches!(
-        path,
+        path.trim(),
         "constructor"
             | "__defineGetter__"
             | "__defineSetter__"

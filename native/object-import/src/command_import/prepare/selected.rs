@@ -98,7 +98,11 @@ impl PreparedImport {
             .ok_or_else(|| invalid("diff import progress"))?
             .ids
             .clone();
-        for scope in targets.iter().filter_map(|target| target.scope.as_deref()) {
+        for scope in targets
+            .iter()
+            .filter_map(|target| target.scope.as_deref().map(str::trim))
+            .filter(|scope| !scope.is_empty())
+        {
             if self.environment.remote_overrides.contains_key(scope)
                 && ids
                     .iter()

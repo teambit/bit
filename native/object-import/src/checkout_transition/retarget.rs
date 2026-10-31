@@ -26,11 +26,11 @@ pub(super) fn apply_with_overlay(
     let retained = state.plans
         .values()
         .map(plan::Plan::bytes)
-        .sum::<usize>();
+        .fold(0_usize, usize::saturating_add);
     let body_count = state.plans
         .values()
         .map(|plan| plan.bodies.len())
-        .sum::<usize>();
+        .fold(0_usize, usize::saturating_add);
     let token = request.token.trim();
     let previous = state.plans.get(token).ok_or_else(|| invalid("stale merge template plan"))?;
     let contents = load(&request, retained, previous, overlay)?;

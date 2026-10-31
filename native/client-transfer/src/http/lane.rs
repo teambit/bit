@@ -46,19 +46,23 @@ impl Network {
 
 fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
     if let Some(raw) = id.as_str() {
-        raw.split('@')
+        raw.trim()
+            .split('@')
             .next()
             .unwrap_or(raw)
             .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             .ok_or_else(|| invalid("remote lane scope"))
     } else {
         let name = id["name"]
             .as_str()
+            .map(str::trim)
             .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("remote lane name"))?;
         let scope = id["scope"]
             .as_str()
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
             .ok_or_else(|| invalid("remote lane scope"))?;
         Ok((scope, name))
@@ -76,14 +80,17 @@ fn lane_projection(lane: &Value) -> io::Result<Value> {
         .map(|row| {
             let scope = row["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|text| !text.is_empty())
                 .ok_or_else(|| invalid("remote lane component scope"))?;
             let name = row["name"]
                 .as_str()
+                .map(str::trim)
                 .filter(|text| !text.is_empty())
                 .ok_or_else(|| invalid("remote lane component name"))?;
             let head = row["version"]
                 .as_str()
+                .map(str::trim)
                 .filter(|text| !text.is_empty())
                 .ok_or_else(|| invalid("remote lane component head"))?;
             Ok(json!({"id": format!("{scope}/{name}@{head}"), "head":head}))

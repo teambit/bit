@@ -252,7 +252,10 @@ pub fn split_peer_ids(node: &str) -> Vec<String> {
             }
             ('(', _) => depth += 1,
             (')', 1) => {
-                peers.push(node[segment_start..index].to_owned());
+                let peer = node[segment_start..index].trim();
+                if !peer.is_empty() {
+                    peers.push(peer.to_owned());
+                }
                 depth = 0;
             }
             (')', _) => depth = depth.saturating_sub(1),

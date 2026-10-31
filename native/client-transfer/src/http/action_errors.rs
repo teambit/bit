@@ -71,7 +71,7 @@ struct ActionConflict(Value);
 
 impl std::fmt::Display for ActionConflict {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(self.0["message"].as_str().unwrap_or("remote merge conflict"))
+        formatter.write_str(non_empty_str(&self.0["message"]).unwrap_or("remote merge conflict"))
     }
 }
 impl std::error::Error for ActionConflict {}

@@ -281,6 +281,7 @@ fn missing_objects(plan: &mut PreparedImport, hashes: &[String]) -> io::Result<V
     let mut missing = Vec::new();
     let mut seen = HashSet::new();
     for hash in hashes {
+        let hash = hash.trim();
         crate::merge_history::hash(hash)?;
         if !seen.insert(hash) || plan.overlay.objects.contains_key(hash) {
             continue;
@@ -289,7 +290,7 @@ fn missing_objects(plan: &mut PreparedImport, hashes: &[String]) -> io::Result<V
             .join(&hash[..2])
             .join(&hash[2..]);
         if plan.capture.read(&file)?.is_none() {
-            missing.push(hash.clone());
+            missing.push(hash.to_owned());
         }
     }
     Ok(missing)

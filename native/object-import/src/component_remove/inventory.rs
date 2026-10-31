@@ -5,6 +5,7 @@ use std::{io, path::Path};
 
 /// Whether the canonical pre-ignore component scan finds any files.
 pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Result<bool> {
+    let directory = directory.trim();
     if directory != "." && !super::safe_relative(Path::new(directory)) {
         return Err(super::invalid("component scan directory"));
     }
@@ -14,8 +15,8 @@ pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Re
         .flat_map(|rows| rows.values())
         .filter(|row| row["isAvailableOnCurrentLane"] != false)
         .filter(|row| !is_removed_row(row))
-        .filter_map(|row| row["rootDir"].as_str())
-        .filter(|other| is_nested_root_dir(directory, other))
+        .filter_map(|row| row["rootDir"].as_str().map(str::trim))
+        .filter(|other| !other.is_empty() && is_nested_root_dir(directory, other))
         .map(|directory| root.join(directory))
         .chain(std::iter::once(crate::scope_path(root)))
         .collect::<Vec<_>>();

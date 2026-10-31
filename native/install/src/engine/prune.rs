@@ -31,7 +31,8 @@ pub fn prune_modules(root: &Path, keep: &HashSet<String>) -> io::Result<()> {
         .map(|(key, _)| key.to_virtual_store_name(VIRTUAL_STORE_DIR_MAX_LENGTH))
         .collect();
     for dir in package_dirs {
-        if !expected.contains(&dir) && !keep.contains(&dir) {
+        let trimmed = dir.trim();
+        if !trimmed.is_empty() && !expected.contains(trimmed) && !keep.contains(trimmed) {
             remove(&virtual_store_dir.join(&dir))?;
         }
     }

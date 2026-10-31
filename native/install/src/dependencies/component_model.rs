@@ -73,5 +73,6 @@ impl ComponentModel {
 }
 
 fn is_dependency_resolver_extension(extension: &Value) -> bool {
-    crate::workspace::extension_name(extension).as_deref() == Some(DEPENDENCY_RESOLVER)
+    crate::workspace::extension_name(extension).as_deref().map(str::trim)
+        == Some(DEPENDENCY_RESOLVER)
 }

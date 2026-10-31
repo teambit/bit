@@ -88,7 +88,10 @@ fn env_dir(
 }
 
 fn component_id(id: &str) -> ComponentId {
-    let (scope, name) = id.split_once('/').unwrap_or(("", id));
+    let trimmed = id.trim();
+    let (scope, name) = trimmed
+        .split_once('/')
+        .map_or(("", trimmed), |(scope, name)| (scope.trim(), name.trim()));
     ComponentId {
         scope: (!scope.is_empty()).then(|| scope.to_owned()),
         default_scope: None,

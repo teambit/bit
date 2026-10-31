@@ -22,7 +22,8 @@ pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Re
 }
 
 pub(super) fn plain_tag(tag: &str) -> bool {
-    if tag.len() > 256 {
+    let tag = tag.trim();
+    if tag.is_empty() || tag.len() > 256 {
         return false;
     }
     let (base, build) = tag

@@ -51,18 +51,23 @@ fn model_scope_and_name(model: &Value) -> io::Result<(&str, &str)> {
     if let Some((scope, name)) = model["id"]
         .as_str()
         .or_else(|| model["identity"].as_str())
-        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
+        .map(str::trim)
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
         .and_then(|base| base.split_once('/'))
     {
-        return Ok((scope, name));
+        return Ok((scope.trim(), name.trim()));
     }
     let scope = model["scope"]
         .as_str()
         .or_else(|| model["id"]["scope"].as_str())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("history scope"))?;
     let name = model["name"]
         .as_str()
         .or_else(|| model["id"]["name"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("history name"))?;
     Ok((scope, name))
 }

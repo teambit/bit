@@ -27,7 +27,7 @@ fn read(
     if input.cached(request, state, false).is_some() {
         return Ok(None);
     }
-    let mut compressed = MAX_BYTES - budget.1;
+    let mut compressed = MAX_BYTES.saturating_sub(budget.1);
     let source =
         repository::read_source_record(&request.directory, input.hash, budget.0, &mut compressed)?;
     Ok(Some(Record {

@@ -66,6 +66,8 @@ pub fn ignored(overrides: &FieldMaps, lifecycle: Lifecycle) -> Vec<String> {
     overrides[field_index(lifecycle)]
         .iter()
         .filter(|(_, version)| version.trim() == REMOVE)
-        .map(|(name, _)| name.clone())
+        .map(|(name, _)| name.trim())
+        .filter(|name| !name.is_empty())
+        .map(str::to_owned)
         .collect()
 }

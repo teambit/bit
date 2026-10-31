@@ -19,13 +19,22 @@ pub fn dependency_policy(source: &Value) -> io::Result<Vec<Value>> {
         let id = dependency["packageName"]
             .as_str()
             .or_else(|| dependency["id"].as_str())
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
             .map(str::to_owned)
             .or_else(|| component_identity(&dependency["id"]))
             .ok_or_else(|| unsupported("fork dependency package identity"))?;
-        let version =
-            dependency["version"].as_str().ok_or_else(|| unsupported("fork dependency version"))?;
+        let version = dependency["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
+            .ok_or_else(|| unsupported("fork dependency version"))?;
         let version = version_with_prefix(version, prefix)?;
-        let lifecycle = dependency["lifecycle"].as_str().unwrap_or("runtime");
+        let lifecycle = dependency["lifecycle"]
+            .as_str()
+            .map(str::trim)
+            .filter(|lifecycle| !lifecycle.is_empty())
+            .unwrap_or("runtime");
         output.push(json!({"dependencyId":id,"lifecycleType":if lifecycle=="dev"{"runtime"}else{lifecycle},"value":{"version":version}}));
     }
     Ok(output)
@@ -42,13 +51,18 @@ fn component_identity(component: &Value) -> Option<String> {
     component
         .as_str()
         .map(|id| {
-            id.split('@')
+            id.trim()
+                .split('@')
                 .next()
                 .unwrap_or(id)
-                .to_owned()
+                .trim()
         })
+        .filter(|id| !id.is_empty())
+        .map(str::to_owned)
         .or_else(|| {
-            Some(format!("{}/{}", component["scope"].as_str()?, component["name"].as_str()?))
+            let scope = component["scope"].as_str()?.trim();
+            let name = component["name"].as_str()?.trim();
+            (!scope.is_empty() && !name.is_empty()).then(|| format!("{scope}/{name}"))
         })
 }
 

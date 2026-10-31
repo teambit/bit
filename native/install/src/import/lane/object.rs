@@ -60,11 +60,11 @@ impl LaneObject {
         Self {
             name: object["name"]
                 .as_str()
-                .unwrap_or_default()
+                .map_or("", str::trim)
                 .to_string(),
             scope: object["scope"]
                 .as_str()
-                .unwrap_or_default()
+                .map_or("", str::trim)
                 .to_string(),
             components: components(&object["components"]),
             log: object["log"].clone(),
@@ -72,13 +72,17 @@ impl LaneObject {
             forked_from: present(&object["forkedFrom"]),
             schema: object["schema"]
                 .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
                 .unwrap_or(OLD_LANE_SCHEMA)
                 .to_string(),
             update_dependents,
             override_update_dependents: object["overrideUpdateDependents"].as_bool() == Some(true),
             hash: object["hash"]
                 .as_str()
-                .unwrap_or(hash)
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .unwrap_or_else(|| hash.trim())
                 .to_string(),
             changed: false,
         }

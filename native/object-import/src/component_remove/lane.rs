@@ -73,7 +73,11 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     if matches.len() != 1 {
         return Err(invalid("current lane is not uniquely indexed"));
     }
-    let raw_hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("lane hash"))?;
+    let raw_hash = matches[0]["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("lane hash"))?;
     let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
     let path = crate::scope_path(root)
         .join("objects")

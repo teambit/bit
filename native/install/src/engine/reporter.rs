@@ -139,6 +139,9 @@ impl Renderer {
         match output {
             Output::None => return false,
             Output::Lines(lines) => {
+                if lines.is_empty() {
+                    return false;
+                }
                 let chunk = lines
                     .iter()
                     .fold(String::new(), |mut chunk, line| {

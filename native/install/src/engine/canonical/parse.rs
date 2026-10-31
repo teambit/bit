@@ -129,5 +129,5 @@ const OPTIONS: &[&str] = &[
 fn supported_options(options: &Map<String, Value>) -> bool {
     options
         .keys()
-        .all(|key| OPTIONS.contains(&key.as_str()))
+        .all(|key| OPTIONS.contains(&key.trim()))
 }

@@ -13,8 +13,8 @@ const MAX_LOG_BYTES: usize = 8 * 1024 * 1024;
 impl Network {
     /// `Http.log()`: read-only history in the order supplied by the scope.
     pub async fn log(&self, url: &str, id: &str) -> io::Result<Vec<Value>> {
-        let endpoint = format!("{url}/graphql");
-        let body = json!({"query": LOG_QUERY, "variables": {"id": id}});
+        let endpoint = format!("{}/graphql", url.trim().trim_end_matches('/'));
+        let body = json!({"query": LOG_QUERY, "variables": {"id": id.trim()}});
         let response = self.send(
             self.headers(self.client.post(&endpoint), "read")?
                 .json(&body),

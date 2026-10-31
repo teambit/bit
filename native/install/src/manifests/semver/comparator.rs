@@ -38,7 +38,7 @@ impl Comparator {
     }
 
     pub(crate) fn new(operator: &str, semver: Option<SemVer>) -> Self {
-        let operator = if semver.is_some() { operator } else { "" };
+        let operator = if semver.is_some() { operator.trim() } else { "" };
         let value = semver
             .as_ref()
             .map_or_else(String::new, |semver| format!("{operator}{}", semver.format()));

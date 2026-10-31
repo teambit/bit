@@ -159,6 +159,12 @@ fn select_all(root: &Path, bitmap: &Value, identities: &[String]) -> io::Result<
 }
 
 fn row_matches_identity(key: &str, row: &Value, identity: &str) -> bool {
+    let identity = identity.trim();
+    let bare = identity
+        .split('@')
+        .next()
+        .unwrap_or(identity)
+        .trim();
     if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
         return false;
     }
@@ -167,7 +173,7 @@ fn row_matches_identity(key: &str, row: &Value, identity: &str) -> bool {
         Some(sc) => format!("{sc}/{name}"),
         None => name.to_owned(),
     };
-    key == identity || name == identity || full == identity
+    key.trim() == identity || name == bare || full == bare
 }
 fn select(root: &Path, bitmap: &Value, key: &str, row: &Value) -> io::Result<Selected> {
     let mut shape = row.clone();

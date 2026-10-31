@@ -79,10 +79,18 @@ pub(super) fn validate(request: &Begin) -> io::Result<()> {
         || request.options.ancestor.is_some_and(|count| count > 4096)
         || request.component.version
             .as_ref()
-            .is_some_and(|value| value.len() > 32768 || value.contains('\0'))
+            .is_some_and(|value| {
+                value.len() > 32768
+                    || value.contains('\0')
+                    || (!value.is_empty() && value.trim().is_empty())
+            })
         || request.options.version
             .as_ref()
-            .is_some_and(|value| value.len() > 32768 || value.contains('\0'))
+            .is_some_and(|value| {
+                value.len() > 32768
+                    || value.contains('\0')
+                    || (!value.is_empty() && value.trim().is_empty())
+            })
         || request.options.version_per_id
             .as_ref()
             .is_some_and(|value| {

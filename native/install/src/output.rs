@@ -333,7 +333,7 @@ pub fn pretty_time(duration: Duration) -> String {
         .iter()
         .find(|(_, size)| nanos >= *size)
         .unwrap_or(&UNITS[5]);
-    format!("{}{unit}", (nanos + size / 2) / size)
+    format!("{}{unit}", nanos.saturating_add(size / 2) / size)
 }
 
 /// Chalk closes and reopens styles around LF and CRLF without coloring the line ending.

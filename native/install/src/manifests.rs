@@ -170,7 +170,7 @@ impl ManifestOptions {
 
     /// `referenceLocalPackages`: root components with the isolated linker.
     fn reference_local_packages(&self) -> bool {
-        self.has_root_components && self.node_linker == "isolated"
+        self.has_root_components && self.node_linker.trim() == "isolated"
     }
 }
 
@@ -198,10 +198,11 @@ fn root_policy(input: &ManifestInput<'_>) -> Vec<PolicyEntry> {
     input.policies.workspace
         .iter()
         .filter(|entry| {
-            entry.name != "@teambit/legacy"
+            let name = entry.name.trim();
+            name != "@teambit/legacy"
                 && !input.context.core_aspects
                     .iter()
-                    .any(|aspect| aspect.package_name == entry.name)
+                    .any(|aspect| aspect.package_name.trim() == name)
         })
         .cloned()
         .collect()

@@ -49,7 +49,8 @@ fn local_versions(component: &Value) -> Vec<String> {
         .into_iter()
         .flatten()
         .filter(|(_, state)| state["local"].as_bool() == Some(true))
-        .map(|(tag, _)| tag.clone())
+        .map(|(tag, _)| tag.trim().to_string())
+        .filter(|tag| !tag.is_empty())
         .collect()
 }
 

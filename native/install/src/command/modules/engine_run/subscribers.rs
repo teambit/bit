@@ -30,10 +30,11 @@ pub(super) async fn run(
 
 fn component_id(id: &crate::model::ComponentId) -> String {
     let identity = id.to_string_without_version();
-    match id.version.as_deref().map(str::trim) {
-        Some(version) if !version.is_empty() => format!("{identity}@{version}"),
-        _ => identity,
-    }
+    id.version
+        .as_deref()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+        .map_or_else(|| identity.clone(), |version| format!("{identity}@{version}"))
 }
 
 fn package_options(

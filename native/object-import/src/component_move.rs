@@ -87,6 +87,7 @@ fn change_identity(row: &Value) -> Option<String> {
     if let Some(identity) = row["identity"]
         .as_str()
         .or_else(|| row["id"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         return Some(identity.to_owned());
@@ -95,10 +96,12 @@ fn change_identity(row: &Value) -> Option<String> {
     let name = object
         .get("name")?
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())?;
     match object
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         Some(scope) => Some(format!("{scope}/{name}")),

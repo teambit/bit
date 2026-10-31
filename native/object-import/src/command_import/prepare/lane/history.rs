@@ -63,6 +63,7 @@ impl PreparedImport {
 }
 
 fn merge_history(existing: Option<Value>, incoming: Value, lane_hash: &str) -> io::Result<Value> {
+    let lane_hash = lane_hash.trim();
     if incoming["laneHash"] != lane_hash {
         return Err(invalid("remote LaneHistory identity"));
     }

@@ -8,12 +8,15 @@ use super::{
 };
 
 fn is_x(id: Option<&str>) -> bool {
-    id.is_none_or(|id| id.is_empty() || id.eq_ignore_ascii_case("x") || id == "*")
+    id.is_none_or(|id| {
+        let trimmed = id.trim();
+        trimmed.is_empty() || trimmed.eq_ignore_ascii_case("x") || trimmed == "*"
+    })
 }
 
 /// `+id + 1` for a numeric identifier.
 fn next(id: Option<&str>) -> u64 {
-    id.and_then(|id| id.parse::<u64>().ok())
+    id.and_then(|id| id.trim().parse::<u64>().ok())
         .unwrap_or(0)
         .saturating_add(1)
 }

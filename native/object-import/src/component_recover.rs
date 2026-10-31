@@ -205,6 +205,12 @@ fn prepare_files(root: &Path, selected: &Selection) -> io::Result<(Repository, V
 }
 
 fn tracked_key(bitmap: &Value, name: &str) -> io::Result<String> {
+    let target = name
+        .trim()
+        .split('@')
+        .next()
+        .unwrap_or(name)
+        .trim();
     let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
     let matches: Vec<_> = rows
         .iter()
@@ -214,8 +220,8 @@ fn tracked_key(bitmap: &Value, name: &str) -> io::Result<String> {
                 && row.is_object()
                 && {
                     let (scope, bare_name) = crate::reset_lane::bitmap::row_identity(key, row);
-                    bare_name == name
-                        || scope.is_some_and(|scope| format!("{scope}/{bare_name}") == name)
+                    bare_name == target
+                        || scope.is_some_and(|scope| format!("{scope}/{bare_name}") == target)
                 }
         })
         .collect();

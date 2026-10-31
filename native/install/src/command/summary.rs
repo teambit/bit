@@ -35,7 +35,12 @@ fn another_install_required(
     recurring: bool,
     non_loaded: &[String],
 ) -> Option<String> {
-    if non_loaded.is_empty() {
+    let envs_list: Vec<&str> = non_loaded
+        .iter()
+        .map(|env| env.trim())
+        .filter(|env| !env.is_empty())
+        .collect();
+    if envs_list.is_empty() {
         return None;
     }
     let command = output.paint(Style::Cyan, "bit install");
@@ -49,7 +54,7 @@ fn another_install_required(
     };
     let envs = format!(
         r#"The following environments need to add support for "dependency policy" to fix the warning: {}"#,
-        output.paint(Style::Cyan, &non_loaded.join(", ")),
+        output.paint(Style::Cyan, &envs_list.join(", ")),
     );
     Some(output.paint(Style::Yellow, &format!("{first}{suggestion}\n{envs}\n{DOCS}")))
 }

@@ -31,7 +31,7 @@ pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Resul
     Ok(ordered)
 }
 fn contains_files(files: &HashSet<String>, directory: &str) -> bool {
-    let trimmed = directory.trim().trim_end_matches('/');
+    let trimmed = directory.trim().trim_matches('/');
     if trimmed.is_empty() || trimmed == "." {
         return !files.is_empty();
     }

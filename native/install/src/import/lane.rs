@@ -75,7 +75,9 @@ impl RemoteLane {
 /// the lane, which version resolution prefers over the model. Main has no lane
 /// object; a lane the scope does not hold yet has no dependents.
 pub fn local_update_dependents(repo: &Repo, lane: &LaneId) -> io::Result<Vec<Id>> {
-    let Some(hash) = repo.lane_hash(&lane.scope, &lane.name)? else { return Ok(Vec::new()) };
+    let Some(hash) = repo.lane_hash(lane.scope.trim(), lane.name.trim())? else {
+        return Ok(Vec::new());
+    };
     let Some(object) = repo.read_json(&hash)? else { return Ok(Vec::new()) };
     Ok(object["updateDependents"]
         .as_array()

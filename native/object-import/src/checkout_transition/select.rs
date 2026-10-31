@@ -72,29 +72,33 @@ impl State {
     }
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
+        let token = request.token.trim();
         let mut record = self.records
-            .get(&request.token)
+            .get(token)
             .cloned()
             .ok_or_else(|| invalid("stale checkout select token"))?;
-        if record.revision != request.revision || record.stage.name() != request.observation {
+        if record.revision != request.revision
+            || record.stage.name() != request.observation.trim()
+        {
             return Err(invalid("stale checkout select receipt"));
         }
         let previous_bytes = record.bytes();
         let directive = record.advance(request.value)?;
-        if self.bytes - previous_bytes + record.bytes() > 32 * 1024 * 1024 {
+        let updated_bytes =
+            self.bytes.saturating_sub(previous_bytes).saturating_add(record.bytes());
+        if updated_bytes > 32 * 1024 * 1024 {
             return Err(invalid("checkout select metadata budget"));
         }
         record.revision = record.revision
             .checked_add(1)
             .ok_or_else(|| invalid("checkout select revision limit"))?;
-        let output =
-            json!({"token":request.token,"revision":record.revision,"directive":directive});
+        let output = json!({"token":token,"revision":record.revision,"directive":directive});
         if matches!(record.stage, Stage::Terminal) {
-            self.records.remove(&request.token);
-            self.bytes -= previous_bytes;
+            self.records.remove(token);
+            self.bytes = self.bytes.saturating_sub(previous_bytes);
         } else {
-            self.bytes = self.bytes - previous_bytes + record.bytes();
-            self.records.insert(request.token, record);
+            self.bytes = updated_bytes;
+            self.records.insert(token.to_owned(), record);
         }
         Ok(output)
     }

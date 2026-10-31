@@ -220,7 +220,7 @@ pub fn id(value: &Value) -> &str {
         .as_str()
         .or_else(|| value["id"].as_str())
         .or_else(|| value["nodeId"].as_str())
-        .unwrap_or_default()
+        .map_or("", str::trim)
 }
 
 pub fn packages(graph: &Value) -> &Map<String, Value> {

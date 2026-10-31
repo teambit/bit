@@ -69,11 +69,12 @@ pub enum Completeness {
 /// `VersionHistory.isGraphCompleteSince`: `getAllHashesFrom(ref)` finds no missing parent.
 #[must_use]
 pub fn check(history: &Value, reference: &str) -> Completeness {
+    let reference = reference.trim();
     let recorded = history["graphCompleteRefs"]
         .as_array()
         .is_some_and(|refs| {
             refs.iter()
-                .any(|item| item.as_str() == Some(reference))
+                .any(|item| item.as_str().map(str::trim) == Some(reference))
         });
     if recorded {
         return Completeness::Recorded;

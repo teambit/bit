@@ -4,30 +4,26 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
     if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
         return None;
     }
+    let key = key.trim();
     let (key_id, key_ver) = key
         .rsplit_once('@')
-        .map_or((key, None), |(id, ver)| (id, Some(ver)));
-    let key_scope = key_id.split_once('/').map(|(scope, _)| scope);
-    let scope = row["scope"]
-        .as_str()
-        .filter(|value| !value.is_empty())
-        .or_else(|| {
-            row["defaultScope"]
-                .as_str()
-                .filter(|value| !value.is_empty())
-        })
+        .map_or((key, None), |(id, ver)| (id.trim(), Some(ver.trim())));
+    let key_scope = key_id
+        .split_once('/')
+        .map(|(scope, _)| scope.trim())
+        .filter(|scope| !scope.is_empty());
+    let scope = non_empty_field(row, "scope")
+        .or_else(|| non_empty_field(row, "defaultScope"))
         .or(key_scope)?;
-    let name = row["name"]
-        .as_str()
-        .filter(|value| !value.is_empty())
+    let name = non_empty_field(row, "name")
         .unwrap_or_else(|| {
             key_id
                 .strip_prefix(&format!("{scope}/"))
                 .unwrap_or(key_id)
+                .trim()
         });
-    let version = row["version"]
-        .as_str()
-        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
+    let version = non_empty_field(row, "version")
+        .filter(|version| !matches!(*version, "latest" | "head"))
         .or_else(|| {
             key_ver.filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
         });
@@ -35,6 +31,12 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
         "{scope}/{name}{}",
         version.map_or_else(String::new, |version| format!("@{version}")),
     ))
+}
+fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
+    row[field]
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
 }
 pub(super) fn key(bitmap: &Value, id: &str) -> io::Result<Option<String>> {
     let bare = bare(id);

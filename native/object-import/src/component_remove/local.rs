@@ -96,7 +96,7 @@ impl LocalBatch {
         if !self.track {
             self.cleanup.manifest()?;
             for row in &self.selected {
-                if row.package.try_exists()? {
+                if !row.package.as_os_str().is_empty() && row.package.try_exists()? {
                     fs::remove_dir_all(&row.package)?;
                 }
             }

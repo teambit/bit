@@ -96,7 +96,10 @@ fn lane_hash(
     id: &Id,
     supplied_hash: Option<&str>,
 ) -> io::Result<String> {
-    if let Some(hash) = supplied_hash {
+    if let Some(hash) = supplied_hash
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+    {
         crate::merge_history::hash(hash)?;
         Ok(hash.to_owned())
     } else {

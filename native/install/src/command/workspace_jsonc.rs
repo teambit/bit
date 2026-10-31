@@ -31,6 +31,10 @@ pub fn edit(
 }
 
 fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Result<()> {
+    let file_id = file_id.trim();
+    if file_id.is_empty() {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "backup file_id is empty"));
+    }
     let directory = scope_path.join("workspace-config-history");
     let files = directory.join("files");
     fs::create_dir_all(&files)?;

@@ -60,6 +60,8 @@ fn ref_str(value: &Value) -> Option<&str> {
         .as_str()
         .or_else(|| value["ref"].as_str())
         .or_else(|| value["hash"].as_str())
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
 }
 
 impl PreparedImport {

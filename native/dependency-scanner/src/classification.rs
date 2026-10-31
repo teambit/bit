@@ -62,7 +62,12 @@ fn classify_call(mut callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Cla
         Expression::StaticMemberExpression(member) if member.property.name == "require" => {
             Classification::Fallback
         }
-        Expression::ComputedMemberExpression(member) if matches!(&member.expression, Expression::Identifier(id) if id.name == "require") => {
+        Expression::ComputedMemberExpression(member)
+            if matches!(
+                member.expression.without_parentheses(),
+                Expression::Identifier(id) if id.name == "require",
+            ) =>
+        {
             Classification::Fallback
         }
         _ => Classification::None,

@@ -58,7 +58,10 @@ fn collect_builder_references(artifacts: &Value) -> io::Result<Vec<String>> {
     let mut references = Vec::new();
     for artifact in artifacts.as_array().ok_or_else(|| invalid("lane builder artifacts"))? {
         for file in artifact["files"].as_array().ok_or_else(|| invalid("lane artifact files"))? {
-            let reference = file["file"].as_str().ok_or_else(|| invalid("lane artifact Source"))?;
+            let reference = file["file"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("lane artifact Source"))?;
             crate::merge_history::hash(reference)?;
             references.push(reference.to_owned());
         }

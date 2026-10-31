@@ -159,12 +159,7 @@ fn finish(
         return Err(io::Error::other(r#"HTTP results are missing "data" property"#));
     }
     if crate::tar::truthy(&end["data"]["isError"]) {
-        return Err(unexpected(
-            end["message"]
-                .as_str()
-                .map(str::trim)
-                .unwrap_or_default(),
-        ));
+        return Err(unexpected(end["message"].as_str().map_or("", str::trim)));
     }
     if !status.is_success() {
         return Err(unexpected(&format!(

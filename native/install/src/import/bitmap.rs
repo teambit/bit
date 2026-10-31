@@ -108,43 +108,56 @@ pub fn read(root: &Path) -> io::Result<Bitmap> {
 }
 
 fn exported_id(key: &str, entry: &Value) -> Option<Id> {
-    let bare = key.split('@').next().unwrap_or(key);
-    let entry_name = entry["name"]
-        .as_str()
-        .filter(|val| !val.is_empty());
-    let (scope, name) = if let Some(scope) = entry["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-    {
-        let fallback = bare
-            .strip_prefix(scope)
-            .and_then(|rest| rest.strip_prefix('/'))
-            .unwrap_or(bare);
-        (scope, entry_name.unwrap_or(fallback))
-    } else if entry.get("scope").is_none()
-        && entry["defaultScope"]
-            .as_str()
-            .unwrap_or_default()
-            .is_empty()
-    {
-        let (key_scope, key_name) = bare.split_once('/')?;
-        if key_scope.is_empty() || key_name.is_empty() {
-            return None;
-        }
-        (key_scope, entry_name.unwrap_or(key_name))
-    } else {
-        return None;
-    };
+    let key = key.trim();
+    let bare = key
+        .split('@')
+        .next()
+        .unwrap_or(key)
+        .trim();
+    let (scope, name) = exported_scope_and_name(bare, entry)?;
     let version = entry["version"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
-        .or_else(|| key.split_once('@').map(|(_, ver)| ver))
+        .or_else(|| key.split_once('@').map(|(_, ver)| ver.trim()))
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"));
     Some(Id {
         scope: scope.to_string(),
         name: name.to_string(),
         version: version.map(str::to_string),
     })
+}
+
+fn exported_scope_and_name<'a>(bare: &'a str, entry: &'a Value) -> Option<(&'a str, &'a str)> {
+    let entry_name = entry["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
+    if let Some(scope) = entry["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
+        let fallback = bare
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .unwrap_or(bare)
+            .trim();
+        return Some((scope, entry_name.unwrap_or(fallback)));
+    }
+    if entry.get("scope").is_none()
+        && entry["defaultScope"]
+            .as_str()
+            .map_or("", str::trim)
+            .is_empty()
+    {
+        let (key_scope, key_name) = bare.split_once('/')?;
+        let (key_scope, key_name) = (key_scope.trim(), key_name.trim());
+        if !key_scope.is_empty() && !key_name.is_empty() {
+            return Some((key_scope, entry_name.unwrap_or(key_name)));
+        }
+    }
+    None
 }
 
 fn lane(value: &Value) -> Option<LaneId> {

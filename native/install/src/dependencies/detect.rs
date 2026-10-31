@@ -288,8 +288,13 @@ fn add_missing(detected: &mut Detected, file: &str, missing: &[String], is_dev: 
         merged.append(&mut entry.packages);
         let mut unique: Vec<String> = Vec::with_capacity(merged.len());
         for name in merged {
-            if !unique.contains(&name) {
-                unique.push(name);
+            let trimmed = name.trim();
+            if !trimmed.is_empty()
+                && !unique
+                    .iter()
+                    .any(|existing| existing == trimmed)
+            {
+                unique.push(trimmed.to_owned());
             }
         }
         entry.packages = unique;

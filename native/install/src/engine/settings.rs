@@ -159,16 +159,18 @@ fn enable_global_virtual_store(
     }
     if let Some(value) = env.enable_global_virtual_store
         .as_deref()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        return value == "true" || value == "1";
+        return value.eq_ignore_ascii_case("true") || value == "1";
     }
     if let Some(value) = config.enable_global_virtual_store {
         return value;
     }
     match global.get("enable_global_virtual_store") {
         Some(Value::Bool(value)) => *value,
-        _ => matches!(global_string(global, "enable_global_virtual_store"), Some("true" | "1")),
+        _ => global_string(global, "enable_global_virtual_store")
+            .is_some_and(|value| value.eq_ignore_ascii_case("true") || value == "1"),
     }
 }
 

@@ -129,7 +129,7 @@ fn normalized_kind(file: &File) -> String {
         .as_deref()
         .map(str::trim)
         .filter(|kind| !kind.is_empty())
-        .or_else(|| file.path.rsplit('.').next())
+        .or_else(|| file.path.trim().rsplit('.').next())
         .unwrap_or("")
         .trim_start_matches('.')
         .to_ascii_lowercase()

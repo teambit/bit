@@ -292,10 +292,11 @@ fn merge_props(env: Option<&Value>, component: &WorkspaceComponent) -> Value {
 
 /// An env id matches with or without the version of the component's env.
 fn env_matches(env: &str, component_env: &str) -> bool {
+    let (env, component_env) = (env.trim(), component_env.trim());
     component_env == env
         || component_env
             .split_once('@')
-            .is_some_and(|(id, _)| id == env)
+            .is_some_and(|(id, _)| id.trim() == env)
 }
 
 /// `getInjectedDirs`: each injected copy of the package gets its `package.json` hard linked

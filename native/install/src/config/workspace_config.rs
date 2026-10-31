@@ -73,8 +73,9 @@ pub struct WorkspaceConfig {
 /// `scope/name@version` → `scope/name`. Ids never start with `@`.
 #[must_use]
 pub fn aspect_id_without_version(id: &str) -> &str {
+    let id = id.trim();
     match id.rsplit_once('@') {
-        Some((without, _)) if !without.is_empty() => without,
+        Some((without, _)) if !without.trim().is_empty() => without.trim(),
         _ => id,
     }
 }

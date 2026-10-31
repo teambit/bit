@@ -109,7 +109,7 @@ impl super::capture::Capture {
     }
 }
 fn object_path(directory: &Path, hash: &str) -> io::Result<PathBuf> {
-    let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash)?);
+    let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
     Ok(directory
         .join(&canonical[..2])
         .join(&canonical[2..]))

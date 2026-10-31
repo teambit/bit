@@ -45,14 +45,17 @@ fn handle_preserved(deduped: &mut Deduped, name: &str, entry: &IndexEntry) -> io
 
 /// `addOneOccurrenceToRoot`: one requirement, or all requirements equal.
 fn add_one_occurrence_to_root(deduped: &mut Deduped, name: &str, items: &[Item]) -> bool {
+    let Some(first) = items.first() else {
+        return false;
+    };
     if items.len() > 1
         && items
             .iter()
-            .any(|item| item.range != items[0].range)
+            .any(|item| item.range != first.range)
     {
         return true;
     }
-    set_root(deduped, items[0].field, name, &items[0].range);
+    set_root(deduped, first.field, name, &first.range);
     false
 }
 

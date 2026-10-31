@@ -32,11 +32,15 @@ impl Dep<'_> {
     /// `dependency.id`: the package name, or `scope/name@version`.
     fn id(&self) -> String {
         match self.component {
-            Some(id) => match &id.version {
+            Some(id) => match id.version
+                .as_deref()
+                .map(str::trim)
+                .filter(|version| !version.is_empty())
+            {
                 Some(version) => format!("{}@{version}", id.to_string_without_version()),
                 None => id.to_string_without_version(),
             },
-            None => self.package_name.to_string(),
+            None => self.package_name.trim().to_string(),
         }
     }
 }

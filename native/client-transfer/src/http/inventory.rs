@@ -143,7 +143,11 @@ fn unknown_include_deleted(response: &Value) -> bool {
 }
 
 fn graphql_error(response: &Value) -> io::Result<()> {
-    if let Some(message) = response["errors"][0]["message"].as_str() {
+    if let Some(message) = response["errors"][0]["message"]
+        .as_str()
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+    {
         return Err(io::Error::other(message.to_owned()));
     }
     Ok(())

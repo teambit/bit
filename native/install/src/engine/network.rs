@@ -297,7 +297,7 @@ fn number<Number: TryFrom<u64>>(value: Option<&Value>) -> Option<Number> {
 fn boolean(value: &Value) -> Option<bool> {
     match value {
         Value::Bool(value) => Some(*value),
-        Value::String(text) => Some(text.eq_ignore_ascii_case("true")),
+        Value::String(text) => Some(text.trim().eq_ignore_ascii_case("true")),
         _ => None,
     }
 }
@@ -309,6 +309,8 @@ fn string_list(value: &Value) -> Option<Vec<String>> {
             items
                 .iter()
                 .filter_map(Value::as_str)
+                .map(str::trim)
+                .filter(|item| !item.is_empty())
                 .map(str::to_string)
                 .collect(),
         ),

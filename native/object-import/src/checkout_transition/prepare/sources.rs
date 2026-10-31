@@ -59,8 +59,8 @@ fn parallel(
     let records = read_batch(directory, manifests, *total, *compressed)
         .or_else(|_| serial_batch(directory, manifests, *total, *compressed))?;
     for (hash, record) in records {
-        *total += record.body.len();
-        *compressed += record.compressed.len();
+        *total = total.saturating_add(record.body.len());
+        *compressed = compressed.saturating_add(record.compressed.len());
         crate::merge_transaction::reads::source(hash, &record)?;
         files.push(record.body);
     }

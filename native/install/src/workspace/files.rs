@@ -91,6 +91,7 @@ impl FileRules {
         dir: &str,
         exclude_dirs: &[String],
     ) -> io::Result<Vec<String>> {
+        let dir = dir.trim();
         let scanned = scan(&self.root, dir, exclude_dirs)?;
         if scanned.is_empty() {
             return Ok(Vec::new());

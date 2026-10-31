@@ -283,10 +283,13 @@ fn is_typescript_origin(path: &Path) -> bool {
 /// `resolvePackageNameByPath`: `@scope/name` or `name` of a specifier.
 #[must_use]
 pub fn package_name(specifier: &str) -> String {
+    let specifier = specifier.trim();
     let mut parts = specifier.split('/');
     match (parts.next(), parts.next()) {
-        (Some(scope), Some(name)) if scope.starts_with('@') => format!("{scope}/{name}"),
-        (Some(name), _) => name.to_owned(),
+        (Some(scope), Some(name)) if scope.starts_with('@') => {
+            format!("{}/{}", scope.trim(), name.trim())
+        }
+        (Some(name), _) => name.trim().to_owned(),
         _ => specifier.to_owned(),
     }
 }

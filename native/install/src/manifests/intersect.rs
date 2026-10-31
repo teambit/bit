@@ -82,6 +82,9 @@ fn all_pairs_intersect(ranges: &[Range]) -> io::Result<bool> {
 /// `intersect(...ranges)`: the intersected range, or `None` when the ranges do
 /// not intersect or one of them is not a valid range.
 pub(crate) fn intersect(ranges: &[&str]) -> io::Result<Option<String>> {
+    if ranges.is_empty() {
+        return Ok(None);
+    }
     let Ok(parsed) = ranges
         .iter()
         .map(|range| Range::parse(range, Flavor::V6))

@@ -199,8 +199,13 @@ pub(super) fn root_manifests(
 ) -> IndexMap<PathBuf, Manifest> {
     let workspace_deps: DependencyMap = manifests
         .values()
-        .filter_map(|manifest| manifest.get("name")?.as_str())
-        .filter(|name| *name != "workspace")
+        .filter_map(|manifest| {
+            manifest
+                .get("name")?
+                .as_str()
+                .map(str::trim)
+        })
+        .filter(|name| !name.is_empty() && *name != "workspace")
         .map(|name| (name.to_string(), "workspace:*".to_string()))
         .collect();
     let mut result = env_manifests(input, &workspace_deps);
@@ -220,10 +225,16 @@ pub(super) fn has_missing_local_components(
         .collect();
     manifests
         .values()
-        .filter_map(|manifest| manifest.get("name")?.as_str())
+        .filter_map(|manifest| {
+            manifest
+                .get("name")?
+                .as_str()
+                .map(str::trim)
+        })
+        .filter(|name| !name.is_empty())
         .any(|name| {
             missing
                 .iter()
-                .any(|missing| *missing == name)
+                .any(|missing| missing.trim() == name)
         })
 }

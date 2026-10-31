@@ -131,11 +131,12 @@ fn append(scope: &mut Value, id: &Id, alias: &str) -> io::Result<bool> {
 
 pub(crate) fn parse_lane_id(value: &Value) -> io::Result<Id> {
     if let Some(raw) = value.as_str() {
+        let raw = raw.trim();
         let raw = raw.split('@').next().unwrap_or(raw);
         let (scope, name) = raw.split_once('/').ok_or_else(|| invalid("command lane identity"))?;
-        return Ok(Id { scope: scope.into(), name: name.into() });
+        return Ok(Id { scope: scope.trim().into(), name: name.trim().into() });
     }
-    Ok(Id { scope: text(value, "scope")?.into(), name: text(value, "name")?.into() })
+    Ok(Id { scope: text(value, "scope")?.trim().into(), name: text(value, "name")?.trim().into() })
 }
 
 pub(crate) fn lane_index_id(row: &Value) -> io::Result<Id> {

@@ -1,6 +1,7 @@
 use super::{Action, Batch, Item, REMOVE, Value, invalid, repository, selection};
 use std::io;
 pub(super) fn classify(batch: &mut Batch, id: &str) -> io::Result<Item> {
+    let id = id.trim();
     let key = selection::key(&batch.bitmap, id)?;
     let row = key
         .as_ref()

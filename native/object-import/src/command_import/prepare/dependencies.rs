@@ -227,14 +227,16 @@ pub(super) fn dependency_target(value: &Value) -> io::Result<Target> {
         .as_str()
         .or_else(|| value["id"].as_str())
     {
-        let (identity, version) =
-            text.rsplit_once('@').ok_or_else(|| invalid("import dependency version"))?;
+        let (identity, version) = text
+            .trim()
+            .rsplit_once('@')
+            .ok_or_else(|| invalid("import dependency version"))?;
         let (scope, name) =
             identity.split_once('/').ok_or_else(|| invalid("import dependency identity"))?;
         return Ok(Target {
-            scope: Some(scope.to_owned()),
-            name: name.to_owned(),
-            version: version.to_owned(),
+            scope: Some(scope.trim().to_owned()),
+            name: name.trim().to_owned(),
+            version: version.trim().to_owned(),
         });
     }
     let id_obj = value

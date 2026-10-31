@@ -164,10 +164,12 @@ fn add_serialized(dependency: &Value, package_name: String, list: &mut Component
 }
 
 fn serialized_package_name(dependency: &Value) -> Option<String> {
-    if dependency["__type"] == "component" {
-        return dependency["packageName"].as_str().map(str::to_owned);
-    }
-    dependency["id"].as_str().map(str::to_owned)
+    let field = if dependency["__type"] == "component" { "packageName" } else { "id" };
+    dependency[field]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .map(str::to_owned)
 }
 
 fn lifecycle(value: &Value) -> Lifecycle {

@@ -105,7 +105,13 @@ impl DependencyResolverConfig {
     /// `nodeLinker`: `hoisted` for yarn, otherwise `isolated` unless configured.
     #[must_use]
     pub fn node_linker(&self) -> &str {
-        match (self.node_linker.as_deref(), self.package_manager.as_deref()) {
+        match (
+            self.node_linker
+                .as_deref()
+                .map(str::trim)
+                .filter(|linker| !linker.is_empty()),
+            self.package_manager.as_deref().map(str::trim),
+        ) {
             (Some(linker), _) => linker,
             (None, Some("teambit.dependencies/yarn")) => "hoisted",
             _ => "isolated",

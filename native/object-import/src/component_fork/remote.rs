@@ -161,7 +161,13 @@ impl RemoteCapture {
         }
         self.write_objects(objects)?;
         let configs = objects::configs(version)?;
-        self.sources.push(serde_json::json!({"identity":id.split('@').next().unwrap_or(id),"version":version_id,"sourceDirectory":directory.path(),"mainFile":version["mainFile"],"files":files.iter().map(|(path,_)|serde_json::json!({"relativePath":path})).collect::<Vec<_>>(),"versionData":version,"sourceConfigs":configs}));
+        let bare_id = id
+            .trim()
+            .split('@')
+            .next()
+            .unwrap_or(id)
+            .trim();
+        self.sources.push(serde_json::json!({"identity":bare_id,"version":version_id,"sourceDirectory":directory.path(),"mainFile":version["mainFile"],"files":files.iter().map(|(path,_)|serde_json::json!({"relativePath":path})).collect::<Vec<_>>(),"versionData":version,"sourceConfigs":configs}));
         self.directories.push(directory);
         Ok(())
     }

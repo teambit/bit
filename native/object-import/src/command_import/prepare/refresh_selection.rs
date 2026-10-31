@@ -33,7 +33,11 @@ pub(super) fn refresh_all<'a>(
         ..Default::default()
     });
     for target in scoped {
-        let remote_name = target.scope.as_deref().ok_or_else(|| invalid("import scope"))?;
+        let remote_name = target.scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("import scope"))?;
         if remote_name == plan.environment.local_scope {
             continue;
         }

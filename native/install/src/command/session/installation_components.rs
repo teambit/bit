@@ -81,12 +81,14 @@ fn ordered_row(
     let id = row["id"]
         .as_str()
         .or_else(|| row["identity"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(invalid)?;
     let component = remove_matching(remaining, id).ok_or_else(invalid)?;
     let directory = row["directory"]
         .as_str()
         .or_else(|| row["rootDir"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(invalid)?;
     let actual = if Path::new(directory).is_absolute() {

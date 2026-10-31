@@ -238,6 +238,8 @@ fn merge_bit(existing: Option<&Value>, graph: Option<&Value>) -> Option<Value> {
             .into_iter()
             .flatten()
             .filter_map(Value::as_str)
+            .map(str::trim)
+            .filter(|dep| !dep.is_empty())
             .map(str::to_string)
             .collect()
     };

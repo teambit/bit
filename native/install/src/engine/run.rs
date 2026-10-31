@@ -48,9 +48,15 @@ pub async fn install(
             return Err(error);
         }
     };
-    let deps_requiring_build = outcome.deps_requiring_build.map(|mut deps| {
-        deps.sort();
-        deps
+    let deps_requiring_build = outcome.deps_requiring_build.map(|deps| {
+        let mut sorted: Vec<String> = deps
+            .into_iter()
+            .map(|dep| dep.trim().to_string())
+            .filter(|dep| !dep.is_empty())
+            .collect();
+        sorted.sort();
+        sorted.dedup();
+        sorted
     });
     if let Some(attrs) = lockfile_attrs::merge(pre_install_attrs, deps_requiring_build.as_deref()) {
         lockfile_attrs::write(root, attrs)?;

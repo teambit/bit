@@ -56,7 +56,11 @@ pub(super) fn version(
     component: &WorkspaceComponent,
     package_context: &super::PackageJsonContext<'_>,
 ) {
-    if matches!(component.id.version.as_deref(), Some("latest" | "head")) {
+    if component.id.version
+        .as_deref()
+        .map(str::trim)
+        .is_some_and(|ver| matches!(ver, "latest" | "head"))
+    {
         strip_component_id_version(manifest);
     }
     if component.id.version.is_none() && package_context.props.get("version").is_none() {
@@ -69,8 +73,9 @@ fn strip_component_id_version(manifest: &mut Manifest) {
     if let Some(id) = component_id.as_object_mut() {
         id.shift_remove("version");
     } else if let Some(text) = component_id.as_str()
-        && let Some((base, "latest" | "head")) = text.rsplit_once('@')
+        && let Some((base, ver)) = text.trim().rsplit_once('@')
+        && matches!(ver.trim(), "latest" | "head")
     {
-        *component_id = Value::String(base.to_owned());
+        *component_id = Value::String(base.trim().to_owned());
     }
 }

@@ -100,6 +100,8 @@ impl Capture {
         hash: &str,
         kind: &str,
     ) -> io::Result<Option<Object>> {
+        let hash = hash.trim();
+        let kind = kind.trim();
         let identity = crate::merge_history::hash(hash)?;
         let path = directory
             .join(&hash[..2])

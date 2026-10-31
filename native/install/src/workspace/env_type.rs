@@ -19,16 +19,23 @@ pub fn aspect_env_ids(
 ) -> io::Result<Vec<String>> {
     let mut ids: Vec<String> = core
         .iter()
-        .map(ToString::to_string)
+        .map(|id| id.trim())
+        .filter(|id| !id.is_empty())
+        .map(str::to_owned)
         .collect();
     for component in components {
-        if ids.contains(&component.env_id) {
+        let env_id = component.env_id.trim();
+        if env_id.is_empty()
+            || ids
+                .iter()
+                .any(|existing| existing == env_id)
+        {
             continue;
         }
         let uses_aspect_env =
             objects.component(&component.id)?.is_some_and(|model| model.uses_aspect_env());
         if uses_aspect_env {
-            ids.push(component.env_id.clone());
+            ids.push(env_id.to_owned());
         }
     }
     Ok(ids)

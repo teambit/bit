@@ -41,10 +41,13 @@ impl ComponentId {
     /// `scope/name`, without the version.
     #[must_use]
     pub fn to_string_without_version(&self) -> String {
-        let name = self.name.trim();
-        match self.effective_scope() {
-            Some(scope) => format!("{scope}/{name}"),
-            None => name.to_owned(),
+        let name = self.name.trim().trim_matches('/');
+        match self
+            .effective_scope()
+            .map(|scope| scope.trim_matches('/'))
+        {
+            Some(scope) if !scope.is_empty() => format!("{scope}/{name}"),
+            _ => name.to_owned(),
         }
     }
 }

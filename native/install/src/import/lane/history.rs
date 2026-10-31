@@ -15,7 +15,7 @@ use std::{
 /// `BitObject.hash()` of a `LaneHistory`: `sha1("<laneHash>:LaneHistory")`.
 #[must_use]
 pub fn history_hash(lane_hash: &str) -> String {
-    sha1_hex(&format!("{lane_hash}:LaneHistory"))
+    sha1_hex(&format!("{}:LaneHistory", lane_hash.trim()))
 }
 
 /// `getBasicLog()` identity: `user.name` and `user.email` from the bit config.

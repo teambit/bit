@@ -20,8 +20,8 @@ pub(super) fn verify(
                 !proof
                     .iter()
                     .any(|source| {
-                        source.relative_path == file.relative_path
-                            && source.hash == file.hash
+                        source.relative_path.trim() == file.relative_path.trim()
+                            && source.hash.trim() == file.hash.trim()
                             && source.name == file.name
                             && source.test == file.test
                     })

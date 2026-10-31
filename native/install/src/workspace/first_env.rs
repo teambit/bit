@@ -69,7 +69,8 @@ fn has_configured_env(component: &WorkspaceComponent) -> bool {
                 (aspect_id_without_version(key) == ENVS_ASPECT).then_some(value)
             })
             .and_then(|config| config.get("env"))
-            .is_some()
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|env| !env.trim().is_empty())
 }
 
 fn is_env_component(id: &str, envs: &[(String, bool)], objects: &ScopeObjects) -> io::Result<bool> {

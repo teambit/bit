@@ -23,14 +23,18 @@ pub(super) fn prepare(
     observed: &mut Observed,
 ) -> io::Result<Identity> {
     let (_, source_name) = source_id(options, source)?;
-    let name = options.target.as_deref().unwrap_or(source_name);
+    let name = options.target
+        .as_deref()
+        .map(str::trim)
+        .filter(|target| !target.is_empty())
+        .unwrap_or(source_name);
     crate::component_rename::copy_refactor::validate_name(name)?;
+    let ws_default = default_scope(workspace);
     let scope = options.scope
         .as_deref()
-        .or_else(|| {
-            crate::component_tracking::identity::workspace_aspect(workspace)["defaultScope"].as_str(
-            )
-        })
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .or(ws_default)
         .ok_or_else(|| invalid("failed finding defaultScope"))?;
     scope_name(scope)?;
     let target = format!("{scope}/{name}");
@@ -43,10 +47,6 @@ pub(super) fn prepare(
         source["incrementPathIfConflicted"] == true,
     )?;
     destination(root, &directory, observed)?;
-    let ws_default =
-        crate::component_tracking::identity::workspace_aspect(workspace)["defaultScope"]
-            .as_str()
-            .filter(|val| !val.is_empty());
     available(bitmap, name, scope, ws_default, &target)?;
     let main = source["mainFile"].as_str().ok_or_else(|| unsupported("fork main file"))?;
     let main = if options.remote && !options.preserve && source["refactorIdentity"] != false {
@@ -59,6 +59,12 @@ pub(super) fn prepare(
         .is_some_and(|rows| rows.iter().any(|(key, row)| is_active_named(key, row, name)));
     let key = if duplicate_name { target.clone() } else { name.into() };
     Ok(Identity { target, key, name: name.into(), scope: scope.into(), directory, main })
+}
+fn default_scope(workspace: &Value) -> Option<&str> {
+    crate::component_tracking::identity::workspace_aspect(workspace)["defaultScope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
 }
 fn is_active_named(key: &str, row: &Value, name: &str) -> bool {
     row.is_object()

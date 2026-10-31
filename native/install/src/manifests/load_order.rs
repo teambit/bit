@@ -113,7 +113,7 @@ fn by_id<'c>(components: &'c [WorkspaceComponent], id: &str) -> Option<&'c Works
 /// `id.toString()`: the id with its version, when it has one.
 fn full_id(component: &WorkspaceComponent) -> String {
     let id = component.id.to_string_without_version();
-    match component.id.version.as_deref() {
+    match component.id.version.as_deref().map(str::trim) {
         Some(version) if !version.is_empty() => format!("{id}@{version}"),
         _ => id,
     }

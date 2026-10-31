@@ -147,8 +147,13 @@ fn quoted(text: &str) -> Option<String> {
 pub fn dedupe(found: Vec<String>) -> Vec<String> {
     let mut result: Vec<String> = Vec::with_capacity(found.len());
     for specifier in found {
-        if !result.contains(&specifier) {
-            result.push(specifier);
+        let trimmed = specifier.trim();
+        if !trimmed.is_empty()
+            && !result
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
+            result.push(trimmed.to_owned());
         }
     }
     result

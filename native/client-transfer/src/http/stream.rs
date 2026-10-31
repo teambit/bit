@@ -10,7 +10,7 @@ pub(super) async fn read(
     maximum: usize,
     cancellation: &Cancellation,
 ) -> io::Result<Vec<ObjectItem>> {
-    if maximum > tar::MAX_ARCHIVE_BYTES {
+    if maximum == 0 || maximum > tar::MAX_ARCHIVE_BYTES {
         return Err(invalid("remote fetch archive exceeds bounds"));
     }
     let (sender, receiver) = mpsc::channel(2);

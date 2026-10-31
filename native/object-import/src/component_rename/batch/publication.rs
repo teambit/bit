@@ -39,6 +39,7 @@ pub(super) fn write(
     file_id: &str,
     reason: &str,
 ) -> io::Result<()> {
+    crate::component_remove::validate_file_id(file_id)?;
     if fs::read(root.join(".bitmap"))? != *expected {
         return Err(invalid("scope rename bitmap changed before publication"));
     }

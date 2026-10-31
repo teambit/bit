@@ -198,6 +198,7 @@ fn index_row_matches(row: &Value, target_scope: Option<&str>, target_name: &str)
 /// `isHash` of `@teambit/component-version`: 3 to 40 lowercase hex characters.
 #[must_use]
 pub fn is_hash(version: &str) -> bool {
+    let version = version.trim();
     (3..=40).contains(&version.len())
         && version
             .bytes()
@@ -207,6 +208,7 @@ pub fn is_hash(version: &str) -> bool {
 /// `snapToSemver`: a snap hash becomes `0.0.0-<hash>`.
 #[must_use]
 pub fn snap_to_semver(version: &str) -> String {
+    let version = version.trim();
     if is_hash(version) { format!("0.0.0-{version}") } else { version.to_owned() }
 }
 

@@ -128,14 +128,14 @@ fn statuses(
 ) -> Vec<Value> {
     let mut positions = HashMap::new();
     for (index, file) in request.current.iter().enumerate() {
-        positions.entry(file.relative_path.as_str()).or_insert(index);
+        positions.entry(file.relative_path.trim()).or_insert(index);
     }
     request.target.files
         .iter()
         .enumerate()
         .map(|(index, file)| {
             let equal = positions
-                .get(file.relative_path.as_str())
+                .get(file.relative_path.trim())
                 .is_some_and(|&position| current[position].raw == target[index]);
             json!({"relativePath":file.relative_path,"status":if equal{"unchanged"}else{"updated"}})
         })

@@ -57,7 +57,11 @@ impl PreparedImport {
         }
         self.cache.fetch_all_dependencies = true;
         for target in targets {
-            self.cache.unbuilt.insert(format!("{}@{}", super::identity(target)?, target.version));
+            self.cache.unbuilt.insert(format!(
+                "{}@{}",
+                super::identity(target)?,
+                target.version.trim(),
+            ));
         }
         let remotes = self.environment.remotes.clone();
         super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;

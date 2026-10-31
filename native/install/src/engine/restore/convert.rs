@@ -39,7 +39,12 @@ pub(super) struct Graph {
 
 impl Graph {
     pub(super) fn parse(serialized: &Value) -> io::Result<Self> {
-        if serialized.get("schemaVersion").and_then(Value::as_str) != Some(SCHEMA_VERSION) {
+        if serialized
+            .get("schemaVersion")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            != Some(SCHEMA_VERSION)
+        {
             return Err(io::Error::other("unsupported dependencies graph schema version"));
         }
         let mut graph = Graph {

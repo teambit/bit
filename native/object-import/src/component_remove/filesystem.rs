@@ -91,6 +91,7 @@ pub(crate) fn validate_file_id(value: &str) -> io::Result<()> {
 
 pub(crate) fn backup_bitmap(root: &Path, file_id: &str, operation: &str) -> io::Result<()> {
     use std::io::Write;
+    let (file_id, operation) = (file_id.trim(), operation.trim());
     let scope = crate::scope_path(root);
     let directory = scope.join("bitmap-history");
     fs::create_dir_all(&directory)?;

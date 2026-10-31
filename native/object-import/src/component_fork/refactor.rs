@@ -93,6 +93,7 @@ fn group(
     let directory = row["directory"]
         .as_str()
         .or_else(|| row["rootDir"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| unsupported("fork refactor component root"))?;
     let mut group = Group { files: Vec::new(), initial: Vec::new() };
@@ -101,6 +102,7 @@ fn group(
             .as_str()
             .or_else(|| file["relativePath"].as_str())
             .or_else(|| file["path"].as_str())
+            .map(str::trim)
             .filter(|value| !value.is_empty())
             .ok_or_else(|| unsupported("fork refactor file path"))?;
         files::relative_path(relative)?;

@@ -134,6 +134,9 @@ pub(super) fn replace_all(token: Token, text: &str, replacement: &str) -> String
 
 /// `text.split(/\s+/)`, keeping the empty leading and trailing parts JavaScript keeps.
 pub(super) fn split_whitespace(text: &str) -> Vec<&str> {
+    if text.is_empty() {
+        return vec![""];
+    }
     let mut parts = Vec::new();
     let mut start = 0;
     let mut in_space = false;

@@ -95,6 +95,10 @@ fn unpublished(calculated: &Calculated, message: &str) -> IndexMap<String, (Stri
     let lower_message = message.to_ascii_lowercase();
     let mut found: IndexMap<String, (String, Vec<String>)> = IndexMap::new();
     for (dependent, dependencies) in &calculated.dependencies {
+        let dependent = dependent.trim();
+        if dependent.is_empty() {
+            continue;
+        }
         for dependency in &dependencies.components {
             record_unpublished_dep(&mut found, dependent, &dependency.id, &local, &lower_message);
         }
@@ -104,7 +108,7 @@ fn unpublished(calculated: &Calculated, message: &str) -> IndexMap<String, (Stri
 
 fn record_unpublished_dep(
     found: &mut IndexMap<String, (String, Vec<String>)>,
-    dependent: &String,
+    dependent: &str,
     dep_id: &crate::model::ComponentId,
     local: &[String],
     lower_message: &str,
@@ -124,8 +128,11 @@ fn record_unpublished_dep(
     let entry = found
         .entry(id)
         .or_insert_with(|| (lower_version, Vec::new()));
-    if !entry.1.contains(dependent) {
-        entry.1.push(dependent.clone());
+    if !entry.1
+        .iter()
+        .any(|existing| existing == dependent)
+    {
+        entry.1.push(dependent.to_owned());
     }
 }
 

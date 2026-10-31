@@ -56,8 +56,11 @@ fn packages(
                     component["identity"]
                         .as_str()
                         .or_else(|| component["id"].as_str())
-                        == Some(row.identity.as_str())
-                        && component["packageName"].is_string()
+                        .map(str::trim)
+                        == Some(row.identity.trim())
+                        && component["packageName"]
+                            .as_str()
+                            .is_some_and(|pkg| !pkg.trim().is_empty())
                 })
         {
             row.package.clear();

@@ -38,13 +38,15 @@ pub async fn cloud_username(global: &GlobalConfig, timeout: Duration) -> Option<
     let body: Value = response.json().await.ok()?;
     body["data"]["me"]["username"]
         .as_str()
+        .map(str::trim)
         .filter(|username| !username.is_empty())
         .map(str::to_string)
 }
 
 /// Name the cloud user in the user agent, unless the pnpm config sets one.
 pub fn apply_cloud_username(settings: &mut EngineSettings, username: &str) {
-    if settings.registry.cloud_user_agent {
+    let username = username.trim();
+    if settings.registry.cloud_user_agent && !username.is_empty() {
         settings.registry.network.user_agent = Some(format!("bit user/{username}"));
     }
 }

@@ -9,7 +9,11 @@ pub(super) fn prepare(batch: &mut Batch, item: &Item) -> io::Result<Option<Confi
     }
     let Some(key) = selection::key(&batch.bitmap, &item.id)? else { return Ok(None) };
     let row = &batch.bitmap[&key];
-    let directory = row["rootDir"].as_str().ok_or_else(|| invalid("recovery component root"))?;
+    let directory = row["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| invalid("recovery component root"))?;
     if directory != "." {
         crate::checkout::plan::relative_path(directory)?;
     }
@@ -25,18 +29,19 @@ pub(super) fn prepare(batch: &mut Batch, item: &Item) -> io::Result<Option<Confi
 fn projection(parsed: &Value) -> io::Result<Value> {
     let has_scope = parsed["componentId"]
         .as_str()
+        .map(str::trim)
         .and_then(|raw| {
             raw.rsplit_once('@')
-                .map_or(raw, |(bare, _)| bare)
+                .map_or(raw, |(bare, _)| bare.trim())
                 .split_once('/')
         })
-        .is_some_and(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
         || parsed["componentId"]["scope"]
             .as_str()
-            .is_some_and(|val| !val.is_empty())
+            .is_some_and(|val| !val.trim().is_empty())
         || parsed["defaultScope"]
             .as_str()
-            .is_some_and(|val| !val.is_empty());
+            .is_some_and(|val| !val.trim().is_empty());
     if !has_scope {
         return Err(invalid("recovery component.json requires a scoped componentId"));
     }

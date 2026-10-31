@@ -82,9 +82,10 @@ fn write_lanes(plans: &[VersionedPlan]) -> io::Result<()> {
         !plans
             .iter()
             .any(|plan| {
-                let (scope, name) = plan.workspace.identity
+                let identity = plan.workspace.identity.trim();
+                let (scope, name) = identity
                     .split_once('/')
-                    .unwrap_or(("", &plan.workspace.identity));
+                    .map_or(("", identity), |(scope, name)| (scope.trim(), name.trim()));
                 crate::component_remove::lane::matches_component_entry(row, scope, name)
             })
     });

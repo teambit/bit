@@ -45,15 +45,27 @@ fn extension_id(value: &Value) -> Option<String> {
         .or_else(|| value["name"].as_str())
         .or_else(|| value["legacyId"].as_str())
         .or_else(|| value["extensionId"].as_str())
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
     {
-        return Some(id.split('@').next()?.to_owned());
+        let bare = id.split('@').next()?.trim();
+        return (!bare.is_empty()).then(|| bare.to_owned());
     }
     let id = value
         .get("extensionId")
         .or_else(|| value.get("id"))?;
-    let name = id["name"].as_str()?.split('@').next()?;
+    let name = id["name"]
+        .as_str()?
+        .trim()
+        .split('@')
+        .next()?
+        .trim();
+    if name.is_empty() {
+        return None;
+    }
     match id["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     {
         Some(scope) => Some(format!("{scope}/{name}")),

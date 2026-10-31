@@ -70,10 +70,14 @@ impl BitHooks {
 
     fn remove_never_built_scripts(&self, mut manifest: Value) -> Value {
         if let Some(object) = manifest.as_object_mut()
-            && let Some(name) = object.get("name").and_then(Value::as_str)
+            && let Some(name) = object
+                .get("name")
+                .and_then(Value::as_str)
+                .map(str::trim)
+            && !name.is_empty()
             && self.never_build
                 .iter()
-                .any(|never| never == name)
+                .any(|never| never.trim() == name)
         {
             object.remove("scripts");
         }

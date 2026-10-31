@@ -65,7 +65,8 @@ pub fn remove_from_document(document: &mut Document, packages: &[String]) -> boo
         .filter(|(_, name, _)| {
             !packages
                 .iter()
-                .any(|package| package == name)
+                .map(|package| package.trim())
+                .any(|package| package == name.trim())
         })
         .collect();
     let changed = retained.len() != original_len;

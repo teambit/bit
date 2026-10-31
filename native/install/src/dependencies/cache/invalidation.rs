@@ -102,8 +102,10 @@ fn bucket_times(text: &str) -> Vec<f64> {
         .filter(|line| !line.is_empty())
     {
         let mut pieces = line.split('\t');
-        let (Some(hash), Some(body)) = (pieces.next(), pieces.next()) else { continue };
-        if body.is_empty() || hex(&Sha1::digest(body.as_bytes())) != hash {
+        let (Some(hash), Some(body)) = (pieces.next().map(str::trim), pieces.next()) else {
+            continue;
+        };
+        if hash.is_empty() || body.is_empty() || hex(&Sha1::digest(body.as_bytes())) != hash {
             continue;
         }
         let Ok(entry) = serde_json::from_str::<Value>(body) else { continue };

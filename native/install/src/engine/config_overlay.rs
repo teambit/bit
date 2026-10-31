@@ -305,7 +305,7 @@ fn pin_unkeyed_header(settings: &EngineSettings) -> HashMap<String, String> {
 }
 
 fn import_method(value: &str) -> Option<PackageImportMethod> {
-    match value {
+    match value.trim() {
         "auto" => Some(PackageImportMethod::Auto),
         "hardlink" => Some(PackageImportMethod::Hardlink),
         "copy" => Some(PackageImportMethod::Copy),

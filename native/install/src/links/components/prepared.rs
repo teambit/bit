@@ -37,7 +37,9 @@ pub fn link_prepared_component(
     if is_workspace_root_dir(&component.root_dir) {
         return Ok(ComponentLinks::default());
     }
-    let package = root.join("node_modules").join(&component.package_name);
+    let package = root
+        .join("node_modules")
+        .join(Path::new(&component.package_name).components().collect::<std::path::PathBuf>());
     let (links, existing) = plan_file_links(root, component, &package);
     if is_symlink(&package) {
         remove_path(&package)?;

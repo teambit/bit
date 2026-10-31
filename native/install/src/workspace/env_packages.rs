@@ -41,11 +41,13 @@ pub fn external_env_packages(
 
 /// `scope/name` (the scope may contain dots, the name slashes).
 fn bare_id(id: &str) -> ComponentId {
+    let id = id.trim();
     let (scope, name) = id.split_once('/').unwrap_or(("", id));
+    let scope = scope.trim();
     ComponentId {
         scope: (!scope.is_empty()).then(|| scope.to_owned()),
         default_scope: None,
-        name: name.to_owned(),
+        name: name.trim().to_owned(),
         version: None,
     }
 }

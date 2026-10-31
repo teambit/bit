@@ -39,7 +39,14 @@ impl<'a> Progress<'a> {
     /// `None` when `CI` is set, as `showProgress` prints nothing there.
     #[must_use]
     pub fn new(output: &'a Output, message: &str) -> Option<Self> {
-        if std::env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        if std::env::var_os("CI")
+            .is_some_and(|value| {
+                !value
+                    .to_string_lossy()
+                    .trim()
+                    .is_empty()
+            })
+        {
             return None;
         }
         Some(Self { output, message: message.to_string(), added: Cell::new(0) })

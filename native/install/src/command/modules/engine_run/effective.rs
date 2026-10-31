@@ -141,7 +141,10 @@ fn assign<Setting: DeserializeOwned>(
     key: &str,
     target: &mut Setting,
 ) -> io::Result<()> {
-    if let Some(value) = values.get(key) {
+    if let Some(value) = values
+        .get(key)
+        .filter(|value| !value.is_null())
+    {
         *target = serde_json::from_value(value.clone())
             .map_err(|error| io::Error::other(format!("subscriber {key}: {error}")))?;
     }

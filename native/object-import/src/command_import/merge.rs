@@ -201,9 +201,12 @@ fn entries(value: &Value) -> io::Result<Vec<[String; 2]>> {
         .ok_or_else(|| invalid("import tag map"))?
         .iter()
         .map(|(tag, hash)| {
-            let hash = hash.as_str().ok_or_else(|| invalid("import tag hash"))?;
+            let hash = hash
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("import tag hash"))?;
             crate::merge_history::hash(hash)?;
-            Ok([tag.clone(), hash.to_owned()])
+            Ok([tag.trim().to_owned(), hash.to_owned()])
         })
         .collect()
 }
@@ -216,7 +219,10 @@ fn array(value: &Value) -> io::Result<Vec<String>> {
         .ok_or_else(|| invalid("import detached heads"))?
         .iter()
         .map(|value| {
-            let hash = value.as_str().ok_or_else(|| invalid("import detached hash"))?;
+            let hash = value
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("import detached hash"))?;
             crate::merge_history::hash(hash)?;
             Ok(hash.to_owned())
         })

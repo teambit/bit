@@ -49,6 +49,7 @@ impl ModelData {
         self.envs_data()
             .and_then(|data| data.get("type"))
             .and_then(Value::as_str)
+            .map(str::trim)
             == Some("aspect")
     }
 

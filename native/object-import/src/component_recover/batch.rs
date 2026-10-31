@@ -123,6 +123,7 @@ impl Batch {
             }
             let deleted = removed
                 .get(&item.id)
+                .or_else(|| removed.get(selection::bare(&item.id)))
                 .ok_or_else(|| unsupported("recovery remote classification missing"))?;
             item.action = if *deleted { Action::Import } else { Action::None };
         }

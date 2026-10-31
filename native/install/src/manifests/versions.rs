@@ -7,12 +7,14 @@ use std::{io, sync::OnceLock};
 
 /// `isHash` of `@teambit/component-version`: 3 to 40 hex characters.
 pub(super) fn is_hash(version: &str) -> bool {
-    (3..=40).contains(&version.len()) && version.bytes().all(|byte| byte.is_ascii_hexdigit())
+    let trimmed = version.trim();
+    (3..=40).contains(&trimmed.len()) && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 /// `snapToSemver`: a snap hash becomes `0.0.0-<hash>`.
 pub(super) fn snap_to_semver(version: &str) -> String {
-    if is_hash(version) { format!("0.0.0-{version}") } else { version.to_string() }
+    let trimmed = version.trim();
+    if is_hash(trimmed) { format!("0.0.0-{trimmed}") } else { trimmed.to_string() }
 }
 
 fn trailing_version() -> &'static Regex {

@@ -9,19 +9,21 @@ pub(super) fn supported_row<'a>(
     row: &'a Value,
     kind: RowKind,
 ) -> io::Result<(&'a str, &'a str)> {
-    let key_id = key.rsplit_once('@').map_or(key, |(id, _)| id);
+    let key_trimmed = key.trim();
+    let key_id = key_trimmed.rsplit_once('@').map_or(key_trimmed, |(id, _)| id.trim());
     let (id_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
     let scope = scope(row, id_scope)?;
     let identity = (key_id == name || key_id == format!("{scope}/{name}"))
         && valid_name(name)
         && valid_scope(scope);
     let local = if matches!(kind, RowKind::Imported | RowKind::ExportedLane) {
-        (row["scope"] == scope || (row.get("scope").is_none() && id_scope == Some(scope)))
+        (row["scope"].as_str().map(str::trim) == Some(scope)
+            || (row.get("scope").is_none() && id_scope == Some(scope)))
             && row.get("defaultScope").is_none()
     } else {
         row["scope"]
             .as_str()
-            .unwrap_or_default()
+            .map_or("", str::trim)
             .is_empty()
     };
     if !identity

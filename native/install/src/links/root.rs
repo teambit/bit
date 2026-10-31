@@ -275,7 +275,8 @@ fn has_compiled_main(package_dir: &Path) -> bool {
     let Ok(manifest) = crate::jsonc::parse(&text) else { return false };
     let main = manifest
         .get("main")
-        .and_then(|main| main.as_str())
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
         .filter(|main| !main.is_empty());
     package_dir
         .join(main.unwrap_or("index.js"))
@@ -308,7 +309,10 @@ pub(super) fn link_value(path: &Path) -> String {
 }
 
 fn link_source(link: &str) -> io::Result<PathBuf> {
-    link.strip_prefix(LINK_PREFIX)
+    link.trim()
+        .strip_prefix(LINK_PREFIX)
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .map(PathBuf::from)
         .ok_or_else(|| {
             io::Error::new(io::ErrorKind::InvalidInput, format!("not a link: specifier: {link}"))

@@ -93,8 +93,12 @@ pub fn sync_core_aspects(
         components,
         global_virtual_store,
     )?;
-    if let Some(warning) = warning.filter(|text| !text.trim().is_empty()) {
-        session.output.warning(&warning);
+    if let Some(warning) = warning
+        .as_deref()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+    {
+        session.output.warning(warning);
     }
     Ok(())
 }

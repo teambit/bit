@@ -93,6 +93,7 @@ pub(super) fn raw_remote(
     remotes: &Value,
     name: &str,
 ) -> io::Result<PathBuf> {
+    let name = name.trim();
     if name.is_empty()
         || name
             .bytes()
@@ -109,6 +110,7 @@ pub(super) fn raw_remote(
     }
     let host = remotes[name]
         .as_str()
+        .map(str::trim)
         .ok_or_else(|| invalid("import unmapped remote requires canonical resolver"))?;
     let path = host
         .strip_prefix("file://")

@@ -2,6 +2,7 @@
 use super::invalid;
 use std::{fs, io, path::Path};
 pub fn select_ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
+    let pattern = pattern.trim();
     if pattern == "$deprecated" {
         return crate::component_deprecation::Plan::prepare(root, pattern, None, None, true)
             .map(|plan| plan.changed().to_vec());
@@ -20,6 +21,7 @@ pub fn select_ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
     let mut parts = pattern
         .split(',')
         .map(str::trim)
+        .filter(|part| !part.is_empty())
         .collect::<Vec<_>>();
     if parts
         .iter()

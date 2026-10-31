@@ -157,6 +157,9 @@ fn put_content(cache: &Path, data: &[u8]) -> io::Result<String> {
 }
 
 fn segmented(root: &Path, hash: &str) -> PathBuf {
+    if hash.len() < 4 {
+        return root.join(hash);
+    }
     root.join(&hash[..2])
         .join(&hash[2..4])
         .join(&hash[4..])

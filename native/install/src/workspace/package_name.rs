@@ -19,11 +19,21 @@ pub fn binding_prefix_by_default_scope(scope: &str) -> String {
 
 /// `parseScope`: `owner.scope` → (owner, scope).
 fn parse_scope(scope_id: Option<&str>) -> (Option<&str>, Option<&str>) {
-    match scope_id {
+    match scope_id
+        .map(str::trim)
+        .filter(|scope_id| !scope_id.is_empty())
+    {
         Some(scope_id) if scope_id.contains('.') => {
             let mut parts = scope_id.split('.');
-            let owner = parts.next();
-            (owner, parts.next())
+            let owner = parts
+                .next()
+                .map(str::trim)
+                .filter(|part| !part.is_empty());
+            let scope = parts
+                .next()
+                .map(str::trim)
+                .filter(|part| !part.is_empty());
+            (owner, scope)
         }
         Some(scope_id) => (None, Some(scope_id)),
         None => (None, None),

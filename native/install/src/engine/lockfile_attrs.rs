@@ -77,8 +77,8 @@ pub(super) fn remove_for_update(root: &Path, update_all: bool) -> io::Result<Opt
 
 /// Put back a lockfile [`remove_for_update`] removed.
 pub(super) fn restore_after_failure(root: &Path, contents: Option<Vec<u8>>) -> io::Result<()> {
-    match contents {
-        Some(contents) => fs::write(root.join(Lockfile::FILE_NAME), contents),
-        None => Ok(()),
+    if let Some(contents) = contents {
+        fs::write(root.join(Lockfile::FILE_NAME), contents)?;
     }
+    Ok(())
 }

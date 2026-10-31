@@ -129,8 +129,8 @@ fn build(request: &Request, state: &mut cache::State) -> io::Result<Plan> {
         "Component",
         &mut compressed_total,
     )?;
-    let version_hash = resolve(&component, &request.requested_version)?;
-    if version_hash != request.expected_version_hash {
+    let version_hash = resolve(&component, request.requested_version.trim())?;
+    if version_hash != request.expected_version_hash.trim() {
         return Err(invalid("checkout plan target Version changed"));
     }
     let version = metadata(

@@ -133,7 +133,7 @@ impl Loaded {
             .map_or_else(
                 || {
                     root.file_name()
-                        .map(|name| name.to_string_lossy().into_owned())
+                        .map(|name| name.to_string_lossy().trim().to_owned())
                         .unwrap_or_default()
                 },
                 str::to_owned,

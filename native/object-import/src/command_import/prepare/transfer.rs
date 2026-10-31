@@ -168,12 +168,17 @@ pub(super) fn retain_sources(
         sources.push(
             file["file"]
                 .as_str()
+                .map(str::trim)
                 .ok_or_else(|| invalid("import file reference"))?
                 .to_owned(),
         );
     }
     for key in ["flattenedEdgesRef", "dependenciesGraphRef", "flattenedDependenciesRef"] {
-        if let Some(hash) = version[key].as_str() {
+        if let Some(hash) = version[key]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+        {
             sources.push(hash.to_owned());
         }
     }

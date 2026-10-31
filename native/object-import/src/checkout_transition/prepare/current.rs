@@ -123,7 +123,7 @@ fn validate<'a>(
     retained: bool,
 ) -> io::Result<()> {
     crate::checkout::plan::relative_path(&file.relative_path)?;
-    if file.bitmap && file.relative_path != ".bitmap" {
+    if file.bitmap && file.relative_path.trim() != ".bitmap" {
         return Err(invalid("checkout bitmap normalization label"));
     }
     if !file.path.is_absolute()

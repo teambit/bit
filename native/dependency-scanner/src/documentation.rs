@@ -50,12 +50,13 @@ fn source_type(path: &str) -> Option<SourceType> {
     if path.is_empty() {
         return None;
     }
-    if path.ends_with(".js.snap") {
+    let lower = path.to_ascii_lowercase();
+    if lower.ends_with(".js.snap") {
         return Some(SourceType::cjs());
     }
-    let kind = path.rsplit('.').next()?;
+    let kind = lower.rsplit('.').next()?;
     matches!(kind, "js" | "cjs" | "mjs" | "jsx" | "ts" | "tsx" | "mts" | "cts")
-        .then(|| SourceType::from_path(path).ok())
+        .then(|| SourceType::from_path(&lower).ok())
         .flatten()
 }
 

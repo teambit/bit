@@ -109,7 +109,11 @@ impl InstallOptions {
     /// dependencies.
     #[must_use]
     pub fn lifecycle(&self) -> &str {
-        self.lifecycle_type.as_deref().unwrap_or("runtime")
+        self.lifecycle_type
+            .as_deref()
+            .map(str::trim)
+            .filter(|lifecycle| !lifecycle.is_empty())
+            .unwrap_or("runtime")
     }
 }
 

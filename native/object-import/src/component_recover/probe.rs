@@ -25,7 +25,10 @@ pub fn probe_remote(
             let mut result = BTreeMap::new();
             for id in ids {
                 let (scope, _) = id
+                    .trim()
                     .split_once('/')
+                    .map(|(scope, name)| (scope.trim(), name.trim()))
+                    .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
                     .ok_or_else(|| super::batch::invalid("recovery remote identity"))?;
                 let deleted = match remotes.resolve(scope, network).await? {
                     Remote::File(path) => objects::file(&path, id)?,

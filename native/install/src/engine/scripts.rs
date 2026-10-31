@@ -42,7 +42,10 @@ pub(super) fn allowed_scripts(
     config: &DependencyResolverConfig,
     from_env: Option<&str>,
 ) -> io::Result<Option<IndexMap<String, Value>>> {
-    let Some(from_env) = from_env.filter(|value| !value.is_empty()) else {
+    let Some(from_env) = from_env
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
         return Ok(config.allow_scripts.clone());
     };
     let parsed: Value = serde_json::from_str(from_env)
@@ -55,7 +58,12 @@ pub(super) fn allowed_scripts(
         return Err(io::Error::other("BIT_ALLOW_SCRIPTS must be a JSON object"));
     };
     let mut merged = config.allow_scripts.clone().unwrap_or_default();
-    merged.extend(from_env);
+    merged.extend(
+        from_env
+            .into_iter()
+            .map(|(name, value)| (name.trim().to_string(), value))
+            .filter(|(name, _)| !name.is_empty()),
+    );
     Ok(Some(merged))
 }
 

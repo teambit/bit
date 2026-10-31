@@ -61,10 +61,14 @@ pub(super) fn record_local_main(
     remotes: &Value,
 ) -> io::Result<()> {
     for target in targets {
-        let scope = target.scope.as_deref().ok_or_else(|| invalid("recovery local scope"))?;
+        let scope = target.scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("recovery local scope"))?;
         let file = remotes[scope]
             .as_str()
-            .is_some_and(|host| host.starts_with("file://"));
+            .is_some_and(|host| host.trim().starts_with("file://"));
         if file {
             super::remote(plan, remotes, scope)?;
         }

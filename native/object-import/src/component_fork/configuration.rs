@@ -50,11 +50,14 @@ fn config(options: &Options, source: &Value) -> io::Result<Value> {
 fn source_version(source: &Value) -> Option<&str> {
     source["version"]
         .as_str()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
         .or_else(|| {
             source["identity"]
                 .as_str()
-                .and_then(|id| id.split_once('@').map(|(_, version)| version))
+                .and_then(|id| id.rsplit_once('@').map(|(_, version)| version.trim()))
         })
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
 }
 fn copy(output: &mut Value, source: &Value) -> io::Result<()> {
     if let Some(configs) = source.get("sourceConfigs") {

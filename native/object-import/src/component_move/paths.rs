@@ -9,8 +9,8 @@ pub(super) fn locations(
     from: &str,
     to: &str,
 ) -> io::Result<(PathBuf, PathBuf, bool)> {
-    let source = normalize(&cwd.join(from));
-    let destination = normalize(&cwd.join(to));
+    let source = normalize(&cwd.join(from.trim()));
+    let destination = normalize(&cwd.join(to.trim()));
     let first = source.try_exists()?;
     let second = destination.try_exists()?;
     validate_existing(&source, &destination, from, to, first, second)?;

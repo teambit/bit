@@ -100,7 +100,8 @@ pub(super) fn resolve(
 
 /// The default registry is npmjs or unset, so Bit's registry proxies it.
 fn is_npmjs(uri: &str) -> bool {
-    uri.is_empty() || uri == NPM_REGISTRY || NPM_REGISTRY.starts_with(uri)
+    let trimmed = uri.trim();
+    trimmed.is_empty() || trimmed == NPM_REGISTRY || NPM_REGISTRY.starts_with(trimmed)
 }
 
 /// `getRegistries(config)` plus the `bit` scope registry when it is missing.
@@ -132,12 +133,12 @@ fn from_pnpm_config(config: &pnpm_config::Config, cloud_registry: &str) -> Regis
 fn configured_registries(config: &pnpm_config::Config) -> Vec<(String, String)> {
     let mut list = Vec::new();
     if !config.registries_by_scope.contains_key("default") {
-        list.push(("default".to_string(), config.registry.clone()));
+        list.push(("default".to_string(), config.registry.trim().to_string()));
     }
     list.extend(
         config.registries_by_scope
             .iter()
-            .map(|(name, url)| (name.clone(), url.clone())),
+            .map(|(name, url)| (name.trim().to_string(), url.trim().to_string())),
     );
     list
 }
@@ -164,7 +165,11 @@ fn add_auth_to_scoped_bit_registries(
     bit_auth: &str,
 ) {
     for registry in registries.scopes.values_mut() {
-        if registry.auth_header_value.is_empty() && cloud_registry.contains(&registry.uri) {
+        let uri = registry.uri.trim();
+        if registry.auth_header_value.trim().is_empty()
+            && !uri.is_empty()
+            && cloud_registry.contains(uri)
+        {
             registry.always_auth = true;
             registry.auth_header_value = bit_auth.to_string();
         }

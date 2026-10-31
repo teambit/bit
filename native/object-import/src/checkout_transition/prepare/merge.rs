@@ -94,18 +94,19 @@ fn required_base(
     let base_indices: HashMap<_, _> = base.files
         .iter()
         .enumerate()
-        .map(|(index, file)| (file.relative_path.as_str(), index))
+        .map(|(index, file)| (file.relative_path.trim(), index))
         .collect();
     let other: HashMap<_, _> = request.target.files
         .iter()
-        .map(|file| (file.relative_path.as_str(), file.hash.as_str()))
+        .map(|file| (file.relative_path.trim(), file.hash.as_str()))
         .collect();
     let mut needed = vec![false; base.files.len()];
     for (file, loaded) in request.current.iter().zip(current) {
-        let Some(&index) = base_indices.get(file.relative_path.as_str()) else {
+        let relative_path = file.relative_path.trim();
+        let Some(&index) = base_indices.get(relative_path) else {
             continue;
         };
-        let Some(&other_hash) = other.get(file.relative_path.as_str()) else {
+        let Some(&other_hash) = other.get(relative_path) else {
             continue;
         };
         let current_hash = crate::validate::hexadecimal(&Sha1::digest(&loaded.normalized));

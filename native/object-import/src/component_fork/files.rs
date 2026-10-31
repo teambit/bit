@@ -87,13 +87,15 @@ pub(super) fn source_path(
     }
     let directory = source["sourceDirectory"]
         .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
         .map_or_else(
             || {
                 root.join(
                     source["rootDir"]
                         .as_str()
                         .or_else(|| source["directory"].as_str())
-                        .unwrap_or_default(),
+                        .map_or("", str::trim),
                 )
             },
             PathBuf::from,

@@ -112,11 +112,12 @@ pub fn configures_non_core(component: &WorkspaceComponent, core_aspects: &[CoreA
 /// A Bit core aspect, a core env or an id Bit reserves.
 #[must_use]
 pub fn is_core(id: &str, core_aspects: &[CoreAspect]) -> bool {
+    let id = id.trim();
     RESERVED.contains(&id)
         || is_core_env(id)
         || core_aspects
             .iter()
-            .any(|aspect| aspect.id == id)
+            .any(|aspect| aspect.id.trim() == id)
 }
 
 /// `[[registrar, policy], ...]` as the host returns `policiesRegistry.toArray()`.

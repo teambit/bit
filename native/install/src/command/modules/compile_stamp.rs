@@ -244,8 +244,12 @@ pub(super) fn has_external_links(
                 .filter_map(|field| project.manifest.get(*field).and_then(Value::as_object))
                 .flat_map(|dependencies| dependencies.values().filter_map(Value::as_str))
                 .filter_map(|spec| {
-                    spec.strip_prefix("link:")
-                        .or_else(|| spec.strip_prefix("file:"))
+                    let trimmed = spec.trim();
+                    trimmed
+                        .strip_prefix("link:")
+                        .or_else(|| trimmed.strip_prefix("file:"))
+                        .map(str::trim)
+                        .filter(|target| !target.is_empty())
                 })
                 .any(|target| !allowed(&normalize(&project.dir.join(target))))
         })

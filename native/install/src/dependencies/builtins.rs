@@ -56,6 +56,6 @@ pub fn is_builtin(specifier: &str) -> bool {
     let root = trimmed
         .split('/')
         .next()
-        .unwrap_or(trimmed);
+        .map_or("", str::trim);
     BUILTINS.contains(&root)
 }

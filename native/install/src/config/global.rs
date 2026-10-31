@@ -81,9 +81,10 @@ pub fn load_global_config(dir: &Path) -> io::Result<GlobalConfig> {
             format!("failed parsing {}: {error}", path.display()),
         )
     })?;
-    match value {
-        Value::Object(map) => Ok(map.into_iter().collect()),
-        _ => Ok(GlobalConfig::new()),
+    if let Value::Object(map) = value {
+        Ok(map.into_iter().collect())
+    } else {
+        Ok(GlobalConfig::new())
     }
 }
 

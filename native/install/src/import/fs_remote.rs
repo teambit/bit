@@ -202,12 +202,15 @@ impl Collector {
 /// `ModelComponent.getRef(version)`: a tag (also orphaned) or a snap hash.
 #[must_use]
 pub fn resolve_version(component: &Value, version: &str) -> Option<String> {
+    let version = version.trim();
     if matches!(version, "latest" | "head") {
         return latest(component);
     }
     if let Some(hash) = component["versions"][version]
         .as_str()
         .or_else(|| component["orphanedVersions"][version].as_str())
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
     {
         return Some(hash.to_string());
     }

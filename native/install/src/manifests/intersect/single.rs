@@ -18,9 +18,9 @@ pub(super) enum Single {
 impl fmt::Display for Single {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Single::Ver(comparator) => formatter.write_str(&comparator.value),
+            Single::Ver(comparator) => formatter.write_str(comparator.value.trim()),
             Single::Range(lower, upper) => {
-                let parts: Vec<&str> = [lower.value.as_str(), upper.value.as_str()]
+                let parts: Vec<&str> = [lower.value.trim(), upper.value.trim()]
                     .into_iter()
                     .filter(|value| !value.is_empty())
                     .collect();

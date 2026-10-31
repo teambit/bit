@@ -148,7 +148,8 @@ fn hint(package: &str) -> String {
 
 impl EnvRoot {
     fn add_root(&mut self, name: &str, version: &str, overrides: bool) {
-        if name.trim().is_empty() || version.trim().is_empty() {
+        let (name, version) = (name.trim(), version.trim());
+        if name.is_empty() || version.is_empty() {
             return;
         }
         self.peers.insert(name.to_string(), version.to_string());
@@ -158,6 +159,7 @@ impl EnvRoot {
     }
 
     fn per_component(&mut self, name: &str, versions: &IndexMap<String, IndexSet<String>>) {
+        let name = name.trim();
         for (version, envs) in versions
             .iter()
             .filter(|(version, _)| !bit_object_import::plus_version::is_plus(version))
@@ -166,7 +168,7 @@ impl EnvRoot {
                 self.component_peers
                     .entry(env.clone())
                     .or_default()
-                    .insert(name.to_string(), version.clone());
+                    .insert(name.to_string(), version.trim().to_string());
             }
         }
     }

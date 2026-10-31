@@ -9,7 +9,7 @@ use std::{
 pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let request: wire::Materialize = serde_json::from_value(input).map_err(io::Error::other)?;
     let plan = state.plans
-        .get(&request.token)
+        .get(request.token.trim())
         .ok_or_else(|| invalid("stale checkout materialize token"))?;
     let contents = prepare(&request, plan)?;
     let mut completed = 0;

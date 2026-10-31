@@ -77,10 +77,9 @@ impl Compiler {
         if origin.is_empty() || self.blank_line.find(origin).is_some() || origin.starts_with('#') {
             return Ok(None);
         }
-        let (negative, pattern) = match origin.strip_prefix('!') {
-            Some(rest) => (true, rest),
-            None => (false, origin),
-        };
+        let (negative, pattern) = origin
+            .strip_prefix('!')
+            .map_or((false, origin), |rest| (true, rest));
         let pattern = js_replace(pattern, &self.leading_escaped_exclamation, false, |_| "!".into());
         let pattern = js_replace(&pattern, &self.leading_escaped_hash, false, |_| "#".into());
         let source = self.make_regex(&pattern, negative)?;

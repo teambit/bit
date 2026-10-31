@@ -61,12 +61,14 @@ fn dependency(dependency: &LegacyDependency) -> Value {
     value.insert("relativePaths".to_owned(), Value::Array(Vec::new()));
     if let Some(name) = dependency.package_name
         .as_deref()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
     {
         value.insert("packageName".to_owned(), Value::String(name.to_owned()));
     }
     if let Some(range) = dependency.version_range
         .as_deref()
+        .map(str::trim)
         .filter(|range| !range.is_empty())
     {
         value.insert("versionRange".to_owned(), Value::String(range.to_owned()));

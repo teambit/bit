@@ -84,8 +84,7 @@ async fn import(
     let scope_json = read_scope_json(scope_dir)?;
     let local_scope = scope_json["name"]
         .as_str()
-        .map(str::trim)
-        .unwrap_or_default()
+        .map_or("", str::trim)
         .to_string();
     let (remotes, network) = connect(&scope_json, &local_scope, global, info)?;
     let fetcher =

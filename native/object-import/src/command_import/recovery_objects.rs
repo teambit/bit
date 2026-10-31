@@ -16,6 +16,7 @@ impl PreparedImport {
             }
             self.capture.accept_known(&path, bytes);
             self.overlay.objects.remove(&canonical);
+            self.overlay.objects.remove(hash.trim());
             self.overlay.objects.remove(hash.as_str());
         }
         Ok(())

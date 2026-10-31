@@ -57,15 +57,17 @@ pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> 
 
 pub(crate) fn row_id_parts(id: &Value) -> (&str, &str) {
     if let Some(raw) = id.as_str() {
-        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let raw = raw.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
         return bare
             .split_once('/')
-            .unwrap_or(("", bare));
+            .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     }
-    let scope = id["scope"].as_str().unwrap_or_default();
+    let scope = id["scope"].as_str().map_or("", str::trim);
     let name = id["name"]
         .as_str()
-        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base))
+        .map(str::trim)
+        .map(|nm| nm.rsplit_once('@').map_or(nm, |(base, _)| base.trim()))
         .unwrap_or_default();
     (scope, name)
 }

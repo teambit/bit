@@ -13,7 +13,7 @@ use std::{
 };
 
 pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
-    let mut current = head.to_owned();
+    let mut current = head.trim().to_owned();
     let mut seen = HashSet::new();
     let mut versions = Vec::new();
     loop {

@@ -134,11 +134,12 @@ fn range_state(config: &mut Value, id: &str, model: &Value) {
     }
     let Some(range) = config["range"]
         .as_str()
+        .map(str::trim)
         .and_then(|range| node_semver::Range::parse(range).ok())
     else {
         return;
     };
-    let Some(version) = id.rsplit_once('@').map(|(_, version)| version) else {
+    let Some(version) = id.rsplit_once('@').map(|(_, version)| version.trim()) else {
         return;
     };
     let tag = model["versions"]

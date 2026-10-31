@@ -63,6 +63,7 @@ impl Resolver {
     ) -> Option<Self> {
         let path = scope_json["resolverPath"]
             .as_str()
+            .map(str::trim)
             .filter(|path| !path.is_empty())?;
         let token = global
             .get(CFG_USER_TOKEN)
@@ -72,7 +73,7 @@ impl Resolver {
             path: path.to_string(),
             node,
             bit_dir,
-            this_scope: this_scope.to_string(),
+            this_scope: this_scope.trim().to_string(),
             token,
         })
     }

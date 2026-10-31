@@ -182,6 +182,7 @@ fn string(value: &Value, field: &str) -> Option<String> {
     value
         .get(field)
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .map(str::to_owned)
 }

@@ -235,7 +235,8 @@ impl<'a> Visit<'a> for Scanner {
         walk::walk_import_expression(self, node);
     }
     fn visit_call_expression(&mut self, node: &CallExpression<'a>) {
-        if matches!(&node.callee, Expression::Identifier(id) if id.name=="define") {
+        if matches!(node.callee.without_parentheses(), Expression::Identifier(id) if id.name == "define")
+        {
             self.unsupported = true;
         }
         let accepted = calls::accepted(node, self.ts);

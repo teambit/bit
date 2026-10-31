@@ -367,12 +367,15 @@ fn ref_row_matches(row: &Value, scope: &str, name: &str) -> bool {
     row["id"]["name"] == name && (row_scope.is_empty() || row_scope == scope)
 }
 fn version_ref(model: &Value, version: &str) -> io::Result<String> {
+    let version = version.trim();
     if crate::merge_history::hash(version).is_ok() {
         return Ok(version.to_owned());
     }
     if version.is_empty() || matches!(version, "latest" | "head") {
         return model["head"]
             .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
             .map(str::to_owned)
             .ok_or_else(|| invalid("import model head absent"));
     }
@@ -380,6 +383,8 @@ fn version_ref(model: &Value, version: &str) -> io::Result<String> {
         .get(version)
         .unwrap_or_else(|| &model["versions"][version])
         .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
         .ok_or_else(|| invalid("import model version absent"))
 }

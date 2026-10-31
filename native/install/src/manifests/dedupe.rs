@@ -102,7 +102,10 @@ pub(super) fn dedupe(
 /// `excludeWorkspaceDependencies`: drop `file:` and `workspace:` specs.
 pub(super) fn exclude_workspace(map: &DependencyMap) -> DependencyMap {
     map.iter()
-        .filter(|(_, spec)| !spec.starts_with("file:") && !spec.starts_with("workspace:"))
+        .filter(|(_, spec)| {
+            let trimmed = spec.trim();
+            !trimmed.starts_with("file:") && !trimmed.starts_with("workspace:")
+        })
         .map(|(name, spec)| (name.clone(), spec.clone()))
         .collect()
 }

@@ -16,18 +16,19 @@ pub(super) struct File {
 }
 pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let request: wire::Apply = serde_json::from_value(input).map_err(io::Error::other)?;
-    let plan =
-        state.plans.get(&request.token).ok_or_else(|| invalid("stale checkout apply token"))?;
+    let plan = state.plans
+        .get(request.token.trim())
+        .ok_or_else(|| invalid("stale checkout apply token"))?;
+    let strategy = request.strategy.as_deref().map(str::trim);
     let keep = request.current_exists
-        && (request.force_ours
-            || (plan.has_conflicts && request.strategy.as_deref() == Some("ours")));
+        && (request.force_ours || (plan.has_conflicts && strategy == Some("ours")));
     if keep {
         return Ok(
             json!({"keepOurs":true,"files":[],"filesStatus":plan.current.iter().map(|file|json!({"relativePath":file.relative_path,"status":"unchanged"})).collect::<Vec<_>>(),"removals":[]}),
         );
     }
     let (mut files, mut status, removal) = initial(plan, &request, state)?;
-    let error = if plan.has_conflicts && request.strategy.as_deref() != Some("manual") {
+    let error = if plan.has_conflicts && strategy != Some("manual") {
         None
     } else {
         effects::apply(plan, &mut files, &mut status)?

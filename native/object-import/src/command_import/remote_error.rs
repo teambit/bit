@@ -29,6 +29,6 @@ pub(crate) fn message(error: &io::Error) -> Option<String> {
     let message = crate::checkout::repository::inflate_message(&failure.cause)?;
     Some(format!(
         "remote {} responded with the following error:\nfatal: zlib.inflate has failed with an error: \"{message}\"\ntry running bit import --all-history to fix the corrupted objects",
-        failure.scope,
+        failure.scope.trim(),
     ))
 }

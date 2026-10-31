@@ -111,10 +111,11 @@ impl Workspace<'_> {
 
     #[must_use]
     pub fn is_core_aspect_id(&self, id: &str) -> bool {
+        let id = id.trim();
         is_core_env(id)
             || self.options.core_aspects
                 .iter()
-                .any(|aspect| aspect.id == id)
+                .any(|aspect| aspect.id.trim() == id)
     }
 
     /// The package name of a component: the workspace component's, else the default

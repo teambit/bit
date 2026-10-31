@@ -18,6 +18,7 @@ pub(crate) fn invalid(message: &str) -> std::io::Error {
 }
 
 pub(crate) fn is_hash(value: &str) -> bool {
+    let value = value.trim();
     value.len() == 40 && value.bytes().all(is_lowercase_hex_byte)
 }
 

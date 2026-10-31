@@ -85,7 +85,12 @@ impl EngineCall {
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .take()
-                .map(|deps| deps.into_iter().collect()),
+                .map(|deps| {
+                    deps.into_iter()
+                        .map(|dep| dep.trim().to_string())
+                        .filter(|dep| !dep.is_empty())
+                        .collect()
+                }),
             store_dir: PathBuf::from(config.store_dir.clone()),
         })
     }

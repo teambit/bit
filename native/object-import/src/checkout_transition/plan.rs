@@ -61,7 +61,7 @@ impl Plan {
         self.bodies
             .iter()
             .map(|body| body.contents.len())
-            .sum()
+            .fold(0_usize, usize::saturating_add)
     }
     pub(super) fn manifest(&self, token: &str) -> Value {
         let target = self.target

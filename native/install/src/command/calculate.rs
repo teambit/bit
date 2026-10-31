@@ -248,7 +248,7 @@ fn root_policy(
     for id in aspects.into_iter().chain(envs) {
         let (name, version) = split_version(&id);
         let component_id = parse_id(name);
-        if in_workspace(loaded, &component_id) {
+        if component_id.name.is_empty() || in_workspace(loaded, &component_id) {
             continue;
         }
         let package = stored_package_name(&objects, &component_id, version)?
@@ -261,7 +261,11 @@ fn root_policy(
         }
         policy.push(PolicyEntry {
             name: package,
-            version: version.unwrap_or("*").to_string(),
+            version: version
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+                .unwrap_or("*")
+                .to_string(),
             lifecycle: Lifecycle::Runtime,
             force: false,
             optional: false,

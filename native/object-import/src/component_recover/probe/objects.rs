@@ -7,7 +7,12 @@ use serde_json::Value;
 use std::{collections::HashMap, io, path::Path};
 
 pub(super) fn file(scope: &Path, id: &str) -> io::Result<bool> {
-    let bare = id.split('@').next().unwrap_or(id);
+    let id = id.trim();
+    let bare = id
+        .split('@')
+        .next()
+        .unwrap_or(id)
+        .trim();
     let model = read_remote_model(scope, bare, id)?;
     let hash = version_hash(&model, id)?;
     let (kind, version) = crate::read_scope_object(scope, &hash)?.ok_or_else(|| missing(id))?;

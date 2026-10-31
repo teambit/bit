@@ -54,9 +54,7 @@ fn read(
     use_cache: bool,
     budget: (&Budget, &Budget),
 ) -> io::Result<Vec<u8>> {
-    if (use_cache || input.prefer_cached)
-        && let Some(body) = state.get(&request.directory, input.hash)
-    {
+    if let Some(body) = input.cached(request, state, use_cache) {
         budget.0.reserve(body.len())?;
         return Ok(body.clone());
     }

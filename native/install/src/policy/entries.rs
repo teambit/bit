@@ -226,6 +226,7 @@ pub fn truthy(value: &Value) -> bool {
 fn string(value: Option<&Value>) -> Option<String> {
     value
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .map(str::to_owned)
 }

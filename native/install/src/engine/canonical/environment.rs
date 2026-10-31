@@ -26,6 +26,7 @@ impl Captured {
     pub(super) fn parse(payload: &Value) -> Option<Self> {
         let mut vars = BTreeMap::new();
         for (key, value) in payload.get("environment")?.as_object()? {
+            let key = key.trim();
             if key.is_empty() || key.contains(['=', '\0']) || value.is_null() {
                 continue;
             }
@@ -38,7 +39,7 @@ impl Captured {
             if text.contains('\0') {
                 return None;
             }
-            vars.insert(key.clone(), text);
+            vars.insert(key.to_owned(), text);
         }
         let cwd = PathBuf::from(payload.get("cwd")?.as_str()?.trim());
         cwd.is_absolute()

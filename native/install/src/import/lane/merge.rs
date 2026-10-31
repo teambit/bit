@@ -283,6 +283,11 @@ fn hashes(value: &Value) -> Vec<String> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|hash| hash.as_str().map(str::to_string))
+        .filter_map(|hash| {
+            hash.as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .map(str::to_string)
+        })
         .collect()
 }

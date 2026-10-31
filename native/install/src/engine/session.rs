@@ -45,7 +45,7 @@ impl Session {
             config,
             client: http_client(config)?,
             lockfile,
-            lockfile_path: root.join(config.wanted_lockfile_name()),
+            lockfile_path: root.join(config.wanted_lockfile_name().trim()),
             resolved_packages: ResolvedPackages::new(),
             manifest: root_manifest(projects, root)?,
             runtime: tokio::runtime::Builder::new_multi_thread().enable_all().build()?,

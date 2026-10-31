@@ -35,8 +35,12 @@ pub(crate) fn nonstring_literal(argument: Option<&Argument<'_>>) -> bool {
     )
 }
 pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
+    let mut callee = &node.callee;
+    while let Expression::ParenthesizedExpression(paren) = callee {
+        callee = &paren.expression;
+    }
     (ts || !in_optional_chain(node))
-        && match &node.callee {
+        && match callee {
             Expression::Identifier(id) => id.name == "require",
             Expression::StaticMemberExpression(member) => {
                 member.property.name == "resolve"

@@ -135,23 +135,16 @@ pub fn merge_manifests(parent: &Value, child: &Value) -> Value {
         let mut merged: Vec<Value> = policy_items(parent, key)
             .into_iter()
             .filter(|entry| {
+                let entry_name = trimmed_field(entry, "name");
                 !children
                     .iter()
-                    .any(|child| child.get("name") == entry.get("name"))
+                    .any(|child| trimmed_field(child, "name") == entry_name)
             })
             .collect();
         merged.extend(children);
         merged.retain(|entry| {
-            entry
-                .get("version")
-                .and_then(Value::as_str)
-                .map(str::trim)
-                != Some("-")
-                && entry
-                    .get("supportedRange")
-                    .and_then(Value::as_str)
-                    .map(str::trim)
-                    != Some("-")
+            trimmed_field(entry, "version") != Some("-")
+                && trimmed_field(entry, "supportedRange") != Some("-")
         });
         policy.insert(key.to_owned(), Value::Array(merged));
     }
@@ -160,6 +153,13 @@ pub fn merge_manifests(parent: &Value, child: &Value) -> Value {
         result["extends"] = extends.clone();
     }
     result
+}
+
+fn trimmed_field<'a>(entry: &'a Value, field: &str) -> Option<&'a str> {
+    entry
+        .get(field)
+        .and_then(Value::as_str)
+        .map(str::trim)
 }
 
 /// The dev-files customizer: `{ ...parent.patterns, ...child.patterns }`.
