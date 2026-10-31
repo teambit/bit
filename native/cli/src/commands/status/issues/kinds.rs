@@ -181,7 +181,8 @@ impl Issue {
             | Self::DeprecatedDependencies
             | Self::PinnedDependencies => Ok(format!("{SPACE}{}", join(data)?)),
             Self::Duplicate | Self::NonLoadedEnv | Self::RemovedEnv => {
-                Ok(format!("{SPACE}{}", text(Some(data))?))
+                let item = text(Some(data))?.trim();
+                Ok(format!("{SPACE}{item}"))
             }
             Self::MissingPackages => missing_packages_to_string(data),
             Self::MissingDependencies | Self::ImportFromDirectory => {
@@ -213,6 +214,9 @@ fn missing_packages_to_string(data: &Value) -> io::Result<String> {
                     .or_else(|| row.get("path")),
             )?
             .trim();
+            if file.is_empty() {
+                return Err(decline("missing packages file path"));
+            }
             let packages = row
                 .get("missingPackages")
                 .or_else(|| row.get("packages"))

@@ -85,7 +85,7 @@ pub(super) fn prepare(
     }
     let ids = targets
         .iter()
-        .map(|target| text(target.get("identity")).map(str::to_owned))
+        .map(|target| text(target.get("identity")).map(|id| id.trim().to_owned()))
         .collect::<io::Result<Vec<_>>>()?;
     let prepared = super::super::import::prepare_status_refresh(engine, root, &ids)?;
     let token = prepared.get("token").ok_or_else(|| decline("status main refresh token"))?;

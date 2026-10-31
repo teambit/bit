@@ -149,8 +149,15 @@ fn existing_version_error(context: &Value, options: &Options) -> Option<io::Erro
     let targets = context["targets"].as_array()?;
     let models = context["models"].as_array()?;
     for target in targets {
-        let identity = target["identity"].as_str()?;
-        let name = target["name"].as_str().unwrap_or(identity);
+        let identity = target["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())?;
+        let name = target["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|n| !n.is_empty())
+            .unwrap_or(identity);
         if !matches_patterns(identity, name, &options.selection.patterns) {
             continue;
         }
@@ -160,8 +167,8 @@ fn existing_version_error(context: &Value, options: &Options) -> Option<io::Erro
             .find(|model| {
                 format!(
                     "{}/{}",
-                    model["scope"].as_str().unwrap_or_default(),
-                    model["name"].as_str().unwrap_or_default(),
+                    model["scope"].as_str().map_or("", str::trim),
+                    model["name"].as_str().map_or("", str::trim),
                 ) == identity
             })?;
         if model["versions"].get(exact).is_some() || model["orphanedVersions"].get(exact).is_some()

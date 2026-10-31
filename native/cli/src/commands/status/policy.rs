@@ -52,13 +52,16 @@ impl Policy {
         let config = self.extensions
             .iter()
             .find(|entry| component::matches_aspect(entry, "teambit.component/issues"));
-        array(
+        Ok(array(
             config.and_then(|entry| entry["config"].get("ignoreIssues")),
             "component ignoreIssues",
         )?
         .iter()
         .map(|value| text(Some(value)).map(|item| item.trim().to_string()))
-        .collect()
+        .collect::<io::Result<Vec<_>>>()?
+        .into_iter()
+        .filter(|item| !item.is_empty())
+        .collect())
     }
 
     pub fn issues(&self, dependencies: &Value) -> io::Result<Value> {

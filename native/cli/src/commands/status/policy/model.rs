@@ -10,6 +10,9 @@ pub(in crate::commands::status) fn model_of<'c>(
 ) -> Option<&'c Value> {
     let models = context.get("models").and_then(Value::as_array)?;
     let trimmed_id = identity.trim();
+    if trimmed_id.is_empty() {
+        return None;
+    }
     let (_, target_name) = trimmed_id
         .split_once('/')
         .map_or(("", trimmed_id), |(scope, name)| (scope.trim(), name.trim()));

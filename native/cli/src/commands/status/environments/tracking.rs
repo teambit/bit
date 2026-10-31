@@ -90,7 +90,11 @@ impl Environments {
         bitmap: &Value,
         components: &[Value],
     ) -> io::Result<String> {
-        if root.as_os_str().is_empty() {
+        if root.as_os_str().is_empty()
+            || root
+                .to_str()
+                .is_some_and(|path| path.trim().is_empty())
+        {
             return Err(io::Error::other("tracking workspace root is empty"));
         }
         let host = self.host(root)?;
@@ -105,6 +109,13 @@ impl Environments {
         bitmap: &Value,
         components: &[Value],
     ) -> io::Result<String> {
+        if root.as_os_str().is_empty()
+            || root
+                .to_str()
+                .is_some_and(|path| path.trim().is_empty())
+        {
+            return Err(io::Error::other("tracking workspace root is empty"));
+        }
         let host = self.host(root)?;
         host.call(
             "trackingProjectBitmap",

@@ -35,7 +35,10 @@ pub(super) fn read(context: &Value) -> io::Result<Workspace> {
 fn root_policy(policy: &Value) -> io::Result<[Map<String, Value>; 2]> {
     for field in ["dependencies", "peerDependencies"] {
         let Some(values) = nullish(policy.get(field)) else { continue };
-        if !object(values)?.values().all(is_valid_policy_version_entry) {
+        if !object(values)?
+            .iter()
+            .all(|(name, val)| !name.trim().is_empty() && is_valid_policy_version_entry(val))
+        {
             return Err(decline("status root dependency policy version"));
         }
     }

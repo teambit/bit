@@ -102,7 +102,7 @@ fn test_case(file_name: &str, test: &Value) -> io::Result<Case> {
             .as_str()
             .filter(|value| !value.is_empty())
             .map(str::to_owned),
-        skipped: matches!(test["status"].as_str(), Some("pending" | "skipped")),
+        skipped: matches!(test["status"].as_str().map(str::trim), Some("pending" | "skipped")),
     })
 }
 fn source_rows<'a>(component: &Value, raw: &'a Value) -> &'a Value {

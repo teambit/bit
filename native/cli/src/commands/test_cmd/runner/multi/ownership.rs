@@ -3,6 +3,12 @@ use super::{Component, Path, invalid, io};
 use std::fs;
 
 pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> {
+    if components
+        .iter()
+        .any(|component| component.directory.trim().is_empty())
+    {
+        return Err(invalid("tester empty component directory"));
+    }
     let roots: Vec<_> = components
         .iter()
         .map(|component| super::super::paths::normalized(&root.join(component.directory.trim())))

@@ -50,11 +50,14 @@ fn removed_id(target: &Value, component: &Component, packages: &HashSet<&str>) -
         .or_else(|| target["head"].as_str())
         .map(str::trim)
         .filter(|ver| !ver.is_empty())?;
-    let (scope, name) = identity.split_once('/')?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())?;
     let package = format!("@{scope}/{}", name.replace('/', "."));
     let referenced = component.dependencies
         .iter()
         .any(|dependency| without_version(dependency) == identity)
         || packages.contains(package.as_str());
-    referenced.then(|| format!("{identity}@{version}"))
+    referenced.then(|| format!("{scope}/{name}@{version}"))
 }

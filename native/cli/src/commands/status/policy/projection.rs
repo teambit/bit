@@ -112,7 +112,7 @@ fn add_variants(
     };
     let variants = object(config)?
         .iter()
-        .map(|(pattern, value)| Ok((pattern.clone(), object(value)?.clone())))
+        .map(|(pattern, value)| Ok((pattern.trim().to_owned(), object(value)?.clone())))
         .collect::<io::Result<Vec<_>>>()?;
     let directory = text(target.get("directory"))?.trim();
     let matched = by_root_dir_and_name(&variants, directory, name)?;

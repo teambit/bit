@@ -54,6 +54,9 @@ fn source_callbacks(
     inventory: &Inventory,
 ) -> io::Result<bool> {
     let directory = text(target.get("directory"))?.trim();
+    if directory.is_empty() {
+        return Ok(false);
+    }
     let location = root.join(directory);
     if !location.try_exists()? {
         return Ok(false);
@@ -80,6 +83,7 @@ fn source_callbacks(
 fn is_callback_source_file(file: &Value) -> bool {
     file["relativePath"]
         .as_str()
+        .map(str::trim)
         .is_some_and(|name| {
             name.contains(".docs.")
                 || name.contains(".composition.")

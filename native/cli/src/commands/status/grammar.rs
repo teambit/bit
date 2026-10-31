@@ -52,10 +52,11 @@ pub fn dependency(values: &Value) -> Value {
         if result.len() >= 16384 {
             break;
         }
-        let coerced = npm::coerce(text).map(|version| version.version);
+        let trimmed = text.trim();
+        let coerced = npm::coerce(trimmed).map(|version| version.version);
         let entry = json!({
-            "valid": npm::valid(text).is_some(),
-            "range": npm::valid_range(text).is_some(),
+            "valid": npm::valid(trimmed).is_some(),
+            "range": npm::valid_range(trimmed).is_some(),
             "coerced": coerced,
         });
         result.insert(text.to_string(), entry);

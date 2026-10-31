@@ -119,16 +119,20 @@ pub(super) fn identity(value: Option<&Value>) -> io::Result<String> {
     let outer = value.ok_or_else(|| decline("status dependency id"))?;
     let id = outer.get("id").unwrap_or(outer);
     if let Some(text) = id.as_str() {
-        return Ok(strip_latest_or_head(text).to_string());
+        return identity_from_str(text);
     }
     let part = |key| text(id.get(key).or_else(|| outer.get(key)));
-    let raw_name = part("name")?;
+    let raw_name = part("name")?.trim();
+    if raw_name.is_empty() {
+        return Err(decline("status dependency name"));
+    }
     let (name, inline_ver) = raw_name
         .rsplit_once('@')
-        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
+        .map_or((raw_name, None), |(base, ver)| (base.trim(), Some(ver.trim())));
     let suffix = resolve_dep_version_suffix(outer, id, inline_ver)?;
     if let Some(scope) = part("scope")
         .ok()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     {
         return Ok(format!("{scope}/{name}{suffix}"));
@@ -137,6 +141,14 @@ pub(super) fn identity(value: Option<&Value>) -> io::Result<String> {
         return Ok(format!("{name}{suffix}"));
     }
     Err(decline("status dependency scope"))
+}
+
+fn identity_from_str(text: &str) -> io::Result<String> {
+    let stripped = strip_latest_or_head(text);
+    if stripped.is_empty() {
+        return Err(decline("status dependency id"));
+    }
+    Ok(stripped.to_string())
 }
 
 fn resolve_dep_version_suffix(

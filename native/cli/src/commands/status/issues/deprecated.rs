@@ -24,7 +24,10 @@ impl Checks<'_> {
 }
 
 fn deprecated(context: &Value, full_id: &str) -> io::Result<bool> {
-    let identity = without_version(full_id.trim());
+    let identity = without_version(full_id.trim()).trim();
+    if identity.is_empty() {
+        return Ok(false);
+    }
     let target = array(context.get("targets"), "deprecation targets")?
         .iter()
         .find(|target| target["identity"].as_str().map(str::trim) == Some(identity));
@@ -60,9 +63,12 @@ fn head_deprecation<'c>(
     let head = context["laneHeads"]
         .get(identity)
         .unwrap_or_else(|| &model["head"]);
+    let head_str = head.as_str().map(str::trim);
     let version = array(context.get("versions"), "deprecation versions")?
         .iter()
-        .find(|row| &row[0] == head);
+        .find(|row| {
+            &row[0] == head || (head_str.is_some() && row[0].as_str().map(str::trim) == head_str)
+        });
     let Some(version) = version else {
         return Ok(None);
     };

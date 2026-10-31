@@ -86,7 +86,8 @@ pub(super) fn report_detail(
     components: &[Component],
     identities: &[String],
 ) -> io::Result<Report> {
-    let mut output = report::report(raw, &identities[0])?;
+    let first_id = identities.first().ok_or_else(|| invalid("tester component identities"))?;
+    let mut output = report::report(raw, first_id)?;
     if raw.get("terminated").is_some() || raw.get("error").is_some() {
         return Ok(output);
     }
@@ -100,32 +101,44 @@ pub(super) fn report_detail(
         .zip(identities)
         .enumerate()
     {
-        let mut result = raw.clone();
-        result["results"]["testResults"] = Value::Array(
-            rows.iter()
-                .filter(|row| belongs(root, component, row))
-                .cloned()
-                .collect(),
-        );
-        if let Some(coverage) = raw["componentCoverage"].get(index) {
-            result["coverage"] = coverage.clone();
-        }
-        let report = report::report(&result, identity)?;
-        let data: Value = serde_json::from_str(&report.data)?;
-        if let Some(component) = data[0]["data"]["components"].get(0) {
+        if let Some(comp_data) = component_detail_data(root, raw, rows, index, component, identity)?
+        {
             errors.extend(
-                component["errors"]
+                comp_data["errors"]
                     .as_array()
                     .ok_or_else(|| invalid("tester component errors"))?
                     .iter()
                     .cloned(),
             );
-            reports.push(component.clone());
+            reports.push(comp_data);
         }
     }
     output.data =
         serde_json::to_string_pretty(&json!([{"data":{"components":reports,"errors":errors}}]))?;
     Ok(output)
+}
+
+fn component_detail_data(
+    root: &Path,
+    raw: &Value,
+    rows: &[Value],
+    index: usize,
+    component: &Component,
+    identity: &str,
+) -> io::Result<Option<Value>> {
+    let mut result = raw.clone();
+    result["results"]["testResults"] = Value::Array(
+        rows.iter()
+            .filter(|row| belongs(root, component, row))
+            .cloned()
+            .collect(),
+    );
+    if let Some(coverage) = raw["componentCoverage"].get(index) {
+        result["coverage"] = coverage.clone();
+    }
+    let report = report::report(&result, identity)?;
+    let data: Value = serde_json::from_str(&report.data)?;
+    Ok(data[0]["data"]["components"].get(0).cloned())
 }
 fn validate_rows(root: &Path, components: &[Component], rows: &[Value]) -> io::Result<()> {
     if rows
@@ -150,7 +163,8 @@ pub(super) fn report_summary(
     identities: &[String],
     environment: &str,
 ) -> io::Result<Report> {
-    let mut output = report::report(raw, &identities[0])?;
+    let first_id = identities.first().ok_or_else(|| invalid("tester component identities"))?;
+    let mut output = report::report(raw, first_id)?;
     if raw.get("terminated").is_some() {
         return Ok(output);
     }

@@ -202,10 +202,12 @@ fn render_progress(
 ) {
     output.status("switching lanes");
     let prepared = prepared_import_count(startup);
-    for import in imports.iter().take(prepared) {
-        if import.requested > 0 {
-            import.render(output);
-        }
+    for import in imports
+        .iter()
+        .take(prepared)
+        .filter(|import| import.requested > 0)
+    {
+        import.render(output);
     }
     if let Some(warning) = startup.build_progress
         .as_ref()
@@ -216,10 +218,12 @@ fn render_progress(
         output.warning(warning);
     }
     workspace_command::checkout_lifecycle::loaded(startup);
-    for import in imports.iter().skip(prepared) {
-        if import.requested > 0 {
-            import.render(output);
-        }
+    for import in imports
+        .iter()
+        .skip(prepared)
+        .filter(|import| import.requested > 0)
+    {
+        import.render(output);
     }
     if let Some(checkout) = checkout {
         checkout.render(output);
@@ -253,9 +257,7 @@ fn prepare(
     let request =
         Request { operation: "switch", options: options.request(), to: None, verify_fresh: false };
     let planned = match environment {
-        Some(environment) => {
-            workspace_command::plan_with_environment(root, &request, startup, environment)?
-        }
+        Some(env) => workspace_command::plan_with_environment(root, &request, startup, env)?,
         None => workspace_command::plan_with_startup(root, &request, startup)?,
     };
     let chalk = super::color::Chalk::detect(args);
@@ -280,9 +282,13 @@ fn writer_ids(plan: &Value) -> io::Result<Vec<String>> {
     if rows.len() > 8192 {
         return Err(decline("switch writer identity count"));
     }
-    rows.iter()
+    Ok(rows
+        .iter()
         .map(|id| text(Some(id)).map(|val| val.trim().to_owned()))
-        .collect()
+        .collect::<io::Result<Vec<_>>>()?
+        .into_iter()
+        .filter(|val| !val.is_empty())
+        .collect())
 }
 
 struct RemoteImport {
@@ -333,17 +339,12 @@ impl RemoteImport {
     fn parse(value: &Value) -> io::Result<Self> {
         let ids = array(value.get("ids"), "switch import ids")?;
         let requested = ids.len();
-        let components = value
-            .get("components")
-            .and_then(Value::as_u64)
-            .ok_or_else(|| decline("switch import components"))?;
-        let objects = value
-            .get("objects")
-            .and_then(Value::as_u64)
-            .ok_or_else(|| decline("switch import objects"))?;
+        let components =
+            value["components"].as_u64().ok_or_else(|| decline("switch import components"))?;
+        let objects = value["objects"].as_u64().ok_or_else(|| decline("switch import objects"))?;
         let reason = match value.get("reason") {
             Some(Value::Null) => None,
-            other => Some(text(other)?.to_string()),
+            other => Some(text(other)?.trim().to_string()),
         };
         if reason
             .as_deref()

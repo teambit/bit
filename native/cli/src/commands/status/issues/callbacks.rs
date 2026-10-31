@@ -30,16 +30,13 @@ pub(super) fn merge(
         .iter()
         .filter_map(|row| row.get("callbackObject"))
     {
-        let kind = text(object.get("type"))?.trim();
+        let kind = validate_callback_object(object)?;
         if ignored.contains(kind) {
             continue;
         }
-        if !object.is_object() || !object.get("dataAsString").is_some_and(Value::is_string) {
-            return Err(decline("Harmony callback issue object"));
-        }
         if let Some(known) = issues
             .iter_mut()
-            .find(|issue| issue["type"] == kind)
+            .find(|issue| issue["type"].as_str().map(str::trim) == Some(kind))
         {
             *known = object.clone();
         } else {
@@ -48,4 +45,15 @@ pub(super) fn merge(
         }
     }
     Ok(())
+}
+
+fn validate_callback_object(object: &Value) -> io::Result<&str> {
+    let kind = text(object.get("type"))?.trim();
+    if kind.is_empty() {
+        return Err(decline("Harmony callback issue type"));
+    }
+    if !object.is_object() || !object.get("dataAsString").is_some_and(Value::is_string) {
+        return Err(decline("Harmony callback issue object"));
+    }
+    Ok(kind)
 }

@@ -39,7 +39,8 @@ impl Status<'_> {
                         row["divergeData"]
                             .get("commonSnapBeforeDiverge")
                             .and_then(|value| value.get("hash").or(Some(value))),
-                    )?;
+                    )?
+                    .trim();
                     message.push_str(" (diverged since ");
                     message.push_str(&common[..common.len().min(9)]);
                     message.push(')');

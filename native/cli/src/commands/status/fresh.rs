@@ -49,12 +49,11 @@ impl Pending {
         else {
             return Err(decline("command dependency cache receipt"));
         };
-        Ok(Self {
-            identity: text(cache.get("identity"))?.trim().to_string(),
-            raw_data: raw_data.to_string(),
-            cacheable,
-            read_set: read_set.clone(),
-        })
+        let identity = text(cache.get("identity"))?.trim().to_string();
+        if identity.is_empty() {
+            return Err(decline("command dependency cache identity"));
+        }
+        Ok(Self { identity, raw_data: raw_data.to_string(), cacheable, read_set: read_set.clone() })
     }
 
     fn detected(target: &Value, dependencies: &Value, read_set: Value) -> io::Result<Self> {

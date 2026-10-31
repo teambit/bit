@@ -37,7 +37,7 @@ impl Assets {
         fs::create_dir_all(&parent)?;
         let staging = tempfile::Builder::new().prefix("assets-").tempdir_in(&parent)?;
         for (name, source) in &payloads {
-            fs::write(staging.path().join(name), source)?;
+            fs::write(staging.path().join(name.trim()), source)?;
         }
         if let Err(error) = fs::rename(staging.path(), &root)
             && !root.try_exists()?
@@ -56,14 +56,14 @@ fn build_payloads(package: &Path) -> io::Result<Vec<(&'static str, String)>> {
     );
     Ok(FILES
         .iter()
-        .map(|(name, source)| (*name, format!("{prefix}{source}")))
+        .map(|(name, source)| (name.trim(), format!("{prefix}{source}")))
         .collect())
 }
 
 fn payload_hash(payloads: &[(&str, String)]) -> String {
     let mut hash = Sha1::new();
     for (name, source) in payloads {
-        hash.update(name.as_bytes());
+        hash.update(name.trim().as_bytes());
         hash.update([0]);
         hash.update(source.as_bytes());
         hash.update([0]);

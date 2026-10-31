@@ -45,18 +45,17 @@ fn parse(content: &str) -> io::Result<Value> {
         .map(str::trim)
         .filter(|line| !line.is_empty() && !line.starts_with('#'))
     {
-        if let Some(version) = line.strip_prefix("DEFAULT:") {
-            let version = version.trim();
+        let (identity, version) =
+            line.split_once(':').ok_or_else(|| decline("versions file line format"))?;
+        let (identity, version) = (identity.trim(), version.trim());
+        if identity == "DEFAULT" {
             if version.is_empty() {
                 return Err(decline("DEFAULT version cannot be empty"));
             }
             default = Some(version);
             continue;
         }
-        let (identity, version) =
-            line.split_once(':').ok_or_else(|| decline("versions file line format"))?;
-        let (identity, version) = (identity.trim(), version.trim());
-        if identity.is_empty() || version.is_empty() {
+        if identity.is_empty() || version.is_empty() || identity.chars().any(char::is_whitespace) {
             return Err(decline("versions file line format"));
         }
         entries.push(json!({"identity":identity,"version":version}));

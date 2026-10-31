@@ -136,6 +136,7 @@ fn solution(issue: &Value) -> String {
     }
     issue["solution"]
         .as_str()
+        .map(str::trim)
         .filter(|solution| !solution.is_empty())
         .map_or_else(String::new, |solution| format!(" ({solution})"))
 }

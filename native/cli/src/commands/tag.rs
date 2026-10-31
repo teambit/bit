@@ -244,6 +244,7 @@ fn plan_tag(
 ) -> io::Result<(Planned, Report, Option<Progress>)> {
     let mut tag_options = options.tag_options();
     if let Some(path) = options.selection.versions_file.as_deref() {
+        let path = path.trim();
         let file = version_file::read(root, path)?;
         tag_options["versionsFile"] = file.data;
         tag_options["versionsFile"]["path"] = serde_json::json!(path);

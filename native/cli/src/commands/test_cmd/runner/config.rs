@@ -46,7 +46,7 @@ pub(super) fn request_with_empty(
         json!(
             patterns.tests
                 .iter()
-                .map(|pattern| absolute_pattern(&root.join(&selected.directory), pattern))
+                .map(|pattern| absolute_pattern(&root.join(selected.directory.trim()), pattern))
                 .collect::<Vec<_>>()
         )
     } else {
@@ -57,7 +57,7 @@ pub(super) fn request_with_empty(
                 .collect::<Vec<_>>()
         )
     };
-    if bit_install::config::aspect_id_without_version(environment) == "teambit.react/react" {
+    if bit_install::config::aspect_id_without_version(environment.trim()) == "teambit.react/react" {
         config["testEnvironment"] = json!("$jsdom");
         config["setupFiles"] = json!(["$polyfill"]);
     }

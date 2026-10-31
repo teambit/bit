@@ -134,7 +134,11 @@ fn validate_test_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option
 }
 
 fn effective_pattern(options: &Options) -> Option<String> {
-    let scope = (!options.json).then_some(options.scope.as_deref()).flatten();
+    let scope = (!options.json)
+        .then_some(options.scope.as_deref())
+        .flatten()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
     if options.user_pattern.is_empty() && scope.is_none() {
         return None;
     }

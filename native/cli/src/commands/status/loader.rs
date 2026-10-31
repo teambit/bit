@@ -64,7 +64,7 @@ fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progres
 
 fn forked_lane_reason(forked_id: Option<&str>) -> String {
     match forked_id
-        .map(str::trim)
+        .map(|id| id.trim().trim_matches('/'))
         .filter(|id| !id.is_empty())
     {
         Some(id) => format!("for fetching lane {id}"),

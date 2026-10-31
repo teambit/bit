@@ -210,6 +210,12 @@ fn render_data(
 }
 
 fn lane_supported(result: &Value) -> io::Result<()> {
+    let valid_scoped = |value: &str| {
+        value
+            .trim()
+            .split_once('/')
+            .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+    };
     let lane = text(result.get("currentLaneId"))?;
     let forked_invalid = result
         .get("forkedLaneId")
@@ -217,10 +223,9 @@ fn lane_supported(result: &Value) -> io::Result<()> {
             !id.is_null()
                 && id
                     .as_str()
-                    .and_then(|id| id.split_once('/'))
-                    .is_none()
+                    .is_none_or(|val| !valid_scoped(val))
         });
-    if lane.split_once('/').is_none() || forked_invalid {
+    if !valid_scoped(lane) || forked_invalid {
         return Err(decline("status report lane"));
     }
     Ok(())

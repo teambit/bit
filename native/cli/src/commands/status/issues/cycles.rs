@@ -25,6 +25,9 @@ pub fn cyclic(components: &[Component]) -> HashSet<&str> {
                 .iter()
                 .filter_map(|id| {
                     let trimmed = id.as_str().trim();
+                    if trimmed.is_empty() {
+                        return None;
+                    }
                     index
                         .get(trimmed)
                         .or_else(|| index.get(strip_version(trimmed)))

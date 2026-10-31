@@ -16,6 +16,9 @@ use serde_json::Value;
 use std::io;
 
 pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
+    if options.lane.trim().is_empty() {
+        return Err(decline("native switch lane name"));
+    }
     let results = hydrate(result)?;
     if results.snaps.is_some()
         || results.snap_error.is_some()

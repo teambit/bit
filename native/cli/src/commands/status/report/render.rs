@@ -135,7 +135,10 @@ fn scope_counts<'i>(ids: &[&'i str]) -> io::Result<Vec<(&'i str, usize)>> {
     for identity in ids {
         let trimmed = identity.trim();
         let scope = trimmed.split_once('/').map_or(trimmed, |(scope, _)| scope.trim());
-        if scope.is_empty() || scope.bytes().all(|byte| byte.is_ascii_digit()) {
+        if scope.is_empty()
+            || scope.bytes().all(|byte| byte.is_ascii_digit())
+            || scope.chars().any(char::is_whitespace)
+        {
             return Err(decline("status report numeric scope"));
         }
         match counts

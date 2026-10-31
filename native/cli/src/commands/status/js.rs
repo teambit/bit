@@ -104,15 +104,20 @@ fn base_target_identity(target: &Value) -> io::Result<String> {
         .get("identity")
         .or_else(|| target.get("id"))
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         return Ok(identity.to_owned());
     }
     let object = target["id"].as_object().ok_or_else(|| decline("status expected a string"))?;
-    let name = text(object.get("name"))?;
+    let name = text(object.get("name"))?.trim();
+    if name.is_empty() {
+        return Err(decline("status expected a string"));
+    }
     match object
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
     {
         Some(scope) => Ok(format!("{scope}/{name}")),

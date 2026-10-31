@@ -84,9 +84,9 @@ fn model_identity(context: &Value, model: &Value) -> Option<String> {
         .and_then(|targets| {
             targets
                 .iter()
-                .filter_map(|target| target["identity"].as_str())
+                .filter_map(|target| target["identity"].as_str().map(str::trim))
                 .find(|identity| {
-                    identity.split_once('/').map_or(*identity, |(_, bare)| bare) == name
+                    identity.split_once('/').map_or(*identity, |(_, bare)| bare.trim()) == name
                 })
                 .map(str::to_owned)
         })

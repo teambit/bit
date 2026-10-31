@@ -39,6 +39,13 @@ struct Inputs {
 }
 impl Inputs {
     fn read(root: &Path) -> io::Result<Self> {
+        if root.as_os_str().is_empty()
+            || root
+                .to_str()
+                .is_some_and(|path| path.trim().is_empty())
+        {
+            return Err(decline("status pending configuration root"));
+        }
         let paths = [root.join("merge-conflict"), scope_path(root).join("unmerged.json")];
         let proofs = paths
             .iter()

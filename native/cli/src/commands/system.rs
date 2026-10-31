@@ -100,6 +100,7 @@ fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Ou
 }
 
 fn format_unrecognized(sub: &str, chalk: Chalk) -> String {
+    let sub = sub.trim();
     chalk.red(&format!(
         r#""{sub}" is not a subcommand of "system", please run "bit system --help" to list the subcommands"#,
     ))

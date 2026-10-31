@@ -107,8 +107,8 @@ pub fn validate_error(args: &[&str], has_editor: bool) -> Option<(bool, String)>
 }
 
 fn validate_options_error(flags: &Flags) -> Option<String> {
-    let increment = flags.string("--increment");
-    let auto_tag = flags.string("--auto-tag-increment");
+    let increment = flags.string("--increment").map(str::trim);
+    let auto_tag = flags.string("--auto-tag-increment").map(str::trim);
     let pre_release = flags.values.get("--pre-release");
     let prerelease =
         |level: Option<&str>| level.is_some_and(|level| PRE_RELEASE_TYPES.contains(&level));

@@ -9,7 +9,8 @@ use std::{
 const METRICS: [&str; 4] = ["lines", "functions", "statements", "branches"];
 
 fn read(root: &Path, directory: &str, main: &str) -> io::Result<Value> {
-    let component = Coverage { directory: directory.to_owned(), main: main.to_owned() };
+    let component =
+        Coverage { directory: directory.trim().to_owned(), main: main.trim().to_owned() };
     Ok(read_many(root, &[component])?.remove(0))
 }
 fn read_many(root: &Path, components: &[Coverage]) -> io::Result<Vec<Value>> {
@@ -31,10 +32,10 @@ fn read_many(root: &Path, components: &[Coverage]) -> io::Result<Vec<Value>> {
                     project(
                         raw,
                         &root
-                            .join(&component.directory)
+                            .join(component.directory.trim())
                             .components()
                             .collect::<PathBuf>(),
-                        &component.main,
+                        component.main.trim(),
                     )
                 })
                 .unwrap_or_else(empty)

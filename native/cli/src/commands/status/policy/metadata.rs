@@ -22,7 +22,12 @@ pub fn current_metadata(target: &Value, policy: &Policy, output: &Value) -> io::
     let mut metadata = Map::new();
     if let Some(main) = target
         .get("mainFile")
-        .filter(|val| !val.is_null())
+        .filter(|val| {
+            !val.is_null()
+                && val
+                    .as_str()
+                    .is_none_or(|main| !main.trim().is_empty())
+        })
     {
         metadata.insert("mainFile".into(), main.clone());
     }

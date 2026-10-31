@@ -53,8 +53,10 @@ impl Group {
 pub fn group_files(files: &[String], group: Group) -> Vec<String> {
     files
         .iter()
+        .map(String::as_str)
+        .map(str::trim)
         .filter(|file| matches(file, group.names()))
-        .cloned()
+        .map(str::to_owned)
         .collect()
 }
 

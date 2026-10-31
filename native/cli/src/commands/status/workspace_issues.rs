@@ -46,7 +46,10 @@ pub(super) fn config_error(root: &Path) -> Option<String> {
 fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String> {
     let key = obj
         .keys()
-        .find(|key| *key != "$schema" && !key.contains('/'))?;
+        .find(|key| {
+            let trimmed = key.trim();
+            trimmed != "$schema" && !trimmed.contains('/')
+        })?;
     Some(format!(r#"unable to parse the component-id "{key}" from the workspace.jsonc file"#))
 }
 
@@ -72,10 +75,12 @@ your workspace.jsonc has this component-id set in the "teambit.workspace/variant
 }
 
 fn is_unknown_harmony_aspect(aspect_key: &str, core: &[String]) -> bool {
-    let bare = aspect_key
+    let trimmed = aspect_key.trim();
+    let bare = trimmed
         .split('@')
         .next()
-        .unwrap_or(aspect_key);
+        .unwrap_or(trimmed)
+        .trim();
     bare.starts_with("teambit.harmony/")
         && !core
             .iter()
@@ -84,5 +89,6 @@ fn is_unknown_harmony_aspect(aspect_key: &str, core: &[String]) -> bool {
 }
 
 fn is_variants_aspect_key(key: &str) -> bool {
-    key == "teambit.workspace/variants" || key.starts_with("teambit.workspace/variants@")
+    let trimmed = key.trim();
+    trimmed == "teambit.workspace/variants" || trimmed.starts_with("teambit.workspace/variants@")
 }

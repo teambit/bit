@@ -154,7 +154,10 @@ impl Issue {
     pub(super) fn data_to_string(self, data: &Value) -> io::Result<String> {
         match self {
             Self::Untracked => untracked(data),
-            Self::ExternalEnv => Ok(format!("{SPACE}{}", text(data.get("envId"))?)),
+            Self::ExternalEnv => {
+                let env_id = text(data.get("envId"))?.trim();
+                Ok(format!("{SPACE}{env_id}"))
+            }
             Self::LoadFailures => load_failures(data),
             _ => file_data(data, |value| self.file_value(value)),
         }

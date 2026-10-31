@@ -12,10 +12,18 @@ pub(super) fn directory(path: &Path) -> io::Result<()> {
         Err(error) => return Err(failure(error, "lstat", path)),
     };
     if !metadata.is_dir() {
-        return fs::remove_file(path).map_err(|error| failure(error, "unlink", path));
+        return match fs::remove_file(path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(failure(error, "unlink", path)),
+        };
     }
     remove_directory_entries(path)?;
-    fs::remove_dir(path).map_err(|error| failure(error, "rmdir", path))
+    match fs::remove_dir(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(failure(error, "rmdir", path)),
+    }
 }
 
 fn remove_directory_entries(path: &Path) -> io::Result<()> {

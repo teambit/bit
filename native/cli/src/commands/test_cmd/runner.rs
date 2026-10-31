@@ -56,7 +56,10 @@ pub(super) fn warnings(output: &bit_install::output::Output, options: &Options) 
     if options.json {
         return;
     }
-    if options.scope.is_some() {
+    if options.scope
+        .as_deref()
+        .is_some_and(|scope| !scope.trim().is_empty())
+    {
         output.warning(r#"--scope is deprecated, use the pattern argument instead. e.g. "scopeName/**" for the entire scope"#);
     }
     if options.all {

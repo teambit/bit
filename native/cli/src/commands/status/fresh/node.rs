@@ -131,10 +131,14 @@ fn builtin_names(modules: &[String]) -> Vec<String> {
 }
 
 fn push_module_forms(names: &mut Vec<String>, module: &str) {
+    let bare = module.strip_prefix("node:").map_or(module, str::trim);
+    if bare.is_empty() {
+        return;
+    }
     let forms = if module.starts_with("node:") {
-        vec![module.to_owned()]
+        vec![format!("node:{bare}")]
     } else {
-        vec![module.to_owned(), format!("node:{module}")]
+        vec![bare.to_owned(), format!("node:{bare}")]
     };
     for form in forms {
         if !names.contains(&form) {

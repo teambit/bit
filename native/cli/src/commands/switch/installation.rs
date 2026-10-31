@@ -70,6 +70,7 @@ fn compiler_error(value: &serde_json::Value) -> io::Result<Option<String>> {
             object
                 .get("message")
                 .or_else(|| object.get("error"))
+                .or_else(|| object.get("stack"))
         })
         .and_then(serde_json::Value::as_str)
     {

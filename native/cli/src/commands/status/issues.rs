@@ -179,6 +179,8 @@ impl Checks<'_> {
             "teambit.envs/envs",
         )
         .and_then(|(_, val)| val["env"].as_str())
+        .map(str::trim)
+        .filter(|env| !env.is_empty())
         .unwrap_or("teambit.harmony/node");
         let module = runtime_module_path(self.root, component, self.root_components, env);
         let compiler =

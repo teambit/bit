@@ -136,6 +136,7 @@ fn set_inline_bool(slot: &mut bool, val: &str, key: &'static str) -> Option<&'st
     Some(set(slot, enabled, key))
 }
 fn set_inline_str(slot: &mut Option<String>, val: &str, key: &'static str) -> Option<&'static str> {
+    let val = val.trim();
     if val.is_empty() || val.starts_with('-') {
         return None;
     }
@@ -167,7 +168,7 @@ fn take<'a>(
     values: &mut impl Iterator<Item = &'a str>,
     key: &'static str,
 ) -> Option<&'static str> {
-    let value = values.next()?;
+    let value = values.next()?.trim();
     if value.is_empty() || value.starts_with('-') {
         return None;
     }

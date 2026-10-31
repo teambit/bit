@@ -128,14 +128,22 @@ fn status_issues(
     let response: Value = engine.request(&json!({"kind":"statusGraph","root":root,"versions":context["versions"],"components":components.iter().map(|component|json!({"identity":component.identity,"dependencies":component.dependencies})).collect::<Vec<_>>()}))?;
     let mut graph = components.to_vec();
     for row in array(response.get("external"), "external status graph")? {
+        let identity = text(row.get("identity"))?.trim().to_owned();
+        if identity.is_empty() {
+            return Err(decline("external status graph identity"));
+        }
+        let dependencies = array(row.get("dependencies"), "external dependencies")?
+            .iter()
+            .map(|id| text(Some(id)).map(|val| val.trim().to_owned()))
+            .collect::<io::Result<Vec<_>>>()?
+            .into_iter()
+            .filter(|val| !val.is_empty())
+            .collect();
         graph.push(Component {
             ignored: Vec::new(),
-            identity: text(row.get("identity"))?.trim().to_owned(),
+            identity,
             package_name: String::new(),
-            dependencies: array(row.get("dependencies"), "external dependencies")?
-                .iter()
-                .map(|id| text(Some(id)).map(|val| val.trim().to_owned()))
-                .collect::<io::Result<_>>()?,
+            dependencies,
             issues: Value::Null,
         });
     }

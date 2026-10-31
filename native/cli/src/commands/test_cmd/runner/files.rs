@@ -22,7 +22,7 @@ pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Select
     let cwd = env::current_dir()?;
     let paths: Vec<_> = values
         .iter()
-        .map(|value| paths::normalized(&cwd.join(value)))
+        .map(|value| paths::normalized(&cwd.join(value.trim())))
         .collect();
     let bitmap = Bitmap::load(root, None)?;
     let mut identities = Vec::new();
@@ -38,7 +38,8 @@ fn owner(root: &Path, bitmap: &Bitmap, path: &Path) -> io::Result<String> {
     let mut owners = bitmap.entries
         .iter()
         .filter(|entry| {
-            entry.owns_its_dir() && path.starts_with(paths::normalized(&root.join(&entry.root_dir)))
+            entry.owns_its_dir()
+                && path.starts_with(paths::normalized(&root.join(entry.root_dir.trim())))
         });
     let identity = owners
         .next()

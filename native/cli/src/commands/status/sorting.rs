@@ -80,7 +80,11 @@ fn permutation(result: &Value, count: usize) -> io::Result<Vec<usize>> {
 
 fn sort_id(row: &Value) -> io::Result<String> {
     if let Value::String(id) = row {
-        return Ok(id.trim().to_owned());
+        let trimmed = id.trim();
+        if trimmed.is_empty() {
+            return Err(decline("status sort id is empty"));
+        }
+        return Ok(trimmed.to_owned());
     }
     if let Some(id) = row
         .get("id")

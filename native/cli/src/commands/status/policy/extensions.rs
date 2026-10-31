@@ -43,8 +43,11 @@ fn projected_extension(extension: &Value) -> io::Result<Value> {
     {
         return Ok(extension.clone());
     }
-    let name =
-        extension["name"].as_str().ok_or_else(|| decline("status projected extension name"))?;
+    let name = extension["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| decline("status projected extension name"))?;
     model_extension(extension, name)
 }
 
