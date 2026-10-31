@@ -38,6 +38,7 @@ impl State {
             || self.next >= MAX_TOKEN
             || snapshot.path.as_os_str().is_empty()
             || snapshot.raw_hash.trim().is_empty()
+            || snapshot.snapshot_hash.trim().is_empty()
         {
             return None;
         }

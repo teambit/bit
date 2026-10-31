@@ -47,20 +47,18 @@ fn reference(model: &Value, version: &str) -> io::Result<String> {
             .as_str()
             .map(str::trim)
             .ok_or_else(|| invalid("cat version absent"))?;
-        merge_history::hash(head)?;
-        return Ok(head.to_owned());
+        return Ok(crate::validate::hexadecimal(&merge_history::hash(head)?));
     }
-    if merge_history::hash(version).is_ok() {
-        return Ok(version.to_owned());
+    if let Ok(raw) = merge_history::hash(version) {
+        return Ok(crate::validate::hexadecimal(&raw));
     }
-    let reference = model["orphanedVersions"]
+    let reference = model["versions"]
         .get(version)
-        .or_else(|| model["versions"].get(version))
+        .or_else(|| model["orphanedVersions"].get(version))
         .and_then(Value::as_str)
         .map(str::trim)
         .ok_or_else(|| invalid("cat version absent"))?;
-    merge_history::hash(reference)?;
-    Ok(reference.to_owned())
+    Ok(crate::validate::hexadecimal(&merge_history::hash(reference)?))
 }
 
 fn files(directory: &std::path::Path, version: &Value) -> io::Result<Vec<Value>> {

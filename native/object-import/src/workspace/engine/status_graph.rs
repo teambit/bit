@@ -87,11 +87,17 @@ fn collect_external_graph(
 type ModelMetadata = (Vec<Value>, Vec<(String, Value)>);
 
 fn metadata(request: &Request, repository: &mut Repository) -> io::Result<ModelMetadata> {
+    let mut seen = HashSet::new();
     let names = request.components
         .iter()
         .flat_map(|component| component.dependencies.iter())
-        .filter_map(|id| id.rsplit_once('@').map(|(name, _)| name))
-        .collect::<HashSet<_>>();
+        .filter_map(|id| {
+            id.trim()
+                .rsplit_once('@')
+                .map(|(name, _)| name.trim())
+        })
+        .filter(|name| !name.is_empty() && seen.insert(*name))
+        .collect::<Vec<_>>();
     let mut models = Vec::new();
     let mut versions = Vec::new();
     for name in names {

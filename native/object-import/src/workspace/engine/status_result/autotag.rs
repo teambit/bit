@@ -41,13 +41,15 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
     selected(&reply, &ordered)
 }
 fn selected(reply: &Value, ordered: &[&Target]) -> io::Result<Value> {
+    let mut seen = std::collections::HashSet::new();
     let mut result = Vec::new();
     for entry in reply["results"].as_array().ok_or_else(|| invalid("status autotag result"))? {
-        let index =
-            entry["component"].as_u64().ok_or_else(|| invalid("status autotag index"))? as usize;
+        let raw = entry["component"].as_u64().ok_or_else(|| invalid("status autotag index"))?;
+        let index = usize::try_from(raw).map_err(|_| invalid("status autotag index"))?;
         let target = ordered.get(index).ok_or_else(|| invalid("status autotag target"))?;
-        if !target.version.trim().is_empty() {
-            result.push(json!(target.identity.trim()));
+        let identity = target.identity.trim();
+        if !target.version.trim().is_empty() && seen.insert(identity) {
+            result.push(json!(identity));
         }
     }
     Ok(Value::Array(result))

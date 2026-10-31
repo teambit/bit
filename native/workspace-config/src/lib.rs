@@ -154,7 +154,10 @@ pub fn workspace_store_key(workspace: &Value) -> &str {
         .and_then(|values| {
             values
                 .keys()
-                .find(|key| *key == ASPECT || key.starts_with("teambit.harmony/config-store@"))
+                .find(|key| {
+                    let trimmed = key.trim();
+                    trimmed == ASPECT || trimmed.starts_with("teambit.harmony/config-store@")
+                })
         })
         .map_or(ASPECT, String::as_str)
 }

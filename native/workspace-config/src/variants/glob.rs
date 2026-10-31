@@ -6,6 +6,9 @@
 pub fn matches(pattern: &str, name: &str) -> bool {
     let pattern = pattern.trim();
     let name = name.trim();
+    if pattern.is_empty() || name.is_empty() {
+        return false;
+    }
     expand_braces(pattern)
         .iter()
         .any(|pattern| {

@@ -47,7 +47,11 @@ fn parse_items(rows: &[Value]) -> io::Result<Vec<Item>> {
         if item.is_symlink {
             continue;
         }
-        if item.hash.trim().is_empty() || !seen.insert(item.hash.trim().to_owned()) {
+        let Ok(raw_hash) = crate::merge_history::hash(item.hash.trim()) else {
+            return Err(invalid("status symlink or duplicate model"));
+        };
+        let hash = crate::validate::hexadecimal(&raw_hash);
+        if item.id.name.trim().is_empty() || !seen.insert(hash) {
             return Err(invalid("status symlink or duplicate model"));
         }
         items.push(item);

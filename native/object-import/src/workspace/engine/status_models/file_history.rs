@@ -149,8 +149,7 @@ fn file_hash(version: &Value, path: &str) -> io::Result<Option<String>> {
                 .as_str()
                 .map(str::trim)
                 .ok_or_else(|| invalid("file history source"))?;
-            merge_history::hash(hash)?;
-            selected = Some(hash.to_string());
+            selected = Some(crate::validate::hexadecimal(&merge_history::hash(hash)?));
         }
     }
     Ok(selected)

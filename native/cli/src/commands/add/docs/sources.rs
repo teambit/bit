@@ -45,13 +45,7 @@ pub(super) fn observe(root: &Path, components: &[Value]) -> io::Result<BTreeMap<
             if file["test"] == true {
                 continue;
             }
-            let relative = file["relativePath"]
-                .as_str()
-                .or_else(|| file["path"].as_str())
-                .or_else(|| file.as_str())
-                .map(str::trim)
-                .filter(|rel| !rel.is_empty())
-                .ok_or_else(|| io::Error::other("tracking docs relative path"))?;
+            let relative = relative_path(directory, file)?;
             let path: PathBuf = root
                 .join(directory)
                 .join(relative)
@@ -65,6 +59,20 @@ pub(super) fn observe(root: &Path, components: &[Value]) -> io::Result<BTreeMap<
         }
     }
     Ok(output)
+}
+
+fn relative_path<'a>(directory: &str, file: &'a Value) -> io::Result<&'a str> {
+    let relative = file["relativePath"]
+        .as_str()
+        .or_else(|| file["path"].as_str())
+        .or_else(|| file.as_str())
+        .map(str::trim)
+        .filter(|rel| !rel.is_empty())
+        .ok_or_else(|| io::Error::other("tracking docs relative path"))?;
+    if Path::new(directory).is_absolute() || Path::new(relative).is_absolute() {
+        return Err(io::Error::other("tracking docs relative path"));
+    }
+    Ok(relative)
 }
 
 fn read_source(path: &Path, remaining: &mut u64) -> io::Result<Source> {

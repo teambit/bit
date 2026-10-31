@@ -70,6 +70,10 @@ impl Parser {
         match self.current().map(|token| &token.kind) {
             None => invalid("Unexpected end of JSON input"),
             Some(Kind::Punct(punct)) => invalid(format!("Unexpected token {punct}")),
+            Some(Kind::String(_)) => invalid("Unexpected string"),
+            Some(Kind::Number(_)) => invalid("Unexpected number"),
+            Some(Kind::Bool(value)) => invalid(format!("Unexpected token {value}")),
+            Some(Kind::Null) => invalid("Unexpected token null"),
             Some(kind) => invalid(format!("Unexpected token {kind:?}")),
         }
     }

@@ -106,11 +106,17 @@ impl Document {
         let mut node = &mut self.root;
         for segment in parent {
             let Node::Object(object) = node else { return false };
-            let Some(child) = object.entries.get_mut(*segment) else { return false };
+            let child = if object.entries.contains_key(*segment) {
+                object.entries.get_mut(*segment)
+            } else {
+                object.entries.get_mut(segment.trim())
+            };
+            let Some(child) = child else { return false };
             node = child;
         }
         let Node::Object(object) = node else { return false };
         object.entries.shift_remove(*key).is_some()
+            || object.entries.shift_remove(key.trim()).is_some()
     }
 
     /// comment-json `assign(target, source)` on the object at `path`: each

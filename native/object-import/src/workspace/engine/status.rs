@@ -14,9 +14,12 @@ pub(super) struct File {
 pub(super) fn compare(target: &[File], current: &[File]) -> io::Result<(usize, Value)> {
     super::count(target.len())?;
     super::count(current.len())?;
+    let mut path_bytes = 0_usize;
     for file in target.iter().chain(current) {
+        path_bytes = path_bytes.saturating_add(file.relative_path.len());
         if file.relative_path.trim().is_empty()
             || file.relative_path.len() > 32768
+            || path_bytes > super::MAX_RAW
             || file.relative_path.chars().any(char::is_control)
         {
             return Err(super::invalid("workspace status path limit"));

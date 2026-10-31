@@ -231,7 +231,9 @@ fn fully_merged(reader: &Reader<'_>, index: &Value, lane: &Value) -> io::Result<
 }
 
 fn head_contains(reader: &Reader<'_>, main_head: &str, lane_head: &str) -> io::Result<bool> {
-    let mut pending = vec![main_head.to_owned()];
+    let lane_head = crate::validate::hexadecimal(&crate::merge_history::hash(lane_head.trim())?);
+    let main_head = crate::validate::hexadecimal(&crate::merge_history::hash(main_head.trim())?);
+    let mut pending = vec![main_head];
     let mut seen = std::collections::HashSet::new();
     while let Some(hash) = pending.pop() {
         if hash == lane_head {
@@ -247,9 +249,12 @@ fn head_contains(reader: &Reader<'_>, main_head: &str, lane_head: &str) -> io::R
         let parents =
             version["parents"].as_array().ok_or_else(|| invalid("list merged parents"))?;
         for parent in parents {
-            let parent = parent.as_str().ok_or_else(|| invalid("list merged parent"))?;
-            crate::merge_history::hash(parent)?;
-            pending.push(parent.to_owned());
+            let parent = parent
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("list merged parent"))?;
+            let parent = crate::validate::hexadecimal(&crate::merge_history::hash(parent)?);
+            pending.push(parent);
         }
     }
     Ok(false)

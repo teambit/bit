@@ -43,7 +43,7 @@ fn append_staged(
 ) -> io::Result<()> {
     if request.update_dependents
         .iter()
-        .any(|item| item == identity)
+        .any(|item| item.trim() == identity)
     {
         push(output, "pendingUpdateDependents", json!(identity));
     } else {

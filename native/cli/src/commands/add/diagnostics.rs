@@ -33,11 +33,20 @@ pub(super) fn links(root: &Path, projection: &Projection) -> io::Result<()> {
 
 fn matches_target(target: &serde_json::Value, identity: &str) -> bool {
     let expected = identity.trim();
-    target["identity"]
-        .as_str()
-        .or_else(|| target["id"].as_str())
-        .map(str::trim)
-        .is_some_and(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()) == expected)
+    !expected.is_empty()
+        && target["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .or_else(|| {
+                target["id"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
+            })
+            .is_some_and(|raw| {
+                raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()) == expected
+            })
 }
 fn blocked_package(package: &Path) -> io::Result<bool> {
     if metadata(package)?.is_some_and(|metadata| metadata.is_file()) {

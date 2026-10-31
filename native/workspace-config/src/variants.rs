@@ -162,6 +162,9 @@ fn dir_match(root_dir: &str, item: &str) -> ItemMatch {
         .trim()
         .trim_start_matches("./")
         .trim_end_matches('/');
+    if pattern.is_empty() || root_dir.is_empty() {
+        return NO_MATCH;
+    }
     let inside = root_dir
         .strip_prefix(pattern)
         .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'));

@@ -88,7 +88,11 @@ impl Node {
                 let map: Map<String, Value> = object
                     .ordered_keys()
                     .into_iter()
-                    .map(|key| (key.clone(), object.entries[key].to_value()))
+                    .filter_map(|key| {
+                        object.entries
+                            .get(key)
+                            .map(|entry| (key.clone(), entry.to_value()))
+                    })
                     .collect();
                 Value::Object(map)
             }

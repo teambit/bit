@@ -7,6 +7,9 @@ const SCOPE_INDENT: &[u8] = b"    ";
 
 /// Serialize a prepared scope document without changing its fields or insertion order.
 pub fn render_scope_json(scope: &Value) -> io::Result<Vec<u8>> {
+    if scope.is_null() {
+        return Ok(b"{}".to_vec());
+    }
     let mut output = Vec::new();
     let formatter = serde_json::ser::PrettyFormatter::with_indent(SCOPE_INDENT);
     let mut serializer = serde_json::Serializer::with_formatter(&mut output, formatter);

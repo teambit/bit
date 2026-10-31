@@ -138,10 +138,14 @@ fn filter_lean_lane_refs(
 }
 
 fn keep_lane_ref(reader: &Reader<'_>, entry: &Value, lane_head: &str) -> io::Result<bool> {
-    let Some(hash) = entry.as_str() else {
+    let Some(hash) = entry
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+    else {
         return Ok(false);
     };
-    if hash == lane_head {
+    if hash.eq_ignore_ascii_case(lane_head.trim()) {
         return Ok(true);
     }
     let version = match reader.read(hash, "Version") {

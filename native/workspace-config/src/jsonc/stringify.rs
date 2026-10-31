@@ -158,15 +158,13 @@ fn object(object: &Object, gap: &str) -> String {
         inside: String::new(),
         after_comma: String::new(),
     };
-    for (index, key) in object
-        .ordered_keys()
-        .into_iter()
-        .enumerate()
-    {
+    let mut first = true;
+    for key in object.ordered_keys() {
         let Some(entry_node) = object.entries.get(key) else {
             continue;
         };
-        members.open(index == 0, key);
+        members.open(first, key);
+        first = false;
         let value = node(entry_node, &members.deeper_gap);
         let entry = format!(
             "{}{}:{} {value}{}",

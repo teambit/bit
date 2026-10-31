@@ -131,14 +131,14 @@ fn observe(
     expected: &Value,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
-    crate::merge_history::hash(hash)?;
+    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
     proof::read(
         &reader.directory
             .join(&hash[..2])
             .join(&hash[2..]),
         proofs,
     )?;
-    if reader.read(hash, "Version")? != *expected {
+    if reader.read(&hash, "Version")? != *expected {
         return Err(invalid("status history ancestor changed"));
     }
     Ok(())

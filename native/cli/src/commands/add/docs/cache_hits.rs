@@ -84,7 +84,7 @@ fn classify(
     bytes: &mut usize,
 ) -> io::Result<bool> {
     if let Some(docs) = hit(cache, path, source.mtime_ms(), enabled)? {
-        *bytes += serde_json::to_vec(&docs)?.len();
+        *bytes = bytes.saturating_add(serde_json::to_vec(&docs)?.len());
         if *bytes > MAX_METADATA {
             return Err(invalid("docs cache metadata budget"));
         }
@@ -95,7 +95,7 @@ fn classify(
     if !bit_dependency_scanner::proves_empty_docs(source.bytes(), relative) {
         return Ok(false);
     }
-    *bytes += 2;
+    *bytes = bytes.saturating_add(2);
     if *bytes > MAX_METADATA {
         return Err(invalid("docs cache metadata budget"));
     }

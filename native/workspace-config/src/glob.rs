@@ -23,6 +23,9 @@ pub fn match_patterns(file: &str, patterns: &[String]) -> bool {
 pub fn matches(pattern: &str, path: &str) -> bool {
     let path = path.trim().trim_start_matches("./");
     let pattern = pattern.trim().trim_start_matches("./");
+    if path.is_empty() || pattern.is_empty() {
+        return false;
+    }
     let segments: Vec<&str> = path.split('/').collect();
     expand_braces(pattern)
         .iter()

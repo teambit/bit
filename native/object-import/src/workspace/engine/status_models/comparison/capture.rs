@@ -31,6 +31,9 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
 }
 
 fn collect_sources(request: &Request) -> io::Result<(Vec<PathBuf>, HashSet<PathBuf>)> {
+    if request.targets.len() > 4096 {
+        return Err(invalid("status comparison target count"));
+    }
     let mut paths = Vec::new();
     let mut bitmaps = HashSet::new();
     let mut identities = HashSet::new();

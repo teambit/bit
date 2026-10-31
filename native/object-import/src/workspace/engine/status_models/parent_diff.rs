@@ -105,8 +105,8 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
             .as_str()
             .map(str::trim)
             .ok_or_else(|| invalid("version parent tag ref"))?;
-        merge_history::hash(reference)?;
-        tags.entry(reference.to_string())
+        let normalized = crate::validate::hexadecimal(&merge_history::hash(reference)?);
+        tags.entry(normalized)
             .or_insert_with(|| tag.trim().to_owned());
     }
     for (tag, reference) in model["orphanedVersions"]
@@ -115,9 +115,9 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
         .flatten()
     {
         if let Some(reference) = reference.as_str().map(str::trim)
-            && merge_history::hash(reference).is_ok()
+            && let Ok(raw) = merge_history::hash(reference)
         {
-            tags.entry(reference.to_string())
+            tags.entry(crate::validate::hexadecimal(&raw))
                 .or_insert_with(|| tag.trim().to_owned());
         }
     }
@@ -139,8 +139,7 @@ fn first_parent(version: &Value) -> io::Result<Option<String>> {
                 .as_str()
                 .map(str::trim)
                 .ok_or_else(|| invalid("version parent ref"))?;
-            merge_history::hash(reference)?;
-            Ok(reference.to_string())
+            Ok(crate::validate::hexadecimal(&merge_history::hash(reference)?))
         })
         .transpose()
 }

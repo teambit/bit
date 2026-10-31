@@ -135,10 +135,14 @@ pub(super) fn remote_for_lane(
     global_remotes_file: Option<&Path>,
     remote_host: Option<&str>,
 ) -> io::Result<Remote> {
+    let scope = scope.trim();
     if scope.is_empty() || scope.contains('/') || scope == "." || scope == ".." {
         return Err(invalid("bare lane remote scope"));
     }
-    if let Some(host) = remote_host {
+    if let Some(host) = remote_host
+        .map(str::trim)
+        .filter(|host| !host.is_empty())
+    {
         return Remote::from_host(host);
     }
     if !bare {

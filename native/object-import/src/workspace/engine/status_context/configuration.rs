@@ -38,6 +38,9 @@ fn find_versioned_aspect<'a>(
 
 /// Apply global aspect settings to an already retained workspace document.
 pub(crate) fn effective_value(workspace: Value, home: &Path) -> io::Result<Value> {
+    if !workspace.is_object() {
+        return Err(super::invalid("workspace aspect configuration"));
+    }
     let path = home.join(".bitrc.jsonc");
     if !path.try_exists()? {
         return Ok(workspace);

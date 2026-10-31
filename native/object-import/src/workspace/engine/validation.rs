@@ -25,14 +25,5 @@ pub(super) fn hash(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }
 pub(super) fn expected_hash(hash: &str) -> io::Result<[u8; 20]> {
-    let hash = hash.trim();
-    if hash.len() != 40 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return Err(invalid("workspace invalid hash"));
-    }
-    let mut output = [0; 20];
-    for (index, byte) in output.iter_mut().enumerate() {
-        *byte = u8::from_str_radix(&hash[index * 2..index * 2 + 2], 16)
-            .map_err(|_| invalid("workspace invalid hash"))?;
-    }
-    Ok(output)
+    crate::merge_history::hash(hash.trim())
 }

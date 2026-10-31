@@ -70,7 +70,7 @@ fn current(output: &mut Value, target: &Target) {
         }
         return;
     }
-    if target.version.is_empty() {
+    if target.version.trim().is_empty() {
         push(output, "newComponents", json!(target.identity));
     } else if target.modified {
         push(output, "modifiedComponents", json!(target.identity));

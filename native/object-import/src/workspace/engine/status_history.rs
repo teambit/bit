@@ -79,14 +79,41 @@ fn serialize(plan: &Plan) -> io::Result<(String, Vec<u8>)> {
     }
     crate::merge_history::status::distance(&history["versions"], None, None)?;
     let versions: Vec<_> = versions.iter().map(record).collect();
-    let body = serde_json::to_string(&json!({"name":name,"scope":scope,"versions":versions,
-        "graphCompleteRefs":history.get("graphCompleteRefs").filter(|value| !value.is_null()).cloned().unwrap_or(json!([]))}))
+    let complete_refs = complete_refs(history)?;
+    let body = serde_json::to_string(&json!({
+        "name": name,
+        "scope": scope,
+        "versions": versions,
+        "graphCompleteRefs": complete_refs,
+    }))
     .map_err(io::Error::other)?;
     let hash = identity(plan.identity.trim());
     let mut serialized =
         format!("VersionHistory {hash} {}\0", body.encode_utf16().count()).into_bytes();
     serialized.extend_from_slice(body.as_bytes());
     Ok((hash, serialized))
+}
+
+fn complete_refs(history: &Value) -> io::Result<Vec<String>> {
+    let Some(refs) = history
+        .get("graphCompleteRefs")
+        .filter(|value| !value.is_null())
+    else {
+        return Ok(Vec::new());
+    };
+    let rows = refs.as_array().ok_or_else(|| invalid("status history complete refs"))?;
+    if rows.len() > 4096 {
+        return Err(invalid("status history complete refs"));
+    }
+    rows.iter()
+        .map(|entry| {
+            let text = entry
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("status history complete ref"))?;
+            Ok(crate::validate::hexadecimal(&crate::merge_history::hash(text)?))
+        })
+        .collect()
 }
 
 fn history_identity<'a>(

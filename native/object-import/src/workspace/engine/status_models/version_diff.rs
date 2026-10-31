@@ -46,7 +46,7 @@ pub(in crate::workspace::engine) fn read_overlay(
     let files = compare_files(request, pool, &from, &to, overlay)?;
     Ok((
         1,
-        json!({"identity":request.identity,"model":if request.no_parent { Value::Null } else { from },"current":to,"files":files,"modified":true}),
+        json!({"identity":request.identity.trim(),"model":if request.no_parent { Value::Null } else { from },"current":to,"files":files,"modified":true}),
     ))
 }
 

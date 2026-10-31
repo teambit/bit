@@ -46,10 +46,14 @@ fn current_sources(current: Vec<File>) -> io::Result<Sources> {
     for file in current {
         let path = file.metadata["relativePath"]
             .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
             .ok_or_else(|| invalid("workspace diff source path"))?
             .to_owned();
-        order.push(path.clone());
-        sources.insert(path, file.contents);
+        if sources.insert(path.clone(), file.contents).is_some() {
+            return Err(invalid("workspace diff duplicate source path"));
+        }
+        order.push(path);
     }
     Ok((order, sources))
 }

@@ -96,7 +96,9 @@ impl Lexer<'_> {
             end = index + char.len_utf8();
             self.chars.next();
         }
-        &self.text[start..end]
+        self.text
+            .get(start..end)
+            .unwrap_or_default()
     }
 
     fn string(&mut self, start: usize, quote: char) -> io::Result<Kind> {

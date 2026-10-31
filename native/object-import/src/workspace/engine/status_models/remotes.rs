@@ -63,11 +63,11 @@ fn insert(refs: &mut HashMap<String, String>, row: &Value, file_scope: &str) -> 
         .as_str()
         .map(str::trim)
         .ok_or_else(|| invalid("status remote head"))?;
-    crate::merge_history::hash(head)?;
+    let head = crate::validate::hexadecimal(&crate::merge_history::hash(head)?);
     if scope != file_scope {
         return Ok(());
     }
     refs.entry(format!("{scope}/{name}"))
-        .or_insert_with(|| head.to_owned());
+        .or_insert(head);
     Ok(())
 }

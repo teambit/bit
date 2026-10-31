@@ -266,7 +266,8 @@ impl Reader<'_> {
         if self.overlay.is_some() {
             return Ok(());
         }
-        crate::merge_history::hash(reference)?;
+        let reference =
+            crate::validate::hexadecimal(&crate::merge_history::hash(reference.trim())?);
         let path = self.directory
             .join(&reference[..2])
             .join(&reference[2..]);

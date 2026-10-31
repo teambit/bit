@@ -49,20 +49,13 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
 }
 
 fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<File> {
+    let original = bytes.len();
+    let bytes =
+        if bitmap { crate::inspection::normalize_bitmap(&read::strip_bom(bytes))? } else { bytes };
     let (metadata, contents) = read::canonical(path, bytes);
-    if bitmap {
-        let normalized = crate::inspection::normalize_bitmap(&contents)?;
-        let cost = metadata.raw_bytes.max(normalized.len());
-        let (metadata, contents) = read::canonical(path, normalized);
-        return Ok(File {
-            metadata: json!({"test":false,"file":metadata.linux_hash}),
-            contents,
-            cost,
-        });
-    }
     Ok(File {
         metadata: json!({"test":false,"file":metadata.linux_hash}),
         contents,
-        cost: metadata.raw_bytes,
+        cost: metadata.raw_bytes.max(original),
     })
 }

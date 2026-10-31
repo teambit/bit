@@ -132,6 +132,7 @@ fn order(root: &Path, components: &[Value], writes: &mut [Value]) -> io::Result<
             .as_array()
             .into_iter()
             .flatten()
+            .filter(|file| file["test"] != true)
         {
             let path = cache_hits::source_path(root, component, file)?;
             let rank = ranks.len();

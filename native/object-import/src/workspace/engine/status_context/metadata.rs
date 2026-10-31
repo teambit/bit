@@ -69,11 +69,12 @@ fn component_id_matches(component: &Value, target_identity: &str) -> bool {
             .next()
             .unwrap_or(id_str)
             .trim();
-        return bare == target_identity;
+        return !bare.is_empty() && bare == target_identity;
     }
     let name = id["name"]
         .as_str()
         .map(str::trim)
+        .map(|name| name.rsplit_once('@').map_or(name, |(base, _)| base.trim()))
         .unwrap_or_default();
     let scope = id["scope"]
         .as_str()
@@ -86,7 +87,7 @@ fn component_id_matches(component: &Value, target_identity: &str) -> bool {
                 .filter(|val| !val.is_empty())
         })
         .unwrap_or_default();
-    format!("{scope}/{name}") == target_identity
+    !scope.is_empty() && !name.is_empty() && format!("{scope}/{name}") == target_identity
 }
 
 fn configuration(config: &Value, recovery: bool) -> io::Result<()> {

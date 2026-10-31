@@ -41,15 +41,19 @@ impl Manifests {
             components
                 .iter()
                 .filter(|component| {
-                    component.root_dir != "."
+                    let root_dir = component.root_dir.trim();
+                    let package_name = component.package_name.trim();
+                    !root_dir.is_empty()
+                        && root_dir != "."
+                        && !package_name.is_empty()
                         && !component.files
                             .iter()
-                            .any(|file| file == "package.json")
+                            .any(|file| file.trim() == "package.json")
                 })
                 .map(|component| {
                     let path = root
                         .join("node_modules")
-                        .join(&component.package_name)
+                        .join(component.package_name.trim())
                         .join("package.json");
                     let before = serialized(&path);
                     (path, before)

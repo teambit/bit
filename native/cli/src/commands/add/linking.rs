@@ -51,8 +51,14 @@ fn matches_captured(row: &Value, expected: &str) -> bool {
     !expected.is_empty()
         && row["identity"]
             .as_str()
-            .or_else(|| row["id"].as_str())
             .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .or_else(|| {
+                row["id"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
+            })
             .map(|id| id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim()))
             .filter(|id| !id.is_empty())
             == Some(expected)

@@ -10,10 +10,13 @@ pub(super) fn hash(model: &Value) -> io::Result<String> {
 pub(super) fn project(model: &Value) -> io::Result<Js> {
     let mut fields = fields(model)?;
     for field in ["dependencies", "devDependencies"] {
-        let value = fields
-            .entry(field)
-            .or_insert_with(|| json!([]));
-        let rows = value.as_array_mut().ok_or_else(|| invalid("status Version dependencies"))?;
+        if fields.get(field).is_none_or(Value::is_null) {
+            fields.insert(field.into(), json!([]));
+        }
+        let rows = fields
+            .get_mut(field)
+            .and_then(Value::as_array_mut)
+            .ok_or_else(|| invalid("status Version dependencies"))?;
         for row in rows {
             row["id"] = identity(&row["id"])?;
         }
@@ -30,6 +33,7 @@ pub(super) fn project(model: &Value) -> io::Result<Js> {
     }
     let extensions = model
         .get("extensions")
+        .filter(|val| !val.is_null())
         .cloned()
         .unwrap_or_else(|| json!([]));
     let extensions = extensions.as_array().ok_or_else(|| invalid("status Version extensions"))?;

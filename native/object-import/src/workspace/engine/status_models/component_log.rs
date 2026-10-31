@@ -289,8 +289,8 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
                 .as_str()
                 .map(str::trim)
                 .ok_or_else(|| invalid("component log tag ref"))?;
-            merge_history::hash(reference)?;
-            tags.insert(reference.to_string(), tag.trim().to_owned());
+            let normalized = crate::validate::hexadecimal(&merge_history::hash(reference)?);
+            tags.insert(normalized, tag.trim().to_owned());
         }
     }
     Ok(tags)

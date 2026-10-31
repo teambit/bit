@@ -14,9 +14,14 @@ pub(in crate::commands) fn packages(
 fn component_packages(row: &Value) -> io::Result<(String, ComponentDependencies)> {
     let identity = row["identity"]
         .as_str()
-        .or_else(|| row["id"].as_str())
         .map(str::trim)
         .filter(|id| !id.is_empty())
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+        })
         .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
         .filter(|id| !id.is_empty())
         .ok_or_else(|| io::Error::other("tracking dependency identity"))?;

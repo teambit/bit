@@ -159,11 +159,19 @@ fn aspect_environments(components: &[WorkspaceComponent], aspects: &[String]) ->
         .iter()
         .filter(|component| {
             let id = component.id.to_string_without_version();
-            aspects
-                .iter()
-                .any(|aspect| aspect.trim() == id)
+            let id = id.trim();
+            !id.is_empty()
+                && !component.env_id.trim().is_empty()
+                && aspects
+                    .iter()
+                    .any(|aspect| {
+                        let trimmed = aspect.trim();
+                        let bare =
+                            trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
+                        bare == id
+                    })
         })
-        .map(|component| component.env_id.clone())
+        .map(|component| component.env_id.trim().to_owned())
         .collect()
 }
 fn report(plan: &Plan, json: bool, chalk: Chalk) -> io::Result<Report> {

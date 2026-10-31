@@ -12,7 +12,10 @@ pub(in crate::workspace::engine) fn validate(value: &Value) -> io::Result<()> {
         return Err(invalid("command legacy Version"));
     }
     for field in ["dependencies", "devDependencies"] {
-        let Some(rows) = value.get(field) else {
+        let Some(rows) = value
+            .get(field)
+            .filter(|val| !val.is_null())
+        else {
             continue;
         };
         for row in rows.as_array().ok_or_else(|| invalid("Harmony dependencies"))? {
@@ -43,7 +46,10 @@ pub(in crate::workspace::engine) fn project(value: &Value) -> io::Result<Value> 
 
 fn flattened(value: &Value, mut visit: impl FnMut(Value)) -> io::Result<()> {
     for field in ["flattenedDependencies", "flattenedDevDependencies"] {
-        let Some(rows) = value.get(field) else {
+        let Some(rows) = value
+            .get(field)
+            .filter(|val| !val.is_null())
+        else {
             continue;
         };
         let rows = rows.as_array().ok_or_else(|| invalid("Harmony flattened dependencies"))?;
@@ -60,7 +66,7 @@ fn flattened(value: &Value, mut visit: impl FnMut(Value)) -> io::Result<()> {
 
 fn defaults(output: &mut Value) {
     for field in ["dependencies", "devDependencies", "extensions", "parents", "modified"] {
-        if output.get(field).is_none() {
+        if output.get(field).is_none_or(Value::is_null) {
             output[field] = json!([]);
         }
     }

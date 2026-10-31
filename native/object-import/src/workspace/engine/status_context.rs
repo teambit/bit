@@ -220,8 +220,15 @@ fn validate_lane_header(header: &Value) -> io::Result<()> {
 }
 
 fn lane_id(bitmap: &Value, scope: &Value) -> io::Result<Value> {
-    let Some(header) = bitmap.get("_bit_lane") else {
-        let name = scope["name"].as_str().ok_or_else(|| invalid("status scope name"))?;
+    let Some(header) = bitmap
+        .get("_bit_lane")
+        .filter(|value| !value.is_null())
+    else {
+        let name = scope["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("status scope name"))?;
         return Ok(json!(format!("{name}/main")));
     };
     validate_lane_header(header)?;

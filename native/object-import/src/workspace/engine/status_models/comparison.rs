@@ -167,27 +167,35 @@ fn code_modified(current: &Value, model: &Value) -> io::Result<bool> {
     if model.is_empty() {
         return Ok(false);
     }
+    let unique_model = model
+        .iter()
+        .filter_map(|stored| stored["relativePath"].as_str().map(str::trim))
+        .filter(|path| !path.is_empty())
+        .collect::<std::collections::HashSet<_>>();
     Ok(model.len() != current.len()
+        || unique_model.len() != model.len()
         || current
             .iter()
-            .any(|file| {
-                let Some(path) = file["relativePath"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|path| !path.is_empty())
-                else {
-                    return true;
-                };
-                let current_hash = file["file"].as_str().map(str::trim);
-                model
-                    .iter()
-                    .find(|stored| stored["relativePath"].as_str().map(str::trim) == Some(path))
-                    .and_then(|stored| {
-                        stored["file"]
-                            .as_str()
-                            .map(str::trim)
-                            .zip(current_hash)
-                    })
-                    .is_none_or(|(left, right)| !left.eq_ignore_ascii_case(right))
-            }))
+            .any(|file| !file_matches_model(file, model)))
+}
+
+fn file_matches_model(file: &Value, model: &[Value]) -> bool {
+    let Some(path) = file["relativePath"]
+        .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+    else {
+        return false;
+    };
+    let current_hash = file["file"].as_str().map(str::trim);
+    model
+        .iter()
+        .find(|stored| stored["relativePath"].as_str().map(str::trim) == Some(path))
+        .and_then(|stored| {
+            stored["file"]
+                .as_str()
+                .map(str::trim)
+                .zip(current_hash)
+        })
+        .is_some_and(|(left, right)| left.eq_ignore_ascii_case(right))
 }

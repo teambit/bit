@@ -179,13 +179,16 @@ fn component_heads(lane: &Value, default_scope: &str) -> io::Result<HashMap<Stri
         let component_scope = scope_opt
             .filter(|scope| !scope.is_empty())
             .unwrap_or(default_scope);
-        let head = row["head"].as_str().ok_or_else(|| invalid("status lane component head"))?;
-        crate::merge_history::hash(head)?;
+        let head = row["head"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("status lane component head"))?;
+        let head = crate::validate::hexadecimal(&crate::merge_history::hash(head)?);
         let identity = format!("{component_scope}/{component_name}");
         if row["isHidden"] == true {
             continue;
         }
-        if heads.insert(identity, head.to_owned()).is_some() {
+        if heads.insert(identity, head).is_some() {
             return Err(invalid("status duplicate lane component"));
         }
     }
@@ -214,13 +217,16 @@ fn remote(root: &Path, scope: &str, name: &str) -> io::Result<HashMap<String, St
         let (component_scope, component_name) =
             crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)
                 .ok_or_else(|| invalid("status lane remote scope"))?;
-        let head = row["head"].as_str().ok_or_else(|| invalid("status lane remote head"))?;
-        crate::merge_history::hash(head)?;
+        let head = row["head"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("status lane remote head"))?;
+        let head = crate::validate::hexadecimal(&crate::merge_history::hash(head)?);
         let id = format!("{component_scope}/{component_name}");
         if !seen.insert(id.clone()) {
             return Err(invalid("status duplicate lane remote ref"));
         }
-        remotes.insert(id, head.to_owned());
+        remotes.insert(id, head);
     }
     Ok(remotes)
 }

@@ -141,17 +141,17 @@ fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
     }
     let extensions = value
         .get("extensions")
+        .filter(|val| !val.is_null())
         .cloned()
         .unwrap_or_else(|| json!({}));
-    if !extensions.is_object()
-        || value
-            .get("propagate")
-            .is_some_and(|propagate| !propagate.is_boolean())
-    {
+    let propagate = value
+        .get("propagate")
+        .filter(|val| !val.is_null());
+    if !extensions.is_object() || propagate.is_some_and(|propagate| !propagate.is_boolean()) {
         return Err(invalid("tracking component configuration"));
     }
     Ok(
-        json!({"componentId":{"scope":scope,"name":name},"extensions":extensions,"propagate":value.get("propagate").cloned().unwrap_or(json!(false))}),
+        json!({"componentId":{"scope":scope,"name":name},"extensions":extensions,"propagate":propagate.cloned().unwrap_or(json!(false))}),
     )
 }
 

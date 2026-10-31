@@ -62,7 +62,8 @@ fn source_budgets(captured: &[Vec<capture::File>]) -> io::Result<Budgets> {
         .iter()
         .flatten()
         .map(|file| file.cost)
-        .sum::<usize>();
+        .try_fold(0_usize, usize::checked_add)
+        .ok_or_else(|| invalid("workspace diff normalized source budget"))?;
     let raw = Budget::new(
         super::super::MAX_RAW
             .checked_sub(used)

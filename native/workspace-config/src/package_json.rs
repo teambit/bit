@@ -19,10 +19,10 @@ pub fn stringify_package(value: &Value, indent: &str, newline: Option<&str>) -> 
     );
     value.serialize(&mut serializer).map_err(io::Error::other)?;
     let json = String::from_utf8(bytes).map_err(io::Error::other)?;
-    Ok(if newline == Some("\r\n") {
-        format!("{}\r\n", json.replace('\n', "\r\n"))
-    } else {
-        format!("{json}\n")
+    Ok(match newline {
+        Some("\r\n") => format!("{}\r\n", json.replace('\n', "\r\n")),
+        Some("") => json,
+        _ => format!("{json}\n"),
     })
 }
 

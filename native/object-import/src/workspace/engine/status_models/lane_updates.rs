@@ -127,34 +127,32 @@ fn forked_target(
     heads: &HashMap<String, &str>,
     excluded: &HashSet<&str>,
 ) -> io::Result<Option<Value>> {
-    if target.version.is_empty() || excluded.contains(target.identity.as_str()) {
+    let identity = target.identity.trim();
+    if target.version.trim().is_empty() || identity.is_empty() || excluded.contains(identity) {
         return Ok(None);
     }
-    let (Some(model), Some(source), Some(main)) = (
-        lookup_model(models, &target.identity),
-        current.heads.get(&target.identity),
-        heads.get(&target.identity),
-    ) else {
+    let (Some(model), Some(source), Some(main)) =
+        (lookup_model(models, identity), current.heads.get(identity), heads.get(identity))
+    else {
         return Ok(None);
     };
-    let (records, _) = history_population::prepare(
-        reader,
-        model,
-        &target.identity,
-        &[Some(source), Some(main)],
-        true,
-    )?;
+    let (records, _) =
+        history_population::prepare(reader, model, identity, &[Some(source), Some(main)], true)?;
     let distance = crate::merge_history::status::distance(&records, Some(source), Some(main))?;
     let diverge = diverge_data(&distance)?;
-    Ok(diverge.map(|diverge| json!({"id":target.identity,"divergeData":diverge})))
+    Ok(diverge.map(|diverge| json!({"id":identity,"divergeData":diverge})))
 }
 
 fn model_index(models: &[Value]) -> io::Result<HashMap<String, &Value>> {
     models
         .iter()
         .map(|model| {
-            let scope = model["scope"].as_str().unwrap_or_default();
-            let name = model["name"].as_str().ok_or_else(|| invalid("status model name"))?;
+            let scope = model["scope"].as_str().map_or("", str::trim);
+            let name = model["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .ok_or_else(|| invalid("status model name"))?;
             let key = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
             Ok((key, model))
         })
@@ -162,12 +160,13 @@ fn model_index(models: &[Value]) -> io::Result<HashMap<String, &Value>> {
 }
 
 fn lookup_model<'a>(models: &HashMap<String, &'a Value>, identity: &str) -> Option<&'a Value> {
+    let identity = identity.trim();
     models
         .get(identity)
         .or_else(|| {
             identity
                 .split_once('/')
-                .and_then(|(_, name)| models.get(name))
+                .and_then(|(_, name)| models.get(name.trim()))
         })
         .copied()
 }
@@ -178,25 +177,27 @@ fn pending_target(
     models: &HashMap<String, &Value>,
     excluded: &HashSet<&str>,
 ) -> io::Result<Option<Value>> {
-    if target.version.is_empty() || excluded.contains(target.identity.as_str()) {
+    let identity = target.identity.trim();
+    if target.version.trim().is_empty() || identity.is_empty() || excluded.contains(identity) {
         return Ok(None);
     }
-    let Some(model) = lookup_model(models, &target.identity) else { return Ok(None) };
-    let Some(main) = model["head"].as_str() else { return Ok(None) };
-    let source = versions::reference(model, &target.version)?;
-    if source == main {
+    let Some(model) = lookup_model(models, identity) else { return Ok(None) };
+    let Some(main) = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
+        return Ok(None);
+    };
+    let source = versions::reference(model, target.version.trim())?;
+    if source.eq_ignore_ascii_case(main) {
         return Ok(None);
     }
-    let (records, _) = history_population::prepare(
-        reader,
-        model,
-        &target.identity,
-        &[Some(&source), Some(main)],
-        true,
-    )?;
+    let (records, _) =
+        history_population::prepare(reader, model, identity, &[Some(&source), Some(main)], true)?;
     let distance = crate::merge_history::status::distance(&records, Some(&source), Some(main))?;
     let diverge = diverge_data(&distance)?;
-    Ok(diverge.map(|diverge| json!({"id":target.identity,"divergeData":diverge})))
+    Ok(diverge.map(|diverge| json!({"id":identity,"divergeData":diverge})))
 }
 
 fn diverge_data(distance: &Value) -> io::Result<Option<Value>> {

@@ -40,6 +40,7 @@ pub(super) fn source_path(root: &Path, target: &Target, file: &str) -> io::Resul
         target.source_overlay_root.as_deref().ok_or_else(|| invalid("source overlay root"))?;
     let relative = path.strip_prefix(spool).map_err(|_| invalid("source overlay outside root"))?;
     if !path.is_absolute()
+        || relative.as_os_str().is_empty()
         || relative
             .components()
             .any(|part| !matches!(part, Component::Normal(_)))
