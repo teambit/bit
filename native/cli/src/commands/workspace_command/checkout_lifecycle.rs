@@ -1,4 +1,6 @@
 //! Checkout provider startup and observable callback output, without Node VCS writes.
+//!
+//! Coordinates [`Engine`], [`Startup`] autosync, [`capture`], and [`Environments`] during checkout.
 
 use crate::commands::{
     engine::Engine,

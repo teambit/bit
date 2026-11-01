@@ -1,4 +1,6 @@
-//! Render the released tester `JUnit` report without loading Bit's JavaScript runtime.
+//! Render the released tester `JUnit` report without loading Bit's `JavaScript` runtime.
+//!
+//! [`render`] formats Jest JSON [`Value`] results into XML using [`cases`] and [`xml`].
 mod cases;
 #[cfg(test)]
 mod tests;

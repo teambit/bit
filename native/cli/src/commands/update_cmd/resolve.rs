@@ -1,3 +1,6 @@
+//! Resolve latest matching versions for dependency update [`Candidate`] entries.
+//!
+//! Evaluates semver ranges and registry metadata for [`Options`] and [`Target`] sources.
 use super::{
     Options,
     collect::{Candidate, Target},

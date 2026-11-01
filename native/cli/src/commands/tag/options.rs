@@ -1,6 +1,8 @@
 //! The native tag grammar, with `validateOptions` of `@teambit/snapping`:
 //! ordinary and soft tags. Editor, build and publish flags stay
 //! with the Node.js CLI.
+//!
+//! Validates [`RELEASE_TYPES`] and serializes tag flags into JSON [`Value`] payloads.
 
 #[cfg(test)]
 mod options_tests;

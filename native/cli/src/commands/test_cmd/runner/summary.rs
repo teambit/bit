@@ -1,4 +1,6 @@
 //! Aggregate released tester JSON into the versionless component summary.
+//!
+//! [`project`] normalizes component test [`Value`] results into versionless summary entries.
 use serde_json::{Value, json};
 
 fn project(data: &Value, identity: &str, environment: &str, message: Option<&str>) -> Value {

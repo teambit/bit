@@ -1,4 +1,6 @@
 //! Reproduce cleargraph node insertion, edge replacement, and topological order.
+//!
+//! [`Node`] models version-history DAG vertices and parent edges across [`HashMap`] and [`HashSet`].
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 

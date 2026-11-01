@@ -1,4 +1,6 @@
 //! Preserve canonical entries outside the selected ancestry.
+//!
+//! [`valid_rows`] validates stored version-history [`Value`] rows using a [`HashSet`].
 use super::{HashSet, Value, json};
 
 #[inline]

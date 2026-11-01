@@ -1,4 +1,6 @@
 //! Lexically normalize absolute filesystem paths without following symlinks.
+//!
+//! [`normalized`] resolves `.` and `..` segments in a [`Path`] into a clean [`PathBuf`].
 use std::path::{Path, PathBuf};
 
 #[inline]

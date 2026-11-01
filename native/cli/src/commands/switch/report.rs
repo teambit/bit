@@ -1,4 +1,6 @@
 //! `SwitchCmd.report` for local lane switches.
+//!
+//! Formats lane switch results for [`Options`] with [`Chalk`] and declines unsupported receipts via [`decline`].
 
 #[cfg(test)]
 mod report_tests;

@@ -1,4 +1,6 @@
 //! Prove an existing history is complete before owning its no-change rebuild.
+//!
+//! Coordinates [`bare`] scope rebuilds, [`startup`] checks, and [`Formatter`] output into [`Outcome`].
 mod bare;
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,6 @@
 //! Native `bit ui-build [type]` (`scopes/ui-foundation/ui/ui-build.cmd.tsx`).
+//!
+//! Validates workspace and argument preconditions for `bit ui-build` into [`Outcome`].
 
 #[cfg(test)]
 mod tests;

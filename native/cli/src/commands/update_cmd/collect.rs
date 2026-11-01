@@ -1,3 +1,6 @@
+//! Collect dependency update candidates from `workspace.jsonc`, `.bitmap`, `component.json`, and scope models.
+//!
+//! Inspects [`Bitmap`] entries ([`BitmapEntry`]), [`Scope`], and [`ComponentId`] policies for `bit update`.
 use crate::commands::{
     aspect::{find_bitmap_row_ref, workspace_default_scope},
     set_peer::DEP_RESOLVER_ID,

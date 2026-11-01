@@ -1,4 +1,6 @@
 //! Qualify tracked remote lane labels without relying on filesystem iteration order.
+//!
+//! [`lanes`] collects deterministic lane head references for a component from [`Path`] objects.
 use serde_json::Value;
 use std::{
     fs, io,

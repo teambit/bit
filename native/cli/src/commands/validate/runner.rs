@@ -1,4 +1,6 @@
 //! Native workspace validation runner for `bit validate`.
+//!
+//! Executes [`VALID_TASKS`] ([`run_check_types_step`], [`run_lint_step`]) for [`Options`] into [`StepResult`].
 
 use super::{
     Options, VALID_TASKS,

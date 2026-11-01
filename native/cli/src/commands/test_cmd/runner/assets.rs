@@ -1,4 +1,6 @@
 //! Materialize stable native-owned external-tool configuration assets.
+//!
+//! [`Assets`] hashes and writes Jest helper scripts into a content-addressed cache directory using [`Sha1`].
 use sha1::{Digest, Sha1};
 use std::{
     fs, io,

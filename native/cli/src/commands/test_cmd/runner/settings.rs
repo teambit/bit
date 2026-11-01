@@ -1,4 +1,6 @@
 //! Select supported tester modes before loader effects or external execution.
+//!
+//! [`Settings`] validates [`Options`], [`Selection`], and [`files`] targets before running Jest.
 use super::{Options, files, invalid};
 use crate::commands::workspace_command::component_service::Selection;
 use std::{

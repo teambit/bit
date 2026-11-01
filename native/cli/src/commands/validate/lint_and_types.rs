@@ -1,4 +1,6 @@
-//! TypeScript type-checking and JavaScript/TypeScript linting for `bit validate`.
+//! `TypeScript` type-checking and `JavaScript`/`TypeScript` linting for `bit validate`.
+//!
+//! Inspects [`WorkspaceComponent`] and [`BitmapEntry`] sources and formats diagnostics with [`Formatter`].
 
 use crate::commands::workspace_command::format::Formatter;
 use bit_install::{model::WorkspaceComponent, workspace::BitmapEntry};

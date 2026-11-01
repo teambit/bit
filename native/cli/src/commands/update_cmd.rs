@@ -1,4 +1,6 @@
 //! Native `bit update [package-patterns...]` (`scopes/workspace/install/update.cmd.tsx`, alias `up`).
+//!
+//! Coordinates [`collect`], [`resolve`], and [`apply`] to update workspace dependency policies.
 
 mod apply;
 mod collect;

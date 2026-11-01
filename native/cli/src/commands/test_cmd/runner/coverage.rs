@@ -1,4 +1,6 @@
 //! Released coverage report consumption, including stale reports without a coverage flag.
+//!
+//! Reads [`METRICS`] totals and cleans up consumed artifacts via [`remove`].
 mod remove;
 use serde_json::{Value, json};
 use std::{

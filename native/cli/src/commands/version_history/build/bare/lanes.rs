@@ -1,4 +1,6 @@
 //! Validate indexed lanes before omitting unrelated heads.
+//!
+//! [`lane_heads`] reads indexed lane objects via [`read`] and records proof bytes.
 use super::{Value, read};
 use std::path::{Path, PathBuf};
 

@@ -1,4 +1,6 @@
 //! Expected output for platform-specific CLI report tests.
+//!
+//! [`expected_success_symbols`] normalizes line endings and Windows checkmarks in test expectations.
 
 /// Match the Node CLI's success symbol on this platform.
 #[must_use]

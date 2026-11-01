@@ -1,5 +1,7 @@
 //! Diagnostic fallbacks when `plan_tag` declines on an invalid workspace state,
 //! existing exact version, auto-tagged dependent issue, or excluded new dependency.
+//!
+//! Queries [`Engine`], [`capture`], and [`issues`] for [`Options`] and [`Mode`].
 
 use super::options::{Mode, Options};
 use crate::commands::{

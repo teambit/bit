@@ -1,4 +1,6 @@
 //! Native `bit version-history <sub-command>` (`vh`) (`scopes/scope/version-history/version-history-cmd.ts`).
+//!
+//! Coordinates [`build`], [`text`], and [`remote`] for version-history inspection and rebuilding.
 
 pub(super) mod build;
 pub(super) mod text;

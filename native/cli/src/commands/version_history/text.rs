@@ -1,4 +1,6 @@
-//! Render the bounded linear history without loading the JavaScript runtime.
+//! Render the bounded linear history without loading the `JavaScript` runtime.
+//!
+//! Coordinates [`graph`] and [`refs`] to format version-history output into [`Outcome`].
 mod graph;
 mod refs;
 #[cfg(test)]

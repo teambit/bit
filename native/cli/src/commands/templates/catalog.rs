@@ -1,4 +1,6 @@
 //! Built-in workspace and component template catalog and formatting (`scopes/generator/generator/templates.cmd.ts`).
+//!
+//! Defines [`TemplateDescriptor`] entries and renders template lists with [`Formatter`] and [`Chalk`].
 
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde::Serialize;

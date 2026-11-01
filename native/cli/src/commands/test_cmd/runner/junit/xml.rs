@@ -1,3 +1,6 @@
+//! XML character filtering and attribute escaping for `JUnit` reports.
+//!
+//! [`attribute`] filters invalid XML codepoints and escapes entity characters.
 use std::sync::LazyLock;
 
 #[inline]

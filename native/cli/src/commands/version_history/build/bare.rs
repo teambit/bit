@@ -1,4 +1,6 @@
 //! Reconstruct qualified local-scope history and publish it atomically.
+//!
+//! Coordinates [`existing`], [`group`], [`lanes`], [`planning`], and [`trash`] into a [`Report`].
 mod existing;
 mod group;
 mod lanes;

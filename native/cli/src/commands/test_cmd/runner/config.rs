@@ -1,3 +1,6 @@
+//! Jest and dev-pattern configuration resolution for `bit test`.
+//!
+//! Resolves [`DevPatternConfig`], [`EnvDevPatterns`], and [`Settings`] over [`Workspace`] and [`Component`].
 use super::{Value, files, invalid, json, settings::Settings};
 use crate::commands::workspace_command::component_service::Component;
 use bit_install::{

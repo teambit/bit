@@ -1,5 +1,7 @@
 //! Native `bit tag [component-patterns...]`: the engine plans and writes the
-//! tags (`workspace_command::resolve`), with the tag options and report.
+//! tags ([`resolve`]), with the tag [`options`] and [`Report`].
+//!
+//! Coordinates [`diagnostics`], [`version_file`], [`Planned`] execution, and [`versions`] output formatting.
 
 mod diagnostics;
 mod options;

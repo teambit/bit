@@ -1,4 +1,6 @@
 //! Dispatch a configured HTTP history rebuild and render its returned results.
+//!
+//! [`run`] executes remote rebuild actions via [`remote_action`] and formats a [`Report`] with [`Formatter`].
 use super::{Chalk, Outcome, ScopeRoot, build};
 use crate::commands::{
     remote_action,
