@@ -11,9 +11,13 @@ pub(super) struct File {
 
 pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec<Vec<File>>> {
     super::super::super::count(request.targets.len())?;
-    let mut paths = Vec::new();
+    let total_files: usize = request.targets
+        .iter()
+        .map(|target| target.files.len())
+        .sum();
+    let mut paths = Vec::with_capacity(total_files);
     let mut bitmaps = HashSet::new();
-    let mut identities = HashSet::new();
+    let mut identities = HashSet::with_capacity(request.targets.len());
     for target in &request.targets {
         comparison::capture::validate(target)?;
         if target.identity.trim().is_empty() || !identities.insert(target.identity.trim()) {

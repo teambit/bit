@@ -101,18 +101,19 @@ impl Network {
         let status = response.status();
         let response_url = response.url().to_string();
         let bytes = self.delete_bytes(response).await?;
-        let end = final_hub_line(&bytes)?;
-        let Some(data) = end.get("data").filter(|data| tar::truthy(data)) else {
+        let mut end = final_hub_line(&bytes)?;
+        if !tar::truthy(&end["data"]) {
             return Err(io::Error::other(r#"HTTP results are missing "data" property"#));
-        };
-        if tar::truthy(&data["isError"]) {
+        }
+        if tar::truthy(&end["data"]["isError"]) {
             return Err(unexpected(end["message"].as_str().map_or("", str::trim)));
         }
         if !status.is_success() {
             return Err(status_error(&[], &response_url, status));
         }
-        validate_removed(data)?;
-        Ok(data.clone())
+        let data = end["data"].take();
+        validate_removed(&data)?;
+        Ok(data)
     }
 
     async fn single_delete_post(
@@ -186,11 +187,6 @@ fn validate_removed(result: &Value) -> io::Result<()> {
 }
 
 fn status_error(bytes: &[u8], url: &str, status: reqwest::StatusCode) -> io::Error {
-    let fallback = format!(
-        "url: {url}. status: {}. text: {}",
-        status.as_u16(),
-        status.canonical_reason().unwrap_or_default(),
-    );
     let parsed: Value = serde_json::from_slice(bytes).unwrap_or(Value::Null);
     let error = if parsed["error"].is_object() { &parsed["error"] } else { &parsed };
     let message = error["message"]
@@ -203,7 +199,16 @@ fn status_error(bytes: &[u8], url: &str, status: reqwest::StatusCode) -> io::Err
                 .map(str::trim)
                 .filter(|msg| !msg.is_empty())
         })
-        .map_or_else(|| fallback.clone(), str::to_owned);
+        .map_or_else(
+            || {
+                format!(
+                    "url: {url}. status: {}. text: {}",
+                    status.as_u16(),
+                    status.canonical_reason().unwrap_or_default(),
+                )
+            },
+            str::to_owned,
+        );
     let code = error["code"]
         .as_u64()
         .or_else(|| {

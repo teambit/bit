@@ -155,25 +155,26 @@ pub(super) fn link_rows(
     Ok(())
 }
 fn aspect_environments(components: &[WorkspaceComponent], aspects: &[String]) -> Vec<String> {
+    let aspect_ids: std::collections::HashSet<&str> = aspects
+        .iter()
+        .map(|aspect| {
+            let trimmed = aspect.trim();
+            trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
+        })
+        .collect();
     let mut seen = std::collections::HashSet::new();
     components
         .iter()
         .filter(|component| {
-            let id = component.id.to_string_without_version();
-            let id = id.trim();
-            !id.is_empty()
-                && !component.env_id.trim().is_empty()
-                && aspects
-                    .iter()
-                    .any(|aspect| {
-                        let trimmed = aspect.trim();
-                        let bare =
-                            trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
-                        bare == id
-                    })
+            !component.env_id.trim().is_empty() && {
+                let id = component.id.to_string_without_version();
+                let id = id.trim();
+                !id.is_empty() && aspect_ids.contains(id)
+            }
         })
-        .map(|component| component.env_id.trim().to_owned())
-        .filter(|env_id| seen.insert(env_id.clone()))
+        .map(|component| component.env_id.trim())
+        .filter(|env_id| seen.insert(*env_id))
+        .map(str::to_owned)
         .collect()
 }
 fn report(plan: &Plan, json: bool, chalk: Chalk) -> io::Result<Report> {

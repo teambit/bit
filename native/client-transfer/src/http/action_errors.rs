@@ -116,29 +116,30 @@ impl std::error::Error for ActionNotFound {}
 
 /// `throwForNonOkStatus` with `remoteErrorHandler`'s messages.
 pub(super) async fn throw_for_status(response: Response) -> io::Result<Response> {
-    if response.status().is_success() {
+    let status = response.status();
+    if status.is_success() {
         return Ok(response);
     }
-    let fallback = format!(
-        "url: {}. status: {}. text: {}",
-        response.url(),
-        response.status().as_u16(),
-        response
-            .status()
-            .canonical_reason()
-            .unwrap_or_default(),
-    );
     let url = response.url().to_string();
     let parsed: Value = response.json().await.unwrap_or(Value::Null);
-    let error =
-        if parsed["error"]["code"].is_null() { parsed.clone() } else { parsed["error"].clone() };
+    let error = if parsed["error"]["code"].is_null() { &parsed } else { &parsed["error"] };
     let message = non_empty_str(&error["message"])
         .or_else(|| non_empty_str(&parsed["message"]))
-        .map(str::to_string);
-    let message = message.unwrap_or_else(|| {
-        if crate::tar::truthy(&error) { "unknown error".to_owned() } else { fallback }
-    });
-    Err(remote_error(error_code(&error), &error, &url, message))
+        .map_or_else(
+            || {
+                if crate::tar::truthy(error) {
+                    "unknown error".to_owned()
+                } else {
+                    format!(
+                        "url: {url}. status: {}. text: {}",
+                        status.as_u16(),
+                        status.canonical_reason().unwrap_or_default(),
+                    )
+                }
+            },
+            str::to_string,
+        );
+    Err(remote_error(error_code(error), error, &url, message))
 }
 
 pub(super) fn remote_error(

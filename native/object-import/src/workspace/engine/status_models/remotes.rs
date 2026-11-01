@@ -19,16 +19,17 @@ pub(super) fn read(root: &Path, models: &[Value]) -> io::Result<HashMap<String, 
         })
         .collect::<HashSet<_>>();
     let budget = Budget::new(4 * 1024 * 1024);
-    let mut refs = HashMap::new();
+    let remotes_dir = crate::scope_path(root).join("refs/remotes");
+    let mut refs = HashMap::with_capacity(models.len());
     for scope in scopes {
-        let rows = rows(root, scope, &budget)?;
+        let rows = rows(&remotes_dir, scope, &budget)?;
         for row in rows {
             insert(&mut refs, &row, scope)?;
         }
     }
     Ok(refs)
 }
-fn rows(root: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Value>> {
+fn rows(remotes_dir: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Value>> {
     if scope.is_empty()
         || matches!(scope, "." | "..")
         || scope
@@ -37,12 +38,7 @@ fn rows(root: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Value>> {
     {
         return Err(invalid("status remote scope path"));
     }
-    let file = match File::open(
-        crate::scope_path(root)
-            .join("refs/remotes")
-            .join(scope)
-            .join("main"),
-    ) {
+    let file = match File::open(remotes_dir.join(scope).join("main")) {
         Ok(file) => file,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
         Err(error) => return Err(error),

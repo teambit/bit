@@ -50,7 +50,7 @@ pub(super) fn project(model: &Value) -> io::Result<Js> {
 }
 fn fields(model: &Value) -> io::Result<Map<String, Value>> {
     let object = model.as_object().ok_or_else(|| invalid("status Version object"))?;
-    let mut fields = Map::new();
+    let mut fields = Map::with_capacity(11);
     for field in [
         "mainFile",
         "files",
@@ -152,15 +152,11 @@ fn normalize_object_version(object: &mut serde_json::Map<String, Value>, inline_
     {
         object.insert("version".into(), json!(ver));
     }
-    if let Some(version) = object
-        .get("version")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .map(str::to_owned)
-    {
-        if version.is_empty() || matches!(version.as_str(), "latest" | "head") {
+    if let Some(raw) = object.get("version").and_then(Value::as_str) {
+        let version = raw.trim();
+        if version.is_empty() || matches!(version, "latest" | "head") {
             object.remove("version");
-        } else {
+        } else if version.len() != raw.len() {
             object.insert("version".into(), json!(version));
         }
     }

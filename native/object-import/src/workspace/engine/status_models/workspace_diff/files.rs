@@ -20,7 +20,7 @@ pub(super) fn read(
     let (order, mut current) = current_sources(current)?;
     let models = model_files(model)?;
     let bodies = model_sources(request, models, (&budgets.raw, &budgets.packed), overlay)?;
-    let mut files = Vec::new();
+    let mut files = Vec::with_capacity(models.len() + order.len());
     for (file, body) in models.iter().zip(bodies) {
         let path = file["relativePath"]
             .as_str()
@@ -41,8 +41,8 @@ pub(super) fn read(
 
 type Sources = (Vec<String>, HashMap<String, Vec<u8>>);
 fn current_sources(current: Vec<File>) -> io::Result<Sources> {
-    let mut order = Vec::new();
-    let mut sources = HashMap::new();
+    let mut order = Vec::with_capacity(current.len());
+    let mut sources = HashMap::with_capacity(current.len());
     for file in current {
         let path = file.metadata["relativePath"]
             .as_str()
@@ -66,7 +66,7 @@ fn model_files(model: Option<&Value>) -> io::Result<&[Value]> {
         None => &[],
     };
     super::super::super::count(files.len())?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(files.len());
     for file in files {
         let path = file["relativePath"]
             .as_str()
@@ -84,6 +84,7 @@ fn model_sources(
     budgets: (&Budget, &Budget),
     overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<Vec<u8>>> {
+    let objects_dir = crate::scope_path(&request.root).join("objects");
     files
         .par_iter()
         .map(|file| {
@@ -98,14 +99,9 @@ fn model_sources(
                 overlay.expect("source belongs to overlay").trace_source(&canonical)?;
                 return Ok(source.to_vec());
             }
-            let reference = digest;
-            let source = repository::read_source_shared(
-                &crate::scope_path(&request.root).join("objects"),
-                reference,
-                budgets.0,
-                budgets.1,
-            )?;
-            crate::merge_transaction::reads::source(reference, &source)?;
+            let source =
+                repository::read_source_shared(&objects_dir, digest, budgets.0, budgets.1)?;
+            crate::merge_transaction::reads::source(digest, &source)?;
             Ok(source.body)
         })
         .collect()

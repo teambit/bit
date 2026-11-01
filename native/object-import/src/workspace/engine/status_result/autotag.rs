@@ -18,10 +18,7 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
     let ordered: Vec<_> = request.targets
         .iter()
         .filter(|target| {
-            target.invalid.is_none()
-                && !changed
-                    .iter()
-                    .any(|other| other.identity.trim() == target.identity.trim())
+            target.invalid.is_none() && (!target.modified || target.version.trim().is_empty())
         })
         .chain(changed.iter().copied())
         .collect();
@@ -41,9 +38,10 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
     selected(&reply, &ordered)
 }
 fn selected(reply: &Value, ordered: &[&Target]) -> io::Result<Value> {
-    let mut seen = std::collections::HashSet::new();
-    let mut result = Vec::new();
-    for entry in reply["results"].as_array().ok_or_else(|| invalid("status autotag result"))? {
+    let results = reply["results"].as_array().ok_or_else(|| invalid("status autotag result"))?;
+    let mut seen = std::collections::HashSet::with_capacity(results.len());
+    let mut result = Vec::with_capacity(results.len());
+    for entry in results {
         let raw = entry["component"].as_u64().ok_or_else(|| invalid("status autotag index"))?;
         let index = usize::try_from(raw).map_err(|_| invalid("status autotag index"))?;
         let target = ordered.get(index).ok_or_else(|| invalid("status autotag target"))?;

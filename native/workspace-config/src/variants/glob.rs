@@ -9,11 +9,15 @@ pub fn matches(pattern: &str, name: &str) -> bool {
     if pattern.is_empty() || name.is_empty() {
         return false;
     }
+    let name: Vec<&str> = name.split('/').collect();
+    if !pattern.contains('{') {
+        let pattern: Vec<&str> = pattern.split('/').collect();
+        return segments(&pattern, &name);
+    }
     expand_braces(pattern)
         .iter()
         .any(|pattern| {
             let pattern: Vec<&str> = pattern.split('/').collect();
-            let name: Vec<&str> = name.split('/').collect();
             segments(&pattern, &name)
         })
 }

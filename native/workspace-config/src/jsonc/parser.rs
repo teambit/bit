@@ -186,9 +186,10 @@ impl Parser {
                 break;
             }
             started = true;
-            let Some(Token { kind: Kind::String(name), .. }) = self.current().cloned() else {
+            let Some(Kind::String(name)) = self.current().map(|token| &token.kind) else {
                 return Err(self.unexpected());
             };
+            let name = name.clone();
             self.prop = Some(name.clone());
             self.assign("before");
             self.next();
@@ -241,8 +242,8 @@ impl Parser {
             }
             Kind::Punct('-') => {
                 self.next();
-                match self.current().map(|token| token.kind.clone()) {
-                    Some(Kind::Number(value)) => {
+                match self.current().map(|token| &token.kind) {
+                    Some(&Kind::Number(value)) => {
                         self.next();
                         Ok(Node::Number(if value == 0.0 { 0.0 } else { -value }))
                     }

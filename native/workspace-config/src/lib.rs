@@ -75,22 +75,23 @@ pub fn effective_with_environment(
     environment: impl Fn(&str) -> Option<String>,
 ) -> Map<String, Value> {
     let mut values = merge_layers(global, scope, workspace);
-    let keys = values
+    let overrides: Vec<(String, Value)> = values
         .keys()
-        .cloned()
+        .map(String::as_str)
         .chain(
             known_keys
                 .iter()
                 .map(|key| key.trim())
-                .filter(|key| !key.is_empty())
-                .map(str::to_owned),
+                .filter(|key| !key.is_empty()),
         )
-        .collect::<std::collections::BTreeSet<_>>();
-    for key in keys {
-        if let Some(value) = environment(&environment_key(&key)).filter(|value| !value.is_empty()) {
-            values.insert(key, Value::String(value));
-        }
-    }
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .filter_map(|key| {
+            let value = environment(&environment_key(key)).filter(|value| !value.is_empty())?;
+            Some((key.to_owned(), Value::String(value)))
+        })
+        .collect();
+    values.extend(overrides);
     values
 }
 

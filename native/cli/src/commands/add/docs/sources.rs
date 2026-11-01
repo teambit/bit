@@ -88,8 +88,10 @@ fn read_source(path: &Path, remaining: &mut u64) -> io::Result<Source> {
         return Err(io::Error::other("tracking docs nonordinary source"));
     }
     let file = fs::File::open(path)?;
-    let modified = file.metadata()?.modified()?;
-    let mut bytes = Vec::new();
+    let metadata = file.metadata()?;
+    let modified = metadata.modified()?;
+    let capacity = usize::try_from(metadata.len().min(*remaining)).unwrap_or(0);
+    let mut bytes = Vec::with_capacity(capacity);
     file.take(*remaining + 1)
         .read_to_end(&mut bytes)?;
     *remaining = remaining

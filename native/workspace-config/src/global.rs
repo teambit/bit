@@ -16,26 +16,19 @@ pub fn read_global_config_with(
         return Ok(Value::Object(Map::new()));
     }
     let path = directory.join("config.json");
-    match fs::metadata(&path) {
-        Ok(metadata) if metadata.len() > 4 * 1024 * 1024 => {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "global config exceeds size limit",
-            ));
-        }
-        Ok(_) => {}
-        Err(error) if error.kind() == io::ErrorKind::NotFound => {
-            return Ok(Value::Object(Map::new()));
-        }
-        Err(error) => return Err(error),
-    }
-    let text = match fs::read_to_string(&path) {
-        Ok(text) => text,
+    let mut file = match fs::File::open(&path) {
+        Ok(file) => file,
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             return Ok(Value::Object(Map::new()));
         }
         Err(error) => return Err(error),
     };
+    let len = file.metadata()?.len();
+    if len > 4 * 1024 * 1024 {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "global config exceeds size limit"));
+    }
+    let mut text = String::with_capacity(usize::try_from(len).unwrap_or(0));
+    io::Read::read_to_string(&mut file, &mut text)?;
     let text = text.strip_prefix('\u{feff}').unwrap_or(&text);
     if text.trim().is_empty() {
         return Ok(Value::Object(Map::new()));

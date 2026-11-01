@@ -138,9 +138,10 @@ fn join_sources(left: Vec<(String, Vec<u8>)>, right: Vec<(String, Vec<u8>)>) -> 
         .map(|(path, _)| path.clone())
         .collect();
     let mut right = right.into_iter().collect::<HashMap<_, _>>();
-    let mut files = Vec::new();
+    let mut files = Vec::with_capacity(left.len() + right.len());
     for (path, body) in left {
-        files.push((path.clone(), Some(body), right.remove(&path)));
+        let right_body = right.remove(&path);
+        files.push((path, Some(body), right_body));
     }
     for path in right_order {
         if let Some(body) = right.remove(&path) {
@@ -161,7 +162,8 @@ fn sources(
     if files.len() > 4096 {
         return Err(invalid("version diff file limit"));
     }
-    let mut seen = HashSet::new();
+    let objects_dir = crate::scope_path(root).join("objects");
+    let mut seen = HashSet::with_capacity(files.len());
     files
         .iter()
         .map(|file| {
@@ -184,14 +186,8 @@ fn sources(
                 overlay.expect("source belongs to overlay").trace_source(&canonical)?;
                 return Ok((path.to_string(), source.to_vec()));
             }
-            let source = repository::read_source_shared(
-                &crate::scope_path(root).join("objects"),
-                digest,
-                raw,
-                packed,
-            )?;
-            let reference = digest;
-            crate::merge_transaction::reads::source(reference, &source)?;
+            let source = repository::read_source_shared(&objects_dir, digest, raw, packed)?;
+            crate::merge_transaction::reads::source(digest, &source)?;
             Ok((path.to_string(), source.body))
         })
         .collect()

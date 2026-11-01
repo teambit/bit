@@ -32,10 +32,15 @@ pub(crate) struct Observation {
     pub(crate) contents: Arc<[u8]>,
 }
 
+fn valid_hash(hash: &str) -> bool {
+    !hash.is_empty() && !hash.chars().any(char::is_control)
+}
+
 impl State {
     pub(crate) fn retain(&mut self, snapshot: Observation) -> Option<u64> {
-        let valid_hash = |hash: &str| !hash.is_empty() && !hash.chars().any(char::is_control);
-        if snapshot.contents.len() > MAX_BYTES
+        let content_len = snapshot.contents.len();
+        if content_len > MAX_BYTES
+            || snapshot.raw_bytes < content_len
             || self.next >= MAX_TOKEN
             || snapshot.path.as_os_str().is_empty()
             || !valid_hash(snapshot.raw_hash.trim())
@@ -43,18 +48,14 @@ impl State {
         {
             return None;
         }
-        if snapshot.raw_bytes < snapshot.contents.len() {
-            return None;
-        }
-        while self.bytes.saturating_add(snapshot.contents.len()) > MAX_BYTES
-            || self.records.len() >= MAX_FILES
+        while self.bytes.saturating_add(content_len) > MAX_BYTES || self.records.len() >= MAX_FILES
         {
             let oldest = self.order.pop_front()?;
             let removed = self.records.remove(&oldest)?;
             self.bytes = self.bytes.saturating_sub(removed.contents.len());
         }
         self.next += 1;
-        self.bytes = self.bytes.saturating_add(snapshot.contents.len());
+        self.bytes = self.bytes.saturating_add(content_len);
         self.order.push_back(self.next);
         self.records.insert(self.next, snapshot);
         Some(self.next)

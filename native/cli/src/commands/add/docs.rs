@@ -104,16 +104,17 @@ fn validate(
         return Err(io::Error::other("tracking docs file count budget"));
     }
     let mut total = 0_usize;
-    let mut seen = std::collections::HashSet::new();
-    let mut entries = Vec::new();
+    let mut seen = std::collections::HashSet::with_capacity(writes.len());
+    let mut entries = Vec::with_capacity(writes.len());
     for row in writes {
         let path = row["path"]
             .as_str()
             .map(str::trim)
             .filter(|path| !path.is_empty())
             .ok_or_else(|| io::Error::other("tracking docs path"))?;
-        if !observed.contains_key(Path::new(path))
-            || !seen.insert(PathBuf::from(path))
+        let candidate = Path::new(path);
+        if !observed.contains_key(candidate)
+            || !seen.insert(candidate)
             || row.get("docs").is_none_or(Value::is_null)
         {
             return Err(io::Error::other("tracking docs unknown source"));

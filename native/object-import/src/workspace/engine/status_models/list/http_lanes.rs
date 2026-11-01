@@ -88,16 +88,13 @@ pub(super) fn configured_remote(
         return Err(invalid("list remote scope"));
     }
     let local = read_json_file(&crate::scope_path(root).join("scope.json"))?;
-    let host = local["remotes"][scope]
-        .as_str()
-        .map(str::to_owned)
-        .or_else(|| {
-            let path = global_remotes_file?;
-            let global = read_json_file(path).ok()?;
-            global[scope].as_str().map(str::to_owned)
-        })
-        .ok_or_else(|| invalid("list unconfigured remote"))?;
-    Remote::from_host(&host)
+    if let Some(host) = local["remotes"][scope].as_str() {
+        return Remote::from_host(host);
+    }
+    let path = global_remotes_file.ok_or_else(|| invalid("list unconfigured remote"))?;
+    let global = read_json_file(path).map_err(|_| invalid("list unconfigured remote"))?;
+    let host = global[scope].as_str().ok_or_else(|| invalid("list unconfigured remote"))?;
+    Remote::from_host(host)
 }
 
 pub(super) fn scope_directory(root: &Path, bare: bool) -> PathBuf {

@@ -9,9 +9,9 @@ pub(super) fn invalid(message: &str) -> io::Error {
 }
 pub(super) fn path(path: &Path) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("workspace non-UTF8 path"))?;
-    if name.trim().is_empty()
+    if name.len() > 32768
         || !path.is_absolute()
-        || name.len() > 32768
+        || name.trim().is_empty()
         || name.chars().any(char::is_control)
         || path
             .components()

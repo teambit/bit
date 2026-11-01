@@ -40,8 +40,8 @@ pub(super) fn read_at(scope: &Path) -> io::Result<Vec<Item>> {
 }
 
 fn parse_items(rows: &[Value]) -> io::Result<Vec<Item>> {
-    let mut seen = HashSet::new();
-    let mut items = Vec::new();
+    let mut seen = HashSet::with_capacity(rows.len());
+    let mut items = Vec::with_capacity(rows.len());
     for row in rows {
         let item: Item = serde_json::from_value(row.clone()).map_err(io::Error::other)?;
         if item.is_symlink {
@@ -50,8 +50,7 @@ fn parse_items(rows: &[Value]) -> io::Result<Vec<Item>> {
         let Ok(raw_hash) = crate::merge_history::hash(item.hash.trim()) else {
             return Err(invalid("status symlink or duplicate model"));
         };
-        let hash = crate::validate::hexadecimal(&raw_hash);
-        if item.id.name.trim().is_empty() || !seen.insert(hash) {
+        if item.id.name.trim().is_empty() || !seen.insert(raw_hash) {
             return Err(invalid("status symlink or duplicate model"));
         }
         items.push(item);
@@ -69,8 +68,13 @@ pub(super) fn model(reader: &Reader<'_>, item: &Item) -> io::Result<Value> {
     if scope.is_some_and(|part| part.contains('/')) {
         return Err(invalid("status indexed model identity"));
     }
-    let identity = scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
-    let expected = crate::validate::hexadecimal(&Sha1::digest(identity.as_bytes()));
+    let mut digest = Sha1::new();
+    if let Some(scope) = scope {
+        digest.update(scope.as_bytes());
+        digest.update(b"/");
+    }
+    digest.update(name.as_bytes());
+    let expected = crate::validate::hexadecimal(&digest.finalize());
     if !expected.eq_ignore_ascii_case(hash)
         || value["name"].as_str().map(str::trim) != Some(name)
         || value

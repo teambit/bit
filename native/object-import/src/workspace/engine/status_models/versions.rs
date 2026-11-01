@@ -18,8 +18,8 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
             (if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }, model)
         })
         .collect();
-    let mut seen = HashSet::new();
-    let mut references = Vec::new();
+    let mut seen = HashSet::with_capacity(targets.len());
+    let mut references = Vec::with_capacity(targets.len());
     for target in targets {
         let version = target.version.trim();
         let identity = target.identity.trim();
@@ -85,9 +85,10 @@ fn read_single(
     reference: &String,
     required: &[String],
 ) -> io::Result<Option<(String, Value)>> {
+    let is_required = required.contains(reference);
     let value = match reader.read(reference, "Version") {
         Ok(value) => value,
-        Err(error) if error.kind() == io::ErrorKind::NotFound && !required.contains(reference) => {
+        Err(error) if error.kind() == io::ErrorKind::NotFound && !is_required => {
             return Ok(None);
         }
         Err(error) => return Err(error),
@@ -97,7 +98,7 @@ fn read_single(
     if matches!(value["schema"].as_str(), Some("1.0.0" | "2.0.0")) {
         super::harmony::validate(&value)?;
     }
-    if required.contains(reference) {
+    if is_required {
         verify_required_sources(reader, &value)?;
     }
     Ok(Some((reference.clone(), value)))

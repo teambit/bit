@@ -181,7 +181,11 @@ fn dir_match(root_dir: &str, item: &str) -> ItemMatch {
 
 /// `isMatchNamespacePatternItem`: `{ui/*}` against the component name.
 fn namespace_match(name: &str, item: &str) -> ItemMatch {
-    let without_brackets = item.replacen('{', "", 1).replacen('}', "", 1);
+    let after_open = item.strip_prefix('{').unwrap_or(item);
+    let without_brackets = match after_open.strip_suffix('}') {
+        Some(inner) if !inner.contains('}') => std::borrow::Cow::Borrowed(inner),
+        _ => std::borrow::Cow::Owned(after_open.replacen('}', "", 1)),
+    };
     let pattern = without_brackets
         .trim()
         .trim_end_matches('/')

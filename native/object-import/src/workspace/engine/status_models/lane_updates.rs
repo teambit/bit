@@ -53,7 +53,8 @@ pub(in crate::workspace::engine) fn read(
     let models = model_index(&models)?;
     let excluded = request.during_merge
         .iter()
-        .map(|id| id.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .collect::<HashSet<_>>();
     if request.forked_lane_id.is_some() {
         return forked_updates(request, overlay, &reader, &models, &current, &excluded, pool);
@@ -132,9 +133,11 @@ fn forked_target(
     if target.version.trim().is_empty() || identity.is_empty() || excluded.contains(identity) {
         return Ok(None);
     }
-    let (Some(model), Some(source), Some(main)) =
-        (lookup_model(models, identity), current.heads.get(identity), heads.get(identity))
-    else {
+    let (Some(model), Some(source), Some(main)) = (
+        super::comparison::lookup_model(models, identity),
+        current.heads.get(identity),
+        heads.get(identity),
+    ) else {
         return Ok(None);
     };
     let (records, _) =
@@ -160,18 +163,6 @@ fn model_index(models: &[Value]) -> io::Result<HashMap<String, &Value>> {
         .collect()
 }
 
-fn lookup_model<'a>(models: &HashMap<String, &'a Value>, identity: &str) -> Option<&'a Value> {
-    let identity = identity.trim();
-    models
-        .get(identity)
-        .or_else(|| {
-            identity
-                .split_once('/')
-                .and_then(|(_, name)| models.get(name.trim()))
-        })
-        .copied()
-}
-
 fn pending_target(
     target: &Target,
     reader: &Reader<'_>,
@@ -182,7 +173,9 @@ fn pending_target(
     if target.version.trim().is_empty() || identity.is_empty() || excluded.contains(identity) {
         return Ok(None);
     }
-    let Some(model) = lookup_model(models, identity) else { return Ok(None) };
+    let Some(model) = super::comparison::lookup_model(models, identity) else {
+        return Ok(None);
+    };
     let Some(main) = model["head"]
         .as_str()
         .map(str::trim)

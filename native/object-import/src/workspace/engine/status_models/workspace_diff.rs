@@ -113,14 +113,7 @@ fn selected<'a>(
     models: &HashMap<String, &Value>,
     versions: &HashMap<&str, &'a Value>,
 ) -> io::Result<Option<&'a Value>> {
-    let identity = target.identity.trim();
-    let model = models
-        .get(identity)
-        .or_else(|| {
-            identity
-                .split_once('/')
-                .and_then(|(_, name)| models.get(name.trim()))
-        });
+    let model = comparison::lookup_model(models, &target.identity);
     let version = target.version.trim();
     if version.is_empty() {
         return if model.is_none() {
@@ -153,12 +146,12 @@ fn one(
             .collect(),
     );
     let modified = match model {
-        Some(model) => comparison::compare(target, &metadata, model)?["modified"].clone(),
-        None => json!(true),
+        Some(model) => comparison::compare(target, &metadata, model)?["modified"] == true,
+        None => true,
     };
     let mut current = target.current.clone();
     current["files"] = metadata;
-    let files = if request.modified_only && modified == false {
+    let files = if request.modified_only && !modified {
         Vec::new()
     } else {
         files::read(request, sources, model, budgets, overlay)?

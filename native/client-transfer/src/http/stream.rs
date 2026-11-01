@@ -71,7 +71,8 @@ impl Read for Chunks {
                 Some(chunk) if chunk.is_empty() => continue,
                 Some(chunk) => self.current = io::Cursor::new(chunk),
                 None => {
-                    self.current = io::Cursor::new(Vec::new());
+                    self.current.get_mut().clear();
+                    self.current.set_position(0);
                     return Ok(0);
                 }
             }

@@ -136,11 +136,12 @@ fn validate(request: &Request) -> io::Result<()> {
         return Err(invalid("status result domain"));
     }
     models(request)?;
-    let mut identities = HashSet::new();
+    let mut identities = HashSet::with_capacity(request.targets.len());
     for target in &request.targets {
         grammar(request, target)?;
-        if target.identity.trim().is_empty()
-            || !identities.insert(target.identity.trim())
+        let identity = target.identity.trim();
+        if identity.is_empty()
+            || !identities.insert(identity)
             || target.dependencies.len() > 4096
             || target.issues.len() > 4096
         {
@@ -151,8 +152,8 @@ fn validate(request: &Request) -> io::Result<()> {
 }
 
 fn models(request: &Request) -> io::Result<()> {
-    let mut known = HashSet::new();
-    let mut histories = HashSet::new();
+    let mut known = HashSet::with_capacity(request.models.len());
+    let mut histories = HashSet::with_capacity(request.histories.len());
     for model in &request.models {
         let identity = model::identity(model, request)?;
         if !known.insert(identity) {

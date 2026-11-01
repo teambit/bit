@@ -53,6 +53,7 @@ fn add_lifecycle_packages(
     if packages.len() > 4096 {
         return Err(io::Error::other("tracking package dependency count"));
     }
+    result.packages.reserve(packages.len());
     for (name, spec) in packages {
         let name = name.trim();
         let version = spec

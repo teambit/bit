@@ -12,7 +12,7 @@ pub fn stringify_package(value: &Value, indent: &str, newline: Option<&str>) -> 
     // `JSON.stringify` uses at most ten characters of a string indent.
     let indent: String =
         if indent.is_empty() { "  ".to_string() } else { indent.chars().take(10).collect() };
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(128);
     let mut serializer = serde_json::Serializer::with_formatter(
         &mut bytes,
         PrettyFormatter::with_indent(indent.as_bytes()),
@@ -82,12 +82,10 @@ enum Leading {
 
 fn leading(line: &str) -> Leading {
     let run = |character: char| line.len() - line.trim_start_matches(character).len();
-    if line.starts_with(' ') {
-        Leading::Spaces(run(' '))
-    } else if line.starts_with('\t') {
-        Leading::Tabs(run('\t'))
-    } else {
-        Leading::None
+    match line.as_bytes().first() {
+        Some(b' ') => Leading::Spaces(run(' ')),
+        Some(b'\t') => Leading::Tabs(run('\t')),
+        _ => Leading::None,
     }
 }
 

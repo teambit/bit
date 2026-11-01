@@ -74,21 +74,23 @@ impl Cancellation {
         future: impl Future<Output = ResultValue>,
     ) -> io::Result<ResultValue> {
         if self.is_cancelled() {
-            return Err(io::Error::new(io::ErrorKind::Interrupted, "operation cancelled"));
+            return Err(cancelled_error());
         }
         let cancelled = self.cancelled();
         futures_util::pin_mut!(cancelled, future);
         match select(cancelled, future).await {
-            Either::Left(_) => {
-                Err(io::Error::new(io::ErrorKind::Interrupted, "operation cancelled"))
-            }
+            Either::Left(_) => Err(cancelled_error()),
             Either::Right((result, _)) => {
                 if self.is_cancelled() {
-                    Err(io::Error::new(io::ErrorKind::Interrupted, "operation cancelled"))
+                    Err(cancelled_error())
                 } else {
                     Ok(result)
                 }
             }
         }
     }
+}
+
+fn cancelled_error() -> io::Error {
+    io::Error::new(io::ErrorKind::Interrupted, "operation cancelled")
 }

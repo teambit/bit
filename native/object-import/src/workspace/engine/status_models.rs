@@ -102,23 +102,19 @@ fn load_overlay(
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };
-    let lane = request.current_lane_id
-        .as_deref()
-        .map(str::trim)
-        .filter(|id| !id.is_empty())
-        .map(|id| lane::read(&request.root, &reader, id))
-        .transpose()?
-        .flatten();
+    let lane = current_lane(request, &reader)?;
     let mut models = indexed_models(&reader, &request.root, pool)?;
     replace_models(&mut models, overlay);
-    let references = selected_references(request, &models, lane.as_ref())?;
     let required = versions::references(&models, &request.targets)?;
+    let references = selected_references(request, &models, lane.as_ref(), required.clone())?;
     let versions = versions::read(&reader, &references, &required, pool)?;
     let semantics = stored_semantics(&versions, pool, stored_hashes)?;
     let (histories, pending_history) = histories(&reader, &models, request, lane.as_ref(), pool)?;
     Ok(Snapshot {
         forked_from: lane.as_ref().and_then(|lane| lane.forked_from.clone()),
-        lane_heads: lane_heads(lane.as_ref()),
+        lane_heads: lane
+            .as_ref()
+            .map_or_else(std::collections::HashMap::new, |lane| lane.heads.clone()),
         update_dependents: lane.map_or_else(Vec::new, |lane| lane.update_dependents),
         models,
         versions,
@@ -126,6 +122,15 @@ fn load_overlay(
         histories,
         pending_history,
     })
+}
+fn current_lane(request: &Request, reader: &Reader<'_>) -> io::Result<Option<lane::Lane>> {
+    request.current_lane_id
+        .as_deref()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .map(|id| lane::read(&request.root, reader, id))
+        .transpose()
+        .map(Option::flatten)
 }
 fn histories(
     reader: &Reader<'_>,
@@ -187,10 +192,6 @@ fn locally_changed(model: &Value) -> bool {
         })
 }
 
-fn lane_heads(lane: Option<&lane::Lane>) -> std::collections::HashMap<String, String> {
-    lane.map_or_else(std::collections::HashMap::new, |lane| lane.heads.clone())
-}
-
 fn indexed_models(
     reader: &Reader<'_>,
     root: &Path,
@@ -208,8 +209,8 @@ fn selected_references(
     request: &Request,
     models: &[Value],
     lane: Option<&lane::Lane>,
+    mut references: Vec<String>,
 ) -> io::Result<Vec<String>> {
-    let mut references = versions::references(models, &request.targets)?;
     if !request.include_heads {
         return Ok(references);
     }

@@ -145,7 +145,7 @@ fn first_parent(version: &Value) -> io::Result<Option<String>> {
 }
 
 fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
-    fn entries(version: &Value) -> io::Result<Vec<String>> {
+    fn entries(version: &Value) -> io::Result<Vec<(&str, [u8; 20])>> {
         let files = version["files"].as_array().ok_or_else(|| invalid("version parent files"))?;
         let mut seen = HashSet::with_capacity(files.len());
         let mut entries = files
@@ -163,11 +163,10 @@ fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
                     .as_str()
                     .map(str::trim)
                     .ok_or_else(|| invalid("version parent file ref"))?;
-                let canonical = crate::validate::hexadecimal(&merge_history::hash(hash)?);
-                Ok(format!("{path}:{canonical}"))
+                Ok((path, merge_history::hash(hash)?))
             })
             .collect::<io::Result<Vec<_>>>()?;
-        entries.sort();
+        entries.sort_unstable();
         Ok(entries)
     }
     Ok(entries(left)? == entries(right)?)

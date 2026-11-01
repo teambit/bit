@@ -136,7 +136,10 @@ fn read_entry<Reader: Read>(
     let name = String::from_utf8_lossy(&entry.path_bytes())
         .trim_matches(|ch: char| ch.is_whitespace() || ch == '\0')
         .to_owned();
-    let mut data = Vec::new();
+    let capacity = usize::try_from(entry.size())
+        .unwrap_or(0)
+        .min(64 * 1024);
+    let mut data = Vec::with_capacity(capacity);
     entry
         .take(limit as u64 + 1)
         .read_to_end(&mut data)?;

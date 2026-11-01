@@ -119,7 +119,12 @@ impl Network {
         )
         .await?;
         let mut response = self.cancellation.run(throw_for_status(response)).await??;
-        let mut bytes = Vec::new();
+        let capacity = response
+            .content_length()
+            .and_then(|len| usize::try_from(len).ok())
+            .unwrap_or(0)
+            .min(MAX_GRAPHQL_BYTES);
+        let mut bytes = Vec::with_capacity(capacity);
         while let Some(chunk) =
             self.cancellation.run(response.chunk()).await?.map_err(|error| network_error(&error))?
         {

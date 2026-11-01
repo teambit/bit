@@ -112,12 +112,12 @@ impl Document {
         let mut node = &mut self.root;
         for segment in parent {
             let Node::Object(object) = node else { return false };
-            let child = if object.entries.contains_key(*segment) {
-                object.entries.get_mut(*segment)
-            } else {
-                object.entries.get_mut(segment.trim())
+            let index = object.entries
+                .get_index_of(*segment)
+                .or_else(|| object.entries.get_index_of(segment.trim()));
+            let Some((_, child)) = index.and_then(|idx| object.entries.get_index_mut(idx)) else {
+                return false;
             };
-            let Some(child) = child else { return false };
             node = child;
         }
         let Node::Object(object) = node else { return false };
@@ -129,6 +129,7 @@ impl Document {
     /// source key is set in order, keeping existing positions and comments.
     pub fn assign(&mut self, path: &[&str], source: &serde_json::Map<String, Value>) {
         let object = self.object_mut(path);
+        object.entries.reserve(source.len());
         for (key, value) in source {
             object.entries.insert(key.clone(), Node::from_value(value));
         }
@@ -140,6 +141,7 @@ impl Document {
     pub fn replace_entries(&mut self, path: &[&str], entries: &IndexMap<String, Value>) {
         let object = self.object_mut(path);
         object.entries.clear();
+        object.entries.reserve(entries.len());
         for (key, value) in entries {
             object.entries.insert(key.clone(), Node::from_value(value));
         }

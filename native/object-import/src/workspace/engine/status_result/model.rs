@@ -23,7 +23,7 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
         .iter()
         .any(|item| item.trim() == identity);
     if is_staged(model, target.is_some() || history["laneHead"].is_string(), pending, source) {
-        append_staged(output, model, history, request, &identity)?;
+        append_staged(output, model, history, &identity, pending)?;
     }
     if let Some(target) = target {
         let merging = request.during_merge
@@ -38,13 +38,10 @@ fn append_staged(
     output: &mut Value,
     model: &Value,
     history: &Value,
-    request: &Request,
     identity: &str,
+    pending: bool,
 ) -> io::Result<()> {
-    if request.update_dependents
-        .iter()
-        .any(|item| item.trim() == identity)
-    {
+    if pending {
         push(output, "pendingUpdateDependents", json!(identity));
     } else {
         let labels = local_labels(model, history)?;
@@ -226,7 +223,7 @@ fn refs<'a>(distance: &'a Value, field: &str) -> io::Result<&'a [Value]> {
         .ok_or_else(|| invalid("status distance refs"))
 }
 fn unique_refs(versions: &Map<String, Value>) -> io::Result<()> {
-    let mut refs = HashSet::new();
+    let mut refs = HashSet::with_capacity(versions.len());
     for value in versions.values() {
         let value = value
             .as_str()

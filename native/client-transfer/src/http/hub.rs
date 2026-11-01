@@ -102,22 +102,28 @@ async fn read(
 }
 
 fn accept_chunk(
-    chunk: &[u8],
+    mut chunk: &[u8],
     pending: &mut Vec<u8>,
     end: &mut Value,
     messages: &mut Vec<String>,
     observe: &mut impl FnMut(&str),
 ) -> io::Result<()> {
-    for &byte in chunk {
-        if byte == b'\n' {
-            observed_line(pending, end, messages, observe)?;
-            pending.clear();
-        } else if pending.len() < MAX_LINE {
-            pending.push(byte);
-        } else {
+    while let Some(newline) = chunk
+        .iter()
+        .position(|&byte| byte == b'\n')
+    {
+        if pending.len() + newline > MAX_LINE {
             return Err(invalid("central hub response line exceeds bounds"));
         }
+        pending.extend_from_slice(&chunk[..newline]);
+        observed_line(pending, end, messages, observe)?;
+        pending.clear();
+        chunk = &chunk[newline + 1..];
     }
+    if pending.len() + chunk.len() > MAX_LINE {
+        return Err(invalid("central hub response line exceeds bounds"));
+    }
+    pending.extend_from_slice(chunk);
     Ok(())
 }
 

@@ -46,9 +46,15 @@ pub struct Selection {
 
 impl FetchOptions {
     fn normalize_lane_id(lane_id: Option<String>) -> Option<String> {
-        lane_id
-            .map(|id| id.trim().to_owned())
-            .filter(|id| !id.is_empty())
+        let id = lane_id?;
+        let trimmed = id.trim();
+        if trimmed.is_empty() {
+            None
+        } else if trimmed.len() == id.len() {
+            Some(id)
+        } else {
+            Some(trimmed.to_owned())
+        }
     }
 
     /// `importWithoutDeps` with `fetchHeadIfLocalIsBehind` (`getExternalManyWithoutDeps`).

@@ -43,7 +43,6 @@ fn partition(
     let mut plan = Plan { hits: Vec::new(), misses: Vec::new(), proven: Vec::new() };
     let mut bytes = 0;
     for component in components {
-        let mut pending = component.clone();
         let files = component["files"].as_array().ok_or_else(|| invalid("docs files"))?;
         if files.len() > 16384 {
             return Err(invalid("docs files"));
@@ -60,6 +59,7 @@ fn partition(
             }
         }
         if !misses.is_empty() {
+            let mut pending = component.clone();
             pending["files"] = json!(misses);
             plan.misses.push(pending);
         }

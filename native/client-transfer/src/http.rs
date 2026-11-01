@@ -347,12 +347,14 @@ fn request_id() -> io::Result<String> {
     getrandom::fill(&mut bytes).map_err(|error| io::Error::other(error.to_string()))?;
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    const HEX: &[u8] = b"0123456789abcdef";
-    let hex = bytes
-        .into_iter()
-        .flat_map(|byte| {
-            [char::from(HEX[usize::from(byte >> 4)]), char::from(HEX[usize::from(byte & 15)])]
-        })
-        .collect::<String>();
-    Ok(format!("{}-{}-{}-{}-{}", &hex[..8], &hex[8..12], &hex[12..16], &hex[16..20], &hex[20..]))
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut uuid = String::with_capacity(36);
+    for (index, byte) in bytes.into_iter().enumerate() {
+        if matches!(index, 4 | 6 | 8 | 10) {
+            uuid.push('-');
+        }
+        uuid.push(char::from(HEX[usize::from(byte >> 4)]));
+        uuid.push(char::from(HEX[usize::from(byte & 0x0f)]));
+    }
+    Ok(uuid)
 }

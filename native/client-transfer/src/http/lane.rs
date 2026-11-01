@@ -17,7 +17,7 @@ impl Network {
         let ids = id
             .map(str::trim)
             .filter(|id| !id.is_empty())
-            .map(|id| vec![id]);
+            .map(|id| [id]);
         let endpoint = format!("{base}/graphql");
         let response = self.send(
             self.headers(self.client.post(&endpoint), "read")?

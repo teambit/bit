@@ -26,5 +26,5 @@ pub(crate) fn is_hash(value: &str) -> bool {
 }
 
 const fn is_lowercase_hex_byte(byte: u8) -> bool {
-    byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()
+    matches!(byte, b'0'..=b'9' | b'a'..=b'f')
 }

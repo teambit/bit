@@ -12,7 +12,8 @@ pub(super) fn temporary(root: &Path) -> io::Result<()> {
 
 fn has_temporary_path(root: &Path) -> bool {
     root.is_absolute()
-        && !root.as_os_str().is_empty()
-        && !root.to_string_lossy().trim().is_empty()
+        && root
+            .to_str()
+            .map_or(!root.as_os_str().is_empty(), |text| !text.trim().is_empty())
         && fs::metadata(root.join(".bitTmp")).is_ok()
 }

@@ -34,7 +34,7 @@ impl Network {
             request.json(&json!({"query":query,"variables":variables,"operationName":"doctor"}));
         let response = self.send(request).await?;
         let value = self.doctor_response(response).await?;
-        projection(&value, scope)
+        projection(value, scope)
     }
 
     async fn doctor_response(&self, response: reqwest::Response) -> io::Result<Value> {
@@ -51,7 +51,7 @@ impl Network {
     }
 }
 
-fn projection(value: &Value, scope: &str) -> io::Result<Value> {
+fn projection(mut value: Value, scope: &str) -> io::Result<Value> {
     let scope = scope.trim();
     if let Some(message) = value["errors"][0]["message"]
         .as_str()
@@ -68,22 +68,18 @@ fn projection(value: &Value, scope: &str) -> io::Result<Value> {
         }
         return Err(io::Error::other(message.to_owned()));
     }
-    let result = &value["data"]["scope"]["doctor"];
-    let meta = result
-        .get("metaData")
-        .or_else(|| result.get("metadata"));
-    if result["examineResults"]
+    let mut normalized = value["data"]["scope"]["doctor"].take();
+    if normalized.get("metaData").is_none()
+        && let Some(meta_val) = normalized.get("metadata").cloned()
+    {
+        normalized["metaData"] = meta_val;
+    }
+    if normalized["examineResults"]
         .as_array()
         .is_none_or(|rows| rows.len() > 4096)
-        || !meta.is_some_and(Value::is_object)
+        || !normalized.get("metaData").is_some_and(Value::is_object)
     {
         return Err(invalid("remote doctor result"));
-    }
-    let mut normalized = result.clone();
-    if normalized.get("metaData").is_none()
-        && let Some(meta_val) = meta
-    {
-        normalized["metaData"] = meta_val.clone();
     }
     Ok(normalized)
 }

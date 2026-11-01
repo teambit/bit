@@ -93,12 +93,13 @@ fn filename(reader: &mut impl Read) -> io::Result<PathBuf> {
     }
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
-    let name = String::from_utf8(bytes).map_err(|_| invalid("workspace path is not UTF-8"))?;
-    let name = name.trim();
-    let path = PathBuf::from(name);
-    if name.is_empty()
-        || !path.is_absolute()
-        || name.chars().any(char::is_control)
+    let raw = String::from_utf8(bytes).map_err(|_| invalid("workspace path is not UTF-8"))?;
+    let name = raw.trim();
+    if name.is_empty() || name.chars().any(char::is_control) {
+        return Err(invalid("workspace path must be absolute and contain no NUL"));
+    }
+    let path = if name.len() == raw.len() { PathBuf::from(raw) } else { PathBuf::from(name) };
+    if !path.is_absolute()
         || path
             .components()
             .any(|part| {

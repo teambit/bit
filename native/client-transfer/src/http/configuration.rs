@@ -83,15 +83,13 @@ fn strict_bool(value: &Value) -> Option<bool> {
     if let Some(flag) = value.as_bool() {
         return Some(flag);
     }
-    match value
-        .as_str()?
-        .trim()
-        .to_ascii_lowercase()
-        .as_str()
-    {
-        "true" | "1" => Some(true),
-        "false" | "0" => Some(false),
-        _ => None,
+    let text = value.as_str()?.trim();
+    if text == "1" || text.eq_ignore_ascii_case("true") {
+        Some(true)
+    } else if text == "0" || text.eq_ignore_ascii_case("false") {
+        Some(false)
+    } else {
+        None
     }
 }
 

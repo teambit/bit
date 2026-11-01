@@ -89,10 +89,13 @@ fn lookup_lane_head<'a>(lane_heads: &'a HashMap<String, String>, model: &Value) 
     lane_heads
         .get(name)
         .or_else(|| {
-            let suffix = format!("/{name}");
             lane_heads
                 .iter()
-                .find_map(|(key, val)| key.ends_with(&suffix).then_some(val))
+                .find_map(|(key, val)| {
+                    key.strip_suffix(name)
+                        .is_some_and(|prefix| prefix.ends_with('/'))
+                        .then_some(val)
+                })
         })
         .map(String::as_str)
         .map(str::trim)
@@ -298,10 +301,10 @@ pub(super) fn parse_lane_heads(
     value: &Value,
     lane_scope: &str,
 ) -> io::Result<HashMap<String, String>> {
-    let mut heads = HashMap::new();
-    for component in
-        value["components"].as_array().ok_or_else(|| invalid("list lane components"))?
-    {
+    let components =
+        value["components"].as_array().ok_or_else(|| invalid("list lane components"))?;
+    let mut heads = HashMap::with_capacity(components.len());
+    for component in components {
         if component["isHidden"] == true {
             continue;
         }
@@ -332,14 +335,11 @@ fn row(reader: &Reader<'_>, model: &Value, lane: Option<&str>) -> io::Result<Val
         Some(head) if !is_legacy_dep => head_version(reader, head)?,
         _ => None,
     };
-    let deprecated = if is_legacy_dep {
-        json!(true)
-    } else if head.is_none() {
-        json!(false)
-    } else {
-        version
-            .as_ref()
-            .map_or(Value::Null, |ver| json!(deprecated(ver)))
+    let deprecated = match (is_legacy_dep, head.is_some(), version.as_ref()) {
+        (true, _, _) => json!(true),
+        (false, false, _) => json!(false),
+        (false, true, Some(ver)) => json!(deprecated(ver)),
+        (false, true, None) => Value::Null,
     };
     Ok(json!({
         "scope": model["scope"], "name": model["name"], "head": head,

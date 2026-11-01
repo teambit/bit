@@ -27,6 +27,10 @@ pub fn matches(pattern: &str, path: &str) -> bool {
         return false;
     }
     let segments: Vec<&str> = path.split('/').collect();
+    if !pattern.contains('{') {
+        let parts: Vec<&str> = pattern.split('/').collect();
+        return match_parts(&parts, &segments);
+    }
     expand_braces(pattern)
         .iter()
         .any(|pattern| {

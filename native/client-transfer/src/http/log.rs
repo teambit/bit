@@ -46,7 +46,7 @@ async fn bounded_body(response: Response) -> io::Result<Vec<u8>> {
 }
 
 fn parse(bytes: &[u8], endpoint: &str) -> io::Result<Vec<Value>> {
-    let parsed: Value = serde_json::from_slice(bytes).map_err(|_| {
+    let mut parsed: Value = serde_json::from_slice(bytes).map_err(|_| {
             invalid(&format!("fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}"))
         })?;
     if let Some(message) = parsed["errors"][0]["message"]
@@ -56,16 +56,18 @@ fn parse(bytes: &[u8], endpoint: &str) -> io::Result<Vec<Value>> {
     {
         return Err(io::Error::other(message.to_string()));
     }
-    let rows = parsed["data"]["scope"]["getLogs"]
-        .as_array()
-        .ok_or_else(|| invalid("remote log response"))?;
+    let Value::Array(rows) = parsed["data"]["scope"]["getLogs"].take() else {
+        return Err(invalid("remote log response"));
+    };
     if rows.len() > 16384 {
         return Err(invalid("remote log exceeds bounds"));
     }
-    rows.iter().map(validate_row).collect()
+    rows.into_iter()
+        .map(validate_row)
+        .collect()
 }
 
-fn validate_row(row: &Value) -> io::Result<Value> {
+fn validate_row(mut row: Value) -> io::Result<Value> {
     let Some(object) = row.as_object() else { return Err(invalid("remote log row")) };
     let expected = ["message", "username", "email", "date", "hash", "tag"];
     let valid_date = row["date"].is_null()
@@ -90,13 +92,12 @@ fn validate_row(row: &Value) -> io::Result<Value> {
     {
         return Err(invalid("remote log row"));
     }
-    let mut normalized = row.clone();
-    if let Some(number) = normalized["date"]
+    if let Some(number) = row["date"]
         .as_i64()
         .map(|val| val.to_string())
-        .or_else(|| normalized["date"].as_u64().map(|val| val.to_string()))
+        .or_else(|| row["date"].as_u64().map(|val| val.to_string()))
     {
-        normalized["date"] = Value::String(number);
+        row["date"] = Value::String(number);
     }
-    Ok(normalized)
+    Ok(row)
 }

@@ -98,9 +98,9 @@ impl Resolver {
             .trim()
             .is_empty()
         {
-            PathBuf::from("node")
+            std::path::Path::new("node")
         } else {
-            self.node.clone()
+            &self.node
         };
         let output = Command::new(node)
             .args(["-e", SCRIPT, &self.path, scope, &self.this_scope])
@@ -112,9 +112,11 @@ impl Resolver {
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let message = stderr.trim();
-            let fallback = String::from_utf8_lossy(&output.stdout);
-            let detail = if message.is_empty() { fallback.trim() } else { message };
-            return Err(io::Error::other(detail.to_string()));
+            if !message.is_empty() {
+                return Err(io::Error::other(message.to_string()));
+            }
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            return Err(io::Error::other(stdout.trim().to_string()));
         }
         String::from_utf8(output.stdout)
             .ok()

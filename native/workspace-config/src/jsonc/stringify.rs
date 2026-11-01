@@ -1,6 +1,7 @@
 //! comment-json 4.2.5 `stringify(value, undefined, 2)`.
 
 use super::node::{Comment, Comments, Node, Object};
+use std::fmt::Write as _;
 
 const INDENT: &str = "  ";
 
@@ -111,6 +112,9 @@ struct Members<'a> {
 
 impl Members<'_> {
     fn comments(&self, prefix: &str, key: &str) -> String {
+        if self.comments.is_empty() {
+            return String::new();
+        }
         process(
             self.comments
                 .get(&format!("{prefix}:{key}"))
@@ -170,14 +174,14 @@ fn object(object: &Object, gap: &str) -> String {
         members.open(first, key);
         first = false;
         let value = node(entry_node, &members.deeper_gap);
-        let entry = format!(
+        let _ = write!(
+            members.inside,
             "{}{}:{} {value}{}",
             quote(key),
             members.comments("after-prop", key),
             members.comments("after-colon", key),
             members.comments("after-value", key),
         );
-        members.inside.push_str(&entry);
         members.after_comma = members.comments("after", key);
     }
     format!("{{{}}}", members.close(gap))

@@ -34,7 +34,7 @@ struct Lexer<'a> {
 
 pub(super) fn tokenize(text: &str) -> io::Result<Vec<Token>> {
     let mut lexer = Lexer { text, chars: text.char_indices().peekable(), line: 1 };
-    let mut tokens = Vec::new();
+    let mut tokens = Vec::with_capacity(text.len() / 8);
     while let Some(token) = lexer.next_token()? {
         tokens.push(token);
     }
@@ -82,7 +82,7 @@ impl Lexer<'_> {
             '"' | '\'' => self.string(start, char),
             '/' => self.comment(start),
             '0'..='9' | '.' => self.number(start),
-            _ if char.is_alphabetic() || char == '_' || char == '$' => self.word(start),
+            _ if char.is_alphabetic() || char == '_' || char == '$' => self.word(start, char),
             _ => Err(invalid(format!("Unexpected token {char}"))),
         }
     }
@@ -175,17 +175,14 @@ impl Lexer<'_> {
             .ok_or_else(|| invalid("Unexpected number"))
     }
 
-    fn word(&mut self, start: usize) -> io::Result<Kind> {
+    fn word(&mut self, start: usize, first: char) -> io::Result<Kind> {
         let word =
             self.take_while(start, |char| char.is_alphanumeric() || char == '_' || char == '$');
         match word {
             "true" => Ok(Kind::Bool(true)),
             "false" => Ok(Kind::Bool(false)),
             "null" => Ok(Kind::Null),
-            _ => {
-                let first = word.chars().next().unwrap_or_default();
-                Err(invalid(format!("Unexpected token {first}")))
-            }
+            _ => Err(invalid(format!("Unexpected token {first}"))),
         }
     }
 }

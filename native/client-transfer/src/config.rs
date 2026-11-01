@@ -61,8 +61,7 @@ fn layers(
         &Value::Object(
             global
                 .into_iter()
-                .map(|(key, value)| (key.trim().to_owned(), value))
-                .filter(|(key, _)| !key.is_empty())
+                .filter_map(normalize_entry)
                 .collect(),
         ),
         scope,
@@ -71,7 +70,15 @@ fn layers(
         environment,
     )
     .into_iter()
-    .map(|(key, value)| (key.trim().to_owned(), value))
-    .filter(|(key, _)| !key.is_empty())
+    .filter_map(normalize_entry)
     .collect()
+}
+
+fn normalize_entry((key, value): (String, Value)) -> Option<(String, Value)> {
+    let trimmed = key.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    let key = if trimmed.len() == key.len() { key } else { trimmed.to_owned() };
+    Some((key, value))
 }

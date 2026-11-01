@@ -75,6 +75,9 @@ impl CatDocs {
             return Err(io::Error::other("cat documentation cache changed"));
         }
         let mut writes = self.plan.proven;
+        if writes.is_empty() {
+            return Ok(());
+        }
         order(&self.root, &self.components, &mut writes)?;
         for (path, bytes) in validate(&writes, &self.observed)? {
             // Published FsCache.saveDataInCache treats IO failures as nonfatal.
@@ -93,7 +96,7 @@ fn parse_doc_receipt(receipt: &Value) -> io::Result<Option<String>> {
         return Err(io::Error::other("cat documentation parser receipt"));
     }
     let error = &receipt["error"];
-    if error.is_null() || error == &Value::Bool(false) {
+    if error.is_null() || error.as_bool() == Some(false) {
         return Ok(None);
     }
     if let Some(message) = error

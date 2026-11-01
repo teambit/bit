@@ -8,21 +8,18 @@ use std::{
 };
 
 pub(in crate::commands) fn restrict(root: &Path, capture: &mut Capture) {
+    let captured_ids: HashSet<&str> = capture.captured
+        .iter()
+        .filter(|row| row["directory"].as_str().map(str::trim) != Some("."))
+        .filter_map(|row| row["identity"].as_str().map(identity))
+        .collect();
+    let node_modules = root.join("node_modules");
     let identities = capture.components
         .iter()
         .filter(|component| {
             let package_name = component.package_name.trim();
-            capture.captured
-                .iter()
-                .any(|row| {
-                    row["identity"].as_str().map(identity) == Some(identity(&component.identity))
-                        && row["directory"].as_str().map(str::trim) != Some(".")
-                })
-                && (package_name.is_empty()
-                    || !root
-                        .join("node_modules")
-                        .join(package_name)
-                        .exists())
+            captured_ids.contains(identity(&component.identity))
+                && (package_name.is_empty() || !node_modules.join(package_name).exists())
         })
         .map(|component| identity(&component.identity).to_owned())
         .collect::<HashSet<_>>();

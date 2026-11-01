@@ -41,14 +41,19 @@ impl Object {
     /// ascending, then the rest in insertion order.
     #[must_use]
     pub fn ordered_keys(&self) -> Vec<&String> {
-        let mut indexes: Vec<(u32, &String)> = self.entries
-            .keys()
-            .filter_map(|key| array_index(key).map(|index| (index, key)))
-            .collect();
-        indexes.sort_by_key(|(index, _)| *index);
-        let rest = self.entries
-            .keys()
-            .filter(|key| array_index(key).is_none());
+        let mut indexes = Vec::new();
+        let mut rest = Vec::with_capacity(self.entries.len());
+        for key in self.entries.keys() {
+            if let Some(index) = array_index(key) {
+                indexes.push((index, key));
+            } else {
+                rest.push(key);
+            }
+        }
+        if indexes.is_empty() {
+            return rest;
+        }
+        indexes.sort_unstable_by_key(|&(index, _)| index);
         indexes
             .into_iter()
             .map(|(_, key)| key)

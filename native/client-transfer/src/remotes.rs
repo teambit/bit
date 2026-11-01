@@ -178,21 +178,22 @@ pub fn not_found_or_denied(scope: &str) -> io::Error {
 }
 
 pub fn global_remotes(dir: &Path) -> io::Result<IndexMap<String, String>> {
-    match fs::read(dir.join(GLOBAL_REMOTES)) {
-        Ok(bytes) => Ok(bit_workspace_config::parse_jsonc(&bytes)
-            .ok()
-            .and_then(|value| serde_json::from_value::<IndexMap<String, Value>>(value).ok())
-            .ok_or_else(|| invalid("invalid global-remotes.json"))?
-            .into_iter()
-            .filter_map(|(name, host)| {
-                let name = name.trim();
-                let host = host.as_str()?.trim();
-                (!name.is_empty() && !host.is_empty()).then(|| (name.to_string(), host.to_string()))
-            })
-            .collect()),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(IndexMap::new()),
-        Err(error) => Err(error),
-    }
+    let bytes = match fs::read(dir.join(GLOBAL_REMOTES)) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(IndexMap::new()),
+        Err(error) => return Err(error),
+    };
+    let Ok(Value::Object(map)) = bit_workspace_config::parse_jsonc(&bytes) else {
+        return Err(invalid("invalid global-remotes.json"));
+    };
+    Ok(map
+        .into_iter()
+        .filter_map(|(name, host)| {
+            let name = name.trim();
+            let host = host.as_str()?.trim();
+            (!name.is_empty() && !host.is_empty()).then(|| (name.to_string(), host.to_string()))
+        })
+        .collect())
 }
 
 /// `getSymphonyUrl()`.

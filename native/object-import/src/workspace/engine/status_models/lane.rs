@@ -114,8 +114,9 @@ fn forked_from(lane: &Value) -> io::Result<Option<String>> {
         .as_str()
         .map(str::trim)
         .ok_or_else(|| invalid("status forked lane name"))?;
-    parse_id(&format!("{scope}/{name}"))?;
-    Ok(Some(format!("{scope}/{name}")))
+    let id = format!("{scope}/{name}");
+    parse_id(&id)?;
+    Ok(Some(id))
 }
 
 fn parse_id(id: &str) -> io::Result<(&str, &str)> {
@@ -180,7 +181,7 @@ fn component_heads(lane: &Value, default_scope: &str) -> io::Result<HashMap<Stri
     if components.len() > 4096 {
         return Err(invalid("status lane component count"));
     }
-    let mut heads = HashMap::new();
+    let mut heads = HashMap::with_capacity(components.len());
     for row in components {
         let (scope_opt, component_name) =
             crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
@@ -220,8 +221,7 @@ fn remote(root: &Path, scope: &str, name: &str) -> io::Result<HashMap<String, St
         .as_array()
         .filter(|rows| rows.len() <= 4096)
         .ok_or_else(|| invalid("status lane remote refs"))?;
-    let mut seen = HashSet::new();
-    let mut remotes = HashMap::new();
+    let mut remotes = HashMap::with_capacity(rows.len());
     for row in rows {
         let (component_scope, component_name) =
             crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)
@@ -232,10 +232,9 @@ fn remote(root: &Path, scope: &str, name: &str) -> io::Result<HashMap<String, St
             .ok_or_else(|| invalid("status lane remote head"))?;
         let head = crate::validate::hexadecimal(&crate::merge_history::hash(head)?);
         let id = format!("{component_scope}/{component_name}");
-        if !seen.insert(id.clone()) {
+        if remotes.insert(id, head).is_some() {
             return Err(invalid("status duplicate lane remote ref"));
         }
-        remotes.insert(id, head);
     }
     Ok(remotes)
 }
