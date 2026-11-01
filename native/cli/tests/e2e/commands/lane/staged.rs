@@ -1,4 +1,5 @@
 //! Released-oracle comparison for transferring main snaps to a new lane.
+
 use super::{object, state};
 use crate::{
     commands::move_paths::support::setup,

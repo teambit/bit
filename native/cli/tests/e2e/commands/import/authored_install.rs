@@ -1,4 +1,5 @@
 //! A tracked authored component survives a lost local scope and a normal import installation.
+
 use super::{FOO_FIXTURE, Helper, OsStr, fs, setup, without_progress_timing};
 use flate2::read::ZlibDecoder;
 use std::{

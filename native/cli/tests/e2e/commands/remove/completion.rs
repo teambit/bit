@@ -1,4 +1,5 @@
-//! Strict whole-operation batching, tracking and provider mutation parity.
+//! Strict whole-operation batching, tracking, and provider mutation parity.
+
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},
     helper::{Helper, config},

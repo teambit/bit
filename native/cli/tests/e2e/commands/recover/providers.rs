@@ -1,4 +1,5 @@
 //! Recovery must classify the provider's authoritative bitmap and retain its source effects.
+
 use crate::{
     commands::move_paths::support::{bitmap, setup, successful, workspace},
     helper::config,

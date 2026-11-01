@@ -1,4 +1,5 @@
 //! Published identity operations retain consumer temporary files, including successful noops.
+
 use super::support::{compare, successful, workspace};
 use std::fs;
 

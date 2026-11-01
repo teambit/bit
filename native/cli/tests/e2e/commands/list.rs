@@ -1,4 +1,4 @@
-//! `e2e/commands/list.e2e.ts`.
+//! Port of `e2e/commands/list.e2e.ts` for native `bit list` parity.
 
 mod parity;
 

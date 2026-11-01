@@ -1,4 +1,5 @@
 //! Published application registration participates in snapshot metadata.
+
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 

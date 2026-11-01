@@ -1,5 +1,6 @@
 //! The released `fetch --from-original-scopes` flag is accepted but ignored:
 //! `FetchCmd` declares the plural option yet reads the singular `fromOriginalScope`.
+
 use super::{
     Duration, Helper, OsStr, ScopeServer, Stdio, TcpListener, TcpStream, fs, setup, thread,
     without_progress_timing,

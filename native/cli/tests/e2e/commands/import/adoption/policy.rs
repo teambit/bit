@@ -1,3 +1,5 @@
+//! Dependency policy update tests for workspace adoption and `bit import --write-deps`.
+
 use super::command;
 use crate::{
     commands::move_paths::support,

@@ -1,4 +1,5 @@
-//! Local removal against the pinned Node.js CLI.
+//! Local `bit remove` parity against the pinned Node.js CLI.
+
 mod completion;
 mod selectors;
 mod suite;

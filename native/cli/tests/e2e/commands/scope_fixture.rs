@@ -1,3 +1,5 @@
+//! Shared remote scope fixture and comparison helpers for scope-level command tests.
+
 use crate::{
     commands::move_paths::support::{self, tree},
     helper::{Helper, Run},

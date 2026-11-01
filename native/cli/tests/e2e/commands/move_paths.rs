@@ -1,4 +1,5 @@
-//! Original move-directory, imported-directory and manually moved source contracts.
+//! Original move-directory, imported-directory, and manually moved source contracts.
+
 pub(crate) mod support;
 
 mod cleanup;

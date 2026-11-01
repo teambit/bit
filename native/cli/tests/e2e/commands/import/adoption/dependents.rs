@@ -1,3 +1,5 @@
+//! Dependent-path import and `--dependents-via` graph traversal tests.
+
 use super::command;
 use crate::{
     commands::{diff_completion::http, move_paths::support},

@@ -1,4 +1,5 @@
 //! Recovery keeps its exact published import/recover transition contract.
+
 use crate::{
     commands::add::support::history_oracle,
     helper::{Helper, Run},

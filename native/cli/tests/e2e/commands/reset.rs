@@ -1,4 +1,4 @@
-//! `e2e/commands/reset.e2e.ts`.
+//! Port of `e2e/commands/reset.e2e.ts` for native `bit reset` parity.
 
 use crate::helper::{FOO_FIXTURE, Helper, Run, parse};
 use serde_json::Value;

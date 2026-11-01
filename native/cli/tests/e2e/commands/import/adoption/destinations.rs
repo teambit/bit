@@ -1,3 +1,5 @@
+//! Destination directory conflict and relocation tests for `bit import`.
+
 use super::{command, exported, file, untrack};
 use crate::{
     commands::{diff_completion::http, move_paths::support},

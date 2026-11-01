@@ -1,4 +1,5 @@
 //! Native linter orchestration compares released diagnostics and complete workspace/cache state.
+
 use super::move_paths::support;
 
 fn duration(output: &str) -> String {

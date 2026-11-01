@@ -1,4 +1,4 @@
-//! Released `ListCmd` output and read-only inventory parity.
+//! Released `ListCmd` output and read-only inventory parity tests.
 
 use crate::helper::{Helper, Run};
 use serde_json::json;

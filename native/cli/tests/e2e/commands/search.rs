@@ -1,4 +1,4 @@
-//! `e2e/commands/search.e2e.ts`.
+//! Port of `e2e/commands/search.e2e.ts` for native `bit search` parity.
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 

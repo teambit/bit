@@ -1,4 +1,4 @@
-//! Released `ShowCmd` argument handling before component loading.
+//! Released `ShowCmd` argument handling tests before component loading.
 
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};

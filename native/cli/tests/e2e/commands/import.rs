@@ -1,4 +1,4 @@
-//! `e2e/commands/import.e2e.ts`.
+//! Port of `e2e/commands/import.e2e.ts` for native `bit import` parity.
 
 mod adoption;
 mod authored_install;

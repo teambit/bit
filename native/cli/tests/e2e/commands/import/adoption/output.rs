@@ -1,4 +1,5 @@
 //! Only the released import completion line's validated duration token varies.
+
 pub(super) fn durations(text: &str) -> String {
     text.split_inclusive('\n')
         .map(completion)

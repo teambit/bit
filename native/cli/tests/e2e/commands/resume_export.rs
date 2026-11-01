@@ -1,4 +1,5 @@
-//! Export recovery protocol, failures and reports against the released CLI.
+//! Export recovery protocol, failures, and reports against the released CLI.
+
 mod file;
 
 use crate::helper::{

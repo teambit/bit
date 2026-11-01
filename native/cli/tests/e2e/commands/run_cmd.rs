@@ -1,3 +1,5 @@
+//! End-to-end tests for the native `bit run` command.
+
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::{ffi::OsStr, fs};
 

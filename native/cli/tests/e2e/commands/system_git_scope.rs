@@ -1,4 +1,4 @@
-//! Native e2e coverage for `details`, `globals`, `system`, `version`, `git`, and `scope trust`.
+//! Native end-to-end coverage for `details`, `globals`, `system`, `version`, `git`, and `scope trust`.
 
 mod remote_history;
 mod upstream_history;

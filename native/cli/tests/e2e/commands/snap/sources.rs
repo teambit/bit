@@ -1,4 +1,5 @@
-//! Snapshot source manifests use the published linker's package.json exclusion rule.
+//! Snapshot source manifests use the published linker's `package.json` exclusion rule.
+
 use crate::helper::{Helper, config};
 use std::{
     collections::BTreeMap,

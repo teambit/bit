@@ -1,4 +1,5 @@
 //! Strict whole-command parity for workspace adoption and dependent-path imports.
+
 mod callbacks;
 mod combined;
 mod dependents;

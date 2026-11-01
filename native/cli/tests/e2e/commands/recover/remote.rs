@@ -1,4 +1,5 @@
-//! Scope.get imports missing models before the separate nonpersisting remote peek.
+//! `Scope.get` imports missing models before the separate nonpersisting remote peek.
+
 pub(super) mod history;
 
 use crate::{

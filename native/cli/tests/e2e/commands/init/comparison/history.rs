@@ -1,4 +1,5 @@
 //! Map only validated clock IDs; metadata order preserves every snapshot and collision group.
+
 mod clock;
 mod tests;
 

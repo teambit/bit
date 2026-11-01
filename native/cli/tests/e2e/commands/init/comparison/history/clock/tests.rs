@@ -1,3 +1,5 @@
+//! Unit tests for history backup timestamp comparison in `bit init` replay.
+
 use super::{date, past};
 use chrono::Timelike;
 #[test]

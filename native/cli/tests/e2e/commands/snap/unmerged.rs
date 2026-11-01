@@ -1,4 +1,5 @@
 //! Pending merge configuration is captured by ordinary snapshot publication.
+
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
