@@ -62,9 +62,13 @@ fn request(reader: &mut impl Read) -> io::Result<Vec<File>> {
         return Err(invalid("workspace file count out of bounds"));
     }
     let mut files = Vec::with_capacity(count as usize);
+    let mut seen = HashSet::with_capacity(count as usize);
     let mut total = 0_usize;
     for _ in 0..count {
         let path = filename(reader)?;
+        if !seen.insert(path.clone()) {
+            return Err(invalid("duplicate workspace file path"));
+        }
         let overwrite = match protocol::word(reader)? {
             0 => false,
             1 => true,

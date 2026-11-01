@@ -76,6 +76,9 @@ fn artifacts(value: &Value) -> io::Result<Vec<[u8; 20]>> {
         return Ok(Vec::new());
     };
     let artifacts = artifacts.as_array().ok_or_else(|| invalid("unsupported builder artifacts"))?;
+    if artifacts.len() > MAX_OBJECTS {
+        return Err(invalid("artifact count exceeds bounds"));
+    }
     let mut result = Vec::new();
     for artifact in artifacts {
         let files = artifact

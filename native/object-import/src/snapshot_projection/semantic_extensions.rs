@@ -61,6 +61,7 @@ pub(super) fn dependencies(value: &Value) -> io::Result<Value> {
     }
     let mut output = Vec::new();
     for row in entries {
+        object(row)?;
         let id = get(row, "extensionId");
         if id.truthy()? {
             output.push(Value::Object(vec![(
@@ -77,7 +78,8 @@ fn id(row: &Value) -> io::Result<String> {
     for key in ["extensionId", "name", "legacyId"] {
         let field = get(row, key);
         if field.truthy()? {
-            return component_id(field).or_else(|_| text(field));
+            let resolved = component_id(field).or_else(|_| text(field))?;
+            return Ok(resolved.trim().to_owned());
         }
     }
     Ok(String::new())

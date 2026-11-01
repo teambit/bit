@@ -12,6 +12,9 @@ pub(super) fn name(item: &Descriptor) -> io::Result<String> {
         None => Ok(hash),
         Some(scope)
             if !scope.is_empty()
+                && scope.len() <= 256
+                && !scope.contains("..")
+                && scope != "."
                 && scope
                     .bytes()
                     .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte)) =>
@@ -53,6 +56,9 @@ pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io
     let path = directory
         .join(&identity[..2])
         .join(&identity[2..]);
+    if path.parent().is_none_or(Path::is_symlink) {
+        return Err(invalid("transfer object exceeds bounds"));
+    }
     let link_meta = std::fs::symlink_metadata(&path)?;
     if !link_meta.is_file() || link_meta.file_type().is_symlink() {
         return Err(invalid("transfer object exceeds bounds"));

@@ -93,14 +93,8 @@ pub(super) fn baseline(
         return Ok(Some(head.to_owned()));
     }
     if !bitmap.exported
-        && let Some(fork) = lane
-            .get("forkedFrom")
-            .filter(|val| !val.is_null())
+        && let Some((fork_scope, fork_name)) = fork_parts(lane)?
     {
-        let (fork_scope, fork_name) = super::row_id_parts(fork);
-        if fork_scope.is_empty() || fork_name.is_empty() {
-            return Err(invalid("lane reset fork scope"));
-        }
         if let Some(head) = remote_head(root, fork_scope, fork_name, scope, name, reads)? {
             return Ok(Some(head));
         }
@@ -108,11 +102,38 @@ pub(super) fn baseline(
             return Ok(None);
         }
     }
-    Ok(remote_head(root, scope, "main", scope, name, reads)?
-        .or_else(|| {
-            model["head"]
-                .as_str()
-                .and_then(|head| crate::merge_history::hash(head.trim()).ok())
-                .map(|bytes| crate::validate::hexadecimal(&bytes))
-        }))
+    if let Some(head) = remote_head(root, scope, "main", scope, name, reads)? {
+        return Ok(Some(head));
+    }
+    model_head(model)
+}
+
+fn fork_parts(lane: &Value) -> io::Result<Option<(&str, &str)>> {
+    let Some(fork) = lane
+        .get("forkedFrom")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(None);
+    };
+    let (fork_scope, fork_name) = super::row_id_parts(fork);
+    if fork_scope.is_empty() || fork_name.is_empty() {
+        return Err(invalid("lane reset fork scope"));
+    }
+    Ok(Some((fork_scope, fork_name)))
+}
+
+fn model_head(model: &Value) -> io::Result<Option<String>> {
+    let Some(raw_head) = model
+        .get("head")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(None);
+    };
+    let head_str = raw_head
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("lane reset model head"))?;
+    let bytes = crate::merge_history::hash(head_str)?;
+    Ok(Some(crate::validate::hexadecimal(&bytes)))
 }

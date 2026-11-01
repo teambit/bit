@@ -24,11 +24,11 @@ pub(super) fn remove_new_model(
         .ok_or_else(|| invalid("lane reset model hash"))?
         .to_owned();
     crate::merge_history::hash(&hash)?;
-    let model = ObjectChange {
-        hash: hash.clone(),
-        before: fs::read(object_path(&crate::scope_path(root).join("objects"), &hash))?,
-        after: None,
-    };
+    let model_bytes = fs::read(object_path(&crate::scope_path(root).join("objects"), &hash))?;
+    if model_bytes.len() > 32 * 1024 * 1024 {
+        return Err(invalid("lane reset model budget"));
+    }
+    let model = ObjectChange { hash, before: model_bytes, after: None };
     rows.remove(position);
     let mut after = serde_json::to_vec_pretty(&index)?;
     after.push(b'\n');

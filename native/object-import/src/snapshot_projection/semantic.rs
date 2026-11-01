@@ -76,7 +76,10 @@ fn files(value: &Value) -> io::Result<Value> {
     }
     Ok(Value::Array(
         rows.iter()
-            .map(|row| choose(row, &["file", "relativePath", "name", "test"], false))
+            .map(|row| {
+                object(row)?;
+                choose(row, &["file", "relativePath", "name", "test"], false)
+            })
             .collect::<io::Result<_>>()?,
     ))
 }
@@ -91,6 +94,7 @@ fn dependencies(value: &Value) -> io::Result<Value> {
     Ok(Value::Array(
         rows.iter()
             .map(|row| {
+                object(row)?;
                 Ok(Value::Object(vec![(
                     "id".encode_utf16().collect(),
                     Value::text(&component_id(get(row, "id"))?),

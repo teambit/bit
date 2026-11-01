@@ -165,7 +165,15 @@ pub(super) fn format(version: &Value) -> io::Result<String> {
 
 fn part_text(value: &Value) -> io::Result<String> {
     if let Some(text) = value.as_str() {
-        return Ok(text.trim().to_owned());
+        let trimmed = text.trim();
+        if trimmed.is_empty()
+            || !trimmed
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+        {
+            return Err(invalid("semver prerelease"));
+        }
+        return Ok(trimmed.to_owned());
     }
     value
         .as_u64()

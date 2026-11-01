@@ -144,6 +144,7 @@ fn directory(directory: &Path) -> io::Result<()> {
 fn path(path: &Path) -> io::Result<()> {
     let text = path.to_str().ok_or_else(|| invalid("snapshot nonUTF8 path"))?;
     if !path.is_absolute()
+        || path.is_symlink()
         || text.trim().is_empty()
         || text.len() > 32768
         || text.contains('\0')
@@ -178,6 +179,9 @@ fn version_identity(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let semantic: crate::snapshot_projection::Semantic =
         crate::snapshot_projection::semantic(&request.fields)?;
+    if semantic.bytes.len() > MAX_RAW {
+        return Err(invalid("snapshot semantic byte limit"));
+    }
     Ok(
         json!({"hash":semantic.hash,"bytes":semantic.bytes.len(),"configAssignments":semantic.config_assignments}),
     )

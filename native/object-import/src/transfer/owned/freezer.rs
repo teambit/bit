@@ -12,6 +12,9 @@ pub(super) fn freeze(
     descriptors: Vec<Descriptor>,
     skip_missing: bool,
 ) -> io::Result<Frozen> {
+    if descriptors.len() > super::super::MAX_OBJECTS {
+        return Err(invalid("collection raw byte budget"));
+    }
     let mut frozen = Frozen { entries: Vec::new(), missing: HashSet::new() };
     let mut compressed = 0_usize;
     let mut raw = 0_usize;

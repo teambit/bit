@@ -35,7 +35,13 @@ pub(crate) fn select(
     seconds: u32,
     mode: &Mode,
 ) -> io::Result<Vec<Descriptor>> {
-    if !directory.is_absolute() || versions.len() > MAX_OBJECTS {
+    if !directory.is_absolute()
+        || directory.is_symlink()
+        || directory
+            .components()
+            .any(|comp| matches!(comp, std::path::Component::ParentDir))
+        || versions.len() > MAX_OBJECTS
+    {
         return Err(invalid("unsupported transfer collection"));
     }
     let loaded = version::load(directory, versions)?;

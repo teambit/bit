@@ -34,16 +34,22 @@ impl Batch {
         head_only: bool,
         force: bool,
     ) -> io::Result<Self> {
-        let identities = identities
-            .iter()
-            .map(|id| {
-                let trimmed = id.trim();
-                trimmed.rsplit_once('@').map_or(trimmed, |(bare, _)| bare.trim())
-            })
-            .filter(|id| !id.is_empty())
-            .map(str::to_owned)
-            .collect();
-        Self::prepare_with(root, head_only, Some(Selected { identities, force }))
+        let mut normalized = Vec::new();
+        for id in identities {
+            let trimmed = id.trim();
+            let bare = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
+            if !bare.is_empty()
+                && !normalized
+                    .iter()
+                    .any(|existing| existing == bare)
+            {
+                normalized.push(bare.to_owned());
+            }
+        }
+        if normalized.is_empty() {
+            return Err(invalid("no selected components found to reset"));
+        }
+        Self::prepare_with(root, head_only, Some(Selected { identities: normalized, force }))
     }
 
     fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {
@@ -118,7 +124,11 @@ impl Batch {
 }
 
 fn candidates(root: &Path) -> io::Result<Vec<String>> {
-    let index: Value = crate::parse_jsonc(&fs::read(crate::scope_path(root).join("index.json"))?)?;
+    let index_bytes = fs::read(crate::scope_path(root).join("index.json"))?;
+    if index_bytes.len() > 16 * 1024 * 1024 {
+        return Err(invalid("reset batch index budget"));
+    }
+    let index: Value = crate::parse_jsonc(&index_bytes)?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())

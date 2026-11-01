@@ -39,6 +39,9 @@ fn validate(plan: &Plan) -> io::Result<()> {
     }
     if let Some(parent) = &plan.parent {
         hash(parent)?;
+        if parent.trim().eq_ignore_ascii_case(plan.hash.trim()) {
+            return Err(invalid("snapshot self-parent"));
+        }
     }
     if plan.version.trim().is_empty()
         || plan.version.len() > 256

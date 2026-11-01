@@ -106,6 +106,9 @@ impl State {
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
         let token = request.token.trim();
+        if token.is_empty() || token.len() > 256 || token.contains('\0') {
+            return Err(invalid("missing snapshot journal"));
+        }
         let journal =
             self.journals.get_mut(token).ok_or_else(|| invalid("missing snapshot journal"))?;
         journal.verify(&request)?;

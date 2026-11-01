@@ -11,6 +11,9 @@ pub struct PreparedSave {
 impl PreparedSave {
     /// Retain the metadata inventory before any detached objects are published.
     pub fn prepare(scope: &Path, data: &Value) -> io::Result<Self> {
+        if !data.is_object() {
+            return Err(invalid("stash metadata must be a JSON object"));
+        }
         let observation = Observation::read(scope)?;
         let next = next_index(observation.latest())?;
         let filename = format!("stash-{next}.json");
@@ -35,11 +38,18 @@ impl PreparedSave {
     pub fn apply(&self) -> io::Result<()> {
         self.validate()?;
         let directory = self.observation.directory();
+        if directory.is_symlink() {
+            return Err(invalid("stash directory is not a regular directory"));
+        }
         fs::create_dir_all(directory)?;
         if fs::symlink_metadata(directory)?.file_type().is_symlink() {
             return Err(invalid("stash directory is not a regular directory"));
         }
-        fs::write(directory.join(&self.filename), &self.bytes)
+        let target = directory.join(&self.filename);
+        if target.is_symlink() {
+            return Err(invalid("stash metadata is a symbolic link"));
+        }
+        fs::write(target, &self.bytes)
     }
 }
 fn next_index(latest: Option<&str>) -> io::Result<u64> {

@@ -69,6 +69,7 @@ impl WorkspaceSession {
             &mut self.checkout,
             &mut self.merge,
         )? || reader.position() != frame.len() as u64
+            || output.len() > crate::protocol::MAX_BATCH_BYTES
         {
             return Err(io::Error::other("invalid workspace frame"));
         }

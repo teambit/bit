@@ -142,7 +142,11 @@ fn current(
             let (row_scope, row_name) = super::row_id_parts(&row["id"]);
             (row_scope == scope || row_scope.is_empty()) && row_name == name
         });
+    let hidden = membership::hidden_head(lane, &format!("{scope}/{name}"))?;
     let current = if visible {
+        if hidden.is_some() {
+            return Err(invalid("lane reset duplicate membership"));
+        }
         if require_bitmap && bitmap.key.is_empty() {
             return Err(invalid("lane reset visible bitmap absent"));
         }
@@ -153,9 +157,8 @@ fn current(
             .ok_or_else(|| invalid("lane reset head"))?
             .to_owned()
     } else {
-        membership::hidden_head(lane, &format!("{scope}/{name}"))?
-            .ok_or_else(|| invalid("lane reset membership absent"))?
+        hidden.ok_or_else(|| invalid("lane reset membership absent"))?
     };
-    crate::merge_history::hash(&current)?;
-    Ok(current)
+    let bytes = crate::merge_history::hash(&current)?;
+    Ok(crate::validate::hexadecimal(&bytes))
 }

@@ -102,14 +102,16 @@ fn non_empty_str(value: &Value) -> Option<&str> {
 }
 fn target(id: &Value, components: &[Value]) -> io::Result<Option<usize>> {
     let key = autotag::identity(id)?;
+    let mut found = None;
     for (index, component) in components.iter().enumerate() {
         if component["removed"].as_bool() != Some(true)
             && autotag::identity(&component["id"])? == key
+            && found.replace(index).is_some()
         {
-            return Ok(Some(index));
+            return Err(invalid("snapshot duplicate component identity"));
         }
     }
-    Ok(None)
+    Ok(found)
 }
 fn is_snap(version: &str) -> bool {
     version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit())

@@ -171,13 +171,15 @@ impl Store {
         compressed: &[u8],
         owner: Option<(u32, u32)>,
     ) -> io::Result<()> {
+        let parent = path.parent().ok_or_else(|| io::Error::other("missing object parent"))?;
+        if path.is_symlink() || parent.is_symlink() {
+            return Err(io::Error::other("non-canonical object path"));
+        }
         let existing = fs::metadata(path).ok();
         let mut file = match create(temporary, existing.as_ref()) {
             Ok(file) => file,
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
-                fs::create_dir_all(
-                    path.parent().ok_or_else(|| io::Error::other("missing object parent"))?,
-                )?;
+                fs::create_dir_all(parent)?;
                 create(temporary, existing.as_ref())?
             }
             Err(error) => return Err(error),

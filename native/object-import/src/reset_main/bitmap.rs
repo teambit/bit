@@ -14,6 +14,9 @@ pub(super) struct Bitmap {
 impl Bitmap {
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
+        if before.len() > 4 * 1024 * 1024 {
+            return Err(invalid("reset bitmap budget"));
+        }
         let document = crate::recovery::jsonc::parse(&before)?;
         let fields = document.as_object().ok_or_else(|| invalid("reset bitmap"))?;
         if fields.contains_key("_bit_lane") {
@@ -74,7 +77,10 @@ fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
 }
 
 fn validate_row(row: &Value) -> io::Result<()> {
-    if row["isAvailableOnCurrentLane"] == false || row["onLanesOnly"] == true {
+    if row["isAvailableOnCurrentLane"] == false
+        || row["onLanesOnly"] == true
+        || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
+    {
         return Err(invalid("reset component unavailable on main"));
     }
     Ok(())

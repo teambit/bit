@@ -45,13 +45,24 @@ fn append_removed(objects: &Path, history: &mut Value, selection: &Selection) ->
     for reference in &selection.removed {
         if versions
             .iter()
-            .any(|entry| entry["hash"].as_str().map(str::trim) == Some(reference.as_str()))
+            .any(|entry| {
+                entry["hash"]
+                    .as_str()
+                    .map(str::trim)
+                    .is_some_and(|hash| hash.eq_ignore_ascii_case(reference))
+            })
         {
             continue;
         }
         let version = outbound::read_object(objects, reference, "Version")?;
-        let mut entry = json!({"hash":reference,"parents":version["parents"]});
-        if let Some(unrelated) = version["unrelated"]["head"].as_str() {
+        let parents =
+            version["parents"].as_array().ok_or_else(|| invalid("reset history parents"))?;
+        let mut entry = json!({"hash":reference,"parents":parents});
+        if let Some(unrelated) = version["unrelated"]["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        {
             entry["unrelated"] = json!(unrelated);
         }
         if let Some(squashed) = version["squashed"]["previousParents"].as_array() {

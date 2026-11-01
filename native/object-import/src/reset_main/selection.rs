@@ -19,15 +19,16 @@ pub struct Selection {
 /// recorded detached head stays separate from the main parent chain.
 pub fn select(component: &Value, objects: &Path, head_only: bool) -> io::Result<Selection> {
     let local = local_refs(component)?;
-    let head = component["head"]
+    let raw_head = component["head"]
         .as_str()
         .map(str::trim)
         .filter(|head| !head.is_empty())
         .ok_or_else(|| invalid("reset head absent"))?;
-    if !local.contains_key(head) {
+    let head = crate::validate::hexadecimal(&crate::merge_history::hash(raw_head)?);
+    if !local.contains_key(&head) {
         return Err(invalid("reset head is exported"));
     }
-    let (removed, next_head) = walk(objects, head, &local, head_only)?;
+    let (removed, next_head) = walk(objects, &head, &local, head_only)?;
     if !head_only {
         validate_other_local(component, &local, &removed)?;
     }
@@ -48,9 +49,12 @@ fn local_refs(component: &Value) -> io::Result<HashMap<String, String>> {
             continue;
         }
         let trimmed = label.trim();
-        let hash = resolve_label_hash(versions, orphaned, label, trimmed);
-        crate::merge_history::hash(hash)?;
-        if local.insert(hash.to_owned(), trimmed.to_owned()).is_some() {
+        if trimmed.is_empty() {
+            return Err(invalid("reset empty local version label"));
+        }
+        let raw_hash = resolve_label_hash(versions, orphaned, label, trimmed);
+        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
+        if local.insert(hash, trimmed.to_owned()).is_some() {
             return Err(invalid("reset duplicate local hash"));
         }
     }

@@ -27,6 +27,11 @@ pub(super) fn collect(input: &serde_json::Value) -> std::io::Result<Collect> {
     let mut request: Collect =
         serde::Deserialize::deserialize(input).map_err(std::io::Error::other)?;
     request.mode = request.mode.trim().to_owned();
+    if request.versions.len() > super::super::MAX_OBJECTS
+        || request.refs.len() > super::super::MAX_OBJECTS
+    {
+        return Err(invalid("collection object count exceeds bounds"));
+    }
     request.scope = request.scope
         .as_deref()
         .map(str::trim)

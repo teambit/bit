@@ -12,7 +12,10 @@ pub(super) fn project(
     let original = repository.model.clone();
     let scope = original["scope"].as_str().map_or("", str::trim);
     let name = original["name"].as_str().map_or("", str::trim);
-    let identity = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
+    if scope.is_empty() || name.is_empty() {
+        return Err(invalid("lane reset Component identity"));
+    }
+    let identity = format!("{scope}/{name}");
     if is_removed(&original["head"], &selection.removed) {
         set_head(&mut repository.model, selection.next.as_deref())?;
     }

@@ -51,6 +51,9 @@ impl Plan {
         selected: Option<Vec<String>>,
     ) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
+        if before.len() > 4 * 1024 * 1024 {
+            return Err(invalid("soft reset bitmap budget"));
+        }
         let mut bitmap = crate::recovery::jsonc::parse(&before)?;
         let rows = bitmap.as_object_mut().ok_or_else(|| invalid("soft reset bitmap"))?;
         if rows
@@ -92,12 +95,11 @@ fn select(
     let mut found = Vec::new();
     for (key, row) in rows.iter_mut() {
         let key_trimmed = key.trim();
-        if key_trimmed.is_empty()
-            || key_trimmed.starts_with('$')
-            || key_trimmed == "_bit_lane"
-            || key_trimmed == "version"
+        if key_trimmed.starts_with('$')
+            || matches!(key_trimmed, "" | "_bit_lane" | "version")
             || !row.is_object()
             || row["isAvailableOnCurrentLane"] == false
+            || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         {
             continue;
         }

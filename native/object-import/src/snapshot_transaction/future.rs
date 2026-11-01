@@ -122,6 +122,8 @@ fn raw<'a>(
     if semver[text].get("version").is_some() {
         let normalized = semver[text]["canonicalText"]
             .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
             .ok_or_else(|| invalid("snapshot canonical version text missing"))?;
         return Ok(Choice { release: "patch", exact: Some(normalized), count, pre, soft: false });
     }
@@ -129,10 +131,14 @@ fn raw<'a>(
 }
 fn resolve(component: &Component, choice: &Choice<'_>, semver: &Value) -> io::Result<String> {
     if choice.soft {
-        return Ok(choice.exact
+        let soft = choice.exact
             .filter(|text| !text.is_empty())
             .unwrap_or(choice.release)
-            .to_owned());
+            .trim();
+        if soft.is_empty() {
+            return Err(invalid("snapshot empty soft version"));
+        }
+        return Ok(soft.to_owned());
     }
     if let Some(exact) = choice.exact.filter(|text| !text.is_empty()) {
         if component.versions

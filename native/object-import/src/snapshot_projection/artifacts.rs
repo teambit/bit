@@ -40,6 +40,17 @@ fn artifact(artifact: &Value) -> io::Result<Value> {
 }
 fn reference(reference: &Value) -> io::Result<Value> {
     object(reference)?;
+    if let Value::String(units) = get(reference, "relativePath") {
+        let rel = String::from_utf16_lossy(units);
+        let trimmed = rel.trim();
+        if trimmed.contains('\0')
+            || trimmed
+                .split(['/', '\\'])
+                .any(|part| matches!(part, "" | "." | ".."))
+        {
+            return Err(invalid("snapshot artifact relative path"));
+        }
+    }
     let mut fields = Vec::new();
     for (name, source) in [("relativePath", "relativePath"), ("file", "ref"), ("url", "url")] {
         fields.push((name.encode_utf16().collect(), get(reference, source).clone()));

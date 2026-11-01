@@ -49,14 +49,19 @@ pub(super) fn write_object(root: &Path, object: &ObjectChange) -> io::Result<()>
 
 pub fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
     let file_id = file_id.trim();
+    validate_file_id(file_id)?;
     let scope_dir = crate::scope_path(root);
     let directory = scope_dir.join("bitmap-history");
+    let metadata_path = scope_dir.join("bitmap-history-metadata.txt");
+    if directory.is_symlink() || metadata_path.is_symlink() {
+        return Err(invalid("reset bitmap history symlink"));
+    }
     fs::create_dir_all(&directory)?;
     fs::copy(root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
     let mut metadata = fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(scope_dir.join("bitmap-history-metadata.txt"))?;
+        .open(metadata_path)?;
     writeln!(metadata, "{file_id} reset")
 }
 

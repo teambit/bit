@@ -24,7 +24,7 @@ pub(super) fn write(state: &State, input: &Value) -> io::Result<Value> {
     let request: Request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
     crate::transfer::paths(&request.pending_dir, &request.pending_dir.join(".native-path-check"))?;
     let token = request.token.trim();
-    if token.is_empty() {
+    if token.is_empty() || token.len() > 256 || token.contains(char::is_control) {
         return Err(invalid("unknown pending transfer token"));
     }
     let plan = state.plans.get(token).ok_or_else(|| invalid("unknown pending transfer token"))?;

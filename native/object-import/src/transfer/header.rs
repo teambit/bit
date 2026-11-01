@@ -4,7 +4,8 @@ pub(super) fn encode(name: &str, size: usize, seconds: u32) -> io::Result<[u8; 5
     let name = name.trim().trim_matches('/');
     if name.is_empty()
         || !name.is_ascii()
-        || name.contains('\0')
+        || name.contains('\\')
+        || name.bytes().any(|byte| byte.is_ascii_control())
         || name
             .split('/')
             .any(|part| part.is_empty() || part == "." || part == "..")

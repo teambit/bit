@@ -66,7 +66,8 @@ fn header(bytes: &[u8], expected: &str) -> Result<usize, &'static str> {
         .next()
         .ok_or("invalid-header")?
         .parse::<usize>()
-        .is_err()
+        .ok()
+        .is_none_or(|size| size > MAX_INFLATED_BYTES)
         || parts.next().is_some()
     {
         return Err("invalid-header");

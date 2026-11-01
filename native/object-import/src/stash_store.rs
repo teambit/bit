@@ -100,18 +100,27 @@ fn component_id(id: &Value) -> io::Result<String> {
         .map(str::trim)
         .filter(|raw| !raw.is_empty())
     {
+        if raw.contains(['\\', '\0']) || raw.contains("..") {
+            return Err(invalid("stash component identity"));
+        }
         return Ok(raw.to_owned());
     }
     let name = id["name"]
         .as_str()
         .map(str::trim)
-        .filter(|name| !name.is_empty())
+        .filter(|name| !name.is_empty() && !name.contains(['\\', '\0']) && !name.contains(".."))
         .ok_or_else(|| invalid("stash component identity"))?;
-    let name = id["scope"]
+    let name = match id["scope"]
         .as_str()
         .map(str::trim)
         .filter(|scope| !scope.is_empty())
-        .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+    {
+        None => name.to_owned(),
+        Some(scope) if !scope.contains(['/', '\\', '\0']) && !scope.contains("..") => {
+            format!("{scope}/{name}")
+        }
+        Some(_) => return Err(invalid("stash component identity")),
+    };
     Ok(id["version"]
         .as_str()
         .map(str::trim)

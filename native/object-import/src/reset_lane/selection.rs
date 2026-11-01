@@ -51,11 +51,13 @@ fn hashes(distance: &Value) -> io::Result<Vec<String>> {
         .ok_or_else(|| invalid("lane reset divergence"))?
         .iter()
         .map(|hash| {
-            hash.as_str()
+            let raw = hash
+                .as_str()
                 .map(str::trim)
                 .filter(|hash| !hash.is_empty())
-                .map(str::to_owned)
-                .ok_or_else(|| invalid("lane reset divergence hash"))
+                .ok_or_else(|| invalid("lane reset divergence hash"))?;
+            let bytes = crate::merge_history::hash(raw)?;
+            Ok(crate::validate::hexadecimal(&bytes))
         })
         .collect()
 }
@@ -132,13 +134,14 @@ fn replacement(
                 )));
             }
         };
+        let parent = crate::validate::hexadecimal(&crate::merge_history::hash(parent)?);
         if !removed
             .iter()
-            .any(|hash| hash == parent)
+            .any(|hash| hash.eq_ignore_ascii_case(&parent))
         {
-            return Ok(Some(parent.to_owned()));
+            return Ok(Some(parent));
         }
-        parent.clone_into(&mut current);
+        current = parent;
     }
     Err(invalid("lane reset cyclic or oversized history"))
 }

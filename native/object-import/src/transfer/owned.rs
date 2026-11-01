@@ -109,6 +109,9 @@ fn staging(path: &Path, state: &State) -> io::Result<()> {
         || path
             .to_str()
             .is_none_or(|text| text.len() > 512 || text.contains('\0'))
+        || path
+            .components()
+            .any(|comp| matches!(comp, std::path::Component::ParentDir))
         || !fs::symlink_metadata(path)?.is_dir()
     {
         return Err(invalid("staging directory must be private empty directory"));

@@ -57,6 +57,13 @@ impl Transaction {
         {
             return Err(invalid("unsupported transfer transaction"));
         }
+        let mut seen = std::collections::HashSet::with_capacity(input.scopes.len());
+        if !input.scopes
+            .iter()
+            .all(|scope| seen.insert(scope.trim()))
+        {
+            return Err(invalid("unsupported transfer transaction"));
+        }
         let phase = if input.resuming { Phase::Validate } else { Phase::Push(0) };
         Ok(Self { scopes: input.scopes, token, revision: 0, resuming: input.resuming, phase })
     }

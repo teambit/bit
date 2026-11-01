@@ -91,7 +91,13 @@ fn parse_identity(identity: &str) -> io::Result<(&str, &str)> {
     let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
     bare.split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
-        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty() && !name.contains(".."))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .filter(|(scope, name)| {
+            !scope.contains("..")
+                && !name.contains("..")
+                && !scope.contains(['/', '\\', '\0'])
+                && !name.contains(['\\', '\0'])
+        })
         .ok_or_else(|| invalid("reset identity"))
 }
 

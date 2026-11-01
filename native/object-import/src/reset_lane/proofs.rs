@@ -102,7 +102,6 @@ pub(super) fn capture_heads(repository: &Repository, heads: &[String]) -> io::Re
     let records = super::history::records(repository, heads)?;
     let mut seen = HashSet::new();
     let mut proofs = repository.reads.clone();
-    let mut bytes: usize = 0;
     for row in records.as_array().ok_or_else(|| invalid("lane reset graph proofs"))? {
         let raw_hash = row["hash"]
             .as_str()
@@ -117,11 +116,7 @@ pub(super) fn capture_heads(repository: &Repository, heads: &[String]) -> io::Re
         }
         let path = object_path(&repository.objects, &hash);
         let raw = regular(&path)?;
-        bytes = bytes.saturating_add(raw.as_ref().map_or(0, Vec::len));
-        if bytes > 96 * 1024 * 1024 {
-            return Err(invalid("lane reset graph proof byte limit"));
-        }
-        proofs.push((path, raw));
+        retain(&path, raw.as_deref(), &mut proofs)?;
     }
     Ok(proofs)
 }

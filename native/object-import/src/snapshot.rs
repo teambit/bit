@@ -92,7 +92,10 @@ fn apply(id: u32, request: Request) -> io::Result<Response> {
         }
         Request::IndexWrite { objects_directory, owner, contents } => {
             path(&objects_directory)?;
-            if !crate::parse_jsonc(contents.as_bytes()).is_ok_and(|value| value.is_object()) {
+            if contents.is_empty()
+                || contents.len() > MAX_JSON
+                || !crate::parse_jsonc(contents.as_bytes()).is_ok_and(|value| value.is_object())
+            {
                 return Err(invalid("snapshot invalid index JSON"));
             }
             let store = Store::new(objects_directory, Owner::pair(owner))?;
@@ -110,12 +113,16 @@ fn count(count: usize) -> io::Result<()> {
 fn path(path: &Path) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("snapshot non-UTF8 path"))?;
     if !path.is_absolute()
+        || path.is_symlink()
         || name.trim().is_empty()
         || name.len() > 32768
         || name.contains('\0')
-        || path
-            .components()
-            .any(|comp| matches!(comp, std::path::Component::ParentDir))
+    {
+        return Err(invalid("snapshot invalid absolute path"));
+    }
+    if path
+        .components()
+        .any(|comp| matches!(comp, std::path::Component::ParentDir))
     {
         return Err(invalid("snapshot invalid absolute path"));
     }

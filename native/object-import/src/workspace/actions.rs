@@ -70,10 +70,12 @@ fn action_path(reader: &mut impl Read, total: &mut usize) -> io::Result<Option<P
     let path = PathBuf::from(&name);
     if name.trim().is_empty()
         || !path.is_absolute()
-        || name.contains('\0')
+        || name.chars().any(char::is_control)
         || path
             .components()
-            .any(|comp| matches!(comp, std::path::Component::ParentDir))
+            .any(|comp| {
+                matches!(comp, std::path::Component::CurDir | std::path::Component::ParentDir)
+            })
     {
         return Err(invalid("workspace action path must be absolute and contain no NUL"));
     }

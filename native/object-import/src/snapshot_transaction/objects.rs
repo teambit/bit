@@ -32,6 +32,9 @@ pub(super) fn prepare(objects: Vec<wire::Object>, pretty: bool) -> io::Result<Ve
         if object.kind.len() != object.kind.trim().len() {
             object.kind = object.kind.trim().into();
         }
+        if object.kind.is_empty() {
+            return Err(invalid("snapshot object kind missing"));
+        }
         let body = body(&object, pretty, MAX_RAW.saturating_sub(total), &mut input_compressed)?;
         total = total.saturating_add(body.len());
         if total > MAX_RAW {
@@ -146,6 +149,9 @@ pub(super) fn manifest(objects: &[Prepared]) -> Vec<Value> {
 
 impl Prepared {
     pub(super) fn spool(&self) -> io::Result<()> {
+        if self.path.is_symlink() || self.path.parent().is_none_or(Path::is_symlink) {
+            return Err(invalid("snapshot staging symlink"));
+        }
         OpenOptions::new()
             .write(true)
             .create_new(true)

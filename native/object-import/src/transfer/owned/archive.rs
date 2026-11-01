@@ -90,7 +90,12 @@ fn wrappers(plan: &Plan, request: &wire::Archive) -> io::Result<(Vec<u8>, Vec<u8
         .as_deref()
         .map(str::trim)
         .ok_or_else(|| invalid("missing fetch scope name"))?;
-    if scope.is_empty() || scope.len() > 4096 || scope.contains('\0') {
+    if scope.is_empty()
+        || scope.len() > 4096
+        || scope.contains(char::is_control)
+        || scope.contains(['/', '\\'])
+        || scope.contains("..")
+    {
         return Err(invalid("unsupported fetch scope name"));
     }
     let start =

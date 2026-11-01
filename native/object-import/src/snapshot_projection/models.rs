@@ -139,7 +139,13 @@ pub(super) fn history(fields: &Value) -> io::Result<Value> {
         .collect::<io::Result<Vec<_>>>()?;
     let mut output = choose(fields, &["name", "scope"], false)?;
     insert(&mut output, "versions", Value::Array(rows));
-    insert(&mut output, "graphCompleteRefs", get(fields, "graphCompleteRefs").clone());
+    let graph_refs = get(fields, "graphCompleteRefs");
+    if let Value::Array(refs) = graph_refs
+        && refs.len() > 65536
+    {
+        return Err(invalid("history graphCompleteRefs limit"));
+    }
+    insert(&mut output, "graphCompleteRefs", graph_refs.clone());
     Ok(output)
 }
 

@@ -41,19 +41,11 @@ pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Resu
         }
         return Ok(hash.to_owned());
     }
-    let name = text(get(fields, "name"))?;
-    let name = name.trim();
-    if name.is_empty() {
-        return Err(invalid("snapshot empty component name"));
-    }
-    let scope = get(fields, "scope");
-    let scoped =
-        if scope.truthy()? { format!("{}/{name}", text(scope)?.trim()) } else { name.to_owned() };
+    let (name, scope_text) = component_name_and_scope(fields)?;
+    let scoped = if scope_text.is_empty() { name.clone() } else { format!("{scope_text}/{name}") };
     let id = match kind {
         "Component" => scoped,
         "VersionHistory" => {
-            let scope_text = text(scope)?;
-            let scope_text = scope_text.trim();
             if scope_text.is_empty() {
                 return Err(invalid("snapshot empty history scope"));
             }
@@ -62,6 +54,20 @@ pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Resu
         _ => return Err(invalid("unsupported object identity")),
     };
     Ok(hexadecimal(&Sha1::digest(id.as_bytes())))
+}
+
+fn component_name_and_scope(fields: &Value) -> io::Result<(String, String)> {
+    let raw_name = text(get(fields, "name"))?;
+    let name = raw_name.trim();
+    if name.is_empty() || name.contains("..") || name.contains(['\\', '\0']) {
+        return Err(invalid("snapshot empty component name"));
+    }
+    let scope = get(fields, "scope");
+    let scope_text = if scope.truthy()? { text(scope)?.trim().to_owned() } else { String::new() };
+    if scope_text.contains("..") || scope_text.contains(['/', '\\', '\0']) {
+        return Err(invalid("snapshot invalid component scope"));
+    }
+    Ok((name.to_owned(), scope_text))
 }
 
 fn lane_history_identity(fields: &Value) -> io::Result<String> {

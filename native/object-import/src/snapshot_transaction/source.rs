@@ -42,6 +42,9 @@ pub(super) fn read(
 
 fn workspace(source: &wire::Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     path(&source.path)?;
+    if source.path.parent().is_none_or(std::path::Path::is_symlink) {
+        return Err(invalid("snapshot workspace size/type"));
+    }
     crate::merge_history::hash(&source.hash)?;
     crate::merge_history::hash(&source.source_hash)?;
     let metadata = std::fs::symlink_metadata(&source.path)?;

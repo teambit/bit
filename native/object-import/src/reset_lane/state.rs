@@ -18,6 +18,9 @@ fn parse_lane_header(rows: &serde_json::Map<String, Value>) -> io::Result<(Strin
 impl BitmapState {
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
+        if before.len() > 4 * 1024 * 1024 {
+            return Err(invalid("lane reset bitmap budget"));
+        }
         let mut document = crate::recovery::jsonc::parse(&before)?;
         let rows = document.as_object().ok_or_else(|| invalid("lane reset bitmap"))?;
         let (lane_scope, lane_name, exported) = parse_lane_header(rows)?;

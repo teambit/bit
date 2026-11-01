@@ -23,6 +23,9 @@ pub struct Plan {
 impl Plan {
     pub fn prepare(root: &Path) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
+        if before.len() > 4 * 1024 * 1024 {
+            return Err(invalid("never-exported bitmap budget"));
+        }
         let mut bitmap = crate::recovery::jsonc::parse(&before)?;
         let rows = bitmap.as_object_mut().ok_or_else(|| invalid("never-exported bitmap"))?;
         if rows.contains_key("_bit_lane") {
@@ -119,6 +122,9 @@ fn read_object_file(root: &Path, name: &str) -> io::Result<(PathBuf, Option<Vec<
         return Err(invalid("never-exported object symlink"));
     }
     let data = match fs::read(&path) {
+        Ok(data) if data.len() > 32 * 1024 * 1024 => {
+            return Err(invalid("never-exported object budget"));
+        }
         Ok(data) => Some(data),
         Err(error) if error.kind() == io::ErrorKind::NotFound => None,
         Err(error) => return Err(error),

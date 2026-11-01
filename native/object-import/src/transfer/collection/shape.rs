@@ -198,7 +198,11 @@ fn extensions(value: &Value, clean: &mut Value, artifacts: bool) -> io::Result<(
 }
 
 fn edges(value: &Value, clean: &mut Value) -> io::Result<()> {
-    if value.get("flattenedEdgesRef").is_some_and(Value::is_string) {
+    if value
+        .get("flattenedEdgesRef")
+        .and_then(Value::as_str)
+        .is_some_and(|text| !text.trim().is_empty())
+    {
         return Ok(());
     }
     let Some(items) = array(value, "flattenedEdges")? else { return Ok(()) };

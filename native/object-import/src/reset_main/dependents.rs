@@ -66,7 +66,8 @@ fn component_model(objects: &Path, row: &Value, same: bool, selected: &Value) ->
 fn references(component: &Value) -> io::Result<HashSet<String>> {
     let versions =
         component["versions"].as_object().ok_or_else(|| invalid("reset dependent versions"))?;
-    let mut refs: HashSet<_> = versions
+    let mut refs = HashSet::new();
+    for value in versions
         .values()
         .chain(
             component["orphanedVersions"]
@@ -74,16 +75,21 @@ fn references(component: &Value) -> io::Result<HashSet<String>> {
                 .into_iter()
                 .flat_map(serde_json::Map::values),
         )
-        .filter_map(Value::as_str)
-        .map(str::trim)
-        .filter(|hash| !hash.is_empty())
-        .map(str::to_owned)
-        .collect();
+    {
+        let hash = value
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+            .ok_or_else(|| invalid("reset dependent version hash"))?;
+        crate::merge_history::hash(hash)?;
+        refs.insert(hash.to_owned());
+    }
     if let Some(head) = component["head"]
         .as_str()
         .map(str::trim)
         .filter(|head| !head.is_empty())
     {
+        crate::merge_history::hash(head)?;
         refs.insert(head.to_owned());
     }
     if let Some(local) = component["state"]["versions"].as_object() {

@@ -62,6 +62,15 @@ fn field(fields: &Value, name: &str) -> io::Result<Value> {
             object(value)?;
             choose(value, &["head", "laneId"], false)
         }
+        "parents" if value.truthy()? => {
+            let Value::Array(items) = value else {
+                return Err(invalid("snapshot parents array required"));
+            };
+            if items.len() > 4096 {
+                return Err(invalid("snapshot parents limit"));
+            }
+            Ok(value.clone())
+        }
         _ => Ok(value.clone()),
     }
 }

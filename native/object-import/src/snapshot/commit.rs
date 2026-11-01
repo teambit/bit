@@ -165,7 +165,10 @@ fn read(workspace: &Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     path(&workspace.path)?;
     hash(&workspace.hash)?;
     let link_meta = fs::symlink_metadata(&workspace.path)?;
-    if !link_meta.is_file() || link_meta.file_type().is_symlink() {
+    if !link_meta.is_file()
+        || link_meta.file_type().is_symlink()
+        || workspace.path.parent().is_none_or(Path::is_symlink)
+    {
         return Err(invalid("snapshot workspace file type"));
     }
     let file = File::open(&workspace.path)?;

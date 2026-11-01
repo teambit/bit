@@ -339,10 +339,10 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
             Ok((files.len(), json!({"files":files})))
         }
         Request::FileStatus { target, current } => status::compare(&target, &current),
-        Request::Compare { left, right } => Ok((
-            1,
-            json!({"modified":Sha1::digest(left.as_bytes())!=Sha1::digest(right.as_bytes())}),
-        )),
+        Request::Compare { left, right } if left.len() <= MAX_RAW && right.len() <= MAX_RAW => Ok(
+            (1, json!({"modified":Sha1::digest(left.as_bytes())!=Sha1::digest(right.as_bytes())})),
+        ),
+        Request::Compare { .. } => Err(invalid("workspace compare byte limit")),
         request => dependencies(request, pool),
     }
 }
