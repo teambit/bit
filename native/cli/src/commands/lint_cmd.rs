@@ -72,6 +72,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     )
 }
 
+#[inline]
 pub(super) fn bare_scope_error(pattern: Option<&str>, changed: bool) -> &'static str {
     if pattern.is_some_and(|pat| !pat.trim().is_empty()) {
         "Cannot read properties of undefined (reading 'idsByPattern')"
@@ -82,6 +83,7 @@ pub(super) fn bare_scope_error(pattern: Option<&str>, changed: bool) -> &'static
     }
 }
 
+#[inline]
 pub(in crate::commands) fn consume_trailing_internalize<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut Option<String>,
@@ -186,6 +188,7 @@ pub(super) fn strip_local_env_version(
         .collect()
 }
 
+#[inline]
 pub(super) fn has_variants_internalize_config(workspace_val: &Value) -> bool {
     let Some(rows) = workspace_val.as_object() else {
         return false;
@@ -286,6 +289,7 @@ pub(super) fn validate_lint_pattern(
     }
 }
 
+#[inline]
 pub(super) fn is_missing_host(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
         && !cwd
@@ -310,6 +314,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn consume_trailing_lint_pattern<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut Option<String>,
@@ -365,6 +370,7 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
     if !arg.starts_with('-')
         || arg.starts_with("--")

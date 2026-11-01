@@ -12,6 +12,7 @@ pub(super) struct Options<'a> {
     pub(super) remote: bool,
 }
 
+#[inline]
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
@@ -26,6 +27,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     options.id.map(|_| options)
 }
 
+#[inline]
 fn consume_trailing_id<'a>(
     iter: impl Iterator<Item = &'a str>,
     id: &mut Option<&'a str>,
@@ -78,6 +80,7 @@ fn apply_log_arg<'a>(options: &mut Options<'a>, trimmed: &'a str) -> Option<()> 
     Some(())
 }
 
+#[inline]
 fn parse_log_flag_value(arg: &str) -> Option<(&str, bool)> {
     match arg.split_once('=') {
         Some((flag, raw)) if flag.starts_with("--") => {
@@ -96,6 +99,7 @@ fn parse_log_flag_value(arg: &str) -> Option<(&str, bool)> {
     }
 }
 
+#[inline]
 fn apply_log_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
     if !arg.starts_with('-')
         || arg.starts_with("--")
@@ -112,6 +116,7 @@ fn apply_log_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
     true
 }
 
+#[inline]
 fn log_short_field<'a>(options: &'a mut Options<'_>, byte: u8) -> &'a mut bool {
     match byte {
         b'j' => &mut options.json,

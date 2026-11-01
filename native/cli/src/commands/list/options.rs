@@ -14,6 +14,7 @@ pub(super) struct Options {
 }
 
 /// `args` starts after the command name; `None` for anything else.
+#[inline]
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut seen: Vec<&str> = Vec::with_capacity(args.len());
@@ -35,6 +36,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
 }
 
 /// The long name of a short flag.
+#[inline]
 fn long_flag(flag: &str) -> &str {
     match flag {
         "-i" => "--ids",
@@ -84,6 +86,7 @@ impl Options {
         Some(1 + self.flag(raw, flag, args.get(index + 1).copied())?)
     }
     /// One flag; the number of values it consumed.
+    #[inline]
     fn flag(&mut self, raw: &str, flag: &str, next: Option<&str>) -> Option<usize> {
         if let Some((_, inline)) = raw.split_once('=') {
             return self.inline_flag(raw, flag, inline);
@@ -106,6 +109,7 @@ impl Options {
         Some(0)
     }
 
+    #[inline]
     fn inline_flag(&mut self, raw: &str, flag: &str, inline: &str) -> Option<usize> {
         let trimmed = inline
             .trim()
@@ -135,6 +139,7 @@ impl Options {
         Some(0)
     }
 
+    #[inline]
     fn set_string(&mut self, flag: &str, value: &str) {
         if flag == "--scope" {
             self.scope = Some(value.to_string());

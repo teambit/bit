@@ -5,6 +5,7 @@ use crate::commands::{
 };
 use std::{ffi::OsString, io};
 
+#[inline]
 pub(super) fn create(
     result: &Value,
     progress: &Progress,
@@ -87,6 +88,7 @@ fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
     ))
 }
 
+#[inline]
 fn summary(result: &Value, count: usize, elapsed: u64) -> String {
     let seconds = elapsed / 1000;
     let fraction = elapsed % 1000;

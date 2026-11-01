@@ -40,6 +40,7 @@ fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     Some(options)
 }
 
+#[inline]
 fn apply_history_arg<'a>(
     options: &mut Options<'a>,
     arg: &'a str,
@@ -172,6 +173,7 @@ fn finish(
     }
 }
 
+#[inline]
 fn apply_refresh(engine: &mut Engine, prepared: &Value) -> io::Result<()> {
     if prepared["needsApply"] != true {
         return Ok(());
@@ -298,7 +300,7 @@ fn sorted(value: &Value) -> io::Result<Vec<(&str, &Value)>> {
 }
 
 fn json_row(id: &str, row: &Value) -> io::Result<Value> {
-    let mut result = Map::new();
+    let mut result = Map::with_capacity(6);
     result.insert("id".into(), Value::String(id.into()));
     for key in ["date", "username", "message"] {
         if let Some(value) = row["log"].get(key) {
@@ -315,6 +317,7 @@ fn json_row(id: &str, row: &Value) -> io::Result<Value> {
     Ok(Value::Object(result))
 }
 
+#[inline]
 fn text_rows(rows: &[(String, Value)], single: bool) -> io::Result<String> {
     rows.iter()
         .map(|(id, row)| text_row(id, row, single))
@@ -355,6 +358,7 @@ fn text_details(row: &Value) -> io::Result<String> {
     Ok(detail)
 }
 
+#[inline]
 fn join_strings(values: &[Value]) -> String {
     values
         .iter()
@@ -363,6 +367,7 @@ fn join_strings(values: &[Value]) -> String {
         .join("\n")
 }
 
+#[inline]
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, "unsupported lane history")
 }

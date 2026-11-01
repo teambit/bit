@@ -74,6 +74,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -91,6 +92,7 @@ fn ci_enabled() -> bool {
 }
 
 impl Subcommand {
+    #[inline]
     const fn loader_label(&self) -> &'static str {
         match self {
             Self::Set(_) => "set",
@@ -125,6 +127,7 @@ fn parse_subcommand(args: &[OsString]) -> Option<Subcommand> {
     }
 }
 
+#[inline]
 fn is_supported_pattern(pattern: &str) -> bool {
     let pattern = pattern.trim();
     !pattern.is_empty()
@@ -301,6 +304,7 @@ fn find_bitmap_row_mut<'a>(
         .ok_or_else(|| Failure::Declined(format!("bitmap entry {}", entry.id.name)))
 }
 
+#[inline]
 fn row_matches_entry(key: &str, row: &Value, entry: &BitmapEntry) -> bool {
     if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
         return false;
@@ -343,11 +347,13 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn persist_bitmap(root: &Path, before: &[u8], after: &Value, reason: &str) -> io::Result<()> {
     let file_id = workspace_command::file_id();
     bit_object_import::component_deprecation::write_bitmap(root, before, after, &file_id, reason)
 }
 
+#[inline]
 fn format_list(chalk: Chalk, heading: &str, ids: &[String]) -> String {
     if ids.is_empty() {
         chalk.yellow("no local-only components were found")

@@ -76,6 +76,7 @@ fn updates_in_scope(
     Ok(Outcome::Declined("lane updates remote lookup delegated".into()))
 }
 
+#[inline]
 fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
     let mut lane_name = None;
     let mut json = false;
@@ -196,11 +197,13 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
     Some((lane_name, json))
 }
 
+#[inline]
 fn non_flag(val: &str) -> Option<&str> {
     let trimmed = val.trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(trimmed)
 }
 
+#[inline]
 fn unscoped_lane_error(root: &scope_root::ScopeRoot, name: &str) -> Option<String> {
     let name = name.trim();
     if name.is_empty()
@@ -218,6 +221,7 @@ fn unscoped_lane_error(root: &scope_root::ScopeRoot, name: &str) -> Option<Strin
     (!err.ends_with("was not found!")).then_some(err)
 }
 
+#[inline]
 fn is_checked_out_to_main(root: &Path) -> io::Result<bool> {
     let (current, _) = list::read_current(root)?;
     Ok(current["name"].as_str().map(str::trim) == Some("main"))

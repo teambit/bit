@@ -5,6 +5,7 @@ use std::{fmt::Write as _, io};
 
 const FUNCTION: &str = "fn:string:8:[native]string:20:function-name:Object";
 
+#[inline]
 pub(super) fn hash(value: &Value) -> io::Result<String> {
     if !value.is_object() {
         return Err(super::invalid("linter configuration root"));
@@ -76,6 +77,7 @@ fn object(
     Ok(())
 }
 
+#[inline]
 fn string(value: &str, output: &mut String) {
     let _ = write!(output, "string:{}:{value}", value.encode_utf16().count());
 }

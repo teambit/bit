@@ -213,6 +213,7 @@ pub(super) fn normalize(row: &Value) -> io::Result<Value> {
     Ok(Value::Object(normalized))
 }
 
+#[inline]
 fn normalize_author(normalized: &mut Map<String, Value>) {
     for key in ["username", "email"] {
         if normalized
@@ -225,6 +226,7 @@ fn normalize_author(normalized: &mut Map<String, Value>) {
     }
 }
 
+#[inline]
 pub(super) fn raw_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
     let millis = |row: &Value| {
         row["log"]["date"]
@@ -261,6 +263,7 @@ fn render(logs: &[Value], options: &Options<'_>, chalk: Chalk) -> io::Result<Val
     ))
 }
 
+#[inline]
 fn shorten(logs: &mut [Value], options: &Options<'_>) -> io::Result<()> {
     for row in logs {
         if !options.full_hash {
@@ -278,6 +281,7 @@ fn shorten(logs: &mut [Value], options: &Options<'_>) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn shorten_hashes(row: &mut Value) -> io::Result<()> {
     let hash = text(row.get("hash"))?;
     row["hash"] = json!(&hash[..hash.len().min(9)]);
@@ -330,6 +334,7 @@ fn paint(row: &Value, chalk: Chalk) -> io::Result<String> {
     Ok(output)
 }
 
+#[inline]
 fn paint_author(row: &Value) -> Option<String> {
     let username = row
         .get("username")

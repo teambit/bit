@@ -53,39 +53,40 @@ pub(super) struct LaneData {
 }
 
 impl LaneData {
-    pub(super) fn is_main(&self) -> bool {
+    #[inline]
+    pub(super) const fn is_main(&self) -> bool {
         self.lane.is_none()
     }
 
     /// `laneIdStr`: main's name, or `scope/name` with a differing alias.
+    #[inline]
     pub(super) fn label(&self) -> String {
         let name = self.id["name"].as_str().map_or("", str::trim);
         if self.is_main() {
             return name.to_string();
         }
         let id = format!("{}/{name}", self.id["scope"].as_str().map_or("", str::trim));
-        match self.alias
+        if let Some(alias) = self.alias
             .as_deref()
             .map(str::trim)
             .filter(|alias| !alias.is_empty())
         {
-            Some(alias) => format!("{id} ({alias})"),
-            None => id,
+            format!("{id} ({alias})")
+        } else {
+            id
         }
     }
 
     pub(super) fn json(&self) -> Value {
-        let mut data = Map::new();
+        let mut data = Map::with_capacity(9);
         data.insert("name".into(), self.id["name"].clone());
-        let remote = self.lane
-            .as_ref()
-            .map(|_| {
-                format!(
-                    "{}/{}",
-                    self.id["scope"].as_str().map_or("", str::trim),
-                    self.id["name"].as_str().map_or("", str::trim),
-                )
-            });
+        let remote = (!self.is_main()).then(|| {
+            format!(
+                "{}/{}",
+                self.id["scope"].as_str().map_or("", str::trim),
+                self.id["name"].as_str().map_or("", str::trim),
+            )
+        });
         data.insert("remote".into(), json!(remote));
         data.insert("id".into(), self.id.clone());
         if !self.is_main() {
@@ -109,11 +110,13 @@ impl LaneData {
 }
 
 /// `args` starts after `list`.
+#[inline]
 pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
     run_with_command(args, list_args, "list")
 }
 
 /// `bit lane` without a subcommand delegates `report()` to `LaneListCmd` (`LaneCmd` has no `json()`).
+#[inline]
 pub(super) fn run_default(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
     run_with_command(args, list_args, "lane")
 }
@@ -155,14 +158,10 @@ fn outside_scope_list(
     if remote.is_some() || std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("not inside a scope".to_string()));
     }
-    workspace_command::execute_failure_scope(
-        &std::env::current_dir()?,
-        args,
-        command,
-        json,
-        "",
-        io::Error::other("error: please run the command from a workspace or a scope directory"),
-    )
+    let err =
+        io::Error::other("error: please run the command from a workspace or a scope directory");
+    let cwd = std::env::current_dir()?;
+    workspace_command::execute_failure_scope(&cwd, args, command, json, "", err)
 }
 
 fn display_local(
@@ -174,19 +173,16 @@ fn display_local(
     merged: Option<bool>,
     (lanes, current): (Vec<LaneData>, (Value, String)),
 ) -> io::Result<Outcome> {
-    let root = &scope_root.path;
-    let bare = scope_root.bare;
+    let (root, bare) = (&scope_root.path, scope_root.bare);
     if json && command != "lane" {
         return emit_json(root, bare, args, &lanes, &current.1);
     }
-    let report = Report {
-        data: match merged {
-            Some(only_merged) => merged::report(&lanes, only_merged, Chalk::detect(args)),
-            None => report(&lanes, &current.0, Chalk::detect(args), details, bare),
-        },
-        code: 0,
-        details: None,
-    };
+    let chalk = Chalk::detect(args);
+    let data = merged.map_or_else(
+        || report(&lanes, &current.0, chalk, details, bare),
+        |only| merged::report(&lanes, only, chalk),
+    );
+    let report = Report { data, code: 0, details: None };
     match (bare, json) {
         (true, true) => {
             workspace_command::execute_without_loader_scope(root, args, command, |_| Ok(report))
@@ -207,11 +203,8 @@ fn emit_json(
     current: &str,
 ) -> io::Result<Outcome> {
     let history = (!bare).then(|| History::start(root, args));
-    let data = json!({
-        "lanes": lanes.iter().map(LaneData::json).collect::<Vec<_>>(),
-        "currentLane": if bare { Value::Null } else { json!(current) },
-    });
-    // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
+    let current_lane = if bare { Value::Null } else { json!(current) };
+    let data = json!({"lanes": lanes.iter().map(LaneData::json).collect::<Vec<_>>(), "currentLane": current_lane});
     let mut stdout = io::stdout().lock();
     serde_json::to_writer_pretty(&mut stdout, &data)?;
     stdout.flush()?;
@@ -284,17 +277,19 @@ fn apply_list_arg<'a>(
     Some(())
 }
 
+#[inline]
 fn remote_name(name: Option<&str>) -> Option<&str> {
     name.map(str::trim)
         .filter(|name| !name.is_empty() && !name.starts_with('-'))
 }
 
-/// The lanes then main, and the current lane's id with
-/// `getCurrentLaneNameOrAlias()`.
+/// The lanes then main, and the current lane's id with `getCurrentLaneNameOrAlias()`.
+#[inline]
 pub(super) fn read(root: &Path) -> io::Result<(Vec<LaneData>, (Value, String))> {
     read_with_merge(root, false)
 }
 
+#[inline]
 pub(super) fn read_with_merge(
     root: &Path,
     merge_data: bool,
@@ -336,6 +331,7 @@ pub(super) fn read_for_scope(
     Ok((lanes, with_alias(current, &tracking)?))
 }
 
+#[inline]
 fn non_empty_str<'a>(val: &'a Value, key: &str) -> Option<&'a str> {
     val[key]
         .as_str()

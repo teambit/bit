@@ -129,6 +129,7 @@ fn rewire_specifier(
     *current = replace_package_name(current, &old_name, &new_name);
 }
 
+#[inline]
 fn find_owner<'a>(
     target: &Path,
     all_components: &[&'a WorkspaceComponent],
@@ -168,6 +169,7 @@ fn name_without_internal_path(
     import_source.to_owned()
 }
 
+#[inline]
 fn strip_trailing_segment(input: &str, segment: &str) -> Option<String> {
     if segment.is_empty() || !input.ends_with(segment) {
         return None;
@@ -176,6 +178,7 @@ fn strip_trailing_segment(input: &str, segment: &str) -> Option<String> {
     input.strip_suffix(&suffix).map(str::to_owned)
 }
 
+#[inline]
 fn strip_extension(path_str: &str) -> String {
     if let Some(stem) = path_str.strip_suffix(".d.ts") {
         return stem.to_owned();
@@ -213,7 +216,7 @@ fn extract_specifiers(source: &str, is_style: bool) -> Vec<String> {
     } else {
         extract_lexical_specifiers(source)
     };
-    let mut unique = Vec::new();
+    let mut unique = Vec::with_capacity(raw.len());
     for item in raw {
         if !unique.contains(&item) {
             unique.push(item);
@@ -246,6 +249,7 @@ fn extract_lexical_specifiers(source: &str) -> Vec<String> {
     found
 }
 
+#[inline]
 fn is_ident_char(character: char) -> bool {
     character.is_alphanumeric() || character == '_' || character == '$' || character == '.'
 }
@@ -269,6 +273,7 @@ fn extract_style_specifiers(source: &str) -> Vec<String> {
     found
 }
 
+#[inline]
 fn parse_style_target(after_keyword: &str) -> Option<String> {
     let trimmed = after_keyword.trim_start();
     let inner = trimmed.strip_prefix("url(").map_or(trimmed, str::trim_start);
@@ -286,6 +291,7 @@ fn parse_style_target(after_keyword: &str) -> Option<String> {
     }
 }
 
+#[inline]
 fn parse_quoted(input: &str) -> Option<String> {
     let quote = input
         .chars()
@@ -308,6 +314,7 @@ fn find_resolved_file(target: &Path, is_ts: bool) -> Option<PathBuf> {
         .or_else(|| with_extensions(&target.join("index"), &COMMONJS_LOOKUP_EXTS))
 }
 
+#[inline]
 fn typescript_lookup(target: &Path) -> Option<PathBuf> {
     let stem = strip_script_ext(target);
     let base = stem.as_deref().unwrap_or(target);
@@ -315,6 +322,7 @@ fn typescript_lookup(target: &Path) -> Option<PathBuf> {
         .or_else(|| with_extensions(&target.join("index"), &TYPESCRIPT_LOOKUP_EXTS))
 }
 
+#[inline]
 fn strip_script_ext(target: &Path) -> Option<PathBuf> {
     let ext = target.extension()?.to_str()?;
     ["js", "jsx", "mjs", "cjs"]
@@ -322,6 +330,7 @@ fn strip_script_ext(target: &Path) -> Option<PathBuf> {
         .then(|| target.with_extension(""))
 }
 
+#[inline]
 fn with_extensions(base: &Path, extensions: &[&str]) -> Option<PathBuf> {
     extensions
         .iter()
@@ -329,6 +338,7 @@ fn with_extensions(base: &Path, extensions: &[&str]) -> Option<PathBuf> {
         .find(|candidate| candidate.is_file())
 }
 
+#[inline]
 fn file_extension(path: &Path) -> String {
     path.extension()
         .and_then(|ext| ext.to_str())

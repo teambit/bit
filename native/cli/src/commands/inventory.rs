@@ -75,6 +75,7 @@ struct Nested {
 
 impl Inventory {
     /// `ignore().add([...patterns, ...IGNORE_LIST, ...ignoredFiles])`.
+    #[inline]
     pub fn new(options: &Options) -> io::Result<Self> {
         let hard = if options.track_all_files { ALWAYS_IGNORE } else { IGNORE_ALL };
         let ignored_root: &[&str] = if options.track_all_files { &[] } else { IGNORE_ROOT_ONLY };
@@ -97,6 +98,8 @@ impl Inventory {
     }
 
     /// The root rules, as `rootPolicy`.
+    #[must_use]
+    #[inline]
     pub fn root_policy(&self) -> Value {
         policy(self.root.rules())
     }
@@ -145,6 +148,7 @@ impl Inventory {
 }
 
 /// `ignore().add(base).add(patterns)`.
+#[inline]
 fn compile(base: Option<&Ignore>, patterns: &[impl AsRef<str>]) -> io::Result<Ignore> {
     let mut ignore = Ignore::new();
     if let Some(base) = base {
@@ -163,6 +167,7 @@ fn compile(base: Option<&Ignore>, patterns: &[impl AsRef<str>]) -> io::Result<Ig
 
 /// The ignore policy of a fresh instance: its rules and
 /// its empty match cache.
+#[inline]
 fn policy(rules: &[Rule]) -> Value {
     json!({ "rules": rules, "cache": [] })
 }

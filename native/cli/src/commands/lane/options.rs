@@ -44,6 +44,8 @@ const EXTRA_BOOLEANS: [&str; 8] = [
 const VALUED: [&str; 3] = ["--auto-merge-resolve", "--message", "--pattern"];
 
 /// `args` starts after `lane merge`.
+#[must_use]
+#[inline]
 pub fn parse(args: &[&str]) -> Option<Options> {
     let read = read(args, false)?;
     let [name, rest @ ..] = read.positionals.as_slice() else { return None };
@@ -75,6 +77,8 @@ pub fn parse(args: &[&str]) -> Option<Options> {
 }
 
 /// Deterministic option validation error thrown by `MergeLaneCmd.report` before merging.
+#[must_use]
+#[inline]
 pub fn validate_error(args: &[&str]) -> Option<&'static str> {
     let read = read(args, true)?;
     let [_name, rest @ ..] = read.positionals.as_slice() else { return None };
@@ -97,12 +101,14 @@ struct Read {
 }
 
 impl Read {
+    #[inline]
     fn has(&self, flag: &str) -> bool {
         self.flags
             .iter()
             .any(|known| known == flag)
     }
 
+    #[inline]
     fn value(&self, flag: &str) -> Option<&str> {
         self.values.get(flag).and_then(Value::as_str)
     }
@@ -123,6 +129,7 @@ impl Read {
     }
 
     /// The flag combinations the native grammar rejects.
+    #[inline]
     fn conflicting(&self, pattern: Option<&str>) -> bool {
         (self.has("--manual") && self.value("--auto-merge-resolve").is_some())
             || (self.has("--no-squash") && self.has("--squash"))
@@ -222,10 +229,12 @@ impl Read {
     }
 }
 
+#[inline]
 fn is_boolean_flag(flag: &str, allow_extra: bool) -> bool {
     BOOLEANS.contains(&flag) || (allow_extra && EXTRA_BOOLEANS.contains(&flag))
 }
 
+#[inline]
 fn lane_alias(arg: &str) -> &str {
     match arg {
         "-x" => "--skip-dependency-installation",
@@ -273,6 +282,7 @@ fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
 }
 
 /// `/^[a-z0-9_.-]+(?:\/[a-z0-9_.-]+)?$/`.
+#[inline]
 fn lane_name(name: &str) -> bool {
     let name = name.trim();
     let part = |part: &str| {
@@ -292,6 +302,7 @@ fn lane_name(name: &str) -> bool {
 }
 
 /// A pattern without state selectors (`$…`) or `AND`.
+#[inline]
 fn pattern_text(pattern: &str) -> bool {
     pattern.len() <= 4096
         && !pattern
@@ -300,6 +311,7 @@ fn pattern_text(pattern: &str) -> bool {
 }
 
 impl Options {
+    #[inline]
     fn has(&self, flag: &str) -> bool {
         self.flags
             .iter()
@@ -308,6 +320,8 @@ impl Options {
 
     /// The engine's command options without `operation`, as `JSON.stringify`
     /// writes them.
+    #[must_use]
+    #[inline]
     pub fn request(&self) -> Value {
         let lane = json!({
             "name": self.name,

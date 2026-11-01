@@ -40,6 +40,7 @@ pub(super) fn json_report(rows: &[Row], ids: bool) -> Value {
     )
 }
 
+#[inline]
 fn local_version(row: &Row) -> &str {
     row.version
         .as_deref()
@@ -48,6 +49,7 @@ fn local_version(row: &Row) -> &str {
         .unwrap_or("<new>")
 }
 
+#[inline]
 fn current_version(row: &WorkspaceRow) -> &str {
     row.used
         .as_deref()
@@ -56,6 +58,7 @@ fn current_version(row: &WorkspaceRow) -> &str {
         .unwrap_or("N/A")
 }
 
+#[inline]
 fn remote_version(row: &Row) -> &str {
     row.remote_version
         .as_deref()
@@ -136,6 +139,7 @@ fn render_table(rows: &[Row], options: &Options, chalk: Chalk, colors: bool) -> 
 }
 
 /// `getFormattedId` of `listTemplate`.
+#[inline]
 fn formatted_id(row: &Row, chalk: Chalk) -> String {
     let mut id = chalk.white(row.identity.trim());
     if row.deprecated == Some(true) {
@@ -159,6 +163,7 @@ fn formatted_id(row: &Row, chalk: Chalk) -> String {
     id
 }
 
+#[inline]
 fn colored_version(row: &Row, outdated: bool, remote: bool, chalk: Chalk) -> String {
     let local = local_version(row);
     let latest = remote_version(row);

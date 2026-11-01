@@ -123,6 +123,7 @@ fn select_lanes(root: &Path, values: &[&str]) -> Option<(list::LaneData, list::L
     Some((from_lane, to_lane))
 }
 
+#[inline]
 fn parse_values<'a>(lane_args: &[&'a str]) -> Option<Vec<&'a str>> {
     crate::commands::scope_set::collect_non_flag_tokens(lane_args)?
         .into_iter()
@@ -133,6 +134,7 @@ fn parse_values<'a>(lane_args: &[&'a str]) -> Option<Vec<&'a str>> {
         .collect()
 }
 
+#[inline]
 fn resolve_lane_names<'a>(values: &[&'a str], current_name: &'a str) -> Option<(&'a str, &'a str)> {
     match values {
         [] if current_name != "main" => Some(("main", current_name)),
@@ -206,6 +208,7 @@ fn inspect_component(
     })
 }
 
+#[inline]
 fn missing_message(id: &str, from_head: &str, chalk: Chalk) -> String {
     format!(
         "error: version \"{}\" of component {} was not found on the filesystem.\ntry running \"bit import\". if it doesn't help, try running \"bit import {id} --objects --all-history\"",
@@ -214,6 +217,7 @@ fn missing_message(id: &str, from_head: &str, chalk: Chalk) -> String {
     )
 }
 
+#[inline]
 fn format_failures(failures: &[(String, String)], chalk: Chalk) -> String {
     let title = if chalk.enabled() {
         "\u{1b}[7m\u{1b}[27m\n\u{1b}[7m\u{1b}[27m\n\u{1b}[7mDiff failed on the following component(s)\u{1b}[27m"
@@ -228,6 +232,7 @@ fn format_failures(failures: &[(String, String)], chalk: Chalk) -> String {
     format!("{title}\n{rows}")
 }
 
+#[inline]
 fn find_model<'a>(models: &'a [Value], identity: &str) -> Option<&'a Value> {
     let (scope, name) = identity.trim().split_once('/')?;
     models
@@ -259,6 +264,7 @@ fn resolve_from_head<'a>(
         .filter(|head| !head.is_empty())
 }
 
+#[inline]
 fn has_object(objects_dir: &Path, hash: &str) -> bool {
     let hash = hash.trim();
     hash.len() > 2
@@ -310,6 +316,7 @@ fn diff_component(
     Ok(Some(format!("{header}\n{}\n", file_diffs.join("\n"))))
 }
 
+#[inline]
 fn validated_relative_path(file: &Value) -> io::Result<&str> {
     let path = text(file.get("relativePath"))?;
     if path.trim().is_empty() {

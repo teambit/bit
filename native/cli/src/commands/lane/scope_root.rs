@@ -15,6 +15,7 @@ pub(crate) struct ScopeRoot {
     pub(crate) bare: bool,
 }
 
+#[inline]
 pub(crate) fn discover() -> io::Result<Option<ScopeRoot>> {
     let cwd = env::current_dir()?;
     if let Some(path) = workspace::root(&cwd) {
@@ -103,6 +104,7 @@ pub(in crate::commands) fn diagnose_component_lookup_error(
     diagnose_unscoped_component_error(comps, raw_id, bare_id)
 }
 
+#[inline]
 fn diagnose_unscoped_component_error(
     comps: &[Value],
     raw_id: &str,
@@ -123,6 +125,7 @@ fn diagnose_unscoped_component_error(
     }
 }
 
+#[inline]
 fn row_has_name(row: &Value, bare_id: &str) -> bool {
     let target = bare_id.trim();
     row["id"]["name"].as_str().map(str::trim) == Some(target)
@@ -182,6 +185,7 @@ pub(in crate::commands) fn diagnose_version_error(
         .then(|| missing_version_on_fs_msg(ver, comp_id))
 }
 
+#[inline]
 fn missing_version_on_fs_msg(ver: &str, comp_id: &str) -> String {
     format!(
         "error: version \"{ver}\" of component {comp_id} was not found on the filesystem.\ntry running \"bit import\". if it doesn't help, try running \"bit import {comp_id} --objects\"",

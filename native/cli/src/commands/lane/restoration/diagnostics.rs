@@ -2,6 +2,7 @@
 use crate::commands::status::cache::cache_root;
 use std::{env, path::Path};
 
+#[inline]
 pub(super) fn requires_node(root: &Path, history: &str) -> bool {
     if !is_ci_enabled() {
         return false;
@@ -15,6 +16,7 @@ pub(super) fn requires_node(root: &Path, history: &str) -> bool {
         .unwrap_or(true)
 }
 
+#[inline]
 fn is_ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|value| {

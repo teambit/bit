@@ -7,6 +7,7 @@ use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
+#[inline]
 pub(super) fn needs_canonical_install(root: &Path) -> bool {
     configured_root_aspects(root).unwrap_or(true)
 }
@@ -56,6 +57,7 @@ fn scope_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Resu
         }))
 }
 
+#[inline]
 pub(super) fn lane_installation() -> bool {
     let arguments = std::env::args()
         .skip(1)
@@ -74,6 +76,7 @@ pub(super) fn lane_installation() -> bool {
 }
 
 impl JsHost {
+    #[inline]
     pub(in crate::commands) fn new(host: Arc<Host>, quiet: bool) -> Self {
         Self(host, quiet)
     }
@@ -123,6 +126,7 @@ pub(in crate::commands) fn confirm(question: &str) -> io::Result<bool> {
 }
 
 /// chalk's decision: `FORCE_COLOR`, then `NO_COLOR`, then a non-dumb terminal.
+#[inline]
 pub(super) fn color_enabled(tty: bool) -> bool {
     if let Ok(force) = std::env::var("FORCE_COLOR") {
         return parse_force_color(&force);
@@ -133,6 +137,7 @@ pub(super) fn color_enabled(tty: bool) -> bool {
     tty && std::env::var("TERM").is_ok_and(|term| !term.trim().eq_ignore_ascii_case("dumb"))
 }
 
+#[inline]
 fn parse_force_color(force: &str) -> bool {
     let trimmed = force
         .trim()
@@ -143,6 +148,7 @@ fn parse_force_color(force: &str) -> bool {
 }
 
 /// The `yn` package: true for `true`, `1`, `yes`, `y`, `on`.
+#[inline]
 pub(super) fn yn(value: &str) -> bool {
     matches!(
         value

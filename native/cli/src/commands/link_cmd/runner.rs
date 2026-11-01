@@ -119,12 +119,14 @@ fn has_custom_package_hook(ws: &Workspace, core_ids: &[String]) -> bool {
     uses_custom_env && ws.active().any(|(_, component)| component_has_package_hook(component))
 }
 
+#[inline]
 fn component_has_package_hook(component: &WorkspaceComponent) -> bool {
     component.files
         .iter()
         .any(|rel_file| file_has_package_hook(&component.dir.join(rel_file)))
 }
 
+#[inline]
 fn file_has_package_hook(path: &Path) -> bool {
     let Ok(text) = fs::read_to_string(path) else {
         return false;
@@ -342,18 +344,17 @@ fn to_link_item(
     }
 }
 
+#[inline]
 pub(super) fn format_component_id(id: &ComponentId) -> String {
     let bare = id.to_string_without_version();
-    match id.version
+    id.version
         .as_deref()
         .map(str::trim)
         .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
-    {
-        Some(ver) => format!("{bare}@{ver}"),
-        None => bare,
-    }
+        .map_or_else(|| bare.clone(), |ver| format!("{bare}@{ver}"))
 }
 
+#[inline]
 fn relative_display(root: &Path, path: &Path) -> String {
     path.strip_prefix(root)
         .unwrap_or(path)
@@ -361,6 +362,7 @@ fn relative_display(root: &Path, path: &Path) -> String {
         .replace('\\', "/")
 }
 
+#[inline]
 fn resolve_target_dir(cwd: &Path, target_arg: &str) -> PathBuf {
     let target_path = Path::new(target_arg.trim());
     if target_path.is_absolute() { target_path.to_path_buf() } else { cwd.join(target_path) }

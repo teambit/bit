@@ -138,6 +138,7 @@ fn request(component: &Component, config: &Config, options: &Options) -> io::Res
         "useEslintrc":false,"fix":options.fix,"fixTypes":fixes}}))
 }
 
+#[inline]
 fn select_lint_file(file: &Value, extensions: &[&str]) -> Option<Value> {
     let rel_path = file["filePath"].as_str()?.trim();
     if !extensions
@@ -153,6 +154,7 @@ fn select_lint_file(file: &Value, extensions: &[&str]) -> Option<Value> {
         .map(|path| Value::String(path.to_owned()))
 }
 
+#[inline]
 fn write(tool: &Value) -> io::Result<Option<Value>> {
     let files = tool["results"].as_array().ok_or_else(|| invalid("linter write results"))?;
     for file in files {
@@ -171,6 +173,7 @@ fn write(tool: &Value) -> io::Result<Option<Value>> {
     Ok(None)
 }
 
+#[inline]
 fn failure(
     error: Value,
     environment: &str,
@@ -180,6 +183,7 @@ fn failure(
     Ok(results::aggregate(Vec::new(), vec![error]))
 }
 
+#[inline]
 fn validate_sources(files: &[Value]) -> io::Result<()> {
     for file in files {
         let path = file["absolutePath"]

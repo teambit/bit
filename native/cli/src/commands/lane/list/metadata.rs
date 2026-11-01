@@ -7,6 +7,7 @@ use std::io;
 pub(in crate::commands::lane) struct Tracking(pub(in crate::commands::lane) Vec<Value>);
 
 impl Tracking {
+    #[inline]
     pub(in crate::commands::lane) fn read(scope: &Value) -> Self {
         Self(
             scope["lanes"]["tracking"]
@@ -17,6 +18,7 @@ impl Tracking {
     }
 
     /// `getLocalTrackedLaneByRemoteName(name, scope)`.
+    #[inline]
     pub(in crate::commands::lane) fn alias(&self, name: &str, scope: &str) -> Option<String> {
         let name = name.trim();
         let scope = scope.trim();
@@ -96,6 +98,7 @@ pub(super) fn updates(value: &Value) -> io::Result<Option<Vec<Value>>> {
     Ok(update_dependents)
 }
 
+#[inline]
 fn scoped_id(id: &Value) -> io::Result<String> {
     if let Some(raw) = id.as_str() {
         let raw = raw.trim();
@@ -116,6 +119,7 @@ fn scoped_id(id: &Value) -> io::Result<String> {
     Ok(format!("{scope}/{name}"))
 }
 
+#[inline]
 pub(super) fn readme(value: &Value) -> io::Result<Option<Value>> {
     value
         .get("readmeComponent")
@@ -133,6 +137,7 @@ pub(super) fn readme(value: &Value) -> io::Result<Option<Value>> {
         .transpose()
 }
 
+#[inline]
 pub(super) fn readme_report(lane: &LaneData, chalk: Chalk) -> String {
     let Some(readme) = &lane.readme_component else { return String::new() };
     let id = readme["id"].as_str().map_or("", str::trim);
@@ -150,6 +155,7 @@ pub(super) fn readme_report(lane: &LaneData, chalk: Chalk) -> String {
     )
 }
 
+#[inline]
 pub(in crate::commands::lane) fn components_report(lane: &LaneData, format: &Formatter) -> String {
     let items: Vec<_> = lane.components
         .iter()

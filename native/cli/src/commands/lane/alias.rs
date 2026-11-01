@@ -39,6 +39,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     run_in_workspace(&root, args, name, alias)
 }
 
+#[inline]
 fn valid_alias_token(token: &str) -> bool {
     let trimmed = token.trim();
     !trimmed.is_empty() && !trimmed.starts_with('-') && trimmed.len() <= 1024
@@ -80,6 +81,7 @@ fn run_in_workspace(
     })
 }
 
+#[inline]
 fn invalid_alias_error(name: &str, alias: &str) -> Option<&'static str> {
     let name = name.trim();
     let alias = alias.trim();
@@ -92,6 +94,7 @@ fn invalid_alias_error(name: &str, alias: &str) -> Option<&'static str> {
     }
 }
 
+#[inline]
 fn resolve_lane_name_and_scope(root: &std::path::Path, name: &str) -> io::Result<(String, String)> {
     let (lanes, _) = list::read(root)?;
     let lane = show::find(&lanes, name)
@@ -140,6 +143,7 @@ fn prepare(
     Ok((config, format!("{scope}/{lane_name}")))
 }
 
+#[inline]
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, "unsupported lane alias")
 }

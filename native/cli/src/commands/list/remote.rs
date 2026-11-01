@@ -12,6 +12,7 @@ use std::{
     path::Path,
 };
 
+#[inline]
 fn request(root: Option<&Path>, mode: &str) -> io::Result<Value> {
     let cli = NodeCli::find()?;
     Ok(json!({
@@ -58,6 +59,7 @@ pub(super) fn list(
         .collect()
 }
 
+#[inline]
 fn parse_row_id(value: &Value) -> io::Result<(String, Option<String>)> {
     let id = value["id"]
         .as_str()
@@ -151,6 +153,7 @@ pub(super) fn versions(root: &Path, rows: &mut [Row], session: &mut Session) -> 
     )
 }
 
+#[inline]
 fn apply_latest_versions(rows: &mut [Row], values: &[Value]) -> io::Result<()> {
     for value in values {
         let id = value
@@ -173,6 +176,7 @@ fn apply_latest_versions(rows: &mut [Row], values: &[Value]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn remote_scopes(ids: &[String]) -> io::Result<Vec<String>> {
     let mut scopes = Vec::new();
     for id in ids {

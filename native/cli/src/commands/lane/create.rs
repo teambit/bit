@@ -44,6 +44,7 @@ fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     (!options.name.is_empty()).then_some(options)
 }
 
+#[inline]
 fn set_lane_name<'a>(slot: &mut &'a str, name: &'a str) -> bool {
     let name = name.trim();
     if !slot.is_empty() || name.is_empty() {
@@ -78,6 +79,7 @@ fn apply_create_flag<'a>(
     }
 }
 
+#[inline]
 fn apply_create_inline<'a>(options: &mut Options<'a>, flag: &'a str) -> Option<bool> {
     if let Some(val) = flag
         .strip_prefix("--scope=")
@@ -89,6 +91,7 @@ fn apply_create_inline<'a>(options: &mut Options<'a>, flag: &'a str) -> Option<b
     flag.strip_prefix("--alias=").map(|val| set_once(&mut options.alias, val))
 }
 
+#[inline]
 fn set_once<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
     let trimmed = val.trim();
     if slot.is_some() || trimmed.is_empty() || trimmed.starts_with('-') {
@@ -98,6 +101,7 @@ fn set_once<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
     true
 }
 
+#[inline]
 fn take_non_flag<'a>(slot: &mut Option<&'a str>, rest: &mut impl Iterator<Item = &'a str>) -> bool {
     let Some(val) = rest.next() else {
         return false;
@@ -289,11 +293,13 @@ fn report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
     }
 }
 
+#[inline]
 fn resolve_scope(root: &Path, explicit: Option<&str>) -> io::Result<Option<String>> {
     let scope = if let Some(scope) = explicit { scope.to_owned() } else { default_scope(root)? };
     Ok((!scope.is_empty()).then_some(scope))
 }
 
+#[inline]
 fn default_scope(root: &Path) -> io::Result<String> {
     let bitmap: Value = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
     if let Some((scope, _)) = crate::commands::snap_distance::bitmap_lane_scope_and_name(&bitmap)

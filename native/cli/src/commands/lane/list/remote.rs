@@ -56,6 +56,7 @@ pub(super) fn run(
     }
 }
 
+#[inline]
 fn text_report(
     lanes: &[LaneData],
     current: &Value,
@@ -99,6 +100,7 @@ fn prepare(
     Ok((lanes, current, Some(raw)))
 }
 
+#[inline]
 fn report_http_merged(lanes: &[Value], merged: bool, chalk: Chalk) -> String {
     let format = Formatter::new(chalk);
     if merged {
@@ -134,6 +136,7 @@ pub(in crate::commands::lane) fn http_at(
     Ok(array(listed.get("lanes"), "HTTP lanes")?.to_vec())
 }
 
+#[inline]
 pub(in crate::commands::lane) fn project(row: &Value) -> io::Result<LaneData> {
     let id = row
         .get("id")
@@ -196,6 +199,7 @@ pub(in crate::commands::lane) fn read_at(
     Ok((lanes, current))
 }
 
+#[inline]
 pub(in crate::commands::lane) fn current(root: &Path, bare: bool) -> io::Result<(Value, String)> {
     if bare {
         let scope: Value =
@@ -210,6 +214,7 @@ pub(in crate::commands::lane) fn current(root: &Path, bare: bool) -> io::Result<
     }
 }
 
+#[inline]
 pub(super) fn report(lanes: &[LaneData], current: &Value, chalk: Chalk, details: bool) -> String {
     let format = Formatter::new(chalk);
     let others = report_others(lanes, current, chalk, details, &format);

@@ -61,6 +61,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("link execution delegated".into()))
 }
 
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
@@ -79,6 +80,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn apply_token<'a>(
     arg: &'a str,
     iter: &mut impl Iterator<Item = &'a str>,
@@ -111,6 +113,7 @@ fn apply_token<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
     if apply_combined_short(arg, options) {
         return Some(());
@@ -127,6 +130,7 @@ fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
     if !arg.starts_with('-')
         || arg.starts_with("--")

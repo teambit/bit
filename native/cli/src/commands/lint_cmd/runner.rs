@@ -32,10 +32,12 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     }
 }
 
+#[inline]
 fn elapsed_millis(started: &Instant) -> u64 {
     u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX)
 }
 
+#[inline]
 fn invalid(message: &'static str) -> io::Error {
     let trimmed = message.trim();
     io::Error::other(if trimmed.is_empty() { "linter failure" } else { trimmed })

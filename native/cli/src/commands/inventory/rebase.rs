@@ -2,6 +2,8 @@
 //! `.bitignore` pattern, made relative to the workspace.
 
 /// `pattern` from the ignore file in `dir` (a Linux-style relative path).
+#[must_use]
+#[inline]
 pub fn pattern(pattern: &str, dir: &str) -> String {
     let pattern = pattern.trim();
     if pattern.starts_with('#') {
@@ -32,6 +34,8 @@ pub fn pattern(pattern: &str, dir: &str) -> String {
 /// `pathJoinLinux`: `path.join`, then `normalize-path`, which uses forward
 /// slashes and drops a trailing one. On Windows `path.join` also splits on
 /// backslashes.
+#[must_use]
+#[inline]
 pub fn join_linux(parts: &[&str]) -> String {
     let joined = parts
         .iter()
@@ -48,6 +52,8 @@ pub fn join_linux(parts: &[&str]) -> String {
 }
 
 /// `path.posix.normalize`.
+#[must_use]
+#[inline]
 pub fn normalize(path: &str) -> String {
     if path.is_empty() {
         return ".".to_string();
@@ -69,6 +75,7 @@ pub fn normalize(path: &str) -> String {
 
 /// One segment of `path.posix.normalize`: `.` and empty segments vanish,
 /// `..` removes its parent, or stays when a relative path climbs above its start.
+#[inline]
 fn resolve<'path>(
     mut segments: Vec<&'path str>,
     segment: &'path str,

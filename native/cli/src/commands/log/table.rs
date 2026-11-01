@@ -4,6 +4,7 @@ use serde_json::Value;
 use std::io;
 use unicode_width::UnicodeWidthStr;
 
+#[inline]
 pub(super) fn one_line(logs: &[Value]) -> io::Result<String> {
     let fields = ["hash", "tag", "username", "date", "message"];
     let rows: Vec<Vec<&str>> = logs
@@ -18,6 +19,7 @@ pub(super) fn one_line(logs: &[Value]) -> io::Result<String> {
     Ok(table(&rows))
 }
 
+#[inline]
 fn log_field<'a>(row: &'a Value, field: &str) -> &'a str {
     let alias = match field {
         "tag" => Some("version"),
@@ -38,6 +40,7 @@ fn log_field<'a>(row: &'a Value, field: &str) -> &'a str {
         .unwrap_or("")
 }
 
+#[inline]
 pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {
     table_with_separator(rows, " ")
 }
@@ -48,7 +51,7 @@ pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &
         return String::new();
     }
     let widths = column_widths(rows);
-    let mut lines = Vec::new();
+    let mut lines = Vec::with_capacity(rows.len());
     for row in rows {
         let cells: Vec<Vec<&str>> = row
             .iter()
@@ -70,6 +73,7 @@ pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &
     lines.join("\n")
 }
 
+#[inline]
 fn format_row_line(cells: &[Vec<&str>], widths: &[usize], line: usize, separator: &str) -> String {
     let mut output = String::with_capacity(widths.iter().sum::<usize>() + cells.len());
     for (index, cell) in cells.iter().enumerate() {
@@ -88,6 +92,7 @@ fn format_row_line(cells: &[Vec<&str>], widths: &[usize], line: usize, separator
     output
 }
 
+#[inline]
 fn column_widths(rows: &[Vec<&str>]) -> Vec<usize> {
     let fields = rows
         .iter()

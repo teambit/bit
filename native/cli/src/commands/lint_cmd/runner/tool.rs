@@ -58,6 +58,7 @@ impl Session {
         Ok(Self { child, input, output, errors })
     }
 
+    #[inline]
     pub(super) fn run(&mut self) -> io::Result<Value> {
         self.input.write_all(b"true\n")?;
         self.input.flush()?;
@@ -68,6 +69,7 @@ impl Session {
         Ok(value)
     }
 
+    #[inline]
     fn read(&mut self) -> io::Result<Value> {
         let mut bytes = Vec::new();
         self.output
@@ -80,6 +82,7 @@ impl Session {
         serde_json::from_slice(&bytes).map_err(|_| invalid("linter tool response json"))
     }
 
+    #[inline]
     fn has_stderr(&mut self) -> io::Result<bool> {
         if self.errors.seek(SeekFrom::End(0))? == 0 {
             return Ok(false);

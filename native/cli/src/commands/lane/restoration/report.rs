@@ -72,6 +72,7 @@ const RESULT_FIELDS: [&str; 14] = [
     "mergeSnapError",
 ];
 
+#[inline]
 fn project(result: &Value, id: &str, chalk: Chalk) -> io::Result<Value> {
     let mut projected = serde_json::Map::with_capacity(RESULT_FIELDS.len() + 3);
     for name in RESULT_FIELDS {
@@ -99,6 +100,7 @@ fn project(result: &Value, id: &str, chalk: Chalk) -> io::Result<Value> {
     Ok(Value::Object(projected))
 }
 
+#[inline]
 fn project_statuses(components: Option<&mut Value>, chalk: Chalk) -> io::Result<()> {
     for component in components
         .and_then(Value::as_array_mut)
@@ -120,6 +122,7 @@ fn project_statuses(components: Option<&mut Value>, chalk: Chalk) -> io::Result<
     Ok(())
 }
 
+#[inline]
 pub(super) fn merge(first: &mut Value, second: &Value) -> io::Result<()> {
     let obj =
         first.as_object_mut().ok_or_else(|| io::Error::other("lane history checkout result"))?;

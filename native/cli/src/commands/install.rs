@@ -93,18 +93,17 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, Outcome>> {
         return Ok(Err(Outcome::Declined("not inside a workspace".to_string())));
     };
     let Target::Entry(cli) = discovery::find()? else {
-        return Ok(Err(Outcome::Declined(
-            "the Node.js CLI is only reachable as a wrapper".to_string(),
-        )));
+        return Ok(Err(Outcome::Declined("the Node.js CLI is only reachable as a wrapper".into())));
     };
     if cli.bit_dir.is_none() {
-        return Ok(Err(Outcome::Declined(
-            "the entry is not inside an @teambit/bit package".to_string(),
-        )));
+        return Ok(Err(
+            Outcome::Declined("the entry is not inside an @teambit/bit package".into()),
+        ));
     }
     Ok(Ok(Prepared { argv, cli, cwd, root }))
 }
 
+#[inline]
 fn utf8(args: &[OsString]) -> Option<Vec<String>> {
     args.iter()
         .map(|arg| arg.to_str().map(str::to_string))
@@ -114,6 +113,7 @@ fn utf8(args: &[OsString]) -> Option<Vec<String>> {
 /// The host computes everything `HostInfo` needs from Node and prefixes its
 /// executable directory to PATH; the terminal facts are ours. Run this before
 /// native workers start. The node-gyp script path is prepared at engine start.
+#[inline]
 pub(super) fn host_info(host: &Host, terminal: &Terminal) -> io::Result<HostInfo> {
     host_info_for(host, terminal, false)
 }
@@ -219,6 +219,7 @@ impl Terminal {
         }
     }
 
+    #[inline]
     fn json(&self) -> Value {
         json!({
             "tty": self.tty,
@@ -228,6 +229,7 @@ impl Terminal {
         })
     }
 
+    #[inline]
     pub(super) fn red(&self, text: &str) -> String {
         if self.color { format!("\u{1b}[31m{text}\u{1b}[39m") } else { text.to_string() }
     }
@@ -236,6 +238,7 @@ impl Terminal {
 pub(in crate::commands) struct JsHost(Arc<Host>, bool);
 
 impl JsHost {
+    #[inline]
     fn flush_stdout(&self) -> io::Result<()> {
         let output = self.0.take_stdout();
         if !self.1 && !output.is_empty() {

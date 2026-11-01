@@ -17,6 +17,8 @@ pub(super) struct Config {
 }
 
 impl Config {
+    #[must_use]
+    #[inline]
     pub(super) const fn exists(&self) -> bool {
         self.existing
     }
@@ -42,6 +44,7 @@ impl Config {
         Ok(Self { path, bytes, existing })
     }
 
+    #[inline]
     pub(super) fn publish(&self) -> io::Result<Option<Value>> {
         if !self.existing {
             let parent = self.path.parent().ok_or_else(|| invalid("linter cache parent"))?;
@@ -56,6 +59,7 @@ impl Config {
     }
 }
 
+#[inline]
 fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<Value>> {
     let mut expanded = Vec::with_capacity(patterns.len() * directories.len());
     for pattern in patterns {
@@ -71,6 +75,7 @@ fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<V
     Ok(expanded)
 }
 
+#[inline]
 fn push_expanded_pattern(expanded: &mut Vec<Value>, directory: &str, value: &str) {
     let trimmed = directory.trim();
     let normalized = if trimmed.contains('\\') {

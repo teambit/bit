@@ -12,7 +12,7 @@ pub const COMMAND: Command = Command { name: "login", aliases: &[], run };
 const CONFLICTING_DOMAIN_ERR: &str =
     "use either --default-cloud-domain or --cloud-domain, not both";
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub cloud_domain: Option<String>,
     pub default_cloud_domain: bool,
@@ -50,6 +50,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("interactive browser login delegated".into()))
 }
 
+#[inline]
 fn emit_conflicting_domain_error(args: &[OsString], json: bool) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     if let Some(root) = workspace::root(&cwd) {
@@ -72,17 +73,9 @@ fn emit_conflicting_domain_error(args: &[OsString], json: bool) -> io::Result<Ou
     )
 }
 
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut options = Options {
-        cloud_domain: None,
-        default_cloud_domain: false,
-        port: None,
-        no_browser: false,
-        machine_name: None,
-        skip_config_update: false,
-        refresh_token: false,
-        json: false,
-    };
+    let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(raw_arg) = iter.next() {
         let arg = raw_arg.trim();
@@ -131,6 +124,7 @@ fn apply_login_arg<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_inline_login_arg(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg
         .strip_prefix("--cloud-domain=")
@@ -156,6 +150,7 @@ fn apply_inline_login_arg(arg: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn take_val(val: &str) -> Option<String> {
     let trimmed = val
         .trim()

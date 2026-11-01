@@ -200,6 +200,7 @@ fn select_lane(
         .ok_or_else(|| missing(target))
 }
 
+#[inline]
 fn matches_http_lane(row: &Value, scope: &str, target: &str) -> bool {
     let target = target.trim();
     let scope = scope.trim();
@@ -214,6 +215,7 @@ fn matches_http_lane(row: &Value, scope: &str, target: &str) -> bool {
     row_name == target || target.split_once('/') == Some((scope, row_name))
 }
 
+#[inline]
 fn remote_scope(local: &[LaneData], target: &str) -> io::Result<String> {
     let target = target.trim();
     let scope = target
@@ -232,6 +234,7 @@ fn remote_scope(local: &[LaneData], target: &str) -> io::Result<String> {
     scope.ok_or_else(|| io::Error::other("remote lane identity"))
 }
 
+#[inline]
 fn missing(target: &str) -> io::Error {
     io::Error::other(format!(r#"lane "{target}" was not found"#))
 }
@@ -268,6 +271,7 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
     Some((name, json, remote))
 }
 
+#[inline]
 fn consume_trailing_show_lane<'a>(
     iter: impl Iterator<Item = &'a str>,
     name: &mut Option<&'a str>,
@@ -279,6 +283,7 @@ fn consume_trailing_show_lane<'a>(
     Some(())
 }
 
+#[inline]
 pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneData> {
     let target = target.trim();
     let matches: Vec<_> = lanes
@@ -306,6 +311,7 @@ fn emit_json(root: &Path, bare: bool, args: &[OsString], lane: &Value) -> io::Re
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 pub(super) fn show_report(lane: &LaneData, chalk: Chalk) -> io::Result<String> {
     let format = Formatter::new(chalk);
     let name = lane.id["name"].as_str().map_or("", str::trim);
@@ -319,7 +325,7 @@ pub(super) fn show_report(lane: &LaneData, chalk: Chalk) -> io::Result<String> {
 
 fn metadata(lane: &LaneData) -> io::Result<String> {
     let name = text(lane.id.get("name"))?.trim();
-    let mut meta = Vec::new();
+    let mut meta = Vec::with_capacity(3);
     if let Some((log, _)) = &lane.lane {
         if !log.is_null() {
             let author = log["username"]
@@ -343,6 +349,7 @@ fn metadata(lane: &LaneData) -> io::Result<String> {
     Ok(meta.join("\n"))
 }
 
+#[inline]
 fn created(log: &Value) -> io::Result<Option<String>> {
     let Some(date) = log["date"]
         .as_str()

@@ -23,11 +23,15 @@ pub(in crate::commands) struct Entry {
 impl Entry {
     /// `isIdOnCurrentLane`: not removed, and available on the lane or one of
     /// its components. On main, `lane` is empty.
+    #[must_use]
+    #[inline]
     pub fn on_current_lane(&self, lane: &[String]) -> bool {
         !self.removed && self.on_current_lane_including_removed(lane)
     }
 
     /// `idsByPattern` with `includeDeleted`: availability still follows the lane.
+    #[must_use]
+    #[inline]
     pub fn on_current_lane_including_removed(&self, lane: &[String]) -> bool {
         self.available || lane.contains(&self.identity)
     }
@@ -90,6 +94,7 @@ fn lane_id(lane: &Value) -> io::Result<Value> {
     Ok(serde_json::json!({ "scope": scope, "name": name }))
 }
 
+#[inline]
 fn text<'a>(value: &'a Value, field: &str) -> Option<&'a str> {
     value[field]
         .as_str()
@@ -97,6 +102,7 @@ fn text<'a>(value: &'a Value, field: &str) -> Option<&'a str> {
         .filter(|val| !val.is_empty())
 }
 
+#[inline]
 fn entry_scope<'a>(key_id: &'a str, name: &str, value: &'a Value) -> io::Result<(&'a str, bool)> {
     let key_scope = key_id
         .strip_suffix(name)
@@ -111,6 +117,7 @@ fn entry_scope<'a>(key_id: &'a str, name: &str, value: &'a Value) -> io::Result<
     }
 }
 
+#[inline]
 fn split_key_version(key: &str) -> (&str, Option<&str>) {
     let trimmed = key.trim();
     match trimmed

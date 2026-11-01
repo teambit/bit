@@ -73,6 +73,7 @@ fn shorten_names(cycle: &[String]) -> Shortened {
     Shortened { names, scope: scope.map(str::to_owned), version: version.map(str::to_owned) }
 }
 
+#[inline]
 fn parse_id(id: &str) -> ParsedId<'_> {
     let id = id.trim();
     let (bare, version) = id
@@ -91,6 +92,7 @@ fn parse_id(id: &str) -> ParsedId<'_> {
     ParsedId { scope, name, version }
 }
 
+#[inline]
 fn display_name(
     item: &ParsedId<'_>,
     common_scope: Option<&str>,
@@ -129,6 +131,7 @@ fn header(index: usize, total: usize, info: &Shortened, chalk: Chalk) -> String 
     chalk.bold(&line)
 }
 
+#[inline]
 fn horizontal_width(names: &[String]) -> usize {
     names
         .iter()
@@ -168,7 +171,7 @@ fn vertical(names: &[String], chalk: Chalk) -> String {
     let Some(first) = names.first() else {
         return String::new();
     };
-    let mut lines = Vec::new();
+    let mut lines = Vec::with_capacity(names.len() * 3 + 1);
     for (index, name) in names.iter().enumerate() {
         lines.push(chalk.cyan(name));
         if index + 1 < names.len() {
@@ -268,6 +271,7 @@ fn build_duplicate_entry(
     })
 }
 
+#[inline]
 fn immediate_dependents(graph: &CompGraph, target: &str) -> Vec<String> {
     graph.edges
         .iter()
@@ -327,6 +331,7 @@ fn render_duplicate_entries(entries: &[DuplicateEntry]) -> String {
         .join("\n")
 }
 
+#[inline]
 fn strip_ver(id: &str) -> &str {
     let id = id.trim();
     id.rsplit_once('@')

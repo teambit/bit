@@ -177,6 +177,7 @@ fn apply_setup_arg(
     Some(())
 }
 
+#[inline]
 pub(super) fn editor_display_name(editor: &str) -> &str {
     let trimmed = editor.trim();
     match trimmed.to_ascii_lowercase().as_str() {
@@ -254,10 +255,12 @@ fn setup_editor_and_path(cwd: &Path, opts: &SetupOptions) -> Result<PathBuf, Str
     }
 }
 
+#[inline]
 fn write_stdio_mcp_server(path: PathBuf, server_args: &[String]) -> Result<PathBuf, String> {
     write_server_entry(&path, "mcpServers", "bit", stdio_entry(server_args)).map(|()| path)
 }
 
+#[inline]
 fn build_mcp_server_args(opts: &SetupOptions) -> Vec<String> {
     let mut args = vec!["mcp-server".to_owned(), "start".to_owned()];
     if opts.consumer_project {
@@ -274,12 +277,9 @@ fn build_mcp_server_args(opts: &SetupOptions) -> Vec<String> {
     args
 }
 
+#[inline]
 fn stdio_entry(args: &[String]) -> Value {
-    json!({
-        "type": "stdio",
-        "command": "bit",
-        "args": args,
-    })
+    json!({ "type": "stdio", "command": "bit", "args": args })
 }
 
 fn write_vscode_global(path: &Path, server_args: &[String]) -> Result<(), String> {
@@ -302,6 +302,7 @@ fn write_server_entry(
     write_json_object(path, &Value::Object(cfg))
 }
 
+#[inline]
 fn ensure_json_object<'a>(
     map: &'a mut Map<String, Value>,
     key: &str,
@@ -332,6 +333,7 @@ fn read_json_object(path: &Path) -> Result<Map<String, Value>, String> {
         .ok_or_else(|| format!("Failed to parse {file_name}: expected JSON object"))
 }
 
+#[inline]
 fn write_json_object(path: &Path, val: &Value) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|err| err.to_string())?;
@@ -357,6 +359,7 @@ fn vscode_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> 
     Ok(base.join("Code/User/settings.json"))
 }
 
+#[inline]
 fn roo_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
     if is_global {
         return Err(
@@ -366,6 +369,7 @@ fn roo_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
     Ok(cwd.join(".roo/mcp.json"))
 }
 
+#[inline]
 fn claude_code_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
     if !is_global {
         return Ok(cwd.join(".mcp.json"));

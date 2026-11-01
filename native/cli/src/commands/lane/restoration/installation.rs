@@ -46,6 +46,7 @@ pub(super) fn run(
     Ok(Some(Environments::from_host(host).for_checkout()))
 }
 
+#[inline]
 fn compile(
     host: &crate::host::Host,
     succeeded: bool,
@@ -65,6 +66,7 @@ fn compile(
     Ok(())
 }
 
+#[inline]
 fn compiler_error(value: &Value) -> io::Result<Option<&str>> {
     match value {
         Value::Null => Ok(None),

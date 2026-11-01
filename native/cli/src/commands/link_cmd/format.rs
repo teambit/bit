@@ -26,6 +26,7 @@ pub(super) struct LinkSummary {
     pub target_links: Vec<LinkToDirResult>,
 }
 
+#[inline]
 pub(super) fn render_json(summary: &LinkSummary) -> Value {
     let mut map = serde_json::Map::with_capacity(3);
     if !summary.target_links.is_empty() {
@@ -45,6 +46,7 @@ pub(super) fn render_json(summary: &LinkSummary) -> Value {
     Value::Object(map)
 }
 
+#[inline]
 fn legacy_links_json(items: &[ComponentLinkItem]) -> Vec<Value> {
     items
         .iter()
@@ -67,6 +69,7 @@ fn legacy_links_json(items: &[ComponentLinkItem]) -> Vec<Value> {
         .collect()
 }
 
+#[inline]
 fn codemods_json(items: &[CodemodResult]) -> Vec<Value> {
     items
         .iter()
@@ -80,6 +83,7 @@ fn codemods_json(items: &[CodemodResult]) -> Vec<Value> {
         .collect()
 }
 
+#[inline]
 fn target_links_json(items: &[LinkToDirResult]) -> Vec<Value> {
     items
         .iter()
@@ -147,6 +151,7 @@ fn format_component_links(
     if rows.is_empty() { header } else { format!("{header}\n{}", rows.join("\n")) }
 }
 
+#[inline]
 fn format_regular_component_link(chalk: Chalk, item: &ComponentLinkItem) -> String {
     let pkg = item.package_name.trim();
     if item.bound.is_empty() || pkg.is_empty() {
@@ -156,6 +161,7 @@ fn format_regular_component_link(chalk: Chalk, item: &ComponentLinkItem) -> Stri
     format_link_row(chalk, item.id.trim(), &target)
 }
 
+#[inline]
 fn format_verbose_component_link(chalk: Chalk, item: &ComponentLinkItem) -> String {
     if item.bound.is_empty() {
         return String::new();
@@ -170,6 +176,7 @@ fn format_verbose_component_link(chalk: Chalk, item: &ComponentLinkItem) -> Stri
     format!("{title}\n{}\n", links.join("\n"))
 }
 
+#[inline]
 fn format_rewire_row(chalk: Chalk, codemod_results: &[CodemodResult]) -> String {
     if codemod_results.is_empty() {
         return String::new();
@@ -186,6 +193,7 @@ fn format_rewire_row(chalk: Chalk, codemod_results: &[CodemodResult]) -> String 
     )
 }
 
+#[inline]
 fn format_target_links(chalk: Chalk, target_links: &[LinkToDirResult]) -> String {
     if target_links.is_empty() {
         return String::new();
@@ -198,6 +206,7 @@ fn format_target_links(chalk: Chalk, target_links: &[LinkToDirResult]) -> String
     format!("{title}\n{}", rows.join("\n"))
 }
 
+#[inline]
 fn format_link_row(chalk: Chalk, title: &str, target: &str) -> String {
     chalk.bold(&format!("{title:<50} > {target}"))
 }

@@ -38,6 +38,7 @@ const CYAN: (&str, &str) = ("\u{1b}[36m", "\u{1b}[39m");
 const GREY: (&str, &str) = ("\u{1b}[90m", "\u{1b}[39m");
 
 /// `colors[style](text)`: the close codes inside become open codes.
+#[inline]
 fn style(enabled: bool, (open, close): (&str, &str), text: &str) -> String {
     if !enabled || text.is_empty() {
         return text.to_string();
@@ -46,6 +47,7 @@ fn style(enabled: bool, (open, close): (&str, &str), text: &str) -> String {
 }
 
 /// `utils.strlen`: the longest line in UTF-16 units, without SGR codes.
+#[inline]
 fn strlen(text: &str) -> usize {
     strip_sgr(text)
         .split('\n')
@@ -60,6 +62,8 @@ fn strlen(text: &str) -> usize {
 }
 
 /// `/\u001b\[(?:\d*;){0,5}\d*m/g` replaced with nothing.
+#[must_use]
+#[inline]
 pub(crate) fn strip_sgr(text: &str) -> String {
     let mut output = String::with_capacity(text.len());
     let mut rest = text;
@@ -78,6 +82,7 @@ pub(crate) fn strip_sgr(text: &str) -> String {
 }
 
 /// The length of `(?:\d*;){0,5}\d*m` at the start of `text`, if it matches.
+#[inline]
 fn sgr_length(text: &str) -> Option<usize> {
     let bytes = text.as_bytes();
     let mut index = 0;
@@ -115,6 +120,7 @@ pub(crate) fn render(head: &[&str], rows: &[Vec<String>], colors: bool) -> Strin
 }
 
 /// Each column's width: its longest cell and the padding.
+#[inline]
 fn widths(head: &[&str], rows: &[Vec<String>]) -> Vec<usize> {
     let mut widths: Vec<usize> = head
         .iter()
@@ -132,6 +138,7 @@ fn widths(head: &[&str], rows: &[Vec<String>]) -> Vec<usize> {
 
 /// A border line: `─` across the columns, with its left, right and
 /// intersection characters.
+#[inline]
 fn line(widths: &[usize], [left, right, middle]: [char; 3], colors: bool) -> String {
     let columns: Vec<String> = widths
         .iter()
@@ -178,6 +185,7 @@ fn row(cells: &[impl AsRef<str>], widths: &[usize], colors: bool, head: bool) ->
 
 /// `string(str, index)`: one space either side, padded on the right to the
 /// column's width.
+#[inline]
 fn pad(text: &str, width: usize) -> String {
     let inner = width.saturating_sub(2);
     let length = strlen(text);

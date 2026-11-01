@@ -9,6 +9,8 @@ pub(super) struct Options {
 }
 
 impl Options {
+    #[must_use]
+    #[inline]
     pub fn parse(args: &[&str]) -> Option<Self> {
         let sub = args.get(1)?.trim();
         if !matches!(sub, "checkout" | "revert") {
@@ -38,6 +40,7 @@ impl Options {
         (!options.id.is_empty() && options.id.len() <= 256).then_some(options)
     }
 
+    #[inline]
     fn apply_arg(&mut self, value: &str) -> Option<()> {
         match value {
             "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
@@ -68,7 +71,9 @@ impl Options {
         Some(())
     }
 
-    pub fn command(&self) -> &'static str {
+    #[must_use]
+    #[inline]
+    pub const fn command(&self) -> &'static str {
         if self.revert { "revert" } else { "checkout" }
     }
 }

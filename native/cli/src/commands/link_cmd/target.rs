@@ -112,6 +112,7 @@ fn add_package_json_peers(path: &Path, peers: &mut Vec<String>) {
     }
 }
 
+#[inline]
 fn add_policy_peers(policy: &Value, peers: &mut Vec<String>) {
     let Some(peer_deps) = policy.get("peerDependencies") else {
         return;
@@ -123,6 +124,7 @@ fn add_policy_peers(policy: &Value, peers: &mut Vec<String>) {
     }
 }
 
+#[inline]
 fn add_object_peers(map: &serde_json::Map<String, Value>, peers: &mut Vec<String>) {
     for (name, val) in map {
         if val.as_str().map(str::trim) != Some("-") {
@@ -131,6 +133,7 @@ fn add_object_peers(map: &serde_json::Map<String, Value>, peers: &mut Vec<String
     }
 }
 
+#[inline]
 fn add_array_peers(items: &[Value], peers: &mut Vec<String>) {
     for item in items {
         if let Some(name) = item.get("name").and_then(Value::as_str)
@@ -145,6 +148,7 @@ fn add_array_peers(items: &[Value], peers: &mut Vec<String>) {
     }
 }
 
+#[inline]
 fn add_env_peers(env_id: &str, peers: &mut Vec<String>) {
     let base_env = aspect_id_without_version(env_id.trim()).trim();
     if matches!(
@@ -162,6 +166,7 @@ fn add_env_peers(env_id: &str, peers: &mut Vec<String>) {
     }
 }
 
+#[inline]
 fn push_unique(list: &mut Vec<String>, item: &str) {
     let item = item.trim();
     if !item.is_empty()
@@ -249,6 +254,7 @@ fn find_teambit_packages_dir(root: &Path) -> Option<PathBuf> {
     parent.is_dir().then(|| parent.to_path_buf())
 }
 
+#[inline]
 fn link_aspect_if_allowed(src: &Path, dest: &Path) -> io::Result<()> {
     if let Ok(meta) = dest.symlink_metadata()
         && !meta.file_type().is_symlink()
@@ -279,6 +285,7 @@ pub(super) fn create_dir_symlink(from: &Path, to: &Path) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn remove_existing_target(to: &Path) -> io::Result<()> {
     let Ok(meta) = to.symlink_metadata() else {
         return Ok(());

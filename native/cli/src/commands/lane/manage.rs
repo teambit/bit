@@ -65,6 +65,7 @@ fn parse_lane_target_args<'a>(args: &[&'a str]) -> Option<(&'a str, Option<&'a s
     Some((target?, lane_name))
 }
 
+#[inline]
 fn apply_lane_target_arg<'a>(
     arg: &'a str,
     iter: &mut impl Iterator<Item = &'a str>,
@@ -97,6 +98,7 @@ fn apply_lane_target_arg<'a>(
     set_unique(target, arg).then_some(())
 }
 
+#[inline]
 fn set_unique<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
     let trimmed = val.trim();
     !trimmed.is_empty() && !trimmed.starts_with('-') && slot.replace(trimmed).is_none()
@@ -170,6 +172,7 @@ pub(super) fn remove_comp(args: &[OsString], lane_args: &[&str]) -> io::Result<O
     })
 }
 
+#[inline]
 fn valid_remove_comp_args(args: &[&str]) -> bool {
     let mut pattern_count = 0usize;
     let mut iter = args.iter().copied();
@@ -193,6 +196,7 @@ fn valid_remove_comp_args(args: &[&str]) -> bool {
     pattern_count == 1
 }
 
+#[inline]
 fn count_trailing_patterns<'a>(iter: impl Iterator<Item = &'a str>, count: &mut usize) -> bool {
     for rest in iter {
         let rest = rest.trim();
@@ -331,6 +335,7 @@ pub(super) fn eject(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome
     crate::commands::eject::eject_from_lane(&root, args, &ids, models)
 }
 
+#[inline]
 fn outside_workspace_failure(
     cwd: &Path,
     args: &[OsString],

@@ -12,6 +12,7 @@ use std::{
 const REMOTE_LOCAL_CONFLICT_ERR: &str =
     "The --local-scope and --scope flags cannot be used when listing a remote scope.";
 
+#[inline]
 pub(super) fn preflight(
     cwd: &Path,
     root: Option<&Path>,
@@ -27,6 +28,7 @@ pub(super) fn preflight(
     None
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     std::env::var_os("CI")
         .is_some_and(|val| {
@@ -42,6 +44,7 @@ fn ci_enabled() -> bool {
         })
 }
 
+#[inline]
 fn emit_error(
     cwd: &Path,
     root: Option<&Path>,
@@ -60,6 +63,7 @@ fn emit_error(
     workspace_command::execute_failure_scope(cwd, args, "list", json, "", io::Error::other(msg))
 }
 
+#[inline]
 pub(super) fn owned(
     root: Option<&Path>,
     args: &[OsString],
@@ -118,6 +122,7 @@ fn bare(
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 
+#[inline]
 fn write_session(
     args: &[OsString],
     session: &Session,

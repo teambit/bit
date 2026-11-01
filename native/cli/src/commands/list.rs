@@ -1,9 +1,7 @@
 //! Native local and remote `bit list` (`ls`): `ListCmd` with
 //! `ListerMain.localList` and `ComponentsList.listAll`. The workspace engine's
 //! `scopeList` reads the scope's models; the bitmap gives the workspace ids.
-//!
 //! On a lane, the components' heads are their lane heads.
-//!
 //! Rust reads scalar remote inventory and latest versions without importing
 //! objects; unsupported input and diagnostics delegate before effects.
 
@@ -65,6 +63,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     failure::present(root.as_deref(), args, &rows, &options, &session)
 }
 
+#[inline]
 fn unsupported(root: Option<&Path>, options: &Options) -> Option<&'static str> {
     if root.is_none() && options.remote.is_none() {
         return Some("not inside a workspace");
@@ -121,6 +120,7 @@ struct WorkspaceRow {
 
 impl Row {
     /// `id.toString()`.
+    #[inline]
     fn id(&self) -> String {
         self.version
             .as_ref()
@@ -266,6 +266,7 @@ fn all_ids<'a>(
 
 /// What `isBitIdMatchByWildcards` matches: the id, or the name of an id
 /// without its own scope.
+#[inline]
 fn wildcard_name(identity: &str, has_scope: bool) -> &str {
     if has_scope {
         return identity;
@@ -346,6 +347,7 @@ fn parse_lane_readme_of(value: &Value) -> io::Result<Vec<String>> {
 }
 
 /// `getNamespaceWithWildcard`, then `**/<namespace>` of `listAll`.
+#[inline]
 fn namespace_pattern(namespace: &str) -> String {
     if namespace.contains('*') { format!("**/{namespace}") } else { format!("**/{namespace}/**") }
 }
@@ -388,10 +390,12 @@ fn matches_at(pattern: &[char], text: &[char]) -> bool {
     }
 }
 
+#[inline]
 const fn line_terminator(character: char) -> bool {
     matches!(character, '\n' | '\r' | '\u{2028}' | '\u{2029}')
 }
 
+#[inline]
 fn decline(reason: &'static str) -> io::Error {
     io::Error::other(reason)
 }

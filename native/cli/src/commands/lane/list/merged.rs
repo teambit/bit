@@ -2,6 +2,7 @@
 use super::LaneData;
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 
+#[inline]
 pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
     let format = Formatter::new(chalk);
     let items = lanes
@@ -24,6 +25,7 @@ pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
     format.section(if merged { "merged lanes" } else { "unmerged lanes" }, "", &items)
 }
 
+#[inline]
 fn lane_name(id: &serde_json::Value) -> &str {
     id["name"]
         .as_str()

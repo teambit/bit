@@ -24,6 +24,7 @@ use std::{ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "lane", aliases: &["l"], run };
 
+#[inline]
 fn is_color_flag(arg: &str) -> bool {
     matches!(
         arg,
@@ -113,6 +114,7 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn fallback_lane_merge_error(args: &[OsString], grammar: &[&str]) -> io::Result<Outcome> {
     let Some(err_msg) = options::validate_error(grammar) else {
         return Ok(Outcome::Declined("outside the native lane merge grammar".into()));
@@ -120,6 +122,7 @@ fn fallback_lane_merge_error(args: &[OsString], grammar: &[&str]) -> io::Result<
     emit_lane_merge_error(args, err_msg)
 }
 
+#[inline]
 fn emit_lane_merge_error(args: &[OsString], err_msg: &'static str) -> io::Result<Outcome> {
     if std::env::var_os("CI")
         .is_some_and(|val| {

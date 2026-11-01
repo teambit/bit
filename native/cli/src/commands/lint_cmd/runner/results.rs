@@ -25,6 +25,7 @@ pub(super) const COUNTS: [(&str, &str, &str, &str); 5] = [
     ("warningCount", "totalWarningCount", "totalComponentsWithWarningCount", "Warnings"),
 ];
 
+#[inline]
 pub(super) fn component(id: &Value, tool: &Value) -> io::Result<Value> {
     let files = tool["results"].as_array().ok_or_else(|| invalid("linter results"))?;
     let output = tool["output"].as_str().unwrap_or_default();
@@ -47,6 +48,7 @@ pub(super) fn component(id: &Value, tool: &Value) -> io::Result<Value> {
     Ok(result)
 }
 
+#[inline]
 fn file(raw: &Value) -> Value {
     let file_path = raw["filePath"]
         .as_str()
@@ -67,6 +69,7 @@ fn file(raw: &Value) -> Value {
     })
 }
 
+#[inline]
 pub(super) fn aggregate(rows: Vec<Value>, errors: Vec<Value>) -> Value {
     let mut result = json!({});
     for (_, total, components, _) in COUNTS {
@@ -87,6 +90,7 @@ pub(super) fn aggregate(rows: Vec<Value>, errors: Vec<Value>) -> Value {
     result
 }
 
+#[inline]
 fn clean(result: &Value) -> bool {
     ["totalErrorCount", "totalFatalErrorCount", "totalWarningCount"]
         .iter()

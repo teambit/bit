@@ -66,6 +66,7 @@ fn run_in_workspace(
     }
 }
 
+#[inline]
 fn failure(
     root: &Path,
     args: &[OsString],
@@ -85,6 +86,7 @@ fn failure(
     }
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {

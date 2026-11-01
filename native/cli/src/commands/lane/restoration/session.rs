@@ -98,6 +98,7 @@ impl Session {
         Ok(phases.clone())
     }
 
+    #[inline]
     fn prepare_phase(
         &mut self,
         root: &Path,
@@ -109,6 +110,7 @@ impl Session {
         workspace_command::plan_retained(root, &request, startup, self.environment.take(), engine)
     }
 
+    #[inline]
     fn phase_request(&self, phase: &Value) -> Request<'static> {
         let token = self.selection["historyToken"].as_str().map_or("", str::trim);
         let phase_name = phase["phase"].as_str().map_or("", str::trim);
@@ -152,6 +154,7 @@ impl Session {
     }
 }
 
+#[inline]
 fn select(
     root: &Path,
     options: &Options,
@@ -175,6 +178,7 @@ fn select(
     Ok(selection)
 }
 
+#[inline]
 fn bootstrap(
     root: &Path,
     argv: &[&str],
@@ -194,6 +198,7 @@ fn bootstrap(
     Ok((environment.for_checkout(), Some(info)))
 }
 
+#[inline]
 pub(super) fn render_failure(
     startup: &Startup,
     output: &Output,

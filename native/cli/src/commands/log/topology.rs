@@ -94,6 +94,7 @@ fn resolve_from_scope_index(root: &Path, id: &str) -> io::Result<Option<String>>
     }
 }
 
+#[inline]
 fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
     let target = target.trim();
     let (scope, name) = if let Some(id_str) = row["id"].as_str() {
@@ -123,6 +124,7 @@ fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
     matched.then(|| if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") })
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -176,6 +178,7 @@ fn diagnose_missing_local_target(
     Err(decline("log unknown component"))
 }
 
+#[inline]
 pub(super) fn ordered_parents(logs: &[Value]) -> io::Result<Vec<&Value>> {
     let edges = graph_edges(logs)?;
     let mut postorder = topological_postorder(&edges)?;
@@ -210,6 +213,7 @@ fn graph_edges(logs: &[Value]) -> io::Result<Vec<Vec<usize>>> {
         .collect()
 }
 
+#[inline]
 fn topological_postorder(edges: &[Vec<usize>]) -> io::Result<Vec<usize>> {
     // Cleargraph visits nodes and outgoing edges from last to first, then
     // fills the result from the end. An explicit stack handles long histories.

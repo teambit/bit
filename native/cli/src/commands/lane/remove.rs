@@ -49,6 +49,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     workspace_command::execute_with(&root, args, "remove", &report, |_| plan.commit())
 }
 
+#[inline]
 fn all_scoped_remote_lanes(names: &[String]) -> bool {
     names
         .iter()
@@ -78,6 +79,7 @@ fn outside_workspace_remove(cwd: &std::path::Path, args: &[OsString]) -> io::Res
     Ok(Outcome::Declined("not inside a workspace".into()))
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -86,7 +88,11 @@ fn ci_enabled() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && trimmed != "0"
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
 }
 
@@ -123,6 +129,7 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
     (silent && !names.is_empty()).then_some((names, force, remote))
 }
 
+#[inline]
 fn consume_trailing_remove_names<'a>(
     iter: impl Iterator<Item = &'a str>,
     names: &mut Vec<String>,
@@ -136,6 +143,7 @@ fn consume_trailing_remove_names<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_remove_short_bundle(
     arg: &str,
     force: &mut bool,
@@ -187,6 +195,7 @@ fn select(names: &[String], lanes: &[list::LaneData], force: bool) -> io::Result
     Ok(ids)
 }
 
+#[inline]
 fn matches_lane(lane: &list::LaneData, target: &str) -> bool {
     if lane.is_main() {
         return false;

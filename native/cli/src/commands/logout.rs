@@ -42,6 +42,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn valid_args(args: &[OsString]) -> bool {
     if args.is_empty() {
         return false;
@@ -75,6 +76,7 @@ fn valid_args(args: &[OsString]) -> bool {
     true
 }
 
+#[inline]
 fn clear_auth_config(global_dir: &Path) -> io::Result<()> {
     let path = global_dir.join("config.json");
     if !path.is_file() {

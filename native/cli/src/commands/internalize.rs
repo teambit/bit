@@ -158,6 +158,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn apply_short_internalize_flags(arg: &str, options: &mut Options) -> Option<()> {
     let flags = arg.strip_prefix('-')?;
     if flags.is_empty() || flags.starts_with('-') {
@@ -211,6 +212,7 @@ fn prepare_list(
     Ok(Prepared::List { ids })
 }
 
+#[inline]
 fn is_entry_internal(
     root: &Path,
     bitmap_val: &Value,
@@ -347,6 +349,7 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn render_list(formatter: &Formatter, ids: &[String]) -> String {
     if ids.is_empty() {
         return formatter.hint("no internal components found in the workspace");
@@ -358,6 +361,7 @@ fn render_list(formatter: &Formatter, ids: &[String]) -> String {
     formatter.section("internal components", "", &items)
 }
 
+#[inline]
 fn render_mutate(formatter: &Formatter, changed: &[String], revert: bool) -> String {
     if changed.is_empty() {
         return formatter.hint(if revert {

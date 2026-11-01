@@ -40,6 +40,7 @@ pub(super) fn component_ids(result: &Value) -> io::Result<Vec<String>> {
 
 /// `checkout reset` installs only genuinely changed components; a restored
 /// directory appears under `addedComponents` but Node skips installation.
+#[inline]
 pub(super) fn changed_component_ids(result: &Value) -> io::Result<Vec<String>> {
     array(result.get("components"), "changed components")?
         .iter()
@@ -47,6 +48,7 @@ pub(super) fn changed_component_ids(result: &Value) -> io::Result<Vec<String>> {
         .collect()
 }
 
+#[inline]
 pub(super) fn error_report(chalk: Chalk, error: &str) -> String {
     let formatter = Formatter::new(chalk);
     format!(
@@ -74,6 +76,7 @@ pub(in crate::commands) struct ImportErrors {
 
 impl Installer {
     /// Process facts precede workers; the same Host later initializes checkout providers.
+    #[inline]
     pub(in crate::commands) fn into_parts(
         self,
     ) -> io::Result<(crate::commands::status::environments::Environments, HostInfo)> {
@@ -97,20 +100,26 @@ impl Installer {
 
     /// A configured user class may register mutable `InstallMain` or package-manager callbacks.
     /// Keep those workspaces on the released installation class before native install effects.
+    #[inline]
     pub(in crate::commands) fn needs_canonical(root: &Path) -> bool {
         canonical_workspace(root, false).unwrap_or(true)
     }
 
+    #[inline]
     pub(in crate::commands) fn needs_service_callbacks(root: &Path) -> bool {
         canonical_workspace(root, true).unwrap_or(true)
     }
 
     /// Keep the already loaded providers and process facts of a parent operation.
+    #[must_use]
+    #[inline]
     pub(in crate::commands) const fn from_host(host: Arc<Host>, info: HostInfo) -> Self {
         Self { host, info, cache_initialized: false }
     }
 
     /// Checkout and installation share the same consumer's single invalidation check.
+    #[must_use]
+    #[inline]
     pub(in crate::commands) const fn with_initialized_cache(mut self, initialized: bool) -> Self {
         self.cache_initialized = initialized;
         self
@@ -138,6 +147,7 @@ impl Installer {
     }
 
     /// Fork propagates the same native installation result without rename's graceful catch.
+    #[inline]
     pub(in crate::commands) fn install_fork(self, root: &Path) -> io::Result<()> {
         self.install_scope_rename(root)
     }
@@ -161,6 +171,7 @@ impl Installer {
 
     /// `InstallMain.install(undefined, { dedupe, import: false, writeConfigFiles,
     /// dependenciesGraph })` for the imported `ids`.
+    #[inline]
     pub fn install(
         self,
         root: &Path,
@@ -264,6 +275,7 @@ impl Installer {
     }
 
     /// Merge calls `InstallMain.install` without a supplied dependency graph.
+    #[inline]
     pub fn install_merge(self, root: &Path) -> io::Result<()> {
         self.run_ordered(
             root,
@@ -338,6 +350,7 @@ impl Installer {
         result.map_or(true, |value| value != false)
     }
 
+    #[inline]
     fn print_host_output(&self) {
         let stdout = self.host.take_stdout();
         if !self.info.non_interactive {

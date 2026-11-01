@@ -91,6 +91,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(opts)
 }
 
+#[inline]
 fn consume_trailing_insight_names<'a>(
     iter: impl Iterator<Item = &'a str>,
     names: &mut Vec<String>,
@@ -155,7 +156,7 @@ fn evaluate_insights(
     graph_and_seeders: Option<&(CompGraph, Vec<String>)>,
     chalk: Chalk,
 ) -> Option<Vec<EvaluatedInsight>> {
-    let mut results = Vec::new();
+    let mut results = Vec::with_capacity(opts.names.len());
     for name in &opts.names {
         match name.as_str() {
             "circular" => {
@@ -172,6 +173,7 @@ fn evaluate_insights(
     Some(results)
 }
 
+#[inline]
 fn evaluate_circular(
     graph: &CompGraph,
     seeders: &[String],
@@ -193,6 +195,7 @@ fn evaluate_circular(
     EvaluatedInsight { message, rendered_data, json_entry }
 }
 
+#[inline]
 fn evaluate_duplicate_dependencies(
     graph: &CompGraph,
     seeders: &[String],
@@ -262,6 +265,7 @@ fn emit_output(
 }
 
 /// Shared `GraphMain.getGraphIds().findCycles` projection for the two CLI commands.
+#[inline]
 pub(super) fn workspace_cycles(
     root: &std::path::Path,
     include_deps: bool,
@@ -334,6 +338,7 @@ struct Tarjan<'a> {
 }
 
 impl<'a> Tarjan<'a> {
+    #[inline]
     fn new(edges: &'a [Vec<usize>]) -> Self {
         let size = edges.len();
         Self {
@@ -341,7 +346,7 @@ impl<'a> Tarjan<'a> {
             next: 0,
             indices: vec![None; size],
             low: vec![0; size],
-            stack: Vec::new(),
+            stack: Vec::with_capacity(size),
             on_stack: vec![false; size],
             components: Vec::new(),
         }

@@ -48,6 +48,7 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     active(&root, args, &options.lane, &current, providers)
 }
 
+#[inline]
 fn outside_workspace_import(
     cwd: &std::path::Path,
     args: &[OsString],
@@ -60,6 +61,7 @@ fn outside_workspace_import(
     workspace_command::execute_failure_scope(cwd, args, "import", false, "", io::Error::other(msg))
 }
 
+#[inline]
 fn bootstrap(root: &std::path::Path) -> io::Result<Option<ProjectedLinker>> {
     // Main-lane import is handed to switch's own retained host. Active-lane
     // import keeps this host alive across remote Prepare and Apply.
@@ -112,6 +114,7 @@ fn active(
     })
 }
 
+#[inline]
 fn current_lane_id(current: &Value) -> String {
     current
         .as_str()
@@ -127,6 +130,7 @@ fn current_lane_id(current: &Value) -> String {
         )
 }
 
+#[inline]
 fn decline_or_fail(
     root: &std::path::Path,
     args: &[OsString],
@@ -184,6 +188,7 @@ fn apply(engine: &mut Engine, prepared: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn progress(output: &Output, row: &Value) {
     let reason = row["reason"].as_str().map_or("", str::trim);
     let count = row["ids"].as_array().map_or(0, Vec::len);
@@ -194,6 +199,7 @@ fn progress(output: &Output, row: &Value) {
     output.restart(&format!("successfully imported {number} {kind} {reason}"));
 }
 
+#[inline]
 fn report(lane: &str, current: &str, chalk: Chalk) -> String {
     let format = Formatter::new(chalk);
     if lane == current {

@@ -73,6 +73,7 @@ fn write_current(stdout: &mut impl Write, id: &Value, alias: &str, json: bool) -
     Ok(())
 }
 
+#[inline]
 fn current_json(name: &str, scope: &str, full: &str, alias: &str, is_main: bool) -> Value {
     if is_main {
         json!({"name":"main","scope":null,"id":"main","isDefault":true,"alias":null})
@@ -82,15 +83,18 @@ fn current_json(name: &str, scope: &str, full: &str, alias: &str, is_main: bool)
     }
 }
 
+#[inline]
 pub(super) fn scope(root: &Path) -> io::Result<Value> {
     scope_for(root, false)
 }
 
+#[inline]
 pub(super) fn scope_for(root: &Path, bare: bool) -> io::Result<Value> {
     let path = if bare { root.to_owned() } else { bit_object_import::scope_path(root) };
     bit_object_import::parse_jsonc(&fs::read(path.join("scope.json"))?)
 }
 
+#[inline]
 pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {
     let scope = scope(root)?;
     let scope_name = scope["name"]
@@ -102,6 +106,7 @@ pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {
     with_alias(current, &Tracking::read(&scope))
 }
 
+#[inline]
 pub(super) fn with_alias(current: Value, tracking: &Tracking) -> io::Result<(Value, String)> {
     let name = text(current.get("name"))?.trim();
     let scope = if name == "main" {

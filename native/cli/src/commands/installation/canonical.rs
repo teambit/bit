@@ -84,6 +84,7 @@ fn run_prepared(prepared: CanonicalInstall, path: String) -> Value {
     }
 }
 
+#[inline]
 fn native_error(error: &io::Error) -> Value {
     match bit_install::engine::EngineError::from_io(error) {
         Some(error) => json!({"code": error.code, "message": error.message, "hint": error.hint}),
@@ -149,6 +150,7 @@ pub(super) fn canonical_workspace(root: &Path, react_service: bool) -> io::Resul
         }))
 }
 
+#[inline]
 fn scope_has_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Result<bool> {
     let path = scope_path(root).join("scope.jsonc");
     if !path.try_exists()? {
@@ -165,6 +167,7 @@ fn scope_has_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::
 }
 
 /// `isFeatureEnabled(DEPS_GRAPH)`: `BIT_FEATURES`, else the `features` config.
+#[inline]
 pub(super) fn deps_graph_enabled(root: &Path) -> io::Result<bool> {
     let features = if let Some(features) = env::var("BIT_FEATURES")
         .ok()
