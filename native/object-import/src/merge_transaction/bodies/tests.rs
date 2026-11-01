@@ -1,3 +1,5 @@
+//! Unit tests for merge transaction source body preparation from overlays.
+
 use super::{json, prepare_response};
 use flate2::{Compression, write::ZlibEncoder};
 use sha1::{Digest, Sha1};

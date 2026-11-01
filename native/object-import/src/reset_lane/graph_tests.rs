@@ -1,3 +1,5 @@
+//! Unit tests for lane reset version graph selection and diagnostics.
+
 use super::{Heads, Repository, diagnostics, object_path, outbound, selection};
 use serde_json::{Value, json};
 use std::{
@@ -11,6 +13,7 @@ const BASE: &str = "1111111111111111111111111111111111111111";
 const MAIN: &str = "2222222222222222222222222222222222222222";
 const MERGE: &str = "3333333333333333333333333333333333333333";
 
+#[derive(Debug)]
 struct Fixture(std::path::PathBuf);
 impl Drop for Fixture {
     fn drop(&mut self) {

@@ -1,3 +1,5 @@
+//! Unit tests for outbound staged lane creation planning.
+
 use crate::lane_create::{Options, Plan, outbound};
 use serde_json::{Value, json};
 use std::{fs, path::Path};

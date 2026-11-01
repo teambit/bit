@@ -1,3 +1,5 @@
+//! Unit tests for recovery operation token revision exhaustion.
+
 use super::{Operation, State};
 #[test]
 fn token_revision_exhaustion_discards_previous_plan() {

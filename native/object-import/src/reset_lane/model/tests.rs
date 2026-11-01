@@ -1,3 +1,5 @@
+//! Unit tests for lane reset component model version state pruning.
+
 use super::remove_versions;
 use crate::reset_lane::Selection;
 use serde_json::json;

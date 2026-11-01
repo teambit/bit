@@ -1,3 +1,5 @@
+//! Unit tests for workspace configuration conflict planning in merge state.
+
 use super::{State, serve};
 use serde_json::{Value, json};
 use std::io::Cursor;
@@ -14,6 +16,7 @@ fn state_request(state: &mut State, input: impl serde::Serialize) -> Value {
     serve(&mut Cursor::new(frame), &mut output, state, &super::tests::POOL).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
+#[derive(Debug)]
 struct Directory(std::path::PathBuf);
 impl Directory {
     fn new() -> Self {

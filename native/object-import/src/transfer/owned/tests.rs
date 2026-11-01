@@ -1,3 +1,5 @@
+//! Unit tests for owned transfer initialization and staged object streaming.
+
 use std::{fs, io::Write, path::Path};
 
 use flate2::{Compression, write::ZlibEncoder};

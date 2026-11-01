@@ -1,3 +1,5 @@
+//! Unit tests for atomic concurrent object store writes and duplicate suppression.
+
 use super::Store;
 use std::{
     fs,
@@ -6,6 +8,7 @@ use std::{
 };
 
 static COUNTER: AtomicU64 = AtomicU64::new(0);
+#[derive(Debug)]
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> Self {

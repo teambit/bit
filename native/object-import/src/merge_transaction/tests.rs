@@ -1,3 +1,5 @@
+//! Unit tests for merge transaction phase directives and journal receipts.
+
 use super::{State, apply};
 use serde_json::{Value, json};
 

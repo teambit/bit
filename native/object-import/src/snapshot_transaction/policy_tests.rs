@@ -1,3 +1,5 @@
+//! Seeded differential tests for future version increment policy.
+
 use super::future;
 use serde_json::Value;
 use std::process::Command;

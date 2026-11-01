@@ -1,3 +1,5 @@
+//! Unit tests for in-memory owned snapshot capture during inspection.
+
 use super::{State, apply, begin, tests::Fixture};
 use serde_json::{Value, json};
 use std::fs;

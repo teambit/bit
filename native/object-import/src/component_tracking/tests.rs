@@ -1,3 +1,5 @@
+//! Unit tests for `bit add` component tracking planning and `.bitmap` updates.
+
 mod main_file;
 mod planning;
 mod root;

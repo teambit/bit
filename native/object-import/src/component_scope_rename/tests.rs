@@ -1,3 +1,5 @@
+//! Unit tests for component scope and owner rename selection and validation.
+
 use super::{Options, selection};
 #[test]
 fn owner_selection_requires_the_owner_separator_and_preserves_scope_suffixes() {

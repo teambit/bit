@@ -1,3 +1,5 @@
+//! Seeded equivalence tests for `isComponentModified` and `isComponentSourceCodeModified`.
+
 use super::plan;
 use serde_json::Value;
 use std::process::Command;

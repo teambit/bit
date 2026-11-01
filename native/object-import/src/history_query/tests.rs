@@ -1,3 +1,5 @@
+//! Unit tests for topological graph sorting and `jsdiff`-compatible line diffs.
+
 use super::{lines, show};
 use serde_json::json;
 

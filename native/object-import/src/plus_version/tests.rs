@@ -1,3 +1,5 @@
+//! Unit tests for plus-prefixed dependency version placeholder resolution.
+
 use super::{is_plus, resolve};
 
 #[test]

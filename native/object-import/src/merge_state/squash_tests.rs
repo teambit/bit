@@ -1,3 +1,5 @@
+//! Unit tests for lane squash parent policy resolution in merge state.
+
 use super::{State, serve};
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};

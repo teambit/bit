@@ -1,3 +1,5 @@
+//! Unit tests for bounded zlib object metadata inflation.
+
 use super::{MAX_BYTES, inflate};
 use flate2::{Compression, write::ZlibEncoder};
 use std::io::Write;

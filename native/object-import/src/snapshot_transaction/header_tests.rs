@@ -1,3 +1,5 @@
+//! Unit tests for parallel object header encoding and zlib compression.
+
 use super::{compress, encode};
 use flate2::read::ZlibDecoder;
 use serde_json::Value;

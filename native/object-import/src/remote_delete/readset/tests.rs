@@ -1,3 +1,5 @@
+//! Unit tests for remote delete readset file watch validation.
+
 use super::Readset;
 use std::fs;
 

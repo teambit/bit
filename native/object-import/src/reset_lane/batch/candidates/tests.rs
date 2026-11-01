@@ -1,3 +1,5 @@
+//! Unit tests for lane reset batch candidate discovery and index ordering.
+
 use super::{Discovery, ordered, staged};
 use crate::reset_lane::{Heads, Repository, diagnostics, object_path, outbound, selection};
 use serde_json::json;

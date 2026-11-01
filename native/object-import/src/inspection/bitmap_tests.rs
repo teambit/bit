@@ -1,3 +1,5 @@
+//! Seeded equivalence tests for `normalizeBitmapContentForVersioning`.
+
 use super::bitmap::normalize;
 use serde_json::Value;
 use std::process::Command;

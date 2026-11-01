@@ -1,3 +1,5 @@
+//! Unit tests for parallel model source reading and budget retry behavior during diffing.
+
 use super::load;
 use crate::inspection::{hash, tests::Fixture, wire};
 use flate2::{Compression, write::ZlibEncoder};

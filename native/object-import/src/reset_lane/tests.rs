@@ -1,3 +1,5 @@
+//! Unit tests for single-component linear lane snap resets and publication guards.
+
 use super::{Plan, object_hash, object_path};
 use crate::workspace::engine::command::outbound;
 use serde_json::{Value, json};

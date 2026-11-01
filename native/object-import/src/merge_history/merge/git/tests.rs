@@ -1,3 +1,5 @@
+//! Unit tests for platform-aware three-way text merge conflict formatting.
+
 use super::workspace_merge_for_platform;
 
 #[test]

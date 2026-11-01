@@ -1,3 +1,5 @@
+//! Unit tests for component reset head and parent provenance planning.
+
 use super::{plan, walk};
 use serde_json::{Value, json};
 fn hash(byte: char) -> String {

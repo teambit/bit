@@ -1,3 +1,5 @@
+//! Unit tests for workspace session stack frame size bounds.
+
 use super::WorkspaceSession;
 
 #[test]

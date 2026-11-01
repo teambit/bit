@@ -1,3 +1,5 @@
+//! Unit tests for semver comparison and range intersection in config merge planning.
+
 use super::semver;
 use serde_json::{Value, json};
 use std::cmp::Ordering;

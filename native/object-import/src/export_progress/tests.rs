@@ -1,3 +1,5 @@
+//! Unit tests for thread-local export progress event observers and unwind isolation.
+
 use super::{Event, emit, scope};
 use std::sync::{Arc, Barrier, mpsc::sync_channel};
 

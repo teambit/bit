@@ -1,3 +1,5 @@
+//! Unit tests for retained workspace read observations during inspection.
+
 use super::{State, begin, hash, tests::Fixture};
 use crate::workspace::snapshots::{Observation, State as Reads};
 use serde_json::{Value, json};

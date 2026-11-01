@@ -1,3 +1,5 @@
+//! Unit tests for workspace file inspection sessions and snapshot lifecycle.
+
 use super::{State, apply, hash};
 use serde_json::json;
 use std::{
@@ -5,6 +7,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+#[derive(Debug)]
 pub(super) struct Fixture(pub(super) std::path::PathBuf);
 impl Fixture {
     pub(super) fn new() -> Self {

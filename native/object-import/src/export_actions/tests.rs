@@ -1,3 +1,5 @@
+//! Unit tests for thread-local export action handler scoping and unwind recovery.
+
 use super::{Handler, current, scope};
 use serde_json::json;
 use std::{

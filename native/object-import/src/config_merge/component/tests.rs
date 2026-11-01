@@ -1,3 +1,5 @@
+//! Unit tests for versioned workspace aspect identity resolution during config merge.
+
 use super::{Engine, other_id};
 use serde_json::json;
 

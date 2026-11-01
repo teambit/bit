@@ -1,3 +1,5 @@
+//! Unit tests for snapshot transaction journal directive ordering and receipts.
+
 use super::State;
 use serde_json::{Value, json};
 

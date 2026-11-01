@@ -1,3 +1,5 @@
+//! Unit tests for clearing soft-tagged `nextVersion` entries in `.bitmap`.
+
 use super::Plan;
 use serde_json::json;
 use std::{

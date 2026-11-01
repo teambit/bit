@@ -1,3 +1,5 @@
+//! Unit tests for workspace and artifact source normalization during snapshot transactions.
+
 use super::{read, wire};
 use serde_json::json;
 use sha1::{Digest, Sha1};

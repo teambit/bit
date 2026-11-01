@@ -1,3 +1,5 @@
+//! Unit tests for compact and legacy JavaScript JSON wire serialization.
+
 use super::Value;
 use serde_json::json;
 #[test]

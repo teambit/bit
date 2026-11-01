@@ -1,3 +1,5 @@
+//! Unit tests for main-branch component reset planning and publication.
+
 use super::{Batch, Plan, outbound, repository::object_path};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
@@ -9,6 +11,7 @@ use std::{
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+#[derive(Debug)]
 struct Fixture {
     root: PathBuf,
     alpha: String,

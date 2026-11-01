@@ -1,3 +1,5 @@
+//! Unit tests for merge transaction body preparation and conflict markers.
+
 mod compact_receipts;
 mod parallel_reads;
 mod selected_base;
@@ -12,6 +14,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

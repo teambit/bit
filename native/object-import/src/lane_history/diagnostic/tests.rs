@@ -1,3 +1,5 @@
+//! Unit tests for lane history published diagnostic checks.
+
 use super::ci_requires_published_diagnostic;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
@@ -7,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug)]
 struct Fixture {
     temporary: tempfile::TempDir,
     root: PathBuf,

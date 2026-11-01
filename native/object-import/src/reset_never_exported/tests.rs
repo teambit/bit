@@ -1,3 +1,5 @@
+//! Unit tests for clearing unexported `.bitmap` component versions.
+
 use super::Plan;
 use serde_json::json;
 use std::{

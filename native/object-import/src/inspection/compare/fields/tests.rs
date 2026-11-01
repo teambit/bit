@@ -1,3 +1,5 @@
+//! Unit tests for UTF-16 file alignment and duplicate path handling during version comparison.
+
 use super::{Js, align_files, array, get, text};
 use serde_json::json;
 fn row(path: Js, name: &str) -> Js {

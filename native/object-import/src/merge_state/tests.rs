@@ -1,3 +1,5 @@
+//! Unit tests for lane snap and merge state transitions.
+
 pub(super) static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
     rayon::ThreadPoolBuilder::new()
         .num_threads(4)

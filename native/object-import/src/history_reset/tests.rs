@@ -1,3 +1,5 @@
+//! Unit tests for `historyReset` candidate selection and local version retention.
+
 use super::{State, apply};
 use serde_json::{Value, json};
 fn call(kind: &str, input: Value) -> Value {

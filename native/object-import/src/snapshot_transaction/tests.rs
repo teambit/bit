@@ -1,3 +1,5 @@
+//! Unit tests for end-to-end snapshot transaction staging and publication.
+
 use super::{State, apply};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
@@ -7,6 +9,7 @@ use std::{
 };
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
+#[derive(Debug)]
 struct Fixture(std::path::PathBuf);
 impl Fixture {
     fn new() -> Self {

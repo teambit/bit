@@ -1,3 +1,5 @@
+//! Unit tests for `inspectionDiff` against captured workspace bytes and verified scope sources.
+
 use super::{State, apply, hash};
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::json;

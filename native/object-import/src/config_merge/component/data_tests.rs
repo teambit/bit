@@ -1,3 +1,5 @@
+//! Unit tests for own `undefined` property preservation in component config merges.
+
 use super::equal;
 use serde_json::json;
 

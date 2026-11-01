@@ -1,3 +1,5 @@
+//! Unit tests for merge history graph traversal and file merge resolution.
+
 static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
     rayon::ThreadPoolBuilder::new()
         .num_threads(4)
@@ -15,6 +17,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> Self {
@@ -43,15 +46,11 @@ impl Directory {
         hash
     }
     fn version(&self, hash: &str, parents: &[String]) {
-        self.store(
-            "Version",
-            hash,
-            serde_json::to_string(
-                &json!({"mainFile":"index.js","files":[],"log":{},"parents":parents}),
-            )
-            .unwrap()
-            .as_bytes(),
-        );
+        let body = serde_json::to_vec(
+            &json!({"mainFile":"index.js","files":[],"log":{},"parents":parents}),
+        )
+        .unwrap();
+        self.store("Version", hash, &body);
     }
 }
 impl Drop for Directory {

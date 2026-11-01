@@ -1,3 +1,5 @@
+//! Unit tests for snapshot object batch writing and verification.
+
 use super::serve;
 use flate2::read::ZlibDecoder;
 use serde_json::{Value, json};
@@ -9,6 +11,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> Self {

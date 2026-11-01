@@ -1,3 +1,5 @@
+//! Unit tests for component tracking platform path formatting and workspace boundary checks.
+
 use super::{diagnostic, display, relative};
 use std::path::Path;
 

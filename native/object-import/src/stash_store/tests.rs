@@ -1,3 +1,5 @@
+//! Unit tests for stash store lexical ordering, metadata formatting, and consumption.
+
 use super::{PreparedLoad, PreparedSave, list};
 use serde_json::json;
 use std::{

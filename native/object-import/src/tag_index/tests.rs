@@ -1,3 +1,5 @@
+//! Unit tests for component version tag hash indexing and precedence.
+
 use super::TagIndex;
 #[test]
 fn newest_tag_and_normal_versions_take_precedence() {

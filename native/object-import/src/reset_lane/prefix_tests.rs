@@ -1,3 +1,5 @@
+//! Unit tests for lane reset hash prefix resolution and ambiguity diagnostics.
+
 use super::{
     Batch, BitmapState, Plan, Repository, diagnostics, object_hash, object_path, outbound,
 };
@@ -13,6 +15,7 @@ const DETACHED: &str = "3333333333333333333333333333333333333333";
 const OTHER: &str = "4444444444444444444444444444444444444444";
 const MERGE: &str = "5555555555555555555555555555555555555555";
 
+#[derive(Debug)]
 struct Fixture(tempfile::TempDir);
 impl Fixture {
     fn new() -> Self {

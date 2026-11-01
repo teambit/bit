@@ -1,3 +1,5 @@
+//! Unit tests for multi-component lane reset batch execution and dependent checks.
+
 use super::Batch;
 use crate::reset_lane::{Plan, object_hash, object_path, outbound};
 use serde_json::{Value, json};

@@ -1,3 +1,5 @@
+//! Unit tests for parallel workspace file capture and binary normalization.
+
 use super::{capture, wire};
 use crate::inspection::{hash, tests::Fixture};
 use serde_json::json;
