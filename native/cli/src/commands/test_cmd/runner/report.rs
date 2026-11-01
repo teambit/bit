@@ -21,6 +21,7 @@ pub(super) fn report(raw: &Value, identity: &str) -> io::Result<Report> {
         .map(file)
         .collect::<io::Result<Vec<_>>>()?;
     let errors: Vec<_> = rows.iter().filter_map(error).collect();
+    let has_errors = !errors.is_empty();
     let components = if files.is_empty() {
         Vec::new()
     } else {
@@ -29,16 +30,17 @@ pub(super) fn report(raw: &Value, identity: &str) -> io::Result<Report> {
             "coverage":raw.get("coverage").cloned().unwrap_or_else(super::coverage::empty)},"errors":errors})]
     };
     Ok(Report {
-        data: serde_json::to_string_pretty(
-            &json!([{"data":{"components":components,"errors":errors}}]),
-        )?,
+        data: serde_json::to_string_pretty(&json!([{"data":{
+            "components": Value::Array(components),
+            "errors": Value::Array(errors),
+        }}]))?,
         code: raw["exitCode"]
             .as_i64()
             .filter(|code| *code != 0)
             .map(i32::try_from)
             .transpose()
             .map_err(io::Error::other)?
-            .unwrap_or_else(|| i32::from(!errors.is_empty())),
+            .unwrap_or_else(|| i32::from(has_errors)),
         details: None,
     })
 }

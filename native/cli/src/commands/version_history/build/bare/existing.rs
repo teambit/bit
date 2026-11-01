@@ -67,7 +67,7 @@ fn valid_hash(hash: &str) -> Option<&str> {
 
 pub(super) fn complete_refs(value: &Value) -> Option<bool> {
     let values = refs(value)?;
-    let mut unique = HashSet::new();
+    let mut unique = HashSet::with_capacity(values.len());
     Some(
         values
             .into_iter()

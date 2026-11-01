@@ -1,5 +1,5 @@
 //! List the default scope through native inbound transport before checkout preparation.
-use super::{NodeCli, Request, array};
+use super::{NodeCli, Request, decline};
 use crate::commands::{engine::Engine, status::cache::cache_root};
 use serde_json::{Value, json};
 use std::{io, path::Path};
@@ -42,18 +42,27 @@ fn list(engine: &mut Engine, root: &Path, scope: &str) -> io::Result<Vec<Value>>
         "patterns": [format!("{}/**", scope.trim())],
         "laneOnly": false,
     }))?;
-    let first = listed["lists"]
-        .get(0)
-        .and_then(|entry| entry.get("components"));
-    Ok(array(first, "checkout scope components")?
-        .iter()
-        .filter_map(|component| match &component["id"] {
+    let mut listed = listed;
+    let components = listed["lists"]
+        .get_mut(0)
+        .and_then(|entry| entry.get_mut("components"))
+        .and_then(Value::as_array_mut)
+        .ok_or_else(|| decline("checkout scope components"))?;
+    Ok(std::mem::take(components)
+        .into_iter()
+        .filter_map(|mut component| match component["id"].take() {
             Value::Null => None,
             Value::String(text) => {
                 let trimmed = text.trim();
-                (!trimmed.is_empty()).then(|| Value::String(trimmed.to_owned()))
+                if trimmed.is_empty() {
+                    None
+                } else if trimmed.len() == text.len() {
+                    Some(Value::String(text))
+                } else {
+                    Some(Value::String(trimmed.to_owned()))
+                }
             }
-            other => Some(other.clone()),
+            other => Some(other),
         })
         .collect())
 }

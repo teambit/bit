@@ -2,16 +2,15 @@
 use serde_json::{Value, json};
 
 fn project(data: &Value, identity: &str, environment: &str, message: Option<&str>) -> Value {
-    let trimmed_id = identity.trim();
-    let identity = trimmed_id
+    let identity = identity
+        .trim()
         .split('@')
         .next()
-        .unwrap_or(trimmed_id)
+        .unwrap_or_default()
         .trim();
-    let components = data[0]["data"]["components"]
+    let tested: Vec<_> = data[0]["data"]["components"]
         .as_array()
-        .map_or(&[][..], Vec::as_slice);
-    let tested: Vec<_> = components
+        .map_or(&[][..], Vec::as_slice)
         .iter()
         .filter_map(component)
         .collect();
@@ -20,22 +19,28 @@ fn project(data: &Value, identity: &str, environment: &str, message: Option<&str
         .is_some_and(|error| !error.is_null());
     let without = if tested.is_empty() && !environment_error { vec![identity] } else { Vec::new() };
     let affected = if tested.is_empty() && environment_error { vec![identity] } else { Vec::new() };
-    let mut errors = Vec::new();
-    if environment_error {
-        let mut error = json!({"envId":environment.trim()});
-        if let Some(message) = message
-            .map(str::trim)
-            .filter(|msg| !msg.is_empty())
-        {
-            error["message"] = json!(message);
-        }
-        errors.push(error);
-    }
+    let errors = env_errors(environment_error, environment, message);
+    let (tests_passed, tests_failed, tests_pending) =
+        sum_triple(&tested, ["passed", "failed", "pending"]);
     json!({"totals":{"totalComponents":1,"tested":tested.len(),"withoutTests":without.len(),
-        "affectedByEnvError":affected.len(),"testsPassed":sum(&tested,"passed"),
-        "testsFailed":sum(&tested,"failed"),"testsPending":sum(&tested,"pending")},
+        "affectedByEnvError":affected.len(),"testsPassed":tests_passed,
+        "testsFailed":tests_failed,"testsPending":tests_pending},
         "componentsWithTests":tested,"componentsWithoutTests":without,
         "componentsAffectedByEnvError":affected,"envErrors":errors})
+}
+
+fn env_errors(environment_error: bool, environment: &str, message: Option<&str>) -> Vec<Value> {
+    if !environment_error {
+        return Vec::new();
+    }
+    let mut error = json!({"envId":environment.trim()});
+    if let Some(message) = message
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+    {
+        error["message"] = json!(message);
+    }
+    vec![error]
 }
 
 fn component(component: &Value) -> Option<Value> {
@@ -57,8 +62,9 @@ fn component(component: &Value) -> Option<Value> {
                 file.get("error")
                     .is_some_and(|err| !err.is_null())
             });
-    Some(json!({"id":identity,"passed":sum(files,"pass"),"failed":sum(files,"failed"),
-        "pending":sum(files,"pending"),"hasError":has_error}))
+    let (passed, failed, pending) = sum_triple(files, ["pass", "failed", "pending"]);
+    Some(json!({"id":identity,"passed":passed,"failed":failed,
+        "pending":pending,"hasError":has_error}))
 }
 
 fn non_empty_str(val: &Value) -> Option<&str> {
@@ -79,10 +85,15 @@ fn component_identity(id: &Value) -> Option<String> {
     Some(format!("{scope}/{name}"))
 }
 
-fn sum(rows: &[Value], field: &str) -> u64 {
+fn sum_triple(rows: &[Value], fields: [&str; 3]) -> (u64, u64, u64) {
     rows.iter()
-        .map(|row| row[field].as_u64().unwrap_or(0))
-        .sum()
+        .fold((0, 0, 0), |(first, second, third), row| {
+            (
+                first + row[fields[0]].as_u64().unwrap_or(0),
+                second + row[fields[1]].as_u64().unwrap_or(0),
+                third + row[fields[2]].as_u64().unwrap_or(0),
+            )
+        })
 }
 
 pub(super) fn render(

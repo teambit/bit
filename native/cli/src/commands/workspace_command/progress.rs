@@ -334,14 +334,18 @@ fn render_import(output: &Output, row: &Import) {
 }
 
 fn import_message(row: &Import) -> String {
-    let names: HashSet<&str> = row.ids
-        .iter()
-        .map(|id| without_version(id))
-        .collect();
-    let ids = match (row.objects_only, names.len() == row.ids.len()) {
-        (true, _) => format!("{} objects", row.ids.len()),
-        (false, true) => format!("{} components", names.len()),
-        (false, false) => format!("{} components, {} versions", names.len(), row.ids.len()),
+    let ids = if row.objects_only {
+        format!("{} objects", row.ids.len())
+    } else {
+        let names: HashSet<&str> = row.ids
+            .iter()
+            .map(|id| without_version(id))
+            .collect();
+        if names.len() == row.ids.len() {
+            format!("{} components", names.len())
+        } else {
+            format!("{} components, {} versions", names.len(), row.ids.len())
+        }
     };
     let reason = row.reason
         .as_ref()

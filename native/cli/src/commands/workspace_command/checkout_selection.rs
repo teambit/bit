@@ -123,14 +123,15 @@ fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
             )
         })
         .collect::<io::Result<Vec<_>>>()?;
-    let selected = patterns::extended::matching(&identities, &patterns::split(pattern))?;
+    let selected: std::collections::HashSet<&str> =
+        patterns::extended::matching(&identities, &patterns::split(pattern))?.into_iter().collect();
     if selected.is_empty() {
         return Err(decline("checkout component pattern has no matches"));
     }
     Ok(targets
         .iter()
         .zip(&identities)
-        .filter(|(_, id)| selected.contains(id))
+        .filter(|(_, id)| selected.contains(*id))
         .map(|(target, _)| target.clone())
         .collect())
 }

@@ -21,7 +21,7 @@ impl Settings {
         let selected = files::select(root, &options.user_pattern)?;
         let mut settings = Self {
             selection: Selection {
-                pattern: (!options.user_pattern.is_empty()).then(|| {
+                pattern: (selected.is_none() && !options.user_pattern.is_empty()).then(|| {
                     options.user_pattern.join(", ")
                 }),
                 changed: options.json || !options.all,

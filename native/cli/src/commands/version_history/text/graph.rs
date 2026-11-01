@@ -18,8 +18,11 @@ impl Graph {
         if rows.len() > 10000 {
             return None;
         }
-        let mut graph = Self { nodes: Vec::new(), indices: HashMap::new() };
-        let mut seen_rows = HashSet::new();
+        let mut graph = Self {
+            nodes: Vec::with_capacity(rows.len()),
+            indices: HashMap::with_capacity(rows.len()),
+        };
+        let mut seen_rows = HashSet::with_capacity(rows.len());
         for row in rows {
             let hash = row["hash"]
                 .as_str()
@@ -28,7 +31,7 @@ impl Graph {
             if !seen_rows.insert(hash) {
                 return None;
             }
-            graph.add_row_nodes(row)?;
+            graph.add_row_nodes(hash, row)?;
         }
         if short && !graph.unique_short_hashes() {
             return None;
@@ -39,11 +42,7 @@ impl Graph {
         Some(graph)
     }
 
-    fn add_row_nodes(&mut self, row: &Value) -> Option<()> {
-        let hash = row["hash"]
-            .as_str()
-            .map(str::trim)
-            .filter(|hash| !hash.is_empty())?;
+    fn add_row_nodes(&mut self, hash: &str, row: &Value) -> Option<()> {
         self.add_node(hash)?;
         for hash in refs(row, "parents")?
             .into_iter()

@@ -6,7 +6,7 @@ pub(super) fn normalized(path: &Path) -> PathBuf {
     if path.as_os_str().is_empty() {
         return PathBuf::new();
     }
-    let mut result = PathBuf::new();
+    let mut result = PathBuf::with_capacity(path.as_os_str().len());
     for component in path.components() {
         match component {
             std::path::Component::CurDir => {}

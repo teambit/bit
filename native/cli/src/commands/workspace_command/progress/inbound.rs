@@ -95,16 +95,15 @@ fn announce_dependency(
     wildcard: bool,
     on_lane: bool,
 ) -> bool {
-    let fallback = requested
-        .unwrap_or(row)
-        .ids
-        .iter()
-        .filter(|id| !id.trim().is_empty())
-        .count() as u64;
-    output.status(&format!(
-        "import {} components with their dependencies (if missing)",
-        row.requested.unwrap_or(fallback),
-    ));
+    let count = row.requested.unwrap_or_else(|| {
+        requested
+            .unwrap_or(row)
+            .ids
+            .iter()
+            .filter(|id| !id.trim().is_empty())
+            .count() as u64
+    });
+    output.status(&format!("import {count} components with their dependencies (if missing)"));
     row.components > 0 || ((wildcard || on_lane) && row.objects > 0)
 }
 

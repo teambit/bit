@@ -189,11 +189,18 @@ fn append_policy_candidates(
     out: &mut Vec<Candidate>,
 ) {
     for field in POLICY_FIELDS {
-        for (name, range) in policy_field_entries(&policy[field]) {
-            if !local_pkgs.contains(&name) {
+        let Some(obj) = policy[field].as_object() else {
+            continue;
+        };
+        for (raw_name, val) in obj {
+            let name = raw_name.trim();
+            let Some(range) = policy_entry_range(val) else {
+                continue;
+            };
+            if !name.is_empty() && !local_pkgs.contains(name) {
                 out.push(Candidate {
-                    name,
-                    current_range: range,
+                    name: name.to_owned(),
+                    current_range: range.to_owned(),
                     field: field.to_owned(),
                     target: target.clone(),
                     comp_bare_id: None,
@@ -203,22 +210,11 @@ fn append_policy_candidates(
     }
 }
 
-fn policy_field_entries(field_val: &Value) -> Vec<(String, String)> {
-    let Some(obj) = field_val.as_object() else {
-        return Vec::new();
-    };
-    obj.iter()
-        .filter_map(|(name, val)| {
-            let name = name.trim();
-            let range = val
-                .as_str()
-                .or_else(|| val.get("version").and_then(Value::as_str))?
-                .trim();
-            (!name.is_empty() && range != "-" && !range.is_empty()).then(|| {
-                (name.to_owned(), range.to_owned())
-            })
-        })
-        .collect()
+fn policy_entry_range(val: &Value) -> Option<&str> {
+    val.as_str()
+        .or_else(|| val.get("version").and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|range| !range.is_empty() && *range != "-")
 }
 
 fn collect_model_deps(

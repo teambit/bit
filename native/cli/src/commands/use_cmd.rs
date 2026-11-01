@@ -104,16 +104,7 @@ fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<Strin
         .trim_start_matches("./")
         .trim_end_matches('/')
         .to_owned();
-    let entry = bitmap.entries
-        .iter()
-        .find(|entry| {
-            let norm_root = super::inventory::normalize(entry.root_dir.trim());
-            let root_dir = norm_root.trim_start_matches("./").trim_end_matches('/');
-            entry.owns_its_dir()
-                && (entry.id.to_string_without_version() == bare
-                    || entry.id.name == bare
-                    || (!root_dir.is_empty() && root_dir == normalized))
-        });
+    let entry = bitmap.entries.iter().find(|entry| matches_bitmap_entry(entry, bare, &normalized));
     let Some(entry) = entry else {
         if super::unuse_cmd::is_unscoped_unknown(root, bare) {
             return Err(Failure::User(format!(
@@ -125,6 +116,22 @@ fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<Strin
     Ok(entry.id.to_string_without_version())
 }
 
+fn matches_bitmap_entry(
+    entry: &bit_install::workspace::BitmapEntry,
+    bare: &str,
+    normalized: &str,
+) -> bool {
+    if !entry.owns_its_dir() {
+        return false;
+    }
+    if entry.id.name == bare || entry.id.to_string_without_version() == bare {
+        return true;
+    }
+    let norm_root = super::inventory::normalize(entry.root_dir.trim());
+    let root_dir = norm_root.trim_start_matches("./").trim_end_matches('/');
+    !root_dir.is_empty() && root_dir == normalized
+}
+
 fn is_extension_configured(value: &Value, id: &str) -> bool {
     let Some(obj) = value.as_object() else {
         return false;
@@ -133,10 +140,12 @@ fn is_extension_configured(value: &Value, id: &str) -> bool {
     if obj.contains_key(target) {
         return true;
     }
-    let prefix = format!("{target}@");
     obj.keys()
         .any(|key| {
             let trimmed = key.trim();
-            trimmed == target || trimmed.starts_with(&prefix)
+            trimmed == target
+                || trimmed
+                    .strip_prefix(target)
+                    .is_some_and(|rest| rest.starts_with('@'))
         })
 }

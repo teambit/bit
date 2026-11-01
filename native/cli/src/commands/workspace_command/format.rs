@@ -38,23 +38,29 @@ impl Formatter {
 
     /// `formatSection(title, description, items)`.
     pub fn section(&self, title: &str, description: &str, items: &[String]) -> String {
-        let non_empty: Vec<&String> = items
+        let non_empty: Vec<&str> = items
             .iter()
+            .map(String::as_str)
             .filter(|item| !item.trim().is_empty())
             .collect();
         if non_empty.is_empty() {
             return String::new();
         }
-        let mut lines = vec![self.title(&format!("{} ({})", title.trim(), non_empty.len()))];
+        let heading = self.title(&format!("{} ({})", title.trim(), non_empty.len()));
         let description = description.trim();
-        if !description.is_empty() {
+        let desc_line = (!description.is_empty()).then(|| {
             let indented: Vec<String> = description
                 .lines()
                 .map(|line| format!("  {}", line.trim_end()))
                 .collect();
-            lines.push(self.chalk.dim(&indented.join("\n")));
+            self.chalk.dim(&indented.join("\n"))
+        });
+        let mut lines = Vec::with_capacity(non_empty.len() + 2);
+        lines.push(heading.as_str());
+        if let Some(desc) = &desc_line {
+            lines.push(desc.as_str());
         }
-        lines.extend(non_empty.into_iter().cloned());
+        lines.extend(non_empty);
         lines.join("\n")
     }
 

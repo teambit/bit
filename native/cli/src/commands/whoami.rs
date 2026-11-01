@@ -29,7 +29,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let history = workspace::root(&cwd).map(|root| History::start(&root, args));
     let output = workspace_command::loader_output(chalk, false);
     output.restart(r#"running command "whoami"..."#);
-    let username = resolve_user(cli_token.as_deref())?;
+    let username = resolve_user(cli_token)?;
     output.stop();
     let formatter = Formatter::new(chalk);
     let message = match username
@@ -92,19 +92,24 @@ fn apply_whoami_arg<'a>(
     Some(())
 }
 
-fn resolve_user(cli_token: Option<&str>) -> io::Result<Option<String>> {
+fn resolve_user(cli_token: Option<String>) -> io::Result<Option<String>> {
     let global_val = bit_workspace_config::read_global_config(&global_config_dir())?;
     let mut global: bit_install::model::GlobalConfig =
         serde_json::from_value(global_val).unwrap_or_default();
-    let token = cli_token
-        .or_else(|| global.get("user.token").and_then(serde_json::Value::as_str))
-        .map(str::trim)
-        .filter(|tok| !tok.is_empty())
-        .map(str::to_owned);
-    let Some(token) = token else {
-        return Ok(None);
-    };
-    global.insert("user.token".to_owned(), serde_json::Value::String(token));
+    if let Some(token) = cli_token {
+        global.insert("user.token".to_owned(), serde_json::Value::String(token));
+    } else {
+        let Some(raw) = global.get("user.token").and_then(serde_json::Value::as_str) else {
+            return Ok(None);
+        };
+        let trimmed = raw.trim();
+        if trimmed.is_empty() {
+            return Ok(None);
+        }
+        if trimmed.len() != raw.len() {
+            global.insert("user.token".to_owned(), serde_json::Value::String(trimmed.to_owned()));
+        }
+    }
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     Ok(runtime.block_on(bit_install::engine::cloud_username(&global, Duration::from_secs(5))))
 }

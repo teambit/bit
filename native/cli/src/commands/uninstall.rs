@@ -38,7 +38,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             "configured installation callbacks use InstallMain.install".into(),
         ));
     }
-    update_workspace_policy(&root, &packages)?;
+    update_workspace_policy(&root, packages)?;
     let terminal = detect_terminal(args);
     let host = Arc::new(Host::new(cli, root.clone(), terminal.color));
     let info = match install::host_info(&host, &terminal) {
@@ -97,6 +97,10 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
     if argv.is_empty() {
         return Ok(Err("missing package arguments".to_string()));
     }
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return Ok(Err("not inside a workspace".to_string()));
+    };
     let Target::Entry(cli) = discovery::find()? else {
         return Ok(Err("the Node.js CLI is only reachable as a wrapper".to_string()));
     };
@@ -111,10 +115,6 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
     {
         return Ok(Err("the entry is not inside an @teambit/bit package".to_string()));
     }
-    let cwd = env::current_dir()?;
-    let Some(root) = workspace::root(&cwd) else {
-        return Ok(Err("not inside a workspace".to_string()));
-    };
     Ok(Ok(Prepared { packages: argv, cli, cwd, root }))
 }
 
@@ -161,14 +161,8 @@ fn consume_trailing_packages<'a>(
     Some(())
 }
 
-fn update_workspace_policy(root: &Path, packages: &[String]) -> io::Result<()> {
-    let to_remove: Vec<String> = packages
-        .iter()
-        .map(|pkg| pkg.trim())
-        .filter(|pkg| !pkg.is_empty())
-        .map(str::to_owned)
-        .collect();
-    if to_remove.is_empty() {
+fn update_workspace_policy(root: &Path, packages: Vec<String>) -> io::Result<()> {
+    if packages.is_empty() {
         return Ok(());
     }
     bit_install::command::edit_workspace_config(
@@ -177,7 +171,7 @@ fn update_workspace_policy(root: &Path, packages: &[String]) -> io::Result<()> {
         &workspace_command::file_id(),
         "uninstall dependencies",
         move |document| {
-            bit_install::command::remove_root_policy_entries(document, &to_remove);
+            bit_install::command::remove_root_policy_entries(document, &packages);
         },
     )
 }

@@ -26,9 +26,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if version.is_empty() {
         return Ok(Outcome::Declined("empty Bit CLI version".to_owned()));
     }
-    let text = render_version(version, json)?;
     let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
     let mut stdout = io::stdout().lock();
+    let text = render_version(version, json)?;
     if json {
         write!(stdout, "{text}")?;
     } else {
@@ -57,10 +57,12 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     Some(json)
 }
 
-fn render_version(version: &str, json: bool) -> io::Result<String> {
+fn render_version(version: &str, json: bool) -> io::Result<std::borrow::Cow<'_, str>> {
     if json {
-        serde_json::to_string_pretty(&json!({ "bit": version })).map_err(io::Error::other)
+        serde_json::to_string_pretty(&json!({ "bit": version }))
+            .map(std::borrow::Cow::Owned)
+            .map_err(io::Error::other)
     } else {
-        Ok(version.to_owned())
+        Ok(std::borrow::Cow::Borrowed(version))
     }
 }

@@ -227,7 +227,7 @@ fn complete(history: &Value, head: &str) -> Option<bool> {
     {
         return Some(true);
     }
-    let mut visited = HashSet::new();
+    let mut visited = HashSet::with_capacity(by_hash.len());
     let mut pending = vec![head];
     while let Some(hash) = pending.pop() {
         if !visited.insert(hash) {
@@ -242,7 +242,7 @@ fn complete(history: &Value, head: &str) -> Option<bool> {
 }
 
 fn parent_index(rows: &[Value]) -> Option<HashMap<&str, &Vec<Value>>> {
-    let mut by_hash = HashMap::new();
+    let mut by_hash = HashMap::with_capacity(rows.len());
     for row in rows {
         let hash = row["hash"].as_str()?.trim();
         if hash.is_empty()

@@ -40,8 +40,9 @@ pub(super) fn callbacks(
     let before = crate::commands::status::capture::callback_issue_stdout(resolved.capture).len();
     let automatic = needs_snap
         .iter()
-        .map(|id| id.trim().to_owned())
-        .filter(|id| !selected.contains(id))
+        .map(|id| id.trim())
+        .filter(|id| !selected.iter().any(|sel| sel == id))
+        .map(str::to_owned)
         .collect::<Vec<_>>();
     if !automatic.is_empty() {
         let result = callback_batch(resolved, rows, &automatic, ignored, resolving);

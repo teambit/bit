@@ -125,16 +125,18 @@ fn match_by_pattern<'a>(
     Some(
         ws.active()
             .filter(|(entry, _)| {
-                let no_ver = entry.id.to_string_without_version();
+                if entry.id.name == pattern
+                    || entry.key == pattern
+                    || entry.id.to_string_without_version() == pattern
+                {
+                    return true;
+                }
                 let norm_root = inventory::normalize(entry.root_dir.trim());
                 let root_dir = norm_root
                     .strip_prefix("./")
                     .unwrap_or(&norm_root)
                     .trim_end_matches('/');
-                no_ver == pattern
-                    || entry.id.name == pattern
-                    || entry.key == pattern
-                    || (!root_dir.is_empty() && root_dir == dir)
+                !root_dir.is_empty() && root_dir == dir
             })
             .collect(),
     )

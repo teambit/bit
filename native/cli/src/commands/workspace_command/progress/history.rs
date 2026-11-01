@@ -13,19 +13,20 @@ impl Progress {
         if !value.is_object() {
             return Err(decline("lane history pending import receipt"));
         }
-        let (Some(performed), Some(completed)) =
-            (value["performed"].as_bool(), value["completed"].as_bool())
-        else {
+        let (Some(performed), Some(completed), Some(requested)) = (
+            value["performed"].as_bool(),
+            value["completed"].as_bool(),
+            value["requested"].as_u64(),
+        ) else {
             return Err(decline("lane history pending import receipt"));
         };
-        let requested = value["requested"].as_u64();
+        if unexpected_history_fields(value) {
+            return Err(decline("lane history pending import receipt"));
+        }
         let row = import(
             &json!({"ids":value["ids"],"reason":null,"components":0,"objects":0,"requested":requested}),
         )?;
-        let unexpected_fields = !value["reason"].is_null()
-            || (!value["objectRequest"].is_null() && value["objectRequest"] != Value::Bool(false));
-        if unexpected_fields
-            || requested != Some(row.ids.len() as u64)
+        if requested != row.ids.len() as u64
             || performed == row.ids.is_empty()
             || row.ids
                 .iter()
@@ -38,4 +39,9 @@ impl Progress {
         }
         Ok(())
     }
+}
+
+fn unexpected_history_fields(value: &Value) -> bool {
+    !value["reason"].is_null()
+        || (!value["objectRequest"].is_null() && value["objectRequest"] != Value::Bool(false))
 }

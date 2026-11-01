@@ -102,13 +102,14 @@ pub(in crate::commands) fn json(error: &io::Error) -> serde_json::Value {
     let Some(failure) = error.get_ref().and_then(|error| error.downcast_ref::<Failure>()) else {
         return serde_json::json!({});
     };
-    let mut result = serde_json::json!({});
+    let mut result = serde_json::json!({
+        "code": failure.code,
+        "syscall": failure.operation,
+        "path": failure.path,
+    });
     if let Some(errno) = failure.errno {
         result["errno"] = serde_json::json!(errno);
     }
-    result["code"] = serde_json::json!(failure.code);
-    result["syscall"] = serde_json::json!(failure.operation);
-    result["path"] = serde_json::json!(failure.path);
     if let Some(destination) = failure.destination
         .as_deref()
         .map(str::trim)

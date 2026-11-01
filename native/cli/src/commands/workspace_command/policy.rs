@@ -312,7 +312,7 @@ fn validate(completed: &Value, projected: &[Value], rows: &[Value]) -> io::Resul
         .filter(|caches| caches.len() == cache_targets.len())
         .ok_or_else(|| decline("command dependency cache receipt"))?;
     for (cache, target) in caches.iter().zip(&cache_targets) {
-        if cache["identity"].as_str().map(str::trim) != Some(versioned(target).as_str()) {
+        if !matches_versioned(cache["identity"].as_str(), target) {
             return Err(decline("command dependency cache receipt"));
         }
     }
@@ -321,8 +321,7 @@ fn validate(completed: &Value, projected: &[Value], rows: &[Value]) -> io::Resul
         .filter(|issues| issues.len() == projected.len())
         .ok_or_else(|| decline("command issue target receipt"))?;
     for (component, target) in issues.iter().zip(projected) {
-        let valid = component["identity"].as_str().map(str::trim)
-            == Some(versioned(target).as_str())
+        let valid = matches_versioned(component["identity"].as_str(), target)
             && component.get("packageName").is_some_and(Value::is_string)
             && component["dependencies"]
                 .as_array()
@@ -335,9 +334,15 @@ fn validate(completed: &Value, projected: &[Value], rows: &[Value]) -> io::Resul
     Ok(())
 }
 
-/// `` `${target.identity}@${target.version}` ``.
-fn versioned(target: &Value) -> String {
-    format!("{}@{}", versioned_field(&target["identity"]), versioned_field(&target["version"]))
+/// Matches `` `${target.identity}@${target.version}` `` without allocating.
+fn matches_versioned(actual: Option<&str>, target: &Value) -> bool {
+    let Some((id, version)) = actual
+        .map(str::trim)
+        .and_then(|raw| raw.rsplit_once('@'))
+    else {
+        return false;
+    };
+    id == versioned_field(&target["identity"]) && version == versioned_field(&target["version"])
 }
 
 fn versioned_field(val: &Value) -> &str {

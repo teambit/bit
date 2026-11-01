@@ -50,7 +50,8 @@ pub(super) fn safe_parents(root: &Path, object: &Path) -> Option<bool> {
     use std::os::unix::fs::MetadataExt;
     // SAFETY: this identity query takes no arguments and has no side effects.
     let gid = unsafe { libc::getegid() };
-    for path in [root.to_owned(), root.join("objects"), object.parent()?.to_owned()] {
+    let objects = root.join("objects");
+    for path in [root, objects.as_path(), object.parent()?] {
         match fs::metadata(path) {
             Ok(metadata) if metadata.mode() & 0o2000 == 0 || metadata.gid() == gid => {}
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}

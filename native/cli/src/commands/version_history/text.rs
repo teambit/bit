@@ -64,8 +64,9 @@ fn render(
     lanes: &[(String, String)],
 ) -> Option<String> {
     let graph = graph::Graph::build(history, short)?;
-    let mut output = Vec::new();
-    for index in graph.order()? {
+    let order = graph.order()?;
+    let mut output = Vec::with_capacity(order.len());
+    for index in order {
         let node = &graph.nodes[index];
         output.push(format_row(model, &graph, node, short, chalk, lanes));
     }

@@ -6,7 +6,7 @@ use crate::discovery::{self, Target};
 use std::{
     ffi::OsString,
     fs::File,
-    io::{self, BufRead, BufReader, Read, Seek, SeekFrom, Write},
+    io::{self, BufRead, BufReader, Read, Write},
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
@@ -65,7 +65,7 @@ impl Quiet {
         if session
             .read()?
             .is_none_or(|value| value["ready"] != true)
-            || !session.stderr()?.is_empty()
+            || session.has_stderr()?
         {
             return Err(invalid("tester external tool preparation"));
         }
@@ -108,7 +108,7 @@ impl Quiet {
         let value = self.read();
         let status = self.child.wait()?;
         let value = value?;
-        if status.code().is_none() || !self.stderr()?.is_empty() {
+        if status.code().is_none() || self.has_stderr()? {
             return Err(invalid("tester external tool failed"));
         }
         Ok(value.unwrap_or_else(|| json!({"terminated": status.code()})))
@@ -129,11 +129,8 @@ impl Quiet {
         serde_json::from_slice(&bytes).map(Some).map_err(io::Error::other)
     }
 
-    fn stderr(&mut self) -> io::Result<Vec<u8>> {
-        self.errors.seek(SeekFrom::Start(0))?;
-        let mut bytes = Vec::new();
-        Read::by_ref(&mut self.errors).take(LIMIT).read_to_end(&mut bytes)?;
-        Ok(bytes)
+    fn has_stderr(&self) -> io::Result<bool> {
+        Ok(self.errors.metadata()?.len() != 0)
     }
 }
 

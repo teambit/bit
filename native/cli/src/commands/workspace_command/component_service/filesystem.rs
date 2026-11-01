@@ -28,23 +28,27 @@ fn non_empty(val: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+fn code_description(code: &str) -> Option<&'static str> {
+    match code {
+        "EPERM" => Some("operation not permitted"),
+        "EACCES" => Some("permission denied"),
+        "ENOENT" => Some("no such file or directory"),
+        "EEXIST" => Some("file already exists"),
+        "ENOTDIR" => Some("not a directory"),
+        "EISDIR" => Some("illegal operation on a directory"),
+        "EROFS" => Some("read-only file system"),
+        "ENOTEMPTY" => Some("directory not empty"),
+        _ => None,
+    }
+}
+
 pub(in crate::commands) fn message(
     service: &str,
     environment: &str,
     error: &Value,
 ) -> io::Result<String> {
     let code = non_empty(&error["code"]).ok_or_else(|| invalid("service error code"))?;
-    let description = match code {
-        "EPERM" => "operation not permitted",
-        "EACCES" => "permission denied",
-        "ENOENT" => "no such file or directory",
-        "EEXIST" => "file already exists",
-        "ENOTDIR" => "not a directory",
-        "EISDIR" => "illegal operation on a directory",
-        "EROFS" => "read-only file system",
-        "ENOTEMPTY" => "directory not empty",
-        _ => return Err(invalid("service filesystem error")),
-    };
+    let description = code_description(code).ok_or_else(|| invalid("service filesystem error"))?;
     let path = non_empty(&error["path"])
         .or_else(|| non_empty(&error["filePath"]))
         .ok_or_else(|| invalid("service error path"))?;

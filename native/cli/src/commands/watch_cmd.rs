@@ -35,18 +35,25 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("CI watch delegated".into()));
     }
     let cwd = env::current_dir()?;
+    let root = workspace::root(&cwd);
     if let Some(err) = check_types_error(&options) {
-        return emit_watch_err(&cwd, args, options.import, err);
+        return emit_watch_err(&cwd, root.as_deref(), args, options.import, err);
     }
-    if workspace::root(&cwd).is_none() {
-        return emit_watch_err(&cwd, args, options.import, OUTSIDE_WORKSPACE_ERR.to_owned());
+    if root.is_none() {
+        return emit_watch_err(&cwd, None, args, options.import, OUTSIDE_WORKSPACE_ERR.to_owned());
     }
     Ok(Outcome::Declined("watch execution delegated".into()))
 }
 
-fn emit_watch_err(cwd: &Path, args: &[OsString], import: bool, err: String) -> io::Result<Outcome> {
-    if let Some(root) = workspace::root(cwd) {
-        return workspace_command::execute_without_loader(&root, args, "watch", move |output| {
+fn emit_watch_err(
+    cwd: &Path,
+    root: Option<&Path>,
+    args: &[OsString],
+    import: bool,
+    err: String,
+) -> io::Result<Outcome> {
+    if let Some(root) = root {
+        return workspace_command::execute_without_loader(root, args, "watch", move |output| {
             if import {
                 output.warning(DEPRECATED_IMPORT_WARN);
             }

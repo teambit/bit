@@ -27,8 +27,14 @@ pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
     }
     format!("[Error: {}] {{\n  {}\n}}", error.description(), fields.join(",\n  "))
 }
-fn quote(value: &str) -> String {
-    let delimiter = if !value.contains('\'') {
+fn needs_escaping(value: &str, delimiter: char) -> bool {
+    value
+        .chars()
+        .any(|ch| ch == '\\' || ch == delimiter || ch.is_control())
+}
+
+fn select_delimiter(value: &str) -> char {
+    if !value.contains('\'') {
         '\''
     } else if !value.contains('"') {
         '"'
@@ -36,7 +42,14 @@ fn quote(value: &str) -> String {
         '`'
     } else {
         '\''
-    };
+    }
+}
+
+fn quote(value: &str) -> String {
+    let delimiter = select_delimiter(value);
+    if !needs_escaping(value, delimiter) {
+        return format!("{delimiter}{value}{delimiter}");
+    }
     let mut result = String::with_capacity(value.len() + 2);
     result.push(delimiter);
     for character in value.chars() {

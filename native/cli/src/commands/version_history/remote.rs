@@ -47,7 +47,11 @@ pub(super) fn run(
 }
 
 fn payload(args: &[OsString], pattern: &str, from: Option<&str>) -> Value {
-    let mut payload = json!({"pattern":pattern});
+    let mut payload = json!({
+        "pattern": pattern,
+        "component-pattern": pattern,
+        "componentPattern": pattern,
+    });
     if let Some(from) = from {
         payload["from-snap"] = json!(from);
         payload["fromSnap"] = json!(from);
@@ -70,8 +74,6 @@ fn payload(args: &[OsString], pattern: &str, from: Option<&str>) -> Value {
         payload["delete-existing"] = json!(true);
         payload["deleteExisting"] = json!(true);
     }
-    payload["component-pattern"] = json!(pattern);
-    payload["componentPattern"] = json!(pattern);
     payload
 }
 

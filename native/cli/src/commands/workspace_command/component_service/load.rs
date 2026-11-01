@@ -105,11 +105,12 @@ impl Loaded {
             self.add_in_target_order(root, workspace, targets)?;
         } else {
             for (entry, _) in workspace.active() {
+                let identity = entry.id.to_string_without_version();
                 if targets
                     .iter()
-                    .any(|target| target["identity"] == entry.id.to_string_without_version())
+                    .any(|target| target["identity"].as_str() == Some(identity.as_str()))
                 {
-                    self.add(root, entry)?;
+                    self.add(root, entry, &identity)?;
                 }
             }
         }
@@ -137,15 +138,19 @@ impl Loaded {
                 .active()
                 .find(|(entry, _)| entry.id.to_string_without_version() == identity)
                 .ok_or_else(|| invalid("component service selection entry"))?;
-            self.add(root, entry)?;
+            self.add(root, entry, identity)?;
         }
         Ok(())
     }
-    fn add(&mut self, root: &Path, entry: &bit_install::workspace::BitmapEntry) -> io::Result<()> {
-        let identity = entry.id.to_string_without_version();
+    fn add(
+        &mut self,
+        root: &Path,
+        entry: &bit_install::workspace::BitmapEntry,
+        identity: &str,
+    ) -> io::Result<()> {
         let row = self.capture.captured
             .iter()
-            .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.as_str()))
+            .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
             .ok_or_else(|| invalid("component service capture"))?;
         let files = row["files"].as_array().ok_or_else(|| invalid("component service files"))?;
         self.counts.push(files.len());
@@ -170,7 +175,7 @@ impl Loaded {
         let legacy = json!({"scope":entry.id.scope,"name":entry.id.name,"version":version});
         self.ids.push(json!({"_legacy":legacy,"_scope":scope}));
         self.progress.identities.push(ver.map_or_else(
-            || identity.clone(),
+            || identity.to_owned(),
             |ver| format!("{identity}@{ver}"),
         ));
         Ok(())

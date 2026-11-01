@@ -30,11 +30,13 @@ fn matches(row: &Value, selector: &str) -> bool {
     };
     let identity = bit_install::config::aspect_id_without_version(raw_identity).trim();
     let component_name = identity.split_once('/').map_or(identity, |(_, name)| name.trim());
+    if identity == name || component_name == name {
+        return true;
+    }
     let directory = normalized_dir(name);
-    let row_dir = row_text(row, ["directory", "rootDir"]).map(normalized_dir);
-    identity == name
-        || component_name == name
-        || (!directory.is_empty() && row_dir.as_deref() == Some(directory.as_str()))
+    !directory.is_empty()
+        && row_text(row, ["directory", "rootDir"])
+            .is_some_and(|dir| normalized_dir(dir) == directory)
 }
 
 fn row_text<'r>(row: &'r Value, keys: [&str; 2]) -> Option<&'r str> {

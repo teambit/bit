@@ -238,16 +238,17 @@ impl Reader {
         inherited: Option<crate::commands::status::environments::Environments>,
         engine: Engine,
     ) -> io::Result<Self> {
-        let reader = Self::new(root, request, preview, startup.as_deref_mut(), inherited, engine)
-            .inspect_err(|error| {
-                if let Some(progress) = crate::commands::engine::canonical_progress(error)
-                    && let Some(startup) = startup.as_deref_mut()
-                {
-                    startup.build_progress = Some(progress.clone());
-                }
-            })?;
+        let mut reader =
+            Self::new(root, request, preview, startup.as_deref_mut(), inherited, engine)
+                .inspect_err(|error| {
+                    if let Some(progress) = crate::commands::engine::canonical_progress(error)
+                        && let Some(startup) = startup.as_deref_mut()
+                    {
+                        startup.build_progress = Some(progress.clone());
+                    }
+                })?;
         if let Some(startup) = startup {
-            let mut progress = reader.context["commandProgress"].clone();
+            let mut progress = reader.context["commandProgress"].take();
             progress["switchImportCount"] = reader.context["switchImportCount"].clone();
             progress["switchRemoteWarning"] = reader.context["switchRemoteWarning"].clone();
             startup.build_progress = Some(progress);

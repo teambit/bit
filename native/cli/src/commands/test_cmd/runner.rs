@@ -31,14 +31,15 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         Err(error) => return Ok(Outcome::Declined(format!("tester preparation: {error}"))),
     };
     let history = History::start(root, args);
+    let chalk = crate::commands::color::Chalk::detect(args);
     let work = move |output: &bit_install::output::Output| {
         warnings(output, options);
-        match plan.run(root, output, !options.json, crate::commands::color::Chalk::detect(args)) {
+        match plan.run(root, output, !options.json, chalk) {
             Ok(execution) => {
                 if !execution.terminated {
                     history.end(execution.report.code == 0);
                 }
-                format_execution(execution, options, args, started)
+                format_execution(execution, options, args, chalk, started)
             }
             Err(error) => {
                 history.end(false);
@@ -70,6 +71,7 @@ fn format_execution(
     execution: Execution,
     options: &Options,
     args: &[OsString],
+    chalk: crate::commands::color::Chalk,
     started: Instant,
 ) -> io::Result<workspace_command::results::Report> {
     let mut report = execution.report;
@@ -79,7 +81,7 @@ fn format_execution(
             "[]".clone_into(&mut report.data);
         }
     } else if execution.empty {
-        report.data = empty_test_message(args);
+        report.data = empty_test_message(chalk);
     } else if !execution.terminated {
         if empty_data {
             return Err(invalid("empty tester report data"));
@@ -89,14 +91,14 @@ fn format_execution(
             &value,
             report.code,
             started.elapsed().as_millis(),
-            crate::commands::color::Chalk::detect(args),
+            chalk,
             args,
         );
     }
     Ok(report)
 }
-fn empty_test_message(args: &[OsString]) -> String {
-    crate::commands::color::Chalk::detect(args).dim(
+fn empty_test_message(chalk: crate::commands::color::Chalk) -> String {
+    chalk.dim(
         "no components found to test.\nuse \"--unmodified\" flag to test all components or specify the ids to test.\notherwise, only new and modified components will be tested",
     )
 }

@@ -16,7 +16,7 @@ pub(super) fn lane_heads(
     if lanes.len() > 128 {
         return None;
     }
-    let mut heads = Vec::new();
+    let mut heads = Vec::with_capacity(lanes.len());
     for entry in lanes {
         let hash = entry["hash"].as_str()?.trim();
         let lane = read(root, hash, "Lane", proofs)?;
@@ -70,7 +70,7 @@ fn hidden_head(hidden: &Value, scope: &str, name: &str) -> Option<Option<String>
         return Some(None);
     }
     let mut head = None;
-    let target = format!("{}/{}", scope.trim(), name.trim());
+    let target = (scope.trim(), name.trim());
     for id in hidden.as_array()? {
         let (id, hash) = id.as_str()?.trim().split_once('@')?;
         let id = identifier(id)?;
@@ -78,7 +78,7 @@ fn hidden_head(hidden: &Value, scope: &str, name: &str) -> Option<Option<String>
         if hash.len() != 40 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return None;
         }
-        if id == target && head.replace(hash.to_owned()).is_some() {
+        if id.split_once('/') == Some(target) && head.replace(hash.to_owned()).is_some() {
             return None;
         }
     }

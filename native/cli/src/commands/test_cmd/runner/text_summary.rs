@@ -9,18 +9,19 @@ impl Summary<'_> {
         self.0["totals"][key].as_u64().unwrap_or(0)
     }
     fn counts(&self) -> (usize, usize) {
-        let rows = self.0["componentsWithTests"]
+        self.0["componentsWithTests"]
             .as_array()
-            .map_or(&[][..], Vec::as_slice);
-        let failed = rows
+            .map_or(&[][..], Vec::as_slice)
             .iter()
-            .filter(|row| row["failed"].as_u64().unwrap_or(0) > 0)
-            .count();
-        let errors = rows
-            .iter()
-            .filter(|row| row["failed"].as_u64().unwrap_or(0) == 0 && row["hasError"] == true)
-            .count();
-        (failed, errors)
+            .fold((0, 0), |(failed, errors), row| {
+                if row["failed"].as_u64().unwrap_or(0) > 0 {
+                    (failed + 1, errors)
+                } else if row["hasError"] == true {
+                    (failed, errors + 1)
+                } else {
+                    (failed, errors)
+                }
+            })
     }
     fn suffix(&self) -> String {
         let mut parts = Vec::new();
@@ -212,21 +213,22 @@ fn no_tests_section(value: &Value, chalk: Chalk, verbose: bool, sections: &mut V
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .collect::<Vec<_>>();
+    if names.is_empty() {
+        return;
+    }
     names.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     let hint = if verbose {
         format!("{} components have no tests", names.len())
     } else {
         format!("{} components have no tests (run with --verbose to list)", names.len())
     };
-    if !names.is_empty() {
-        let mut section = chalk.dim(&hint);
-        if verbose {
-            for name in names {
-                let _ = write!(section, "\n   {} {name}", chalk.dim("›"));
-            }
+    let mut section = chalk.dim(&hint);
+    if verbose {
+        for name in names {
+            let _ = write!(section, "\n   {} {name}", chalk.dim("›"));
         }
-        sections.push(section);
     }
+    sections.push(section);
 }
 fn component_line(row: &Value, chalk: Chalk) -> String {
     let failed = row["failed"].as_u64().unwrap_or(0);

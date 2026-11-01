@@ -142,6 +142,13 @@ fn has_env_jsonc_policy(root: &Path) -> bool {
         })
 }
 
+fn has_aspect_id_prefix(candidate: &str, bare_id: &str) -> bool {
+    candidate == bare_id
+        || candidate
+            .strip_prefix(bare_id)
+            .is_some_and(|rest| rest.starts_with('@'))
+}
+
 pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
     let id = id.trim();
     if let Some(name) =
@@ -151,7 +158,7 @@ pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
             .map(str::trim)
             .find(|name| !name.is_empty())
     {
-        return name == id || name.starts_with(&format!("{id}@"));
+        return has_aspect_id_prefix(name, id);
     }
     let Some((scope, bare_name)) = id.split_once('/') else {
         return false;
@@ -160,10 +167,7 @@ pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
         && entry["extensionId"]["name"]
             .as_str()
             .map(str::trim)
-            .is_some_and(|name| {
-                let bare_name = bare_name.trim();
-                name == bare_name || name.starts_with(&format!("{bare_name}@"))
-            })
+            .is_some_and(|name| has_aspect_id_prefix(name, bare_name.trim()))
 }
 
 pub(in crate::commands) fn bitmap_row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {
@@ -198,7 +202,8 @@ pub(in crate::commands) fn bitmap_row_scope_and_name<'a>(
                 key_id
             } else {
                 key_id
-                    .strip_prefix(&format!("{scope}/"))
+                    .strip_prefix(scope)
+                    .and_then(|rest| rest.strip_prefix('/'))
                     .map_or(key_id, str::trim)
             }
         });
@@ -214,9 +219,8 @@ pub(in crate::commands) fn bitmap_entry_aspect<'a>(
     if let Some(val) = map.get(bare_id) {
         return Some(val);
     }
-    let prefix = format!("{bare_id}@");
     map.iter()
-        .find(|(key, _)| key.trim() == bare_id || key.trim().starts_with(&prefix))
+        .find(|(key, _)| has_aspect_id_prefix(key.trim(), bare_id))
         .map(|(_, val)| val)
 }
 
@@ -229,9 +233,8 @@ pub(in crate::commands) fn aspect_entry<'a>(
     if let Some((key, val)) = obj.get_key_value(bare_id) {
         return Some((key.as_str(), val));
     }
-    let prefix = format!("{bare_id}@");
     obj.iter()
-        .find(|(key, _)| key.trim() == bare_id || key.trim().starts_with(&prefix))
+        .find(|(key, _)| has_aspect_id_prefix(key.trim(), bare_id))
         .map(|(key, val)| (key.as_str(), val))
 }
 

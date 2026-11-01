@@ -18,20 +18,16 @@ pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> 
         if has_glob_metacharacters(directory) {
             return Err(invalid("tester glob metacharacters in component root"));
         }
-        if roots
-            .iter()
-            .enumerate()
-            .any(|(other, path)| other != index && overlaps(directory, path))
-        {
+        if roots[index + 1..].iter().any(|path| overlaps(directory, path)) {
             return Err(invalid("tester overlapping component roots"));
         }
         check(&root, directory)?;
         reject_symlinks(directory)?;
-        validate_sources(&root, directory, &components[index])?;
+        validate_sources(directory, &components[index])?;
     }
     Ok(())
 }
-fn validate_sources(root: &Path, directory: &Path, component: &Component) -> io::Result<()> {
+fn validate_sources(directory: &Path, component: &Component) -> io::Result<()> {
     for file in &component.files {
         let path = file["absolutePath"]
             .as_str()
@@ -42,7 +38,6 @@ fn validate_sources(root: &Path, directory: &Path, component: &Component) -> io:
         if !path.starts_with(directory) {
             return Err(invalid("tester component source ownership"));
         }
-        check(root, &path)?;
     }
     Ok(())
 }

@@ -108,6 +108,7 @@ fn clean_generator_envs(document: &mut Document, target: &str, resolved_id: &str
     let gen_key = super::update_cmd::aspect_entry(&document.value(), "teambit.generator/generator")
         .map_or_else(|| "teambit.generator/generator".to_owned(), |(key, _)| key.to_owned());
     if let Some(Value::Array(envs)) = document.get(&[&gen_key, "envs"]) {
+        let prev_len = envs.len();
         let filtered: Vec<Value> = envs
             .into_iter()
             .filter(|env| {
@@ -115,7 +116,9 @@ fn clean_generator_envs(document: &mut Document, target: &str, resolved_id: &str
                 env_str != Some(target) && env_str != Some(resolved_id)
             })
             .collect();
-        document.set(&[&gen_key, "envs"], &Value::Array(filtered));
+        if filtered.len() != prev_len {
+            document.set(&[&gen_key, "envs"], &Value::Array(filtered));
+        }
     }
 }
 
@@ -192,8 +195,13 @@ fn find_extension_key(value: &Value, id: &str) -> Option<String> {
     if obj.contains_key(id) {
         return Some(id.to_owned());
     }
-    let prefix = format!("{id}@");
     obj.keys()
-        .find(|key| key.trim() == id || key.trim().starts_with(&prefix))
+        .find(|key| {
+            let trimmed = key.trim();
+            trimmed == id
+                || trimmed
+                    .strip_prefix(id)
+                    .is_some_and(|rest| rest.starts_with('@'))
+        })
         .cloned()
 }

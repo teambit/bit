@@ -137,13 +137,23 @@ impl Plan {
         text: bool,
     ) -> io::Result<Report> {
         let components = self.loaded.components()?;
+        let summary_mode = (self.settings.summary || text) && !terminated;
+        if summary_mode && components.len() > 1 && self.settings.junit.is_none() {
+            return multi::report_summary(
+                root,
+                result,
+                &components,
+                &self.loaded.progress.identities,
+                &self.loaded.progress.environment,
+            );
+        }
         let mut report = if components.len() > 1 {
             multi::report_detail(root, result, &components, &self.loaded.progress.identities)?
         } else {
             report::report(result, identity)?
         };
         self.write_junit(root, result, &components, &report, terminated)?;
-        if (self.settings.summary || text) && !terminated {
+        if summary_mode {
             if components.len() > 1 {
                 return multi::report_summary(
                     root,

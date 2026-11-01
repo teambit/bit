@@ -146,25 +146,25 @@ fn environment(root: &Path, component: &Value) -> io::Result<Option<Value>> {
         .map_or_else(|| root.join(directory).join(file), std::path::PathBuf::from);
     Ok(bit_object_import::parse_jsonc(&fs::read(path)?).ok())
 }
+fn has_plus_range_feature(features: &str) -> bool {
+    features
+        .split(',')
+        .any(|feature| feature.trim() == "plus-range-versions")
+}
+
 fn enabled() -> io::Result<bool> {
+    for key in ["BIT_FEATURES", "BIT_CONFIG_FEATURES"] {
+        if let Ok(val) = env::var(key) {
+            let trimmed = val.trim();
+            if !trimmed.is_empty() {
+                return Ok(has_plus_range_feature(trimmed));
+            }
+        }
+    }
     let global =
         bit_install::config::load_global_config(&bit_workspace_config::global_config_dir())?;
-    let env_features = ["BIT_FEATURES", "BIT_CONFIG_FEATURES"]
-        .into_iter()
-        .find_map(|key| {
-            let val = env::var(key).ok()?;
-            let trimmed = val.trim();
-            (!trimmed.is_empty()).then(|| trimmed.to_owned())
-        });
-    let features = env_features.or_else(|| {
-        global
-            .get("features")
-            .and_then(non_empty_str)
-            .map(str::to_owned)
-    });
-    Ok(features.is_some_and(|features| {
-        features
-            .split(',')
-            .any(|feature| feature.trim() == "plus-range-versions")
-    }))
+    Ok(global
+        .get("features")
+        .and_then(non_empty_str)
+        .is_some_and(has_plus_range_feature))
 }

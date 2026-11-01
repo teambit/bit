@@ -247,15 +247,13 @@ fn classify_skip_tasks(
         .map(str::trim)
         .filter(|task| !task.is_empty())
         .collect::<Vec<_>>();
-    let invalid = parsed_tasks
+    let has_invalid = parsed_tasks
         .iter()
-        .filter(|task| !VALID_TASKS.contains(task))
-        .map(|task| (*task).to_owned())
-        .collect::<Vec<_>>();
+        .any(|task| !VALID_TASKS.contains(task));
     let skipped_all = VALID_TASKS
         .iter()
         .all(|task| parsed_tasks.contains(task));
-    if invalid.is_empty() && !skipped_all {
+    if !has_invalid && !skipped_all {
         return Ok(None);
     }
     let Some(count) = matched_validate_count(root, options, all_count) else {
@@ -264,7 +262,12 @@ fn classify_skip_tasks(
     if count == 0 {
         return Ok(Some(FastOutcome::Empty));
     }
-    if !invalid.is_empty() {
+    if has_invalid {
+        let invalid = parsed_tasks
+            .into_iter()
+            .filter(|task| !VALID_TASKS.contains(task))
+            .map(str::to_owned)
+            .collect();
         return Ok(Some(FastOutcome::InvalidSkipTasks { count, invalid }));
     }
     Ok(Some(FastOutcome::SkippedAll { count }))

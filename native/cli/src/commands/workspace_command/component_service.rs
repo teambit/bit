@@ -36,11 +36,12 @@ fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
 }
 
+fn trim_owned(val: String) -> String {
+    if val.trim().len() == val.len() { val } else { val.trim().to_owned() }
+}
+
 impl Progress {
     fn new(name: String, environment: String, counts: [usize; 2], options: &Selection) -> Self {
-        let trim_owned = |val: String| {
-            if val.trim().len() == val.len() { val } else { val.trim().to_owned() }
-        };
         Self {
             name: trim_owned(name),
             environment: trim_owned(environment),

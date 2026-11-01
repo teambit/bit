@@ -116,12 +116,7 @@ pub(in crate::commands) fn failure(
     error: io::Error,
 ) -> io::Result<crate::native::Outcome> {
     before(startup)?;
-    let callback = error
-        .get_ref()
-        .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>());
-    emit_callback_startup(callback);
-    let failed_output =
-        callback.map_or_else(String::new, |callback| callback.output.clone());
+    emit_callback_startup(callback_error(&error));
     let progress = super::progress::Progress::parse(startup.build_progress.as_ref())?;
     super::execute_then(root, args, command, |output| {
         if command == "merge"
@@ -134,8 +129,10 @@ pub(in crate::commands) fn failure(
         {
             progress.render_checkout_with(output, false, command == "revert");
         }
+        let failed_output =
+            callback_error(&error).map_or("", |callback| callback.output.as_str());
         if matches!(command, "switch" | "import") {
-            crate::commands::switch::render_failure_progress(output, startup, &failed_output)?;
+            crate::commands::switch::render_failure_progress(output, startup, failed_output)?;
         } else {
             loaded(startup);
             print!("{failed_output}");
@@ -143,6 +140,12 @@ pub(in crate::commands) fn failure(
         }
         Err(error)
     })
+}
+
+fn callback_error(error: &io::Error) -> Option<&crate::host::callback_error::CallbackError> {
+    error
+        .get_ref()
+        .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>())
 }
 
 fn emit_callback_startup(callback: Option<&crate::host::callback_error::CallbackError>) {

@@ -8,15 +8,7 @@ use std::{
 #[cfg(unix)]
 pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
     use std::os::unix::fs::MetadataExt;
-    let bucket = source
-        .parent()?
-        .file_name()
-        .filter(|name| {
-            !name.is_empty()
-                && name
-                    .to_str()
-                    .is_none_or(|text| !text.trim().is_empty())
-        })?;
+    let bucket = non_empty_os_name(source.parent()?.file_name())?;
     let trash = root.join("trash");
     let parent = trash.join(bucket);
     let source_meta = fs::symlink_metadata(source).ok()?;
@@ -30,9 +22,7 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
     for directory in [&trash, &parent] {
         valid_directory(directory, device)?;
     }
-    let file_name = source
-        .file_name()
-        .filter(|name| !name.is_empty() && !name.to_string_lossy().trim().is_empty())?;
+    let file_name = non_empty_os_name(source.file_name())?;
     let destination = parent.join(file_name);
     match fs::symlink_metadata(&destination) {
         Ok(metadata)
@@ -45,6 +35,16 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => Some(destination),
         _ => None,
     }
+}
+
+#[cfg(unix)]
+fn non_empty_os_name(name: Option<&std::ffi::OsStr>) -> Option<&std::ffi::OsStr> {
+    name.filter(|name| {
+        !name.is_empty()
+            && name
+                .to_str()
+                .is_none_or(|text| !text.trim().is_empty())
+    })
 }
 
 #[cfg(unix)]

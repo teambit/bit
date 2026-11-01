@@ -276,19 +276,15 @@ pub(super) fn lint_source_content(content: &str) -> Vec<String> {
     errors
 }
 
-fn collect_declared_identifiers(content: &str) -> HashSet<String> {
-    let mut declared: HashSet<String> = KNOWN_GLOBALS
-        .iter()
-        .copied()
-        .map(str::to_owned)
-        .collect();
+fn collect_declared_identifiers(content: &str) -> HashSet<&str> {
+    let mut declared: HashSet<&str> = KNOWN_GLOBALS.iter().copied().collect();
     for line in content.lines() {
         collect_line_declarations(line.trim(), &mut declared);
     }
     declared
 }
 
-fn collect_line_declarations(trimmed: &str, declared: &mut HashSet<String>) {
+fn collect_line_declarations<'a>(trimmed: &'a str, declared: &mut HashSet<&'a str>) {
     let after_export = trimmed.strip_prefix("export ").unwrap_or(trimmed);
     let after_default = after_export.strip_prefix("default ").unwrap_or(after_export);
     let decl_rest = after_default.strip_prefix("async ").unwrap_or(after_default);
@@ -310,15 +306,15 @@ fn collect_line_declarations(trimmed: &str, declared: &mut HashSet<String>) {
     }
 }
 
-fn insert_ident_tokens(segment: &str, declared: &mut HashSet<String>) {
+fn insert_ident_tokens<'a>(segment: &'a str, declared: &mut HashSet<&'a str>) {
     for token in segment.split(|ch: char| !is_ident_char(ch)) {
         if is_valid_ident(token) && token != "as" && token != "type" {
-            declared.insert(token.to_owned());
+            declared.insert(token);
         }
     }
 }
 
-fn find_undeclared_call_args(line: &str, declared: &HashSet<String>) -> Vec<String> {
+fn find_undeclared_call_args<'a>(line: &'a str, declared: &HashSet<&str>) -> Vec<&'a str> {
     let mut missing = Vec::new();
     let Some((open_idx, close_idx)) = line.find('(').zip(line.rfind(')')) else {
         return missing;
@@ -329,7 +325,7 @@ fn find_undeclared_call_args(line: &str, declared: &HashSet<String>) -> Vec<Stri
     for raw_arg in line[open_idx + 1..close_idx].split(',') {
         let arg = raw_arg.trim();
         if is_valid_ident(arg) && !declared.contains(arg) {
-            missing.push(arg.to_owned());
+            missing.push(arg);
         }
     }
     missing

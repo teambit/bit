@@ -26,17 +26,17 @@ pub(super) fn prepare(root: &Path, components: &[Value]) -> io::Result<Vec<CatDo
 }
 
 fn component_directory(component: &Value) -> Value {
-    [component["directory"].as_str(), component["rootDir"].as_str()]
+    let (directory, root_dir) = (component.get("directory"), component.get("rootDir"));
+    [directory.and_then(Value::as_str), root_dir.and_then(Value::as_str)]
         .into_iter()
         .flatten()
         .map(str::trim)
         .find(|dir| !dir.is_empty())
         .map_or_else(
             || {
-                component
-                    .get("directory")
+                directory
                     .filter(|val| !val.is_null())
-                    .or_else(|| component.get("rootDir"))
+                    .or(root_dir)
                     .cloned()
                     .unwrap_or(Value::Null)
             },

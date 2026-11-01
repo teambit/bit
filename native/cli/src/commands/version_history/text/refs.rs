@@ -18,7 +18,7 @@ pub(super) fn lanes(root: &Path, scope: &str, component: &str) -> Option<Vec<(St
 }
 
 fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
-    let mut remotes = std::collections::HashMap::new();
+    let mut remotes = std::collections::HashMap::with_capacity(lanes.len());
     for (name, head) in lanes {
         let remote = name.split_once('/')?.0.trim();
         let head = head.trim();
@@ -64,13 +64,12 @@ fn lane_paths(root: &Path) -> Option<Vec<(String, PathBuf)>> {
         if !remote.file_type().ok()?.is_dir() {
             return None;
         }
-        paths.extend(remote_lanes(&remote.path(), remote_name)?);
+        remote_lanes(&remote.path(), remote_name, &mut paths)?;
     }
     Some(paths)
 }
 
-fn remote_lanes(root: &Path, remote: &str) -> Option<Vec<(String, PathBuf)>> {
-    let mut paths = Vec::new();
+fn remote_lanes(root: &Path, remote: &str, paths: &mut Vec<(String, PathBuf)>) -> Option<()> {
     for lane in entries(root)? {
         let name = lane.file_name().into_string().ok()?;
         let name = name.trim();
@@ -82,7 +81,7 @@ fn remote_lanes(root: &Path, remote: &str) -> Option<Vec<(String, PathBuf)>> {
         }
         paths.push((format!("{remote}/{name}"), lane.path()));
     }
-    Some(paths)
+    Some(())
 }
 
 fn entries(path: &Path) -> Option<Vec<fs::DirEntry>> {

@@ -115,9 +115,12 @@ fn derive_bare_id_from_pkg(pkg_name: &str, remotes: &HashMap<String, PathBuf>) -
         return Some(format!("{pkg_scope}/{}", pkg_rest.replace('.', "/")));
     }
     for remote_name in remotes.keys() {
-        let prefix = format!("{pkg_scope}.");
-        if let Some(scope_tail) = remote_name.strip_prefix(&prefix)
-            && let Some(comp_tail) = pkg_rest.strip_prefix(&format!("{scope_tail}."))
+        if let Some(scope_tail) = remote_name
+            .strip_prefix(pkg_scope)
+            .and_then(|rest| rest.strip_prefix('.'))
+            && let Some(comp_tail) = pkg_rest
+                .strip_prefix(scope_tail)
+                .and_then(|rest| rest.strip_prefix('.'))
         {
             return Some(format!("{remote_name}/{}", comp_tail.replace('.', "/")));
         }

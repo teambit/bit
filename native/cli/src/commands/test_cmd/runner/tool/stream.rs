@@ -130,7 +130,7 @@ impl Stream {
         Ok(value.unwrap_or_else(|| json!({"terminated":status.code()})))
     }
     fn read(&mut self) -> io::Result<Option<Value>> {
-        let mut bytes = Vec::new();
+        let mut bytes = Vec::with_capacity(1024);
         self.control
             .by_ref()
             .take(LIMIT)
@@ -162,7 +162,7 @@ fn accept(
                 stream.set_nonblocking(false)?;
                 stream.set_read_timeout(Some(Duration::from_secs(5)))?;
                 let mut reader = BufReader::new(stream);
-                let mut line = String::new();
+                let mut line = String::with_capacity(128);
                 reader
                     .by_ref()
                     .take(1024)

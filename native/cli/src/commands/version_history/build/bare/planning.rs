@@ -74,17 +74,17 @@ fn pattern_target(root: &Path, pattern: &str) -> Option<Target> {
     {
         return None;
     }
-    let (candidates, proofs) = pattern_candidates(root)?;
+    let (mut candidates, proofs) = pattern_candidates(root)?;
     let refs = candidates
         .iter()
         .map(|item| item.identity.as_str())
         .collect::<Vec<_>>();
     let matched = patterns::matching(&refs, &patterns::split(pattern)).ok()?;
-    let [selected] = matched.as_slice() else { return None };
-    let selected = (*selected).to_owned();
-    let candidate = candidates
-        .into_iter()
-        .find(|item| item.identity == selected)?;
+    let &[selected] = matched.as_slice() else { return None };
+    let index = candidates
+        .iter()
+        .position(|item| item.identity == selected)?;
+    let candidate = candidates.swap_remove(index);
     Some(Target {
         scope: candidate.scope,
         name: candidate.name,

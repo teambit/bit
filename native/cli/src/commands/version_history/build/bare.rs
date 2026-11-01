@@ -111,7 +111,8 @@ fn absent(path: &Path) -> bool {
 
 fn safe_parent(root: &Path, path: &Path) -> bool {
     let Some(parent) = path.parent() else { return false };
-    for directory in [root.join("objects"), parent.to_owned()] {
+    let objects = root.join("objects");
+    for directory in [objects.as_path(), parent] {
         match fs::symlink_metadata(directory) {
             Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {}
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
@@ -261,11 +262,11 @@ fn read(
 }
 
 fn encode(hash: &str, value: &Value) -> io::Result<Vec<u8>> {
-    let body = serde_json::to_vec(value)?;
-    let length = String::from_utf8_lossy(&body).encode_utf16().count();
+    let body = serde_json::to_string(value)?;
+    let length = body.encode_utf16().count();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     write!(encoder, "VersionHistory {hash} {length}\0")?;
-    encoder.write_all(&body)?;
+    encoder.write_all(body.as_bytes())?;
     encoder.finish()
 }
 

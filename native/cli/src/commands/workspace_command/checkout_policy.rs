@@ -23,12 +23,16 @@ pub(crate) fn semver(receipt: &Value) -> io::Result<Value> {
     let mut inputs = vec![receipt.clone()];
     let dependencies = array(receipt.get("componentDeps"), "checkout policy dependencies")?;
     for entry in array(receipt.get("workspaceEntries"), "checkout workspace entries")? {
-        inputs.extend(prefixed_ranges(entry, dependencies)?);
+        append_prefixed_ranges(entry, dependencies, &mut inputs)?;
     }
     grammar::config_inputs(&json!(inputs)).ok_or_else(|| decline("checkout policy semver grammar"))
 }
 
-fn prefixed_ranges(entry: &Value, dependencies: &[Value]) -> io::Result<Vec<Value>> {
+fn append_prefixed_ranges(
+    entry: &Value,
+    dependencies: &[Value],
+    inputs: &mut Vec<Value>,
+) -> io::Result<()> {
     let version =
         [entry["value"]["version"].as_str(), entry["value"].as_str(), entry["version"].as_str()]
             .into_iter()
@@ -36,16 +40,15 @@ fn prefixed_ranges(entry: &Value, dependencies: &[Value]) -> io::Result<Vec<Valu
             .map(str::trim)
             .find(|val| !val.is_empty())
             .ok_or_else(|| decline("checkout policy entry version"))?;
-    let Some(prefix) = version.chars().next() else { return Ok(Vec::new()) };
+    let Some(prefix) = version.chars().next() else { return Ok(()) };
     let Some(target_name) = [entry["dependencyId"].as_str(), entry["name"].as_str()]
         .into_iter()
         .flatten()
         .map(str::trim)
         .find(|name| !name.is_empty())
     else {
-        return Ok(Vec::new());
+        return Ok(());
     };
-    let mut inputs = Vec::new();
     for dependency in dependencies
         .iter()
         .filter(|dependency| {
@@ -61,5 +64,5 @@ fn prefixed_ranges(entry: &Value, dependencies: &[Value]) -> io::Result<Vec<Valu
             }
         }
     }
-    Ok(inputs)
+    Ok(())
 }

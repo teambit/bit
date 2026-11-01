@@ -28,41 +28,42 @@ pub(super) fn apply_updates(root: &Path, updates: &[ResolvedUpdate]) -> io::Resu
 }
 
 fn apply_workspace_jsonc_updates(root: &Path, updates: &[ResolvedUpdate]) -> io::Result<()> {
-    let has_ws_updates = updates
+    let ws_updates: Vec<ResolvedUpdate> = updates
         .iter()
-        .any(|upd| {
+        .filter(|upd| {
             matches!(upd.target, Target::RootPolicy | Target::ModelRoot | Target::Variant(_))
-        });
-    if !has_ws_updates {
+        })
+        .cloned()
+        .collect();
+    if ws_updates.is_empty() {
         return Ok(());
     }
-    let cloned = updates.to_vec();
     edit_workspace_config(
         root,
         &workspace::scope_path(root),
         &workspace_command::file_id(),
         "update dependencies",
         move |doc| {
-            for upd in &cloned {
-                apply_single_ws_update(doc, upd);
+            let doc_val = doc.value();
+            for upd in &ws_updates {
+                apply_single_ws_update(doc, &doc_val, upd);
             }
         },
     )
 }
 
-fn apply_single_ws_update(doc: &mut Document, upd: &ResolvedUpdate) {
+fn apply_single_ws_update(doc: &mut Document, doc_val: &Value, upd: &ResolvedUpdate) {
     let field = upd.field.trim();
     let name = upd.name.trim();
     let latest_range = upd.latest_range.trim();
-    let doc_val = doc.value();
     match &upd.target {
         Target::RootPolicy | Target::ModelRoot => {
-            let resolver_key = super::aspect_entry(&doc_val, DEP_RESOLVER_ID)
+            let resolver_key = super::aspect_entry(doc_val, DEP_RESOLVER_ID)
                 .map_or(DEP_RESOLVER_ID, |(key, _)| key);
             set_doc_policy_entry(doc, &[resolver_key, "policy", field, name], latest_range);
         }
         Target::Variant(pattern) => {
-            let variants_key = super::aspect_entry(&doc_val, "teambit.workspace/variants")
+            let variants_key = super::aspect_entry(doc_val, "teambit.workspace/variants")
                 .map_or("teambit.workspace/variants", |(key, _)| key);
             let pattern = pattern.trim();
             let resolver_key =

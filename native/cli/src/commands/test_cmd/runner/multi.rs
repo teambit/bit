@@ -95,7 +95,7 @@ pub(super) fn report_detail(
     let rows =
         raw["results"]["testResults"].as_array().ok_or_else(|| invalid("tester result files"))?;
     validate_rows(root, components, rows)?;
-    let mut reports = Vec::new();
+    let mut reports = Vec::with_capacity(components.len());
     let mut errors = Vec::new();
     for (index, (component, identity)) in components
         .iter()
@@ -244,7 +244,7 @@ pub(super) fn junit_rows(
         return Ok(copy);
     };
     validate_rows(root, components, rows)?;
-    let mut grouped = serde_json::Map::new();
+    let mut grouped = serde_json::Map::with_capacity(components.len());
     for (component, identity) in components.iter().zip(identities) {
         let selected = rows
             .iter()

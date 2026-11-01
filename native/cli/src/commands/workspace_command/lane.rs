@@ -52,14 +52,17 @@ pub fn pattern_ids(options: &Value, context: &Value) -> io::Result<Option<Vec<St
         return Err(decline("command lane state selector requires workspace callbacks"));
     }
     let targets = array(context["lane"].get("targets"), "lane targets")?;
+    if targets.len() > 4096 {
+        return Err(decline("command lane pattern identities"));
+    }
     let identities: Vec<&str> = targets
         .iter()
         .map(|target| text(target.get("identity")).map(str::trim))
         .collect::<io::Result<_>>()?;
-    let distinct: std::collections::HashSet<&&str> = identities.iter().collect();
-    if targets.len() > 4096
-        || distinct.len() != identities.len()
-        || identities.iter().any(|id| id.is_empty())
+    let mut distinct = std::collections::HashSet::with_capacity(identities.len());
+    if identities
+        .iter()
+        .any(|id| id.is_empty() || !distinct.insert(*id))
     {
         return Err(decline("command lane pattern identities"));
     }

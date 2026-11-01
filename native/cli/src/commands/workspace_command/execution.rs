@@ -63,9 +63,11 @@ pub fn execute_failure_scope(
     error: io::Error,
 ) -> io::Result<Outcome> {
     execute_mode_at(scope, args, command, json, !json, |_| {
-        let mut stdout = io::stdout().lock();
-        stdout.write_all(callback_output.as_bytes())?;
-        stdout.flush()?;
+        if !callback_output.is_empty() {
+            let mut stdout = io::stdout().lock();
+            stdout.write_all(callback_output.as_bytes())?;
+            stdout.flush()?;
+        }
         Err(error)
     })
 }
@@ -213,13 +215,11 @@ pub(in crate::commands) fn loader_output(chalk: Chalk, quiet: bool) -> Output {
         io::stdout().is_terminal() && env::var("TERM").map_or(true, |term| term != "dumb") && !ci;
     let disabled = env::var("BIT_DISABLE_SPINNER")
         .is_ok_and(|value| {
-            matches!(
-                value
-                    .trim()
-                    .to_ascii_lowercase()
-                    .as_str(),
-                "true" | "1" | "yes" | "y" | "on",
-            )
+            let trimmed = value.trim();
+            trimmed == "1"
+                || ["true", "yes", "y", "on"]
+                    .iter()
+                    .any(|flag| trimmed.eq_ignore_ascii_case(flag))
         });
     let sink: bit_install::output::Sink = Arc::new(move |text: &str| {
         if quiet {

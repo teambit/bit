@@ -55,9 +55,10 @@ pub fn receipt(target: &Value, policy: &Policy, files: &[String]) -> io::Result<
     if text(target.get("identity"))?.trim() == NODE_ENV {
         return Err(decline("command environment component"));
     }
-    let compositions = dev_files::group_files(files, Group::Compositions);
-    let docs = dev_files::group_files(files, Group::Docs);
-    if !compositions.is_empty() || !docs.is_empty() || files.iter().any(|file| app_file(file)) {
+    if !dev_files::group_files(files, Group::Compositions).is_empty()
+        || !dev_files::group_files(files, Group::Docs).is_empty()
+        || files.iter().any(|file| app_file(file))
+    {
         return Err(decline("command configured source callbacks"));
     }
     let prefix = policy.input["resolution"]
@@ -78,8 +79,8 @@ pub fn receipt(target: &Value, policy: &Policy, files: &[String]) -> io::Result<
         "devFiles": {
             "config": [],
             "teambit.defender/tester": dev_files::group_files(files, Group::Tests),
-            "teambit.compositions/compositions": compositions,
-            "teambit.docs/docs": docs,
+            "teambit.compositions/compositions": [],
+            "teambit.docs/docs": [],
             NODE_ENV: [],
         },
         "slotData": slot_data(),
