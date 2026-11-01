@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/export.e2e.ts` for native `bit export` main, lane, and head-only parity.
+//! End-to-end port of `e2e/commands/export.e2e.ts` for native `bit export` main, lane, and `--head-only` parity.
 
 #[cfg(unix)]
 mod shared;

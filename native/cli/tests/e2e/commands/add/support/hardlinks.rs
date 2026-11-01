@@ -1,4 +1,4 @@
-//! Replay original regular-file hardlink alias topology ([`Snapshot`]) before running the second implementation.
+//! Replay original regular-file hardlink alias topology ([`Snapshot`], [`Identity`]) before running the second implementation.
 
 use std::{
     collections::BTreeMap,

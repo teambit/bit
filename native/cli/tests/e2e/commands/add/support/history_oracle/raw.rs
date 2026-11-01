@@ -1,4 +1,4 @@
-//! Raw workspace-config and `.bitmap` history [`Snapshot`] reader and parser for replay comparison.
+//! Raw workspace-config and `.bitmap` history [`Snapshot`] reader and parser for replay oracle comparison.
 
 #[cfg(test)]
 mod tests;

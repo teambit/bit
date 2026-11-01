@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/import.e2e.ts` for native `bit import` and `bit fetch` parity.
+//! End-to-end port of `e2e/commands/import.e2e.ts` for native `bit import` and `bit fetch` CLI parity.
 
 mod adoption;
 mod authored_install;

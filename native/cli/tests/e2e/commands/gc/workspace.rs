@@ -1,4 +1,4 @@
-//! End-to-end tests verifying workspace `bit gc` collection owns partial failures and restoration without replaying through Node.
+//! End-to-end tests verifying workspace `bit gc` collection owns partial failures and restoration without replaying through `Node.js`.
 
 use super::{objects, orphan};
 use crate::commands::move_paths::support;

@@ -1,4 +1,4 @@
-//! End-to-end tests verifying re-tracking keeps published identities and variant scopes distinct from the workspace's current `defaultScope`.
+//! End-to-end tests ([`compare`]) verifying re-tracking keeps published identities and variant scopes distinct from the workspace's current `defaultScope`.
 use super::support::{compare, workspace};
 use crate::helper::{config, remote};
 use serde_json::json;

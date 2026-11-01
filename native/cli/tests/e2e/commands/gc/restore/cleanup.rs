@@ -1,4 +1,4 @@
-//! End-to-end tests verifying only the validated recovery timestamp and process ID differ between `bit gc --restore` invocations.
+//! End-to-end tests ([`Snapshot`]) verifying only the validated recovery timestamp and process ID differ between `bit gc --restore` invocations.
 
 use super::super::{compare, fixture, objects, orphan, tree};
 use crate::helper::{Helper, Run};

@@ -1,4 +1,4 @@
-//! Unit tests for `bit tag` release-level, prerelease, [`Mode::Soft`], and [`Mode::Persist`] option parsing ([`parse`]).
+//! Unit tests for `bit tag` release-level, prerelease, [`Mode::Soft`], and [`Mode::Persist`] CLI option parsing ([`parse`]).
 
 use super::{Mode, parse};
 use serde_json::json;

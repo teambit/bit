@@ -1,4 +1,4 @@
-//! Unit tests for `JUnit` XML test report [`render`]ing and Windows directory write error formatting.
+//! Unit tests for `JUnit` XML test report [`render`]ing and Windows directory write error diagnostics.
 
 use super::render;
 use serde_json::json;

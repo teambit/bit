@@ -1,4 +1,4 @@
-//! End-to-end tests verifying `bit gc --verbose` counts retain repeated lane traversals even when object retention is deduplicated.
+//! End-to-end tests ([`compare`]) verifying `bit gc --verbose` counts retain repeated lane traversals even when object retention is deduplicated.
 
 use super::{compare, fixture, objects, orphan};
 use crate::commands::move_paths::support;

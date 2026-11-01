@@ -1,4 +1,4 @@
-//! Unit tests for reachable lockfile [`filter`]ing and [`Snapped`] dependency [`graph`] conversion parity.
+//! Unit tests for reachable lockfile [`filter`]ing and [`Snapped`] dependency [`graph`] conversion parity with [`Replacer`].
 
 use super::{filter, graph};
 use crate::commands::workspace_command::snapshot::graph::{Snapped, replacer::Replacer};

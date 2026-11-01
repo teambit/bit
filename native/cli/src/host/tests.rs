@@ -1,4 +1,4 @@
-//! Unit tests ensuring [`Host`] retains its private `.cjs` program ([`SCRIPT`]) through callbacks and removes it on failure.
+//! Unit tests ensuring [`Host`] retains its private `.cjs` program ([`SCRIPT`]) through callbacks and removes it on session termination.
 use super::{Host, SCRIPT};
 use crate::discovery::{NodeCli, Source};
 use serde_json::json;

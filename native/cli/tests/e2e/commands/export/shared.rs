@@ -1,4 +1,4 @@
-//! End-to-end tests for public `bit export` into an actual Unix shared-group (`group-shares`) file scope.
+//! End-to-end tests for public `bit export` into an actual Unix shared-group (`group-shares`) file scope repository.
 
 use crate::helper::{Helper, parse};
 use serde_json::Value;

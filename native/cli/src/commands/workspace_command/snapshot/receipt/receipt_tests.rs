@@ -1,4 +1,4 @@
-//! Unit tests for [`uuid_v4`] generation, snap SHA-1 hash allocation ([`new_snap_hash`]), git config parsing, and `PATH` lookup.
+//! Unit tests for [`uuid_v4`] generation, snap SHA-1 hash allocation ([`new_snap_hash`]), `git` config parsing, and `PATH` lookup.
 
 use super::{new_snap_hash, uuid_v4};
 

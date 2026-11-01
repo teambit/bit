@@ -1,4 +1,4 @@
-//! End-to-end tests comparing bare-scope `bit gc` collection ([`compare`]) at the same path, including every object and backup byte.
+//! End-to-end tests comparing bare-scope `bit gc` collection ([`compare`], [`compare_with_snapshot`]) at the same path, including every object and backup byte.
 
 mod boundaries;
 #[cfg(target_os = "linux")]

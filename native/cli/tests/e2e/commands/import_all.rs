@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/import-all.e2e.ts` for native `bit import` workspace-wide object and source parity.
+//! End-to-end port of `e2e/commands/import-all.e2e.ts` for native `bit import` workspace-wide object and source file parity.
 
 use crate::{
     helper::{FOO_FIXTURE, Helper, Run},

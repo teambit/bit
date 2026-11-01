@@ -1,4 +1,4 @@
-//! Unit tests for ISO-8601 timestamp formatting ([`iso`]) and `.bit/command-history` logging in [`History`].
+//! Unit tests for ISO-8601 timestamp formatting ([`iso`]) and `.bit/command-history` lifecycle logging in [`History`].
 
 use super::{History, iso};
 use std::{ffi::OsString, fs};

@@ -1,4 +1,4 @@
-//! End-to-end tests ensuring empty policies and explicit lifecycle policy ranges retain the published `--write-deps` rules.
+//! End-to-end tests ensuring empty policies and explicit lifecycle policy ranges ([`RESOLVER`]) retain the published `--write-deps` rules.
 
 use super::{command, file};
 use crate::{

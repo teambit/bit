@@ -1,4 +1,4 @@
-//! Scope object builders ([`digest`], [`path`], [`write`], [`dependency_graph`]) adding isolated graph branches for the `bit gc` collector oracle.
+//! Scope object builders ([`digest`], [`path`], [`write`], [`dependency_graph`]) adding isolated graph branches for the `bit gc` collector test oracle.
 
 use crate::helper::Helper;
 use flate2::{Compression, write::ZlibEncoder};

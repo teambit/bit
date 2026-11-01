@@ -1,4 +1,4 @@
-//! Unit tests for `bit unuse` target parsing ([`parse_target`]) and configured aspect lookup ([`find_extension_key`]).
+//! Unit tests for `bit unuse` CLI target parsing ([`parse_target`]) and configured aspect lookup ([`find_extension_key`]).
 
 use super::{find_extension_key, parse_target};
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! End-to-end tests comparing released Node hard-delete (`--hard`) state and output on independent remote copies.
+//! End-to-end tests comparing released `Node.js` hard-delete (`--hard`) state and output on independent remote copies.
 
 use super::Helper;
 use crate::{commands::move_paths::support::tree, helper::config};

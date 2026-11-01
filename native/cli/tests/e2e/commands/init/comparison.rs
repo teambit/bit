@@ -1,4 +1,4 @@
-//! Directory and history comparison helpers ([`tree`], [`wait_past_setup_history`]) for `bit init` end-to-end tests.
+//! Directory and history comparison helpers ([`tree`], [`wait_past_setup_history`], [`copy_directory_modes`]) for `bit init` end-to-end tests.
 
 mod history;
 

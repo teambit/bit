@@ -1,4 +1,4 @@
-//! Unit tests for `bit whoami` argument and `--token` flag parsing ([`parse_args`]).
+//! Unit tests for `bit whoami` CLI argument and `--token` flag parsing ([`parse_args`]).
 
 use super::parse_args;
 use std::ffi::OsString;

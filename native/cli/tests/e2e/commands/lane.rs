@@ -1,4 +1,4 @@
-//! End-to-end client-side lane creation, import, switch, and list parity from a clean or staged workspace.
+//! End-to-end client-side lane creation, import, switch, and list CLI parity from a clean or staged workspace.
 
 mod staged;
 use crate::helper::{Helper, config, parse, remote, setup};

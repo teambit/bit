@@ -1,4 +1,4 @@
-//! Unit tests for multi-write replay clock-phase launch gate matching ([`multiple_bitmap_writes`], [`delay`]).
+//! Unit tests for multi-write replay clock-phase launch gate matching ([`multiple_bitmap_writes`], [`delay`], [`START`], [`END`], [`SECOND`]).
 
 use super::{END, SECOND, START, delay, multiple_bitmap_writes};
 #[test]

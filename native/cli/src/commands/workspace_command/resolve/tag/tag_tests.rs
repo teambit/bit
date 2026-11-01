@@ -1,4 +1,4 @@
-//! Unit tests for per-component tag version [`selections`] patterns and [`entered_versions`] / [`planned_versions`] extraction.
+//! Unit tests for per-component tag version [`selections`] glob patterns and [`entered_versions`] / [`planned_versions`] extraction.
 
 use super::{entered_versions, planned_versions, selections};
 use serde_json::json;

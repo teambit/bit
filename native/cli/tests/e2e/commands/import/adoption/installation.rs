@@ -1,4 +1,4 @@
-//! End-to-end tests for default installation during `bit import` where JSON mode suppresses pnpm's timed reporter.
+//! End-to-end tests for default installation during `bit import` where JSON mode suppresses `pnpm` timed reporter output.
 
 use super::{file, untrack};
 use crate::{

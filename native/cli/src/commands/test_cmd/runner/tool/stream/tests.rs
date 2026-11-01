@@ -1,4 +1,4 @@
-//! Unit tests for test-runner control socket handshake ([`accept`]) and delayed message reception.
+//! Unit tests for test-runner control socket handshake ([`accept`]) and delayed message reception over TCP.
 
 use super::accept;
 use std::{

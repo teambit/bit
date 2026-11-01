@@ -1,4 +1,4 @@
-//! End-to-end tests ensuring `bit gc --restore` and `--restore-overwrite` compare existing object bytes and permissions.
+//! End-to-end tests ([`compare`]) ensuring `bit gc --restore` and `--restore-overwrite` compare existing object bytes and permissions.
 
 mod cleanup;
 mod conflicts;

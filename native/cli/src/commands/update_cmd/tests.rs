@@ -1,4 +1,4 @@
-//! Unit tests for `bit update` [`Options`] parsing ([`parse_options`]) and empty workspace dependency detection ([`has_no_workspace_dependencies`]).
+//! Unit tests for `bit update` [`Options`] CLI parsing ([`parse_options`]) and empty workspace dependency detection ([`has_no_workspace_dependencies`]).
 
 use super::{Options, has_no_workspace_dependencies, parse_options};
 use std::fs;

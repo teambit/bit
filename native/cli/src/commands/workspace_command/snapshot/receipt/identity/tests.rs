@@ -1,4 +1,4 @@
-//! Unit tests for concurrent snapshot [`User`] author identity resolution and caching in [`Cache`].
+//! Unit tests for concurrent snapshot [`User`] author identity resolution and caching in [`Cache`] receipts.
 
 use super::{Cache, User};
 use std::{

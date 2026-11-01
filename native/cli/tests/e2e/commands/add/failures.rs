@@ -1,4 +1,4 @@
-//! End-to-end tests verifying file/link failures retain the exact publication prefix before `.bitmap` persistence and CI delegation.
+//! End-to-end tests ([`compare`]) verifying file/link failures retain the exact publication prefix before `.bitmap` persistence and CI delegation.
 use super::support::{compare, workspace};
 use std::fs;
 #[test]

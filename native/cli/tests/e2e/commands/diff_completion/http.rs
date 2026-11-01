@@ -1,4 +1,4 @@
-//! Ephemeral HTTP scope [`Server`] (`bit start`) harness ([`start`]) for remote `bit diff` end-to-end tests.
+//! Ephemeral HTTP scope [`Server`] (`bit start`) harness ([`start`], [`url`]) for remote `bit diff` end-to-end tests.
 
 use crate::helper::{Helper, config, setup};
 use std::{

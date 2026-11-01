@@ -1,4 +1,4 @@
-//! Replay oracle ([`compare`], [`compare_ci`]) ensuring a sequence of published writes retains its full raw history proof and clock window.
+//! Replay oracle ([`compare`], [`compare_ci`]) ensuring a sequence of published writes retains its full raw history proof and timestamp window.
 
 mod raw;
 

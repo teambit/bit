@@ -1,4 +1,4 @@
-//! Replay dependency-cache modification timestamps and directory permissions ([`Snapshot`]) lost during fixture copying.
+//! Replay dependency-cache modification timestamps and directory permissions ([`Snapshot`], [`Entry`]) lost during fixture copying.
 
 use std::{
     collections::BTreeMap,

@@ -1,4 +1,4 @@
-//! Normalize ([`durations`]) only the released `bit import` completion line's validated duration token.
+//! Normalize ([`durations`]) only the released `bit import` completion line's validated duration token string.
 
 pub(super) fn durations(text: &str) -> String {
     text.split_inclusive('\n')

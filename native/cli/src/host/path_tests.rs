@@ -1,4 +1,4 @@
-//! Unit tests ensuring directory receipts preserve identities while accepting platform separator spellings (POSIX and Windows).
+//! Unit tests ensuring installation directory receipts preserve identities while accepting platform separator spellings (POSIX and Windows).
 use std::{env, process::Command};
 
 #[test]

@@ -1,4 +1,4 @@
-//! Unit tests for `bit watch` [`Options`] parsing ([`parse_options`]) and `--check-types` value validation ([`check_types_error`]).
+//! Unit tests for `bit watch` [`Options`] CLI parsing ([`parse_options`]) and `--check-types` value validation ([`check_types_error`]).
 
 use super::{Options, check_types_error, parse_options};
 

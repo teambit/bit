@@ -1,4 +1,4 @@
-//! End-to-end tests verifying copy errors retain the reverse-sorted prefix and roll the `deleted-objects` backup back for another attempt.
+//! End-to-end tests ([`Snapshot`]) verifying copy errors retain the reverse-sorted prefix and roll the `deleted-objects` backup back for another attempt.
 
 use super::super::{compare, fixture, objects, orphan, tree};
 use crate::helper::{Helper, Run};

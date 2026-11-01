@@ -1,4 +1,4 @@
-//! Unit tests for lane merge pattern filtering ([`pattern_ids`]), squash validation ([`validate`]), and receipt inspection ([`squash_hashes`], [`other_lane`]).
+//! Unit tests for lane merge pattern filtering ([`pattern_ids`]), squash validation ([`validate`]), and receipt inspection ([`squash_hashes`], [`other_lane`]) against [`HASH`].
 
 use super::{other_lane, pattern_ids, squash_hashes, validate};
 use serde_json::json;

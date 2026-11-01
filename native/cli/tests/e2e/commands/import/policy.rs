@@ -1,4 +1,4 @@
-//! End-to-end tests verifying `bit import` finalization updates the workspace policy using imported automatic dependencies.
+//! End-to-end tests verifying `bit import` finalization updates the workspace policy using imported automatic dependency ranges.
 
 use crate::helper::{
     Helper,

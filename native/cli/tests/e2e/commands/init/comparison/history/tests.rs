@@ -1,4 +1,4 @@
-//! Unit tests for history backup ID normalization ([`inventory`]) and collision-group preservation.
+//! Unit tests for history backup ID normalization ([`inventory`]) and collision-group preservation across [`FIRST`]..[`FOURTH`].
 
 use super::super::inventory;
 use std::{fmt::Write as _, fs, path::Path};

@@ -1,4 +1,4 @@
-//! End-to-end parity tests for the native `bit capsule` list, create, and delete command family.
+//! End-to-end parity tests for the native `bit capsule` list, create, and delete CLI command family.
 
 use crate::{
     helper::{Helper, parse},

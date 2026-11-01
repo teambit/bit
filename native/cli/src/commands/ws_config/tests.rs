@@ -1,4 +1,4 @@
-//! Unit tests for `bit ws-config` [`Subcommand`] parsing ([`parse_subcommand`]), generated config cleanup ([`clean_workspace_configs`]), and writer execution ([`write_workspace_configs`]).
+//! Unit tests for `bit ws-config` [`Subcommand`] CLI parsing ([`parse_subcommand`]), generated config cleanup ([`clean_workspace_configs`]), and writer execution ([`write_workspace_configs`]).
 
 use super::{
     DryRunMode, Subcommand, WriteOptions,

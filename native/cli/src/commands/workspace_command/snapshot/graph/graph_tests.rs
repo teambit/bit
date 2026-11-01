@@ -1,4 +1,4 @@
-//! Unit tests for workspace package pruning ([`remove_workspace_package`]), lockfile [`snapshot_order`] traversal, and environment importer paths.
+//! Unit tests for workspace package pruning ([`remove_workspace_package`]), lockfile [`snapshot_order`] traversal, and environment importer path resolution.
 
 use super::{remove_workspace_package, snapshot_order};
 use serde_json::json;
