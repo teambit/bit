@@ -1,4 +1,4 @@
-//! Released core-environment dependency policies for capsule manifests.
+//! Released [`BuiltinEnv`] core-environment [`PackageDependencies`] policies for capsule manifests.
 
 use super::{BuiltinEnv, EntryPointMetadata, ManifestConfig, PackageDependencies};
 use serde_json::{Map, Value};

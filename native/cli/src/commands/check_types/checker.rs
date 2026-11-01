@@ -1,4 +1,4 @@
-//! Native TypeScript type checking for workspace components.
+//! Native `TypeScript` type checking ([`Options`], [`emit_empty_check_types`]) for workspace components.
 
 use super::{Options, emit_empty_check_types};
 use crate::{

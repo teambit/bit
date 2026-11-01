@@ -1,4 +1,4 @@
-//! Native `bit ci [verify|pr|merge|sync]` (`scopes/git/ci/ci.cmd.ts`).
+//! Native `bit ci [verify|pr|merge|sync|init]` (`scopes/git/ci/ci.cmd.ts`).
 
 mod init;
 mod merge;

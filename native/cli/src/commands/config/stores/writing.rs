@@ -1,4 +1,4 @@
-//! Store persistence follows `GlobalConfig`, `ScopeJson` and `WorkspaceConfig` independently.
+//! [`Store`] persistence follows `GlobalConfig`, `ScopeJson`, and `WorkspaceConfig` [`Document`]s independently.
 use super::{Document, Map, Store, Value, aspect};
 use std::{
     fs,

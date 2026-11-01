@@ -1,4 +1,4 @@
-//! Read-only Git facts for the CI onboarding plan.
+//! Read-only Git facts for the `bit ci init` onboarding plan.
 #[cfg(test)]
 mod tests;
 

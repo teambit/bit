@@ -1,4 +1,4 @@
-//! Native `bit clone <component-id> [dir]` (`scopes/workspace/workspace-root/clone.cmd.ts`).
+//! Native `bit clone <component-id> [dir]` (`scopes/workspace/workspace-root/clone.cmd.ts`, [`Command`]).
 
 #[cfg(test)]
 mod tests;

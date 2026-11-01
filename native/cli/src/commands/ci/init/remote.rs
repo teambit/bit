@@ -1,4 +1,4 @@
-//! Git remote interpretation used only to render the onboarding checklist.
+//! Git remote [`Repository`] interpretation used only to render the onboarding checklist.
 use reqwest::Url;
 use std::env;
 

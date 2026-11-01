@@ -1,4 +1,4 @@
-//! Native `bit compile [component-names...]` (`scopes/compilation/compiler/compiler.cmd.ts`).
+//! Native `bit compile [component-names...]` (`scopes/compilation/compiler/compiler.cmd.ts`, `--changed`, `--verbose`, `--json`).
 
 pub(in crate::commands) mod syntax;
 

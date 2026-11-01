@@ -1,4 +1,4 @@
-//! Invoke the external TypeScript compiler without importing Bit runtime modules.
+//! Invoke the external `TypeScript` compiler ([`Target`]) without importing Bit runtime modules.
 use crate::discovery::{self, Target};
 use serde_json::{Value, json};
 use std::{

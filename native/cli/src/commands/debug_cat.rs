@@ -1,5 +1,5 @@
 //! Native `cat-object`, `cat-component` (`cmp`), `cat-lane` (`cl`),
-//! `cat-version-history` (`cvh`), and `cat-lane-history` (`clh`).
+//! `cat-version-history` (`cvh`), and `cat-lane-history` (`clh`) via [`lookup`].
 
 pub(in crate::commands) mod lookup;
 #[cfg(test)]

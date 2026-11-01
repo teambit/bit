@@ -1,4 +1,4 @@
-//! Native `bit capsule create [component-ids...] [--seeders-only] [-j|--json]`.
+//! Native `bit capsule create [component-ids...] [--seeders-only] [-j|--json]` ([`parse_create_flags`]).
 
 pub(super) use self::root::parse_create_flags;
 

@@ -1,4 +1,4 @@
-//! Narrow grammar of the published `ConfigCmd`'s four subcommands.
+//! Narrow [`Options`] grammar of the published `ConfigCmd`'s four subcommands (`get`, `set`, `del`, `list`).
 use std::ffi::OsString;
 
 pub(super) struct Options {

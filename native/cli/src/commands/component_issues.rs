@@ -1,4 +1,4 @@
-//! Native `bit component-issues [--json|-j]` (`ComponentIssuesCmd`).
+//! Native `bit component-issues [--json|-j]` (`ComponentIssuesCmd`, [`Chalk`]).
 
 #[cfg(test)]
 mod tests;

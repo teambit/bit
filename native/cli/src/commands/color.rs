@@ -1,4 +1,4 @@
-//! chalk 4.1.2 as the Node.js CLI's process sets it up: whether stdout gets
+//! chalk 4.1.2 ([`Chalk`]) as the Node.js CLI's process sets it up: whether stdout gets
 //! colors (`supports-color` 7.2.0), and how `chalk.red`/`green`/`bold` wrap text.
 
 #[cfg(test)]

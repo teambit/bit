@@ -1,4 +1,4 @@
-//! Source and package files for an isolated workspace component.
+//! Source and package files ([`BitmapEntry`], [`ScopeObjects`]) for an isolated workspace component.
 
 mod policy;
 

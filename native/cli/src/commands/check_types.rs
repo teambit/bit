@@ -1,4 +1,4 @@
-//! Native `bit check-types [component-pattern]` (`scopes/typescript/typescript/cmds/check-types.cmd.ts`).
+//! Native `bit check-types [component-pattern]` (`scopes/typescript/typescript/cmds/check-types.cmd.ts`, `--unmodified`, `--strict`).
 
 mod checker;
 #[cfg(test)]

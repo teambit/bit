@@ -1,4 +1,4 @@
-//! `fs.realpathSync` resolves links while preserving ordinary names, including DOS short names.
+//! `fs.realpathSync` resolves links while preserving ordinary names, including DOS short names (`bit ci init`).
 #[cfg(test)]
 mod tests;
 

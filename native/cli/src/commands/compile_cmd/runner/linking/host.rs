@@ -1,4 +1,4 @@
-//! Fixed Node and React package properties; arbitrary environment callbacks remain guarded.
+//! Fixed [`Builtin`] Node and React package [`Host`] properties; arbitrary environment callbacks remain guarded.
 use async_trait::async_trait;
 use bit_install::host::{AfterInstall, AfterInstallResult, Host};
 use serde_json::{Value, json};

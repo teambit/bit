@@ -1,4 +1,4 @@
-//! Optional package and component flags follow the first merged component policy entry.
+//! Optional package and component flags follow the first merged [`WorkspaceComponent`] [`PolicyEntry`].
 use crate::commands::workspace_command::component_service::Loaded;
 use bit_install::{
     model::{

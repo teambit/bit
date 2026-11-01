@@ -1,4 +1,4 @@
-//! Native `bit capsule [list|delete|create]` (`scopes/workspace/workspace/capsule.cmd.ts`).
+//! Native `bit capsule [list|delete|create]` (`scopes/workspace/workspace/capsule.cmd.ts`, `list` default).
 
 mod create;
 mod list_stats;

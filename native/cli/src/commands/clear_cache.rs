@@ -1,4 +1,4 @@
-//! Native `bit clear-cache` (`cc`) (`ClearCacheCmd` in `scopes/workspace/clear-cache/clear-cache-cmd.ts`).
+//! Native `bit clear-cache` (`cc`) (`ClearCacheCmd` in `scopes/workspace/clear-cache/clear-cache-cmd.ts`, `--remote`).
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! `ConfigGet` and `ConfigList` formatting, including the released origin ordering.
+//! `ConfigGet` and `ConfigList` formatting ([`Options`], [`Stores`]), including the released origin ordering.
 use super::{options::Options, stores::Stores};
 use crate::commands::color::Chalk;
 use bit_workspace_config::{environment_value, truthy};

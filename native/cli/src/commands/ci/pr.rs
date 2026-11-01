@@ -1,4 +1,4 @@
-//! Native `bit ci pr` (`scopes/git/ci/commands/pr.cmd.ts`).
+//! Native `bit ci pr` (`scopes/git/ci/commands/pr.cmd.ts`, [`Report`]).
 
 use super::{
     git_current_branch, git_last_commit_message, run_child_bit,

@@ -1,3 +1,5 @@
+//! Atomic output file writing ([`Emitted`]) and [`failure`] reporting for `bit compile`.
+
 use super::Emitted;
 use crate::commands::workspace_command::filesystem_error::failure;
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Native `bit cat-scope [scopePath] [-f|--full] [-j|--json] [-e|--json-extra]`.
+//! Native `bit cat-scope [scopePath] [-f|--full] [-j|--json] [-e|--json-extra]` (`cat-scope-cmd.ts`).
 
 mod json;
 #[cfg(test)]

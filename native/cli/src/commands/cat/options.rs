@@ -1,4 +1,4 @@
-//! Option parsing for `bit cat`.
+//! [`Options`] and [`parse`] option parsing for `bit cat`.
 
 #[derive(Default)]
 pub(super) struct Options<'a> {

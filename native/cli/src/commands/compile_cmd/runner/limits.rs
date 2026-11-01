@@ -1,3 +1,5 @@
+//! Compilation [`batch_size`] and file budget limits for [`Compiled`] components.
+
 use super::Compiled;
 use bit_workspace_config::{config_string, effective, global_config_dir, read_global_config};
 use serde_json::Value;

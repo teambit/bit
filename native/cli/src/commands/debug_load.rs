@@ -1,4 +1,4 @@
-//! Native `bit debug-load <component-id>` (`scopes/workspace/workspace/debug-load.cmd.ts`).
+//! Native `bit debug-load <component-id>` (`scopes/workspace/workspace/debug-load.cmd.ts`, `--aspect`).
 
 #[cfg(test)]
 mod tests;

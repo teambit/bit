@@ -1,4 +1,4 @@
-//! Native `bit ci merge` (`scopes/git/ci/commands/merge.cmd.ts`).
+//! Native `bit ci merge` (`scopes/git/ci/commands/merge.cmd.ts`, [`Report`]).
 
 use super::{
     git_current_branch, git_last_commit_message, run_child_bit, run_git,

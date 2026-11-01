@@ -1,3 +1,5 @@
+//! Component package linking ([`Links`], [`link_components`]) before and after compilation.
+
 mod host;
 mod optional;
 use crate::commands::{add, workspace_command::component_service::Loaded};

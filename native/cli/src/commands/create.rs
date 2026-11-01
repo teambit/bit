@@ -1,4 +1,4 @@
-//! Native `bit create <template-name> <component-names...>` (`CreateCmd`).
+//! Native `bit create <template-name> <component-names...>` (`CreateCmd`, `--scope`, `--namespace`, `--aspect`, `--env`).
 //!
 //! Validates CLI arguments, workspace presence, `--scope` format, and
 //! same-name-as-template errors natively before delegating template generation

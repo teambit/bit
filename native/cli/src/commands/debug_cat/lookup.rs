@@ -1,3 +1,5 @@
+//! Component ([`load_cat_component`]), lane, and version-history lookup helpers for debug `cat-*` commands.
+
 pub(in crate::commands) use crate::commands::lane::scope_root::diagnose_component_lookup_error;
 use crate::commands::{
     color::Chalk,
@@ -14,9 +16,7 @@ pub(in crate::commands) fn load_cat_component(
     let (bare_id, version_opt) = split_cat_id(raw_id)?;
     let (comp_scope, comp_name, comp_hash) = resolve_component_entry(scope_dir, bare_id)?;
     let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
-    if kind != "Component" {
-        return None;
-    }
+    (kind == "Component").then_some(())?;
     let Some(ver) = version_opt else {
         return Some(comp_val);
     };

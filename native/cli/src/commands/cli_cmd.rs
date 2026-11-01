@@ -1,4 +1,4 @@
-//! Native `bit cli generate --docs` with metadata and skill options (`cli.cmd.ts`).
+//! Native `bit cli generate --docs` with `--metadata`, `--skill`, and `--json` options (`cli.cmd.ts`).
 
 #[cfg(test)]
 mod tests;

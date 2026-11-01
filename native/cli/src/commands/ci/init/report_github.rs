@@ -1,4 +1,4 @@
-//! Repository-specific manual steps; rendering never contacts a Git host.
+//! [`Repository`]-specific [`Report`] manual steps; rendering never contacts a Git host.
 use super::{
     remote::{self, Repository},
     report::{self, Report},

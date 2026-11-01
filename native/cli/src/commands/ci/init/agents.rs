@@ -1,4 +1,4 @@
-//! `scaffoldAgentsMd`: retain user edits and only fill the unresolved repository placeholder.
+//! `scaffoldAgentsMd`: retain user edits and only fill the [`UNKNOWN`] repository placeholder.
 use std::{io, path::Path, sync::OnceLock};
 const START: &str = "<!-- bit-ci-sync:start";
 const END: &str = "<!-- bit-ci-sync:end -->";

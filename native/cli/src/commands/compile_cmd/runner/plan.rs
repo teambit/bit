@@ -1,3 +1,5 @@
+//! Compilation [`Plan`] preparation and [`Loaded`] component execution for `bit compile`.
+
 use super::{Compiled, Options, emission, limits, linking::Links, report, write};
 use crate::commands::workspace_command::component_service::{Loaded, Selection};
 use std::{io, path::Path};

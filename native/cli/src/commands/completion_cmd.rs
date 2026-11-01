@@ -1,4 +1,4 @@
-//! Native `bit completion` (`scopes/harmony/cli/completion.cmd.ts`).
+//! Native `bit completion` (`scopes/harmony/cli/completion.cmd.ts`, [`Command`]).
 
 #[cfg(test)]
 mod tests;

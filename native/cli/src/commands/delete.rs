@@ -1,4 +1,4 @@
-//! RemoveMain.markRemoveComps: packages, one bitmap publication, then source removal.
+//! `RemoveMain.markRemoveComps`: packages, one `.bitmap` publication, then source removal (`bit delete`).
 pub(in crate::commands) mod hard;
 pub(super) mod loading;
 pub(in crate::commands) mod options;

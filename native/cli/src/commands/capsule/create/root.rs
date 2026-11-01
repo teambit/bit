@@ -1,4 +1,4 @@
-//! Capsule root path selection and base-directory validation.
+//! Capsule root path selection ([`compute_capsules_root_dirs`], [`resolve_capsules_dir`]) and base-directory validation.
 
 use super::{
     super::{

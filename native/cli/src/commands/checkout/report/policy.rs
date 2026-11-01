@@ -1,4 +1,4 @@
-//! `getWsConfigUpdateLogs` and `getWorkspaceConfigUpdateOutput`.
+//! `getWsConfigUpdateLogs` and `getWorkspaceConfigUpdateOutput` via [`Formatter`] and [`Chalk`].
 use crate::commands::{
     color::Chalk,
     status::js::{array, decline, object, text},

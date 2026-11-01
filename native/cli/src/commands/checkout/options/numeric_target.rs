@@ -1,4 +1,4 @@
-//! yargs-parser's positional number coercion followed by `CheckoutCmd`'s `String(to)`.
+//! yargs-parser's positional number coercion ([`coerce`]) followed by `CheckoutCmd`'s `String(to)`.
 #[cfg(test)]
 mod tests;
 

@@ -1,4 +1,4 @@
-//! `CatCmd.report` and `CatCmd.json` presentation of native Source bodies.
+//! `CatCmd.report` and `CatCmd.json` ([`Options`]) presentation of native Source bodies.
 
 use super::Options;
 use crate::commands::status::js::decline;

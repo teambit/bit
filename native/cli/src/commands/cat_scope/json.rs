@@ -1,4 +1,4 @@
-//! JSON entry builders for `bit cat-scope [-j|--json] [-e|--json-extra]`.
+//! JSON entry builders ([`build_component_json_obj`]) for `bit cat-scope [-j|--json] [-e|--json-extra]`.
 
 use serde_json::{Map, Value, json};
 

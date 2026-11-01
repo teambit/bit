@@ -1,4 +1,4 @@
-//! `CatCmd`: inspect validated stored Sources without returning file bodies through Node.
+//! `CatCmd` ([`Options`], [`parse`]): inspect validated stored Sources without returning file bodies through Node.
 
 mod options;
 mod report;

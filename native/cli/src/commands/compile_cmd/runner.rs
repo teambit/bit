@@ -1,4 +1,4 @@
-//! Rust owns component compilation orchestration; TypeScript is an external compiler.
+//! Rust owns component compilation orchestration ([`Options`]); `TypeScript` is an external compiler.
 mod emission;
 mod limits;
 mod linking;

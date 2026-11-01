@@ -1,4 +1,4 @@
-//! Capsule command behavior outside a workspace or scope.
+//! Capsule [`Subcommand`] behavior ([`CreateArgs`], [`delete_and_report`], [`prune`]) outside a workspace or scope.
 
 use super::{Subcommand, create::CreateArgs, delete_and_report, prune};
 use crate::{

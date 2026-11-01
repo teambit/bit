@@ -1,3 +1,5 @@
+//! Capsule directory size and count statistics ([`resolve_capsules_dir`]) for `bit capsule list`.
+
 use super::{Chalk, resolve_capsules_dir};
 use crate::{commands::lane::scope_root::ScopeRoot, workspace};
 use bit_workspace_config::{

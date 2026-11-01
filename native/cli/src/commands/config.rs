@@ -1,4 +1,4 @@
-//! `ConfigCmd` reads and edits the same global, scope and workspace stores as `ConfigStoreMain`.
+//! `ConfigCmd` ([`options`], [`report`], [`stores`]) reads and edits the same global, scope, and workspace stores as `ConfigStoreMain`.
 mod options;
 mod report;
 mod stores;

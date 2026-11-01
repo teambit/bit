@@ -1,4 +1,4 @@
-//! Preserve external TypeScript parser diagnostics without loading Bit's dependency detectors.
+//! Preserve external `TypeScript` parser diagnostics ([`Target`]) without loading Bit's dependency detectors.
 use crate::discovery::{self, Target};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};

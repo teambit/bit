@@ -1,4 +1,4 @@
-//! `CompileCmd` reports retain emitted paths, diagnostics and per-component status.
+//! `CompileCmd` [`Report`]s retain [`Compiled`] emitted paths, diagnostics, and per-component status.
 use super::{Compiled, Options};
 use crate::commands::{
     color::Chalk,

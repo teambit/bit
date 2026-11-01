@@ -1,4 +1,4 @@
-//! The checkout report: `checkoutOutput` of `@teambit/checkout`.
+//! The checkout report ([`Options`], [`policy`]): `checkoutOutput` of `@teambit/checkout`.
 pub(crate) mod policy;
 #[cfg(test)]
 mod report_tests;

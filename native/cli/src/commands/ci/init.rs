@@ -1,4 +1,4 @@
-//! `SyncOrchestrator.syncInit`: onboard a repository without running reconciliation.
+//! `SyncOrchestrator.syncInit`: onboard a repository without running reconciliation (`bit ci init`).
 mod agents;
 mod files;
 mod git;

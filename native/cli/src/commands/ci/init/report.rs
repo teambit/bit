@@ -1,4 +1,4 @@
-//! `renderInitReport`: the exact files and manual commands required for CI onboarding.
+//! `renderInitReport` ([`Report`], [`File`]): the exact files and manual commands required for CI onboarding.
 use super::{remote, shell_word};
 use crate::commands::color::Chalk;
 

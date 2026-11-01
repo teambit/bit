@@ -1,4 +1,4 @@
-//! Root metadata written by `IsolatorMain` for workspace capsules.
+//! Root metadata ([`object_hash_short`]) written by `IsolatorMain` for workspace capsules.
 
 use super::super::object_hash_short;
 use chrono::{SecondsFormat, Utc};

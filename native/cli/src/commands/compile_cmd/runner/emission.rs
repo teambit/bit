@@ -1,3 +1,5 @@
+//! Compiler output [`Emitted`] file collection and [`Diagnostic`] mapping for [`Component`]s.
+
 use super::{Compiled, Diagnostic, Emitted, tool};
 use crate::commands::workspace_command::component_service::Component;
 use serde_json::{Value, json};

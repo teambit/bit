@@ -1,4 +1,4 @@
-//! `ConfigStoreMain` store registration and deferred native writes.
+//! `ConfigStoreMain` [`Stores`] registration ([`Options`]) and deferred native [`writing`].
 mod writing;
 
 use super::options::Options;
