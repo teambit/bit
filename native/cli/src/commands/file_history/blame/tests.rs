@@ -47,3 +47,9 @@ fn parses_blame_args_with_no_color_and_classifies_targets() {
     assert_eq!(classify_target(dir.path(), "comp1/index.ts").unwrap(), Target::Unversioned);
     assert_eq!(classify_target(dir.path(), "other/index.ts").unwrap(), Target::Unowned);
 }
+
+#[test]
+fn rejects_empty_or_multi_positional_blame_args() {
+    assert_eq!(parse_args(&[]), None);
+    assert_eq!(parse_args(&["a.ts", "b.ts"]), None);
+}

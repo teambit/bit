@@ -88,3 +88,8 @@ fn merges_bitmap_contents_across_strategies_and_detects_conflicts() {
         r#""foo" is not a subcommand of "git", please run "bit git --help" to list the subcommands"#,
     );
 }
+
+#[test]
+fn merge_bitmap_contents_with_invalid_json_returns_error() {
+    assert!(merge_bitmap_contents("not-json", "{}", "ours").is_err());
+}

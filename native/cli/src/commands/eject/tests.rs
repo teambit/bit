@@ -56,3 +56,11 @@ fn rejects_eject_when_workspace_on_lane() {
     let err = validate_workspace(temp.path(), "comp1").unwrap().unwrap();
     assert!(err.contains("unable to eject when the workspace is on a lane"), "{err}");
 }
+
+#[test]
+fn parses_trailing_double_dash_pattern_and_rejects_unknown_short_flags() {
+    let parsed = parse_options(&["-fx", "--", "comp1"]).unwrap();
+    assert_eq!(parsed.pattern, "comp1");
+    assert!(parsed.force && parsed.skip_dependency_installation);
+    assert_eq!(parse_options(&["-z", "comp1"]), None);
+}

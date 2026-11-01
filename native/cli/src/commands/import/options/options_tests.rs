@@ -163,6 +163,11 @@ fn semantic_adoption_errors_parse_for_owned_validation_after_provider_startup() 
     );
 }
 
+#[test]
+fn empty_slice_returns_none_for_import_parser() {
+    assert!(parse(&[]).is_none());
+}
+
 fn semantic_errors() -> Vec<(&'static [&'static str], &'static str)> {
     vec![
         (&["import", "--dependencies"], r#"you have to specify ids to use "--dependencies" flag"#),

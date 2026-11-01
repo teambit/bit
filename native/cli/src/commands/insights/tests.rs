@@ -103,3 +103,9 @@ fn finds_closed_cycles_without_acyclic_dependencies() {
         vec![vec!["a", "b", "c", "a"], vec!["x", "y", "x"]],
     );
 }
+
+#[test]
+fn empty_graph_has_no_closed_cycles() {
+    let graph = CompGraph::default();
+    assert!(find_cycles(&graph, &[], false).is_empty());
+}

@@ -23,3 +23,8 @@ fn rejects_flags_or_missing_subcommand() {
     assert_eq!(parse_subcommand(&os_args(&["npmrc", "-h"])), None);
     assert_eq!(parse_subcommand(&os_args(&["npmrc", "a", "b"])), None);
 }
+
+#[test]
+fn empty_slice_returns_none_for_npmrc() {
+    assert_eq!(parse_subcommand(&[]), None);
+}

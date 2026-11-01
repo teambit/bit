@@ -39,6 +39,14 @@ fn parses_graph_options_and_validates_remote_or_host() {
 }
 
 #[test]
+fn empty_graph_filter_cycles_preserves_empty_nodes_and_edges() {
+    let mut graph = CompGraph::default();
+    graph.filter_cycles();
+    assert!(graph.nodes.is_empty());
+    assert!(graph.edges.is_empty());
+}
+
+#[test]
 fn filters_graph_seeders_local_only_and_cycles() {
     let mut graph = CompGraph::default();
     graph.add_edge("scope/a@0.0.1".into(), "scope/b@0.0.1".into(), "prod");

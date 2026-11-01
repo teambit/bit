@@ -162,3 +162,30 @@ fn merged_report_accepts_string_or_object_lane_ids() {
     assert!(merged.contains("feature-a"));
     assert!(!merged.contains("feature-b"));
 }
+
+#[test]
+fn unmerged_report_lists_only_lanes_marked_not_merged() {
+    let lanes = [
+        LaneData {
+            id: json!("scope/feature-a"),
+            alias: None,
+            components: Vec::new(),
+            update_dependents: None,
+            readme_component: None,
+            is_merged: Some(true),
+            lane: None,
+        },
+        LaneData {
+            id: json!({"scope": "scope", "name": "feature-b"}),
+            alias: None,
+            components: Vec::new(),
+            update_dependents: None,
+            readme_component: None,
+            is_merged: Some(false),
+            lane: None,
+        },
+    ];
+    let unmerged = super::merged::report(&lanes, false, Chalk::new(false));
+    assert!(unmerged.contains("feature-b"));
+    assert!(!unmerged.contains("feature-a"));
+}

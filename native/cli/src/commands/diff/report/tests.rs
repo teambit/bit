@@ -18,3 +18,12 @@ fn filters_and_summarizes_diff_rows() {
         "showing diff for s/one\nM src/index.js  +1 -1",
     );
 }
+
+#[test]
+fn empty_diff_rows_format_no_modified_components_warning() {
+    let options = parse(&[]).unwrap();
+    assert_eq!(
+        format(&json!([]), Chalk::new(false), &options).unwrap(),
+        "there are no modified components to diff",
+    );
+}

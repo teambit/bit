@@ -26,3 +26,11 @@ fn parses_bare_ripple_and_invalid_limit() {
     assert_eq!(parse_positive_int("0"), None);
     assert_eq!(parse_positive_int("-5"), None);
 }
+
+#[test]
+fn parses_simulate_without_lane_flag() {
+    assert_eq!(
+        parse_subcommand(&["simulate"]),
+        Some(Subcommand::Simulate { lane: None, json: false }),
+    );
+}

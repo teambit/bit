@@ -109,3 +109,8 @@ fn a_writer_compile_error_follows_the_graceful_install_error() {
         ),
     );
 }
+
+#[test]
+fn non_object_receipt_declines_validation() {
+    assert!(validate(&json!("invalid")).is_err());
+}

@@ -27,3 +27,9 @@ fn component_abort_reports_unversioned_ids() {
     assert!(report.data.contains("scope/name"));
     assert!(!report.data.contains("@abc"));
 }
+
+#[test]
+fn component_abort_with_unexpected_key_declines_formatting() {
+    let extra = json!({"abortedComponents": [], "extra": 1});
+    assert!(format_component(&extra, Chalk::new(false)).is_err());
+}

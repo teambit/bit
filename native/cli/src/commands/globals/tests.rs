@@ -40,3 +40,8 @@ fn renders_globals_text_and_json_formats() {
     assert_eq!(parsed["Config Dir"], "/tmp/bit-globals/config");
     assert_eq!(parsed["Capsules Dir"], "/tmp/bit-globals/capsules");
 }
+
+#[test]
+fn empty_args_slice_defaults_to_non_json_for_globals() {
+    assert_eq!(parse_json_flag(&[]), Some(false));
+}

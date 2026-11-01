@@ -36,3 +36,11 @@ fn exclusion_keeps_scope_metadata_and_hides_only_internal_payloads() {
         assert!(!excluded(Path::new(path), &options), "{path}");
     }
 }
+
+#[test]
+fn include_public_and_node_modules_flags_retain_those_paths_in_archive() {
+    let options =
+        Options::parse(&["--archive", "--include-public", "--include-node-modules"]).unwrap();
+    assert!(!excluded(Path::new("public/file"), &options));
+    assert!(!excluded(Path::new("node_modules/pkg/file"), &options));
+}

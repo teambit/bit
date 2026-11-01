@@ -71,3 +71,8 @@ fn validates_existing_workspace_existing_path_and_load_from() {
         "Error: unable to generate a new workspace inside of an existing workspace"
     ),);
 }
+
+#[test]
+fn empty_new_args_return_none() {
+    assert_eq!(parse_options(&[]), None);
+}

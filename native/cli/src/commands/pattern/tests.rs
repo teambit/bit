@@ -35,3 +35,11 @@ fn declines_stateful_or_invalid_arguments() {
     assert_eq!(parse(&["pattern", "**", "extra"]), None);
     assert_eq!(parse(&["pattern", "**", "--help"]), None);
 }
+
+#[test]
+fn accepts_double_dash_before_pattern_argument() {
+    assert_eq!(
+        parse(&["pattern", "-j", "--", "ui/*"]),
+        Some(Options { pattern: "ui/*".to_owned(), json: true, remote: false }),
+    );
+}

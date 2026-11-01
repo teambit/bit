@@ -57,3 +57,11 @@ fn archive_path_wins_over_save_regardless_of_argument_order() {
         );
     }
 }
+
+#[test]
+fn empty_doctor_args_parse_and_pass_validation() {
+    let options = Options::parse(&[]).unwrap();
+    assert!(options.name.is_none());
+    assert!(options.file.is_none());
+    assert!(options.validate().is_ok());
+}

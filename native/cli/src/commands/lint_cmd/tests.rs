@@ -41,3 +41,9 @@ fn validates_lint_pattern_against_workspace_bitmap() {
         ),
     );
 }
+
+#[test]
+fn none_lint_pattern_passes_workspace_validation() {
+    let temp = tempfile::tempdir().unwrap();
+    assert!(validate_lint_pattern(temp.path(), None, Chalk::new(false)).is_none());
+}

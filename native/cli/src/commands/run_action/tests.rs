@@ -30,3 +30,9 @@ fn formats_action_results_like_command_runner() {
     let structured = report(&json!({"data": "custom", "code": 2})).unwrap();
     assert_eq!((structured.data.as_str(), structured.code), ("custom", 2));
 }
+
+#[test]
+fn rejects_too_few_run_action_positional_arguments() {
+    assert_eq!(parse_options(&[]), None);
+    assert_eq!(parse_options(&["ExportPersist", "my-scope"]), None);
+}

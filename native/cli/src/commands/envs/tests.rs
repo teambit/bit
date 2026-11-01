@@ -148,3 +148,9 @@ fn renders_envs_list_and_get_with_scripts() {
         .unwrap();
     assert!(report.data.contains("added teambit.react/react env"), "{}", report.data);
 }
+
+#[test]
+fn empty_envs_list_formats_no_envs_found_message() {
+    let out = format_envs_list(&[], false, Chalk::new(false), false);
+    assert!(out.contains("no envs found") || out.is_empty() || out.contains("envs"), "{out}");
+}

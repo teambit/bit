@@ -35,3 +35,11 @@ fn detects_mutually_exclusive_flags_and_rejects_unimplemented_inputs() {
         assert!(parse(args).is_none(), "{args:?}");
     }
 }
+
+#[test]
+fn empty_args_parse_to_default_workspace_diff_options() {
+    let options = parse(&[]).unwrap();
+    assert!(options.pattern.is_none());
+    assert!(options.output.files.is_empty());
+    assert!(!options.output.stat && !options.output.json && !options.output.name_only);
+}

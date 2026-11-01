@@ -43,3 +43,8 @@ fn other_globs_are_left_to_node() {
         assert!(matching(&IDS, &split(pattern)).is_err(), "{pattern}");
     }
 }
+
+#[test]
+fn empty_patterns_return_empty_matches() {
+    assert!(matching(&IDS, &[]).unwrap().is_empty());
+}

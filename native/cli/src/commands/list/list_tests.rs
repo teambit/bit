@@ -152,3 +152,10 @@ fn outdated_text_validation_preserves_published_semver_errors_for_hashes() {
     local.remote_version = Some("0.0.1".to_string());
     assert!(super::validate_versions(&[local]).is_err());
 }
+
+#[test]
+fn semver_local_and_remote_versions_pass_outdated_validation() {
+    let mut local = row("remote/one", Some("0.0.1"), Some("0.0.1"));
+    local.remote_version = Some("0.0.2".to_string());
+    assert!(super::validate_versions(&[local]).is_ok());
+}

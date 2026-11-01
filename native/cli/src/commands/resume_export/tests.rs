@@ -26,3 +26,8 @@ fn parses_resume_export_options() {
         }),
     );
 }
+
+#[test]
+fn empty_resume_export_args_return_none() {
+    assert_eq!(parse_options(&[]), None);
+}

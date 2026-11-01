@@ -46,3 +46,16 @@ fn mixed_type_reports_decline_before_stray_cleanup_or_collection() {
     );
     assert_eq!(fs::read(stray).unwrap(), b"keep until planning succeeds");
 }
+
+#[test]
+fn empty_plan_validates_and_executes_without_touching_scope() {
+    let scope = tempfile::tempdir().unwrap();
+    let plan = Plan {
+        result: GcResult::default(),
+        versions: Vec::new(),
+        sources: Vec::new(),
+        stray: Vec::new(),
+    };
+    plan.validate(scope.path()).unwrap();
+    plan.execute(scope.path()).unwrap();
+}

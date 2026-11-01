@@ -22,3 +22,8 @@ fn debug_log_stripping_preserves_incomplete_and_multiline_escape_sequences() {
     assert_eq!(super::strip("a\u{1b}[oops\nkeepm"), "a\u{1b}[oops\nkeepm");
     assert_eq!(super::strip("a\u{1b}oops"), "a\u{1b}oops");
 }
+
+#[test]
+fn plain_string_without_ansi_escapes_is_returned_unchanged() {
+    assert_eq!(super::strip("plain text without escapes"), "plain text without escapes");
+}

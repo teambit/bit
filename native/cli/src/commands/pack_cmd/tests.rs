@@ -53,3 +53,11 @@ fn builds_valid_tgz_archive() {
     assert!(paths.contains(&"package/package.json".to_owned()));
     assert!(paths.contains(&"package/index.js".to_owned()));
 }
+
+#[test]
+fn parses_optional_scope_path_and_rejects_third_positional_argument() {
+    let with_scope = parse_options(&["comp1", "my-scope-dir"]).unwrap();
+    assert_eq!(with_scope.scope_path.as_deref(), Some("my-scope-dir"));
+    assert_eq!(parse_options(&["comp1", "comp2", "comp3"]), None);
+    assert_eq!(parse_options(&["comp1", "--unknown"]), None);
+}

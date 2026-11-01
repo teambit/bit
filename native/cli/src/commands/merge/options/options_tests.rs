@@ -35,3 +35,9 @@ fn rejects_everything_else() {
     assert!(parse(&["-x", "--all"]).is_none());
     assert!(parse(&["-x", "--force-ours"]).is_none());
 }
+
+#[test]
+fn double_dash_accepts_single_merge_pattern() {
+    let options = parse(&["-x", "--", "remote/one"]).unwrap();
+    assert_eq!(options.pattern.as_deref(), Some("remote/one"));
+}

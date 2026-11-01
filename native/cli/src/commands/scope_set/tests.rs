@@ -30,3 +30,11 @@ fn declines_unsupported_scope_set_arguments() {
     assert_eq!(parse(&["scope", "set", "org.scope", "$modified"]), None);
     assert_eq!(parse(&["scope", "set", "org.scope", "comp1", "extra"]), None);
 }
+
+#[test]
+fn accepts_no_color_flag_with_scope_set() {
+    assert_eq!(
+        parse(&["scope", "set", "org.my-scope", "--no-color"]),
+        Some(Options { scope_name: "org.my-scope".to_owned(), pattern: None }),
+    );
+}

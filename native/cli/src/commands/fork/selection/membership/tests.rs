@@ -34,3 +34,10 @@ fn different_versions_are_not_equal_component_ids() {
     assert_eq!(locals, local);
     assert_eq!(remotes, remote);
 }
+
+#[test]
+fn empty_local_and_remote_inputs_produce_empty_classifications() {
+    let (locals, remotes) = classify(&[], &[], &[]);
+    assert!(locals.is_empty());
+    assert!(remotes.is_empty());
+}

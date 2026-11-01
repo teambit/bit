@@ -95,3 +95,21 @@ fn writes_workspace_setup_and_rules_files() {
         "---\ndescription: Bit MCP Agent Instructions\nalwaysApply: true\n---"
     ));
 }
+
+#[test]
+fn rules_print_mode_outputs_instructions_without_writing_file() {
+    let dir = tempdir().expect("tempdir");
+    let rules_out = execute_rules(
+        dir.path(),
+        &RulesOptions {
+            editor: "cursor".into(),
+            is_global: false,
+            should_print: true,
+            consumer_project: false,
+            force_standard: false,
+        },
+        Chalk::new(false),
+    );
+    assert!(rules_out.contains("Bit MCP"));
+    assert!(!dir.path().join(".cursor").exists());
+}

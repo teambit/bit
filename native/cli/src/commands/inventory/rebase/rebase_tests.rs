@@ -33,3 +33,8 @@ fn rebase_matches_node() {
         assert_eq!(pattern(input, dir), expected, "{input} in {dir}");
     }
 }
+
+#[test]
+fn join_linux_with_single_dot_returns_dot() {
+    assert_eq!(join_linux(&["."]), ".");
+}

@@ -70,6 +70,11 @@ fn parses_gc_options_and_keep_versions() {
 }
 
 #[test]
+fn formats_megabyte_quantities_with_one_decimal_place() {
+    assert_eq!(format_bytes(1_048_576), "1.0 MB");
+}
+
+#[test]
 fn restores_deleted_objects_and_formats_empty_report() {
     let dir = tempdir().expect("tempdir");
     let err = restore_deleted_objects(dir.path(), false).expect_err("missing backup should error");

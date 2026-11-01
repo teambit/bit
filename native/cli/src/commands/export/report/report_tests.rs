@@ -82,3 +82,11 @@ fn empty_server_acknowledgement_keeps_lane_removal_report() {
         "exported lane (1)\n   › s/study\n\ncomponents removed on the remote lane (1)\n   ⚠ s/a",
     );
 }
+
+#[test]
+fn ripple_job_urls_are_included_in_formatted_export_report() {
+    let mut value = receipt(&["s/a"], &["s/a@0.0.1"]);
+    value["rippleJobUrls"] = json!(["https://bit.cloud/ripple-ci/job/123"]);
+    let output = format_with(&value, Chalk::new(false), false);
+    assert!(output.contains("https://bit.cloud/ripple-ci/job/123"), "{output}");
+}

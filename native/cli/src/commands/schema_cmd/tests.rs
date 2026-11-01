@@ -115,3 +115,8 @@ fn write_object(scope: &Path, kind: &str, hash: &str, body: &serde_json::Value) 
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, encoder.finish().unwrap()).unwrap();
 }
+
+#[test]
+fn rejects_schema_diff_with_missing_version_arguments() {
+    assert_eq!(parse_command(&["diff", "comp1", "0.0.1"]), None);
+}

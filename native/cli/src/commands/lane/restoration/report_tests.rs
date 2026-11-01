@@ -118,3 +118,8 @@ fn unrecognized_or_non_string_file_statuses_fail_without_mutating_input() {
         }
     }
 }
+
+#[test]
+fn non_object_restoration_payload_fails_merge() {
+    assert!(merge(&mut json!("invalid"), &json!({})).is_err());
+}

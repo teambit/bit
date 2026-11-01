@@ -154,3 +154,8 @@ fn deleted_and_deprecated_titles_keep_nested_published_symbol_colors() {
             .contains(" \u{1b}[31m\u{1b}[31m✖\u{1b}[39m\u{1b}[31m deleted\u{1b}[39m"),
     );
 }
+
+#[test]
+fn ordered_parents_on_empty_slice_returns_empty_vec() {
+    assert!(ordered_parents(&[]).unwrap().is_empty());
+}

@@ -39,3 +39,12 @@ fn reports_a_workspace_without_file_changes() {
         ),
     );
 }
+
+#[test]
+fn mini_status_report_lists_new_components_when_present() {
+    let only_new = summary(&[], &["s/new-comp"]);
+    assert_eq!(
+        report(&only_new, Chalk::new(false)),
+        "modified components (files only):\n<none>\n\nnew components:\ns/new-comp",
+    );
+}

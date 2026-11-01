@@ -97,3 +97,9 @@ fn renders_report_and_json() {
     assert_eq!(json_val["legacyLinkResults"][0]["id"], "my-scope/comp1");
     assert_eq!(json_val["linkToDirResults"][0]["componentId"], "my-scope/comp1");
 }
+
+#[test]
+fn replace_package_name_leaves_unrelated_imports_unchanged() {
+    let source = "import x from 'other-pkg';\n";
+    assert_eq!(replace_package_name(source, "../comp2", "@my-scope/comp2"), source);
+}

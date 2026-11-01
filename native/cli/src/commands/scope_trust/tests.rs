@@ -94,3 +94,11 @@ fn manages_trusted_scopes_lifecycle_in_workspace_jsonc() {
     let disabled = WorkspaceTrust::load(dir.path()).unwrap();
     assert!(!disabled.opted_in);
 }
+
+#[test]
+fn parses_remove_action_with_pattern() {
+    assert_eq!(
+        parse_action(&["remove".to_owned(), "acme.*".to_owned()]).ok(),
+        Some(Action::Remove("acme.*".to_owned())),
+    );
+}

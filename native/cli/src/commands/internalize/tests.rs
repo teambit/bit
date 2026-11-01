@@ -61,3 +61,8 @@ fn detects_internalize_from_component_json() {
     let bitmap = Bitmap::load(root, Some("my-scope")).unwrap();
     assert!(is_entry_internal(root, &bitmap_val, &bitmap.entries[0]).ok().unwrap());
 }
+
+#[test]
+fn rejects_unknown_internalize_flags() {
+    assert_eq!(parse_options(&["--unknown"]), None);
+}

@@ -76,3 +76,9 @@ fn integrity_accepts_jsonc_index_and_string_component_ids() {
         json!({"valid":false,"data":{"componentsWithMissingHeads":[{"id":"local.scope/foo/bar","head":head}],"totalComponents":1}}),
     );
 }
+
+#[test]
+fn heads_without_scope_reports_valid_zero_components() {
+    let result = heads(&DIAGNOSES[7], None).unwrap();
+    assert_eq!(result["bareResult"]["valid"], true);
+}

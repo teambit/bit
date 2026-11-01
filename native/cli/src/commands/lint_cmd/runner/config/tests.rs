@@ -31,3 +31,10 @@ fn plain_object_hash_preserves_prototypes_and_unicode_string_lengths() {
         assert!(hash::hash(&value).is_err());
     }
 }
+
+#[test]
+fn plain_object_hash_sorts_keys_deterministically() {
+    let first = hash::hash(&json!({"b": "1", "a": "2"})).unwrap();
+    let second = hash::hash(&json!({"a": "2", "b": "1"})).unwrap();
+    assert_eq!(first, second);
+}

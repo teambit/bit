@@ -17,3 +17,8 @@ fn parses_run_options() {
         }),
     );
 }
+
+#[test]
+fn empty_run_args_parse_to_default_options() {
+    assert_eq!(parse_options(&[]), Some(Options::default()));
+}

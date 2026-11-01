@@ -24,3 +24,12 @@ fn parses_format_options_and_detects_missing_host() {
         Some(r#"unable to find any component matching the "ui/*" pattern"#),
     );
 }
+
+#[test]
+fn parses_combined_short_flags_and_double_dash_format_pattern() {
+    assert_eq!(
+        parse_options(&["-cj", "--", "ui/*"]),
+        Some(Options { pattern: Some("ui/*".into()), changed: true, check: false, json: true }),
+    );
+    assert_eq!(parse_options(&["--unknown"]), None);
+}

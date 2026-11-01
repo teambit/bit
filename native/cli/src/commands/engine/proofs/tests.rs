@@ -29,3 +29,14 @@ fn different_observations_of_one_path_are_not_deduplicated() {
         .unwrap_err();
     assert!(error.to_string().contains("dependency capture changed"), "{error}");
 }
+
+#[test]
+fn empty_and_null_only_proof_slices_succeed_without_engine_roundtrip() {
+    let mut engine = Engine::new().unwrap();
+    engine
+        .validate_read_set(&[], "unused")
+        .unwrap();
+    engine
+        .validate_read_set(&[json!(null), json!(null)], "unused")
+        .unwrap();
+}

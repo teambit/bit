@@ -174,3 +174,9 @@ fn merges_existing_non_empty_component_json_when_override_is_enabled() {
         }),
     );
 }
+
+#[test]
+fn rejects_multiple_patterns_or_unknown_eject_conf_flags() {
+    assert_eq!(parse_options(&["comp1", "comp2"]), None);
+    assert_eq!(parse_options(&["comp1", "--unknown"]), None);
+}

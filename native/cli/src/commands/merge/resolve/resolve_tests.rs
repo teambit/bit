@@ -23,3 +23,9 @@ fn resolved_components_are_listed_without_versions() {
     assert_eq!(report.data, "resolved components (2)\n   › s/a\n   › s/b");
     assert!(format(&json!({ "resolvedComponents": [], "other": 1 }), Chalk::new(false)).is_err());
 }
+
+#[test]
+fn duplicate_resolved_component_identities_decline_formatting() {
+    let duplicate = json!({ "resolvedComponents": [{ "id": "s/a@1.0.0" }, { "id": "s/a@2.0.0" }] });
+    assert!(format(&duplicate, Chalk::new(false)).is_err());
+}

@@ -48,3 +48,9 @@ fn clears_user_credentials_from_global_config() {
         Some(&serde_json::Value::String("preserve_me".to_owned())),
     );
 }
+
+#[test]
+fn clear_auth_config_succeeds_when_config_file_does_not_exist() {
+    let dir = tempdir().unwrap();
+    clear_auth_config(dir.path()).unwrap();
+}

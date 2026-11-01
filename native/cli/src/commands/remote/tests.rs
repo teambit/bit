@@ -51,3 +51,11 @@ fn declines_unsupported_remote_arguments() {
     assert_eq!(parse(&["remote", "del"]), None);
     assert_eq!(parse(&["remote", "unknown"]), None);
 }
+
+#[test]
+fn empty_args_slice_defaults_to_remote_list_action() {
+    assert_eq!(
+        parse(&[]),
+        Some(Options { command: "remote", action: Action::List, global: false }),
+    );
+}

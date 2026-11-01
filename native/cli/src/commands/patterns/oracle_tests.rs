@@ -26,3 +26,8 @@ fn matches_agree_with_multimatch() {
         assert_eq!(matching(&IDS, &split(pattern)).unwrap(), expected, "{pattern}");
     }
 }
+
+#[test]
+fn split_trims_comma_separated_segments() {
+    assert_eq!(split(" a/b , c/d "), ["a/b", "c/d"]);
+}
