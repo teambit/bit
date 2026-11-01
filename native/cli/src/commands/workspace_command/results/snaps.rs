@@ -18,6 +18,7 @@ const ISSUE_SPACE: &str = "          ";
 
 /// `mergeSnapResults`: the snapped components and the dependents snapped
 /// with them.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Snaps {
     pub snapped: Vec<Id>,
     /// Each auto-snapped component and the components that triggered it.
@@ -26,6 +27,7 @@ pub struct Snaps {
 
 /// `mergeSnapError`, a `ComponentsHaveIssues` whose only issues are
 /// missing manually configured packages.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SnapError {
     /// Each component and the packages of each of its issues.
     pub components: Vec<(Id, Vec<Vec<String>>)>,
@@ -33,6 +35,7 @@ pub struct SnapError {
 }
 
 /// An object with no keys outside `keys`.
+#[inline]
 fn record<'v>(value: &'v Value, keys: &[&str]) -> io::Result<&'v serde_json::Map<String, Value>> {
     let map = object(value)?;
     if map
@@ -44,6 +47,7 @@ fn record<'v>(value: &'v Value, keys: &[&str]) -> io::Result<&'v serde_json::Map
     Ok(map)
 }
 
+#[inline]
 fn id(value: Option<&Value>) -> io::Result<Id> {
     let value = value.ok_or_else(|| decline("native command report identity"))?;
     if value
@@ -137,11 +141,14 @@ fn packages(issue: &Value) -> io::Result<Vec<String>> {
 
 impl Snaps {
     /// `Total Snapped`.
+    #[must_use]
+    #[inline]
     pub fn count(&self) -> usize {
         self.snapped.len() + self.auto.len()
     }
 
     /// `getSnapsOutput` without an error.
+    #[must_use]
     pub fn section(&self, format: &Formatter) -> String {
         let items: Vec<String> = self.snapped
             .iter()
@@ -172,6 +179,8 @@ impl Snaps {
 
 impl SnapError {
     /// `getSnapsOutput` with `mergeSnapError`.
+    #[must_use]
+    #[inline]
     pub fn section(&self, format: &Formatter) -> String {
         let chalk = format.chalk;
         let title = format.title(&format!("{} snap error", format.error_symbol()));
@@ -182,6 +191,7 @@ impl SnapError {
     }
 
     /// `ComponentsHaveIssues.message`.
+    #[inline]
     fn message(&self, format: &Formatter) -> String {
         if let Some(message) = &self.message {
             return message.clone();

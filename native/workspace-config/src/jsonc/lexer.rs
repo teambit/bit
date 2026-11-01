@@ -91,6 +91,7 @@ impl Lexer<'_> {
         }
     }
 
+    #[inline]
     fn take_while(&mut self, start: usize, mut keep: impl FnMut(char) -> bool) -> &str {
         let mut end = start;
         while let Some(&(index, char)) = self.chars.peek() {
@@ -179,6 +180,7 @@ impl Lexer<'_> {
             .ok_or_else(|| invalid("Unexpected number"))
     }
 
+    #[inline]
     fn word(&mut self, start: usize, first: char) -> io::Result<Kind> {
         let word =
             self.take_while(start, |char| char.is_alphanumeric() || char == '_' || char == '$');

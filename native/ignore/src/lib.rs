@@ -37,11 +37,13 @@ pub struct Ignore {
 
 impl Ignore {
     #[must_use]
+    #[inline]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// `add(patterns)` with the process-wide regex cache.
+    #[inline]
     pub fn add<'pattern>(
         &mut self,
         patterns: impl IntoIterator<Item = &'pattern str>,
@@ -74,17 +76,20 @@ impl Ignore {
     }
 
     /// `add(other)`: another instance's rules, appended.
+    #[inline]
     pub fn add_ignore(&mut self, other: &Self) -> &mut Self {
         self.rules.extend_from_slice(&other.rules);
         self
     }
 
     #[must_use]
+    #[inline]
     pub fn rules(&self) -> &[Rule] {
         &self.rules
     }
 }
 
+#[inline]
 fn process_compiler() -> &'static Mutex<Compiler> {
     static COMPILER: OnceLock<Mutex<Compiler>> = OnceLock::new();
     COMPILER.get_or_init(|| Mutex::new(Compiler::new()))

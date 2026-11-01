@@ -55,10 +55,14 @@ pub(super) enum DryRunMode {
 }
 
 impl DryRunMode {
+    #[must_use]
+    #[inline]
     pub const fn is_dry(self) -> bool {
         !matches!(self, Self::Off)
     }
 
+    #[must_use]
+    #[inline]
     pub const fn with_content(self) -> bool {
         matches!(self, Self::WithContent)
     }
@@ -109,6 +113,7 @@ fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Ou
     }
 }
 
+#[inline]
 fn emit_outside_workspace(
     cwd: &Path,
     args: &[OsString],
@@ -204,6 +209,7 @@ fn run_write(args: &[OsString], opts: &WriteOptions, chalk: Chalk) -> io::Result
     execute_ws_report(&root, args, "write", opts.json, data)
 }
 
+#[inline]
 fn execute_ws_report(
     root: &Path,
     args: &[OsString],
@@ -219,6 +225,7 @@ fn execute_ws_report(
     }
 }
 
+#[must_use]
 pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     if let Some(sub) = parse_unrecognized(args) {
         return Some(Subcommand::Unrecognized(sub.to_owned()));
@@ -239,17 +246,16 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     }
 }
 
+#[must_use]
+#[inline]
 pub(super) fn parse_unrecognized<'a>(args: &[&'a str]) -> Option<&'a str> {
-    let mut filtered = args
-        .iter()
-        .copied()
-        .filter(|&arg| !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false"));
-    let (Some(sub), None) = (filtered.next(), filtered.next()) else { return None };
+    let [sub] = *strip_no_color(args) else { return None };
     let sub = sub.trim();
     (!sub.is_empty() && !sub.starts_with('-') && !matches!(sub, "write" | "clean" | "list"))
         .then_some(sub)
 }
 
+#[inline]
 fn strip_no_color<'a>(args: &[&'a str]) -> Vec<&'a str> {
     args.iter()
         .copied()
@@ -257,6 +263,7 @@ fn strip_no_color<'a>(args: &[&'a str]) -> Vec<&'a str> {
         .collect()
 }
 
+#[inline]
 fn parse_list(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
     for &arg in rest {
@@ -370,6 +377,7 @@ fn apply_write_combined_short(token: &str, opts: &mut WriteOptions) -> bool {
     true
 }
 
+#[inline]
 fn parse_writers_arg(rest: &[&str], idx: &mut usize) -> Option<Vec<String>> {
     match rest[*idx] {
         "-w" | "--writers" => {
@@ -383,6 +391,7 @@ fn parse_writers_arg(rest: &[&str], idx: &mut usize) -> Option<Vec<String>> {
     }
 }
 
+#[inline]
 fn split_writers(raw: &str) -> Option<Vec<String>> {
     let raw = raw.trim();
     (!raw.is_empty() && !raw.starts_with('-'))

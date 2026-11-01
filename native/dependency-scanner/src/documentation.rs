@@ -46,6 +46,7 @@ pub fn proves_empty_docs(source: &[u8], relative_path: &str) -> bool {
     proof.accepted || unexported::proven(&parsed.program)
 }
 
+#[inline]
 fn source_type(path: &str) -> Option<SourceType> {
     let file_name = path
         .trim()
@@ -65,6 +66,7 @@ fn source_type(path: &str) -> Option<SourceType> {
         .flatten()
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Proof {
     accepted: bool,
     depth: usize,
@@ -118,6 +120,7 @@ impl<'a> Visit<'a> for Proof {
         self.accepted = false;
     }
 }
+#[inline]
 fn data_expression(expression: &Expression<'_>) -> bool {
     match expression {
         Expression::BooleanLiteral(_)
@@ -137,6 +140,7 @@ fn data_expression(expression: &Expression<'_>) -> bool {
     }
 }
 
+#[inline]
 fn data_target(target: &AssignmentTarget<'_>) -> bool {
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(_)
@@ -152,12 +156,14 @@ fn data_target(target: &AssignmentTarget<'_>) -> bool {
         _ => false,
     }
 }
+#[inline]
 fn literal_require(call: &CallExpression<'_>) -> bool {
     !call.optional
         && matches!(&call.callee, Expression::Identifier(id) if id.name == "require")
         && matches!(call.arguments.as_slice(), [Argument::StringLiteral(_)])
 }
 
+#[inline]
 fn console_log(call: &CallExpression<'_>) -> bool {
     !call.optional
         && matches!(&call.callee, Expression::StaticMemberExpression(member)
@@ -165,6 +171,7 @@ fn console_log(call: &CallExpression<'_>) -> bool {
                 && matches!(&member.object, Expression::Identifier(id) if id.name == "console"))
 }
 
+#[inline]
 fn literal_arrow(arrow: &ArrowFunctionExpression<'_>) -> bool {
     if arrow.r#async || !arrow.params.items.is_empty() || arrow.params.rest.is_some() {
         return false;

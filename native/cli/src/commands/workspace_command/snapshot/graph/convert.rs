@@ -59,6 +59,7 @@ pub fn convert(
 }
 
 /// `convertLockfileToGraphFromCapsule`: the importer's own dependencies.
+#[inline]
 fn capsule_dependencies(lockfile: &Value, importer: &str) -> io::Result<Vec<Value>> {
     let importer = &lockfile["importers"][importer];
     let mut direct = Vec::new();
@@ -138,6 +139,7 @@ fn locked_neighbours(snapshot: &Value, own: &Value) -> io::Result<Vec<Value>> {
 
 /// Another snapshot's edge back to the component, from a circular
 /// workspace dependency, would point at the dropped package.
+#[inline]
 fn scrub_back_edge(snapshot: &mut Value, package: &str, version: &str) {
     for field in ["dependencies", "optionalDependencies"] {
         let Some(deps) = snapshot.get_mut(field).and_then(Value::as_object_mut) else {
@@ -178,6 +180,7 @@ fn importer_neighbours(deps: &Value, lifecycle: &str, optional: bool) -> io::Res
 }
 
 /// `buildEdges`: each snapshot with dependencies or a suffix, then the root edge.
+#[inline]
 fn edges(lockfile: &Value, mut direct: Vec<Value>, replacer: &Replacer) -> Vec<Value> {
     let snapshots = lockfile
         .get("snapshots")
@@ -196,6 +199,7 @@ fn edges(lockfile: &Value, mut direct: Vec<Value>, replacer: &Replacer) -> Vec<V
 }
 
 /// One snapshot's edge: `None` without dependencies or a suffix.
+#[inline]
 fn edge(dep_path: &str, snapshot: &Value, replacer: &Replacer) -> Option<Value> {
     let neighbours = snapshot_neighbours(snapshot, replacer);
     let id = replacer.replace(dep_path);
@@ -221,6 +225,7 @@ fn edge(dep_path: &str, snapshot: &Value, replacer: &Replacer) -> Option<Value> 
 }
 
 /// `extractDependenciesFromSnapshot`.
+#[inline]
 fn snapshot_neighbours(snapshot: &Value, replacer: &Replacer) -> Vec<Value> {
     let mut neighbours = Vec::new();
     for (field, optional) in [("dependencies", false), ("optionalDependencies", true)] {
@@ -271,6 +276,7 @@ fn packages(lockfile: &Value, replacer: &Replacer) -> io::Result<Map<String, Val
 }
 
 /// `pick(pkg, PACKAGE_FIELDS)`, without a directory resolution.
+#[inline]
 fn pick(package: &Value) -> io::Result<Map<String, Value>> {
     let mut picked = Map::new();
     for field in PACKAGE_FIELDS {
@@ -338,6 +344,7 @@ fn drop_orphan_file_packages(packages: &mut Map<String, Value>, edges: &mut Vec<
 }
 
 /// `dp.parse(pkgId).nonSemverVersion?.startsWith('file:')`.
+#[inline]
 fn is_file_package(pkg_id: &str) -> bool {
     package_name(pkg_id)
         .is_some_and(|name| {
@@ -348,6 +355,7 @@ fn is_file_package(pkg_id: &str) -> bool {
 }
 
 /// `dp.parse(depPath).name`.
+#[inline]
 fn package_name(dep_path: &str) -> Option<&str> {
     let first_len = dep_path.chars().next()?.len_utf8();
     let separator = dep_path.get(first_len..)?.find('@')? + first_len;
@@ -355,6 +363,8 @@ fn package_name(dep_path: &str) -> Option<&str> {
 }
 
 /// `refToRelative(reference, pkgName)` of `@pnpm/deps.path`.
+#[must_use]
+#[inline]
 pub fn ref_to_relative(reference: &str, name: &str) -> Option<String> {
     let reference = reference.trim();
     let name = name.trim();
@@ -377,6 +387,7 @@ pub fn ref_to_relative(reference: &str, name: &str) -> Option<String> {
     }
 }
 
+#[inline]
 fn text(value: &Value) -> io::Result<&str> {
     value.as_str().ok_or_else(|| decline("lockfile reference"))
 }

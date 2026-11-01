@@ -13,6 +13,7 @@ use std::{collections::HashMap, io};
 const SNAP_PREFIX: &str = "0.0.0-";
 
 /// One workspace component: its package, id and version.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorkspaceComponent<'c> {
     pub package_name: &'c str,
     /// `scope/name`.
@@ -22,6 +23,7 @@ pub struct WorkspaceComponent<'c> {
     pub version: Option<&'c str>,
 }
 
+#[derive(Debug, Default, Clone)]
 pub struct Replacer {
     /// `(name1|name2)@file:[^'"(]+`, global.
     pattern: Option<Regex>,
@@ -67,6 +69,7 @@ impl Replacer {
     }
 
     /// `replaceFileVersion(s)`.
+    #[must_use]
     pub fn replace(&self, text: &str) -> String {
         let Some(pattern) = self.pattern
             .as_ref()
@@ -87,10 +90,13 @@ impl Replacer {
     }
 
     /// The `{ name, scope }` a workspace component's package is marked with.
+    #[must_use]
+    #[inline]
     pub fn component(&self, package_name: &str) -> Option<&(String, String)> {
         self.components.get(package_name.trim())
     }
 
+    #[inline]
     pub fn package_names(&self) -> impl Iterator<Item = &str> {
         self.replacements.keys().map(String::as_str)
     }
@@ -98,6 +104,7 @@ impl Replacer {
 
 /// `snapToSemver`: a hash (`isHash`: 3 to 40 hexadecimal digits) as a
 /// prerelease of `0.0.0`.
+#[inline]
 fn snap_to_semver(version: &str) -> String {
     let version = version.trim();
     if version.is_empty() {
@@ -109,6 +116,7 @@ fn snap_to_semver(version: &str) -> String {
 }
 
 /// `name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')`.
+#[inline]
 fn escape(name: &str) -> String {
     let mut escaped = String::with_capacity(name.len());
     for character in name.chars() {

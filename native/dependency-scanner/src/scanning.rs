@@ -88,6 +88,7 @@ fn extract_source(file: &File, source: &str, ts: bool, program: &Program<'_>) ->
         diagnostics: vec![],
     }
 }
+#[inline]
 fn is_array_index(name: &str) -> bool {
     (name == "0" || (!name.starts_with('0') && name.bytes().all(|byte| byte.is_ascii_digit())))
         && name
@@ -130,6 +131,7 @@ fn scanner_for_source(
     };
     Scanner { line_starts, ts, no_check, comments, deps: IndexMap::new(), unsupported: false }
 }
+#[inline]
 fn normalized_kind(file: &File) -> String {
     file.kind
         .as_deref()
@@ -148,6 +150,7 @@ fn normalized_kind(file: &File) -> String {
         .trim_start_matches('.')
         .to_ascii_lowercase()
 }
+#[inline]
 fn source_type(kind: &str) -> Option<SourceType> {
     match kind {
         "js" | "mjs" | "cjs" | "jsx" => Some(SourceType::mjs().with_jsx(true)),

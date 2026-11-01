@@ -15,6 +15,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct History {
     file: PathBuf,
     command: String,
@@ -22,6 +23,8 @@ pub struct History {
 
 impl History {
     /// Record the start of the command `args` (starting at the command name).
+    #[must_use]
+    #[inline]
     pub fn start(root: &Path, args: &[OsString]) -> Self {
         Self::start_scope(&workspace::scope_path(root), args)
     }
@@ -29,21 +32,29 @@ impl History {
     /// Prepare a workspace command history handle for safe-mode commands that
     /// load the consumer after `CLIParser.parse()`, writing only the completion
     /// entry on `end`.
+    #[must_use]
+    #[inline]
     pub fn unstarted(root: &Path, args: &[OsString]) -> Self {
         Self::new(&workspace::scope_path(root), args)
     }
 
     /// Record a command using the actual consumer scope directory.
+    #[must_use]
+    #[inline]
     pub fn start_scope(scope: &Path, args: &[OsString]) -> Self {
         let history = Self::new(scope, args);
         history.write("started");
         history
     }
 
+    #[must_use]
+    #[inline]
     fn new(scope: &Path, args: &[OsString]) -> Self {
         Self { file: scope.join("command-history"), command: Self::format_command(args) }
     }
 
+    #[must_use]
+    #[inline]
     fn format_command(args: &[OsString]) -> String {
         args.iter()
             .map(|arg| {
@@ -54,11 +65,13 @@ impl History {
             .join(" ")
     }
 
+    #[inline]
     pub fn end(&self, succeeded: bool) {
         self.write(if succeeded { "succeeded" } else { "failed" });
     }
 
     /// Best effort, as in Node: a scope that cannot be written loses the line.
+    #[inline]
     fn write(&self, state: &str) {
         if let Ok(mut file) = OpenOptions::new()
             .append(true)
@@ -73,11 +86,15 @@ impl History {
 }
 
 /// `new Date().toISOString()`: UTC with milliseconds.
+#[must_use]
+#[inline]
 pub fn iso_now() -> String {
     let elapsed = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
     iso(elapsed.as_millis() as i64)
 }
 
+#[must_use]
+#[inline]
 fn iso(millis: i64) -> String {
     let (days, time) = (millis.div_euclid(86_400_000), millis.rem_euclid(86_400_000));
     let (year, month, day) = civil(days);
@@ -87,6 +104,8 @@ fn iso(millis: i64) -> String {
 }
 
 /// Days since 1970-01-01 to a proleptic Gregorian date (Howard Hinnant's algorithm).
+#[must_use]
+#[inline]
 fn civil(days: i64) -> (i64, i64, i64) {
     let shifted = days + 719_468;
     let era = shifted.div_euclid(146_097);

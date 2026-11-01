@@ -189,6 +189,7 @@ fn write_eslint_configs(
     Ok(finish_one_writer("eslint", env_ids, real_files, ext_file, skipped))
 }
 
+#[inline]
 fn persist_eslint_real(
     cache: &Path,
     ts_name: &str,
@@ -268,6 +269,7 @@ fn build_tsconfig(comp_dirs: &[String], include_root_dir: bool) -> io::Result<St
     .map_err(io::Error::other)
 }
 
+#[inline]
 fn persist_real(
     cache_dir: &Path,
     name: &str,
@@ -341,11 +343,13 @@ fn write_extending_in_dir(
     Ok((Some(path_str), None))
 }
 
+#[inline]
 fn is_user_authored(file_path: &Path, marker: &str) -> bool {
     file_path.exists()
         && fs::read_to_string(file_path).map_or(true, |content| !content.contains(marker))
 }
 
+#[inline]
 fn relative_to_cache(rel_dir: &str, target_name: &str) -> String {
     let depth = rel_dir
         .trim()

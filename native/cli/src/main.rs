@@ -41,6 +41,7 @@ fn main() -> ExitCode {
     }
 }
 
+#[inline]
 fn run(args: &[OsString]) -> std::io::Result<ExitCode> {
     if let Some(code) = native::run(args)? {
         return Ok(code);

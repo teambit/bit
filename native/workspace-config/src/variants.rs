@@ -51,6 +51,7 @@ pub fn by_root_dir_and_name(
 
 /// The matching variants by specificity, descending; lodash
 /// `sortBy(...).reverse()` puts the later of two equal patterns first.
+#[inline]
 fn sorted_matches<'a>(
     variants: &'a [(String, Map<String, Value>)],
     root_dir: &str,
@@ -109,6 +110,7 @@ fn merge_matches(matches: Vec<MatchedVariant<'_>>) -> VariantConfig {
 
 /// `isMatchPattern`: comma-separated items; the most specific decides the
 /// match, any matching `!` item excludes.
+#[inline]
 fn is_match_pattern(root_dir: &str, name: &str, pattern: &str) -> io::Result<ItemMatch> {
     let items = pattern
         .split(',')
@@ -128,6 +130,7 @@ fn is_match_pattern(root_dir: &str, name: &str, pattern: &str) -> io::Result<Ite
     Ok(ItemMatch { matched: best.matched, specificity: best.specificity, excluded })
 }
 
+#[inline]
 fn is_match_item(root_dir: &str, name: &str, item: &str) -> io::Result<ItemMatch> {
     let item = item.trim();
     if item == "*" {

@@ -87,6 +87,8 @@ struct Response {
 
 impl Host {
     /// A host for the workspace at `root`. `color` makes the aspects' own output colored.
+    #[must_use]
+    #[inline]
     pub fn new(cli: NodeCli, root: PathBuf, color: bool) -> Self {
         Self {
             cli,
@@ -118,6 +120,7 @@ impl Host {
     }
 
     /// Output emitted while loading aspects and serving callback facts.
+    #[inline]
     pub fn take_stdout(&self) -> String {
         // `call` holds session before failed_stdout on transport failure.
         let mut guard = self.session.lock().unwrap_or_else(PoisonError::into_inner);
@@ -186,6 +189,7 @@ impl Host {
     }
 }
 
+#[inline]
 fn program() -> io::Result<tempfile::TempPath> {
     let mut script = tempfile::Builder::new()
         .prefix("bit-native-host-")
@@ -227,6 +231,7 @@ impl Session {
 }
 
 impl Response {
+    #[inline]
     fn into_result(self) -> io::Result<Value> {
         match self.error {
             Some(error) => {
@@ -292,6 +297,7 @@ fn forward_stderr(child: &mut Child) -> io::Result<std::sync::mpsc::Receiver<()>
     Ok(receiver)
 }
 
+#[inline]
 fn progress_mode() -> &'static str {
     let mut args = env::args().skip(1);
     let progress = args

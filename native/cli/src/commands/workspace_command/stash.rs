@@ -54,16 +54,20 @@ impl Save {
     }
 
     /// Effective post-load aspect facts used by removeLocallyByIds' safety scan.
+    #[must_use]
+    #[inline]
     pub fn removal_components(&self) -> Vec<Value> {
         self.removal.clone()
     }
 
     /// Reuse the same providers for reset after persisting the stash.
+    #[inline]
     pub fn take_environment(&mut self) -> Option<environments::Environments> {
         capture::take_callback_environment(&mut self.capture)
     }
 
     /// Persist Sources and detached Versions before the stash metadata file.
+    #[inline]
     pub fn persist(&mut self, root: &Path) -> io::Result<()> {
         if self.modified.is_empty() && self.new.is_empty() {
             return Ok(());
@@ -75,6 +79,7 @@ impl Save {
     }
 }
 
+#[inline]
 fn identities(value: &Value) -> io::Result<Vec<String>> {
     array(Some(value), "stash identities")?
         .iter()
@@ -88,6 +93,7 @@ fn identities(value: &Value) -> io::Result<Vec<String>> {
         .collect()
 }
 
+#[inline]
 fn check(value: &Value, token: &str) -> io::Result<()> {
     if value["token"].as_str().map(str::trim) == Some(token.trim()) {
         Ok(())
@@ -98,6 +104,7 @@ fn check(value: &Value, token: &str) -> io::Result<()> {
 
 impl super::Planned {
     /// Retain the same provider session across new-component callbacks and tracked checkout.
+    #[inline]
     pub(in crate::commands) fn stash_added(
         &mut self,
         root: &Path,
@@ -119,6 +126,7 @@ struct Captured {
     capture: Capture,
 }
 impl Captured {
+    #[inline]
     fn history(&mut self, prepare_only: bool) -> io::Result<u64> {
         let result: Value = self.engine.request(&json!({
             "kind":"commandStashStageHistory","token":self.token,"prepareOnly":prepare_only,
@@ -206,6 +214,7 @@ fn finalize(
     check(&finalized, token)
 }
 
+#[inline]
 fn allocations(root: &Path, selected: &[String], plan: &Value) -> io::Result<Vec<Value>> {
     let hashes = receipt::new_snap_hashes(selected.len())?;
     let fallback = identities(&plan["needsLog"])?;
@@ -225,6 +234,7 @@ fn allocations(root: &Path, selected: &[String], plan: &Value) -> io::Result<Vec
         .collect())
 }
 
+#[inline]
 fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()

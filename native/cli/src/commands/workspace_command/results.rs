@@ -33,6 +33,7 @@ const RESULT_KEYS: [&str; 13] = [
 
 /// The command's `Report`: what is printed, the exit code, and the details
 /// `bit details` shows.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Report {
     pub data: String,
     pub code: i32,
@@ -40,6 +41,7 @@ pub struct Report {
 }
 
 /// One switched component and the status of each of its files.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Changed {
     pub id: Id,
     pub files: Vec<(String, Status)>,
@@ -61,6 +63,7 @@ pub enum Status {
 }
 
 impl Status {
+    #[inline]
     pub(in crate::commands) fn parse(name: &str) -> io::Result<Self> {
         let name = name.trim();
         Ok(match name {
@@ -78,6 +81,8 @@ impl Status {
         })
     }
 
+    #[must_use]
+    #[inline]
     pub fn label(self, chalk: Chalk) -> String {
         match self {
             Self::Merged => chalk.green("auto-merged"),
@@ -95,6 +100,7 @@ impl Status {
 }
 
 /// The hydrated `ApplyVersionResults` checkout reports on.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Results {
     pub components: Vec<Changed>,
     /// Components left as they were, with the reason.
@@ -109,6 +115,7 @@ pub struct Results {
 }
 
 /// Component ID lists reported separately from changed file results.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Lists {
     pub scope: Vec<Id>,
     pub removed: Vec<Id>,
@@ -117,6 +124,7 @@ pub struct Lists {
 }
 
 /// `getNewOnLaneOutput`: current-lane components absent from the selection.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct LaneAdditions {
     pub ids: Vec<Id>,
     pub added: bool,
@@ -166,6 +174,7 @@ pub fn hydrate(value: &Value) -> io::Result<Results> {
     })
 }
 
+#[inline]
 pub(super) fn rows(value: Option<&Value>) -> io::Result<&[Value]> {
     let rows = array(value, "native command report rows")?;
     if rows.len() > 4096 {
@@ -174,6 +183,7 @@ pub(super) fn rows(value: Option<&Value>) -> io::Result<&[Value]> {
     Ok(rows)
 }
 
+#[inline]
 fn ids(value: Option<&Value>) -> io::Result<Vec<Id>> {
     rows(value)?
         .iter()
@@ -200,6 +210,7 @@ fn changed(row: &Value) -> io::Result<Changed> {
     Ok(Changed { id: Id::from_object(raw_id)?, files })
 }
 
+#[inline]
 fn component_lists(map: &serde_json::Map<String, Value>, added: bool) -> io::Result<Lists> {
     Ok(Lists {
         scope: ids(map.get("newFromScope"))?,
@@ -226,11 +237,14 @@ fn skipped(row: &Value) -> io::Result<(Id, String)> {
 
 impl Results {
     /// `Total Snapped`: the snapped and auto-snapped components.
+    #[must_use]
+    #[inline]
     pub fn snapped_count(&self) -> usize {
         self.snaps.as_ref().map_or(0, snaps::Snaps::count)
     }
 
     /// `applyVersionReport(components, addName, showVersion)`.
+    #[must_use]
     pub fn apply_version_report(
         &self,
         format: &Formatter,
@@ -275,6 +289,7 @@ impl Results {
 
     /// `conflictSummaryReport(components).conflictStr`: each component with
     /// conflicting files and the files.
+    #[must_use]
     pub fn conflict_lines(&self, chalk: Chalk) -> Vec<String> {
         self.components
             .iter()
@@ -293,6 +308,8 @@ impl Results {
 }
 
 /// `getFileStatusNote`.
+#[must_use]
+#[inline]
 fn note(chalk: Chalk, status: Status, file: &str) -> String {
     match status {
         Status::BinaryConflict => chalk.white(binary::note(file)),
@@ -304,6 +321,8 @@ fn note(chalk: Chalk, status: Status, file: &str) -> String {
 }
 
 /// `getRemovedOutput` and `getAddedOutput`.
+#[must_use]
+#[inline]
 pub fn listed(format: &Formatter, label: &str, ids: &[Id]) -> String {
     if ids.is_empty() {
         return String::new();
@@ -313,6 +332,8 @@ pub fn listed(format: &Formatter, label: &str, ids: &[Id]) -> String {
 }
 
 /// `[...].filter(Boolean).join('\n')`.
+#[must_use]
+#[inline]
 pub fn join_lines(parts: &[String]) -> String {
     parts
         .iter()

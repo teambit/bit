@@ -31,6 +31,7 @@ struct Versioned<'l> {
     summary: (Option<String>, u64),
 }
 
+#[inline]
 pub fn format(result: &Value, chalk: Chalk, labels: &Labels) -> io::Result<Report> {
     if result.is_null() {
         return Ok(Report { data: chalk.yellow(labels.nothing), code: 0, details: None });
@@ -50,10 +51,7 @@ fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
     let selected = versions(ids(map.get(labels.versioned))?, labels)?;
     let added = ids(map.get("newComponents"))?;
     let removed = if labels.tag { Vec::new() } else { ids(map.get("removedComponents"))? };
-    let selected_names: HashSet<String> = selected
-        .iter()
-        .map(Id::without_version)
-        .collect();
+    let selected_names = bare_names(&selected);
     if added
         .iter()
         .chain(&removed)
@@ -79,6 +77,7 @@ fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
     Ok(versioned)
 }
 
+#[inline]
 fn lane_name(map: &serde_json::Map<String, Value>) -> Option<String> {
     map.get("laneName")
         .and_then(Value::as_str)
@@ -135,6 +134,7 @@ fn header(map: &serde_json::Map<String, Value>, labels: &Labels) -> io::Result<u
 }
 
 /// Tags must carry semver versions.
+#[inline]
 fn versions(ids: Vec<Id>, labels: &Labels) -> io::Result<Vec<Id>> {
     let semver = |id: &Id| {
         id.version
@@ -148,6 +148,7 @@ fn versions(ids: Vec<Id>, labels: &Labels) -> io::Result<Vec<Id>> {
 }
 
 /// A tag's warnings: strings.
+#[inline]
 fn warnings(value: Option<&Value>, labels: &Labels) -> io::Result<Vec<String>> {
     if !labels.tag {
         return Ok(Vec::new());
@@ -201,6 +202,7 @@ fn ids(value: Option<&Value>) -> io::Result<Vec<Id>> {
         .collect()
 }
 
+#[inline]
 fn bare_names(ids: &[Id]) -> HashSet<String> {
     ids.iter()
         .map(Id::without_version)
@@ -359,14 +361,16 @@ impl Versioned<'_> {
     }
 
     /// `warnings.map(w => warnSymbol + yellow(w))`.
+    #[inline]
     fn warnings(&self, format: &Formatter) -> String {
-        let lines: Vec<String> = self.warnings
+        self.warnings
             .iter()
             .map(|warning| format!("{} {}", format.warn_symbol(), format.chalk.yellow(warning)))
-            .collect();
-        lines.join("\n")
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
+    #[inline]
     fn footer(&self, format: &Formatter) -> String {
         let lane = self.summary.0
             .as_ref()
@@ -385,6 +389,7 @@ impl Versioned<'_> {
 }
 
 /// `compInBold(id)`.
+#[inline]
 fn in_bold(chalk: Chalk, id: &Id) -> String {
     let version = id.version
         .as_deref()

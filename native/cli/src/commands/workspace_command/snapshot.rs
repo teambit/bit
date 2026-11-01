@@ -63,6 +63,7 @@ impl Steps<'_> {
     /// The snapshots the native step writes: merges that snap, not lane
     /// merges without auto-snap, nor lane snaps of hidden components or
     /// that fail.
+    #[inline]
     fn supported(
         &self,
         request: &Request<'_>,
@@ -165,6 +166,7 @@ impl Steps<'_> {
 
 /// A lane merge whose snaps are all hidden lane components, absent from
 /// the bitmap: they are scope-only snapshots.
+#[inline]
 fn hidden_only(context: &Value, needs_snap: &[String]) -> bool {
     let targets = context["lane"]["targets"].as_array();
     !needs_snap.is_empty()
@@ -281,6 +283,7 @@ fn cache_versions(value: Option<&Value>, targets: &[Value]) -> io::Result<HashMa
 
 /// Whether a captured component depends on a component the merge snaps:
 /// its dependents would be auto-snapped, which Node computes.
+#[inline]
 fn depends_on(capture: &Capture, needs_snap: &[String]) -> bool {
     capture.captured
         .iter()
@@ -300,6 +303,7 @@ fn depends_on(capture: &Capture, needs_snap: &[String]) -> bool {
 }
 
 /// `<scope>/<name>` of a dependency's id.
+#[inline]
 fn dependency_identity(dependency: &Value) -> Option<String> {
     let id = &dependency["id"];
     if let Some(raw) = id.as_str() {

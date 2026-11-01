@@ -97,6 +97,7 @@ fn number(value: f64) -> String {
     }
 }
 
+#[inline]
 pub(super) fn node(value: &Node, gap: &str) -> String {
     match value {
         Node::Null => "null".to_owned(),
@@ -131,6 +132,7 @@ impl Members<'_> {
         )
     }
 
+    #[inline]
     fn open(&mut self, first: bool, key: &str) {
         if !first {
             self.inside.push(',');
@@ -152,6 +154,7 @@ impl Members<'_> {
     }
 }
 
+#[inline]
 fn array(items: &[Node], comments: &Comments, gap: &str) -> String {
     let deeper_gap = format!("{gap}{INDENT}");
     let mut members =

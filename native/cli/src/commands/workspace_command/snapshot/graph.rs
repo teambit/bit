@@ -23,6 +23,7 @@ use serde_json::{Map, Value};
 use std::{collections::HashSet, io, path::Path};
 
 /// One snapped component.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Snapped<'s> {
     /// `componentMap.rootDir`.
     pub directory: &'s str,
@@ -62,6 +63,7 @@ pub fn graphs(
         .collect()
 }
 
+#[inline]
 fn roots_dir(root: &Path) -> io::Result<std::path::PathBuf> {
     let config = WorkspaceConfig::load(root)?;
     let root_directory = config.aspects
@@ -114,6 +116,7 @@ fn graph(
 }
 
 /// The lockfile without the other workspace packages in `ids`' importers.
+#[inline]
 fn narrow(
     lockfile: &Value,
     ids: &[String],
@@ -137,6 +140,7 @@ fn narrow(
 
 /// The other workspace packages are wiring, not the component's
 /// dependencies, unless the component's own importer injects them.
+#[inline]
 fn remove_workspace_package(importer: &mut Value, name: &str, own: bool) {
     let lookup = |field: &str| {
         importer
@@ -192,6 +196,7 @@ fn filter(lockfile: Value, ids: Vec<String>) -> io::Result<Map<String, Value>> {
     Ok(map)
 }
 
+#[inline]
 fn reorder_entries(map: &mut Map<String, Value>, field: &str, order: impl Iterator<Item = String>) {
     let Some(Value::Object(entries)) = map.get_mut(field) else { return };
     let mut ordered = Map::new();
@@ -206,6 +211,7 @@ fn reorder_entries(map: &mut Map<String, Value>, field: &str, order: impl Iterat
 
 /// pnpm's `lockfileWalker` visits importer dependencies in dev, runtime,
 /// optional order, marking each sibling before descending into its children.
+#[inline]
 fn snapshot_order(lockfile: &Value, importers: &[String]) -> Vec<String> {
     let snapshots = &lockfile["snapshots"];
     let mut roots = Vec::new();
@@ -216,6 +222,7 @@ fn snapshot_order(lockfile: &Value, importers: &[String]) -> Vec<String> {
     walk_snapshots(snapshots, roots)
 }
 
+#[inline]
 fn importer_children(entry: &Value) -> Vec<String> {
     ["devDependencies", "dependencies", "optionalDependencies"]
         .into_iter()
@@ -249,6 +256,7 @@ fn walk_snapshots(snapshots: &Value, roots: Vec<String>) -> Vec<String> {
     order
 }
 
+#[inline]
 fn snapshot_children(snapshot: &Value) -> Vec<String> {
     ["dependencies", "optionalDependencies"]
         .into_iter()
@@ -264,6 +272,7 @@ fn snapshot_children(snapshot: &Value) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn snapshot_siblings(
     snapshots: &Value,
     ids: Vec<String>,
@@ -281,6 +290,7 @@ fn snapshot_siblings(
         .collect()
 }
 
+#[inline]
 fn environment_importer(root: &Path, roots: &Path, env_id: &str) -> io::Result<String> {
     let unversioned =
         roots.join(crate::commands::status::js::without_version(env_id).replace('/', "_"));

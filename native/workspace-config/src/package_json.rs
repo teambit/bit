@@ -8,6 +8,7 @@ use std::io;
 
 /// `stringify-package`: `JSON.stringify` with the indentation (two spaces when
 /// none was detected) and a final newline, CRLF throughout for CRLF files.
+#[inline]
 pub fn stringify_package(value: &Value, indent: &str, newline: Option<&str>) -> io::Result<String> {
     // `JSON.stringify` uses at most ten characters of a string indent.
     let indent: String =
@@ -42,6 +43,7 @@ pub fn detect_newline(text: &str) -> Option<&'static str> {
 /// lines follow), as spaces unless more lines are indented with tabs; empty when
 /// nothing is indented.
 #[must_use]
+#[inline]
 pub fn detect_indent(text: &str) -> String {
     let text = text.strip_prefix('\u{feff}').unwrap_or(text);
     let mut steps = IndentSteps::default();
@@ -75,6 +77,7 @@ pub fn detect_indent(text: &str) -> String {
 }
 
 /// `/^(?:( )+|\t+)/`: a run of spaces or a run of tabs, not both.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Leading {
     Spaces(usize),
     Tabs(usize),
@@ -93,7 +96,7 @@ fn leading(line: &str) -> Leading {
 
 /// The `indents` map of `detect-indent` 5, in insertion order: each step (signed
 /// as first set) with its uses and the lines that follow it as an indent.
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct IndentSteps {
     previous: i64,
     entries: Vec<(i64, [u64; 2])>,
@@ -102,6 +105,7 @@ struct IndentSteps {
 }
 
 impl IndentSteps {
+    #[inline]
     fn line(&mut self, indent: i64) {
         let diff = indent.saturating_sub(self.previous);
         self.previous = indent;
@@ -117,6 +121,7 @@ impl IndentSteps {
 
     /// `indents.get(|diff|)` gets one more use; otherwise `indents.set(diff, [1, 0])`,
     /// which replaces an earlier unindent entry in place.
+    #[inline]
     fn step(&mut self, diff: i64) -> usize {
         if let Some(found) = self.position(diff.saturating_abs()) {
             self.entries[found].1[0] += 1;

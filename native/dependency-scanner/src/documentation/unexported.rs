@@ -6,6 +6,7 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{Visit, walk};
 
+#[inline]
 pub(super) fn proven(program: &Program<'_>) -> bool {
     if program.body.is_empty() {
         return true;
@@ -14,12 +15,14 @@ pub(super) fn proven(program: &Program<'_>) -> bool {
     proof.visit_program(program);
     proof.accepted
 }
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Proof {
     accepted: bool,
     depth: usize,
     nodes: usize,
 }
 impl Proof {
+    #[inline]
     fn walk_within(&mut self, step: impl FnOnce(&mut Self)) {
         self.nodes += 1;
         if !self.accepted || self.depth >= 128 || self.nodes > 16384 {

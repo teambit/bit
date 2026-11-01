@@ -8,6 +8,7 @@ use std::{io, sync::OnceLock};
 
 static IDENTITY: Cache = Cache::new();
 
+#[inline]
 pub(super) fn load(factory: impl FnOnce() -> io::Result<User>) -> io::Result<User> {
     IDENTITY.load(factory)
 }
@@ -16,12 +17,14 @@ struct Cache {
     value: OnceLock<Result<User, Failure>>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Failure {
     kind: io::ErrorKind,
     message: String,
 }
 
 impl Cache {
+    #[inline]
     const fn new() -> Self {
         Self { value: OnceLock::new() }
     }
@@ -52,6 +55,7 @@ impl Cache {
     }
 }
 
+#[inline]
 fn clean_field(field: Option<String>) -> Option<String> {
     let val = field?;
     let trimmed = val.trim();

@@ -3,10 +3,13 @@
 
 use std::{env, fmt::Display};
 
+#[must_use]
+#[inline]
 pub fn enabled() -> bool {
     env::var_os("BIT_NATIVE_TRACE").is_some_and(|value| is_active_trace_value(&value))
 }
 
+#[inline]
 fn is_active_trace_value(value: &std::ffi::OsStr) -> bool {
     let text = value.to_string_lossy();
     let trimmed = text.trim();
@@ -17,6 +20,7 @@ fn is_active_trace_value(value: &std::ffi::OsStr) -> bool {
             .any(|word| trimmed.eq_ignore_ascii_case(word))
 }
 
+#[inline]
 pub fn log(message: impl Display) {
     if enabled() {
         let rendered = message.to_string();

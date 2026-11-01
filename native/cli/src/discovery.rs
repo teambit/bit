@@ -73,6 +73,7 @@ pub struct Environment {
 const NOT_FOUND: &str = "the Node.js Bit CLI was not found. Set BIT_NODE_CLI to the path of @teambit/bit's bin/bit (or a checkout's bin/bit.js), install bit with bvm, or put the Node.js bit on PATH";
 const ENTRY_IN_PACKAGE: &str = "node_modules/@teambit/bit/bin/bit";
 
+#[inline]
 pub fn find() -> io::Result<Target> {
     find_in(&Environment::from_process())
 }
@@ -91,6 +92,8 @@ pub fn find_in(environment: &Environment) -> io::Result<Target> {
 }
 
 impl Environment {
+    #[must_use]
+    #[inline]
     pub fn from_process() -> Self {
         Self {
             node_cli: env_path("BIT_NODE_CLI"),
@@ -102,12 +105,14 @@ impl Environment {
     }
 }
 
+#[inline]
 fn env_path(key: &str) -> Option<PathBuf> {
     env::var_os(key)
         .filter(|val| !val.to_string_lossy().trim().is_empty())
         .map(PathBuf::from)
 }
 
+#[inline]
 fn bvm_dir() -> Option<PathBuf> {
     if let Some(dir) = env_path("BVM_GLOBALS_DIR") {
         return Some(dir);
@@ -120,11 +125,13 @@ fn bvm_dir() -> Option<PathBuf> {
     home.map(|dir| dir.join(".bvm"))
 }
 
+#[inline]
 fn from_env(environment: &Environment) -> Option<NodeCli> {
     let entry = environment.node_cli.as_ref().filter(|entry| entry.is_file())?;
     Some(node_cli(entry.clone(), Source::Env, environment))
 }
 
+#[inline]
 fn beside_executable(environment: &Environment) -> Option<NodeCli> {
     let executable = environment.executable.as_ref()?;
     let entry = executable
@@ -151,6 +158,7 @@ fn in_checkout(environment: &Environment) -> Option<NodeCli> {
     installed.then(|| node_cli(entry, Source::Checkout, environment))
 }
 
+#[inline]
 fn bvm_link(environment: &Environment) -> Option<NodeCli> {
     let bvm = environment.bvm_dir.as_ref()?;
     let entry = bvm
@@ -188,6 +196,7 @@ fn path_wrapper(environment: &Environment) -> Option<PathBuf> {
         .find(|candidate| is_other_executable(candidate, environment.executable.as_deref()))
 }
 
+#[inline]
 fn is_other_executable(candidate: &Path, this: Option<&Path>) -> bool {
     if !candidate.is_file() {
         return false;
@@ -195,6 +204,7 @@ fn is_other_executable(candidate: &Path, this: Option<&Path>) -> bool {
     fs::canonicalize(candidate).is_ok_and(|canonical| Some(canonical.as_path()) != this)
 }
 
+#[inline]
 fn node_cli(entry: PathBuf, source: Source, environment: &Environment) -> NodeCli {
     let bvm = bvm_root(&entry);
     let node = environment.node_binary
@@ -206,6 +216,7 @@ fn node_cli(entry: PathBuf, source: Source, environment: &Environment) -> NodeCl
 
 /// The bvm directory an entry lives in: an ancestor holding both `nodejs`
 /// and `versions`.
+#[inline]
 fn bvm_root(entry: &Path) -> Option<PathBuf> {
     entry
         .ancestors()
@@ -228,6 +239,7 @@ fn newest_bvm_node(bvm: &Path) -> Option<PathBuf> {
         .map(|(_, node)| node)
 }
 
+#[inline]
 fn node_in(dir: &Path) -> Option<PathBuf> {
     let candidates: &[&str] =
         if cfg!(windows) { &["node.exe", "bin/node.exe"] } else { &["bin/node"] };
@@ -257,6 +269,7 @@ fn version_key(name: &str) -> (Vec<u64>, String) {
 
 /// The `@teambit/bit` package: the entry's own package, or the one a
 /// checkout's `bin/bit.js` requires from its `node_modules`.
+#[inline]
 fn bit_dir(entry: &Path) -> Option<PathBuf> {
     let bin = entry.parent()?;
     let root = bin.parent()?;
@@ -270,6 +283,7 @@ fn bit_dir(entry: &Path) -> Option<PathBuf> {
     .find(|dir| is_bit_package(dir))
 }
 
+#[inline]
 fn is_bit_package(dir: &Path) -> bool {
     fs::read(dir.join("package.json"))
         .ok()
@@ -279,6 +293,7 @@ fn is_bit_package(dir: &Path) -> bool {
 
 /// `findBvmDir` of `@teambit/bvm.path`: the ancestor whose parent is `links`
 /// inside `.bvm`.
+#[inline]
 fn bvm_link_of(entry: &Path) -> Option<PathBuf> {
     entry
         .ancestors()

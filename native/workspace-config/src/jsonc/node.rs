@@ -40,6 +40,7 @@ impl Object {
     /// Keys in JavaScript `Object.keys` order: canonical array indexes
     /// ascending, then the rest in insertion order.
     #[must_use]
+    #[inline]
     pub fn ordered_keys(&self) -> Vec<&String> {
         let mut indexes = Vec::new();
         let mut rest = Vec::with_capacity(self.entries.len());

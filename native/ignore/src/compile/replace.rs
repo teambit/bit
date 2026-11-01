@@ -4,6 +4,7 @@
 use regress::{Match, Regex};
 
 /// The arguments a replacement function receives.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Found<'text> {
     pub matched: &'text str,
     pub group: Option<&'text str>,
@@ -17,6 +18,7 @@ pub struct Found<'text> {
 /// a slash that is not its last character.
 type Replacement = fn(&Found<'_>, bool) -> String;
 
+#[derive(Debug, Clone)]
 pub struct Step {
     regex: Regex,
     global: bool,
@@ -24,12 +26,14 @@ pub struct Step {
 }
 
 impl Step {
+    #[inline]
     fn new(source: &str, global: bool, replacement: Replacement) -> Self {
         let regex = Regex::with_flags(source, "").expect("node-ignore's replacers compile");
         Self { regex, global, replacement }
     }
 
     #[must_use]
+    #[inline]
     pub fn apply(&self, text: &str, anchored: bool) -> String {
         if text.is_empty() {
             return String::new();
@@ -70,6 +74,7 @@ pub fn js_replace(
     output
 }
 
+#[inline]
 fn arguments<'text>(text: &'text str, found: &Match, length: usize) -> Found<'text> {
     let range = found.range();
     Found {
@@ -80,12 +85,14 @@ fn arguments<'text>(text: &'text str, found: &Match, length: usize) -> Found<'te
     }
 }
 
+#[inline]
 fn next_boundary(text: &str, index: usize) -> usize {
     text.get(index..)
         .and_then(|rest| rest.chars().next())
         .map_or(index + 1, |next| index + next.len_utf8())
 }
 
+#[inline]
 fn utf16_len(text: &str) -> usize {
     text.chars().map(char::len_utf16).sum()
 }
@@ -139,6 +146,7 @@ fn suffix() -> Vec<Step> {
     ]
 }
 
+#[inline]
 fn with_ending(ending: Step) -> Vec<Step> {
     prefix()
         .into_iter()
@@ -148,11 +156,15 @@ fn with_ending(ending: Step) -> Vec<Step> {
 }
 
 /// `POSITIVE_REPLACERS`: a plain name matches itself and what is under it.
+#[must_use]
+#[inline]
 pub fn positive() -> Vec<Step> {
     with_ending(Step::new(r"(?:[^*\/])$", false, |found, _| format!(r"{}(?=$|\/)", found.matched)))
 }
 
 /// `NEGATIVE_REPLACERS`: a negation does not re-include a directory's content.
+#[must_use]
+#[inline]
 pub fn negative() -> Vec<Step> {
     with_ending(Step::new(r"(?:[^*])$", false, |found, _| format!(r"{}(?=$|\/$)", found.matched)))
 }

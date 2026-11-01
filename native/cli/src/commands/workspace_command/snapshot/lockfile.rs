@@ -8,6 +8,8 @@ use serde_json::Value;
 use std::{io, path::Path};
 
 /// Scope-only cascade entries are not workspace lockfile roots.
+#[must_use]
+#[inline]
 pub(in crate::commands::workspace_command) fn hidden_target(
     context: &Value,
     identity: &str,
@@ -32,12 +34,14 @@ pub(in crate::commands::workspace_command) fn hidden_target(
             })
 }
 
+#[inline]
 fn target_identity(target: &Value) -> Option<&str> {
     non_empty_str(&target["identity"])
         .or_else(|| non_empty_str(&target["id"]))
         .map(without_version)
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -104,6 +108,7 @@ fn visible_graphs(
     graph::graphs(root, &snapped, &components)
 }
 
+#[inline]
 fn env_id_str(value: &Value) -> Option<&str> {
     non_empty_str(value).or_else(|| non_empty_str(&value["id"]))
 }
@@ -144,6 +149,7 @@ fn workspace_components<'c>(
 }
 
 /// The package name of a captured component.
+#[inline]
 fn package_name<'c>(capture: &'c Capture, identity: &str) -> io::Result<&'c str> {
     let target = without_version(identity.trim());
     capture.components

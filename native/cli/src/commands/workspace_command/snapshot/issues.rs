@@ -46,6 +46,7 @@ pub fn validate(
 
 /// Whether the component's tag-blocking issues are the ones the snap error
 /// lists for it, compared as JSON text.
+#[inline]
 fn predicted(component: &Value, id: &str, errors: &[Value]) -> io::Result<bool> {
     let expected = errors
         .iter()
@@ -56,6 +57,7 @@ fn predicted(component: &Value, id: &str, errors: &[Value]) -> io::Result<bool> 
     Ok(actual == serde_json::to_string(&expected).map_err(io::Error::other)?)
 }
 
+#[inline]
 fn entry_matches_id(entry_id: &Value, id: &str) -> bool {
     let target = without_version(id.trim());
     if let Some(raw) = entry_id.as_str() {
@@ -67,6 +69,7 @@ fn entry_matches_id(entry_id: &Value, id: &str) -> bool {
 }
 
 /// The tag-blocking issues: their type and their data as JSON.
+#[inline]
 fn blockers(component: &Value) -> io::Result<Value> {
     let issues = array(component.get("issues"), "component issues")?
         .iter()
@@ -80,6 +83,7 @@ fn blockers(component: &Value) -> io::Result<Value> {
 }
 
 /// The divergent policy targets, or the components the merge snaps.
+#[inline]
 fn selected<'p>(plan: &'p Value, policy: Option<&'p Value>) -> io::Result<HashSet<&'p str>> {
     let Some(policy) = policy else {
         return array(plan.get("needsSnap"), "needs snap")?
@@ -130,6 +134,7 @@ fn merged(components: &[Component], projected: &[Value]) -> io::Result<Vec<Compo
         .collect())
 }
 
+#[inline]
 fn projected_component(row: &Value, identity: &str, ignored: Vec<String>) -> io::Result<Component> {
     let dependencies = array(row.get("dependencies"), "issue target dependencies")?
         .iter()

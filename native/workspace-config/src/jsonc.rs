@@ -158,6 +158,7 @@ impl Document {
 /// comment-json's `stringify(data, undefined, 2)`. Bit writes the file with a
 /// trailing newline: `format!("{document}\n")`.
 impl fmt::Display for Document {
+    #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(&stringify::document(&self.root, &self.before_all, &self.after_all))
     }

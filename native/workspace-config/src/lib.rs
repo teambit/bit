@@ -21,6 +21,7 @@ use std::io;
 
 /// Preserve JavaScript object insertion order while later stores replace earlier values.
 #[must_use]
+#[inline]
 pub fn merge_layers(global: &Value, scope: &Value, workspace: &Value) -> Map<String, Value> {
     let mut combined = Map::new();
     for layer in [global, scope, workspace] {
@@ -37,6 +38,7 @@ pub fn merge_layers(global: &Value, scope: &Value, workspace: &Value) -> Map<Str
 
 /// `toEnvVariableName` replaces periods only; hyphens remain significant.
 #[must_use]
+#[inline]
 pub fn environment_key(key: &str) -> String {
     format!(
         "BIT_CONFIG_{}",
@@ -48,6 +50,7 @@ pub fn environment_key(key: &str) -> String {
 
 /// Empty environment variables do not override a configured value.
 #[must_use]
+#[inline]
 pub fn environment_value(key: &str) -> Option<String> {
     std::env::var(environment_key(key))
         .ok()
@@ -56,6 +59,7 @@ pub fn environment_value(key: &str) -> Option<String> {
 
 /// Materialize environment overrides for known consumers; listConfig itself excludes them.
 #[must_use]
+#[inline]
 pub fn effective(
     global: &Value,
     scope: &Value,
@@ -97,6 +101,7 @@ pub fn effective_with_environment(
 
 /// JavaScript truthiness used by config get's `value || ''` report.
 #[must_use]
+#[inline]
 pub fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
@@ -110,12 +115,14 @@ pub fn truthy(value: &Value) -> bool {
 }
 
 /// Plain JSONC values using the shared comment-preserving parser.
+#[inline]
 pub fn parse_jsonc(bytes: &[u8]) -> io::Result<Value> {
     jsonc::parse(std::str::from_utf8(bytes).map_err(io::Error::other)?)
 }
 
 /// Consumer._getScopePath prefers .bit; only an actual .git directory embeds its scope.
 #[must_use]
+#[inline]
 pub fn scope_path(root: &std::path::Path) -> std::path::PathBuf {
     let hidden = root.join(".bit");
     let git = root.join(".git");
@@ -130,6 +137,7 @@ pub fn scope_path(root: &std::path::Path) -> std::path::PathBuf {
 
 /// Locate the closest parent workspace.jsonc from an invocation directory.
 #[must_use]
+#[inline]
 pub fn workspace_root(cwd: &std::path::Path) -> Option<std::path::PathBuf> {
     cwd.ancestors()
         .find(|path| path.join("workspace.jsonc").is_file())
@@ -138,6 +146,7 @@ pub fn workspace_root(cwd: &std::path::Path) -> Option<std::path::PathBuf> {
 
 /// Workspace.getConfigStore lists the first matching version-insensitive config-store aspect.
 #[must_use]
+#[inline]
 pub fn workspace_values(workspace: &Value) -> Map<String, Value> {
     workspace
         .get(workspace_store_key(workspace))
@@ -148,6 +157,7 @@ pub fn workspace_values(workspace: &Value) -> Map<String, Value> {
 
 /// Preserve the configured aspect identity for comment-preserving edits.
 #[must_use]
+#[inline]
 pub fn workspace_store_key(workspace: &Value) -> &str {
     const ASPECT: &str = "teambit.harmony/config-store";
     workspace

@@ -36,6 +36,7 @@ pub(super) fn graph(
     serde_json::to_string(&graph).map(Some).map_err(io::Error::other)
 }
 
+#[inline]
 fn environment_root<'a>(lockfile: &Value, environment: &'a str, package: &str) -> Option<&'a str> {
     let environment = environment.trim();
     let environment = if lockfile["importers"].get(environment).is_none() {
@@ -55,6 +56,7 @@ fn environment_root<'a>(lockfile: &Value, environment: &'a str, package: &str) -
         .then_some(environment)
 }
 
+#[inline]
 fn selected_importers(
     lockfile: &Value,
     component: &Snapped<'_>,
@@ -79,6 +81,7 @@ fn selected_importers(
     importers
 }
 
+#[must_use]
 pub(super) fn filter(lockfile: &Value, importers: Map<String, Value>) -> Map<String, Value> {
     let mut packages = Map::new();
     let mut snapshots = Map::new();
@@ -101,6 +104,7 @@ pub(super) fn filter(lockfile: &Value, importers: Map<String, Value>) -> Map<Str
     filtered
 }
 
+#[inline]
 fn importer_roots(importer: &Value) -> Vec<String> {
     ["dependencies", "devDependencies", "optionalDependencies"]
         .into_iter()
@@ -141,6 +145,7 @@ fn visit(
     }
 }
 
+#[inline]
 fn scrub_own(lockfile: &mut Map<String, Value>, package: &str) {
     let package = package.trim();
     let prefix = format!("{package}@file:");
@@ -157,6 +162,7 @@ fn scrub_own(lockfile: &mut Map<String, Value>, package: &str) {
     }
 }
 
+#[inline]
 fn scrub_back_edges(snapshot: &mut Value, package: &str) {
     for field in ["dependencies", "optionalDependencies"] {
         let Some(dependencies) = snapshot.get_mut(field).and_then(Value::as_object_mut) else {

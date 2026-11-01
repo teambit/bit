@@ -2,6 +2,7 @@ use oxc_ast::ast::{Argument, CallExpression, Expression};
 /// Babel types every call after the first `?.` of a chain as `OptionalCallExpression`, which
 /// neither the JS detective nor module-definition matches; `typescript-estree` keeps
 /// `CallExpression`.
+#[inline]
 pub(crate) fn in_optional_chain(node: &CallExpression<'_>) -> bool {
     if node.optional {
         return true;
@@ -24,6 +25,7 @@ pub(crate) fn in_optional_chain(node: &CallExpression<'_>) -> bool {
     }
 }
 /// Literals whose legacy `value` becomes a coerced dependency key (`import(5)` yields `"5"`).
+#[inline]
 pub(crate) fn nonstring_literal(argument: Option<&Argument<'_>>) -> bool {
     matches!(
         argument,
@@ -35,6 +37,7 @@ pub(crate) fn nonstring_literal(argument: Option<&Argument<'_>>) -> bool {
         ),
     )
 }
+#[inline]
 pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
     let callee = node.callee.without_parentheses();
     let matched = match callee {
@@ -53,6 +56,7 @@ pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
     matched && (ts || !in_optional_chain(node))
 }
 
+#[inline]
 fn is_resolve_receiver(object: &Expression<'_>) -> bool {
     match object.without_parentheses() {
         Expression::Identifier(id) => id.name == "require",

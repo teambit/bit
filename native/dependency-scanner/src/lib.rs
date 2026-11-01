@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Request {
     version: u32,
@@ -37,21 +37,21 @@ struct Request {
     #[serde(default)]
     options: BTreeMap<String, Value>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct File {
     path: String,
     source: Option<String>,
     kind: Option<String>,
 }
-#[derive(Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 struct Outcome {
     path: String,
     status: &'static str,
     dependencies: IndexMap<String, Dependency>,
     diagnostics: Vec<String>,
 }
-#[derive(Default, Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Dependency {
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -59,7 +59,7 @@ struct Dependency {
     #[serde(skip_serializing_if = "Option::is_none")]
     is_type_import: Option<bool>,
 }
-#[derive(Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Specifier {
     is_default: bool,
@@ -68,6 +68,7 @@ struct Specifier {
     #[serde(skip_serializing_if = "Option::is_none")]
     exported: Option<bool>,
 }
+#[derive(Debug, Default, Clone)]
 struct Scanner {
     line_starts: Vec<u32>,
     ts: bool,
@@ -76,6 +77,7 @@ struct Scanner {
     deps: IndexMap<String, Dependency>,
     unsupported: bool,
 }
+#[inline]
 fn line_starts(source: &str) -> Vec<u32> {
     std::iter::once(0)
         .chain(
@@ -88,10 +90,12 @@ fn line_starts(source: &str) -> Vec<u32> {
         .collect()
 }
 /// One-based line number of a byte offset.
+#[inline]
 fn line(line_starts: &[u32], offset: u32) -> usize {
     line_starts.partition_point(|start| *start <= offset)
 }
 impl Scanner {
+    #[inline]
     fn ignored(&self, span: Span) -> bool {
         if self.no_check {
             return true;
@@ -103,6 +107,7 @@ impl Scanner {
                 *comment_line + 1 == node_line && text.contains("@bit-ignore")
             })
     }
+    #[inline]
     fn add(&mut self, name: &str, span: Span) -> Option<&mut Dependency> {
         if name.is_empty() || (self.ts && self.ignored(span)) {
             return None;
@@ -113,6 +118,7 @@ impl Scanner {
         }
         Some(self.deps.entry(name.to_owned()).or_default())
     }
+    #[inline]
     fn exported(&mut self, name: &str) {
         for dep in self.deps.values_mut() {
             if let Some(spec) = dep.import_specifiers
@@ -124,6 +130,7 @@ impl Scanner {
         }
     }
 }
+#[inline]
 fn string(expr: &Expression<'_>) -> Option<String> {
     match expr.without_parentheses() {
         Expression::StringLiteral(s) => Some(s.value.to_string()),
@@ -133,9 +140,11 @@ fn string(expr: &Expression<'_>) -> Option<String> {
         _ => None,
     }
 }
+#[inline]
 fn argument(arg: &Argument<'_>) -> Option<String> {
     arg.as_expression().and_then(string)
 }
+#[inline]
 fn identifier_name(name: &oxc_ast::ast::ModuleExportName<'_>) -> Option<String> {
     if matches!(name, oxc_ast::ast::ModuleExportName::StringLiteral(_)) {
         None
@@ -143,6 +152,7 @@ fn identifier_name(name: &oxc_ast::ast::ModuleExportName<'_>) -> Option<String> 
         Some(name.name().to_string())
     }
 }
+#[inline]
 fn import_specifier(spec: &ImportDeclarationSpecifier<'_>) -> Specifier {
     let (is_default, name) = match spec {
         ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
@@ -257,6 +267,7 @@ impl<'a> Visit<'a> for Scanner {
         walk::walk_decorator(self, node);
     }
 }
+#[inline]
 fn outcome(file: &File, status: &'static str, message: String) -> Outcome {
     Outcome {
         path: file.path.clone(),
@@ -267,6 +278,7 @@ fn outcome(file: &File, status: &'static str, message: String) -> Outcome {
 }
 
 /// Scan an owned request on the caller's bounded worker pool.
+#[inline]
 pub fn scan_request(input: &str, pool: &rayon::ThreadPool) -> Result<Value, serde_json::Error> {
     if input.len() > limits::REQUEST_BYTES {
         return Ok(invalid_request("request exceeds 8 MiB limit"));
@@ -276,12 +288,15 @@ pub fn scan_request(input: &str, pool: &rayon::ThreadPool) -> Result<Value, serd
 
 /// Scan one captured source on a caller-owned worker without a JSON source round trip.
 /// The caller owns scheduling and aggregate output limits; per-source limits remain enforced.
+#[inline]
 pub fn scan_source(path: String, source: String) -> Result<Value, serde_json::Error> {
     let file = File { path, source: Some(source), kind: None };
     serde_json::to_value(scan(&file, false))
 }
 
 /// The response to a request the scanner cannot read.
+#[must_use]
+#[inline]
 pub(crate) fn invalid_request(message: &str) -> Value {
     let trimmed = message.trim();
     serde_json::json!({"version":1,"status":"invalid_request","diagnostics":[trimmed]})

@@ -14,7 +14,7 @@ use std::{
 };
 
 /// What a native command did with its arguments.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Outcome {
     /// The command ran; exit with this code.
     Exit(ExitCode),
@@ -98,6 +98,8 @@ fn warn_fallback(name: &str, reason: &str, args: &[OsString]) {
 }
 
 /// The fallback warning's text.
+#[must_use]
+#[inline]
 fn fallback_message(name: &str, reason: &str) -> String {
     format!("\u{26A0} bit-native: `{name}` runs on the Node.js CLI: {reason}")
 }

@@ -90,6 +90,7 @@ fn literal(rest: &[char], character: char, text: &[char]) -> bool {
 }
 
 /// Index of the `)` closing an extglob that starts at `pattern[0]`.
+#[inline]
 fn extglob_end(pattern: &[char]) -> Option<usize> {
     if pattern.len() < 3 || pattern[1] != '(' || !matches!(pattern[0], '+' | '*' | '?' | '@' | '!')
     {
@@ -187,6 +188,7 @@ fn class(pattern: &[char], text: &[char]) -> bool {
     found != negated && glob(&pattern[end + 1..], &text[1..])
 }
 
+#[inline]
 fn in_class(body: &[char], character: char) -> Option<bool> {
     let mut index = 0;
     let mut found = false;
@@ -207,6 +209,7 @@ fn in_class(body: &[char], character: char) -> Option<bool> {
 }
 
 /// `{a,b}` brace expansion, applied before matching.
+#[inline]
 fn expand_braces(pattern: &str) -> Vec<String> {
     let Some((open, close, commas)) = find_brace_group(pattern) else {
         return vec![pattern.to_owned()];
@@ -229,6 +232,7 @@ fn expand_braces(pattern: &str) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn find_brace_group(pattern: &str) -> Option<(usize, usize, Vec<usize>)> {
     for (open, _) in pattern.match_indices('{') {
         let mut depth = 0;

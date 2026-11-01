@@ -4,14 +4,14 @@ use oxc_ast::{
 };
 use oxc_ast_visit::Visit;
 
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Classification {
     #[default]
     None,
     Supported,
     Fallback,
 }
-#[derive(Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Classifier {
     classification: Classification,
 }
@@ -48,6 +48,7 @@ impl<'ast> Visit<'ast> for Classifier {
         };
     }
 }
+#[inline]
 fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classification {
     match callee.without_parentheses() {
         Expression::Identifier(identifier) if identifier.name == "require" => {
@@ -76,12 +77,14 @@ fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classif
         _ => Classification::None,
     }
 }
+#[inline]
 pub(crate) fn classify(program: &Program<'_>) -> Classification {
     let mut classifier = Classifier::default();
     classifier.visit_program(program);
     classifier.classification
 }
 
+#[inline]
 pub(crate) fn classification_outcome(
     file: &crate::File,
     program: &Program<'_>,
@@ -102,6 +105,7 @@ pub(crate) fn classification_outcome(
     }
 }
 
+#[inline]
 pub(crate) fn legacy_object_key(name: &str) -> bool {
     matches!(
         name.trim(),

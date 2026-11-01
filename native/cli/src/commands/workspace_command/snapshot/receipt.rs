@@ -27,6 +27,7 @@ const CLOUD_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// The receipt for snapping `identities`.
 /// The components a snap writes: identities, new hashes and dependency graphs.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Snapped<'s> {
     pub identities: &'s [String],
     pub hashes: &'s [String],
@@ -35,6 +36,7 @@ pub struct Snapped<'s> {
 
 /// `count` new snap hashes, allocated before the dependency graphs that
 /// name them.
+#[inline]
 pub fn new_snap_hashes(count: usize) -> io::Result<Vec<String>> {
     (0..count).map(|_| new_snap_hash()).collect()
 }
@@ -68,7 +70,7 @@ pub fn snapshot(root: &Path, snapped: &Snapped<'_>, lane_log: bool) -> io::Resul
 }
 
 /// `getIdentity()`: the user's name and email.
-#[derive(Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct User {
     username: Option<String>,
     email: Option<String>,
@@ -77,6 +79,7 @@ pub struct User {
 impl User {
     /// `getBitCloudUsername() || getConfig('user.name')` and
     /// `getConfig('user.email')`, the git config being the last layer.
+    #[inline]
     pub fn load(root: &Path) -> io::Result<Self> {
         identity::load(|| Self::read(root))
     }
@@ -106,6 +109,8 @@ impl User {
     }
 
     /// `getBasicLog()`: `undefined` fields are left out, as `JSON.stringify` does.
+    #[must_use]
+    #[inline]
     pub fn log(&self) -> Value {
         let mut log = Map::new();
         if let Some(username) = &self.username {
@@ -157,6 +162,7 @@ fn cloud_username(domain: &str, token: &str) -> Option<String> {
 
 /// `gitconfig.get.sync()`: `git config --list` in the working directory,
 /// each line split at its `=` signs, the second part being the value.
+#[inline]
 fn git_config() -> HashMap<String, String> {
     let Ok(output) = Command::new("git")
         .args(["config", "--list"])
@@ -172,6 +178,7 @@ fn git_config() -> HashMap<String, String> {
 
 /// `_parseStdout`: `key=value` lines, the value ending at the next `=`;
 /// the last line of a key wins.
+#[inline]
 fn parse_git_config(text: &str) -> HashMap<String, String> {
     text.split('\n')
         .filter_map(|line| {
@@ -181,17 +188,20 @@ fn parse_git_config(text: &str) -> HashMap<String, String> {
         .collect()
 }
 
+#[inline]
 fn now_millis() -> u128 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis())
 }
 
 /// `newSnapHash()`: the SHA-1 of a random UUID.
+#[inline]
 fn new_snap_hash() -> io::Result<String> {
     let digest = Sha1::digest(uuid_v4()?.as_bytes());
     Ok(hex(&digest))
 }
 
 /// Lowercase hexadecimal.
+#[inline]
 fn hex(bytes: &[u8]) -> String {
     bytes
         .iter()
@@ -202,6 +212,7 @@ fn hex(bytes: &[u8]) -> String {
 }
 
 /// `uuid.v4()`.
+#[inline]
 pub fn uuid_v4() -> io::Result<String> {
     let mut bytes = [0_u8; 16];
     getrandom::fill(&mut bytes).map_err(|error| io::Error::other(error.to_string()))?;
@@ -214,6 +225,7 @@ pub fn uuid_v4() -> io::Result<String> {
 /// The Node.js CLI the native commands stand in for: its Node (absolute,
 /// `process.execPath`), its `@teambit/bit` package and that package's
 /// version (`getBitVersion()`).
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NodeCli {
     pub node: PathBuf,
     pub bit_dir: PathBuf,
@@ -241,6 +253,7 @@ impl NodeCli {
 }
 
 /// `node` resolved on `PATH` when discovery left it bare.
+#[inline]
 fn absolute_node(node: &Path) -> Option<PathBuf> {
     if node.is_absolute() {
         return Some(node.to_path_buf());
@@ -249,6 +262,7 @@ fn absolute_node(node: &Path) -> Option<PathBuf> {
     node_in_paths(node, std::env::split_paths(&path), cfg!(windows))
 }
 
+#[inline]
 fn node_in_paths(
     node: &Path,
     mut paths: impl Iterator<Item = PathBuf>,
@@ -266,6 +280,7 @@ fn node_in_paths(
 
 /// `getBitVersion()`: the version of the `@teambit/bit` package the Node.js
 /// CLI runs from.
+#[inline]
 fn bit_version() -> io::Result<String> {
     NodeCli::find().map(|cli| cli.version)
 }

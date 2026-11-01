@@ -9,6 +9,8 @@ pub(crate) struct CallbackError {
 }
 
 impl CallbackError {
+    #[must_use]
+    #[inline]
     pub(crate) fn wrap(cause: io::Error, mut startup: String, mut output: String) -> io::Error {
         let cause = match cause.downcast::<Self>() {
             Ok(inner) => {
@@ -36,12 +38,14 @@ impl CallbackError {
 }
 
 impl fmt::Display for CallbackError {
+    #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.cause.fmt(formatter)
     }
 }
 
 impl Error for CallbackError {
+    #[inline]
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         Some(&self.cause)
     }

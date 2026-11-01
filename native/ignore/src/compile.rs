@@ -33,6 +33,7 @@ const PROTOTYPE_KEYS: &[&str] = &[
 pub struct UnsupportedPattern(pub String);
 
 impl fmt::Display for UnsupportedPattern {
+    #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "unsupported ignore pattern {:?}", self.0)
     }
@@ -41,6 +42,7 @@ impl fmt::Display for UnsupportedPattern {
 impl std::error::Error for UnsupportedPattern {}
 
 /// The module state of node-ignore: its replacer tables and regex cache.
+#[derive(Debug, Clone)]
 pub struct Compiler {
     blank_line: Regex,
     leading_escaped_exclamation: Regex,
@@ -53,6 +55,7 @@ pub struct Compiler {
 }
 
 impl Default for Compiler {
+    #[inline]
     fn default() -> Self {
         Self::new()
     }
@@ -60,6 +63,7 @@ impl Default for Compiler {
 
 impl Compiler {
     #[must_use]
+    #[inline]
     pub fn new() -> Self {
         Self {
             blank_line: js(r"^\s+$"),
@@ -73,6 +77,7 @@ impl Compiler {
     }
 
     /// `_checkPattern` then `_createRule`; `None` for blank lines and comments.
+    #[inline]
     pub fn rule(&mut self, origin: &str) -> Result<Option<Rule>, UnsupportedPattern> {
         check_supported(origin)?;
         if origin.is_empty() || self.blank_line.find(origin).is_some() || origin.starts_with('#') {
@@ -93,6 +98,7 @@ impl Compiler {
     }
 
     /// `make_regex(pattern, negative)`.
+    #[inline]
     fn make_regex(&mut self, pattern: &str, negative: bool) -> Result<String, UnsupportedPattern> {
         check_supported(pattern)?;
         if let Some(source) = self.cache.get(pattern) {
@@ -108,6 +114,7 @@ impl Compiler {
     }
 }
 
+#[inline]
 fn check_supported(pattern: &str) -> Result<(), UnsupportedPattern> {
     if pattern.contains('\0') || PROTOTYPE_KEYS.contains(&pattern) {
         return Err(UnsupportedPattern(pattern.to_string()));
@@ -115,6 +122,7 @@ fn check_supported(pattern: &str) -> Result<(), UnsupportedPattern> {
     Ok(())
 }
 
+#[inline]
 fn js(source: &str) -> Regex {
     Regex::with_flags(source, "").expect("node-ignore's own regular expressions compile")
 }

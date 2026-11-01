@@ -19,6 +19,7 @@ use std::{
     process::{Command, ExitCode},
 };
 
+#[inline]
 pub fn run(target: &Target, args: &[OsString]) -> io::Result<ExitCode> {
     let command = command(target, args);
     if trace::enabled() {
@@ -27,6 +28,8 @@ pub fn run(target: &Target, args: &[OsString]) -> io::Result<ExitCode> {
     exec(command)
 }
 
+#[must_use]
+#[inline]
 pub fn command(target: &Target, args: &[OsString]) -> Command {
     match target {
         Target::Entry(cli) => entry_command(cli, args),
@@ -38,6 +41,7 @@ pub fn command(target: &Target, args: &[OsString]) -> Command {
     }
 }
 
+#[inline]
 fn entry_command(cli: &NodeCli, args: &[OsString]) -> Command {
     let mut command = Command::new(&cli.node);
     command.arg(&cli.entry).args(args);
@@ -52,6 +56,7 @@ fn entry_command(cli: &NodeCli, args: &[OsString]) -> Command {
     command
 }
 
+#[must_use]
 pub fn path_with(dir: &Path, path: Option<OsString>) -> OsString {
     let is_blank = |os: &OsStr| os.to_string_lossy().trim().is_empty();
     if is_blank(dir.as_os_str()) {
@@ -73,6 +78,7 @@ pub fn path_with(dir: &Path, path: Option<OsString>) -> OsString {
     joined
 }
 
+#[inline]
 fn describe(command: &Command) -> String {
     std::iter::once(command.get_program())
         .chain(command.get_args())

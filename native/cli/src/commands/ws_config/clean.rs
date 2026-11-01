@@ -21,6 +21,8 @@ pub(super) const STANDARD_WRITERS: &[(&str, &str, &str, &str)] = &[
     ("prettier", "PrettierConfigWriter", ".prettierrc.cjs", "// bit-generated-prettier-config"),
 ];
 
+#[must_use]
+#[inline]
 pub(super) fn format_list_output(env_ids: &[String], chalk: Chalk) -> String {
     env_ids
         .iter()
@@ -57,12 +59,15 @@ pub(super) fn format_list_json(env_ids: &[String]) -> io::Result<String> {
     serde_json::to_string_pretty(&entries).map_err(io::Error::other)
 }
 
+#[must_use]
+#[inline]
 pub(super) fn format_clean_output(paths: &[String], dry_run: bool, chalk: Chalk) -> String {
     let verb = if dry_run { "will be" } else { "were" };
     let header = chalk.green(&format!("{} config files {verb} deleted", paths.len()));
     format!("{header}\n  {}\n", paths.join("\n  "))
 }
 
+#[inline]
 pub(super) fn clean_workspace_configs(
     root: &Path,
     writers: Option<&[String]>,
@@ -148,6 +153,8 @@ fn check_config_file(
     }
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands::ws_config) fn writer_matches(
     writer_id: &str,
     writers: Option<&[String]>,
@@ -160,6 +167,7 @@ pub(in crate::commands::ws_config) fn writer_matches(
     })
 }
 
+#[must_use]
 pub(in crate::commands) fn collect_standard_env_ids(ws: &Workspace) -> Option<Vec<String>> {
     let mut env_ids = Vec::new();
     for (_, comp) in ws.active() {
@@ -177,6 +185,8 @@ pub(in crate::commands) fn collect_standard_env_ids(ws: &Workspace) -> Option<Ve
     Some(env_ids)
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands::ws_config) fn collect_active_component_dirs(ws: &Workspace) -> Vec<String> {
     ws.active()
         .filter_map(|(_, comp)| {

@@ -1,6 +1,7 @@
 //! Labels for snap and tag result reports.
 
 /// What differs between the snap and the tag report.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Labels {
     /// `snappedComponents` or `taggedComponents`.
     pub(super) versioned: &'static str,
@@ -64,10 +65,12 @@ pub const PERSIST_TAG: Labels = Labels { nothing: "no soft-tag found", ..TAG };
 
 impl Labels {
     #[must_use]
+    #[inline]
     pub(super) fn soft(&self) -> bool {
         self.tag && self.verb == "soft-tagged"
     }
     #[must_use]
+    #[inline]
     pub(super) fn section(&self, new: bool) -> (&'static str, &'static str) {
         match (self.soft(), new) {
             (true, true) => (

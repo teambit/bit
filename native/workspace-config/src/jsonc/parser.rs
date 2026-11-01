@@ -8,6 +8,7 @@ use super::{
 use std::io;
 
 /// The parsed root plus the comments before and after it.
+#[derive(Debug, Clone, PartialEq)]
 pub(super) struct Parsed {
     pub(super) root: Node,
     pub(super) before_all: Vec<Comment>,
@@ -68,6 +69,7 @@ impl Parser {
         self.inline = previous.is_some() && previous == start;
     }
 
+    #[inline]
     fn unexpected(&self) -> io::Error {
         match self.current().map(|token| &token.kind) {
             None => invalid("Unexpected end of JSON input"),
@@ -264,6 +266,7 @@ impl Parser {
         }
     }
 
+    #[inline]
     fn literal(&mut self, kind: Kind) -> io::Result<Node> {
         let node = match kind {
             Kind::String(value) => Node::String(value),

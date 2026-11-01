@@ -3,6 +3,7 @@
 
 /// Whether `name` matches the minimatch `pattern`.
 #[must_use]
+#[inline]
 pub fn matches(pattern: &str, name: &str) -> bool {
     let pattern = pattern.trim();
     let name = name.trim();
@@ -23,6 +24,7 @@ pub fn matches(pattern: &str, name: &str) -> bool {
 }
 
 /// `{a,b}` alternatives, expanded innermost/left-to-right.
+#[inline]
 fn expand_braces(pattern: &str) -> Vec<String> {
     let Some((open, close)) = find_comma_brace_pair(pattern) else {
         return vec![pattern.to_owned()];
@@ -79,6 +81,7 @@ fn segment_matches(pattern: &str, name: &str) -> bool {
     wildcard(&pattern, &name)
 }
 
+#[inline]
 fn wildcard(pattern: &[char], name: &[char]) -> bool {
     match pattern.split_first() {
         None => name.is_empty(),
@@ -93,6 +96,7 @@ fn wildcard(pattern: &[char], name: &[char]) -> bool {
 }
 
 /// `[abc]`, `[a-z]`, `[!x]`/`[^x]`; an unclosed `[` is literal.
+#[inline]
 fn class(rest: &[char], name: &[char]) -> bool {
     let Some(close) = rest
         .iter()

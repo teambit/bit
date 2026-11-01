@@ -1,6 +1,8 @@
 //! Published `is-binary-path` uses binary-extensions 2.3.0, not source-byte heuristics.
 const EXTENSIONS: &str = include_str!("binary_extensions.txt");
 
+#[must_use]
+#[inline]
 pub(super) fn note(file: &str) -> &'static str {
     let file_name = file
         .trim()
