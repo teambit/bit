@@ -1,4 +1,4 @@
-//! Native `bit build [component-pattern]` (`scopes/pipelines/builder/build.cmd.ts`).
+//! Native `bit build [component-pattern]` (`scopes/pipelines/builder/build.cmd.ts`, `--list-tasks`, `--tasks`, `--skip-tests`).
 
 mod runner;
 #[cfg(test)]

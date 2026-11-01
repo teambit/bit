@@ -1,4 +1,4 @@
-//! Link issues block dependency-cache saves; new package manifests invalidate loader entries.
+//! Link issues block dependency-cache saves; new [`WorkspaceComponent`] package manifests invalidate loader entries.
 use crate::commands::status::capture::Capture;
 use bit_install::model::WorkspaceComponent;
 use std::{

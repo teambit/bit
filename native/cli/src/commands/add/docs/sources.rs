@@ -1,4 +1,4 @@
-//! Retain bounded source bytes and exact modification times around documentation decisions.
+//! Retain bounded [`Source`] bytes and exact modification times around documentation decisions.
 use serde_json::Value;
 use std::{
     collections::BTreeMap,

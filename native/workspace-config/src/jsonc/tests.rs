@@ -1,4 +1,4 @@
-//! Unit tests for comment-preserving JSONC parsing, formatting, and policy updates.
+//! Unit tests for comment-preserving `JSONC` [`Document`] [`parse`], formatting, and policy updates.
 
 mod golden;
 

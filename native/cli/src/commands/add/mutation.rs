@@ -1,4 +1,4 @@
-//! Retain published providers while native identity operations materialize and link files.
+//! Retain published [`ProjectedLinker`] providers while native identity operations materialize and link files.
 mod cached;
 mod controls;
 mod fork;

@@ -1,4 +1,4 @@
-//! Unit tests for layered workspace configuration merging and JSONC parsing.
+//! Unit tests for layered workspace configuration [`merge_layers`], [`environment_key`], and [`parse_jsonc`].
 
 use super::{environment_key, merge_layers, parse_jsonc};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Native `bit app [subcommand]` (`scopes/harmony/application/app.cmd.ts`, alias `apps`).
+//! Native `bit app [subcommand]` (`scopes/harmony/application/app.cmd.ts`, alias `apps`, `list` default).
 
 mod help;
 #[cfg(test)]

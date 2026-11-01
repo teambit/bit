@@ -1,4 +1,4 @@
-//! Workspace state patterns execute each loading criterion lazily, in published order.
+//! Workspace state patterns ([`Facts`]) execute each loading criterion lazily, in published order.
 pub(super) use facts::Facts;
 
 mod code;

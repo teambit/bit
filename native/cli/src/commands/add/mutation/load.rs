@@ -1,4 +1,4 @@
-//! Native projected capture and cache publication shared by workspace identity operations.
+//! Native [`Projection`] capture and [`cache`] publication shared by workspace identity operations.
 use super::{
     super::{cache, docs, projection::Projection},
     controls, selection,

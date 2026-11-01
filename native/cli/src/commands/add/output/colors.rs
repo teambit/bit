@@ -1,4 +1,4 @@
-//! Inner colors of the released tracking exceptions, before the CLI's outer red error.
+//! Inner [`Chalk`] colors of the released tracking exceptions, before the CLI's outer red error.
 #[cfg(test)]
 mod tests;
 

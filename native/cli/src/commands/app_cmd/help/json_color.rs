@@ -1,4 +1,4 @@
-//! Released yargs unknown-option ordering and deduplication for app JSON/color flags.
+//! Released yargs unknown-option [`error`] ordering and deduplication for [`is_json_flag`] and color flags.
 
 use super::is_json_flag;
 

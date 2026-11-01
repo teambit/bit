@@ -1,3 +1,4 @@
+//! Aspect configuration mutations (`set`, `unset`, `update`) across `.bitmap` and `component.json`.
 pub(in crate::commands) use self::{
     comp_json::serialize_json_preserving_newline,
     update::{

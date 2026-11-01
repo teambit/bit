@@ -1,4 +1,4 @@
-//! Released app command help and rejected-option output.
+//! Released `bit app` command [`GLOBAL_HELP`], subcommand help, and rejected-option output.
 
 mod json_color;
 

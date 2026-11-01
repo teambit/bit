@@ -1,4 +1,4 @@
-//! Native `--list-tasks` and capsule materialization for `bit build`.
+//! Native `--list-tasks` and [`compute_capsules_root_dirs`] capsule materialization for `bit build`.
 
 use super::{
     super::{

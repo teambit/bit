@@ -1,4 +1,4 @@
-//! Advance only the bitmap preimage acknowledged by a completed native fork publication.
+//! Advance only the `.bitmap` preimage acknowledged by a completed native fork publication on [`ProjectedLinker`].
 use super::{ProjectedLinker, controls};
 use crate::commands::engine::Engine;
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Differential qualification of published dependency placeholder resolution.
+//! Differential qualification of published dependency placeholder resolution in `bit-object-import`.
 //! Verifies [`is_plus`] and [`resolve`] against `@teambit/dependency-resolver`.
 use bit_object_import::plus_version::{is_plus, resolve};
 use std::process::Command;

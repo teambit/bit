@@ -1,4 +1,4 @@
-//! Native `bit aspect get <component-name> [aspect-id]`.
+//! Native `bit aspect get <component-name> [aspect-id]` ([`GetOpts`], [`InspectCtx`]) resolution and formatting.
 
 use super::{InspectCtx, RawOrigin, collect_raw_origins, debug::run_get_debug, find_ws_comp};
 use crate::{

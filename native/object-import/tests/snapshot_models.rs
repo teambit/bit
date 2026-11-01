@@ -1,4 +1,4 @@
-//! Differential tests for `ModelComponent`, `Lane`, and `VersionHistory` serialization.
+//! Differential tests for `ModelComponent`, `Lane`, and `VersionHistory` [`snapshot_projection`] serialization.
 
 #[path = "../src/js_json.rs"]
 pub mod js_json;

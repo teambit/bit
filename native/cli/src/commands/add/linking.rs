@@ -1,4 +1,4 @@
-//! Reuse native links with the final component-load metadata and canonical IO errors.
+//! Reuse native [`WorkspaceComponent`] links with the final component-load metadata and canonical IO errors.
 #[cfg(test)]
 mod tests;
 

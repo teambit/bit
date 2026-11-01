@@ -1,4 +1,4 @@
-//! Project the retained add bitmap into the existing native component loader.
+//! Project the retained add `.bitmap` ([`Projection`]) into the existing native [`Workspace`] component loader.
 use bit_install::{config::WorkspaceConfig, model::WorkspaceComponent, workspace::Workspace};
 use serde_json::{Value, json};
 use std::{io, path::Path};

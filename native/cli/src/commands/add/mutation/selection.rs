@@ -1,4 +1,4 @@
-//! Project the selected persisted identities without inventing new-component versions.
+//! Project the selected persisted identities into [`Projection`] without inventing new-component versions.
 use super::super::projection::{self, Projection};
 use bit_install::{config::WorkspaceConfig, model::WorkspaceComponent, workspace::Workspace};
 use serde_json::{Value, json};

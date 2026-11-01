@@ -1,4 +1,4 @@
-//! Unit tests for workspace file materialization framing and overwrite rules.
+//! Unit tests for workspace file materialization framing and overwrite rules in `bit-object-import`.
 
 use std::{
     fs,

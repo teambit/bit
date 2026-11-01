@@ -1,4 +1,4 @@
-//! Preserve `ScopeMain`'s ordinary-then-state union and ordered AND syntax.
+//! Preserve `ScopeMain`'s ordinary-then-state union and ordered AND syntax via [`patterns`].
 #[cfg(test)]
 mod tests;
 

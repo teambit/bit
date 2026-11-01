@@ -1,4 +1,4 @@
-//! `ComponentFsCache` cache keys and doc-parser's strict, fractional-millisecond staleness test.
+//! `ComponentFsCache` cache keys and doc-parser's strict, fractional-millisecond [`Source`] staleness test.
 #[cfg(test)]
 mod tests;
 

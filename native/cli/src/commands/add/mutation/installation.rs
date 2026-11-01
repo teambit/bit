@@ -1,4 +1,4 @@
-//! Reuse identity providers when bulk renaming invokes the native package manager.
+//! Reuse [`ProjectedLinker`] identity providers when bulk renaming invokes the native [`Installer`].
 use super::ProjectedLinker;
 use crate::commands::{installation::Installer, status::environments::Environments};
 use serde_json::json;

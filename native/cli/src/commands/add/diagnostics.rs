@@ -1,4 +1,4 @@
-//! Released CI diagnostics include Node stacks, so predictable errors delegate before providers.
+//! Released CI diagnostics ([`ci`]) include Node stacks, so predictable [`Projection`] errors delegate before providers.
 use super::projection::Projection;
 use std::{env, fs, io, path::Path};
 #[inline]

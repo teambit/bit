@@ -1,4 +1,4 @@
-//! Pure eligibility precedes provider startup and authoritative projected loading.
+//! Pure [`Prepared`] eligibility precedes provider [`Startup`] and authoritative projected loading.
 use super::{Prepared, diagnostics, docs, options, projection};
 use crate::commands::{
     engine::Engine,

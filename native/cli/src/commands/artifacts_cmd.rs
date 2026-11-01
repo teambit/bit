@@ -1,4 +1,4 @@
-//! Native `bit artifacts <component-pattern>` (`scopes/pipelines/builder/artifact/artifacts.cmd.ts`).
+//! Native `bit artifacts <component-pattern>` (`scopes/pipelines/builder/artifact/artifacts.cmd.ts`, `--aspect`, `--task`, `--files`, `--out-dir`).
 
 mod extractor;
 mod render;

@@ -1,4 +1,4 @@
-//! Legacy status loads share component classes and comparisons with earlier selectors.
+//! Legacy status loads on [`ProjectedLinker`] share component classes and comparisons with earlier selectors.
 use super::{ProjectedLinker, load};
 use crate::commands::{engine::Engine, workspace_command};
 use serde_json::{Value, json};

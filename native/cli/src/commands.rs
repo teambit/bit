@@ -1,5 +1,5 @@
-//! The commands implemented in Rust. A command is looked up by its name or
-//! one of its aliases, exactly as the Node.js CLI spells them.
+//! The commands implemented in Rust (`bit-cli`). A command is looked up by its
+//! name or one of its aliases, exactly as the Node.js CLI spells them.
 
 mod add;
 mod app_cmd;

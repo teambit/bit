@@ -1,4 +1,4 @@
-//! File-only predicates use native source hashing without class or dependency-cache loads.
+//! File-only predicates use native [`Engine`] source hashing without class or dependency-cache loads.
 use super::super::{controls, load};
 use crate::commands::engine::Engine;
 use serde_json::{Map, Value, json};

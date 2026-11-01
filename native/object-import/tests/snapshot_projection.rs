@@ -1,4 +1,4 @@
-//! Differential tests for canonical `Version` snapshot projection and hashing.
+//! Differential tests for canonical `Version` [`snapshot_projection`] and hashing.
 
 #[path = "../src/js_json.rs"]
 pub mod js_json;

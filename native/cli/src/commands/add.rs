@@ -1,4 +1,4 @@
-//! Native tracking: retain the projected bitmap until component links succeed.
+//! Native `bit add` tracking: retain the projected `.bitmap` until component links succeed.
 pub(in crate::commands) mod docs;
 
 pub(in crate::commands) use cache::invalidate as invalidate_component_dependencies;

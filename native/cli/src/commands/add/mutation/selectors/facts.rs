@@ -1,4 +1,4 @@
-//! Loaded-class comparison inputs survive subsequent selector and mutation cache hits.
+//! Loaded-class [`Facts`] comparison inputs survive subsequent selector and mutation cache hits.
 use crate::commands::{engine::Engine, status::capture::Capture};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};

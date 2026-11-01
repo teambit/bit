@@ -1,4 +1,4 @@
-//! Package dependencies from the shared native component-load receipt.
+//! [`ComponentDependencies`] and [`PackageDependency`] extraction from the shared native component-load receipt.
 use bit_install::model::{ComponentDependencies, Lifecycle, PackageDependency};
 use serde_json::Value;
 use std::io;

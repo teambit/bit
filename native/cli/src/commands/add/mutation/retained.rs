@@ -1,4 +1,4 @@
-//! Keep callback source spools alive until identity publication and tooling finish.
+//! Keep callback [`Retained`] source spools alive until identity publication and tooling finish.
 mod import;
 #[cfg(test)]
 mod tests;

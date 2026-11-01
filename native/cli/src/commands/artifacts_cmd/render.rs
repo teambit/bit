@@ -1,4 +1,4 @@
-//! Saving and formatting build artifacts for `bit artifacts`.
+//! Saving ([`save_artifacts_to_dir`]) and formatting ([`render_artifacts_report`]) [`ComponentArtifacts`] for `bit artifacts`.
 
 use super::extractor::{ArtifactFile, ArtifactItem, ComponentArtifacts};
 use crate::commands::{scope_set::Failure, workspace_command::format::Formatter};

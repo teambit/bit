@@ -1,4 +1,4 @@
-//! Artifact extraction and filtering for `bit artifacts`.
+//! Artifact extraction, [`Options`] filtering, and [`render_artifacts_report`] dispatch for `bit artifacts`.
 
 use super::{
     Options,

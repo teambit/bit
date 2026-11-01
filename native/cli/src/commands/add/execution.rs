@@ -1,4 +1,4 @@
-//! Component-load caches, native package links, then one bitmap publication.
+//! Component-load caches, native [`linking`], then one `.bitmap` [`Projection`] publication.
 use super::{
     Prepared, cache, cleanup, dependencies, linking, output, projection::Projection, remote, report,
 };

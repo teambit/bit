@@ -1,4 +1,4 @@
-//! Retain current control facts across callbacks and later authoritative captures.
+//! Retain current [`Capture`] control facts across callbacks and later authoritative [`Engine`] captures.
 #[cfg(test)]
 mod tests;
 

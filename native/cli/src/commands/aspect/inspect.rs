@@ -1,4 +1,4 @@
-//! Native `bit aspect list [pattern]` and `bit aspect get <component-name> [aspect-id]`.
+//! Native `bit aspect list [pattern]` ([`ListOpts`]) and `bit aspect get <component-name> [aspect-id]` inspection.
 
 pub(super) mod debug;
 pub(super) mod get;

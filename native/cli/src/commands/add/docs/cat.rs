@@ -1,4 +1,4 @@
-//! Cold `cat` documentation uses the published parser without starting Harmony.
+//! Cold `cat` documentation ([`CatDocs`], [`cat_prepare`]) uses the published parser without starting Harmony.
 use super::{cache_hits, observe, order, validate};
 use crate::commands::status::cache;
 use serde_json::Value;

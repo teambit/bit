@@ -1,4 +1,4 @@
-//! Handler-specific error rendering without restarting a command after provider effects.
+//! Handler-specific [`Outcome`] error rendering without restarting a command after provider effects.
 mod colors;
 
 use crate::{

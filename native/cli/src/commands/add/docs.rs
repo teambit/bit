@@ -1,4 +1,4 @@
-//! Native cache publication around the published semantic documentation parser.
+//! Native cache publication around the published semantic documentation parser ([`CatDocs`], [`cat_prepare`]).
 pub(in crate::commands) use cat::{CatDocs, cat_prepare};
 
 mod cache_hits;

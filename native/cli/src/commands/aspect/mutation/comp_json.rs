@@ -1,3 +1,5 @@
+//! Updating aspect entries in `.bitmap` ([`update_in_bitmap_row`]) and `component.json` ([`update_in_comp_json`]).
+
 use super::{CompJsonEdit, deep_merge, find_bitmap_row_mut, find_matching_aspect_key};
 use crate::commands::scope_set::Failure;
 use bit_install::workspace::BitmapEntry;

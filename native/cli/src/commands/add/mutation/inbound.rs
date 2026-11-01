@@ -1,4 +1,4 @@
-//! A retained import advances only exact content proofs acknowledged by its native publisher.
+//! A retained import on [`ProjectedLinker`] advances only exact content proofs acknowledged by its native publisher.
 use super::ProjectedLinker;
 use serde_json::Value;
 use std::{io, path::Path};

@@ -1,4 +1,4 @@
-//! Consumer destruction cleans temporary files before publishing the bitmap.
+//! Consumer destruction cleans [`temporary`] files before publishing `.bitmap`.
 use std::{fs, io, path::Path};
 
 #[inline]

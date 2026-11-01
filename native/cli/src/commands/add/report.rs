@@ -1,4 +1,4 @@
-//! Published `AddCmd.report/json` with exact warning and section order.
+//! Published `AddCmd` [`json`] and [`Formatter`] report with exact warning and section order.
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::{Value, json};
 use std::io;

@@ -1,4 +1,4 @@
-//! Published `AddCmd` flags, preserving yargs string-valued override semantics.
+//! Published `AddCmd` [`Options`] flags, preserving yargs string-valued override semantics.
 use bit_object_import::component_tracking::Options as Tracking;
 use serde_json::json;
 pub(super) struct Options {

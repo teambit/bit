@@ -1,4 +1,4 @@
-//! Best-effort collision facts after the tracked bitmap is persisted.
+//! Best-effort remote [`Host`] collision facts after the tracked [`Projection`] `.bitmap` is persisted.
 use super::projection::Projection;
 use crate::{
     commands::{color::Chalk, workspace_command::format::Formatter},

@@ -1,4 +1,4 @@
-//! Acknowledge only content preimages consumed by exact native import publications.
+//! Acknowledge only [`Retained`] content preimages consumed by exact native import publications.
 #[cfg(test)]
 mod tests;
 

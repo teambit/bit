@@ -1,4 +1,4 @@
-//! Unit tests for `package.json` indentation and newline detection.
+//! Unit tests for `package.json` [`detect_indent`] indentation and [`detect_newline`] newline detection.
 
 use super::{detect_indent, detect_newline};
 

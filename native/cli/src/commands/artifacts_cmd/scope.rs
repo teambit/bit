@@ -1,4 +1,4 @@
-//! Bare-scope target resolution for `bit artifacts`.
+//! Bare-scope [`TargetComponent`] resolution ([`resolve_bare_scope_targets`]) and [`filter_artifacts`] for `bit artifacts`.
 
 use super::{
     Options,

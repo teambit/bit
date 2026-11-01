@@ -1,4 +1,4 @@
-//! Debug rendering for `bit aspect get <component-name> --debug [--json]`.
+//! Debug provenance rendering ([`InspectCtx`], [`RawOrigin`]) for `bit aspect get <component-name> --debug [--json]`.
 
 use super::{
     InspectCtx, RawOrigin, collect_raw_origins, find_ws_comp,

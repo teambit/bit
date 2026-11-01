@@ -1,4 +1,4 @@
-//! New-component rename follows the published loaded-class cache across path materialization.
+//! New-component rename ([`ProjectedLinker`]) follows the published loaded-class cache across path materialization.
 use super::{ProjectedLinker, cache, execution, linking, load, selection};
 use crate::commands::color::Chalk;
 use serde_json::{Value, json};
