@@ -19,6 +19,7 @@ pub(super) struct Collector<'a> {
     pub verbose: bool,
 }
 impl<'a> Collector<'a> {
+    #[inline]
     pub(super) fn new(
         scope: &'a Path,
         name: &'a str,
@@ -165,6 +166,7 @@ impl<'a> Collector<'a> {
         }
         Ok(loaded)
     }
+    #[inline]
     fn version(&mut self, hash: &str, version: &Value) {
         self.retained.insert(hash.to_owned());
         self.retained.extend(super::super::graph::version_refs_without_parents(version));
@@ -275,6 +277,7 @@ fn flattened(scope: &Path, version: &Value) -> io::Result<Vec<String>> {
     result.extend(flattened_values(&version["flattenedDevDependencies"])?);
     Ok(result)
 }
+#[inline]
 fn flattened_values(value: &Value) -> io::Result<Vec<String>> {
     if value.is_null() {
         return Ok(Vec::new());
@@ -318,6 +321,7 @@ fn flattened_entry(value: &Value) -> io::Result<String> {
     Ok(format!("{}/{name}@{ver}", text(scope)?))
 }
 
+#[inline]
 fn flattened_str_id(id_str: &str, value: &Value) -> io::Result<String> {
     if id_str.contains('@') {
         return Ok(id_str.to_owned());
@@ -326,6 +330,7 @@ fn flattened_str_id(id_str: &str, value: &Value) -> io::Result<String> {
     Ok(format!("{id_str}@{ver}"))
 }
 
+#[inline]
 fn flattened_ver<'a>(
     inner: &'a Value,
     value: &'a Value,

@@ -56,6 +56,8 @@ impl Id {
     }
 
     /// `id.changeVersion(version)`.
+    #[inline]
+    #[must_use]
     pub fn with_version(&self, version: Option<String>) -> Self {
         let version = version
             .map(|val| val.trim().to_owned())
@@ -64,11 +66,15 @@ impl Id {
     }
 
     /// `id.scope`.
+    #[inline]
+    #[must_use]
     pub fn scope(&self) -> &str {
         &self.scope
     }
 
     /// `hasVersion()`: a version other than `latest` or `head`.
+    #[inline]
+    #[must_use]
     pub fn has_version(&self) -> bool {
         self.version
             .as_deref()
@@ -79,11 +85,15 @@ impl Id {
             })
     }
 
+    #[inline]
+    #[must_use]
     pub fn without_version(&self) -> String {
         format!("{}/{}", self.scope, self.name)
     }
 
     /// `id.toString()`.
+    #[inline]
+    #[must_use]
     pub fn display(&self) -> String {
         match self.version
             .as_deref()
@@ -96,11 +106,15 @@ impl Id {
     }
 
     /// `searchWithoutVersion`'s test: same scope and name.
+    #[inline]
+    #[must_use]
     pub fn same_without_version(&self, other: &Self) -> bool {
         self.scope == other.scope && self.name == other.name
     }
 
     /// `isEqual`: same scope and name, and the same version where both have one.
+    #[inline]
+    #[must_use]
     pub fn same(&self, other: &Self) -> bool {
         let same_version = match (self.has_version(), other.has_version()) {
             (true, true) => {
@@ -113,6 +127,7 @@ impl Id {
     }
 
     /// `ComponentIdList.uniqFromArray`: the first of each `toString()`.
+    #[inline]
     pub fn unique(ids: impl IntoIterator<Item = Self>) -> Vec<Self> {
         let mut seen = std::collections::HashSet::new();
         ids.into_iter()

@@ -5,6 +5,7 @@ mod tests;
 use super::bare;
 use serde_json::Value;
 
+#[inline]
 pub(super) fn classify(
     local: &[String],
     remote: &[String],
@@ -25,6 +26,7 @@ pub(super) fn classify(
     remotes.reverse();
     (locals, remotes)
 }
+#[inline]
 fn equal(left: &str, right: &str, pool: &[Value]) -> bool {
     bare(left) == bare(right) && version(left, pool) == version(right, pool)
 }
@@ -52,6 +54,7 @@ fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
     })
 }
 
+#[inline]
 fn row_raw_id(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -65,6 +68,7 @@ fn row_raw_id(row: &Value) -> Option<&str> {
         })
 }
 
+#[inline]
 fn is_concrete_version(version: &str) -> bool {
     !version.is_empty()
         && !version.eq_ignore_ascii_case("latest")

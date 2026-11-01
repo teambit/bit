@@ -193,6 +193,7 @@ fn apply_gc_arg(opts: &mut Options, arg: &str, next: Option<&str>) -> Option<usi
     Some(1)
 }
 
+#[inline]
 fn apply_gc_short_flags(arg: &str, opts: &mut Options) -> Option<()> {
     let flags = arg
         .strip_prefix('-')
@@ -208,6 +209,7 @@ fn apply_gc_short_flags(arg: &str, opts: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 pub(super) fn parse_keep_versions(raw: &str) -> Option<u64> {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
@@ -238,6 +240,7 @@ fn run_restore(
     restore::workspace(&root.path, args, options)
 }
 
+#[inline]
 fn is_workspace_scope_empty(scope_dir: &Path) -> bool {
     !dir_has_any_file(&scope_dir.join("objects"))
         && !dir_has_any_file(&scope_dir.join("deleted-objects"))
@@ -285,6 +288,7 @@ fn run_empty_workspace_gc(
     emit_report(root, args, data)
 }
 
+#[inline]
 pub(super) fn format_empty_gc_report(dry_run: bool, backup: bool, chalk: Chalk) -> String {
     let empty_res =
         GcResult { flags: GcRunFlags { dry_run, backup, backup_dir: None }, ..GcResult::default() };
@@ -302,6 +306,7 @@ fn emit_json(root: &ScopeRoot, args: &[OsString], payload: &Value) -> io::Result
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn emit_report(root: &ScopeRoot, args: &[OsString], data: String) -> io::Result<Outcome> {
     let report = Report { data, code: 0, details: None };
     if root.bare {

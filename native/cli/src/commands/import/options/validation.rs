@@ -1,5 +1,6 @@
 use super::{DependencyOptions, WriteOptions, has_wildcard, valid_pattern};
 
+#[inline]
 pub(super) fn args(flags: &[&str], ids: &[String]) -> bool {
     valid_import_flags(flags)
         && (!flags.contains(&"--lane-only") || ids.iter().any(|id| has_wildcard(id)))
@@ -8,6 +9,7 @@ pub(super) fn args(flags: &[&str], ids: &[String]) -> bool {
             .all(|id| !has_wildcard(id) || valid_pattern(id))
 }
 
+#[inline]
 fn valid_import_flags(flags: &[&str]) -> bool {
     let allowed = [
         "--json",
@@ -47,6 +49,7 @@ fn valid_import_flags(flags: &[&str]) -> bool {
             })
 }
 
+#[inline]
 pub(super) fn mode(
     write: &WriteOptions,
     ids: &[String],
@@ -71,6 +74,7 @@ pub(super) fn mode(
         && valid_path(path, ids, objects_only)
 }
 
+#[inline]
 fn valid_dependencies(
     options: &DependencyOptions,
     ids: &[String],
@@ -89,6 +93,7 @@ fn valid_dependencies(
         || (ids.is_empty() && enabled && options.raw_depth.is_none())
 }
 
+#[inline]
 fn valid_merge_mode(
     merge: bool,
     strategy: Option<&str>,
@@ -108,6 +113,7 @@ fn valid_merge_mode(
     strategy.is_some_and(|strat| !strat.trim().is_empty()) && ids.len() == 1
 }
 
+#[inline]
 fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {
     match path {
         None => true,

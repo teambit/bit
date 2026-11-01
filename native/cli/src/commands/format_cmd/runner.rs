@@ -42,10 +42,12 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         workspace_command::execute_then(root, args, "format", work)
     }
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message.trim())
 }
 
+#[inline]
 fn supported_writes(
     check: bool,
     components: &[workspace_command::component_service::Component],
@@ -72,6 +74,7 @@ fn supported_writes(
     offset == files.len() && offset == inputs.len()
 }
 
+#[inline]
 fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
     if inputs.len() != outputs.len() {
         return false;

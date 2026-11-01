@@ -52,6 +52,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     let mut json = false;
     let rest = args.get(1..).unwrap_or_default();
@@ -134,6 +135,7 @@ fn read_scope_layer(cwd: &Path, ws_root: Option<&Path>) -> io::Result<Value> {
         .unwrap_or(Value::Null))
 }
 
+#[inline]
 fn known_global_dirs(
     cache: &Path,
     config_dir: &Path,
@@ -161,6 +163,7 @@ fn known_global_dirs(
     ]
 }
 
+#[inline]
 fn render_json(dirs: &[(&'static str, String)]) -> io::Result<String> {
     let mut map = Map::with_capacity(dirs.len());
     for (key, val) in dirs {
@@ -169,6 +172,7 @@ fn render_json(dirs: &[(&'static str, String)]) -> io::Result<String> {
     serde_json::to_string_pretty(&Value::Object(map)).map_err(io::Error::other)
 }
 
+#[inline]
 fn render_report(dirs: &[(&'static str, String)], chalk: Chalk) -> String {
     let pad_max = dirs
         .iter()

@@ -47,6 +47,7 @@ pub(super) fn values<'a>(args: &[&'a str]) -> Option<Values<'a>> {
     }
     Some(values)
 }
+#[inline]
 fn inline_value(values: &mut Values<'_>, argument: &str) -> Option<Option<()>> {
     if let Some(val) = argument.strip_prefix("--write-deps=") {
         return Some(set_adoption_slot(&mut values.write_deps, val));
@@ -55,6 +56,7 @@ fn inline_value(values: &mut Values<'_>, argument: &str) -> Option<Option<()>> {
         .strip_prefix("--dependents-via=")
         .map(|val| set_adoption_slot(&mut values.dependents_via, val))
 }
+#[inline]
 fn set_adoption_slot(field: &mut Option<String>, value: &str) -> Option<()> {
     let trimmed = value.trim();
     if field.is_some()
@@ -71,6 +73,7 @@ fn set_adoption_slot(field: &mut Option<String>, value: &str) -> Option<()> {
     Some(())
 }
 impl AdoptionOptions {
+    #[inline]
     pub(super) fn parse(flags: &[&str], write_deps: Option<String>) -> Self {
         Self {
             track_only: flags.contains(&"--track-only"),
@@ -78,11 +81,14 @@ impl AdoptionOptions {
             write_deps,
         }
     }
+    #[must_use]
+    #[inline]
     pub fn request(&self) -> Value {
         json!({"trackOnly":self.track_only,"writeToEmptyDir":self.write_to_empty_dir,"writeDeps":self.write_deps})
     }
 }
 impl DependentsOptions {
+    #[inline]
     pub(super) fn parse(flags: &[&str], via: Option<String>) -> Self {
         Self {
             enabled: flags.contains(&"--dependents"),
@@ -91,12 +97,17 @@ impl DependentsOptions {
             silent: flags.contains(&"--silent"),
         }
     }
-    pub fn active(&self) -> bool {
+    #[must_use]
+    #[inline]
+    pub const fn active(&self) -> bool {
         self.enabled || self.via.is_some() || self.all
     }
-    pub(super) fn valid(&self, ids: &[String]) -> bool {
+    #[inline]
+    pub(super) const fn valid(&self, ids: &[String]) -> bool {
         ids.is_empty() || !self.active() || self.silent
     }
+    #[must_use]
+    #[inline]
     pub fn request(&self) -> Value {
         let via = self.via
             .as_deref()

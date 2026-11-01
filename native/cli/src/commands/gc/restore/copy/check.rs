@@ -2,6 +2,7 @@
 use super::failure;
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn target(
     source: &Path,
     target: &Path,
@@ -19,6 +20,7 @@ pub(super) fn target(
     }
     Ok(())
 }
+#[inline]
 pub(super) fn parents(source: &Path, target: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     if source.as_os_str().is_empty() || target.as_os_str().is_empty() {
         return Err(io::Error::other("Source and destination must not be the same."));
@@ -35,6 +37,7 @@ pub(super) fn parents(source: &Path, target: &Path, metadata: &fs::Metadata) -> 
     }
     Ok(())
 }
+#[inline]
 fn check_parent_entry(
     source: &Path,
     target: &Path,
@@ -51,6 +54,7 @@ fn check_parent_entry(
         Err(error) => Err(failure(error, "stat", parent)),
     }
 }
+#[inline]
 fn subdirectory(source: &Path, target: &Path) -> io::Error {
     io::Error::other(format!(
         "Cannot copy '{}' to a subdirectory of itself, '{}'.",
@@ -59,6 +63,7 @@ fn subdirectory(source: &Path, target: &Path) -> io::Error {
     ))
 }
 #[cfg(unix)]
+#[inline]
 fn identical(first: &fs::Metadata, second: &fs::Metadata) -> bool {
     use std::os::unix::fs::MetadataExt;
     first.ino() != 0
@@ -67,10 +72,12 @@ fn identical(first: &fs::Metadata, second: &fs::Metadata) -> bool {
         && first.dev() == second.dev()
 }
 #[cfg(not(unix))]
+#[inline]
 fn identical(_: &fs::Metadata, _: &fs::Metadata) -> bool {
     false
 }
 
+#[inline]
 fn entry_types(
     source: &Path,
     target: &Path,

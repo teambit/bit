@@ -12,6 +12,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
+#[inline]
 pub(super) fn execute_scope_graph(
     scope_dir: &Path,
     options: &Options,
@@ -57,6 +58,7 @@ fn build_scope_graph(scope_dir: &Path, options: &Options) -> Result<CompGraph, F
     Ok(graph)
 }
 
+#[inline]
 fn apply_scope_filters(
     graph: &mut CompGraph,
     options: &Options,
@@ -80,6 +82,7 @@ fn apply_scope_filters(
     Ok(())
 }
 
+#[inline]
 fn render_scope_graph(
     graph: &CompGraph,
     json_out: bool,
@@ -235,6 +238,7 @@ fn resolve_scope_seeder(scope_dir: &Path, raw_id: &str) -> Result<(String, Value
     ))
 }
 
+#[inline]
 fn read_version_object(scope_dir: &Path, ver_hash: &str) -> Result<Value, Failure> {
     let (kind, ver_val) = bit_object_import::read_scope_object(scope_dir, ver_hash)
         .ok()
@@ -246,6 +250,7 @@ fn read_version_object(scope_dir: &Path, ver_hash: &str) -> Result<Value, Failur
     Ok(ver_val)
 }
 
+#[inline]
 fn is_version_removed(ver_val: &Value) -> bool {
     ver_val["extensions"]
         .as_array()
@@ -339,6 +344,7 @@ fn read_flattened_edges(
         .ok_or_else(|| Failure::Declined("invalid flattenedEdge entry".into()))
 }
 
+#[inline]
 fn parse_dep_item(item: &Value) -> Option<String> {
     item.as_str()
         .map(str::trim)
@@ -347,6 +353,7 @@ fn parse_dep_item(item: &Value) -> Option<String> {
         .or_else(|| format_dep_id(item))
 }
 
+#[inline]
 fn parse_edge_item(item: &Value) -> Option<(String, String, String)> {
     if let Some(arr) = item.as_array() {
         let [src, dst, edge_type] = arr.as_slice() else { return None };

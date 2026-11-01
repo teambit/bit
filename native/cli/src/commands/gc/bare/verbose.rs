@@ -2,6 +2,7 @@
 use super::repository::{Object, identity, text, unsupported};
 use std::{collections::BTreeMap, io};
 
+#[inline]
 pub(super) fn preflight(objects: &BTreeMap<String, Object>, deleted: &[String]) -> io::Result<()> {
     if objects
         .values()
@@ -14,6 +15,7 @@ pub(super) fn preflight(objects: &BTreeMap<String, Object>, deleted: &[String]) 
     }
     Ok(())
 }
+#[inline]
 pub(super) fn deleted(
     objects: &BTreeMap<String, Object>,
     hashes: &[String],
@@ -29,6 +31,7 @@ pub(super) fn deleted(
         })
         .collect()
 }
+#[inline]
 fn description(hash: &str, object: &Object) -> io::Result<String> {
     let hash = hash.trim();
     let kind = object.kind.as_str();

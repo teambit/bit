@@ -25,7 +25,7 @@ pub struct Options {
     pub selection: SelectionOptions,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct WriteOptions {
     pub skip_write_config_files: bool,
     pub skip_dependency_installation: bool,
@@ -129,6 +129,7 @@ fn take_path<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
     Some((remaining, path))
 }
 
+#[inline]
 fn set_bounded_option(slot: &mut Option<String>, value: &str) -> Option<()> {
     let trimmed = value.trim();
     if slot.is_some() || trimmed.is_empty() || trimmed.starts_with('-') || trimmed.len() > 4096 {
@@ -174,18 +175,21 @@ fn split<'a>(args: &[&'a str]) -> Option<(Vec<String>, Vec<&'a str>)> {
     Some((ids, flags))
 }
 
+#[inline]
 fn consume_trailing_import_ids<'a>(
     iter: impl Iterator<Item = &'a str>,
     ids: &mut Vec<String>,
 ) -> Option<()> {
     for raw_arg in iter {
         let arg = raw_arg.trim();
-        (!arg.is_empty()
-            && !arg.starts_with('-')
-            && arg.len() <= 4096
-            && !arg.contains('\0')
-            && ids.len() < 4096)
-            .then_some(())?;
+        if arg.is_empty()
+            || arg.starts_with('-')
+            || arg.len() > 4096
+            || arg.contains('\0')
+            || ids.len() >= 4096
+        {
+            return None;
+        }
         ids.push(arg.to_string());
     }
     Some(())
@@ -206,22 +210,12 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
     {
         return None;
     }
-    let all_history = flags.contains(&"--all-history");
     Some(Options {
         operation: "fetch",
         ids,
         objects_only: true,
-        all_history,
-        write: WriteOptions {
-            skip_write_config_files: false,
-            skip_dependency_installation: false,
-            override_existing: false,
-            merge: false,
-            path: None,
-            merge_strategy: None,
-            dependencies: DependencyOptions::default(),
-            adoption: AdoptionOptions::default(),
-        },
+        all_history: flags.contains(&"--all-history"),
+        write: WriteOptions::default(),
         lanes: lanes == 1,
         output: OutputOptions::default(),
         // The released FetchCmd advertises this flag but destructures the
@@ -302,6 +296,7 @@ fn import_write(
     validation::mode(&write, ids, objects_only, explicit_objects).then_some(write)
 }
 
+#[inline]
 fn merge_strategy(flags: &[&str]) -> Option<Option<String>> {
     let mut strategy = None;
     for flag in flags {
@@ -316,12 +311,15 @@ fn merge_strategy(flags: &[&str]) -> Option<Option<String>> {
 }
 
 /// `hasWildcard`.
+#[must_use]
+#[inline]
 pub fn has_wildcard(id: &str) -> bool {
     id.contains('*')
 }
 
 /// `<scope>/<namespaces with wildcards>`: `getRemoteCompIdsByWildcards`
 /// needs the scope written out.
+#[inline]
 fn valid_pattern(id: &str) -> bool {
     let id = id.trim();
     id.split_once('/')
@@ -333,12 +331,18 @@ fn valid_pattern(id: &str) -> bool {
 }
 
 impl Options {
+    #[must_use]
+    #[inline]
     pub fn validation_error(&self) -> Option<String> {
         semantic::error(self)
     }
+    #[must_use]
+    #[inline]
     pub fn needs_installer(&self) -> bool {
         self.installs() && self.validation_error().is_none()
     }
+    #[must_use]
+    #[inline]
     pub fn requires_facts(&self) -> bool {
         self.validation_error().is_none()
             && (self.installs()
@@ -346,11 +350,15 @@ impl Options {
                 || self.selection.dependents.active())
     }
     /// Whether the components are written and then installed.
+    #[must_use]
+    #[inline]
     pub const fn installs(&self) -> bool {
         !self.objects_only && !self.write.skip_dependency_installation
     }
 
     /// The wildcard patterns, listed on their remotes before importing.
+    #[must_use]
+    #[inline]
     pub fn wildcards(&self) -> Vec<&String> {
         self.ids
             .iter()
@@ -359,6 +367,8 @@ impl Options {
     }
 
     /// The `options` of `commandInboundPrepare`.
+    #[must_use]
+    #[inline]
     pub fn request(&self) -> Value {
         json!({
             "objectsOnly": self.objects_only,
@@ -380,6 +390,7 @@ impl Options {
     }
 }
 
+#[inline]
 fn import_output(flags: &[&str]) -> OutputOptions {
     OutputOptions {
         json: flags.contains(&"--json") || flags.contains(&"-j"),
@@ -387,6 +398,7 @@ fn import_output(flags: &[&str]) -> OutputOptions {
     }
 }
 
+#[inline]
 fn import_selection(flags: &[&str], dependents: DependentsOptions) -> SelectionOptions {
     SelectionOptions {
         include_deprecated: flags.contains(&"--include-deprecated"),

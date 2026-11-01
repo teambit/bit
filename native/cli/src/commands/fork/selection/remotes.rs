@@ -7,9 +7,10 @@ use serde_json::{Value, json};
 use std::{io, path::Path};
 
 pub(super) fn ids(root: &Path, options: &Options) -> io::Result<Vec<String>> {
+    let scope_list = scopes(options);
     let mut result = Vec::new();
-    let mut seen = std::collections::HashSet::new();
-    for scope in scopes(options) {
+    let mut seen = std::collections::HashSet::with_capacity(scope_list.len());
+    for scope in scope_list {
         if !seen.insert(scope.clone()) {
             continue;
         }
@@ -26,6 +27,7 @@ pub(super) fn ids(root: &Path, options: &Options) -> io::Result<Vec<String>> {
     }
     Ok(result)
 }
+#[inline]
 fn scopes(options: &Options) -> Vec<String> {
     if options.scope_fork {
         return vec![options.source.trim().to_owned()];
@@ -40,6 +42,7 @@ fn scopes(options: &Options) -> Vec<String> {
         })
         .collect()
 }
+#[inline]
 fn pattern(options: &Options, scope: &str) -> Option<String> {
     if !options.scope_fork {
         return Some(options.source.clone());
@@ -56,6 +59,7 @@ fn pattern(options: &Options, scope: &str) -> Option<String> {
         })
         .filter(|joined| !joined.is_empty())
 }
+#[inline]
 fn qualify_scope_part(part: &str, scope: &str) -> Option<String> {
     let trimmed = part.trim();
     let (prefix, body) = trimmed
@@ -85,12 +89,14 @@ fn list(root: &Path, scope: &str) -> io::Result<Vec<String>> {
     Ok(ids)
 }
 
+#[inline]
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
 
+#[inline]
 fn row_identity(row: &Value) -> io::Result<String> {
     if let Some(id) = non_empty_str(&row["id"]).or_else(|| non_empty_str(&row["identity"])) {
         return Ok(id.to_owned());

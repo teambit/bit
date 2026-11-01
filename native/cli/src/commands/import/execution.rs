@@ -35,6 +35,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     }
     execute_selected(root, args, options, lifecycle, chalk, &selection)
 }
+#[inline]
 fn preflight_outcome(
     root: &Path,
     args: &[OsString],
@@ -154,6 +155,7 @@ fn remove_imported_packages_from_root_policy(root: &Path, ids: &[String]) -> io:
     )
 }
 
+#[inline]
 fn imported_package_name(id: &str) -> Option<String> {
     let id = id.trim();
     let without_ver = match id.rsplit_once('@') {
@@ -183,6 +185,7 @@ fn imported_package_name(id: &str) -> Option<String> {
     }
 }
 
+#[inline]
 fn root_policy_has_any(root: &Path, packages: &[String]) -> bool {
     let Ok(bytes) = std::fs::read(root.join("workspace.jsonc"))
         .or_else(|_| std::fs::read(root.join("workspace.json")))
@@ -206,6 +209,7 @@ fn root_policy_has_any(root: &Path, packages: &[String]) -> bool {
                 || policy["peerDependencies"].get(pkg).is_some()
         })
 }
+#[inline]
 fn failure(
     root: &Path,
     args: &[OsString],

@@ -40,6 +40,7 @@ pub(super) fn move_object(scope: &Path, hash: &str) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn check_target(
     source: &Path,
     target: &Path,
@@ -59,6 +60,7 @@ fn check_target(
     }
     Ok(())
 }
+#[inline]
 fn check_parents(source: &Path, target: &Path) -> io::Result<()> {
     for parent in target.ancestors().skip(1) {
         if Some(parent) == source.parent() || parent.parent().is_none() {
@@ -70,6 +72,7 @@ fn check_parents(source: &Path, target: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn metadata_if_present(path: &Path, follow: bool) -> io::Result<Option<fs::Metadata>> {
     let result = if follow { fs::metadata(path) } else { fs::symlink_metadata(path) };
     match result {
@@ -79,6 +82,7 @@ fn metadata_if_present(path: &Path, follow: bool) -> io::Result<Option<fs::Metad
     }
 }
 #[cfg(unix)]
+#[inline]
 fn identical(first: &fs::Metadata, second: &fs::Metadata) -> bool {
     use std::os::unix::fs::MetadataExt;
     first.ino() != 0
@@ -87,10 +91,12 @@ fn identical(first: &fs::Metadata, second: &fs::Metadata) -> bool {
         && first.dev() == second.dev()
 }
 #[cfg(not(unix))]
+#[inline]
 fn identical(_: &fs::Metadata, _: &fs::Metadata) -> bool {
     false
 }
 
+#[inline]
 fn object_move_paths(
     scope: &Path,
     hash: &str,
@@ -107,6 +113,7 @@ fn object_move_paths(
     Ok((source, target))
 }
 
+#[inline]
 fn split_hash(hash: &str) -> io::Result<(&str, &str)> {
     let trimmed = hash.trim();
     if !super::repository::hash(trimmed) {
@@ -116,6 +123,7 @@ fn split_hash(hash: &str) -> io::Result<(&str, &str)> {
 }
 
 /// Every operation in a `pMapPool` chunk starts, even when another member fails.
+#[inline]
 pub(in crate::commands::gc) fn move_batch(scope: &Path, hashes: &[String]) -> io::Result<()> {
     batch(hashes, |hash| move_object(scope, hash))
 }

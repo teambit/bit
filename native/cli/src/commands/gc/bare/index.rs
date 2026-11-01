@@ -29,6 +29,7 @@ pub(super) fn prepare(
     Ok(Some(bytes))
 }
 
+#[inline]
 fn component(value: &Value, hash: &str) -> io::Result<Value> {
     let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
     let scope = normalized_scope(value).unwrap_or(Value::Null);
@@ -36,6 +37,7 @@ fn component(value: &Value, hash: &str) -> io::Result<Value> {
     Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":is_symlink,"hash":hash}))
 }
 
+#[inline]
 fn lane(value: &Value, hash: &str) -> io::Result<Value> {
     let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
     let mut id = json!({"name":name});
@@ -45,6 +47,7 @@ fn lane(value: &Value, hash: &str) -> io::Result<Value> {
     Ok(json!({"id":id,"hash":hash}))
 }
 
+#[inline]
 fn normalized_scope(value: &Value) -> Option<Value> {
     let raw = value
         .get("scope")
@@ -59,6 +62,7 @@ fn normalized_scope(value: &Value) -> Option<Value> {
     Some(raw.clone())
 }
 
+#[inline]
 pub(super) fn write(scope: &Path, bytes: Option<&[u8]>) -> io::Result<()> {
     if let Some(bytes) = bytes {
         let path = scope.join("index.json");
@@ -68,6 +72,7 @@ pub(super) fn write(scope: &Path, bytes: Option<&[u8]>) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(super) fn existing(scope: &Path) -> io::Result<bool> {
     let path = scope.join("index.json");
     match fs::symlink_metadata(&path) {

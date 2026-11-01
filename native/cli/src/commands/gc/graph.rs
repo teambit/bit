@@ -43,6 +43,7 @@ impl GcGraph {
         }
     }
 
+    #[inline]
     pub fn add_root(&mut self, hash: &str) {
         let hash = hash.trim();
         if self.version_map.contains_key(hash) {
@@ -50,6 +51,7 @@ impl GcGraph {
         }
     }
 
+    #[inline]
     pub fn add_new_root(&mut self, hash: &str) -> bool {
         let hash = hash.trim();
         if self.root_versions.contains(hash) || !self.version_map.contains_key(hash) {
@@ -231,6 +233,7 @@ impl GcGraph {
         out
     }
 
+    #[inline]
     pub fn find_comp(&self, scope: Option<&str>, name: &str) -> Option<&Value> {
         self.models.get(scope, name)
     }
@@ -308,6 +311,7 @@ pub(super) fn parse_dep_value(val: &Value) -> Option<CompIdSpec> {
     Some(CompIdSpec { scope, name: name_str.to_owned(), version })
 }
 
+#[inline]
 fn parse_dep_str(str_val: &str) -> CompIdSpec {
     let (id_part, version) = str_val
         .rsplit_once('@')
@@ -321,6 +325,7 @@ fn parse_dep_str(str_val: &str) -> CompIdSpec {
     CompIdSpec { scope, name, version }
 }
 
+#[inline]
 fn version_parents(ver_val: &Value) -> Vec<String> {
     ver_val["parents"]
         .as_array()
@@ -335,6 +340,7 @@ fn version_parents(ver_val: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
+#[inline]
 fn version_dependencies(scope_dir: &Path, ver_val: &Value) -> Vec<CompIdSpec> {
     let mut specs = collect_flattened_deps(scope_dir, ver_val);
     let Some(exts) = ver_val["extensions"].as_array() else { return specs };

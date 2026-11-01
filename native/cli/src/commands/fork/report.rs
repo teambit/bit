@@ -3,10 +3,12 @@ use crate::commands::{
     color::Chalk,
     workspace_command::{format::Formatter, results::Report},
 };
+#[inline]
 pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report {
     let formatter = Formatter::new(chalk);
     let summary = summary(options, ids, chalk);
-    let mut sections = vec![formatter.success_summary(&summary)];
+    let mut sections = Vec::with_capacity(1 + usize::from(options.multiple()));
+    sections.push(formatter.success_summary(&summary));
     if options.multiple() {
         let items = ids
             .iter()
@@ -21,6 +23,7 @@ pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report 
     }
     Report { data: sections.join("\n\n"), code: 0, details: None }
 }
+#[inline]
 fn summary(options: &Options, ids: &[String], chalk: Chalk) -> String {
     let source = options.source.trim();
     if options.scope_fork {
@@ -41,6 +44,7 @@ fn summary(options: &Options, ids: &[String], chalk: Chalk) -> String {
         format!("forked {} from {}", chalk.bold(first_id), chalk.bold(source))
     }
 }
+#[inline]
 fn target_scope<'a>(options: &'a Options, ids: &'a [String]) -> &'a str {
     options.scope
         .as_deref()

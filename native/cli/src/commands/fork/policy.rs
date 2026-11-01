@@ -22,6 +22,7 @@ pub(super) fn persist(
     print!("{}", linker.take_stdout());
     Ok(())
 }
+#[inline]
 fn build_policy(
     config: &Value,
     facts: &[Value],
@@ -47,6 +48,7 @@ fn build_policy(
     }
     Ok(Value::Object(policy))
 }
+#[inline]
 fn insert_policy_entry(
     policy: &mut serde_json::Map<String, Value>,
     entry: &Value,
@@ -74,13 +76,14 @@ fn insert_policy_entry(
         .insert(id.into(), Value::String(version.to_owned()));
     Ok(())
 }
+#[inline]
 fn dependencies(
     facts: &[Value],
     old_packages: &[String],
     multiple: bool,
 ) -> io::Result<Vec<Value>> {
-    let mut seen = std::collections::HashSet::new();
-    let mut entries = Vec::new();
+    let mut seen = std::collections::HashSet::with_capacity(facts.len());
+    let mut entries = Vec::with_capacity(facts.len());
     for source in facts {
         for entry in bit_object_import::component_fork::dependency_policy(source)? {
             let id = entry["dependencyId"]

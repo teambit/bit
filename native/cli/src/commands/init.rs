@@ -121,6 +121,7 @@ fn report(
     message
 }
 
+#[inline]
 fn defaults(options: &mut options::Options) -> io::Result<()> {
     let global =
         bit_workspace_config::read_global_config(&bit_workspace_config::global_config_dir())?;
@@ -135,6 +136,7 @@ fn defaults(options: &mut options::Options) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn default_option_value(global: &serde_json::Value, key: &str) -> Option<String> {
     let clean = |raw: &str| {
         let trimmed = raw
@@ -148,6 +150,7 @@ fn default_option_value(global: &serde_json::Value, key: &str) -> Option<String>
         .or_else(|| global[key].as_str().and_then(clean))
 }
 
+#[inline]
 fn failure(args: &[OsString], error: &str) -> io::Result<Outcome> {
     let chalk = Chalk::detect(args);
     let output = workspace_command::loader_output(chalk, false);
@@ -157,6 +160,7 @@ fn failure(args: &[OsString], error: &str) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 
+#[inline]
 fn validation_error(options: &options::Options) -> Option<String> {
     if options.bare.is_some() {
         return (options.resets.repair || options.resets.hard).then(|| {
@@ -181,6 +185,7 @@ fn validation_error(options: &options::Options) -> Option<String> {
     (!valid).then(|| format!(r#"error: "{name}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]"#))
 }
 
+#[inline]
 fn valid_scope_part(part: &str) -> bool {
     !part.is_empty()
         && part

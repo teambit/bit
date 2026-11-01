@@ -29,6 +29,7 @@ pub(super) fn document(
     bit_workspace_config::render_scope_json(&scope)
 }
 
+#[inline]
 fn current(path: &Path, fresh: bool) -> io::Result<Value> {
     if fresh || !path.join("objects").is_dir() {
         return Ok(Value::Null);
@@ -40,6 +41,7 @@ fn current(path: &Path, fresh: bool) -> io::Result<Value> {
     }
 }
 
+#[inline]
 pub(super) fn valid_name(name: &str) -> io::Result<String> {
     let mut dot = false;
     let name = name
@@ -67,6 +69,7 @@ pub(super) fn valid_name(name: &str) -> io::Result<String> {
     Ok(name)
 }
 
+#[inline]
 pub(super) fn local_name(cwd: &Path) -> io::Result<String> {
     let mut random = [0u8; 4];
     getrandom::fill(&mut random).map_err(|error| io::Error::other(error.to_string()))?;
@@ -79,6 +82,7 @@ pub(super) fn local_name(cwd: &Path) -> io::Result<String> {
     ))
 }
 
+#[inline]
 fn copy_current(scope: &mut Value, current: &Value) {
     for key in
         ["name", "remotes", "resolverPath", "license", "groupName", "version", "lanes", "config"]

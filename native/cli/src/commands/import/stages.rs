@@ -91,6 +91,7 @@ impl Planned {
     }
 }
 
+#[inline]
 fn has_active_lane(value: &Value) -> bool {
     [
         value.as_str(),

@@ -62,6 +62,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("bare scope graph delegated".into()))
 }
 
+#[inline]
 fn emit_fast_graph_error(cwd: &Path, args: &[OsString], err: &'static str) -> io::Result<Outcome> {
     if let Some(root) = workspace::root(cwd) {
         return workspace_command::execute_without_loader(&root, args, "graph", |_| {
@@ -123,6 +124,7 @@ fn finish_scope_graph(scope: &Path, args: &[OsString], options: &Options) -> io:
     }
 }
 
+#[inline]
 pub(super) fn fast_graph_error(cwd: &Path, options: &Options) -> Option<&'static str> {
     if let Some(remote_name) = &options.remote {
         if remote_name.trim().is_empty() && options.id.is_none() {
@@ -144,6 +146,7 @@ pub(super) fn fast_graph_error(cwd: &Path, options: &Options) -> Option<&'static
     None
 }
 
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
@@ -158,6 +161,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn consume_trailing_graph_id(rest: &[&str], options: &mut Options) -> Option<()> {
     for &arg in rest {
         let trimmed = arg.trim();
@@ -201,6 +205,7 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
     Some(())
 }
 
+#[inline]
 fn take_optional_remote(args: &[&str], idx: &mut usize) -> String {
     if let Some(&next) = args.get(*idx + 1)
         && !next.trim().starts_with('-')
@@ -212,6 +217,7 @@ fn take_optional_remote(args: &[&str], idx: &mut usize) -> String {
     }
 }
 
+#[inline]
 fn take_required_layout(args: &[&str], idx: &mut usize) -> Option<String> {
     let next = args.get(*idx + 1)?.trim();
     if next.is_empty() || next.starts_with('-') {
@@ -221,6 +227,7 @@ fn take_required_layout(args: &[&str], idx: &mut usize) -> Option<String> {
     Some(next.to_owned())
 }
 
+#[inline]
 fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
     let arg = arg.trim();
     if let Some(val) = arg

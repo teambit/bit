@@ -52,6 +52,7 @@ pub(super) struct DeletedTypeStats {
     pub size: u64,
 }
 
+#[inline]
 pub(super) fn format_bytes(bytes: u64) -> String {
     if bytes < 1024 {
         return format!("{bytes} B");
@@ -81,6 +82,7 @@ pub(super) fn format_bytes(bytes: u64) -> String {
     format!("{}.{} {unit}", tenths / 10, tenths % 10)
 }
 
+#[inline]
 pub(super) fn format_gc_report(result: &GcResult, chalk: Chalk) -> String {
     let formatter = Formatter::new(chalk);
     let freed_size = if result.flags.backup {
@@ -97,6 +99,7 @@ pub(super) fn format_gc_report(result: &GcResult, chalk: Chalk) -> String {
     Formatter::join(&[first_section, second_section])
 }
 
+#[inline]
 fn format_header(formatter: &Formatter, result: &GcResult, freed_size: u64) -> String {
     if result.flags.dry_run {
         let fate = if result.flags.backup {
@@ -129,7 +132,8 @@ fn build_summary_lines(
     result: &GcResult,
     sizes: (u64, u64),
 ) -> Vec<String> {
-    let mut lines = vec![format_size_line(formatter, chalk, result, sizes)];
+    let mut lines = Vec::with_capacity(4 + result.deleted.by_type.len());
+    lines.push(format_size_line(formatter, chalk, result, sizes));
     if !result.flags.backup && result.dirs.backup_dir_size > 0 {
         lines.push(formatter.item(&format!(
             "{} of it is a backup directory from an earlier run",
@@ -162,6 +166,7 @@ fn build_summary_lines(
     lines
 }
 
+#[inline]
 fn format_type_stat_line(
     formatter: &Formatter,
     chalk: Chalk,
@@ -216,6 +221,7 @@ fn format_size_line(
     }
 }
 
+#[inline]
 fn build_hints(formatter: &Formatter, result: &GcResult) -> Vec<String> {
     let mut hints = Vec::new();
     if result.flags.dry_run && result.deleted.objects > 0 {

@@ -6,6 +6,7 @@ use std::{
     process::{Command, Stdio},
 };
 const MAX_TOOL_BYTES: usize = 64 * 1024 * 1024;
+#[inline]
 pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     if files.is_empty() {
         return Ok(Vec::new());
@@ -43,6 +44,7 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     Ok(formatted)
 }
 
+#[inline]
 fn write_formatter_input(child: &mut std::process::Child, bytes: &[u8]) -> io::Result<()> {
     let mut stdin = child.stdin.take().ok_or_else(|| invalid("formatter tool stdin"))?;
     let result = stdin.write_all(bytes).and_then(|()| stdin.flush());

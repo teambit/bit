@@ -29,6 +29,7 @@ impl Plan {
         }
         Ok(())
     }
+    #[inline]
     pub(in crate::commands::gc) fn log(&self, output: &bit_install::output::Output) {
         for (kind, hashes) in [("Version", &self.versions), ("Source", &self.sources)] {
             for hash in hashes {
@@ -36,6 +37,7 @@ impl Plan {
             }
         }
     }
+    #[inline]
     pub(in crate::commands::gc) fn execute(&self, scope: &Path) -> io::Result<()> {
         if self.result.flags.dry_run {
             return Ok(());
@@ -51,6 +53,7 @@ impl Plan {
         Ok(())
     }
 }
+#[inline]
 fn remove_file(path: &Path) -> io::Result<()> {
     match fs::remove_file(path) {
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
@@ -80,6 +83,7 @@ fn remove_object(scope: &Path, hash: &str) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn remove_empty_bucket(parent: &Path) -> io::Result<()> {
     let mut entries = match fs::read_dir(parent) {
         Ok(entries) => entries,

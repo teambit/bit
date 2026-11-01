@@ -58,6 +58,7 @@ pub(super) fn prepare(
     Ok(Some(Prepared { engine, context, capture: Some(capture), docs: Vec::new() }))
 }
 
+#[inline]
 fn eligible(options: &Options, retained: bool) -> bool {
     let writing = options.operation == "import" && !options.objects_only;
     let without_install = options.write.skip_dependency_installation;
@@ -67,6 +68,7 @@ fn eligible(options: &Options, retained: bool) -> bool {
     !retained && writing && without_install && ordinary
 }
 
+#[inline]
 fn bare(raw: &str) -> &str {
     let trimmed = raw.trim();
     match trimmed.rsplit_once('@') {
@@ -98,6 +100,7 @@ fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
         .collect())
 }
 
+#[inline]
 fn target_bare_id(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -137,6 +140,7 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn bitmap(root: &Path) -> io::Result<Value> {
     bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)
 }

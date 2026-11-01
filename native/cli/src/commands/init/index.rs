@@ -36,6 +36,7 @@ pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::R
     Ok(())
 }
 
+#[inline]
 fn build(scope: &Path) -> io::Result<Value> {
     let mut components = Vec::new();
     let mut lanes = Vec::new();
@@ -79,6 +80,7 @@ fn hashes(objects: &Path) -> io::Result<Vec<String>> {
     Ok(hashes)
 }
 
+#[inline]
 fn component(value: &Value, hash: &str) -> io::Result<Value> {
     let name = value["name"]
         .as_str()
@@ -92,6 +94,7 @@ fn component(value: &Value, hash: &str) -> io::Result<Value> {
     Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":false,"hash":hash.trim()}))
 }
 
+#[inline]
 fn lane(value: &Value, hash: &str) -> io::Result<Value> {
     let name = value["name"]
         .as_str()

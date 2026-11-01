@@ -58,6 +58,7 @@ pub fn select(root: &Path, options: &Options) -> io::Result<Selection> {
 }
 
 /// The ids `pattern`'s list holds, in `sortListScopeResults` order.
+#[inline]
 fn listed(pattern: &str, list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();
     if list
@@ -95,6 +96,7 @@ fn list(root: &Path, patterns: &[&String], lane_only: bool) -> io::Result<Vec<Va
 }
 
 /// The listed ids, with their versions.
+#[inline]
 fn matched(list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
     let components = array(list.get("components"), "remote list components")?;
     let mut ids = Vec::with_capacity(components.len());
@@ -110,6 +112,7 @@ fn matched(list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
     Ok(ids)
 }
 
+#[inline]
 fn component_id(component: &Value) -> io::Result<String> {
     let base = component_base_id(component)?;
     if let Some((prefix, ver)) = base.rsplit_once('@') {
@@ -133,6 +136,7 @@ fn component_id(component: &Value) -> io::Result<String> {
     Ok(format!("{base}@{version}"))
 }
 
+#[inline]
 fn component_base_id(component: &Value) -> io::Result<String> {
     if let Some(id) = component
         .get("id")

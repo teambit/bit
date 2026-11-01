@@ -66,6 +66,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     )
 }
 
+#[inline]
 pub(super) fn is_missing_host(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
         && !cwd
@@ -110,6 +111,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -126,6 +128,7 @@ fn is_ci_active() -> bool {
         })
 }
 
+#[inline]
 fn consume_trailing_format_pattern<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut Option<String>,

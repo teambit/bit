@@ -81,6 +81,7 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
     }
 }
 
+#[inline]
 fn parse_merge_bitmaps(rest: &[&str]) -> Option<Parsed> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [ancestor, current, other] = tokens.as_slice() else {
@@ -95,6 +96,7 @@ fn parse_merge_bitmaps(rest: &[&str]) -> Option<Parsed> {
     Some(Parsed::MergeBitmaps { current: (*current).to_owned(), other: (*other).to_owned() })
 }
 
+#[inline]
 fn parse_set_merge_driver(rest: &[&str]) -> Option<Parsed> {
     let mut global = false;
     for (idx, &token) in rest.iter().enumerate() {
@@ -143,6 +145,7 @@ fn run_merge_bitmaps(
     })
 }
 
+#[inline]
 fn read_bitmap_pair(current: &str, other: &str) -> io::Result<(String, String)> {
     let current_text = strip_bom(&fs::read_to_string(current)?).to_owned();
     let other_text = strip_bom(&fs::read_to_string(other)?).to_owned();
@@ -185,6 +188,7 @@ fn read_merge_strategy(root: &Path) -> io::Result<String> {
         .to_owned())
 }
 
+#[inline]
 fn strip_bom(text: &str) -> &str {
     text.strip_prefix('\u{feff}').unwrap_or(text)
 }
@@ -238,6 +242,7 @@ fn combine_bitmap_objects(
     }
 }
 
+#[inline]
 fn merge_two_maps(first: &Map<String, Value>, second: &Map<String, Value>) -> Map<String, Value> {
     let mut merged = first.clone();
     for (key, value) in second {
@@ -246,6 +251,7 @@ fn merge_two_maps(first: &Map<String, Value>, second: &Map<String, Value>) -> Ma
     merged
 }
 
+#[inline]
 fn format_bitmap_object(sorted: &Map<String, Value>) -> io::Result<String> {
     let mut buf = Vec::new();
     let mut serializer =
@@ -377,6 +383,7 @@ fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Ou
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn format_unrecognized(sub: &str, chalk: Chalk) -> String {
     chalk.red(&format!(
         r#""{sub}" is not a subcommand of "git", please run "bit git --help" to list the subcommands"#,

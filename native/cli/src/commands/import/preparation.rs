@@ -14,6 +14,7 @@ pub(super) enum Preflight {
     Fail(String),
 }
 
+#[inline]
 pub(super) fn prepare_into(
     engine: &mut Engine,
     root: &Path,
@@ -95,6 +96,7 @@ fn classify_preflight_error(
     Err(error)
 }
 
+#[inline]
 fn retry_clean_local_tag(
     engine: &mut Engine,
     options: &Options,
@@ -112,6 +114,7 @@ fn retry_clean_local_tag(
         .is_ok_and(|res| res["eligible"] == true)
 }
 
+#[inline]
 fn preflight_failure_message(
     engine: &mut Engine,
     root: &Path,
@@ -143,13 +146,7 @@ fn unmodified_local_tag_merge(
     let Err(error) = engine.request::<Value>(&preflight) else {
         return Ok(false);
     };
-    if !error.to_string().ends_with("inbound existing component has local versions") {
-        return Ok(false);
-    }
-    preflight["options"]["mergeStrategy"] = Value::Null;
-    Ok(engine
-        .request::<Value>(&preflight)
-        .is_ok_and(|res| res["eligible"] == true))
+    Ok(retry_clean_local_tag(engine, options, &mut preflight, &error.to_string()))
 }
 
 fn bitmap_has_exported_components(root: &Path) -> io::Result<bool> {
@@ -171,8 +168,7 @@ fn bitmap_has_exported_components(root: &Path) -> io::Result<bool> {
 }
 
 fn invalid_directory_template_error(root: &Path) -> io::Result<Option<String>> {
-    let bytes = fs::read(root.join("workspace.jsonc"))?;
-    let ws = bit_object_import::parse_jsonc(&bytes)?;
+    let ws = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
     let Some((_, ws_entry)) =
         crate::commands::update_cmd::aspect_entry(&ws, "teambit.workspace/workspace")
     else {
@@ -232,6 +228,7 @@ fn modified_components_error(
     }))
 }
 
+#[inline]
 fn id_is_modified(
     engine: &mut Engine,
     root: &Path,
@@ -335,6 +332,7 @@ fn new_target_directory(
     Some(root.join(rel_dir))
 }
 
+#[inline]
 fn check_target_directory(abs_dir: &Path, options: &Options) -> Option<String> {
     if fs::symlink_metadata(abs_dir).is_ok_and(|meta| meta.is_file()) {
         return Some(format!("unable to import to {} because it's a file", abs_dir.display()));
@@ -352,6 +350,7 @@ fn check_target_directory(abs_dir: &Path, options: &Options) -> Option<String> {
     None
 }
 
+#[inline]
 fn default_directory_template(root: &Path) -> io::Result<String> {
     let bytes = fs::read(root.join("workspace.jsonc"))?;
     let ws = bit_object_import::parse_jsonc(&bytes)?;
@@ -367,6 +366,7 @@ fn default_directory_template(root: &Path) -> io::Result<String> {
     })
 }
 
+#[inline]
 fn expand_directory(template: &str, scope: &str, name: &str) -> String {
     let (owner, short) = scope
         .rsplit_once('.')
@@ -378,6 +378,7 @@ fn expand_directory(template: &str, scope: &str, name: &str) -> String {
         .replace("{name}", name)
 }
 
+#[inline]
 fn request(root: &Path, options: &Options, ids: &[String]) -> io::Result<Value> {
     let cli = NodeCli::find()?;
     let config = cache_root().join("config");

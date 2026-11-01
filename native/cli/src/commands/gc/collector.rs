@@ -28,15 +28,15 @@ pub(super) struct Plan {
     stray: Vec<PathBuf>,
 }
 
+#[inline]
 pub(super) fn prepare_workspace_garbage(
     root: &Path,
     scope_dir: &Path,
     options: &Options,
 ) -> Result<Option<Plan>, String> {
-    let Some(workspace_ids) = load_workspace_ids(root) else {
-        return Ok(None);
-    };
-    prepare_with_workspace_ids(scope_dir, &workspace_ids, options).map(Some)
+    load_workspace_ids(root)
+        .map(|ids| prepare_with_workspace_ids(scope_dir, &ids, options))
+        .transpose()
 }
 
 pub(super) fn prepare_with_workspace_ids(
@@ -188,8 +188,8 @@ fn seed_workspace_roots(
     graph: &mut GcGraph,
     workspace_ids: &[CompIdSpec],
 ) -> (CompHeadList, HashSet<String>) {
-    let mut checked_out_heads = Vec::new();
-    let mut ws_keys = HashSet::new();
+    let mut checked_out_heads = Vec::with_capacity(workspace_ids.len());
+    let mut ws_keys = HashSet::with_capacity(workspace_ids.len());
     for spec in workspace_ids {
         if let Some(ver) = spec.version
             .as_deref()
@@ -198,9 +198,7 @@ fn seed_workspace_roots(
         {
             graph.add_root(ver);
         }
-        let Some(comp) = graph.find_comp(spec.scope.as_deref(), &spec.name) else {
-            continue;
-        };
+        let Some(comp) = graph.find_comp(spec.scope.as_deref(), &spec.name) else { continue };
         let key = comp_value_key(comp);
         let checked_out = spec.version
             .as_deref()
@@ -353,12 +351,14 @@ fn collect_deletable_objects(
     )
 }
 
+#[inline]
 fn lane_component_refs(lane_val: &Value) -> CompHeadList {
     let mut out = collect_lane_comp_heads(&lane_val["components"]);
     out.extend(collect_lane_update_deps(&lane_val["updateDependents"]));
     out
 }
 
+#[inline]
 fn collect_lane_comp_heads(comps_val: &Value) -> CompHeadList {
     comps_val
         .as_array()
@@ -368,6 +368,7 @@ fn collect_lane_comp_heads(comps_val: &Value) -> CompHeadList {
         .collect()
 }
 
+#[inline]
 fn parse_lane_comp_head(item: &Value) -> Option<(String, String)> {
     if let Some(raw) = item.as_str() {
         let (id, head) = raw.trim().rsplit_once('@')?;

@@ -2,6 +2,7 @@
 use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
     if source.as_os_str().is_empty() || target.as_os_str().is_empty() {
         return Err(io::Error::from(io::ErrorKind::InvalidInput));
@@ -26,6 +27,7 @@ pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
     }
     fs::remove_file(source).map_err(|error| failure(error, "unlink", source))
 }
+#[inline]
 fn copy_link(source: &Path, target: &Path) -> io::Result<()> {
     let link = fs::read_link(source).map_err(|error| failure(error, "readlink", source))?;
     if link.as_os_str().is_empty() {
@@ -37,6 +39,7 @@ fn copy_link(source: &Path, target: &Path) -> io::Result<()> {
     create_symlink(&link, target).map_err(|error| paired_failure(error, "symlink", &link, target))
 }
 
+#[inline]
 fn create_symlink(link: &Path, target: &Path) -> io::Result<()> {
     #[cfg(unix)]
     return std::os::unix::fs::symlink(link, target);

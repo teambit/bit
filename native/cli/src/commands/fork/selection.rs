@@ -35,6 +35,7 @@ pub(super) fn select(root: &Path, options: &Options, state: &Value) -> io::Resul
     require_new_targets(options, &selected)?;
     Ok(selected)
 }
+#[inline]
 fn single(options: &Options, state: &Value, scope: String) -> Selected {
     match inventory::selected(state, &options.source).and_then(row_bare_id) {
         Some(local) => {
@@ -69,6 +70,7 @@ fn local_matches(options: &Options, pool: &[Value]) -> io::Result<Vec<String>> {
         .collect::<Vec<_>>();
     matched(&ids, &options.source)
 }
+#[inline]
 fn require_matches(options: &Options, local: &[String], remote: &[String]) -> io::Result<()> {
     if !local.is_empty() || !remote.is_empty() {
         return Ok(());
@@ -94,6 +96,7 @@ fn without_existing_targets(ids: Vec<String>, scope: &str, pool: &[Value]) -> Ve
         })
         .collect()
 }
+#[inline]
 fn require_new_targets(options: &Options, selected: &Selected) -> io::Result<()> {
     if selected.local.is_empty() && selected.remote.is_empty() {
         return Err(invalid(format!(
@@ -130,7 +133,7 @@ fn scope_selection(
 }
 fn matched(ids: &[String], pattern: &str) -> io::Result<Vec<String>> {
     let patterns = patterns::split(pattern);
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(ids.len());
     for id in ids {
         let full = bare(id);
         let name = full.split_once('/').map_or(full, |(_, name)| name);
@@ -152,6 +155,7 @@ fn matched(ids: &[String], pattern: &str) -> io::Result<Vec<String>> {
     }
     Ok(result)
 }
+#[inline]
 fn row_bare_id(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -165,6 +169,7 @@ fn row_bare_id(row: &Value) -> Option<&str> {
         })
         .map(bare)
 }
+#[inline]
 fn bare(id: &str) -> &str {
     let trimmed = id.trim();
     match trimmed.rsplit_once('@') {
@@ -172,6 +177,7 @@ fn bare(id: &str) -> &str {
         _ => trimmed,
     }
 }
+#[inline]
 fn invalid(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message.into())
 }

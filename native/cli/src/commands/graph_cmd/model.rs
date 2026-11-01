@@ -27,11 +27,13 @@ pub(crate) struct CompGraph {
     pub(crate) edges: Vec<GraphEdge>,
 }
 
+#[inline]
 fn trim_owned(val: String) -> String {
     if val.len() == val.trim().len() { val } else { val.trim().to_owned() }
 }
 
 impl CompGraph {
+    #[inline]
     pub(crate) fn add_node(&mut self, id: String) {
         let id = trim_owned(id);
         if !id.is_empty()
@@ -71,6 +73,7 @@ impl CompGraph {
         }
     }
 
+    #[inline]
     pub(super) fn filter_to_seeders(&mut self, seeders: &[String]) {
         let reachable = self.reachable_from(seeders);
         self.nodes.retain(|node| reachable.contains(node));
@@ -80,7 +83,7 @@ impl CompGraph {
     }
 
     fn reachable_from(&self, seeders: &[String]) -> HashSet<String> {
-        let mut reachable = HashSet::new();
+        let mut reachable = HashSet::with_capacity(self.nodes.len());
         let mut queue = VecDeque::new();
         for seeder in seeders {
             let trimmed = seeder.trim();
@@ -102,6 +105,7 @@ impl CompGraph {
         reachable
     }
 
+    #[inline]
     pub(super) fn filter_local_only(&mut self, local_ids: &[String]) {
         let allowed: HashSet<&str> = local_ids
             .iter()
@@ -154,6 +158,7 @@ impl CompGraph {
         false
     }
 
+    #[inline]
     fn direct_targets(&self, src: &str) -> Vec<&str> {
         let src = src.trim();
         self.edges
@@ -163,6 +168,7 @@ impl CompGraph {
             .collect()
     }
 
+    #[inline]
     pub(super) fn sort_deterministic(&mut self) {
         self.nodes.sort();
         self.edges.sort_by(|left, right| left.id.cmp(&right.id));
@@ -195,6 +201,7 @@ pub(super) fn write_svg_file(graph: &CompGraph) -> Result<PathBuf, Failure> {
     Ok(svg_path)
 }
 
+#[inline]
 fn escape_xml(text: &str) -> String {
     text.replace('&', "&amp;")
         .replace('<', "&lt;")

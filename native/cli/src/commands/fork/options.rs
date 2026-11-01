@@ -7,6 +7,7 @@ pub(super) struct Flags {
     pub no_link: bool,
     pub ast: bool,
 }
+#[derive(Default)]
 pub(super) struct Options {
     pub source: String,
     pub target: Option<String>,
@@ -18,16 +19,7 @@ pub(super) struct Options {
     pub scope_fork: bool,
 }
 pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
-    let mut options = Options {
-        source: String::new(),
-        target: None,
-        scope: None,
-        path: None,
-        env: None,
-        flags: Flags::default(),
-        pattern: None,
-        scope_fork,
-    };
+    let mut options = Options { scope_fork, ..Options::default() };
     let mut positions = Vec::new();
     let mut arguments = argv.iter();
     while let Some(raw_arg) = arguments.next() {
@@ -45,6 +37,7 @@ pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
     assign_positions(positions, &mut options)?;
     Some(options)
 }
+#[inline]
 fn assign_positions(positions: Vec<String>, options: &mut Options) -> Option<()> {
     let min = if options.scope_fork { 2 } else { 1 };
     let max = if options.scope_fork { 3 } else { 2 };
@@ -61,6 +54,7 @@ fn assign_positions(positions: Vec<String>, options: &mut Options) -> Option<()>
     }
     Some(())
 }
+#[inline]
 fn consume_trailing_positions<'a>(
     arguments: impl Iterator<Item = &'a &'a str>,
     positions: &mut Vec<String>,
@@ -135,14 +129,17 @@ fn parse_local_inline(argument: &str, options: &mut Options) -> Option<Option<()
         .or_else(|| argument.strip_prefix("-e="))
         .map(|val| valid_fork_val(val).map(|val| options.env = Some(val)))
 }
+#[inline]
 fn take_fork_val(arguments: &mut std::slice::Iter<'_, &str>) -> Option<String> {
     valid_fork_val(arguments.next()?)
 }
+#[inline]
 fn valid_fork_val(val: &str) -> Option<String> {
     let trimmed = val.trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }
 impl Options {
+    #[inline]
     pub fn multiple(&self) -> bool {
         let trimmed = self.source.trim();
         self.scope_fork

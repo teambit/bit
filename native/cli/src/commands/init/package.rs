@@ -3,11 +3,13 @@ use bit_workspace_config::package_json::{detect_indent, detect_newline, stringif
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(super) fn render(value: &Value, original: Option<&[u8]>) -> io::Result<Vec<u8>> {
     let original = decode_original(original)?;
     Ok(stringify_package(value, &detect_indent(original), detect_newline(original))?.into_bytes())
 }
 
+#[inline]
 fn decode_original(original: Option<&[u8]>) -> io::Result<&str> {
     let Some(bytes) = original.filter(|bytes| !bytes.is_empty()) else {
         return Ok("");

@@ -49,16 +49,20 @@ impl Lifecycle {
             json: options.output.json,
         })
     }
+    #[inline]
     pub(super) const fn started(&self) -> bool {
         self.linker.is_some() || self.cache_owned
     }
+    #[inline]
     pub(super) fn own_cache(&mut self) {
         self.cache_owned = true;
     }
+    #[inline]
     pub(super) fn take_stdout(&mut self) -> String {
         let stdout = self.linker.as_mut().map_or_else(String::new, ProjectedLinker::take_stdout);
         if self.json { String::new() } else { stdout }
     }
+    #[inline]
     pub(super) fn before_apply(&self) -> io::Result<()> {
         self.linker
             .as_ref()
@@ -168,6 +172,7 @@ impl Lifecycle {
         }
     }
 }
+#[inline]
 fn root_providers(config: &WorkspaceConfig, core: &[String]) -> bool {
     config.aspects
         .keys()
@@ -249,7 +254,7 @@ fn capture_group(
 pub(super) fn component_order(receipt: &Value) -> io::Result<Vec<String>> {
     let Some(order) = receipt.get("workspaceComponentOrder") else { return Ok(Vec::new()) };
     let order = order.as_array().ok_or_else(|| io::Error::other("import workspace order"))?;
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(order.len());
     order
         .iter()
         .map(|identity| {
@@ -283,6 +288,7 @@ fn ordered_ids(ids: &[String], order: &[String]) -> io::Result<Vec<String>> {
     }
     Ok(ordered)
 }
+#[inline]
 fn bare_id(raw: &str) -> &str {
     let trimmed = raw.trim();
     match trimmed.rsplit_once('@') {

@@ -3,6 +3,7 @@ use super::{Value, invalid};
 use crate::commands::workspace_command::component_service::filesystem;
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn apply(
     check: bool,
     output: &bit_install::output::Output,
@@ -52,6 +53,7 @@ pub(super) fn publish_components(
     Ok(None)
 }
 
+#[inline]
 pub(super) fn validate(inputs: &[Value]) -> io::Result<()> {
     for input in inputs {
         let path = path(input)?;
@@ -85,6 +87,7 @@ pub(super) fn publish(inputs: &[Value], outputs: &[Value]) -> io::Result<Option<
     }
     Ok(None)
 }
+#[inline]
 fn path(input: &Value) -> io::Result<&Path> {
     input["absolutePath"]
         .as_str()
@@ -95,6 +98,7 @@ fn path(input: &Value) -> io::Result<&Path> {
         .ok_or_else(|| invalid("formatter source path"))
 }
 
+#[inline]
 pub(super) fn message(environment: &str, error: &Value) -> io::Result<String> {
     filesystem::message("formatter", environment.trim(), error)
 }

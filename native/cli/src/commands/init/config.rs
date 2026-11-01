@@ -47,6 +47,7 @@ pub(super) fn create(root: &Path, modules: &Path, options: &Options) -> io::Resu
     Ok(render(&document))
 }
 
+#[inline]
 fn parse_generator_envs(value: &str) -> Vec<&str> {
     value
         .split(',')
@@ -55,6 +56,7 @@ fn parse_generator_envs(value: &str) -> Vec<&str> {
         .collect()
 }
 
+#[inline]
 pub(super) fn existing(path: &Path) -> io::Result<Option<Vec<u8>>> {
     match fs::read_to_string(path) {
         Ok(text) => Ok(Some(render(&Document::parse(&text)?))),
@@ -63,6 +65,7 @@ pub(super) fn existing(path: &Path) -> io::Result<Option<Vec<u8>>> {
     }
 }
 
+#[inline]
 pub(super) fn workspace_files(bytes: Vec<u8>, options: &Options) -> io::Result<Vec<u8>> {
     if !uses_workspace_config_files(options) {
         return Ok(bytes);
@@ -76,6 +79,7 @@ pub(super) fn workspace_files(bytes: Vec<u8>, options: &Options) -> io::Result<V
 }
 
 // WorkspaceConfig.toVinyl is persisted through AbstractVinyl's platform EOL conversion.
+#[inline]
 fn render(document: &Document) -> Vec<u8> {
     let mut text = format!("{document}\n");
     if text.contains('\r') {
@@ -84,6 +88,7 @@ fn render(document: &Document) -> Vec<u8> {
     if cfg!(windows) { text.replace('\n', "\r\n").into_bytes() } else { text.into_bytes() }
 }
 
+#[inline]
 fn template(modules: &Path) -> io::Result<Document> {
     let text = fs::read_to_string(modules.join("config/dist/workspace-template.jsonc"))
         .or_else(|error| {
@@ -96,6 +101,7 @@ fn template(modules: &Path) -> io::Result<Document> {
     Document::parse(&text)
 }
 
+#[inline]
 fn configure(document: &mut Document, options: &Options) {
     if options.flags.external_pm {
         document.set(&[RESOLVER, "externalPackageManager"], &Value::Bool(true));
@@ -110,6 +116,7 @@ fn configure(document: &mut Document, options: &Options) {
     }
 }
 
+#[inline]
 fn uses_workspace_config_files(options: &Options) -> bool {
     options.flags.external_pm
         || options.defaults.directory

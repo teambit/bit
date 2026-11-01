@@ -62,6 +62,7 @@ fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<Stri
     Ok(lines.join("\n"))
 }
 
+#[inline]
 fn component_scope_and_name(id: &Value) -> io::Result<(&str, &str)> {
     if let Some(raw) = id.as_str() {
         let trimmed = raw.trim();
@@ -90,6 +91,7 @@ fn component_scope_and_name(id: &Value) -> io::Result<(&str, &str)> {
     Ok((scope, name))
 }
 
+#[inline]
 pub(super) fn create(
     value: &Value,
     progress: &super::progress::Progress,
@@ -116,6 +118,7 @@ pub(super) fn create(
     Ok(crate::commands::workspace_command::results::Report { data, code, details: None })
 }
 
+#[inline]
 fn file_has_issues(file: &Value) -> bool {
     file["hasIssues"] == true
         || file["hasIssues"]

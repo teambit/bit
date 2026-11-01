@@ -84,6 +84,7 @@ fn prepare(scope: &Path, options: &Options) -> io::Result<Plan> {
     let index = index::prepare(scope, &objects)?;
     Ok(Plan { logs, deleted, index })
 }
+#[inline]
 fn inventory_report(
     name: &str,
     objects: &BTreeMap<String, Object>,
@@ -121,6 +122,7 @@ fn inventory_report(
         ),
     ]
 }
+#[inline]
 fn count_local_components(objects: &BTreeMap<String, Object>, name: &str) -> usize {
     let name = name.trim();
     objects
@@ -196,6 +198,7 @@ pub(super) fn restore(scope: &Path, args: &[OsString], options: &Options) -> io:
     }
 }
 
+#[inline]
 pub(super) fn restore_index(scope: &Path) -> io::Result<Option<Vec<u8>>> {
     if !startup::supported(None, scope, &Value::Null, false)? {
         return Err(unsupported("configured startup callbacks"));

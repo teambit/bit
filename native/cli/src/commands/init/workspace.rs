@@ -76,6 +76,7 @@ fn bitmap(plan: &mut Plan, scope: &Path, options: &Options) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn validate_objects(value: &Value, scope: &Path, options: &Options) -> io::Result<()> {
     let clears_scope = options.resets.scope
         || options.resets.hard
@@ -94,6 +95,7 @@ fn validate_objects(value: &Value, scope: &Path, options: &Options) -> io::Resul
     Ok(())
 }
 
+#[inline]
 fn empty(value: &Value) -> bool {
     value
         .as_object()
@@ -102,6 +104,7 @@ fn empty(value: &Value) -> bool {
                 .all(|key| key.starts_with('$') || key == "_bit_lane" || key == "version")
         })
 }
+#[inline]
 fn reset_new(value: &mut Value, lane_only: bool) -> io::Result<()> {
     let rows = value.as_object_mut().ok_or_else(|| io::Error::other("init bitmap object"))?;
     for (key, row) in rows.iter_mut() {
@@ -186,6 +189,7 @@ fn package(plan: &mut Plan, options: &Options) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn configure_package(
     value: &mut Value,
     options: &Options,
@@ -216,6 +220,7 @@ fn configure_package(
     Ok(())
 }
 
+#[inline]
 fn retained_objects(scope: &Path) -> io::Result<bool> {
     let path = scope.join("objects");
     Ok(path.is_dir() && fs::read_dir(path)?.next().is_some())

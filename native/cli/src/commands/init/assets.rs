@@ -12,16 +12,19 @@ pub(super) struct Assets {
     mcp: Option<(PathBuf, Vec<u8>)>,
 }
 impl Assets {
+    #[inline]
     pub(super) fn prepare(plan: &Plan, options: &Options) -> io::Result<Self> {
         if !plan.created || options.bare.is_some() {
             return Ok(Self::default());
         }
         Ok(Self { agent: agent(plan, options)?, mcp: mcp(&plan.root).ok() })
     }
+    #[inline]
     pub(super) fn write(self, root: &Path) -> (Option<String>, Option<String>) {
         (write(root, self.agent), write(root, self.mcp))
     }
 }
+#[inline]
 fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
     let (path, bytes) = file?;
     let relative = path.to_string_lossy().into_owned();
@@ -38,6 +41,7 @@ fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
     fs::write(&path, bytes).ok()?;
     Some(relative)
 }
+#[inline]
 fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)>> {
     let raw_agent = options.agent.as_deref().map(str::trim);
     let name = match raw_agent {
@@ -78,6 +82,7 @@ fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)
     };
     Ok(Some((PathBuf::from(name), content)))
 }
+#[inline]
 fn mcp(root: &Path) -> io::Result<(PathBuf, Vec<u8>)> {
     let path = root.join(".mcp.json");
     let mut value = fs::read(&path)

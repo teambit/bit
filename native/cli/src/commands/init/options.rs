@@ -65,6 +65,7 @@ pub(super) fn parse(args: &[OsString]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn consume_trailing_init_path<'a>(
     args: impl Iterator<Item = Option<&'a str>>,
     options: &mut Options,
@@ -79,6 +80,7 @@ fn consume_trailing_init_path<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_arg<'a>(
     arg: &'a str,
     args: &mut std::iter::Peekable<impl Iterator<Item = Option<&'a str>>>,
@@ -97,6 +99,7 @@ fn apply_arg<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_non_space_arg(value: &str, options: &mut Options) -> Option<()> {
     if let Some(res) = inline_option(value, options) {
         return res;
@@ -112,11 +115,13 @@ fn apply_non_space_arg(value: &str, options: &mut Options) -> Option<()> {
     None
 }
 
+#[inline]
 fn required<'a>(args: &mut impl Iterator<Item = Option<&'a str>>) -> Option<String> {
     let val = args.next()??.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
 
+#[inline]
 fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
     let (key, val) = arg.split_once('=')?;
     let (key, val) = (key.trim(), val.trim());
@@ -147,6 +152,7 @@ fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
     }
 }
 
+#[inline]
 fn set_inline_string(key: &str, val: &str, options: &mut Options) {
     match key {
         "--name" | "-n" => options.defaults.name = Some(val.to_owned()),
@@ -157,6 +163,7 @@ fn set_inline_string(key: &str, val: &str, options: &mut Options) {
     }
 }
 
+#[inline]
 fn optional<'a>(
     args: &mut std::iter::Peekable<impl Iterator<Item = Option<&'a str>>>,
 ) -> Option<String> {
@@ -168,6 +175,7 @@ fn optional<'a>(
     Some(String::new())
 }
 
+#[inline]
 fn flag(arg: &str, options: &mut Options) -> bool {
     if apply_combined_short_init(arg, options) {
         return true;
@@ -195,6 +203,7 @@ fn flag(arg: &str, options: &mut Options) -> bool {
     true
 }
 
+#[inline]
 fn apply_combined_short_init(arg: &str, options: &mut Options) -> bool {
     let Some(flags) = arg.strip_prefix('-') else {
         return false;

@@ -106,12 +106,14 @@ pub(super) fn model<'objects>(
     }
     component(Some(object))
 }
+#[inline]
 fn component(object: Option<&Object>) -> io::Result<Option<&Object>> {
     if object.is_some_and(|object| object.kind != "Component") {
         return Err(unsupported("component reference has a non-component object"));
     }
     Ok(object)
 }
+#[inline]
 fn entries(directory: &Path) -> io::Result<Vec<fs::DirEntry>> {
     match fs::read_dir(directory) {
         Ok(entries) => entries.collect(),
@@ -119,6 +121,7 @@ fn entries(directory: &Path) -> io::Result<Vec<fs::DirEntry>> {
         Err(error) => Err(error),
     }
 }
+#[inline]
 pub(super) fn hash(value: &str) -> bool {
     let value = value.trim();
     value.len() == 40
@@ -126,6 +129,7 @@ pub(super) fn hash(value: &str) -> bool {
             .bytes()
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
+#[inline]
 pub(super) fn digest(value: &str) -> String {
     format!("{:x}", Sha1::digest(value.as_bytes()))
 }
@@ -145,6 +149,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
     Ok(format!("{scope}/{name}"))
 }
+#[inline]
 pub(super) fn text(value: &Value) -> io::Result<&str> {
     value
         .as_str()
@@ -152,6 +157,7 @@ pub(super) fn text(value: &Value) -> io::Result<&str> {
         .filter(|value| !value.is_empty())
         .ok_or_else(|| unsupported("metadata string"))
 }
+#[inline]
 pub(super) fn strings(value: &Value) -> io::Result<Vec<String>> {
     if value.is_null() {
         return Ok(Vec::new());
@@ -163,6 +169,7 @@ pub(super) fn strings(value: &Value) -> io::Result<Vec<String>> {
         .map(|value| text(value).map(str::to_owned))
         .collect()
 }
+#[inline]
 pub(super) fn unsupported(message: &str) -> io::Error {
     io::Error::other(format!("bare scope collection preflight: {message}"))
 }

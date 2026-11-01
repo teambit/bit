@@ -8,6 +8,7 @@ use std::{fs, io, path::Path, time::Instant};
 pub(in crate::commands) struct RecoverOptions {
     pub skip_write_config_files: bool,
 }
+#[inline]
 pub(in crate::commands) fn recover_import(
     root: &Path,
     ids: &[String],
@@ -24,6 +25,7 @@ pub(in crate::commands) fn recover_import(
     bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap"))?)
 }
 
+#[inline]
 pub(in crate::commands) fn recover_probe(
     root: &Path,
     ids: &[String],
@@ -45,6 +47,7 @@ pub(in crate::commands) fn recover_probe(
     bit_object_import::component_recover::probe_remote(ids, &remotes, &network)
 }
 
+#[inline]
 pub(in crate::commands) fn recover_scope_import(
     root: &Path,
     ids: &[String],
@@ -68,6 +71,7 @@ pub(in crate::commands) fn recover_scope_import(
     Ok(())
 }
 
+#[inline]
 fn import_options(ids: &[String], skip_config: bool, skip_installation: bool) -> options::Options {
     options::Options {
         operation: "import",

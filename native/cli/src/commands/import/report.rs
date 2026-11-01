@@ -54,7 +54,7 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
     let repeated_versions =
         multi_lane || value["laneObjectImport"] == true && value["currentLane"].is_string();
     let (ids, imported) = imported_ids(rows, repeated_versions)?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(details.len());
     let details = details
         .iter()
         .map(|row| {
@@ -67,11 +67,10 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
             Ok(detail)
         })
         .collect::<io::Result<_>>()?;
-    let on_lane = value.get("currentLane").is_some_and(Value::is_string);
     Ok(Receipt {
         ids,
         details,
-        on_lane,
+        on_lane: value.get("currentLane").is_some_and(Value::is_string),
         workspace_policy: value.get("workspaceConfigUpdateResult").cloned(),
     })
 }
@@ -135,6 +134,7 @@ fn details_row(row: &Value) -> io::Result<Details> {
     })
 }
 
+#[inline]
 fn parse_latest_version(latest: &Value) -> Option<String> {
     latest
         .as_str()
@@ -143,6 +143,7 @@ fn parse_latest_version(latest: &Value) -> Option<String> {
         .map(str::to_string)
 }
 
+#[inline]
 fn conflict_paths(value: Option<&Value>) -> io::Result<Vec<String>> {
     match value {
         Some(Value::Null) => Ok(Vec::new()),
@@ -160,6 +161,7 @@ fn conflict_paths(value: Option<&Value>) -> io::Result<Vec<String>> {
 }
 
 impl Receipt {
+    #[inline]
     fn details(&self, id: &Id) -> io::Result<&Details> {
         let name = id.without_version();
         self.details
@@ -170,6 +172,7 @@ impl Receipt {
 
     /// `ImportCmd.report`; `installation_error` is the message the
     /// installation after the write failed with.
+    #[inline]
     pub fn import_report(
         &self,
         chalk: Chalk,
@@ -193,13 +196,11 @@ impl Receipt {
             1 => "successfully imported one component".to_string(),
             count => format!("successfully imported {count} components"),
         };
+        let suffix = if self.on_lane { " on the lane" } else { "" };
         let up_to_date = if up_to_date == 0 {
             String::new()
         } else {
-            format!(
-                ", {up_to_date} components are up to date{}",
-                if self.on_lane { " on the lane" } else { "" },
-            )
+            format!(", {up_to_date} components are up to date{suffix}")
         };
         let imported = format.section("imported components", "", &items);
         let summary = format.success_summary(&format!("{prefix}{up_to_date}"));
@@ -255,8 +256,8 @@ impl Receipt {
         if self.ids.is_empty() {
             return Ok(format.hint("nothing to import"));
         }
-        let mut lines =
-            vec![format.success_summary(&format!("fetched {} component(s)", self.ids.len()))];
+        let mut lines = Vec::with_capacity(1 + self.ids.len());
+        lines.push(format.success_summary(&format!("fetched {} component(s)", self.ids.len())));
         for id in &self.ids {
             let id = Id::parse(id)?;
             lines.push(fetch_item(chalk, &id, self.details(&id)?));
@@ -266,6 +267,7 @@ impl Receipt {
 }
 
 /// `installationErrorOutput`.
+#[inline]
 fn installation_error_output(format: &Formatter, message: Option<&str>) -> String {
     let Some(message) = message else { return String::new() };
     let title = format!("{} {}", format.error_symbol(), format.title("Installation Error"));
@@ -278,6 +280,7 @@ fn installation_error_output(format: &Formatter, message: Option<&str>) -> Strin
     .join("\n")
 }
 
+#[inline]
 fn compilation_error_output(format: &Formatter, message: Option<&str>) -> String {
     let Some(message) = message else { return String::new() };
     [
@@ -328,6 +331,7 @@ fn import_item(format: &Formatter, id: &Id, details: &Details) -> Option<String>
     Some(Formatter::item_with(&chalk.dim(&line), &symbol))
 }
 
+#[inline]
 fn conflict_output(chalk: Chalk, details: &Details) -> String {
     if details.conflicts.is_empty() {
         return String::new();
@@ -363,6 +367,7 @@ fn version_output(id: &Id, details: &Details) -> String {
 }
 
 /// `formatPlainComponentItemWithVersions` of the fetch command.
+#[inline]
 fn fetch_item(chalk: Chalk, id: &Id, details: &Details) -> String {
     let versions = if details.versions.is_empty() {
         String::new()
@@ -382,6 +387,7 @@ fn fetch_item(chalk: Chalk, id: &Id, details: &Details) -> String {
     )
 }
 
+#[inline]
 fn unique_components(ids: &[String]) -> usize {
     ids.iter()
         .map(|id| {

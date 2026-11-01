@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path};
 use workspace_command::results::Report;
 
+#[inline]
 pub(super) fn execute(
     root: &Path,
     args: &[OsString],
@@ -19,6 +20,7 @@ pub(super) fn execute(
     }
 }
 
+#[inline]
 pub(super) fn json_report(
     prepared: &Value,
     installation_error: bool,
@@ -45,6 +47,7 @@ pub(super) fn json_report(
 }
 
 /// `listing remote components` per pattern, then `NoIdMatchWildcard` warnings.
+#[inline]
 pub(super) fn selection(
     options: &Options,
     selection: &super::patterns::Selection,
@@ -104,6 +107,7 @@ pub(super) fn validate_lane_groups(prepared: &Value, options: &Options) -> io::R
     Ok(())
 }
 
+#[inline]
 fn valid_group_count(count: usize, main: bool, selected: usize) -> bool {
     if main { (1..=33).contains(&count) } else { (1..=32).contains(&count) && count == selected }
 }

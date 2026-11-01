@@ -87,6 +87,7 @@ fn plan_scope(
     Ok(())
 }
 
+#[inline]
 fn scope_name(options: &Options, cwd: &Path) -> io::Result<String> {
     if let Some(bare) = options.bare.as_deref() {
         let fallback = cwd
@@ -98,6 +99,7 @@ fn scope_name(options: &Options, cwd: &Path) -> io::Result<String> {
     scope::local_name(cwd)
 }
 
+#[inline]
 fn resolve_bare_scope_name(bare: &str, fallback: &str) -> String {
     let trimmed = bare.trim();
     if trimmed.is_empty() || trimmed.eq_ignore_ascii_case("true") {
@@ -107,22 +109,26 @@ fn resolve_bare_scope_name(bare: &str, fallback: &str) -> String {
     }
 }
 
+#[inline]
 fn locate(start: &Path) -> Option<PathBuf> {
     start
         .ancestors()
         .find(|path| has_workspace(path))
         .map(Path::to_owned)
 }
+#[inline]
 fn has_workspace(path: &Path) -> bool {
     ["workspace.jsonc", ".bitmap", ".bit.map.json", ".bit/scope.json", ".git/bit/scope.json"]
         .iter()
         .any(|name| path.join(name).exists())
 }
-fn resets(options: &Options) -> bool {
+#[inline]
+const fn resets(options: &Options) -> bool {
     let reset = &options.resets;
     reset.repair || reset.hard || reset.scope || reset.new || reset.lane_new
 }
 
+#[inline]
 pub(super) fn backup(
     plan: &mut Plan,
     scope: &Path,
@@ -177,6 +183,7 @@ pub(super) fn backup_bytes(
     plan.actions.push(Action::File(metadata_path, bytes));
 }
 
+#[inline]
 fn resolve(cwd: &Path, requested: Option<&str>) -> PathBuf {
     let absolute = requested
         .map(str::trim)
@@ -195,6 +202,7 @@ fn resolve(cwd: &Path, requested: Option<&str>) -> PathBuf {
     resolved
 }
 
+#[inline]
 fn validate_root(root: &Path, cwd: &Path, options: &Options) -> io::Result<()> {
     if options.path.is_none() && root != cwd && options.bare.is_none() {
         return Err(io::Error::other(format!(
@@ -208,6 +216,7 @@ fn validate_root(root: &Path, cwd: &Path, options: &Options) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn validate_interactive(root: &Path, options: &Options, git: bool) -> io::Result<()> {
     let interactive = io::stdin().is_terminal() && io::stdout().is_terminal();
     let skip_wizard = !interactive

@@ -1,12 +1,14 @@
 //! `ImportCmd.importComponents` validates these known modes after provider startup.
 use super::Options;
 
+#[inline]
 pub(super) fn error(options: &Options) -> Option<String> {
     directories(options)
         .or_else(|| missing_ids(options))
         .map(str::to_owned)
         .or_else(|| dependencies_depth(options))
 }
+#[inline]
 fn directories(options: &Options) -> Option<&'static str> {
     if !options.write.adoption.write_to_empty_dir {
         return None;
@@ -19,6 +21,7 @@ fn directories(options: &Options) -> Option<&'static str> {
         .is_some_and(|path| !path.trim().is_empty())
         .then_some("--path and --write-to-empty-dir cannot be used together")
 }
+#[inline]
 fn missing_ids(options: &Options) -> Option<&'static str> {
     if options.ids
         .iter()
@@ -49,6 +52,7 @@ fn missing_ids(options: &Options) -> Option<&'static str> {
         r#"you have to specify ids to use "--track-only" flag"#,
     )
 }
+#[inline]
 fn dependencies_depth(options: &Options) -> Option<String> {
     let raw = options.write.dependencies.raw_depth.as_deref()?.trim();
     if !has_dependency_import_flag(options) {
@@ -62,6 +66,7 @@ fn dependencies_depth(options: &Options) -> Option<String> {
         .then(|| format!(r#""--dependencies-depth" must be a positive integer, got "{raw}""#))
 }
 
+#[inline]
 const fn has_dependency_import_flag(options: &Options) -> bool {
     options.write.dependencies.import_dependencies
         || options.write.dependencies.import_head_dependencies

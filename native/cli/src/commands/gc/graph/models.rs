@@ -42,9 +42,11 @@ impl Models {
         }
         Self { identities, hashes, aliases }
     }
+    #[inline]
     pub(in crate::commands::gc) fn contains_key(&self, key: &str) -> bool {
         self.identities.contains_key(key)
     }
+    #[inline]
     pub(super) fn get(&self, scope: Option<&str>, name: &str) -> Option<&Value> {
         let name = name.trim();
         let key = scope
@@ -58,6 +60,7 @@ impl Models {
                     .flatten()
             })
     }
+    #[inline]
     fn lookup(&self, key: &str) -> Option<&Value> {
         self.identities
             .get(key)
@@ -93,6 +96,7 @@ pub(in crate::commands::gc) fn normalize(inventory: &mut ScopeInventory) -> Resu
     }
     Ok(())
 }
+#[inline]
 fn normalize_name(value: &mut Value) -> Result<(), String> {
     let name = text(&value["name"])?;
     if crate::commands::status::js::truthy(value.get("box")) {
@@ -100,6 +104,7 @@ fn normalize_name(value: &mut Value) -> Result<(), String> {
     }
     Ok(())
 }
+#[inline]
 fn text(value: &Value) -> Result<&str, String> {
     value
         .as_str()
@@ -107,6 +112,7 @@ fn text(value: &Value) -> Result<&str, String> {
         .filter(|value| !value.is_empty())
         .ok_or_else(|| "legacy workspace model metadata requires the published runtime".into())
 }
+#[inline]
 fn digest(value: &str) -> String {
     format!("{:x}", Sha1::digest(value.as_bytes()))
 }
@@ -188,7 +194,7 @@ pub(in crate::commands::gc) fn load_unmerged_roots(
     };
     let val = bit_object_import::parse_jsonc(&bytes).map_err(|err| err.to_string())?;
     let Some(arr) = val.as_array() else { return Ok(Vec::new()) };
-    let mut roots = Vec::new();
+    let mut roots = Vec::with_capacity(arr.len());
     for item in arr {
         collect_unmerged_item(item, &mut roots);
     }

@@ -287,15 +287,18 @@ pub(super) fn sorted_dir_entries(dir: &Path) -> Vec<PathBuf> {
     paths
 }
 
+#[inline]
 fn hex_bucket_dir_name(path: &Path) -> Option<&str> {
     let name = file_name_str(path)?;
     (is_hex_len(name, 2) && path.is_dir()).then_some(name)
 }
 
+#[inline]
 fn file_name_str(path: &Path) -> Option<&str> {
     path.file_name().and_then(|name| name.to_str())
 }
 
+#[inline]
 fn is_hex_len(text: &str, expected_len: usize) -> bool {
     text.len() == expected_len
         && text
@@ -303,6 +306,7 @@ fn is_hex_len(text: &str, expected_len: usize) -> bool {
             .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
+#[inline]
 fn is_stray_temp_name(name: &str) -> bool {
     name.split_once('.')
         .is_some_and(|(prefix, suffix)| {
@@ -312,6 +316,7 @@ fn is_stray_temp_name(name: &str) -> bool {
         })
 }
 
+#[inline]
 fn is_known_kind(kind: &str) -> bool {
     matches!(
         kind,
@@ -326,6 +331,7 @@ fn is_known_kind(kind: &str) -> bool {
     )
 }
 
+#[inline]
 fn now_ms() -> u64 {
     let millis = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -334,6 +340,7 @@ fn now_ms() -> u64 {
     u64::try_from(millis).unwrap_or(u64::MAX)
 }
 
+#[inline]
 fn meta_mtime_ms(meta: &fs::Metadata) -> u64 {
     let millis = meta
         .modified()

@@ -91,6 +91,7 @@ fn has_unimported_npm_bit_dep(root: &Path, scope_dir: &Path, ws: &Workspace) -> 
     false
 }
 
+#[inline]
 fn is_unimported_npm_spec(
     root: &Path,
     scope_dir: &Path,
@@ -98,13 +99,9 @@ fn is_unimported_npm_spec(
     self_name: &str,
     raw_spec: &str,
 ) -> bool {
-    if match_ws_dep(ws, self_name, raw_spec).is_some() {
-        return false;
-    }
-    let Some(dep_id) = npm_bit_dep_id(root, raw_spec) else {
-        return false;
-    };
-    read_version_by_dep_id(scope_dir, &dep_id).is_none()
+    match_ws_dep(ws, self_name, raw_spec).is_none()
+        && npm_bit_dep_id(root, raw_spec)
+            .is_some_and(|dep_id| read_version_by_dep_id(scope_dir, &dep_id).is_none())
 }
 
 fn npm_bit_dep_id(root: &Path, raw_spec: &str) -> Option<String> {
@@ -117,12 +114,11 @@ fn npm_bit_dep_id(root: &Path, raw_spec: &str) -> Option<String> {
     } else {
         raw_spec.split('/').next()?.to_owned()
     };
-    let bytes = fs::read(
-        root.join("node_modules")
-            .join(pkg_name)
-            .join("package.json"),
-    )
-    .ok()?;
+    let manifest_path = root
+        .join("node_modules")
+        .join(pkg_name)
+        .join("package.json");
+    let bytes = fs::read(manifest_path).ok()?;
     let val = bit_object_import::parse_jsonc(&bytes).ok()?;
     format_dep_id(&val["componentId"])
 }
@@ -155,6 +151,7 @@ fn resolve_seeder_id(ws: &Workspace, raw_id: &str) -> Result<String, Failure> {
     Ok(selection::entry_full_id(entry))
 }
 
+#[inline]
 pub(super) fn build_full_graph(scope_dir: &Path, ws: &Workspace) -> CompGraph {
     let mut graph = CompGraph::default();
     for (entry, comp) in ws.active() {
@@ -165,6 +162,7 @@ pub(super) fn build_full_graph(scope_dir: &Path, ws: &Workspace) -> CompGraph {
     graph
 }
 
+#[inline]
 fn populate_ws_comp_edges(
     scope_dir: &Path,
     ws: &Workspace,
@@ -178,6 +176,7 @@ fn populate_ws_comp_edges(
     add_scanned_ws_dep_edges(ws, comp, node_id, graph);
 }
 
+#[inline]
 fn load_ws_comp_version(scope_dir: &Path, comp: &WorkspaceComponent) -> Option<Value> {
     let ver = comp.id.version
         .as_deref()
@@ -188,6 +187,7 @@ fn load_ws_comp_version(scope_dir: &Path, comp: &WorkspaceComponent) -> Option<V
     read_comp_version_by_hash(scope_dir, &comp_hash, ver)
 }
 
+#[inline]
 fn read_comp_version_by_hash(scope_dir: &Path, comp_hash: &str, ver: &str) -> Option<Value> {
     let (_, comp_val) = bit_object_import::read_scope_object(scope_dir, comp_hash).ok()??;
     let ver_hash = resolve_ver_hash(&comp_val, ver)?;
@@ -300,6 +300,7 @@ fn load_transitive_dep_edges(scope_dir: &Path, dep_id: &str, graph: &mut CompGra
     }
 }
 
+#[inline]
 fn read_version_by_dep_id(scope_dir: &Path, dep_id: &str) -> Option<Value> {
     let dep_id = dep_id.trim();
     let (bare, ver) = dep_id
@@ -333,6 +334,7 @@ fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<Strin
     None
 }
 
+#[inline]
 pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
     let ver = ver.trim();
     if ver.is_empty() || ver.eq_ignore_ascii_case("latest") || ver.eq_ignore_ascii_case("head") {
@@ -342,6 +344,7 @@ pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
             .filter(|hash| !hash.is_empty())
             .map(str::to_owned);
     }
+    let is_sha1 = ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit());
     comp_val["versions"]
         .get(ver)
         .and_then(Value::as_str)
@@ -349,11 +352,7 @@ pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
         .map(str::trim)
         .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
-        .or_else(|| {
-            (ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit())).then(|| {
-                ver.to_owned()
-            })
-        })
+        .or_else(|| is_sha1.then(|| ver.to_owned()))
 }
 
 pub(crate) fn format_dep_id(id_val: &Value) -> Option<String> {

@@ -33,6 +33,7 @@ use std::{env, ffi::OsString, io, path::Path, time::Instant};
 pub const IMPORT: Command = Command { name: "import", aliases: &[], run };
 pub const FETCH: Command = Command { name: "fetch", aliases: &[], run };
 
+#[inline]
 pub(in crate::commands) fn lane_fetch(
     root: &Path,
     args: &[OsString],
@@ -86,6 +87,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     execution::run(&root, args, &options)
 }
 
+#[inline]
 fn render(
     planned: &mut Planned,
     options: &options::Options,
@@ -208,6 +210,7 @@ struct Planned {
 }
 
 impl Planned {
+    #[inline]
     fn plan(
         root: &Path,
         options: &options::Options,
@@ -216,6 +219,7 @@ impl Planned {
     ) -> io::Result<Self> {
         Self::plan_with(root, options, ids, chalk, false)
     }
+    #[inline]
     fn plan_with(
         root: &Path,
         options: &options::Options,
@@ -289,12 +293,14 @@ impl Planned {
 }
 
 /// `commandInboundPrepare`: the engine fetches, and plans the writes.
+#[inline]
 fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Result<(Engine, Value)> {
     let mut engine = Engine::new()?;
     let prepared = prepare_into(&mut engine, root, options, ids)?;
     Ok((engine, prepared))
 }
 
+#[inline]
 fn objects_refresh_options(
     operation: &'static str,
     all_history: bool,
@@ -323,6 +329,7 @@ fn objects_refresh_options(
 
 /// Retain a main-component refresh for `status --lanes` until its complete
 /// report has passed preflight. The same inbound transfer serves `bit fetch`.
+#[inline]
 pub(super) fn prepare_status_refresh(
     engine: &mut Engine,
     root: &Path,
@@ -331,6 +338,7 @@ pub(super) fn prepare_status_refresh(
     prepare_into(engine, root, &objects_refresh_options("status", true, false), ids)
 }
 
+#[inline]
 pub(super) fn prepare_diff_refresh(
     engine: &mut Engine,
     root: &Path,
@@ -339,6 +347,7 @@ pub(super) fn prepare_diff_refresh(
     prepare_into(engine, root, &objects_refresh_options("diff", false, false), ids)
 }
 
+#[inline]
 pub(super) fn prepare_status_forked_refresh(
     engine: &mut Engine,
     root: &Path,
@@ -349,6 +358,7 @@ pub(super) fn prepare_status_forked_refresh(
 }
 
 /// Fetch and publish one remote Lane without materializing workspace files.
+#[inline]
 pub(super) fn prepare_lane_import(
     engine: &mut Engine,
     root: &Path,
@@ -358,6 +368,7 @@ pub(super) fn prepare_lane_import(
     prepare_into(engine, root, &options, &[lane.trim().to_owned()])
 }
 
+#[inline]
 pub(super) fn apply_status_refresh(engine: &mut Engine, token: &Value) -> io::Result<()> {
     if token.is_null() {
         return Err(io::Error::other("status main refresh missing token"));

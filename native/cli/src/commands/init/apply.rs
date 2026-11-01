@@ -2,6 +2,7 @@
 use super::plan::{Action, Plan};
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn apply(plan: Plan) -> io::Result<()> {
     for action in plan.actions {
         match action {
@@ -25,6 +26,7 @@ pub(super) fn apply(plan: Plan) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn remove(path: &Path) -> io::Result<()> {
     if path.as_os_str().is_empty() {
         return Ok(());
@@ -39,10 +41,12 @@ fn remove(path: &Path) -> io::Result<()> {
     }
 }
 #[cfg(not(windows))]
+#[inline]
 fn remove_leaf(path: &Path) -> io::Result<()> {
     fs::remove_file(path)
 }
 #[cfg(windows)]
+#[inline]
 fn remove_leaf(path: &Path) -> io::Result<()> {
     use std::os::windows::fs::FileTypeExt;
     if fs::symlink_metadata(path)?.file_type().is_symlink_dir() {
@@ -52,6 +56,7 @@ fn remove_leaf(path: &Path) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn empty(path: &Path) -> io::Result<()> {
     if path.as_os_str().is_empty() {
         return Ok(());

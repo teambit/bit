@@ -26,6 +26,7 @@ pub(super) enum Error {
     Filesystem(io::Error),
 }
 impl Error {
+    #[inline]
     pub(super) fn report(self, chalk: Chalk) -> io::Error {
         match self {
             Self::Missing(message) => io::Error::other(message.trim().to_owned()),
@@ -34,6 +35,7 @@ impl Error {
     }
 }
 impl From<io::Error> for Error {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Filesystem(error)
     }
@@ -109,6 +111,7 @@ fn find_restoring_leftovers(scope_dir: &Path) -> Vec<String> {
     names
 }
 
+#[inline]
 fn rollback(source: &Path, target: &Path) -> io::Result<()> {
     if fs::symlink_metadata(source).is_ok() && fs::symlink_metadata(target).is_err() {
         fs::rename(source, target)
@@ -161,6 +164,7 @@ pub(super) fn workspace(root: &Path, args: &[OsString], options: &Options) -> io
         workspace_command::execute_then(root, args, "gc", work)
     }
 }
+#[inline]
 pub(super) fn workspace_index(root: &Path, scope: &Path) -> io::Result<Option<Vec<u8>>> {
     let document = bit_workspace_config::jsonc::Document::parse(&fs::read_to_string(root.join(
         "workspace.jsonc",
@@ -171,6 +175,7 @@ pub(super) fn workspace_index(root: &Path, scope: &Path) -> io::Result<Option<Ve
     bare::restore_index(scope)
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     std::env::var_os("CI")
         .is_some_and(|value| {

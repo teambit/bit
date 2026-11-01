@@ -41,12 +41,14 @@ fn preflight_symlink(
     Ok(())
 }
 
+#[inline]
 pub(super) fn run(src: &Path, dst: &Path, overwrite: bool) -> io::Result<()> {
     let metadata = fs::symlink_metadata(src).map_err(|error| failure(error, "lstat", src))?;
     check::parents(src, dst, &metadata)?;
     entry(src, dst, overwrite)
 }
 
+#[inline]
 fn entry(src: &Path, dst: &Path, overwrite: bool) -> io::Result<()> {
     let metadata = fs::symlink_metadata(src).map_err(|error| failure(error, "lstat", src))?;
     let destination = existing(dst)?;
@@ -74,6 +76,7 @@ fn directory(src: &Path, dst: &Path, overwrite: bool, existed: bool) -> io::Resu
     }
     Ok(())
 }
+#[inline]
 fn copy_file(source: &Path, target: &Path, overwrite: bool, existed: bool) -> io::Result<()> {
     if existed {
         if !overwrite {
@@ -100,6 +103,7 @@ fn copy_restore_link(source: &Path, target: &Path) -> io::Result<()> {
 }
 
 #[cfg(unix)]
+#[inline]
 fn link_target(link: &Path, target: &Path) -> io::Result<()> {
     let destination = fs::read_link(target).map_err(|error| failure(error, "readlink", target))?;
     if normalized(&destination)?.starts_with(normalized(link)?) {
@@ -112,6 +116,7 @@ fn link_target(link: &Path, target: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn existing(path: &Path) -> io::Result<Option<fs::Metadata>> {
     match fs::symlink_metadata(path) {
         Ok(metadata) => Ok(Some(metadata)),
