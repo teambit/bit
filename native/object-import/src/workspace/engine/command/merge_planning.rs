@@ -70,7 +70,7 @@ pub(super) fn plan(
     lane_filter::capture_additions(record, &mut planned, snapshots)?;
     lane_filter::validate_captures(record, &planned)?;
     let mut state = merge::State::new(planned.captured.len())?;
-    let mut selected = Vec::new();
+    let mut selected = Vec::with_capacity(planned.captured.len());
     for index in 0..planned.captured.len() {
         selected.push(select(record, &mut planned, &mut state, index)?);
     }
@@ -325,9 +325,8 @@ fn add_material(
     plan: &Value,
 ) -> io::Result<()> {
     let current = &planned.captured[index];
-
-    let mut material =
-        prepared.state.prepare_result(&body(record, selected, current, directory, index), plan)?;
+    let input = body(record, selected, current, directory, index);
+    let mut material = prepared.state.prepare_result(&input, plan)?;
     if selected.distance["shouldBeRemoved"] == true
         && (material.has_conflicts() || material.no_write())
     {
@@ -337,14 +336,7 @@ fn add_material(
         lane_filter::prepare_hidden_metadata(current, &mut material.version)?;
     }
     let scope_only = lane_filter::scope_only(record, current);
-    policy_rows::divergent(
-        prepared,
-        selected,
-        current,
-        &material,
-        scope_only,
-        &body(record, selected, current, directory, index).labels()?,
-    )?;
+    policy_rows::divergent(prepared, selected, current, &material, scope_only, &input.labels()?)?;
     retain_snapshot(record, prepared, selected, current, &material)?;
     if let Some(rows) = planned.result["components"].as_array_mut() {
         rows.push(material.output.clone());

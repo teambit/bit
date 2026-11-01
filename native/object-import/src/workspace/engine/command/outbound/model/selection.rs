@@ -8,16 +8,15 @@ pub(super) fn select_versions(
     model: &Value,
     objects_dir: &Path,
 ) -> io::Result<Staged> {
-    let staged = if input.options.head_only {
-        head_only(model)?
+    if input.options.head_only {
+        head_only(model)
     } else if input.options.all || input.options.all_versions {
-        all_versions::select(model, objects_dir)?
+        all_versions::select(model, objects_dir)
     } else if has_staged(model) {
-        staged(model)?
+        staged(model)
     } else {
-        repeat::select(model)?
-    };
-    Ok(staged)
+        repeat::select(model)
+    }
 }
 
 fn head_only(model: &Value) -> io::Result<Staged> {
@@ -83,7 +82,7 @@ pub(super) fn staged(model: &Value) -> io::Result<Staged> {
         .map(str::trim)
         .ok_or_else(|| invalid("outbound non-head local Version"))?;
     crate::merge_history::hash(head)?;
-    let mut version = None;
+    let mut has_head = false;
     let mut hashes = Vec::new();
     let mut labels = Vec::new();
     for (key, _) in rows
@@ -103,14 +102,14 @@ pub(super) fn staged(model: &Value) -> io::Result<Staged> {
             None => return Err(invalid("outbound local Version ref")),
         };
         crate::merge_history::hash(hash)?;
-        if hash == head {
-            version = Some(key.to_owned());
-        }
+        has_head |= hash == head;
         if !hashes.iter().any(|known| known == hash) {
             hashes.push(hash.to_owned());
         }
         labels.push(key.to_owned());
     }
-    version.ok_or_else(|| invalid("outbound non-head local Version"))?;
+    if !has_head {
+        return Err(invalid("outbound non-head local Version"));
+    }
     Ok(Staged { head: head.to_owned(), hashes, labels })
 }

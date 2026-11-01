@@ -1,4 +1,7 @@
 //! Retain wildcard discovery history writes and validate every mutable input before publication.
+#[cfg(test)]
+mod tests;
+
 use super::{HistoryBytes, candidates, invalid};
 use crate::store::Store;
 use serde_json::Value;
@@ -19,12 +22,13 @@ pub(in super::super) struct Prepared {
 pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
     let mut prepared = Prepared { root: root.to_owned(), ..Prepared::default() };
     let scope = crate::scope_path(root);
-    for path in [root.join(".bitmap"), scope.join("scope.json"), scope.join("index.json")] {
+    let index_path = scope.join("index.json");
+    for path in [root.join(".bitmap"), scope.join("scope.json"), index_path.clone()] {
         prepared.capture(path)?;
     }
     let index: Value = crate::parse_jsonc(
         prepared.preimages
-            .get(&scope.join("index.json"))
+            .get(&index_path)
             .and_then(Option::as_deref)
             .ok_or_else(|| invalid("outbound prefilter index absent"))?,
     )?;
@@ -35,8 +39,9 @@ pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
     if rows.len() > 4096 {
         return Err(invalid("outbound prefilter index bounds"));
     }
+    let objects = scope.join("objects");
     for row in rows {
-        prepared.capture_component(&scope.join("objects"), row)?;
+        prepared.capture_component(&objects, row)?;
     }
     prepared.histories = candidates::histories(root)?;
     prepared.validate()?;
@@ -102,6 +107,3 @@ fn read(path: &Path) -> io::Result<Option<Vec<u8>>> {
         Err(error) => Err(error),
     }
 }
-
-#[cfg(test)]
-mod tests;

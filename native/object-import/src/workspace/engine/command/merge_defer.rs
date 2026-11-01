@@ -14,12 +14,12 @@ pub(in crate::workspace::engine) fn run(
     input: &Request,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
-    let token = input.token.trim();
-    if token.is_empty() || token.len() > 4096 || token.chars().any(char::is_control) {
-        return Err(invalid("merge snapshot deferral token"));
-    }
     let record = state.record.as_mut().ok_or_else(|| invalid("merge owner absent"))?;
-    if record.token.trim() != token || record.request.operation != Operation::Merge {
+    let token = input.token.trim();
+    if token.is_empty()
+        || record.token.trim() != token
+        || record.request.operation != Operation::Merge
+    {
         return Err(invalid("merge snapshot deferral token"));
     }
     proof::verify(&record.proofs)?;

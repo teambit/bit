@@ -11,6 +11,10 @@ pub(super) struct Reported {
 
 impl Reported {
     pub(super) fn prepare(selected: &LaneSelected) -> io::Result<Self> {
+        let selected_ids: HashSet<_> = selected.components.ids
+            .iter()
+            .map(|id| id.trim())
+            .collect();
         let removed =
             selected.lane["components"]
                 .as_array()
@@ -23,21 +27,17 @@ impl Reported {
                             row,
                         )?;
                     let identity = format!("{scope}/{name}");
-                    selected.components.ids
-                        .iter()
-                        .any(|id| id.trim() == identity)
-                        .then_some(identity)
+                    selected_ids.contains(identity.as_str()).then_some(identity)
                 })
                 .collect();
-        Ok(Self { updates: selected_update_ids(selected)?, removed })
+        Ok(Self { updates: selected_update_ids(selected, &selected_ids)?, removed })
     }
 }
 
-fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
-    let selected_ids: HashSet<_> = selected.components.ids
-        .iter()
-        .map(|id| id.trim())
-        .collect();
+fn selected_update_ids(
+    selected: &LaneSelected,
+    selected_ids: &HashSet<&str>,
+) -> io::Result<Vec<String>> {
     let updates = match selected.lane.get("updateDependents") {
         None | Some(Value::Null) => &[][..],
         Some(Value::Array(updates)) => updates.as_slice(),

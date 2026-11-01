@@ -66,7 +66,10 @@ pub(super) fn filter(manifest: &mut Value, nested: &[String]) -> io::Result<()> 
         path != ".bitmap"
             && !nested
                 .iter()
-                .any(|directory| path == directory || path.starts_with(&format!("{directory}/")))
+                .any(|directory| {
+                    path.strip_prefix(directory.as_str())
+                        .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+                })
     });
     Ok(())
 }

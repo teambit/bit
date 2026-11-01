@@ -51,19 +51,17 @@ pub(super) fn error(input: &Input<'_>) -> io::Result<String> {
 }
 
 fn target_identity(target: &Value) -> Option<String> {
-    if let Some(identity) = ["identity", "id"]
+    if let Some(bare) = ["identity", "id"]
         .into_iter()
         .find_map(|field| {
             target[field]
                 .as_str()
                 .map(str::trim)
-                .filter(|value| !value.is_empty())
+                .map(|id| id.rsplit_once('@').map_or(id, |(prefix, _)| prefix.trim()))
+                .filter(|bare| !bare.is_empty())
         })
     {
-        let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
-        if !bare.is_empty() {
-            return Some(bare.to_owned());
-        }
+        return Some(bare.to_owned());
     }
     let object = target["id"].as_object()?;
     let name = object

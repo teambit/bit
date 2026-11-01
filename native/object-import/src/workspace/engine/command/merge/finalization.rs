@@ -124,8 +124,11 @@ impl Prepared {
             .ok_or_else(|| invalid("snapshot index write absent"))?;
         let (_, bytes) = self.writes.remove(index);
         self.write(&path, &bytes)?;
-        let files = std::collections::HashMap::from([(path.clone(), bytes.clone())]);
-        proof::accept_published(&mut self.proofs, &files);
+        for proof in &mut self.proofs {
+            if proof.path == path {
+                *proof = proof::content(&path, &bytes);
+            }
+        }
         Ok((path, bytes))
     }
 
@@ -294,7 +297,10 @@ impl Prepared {
             .file_name()
             .is_some_and(|name| name == "package.json")
         {
-            if self.package_creates.contains(&path.to_path_buf()) {
+            if self.package_creates
+                .iter()
+                .any(|created| created == path)
+            {
                 let mut file = fs::OpenOptions::new()
                     .write(true)
                     .create_new(true)

@@ -154,21 +154,17 @@ fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> i
         .as_str()
         .map(str::trim)
         .ok_or_else(|| invalid("command snap flattened graph"))?;
-    crate::merge_history::hash(old)?;
+    let hash = crate::merge_history::hash(old)?;
+    let objects_dir = crate::scope_path(root).join("objects");
     proof::read(
-        &crate::scope_path(root)
-            .join("objects")
+        &objects_dir
             .join(&old[..2])
             .join(&old[2..]),
         proofs,
     )?;
     let mut compressed = 0;
-    let bytes = crate::checkout::repository::source(
-        &crate::scope_path(root).join("objects"),
-        crate::merge_history::hash(old)?,
-        4 * 1024 * 1024,
-        &mut compressed,
-    )?;
+    let bytes =
+        crate::checkout::repository::source(&objects_dir, hash, 4 * 1024 * 1024, &mut compressed)?;
     proof::verify(&proofs[proofs.len() - 1..])?;
     crate::parse_jsonc(&bytes)
 }
@@ -176,6 +172,9 @@ fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> i
 fn rekey(rows: &mut [Value], identity: &str, hash: &str) {
     let identity = identity.trim();
     let identity = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
+    let Some((scope, name)) = identity.split_once('/') else {
+        return;
+    };
     let hash = hash.trim();
     let pending = rows
         .iter()
@@ -185,11 +184,8 @@ fn rekey(rows: &mut [Value], identity: &str, hash: &str) {
     for row in rows {
         let source = &mut row["source"];
         if source.is_object()
-            && format!(
-                "{}/{}",
-                source["scope"].as_str().map_or("", str::trim),
-                source["name"].as_str().map_or("", str::trim),
-            ) == identity
+            && source["scope"].as_str().map_or("", str::trim) == scope
+            && source["name"].as_str().map_or("", str::trim) == name
             && (!pending
                 || source["version"].as_str().map(str::trim) == Some(super::PENDING_GRAPH_VERSION))
         {

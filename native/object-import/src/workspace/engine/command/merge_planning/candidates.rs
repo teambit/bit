@@ -19,7 +19,7 @@ pub(in crate::workspace::engine::command) fn select_targets(
     {
         return Ok(targets);
     }
-    let mut selected = Vec::new();
+    let mut selected = Vec::with_capacity(targets.len());
     for target in targets {
         let identity = target_identity(&target).ok_or_else(|| invalid("command merge identity"))?;
         let Some(model) = model(context, &identity)? else {

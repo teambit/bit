@@ -38,10 +38,10 @@ fn allocate(path: &Path) -> io::Result<(Temporary, File)> {
         .parent()
         .filter(|parent| !parent.as_os_str().is_empty())
         .ok_or_else(|| io::Error::other("package parent absent"))?;
+    let pid = std::process::id();
     for _ in 0..64 {
         let path = parent.join(format!(
-            ".bit-package-{}-{}",
-            std::process::id(),
+            ".bit-package-{pid}-{}",
             SEQUENCE.fetch_add(1, Ordering::Relaxed),
         ));
         match OpenOptions::new()

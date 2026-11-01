@@ -215,19 +215,15 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
     let (identity, version) = id
         .rsplit_once('@')
         .map_or((id, None), |(identity, version)| (identity.trim(), Some(version.trim())));
-    let identity = identity
+    if let Some((scope, name)) = identity
         .split_once('/')
-        .map_or_else(
-            || identity.to_owned(),
-            |(scope, name)| format!("{}/{}", scope.trim(), name.trim()),
-        );
-    if let Some(scoped) = staged
-        .iter()
-        .find(|(row, model)| {
-            row_scoped_id_parts(row)
-                .is_some_and(|(scope, name)| format!("{scope}/{name}") == identity)
-                && matches_requested_version(model, version)
-        })
+        .map(|(sc, nm)| (sc.trim(), nm.trim()))
+        && let Some(scoped) = staged
+            .iter()
+            .find(|(row, model)| {
+                row_scoped_id_parts(row) == Some((scope, name))
+                    && matches_requested_version(model, version)
+            })
     {
         return Ok(scoped);
     }
@@ -298,12 +294,9 @@ fn identity(row: &Value, model: &Value) -> io::Result<Identity> {
     let model_hash = row["hash"]
         .as_str()
         .map(str::trim)
-        .ok_or_else(|| invalid("outbound model hash"))?;
-    Ok(Identity {
-        scope: scope.to_owned(),
-        name: name.to_owned(),
-        model_hash: model_hash.to_owned(),
-    })
+        .ok_or_else(|| invalid("outbound model hash"))?
+        .to_owned();
+    Ok(Identity { scope: scope.to_owned(), name: name.to_owned(), model_hash })
 }
 
 fn load_model(root: &Path, row: &Value) -> io::Result<Value> {

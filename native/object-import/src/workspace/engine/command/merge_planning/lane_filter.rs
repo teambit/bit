@@ -119,7 +119,7 @@ pub(super) fn capture_hidden(
     planned: &mut planning::Planned,
     snapshots: &mut crate::workspace::snapshots::State,
 ) -> io::Result<()> {
-    let Some(targets) = record.context["lane"]["targets"].as_array().cloned() else {
+    let Some(targets) = record.context["lane"]["targets"].as_array() else {
         return Ok(());
     };
     let directory = super::scratch::Directory::create()?;

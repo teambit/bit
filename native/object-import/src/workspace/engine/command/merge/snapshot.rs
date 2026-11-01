@@ -99,8 +99,8 @@ pub(in crate::workspace::engine::command) fn prepare(
 ) -> io::Result<Snapshot> {
     metadata::receipt(receipt, inputs)?;
     let budget = crate::read_budget::Budget::new(crate::workspace::snapshots::MAX_BYTES);
-    let mut objects = Vec::new();
-    let mut versions = Vec::new();
+    let mut objects = Vec::with_capacity(inputs.len() * 2);
+    let mut versions = Vec::with_capacity(inputs.len());
     let mut proofs = Vec::new();
     for (input, allocation) in inputs
         .iter()
@@ -159,9 +159,9 @@ pub(in crate::workspace::engine::command) fn preflight(
     root: &Path,
     inputs: &[Input<'_>],
 ) -> io::Result<Vec<Value>> {
-    let mut versions = Vec::new();
+    let mut versions = Vec::with_capacity(inputs.len());
     let budget = crate::read_budget::Budget::new(crate::workspace::snapshots::MAX_BYTES);
-    let mut objects = Vec::new();
+    let mut objects = Vec::with_capacity(inputs.len() * 2);
     let mut proofs = Vec::new();
     let mut bytes = 0_usize;
     for input in inputs {

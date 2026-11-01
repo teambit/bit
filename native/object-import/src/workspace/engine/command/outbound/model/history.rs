@@ -75,8 +75,9 @@ fn version_row(dir: &Path, hash: &str) -> io::Result<Value> {
 }
 
 fn refs(value: &Value) -> io::Result<Value> {
-    let mut list = Vec::new();
-    for parent in value.as_array().ok_or_else(|| invalid("outbound Version parent list"))? {
+    let parents = value.as_array().ok_or_else(|| invalid("outbound Version parent list"))?;
+    let mut list = Vec::with_capacity(parents.len());
+    for parent in parents {
         let hash = ref_str(parent).ok_or_else(|| invalid("outbound Version parent"))?;
         crate::merge_history::hash(hash)?;
         list.push(Value::String(hash.to_owned()));

@@ -24,10 +24,10 @@ pub(super) fn prepare(record: &mut Record, plan: &planning::Planned) -> io::Resu
         rebased: &rebased,
         on_main: lane["current"].is_null(),
     };
-    let mut heads = Vec::new();
-    for result in
-        plan.result["components"].as_array().ok_or_else(|| invalid("lane successful results"))?
-    {
+    let results =
+        plan.result["components"].as_array().ok_or_else(|| invalid("lane successful results"))?;
+    let mut heads = Vec::with_capacity(results.len());
+    for result in results {
         let identity = result["id"]
             .as_str()
             .map(|raw| {

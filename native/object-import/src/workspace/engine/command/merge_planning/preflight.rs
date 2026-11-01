@@ -1,4 +1,6 @@
 mod cache_guard;
+#[cfg(test)]
+mod tests;
 
 use super::{Prepared, Record, invalid, merge};
 use serde_json::Value;
@@ -20,6 +22,7 @@ pub(super) fn validate(
         .iter()
         .map(|input| input.identity.trim())
         .collect::<HashSet<_>>();
+    let check_cache = !prepared.policy.as_ref().is_some_and(|policy| policy.dependencies_ready);
     for target in targets {
         validate_target(&target.version)?;
         let identity = target.output["id"]
@@ -28,7 +31,7 @@ pub(super) fn validate(
             .map(|(identity, _)| identity.trim())
             .filter(|identity| !identity.is_empty())
             .ok_or_else(|| invalid("command fast-forward identity"))?;
-        if !prepared.policy.as_ref().is_some_and(|policy| policy.dependencies_ready) {
+        if check_cache {
             prepared.proofs.extend(cache_guard::verify(record, captured, target, identity)?);
         }
     }
@@ -52,9 +55,6 @@ pub(super) fn validate(
 }
 
 fn validate_dependents(record: &Record, identities: &HashSet<&str>) -> io::Result<()> {
-    if record.request.internal_snapshot_preview {
-        return Ok(());
-    }
     for row in
         record.context["versions"].as_array().ok_or_else(|| invalid("command merge versions"))?
     {
@@ -133,6 +133,3 @@ fn validate_target(version: &Value) -> io::Result<()> {
     let files = version["files"].as_array().ok_or_else(|| invalid("command target files"))?;
     merge::snapshot::validate_application_files(files)
 }
-
-#[cfg(test)]
-mod tests;

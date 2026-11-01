@@ -37,11 +37,9 @@ pub(super) fn prepare(
     let directory = root.join("node_modules").join(name);
     ordinary(root, &directory, output)?;
     let tracked = snapshot && tracked_manifest(input.version);
-    let created = if tracked {
-        false
-    } else {
-        manifest(root, input, name, &directory, allow_missing, snapshot, output)?
-    };
+    let created =
+        !tracked && manifest(root, input, name, &directory, allow_missing, snapshot, output)?;
+    let source_root = root.join(input.directory.trim());
     for file in input.version["files"].as_array().ok_or_else(|| invalid("merge package files"))? {
         let relative = file["relativePath"]
             .as_str()
@@ -52,13 +50,13 @@ pub(super) fn prepare(
         if relative == "package.json" && !tracked {
             return Err(invalid("merge tracked package manifest"));
         }
-        let source = root.join(input.directory.trim()).join(relative);
+        let source = source_root.join(relative);
         link(root, &source, &directory.join(relative), snapshot, output)?;
         if roots && !created {
             root_copies(root, name, relative, &source, snapshot, output)?;
         }
     }
-    windows_source_link(root, input, &directory, snapshot, output)?;
+    windows_source_link(root, &source_root, &directory, snapshot, output)?;
     Ok(())
 }
 pub(super) fn package_name(version: &Value) -> io::Result<&str> {
@@ -316,13 +314,13 @@ fn roots_path(root: &Path, snapshot: bool, output: &mut Prepared) -> io::Result<
 
 fn windows_source_link(
     root: &Path,
-    input: &Input<'_>,
+    source_root: &Path,
     directory: &Path,
     snapshot: bool,
     output: &mut Prepared,
 ) -> io::Result<()> {
     if snapshot && cfg!(windows) {
-        link(root, &root.join(input.directory.trim()), &directory.join("_src"), true, output)?;
+        link(root, source_root, &directory.join("_src"), true, output)?;
     }
     Ok(())
 }

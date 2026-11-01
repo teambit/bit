@@ -12,10 +12,9 @@ pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
         return Err(invalid("outbound lane plan identity"));
     }
     let host = remote::host(input, scope)?;
-    let fork_history = (host.starts_with("file://") && !cfg!(windows))
-        .then(|| lane.fork_history.clone())
-        .flatten();
     let prepared = lane_publication::prepare(input, &lane)?;
+    let fork_history =
+        (host.starts_with("file://") && !cfg!(windows)).then_some(lane.fork_history).flatten();
     let name = format!("{scope}/{lane_name}");
     let count = lane.components.ids.len();
     let resume = input.options.resume

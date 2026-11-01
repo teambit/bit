@@ -78,22 +78,22 @@ fn one(
     } else {
         current(&planned.captured[index], selected, relation.clone())?
     };
-    let mut pending =
-        super::pending::entry(&selected.model, &selected.remote, Some(lane), &material);
-    pending["unrelated"] = relation.clone();
-    if let Some(rows) = prepared.unmerged.as_array_mut() {
-        rows.push(pending);
-    }
-    super::retain_snapshot(record, prepared, selected, &planned.captured[index], &material)?;
-    if let Some(rows) = planned.result["components"].as_array_mut() {
-        rows.push(material.output.clone());
-    }
     if let Some(lane) = &mut prepared.publication.lane {
         lane.update(
             &planned.captured[index].target.identity,
             relation["headOnCurrentLane"].as_str().ok_or_else(|| invalid("unrelated lane head"))?,
             false,
         )?;
+    }
+    let mut pending =
+        super::pending::entry(&selected.model, &selected.remote, Some(lane), &material);
+    pending["unrelated"] = relation;
+    if let Some(rows) = prepared.unmerged.as_array_mut() {
+        rows.push(pending);
+    }
+    super::retain_snapshot(record, prepared, selected, &planned.captured[index], &material)?;
+    if let Some(rows) = planned.result["components"].as_array_mut() {
+        rows.push(material.output.clone());
     }
     prepared.materials.push(material);
     Ok(())

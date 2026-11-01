@@ -13,6 +13,7 @@ pub(in super::super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
         Some(Value::Array(updates)) => updates.as_slice(),
         Some(_) => return Err(invalid("outbound lane update-dependents")),
     };
+    entries.reserve(updates.len());
     for update in updates {
         entries.push(parse_update_dependent(update)?);
     }
@@ -115,18 +116,18 @@ fn workspace_entry_id<'a>(key: &'a str, entry: &'a Value) -> Option<(&'a str, &'
     let name = non_empty_field(entry, "name")
         .unwrap_or_else(|| {
             key_id
-                .strip_prefix(&format!("{scope}/"))
+                .strip_prefix(scope)
+                .and_then(|rest| rest.strip_prefix('/'))
                 .unwrap_or(key_id)
                 .trim()
         });
-    let version = non_empty_field(entry, "version")
+    non_empty_field(entry, "version")
         .or_else(|| {
             trimmed_key
                 .rsplit_once('@')
                 .map(|(_, ver)| ver.trim())
                 .filter(|val| !val.is_empty())
         })?;
-    let _ = version;
     (!name.is_empty()).then_some((scope, name))
 }
 

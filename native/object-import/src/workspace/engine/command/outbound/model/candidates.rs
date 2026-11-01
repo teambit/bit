@@ -29,8 +29,9 @@ pub(super) fn histories(root: &Path) -> io::Result<Vec<super::HistoryBytes>> {
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("outbound index"))?;
     let dir = crate::scope_path(root).join("objects");
-    let mut histories = Vec::new();
-    for (row, model) in staged_rows(root, rows)? {
+    let staged = staged_rows(root, rows)?;
+    let mut histories = Vec::with_capacity(staged.len());
+    for (row, model) in staged {
         let (scope, name) = candidate_scope_and_name(&row)?;
         if !super::super::publication::reconcile_present(&bitmap, scope, name) {
             continue;

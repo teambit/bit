@@ -30,16 +30,16 @@ impl Prepared {
 }
 
 fn version_name(current: &Captured, output: &Value) -> String {
-    let trimmed = current.target.version.trim();
-    if !trimmed.is_empty() {
-        return trimmed.to_owned();
-    }
-    output["id"]
-        .as_str()
-        .map(str::trim)
-        .and_then(|id| id.rsplit_once('@'))
-        .map(|(_, ver)| ver.trim())
+    Some(current.target.version.trim())
         .filter(|ver| !ver.is_empty())
+        .or_else(|| {
+            output["id"]
+                .as_str()
+                .map(str::trim)
+                .and_then(|id| id.rsplit_once('@'))
+                .map(|(_, ver)| ver.trim())
+                .filter(|ver| !ver.is_empty())
+        })
         .or_else(|| {
             output["version"]
                 .as_str()

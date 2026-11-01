@@ -1,7 +1,7 @@
 //! RemoveMain.getRemovedStagedFromMain reads all pending removal configuration.
 use super::invalid;
 use serde_json::Value;
-use std::io;
+use std::{collections::HashSet, io};
 
 pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
     let rows: Vec<Value> = crate::parse_jsonc(bytes)
@@ -9,6 +9,7 @@ pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
     if rows.len() > 4096 {
         return Err(invalid("outbound removal configuration bounds"));
     }
+    let mut seen = HashSet::new();
     let mut ids = Vec::new();
     for row in rows
         .iter()
@@ -17,7 +18,7 @@ pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
         })
     {
         let id = parse_removed_id(row)?;
-        if !ids.contains(&id) {
+        if seen.insert(id.clone()) {
             ids.push(id);
         }
     }

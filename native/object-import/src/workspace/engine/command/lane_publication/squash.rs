@@ -116,7 +116,7 @@ fn replacement_message(
         .collect::<io::Result<Vec<_>>>()?;
     let scope = lane_scope(&lane["otherId"]).ok_or_else(|| invalid("squash message remote"))?;
     repository.prepare_lane_squash_messages(scope, &references)?;
-    let mut messages = Vec::new();
+    let mut messages = Vec::with_capacity(references.len());
     for hash in references {
         let value = repository.read(&hash, "Version")?;
         if let Some(message) = value["log"]
@@ -156,14 +156,16 @@ fn replace_message(
     let receipts = receipt["squashMessages"]
         .as_array()
         .ok_or_else(|| invalid("squash message date receipts"))?;
-    let dates = receipts
+    let mut dates = receipts
         .iter()
-        .filter(|entry| entry["hash"].as_str().map(str::trim) == Some(hash))
-        .collect::<Vec<_>>();
-    if dates.len() != 1 {
+        .filter(|entry| entry["hash"].as_str().map(str::trim) == Some(hash));
+    let Some(first) = dates.next() else {
+        return Err(invalid("squash message date identity"));
+    };
+    if dates.next().is_some() {
         return Err(invalid("squash message date identity"));
     }
-    let date = dates[0]["date"]
+    let date = first["date"]
         .as_str()
         .map(str::trim)
         .filter(|date| date.parse::<u64>().is_ok())

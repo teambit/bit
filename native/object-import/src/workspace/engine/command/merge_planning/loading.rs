@@ -59,7 +59,7 @@ fn heads(record: &mut Record, identity: &str, model: &Value) -> io::Result<(Stri
         .as_str()
         .map(str::trim)
         .filter(|head| *head != "0")
-        .unwrap_or("")
+        .unwrap_or_default()
         .to_owned();
     Ok((remote, current_head))
 }

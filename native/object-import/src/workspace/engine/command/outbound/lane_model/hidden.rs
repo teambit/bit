@@ -101,21 +101,19 @@ fn identity(value: &str) -> io::Result<(&str, &str)> {
     Ok((id, hash))
 }
 fn visible(lane: &Value, id: &str) -> bool {
+    let Some((scope, name)) = id.split_once('/') else {
+        return false;
+    };
     lane["components"]
         .as_array()
-        .is_some_and(|rows| rows.iter().any(|row| row_matches_visible(row, id)))
-}
-
-fn row_matches_visible(row: &Value, id: &str) -> bool {
-    row["id"]["scope"]
-        .as_str()
-        .zip(row["id"]["name"].as_str())
-        .is_some_and(|(scope, name)| format!("{}/{}", scope.trim(), name.trim()) == id)
-        || row["id"]
-            .as_str()
-            .map(str::trim)
-            .map(|raw| raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim()))
-            .is_some_and(|raw| raw == id)
+        .is_some_and(|rows| {
+            rows.iter()
+                .any(|row| {
+                    crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                        row, scope, name,
+                    )
+                })
+        })
 }
 fn merge(
     lane: &Value,

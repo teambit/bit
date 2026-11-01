@@ -18,7 +18,7 @@ pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) ->
     };
     let (version, component_version) = package_versions(input);
     let package_name = package_name.trim();
-    let mut fields = Map::new();
+    let mut fields = Map::with_capacity(14);
     fields.insert("name".into(), value!(package_name));
     fields.insert("version".into(), value!(version));
     fields.insert("main".into(), value!(main));
@@ -164,18 +164,13 @@ fn package_paths(version: &Value, main_file: &str) -> io::Result<(String, Option
         .map(str::trim)
         .filter(|main| !main.is_empty())
         .ok_or_else(|| invalid("tag package main"))?;
-    if changes
-        .get("types")
-        .is_some_and(|value| !value.is_string())
-    {
-        return Err(invalid("tag package types"));
-    }
-    let types = changes
-        .get("types")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|types| !types.is_empty())
-        .map(replace);
+    let types = match changes.get("types") {
+        None => None,
+        Some(Value::String(types)) => Some(types.trim())
+            .filter(|types| !types.is_empty())
+            .map(replace),
+        Some(_) => return Err(invalid("tag package types")),
+    };
     let main = replace(main);
     validate_generated_paths(&main, types.as_deref())?;
     Ok((main, types))

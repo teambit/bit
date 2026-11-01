@@ -60,12 +60,10 @@ impl Prepared {
         if self.finalized.is_some() {
             return Err(invalid("command merge snapshot already finalized"));
         }
-        let identities = self.pending
-            .iter()
-            .map(|row| row.identity.clone())
-            .collect();
-        self.pending.clear();
-        Ok(identities)
+        Ok(self.pending
+            .drain(..)
+            .map(|row| row.identity)
+            .collect())
     }
     pub(in crate::workspace::engine::command) fn cancel_snap(&mut self) {
         self.pending.clear();

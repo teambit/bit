@@ -55,10 +55,13 @@ fn resolve_version_labels(
         .map(|hash| {
             tags.iter()
                 .chain(orphaned.into_iter().flat_map(serde_json::Map::iter))
-                .find(|(_, ref_hash)| ref_hash.as_str().map(str::trim) == Some(hash.as_str()))
-                .map(|(tag, _)| tag.trim())
-                .filter(|tag| !tag.is_empty())
-                .map_or_else(|| hash.clone(), str::to_owned)
+                .find_map(|(tag, ref_hash)| {
+                    (ref_hash.as_str().map(str::trim) == Some(hash.as_str()))
+                        .then(|| tag.trim())
+                        .filter(|tag| !tag.is_empty())
+                        .map(str::to_owned)
+                })
+                .unwrap_or_else(|| hash.clone())
         })
         .collect()
 }

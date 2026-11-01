@@ -7,7 +7,10 @@ mod readme;
 mod staged;
 #[cfg(test)]
 mod tests;
-use super::{Prepare, invalid, model, remote};
+use super::{
+    super::inbound::remote::file_list::{row_lane_matches, row_scoped_id_parts},
+    Prepare, invalid, model, remote,
+};
 use crate::transfer;
 use bit_client_transfer::tar::ObjectItem;
 use serde_json::Value;
@@ -63,7 +66,7 @@ pub(super) fn select(input: &Prepare) -> io::Result<Option<LaneSelected>> {
             parent: format!("{parent_scope}/{parent_name}"),
             external_count: selected.component_ids
                 .iter()
-                .filter(|id| !id.starts_with(&format!("{scope}/")))
+                .filter(|id| id.split('/').next() != Some(scope.as_str()))
                 .count(),
             candidate_count,
         });
@@ -91,12 +94,10 @@ fn current_identity(input: &Prepare) -> io::Result<Option<(String, String)>> {
     if !input.ids.is_empty() {
         return Err(invalid("outbound explicit lane IDs require canonical stack"));
     }
-    let (scope, name) =
-        crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(current)
-            .filter(|(_, name)| *name != "main")
-            .map(|(scope, name)| (scope.to_owned(), name.to_owned()))
-            .ok_or_else(|| invalid("outbound lane identity"))?;
-    Ok(Some((scope, name)))
+    row_scoped_id_parts(current)
+        .filter(|(_, name)| *name != "main")
+        .map(|(scope, name)| Some((scope.to_owned(), name.to_owned())))
+        .ok_or_else(|| invalid("outbound lane identity"))
 }
 
 struct Loaded {
@@ -114,11 +115,7 @@ fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
     let lanes = index["lanes"].as_array().ok_or_else(|| invalid("outbound lane index"))?;
     let lane_row = lanes
         .iter()
-        .find(|row| {
-            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
-                row, scope, name,
-            )
-        })
+        .find(|row| row_lane_matches(row, scope, name))
         .ok_or_else(|| invalid("outbound current lane missing"))?;
     let hash_str = lane_row["hash"].as_str().ok_or_else(|| invalid("outbound lane hash"))?;
     let hash = hash_str.trim().to_owned();
@@ -145,28 +142,22 @@ fn forked_from(lane: &Value, scope: &str, new_scope: bool) -> io::Result<Option<
         .get("forkedFrom")
         .filter(|value| !value.is_null())
         .map(|parent| {
-            let (parent_scope, parent_name) = if let Some(raw) = parent.as_str().map(str::trim) {
-                raw.split_once('/')
-                    .map_or(("", raw), |(sc, nm)| (sc.trim(), nm.trim()))
-            } else {
-                (
-                    parent["scope"].as_str().map_or("", str::trim),
-                    parent["name"].as_str().map_or("", str::trim),
-                )
-            };
-            if parent_scope.is_empty() || parent_name.is_empty() {
-                return Err(invalid("outbound lane fork identity"));
-            }
-            Ok((parent_scope.to_owned(), parent_name.to_owned()))
+            parent
+                .as_str()
+                .and_then(|raw| raw.trim().split_once('/'))
+                .or_else(|| Some((parent["scope"].as_str()?, parent["name"].as_str()?)))
+                .map(|(sc, nm)| (sc.trim(), nm.trim()))
+                .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
+                .map(|(sc, nm)| (sc.to_owned(), nm.to_owned()))
+                .ok_or_else(|| invalid("outbound lane fork identity"))
         })
         .transpose()?;
-    let cross_scope = forked_from
+    (forked_from
         .as_ref()
-        .is_some_and(|(parent_scope, _)| parent_scope != scope);
-    if cross_scope != new_scope {
-        return Err(invalid("outbound cross-scope lane fork flag"));
-    }
-    Ok(forked_from)
+        .is_some_and(|(sc, _)| sc != scope)
+        == new_scope)
+        .then_some(forked_from)
+        .ok_or_else(|| invalid("outbound cross-scope lane fork flag"))
 }
 
 #[derive(Default)]
@@ -252,12 +243,9 @@ impl RemoteLaneHeads {
         let head_in = |rows: &'a [Value]| {
             rows.iter()
                 .find(|row| component.matches(row))
-                .and_then(|row| {
-                    row["head"]
-                        .as_str()
-                        .map(str::trim)
-                        .filter(|hd| !hd.is_empty())
-                })
+                .and_then(|row| row["head"].as_str())
+                .map(str::trim)
+                .filter(|hd| !hd.is_empty())
         };
         let (lane_remote_head, fork_remote_head) = (head_in(&self.lane), head_in(&self.fork));
         if (!exhaustive || context.input.options.head_only)
@@ -321,9 +309,7 @@ impl<'a> ComponentId<'a> {
         Ok(Self { scope, name, head, id: format!("{scope}/{name}") })
     }
     fn matches(&self, row: &Value) -> bool {
-        crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
-            row, self.scope, self.name,
-        )
+        row_lane_matches(row, self.scope, self.name)
     }
 }
 
@@ -399,12 +385,7 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
     if bad(scope) || bad(name) {
         return Err(invalid("outbound lane ref path"));
     }
-    match fs::read(
-        crate::scope_path(root)
-            .join("refs/remotes")
-            .join(scope)
-            .join(name),
-    ) {
+    match fs::read(crate::scope_path(root).join(format!("refs/remotes/{scope}/{name}"))) {
         Ok(bytes) => serde_json::from_value(crate::parse_jsonc(&bytes)?).map_err(io::Error::other),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(error) => Err(error),

@@ -96,7 +96,7 @@ pub(in super::super) fn resolve(input: &Prepare, scope: &str) -> io::Result<Reso
 }
 
 fn resolve_hub(input: &Prepare, local: &Value, scope: &str) -> io::Result<String> {
-    let global = global(input)?;
+    let global = global_with_scope(input, local)?;
     let name = local["name"]
         .as_str()
         .map(str::trim)
@@ -125,12 +125,16 @@ fn resolve_hub(input: &Prepare, local: &Value, scope: &str) -> io::Result<String
 }
 
 pub(in super::super) fn global(input: &Prepare) -> io::Result<GlobalConfig> {
+    let scope: Value =
+        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
+    global_with_scope(input, &scope)
+}
+
+fn global_with_scope(input: &Prepare, scope: &Value) -> io::Result<GlobalConfig> {
     let global = serde_json::from_value(bit_workspace_config::read_global_config(
         &input.transport.global_config_dir,
     )?)
     .map_err(io::Error::other)?;
-    let scope: Value =
-        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
     let workspace =
         crate::workspace::engine::effective_workspace_configuration(&input.root, &input.home)?;
     Ok(bit_client_transfer::config::effective(

@@ -258,16 +258,15 @@ fn validate_path(path: &Path, root: &Path) -> io::Result<()> {
 }
 
 fn transition_request(input: &Input<'_>) -> io::Result<Value> {
-    let workspace_root = input.current.target.directory.trim() == ".";
-    let nested = if workspace_root { root::nested_directories(input.root)? } else { Vec::new() };
     let mut target = manifest(input.reference, input.version)?;
-    if workspace_root {
-        root::validate_version(input.version)?;
-        root::filter(&mut target, &nested)?;
-    }
     let mut base = input.base.map(|(hash, value)| manifest(hash, value)).transpose()?;
-    if workspace_root && let Some(base) = base.as_mut() {
-        root::filter(base, &nested)?;
+    if input.current.target.directory.trim() == "." {
+        root::validate_version(input.version)?;
+        let nested = root::nested_directories(input.root)?;
+        root::filter(&mut target, &nested)?;
+        if let Some(base) = base.as_mut() {
+            root::filter(base, &nested)?;
+        }
     }
     Ok(json!({
         "objectsDirectory":crate::scope_path(input.root).join("objects"),"snapshotDirectory":input.directory,

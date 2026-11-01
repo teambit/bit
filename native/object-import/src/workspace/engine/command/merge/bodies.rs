@@ -314,24 +314,26 @@ pub(in crate::workspace::engine::command) fn equivalent_dependencies(
     value: &Value,
     current: &Value,
 ) -> io::Result<()> {
-    let mut normalized = value.clone();
-    let rows = normalized.as_array_mut().ok_or_else(|| invalid("merge dependency metadata"))?;
+    let rows = value.as_array().ok_or_else(|| invalid("merge dependency metadata"))?;
     let reference =
         current.as_array().ok_or_else(|| invalid("merge current dependency metadata"))?;
     if rows.len() != reference.len() {
         return Err(invalid("merge dependency metadata count"));
     }
-    for (row, expected) in rows.iter_mut().zip(reference) {
+    if rows == reference {
+        return Ok(());
+    }
+    let mut normalized = rows.clone();
+    for (row, expected) in normalized.iter_mut().zip(reference) {
         if row.get("packageName").is_none()
             && let Some(name) = expected.get("packageName")
         {
             row["packageName"] = name.clone();
         }
     }
-    if normalized != *current {
-        return Err(invalid("merge dependency metadata differs"));
-    }
-    Ok(())
+    (normalized == *reference)
+        .then_some(())
+        .ok_or_else(|| invalid("merge dependency metadata differs"))
 }
 
 fn current_version(input: &BodyInput<'_>) -> io::Result<Value> {

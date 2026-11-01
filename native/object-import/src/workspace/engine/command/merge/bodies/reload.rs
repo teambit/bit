@@ -45,7 +45,7 @@ fn retain(
         if files
             .iter()
             .any(|file| file["relativePath"].as_str().map(str::trim) == Some(path))
-            || removals.contains(&directory.join(path))
+            || (!removals.is_empty() && removals.contains(&directory.join(path)))
         {
             continue;
         }

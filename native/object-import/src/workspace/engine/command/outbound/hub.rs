@@ -155,11 +155,11 @@ fn scoped_objects(pending: &[Pending]) -> Vec<tar::ObjectItem> {
         let scope = batch.scope.trim();
         for object in &batch.objects {
             let hash = object.hash.trim().to_ascii_lowercase();
-            if seen.insert((scope.to_owned(), hash.clone())) {
+            if seen.insert((scope, hash.clone())) {
                 objects.push(tar::ObjectItem {
                     scope: Some(scope.to_owned()),
                     hash,
-                    ..object.clone()
+                    compressed: object.compressed.clone(),
                 });
             }
         }

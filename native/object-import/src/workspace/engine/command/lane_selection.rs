@@ -55,7 +55,7 @@ pub(super) fn filter(
 }
 
 fn indices_for_ids(statuses: &[Value], ids: &[String]) -> io::Result<Vec<usize>> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(ids.len());
     ids.iter()
         .map(|id| {
             let id = id.trim();
@@ -149,10 +149,16 @@ fn extend_dependencies(
         .as_array()
         .ok_or_else(|| invalid("lane filter flattened dependencies"))?
     {
-        let id = format!("{}/{}", text(dependency, "scope")?, text(dependency, "name")?);
+        let (dep_scope, dep_name) = (text(dependency, "scope")?, text(dependency, "name")?);
         let Some(other) = input.statuses
             .iter()
-            .position(|row| row["identity"].as_str().map(str::trim) == Some(id.as_str()))
+            .position(|row| {
+                row["identity"]
+                    .as_str()
+                    .and_then(|id| id.trim().strip_prefix(dep_scope))
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(dep_name)
+            })
         else {
             continue;
         };

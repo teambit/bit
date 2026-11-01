@@ -85,13 +85,14 @@ fn roots(input: &Prepare, workspace: &Value) -> io::Result<Option<std::path::Pat
 }
 
 fn controls(input: &Prepare) -> io::Result<Vec<proof::Proof>> {
-    let mut proofs = Vec::new();
+    let scope = crate::scope_path(&input.root);
+    let mut proofs = Vec::with_capacity(6);
     for path in [
         input.root.join("workspace.jsonc"),
         input.home.join(".bitrc.jsonc"),
         input.root.join(".bitmap"),
-        crate::scope_path(&input.root).join("index.json"),
-        crate::scope_path(&input.root).join("scope.json"),
+        scope.join("index.json"),
+        scope.join("scope.json"),
         input.transport.global_config_dir.join("config.json"),
     ] {
         proof::read(&path, &mut proofs)?;
@@ -216,13 +217,14 @@ fn projection(
         .transpose()?
         .unwrap_or(Value::Null);
     let files = files(version)?;
+    let envs = data(version, "teambit.envs/envs");
     Ok(
         json!({"component":{"id":{"scope":scope,"default_scope":null,"name":name,"version":target["version"]},
         "rootDir":directory,"dir":input.root.join(directory),"files":files,"mainFile":version["mainFile"],
-        "packageName":package_name,"envId":data(version, "teambit.envs/envs").and_then(|data| data["id"].as_str()).unwrap_or("teambit.harmony/node"),
+        "packageName":package_name,"envId":envs.and_then(|data| data["id"].as_str()).unwrap_or("teambit.harmony/node"),
         "isEnv":false,"hasPackageJson":files.iter().any(|file| file == "package.json"),"config":{}},
         "dependencies":dependencies(version, resolver)?,"props":data(version, "teambit.pkg/pkg").and_then(|data| data.get("packageJsonModification")).cloned().unwrap_or_else(|| json!({})),
-        "isAspect":data(version, "teambit.envs/envs").is_some_and(|data| data["type"] == "aspect"),"target":target,"versionData":version}),
+        "isAspect":envs.is_some_and(|data| data["type"] == "aspect"),"target":target,"versionData":version}),
     )
 }
 

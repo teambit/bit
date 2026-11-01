@@ -140,13 +140,10 @@ pub(in crate::workspace::engine) fn stage(
     let mut receipt = publication_receipt(retained, ids, false);
     receipt["staged"] = json!(true);
     receipt["updatedLocally"] = json!(updated);
-    if let (Some(target), Some(source)) = (
-        receipt.as_object_mut(),
-        retained.local.packages
-            .receipt(Some(&updated))
-            .as_object(),
-    ) {
-        target.extend(source.clone());
+    if let (Some(target), Value::Object(source)) =
+        (receipt.as_object_mut(), retained.local.packages.receipt(Some(&updated)))
+    {
+        target.extend(source);
     }
     Ok((ids.len(), receipt))
 }

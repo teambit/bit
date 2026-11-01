@@ -178,7 +178,7 @@ fn read_merged(row: &Value, budget: &AtomicUsize) -> io::Result<Source> {
     }
     let mut file = fs::File::open(path)?;
     file.seek(SeekFrom::Start(source["spoolOffset"].as_u64().unwrap_or(0)))?;
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(size as usize);
     file.take(size).read_to_end(&mut bytes)?;
     reserve(bytes.len(), budget)?;
     if bytes.len() as u64 != size
@@ -233,20 +233,13 @@ fn compare(
     let filename = path.to_str().ok_or_else(|| invalid("merge dependency source encoding"))?;
     let left = scan(filename, old)?;
     let right = scan(filename, new)?;
-    if left
-        .as_object()
-        .map(|map| map.iter().collect::<Vec<_>>())
-        != right
-            .as_object()
-            .map(|map| map.iter().collect::<Vec<_>>())
-    {
+    let (Some(left_map), Some(right_map)) = (left.as_object(), right.as_object()) else {
+        return Err(invalid("merge dependency detector output"));
+    };
+    if left_map.len() != right_map.len() || !left_map.iter().eq(right_map.iter()) {
         return Err(invalid("merge dependency graph changed"));
     }
-    for dependency in left
-        .as_object()
-        .ok_or_else(|| invalid("merge dependency detector output"))?
-        .keys()
-    {
+    for dependency in left_map.keys() {
         resolve(input, &path, mode, dependency)?;
     }
     // Config and package classification are control inputs even for dependency-free additions.

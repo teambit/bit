@@ -37,8 +37,8 @@ impl Prepared {
         if expected.len() != manifests.len() {
             return Err(invalid("snapshot package manifest count"));
         }
-        let mut identities = HashSet::new();
-        let mut writes = Vec::new();
+        let mut identities = HashSet::with_capacity(manifests.len());
+        let mut writes = Vec::with_capacity(manifests.len());
         for row in manifests {
             let id = row["identity"]
                 .as_str()
@@ -162,10 +162,11 @@ fn aspect_exports(manifest: &mut Value) -> io::Result<()> {
     }
     let exports =
         exports.as_object_mut().ok_or_else(|| invalid("snapshot aspect exports shape"))?;
-    let default = exports.get("default").cloned();
-    if default.as_ref().is_some_and(truthy) {
-        exports.shift_remove("default");
-    }
+    let default = exports
+        .get("default")
+        .is_some_and(truthy)
+        .then(|| exports.shift_remove("default"))
+        .flatten();
     let trimmed = types.trim();
     let types = trimmed.strip_prefix("./").unwrap_or(trimmed);
     let types = format!("./{types}");

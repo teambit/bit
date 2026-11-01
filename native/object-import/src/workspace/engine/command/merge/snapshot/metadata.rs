@@ -48,9 +48,8 @@ pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::
 
 fn base_version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
     let mut version = current_schema(&input.material.version)?;
-    let has_edges_ref = version.get("flattenedEdgesRef").is_some();
     let version_map = version.as_object_mut().ok_or_else(|| invalid("command snap Version"))?;
-    if has_edges_ref {
+    if version_map.contains_key("flattenedEdgesRef") {
         version_map.remove("flattenedEdges");
     }
     for field in ["squashed", "unrelated", "hidden", "dependenciesGraphRef"] {
@@ -132,17 +131,7 @@ fn apply_origin(input: &Input<'_>, version: &mut Value) -> io::Result<()> {
         .ok_or_else(|| invalid("merge snap identity"))?;
     version["origin"] = json!({"id":{"scope":scope,"name":name}});
     if let Some(lane) = input.lane.filter(|lane| !lane["current"].is_null()) {
-        let current = &lane["currentId"];
-        let mut lane_obj = if let Some((lane_scope, lane_name)) = current
-            .as_str()
-            .and_then(|raw| raw.trim().split_once('/'))
-            .map(|(sc, nm)| (sc.trim(), nm.trim()))
-            .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
-        {
-            json!({"scope":lane_scope,"name":lane_name})
-        } else {
-            current.clone()
-        };
+        let mut lane_obj = lane_object(&lane["currentId"]);
         if lane_obj.is_object() {
             lane_obj["hash"] = lane["current"]["hash"].clone();
         }
@@ -190,15 +179,16 @@ pub(super) fn squash_lane(model: &Value, lane: &Value) -> io::Result<Value> {
             .ok_or_else(|| invalid("merge model scope"))?;
         return Ok(json!({"scope":scope,"name":"main"}));
     }
-    if let Some((scope, name)) = other
+    Ok(lane_object(other))
+}
+
+fn lane_object(value: &Value) -> Value {
+    value
         .as_str()
         .and_then(|raw| raw.trim().split_once('/'))
         .map(|(sc, nm)| (sc.trim(), nm.trim()))
         .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
-    {
-        return Ok(json!({"scope":scope,"name":name}));
-    }
-    Ok(other.clone())
+        .map_or_else(|| value.clone(), |(sc, nm)| json!({"scope":sc,"name":nm}))
 }
 
 pub(super) fn current_schema(value: &Value) -> io::Result<Value> {

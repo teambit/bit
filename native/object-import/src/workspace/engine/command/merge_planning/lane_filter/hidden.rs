@@ -46,21 +46,21 @@ fn package_name(dependency: &mut Value, resolver: &Value) {
 
 fn same_component_id(left: &Value, right: &Value) -> bool {
     left == right
-        || (component_id_key(left).is_some() && component_id_key(left) == component_id_key(right))
+        || component_id_key(left).is_some_and(|left_key| Some(left_key) == component_id_key(right))
 }
 
-fn component_id_key(value: &Value) -> Option<(String, String, String)> {
+fn component_id_key(value: &Value) -> Option<(&str, &str, &str)> {
     if let Some(raw) = value.as_str().map(str::trim) {
         let (bare, version) = raw
             .rsplit_once('@')
             .map_or((raw, ""), |(b, v)| (b.trim(), v.trim()));
         let (scope, name) = bare.split_once('/')?;
-        return Some((scope.trim().into(), name.trim().into(), version.into()));
+        return Some((scope.trim(), name.trim(), version));
     }
     let scope = value["scope"].as_str()?.trim();
     let name = value["name"].as_str()?.trim();
     let version = value["version"].as_str().map_or("", str::trim);
-    (!scope.is_empty() && !name.is_empty()).then(|| (scope.into(), name.into(), version.into()))
+    (!scope.is_empty() && !name.is_empty()).then_some((scope, name, version))
 }
 
 fn resolver_dependencies(output: &Value) -> Value {

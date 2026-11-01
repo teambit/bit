@@ -14,22 +14,18 @@ impl Prepared {
         self.published.updated_ids.clear();
         let mut after = crate::recovery::jsonc::parse(&self.published.bitmap.after)?;
         for (key, row) in after.as_object_mut().ok_or_else(|| invalid("outbound lane bitmap"))? {
-            let Some(old) = before
-                .get(key)
-                .filter(|row| row.get("rootDir").is_some())
-            else {
-                continue;
-            };
-            if !old["scope"]
-                .as_str()
-                .is_none_or(|scope| scope.trim().is_empty())
+            let Some(old) = before.get(key) else { continue };
+            if old.get("rootDir").is_none()
+                || !old["scope"]
+                    .as_str()
+                    .is_none_or(|scope| scope.trim().is_empty())
             {
                 continue;
             }
             let identity = promoted_identity(key, row)?;
             if ids
                 .iter()
-                .any(|id| id.starts_with(&format!("{identity}@")))
+                .any(|id| id.rsplit_once('@').map(|(bare, _)| bare) == Some(identity.as_str()))
             {
                 self.published.updated_ids.push(identity);
             } else {
@@ -73,8 +69,8 @@ impl Prepared {
                 == self.published.refs.before
             && read_optional(&crate::scope_path(root).join("staged-snaps"))?
                 == self.staged.snaps
-            && read_optional(&self.staged.config_path)?
-                == self.staged.config.as_ref().map(|config| config.before.clone()))
+            && read_optional(&self.staged.config_path)?.as_deref()
+                == self.staged.config.as_ref().map(|config| config.before.as_slice()))
     }
 
     fn validate_objects(&self) -> io::Result<bool> {
@@ -99,7 +95,8 @@ fn promoted_identity(key: &str, row: &serde_json::Value) -> io::Result<String> {
         .filter(|val| !val.is_empty())
         .unwrap_or_else(|| {
             key_id
-                .strip_prefix(&format!("{scope}/"))
+                .strip_prefix(scope)
+                .and_then(|rest| rest.strip_prefix('/'))
                 .unwrap_or(key_id)
                 .trim()
         });

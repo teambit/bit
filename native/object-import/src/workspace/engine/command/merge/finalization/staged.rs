@@ -33,7 +33,7 @@ pub(super) fn prepare(
         .iter()
         .any(|input| !input.directory.trim().is_empty())
     {
-        config(root, inputs, snapshot, output)?;
+        config(root, &scope, inputs, snapshot, output)?;
     }
     let index = scope.join("index.json");
     // A scope that never stored a component has no index yet: `ComponentsIndex`
@@ -47,6 +47,7 @@ pub(super) fn prepare(
 }
 fn config(
     root: &Path,
+    scope: &Path,
     inputs: &[Input<'_>],
     snapshot: bool,
     output: &mut Prepared,
@@ -65,7 +66,7 @@ fn config(
         "main".to_owned()
     };
     crate::checkout::plan::relative_path(&identity)?;
-    let path = crate::scope_path(root)
+    let path = scope
         .join("staged-config")
         .join(format!("{identity}.json"));
     let mut rows = proof::read(&path, &mut output.proofs)?
@@ -191,7 +192,7 @@ fn merge_config(row: &mut Value, entry: &Value) -> io::Result<()> {
 }
 
 fn component_map(entry: &Value) -> serde_json::Map<String, Value> {
-    let mut component_map = serde_json::Map::new();
+    let mut component_map = serde_json::Map::with_capacity(10);
     for field in ["defaultScope", "mainFile", "rootDir", "wrapDir", "exported", "onLanesOnly"] {
         if let Some(value) = map_field(entry, field) {
             component_map.insert(field.to_owned(), value);

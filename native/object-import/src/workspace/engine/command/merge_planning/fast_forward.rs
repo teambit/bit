@@ -17,7 +17,8 @@ pub(super) fn prepare(
     selected: &[Selected],
     snapshots: &snapshots::State,
 ) -> io::Result<()> {
-    let mut models = Vec::new();
+    let on_main = record.context["lane"]["current"].is_null();
+    let mut models = Vec::with_capacity(if on_main { selected.len() } else { 0 });
     for (index, selected) in selected.iter().enumerate() {
         if selected.action != Action::Target {
             continue;
@@ -28,7 +29,7 @@ pub(super) fn prepare(
         if let Some(lane) = &mut prepared.publication.lane {
             lane.update(planned.captured[index].target.identity.trim(), remote, false)?;
         }
-        if record.context["lane"]["current"].is_null() {
+        if on_main {
             models.push(model(&selected.model, remote)?);
         }
     }

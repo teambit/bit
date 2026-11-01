@@ -109,10 +109,14 @@ pub(super) fn export_staged_config(
         else {
             return true;
         };
-        let prefix = format!("{scope}/{name}@");
         !expected_ids
             .iter()
-            .any(|id| id.trim().starts_with(&prefix))
+            .any(|id| {
+                id.trim()
+                    .rsplit_once('@')
+                    .and_then(|(bare, _)| bare.split_once('/'))
+                    == Some((scope, name))
+            })
     });
     if rows.len() == old_len {
         return Ok(before.to_vec());

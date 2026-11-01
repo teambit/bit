@@ -51,7 +51,10 @@ fn staged_row_matches(row: &Value, scope: &str, name: &str) -> bool {
     let (scope, name) = (scope.trim(), name.trim());
     if let Some(raw) = row["id"].as_str().map(str::trim) {
         let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
-        return bare == name || bare == format!("{scope}/{name}");
+        return bare == name
+            || bare
+                .split_once('/')
+                .is_some_and(|(sc, nm)| sc.trim() == scope && nm.trim() == name);
     }
     let row_scope = row["id"]["scope"]
         .as_str()
@@ -232,9 +235,12 @@ fn sort_updates(updates: &mut [String], promotions: &[(String, String)]) {
     }
     updates.sort_by(|left, right| {
         let group = |id: &str| {
+            let Some((id_scope, _)) = id.split_once('/') else {
+                return usize::MAX;
+            };
             scopes
                 .iter()
-                .position(|scope| id.starts_with(&format!("{scope}/")))
+                .position(|scope| scope == id_scope)
                 .unwrap_or(usize::MAX)
         };
         group(left)

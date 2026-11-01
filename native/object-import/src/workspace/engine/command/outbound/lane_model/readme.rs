@@ -12,18 +12,18 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
     };
     let readme_id = id_pair(readme);
     let readme_head = entry_head(readme);
-    let present = lane["components"]
-        .as_array()
-        .is_some_and(|components| {
-            components
-                .iter()
-                .any(|component| {
-                    (!readme["id"].is_null() && component["id"] == readme["id"]
-                        || readme_id.is_some() && id_pair(component) == readme_id)
-                        && readme_head.is_some()
-                        && entry_head(component) == readme_head
-                })
-        });
+    let present = readme_head.is_some()
+        && lane["components"]
+            .as_array()
+            .is_some_and(|components| {
+                components
+                    .iter()
+                    .any(|component| {
+                        entry_head(component) == readme_head
+                            && (!readme["id"].is_null() && component["id"] == readme["id"]
+                                || readme_id.is_some() && id_pair(component) == readme_id)
+                    })
+            });
     if present {
         return Ok(());
     }

@@ -39,7 +39,8 @@ fn binding_prefix(current: &capture::Captured, context: &Value) -> io::Result<St
             .map(str::to_owned)
             .ok_or_else(|| invalid("command FF prefix"));
     }
-    let model = super::super::repository::model(context, current.target.identity.trim())?
+    let identity = current.target.identity.trim();
+    let model = super::super::repository::model(context, identity)?
         .ok_or_else(|| invalid("command FF model"))?;
     Ok(model["bindingPrefix"]
         .as_str()
@@ -47,8 +48,7 @@ fn binding_prefix(current: &capture::Captured, context: &Value) -> io::Result<St
         .filter(|prefix| !prefix.is_empty())
         .map_or_else(
             || {
-                let owner = current.target.identity
-                    .trim()
+                let owner = identity
                     .split(['.', '/'])
                     .next()
                     .unwrap_or_default()

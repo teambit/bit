@@ -103,17 +103,14 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
     if expected_ids.len() != selected.components.expected_ids.len() {
         return Err(invalid("outbound lane publication acknowledgement"));
     }
+    let staged = prepare_staged(root, selected, &expected_ids)?;
+    let (root, file_id) = (root.clone(), input.transport.bitmap_history_file_id.clone());
+    let (scope, name) = (selected.scope.trim().to_owned(), selected.name.trim().to_owned());
     Ok(Prepared {
-        workspace: Workspace {
-            root: root.clone(),
-            file_id: input.transport.bitmap_history_file_id.clone(),
-        },
-        lane: Lane {
-            scope: selected.scope.trim().to_owned(),
-            name: selected.name.trim().to_owned(),
-        },
+        workspace: Workspace { root: root.clone(), file_id },
+        lane: Lane { scope, name },
         acknowledgement: Acknowledgement { expected: expected_ids },
-        objects: prepare_objects(root, selected)?,
+        objects: prepare_objects(&root, selected)?,
         models: selected.components.models
             .iter()
             .map(|model| Model {
@@ -122,8 +119,8 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
                 after: model.after.clone(),
             })
             .collect(),
-        published: PublishedState::prepare(root, selected)?,
-        staged: prepare_staged(root, selected)?,
+        published: PublishedState::prepare(&root, selected)?,
+        staged,
         report: Reported::prepare(selected)?,
     })
 }
@@ -218,7 +215,11 @@ fn prepare_refs(root: &Path, selected: &LaneSelected) -> io::Result<Refs> {
     Ok(Refs { before, after })
 }
 
-fn prepare_staged(root: &Path, selected: &LaneSelected) -> io::Result<Staged> {
+fn prepare_staged(
+    root: &Path,
+    selected: &LaneSelected,
+    expected: &HashSet<String>,
+) -> io::Result<Staged> {
     let snaps = read_optional(&crate::scope_path(root).join("staged-snaps"))?;
     if snaps
         .as_ref()
@@ -231,14 +232,9 @@ fn prepare_staged(root: &Path, selected: &LaneSelected) -> io::Result<Staged> {
         .join(selected.scope.trim())
         .join(format!("{}.json", selected.name.trim()));
     let before = read_optional(&config_path)?;
-    let expected = selected.components.expected_ids
-        .iter()
-        .map(|id| id.trim().to_owned())
-        .filter(|id| !id.is_empty())
-        .collect::<HashSet<_>>();
     let config = before
         .map(|before| -> io::Result<Change> {
-            let after = export_staged_config(&before, &expected)?;
+            let after = export_staged_config(&before, expected)?;
             Ok(Change { before, after })
         })
         .transpose()?;

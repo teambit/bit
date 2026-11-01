@@ -68,21 +68,14 @@ fn selected_parents(
 
 fn origin_lane_flags(origin: &Value, scope: &str, name: &str) -> (bool, bool) {
     let (scope, name) = (scope.trim(), name.trim());
-    if let Some((orig_scope, orig_name)) = origin
+    let (orig_scope, orig_name) = origin
         .as_str()
         .and_then(|raw| raw.trim().split_once('/'))
-    {
-        let trimmed_scope = orig_scope.trim();
-        let trimmed_name = orig_name.trim();
-        let same = trimmed_scope == scope && trimmed_name == name;
-        let any = !trimmed_scope.is_empty() && !trimmed_name.is_empty();
-        return (same, any);
-    }
-    let orig_scope = origin["scope"].as_str().map_or("", str::trim);
-    let orig_name = origin["name"].as_str().map_or("", str::trim);
-    let same = orig_scope == scope && orig_name == name;
-    let any = !orig_scope.is_empty() && !orig_name.is_empty();
-    (same, any)
+        .unwrap_or_else(|| {
+            (origin["scope"].as_str().unwrap_or(""), origin["name"].as_str().unwrap_or(""))
+        });
+    let (orig_scope, orig_name) = (orig_scope.trim(), orig_name.trim());
+    (orig_scope == scope && orig_name == name, !orig_scope.is_empty() && !orig_name.is_empty())
 }
 
 pub(super) fn selected_versions(

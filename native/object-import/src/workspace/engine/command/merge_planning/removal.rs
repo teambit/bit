@@ -68,12 +68,13 @@ pub(super) fn prepare(
         if current.hidden || directory.is_empty() || directory == "." {
             return Err(invalid("command removed component requires visible workspace files"));
         }
+        let identity = current.target.identity.trim();
         prepared.publication.removed.push(Removed {
-            identity: current.target.identity.trim().to_owned(),
+            identity: identity.to_owned(),
             directory: directory.to_owned(),
         });
         if let Some(rows) = planned.result["removedComponents"].as_array_mut() {
-            rows.push(json!(current.target.identity.trim()));
+            rows.push(json!(identity));
         }
     }
     Ok(())

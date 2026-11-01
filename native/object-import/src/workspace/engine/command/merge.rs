@@ -40,7 +40,7 @@ impl State {
         &self.journal["token"]
     }
     pub(super) fn select(&mut self, input: &status::Input<'_>) -> io::Result<Value> {
-        let output = status::select(input, &self.owner().clone(), &mut self.native)?;
+        let output = status::select(input, &self.journal["token"], &mut self.native)?;
         self.advance(None)?;
         Ok(output)
     }

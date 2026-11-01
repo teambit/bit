@@ -10,13 +10,7 @@ pub(super) fn entry(
     lane: Option<&Value>,
     material: &merge::Prepared,
 ) -> Value {
-    let scope = model["scope"]
-        .as_str()
-        .map_or_else(|| model["scope"].clone(), |sc| json!(sc.trim()));
-    let name = model["name"]
-        .as_str()
-        .map_or_else(|| model["name"].clone(), |nm| json!(nm.trim()));
-    let mut unmerged = json!({"id":{"name":name,"scope":scope},"head":remote.trim(),
+    let mut unmerged = json!({"id":{"name":model_field(model,"name"),"scope":model_field(model,"scope")},"head":remote.trim(),
         "laneId":lane_id(model,lane),"shouldSquash":lane.is_some_and(|value|value["shouldSquash"]==true),"mergedConfig":{}});
     if material.no_write()
         && let Some(object) = unmerged.as_object_mut()
@@ -30,11 +24,14 @@ pub(super) fn entry(
 }
 
 fn lane_id(model: &Value, lane: Option<&Value>) -> Value {
-    let scope = model["scope"]
-        .as_str()
-        .map_or_else(|| model["scope"].clone(), |sc| json!(sc.trim()));
     lane.and_then(|value| other_lane(&value["otherId"]))
-        .unwrap_or_else(|| json!({"scope": scope, "name": "main"}))
+        .unwrap_or_else(|| json!({"scope": model_field(model, "scope"), "name": "main"}))
+}
+
+fn model_field(model: &Value, key: &str) -> Value {
+    model[key]
+        .as_str()
+        .map_or_else(|| model[key].clone(), |text| json!(text.trim()))
 }
 
 fn other_lane(other: &Value) -> Option<Value> {
