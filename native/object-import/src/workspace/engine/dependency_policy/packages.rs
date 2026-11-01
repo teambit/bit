@@ -4,6 +4,7 @@ use super::{
 };
 use serde_json::{Map, Value};
 
+#[inline]
 pub(super) fn prepare(request: &Request, plan: &mut Plan) {
     model_peers(request, plan);
     policy(&request.policies.package_policy, plan);

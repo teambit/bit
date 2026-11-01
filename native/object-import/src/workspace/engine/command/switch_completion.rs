@@ -16,7 +16,7 @@ pub(super) struct Retained {
     tracking: Option<SwitchTracking>,
     applied: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {
     token: String,

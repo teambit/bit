@@ -165,6 +165,7 @@ fn controls(request: &Detect) -> io::Result<Vec<proof::Proof>> {
     Ok(proofs)
 }
 
+#[inline]
 fn validate_packages(request: &Detect) -> io::Result<()> {
     for packages in request.detection.model_packages
         .iter()

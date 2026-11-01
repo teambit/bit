@@ -1,3 +1,4 @@
+//! Bounded `cacache` index-v5 and content-v2 reader with SHA-1/SHA-512 integrity checks.
 use super::invalid;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde_json::{Value, json};

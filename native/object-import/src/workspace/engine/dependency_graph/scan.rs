@@ -13,7 +13,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub(super) struct ScanBudget {
     source_bytes: AtomicUsize,
     output_bytes: AtomicUsize,

@@ -73,6 +73,7 @@ fn extract_model_component_version(identity: &str) -> Option<&str> {
 }
 
 /// Resolve automatic package placeholders before the environment's own policy replaces them.
+#[inline]
 pub(super) fn automatic(request: &Request, output: &mut Output) -> io::Result<()> {
     for packages in &mut output.state.packages {
         for (name, value) in packages {

@@ -105,6 +105,7 @@ fn preparation_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
     Ok(proofs)
 }
 
+#[inline]
 fn validate_license(scope: &str, repository: &mut repository::Repository) -> io::Result<()> {
     let scope = scope.trim().trim_matches('/');
     if scope.is_empty() {

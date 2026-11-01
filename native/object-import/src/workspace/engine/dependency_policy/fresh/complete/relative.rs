@@ -1,3 +1,4 @@
+//! Relative and untracked dependency issue payload validation.
 use super::invalid;
 use serde_json::Value;
 use std::io;

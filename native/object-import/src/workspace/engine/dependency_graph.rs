@@ -65,7 +65,7 @@ struct CustomDetection {
     lookups: HashMap<String, Option<PathBuf>>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Dependency {
     import_source: String,
@@ -73,7 +73,7 @@ struct Dependency {
     #[serde(skip_serializing_if = "Option::is_none")]
     import_specifiers: Option<Value>,
 }
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PathMap {
     file: String,

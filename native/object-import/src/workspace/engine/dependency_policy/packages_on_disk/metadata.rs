@@ -1,3 +1,4 @@
+//! Installed package manifest metadata resolution for dependency policy.
 use super::{Value, invalid, io, json};
 
 pub(super) fn resolved(

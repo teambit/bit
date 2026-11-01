@@ -26,6 +26,7 @@ pub(in crate::workspace::engine::command) fn receipt(count: usize) -> Value {
     json!({"requested":count,"components":count,"objects":0,"performed":count > 0})
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn additions(
     context: &Value,
     targets: &mut Vec<crate::command_import::Target>,

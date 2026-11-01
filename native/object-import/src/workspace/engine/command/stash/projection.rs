@@ -47,6 +47,7 @@ fn clean_dependencies(version: &mut Value) {
     }
 }
 
+#[inline]
 fn clean_extensions(version: &mut Value) {
     for extension in version["extensions"]
         .as_array_mut()

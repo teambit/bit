@@ -82,6 +82,7 @@ fn validated_parents(previous: Option<&str>) -> io::Result<Vec<&str>> {
     Ok(parents)
 }
 
+#[inline]
 fn capture_files(
     version: &mut Value,
     component: &Component,

@@ -1,3 +1,4 @@
+//! Skipped lane-only target reporting for switch command output.
 use super::invalid;
 use serde_json::{Value, json};
 use std::io;

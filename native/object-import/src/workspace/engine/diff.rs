@@ -12,14 +12,14 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct InputFile {
     relative_path: String,
     left: Option<Input>,
     right: Option<Input>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",

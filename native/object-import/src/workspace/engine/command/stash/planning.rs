@@ -286,6 +286,7 @@ fn clean_config(value: &mut Value) {
     }
 }
 
+#[inline]
 fn apply_metadata(version: &mut Value, metadata: &Value) -> io::Result<()> {
     let metadata = metadata.as_object().ok_or_else(|| invalid("stash consumer metadata"))?;
     let version = version.as_object_mut().ok_or_else(|| invalid("stash consumer version"))?;

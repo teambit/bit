@@ -16,7 +16,7 @@ pub(super) struct State {
     pub(super) authored: Map<String, Value>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Owner {
     pub(super) directory: PathBuf,
     pub(super) identity: String,

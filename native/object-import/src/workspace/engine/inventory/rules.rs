@@ -4,13 +4,13 @@ use regress::Regex;
 use serde::Deserialize;
 use std::{collections::HashMap, io, sync::Arc};
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Rule {
     source: String,
     negative: bool,
 }
-#[derive(Default, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Policy {
     rules: Vec<Rule>,

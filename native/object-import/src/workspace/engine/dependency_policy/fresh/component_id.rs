@@ -6,6 +6,7 @@ use super::invalid;
 use serde_json::{Map, Value};
 use std::io;
 
+#[inline]
 pub(super) fn serialize(raw: &Value, unscoped: bool) -> io::Result<Value> {
     let (scope, name, version) = parse_parts(raw)?;
     let mut id = Map::with_capacity(3);

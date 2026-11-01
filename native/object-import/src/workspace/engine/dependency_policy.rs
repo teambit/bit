@@ -18,6 +18,7 @@ use serde_json::{Value, json};
 use std::io;
 use wire::Plan;
 
+#[inline]
 pub(super) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     request.validate()?;
     let mut plan = Plan::new(request);

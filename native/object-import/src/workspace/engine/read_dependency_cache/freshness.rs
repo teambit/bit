@@ -1,3 +1,4 @@
+//! Directory and source-file mtime freshness checks against dependency cache timestamps.
 use super::invalid;
 use rayon::prelude::*;
 use std::{

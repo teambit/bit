@@ -333,6 +333,7 @@ impl Projection<'_> {
     }
 }
 
+#[inline]
 fn identity(id: &Value) -> io::Result<String> {
     if let Some(raw) = id.as_str().map(str::trim) {
         let (scope, name) = unversioned(raw)

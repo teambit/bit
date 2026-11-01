@@ -55,6 +55,7 @@ pub(super) fn canonical(message: String) -> io::Error {
     crate::workspace::engine::response::canonical(message)
 }
 
+#[inline]
 pub(super) fn reject_removed_targets(
     root: &Path,
     context: &Value,

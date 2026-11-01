@@ -78,6 +78,7 @@ fn saved(
     Ok(saved)
 }
 
+#[inline]
 fn previous_graph(previous: &str, repository: &mut Repository) -> io::Result<Value> {
     let version = repository.read(previous.trim(), "Version")?;
     match version["flattenedEdgesRef"]

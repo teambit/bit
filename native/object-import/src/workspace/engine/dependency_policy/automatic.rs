@@ -1,3 +1,4 @@
+//! Automatic dependency policy application and peer promotion.
 use super::{Plan, Request, wire::version};
 use serde_json::Value;
 use std::collections::HashSet;

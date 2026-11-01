@@ -21,7 +21,7 @@ pub(super) struct State {
     pub(super) components: [Vec<usize>; 3],
     pub(super) entries: Vec<Entry>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Resolved {
     pub(super) name: String,

@@ -10,6 +10,7 @@ use super::{invalid, io};
 use serde_json::{Value, json};
 use wire::Output;
 
+#[inline]
 pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     validate(request)?;
     let mut output = Output::new(request);

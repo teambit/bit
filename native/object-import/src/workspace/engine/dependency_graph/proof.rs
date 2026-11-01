@@ -145,6 +145,7 @@ pub(in crate::workspace::engine) fn metadata(
         range: None,
     })
 }
+#[inline]
 pub(in crate::workspace::engine) fn content(file: &Path, bytes: &[u8]) -> Proof {
     Proof {
         path: file.to_path_buf(),

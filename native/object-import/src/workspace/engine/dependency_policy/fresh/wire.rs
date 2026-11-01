@@ -48,7 +48,7 @@ pub(super) struct Capture {
     pub(super) component_versions: Vec<ComponentVersion>,
     pub(super) read_set: Vec<Proof>,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct ComponentVersion {
     pub(super) field: usize,

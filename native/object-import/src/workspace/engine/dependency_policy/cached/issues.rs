@@ -69,6 +69,7 @@ pub(super) fn apply(issues: &Value, output: &Value) -> io::Result<Value> {
     Ok(Value::Array(result))
 }
 
+#[inline]
 fn add_manual(issues: &mut Vec<Value>, missing: &Value) -> io::Result<()> {
     let mut seen = HashSet::new();
     let values: Vec<_> = rows(missing)?

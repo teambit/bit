@@ -14,11 +14,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub(crate) struct State {
     next: u64,
     plans: HashMap<u64, Plan>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Plan {
     paths: Vec<String>,
     root_filtered: Vec<String>,

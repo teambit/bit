@@ -36,6 +36,7 @@ fn plans(
     Ok(plans.to_vec())
 }
 
+#[inline]
 pub(super) fn prepare(
     retained: &mut Retained,
     selected: Option<&[String]>,

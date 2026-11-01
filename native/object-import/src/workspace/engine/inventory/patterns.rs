@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub(super) struct Nested {
     directory: String,
     patterns: Vec<String>,

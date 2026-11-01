@@ -1,3 +1,4 @@
+//! Initial dependency state extraction from cached pre-policy detection payloads.
 use super::{invalid, issues};
 use serde_json::{Value, json};
 use std::io;

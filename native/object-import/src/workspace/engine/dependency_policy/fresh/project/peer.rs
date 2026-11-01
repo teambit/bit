@@ -3,6 +3,7 @@
 use super::Package;
 use serde_json::{Value, json};
 
+#[inline]
 pub(super) fn range(package: &Package) -> Option<Value> {
     if !truthy(&package.manifest["bit"]["peer"]) {
         return None;

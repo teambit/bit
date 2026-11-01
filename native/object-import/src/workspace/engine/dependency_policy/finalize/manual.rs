@@ -1,3 +1,4 @@
+//! Manual dependency policy additions, component promotion, and missing-package tracking.
 use super::{Output, Request, wire::unversioned};
 use crate::workspace::engine::dependency_policy::wire::{Entry, version};
 use serde_json::{Map, Value};

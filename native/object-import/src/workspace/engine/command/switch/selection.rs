@@ -114,6 +114,7 @@ pub(super) fn ordered(mut entries: Vec<Entry>, selected: Option<&[String]>) -> V
     }
     entries
 }
+#[inline]
 pub(super) fn attach(context: &mut Value, request: &Prepare) -> io::Result<()> {
     let options = request.options.lane.as_ref().ok_or_else(|| invalid("switch lane missing"))?;
     let selected = context["targets"]

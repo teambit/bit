@@ -95,6 +95,7 @@ fn invalid_missing_package_row(row: &Value) -> bool {
                         .any(|name| !name.is_string())
             })
 }
+#[inline]
 fn validate_file_issue(data: &str) -> io::Result<()> {
     let parsed: serde_json::Map<String, Value> =
         serde_json::from_str(data).map_err(io::Error::other)?;

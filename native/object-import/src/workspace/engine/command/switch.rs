@@ -1,4 +1,4 @@
-//! Local, ordinary lane switches reuse checkout capture, transition and bitmap publication.
+//! Local, ordinary lane switches reuse checkout capture, transition, and bitmap publication.
 //! Resolve the complete target set before the command retains a writable plan.
 pub(super) mod progress;
 pub(super) mod validation;

@@ -132,6 +132,7 @@ impl Replay {
         self.registered.extend(row.registered.iter().cloned());
         Ok(dependencies)
     }
+    #[inline]
     fn record_diagnostics(&mut self, row: &Row, cache: &mut Value) {
         let file = row.path_map.file.trim();
         if let Some(error) = &row.error {
