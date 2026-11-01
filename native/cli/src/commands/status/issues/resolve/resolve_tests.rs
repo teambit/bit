@@ -1,3 +1,5 @@
+//! Unit tests for component head proof validation and external dependency vertex checks.
+
 use super::{Component, external_vertices, ordinary_heads_for, versioned};
 use serde_json::{Value, json};
 

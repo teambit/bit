@@ -1,3 +1,5 @@
+//! Unit tests for aspect configuration origin precedence and variant specificity rules.
+
 use serde_json::{Value, json};
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";

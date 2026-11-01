@@ -1,3 +1,5 @@
+//! Unit tests for `.bit-app` file detection and default dev-file receipt construction.
+
 use super::app_file;
 
 #[test]

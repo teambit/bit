@@ -1,3 +1,5 @@
+//! Unit tests for `bit script` option parsing, `.bit-env.ts` script extraction, and execution.
+
 use super::{
     Options, fast_workspace_message, parse_options,
     parser::{ParsedScript, ScriptHandler, eval_function_logs, parse_scripts_from_source},

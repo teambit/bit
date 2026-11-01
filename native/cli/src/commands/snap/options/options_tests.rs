@@ -1,3 +1,5 @@
+//! Unit tests for `bit snap` option parsing and selector grammar retention.
+
 use super::{Options, parse};
 use serde_json::json;
 

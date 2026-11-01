@@ -1,3 +1,5 @@
+//! Unit tests for `bit set-peer` and `bit unset-peer` argument parsing and config mutations.
+
 use super::{DEP_RESOLVER_ID, PeerAction, parse_set_args, parse_unset_args, prepare};
 use crate::commands::color::Chalk;
 use serde_json::{Value, json};

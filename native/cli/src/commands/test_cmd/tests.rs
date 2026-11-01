@@ -1,3 +1,5 @@
+//! Unit tests for `bit test` option parsing and fast workspace classification.
+
 use super::{FastOutcome, Options, classify_workspace, parse_options};
 use crate::commands::color::Chalk;
 use std::fs;

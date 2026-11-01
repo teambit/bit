@@ -1,3 +1,5 @@
+//! Unit tests for `bit watch` option parsing and `--check-types` value validation.
+
 use super::{Options, check_types_error, parse_options};
 
 #[test]

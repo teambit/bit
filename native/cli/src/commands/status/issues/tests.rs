@@ -1,3 +1,5 @@
+//! Unit tests for workspace `ignoreIssues` filtering during component issue collection.
+
 use super::{Component, collect};
 use serde_json::{Value, json};
 

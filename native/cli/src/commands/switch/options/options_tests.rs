@@ -1,3 +1,5 @@
+//! Unit tests for `bit switch` and `bit lane import` option parsing and pattern validation.
+
 use super::parse;
 
 #[test]

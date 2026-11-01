@@ -1,3 +1,5 @@
+//! Unit tests for `bit validate` option parsing, workspace classification, and source/type checks.
+
 use super::{
     Chalk, FastOutcome, Options, classify_workspace,
     lint_and_types::{check_ts_content, lint_source_content},

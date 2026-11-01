@@ -1,3 +1,5 @@
+//! Unit tests for concurrent snapshot author identity resolution and caching in [`Cache`].
+
 use super::{Cache, User};
 use std::{
     io,

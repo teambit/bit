@@ -1,3 +1,5 @@
+//! Unit tests for `VersionHistory` graph completeness proofs and component ID row parsing.
+
 use super::complete;
 use serde_json::json;
 

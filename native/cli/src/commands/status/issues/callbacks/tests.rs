@@ -1,3 +1,5 @@
+//! Unit tests for merging plugin callback issue objects into native component issues.
+
 use super::merge;
 use serde_json::json;
 use std::collections::HashSet;

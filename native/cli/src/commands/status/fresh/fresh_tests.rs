@@ -1,3 +1,5 @@
+//! Unit tests for default dev-file pattern matching and core aspect package naming.
+
 use super::{core_package_name, dev_files::is_dev_file};
 
 /// `[path, matchPatterns(path, defaults)]` from `minimatch` 3.0.5.

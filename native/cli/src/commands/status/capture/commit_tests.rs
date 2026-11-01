@@ -1,3 +1,5 @@
+//! Unit tests for dependency-cache reset gating during checkout capture commit.
+
 use super::{Engine, checkout_reset, fresh};
 use crate::commands::status::capture::{CacheWrites, Capture};
 use bit_install::dependencies::cache::{invalidation::deps_dir, put};

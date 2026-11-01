@@ -1,3 +1,5 @@
+//! Unit tests for root-locale component ID collation matching `String.prototype.localeCompare`.
+
 use super::compare;
 
 /// `[...ids].sort((a, b) => a.localeCompare(b))` in Node 22 with `LANG=en_US.UTF-8`.

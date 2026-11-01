@@ -1,3 +1,5 @@
+//! Unit tests for `bit run` option parsing.
+
 use super::{Options, parse_options};
 
 #[test]

@@ -1,3 +1,5 @@
+//! Unit tests for `bit scope set` argument parsing and unsupported-selector rejection.
+
 use super::{Options, parse_options};
 use std::ffi::OsString;
 

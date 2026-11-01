@@ -1,3 +1,5 @@
+//! Unit tests for `bit scope trust` subcommand parsing, pattern validation, and `workspace.jsonc` updates.
+
 use super::{Action, Chalk, WorkspaceTrust, is_valid_pattern, parse_action, parse_tokens};
 use crate::commands::workspace_command::format::Formatter;
 use std::{ffi::OsString, fs, path::Path};

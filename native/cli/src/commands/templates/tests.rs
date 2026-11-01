@@ -1,3 +1,5 @@
+//! Unit tests for `bit templates` option parsing and workspace/component template catalog formatting.
+
 use super::{
     Options, can_use_builtin_workspace_templates,
     catalog::{format_templates_report, friendly_aspect_name, select_templates},

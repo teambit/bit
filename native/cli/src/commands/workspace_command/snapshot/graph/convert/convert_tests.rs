@@ -1,3 +1,5 @@
+//! Unit tests for converting filtered pnpm lockfiles into serialized dependency graphs.
+
 use super::{
     super::replacer::{Replacer, WorkspaceComponent},
     convert, ref_to_relative,

@@ -1,3 +1,5 @@
+//! Unit tests for `bit tag --versions-file` plan parsing and malformed-line rejection.
+
 use super::parse;
 use serde_json::json;
 

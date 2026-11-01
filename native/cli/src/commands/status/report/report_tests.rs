@@ -1,3 +1,5 @@
+//! Unit tests for `bit status` option parsing and status section report formatting.
+
 use super::{Flags, parse, report};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::{Value, json};

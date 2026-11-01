@@ -1,3 +1,5 @@
+//! Unit tests for `bit version-history` subcommand and flag parsing.
+
 use super::{Subcommand, parse_subcommand};
 
 #[test]

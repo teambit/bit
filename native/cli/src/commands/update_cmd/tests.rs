@@ -1,3 +1,5 @@
+//! Unit tests for `bit update` option parsing and empty workspace dependency detection.
+
 use super::{Options, has_no_workspace_dependencies, parse_options};
 use std::fs;
 

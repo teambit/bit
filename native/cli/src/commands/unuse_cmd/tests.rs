@@ -1,3 +1,5 @@
+//! Unit tests for `bit unuse` target parsing and configured aspect lookup.
+
 use super::{find_extension_key, parse_target};
 use serde_json::json;
 use std::ffi::OsString;

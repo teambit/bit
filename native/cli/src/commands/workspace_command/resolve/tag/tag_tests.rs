@@ -1,3 +1,5 @@
+//! Unit tests for per-component tag version selection patterns and planned version extraction.
+
 use super::{entered_versions, planned_versions, selections};
 use serde_json::json;
 

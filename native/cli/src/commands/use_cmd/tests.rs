@@ -1,3 +1,5 @@
+//! Unit tests for `bit use` target parsing and configured aspect detection.
+
 use super::{is_extension_configured, parse_target};
 use serde_json::json;
 use std::ffi::OsString;

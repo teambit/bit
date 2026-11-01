@@ -1,3 +1,5 @@
+//! Unit tests for `JUnit` XML test report rendering and Windows directory write error formatting.
+
 use super::render;
 use serde_json::json;
 

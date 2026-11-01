@@ -1,3 +1,5 @@
+//! Unit tests for `bit schema` option parsing, stored schema extraction, and bare-scope pattern resolution.
+
 use super::{
     DiffOptions, Options, ParsedCommand,
     extractor::{extract_stored_schema, is_entry_modified_on_disk, resolve_scope_schema_json},

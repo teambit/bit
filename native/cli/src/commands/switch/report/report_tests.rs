@@ -1,3 +1,5 @@
+//! Unit tests for `bit switch` empty-workspace and fetched-head report formatting.
+
 use super::{Chalk, Options, format};
 use crate::commands::test_support::expected_success_symbols;
 use serde_json::json;

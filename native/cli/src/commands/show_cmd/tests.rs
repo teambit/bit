@@ -1,3 +1,5 @@
+//! Unit tests for `bit show` option parsing and legacy/Harmony/text report rendering.
+
 use super::{
     Options, missing_host_error, parse_options,
     render::{harmony_json, legacy_json, text_report},

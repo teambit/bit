@@ -1,3 +1,5 @@
+//! Unit tests for `bit search` flag parsing and case-insensitive local query matching.
+
 use super::{match_queries, parse_args};
 use serde_json::json;
 use std::ffi::OsString;

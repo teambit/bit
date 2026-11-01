@@ -1,3 +1,5 @@
+//! Unit tests for `bit tag` release-level, prerelease, soft, and persist option parsing.
+
 use super::{Mode, parse};
 use serde_json::json;
 

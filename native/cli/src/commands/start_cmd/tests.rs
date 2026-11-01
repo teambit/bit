@@ -1,3 +1,5 @@
+//! Unit tests for `bit start` option parsing and missing workspace/scope detection.
+
 use super::{is_outside_workspace_and_scope, parse_options};
 
 #[test]
