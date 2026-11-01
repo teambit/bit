@@ -14,6 +14,7 @@ pub(super) fn extensions(context: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn extension_identity(row: &Value) -> Option<String> {
     [row.get("name"), row.get("legacyId"), row.get("extensionId"), row.get("id")]
         .into_iter()
@@ -21,6 +22,7 @@ fn extension_identity(row: &Value) -> Option<String> {
         .find_map(parse_extension_value)
 }
 
+#[inline]
 fn parse_extension_value(value: &Value) -> Option<String> {
     if let Some(text) = value
         .as_str()

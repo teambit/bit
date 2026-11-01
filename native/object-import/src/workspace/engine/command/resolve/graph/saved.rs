@@ -63,7 +63,6 @@ fn insert_edge(graph: &mut Graph, edge: &Value) -> io::Result<()> {
     if !matches!(edge["type"].as_str().map(str::trim), Some("prod" | "dev" | "ext")) {
         return Err(invalid("resolve saved graph lifecycle"));
     }
-    graph.entry(target.clone()).or_default();
     let outgoing = graph.entry(source).or_default();
     if let Some(previous) = outgoing
         .iter_mut()
@@ -73,6 +72,7 @@ fn insert_edge(graph: &mut Graph, edge: &Value) -> io::Result<()> {
     } else {
         outgoing.push(edge.clone());
     }
+    graph.entry(target).or_default();
     if graph.len() > 4096 {
         return Err(invalid("resolve saved graph node budget"));
     }

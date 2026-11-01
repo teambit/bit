@@ -72,6 +72,7 @@ fn component_dependencies(state: &Value, output: &mut Vec<String>) -> io::Result
     Ok(())
 }
 
+#[inline]
 fn dependency_id(state: &Value, index: &Value) -> io::Result<String> {
     let index = index.as_u64().ok_or_else(|| invalid("issue dependency index"))? as usize;
     let row = state["entries"].get(index).ok_or_else(|| invalid("issue dependency identity"))?;
@@ -190,6 +191,7 @@ fn validate_ordinary_model(model: &Value, repository: &mut Repository) -> io::Re
     Ok(())
 }
 
+#[inline]
 fn validate_ordinary_version(version: &Value) -> io::Result<()> {
     if version["extensions"]
         .as_array()

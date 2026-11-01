@@ -25,6 +25,7 @@ pub(in super::super) fn report(
         "isSoftTag":retained.tag.as_ref().is_some_and(|options| options.soft),"warnings":warnings(retained, semver, selected, materials)?,"totalComponentsCount":materials.len()}))
 }
 
+#[inline]
 fn versioned(id: &str, materials: &[Material]) -> io::Result<String> {
     let id = id.trim();
     let id = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());

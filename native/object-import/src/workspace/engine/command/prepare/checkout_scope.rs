@@ -19,7 +19,7 @@ fn candidates(request: &Prepare) -> io::Result<Vec<Candidate>> {
     if request.options.scope.scope_candidates.len() > 4096 {
         return Err(invalid("checkout scope candidate limit"));
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(request.options.scope.scope_candidates.len());
     request.options.scope.scope_candidates
         .iter()
         .map(|text| {
@@ -32,11 +32,7 @@ fn candidates(request: &Prepare) -> io::Result<Vec<Candidate>> {
                 .split_once('/')
                 .map(|(scope, name)| (scope.trim(), name.trim()))
                 .ok_or_else(|| invalid("checkout scope candidate identity"))?;
-            if scope.is_empty()
-                || name.is_empty()
-                || version.is_empty()
-                || !seen.insert(identity.to_owned())
-            {
+            if scope.is_empty() || name.is_empty() || version.is_empty() || !seen.insert(identity) {
                 return Err(invalid("checkout scope duplicate or incomplete candidate"));
             }
             command_import::lane::component_identity(&json!({"scope":scope,"name":name}))?;
@@ -171,8 +167,8 @@ fn select(
     candidates: &[Candidate],
     imported: &mut PreparedImport,
 ) -> io::Result<(Vec<Value>, Vec<String>)> {
-    let mut selected = Vec::new();
-    let mut names = Vec::new();
+    let mut selected = Vec::with_capacity(candidates.len());
+    let mut names = Vec::with_capacity(candidates.len());
     for candidate in candidates {
         let model = imported
             .lane_model(&candidate.identity)?

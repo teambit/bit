@@ -27,7 +27,7 @@ pub(super) fn select(
     }
     let mut seen = HashSet::with_capacity(selected.len());
     for id in &selected {
-        if id.is_empty() || !seen.insert(id.clone()) || !unresolved.contains(id) {
+        if id.is_empty() || !seen.insert(id.as_str()) || !unresolved.contains(id) {
             return Err(invalid("resolve selection is not pending"));
         }
         if !has_target_identity(targets, id) {
@@ -74,6 +74,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     Ok(format!("{scope}/{name}"))
 }
 
+#[inline]
 fn has_target_identity(targets: &[Value], id: &str) -> bool {
     targets
         .iter()

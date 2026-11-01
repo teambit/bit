@@ -81,6 +81,7 @@ fn update(
     }
 }
 
+#[inline]
 fn hidden_identity(value: &Value) -> Option<&str> {
     value
         .as_str()?
@@ -203,6 +204,7 @@ fn history_log(receipt: &Value) -> io::Result<Value> {
     Ok(log)
 }
 
+#[inline]
 fn component_id(row: &Value) -> io::Result<String> {
     let (scope, name) = super::super::inbound::remote::file_list::row_scoped_id_parts(row)
         .ok_or_else(|| invalid("resolve lane component scope"))?;

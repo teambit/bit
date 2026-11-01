@@ -167,6 +167,7 @@ fn additions(
     Ok(result)
 }
 
+#[inline]
 fn selected_identities(
     request: &Prepare,
     context: &Value,
@@ -228,6 +229,7 @@ fn collect_candidate(
     Ok(())
 }
 
+#[inline]
 fn missing_root(path: &Path) -> io::Result<bool> {
     match path.symlink_metadata() {
         Ok(_) => Ok(false),

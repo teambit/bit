@@ -103,24 +103,25 @@ fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Ve
         .iter()
         .filter(|row| {
             let id = &row["id"];
-            let identity = if let Some(raw) = id.as_str() {
+            if let Some(raw) = id.as_str() {
                 let trimmed = raw.trim();
-                trimmed
-                    .rsplit_once('@')
-                    .map_or(trimmed, |(base, _)| base.trim())
-                    .to_owned()
+                let base = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
+                return !matches_selected(base, identities);
+            }
+            let scope = id["scope"].as_str().map_or("", str::trim);
+            let raw_name = id["name"].as_str().map_or("", str::trim);
+            let name = raw_name.rsplit_once('@').map_or(raw_name, |(base, _)| base.trim());
+            if scope.is_empty() {
+                !matches_selected(name, identities)
             } else {
-                let scope = id["scope"].as_str().map_or("", str::trim);
-                let raw_name = id["name"].as_str().map_or("", str::trim);
-                let name = raw_name.rsplit_once('@').map_or(raw_name, |(base, _)| base.trim());
-                if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
-            };
-            !matches_selected(&identity, identities)
+                !matches_selected(&format!("{scope}/{name}"), identities)
+            }
         })
         .collect::<Vec<_>>();
     serde_json::to_vec_pretty(&remaining).map_err(io::Error::other)
 }
 
+#[inline]
 fn matches_selected(identity: &str, identities: &HashSet<&str>) -> bool {
     let identity = identity.trim().trim_start_matches('/');
     if identity.is_empty() {

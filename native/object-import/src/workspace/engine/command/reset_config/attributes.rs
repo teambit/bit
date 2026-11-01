@@ -31,10 +31,12 @@ pub(super) fn validate(path: &Path) -> io::Result<()> {
     result.and(removed)
 }
 
+#[inline]
 fn has_non_selinux_xattr(path: &Path) -> io::Result<bool> {
     Ok(xattr::list(path)?.any(|name| name != "security.selinux"))
 }
 
+#[inline]
 fn equivalent(original: &Path, temporary: &Path) -> io::Result<()> {
     if has_non_selinux_xattr(temporary)?
         || xattr::get(original, "security.selinux")? != xattr::get(temporary, "security.selinux")?

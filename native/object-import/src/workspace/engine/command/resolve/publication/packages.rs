@@ -13,6 +13,7 @@ pub(in crate::workspace::engine) struct PackageFinalize {
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }
+#[inline]
 fn validate_package_token(retained: &super::Retained, token: &str) -> io::Result<()> {
     let token = token.trim();
     if token.is_empty()

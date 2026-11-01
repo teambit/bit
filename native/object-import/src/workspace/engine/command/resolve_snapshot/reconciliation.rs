@@ -83,6 +83,7 @@ fn squash(
     Ok(())
 }
 
+#[inline]
 fn merge_parent(version: &mut Value, remote: &str) {
     if version["parents"]
         .as_array()
@@ -97,6 +98,7 @@ fn merge_parent(version: &mut Value, remote: &str) {
     }
 }
 
+#[inline]
 fn default_message(version: &mut Value, pending: &Value) {
     if version["log"]["message"]
         .as_str()

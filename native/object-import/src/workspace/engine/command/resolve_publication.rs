@@ -36,16 +36,12 @@ pub(super) fn preflight(
     imported_index: Option<&Value>,
     snapshot: bool,
 ) -> io::Result<()> {
+    const ZERO_HEAD: &str = "0000000000000000000000000000000000000000";
     let heads: HashMap<_, _> = materials
         .iter()
-        .map(|material| {
-            let current = material.version_state.current_head.as_str();
-            let head = if current.is_empty() {
-                "0000000000000000000000000000000000000000"
-            } else {
-                current
-            };
-            (material.identity.as_str(), head)
+        .map(|mat| {
+            let cur = mat.version_state.current_head.as_str();
+            (mat.identity.as_str(), if cur.is_empty() { ZERO_HEAD } else { cur })
         })
         .collect();
     let versions = materials
@@ -169,7 +165,6 @@ fn add_material_to_batch<'a>(
     });
     Ok(())
 }
-
 fn bitmap_update(
     material: &resolve_snapshot::Material,
     version: &Value,
@@ -186,7 +181,6 @@ fn bitmap_update(
         keep_ours: true,
     }
 }
-
 fn directory<'a>(context: &'a Value, material: &resolve_snapshot::Material) -> io::Result<&'a str> {
     if material.hidden {
         return Ok("");
@@ -211,9 +205,8 @@ fn reason(receipt: &Value, tag: bool) -> String {
     format!("{label} (message: {msg})")
 }
 fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Vec<String> {
-    if crate::command_import::lane::parse_lane_id(&context["lane"]["currentId"])
-        .ok()
-        .is_none_or(|lane_id| lane_id.is_main())
+    if !crate::command_import::lane::parse_lane_id(&context["lane"]["currentId"])
+        .is_ok_and(|lane_id| !lane_id.is_main())
     {
         return Vec::new();
     }

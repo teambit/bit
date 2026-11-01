@@ -271,6 +271,7 @@ fn known_previous(
     Ok(known)
 }
 
+#[inline]
 fn id_key(id: &Value) -> io::Result<String> {
     Ok(format!(
         "{}@{}",
@@ -326,6 +327,7 @@ pub(super) fn new_material(
     })
 }
 
+#[inline]
 pub(super) fn local_only(retained: &Retained, identity: &str) -> bool {
     let identity = identity.trim();
     retained.record.targets

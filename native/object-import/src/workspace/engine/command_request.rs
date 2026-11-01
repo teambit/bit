@@ -43,6 +43,7 @@ pub(super) fn dispatch(
     }
 }
 
+#[inline]
 fn import_token(token: Option<&str>) -> io::Result<Option<&str>> {
     let Some(candidate) = token
         .map(str::trim)
@@ -59,6 +60,7 @@ fn import_token(token: Option<&str>) -> io::Result<Option<&str>> {
     Ok(Some(candidate))
 }
 
+#[inline]
 fn inbound_overlay<'a>(
     state: &'a command::State,
     token: Option<&str>,

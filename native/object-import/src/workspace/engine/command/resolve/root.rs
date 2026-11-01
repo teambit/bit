@@ -49,6 +49,7 @@ pub(super) fn include(
     Ok(true)
 }
 
+#[inline]
 pub(super) fn added(retained: &Retained) -> Option<&str> {
     retained.record.context[AUTO]
         .as_str()
@@ -56,6 +57,7 @@ pub(super) fn added(retained: &Retained) -> Option<&str> {
         .filter(|root| !root.is_empty())
 }
 
+#[inline]
 fn target(context: &Value) -> Option<&Value> {
     context["targets"]
         .as_array()?

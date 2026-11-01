@@ -56,6 +56,7 @@ pub(super) fn validate(input: &Validate, state: &mut State) -> io::Result<(usize
     Ok((sources.len(), json!({"token":retained.record.token,"sourceReadSet":sources})))
 }
 
+#[inline]
 fn pending(retained: &Retained, token: &str) -> io::Result<()> {
     let token = token.trim();
     if token.is_empty()
@@ -128,6 +129,7 @@ fn refresh(
     )
 }
 
+#[inline]
 fn replace_sources(retained: &mut Retained, changes: &[SourceChange]) -> io::Result<()> {
     let before = retained.finalized
         .callbacks_mut()?

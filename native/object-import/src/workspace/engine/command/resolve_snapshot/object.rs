@@ -90,6 +90,7 @@ fn metadata(
     Ok(version)
 }
 
+#[inline]
 fn auto_message(version: &mut Value) {
     let message = version["log"]["message"].as_str().map_or("", str::trim);
     version["log"]["message"] = if message.is_empty() {
@@ -180,6 +181,7 @@ pub(super) fn local_model(material: &Material, hash: &str) -> io::Result<Value> 
     Ok(model)
 }
 
+#[inline]
 fn component_message(version: &mut Value, allocation: &Value, automatic: bool) -> io::Result<()> {
     if let Some(log) = allocation.get("log") {
         component_log(version, log)?;
@@ -190,6 +192,7 @@ fn component_message(version: &mut Value, allocation: &Value, automatic: bool) -
     Ok(())
 }
 
+#[inline]
 fn component_log(version: &mut Value, log: &Value) -> io::Result<()> {
     for field in ["message", "username", "email"] {
         if let Some(value) = log.get(field) {

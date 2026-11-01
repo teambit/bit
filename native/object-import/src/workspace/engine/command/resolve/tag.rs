@@ -72,6 +72,7 @@ pub(super) fn select(
     candidate_selection(retained, captured)
 }
 
+#[inline]
 pub(super) fn candidate_ids(
     retained: &mut Retained,
     captured: &[capture::Captured],
@@ -153,6 +154,7 @@ fn head_snaps(retained: &Retained, captured: &[capture::Captured]) -> io::Result
     Ok(output)
 }
 
+#[inline]
 fn is_tagged(model: &Value, head: &str) -> io::Result<bool> {
     Ok(model["versions"]
         .as_object()

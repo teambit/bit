@@ -21,6 +21,7 @@ pub(super) fn lane(
     Ok(Some(imported))
 }
 
+#[inline]
 fn has_lane_assignment(bitmap: &Value) -> bool {
     bitmap
         .get("_bit_lane")

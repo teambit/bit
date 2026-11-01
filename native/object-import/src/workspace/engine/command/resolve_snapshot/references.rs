@@ -77,6 +77,7 @@ fn update_scoped_id(
     }
 }
 
+#[inline]
 fn resolve_string_target<'a>(
     fields: &Map<String, Value>,
     key: &str,
@@ -115,6 +116,7 @@ fn update_string_id(
     }
 }
 
+#[inline]
 fn update_marker(child: &mut Value, hashes: &HashMap<&str, &str>) -> io::Result<()> {
     let Some(identity) = child
         .as_str()
@@ -128,6 +130,7 @@ fn update_marker(child: &mut Value, hashes: &HashMap<&str, &str>) -> io::Result<
     Ok(())
 }
 
+#[inline]
 fn update_root(fields: &mut Map<String, Value>, versions: &HashMap<&str, &str>) -> io::Result<()> {
     let Some((identity, version)) = fields
         .get("root")

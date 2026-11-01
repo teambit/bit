@@ -71,6 +71,7 @@ pub(in crate::workspace::engine::command) fn capture_file(
     Ok((row, source))
 }
 
+#[inline]
 fn observation<'a>(
     file: &Value,
     snapshots: &'a snapshots::State,

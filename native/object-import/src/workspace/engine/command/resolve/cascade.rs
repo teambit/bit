@@ -119,6 +119,7 @@ fn component(row: &Value, pinned: &HashSet<String>) -> io::Result<Value> {
     Ok(json!({"id":id(row)?,"dependencies":dependencies}))
 }
 
+#[inline]
 fn result_identity(row: &Value, ordered: &[&Value]) -> io::Result<String> {
     let index = row["component"].as_u64().ok_or_else(|| invalid("resolve autotag index"))? as usize;
     ordered
@@ -130,6 +131,7 @@ fn result_identity(row: &Value, ordered: &[&Value]) -> io::Result<String> {
         .ok_or_else(|| invalid("resolve autotag component"))
 }
 
+#[inline]
 fn id(row: &Value) -> io::Result<Value> {
     let identity = row["identity"]
         .as_str()

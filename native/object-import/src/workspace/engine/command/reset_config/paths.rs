@@ -34,6 +34,7 @@ pub(super) fn capture(
     Err(invalid("reset config workspace ancestor"))
 }
 
+#[inline]
 fn ordinary_directory_metadata(parent: &Path) -> io::Result<fs::Metadata> {
     let metadata = fs::symlink_metadata(parent)?;
     if !metadata.is_dir() || metadata.file_type().is_symlink() {

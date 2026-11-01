@@ -41,6 +41,7 @@ pub(super) fn plain(name: &str, value: &Value) -> io::Result<Value> {
     Ok(Value::Object(config))
 }
 
+#[inline]
 fn validate_single(
     config: &serde_json::Map<String, Value>,
     key: &str,
@@ -79,6 +80,7 @@ fn validate_policy(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn is_harmony_node_env(value: &Value) -> bool {
     value
         .as_str()

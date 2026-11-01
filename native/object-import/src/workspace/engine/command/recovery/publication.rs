@@ -45,6 +45,7 @@ pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, 
     Ok((count, output))
 }
 
+#[inline]
 fn accept_restored_objects(retained: &mut super::Retained) -> io::Result<()> {
     retained.record.repository.accept_recovery_objects(
         &retained.record.request.root,
@@ -81,6 +82,7 @@ fn restore_models(
     Ok(())
 }
 
+#[inline]
 fn model_identity(model: &Value) -> io::Result<String> {
     if let Some(identity) = model["identity"]
         .as_str()

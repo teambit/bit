@@ -5,12 +5,14 @@ use super::super::invalid;
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
+#[inline]
 pub(in crate::workspace::engine::command) fn project(
     bitmap: &Value,
 ) -> io::Result<(Value, HashMap<String, Value>)> {
     project_with(bitmap, validate)
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn project_snapshot(
     bitmap: &Value,
 ) -> io::Result<(Value, HashMap<String, Value>)> {
@@ -38,6 +40,7 @@ fn validate_snapshot(config: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn normalize_root_dir(dir: &str) -> &str {
     let stripped = dir
         .strip_prefix("./")

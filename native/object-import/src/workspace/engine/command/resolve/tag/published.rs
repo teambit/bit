@@ -73,6 +73,7 @@ fn replace_ids(value: &mut Value, replacements: &HashMap<String, String>) {
     }
 }
 
+#[inline]
 fn can_apply_overrides(retained: &Retained, token: &str) -> bool {
     let token = token.trim();
     !token.is_empty()

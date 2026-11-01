@@ -50,6 +50,7 @@ pub(super) fn semver(file: Option<&Value>, base: &Value) -> io::Result<Value> {
     Ok(Value::Object(output))
 }
 
+#[inline]
 pub(super) fn for_component(
     file: Option<&Value>,
     identity: &str,

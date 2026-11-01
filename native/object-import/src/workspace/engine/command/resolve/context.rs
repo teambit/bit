@@ -205,7 +205,7 @@ fn validate_request(request: &Prepare) -> io::Result<()> {
 }
 
 fn control_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
-    let mut proofs = Vec::new();
+    let mut proofs = Vec::with_capacity(10);
     for name in [".bitmap", "workspace.jsonc", "package.json", "merge-conflict"] {
         proof::read(&request.root.join(name), &mut proofs)?;
     }
@@ -242,6 +242,7 @@ fn load_lane(
     Ok(imported)
 }
 
+#[inline]
 fn token(state: &mut State) -> io::Result<String> {
     state.sequence = state.sequence.checked_add(1).ok_or_else(|| invalid("resolve sequence"))?;
     Ok(crate::workspace::engine::hash(
@@ -371,6 +372,7 @@ fn load_models(
         .extend(models);
     Ok(())
 }
+#[inline]
 fn non_empty(value: &Value) -> Option<&str> {
     let text = value.as_str()?.trim();
     (!text.is_empty()).then_some(text)

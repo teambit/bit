@@ -39,12 +39,14 @@ impl Main {
         validate_index(root, &objects, proofs)?;
         Ok(Some(Self { directory, names, objects }))
     }
+    #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         if filenames(&self.directory)? != self.names {
             return Err(invalid("main recovery inventory changed"));
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn publish(&self, root: &Path) -> io::Result<()> {
         let store = crate::store::Store::new(crate::scope_path(root).join("objects"), None)?;
         for (hash, bytes) in &self.objects {
@@ -75,6 +77,7 @@ fn filenames(directory: &Path) -> io::Result<Vec<String>> {
     names.sort_unstable();
     Ok(names)
 }
+#[inline]
 fn decode(bytes: &[u8]) -> io::Result<(String, Vec<u8>)> {
     let raw = crate::checkout::repository::inflate(bytes, 8 * 1024 * 1024)?;
     let nul = raw

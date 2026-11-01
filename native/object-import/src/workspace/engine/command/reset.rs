@@ -48,6 +48,7 @@ pub(super) fn plan(
 }
 
 /// Check retained live inputs before recovery begins changing workspace controls.
+#[inline]
 fn configuration(record: &Record, plan: &planning::Planned) -> io::Result<reset_config::Prepared> {
     if record.context["callbackLifecycle"] == true {
         reset_config::checkout(record, plan)
@@ -56,6 +57,7 @@ fn configuration(record: &Record, plan: &planning::Planned) -> io::Result<reset_
     }
 }
 
+#[inline]
 pub(super) fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     proof::verify(&record.proofs)?;
     validate_inputs(record, prepared)
@@ -63,6 +65,7 @@ pub(super) fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<(
 
 /// The recovery owner verifies its exact projected control proofs first. The
 /// reset then checks the restored bitmap and all retained checkout inputs.
+#[inline]
 pub(super) fn validate_after_restore(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     prepared.bitmap.validate()?;
     validate_inputs(record, prepared)

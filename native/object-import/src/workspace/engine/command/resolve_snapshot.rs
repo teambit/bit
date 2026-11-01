@@ -34,6 +34,7 @@ pub(super) struct Material {
     pub participation: Participation,
 }
 
+#[inline]
 pub(super) fn is_removed(version: &Value) -> bool {
     version["extensions"]
         .as_array()
@@ -49,6 +50,7 @@ pub(super) fn is_removed(version: &Value) -> bool {
         })
 }
 
+#[inline]
 pub(super) fn pinned_dependencies(version: &Value) -> HashSet<String> {
     version["pinnedDependencies"]
         .as_array()
@@ -121,9 +123,11 @@ impl Snapshot {
         Ok(files)
     }
 
+    #[inline]
     pub fn staged_objects(&self) -> &[Value] {
         &self.objects.staged_objects
     }
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         proof::verify(&self.proofs)?;
         if let Some(repository) = &self.repository {
@@ -131,6 +135,7 @@ impl Snapshot {
         }
         self.objects.validate()
     }
+    #[inline]
     pub fn commit(&mut self, root: &Path) -> io::Result<()> {
         self.validate()?;
         self.objects.commit(root)
@@ -252,6 +257,7 @@ fn allocations<'a>(
     Ok(hashes)
 }
 
+#[inline]
 fn validate_scalars(receipt: &Value) -> io::Result<()> {
     if receipt["batchId"]
         .as_str()

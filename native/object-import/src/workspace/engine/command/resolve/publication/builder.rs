@@ -114,6 +114,7 @@ fn build_receipt(
     Ok(receipt)
 }
 
+#[inline]
 fn version_identity(entry: &Value) -> Option<&str> {
     entry["identity"]
         .as_str()

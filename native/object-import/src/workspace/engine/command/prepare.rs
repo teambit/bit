@@ -99,11 +99,16 @@ fn prepare_checkout_import(
     }
     command_import::prepare(&request.root, &request.global_remotes_file, &targets)
 }
+#[inline]
 fn is_local_checkout_target(to: &str, revert: bool) -> bool {
-    let lower = to.to_ascii_lowercase();
-    !lower.is_empty()
-        && (revert && lower == "main"
-            || !matches!(lower.as_str(), "head" | "latest" | "main") && !lower.starts_with("head~"))
+    !to.is_empty()
+        && (revert && to.eq_ignore_ascii_case("main")
+            || !["head", "latest", "main"]
+                .iter()
+                .any(|kw| to.eq_ignore_ascii_case(kw))
+                && !to
+                    .get(..5)
+                    .is_some_and(|prefix| prefix.eq_ignore_ascii_case("head~")))
 }
 fn unexported_targets(
     request: &Prepare,

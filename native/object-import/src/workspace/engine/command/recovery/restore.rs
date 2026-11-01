@@ -157,6 +157,7 @@ impl Prepared {
         Ok(())
     }
 
+    #[inline]
     fn validate_permissions(&self) -> io::Result<()> {
         for (source, permissions) in &self.mutations.permissions {
             if std::fs::metadata(source)?.permissions() != *permissions {
@@ -192,6 +193,7 @@ impl Prepared {
         }
         Ok(())
     }
+    #[inline]
     pub(in super::super) fn main_objects(&self) -> &[(String, Vec<u8>)] {
         self.objects.main
             .as_ref()

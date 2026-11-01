@@ -83,6 +83,7 @@ pub(super) fn artifacts(
     Ok(())
 }
 
+#[inline]
 fn artifact_root(receipt: &Value) -> io::Result<PathBuf> {
     let root = receipt["artifactRoot"]
         .as_str()
@@ -215,6 +216,7 @@ fn planned_tasks(version: &mut Value, allocation: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn validate_planned_task(task: &Value) -> io::Result<()> {
     let valid_id = task["taskId"]
         .as_str()

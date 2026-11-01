@@ -78,6 +78,7 @@ pub(super) fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec
     Ok(selected)
 }
 
+#[inline]
 fn matches_identity(target: &Value, pattern: &str) -> bool {
     let pattern = pattern.trim();
     let bare = pattern

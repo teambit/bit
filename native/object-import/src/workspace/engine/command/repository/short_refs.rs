@@ -4,6 +4,7 @@ mod tests;
 use crate::workspace::engine::invalid;
 use std::{collections::BTreeSet, fs, io, path::Path};
 
+#[inline]
 pub(super) fn matching(
     directory: &Path,
     prefix: &str,
@@ -64,6 +65,7 @@ fn collect(entries: fs::ReadDir, prefix: &str, refs: &mut BTreeSet<String>) -> i
     Ok(())
 }
 
+#[inline]
 pub(super) fn unique(prefix: &str, refs: &[String]) -> io::Result<String> {
     let prefix = prefix.trim();
     match refs {

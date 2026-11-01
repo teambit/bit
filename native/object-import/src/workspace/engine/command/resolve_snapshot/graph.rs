@@ -34,16 +34,16 @@ fn read(
         .map(str::trim)
         .ok_or_else(|| invalid("resolve graph ref"))?;
     let digest = crate::merge_history::hash(old)?;
+    let objects_dir = crate::scope_path(root).join("objects");
     proof::read(
-        &crate::scope_path(root)
-            .join("objects")
+        &objects_dir
             .join(&old[..2])
             .join(&old[2..]),
         proofs,
     )?;
     let mut compressed = 0;
     let body = crate::checkout::repository::source(
-        &crate::scope_path(root).join("objects"),
+        &objects_dir,
         digest,
         4 * 1024 * 1024,
         &mut compressed,
@@ -78,6 +78,7 @@ fn rekey(rows: &mut Value, identity: &str, hash: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn store(version: &mut Value, rows: &Value, objects: &mut Vec<Value>) -> io::Result<()> {
     let body = serde_json::to_vec(rows).map_err(io::Error::other)?;
     let digest = crate::validate::hexadecimal(&Sha1::digest(&body));

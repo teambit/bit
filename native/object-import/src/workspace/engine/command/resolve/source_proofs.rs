@@ -6,6 +6,7 @@ use crate::workspace::snapshots;
 use serde_json::Value;
 use std::{io, path::Path};
 
+#[inline]
 pub(in crate::workspace::engine::command) fn capture(
     current: &[Captured],
     snapshots: &snapshots::State,
@@ -21,6 +22,7 @@ pub(in crate::workspace::engine::command) fn capture(
         .map(|file| retain(file, snapshots))
         .collect()
 }
+#[inline]
 fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof> {
     let path = Path::new(
         file["path"]

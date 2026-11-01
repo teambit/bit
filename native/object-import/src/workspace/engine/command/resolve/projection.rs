@@ -16,6 +16,7 @@ pub(in crate::workspace::engine::command) struct Component {
 }
 
 impl Component {
+    #[inline]
     fn config_pinned_entries(&self) -> impl Iterator<Item = &Value> {
         let entries = self.dependency_state["entries"].as_array();
         (0..3)
@@ -30,6 +31,7 @@ impl Component {
             .filter(|entry| entry["versionFromConfig"] == true)
     }
 
+    #[inline]
     pub(in crate::workspace::engine::command) fn pinned_from_config(&self) -> HashSet<String> {
         self.config_pinned_entries()
             .filter_map(|entry| {

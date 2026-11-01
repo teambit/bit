@@ -44,6 +44,7 @@ pub(super) fn apply(retained: &Retained, receipt: &mut Value) -> io::Result<()> 
     Ok(())
 }
 
+#[inline]
 fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -70,6 +71,7 @@ fn editor<'a>(receipt: &'a Value, identity: &str) -> &'a Value {
         .unwrap_or(&Value::Null)
 }
 
+#[inline]
 fn merge(log: &mut Value, values: &Value) -> io::Result<()> {
     for field in ["message", "username", "email"] {
         if let Some(value) = values.get(field) {
@@ -82,6 +84,7 @@ fn merge(log: &mut Value, values: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn automatic(log: &mut Value, explicit_message: bool) {
     let message = log["message"].as_str().unwrap_or_default();
     if explicit_message {

@@ -97,9 +97,11 @@ fn validate_index(
     Ok(())
 }
 impl Lane {
+    #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         self.snapshot.validate()
     }
+    #[inline]
     pub(super) fn publish(&mut self, root: &Path) -> io::Result<()> {
         self.snapshot.commit(root)
     }

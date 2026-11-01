@@ -254,7 +254,7 @@ fn pending_targets(targets: &[Value], rows: &[Value]) -> io::Result<(Vec<Value>,
     if rows.is_empty() {
         return Err(invalid("recovery unresolved selection empty"));
     }
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(rows.len());
     let selected = rows
         .iter()
         .map(|row| {
@@ -298,6 +298,7 @@ fn validate_pending_configuration(
     }
     Ok(())
 }
+#[inline]
 fn norm_dir(dir: &str) -> &str {
     dir.strip_prefix("./")
         .unwrap_or(dir)
@@ -322,6 +323,7 @@ fn matches_target(request: &Prepare, target: &Value, identity: &str, marked: boo
                     == Some(norm_dir(pattern))
         })
 }
+#[inline]
 fn pending_id(row: &Value) -> Option<String> {
     if let Some(id) = row["id"]
         .as_str()

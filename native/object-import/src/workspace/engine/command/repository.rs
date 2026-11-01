@@ -75,13 +75,13 @@ impl Repository {
         {
             return Ok(value.clone());
         }
-        let key = (reference.clone(), kind.to_owned());
+        let key = (reference, kind.to_owned());
         if let Some(value) = self.values.get(&key) {
             return Ok(value.clone());
         }
         let file = self.directory
-            .join(&reference[..2])
-            .join(&reference[2..]);
+            .join(&key.0[..2])
+            .join(&key.0[2..]);
         proof::read(&file, &mut self.proofs)?;
         let bytes = repository::read_shared(&self.directory, hash, &self.raw, &self.packed)?;
         let (_, body) = repository::split(&bytes, hash, kind)?;
@@ -240,15 +240,10 @@ impl Repository {
         }
         let scope_dir =
             self.directory.parent().ok_or_else(|| super::super::invalid("command scope path"))?;
-        let file = scope_dir
-            .join("refs/remotes")
-            .join(scope)
-            .join("main");
-        match proof::read(&file, &mut self.proofs)? {
-            Some(bytes) => crate::parse_jsonc(&bytes)
-                .and_then(|val| serde_json::from_value(val).map_err(io::Error::other)),
-            None => Ok(Vec::new()),
-        }
+        let file = scope_dir.join(format!("refs/remotes/{scope}/main"));
+        let Some(bytes) = proof::read(&file, &mut self.proofs)? else { return Ok(Vec::new()) };
+        crate::parse_jsonc(&bytes)
+            .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))
     }
     pub(super) fn overlay(&self) -> Option<&command_import::Overlay> {
         self.imported.as_ref().map(|imported| &imported.overlay)

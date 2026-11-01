@@ -156,6 +156,7 @@ fn enrich_packages(version: &mut Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn enrich_package(dependency: &mut Value, entries: &[Value]) -> io::Result<()> {
     if dependency["packageName"]
         .as_str()

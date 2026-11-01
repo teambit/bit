@@ -7,6 +7,7 @@ pub(in super::super) struct Controls {
     removals: Vec<PathBuf>,
 }
 impl Prepared {
+    #[inline]
     pub(in super::super) fn validate_dependencies(&self, rows: &[proof::Proof]) -> io::Result<()> {
         let backup = crate::scope_path(&self.root).join("last-merged");
         for row in rows {
@@ -67,6 +68,7 @@ impl Controls {
         }
         Ok(())
     }
+    #[inline]
     pub(in super::super) fn paths(&self) -> Vec<PathBuf> {
         self.expected.keys().cloned().collect()
     }

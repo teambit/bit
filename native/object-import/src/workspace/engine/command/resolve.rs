@@ -241,12 +241,14 @@ pub(in crate::workspace::engine) fn apply(
     Ok((retained.materials.len(), result))
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn validate_snapshot(
     input: &Validate,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     refresh::validate(input, state)
 }
+#[inline]
 pub(in crate::workspace::engine) fn refresh_snapshot(
     input: Refresh,
     snapshots: &mut crate::workspace::snapshots::State,
@@ -255,12 +257,14 @@ pub(in crate::workspace::engine) fn refresh_snapshot(
     refresh::apply(input, snapshots, pool)
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn stage_build(
     input: &StageBuild,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     publication::builder::stage(input, state)
 }
+#[inline]
 pub(in crate::workspace::engine) fn build_finalize(
     input: BuildFinalize,
     snapshots: &mut crate::workspace::snapshots::State,
@@ -268,6 +272,7 @@ pub(in crate::workspace::engine) fn build_finalize(
     publication::builder::finalize(input, snapshots)
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn package_finalize(
     input: PackageFinalize,
     state: &mut State,
@@ -275,6 +280,7 @@ pub(in crate::workspace::engine) fn package_finalize(
     publication::packages::finalize(input, state)
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn stage_packages(
     input: &StagePackages,
     state: &mut State,

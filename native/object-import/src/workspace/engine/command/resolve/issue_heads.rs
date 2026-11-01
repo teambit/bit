@@ -36,6 +36,7 @@ pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Resul
     Ok(json!(output))
 }
 
+#[inline]
 fn has_head(heads: &[Value], hash: &str) -> bool {
     heads
         .iter()
@@ -81,6 +82,7 @@ fn model_identity(context: &Value, model: &Value) -> io::Result<String> {
     super::selection::identity(model)
 }
 
+#[inline]
 fn find_lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
     context["lane"]["targets"]
         .as_array()?

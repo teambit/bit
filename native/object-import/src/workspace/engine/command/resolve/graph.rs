@@ -9,10 +9,12 @@ use std::{
     io,
 };
 
+#[inline]
 pub(super) fn project(materials: &mut [Material], repository: &mut Repository) -> io::Result<()> {
     project_with_saved(materials, repository, true)
 }
 
+#[inline]
 pub(super) fn rebuild(materials: &mut [Material], repository: &mut Repository) -> io::Result<()> {
     project_with_saved(materials, repository, false)
 }
@@ -48,6 +50,7 @@ fn project_with_saved(
     Ok(())
 }
 
+#[inline]
 pub(super) fn previous_graph(
     materials: &[Material],
     repository: &mut Repository,
@@ -180,6 +183,7 @@ fn pending(identity: &str) -> io::Result<Value> {
         .ok_or_else(|| invalid("resolve graph identity"))?;
     Ok(json!({"scope":scope,"name":name,"version":format!("__bit_pending_snapshot__:{identity}")}))
 }
+#[inline]
 fn is_pending(id: &Value) -> bool {
     id["version"]
         .as_str()

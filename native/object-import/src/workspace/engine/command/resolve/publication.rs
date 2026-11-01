@@ -102,6 +102,7 @@ fn lane_current(context: &Value) -> Option<Value> {
         })
 }
 
+#[inline]
 fn version_id_and_hash(version: &Value, error: &'static str) -> io::Result<String> {
     let id = version["identity"]
         .as_str()
@@ -184,12 +185,14 @@ pub(super) fn apply(input: &Apply, retained: &mut Retained) -> io::Result<Value>
     prepared.publication.commit(input.file_id.trim())?;
     Ok(json!({"applied":true,"result":retained.result,"postPersistNotifications":notifications}))
 }
+#[inline]
 pub(super) fn validate(retained: &Retained) -> io::Result<()> {
     proof::verify(&retained.record.proofs)?;
     retained.record.repository.validate()
 }
 
 impl Phase {
+    #[inline]
     pub(super) fn callbacks_mut(&mut self) -> io::Result<&mut super::refresh::Callbacks> {
         match self {
             Self::Pending(callbacks) => Ok(callbacks),

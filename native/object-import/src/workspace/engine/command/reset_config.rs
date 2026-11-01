@@ -41,9 +41,11 @@ pub(super) fn validate_target(target: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(super) fn prepare(record: &Record, plan: &planning::Planned) -> io::Result<Prepared> {
     prepare_with(record, plan, false)
 }
+#[inline]
 pub(super) fn checkout(record: &Record, plan: &planning::Planned) -> io::Result<Prepared> {
     prepare_with(record, plan, true)
 }
@@ -207,6 +209,7 @@ fn ordered_extensions<'a>(stored: &'a Value, original: &Value) -> io::Result<Vec
     Ok(specific.chain(inherited).collect())
 }
 
+#[inline]
 fn validate_destination(path: &std::path::Path) -> io::Result<()> {
     crate::store::Store::validate_metadata_write(path)?;
     #[cfg(target_os = "linux")]
@@ -214,6 +217,7 @@ fn validate_destination(path: &std::path::Path) -> io::Result<()> {
     Ok(())
 }
 impl Prepared {
+    #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         proof::verify(&self.proofs)?;
         for (path, _) in &self.writes {
@@ -221,6 +225,7 @@ impl Prepared {
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn commit(&self) -> io::Result<()> {
         for (path, bytes) in &self.writes {
             crate::store::Store::write_metadata(path, bytes)?;

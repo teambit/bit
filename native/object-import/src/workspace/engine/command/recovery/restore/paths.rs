@@ -38,12 +38,14 @@ pub(super) fn removals(
         })
         .collect()
 }
+#[inline]
 fn row_directory(row: &Value) -> Option<&str> {
     row["rootDir"]
         .as_str()
         .or_else(|| row["directory"].as_str())
         .and_then(normalize_directory)
 }
+#[inline]
 fn normalize_directory(dir: &str) -> Option<&str> {
     let trimmed = dir.trim();
     let stripped = trimmed

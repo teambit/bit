@@ -109,7 +109,6 @@ fn retain_proofs(retained: &mut Retained, proofs: Vec<super::proof::Proof>) -> i
     retained.record.repository.validate()?;
     super::proof::verify(&retained.record.proofs)
 }
-
 fn materials(
     retained: &mut Retained,
     selected: &[String],
@@ -123,13 +122,9 @@ fn materials(
     } else {
         cascade::reports(&input.current, &input.components, &seeds, &input.semver)?
     };
-    let order = material_order(selected, &automatic);
+    let (order, automatic_ids) = material_order(selected, &automatic);
     let mut components = input.components.clone();
     bind_new(retained, selected, captured, &mut components)?;
-    let automatic_ids: HashSet<String> = automatic
-        .iter()
-        .filter_map(|row| selection::identity(&row["id"]).ok())
-        .collect();
     let mut materials = order
         .iter()
         .map(|identity| {
@@ -148,16 +143,20 @@ fn materials(
     }
     Ok((materials, automatic, !seeds.is_empty()))
 }
-
-fn material_order(selected: &[String], automatic: &[Value]) -> Vec<String> {
+fn material_order(selected: &[String], automatic: &[Value]) -> (Vec<String>, HashSet<String>) {
     let mut order = selected.to_vec();
-    let extra = automatic
+    let mut automatic_ids = HashSet::with_capacity(automatic.len());
+    for identity in automatic
         .iter()
-        .filter_map(|row| selection::identity(&row["id"]).ok());
-    order.extend(extra.filter(|identity| !selected.contains(identity)));
-    order
+        .filter_map(|row| selection::identity(&row["id"]).ok())
+    {
+        if !selected.contains(&identity) {
+            order.push(identity.clone());
+        }
+        automatic_ids.insert(identity);
+    }
+    (order, automatic_ids)
 }
-
 fn auto_seeds(
     retained: &Retained,
     selected: &[String],
@@ -179,7 +178,6 @@ fn auto_seeds(
         .cloned()
         .collect()
 }
-
 pub(super) fn bind_new(
     retained: &Retained,
     selected: &[String],
@@ -201,7 +199,6 @@ pub(super) fn bind_new(
     }
     Ok(())
 }
-
 fn response(
     retained: &Retained,
     selected: &[String],
@@ -215,7 +212,6 @@ fn response(
         .collect();
     json!({"token":retained.record.token,"selectedIds":selected,"needsSnap":order,"result":result,"issueTargets":materials.iter().map(|material| json!({"identity":format!("{}@{}",material.identity,material.version_state.current_head),"dependencies":material.version["dependencies"],"devDependencies":material.version["devDependencies"],"flattenedDependencies":material.version["flattenedDependencies"]})).collect::<Vec<_>>(),"scalarPreparation":{"laneHistory":!retained.record.context["lane"]["current"].is_null(),"squash":materials.iter().filter_map(|material| material.pending.as_ref().filter(|pending|pending["shouldSquash"]==true).map(|pending|json!({"identity":material.identity,"laneId":pending["laneId"]}))).collect::<Vec<_>>()},"progress":progress(retained,loading.1,loading.0)})
 }
-
 fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
     let count = retained.record.targets.len();
     let mut loads = vec![count, selected, count, count];
@@ -238,7 +234,6 @@ fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
     output["loads"] = json!(loads);
     output
 }
-
 fn select(retained: &Retained, input: &Plan) -> io::Result<Vec<String>> {
     if retained.record.request.options.pattern.is_some() {
         let receipt =
@@ -250,7 +245,6 @@ fn select(retained: &Retained, input: &Plan) -> io::Result<Vec<String>> {
     }
     Ok(retained.selected.clone())
 }
-
 pub(super) fn validate_current(
     retained: &Retained,
     current: &[Value],

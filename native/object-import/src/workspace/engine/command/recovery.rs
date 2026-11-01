@@ -170,6 +170,7 @@ pub(in crate::workspace::engine) fn apply(
     }
     Ok((count, json!({"applied":true,"result":retained.result})))
 }
+#[inline]
 fn write_pending(root: &std::path::Path, pending: &Value) -> io::Result<()> {
     // UnmergedComponents.write uses JSON.stringify(..., null, 2).
     std::fs::write(
@@ -178,6 +179,7 @@ fn write_pending(root: &std::path::Path, pending: &Value) -> io::Result<()> {
     )
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn restore(
     input: &Restore,
     state: &mut State,

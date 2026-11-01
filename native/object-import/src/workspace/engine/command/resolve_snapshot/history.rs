@@ -8,6 +8,7 @@ use std::{io, path::Path};
 
 /// Populate pre-tag heads in existing `VersionHistory` objects during staging.
 /// The newly published semantic tag is absent from the canonical history here.
+#[inline]
 pub(super) fn tag_histories(
     root: &Path,
     materials: &[Material],
@@ -22,6 +23,7 @@ pub(super) fn tag_histories(
     Ok(())
 }
 
+#[inline]
 fn tag_history(
     root: &Path,
     material: &Material,

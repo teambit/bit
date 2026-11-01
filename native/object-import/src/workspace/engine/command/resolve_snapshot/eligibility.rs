@@ -61,6 +61,7 @@ fn validate_identity(material: &Material) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn validate_projection(material: &Material, ordinary_snapshot: bool) -> io::Result<()> {
     let projected = crate::workspace::engine::status_models::harmony::project(&material.version)?;
     if !projected["extensions"].is_array() || !projected["files"].is_array() {
@@ -89,6 +90,7 @@ fn validate_graph(root: &Path, material: &Material) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn validate_files(material: &Material, snapshots: &snapshots::State) -> io::Result<usize> {
     material.files
         .iter()
@@ -100,6 +102,7 @@ fn validate_files(material: &Material, snapshots: &snapshots::State) -> io::Resu
         })
 }
 
+#[inline]
 fn validate_file(file: &Value, snapshots: &snapshots::State) -> io::Result<usize> {
     let path = file["path"]
         .as_str()

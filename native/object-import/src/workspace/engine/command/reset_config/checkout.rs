@@ -48,6 +48,7 @@ pub(super) fn document(
     )
 }
 
+#[inline]
 fn add_config(
     extensions: &mut Map<String, Value>,
     seen: &mut HashSet<String>,
@@ -133,6 +134,7 @@ fn identifier(row: &Value) -> io::Result<String> {
         .ok_or_else(|| invalid("checkout aspect identity"))
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
