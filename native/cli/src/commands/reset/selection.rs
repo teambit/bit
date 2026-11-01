@@ -18,6 +18,7 @@ use std::{io, path::Path, sync::Arc};
 
 pub(super) const LANE_CI_DIAGNOSTIC: &str = "CI lane reset diagnostics require the published stack";
 
+#[inline]
 pub(super) fn complex(pattern: &str) -> bool {
     pattern.contains(['*', '?', '[', ']', '{', '}', '!', ',', '$', ' '])
 }
@@ -78,6 +79,7 @@ pub(super) fn identities(root: &Path, pattern: &str) -> io::Result<Vec<String>> 
         .collect())
 }
 
+#[inline]
 pub(super) fn ci_active() -> bool {
     std::env::var_os("CI")
         .is_some_and(|value| {
@@ -104,6 +106,7 @@ pub(super) struct Selected {
 }
 
 impl Selected {
+    #[inline]
     pub fn ordinary(identities: Vec<String>) -> Self {
         Self {
             identities,
@@ -113,6 +116,7 @@ impl Selected {
             _capture: None,
         }
     }
+    #[inline]
     pub fn render(&self, output: &Output) {
         if !self.stdout.is_empty() {
             output.raw(&self.stdout);
@@ -131,6 +135,7 @@ impl Selected {
     }
 }
 
+#[inline]
 pub(super) fn stateful(pattern: &str) -> bool {
     selection::stateful(pattern)
 }
@@ -174,6 +179,7 @@ pub(super) fn states(root: &Path, pattern: &str, startup: &mut Startup) -> io::R
     Ok(selected)
 }
 
+#[inline]
 fn target_identities(targets: &[Value]) -> Vec<String> {
     targets
         .iter()

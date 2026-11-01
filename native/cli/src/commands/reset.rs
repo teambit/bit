@@ -74,6 +74,7 @@ fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn is_combined_reset_short(arg: &str) -> bool {
     arg.starts_with('-')
         && !arg.starts_with("--")
@@ -83,6 +84,7 @@ fn is_combined_reset_short(arg: &str) -> bool {
             .all(|byte| matches!(byte, b'f' | b's' | b'a'))
 }
 
+#[inline]
 fn apply_combined_reset_short(arg: &str, options: &mut Options<'_>) {
     for byte in arg[1..].bytes() {
         if byte == b'f' {
@@ -119,6 +121,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_prepared(args, &root, &options, &startup)
 }
 
+#[inline]
 fn needs_lane_ci_decline(root: &Path, options: &Options<'_>) -> io::Result<bool> {
     if options.soft
         || options.never_exported
@@ -170,6 +173,7 @@ fn run_prepared(
     }
 }
 
+#[inline]
 fn selection_failure(
     args: &[OsString],
     root: &Path,
@@ -183,6 +187,7 @@ fn selection_failure(
     }
 }
 
+#[inline]
 fn dispatch(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
     if options.never_exported {
         return run_never_exported(args, root);
@@ -243,15 +248,16 @@ fn route_complex_hard(
     pattern: &str,
 ) -> io::Result<Outcome> {
     let owned;
-    let selected = match &options.selected {
-        Some(selected) => selected,
-        None => match selection::identities(root, pattern) {
+    let selected = if let Some(selected) = &options.selected {
+        selected
+    } else {
+        match selection::identities(root, pattern) {
             Ok(ids) => {
                 owned = selection::Selected::ordinary(ids);
                 &owned
             }
             Err(error) => return Ok(Outcome::Declined(format!("reset selection: {error}"))),
-        },
+        }
     };
     run_batch(args, root, options.head, Some(selected), options.force)
 }
@@ -326,6 +332,7 @@ fn run_batch(
 }
 
 /// Format and commit a prepared detached-head main-lane batch reset.
+#[inline]
 fn run_detached_batch(
     args: &[OsString],
     root: &Path,
@@ -369,15 +376,11 @@ fn run_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result
     let selected = match (&options.selected, options.pattern) {
         (Some(selected), _) => Some(selected),
         (None, Some(pattern)) if selection::complex(pattern) => {
-            match selection::identities(root, pattern) {
-                Ok(ids) => {
-                    owned = selection::Selected::ordinary(ids);
-                    Some(&owned)
-                }
-                Err(error) => {
-                    return Ok(Outcome::Declined(format!("soft reset selection: {error}")));
-                }
-            }
+            let Ok(ids) = selection::identities(root, pattern) else {
+                return Ok(Outcome::Declined("soft reset selection".into()));
+            };
+            owned = selection::Selected::ordinary(ids);
+            Some(&owned)
         }
         (None, _) => None,
     };

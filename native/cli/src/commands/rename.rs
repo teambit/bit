@@ -44,6 +44,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|value| {
@@ -60,6 +61,7 @@ fn is_ci_active() -> bool {
         })
 }
 
+#[inline]
 fn run_outside_workspace(
     cwd: &std::path::Path,
     args: &[OsString],

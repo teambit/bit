@@ -41,6 +41,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
+#[inline]
 fn needs_installation(options: &options::Options, preview: &mut Batch) -> bool {
     !options.skip_installation
         && (has_non_empty(&preview.import_ids())
@@ -49,6 +50,7 @@ fn needs_installation(options: &options::Options, preview: &mut Batch) -> bool {
             || preview.scope_import_ids().is_ok_and(|ids| has_non_empty(&ids)))
 }
 
+#[inline]
 fn has_non_empty(ids: &[String]) -> bool {
     ids.iter()
         .any(|id| !id.trim().is_empty())

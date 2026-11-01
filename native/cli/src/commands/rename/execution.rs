@@ -90,6 +90,7 @@ fn refactor_load(
     Ok(())
 }
 
+#[inline]
 fn source_display(prepared: &Prepared) -> String {
     let source = prepared.plan.identity.source.trim();
     if source.contains('@') {
@@ -158,6 +159,7 @@ fn finish_exported(
     Ok(())
 }
 
+#[inline]
 fn report(prepared: &Prepared, chalk: Chalk) -> Report {
     let message = format!(
         "renamed {} to {}",
@@ -171,6 +173,7 @@ fn report(prepared: &Prepared, chalk: Chalk) -> Report {
     }
 }
 
+#[inline]
 fn relative_path(file: &serde_json::Value) -> serde_json::Value {
     if file.is_string() { file.clone() } else { file["relativePath"].clone() }
 }
@@ -203,6 +206,7 @@ fn target_load(
     Ok(())
 }
 
+#[inline]
 fn materialized(root: &Path, prepared: &Prepared, linker: &mut ProjectedLinker) -> io::Result<()> {
     if !prepared.plan.identity.exported {
         linker.call(root, "identityMaterialized", &prepared.plan.materialized())?;
@@ -222,6 +226,7 @@ fn refactor_identities(prepared: &Prepared) -> io::Result<Vec<String>> {
     Ok(identities)
 }
 
+#[inline]
 fn flush_stdout(linker: &mut ProjectedLinker) {
     let stdout = linker.take_stdout();
     if !stdout.is_empty() {
@@ -271,6 +276,7 @@ fn finish_link(
     Ok(())
 }
 
+#[inline]
 fn refactor_bitmap(plan: &Plan) -> io::Result<Cow<'_, Value>> {
     if plan.identity.exported {
         plan.published_bitmap().map(Cow::Owned)
@@ -278,6 +284,7 @@ fn refactor_bitmap(plan: &Plan) -> io::Result<Cow<'_, Value>> {
         Ok(Cow::Borrowed(plan.added_bitmap()))
     }
 }
+#[inline]
 fn listed_identity(key: &str, row: &Value) -> Option<String> {
     if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
         return None;

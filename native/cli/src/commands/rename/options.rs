@@ -18,6 +18,7 @@ pub(super) fn parse(argv: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn consume_trailing_positions<'a>(
     arguments: impl Iterator<Item = &'a str>,
     positions: &mut Vec<String>,
@@ -53,6 +54,7 @@ fn apply_rename_arg<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_inline_or_positional(
     argument: &str,
     options: &mut Options,
@@ -76,6 +78,7 @@ fn apply_inline_or_positional(
     Some(())
 }
 
+#[inline]
 fn take_val(val: &str) -> Option<String> {
     let trimmed = val
         .trim()

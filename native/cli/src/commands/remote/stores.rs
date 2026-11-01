@@ -22,6 +22,7 @@ pub(super) enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error.to_string())
     }
@@ -33,6 +34,7 @@ pub(super) struct Prepared {
 }
 
 impl Prepared {
+    #[inline]
     pub(super) fn commit(&self) -> io::Result<()> {
         for (path, bytes) in &self.writes {
             if let Some(parent) = path
@@ -149,6 +151,7 @@ fn prepare_del(name: &str, global: bool, cwd: &Path, chalk: Chalk) -> Result<Pre
     Ok(Prepared { report, writes })
 }
 
+#[inline]
 fn global_remotes_path() -> PathBuf {
     bit_workspace_config::global_config_dir().join(GLOBAL_REMOTES_FILE)
 }
@@ -170,6 +173,7 @@ fn load_global_remotes(
     extract_remotes(Some(&value))
 }
 
+#[inline]
 fn load_local_scope_json(
     from_path: &Path,
     chalk: Chalk,
@@ -177,6 +181,7 @@ fn load_local_scope_json(
     load_scope_json(from_path, chalk, true)
 }
 
+#[inline]
 fn load_remote_scope_json(
     from_path: &Path,
     chalk: Chalk,
@@ -240,7 +245,7 @@ fn extract_remotes(remotes: Option<&Value>) -> Result<Map<String, Value>, Failur
 }
 
 fn render_scope_json(source: &Map<String, Value>) -> Result<Vec<u8>, Failure> {
-    let mut plain = Map::new();
+    let mut plain = Map::with_capacity(SCOPE_KEYS.len());
     for key in SCOPE_KEYS {
         match key {
             "remotes" => {
@@ -271,6 +276,7 @@ fn render_scope_json(source: &Map<String, Value>) -> Result<Vec<u8>, Failure> {
     render_json(&Value::Object(plain))
 }
 
+#[inline]
 fn render_json(value: &Value) -> Result<Vec<u8>, Failure> {
     let ordered = bit_workspace_config::jsonc::Node::from_value(value).to_value();
     bit_workspace_config::render_scope_json(&ordered).map_err(Failure::from)
@@ -340,10 +346,12 @@ fn scope_at_dir(current: &Path) -> Option<Option<PathBuf>> {
     is_scope_dir(&git_bit).then_some(Some(git_bit))
 }
 
+#[inline]
 fn is_scope_dir(dir: &Path) -> bool {
     fs::symlink_metadata(dir.join("objects")).is_ok_and(|metadata| metadata.is_dir())
 }
 
+#[inline]
 fn is_git_file(dir: &Path) -> bool {
     fs::symlink_metadata(dir.join(".git")).is_ok_and(|metadata| metadata.is_file())
 }

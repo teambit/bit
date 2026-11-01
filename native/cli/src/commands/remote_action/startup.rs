@@ -4,6 +4,7 @@ use bit_workspace_config::parse_jsonc;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(in crate::commands) fn supported(
     workspace: Option<&Path>,
     scope: &Path,
@@ -14,6 +15,7 @@ pub(in crate::commands) fn supported(
     supported_workspace(root, config, load_workspace, Installer::needs_canonical(root))
 }
 
+#[inline]
 pub(in crate::commands) fn service_supported(root: &Path, config: &Value) -> io::Result<bool> {
     supported_workspace(root, config, true, Installer::needs_service_callbacks(root))
 }
@@ -52,6 +54,7 @@ fn supported_workspace(
     Ok(bitmap.lane.as_ref().is_none_or(|lane| is_main_lane(&lane.name)))
 }
 
+#[inline]
 fn is_main_lane(name: &str) -> bool {
     let bare = name
         .trim()
@@ -82,6 +85,7 @@ fn scope_supported(scope: &Path) -> io::Result<bool> {
     Ok(config_supported(&global, &core))
 }
 
+#[inline]
 fn config_supported(config: &Value, core: &[String]) -> bool {
     let Some(entries) = config.as_object() else { return config.is_null() };
     entries

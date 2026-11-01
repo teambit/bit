@@ -98,7 +98,7 @@ fn metadata(
     reader: Option<&load_free::Reader>,
 ) -> (Vec<serde_json::Value>, Vec<String>) {
     let mut rows = Vec::with_capacity(ids.len());
-    let mut pending = Vec::new();
+    let mut pending = Vec::with_capacity(ids.len());
     for id in ids {
         if let Some(row) = reader.and_then(|reader| reader.metadata(&id)) {
             rows.push(row);
@@ -109,6 +109,7 @@ fn metadata(
     (rows, pending)
 }
 
+#[inline]
 fn preflight(root: &Path, options: &options::Options<'_>) -> io::Result<()> {
     let pattern = options.pattern.trim();
     if pattern.is_empty() {
@@ -133,7 +134,7 @@ fn status_consumers(
         return Ok(Vec::new());
     }
     let mut rows = Vec::with_capacity(selected.len());
-    let mut pending = Vec::new();
+    let mut pending = Vec::with_capacity(selected.len());
     for id in selected {
         if let Some(modified) = reader
             .as_deref_mut()

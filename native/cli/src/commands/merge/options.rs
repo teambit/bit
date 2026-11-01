@@ -18,8 +18,9 @@ const BOOLEAN: [&str; 4] = ["--skip-dependency-installation", "--manual", "--ver
 const VALUED: [&str; 2] = ["--auto-merge-resolve", "--message"];
 
 /// When `args` fails validation in `MergeCmd.report`, return the error message.
+#[must_use]
 pub fn validate_error(args: &[&str]) -> Option<&'static str> {
-    let mut flags: Vec<(&str, Value)> = Vec::new();
+    let mut flags: Vec<(&str, Value)> = Vec::with_capacity(args.len());
     let mut positionals = 0usize;
     let mut index = 0;
     while index < args.len() {
@@ -55,6 +56,7 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
     (positionals <= 1).then(|| check_merge_flags(&flags)).flatten()
 }
 
+#[inline]
 fn count_trailing_positionals(tail: &[&str]) -> Option<usize> {
     tail.iter()
         .all(|rest| {
@@ -124,9 +126,10 @@ fn apply_validate_flag<'a>(
 }
 
 /// `args` starts after the command name.
+#[must_use]
 pub fn parse(args: &[&str]) -> Option<Options> {
-    let mut flags: Vec<(&str, Value)> = Vec::new();
-    let mut positionals: Vec<&str> = Vec::new();
+    let mut flags: Vec<(&str, Value)> = Vec::with_capacity(args.len());
+    let mut positionals: Vec<&str> = Vec::with_capacity(args.len());
     let mut index = 0;
     while index < args.len() {
         let arg = alias(args[index].trim());
@@ -225,6 +228,7 @@ fn apply_merge_inline<'a>(
     None
 }
 
+#[inline]
 fn alias(arg: &str) -> &str {
     match arg {
         "-x" => "--skip-dependency-installation",
@@ -276,6 +280,7 @@ fn build(flags: &[(&str, Value)], positionals: &[&str]) -> Option<Options> {
 }
 
 /// `[a-z0-9_./-]`.
+#[inline]
 fn pattern_char(character: char) -> bool {
     character.is_ascii_lowercase()
         || character.is_ascii_digit()
@@ -284,6 +289,7 @@ fn pattern_char(character: char) -> bool {
 
 impl Options {
     /// The `options` of `commandPrepare`: `JSON.stringify` drops the absent ones.
+    #[must_use]
     pub fn request(&self) -> Value {
         let mut options = json!({
             "all": false,

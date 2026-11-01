@@ -82,6 +82,7 @@ fn confirm(formatter: &Formatter, export_id: &str, count: usize) -> io::Result<(
     Ok(())
 }
 
+#[inline]
 fn is_truthy_env(key: &str) -> bool {
     env::var_os(key)
         .is_some_and(|value| {
@@ -129,6 +130,7 @@ async fn ask(
 }
 
 impl Answers {
+    #[inline]
     fn order_by(&mut self, names: &[String]) {
         let pos = |target: &str| {
             names
@@ -142,6 +144,7 @@ impl Answers {
         self.failed.sort_by(|left, _, right, _| pos(left).cmp(&pos(right)));
     }
 
+    #[inline]
     fn record(&mut self, name: String, result: io::Result<serde_json::Value>, delete: bool) {
         match result {
             Ok(value) => match value[if delete { "existed" } else { "exists" }].as_bool() {

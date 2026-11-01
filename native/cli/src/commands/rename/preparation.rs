@@ -9,6 +9,7 @@ pub(in crate::commands) struct Prepared {
     pub(in crate::commands) plan: Plan,
     pub(in crate::commands) facts: Value,
 }
+#[inline]
 pub(in crate::commands) fn prepare(root: &Path, options: &Options) -> io::Result<Prepared> {
     bit_object_import::component_rename::validate_name(&options.target)?;
     let (workspace, mut facts, mut engine) = inventory(root)?;
@@ -68,6 +69,7 @@ fn inventory(root: &Path) -> io::Result<(Workspace, Value, Engine)> {
     ))
 }
 
+#[inline]
 fn validate_inventory(engine: &mut Engine, facts: &Value) -> io::Result<()> {
     let reads = facts["inventoryReadSet"]
         .as_array()

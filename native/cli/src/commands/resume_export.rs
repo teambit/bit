@@ -32,7 +32,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut export_id = None;
-    let mut remotes = Vec::new();
+    let mut remotes = Vec::with_capacity(args.len());
     let mut delete = false;
     let mut force = false;
     let mut iter = args.iter().copied();
@@ -58,6 +58,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(Options { export_id: export_id?, remotes, delete, force })
 }
 
+#[inline]
 fn consume_trailing_resume_args<'a>(
     iter: impl Iterator<Item = &'a str>,
     export_id: &mut Option<String>,
@@ -73,6 +74,7 @@ fn consume_trailing_resume_args<'a>(
     Some(())
 }
 
+#[inline]
 fn is_valid_resume_token(token: &str) -> bool {
     !token.is_empty()
         && !token.starts_with('-')
@@ -80,6 +82,7 @@ fn is_valid_resume_token(token: &str) -> bool {
         && !token.contains('\0')
 }
 
+#[inline]
 fn push_resume_arg(val: &str, export_id: &mut Option<String>, remotes: &mut Vec<String>) {
     if export_id.is_none() {
         *export_id = Some(val.to_owned());

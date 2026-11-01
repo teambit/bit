@@ -26,7 +26,7 @@ use std::{
 
 /// `--resolve` with an optional pattern,
 /// `--message` and `-x`.
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub build: bool,
     pub pattern: Option<String>,
@@ -34,9 +34,10 @@ pub struct Options {
 }
 
 /// `args` starts after the command name; `None` without `--resolve`.
+#[must_use]
 pub fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    let mut flags: Vec<&str> = Vec::new();
+    let mut flags: Vec<&str> = Vec::with_capacity(args.len());
     let mut index = 0;
     while index < args.len() {
         let raw = args[index].trim();
@@ -129,6 +130,7 @@ fn apply_resolve_inline<'a>(
     None
 }
 
+#[inline]
 fn resolve_alias(arg: &str) -> &str {
     match arg {
         "-m" => "--message",
@@ -139,6 +141,7 @@ fn resolve_alias(arg: &str) -> &str {
 
 impl Options {
     /// One flag; the number of values it consumed.
+    #[inline]
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
         if flag == "--build" {
             self.build = true;
@@ -213,6 +216,7 @@ pub fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     })
 }
 
+#[inline]
 pub(in crate::commands) fn plan_with_workflow(
     root: &Path,
     pattern: Option<&str>,
@@ -229,6 +233,7 @@ pub(in crate::commands) fn plan_with_workflow(
     resolve::plan_snapshot(root, &request, startup, workflow)
 }
 
+#[inline]
 pub(in crate::commands) fn plan_continuation(
     root: &Path,
     pattern: Option<&str>,

@@ -143,12 +143,14 @@ fn append_ids(ids: &mut Vec<String>, value: Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn push_unique_id(ids: &mut Vec<String>, id: String) {
     if !ids.contains(&id) {
         ids.push(id);
     }
 }
 
+#[inline]
 fn extract_export_id(value: &Value) -> Option<String> {
     value
         .as_str()

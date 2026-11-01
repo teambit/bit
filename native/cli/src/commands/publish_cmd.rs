@@ -80,6 +80,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     execute_workspace_publish(&root, args, &options)
 }
 
+#[inline]
 fn run_outside_workspace(options: &Options) -> io::Result<Outcome> {
     let text = if options.json { "[]" } else { NO_CANDIDATES_MSG };
     let mut stdout = io::stdout().lock();
@@ -123,6 +124,7 @@ fn execute_workspace_publish(
     Ok(Outcome::Declined("publish execution delegated".into()))
 }
 
+#[inline]
 fn empty_candidates_outcome(root: &Path, args: &[OsString], is_json: bool) -> io::Result<Outcome> {
     workspace_command::execute_without_loader(root, args, "publish", move |_| {
         Ok(Report {
@@ -165,6 +167,7 @@ fn check_unexported_error(
     Ok(None)
 }
 
+#[inline]
 pub(super) fn collect_unexported_ids(root: &Path, entries: &[&BitmapEntry]) -> Vec<String> {
     let scope = Scope::find(root);
     entries
@@ -174,6 +177,7 @@ pub(super) fn collect_unexported_ids(root: &Path, entries: &[&BitmapEntry]) -> V
         .collect()
 }
 
+#[inline]
 pub(super) fn collect_untagged_ids(root: &Path, entries: &[&BitmapEntry]) -> Vec<String> {
     let scope = Scope::find(root);
     entries
@@ -229,6 +233,7 @@ fn is_entry_exported(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
             .is_some_and(|remotes| !remotes.is_empty())
 }
 
+#[inline]
 fn entry_ver(entry: &BitmapEntry) -> &str {
     entry.id.version
         .as_deref()
@@ -263,6 +268,7 @@ fn format_dry_run_report(entries: &[&BitmapEntry], is_json: bool) -> String {
         .join("\n")
 }
 
+#[inline]
 pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
     if super::build_cmd::is_bitmap_auto_sync(&ws_config) {

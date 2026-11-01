@@ -39,6 +39,7 @@ enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error.to_string())
     }
@@ -82,6 +83,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -127,6 +129,7 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
     build_pattern_options(pattern?, json, remote)
 }
 
+#[inline]
 fn build_pattern_options(pattern: String, json: bool, remote: bool) -> Option<Options> {
     let has_state = pattern.contains('$') || pattern.contains(':') || pattern.contains(" AND ");
     let remote_missing_slash = remote
@@ -141,6 +144,7 @@ fn build_pattern_options(pattern: String, json: bool, remote: bool) -> Option<Op
     Some(Options { pattern, json, remote })
 }
 
+#[inline]
 fn workspace_default_scope(root: &Path) -> Option<String> {
     let bytes = fs::read(root.join("workspace.jsonc")).ok()?;
     let config = bit_workspace_config::parse_jsonc(&bytes).ok()?;
@@ -169,6 +173,7 @@ fn local_ids(root: &Path, default_scope: &str, pattern: &str) -> Result<Vec<Stri
     filter_pool_by_pattern(&active, pattern)
 }
 
+#[inline]
 fn is_pattern(pattern: &str) -> bool {
     pattern.contains(['*', ',', '!', '$', ':'])
 }
@@ -206,6 +211,7 @@ fn find_bitmap_literal(bitmap: &Bitmap, pattern: &str) -> Option<Vec<String>> {
     Some(if entry.owns_its_dir() { vec![entry_full_id(entry)] } else { Vec::new() })
 }
 
+#[inline]
 fn is_known_empty_literal(root: &Path, pattern: &str) -> Result<bool, Failure> {
     if let Some((scope, name)) = pattern.split_once('/') {
         if valid_scope_str(scope) && valid_id_chunk(name) {

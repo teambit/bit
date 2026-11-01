@@ -2,6 +2,7 @@
 use crate::commands::installation::Installer;
 use std::{io, path::Path};
 
+#[inline]
 pub(in crate::commands) fn start(
     root: &Path,
     argv: &[&str],

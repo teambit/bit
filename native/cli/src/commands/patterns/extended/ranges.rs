@@ -12,8 +12,9 @@ pub(super) fn expand(pattern: &str) -> io::Result<Vec<String>> {
     let Some((open, close, range)) = sequence(pattern)? else {
         return Ok(vec![pattern.to_string()]);
     };
-    let mut expanded = Vec::new();
-    for value in range.values()? {
+    let values = range.values()?;
+    let mut expanded = Vec::with_capacity(values.len());
+    for value in values {
         let next = format!("{}{value}{}", &pattern[..open], &pattern[close + 1..]);
         expanded.extend(expand(&next)?);
         if expanded.len() > LIMIT {
@@ -118,6 +119,7 @@ impl Sequence {
         Ok(output)
     }
 
+    #[inline]
     fn format(&self, value: i128) -> io::Result<String> {
         if self.letters {
             let number =
@@ -131,12 +133,14 @@ impl Sequence {
     }
 }
 
+#[inline]
 fn letter(value: &str) -> Option<i64> {
     let mut chars = value.chars();
     let letter = chars.next()?;
     (letter.is_ascii_alphabetic() && chars.next().is_none()).then_some(i64::from(u32::from(letter)))
 }
 
+#[inline]
 fn numeric_endpoint(value: &str) -> bool {
     let digits = value
         .strip_prefix('-')
@@ -145,6 +149,7 @@ fn numeric_endpoint(value: &str) -> bool {
     !digits.is_empty() && digits.bytes().all(|byte| byte.is_ascii_digit())
 }
 
+#[inline]
 fn padded_width(parts: &[&str], is_numeric: bool) -> usize {
     let padded = parts
         .iter()

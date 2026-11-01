@@ -10,6 +10,7 @@ use std::{
 static NEXT: AtomicU64 = AtomicU64::new(0);
 struct Spool(std::path::PathBuf);
 impl Drop for Spool {
+    #[inline]
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.0);
     }
@@ -61,6 +62,7 @@ pub(super) fn transform(
     read_transformed_inputs(&spool.0, &inputs, plan)
 }
 
+#[inline]
 fn read_transformed_inputs(
     spool_dir: &Path,
     inputs: &[(std::path::PathBuf, Vec<u8>)],
@@ -77,6 +79,7 @@ fn read_transformed_inputs(
     Ok(())
 }
 
+#[inline]
 fn short_component_name(name: &str) -> Option<&str> {
     let trimmed = name.trim();
     let bare = trimmed

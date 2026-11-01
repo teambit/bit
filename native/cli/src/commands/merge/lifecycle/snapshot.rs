@@ -14,6 +14,7 @@ use std::{
     path::Path,
 };
 
+#[inline]
 pub(super) fn run(
     root: &Path,
     output: &Output,

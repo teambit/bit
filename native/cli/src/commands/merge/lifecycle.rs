@@ -108,6 +108,7 @@ fn precheck(planned: Planned, args: &[OsString], options: &Options) -> io::Resul
     Ok(planned)
 }
 
+#[inline]
 fn installation_session(
     installer: Option<Installer>,
 ) -> io::Result<(Option<Environments>, Option<HostInfo>)> {

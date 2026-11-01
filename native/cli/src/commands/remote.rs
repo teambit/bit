@@ -59,6 +59,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn invalid_workspace_config(root: &std::path::Path) -> bool {
     let Ok(bytes) = std::fs::read(root.join("workspace.jsonc")) else {
         return true;
@@ -104,6 +105,7 @@ fn execute(
     }
 }
 
+#[inline]
 fn execute_error(
     root: Option<&std::path::Path>,
     args: &[OsString],

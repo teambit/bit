@@ -22,6 +22,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     run_workspace(&root, &cwd, args, from, to)
 }
+#[inline]
 fn parse_move_args<'a>(args: &[&'a str]) -> Option<(&'a str, &'a str)> {
     let positionals = super::scope_set::collect_non_flag_tokens(args)?;
     let [from, to] = positionals.as_slice() else {
@@ -31,6 +32,7 @@ fn parse_move_args<'a>(args: &[&'a str]) -> Option<(&'a str, &'a str)> {
     let to = to.trim();
     (!from.is_empty() && !to.is_empty()).then_some((from, to))
 }
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|value| {
@@ -85,6 +87,7 @@ fn run_workspace(
     })
 }
 
+#[inline]
 fn report(plan: &Plan, format: &Formatter) -> io::Result<String> {
     let sections = plan
         .changes()
@@ -103,8 +106,10 @@ fn format_component_move_section(
         .map(str::trim)
         .filter(|id| !id.is_empty())
         .ok_or_else(|| io::Error::other("move component identity"))?;
-    let mut lines = vec![format.title(&format!("moved component {id}"))];
-    for change in component["changes"].as_array().ok_or_else(|| io::Error::other("move paths"))? {
+    let changes = component["changes"].as_array().ok_or_else(|| io::Error::other("move paths"))?;
+    let mut lines = Vec::with_capacity(changes.len() + 1);
+    lines.push(format.title(&format!("moved component {id}")));
+    for change in changes {
         let from = change["from"]
             .as_str()
             .map(str::trim)

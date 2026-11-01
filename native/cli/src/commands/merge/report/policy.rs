@@ -53,6 +53,7 @@ fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::R
     Ok(format!("{}\n{}", formatter.title(title), rows.join("\n")))
 }
 
+#[inline]
 fn update_pair(value: &Value) -> io::Result<String> {
     if let Some(from) = value
         .get("from")
@@ -91,6 +92,7 @@ pub(super) fn conflicted(result: &Value, lane: bool) -> io::Result<Vec<String>> 
         .collect()
 }
 
+#[inline]
 pub(super) fn conflict_section(ids: &[String], formatter: &Formatter) -> String {
     if ids.is_empty() {
         return String::new();

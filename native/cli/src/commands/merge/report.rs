@@ -20,7 +20,7 @@ use std::io;
 const REMOVED: &str = "component has been removed";
 
 /// Which result the report sees.
-#[derive(Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Mode {
     pub verbose: bool,
     /// The whole result of a lane merge.
@@ -77,6 +77,7 @@ impl Merge<'_> {
         ])
     }
 
+    #[inline]
     fn chalk(&self) -> Chalk {
         self.format.chalk
     }
@@ -141,6 +142,7 @@ impl Merge<'_> {
     }
 
     /// `getSnapsOutput`.
+    #[inline]
     fn snaps(&self) -> String {
         if let Some(error) = &self.results.snap_error {
             return error.section(&self.format);
@@ -151,6 +153,7 @@ impl Merge<'_> {
     }
 
     /// `getRemovedOutput(removedComponents)`.
+    #[inline]
     fn removed(&self) -> String {
         if !self.mode.lane {
             return String::new();
@@ -159,6 +162,7 @@ impl Merge<'_> {
     }
 
     /// Whether the merge left unresolved conflicts the report shows.
+    #[inline]
     fn with_conflicts(&self) -> bool {
         self.mode.lane && !self.results.components.is_empty() && self.results.conflicts
     }
@@ -188,7 +192,7 @@ impl Merge<'_> {
         let removed = if self.mode.lane { self.results.lists.removed.len() } else { 0 };
         let conflicted =
             if self.with_conflicts() { self.results.conflict_lines(self.chalk()).len() } else { 0 };
-        let mut conflicts = Vec::new();
+        let mut conflicts = Vec::with_capacity(3);
         if conflicted > 0 {
             conflicts.push(format!("{conflicted} components"));
         }

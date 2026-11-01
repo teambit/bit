@@ -111,6 +111,7 @@ fn try_run_workspace_generate(
     Ok(None)
 }
 
+#[inline]
 fn run_serve(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("serve-preview arguments are not UTF-8".into()));
@@ -157,6 +158,7 @@ pub(super) fn parse_generate_options(args: &[&str]) -> Option<GenerateOptions> {
     Some(options)
 }
 
+#[inline]
 fn consume_trailing_preview_pattern<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut Option<String>,
@@ -203,6 +205,7 @@ pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {
     Some(options)
 }
 
+#[inline]
 fn parse_optional_port(port: &str) -> Option<Option<u16>> {
     let port = port.trim();
     if port.is_empty() { Some(None) } else { port.parse::<u16>().ok().map(Some) }

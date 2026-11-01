@@ -1,4 +1,5 @@
 //! `RecoverCmd`'s two installation controls apply only to grouped imports.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Options<'a> {
     pub pattern: &'a str,
     pub skip_installation: bool,
@@ -32,6 +33,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     (!options.pattern.is_empty()).then_some(options)
 }
 
+#[inline]
 fn consume_trailing_pattern<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut &'a str,
@@ -46,6 +48,7 @@ fn consume_trailing_pattern<'a>(
     Some(())
 }
 
+#[inline]
 fn is_valid_pattern_token(token: &str) -> bool {
     !token.is_empty()
         && token.len() <= 1024

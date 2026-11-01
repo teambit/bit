@@ -39,6 +39,7 @@ pub(super) fn run(
     })
 }
 
+#[inline]
 fn prompt(preview: &Value, chalk: Chalk) -> io::Result<String> {
     let items = array(preview.get("restoredItems"), "recovery restoration items")?;
     let mut deleted_dirs = None;

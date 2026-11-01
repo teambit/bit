@@ -26,6 +26,7 @@ pub(super) struct Plan {
     pub(super) concurrency: usize,
 }
 
+#[inline]
 pub(super) fn supports_file(name: &str) -> bool {
     file::supports(name.trim())
 }
@@ -36,6 +37,7 @@ enum Target {
 }
 
 impl Plan {
+    #[inline]
     pub(super) fn file_scope(&self) -> Option<&Path> {
         match &self.target {
             Target::File(scope) => Some(scope),
@@ -59,6 +61,7 @@ impl Plan {
         }
     }
 
+    #[inline]
     pub(super) fn execute(
         &self,
         args: &[OsString],

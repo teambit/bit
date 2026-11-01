@@ -94,9 +94,11 @@ fn update_report(updates: &[Value], chalk: Chalk, output: &mut Vec<String>) {
     }
 }
 
+#[inline]
 fn deleted_flag(value: &Value) -> bool {
     value["isDeleted"].as_bool() == Some(true)
 }
+#[inline]
 fn id(value: &Value, chalk: Chalk) -> String {
     if let Some(raw) = value["id"]
         .as_str()

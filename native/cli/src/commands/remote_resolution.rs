@@ -30,6 +30,7 @@ pub(super) struct Session {
 }
 
 impl Session {
+    #[inline]
     pub(super) fn new(root: Option<&Path>, args: &[OsString]) -> Self {
         Self {
             root: root.map(Path::to_path_buf),
@@ -43,6 +44,7 @@ impl Session {
         }
     }
 
+    #[inline]
     pub(super) fn for_scope(scope_root: &Path, args: &[OsString]) -> Self {
         Self {
             root: None,
@@ -56,22 +58,27 @@ impl Session {
         }
     }
 
-    pub(super) fn owned(&self) -> bool {
+    #[inline]
+    pub(super) const fn owned(&self) -> bool {
         self.owned
     }
 
+    #[inline]
     pub(super) fn output(&self) -> &str {
         &self.output
     }
 
+    #[inline]
     pub(super) fn warning(&self) -> Option<&str> {
         self.warning.as_deref()
     }
 
-    pub(super) fn overrides(&self) -> &HashMap<String, String> {
+    #[inline]
+    pub(super) const fn overrides(&self) -> &HashMap<String, String> {
         &self.overrides
     }
 
+    #[inline]
     pub(super) fn add_warning(&mut self, warning: &str) {
         self.owned = true;
         self.warning = Some(warning.trim().to_owned());
@@ -197,12 +204,14 @@ fn read_scope(root: &Path, bare: bool) -> io::Result<Value> {
 #[derive(Debug)]
 struct CiResolverDecline;
 impl std::fmt::Display for CiResolverDecline {
+    #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("CI custom resolver errors need the published JavaScript stack")
     }
 }
 impl std::error::Error for CiResolverDecline {}
 
+#[inline]
 pub(super) fn is_ci_decline(error: &io::Error) -> bool {
     error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<CiResolverDecline>)
 }

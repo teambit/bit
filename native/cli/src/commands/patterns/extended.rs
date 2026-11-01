@@ -47,6 +47,7 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
         .collect())
 }
 
+#[inline]
 fn matches(identity: &str, pattern: &str) -> bool {
     let pattern = pattern.trim();
     if pattern.is_empty() || pattern.starts_with('#') {

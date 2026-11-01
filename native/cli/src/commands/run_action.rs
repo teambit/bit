@@ -53,6 +53,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
+#[inline]
 fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Outcome> {
     if env::var_os("CI")
         .is_some_and(|val| {
@@ -82,6 +83,7 @@ fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Out
     )
 }
 
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let filtered = super::scope_set::collect_non_flag_tokens(args)?;
     if filtered.len() != 3 {

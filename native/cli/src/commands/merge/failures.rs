@@ -4,8 +4,9 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn check(result: &Value, chalk: Chalk, lane: bool) -> io::Result<()> {
-    let mut failures = Vec::new();
-    for row in array(result.get("failedComponents"), "merge failed components")? {
+    let rows = array(result.get("failedComponents"), "merge failed components")?;
+    let mut failures = Vec::with_capacity(rows.len());
+    for row in rows {
         if row["unchangedLegitimately"].as_bool() == Some(true) {
             continue;
         }
@@ -23,20 +24,7 @@ pub(super) fn check(result: &Value, chalk: Chalk, lane: bool) -> io::Result<()> 
     if failures.is_empty() {
         return Ok(());
     }
-    if std::env::var_os("CI")
-        .is_some_and(|value| {
-            let text = value.to_string_lossy();
-            let trimmed = text
-                .trim()
-                .trim_matches(['"', '\''])
-                .trim();
-            !trimmed.is_empty()
-                && !trimmed.eq_ignore_ascii_case("0")
-                && !trimmed.eq_ignore_ascii_case("false")
-                && !trimmed.eq_ignore_ascii_case("no")
-                && !trimmed.eq_ignore_ascii_case("off")
-        })
-    {
+    if crate::commands::scope_rename::ci_active() {
         return Err(io::Error::other("published CI error diagnostic stack"));
     }
     let operation = if lane { "proceed" } else { "merge" };

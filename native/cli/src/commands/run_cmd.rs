@@ -61,6 +61,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("run execution delegated".into()))
 }
 
+#[inline]
 fn print_unsupported_help(unknown: &str, chalk: Chalk) -> io::Result<Outcome> {
     io::stdout()
         .lock()
@@ -68,6 +69,7 @@ fn print_unsupported_help(unknown: &str, chalk: Chalk) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 
+#[inline]
 pub(super) fn unsupported_help(command: &str, unknown: &str, chalk: Chalk) -> String {
     let unknown = chalk.yellow(unknown);
     format!("{}\n{unknown}\n", command_help(command, chalk))
@@ -109,10 +111,12 @@ Options
     )
 }
 
+#[inline]
 pub(super) fn help_option(chalk: Chalk, short: &str, long: &str) -> String {
     format!("{}, {}", chalk.green(short), chalk.green(long))
 }
 
+#[inline]
 pub(super) fn is_help_form(args: &[&str]) -> bool {
     match args {
         ["--help" | "-h"] => true,
@@ -125,6 +129,7 @@ pub(super) fn is_help_form(args: &[&str]) -> bool {
     }
 }
 
+#[inline]
 fn run_unsupported_help(args: &[&str]) -> Option<&'static str> {
     match args {
         ["--no-color"] => Some("Unknown arguments: no-color, noColor"),
@@ -221,6 +226,7 @@ fn apply_run_bool_or_short(arg: &str, options: &mut Options) -> bool {
     true
 }
 
+#[inline]
 fn apply_inline_or_app(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg
         .strip_prefix("--port=")

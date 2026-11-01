@@ -43,6 +43,7 @@ impl Options {
     }
 }
 
+#[inline]
 fn split_subcommand<'a>(tokens: &'a [&'a str]) -> Option<(&'static str, &'a [&'a str])> {
     match tokens.split_first() {
         Some((&"list", rest)) => Some(("list", rest)),
@@ -55,7 +56,7 @@ fn split_subcommand<'a>(tokens: &'a [&'a str]) -> Option<(&'static str, &'a [&'a
 
 fn parse_flags_and_values<'a>(tokens: &[&'a str]) -> Option<(bool, Vec<&'a str>)> {
     let mut global = false;
-    let mut values = Vec::new();
+    let mut values = Vec::with_capacity(tokens.len());
     let mut iter = tokens.iter().copied();
     while let Some(token) = iter.next() {
         match token {
@@ -72,6 +73,7 @@ fn parse_flags_and_values<'a>(tokens: &[&'a str]) -> Option<(bool, Vec<&'a str>)
     Some((global, values))
 }
 
+#[inline]
 fn consume_trailing_values<'a>(
     iter: impl Iterator<Item = &'a str>,
     values: &mut Vec<&'a str>,
@@ -85,6 +87,7 @@ fn consume_trailing_values<'a>(
     Some(())
 }
 
+#[inline]
 fn is_no_color_flag(token: &str) -> bool {
     matches!(
         token,
@@ -99,6 +102,7 @@ fn is_no_color_flag(token: &str) -> bool {
     )
 }
 
+#[inline]
 fn valid_target(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 4096

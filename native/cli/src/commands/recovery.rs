@@ -47,9 +47,11 @@ pub(super) struct Options {
     silent: bool,
 }
 
+#[inline]
 pub(super) fn parse_component(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Component)
 }
+#[inline]
 pub(super) fn parse_lane(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Lane)
 }
@@ -91,6 +93,7 @@ fn apply_recovery_flag(arg: &str, opts: &mut Options, abort: &mut bool) -> Optio
     }
 }
 
+#[inline]
 fn apply_component_flag(arg: &str, opts: &mut Options, abort: &mut bool) -> Option<()> {
     if matches!(arg, "--abort" | "--abort=true") && !*abort {
         *abort = true;
@@ -102,6 +105,7 @@ fn apply_component_flag(arg: &str, opts: &mut Options, abort: &mut bool) -> Opti
     })
 }
 
+#[inline]
 fn apply_lane_flag(arg: &str, opts: &mut Options) -> Option<()> {
     if opts.silent {
         return None;
@@ -140,6 +144,7 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     execute_prepared(&root, args, options, &startup, prepared, installation)
 }
 
+#[inline]
 fn start_recovery_installer(
     root: &Path,
     argv: &[&str],
@@ -253,10 +258,9 @@ impl Prepared {
         let versions = workspace_command::semver_values(Some("reset"), &context)?;
         let semver = grammar::snapshot(versions.iter().map(String::as_str))
             .ok_or_else(|| decline("recovery semver grammar"))?;
-        let plan: Value = engine.request(&json!({
-            "kind":"commandRecoveryPlan","token":token,"current":capture.captured,
-            "dependencyReadSet":capture.dependency_read_set(),"semver":semver,
-        }))?;
+        let plan: Value = engine.request(
+            &json!({"kind":"commandRecoveryPlan","token":token,"current":capture.captured,"dependencyReadSet":capture.dependency_read_set(),"semver":semver}),
+        )?;
         if plan.get("token").and_then(Value::as_str) != Some(&token) {
             return Err(decline("recovery plan token"));
         }
@@ -276,20 +280,18 @@ impl Prepared {
         let file_id = restored_id.map_or_else(workspace_command::file_id, str::to_owned);
         let mut read_set = self.capture.dependency_read_set();
         if self.kind == Kind::Lane && restored_id.is_none() {
-            let restored: Value = self.engine.request(&json!({
-                "kind":"commandRecoveryRestore","token":self.token,"fileId":file_id,
-                "dependencyReadSet":read_set,
-            }))?;
+            let restored: Value = self.engine.request(
+                &json!({"kind":"commandRecoveryRestore","token":self.token,"fileId":file_id,"dependencyReadSet":read_set}),
+            )?;
             if restored.get("restored") != Some(&Value::Bool(true)) {
                 return Err(io::Error::other("recovery restore receipt"));
             }
             read_set =
                 array(restored.get("dependencyReadSet"), "restored dependency read set")?.to_vec();
         }
-        let mut applied: Value = self.engine.request(&json!({
-            "kind":"commandRecoveryApply","token":self.token,"fileId":file_id,
-            "dependencyReadSet":read_set,
-        }))?;
+        let mut applied: Value = self.engine.request(
+            &json!({"kind":"commandRecoveryApply","token":self.token,"fileId":file_id,"dependencyReadSet":read_set}),
+        )?;
         (applied.get("applied") == Some(&Value::Bool(true)))
             .then_some(())
             .ok_or_else(|| io::Error::other("recovery apply receipt"))?;

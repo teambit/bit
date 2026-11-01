@@ -167,6 +167,7 @@ fn collect_dir_files(base: &Path, curr: &Path, out: &mut Vec<(String, Vec<u8>)>)
     Ok(())
 }
 
+#[inline]
 fn read_typed_scope_object(scope_dir: &Path, hash: &str, expected: &str) -> Option<Value> {
     let (kind, val) = bit_object_import::read_scope_object(scope_dir, hash).ok().flatten()?;
     (kind == expected).then_some(val)
@@ -261,13 +262,9 @@ fn execute_pack(cwd: &Path, comp: &ResolvedComponent, options: &Options) -> io::
             r#""package.json at {}" contain a snap version which is not a valid semver, can't pack it"#,
             cwd.display(),
         );
-        return Ok(json!({
-            "id": comp.id_display,
-            "warnings": [warn],
-            "errors": [],
-            "startTime": 1,
-            "endTime": 2,
-        }));
+        return Ok(
+            json!({ "id": comp.id_display, "warnings": [warn], "errors": [], "startTime": 1, "endTime": 2 }),
+        );
     }
     let (tar_name, tar_path) = resolve_tar_destination(cwd, comp, options.out_dir.as_deref());
     let pkg_name = format!("@{}/{}", comp.scope_name, comp.comp_name.replace('/', "."));
@@ -275,6 +272,7 @@ fn execute_pack(cwd: &Path, comp: &ResolvedComponent, options: &Options) -> io::
     write_tarball_and_build_result(comp, &pkg_json, &tar_name, &tar_path, options.override_existing)
 }
 
+#[inline]
 fn resolve_tar_destination(
     cwd: &Path,
     comp: &ResolvedComponent,
@@ -308,11 +306,8 @@ fn write_tarball_and_build_result(
             errors.push(format!(r#""{display}" already exists, use --override flag to override"#));
         }
     }
-    let mut metadata = json!({
-        "pkgJson": pkg_json,
-        "tarPath": tar_path.to_string_lossy(),
-        "tarName": tar_name,
-    });
+    let mut metadata =
+        json!({ "pkgJson": pkg_json, "tarPath": tar_path.to_string_lossy(), "tarName": tar_name });
     if errors.is_empty() {
         if let Some(parent) = tar_path
             .parent()
@@ -324,14 +319,9 @@ fn write_tarball_and_build_result(
         metadata["checksum"] = Value::String(hex_sha1(&tgz_bytes));
         fs::write(tar_path, &tgz_bytes)?;
     }
-    Ok(json!({
-        "id": comp.id_display,
-        "metadata": metadata,
-        "warnings": warnings,
-        "errors": errors,
-        "startTime": 1,
-        "endTime": 2,
-    }))
+    Ok(
+        json!({ "id": comp.id_display, "metadata": metadata, "warnings": warnings, "errors": errors, "startTime": 1, "endTime": 2 }),
+    )
 }
 
 pub(super) fn build_tgz_bytes(
@@ -351,6 +341,7 @@ pub(super) fn build_tgz_bytes(
     Ok(gzip_stored(&tar_bytes))
 }
 
+#[inline]
 fn append_tar_entry(
     builder: &mut tar::Builder<Vec<u8>>,
     path: &str,
@@ -384,6 +375,7 @@ fn gzip_stored(data: &[u8]) -> Vec<u8> {
     out
 }
 
+#[inline]
 fn crc32(data: &[u8]) -> u32 {
     let mut crc = 0xffff_ffffu32;
     for &byte in data {

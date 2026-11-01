@@ -82,6 +82,7 @@ pub(super) fn execute_rules(cwd: &Path, opts: &RulesOptions, chalk: Chalk) -> St
     }
 }
 
+#[inline]
 fn default_rules_content(cwd: &Path, consumer_project: bool, force_standard: bool) -> &'static str {
     if consumer_project {
         TEMPLATE_CONSUMER
@@ -196,6 +197,7 @@ fn vscode_prompts_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
     }
 }
 
+#[inline]
 fn cursor_prompts_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
     if is_global {
         return Err("Cursor does not support global prompts configuration in a file".into());
@@ -206,6 +208,7 @@ fn cursor_prompts_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
         .join("bit.rules.mdc"))
 }
 
+#[inline]
 fn roo_prompts_path(is_global: bool, cwd: &Path) -> PathBuf {
     let rel = Path::new(".roo").join("rules").join("bit.instructions.md");
     if is_global { workspace_command::home().join(rel) } else { cwd.join(rel) }
@@ -233,16 +236,19 @@ pub(super) fn cline_prompts_path(is_global: bool, cwd: &Path) -> Result<PathBuf,
     }
 }
 
+#[inline]
 fn claude_code_prompts_path(is_global: bool, cwd: &Path) -> PathBuf {
     let rel = Path::new(".claude").join("bit.md");
     if is_global { workspace_command::home().join(rel) } else { cwd.join(rel) }
 }
 
+#[inline]
 pub(super) fn cursor_settings_path(is_global: bool, cwd: &Path) -> PathBuf {
     let rel = Path::new(".cursor").join("mcp.json");
     if is_global { workspace_command::home().join(rel) } else { cwd.join(rel) }
 }
 
+#[inline]
 pub(super) fn windsurf_settings_path(is_global: bool, cwd: &Path) -> PathBuf {
     let rel = Path::new(".windsurf").join("mcp.json");
     if is_global { workspace_command::home().join(rel) } else { cwd.join(rel) }

@@ -22,6 +22,7 @@ pub(super) fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>>
     Ok(ids)
 }
 
+#[inline]
 pub(super) fn format_result(result: &Value, kind: Kind, chalk: Chalk) -> io::Result<Report> {
     if kind == Kind::Lane { format_lane(result, chalk) } else { format_component(result, chalk) }
 }
@@ -117,6 +118,7 @@ fn lane_checkout_error(map: &serde_json::Map<String, Value>, chalk: Chalk) -> io
         .unwrap_or_default())
 }
 
+#[inline]
 pub(super) fn consume_trailing_recovery<'a>(
     iter: impl Iterator<Item = &'a str>,
     kind: Kind,
@@ -130,6 +132,7 @@ pub(super) fn consume_trailing_recovery<'a>(
     Some(())
 }
 
+#[inline]
 pub(super) fn valid_pattern(pattern: &str) -> bool {
     let pattern = pattern.trim();
     !pattern.is_empty()
@@ -142,6 +145,7 @@ pub(super) fn valid_pattern(pattern: &str) -> bool {
             })
 }
 
+#[inline]
 pub(super) fn installation_session(
     installer: Option<Installer>,
 ) -> io::Result<(Option<environments::Environments>, Option<HostInfo>)> {
@@ -150,6 +154,7 @@ pub(super) fn installation_session(
     Ok((Some(environment), Some(info)))
 }
 
+#[inline]
 pub(super) fn read_environment(
     engine: &mut Engine,
     root: &Path,

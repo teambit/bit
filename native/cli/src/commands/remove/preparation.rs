@@ -4,6 +4,7 @@ use bit_object_import::component_remove::{LocalBatch, select_ids};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(in crate::commands) fn ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
     select_ids(root, pattern)
         .map(|ids| {
@@ -12,6 +13,7 @@ pub(in crate::commands) fn ids(root: &Path, pattern: &str) -> io::Result<Vec<Str
                 .collect()
         })
 }
+#[inline]
 pub(super) fn prepare(
     root: &Path,
     ids: &[String],
@@ -20,6 +22,7 @@ pub(super) fn prepare(
 ) -> io::Result<LocalBatch> {
     LocalBatch::prepare(root, ids, options.keep, options.track, &facts(rows))
 }
+#[inline]
 pub(super) fn classify(selected: &[String], rows: &[Value]) -> (Vec<String>, Vec<String>) {
     selected
         .iter()
@@ -155,12 +158,15 @@ fn main_exists(root: &Path, row: &Value) -> bool {
                 .is_file()
         })
 }
+#[inline]
 pub(in crate::commands) fn bitmap(root: &Path) -> io::Result<Value> {
     bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap"))?)
 }
+#[inline]
 pub(in crate::commands) fn facts(rows: &[Value]) -> Vec<Value> {
     rows.iter().map(|row| json!({"identity":row["identity"],"extensions":row["current"]["extensions"],"packageName":row["packageName"]})).collect()
 }
+#[inline]
 fn bare(id: &str) -> &str {
     let trimmed = id.trim().trim_matches('/');
     match trimmed.rsplit_once('@') {

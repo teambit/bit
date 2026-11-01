@@ -80,17 +80,20 @@ fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
     io::Error::new(error.kind(), format!("{code}: {message}, {operation} '{}'", path.display()))
 }
 
+#[inline]
 fn children_may_remain(error: &io::Error) -> bool {
     matches!(error.kind(), io::ErrorKind::DirectoryNotEmpty | io::ErrorKind::AlreadyExists)
         || (cfg!(windows) && error.kind() == io::ErrorKind::PermissionDenied)
 }
 
 #[cfg(not(windows))]
+#[inline]
 fn unlink(path: &Path) -> io::Result<()> {
     fs::remove_file(path)
 }
 
 #[cfg(windows)]
+#[inline]
 fn unlink(path: &Path) -> io::Result<()> {
     use std::os::windows::fs::FileTypeExt;
     if fs::symlink_metadata(path)?.file_type().is_symlink_dir() {

@@ -43,6 +43,7 @@ enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error.to_string())
     }
@@ -118,6 +119,7 @@ fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Ou
     }
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -175,6 +177,7 @@ fn run_dependency_name_non_workspace(
     }
 }
 
+#[inline]
 fn emit_scope_error(cwd: &Path, args: &[OsString], msg: &str) -> io::Result<Outcome> {
     let err = io::Error::other(msg.to_owned());
     workspace_command::execute_failure_scope(cwd, args, "dependency-name", false, "", err)
@@ -235,6 +238,7 @@ fn prepare_dependency_name(root: &Path, old_id: &str, new_id: &str) -> Result<Pr
     Ok(Prepared { report, writes })
 }
 
+#[inline]
 fn format_component_id(id: &ComponentId) -> String {
     let base = id.to_string_without_version();
     match id.version.as_deref() {
@@ -298,8 +302,7 @@ fn resolve_scope_package_name(scope_dir: &Path, raw_id: &str) -> Option<String> 
 }
 
 fn extract_version_package_name(ver_val: &Value) -> Option<String> {
-    let exts = ver_val["extensions"].as_array()?;
-    for ext in exts {
+    for ext in ver_val["extensions"].as_array()? {
         if super::update_cmd::matches_aspect(ext, "teambit.dependencies/dependency-resolver")
             && let Some(pkg) = ext["data"]["packageName"]
                 .as_str()
@@ -319,6 +322,7 @@ fn extract_version_package_name(ver_val: &Value) -> Option<String> {
     None
 }
 
+#[inline]
 fn is_valid_scoped_package_name(name: &str) -> bool {
     let name = name.trim();
     name.len() <= 214
@@ -331,15 +335,15 @@ fn is_valid_scoped_package_name(name: &str) -> bool {
 }
 
 fn scope_has_components(scope_dir: &Path) -> bool {
-    let Ok(bytes) = fs::read(scope_dir.join("index.json")) else {
-        return false;
-    };
-    let Ok(index) = bit_object_import::parse_jsonc(&bytes) else {
-        return false;
-    };
-    index["components"]
-        .as_array()
-        .or_else(|| index.as_array())
+    fs::read(scope_dir.join("index.json"))
+        .ok()
+        .and_then(|bytes| bit_object_import::parse_jsonc(&bytes).ok())
+        .and_then(|idx| {
+            idx["components"]
+                .as_array()
+                .or_else(|| idx.as_array())
+                .cloned()
+        })
         .is_some_and(|comps| {
             comps
                 .iter()
@@ -347,6 +351,7 @@ fn scope_has_components(scope_dir: &Path) -> bool {
         })
 }
 
+#[inline]
 fn exists_in_scope_index(scope_dir: &Path, id: &str) -> bool {
     resolve_component_entry(scope_dir, id.split('@').next().unwrap_or(id)).is_some()
 }

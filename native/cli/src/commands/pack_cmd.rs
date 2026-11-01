@@ -12,7 +12,7 @@ pub const COMMAND: Command = Command { name: "pack", aliases: &[], run };
 
 const SCOPE_NOT_FOUND_ERR: &str = "scope not found";
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub comp_id: String,
     pub scope_path: Option<String>,
@@ -77,6 +77,7 @@ pub(super) fn missing_scope_error(
     }
 }
 
+#[inline]
 pub(super) fn is_missing_scope(cwd: &Path, options: &Options) -> bool {
     options.scope_path.is_none()
         && workspace::root(cwd).is_none()
@@ -90,15 +91,7 @@ pub(super) fn is_missing_scope(cwd: &Path, options: &Options) -> bool {
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut options = Options {
-        comp_id: String::new(),
-        scope_path: None,
-        out_dir: None,
-        override_existing: false,
-        keep: false,
-        prefix: false,
-        json: false,
-    };
+    let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(raw_arg) = iter.next() {
         let arg = raw_arg.trim();
@@ -165,6 +158,7 @@ fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn apply_short_pack_flags(arg: &str, options: &mut Options) -> Option<()> {
     let flags = arg.strip_prefix('-')?;
     if flags.is_empty() || flags.starts_with('-') {
@@ -182,6 +176,7 @@ fn apply_short_pack_flags(arg: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 pub(super) fn format_pack_report(
     payload: &serde_json::Value,
     chalk: super::color::Chalk,
@@ -198,6 +193,7 @@ pub(super) fn format_pack_report(
     format!("{warnings}\n{errors}\n{tar_line}")
 }
 
+#[inline]
 fn join_yellow_array(arr_val: &serde_json::Value, chalk: super::color::Chalk) -> String {
     arr_val
         .as_array()

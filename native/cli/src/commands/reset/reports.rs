@@ -34,6 +34,7 @@ pub(super) fn soft_report(args: &[OsString], plan: &SoftPlan) -> Report {
     }
 }
 
+#[inline]
 pub(super) fn report(args: &[OsString], identity: &str, labels: &[String]) -> Report {
     let formatter = Formatter::new(Chalk::detect(args));
     let item = formatter.item(&format!(
@@ -147,6 +148,7 @@ pub(super) fn encode_object(kind: &str, hash: &str, value: &Value) -> io::Result
     Ok(out)
 }
 
+#[inline]
 fn adler32(bytes: &[u8]) -> u32 {
     let mut sum_low: u32 = 1;
     let mut sum_high: u32 = 0;

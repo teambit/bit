@@ -15,6 +15,8 @@ use std::io;
 
 /// `splitComponentPatterns(pattern)`: comma-separated, trimmed; when every
 /// part is negated, `**` comes first.
+#[must_use]
+#[inline]
 pub fn split(pattern: &str) -> Vec<String> {
     let mut patterns: Vec<String> = pattern
         .split(',')
@@ -71,6 +73,7 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
 }
 
 /// The ported subset of the glob grammar.
+#[inline]
 fn supported(glob: &str) -> io::Result<()> {
     if glob.is_empty()
         || glob.starts_with('#')
@@ -103,6 +106,7 @@ fn match_segments(path: &[&str], glob: &[&str]) -> bool {
 /// One segment: `*` any run, `?` one character; a glob with either does not
 /// match a dot segment unless it starts with a dot itself, and `*` alone
 /// needs a non-empty segment.
+#[inline]
 fn match_segment(segment: &str, glob: &str) -> bool {
     let magic = glob.contains(['*', '?']);
     if !magic {
@@ -116,6 +120,7 @@ fn match_segment(segment: &str, glob: &str) -> bool {
     wildcard(&segment, &glob)
 }
 
+#[inline]
 fn wildcard(text: &[char], glob: &[char]) -> bool {
     match glob.split_first() {
         None => text.is_empty(),

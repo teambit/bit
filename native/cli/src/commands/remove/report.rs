@@ -1,6 +1,7 @@
 //! The local sections of `RemoveTemplate`, including successful partial removals.
 use crate::commands::workspace_command::format::Formatter;
 
+#[inline]
 pub(super) fn render(
     format: &Formatter,
     removed: &[String],
@@ -51,6 +52,7 @@ fn modified_section(format: &Formatter, ids: &[String]) -> String {
         items.join("\n"),
     )
 }
+#[inline]
 fn unique_ids(ids: &[String]) -> Vec<&str> {
     let mut out = Vec::with_capacity(ids.len());
     for id in ids

@@ -1,4 +1,5 @@
 //! `RemoveCmd`'s local, noninteractive flag grammar.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Options<'a> {
     pub pattern: &'a str,
     pub keep: bool,
@@ -39,6 +40,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     silent.then_some(options)
 }
 
+#[inline]
 fn is_valid_pattern(value: &str) -> bool {
     !value.starts_with('-')
         && value.len() <= 4096
@@ -49,6 +51,7 @@ fn is_valid_pattern(value: &str) -> bool {
             .is_empty()
 }
 
+#[inline]
 fn apply_short_bundle(arg: &str, silent: &mut bool, options: &mut Options<'_>) -> Option<()> {
     let flags = arg
         .strip_prefix('-')

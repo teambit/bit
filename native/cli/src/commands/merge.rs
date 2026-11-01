@@ -86,6 +86,7 @@ fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outc
     )
 }
 
+#[inline]
 fn is_ci_environment() -> bool {
     std::env::var_os("CI")
         .is_some_and(|val| {

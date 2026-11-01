@@ -28,20 +28,24 @@ pub(super) fn preflight(request: &Value) -> io::Result<()> {
 #[derive(Debug)]
 struct Restored(Value);
 impl fmt::Display for Restored {
+    #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("restored lane checkout failure")
     }
 }
 impl std::error::Error for Restored {}
+#[inline]
 pub(super) fn restored(result: Value) -> io::Error {
     io::Error::other(Restored(result))
 }
+#[inline]
 pub(super) fn result(error: &io::Error) -> Option<&Value> {
     error
         .get_ref()?
         .downcast_ref::<Restored>()
         .map(|error| &error.0)
 }
+#[inline]
 pub(super) fn retain(startup: &mut Startup, error: &io::Error) {
     if let Some(error) = error
         .get_ref()

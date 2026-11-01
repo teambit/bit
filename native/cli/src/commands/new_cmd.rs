@@ -70,6 +70,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("new requires workspace-starter runtime".into()))
 }
 
+#[inline]
 pub(super) fn validate_options(cwd: &Path, options: &Options) -> Result<(), String> {
     if workspace::root(cwd).is_some() {
         return Err(
@@ -113,7 +114,7 @@ fn validate_template_source(cwd: &Path, options: &Options) -> Result<(), String>
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut positionals = Vec::new();
+    let mut positionals = Vec::with_capacity(2);
     let mut aspect = None;
     let mut load_from = None;
     let mut current_dir = false;
@@ -209,6 +210,7 @@ fn apply_inline_new_token(
     Some(())
 }
 
+#[inline]
 fn apply_short_new_flags(token: &str, current_dir: &mut bool) -> Option<()> {
     let flags = token.strip_prefix('-')?;
     if flags.is_empty() || flags.starts_with('-') {
@@ -224,6 +226,7 @@ fn apply_short_new_flags(token: &str, current_dir: &mut bool) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn take_new_val(val: &str) -> Option<String> {
     let trimmed = val.trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())

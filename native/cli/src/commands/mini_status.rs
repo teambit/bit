@@ -39,6 +39,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     print(args, report, serde_json::to_string_pretty, false)
 }
 
+#[inline]
 fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     let mut json = false;
     let mut iter = args.get(1..)?.iter();
@@ -148,6 +149,7 @@ fn summarize_with_startup(
 }
 
 /// `MiniStatusCmd.report` without `--show-issues`.
+#[inline]
 fn report(summary: &Summary, chalk: Chalk) -> String {
     let section = |title: &str, ids: &[String]| {
         let ids = if ids.is_empty() { "<none>".to_string() } else { ids.join("\n") };
@@ -182,6 +184,7 @@ fn quick_report(summary: &Summary, chalk: Chalk) -> String {
     sections
 }
 
+#[inline]
 fn home_dir() -> Option<std::path::PathBuf> {
     let home = if cfg!(windows) { env::var_os("USERPROFILE") } else { env::var_os("HOME") };
     home.filter(|home| !home.to_string_lossy().trim().is_empty())
@@ -220,6 +223,7 @@ fn summarize(root: &Path, home: &Path) -> io::Result<Option<Summary>> {
 }
 
 /// `validSummary`.
+#[inline]
 fn valid(summary: &Summary, count: usize) -> bool {
     let ids_valid = |ids: &[String]| {
         ids.len() <= count

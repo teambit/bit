@@ -39,12 +39,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn unknown_subcommand_message(subcommand: &str, chalk: Chalk) -> String {
     chalk.red(&format!(
         r#""{subcommand}" is not a subcommand of "npmrc", please run "bit npmrc --help" to list the subcommands"#,
     ))
 }
 
+#[inline]
 fn parse_subcommand(args: &[OsString]) -> Option<String> {
     let tokens = args
         .get(1..)?

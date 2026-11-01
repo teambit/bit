@@ -57,6 +57,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn run_bare(cwd: &Path, root_opt: Option<&Path>, args: &[OsString]) -> io::Result<Outcome> {
     let report = Report { data: BARE_RIPPLE_MSG.into(), code: 1, details: None };
     if let Some(root) = root_opt {
@@ -66,6 +67,7 @@ fn run_bare(cwd: &Path, root_opt: Option<&Path>, args: &[OsString]) -> io::Resul
     }
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -145,18 +147,21 @@ fn diagnose_simulate_lane_flag(
     (current_lane == Some(lane) && !is_exported).then(|| never_exported_err(lane))
 }
 
+#[inline]
 fn never_exported_err(lane: &str) -> String {
     format!(
         r#"lane "{lane}" was never exported. a simulation runs against the lane on bit.cloud, run "bit export" first"#,
     )
 }
 
+#[inline]
 fn default_lane_err(lane: &str) -> String {
     format!(
         r#""{lane}" is the default lane. a simulation needs a lane whose changes are tested against their dependents on main"#,
     )
 }
 
+#[inline]
 fn invalid_lane_err(lane: &str) -> String {
     format!(
         r#"invalid --lane "{lane}", expected "scope/lane-name". unable to parse "{lane}" as a valid lane-id, expected "scope/lane-name" format"#,
@@ -164,9 +169,7 @@ fn invalid_lane_err(lane: &str) -> String {
 }
 
 fn read_workspace_lane_state(root_opt: Option<&Path>) -> Option<(Option<String>, bool)> {
-    let Some(root) = root_opt else {
-        return Some((None, false));
-    };
+    let Some(root) = root_opt else { return Some((None, false)) };
     let ws_val = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
     if super::build_cmd::is_bitmap_auto_sync(&ws_val) {
         return None;
@@ -329,6 +332,7 @@ fn apply_simulate_inline(arg: &str, lane: &mut Option<String>) -> Option<()> {
     valid_ripple_val(val).map(|_| ())
 }
 
+#[inline]
 fn valid_ripple_val(val: &str) -> Option<&str> {
     let trimmed = val.trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(trimmed)
@@ -390,6 +394,7 @@ fn parse_list_invalid_limit(rest: &[&str]) -> Option<Subcommand> {
     Some(Subcommand::ListInvalidLimit { raw: raw.to_owned(), json })
 }
 
+#[inline]
 pub(super) fn parse_positive_int(raw: &str) -> Option<u64> {
     let val = raw.trim().parse::<u64>().ok()?;
     (val >= 1).then_some(val)

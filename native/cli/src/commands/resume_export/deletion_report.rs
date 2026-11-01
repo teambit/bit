@@ -4,6 +4,7 @@ use crate::commands::workspace_command::format::Formatter;
 use indexmap::IndexMap;
 use std::io;
 
+#[inline]
 pub(super) fn failed_lines(failed: &IndexMap<String, String>) -> Vec<String> {
     failed
         .iter()
@@ -35,10 +36,12 @@ fn failed_section(formatter: &Formatter, failed: &IndexMap<String, String>) -> S
     )
 }
 
+#[inline]
 fn warning(formatter: &Formatter, message: &str) -> String {
     format!("{} {}", formatter.warn_symbol(), formatter.chalk.yellow(message))
 }
 
+#[inline]
 pub(super) fn nothing(formatter: &Formatter, export_id: &str, probe: &Answers) -> String {
     let export_id = export_id.trim();
     let message = format!(r#"no pending objects of "{export_id}" were found, nothing to delete"#);

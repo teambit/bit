@@ -8,6 +8,7 @@ use std::{
     time::Duration,
 };
 
+#[inline]
 pub(super) fn supports(name: &str) -> bool {
     matches!(name.trim(), "PendingDirStatus" | "RemovePendingDir")
 }
@@ -56,6 +57,7 @@ pub(super) fn action(scope: &Path, name: &str, payload: &Value) -> io::Result<Va
     Ok(json!({"existed":existed}))
 }
 
+#[inline]
 fn pending_path(scope: &Path, value: Option<&Value>) -> io::Result<PathBuf> {
     let valid = value
         .and_then(Value::as_str)

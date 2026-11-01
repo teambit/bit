@@ -49,6 +49,7 @@ pub(super) fn execute(
     plan.commit(&workspace_command::file_id())?;
     report(options, &plan, args)
 }
+#[inline]
 fn import(
     root: &Path,
     args: &[OsString],
@@ -72,6 +73,7 @@ fn import(
     };
     plan.after_import(&bitmap)
 }
+#[inline]
 fn report(options: &Options<'_>, plan: &Batch, args: &[OsString]) -> io::Result<Report> {
     let format = Formatter::new(Chalk::detect(args));
     let items = plan

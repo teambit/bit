@@ -18,11 +18,13 @@ pub(super) struct Reader {
     files: Vec<(PathBuf, Vec<u8>)>,
 }
 impl Reader {
+    #[inline]
     pub(super) fn new(root: &Path) -> io::Result<Self> {
         let mut engine = Engine::new()?;
         let context = engine.request(&json!({"kind":"statusContext", "root":root, "home":workspace_command::home(), "history":false}))?;
         Ok(Self { engine, context, files: Vec::new() })
     }
+    #[inline]
     pub(super) fn metadata(&self, identity: &str) -> Option<Value> {
         let target = self.target(identity)?;
         let policy = policy::status_policy(&self.context, target).ok()?;
@@ -30,6 +32,7 @@ impl Reader {
             json!({"identity": identity, "packageName": policy.package_name, "current": {"extensions":policy.extensions}}),
         )
     }
+    #[inline]
     pub(super) fn status(&mut self, root: &Path, bitmap: &Value, identity: &str) -> Option<bool> {
         self.status_checked(root, bitmap, identity)
             .ok()
@@ -115,6 +118,7 @@ impl Reader {
                 ) == identity
             })
     }
+    #[inline]
     fn has_history(&self, identity: &str, model: &Value) -> bool {
         self.context["laneHeads"][identity].is_string()
             || model["head"].is_string()
@@ -125,6 +129,7 @@ impl Reader {
                 .as_object()
                 .is_some_and(|versions| !versions.is_empty())
     }
+    #[inline]
     fn target(&self, identity: &str) -> Option<&Value> {
         let identity = identity.trim();
         self.context["targets"]
@@ -173,6 +178,7 @@ impl Reader {
         Ok(())
     }
 }
+#[inline]
 fn eligible(root: &Path, row: &Value) -> bool {
     let Some(directory) = row["rootDir"]
         .as_str()

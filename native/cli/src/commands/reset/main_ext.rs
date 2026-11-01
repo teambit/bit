@@ -60,7 +60,7 @@ fn load_all_version_refs(scope: &Path) -> io::Result<Vec<(String, String)>> {
         .as_array()
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("reset index"))?;
-    let mut refs = Vec::new();
+    let mut refs = Vec::with_capacity(rows.len());
     for row in rows {
         if row["isSymlink"] == true {
             continue;
@@ -207,6 +207,7 @@ impl DetachedBatch {
     }
 
     /// Yield `(identity, labels)` for the reset report.
+    #[inline]
     pub(super) fn results(&self) -> impl Iterator<Item = (&str, &[String])> {
         self.items
             .iter()
@@ -287,6 +288,7 @@ fn detached_parent_info(scope: &Path, model: &Value, current: &str) -> io::Resul
 }
 
 /// Extract keys marked `local: true` in `state.versions`.
+#[inline]
 fn local_versions(model: &Value) -> Vec<String> {
     model["state"]["versions"]
         .as_object()
@@ -347,12 +349,9 @@ fn prepare_history(
     let hash = format!("{:x}", Sha1::digest(key.as_bytes()));
     let mut history = match read_scope_object(scope, &hash)? {
         Some((_, existing)) => existing,
-        None => json!({
-            "name": comp_name,
-            "scope": comp_scope,
-            "versions": [],
-            "graphCompleteRefs": [],
-        }),
+        None => {
+            json!({ "name": comp_name, "scope": comp_scope, "versions": [], "graphCompleteRefs": [] })
+        }
     };
     let versions =
         history["versions"].as_array_mut().ok_or_else(|| invalid("detached history versions"))?;
@@ -383,6 +382,7 @@ fn project_bitmap(root: &Path, items: &[DetachedItem]) -> io::Result<Vec<u8>> {
     render_workspace_bitmap(&document)
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
