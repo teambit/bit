@@ -67,6 +67,9 @@ pub(super) fn tls(
         && let Some(file) =
             config_str(global, "network.cafile").or_else(|| config_str(global, "proxy.cafile"))
     {
+        if fs::metadata(file)?.len() > 16 * 1024 * 1024 {
+            return Err(invalid("network.cafile exceeds size limit"));
+        }
         pem = Some(fs::read(file)?);
     }
     let builder = builder.tls_danger_accept_invalid_certs(strict == Some(false));

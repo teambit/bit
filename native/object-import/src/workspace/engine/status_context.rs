@@ -176,7 +176,13 @@ fn component_controls(root: &std::path::Path, targets: &[Value]) -> io::Result<V
         let directory = target["directory"]
             .as_str()
             .map(str::trim)
-            .filter(|dir| !dir.is_empty())
+            .filter(|dir| {
+                !dir.is_empty()
+                    && !std::path::Path::new(dir).is_absolute()
+                    && !dir
+                        .split(['/', '\\'])
+                        .any(|part| part == "..")
+            })
             .ok_or_else(|| invalid("status control directory"))?;
         for name in ["component.json", "package.json"] {
             proof::read(&root.join(directory).join(name), &mut proofs)?;

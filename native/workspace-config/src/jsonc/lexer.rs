@@ -113,7 +113,9 @@ impl Lexer<'_> {
             } else if char == '\\' {
                 escaped = true;
             } else if char == quote {
-                let raw = &self.text[start..=index];
+                let raw = self.text
+                    .get(start..=index)
+                    .ok_or_else(|| invalid("Unexpected token ILLEGAL"))?;
                 // `JSON.parse` of the raw token: single quotes are rejected here.
                 return serde_json::from_str(raw)
                     .map(Kind::String)
@@ -143,7 +145,10 @@ impl Lexer<'_> {
                     .is_some_and(|(_, next)| *next == '/')
             {
                 self.chars.next();
-                return Ok(Kind::Block(self.text[body..index].to_owned()));
+                let slice = self.text
+                    .get(body..index)
+                    .ok_or_else(|| invalid("Unexpected token ILLEGAL"))?;
+                return Ok(Kind::Block(slice.to_owned()));
             }
             self.bump_line(char);
         }

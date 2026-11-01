@@ -147,6 +147,7 @@ fn first_parent(version: &Value) -> io::Result<Option<String>> {
 fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
     fn entries(version: &Value) -> io::Result<Vec<String>> {
         let files = version["files"].as_array().ok_or_else(|| invalid("version parent files"))?;
+        let mut seen = HashSet::with_capacity(files.len());
         let mut entries = files
             .iter()
             .map(|file| {
@@ -155,6 +156,9 @@ fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
                     .map(str::trim)
                     .filter(|path| !path.is_empty())
                     .ok_or_else(|| invalid("version parent path"))?;
+                if !seen.insert(path) {
+                    return Err(invalid("version parent duplicate path"));
+                }
                 let hash = file["file"]
                     .as_str()
                     .map(str::trim)

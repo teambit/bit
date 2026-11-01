@@ -96,9 +96,9 @@ pub(in crate::workspace::engine) fn compare(
     let result = crate::inspection::compare_owned(
         semantic::project(model)?,
         semantic::project(&current)?,
-        target.directory == ".",
+        target.directory.trim() == ".",
     )?;
-    Ok(json!({"identity":target.identity,"modified":result["modified"],
+    Ok(json!({"identity":target.identity.trim(),"modified":result["modified"],
         "codeModified":code_modified(files,model)?,
         "modelHash":result["leftHash"],"currentHash":result["rightHash"]}))
 }

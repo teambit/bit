@@ -24,7 +24,7 @@ pub(super) fn read(
     for (file, body) in models.iter().zip(bodies) {
         let path = file["relativePath"]
             .as_str()
-            .expect("validated model path")
+            .ok_or_else(|| invalid("workspace diff model path"))?
             .trim();
         files.push((path.to_owned(), Some(body), current.remove(path)));
     }

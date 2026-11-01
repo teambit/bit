@@ -61,14 +61,11 @@ pub(super) fn component(
 }
 
 fn component_id_matches(component: &Value, target_identity: &str) -> bool {
+    let target_identity = target_identity.trim();
     let id = &component["componentId"];
     if let Some(id_str) = id.as_str() {
-        let bare = id_str
-            .trim()
-            .split('@')
-            .next()
-            .unwrap_or(id_str)
-            .trim();
+        let trimmed = id_str.trim();
+        let bare = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
         return !bare.is_empty() && bare == target_identity;
     }
     let name = id["name"]

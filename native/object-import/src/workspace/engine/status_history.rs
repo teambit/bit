@@ -52,11 +52,13 @@ fn prepare(request: &Request) -> io::Result<Vec<(String, Vec<u8>)>> {
     let mut bytes: usize = 0;
     for plan in &request.plans {
         let (hash, serialized) = serialize(plan)?;
-        bytes = bytes.saturating_add(serialized.len());
-        if bytes > 8 * 1024 * 1024
-            || objects
-                .iter()
-                .any(|(existing, _)| existing == &hash)
+        bytes = bytes
+            .checked_add(serialized.len())
+            .filter(|total| *total <= 8 * 1024 * 1024)
+            .ok_or_else(|| invalid("status history output limit"))?;
+        if objects
+            .iter()
+            .any(|(existing, _)| existing == &hash)
         {
             return Err(invalid("status history output limit"));
         }

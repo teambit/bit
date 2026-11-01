@@ -13,6 +13,9 @@ pub(super) fn path(path: &Path) -> io::Result<()> {
         || !path.is_absolute()
         || name.len() > 32768
         || name.chars().any(char::is_control)
+        || path
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
     {
         return Err(invalid("workspace invalid absolute path"));
     }

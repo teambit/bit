@@ -168,7 +168,11 @@ fn indexed_model_hash(root: &std::path::Path, name: &str) -> Option<String> {
 }
 
 fn model_head(repository: &mut Repository, model: &Value) -> io::Result<Option<(String, Value)>> {
-    let Some(head) = model["head"].as_str() else {
+    let Some(head) = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
         return Ok(None);
     };
     Ok(optional(repository, head, "Version")?.map(|version| (head.to_owned(), version)))

@@ -53,6 +53,11 @@ pub(in crate::workspace::engine) fn read(
 
 fn lane_head(request: &Request) -> io::Result<Option<String>> {
     let Some(id) = &request.lane else { return Ok(None) };
+    let scope = id.scope.trim();
+    let lane_name = id.name.trim();
+    if scope.is_empty() || scope.contains('/') || lane_name.is_empty() || lane_name.contains('/') {
+        return Err(invalid("component log lane id"));
+    }
     let directory = crate::scope_path(&request.root).join("objects");
     let reader = Reader {
         directory: &directory,
@@ -60,7 +65,7 @@ fn lane_head(request: &Request) -> io::Result<Option<String>> {
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };
-    let name = format!("{}/{}", id.scope.trim(), id.name.trim());
+    let name = format!("{scope}/{lane_name}");
     Ok(lane::read(&request.root, &reader, &name)?
         .and_then(|lane| lane.heads.get(request.identity.trim()).cloned()))
 }

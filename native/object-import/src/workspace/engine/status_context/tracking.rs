@@ -121,6 +121,9 @@ fn non_empty_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
 }
 
 fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
+    if !valid_config_keys(value) {
+        return Err(invalid("tracking component configuration"));
+    }
     let identity = target["identity"]
         .as_str()
         .map(str::trim)
@@ -128,7 +131,7 @@ fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
     let (scope, name) = identity
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
-        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .filter(|(scope, name)| !scope.is_empty() && !scope.contains('/') && !name.is_empty())
         .ok_or_else(|| invalid("tracking scoped identity"))?;
     if let Some(id) = value
         .get("componentId")
@@ -153,6 +156,18 @@ fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
     Ok(
         json!({"componentId":{"scope":scope,"name":name},"extensions":extensions,"propagate":propagate.cloned().unwrap_or(json!(false))}),
     )
+}
+
+fn valid_config_keys(value: &Value) -> bool {
+    value
+        .as_object()
+        .is_some_and(|object| {
+            object
+                .keys()
+                .all(|key| {
+                    matches!(key.as_str(), "componentId" | "extensions" | "propagate" | "$schema")
+                })
+        })
 }
 
 fn optional_jsonc(path: &Path, budget: &Budget) -> io::Result<Value> {

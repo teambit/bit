@@ -66,6 +66,9 @@ pub(super) fn model(reader: &Reader<'_>, item: &Item) -> io::Result<Value> {
         .as_deref()
         .map(str::trim)
         .filter(|scope| !scope.is_empty());
+    if scope.is_some_and(|part| part.contains('/')) {
+        return Err(invalid("status indexed model identity"));
+    }
     let identity = scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
     let expected = crate::validate::hexadecimal(&Sha1::digest(identity.as_bytes()));
     if !expected.eq_ignore_ascii_case(hash)

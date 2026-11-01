@@ -156,10 +156,19 @@ fn local_object(root: &Path, reader: &Reader<'_>, scope: &str, name: &str) -> io
                 )
         })
         .ok_or_else(|| invalid("status current lane missing"))?;
-    let hash = row["hash"].as_str().ok_or_else(|| invalid("status lane hash"))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("status lane hash"))?;
+    crate::merge_history::hash(hash)?;
     let lane = reader.read(hash, "Lane")?;
-    let lane_scope = lane["scope"].as_str().unwrap_or_default();
-    if (!lane_scope.is_empty() && lane_scope != scope) || lane["name"] != name {
+    let lane_scope = lane["scope"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
+    if (!lane_scope.is_empty() && lane_scope != scope)
+        || lane["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("status complex lane requires canonical loading"));
     }
     Ok(lane)

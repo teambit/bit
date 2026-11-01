@@ -18,16 +18,20 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
     if captured
         .iter()
         .map(|file| file.raw_bytes)
-        .sum::<usize>()
-        > super::super::super::MAX_RAW
+        .try_fold(0_usize, usize::checked_add)
+        .is_none_or(|total| total > super::super::super::MAX_RAW)
     {
         return Err(invalid("status normalized source budget"));
     }
     let mut captured = captured.into_iter();
-    Ok(request.targets
+    let output = request.targets
         .iter()
         .map(|target| build_target_files(target, &mut captured))
-        .collect())
+        .collect::<Vec<_>>();
+    if captured.next().is_some() {
+        return Err(invalid("status normalized source budget"));
+    }
+    Ok(output)
 }
 
 fn collect_sources(request: &Request) -> io::Result<(Vec<PathBuf>, HashSet<PathBuf>)> {

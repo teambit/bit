@@ -141,12 +141,12 @@ fn repeat(alternatives: &[Vec<char>], rest: &[char], text: &[char]) -> bool {
 
 fn split_alternatives(body: &[char]) -> Vec<Vec<char>> {
     let mut alternatives = vec![Vec::new()];
-    let mut depth = 0;
+    let mut depth = 0_usize;
     for &character in body {
         match character {
             '|' if depth == 0 => alternatives.push(Vec::new()),
             '(' => depth += 1,
-            ')' => depth -= 1,
+            ')' if depth > 0 => depth -= 1,
             _ => {}
         }
         if (character != '|' || depth != 0)

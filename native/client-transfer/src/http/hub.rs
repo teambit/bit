@@ -139,6 +139,9 @@ fn line(bytes: &[u8], end: &mut Value, messages: &mut Vec<String>) -> io::Result
     if bytes.is_empty() {
         return Ok(());
     }
+    if messages.len() >= 16_384 {
+        return Err(invalid("central hub progress line limit"));
+    }
     let row: Value = serde_json::from_slice(bytes).map_err(io::Error::other)?;
     let message = row["message"]
         .as_str()

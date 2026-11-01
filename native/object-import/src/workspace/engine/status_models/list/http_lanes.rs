@@ -168,7 +168,8 @@ pub(super) fn read_json_file(path: &Path) -> io::Result<Value> {
 }
 
 fn validate_bit_version(bit_version: &str) -> io::Result<()> {
-    if bit_version.trim().is_empty() {
+    let trimmed = bit_version.trim();
+    if trimmed.is_empty() || trimmed.len() > 128 || trimmed.chars().any(char::is_control) {
         return Err(invalid("remote lane bit version is empty"));
     }
     Ok(())

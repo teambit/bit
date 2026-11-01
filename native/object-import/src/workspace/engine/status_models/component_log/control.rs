@@ -64,6 +64,7 @@ impl Control {
         row["hash"]
             .as_str()
             .map(str::trim)
+            .filter(|hash| !hash.is_empty())
             .is_some_and(|hash| {
                 self.snaps
                     .iter()

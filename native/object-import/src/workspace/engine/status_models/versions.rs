@@ -106,9 +106,12 @@ fn read_single(
 fn verify_required_sources(reader: &Reader<'_>, value: &Value) -> io::Result<()> {
     let Some(files) = value["files"].as_array() else { return Ok(()) };
     for file in files {
-        if let Some(source) = file["file"].as_str() {
-            reader.verify_source(source)?;
-        }
+        let source = file["file"]
+            .as_str()
+            .map(str::trim)
+            .filter(|source| !source.is_empty())
+            .ok_or_else(|| invalid("status model file source"))?;
+        reader.verify_source(source)?;
     }
     Ok(())
 }

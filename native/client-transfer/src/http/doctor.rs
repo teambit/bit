@@ -11,6 +11,10 @@ const MAX_BYTES: usize = 32 * 1024 * 1024;
 impl Network {
     /// Request the published remote doctor's complete results and runtime metadata.
     pub async fn doctor(&self, url: &str, scope: &str, name: Option<&str>) -> io::Result<Value> {
+        let base = url.trim().trim_end_matches('/');
+        if base.is_empty() || scope.trim().is_empty() {
+            return Err(invalid("remote doctor request"));
+        }
         let mut variables = json!({});
         if let Some(name) = name
             .map(str::trim)
@@ -20,7 +24,7 @@ impl Network {
         }
         let query = QUERY.replace("\r\n", "\n");
         let request = self.client
-            .post(format!("{}/graphql", url.trim().trim_end_matches('/')))
+            .post(format!("{base}/graphql"))
             .header("x-verb", "read");
         let request = match &self.token {
             Some(token) => request.header("authorization", format!("Bearer {token}")),

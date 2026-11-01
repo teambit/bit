@@ -90,22 +90,23 @@ fn forked_updates(
     }
     let (scope, name) = forked.split_once('/').ok_or_else(|| invalid("status forked lane id"))?;
     let refs = overlay.lane_refs(scope, name).ok_or_else(|| invalid("status forked lane refs"))?;
-    let heads = refs
-        .iter()
-        .map(|row| {
-            let (scope, name) =
-                crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(
-                    row,
-                )
+    let mut heads = HashMap::with_capacity(refs.len());
+    for row in refs {
+        let (row_scope, row_name) =
+            crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)
                 .ok_or_else(|| invalid("status forked scope"))?;
-            let head = row["head"]
-                .as_str()
-                .map(str::trim)
-                .ok_or_else(|| invalid("status forked head"))?;
-            crate::merge_history::hash(head)?;
-            Ok((format!("{scope}/{name}"), head))
-        })
-        .collect::<io::Result<HashMap<_, _>>>()?;
+        let head = row["head"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("status forked head"))?;
+        crate::merge_history::hash(head)?;
+        if heads
+            .insert(format!("{row_scope}/{row_name}"), head)
+            .is_some()
+        {
+            return Err(invalid("status duplicate forked lane ref"));
+        }
+    }
     let updates = pool
         .install(|| {
             request.targets

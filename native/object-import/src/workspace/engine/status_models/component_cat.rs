@@ -20,6 +20,9 @@ pub(in crate::workspace::engine) fn read(
     pool: &ThreadPool,
 ) -> io::Result<(usize, Value)> {
     super::super::path(&request.root)?;
+    if request.stored_identity.trim().is_empty() {
+        return Err(invalid("cat component model absent"));
+    }
     let directory = crate::scope_path(&request.root).join("objects");
     let reader = super::Reader {
         directory: &directory,
@@ -37,7 +40,7 @@ pub(in crate::workspace::engine) fn read(
     let version = versions.read(&reference)?;
     let files = files(&directory, &version)?;
     let count = files.len();
-    Ok((count, json!({"version":request.version,"files":files})))
+    Ok((count, json!({"version":request.version.trim(),"files":files})))
 }
 
 fn reference(model: &Value, version: &str) -> io::Result<String> {
@@ -46,6 +49,7 @@ fn reference(model: &Value, version: &str) -> io::Result<String> {
         let head = model["head"]
             .as_str()
             .map(str::trim)
+            .filter(|head| !head.is_empty())
             .ok_or_else(|| invalid("cat version absent"))?;
         return Ok(crate::validate::hexadecimal(&merge_history::hash(head)?));
     }
@@ -57,6 +61,7 @@ fn reference(model: &Value, version: &str) -> io::Result<String> {
         .or_else(|| model["orphanedVersions"].get(version))
         .and_then(Value::as_str)
         .map(str::trim)
+        .filter(|reference| !reference.is_empty())
         .ok_or_else(|| invalid("cat version absent"))?;
     Ok(crate::validate::hexadecimal(&merge_history::hash(reference)?))
 }

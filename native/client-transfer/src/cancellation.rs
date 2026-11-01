@@ -82,7 +82,13 @@ impl Cancellation {
             Either::Left(_) => {
                 Err(io::Error::new(io::ErrorKind::Interrupted, "operation cancelled"))
             }
-            Either::Right((result, _)) => Ok(result),
+            Either::Right((result, _)) => {
+                if self.is_cancelled() {
+                    Err(io::Error::new(io::ErrorKind::Interrupted, "operation cancelled"))
+                } else {
+                    Ok(result)
+                }
+            }
         }
     }
 }

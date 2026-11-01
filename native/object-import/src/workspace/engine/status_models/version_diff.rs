@@ -91,10 +91,15 @@ fn load_pair(
 
 fn target_versions(request: &Request) -> Vec<Target> {
     let identity = request.identity.trim();
+    let from_version = request.from_version.trim();
     let to_version = request.to_version.trim();
-    [request.from_version.trim(), to_version]
+    let versions = if request.no_parent || from_version == to_version {
+        vec![to_version]
+    } else {
+        vec![from_version, to_version]
+    };
+    versions
         .into_iter()
-        .filter(|version| !request.no_parent || *version == to_version)
         .map(|version| Target { identity: identity.to_string(), version: version.to_string() })
         .collect()
 }

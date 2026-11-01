@@ -77,8 +77,14 @@ impl Document {
                 *node = Node::Object(Object::default());
             }
             let Node::Object(object) = node else { unreachable!("replaced by an object above") };
+            let resolved =
+                if !object.entries.contains_key(*key) && object.entries.contains_key(key.trim()) {
+                    key.trim()
+                } else {
+                    *key
+                };
             node = object.entries
-                .entry((*key).to_owned())
+                .entry(resolved.to_owned())
                 .or_insert_with(|| Node::Object(Object::default()));
         }
         if !matches!(node, Node::Object(_)) {

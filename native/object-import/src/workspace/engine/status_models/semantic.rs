@@ -124,15 +124,18 @@ fn identity(value: &Value) -> io::Result<Value> {
         .get("scope")
         .and_then(Value::as_str)
         .map(str::trim)
-        .filter(|scope| !scope.is_empty())
+        .filter(|scope| !scope.is_empty() && !scope.contains('/'))
     else {
         return Err(invalid("status Version dependency scope"));
     };
-    let mut object = object.clone();
-    object.insert("scope".into(), json!(scope));
     let (bare_name, inline_ver) = raw_name
         .rsplit_once('@')
         .map_or((raw_name, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
+    if bare_name.is_empty() {
+        return Err(invalid("status Version dependency scope"));
+    }
+    let mut object = object.clone();
+    object.insert("scope".into(), json!(scope));
     object.insert("name".into(), json!(bare_name));
     normalize_object_version(&mut object, inline_ver);
     Ok(Value::Object(object))

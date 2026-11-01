@@ -49,11 +49,18 @@ fn action_error(code: Option<u64>, error: &Value, url: &str, message: String) ->
             "fatal: another client started exporting to the same scopes as yours within the exact same millisecond ({}), please try again.",
             non_empty_str(&error["clientId"]).unwrap_or(&message),
         )),
-        Some(137) => io::Error::other(format!(
-            "fatal: the server is busy by other exports. total exports (including yours) in the queue: {},\nthe current export-id in queue is \"{}\".\nin a few minutes, bit.cloud will try to complete the export for you.\nif the remote scopes are not updated, please contact support.\n",
-            error["queueSize"],
-            non_empty_str(&error["currentExportId"]).unwrap_or("undefined"),
-        )),
+        Some(137) => {
+            let queue_size = error["queueSize"]
+                .as_u64()
+                .map_or_else(
+                    || non_empty_str(&error["queueSize"]).unwrap_or("undefined").to_owned(),
+                    |size| size.to_string(),
+                );
+            io::Error::other(format!(
+                "fatal: the server is busy by other exports. total exports (including yours) in the queue: {queue_size},\nthe current export-id in queue is \"{}\".\nin a few minutes, bit.cloud will try to complete the export for you.\nif the remote scopes are not updated, please contact support.\n",
+                non_empty_str(&error["currentExportId"]).unwrap_or("undefined"),
+            ))
+        }
         Some(138) => {
             let lane = non_empty_str(&error["laneName"]).unwrap_or("undefined");
             let suffix = non_empty_str(&error["scopeName"])

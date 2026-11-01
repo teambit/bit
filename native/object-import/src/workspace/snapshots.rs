@@ -34,12 +34,16 @@ pub(crate) struct Observation {
 
 impl State {
     pub(crate) fn retain(&mut self, snapshot: Observation) -> Option<u64> {
+        let valid_hash = |hash: &str| !hash.is_empty() && !hash.chars().any(char::is_control);
         if snapshot.contents.len() > MAX_BYTES
             || self.next >= MAX_TOKEN
             || snapshot.path.as_os_str().is_empty()
-            || snapshot.raw_hash.trim().is_empty()
-            || snapshot.snapshot_hash.trim().is_empty()
+            || !valid_hash(snapshot.raw_hash.trim())
+            || !valid_hash(snapshot.snapshot_hash.trim())
         {
+            return None;
+        }
+        if snapshot.raw_bytes < snapshot.contents.len() {
             return None;
         }
         while self.bytes.saturating_add(snapshot.contents.len()) > MAX_BYTES

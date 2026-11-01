@@ -31,21 +31,30 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
         read::read_with(&paths, pool, |path, bytes| one(path, bytes, bitmaps.contains(path)))?
             .into_iter()
             .collect::<io::Result<Vec<_>>>()?;
+    group_target_files(request, captured)
+}
+
+fn group_target_files(request: &Request, captured: Vec<File>) -> io::Result<Vec<Vec<File>>> {
     let mut captured = captured.into_iter();
-    Ok(request.targets
+    let grouped = request.targets
         .iter()
         .map(|target| {
             target.files
                 .iter()
-                .filter_map(|file| {
-                    let mut captured = captured.next()?;
-                    captured.metadata["relativePath"] = json!(file);
-                    captured.metadata["name"] = json!(file.rsplit('/').next().unwrap_or(file));
-                    Some(captured)
+                .map(|file| {
+                    let mut item =
+                        captured.next().ok_or_else(|| invalid("workspace diff captured file"))?;
+                    item.metadata["relativePath"] = json!(file);
+                    item.metadata["name"] = json!(file.rsplit('/').next().unwrap_or(file));
+                    Ok(item)
                 })
-                .collect()
+                .collect::<io::Result<Vec<_>>>()
         })
-        .collect())
+        .collect::<io::Result<Vec<_>>>()?;
+    if captured.next().is_some() {
+        return Err(invalid("workspace diff captured file count"));
+    }
+    Ok(grouped)
 }
 
 fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<File> {

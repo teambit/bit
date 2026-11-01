@@ -120,7 +120,7 @@ impl Parser {
         }
         match prefix {
             Some(prefix) => self.define(self.symbol(prefix), comments),
-            None => self.unassigned = Some(comments),
+            None => self.unassigned.get_or_insert_with(Vec::new).extend(comments),
         }
     }
 

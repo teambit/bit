@@ -67,7 +67,11 @@ fn insert(refs: &mut HashMap<String, String>, row: &Value, file_scope: &str) -> 
     if scope != file_scope {
         return Ok(());
     }
-    refs.entry(format!("{scope}/{name}"))
-        .or_insert(head);
+    if refs
+        .insert(format!("{scope}/{name}"), head)
+        .is_some()
+    {
+        return Err(invalid("status duplicate remote ref"));
+    }
     Ok(())
 }

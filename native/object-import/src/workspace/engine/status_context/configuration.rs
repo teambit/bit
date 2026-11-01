@@ -13,6 +13,7 @@ pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
 }
 
 fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
+    let id = id.trim();
     let map = doc.as_object()?;
     map.get(id)
         .or_else(|| {

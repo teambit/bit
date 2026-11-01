@@ -76,7 +76,13 @@ fn id(identity: &str, version: &str) -> io::Result<Value> {
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
         .ok_or_else(|| invalid("status autotag identity"))?;
-    if scope.is_empty() || name.is_empty() {
+    if scope.is_empty()
+        || matches!(scope, "." | "..")
+        || name.is_empty()
+        || name
+            .split('/')
+            .any(|part| part.trim().is_empty() || matches!(part.trim(), "." | ".."))
+    {
         return Err(invalid("status autotag identity"));
     }
     let effective_version = if version.is_empty() { inline_version } else { version };

@@ -161,7 +161,8 @@ fn dir_match(root_dir: &str, item: &str) -> ItemMatch {
     let root_dir = root_dir
         .trim()
         .trim_start_matches("./")
-        .trim_end_matches('/');
+        .trim_end_matches('/')
+        .trim();
     if pattern.is_empty() || root_dir.is_empty() {
         return NO_MATCH;
     }

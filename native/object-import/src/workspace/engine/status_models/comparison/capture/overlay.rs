@@ -34,7 +34,7 @@ pub(super) fn validate(target: &Target) -> io::Result<()> {
 
 pub(super) fn source_path(root: &Path, target: &Target, file: &str) -> io::Result<PathBuf> {
     let Some(path) = target.source_overlays.get(file) else {
-        return Ok(root.join(&target.directory).join(file));
+        return Ok(root.join(target.directory.trim()).join(file));
     };
     let spool =
         target.source_overlay_root.as_deref().ok_or_else(|| invalid("source overlay root"))?;
@@ -52,8 +52,10 @@ pub(super) fn source_path(root: &Path, target: &Target, file: &str) -> io::Resul
         return Err(invalid("source overlay must be a regular file"));
     }
     let mut parent = path.parent();
+    let mut depth = 0_usize;
     while let Some(directory) = parent.filter(|directory| *directory != spool) {
-        if !fs::symlink_metadata(directory)?.is_dir() {
+        depth += 1;
+        if depth > 64 || !fs::symlink_metadata(directory)?.is_dir() {
             return Err(invalid("source overlay parent must be a regular directory"));
         }
         parent = directory.parent();

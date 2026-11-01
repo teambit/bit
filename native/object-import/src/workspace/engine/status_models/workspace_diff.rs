@@ -36,6 +36,9 @@ pub(in crate::workspace::engine) fn read_overlay(
     let input = model_request(request);
     let snapshot = super::load_overlay(&input, pool, false, overlay)?;
     let captured = capture::all(request, pool)?;
+    if captured.len() != request.targets.len() {
+        return Err(invalid("workspace diff captured target count"));
+    }
     let budgets = source_budgets(&captured)?;
     let models = index_models(&snapshot.models);
     let versions = index_versions(&snapshot.versions);

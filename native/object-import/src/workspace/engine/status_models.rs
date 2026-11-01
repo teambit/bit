@@ -225,12 +225,18 @@ fn replace_models(models: &mut Vec<Value>, overlay: Option<&crate::command_impor
         return;
     };
     for replacement in overlay.models() {
-        let name = replacement["name"].as_str().map(str::trim);
+        let Some(name) = replacement["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+        else {
+            continue;
+        };
         let scope = replacement["scope"].as_str().map_or("", str::trim);
         if let Some(model) = models
             .iter_mut()
             .find(|model| {
-                model["name"].as_str().map(str::trim) == name
+                model["name"].as_str().map(str::trim) == Some(name)
                     && model["scope"].as_str().map_or("", str::trim) == scope
             })
         {

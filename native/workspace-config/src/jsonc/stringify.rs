@@ -29,9 +29,13 @@ fn process(comments: Option<&[Comment]>, deeper_gap: &str, display_block: bool) 
             output.push_str(deeper_gap);
         }
         line = !comment.block;
-        let (open, close) = if comment.block { ("/*", "*/") } else { ("//", "") };
+        let (open, value, close) = if comment.block {
+            ("/*", comment.value.as_str(), "*/")
+        } else {
+            ("//", comment.value.trim_end_matches(['\r', '\n']), "")
+        };
         output.push_str(open);
-        output.push_str(&comment.value);
+        output.push_str(value);
         output.push_str(close);
     }
     if display_block || line {

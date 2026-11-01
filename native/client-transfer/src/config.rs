@@ -71,5 +71,7 @@ fn layers(
         environment,
     )
     .into_iter()
+    .map(|(key, value)| (key.trim().to_owned(), value))
+    .filter(|(key, _)| !key.is_empty())
     .collect()
 }

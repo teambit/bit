@@ -103,7 +103,7 @@ struct IndentSteps {
 
 impl IndentSteps {
     fn line(&mut self, indent: i64) {
-        let diff = indent - self.previous;
+        let diff = indent.saturating_sub(self.previous);
         self.previous = indent;
         if diff == 0 {
             if let Some(found) = self.current {
@@ -118,7 +118,7 @@ impl IndentSteps {
     /// `indents.get(|diff|)` gets one more use; otherwise `indents.set(diff, [1, 0])`,
     /// which replaces an earlier unindent entry in place.
     fn step(&mut self, diff: i64) -> usize {
-        if let Some(found) = self.position(diff.abs()) {
+        if let Some(found) = self.position(diff.saturating_abs()) {
             self.entries[found].1[0] += 1;
             return found;
         }

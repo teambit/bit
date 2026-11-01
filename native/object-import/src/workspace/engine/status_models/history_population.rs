@@ -91,27 +91,32 @@ fn populate(
         "objectsDirectory":reader.directory,"head":head,"headExists":false,"exitWhenFind":true,
         "existing":rows.iter().map(|row| row["hash"].clone()).collect::<Vec<_>>(),"headData":version,
     }))?;
-    if result["complete"] != true {
-        return Err(invalid("status history missing ancestors"));
-    }
-    let added = result["added"].as_array().ok_or_else(|| invalid("status history population"))?;
+    let added = (result["complete"] == true)
+        .then(|| result["added"].as_array())
+        .flatten()
+        .ok_or_else(|| invalid("status history missing ancestors"))?;
     let rows = history["versions"].as_array_mut().ok_or_else(|| invalid("status history rows"))?;
+    if rows.len().saturating_add(added.len()) > 4096 {
+        return Err(invalid("status history version count"));
+    }
     for row in added {
-        if let Some(body) = row["versionJSON"].as_str() {
-            let value = serde_json::from_str(body).map_err(io::Error::other)?;
-            observe(
-                reader,
-                row["hash"]
-                    .as_str()
-                    .map(str::trim)
-                    .ok_or_else(|| invalid("history hash"))?,
-                &value,
-                proofs,
-            )?;
-        }
+        observe_added(reader, row, proofs)?;
         rows.push(record(row));
     }
     Ok(())
+}
+fn observe_added(
+    reader: &Reader<'_>,
+    row: &Value,
+    proofs: &mut Vec<proof::Proof>,
+) -> io::Result<()> {
+    let Some(body) = row["versionJSON"].as_str() else { return Ok(()) };
+    let value = serde_json::from_str(body).map_err(io::Error::other)?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("history hash"))?;
+    observe(reader, hash, &value, proofs)
 }
 fn record(row: &Value) -> Value {
     let mut result = json!({"hash":row["hash"],"parents":row["parents"]});

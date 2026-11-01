@@ -188,7 +188,11 @@ fn models(request: &Request) -> io::Result<()> {
 fn valid_lane_id(lane_id: &str) -> bool {
     lane_id
         .split_once('/')
-        .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+        .is_some_and(|(scope, name)| {
+            let scope = scope.trim();
+            let name = name.trim();
+            !scope.is_empty() && !name.is_empty() && !name.contains('/')
+        })
 }
 
 fn grammar(request: &Request, target: &Target) -> io::Result<()> {

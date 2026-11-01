@@ -239,6 +239,7 @@ fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Resu
     for model in models {
         if let Some(scope) = model["scope"]
             .as_str()
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
             && seen.insert(scope)
         {

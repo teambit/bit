@@ -39,7 +39,7 @@ pub(in crate::workspace::engine) fn project(value: &Value) -> io::Result<Value> 
     output["flattenedDependencies"] = json!(dependencies);
     output
         .as_object_mut()
-        .unwrap()
+        .ok_or_else(|| invalid("Harmony Version object"))?
         .remove("flattenedDevDependencies");
     Ok(output)
 }

@@ -100,10 +100,20 @@ fn class(rest: &[char], name: &[char]) -> bool {
         '!' | '^' => (true, &rest[1..close]),
         _ => (false, &rest[..close]),
     };
+    let Some(found) = match_class_body(body, head) else {
+        return head == '[' && wildcard(rest, &name[1..]);
+    };
+    found != negated && wildcard(&rest[close + 1..], &name[1..])
+}
+
+fn match_class_body(body: &[char], head: char) -> Option<bool> {
     let mut found = false;
     let mut index = 0;
     while index < body.len() {
         if index + 2 < body.len() && body[index + 1] == '-' {
+            if body[index] > body[index + 2] {
+                return None;
+            }
             found |= (body[index]..=body[index + 2]).contains(&head);
             index += 3;
         } else {
@@ -111,5 +121,5 @@ fn class(rest: &[char], name: &[char]) -> bool {
             index += 1;
         }
     }
-    found != negated && wildcard(&rest[close + 1..], &name[1..])
+    Some(found)
 }

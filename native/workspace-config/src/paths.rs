@@ -31,12 +31,9 @@ pub fn cache_root() -> PathBuf {
 
 fn non_empty_env(key: &str) -> Option<PathBuf> {
     let val = env::var_os(key)?;
-    let trimmed = val.to_string_lossy().trim().to_owned();
-    if trimmed.is_empty() {
-        None
-    } else if trimmed.len() == val.len() {
-        Some(PathBuf::from(val))
-    } else {
-        Some(PathBuf::from(trimmed))
+    if let Some(text) = val.to_str() {
+        let trimmed = text.trim();
+        return (!trimmed.is_empty()).then(|| PathBuf::from(trimmed));
     }
+    (!val.is_empty()).then(|| PathBuf::from(val))
 }

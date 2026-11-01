@@ -16,10 +16,12 @@ pub(super) fn compare(target: &[File], current: &[File]) -> io::Result<(usize, V
     super::count(current.len())?;
     let mut path_bytes = 0_usize;
     for file in target.iter().chain(current) {
-        path_bytes = path_bytes.saturating_add(file.relative_path.len());
+        path_bytes = path_bytes
+            .checked_add(file.relative_path.len())
+            .filter(|bytes| *bytes <= super::MAX_RAW)
+            .ok_or_else(|| super::invalid("workspace status path limit"))?;
         if file.relative_path.trim().is_empty()
             || file.relative_path.len() > 32768
-            || path_bytes > super::MAX_RAW
             || file.relative_path.chars().any(char::is_control)
         {
             return Err(super::invalid("workspace status path limit"));

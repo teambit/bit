@@ -105,7 +105,10 @@ impl Node {
         match value {
             Value::Null => Self::Null,
             Value::Bool(value) => Self::Bool(*value),
-            Value::Number(value) => Self::Number(value.as_f64().unwrap_or(f64::NAN)),
+            Value::Number(value) => {
+                let num = value.as_f64().unwrap_or(f64::NAN);
+                Self::Number(if num == 0.0 { 0.0 } else { num })
+            }
             Value::String(value) => Self::String(value.clone()),
             Value::Array(items) => Self::Array(
                 items

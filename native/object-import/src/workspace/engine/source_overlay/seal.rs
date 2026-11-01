@@ -7,6 +7,9 @@ use std::{
 };
 
 pub(super) fn capture(data: &Data) -> io::Result<Vec<proof::Proof>> {
+    if data.entries.len() > 8192 {
+        return Err(invalid("overlay entry budget"));
+    }
     let declared: Option<u64> = data.entries
         .values()
         .map(|entry| match entry {

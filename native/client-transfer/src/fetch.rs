@@ -138,6 +138,7 @@ pub fn concurrency(global: &GlobalConfig) -> usize {
             usize::try_from(parsed)
                 .ok()
                 .filter(|limit| *limit > 0)
+                .map(|limit| limit.min(256))
         })
         .unwrap_or(DEFAULT_CONCURRENCY)
 }

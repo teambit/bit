@@ -339,7 +339,7 @@ fn row(reader: &Reader<'_>, model: &Value, lane: Option<&str>) -> io::Result<Val
     } else {
         version
             .as_ref()
-            .map_or(Value::Null, |version| json!(deprecated(version)))
+            .map_or(Value::Null, |ver| json!(deprecated(ver)))
     };
     Ok(json!({
         "scope": model["scope"], "name": model["name"], "head": head,
@@ -351,7 +351,7 @@ fn row(reader: &Reader<'_>, model: &Value, lane: Option<&str>) -> io::Result<Val
 }
 
 fn head_version(reader: &Reader<'_>, head: &str) -> io::Result<Option<Value>> {
-    crate::merge_history::hash(head)?;
+    let head = crate::validate::hexadecimal(&crate::merge_history::hash(head.trim())?);
     if !reader.directory
         .join(&head[..2])
         .join(&head[2..])
@@ -359,7 +359,7 @@ fn head_version(reader: &Reader<'_>, head: &str) -> io::Result<Option<Value>> {
     {
         return Ok(None);
     }
-    reader.read(head, "Version").map(Some)
+    reader.read(&head, "Version").map(Some)
 }
 
 fn core_config<'v>(version: &'v Value, id: &str) -> Option<&'v Value> {
@@ -384,17 +384,21 @@ fn lane_readme_of(version: &Value) -> io::Result<Vec<String>> {
     else {
         return Ok(Vec::new());
     };
-    let readme = readme.as_object().ok_or_else(|| invalid("list lane readme"))?;
-    Ok(readme.keys().cloned().collect())
+    Ok(readme
+        .as_object()
+        .ok_or_else(|| invalid("list lane readme"))?
+        .keys()
+        .cloned()
+        .collect())
 }
 
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(value) => *value,
-        Value::Number(number) => number
+        Value::Number(num) => num
             .as_f64()
-            .is_some_and(|number| number != 0.0 && !number.is_nan()),
+            .is_some_and(|val| val != 0.0 && !val.is_nan()),
         Value::String(text) => !text.trim().is_empty(),
         Value::Array(_) | Value::Object(_) => true,
     }

@@ -31,8 +31,12 @@ pub(in crate::workspace::engine) fn read(
     pool: &ThreadPool,
 ) -> io::Result<(usize, Value)> {
     validate_file(&request.file)?;
+    let identity = request.identity.trim();
+    if identity.is_empty() {
+        return Err(invalid("file history identity"));
+    }
     let log_request = serde_json::from_value(json!({
-        "root":request.root,"identity":request.identity,"lane":request.lane,
+        "root":request.root,"identity":identity,"lane":request.lane,
     }))
     .map_err(io::Error::other)?;
     let (_, log) = component_log::read(&log_request, pool)?;

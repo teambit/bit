@@ -38,7 +38,12 @@ impl Spool {
         Ok(Self { path: PathBuf::from(path), offset, size, hash })
     }
     pub(super) fn read(&self) -> io::Result<Vec<u8>> {
-        if !fs::symlink_metadata(&self.path)?.is_file() {
+        let metadata = fs::symlink_metadata(&self.path)?;
+        if !metadata.is_file()
+            || self.offset
+                .checked_add(self.size)
+                .is_none_or(|end| end > metadata.len())
+        {
             return Err(invalid("overlay spool changed"));
         }
         let mut file = fs::File::open(&self.path)?;
