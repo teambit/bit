@@ -97,7 +97,7 @@ impl Comparator {
         let (Some(this), Some(that)) = (&self.semver, &other.semver) else { return true };
         let same_increasing = self.increasing() && other.increasing();
         let same_decreasing = self.decreasing() && other.decreasing();
-        let same_semver = this.format() == that.format();
+        let same_semver = this == that;
         let inclusive = self.inclusive() && other.inclusive();
         let order = this.compare(that);
         let less = order == Ordering::Less && self.increasing() && other.decreasing();

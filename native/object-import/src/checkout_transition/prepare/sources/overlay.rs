@@ -18,11 +18,12 @@ pub(super) fn verify(
         && version.files
             .iter()
             .any(|file| {
+                let (path, hash) = (file.relative_path.trim(), file.hash.trim());
                 !proof
                     .iter()
                     .any(|source| {
-                        source.relative_path.trim() == file.relative_path.trim()
-                            && source.hash.trim() == file.hash.trim()
+                        source.relative_path.trim() == path
+                            && source.hash.trim() == hash
                             && source.name == file.name
                             && source.test == file.test
                     })

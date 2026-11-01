@@ -128,9 +128,12 @@ pub(super) fn merge(old: Option<&Object>, incoming: &Value) -> io::Result<Value>
     )?;
     let mut rows = received.clone();
     for index in retained.as_array().ok_or_else(|| invalid("import history selection"))? {
+        let position =
+            usize::try_from(index.as_u64().ok_or_else(|| invalid("import history index"))?)
+                .map_err(|_| invalid("import history index bounds"))?;
         rows.push(
             previous
-                .get(index.as_u64().ok_or_else(|| invalid("import history index"))? as usize)
+                .get(position)
                 .ok_or_else(|| invalid("import history index bounds"))?
                 .clone(),
         );

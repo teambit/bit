@@ -3,25 +3,14 @@
 //! aspects, workspace variants and the model's other aspects, first wins per
 //! aspect. Then its env (`calculateEnvId`).
 
+pub use crate::policy::CORE_ENVS;
+
 use crate::{config::aspect_id_without_version, model::ComponentId};
 use serde_json::{Map, Value};
 
 const ENVS_ASPECT: &str = "teambit.envs/envs";
 const SPECIFIC_FIELD: &str = "__specific";
 pub const DEFAULT_ENV: &str = "teambit.harmony/node";
-/// `getCoreEnvsIds()`.
-pub const CORE_ENVS: [&str; 10] = [
-    "teambit.harmony/aspect",
-    "teambit.react/react",
-    "teambit.harmony/node",
-    "teambit.react/react-native",
-    "teambit.html/html",
-    "teambit.mdx/mdx",
-    "teambit.envs/env",
-    "teambit.mdx/readme",
-    "teambit.harmony/bit-custom-aspect",
-    "teambit.harmony/empty-env",
-];
 
 /// One aspect of a component (`ExtensionDataEntry`).
 #[derive(Debug, Clone, PartialEq)]

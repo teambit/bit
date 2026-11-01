@@ -81,13 +81,10 @@ fn response(request: &Request, records: &[Option<Record>]) -> Output {
     let data = records
         .iter()
         .map(|record| {
-            record
-                .as_ref()
-                .map(|record| {
-                    let offset = binary_bytes;
-                    binary_bytes = binary_bytes.saturating_add(record.body.len());
-                    [offset, record.body.len(), record.compressed, record.inflated]
-                })
+            let record = record.as_ref()?;
+            let offset = binary_bytes;
+            binary_bytes = binary_bytes.saturating_add(record.body.len());
+            Some([offset, record.body.len(), record.compressed, record.inflated])
         })
         .collect();
     Output {

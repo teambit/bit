@@ -6,7 +6,9 @@ impl PreparedImport {
     /// Called after status/pattern/squash preparation, before any publication.
     /// Canonical artifact import covers every status ID, including exclusions.
     pub(crate) fn prepare_lane_artifacts(&mut self, versions: &[String]) -> io::Result<()> {
-        let Some(lane) = self.cache.fetched_lane.clone() else { return Ok(()) };
+        if self.cache.fetched_lane.is_none() {
+            return Ok(());
+        }
         if versions.len() > 4096 {
             return Err(invalid("lane artifact component budget"));
         }
@@ -18,18 +20,11 @@ impl PreparedImport {
                 return Err(invalid("lane artifact Source budget"));
             }
         }
-        let scope = lane.value["scope"]
-            .as_str()
-            .map(str::trim)
-            .filter(|scope| !scope.is_empty())
-            .ok_or_else(|| invalid("lane artifact scope"))?;
-        let name = lane.value["name"]
-            .as_str()
-            .map(str::trim)
-            .filter(|name| !name.is_empty())
-            .ok_or_else(|| invalid("lane artifact name"))?;
+        let Some(lane) = &self.cache.fetched_lane else { return Ok(()) };
+        let scope = lane_field(&lane.value, "scope", "lane artifact scope")?;
+        let name = lane_field(&lane.value, "name", "lane artifact name")?;
         self.prepare_lane_objects(
-            scope,
+            &scope,
             &references,
             "Source",
             Some(&format!(
@@ -38,6 +33,14 @@ impl PreparedImport {
             )),
         )
     }
+}
+fn lane_field(lane: &Value, key: &str, msg: &'static str) -> io::Result<String> {
+    lane[key]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| invalid(msg))
 }
 fn artifact_refs(version: &Value) -> io::Result<Vec<String>> {
     let Some(extensions) = version

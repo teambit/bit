@@ -106,9 +106,7 @@ impl Capture {
         let hash = hash.trim();
         let kind = kind.trim();
         let identity = crate::merge_history::hash(hash)?;
-        let path = directory
-            .join(&hash[..2])
-            .join(&hash[2..]);
+        let path = object_path(directory, hash);
         let Some(bytes) = self.read(&path)? else { return Ok(None) };
         let raw = if self.virtual_files.contains_key(&path) {
             repository::inflate(&bytes, 32 * 1024 * 1024)?
@@ -154,12 +152,7 @@ impl Capture {
             .iter()
             .any(|hash| {
                 let hash = hash.trim();
-                hash.len() >= 3
-                    && self.virtual_files.contains_key(
-                        &directory
-                            .join(&hash[..2])
-                            .join(&hash[2..]),
-                    )
+                hash.len() >= 3 && self.virtual_files.contains_key(&object_path(directory, hash))
             })
         {
             return hashes
@@ -201,9 +194,7 @@ impl Capture {
     ) -> io::Result<(String, Object)> {
         self.raw_bytes += record.inflated_size;
         self.bytes += record.compressed.len();
-        let path = directory
-            .join(&hash[..2])
-            .join(&hash[2..]);
+        let path = object_path(directory, &hash);
         let digest = Some(<[u8; 32]>::from(Sha256::digest(&record.compressed)));
         if self.proofs
             .insert(path, digest)
@@ -240,6 +231,11 @@ impl Capture {
         }
         Ok(())
     }
+}
+fn object_path(directory: &Path, hash: &str) -> PathBuf {
+    directory
+        .join(&hash[..2])
+        .join(&hash[2..])
 }
 fn read(path: &Path, maximum: usize) -> io::Result<Option<Vec<u8>>> {
     if fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink()) {

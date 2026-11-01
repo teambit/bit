@@ -35,10 +35,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         "checkoutSelectBegin" => state.select.begin(&input),
         "checkoutSelectReceipt" => state.select.receipt(input),
         "checkoutApplyDecision" => decision(&input),
-        _ => Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "unsupported checkout transition operation",
-        )),
+        _ => Err(invalid("unsupported checkout transition operation")),
     }
 }
 pub(crate) fn prepare_with_workspace(
@@ -57,20 +54,16 @@ pub(crate) fn prepare_with_overlay(
     prepare::prepare_with_overlay(input, &mut state.plans, snapshots, Some(overlay))
 }
 fn decision(input: &Value) -> io::Result<Value> {
-    let current = input["currentExists"]
-        .as_bool()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "checkout current flag"))?;
-    let force = input["forceOurs"]
-        .as_bool()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "checkout force flag"))?;
-    let conflicts = input["hasConflicts"]
-        .as_bool()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "checkout conflict flag"))?;
+    let current =
+        input["currentExists"].as_bool().ok_or_else(|| invalid("checkout current flag"))?;
+    let force = input["forceOurs"].as_bool().ok_or_else(|| invalid("checkout force flag"))?;
+    let conflicts =
+        input["hasConflicts"].as_bool().ok_or_else(|| invalid("checkout conflict flag"))?;
     if let Some(strategy) = input.get("strategy")
         && !strategy.is_null()
         && !strategy.is_string()
     {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "checkout strategy flag"));
+        return Err(invalid("checkout strategy flag"));
     }
     let ours = input["strategy"]
         .as_str()

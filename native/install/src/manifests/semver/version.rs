@@ -120,5 +120,8 @@ pub(crate) fn coerce(version: &str) -> Option<String> {
     let major = parts[2]?;
     let minor = parts[3].unwrap_or("0");
     let patch = parts[4].unwrap_or("0");
-    SemVer::parse(&format!("{major}.{minor}.{patch}")).ok().map(|semver| semver.format())
+    SemVer::parse(&format!("{major}.{minor}.{patch}"))
+        .ok()
+        .as_ref()
+        .map(SemVer::format)
 }

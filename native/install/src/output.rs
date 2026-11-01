@@ -132,14 +132,7 @@ impl Output {
     /// Mirror a retained published package manager's `logger.off()` after it
     /// failed: the Rust parent still renders the following graceful result.
     pub fn external_loader_off() {
-        let mut spinner = lock();
-        spinner.spinning = false;
-        if spinner.drawn {
-            if let Some(sink) = &spinner.sink {
-                sink("\r\u{1b}[2K");
-            }
-            spinner.drawn = false;
-        }
+        lock().stop();
         SWITCHED.store(SWITCHED_OFF, Ordering::SeqCst);
     }
 
@@ -247,14 +240,7 @@ impl Output {
 
     /// Stop the spinner and clear its line (`loader.stop()`).
     pub fn stop(&self) {
-        let mut spinner = lock();
-        spinner.spinning = false;
-        if spinner.drawn {
-            if let Some(sink) = &spinner.sink {
-                sink("\r\u{1b}[2K");
-            }
-            spinner.drawn = false;
-        }
+        lock().stop();
     }
 
     /// Write `text` as is, after stopping the loader (`console.log`).
@@ -295,6 +281,18 @@ impl Output {
 impl Drop for Output {
     fn drop(&mut self) {
         self.stop();
+    }
+}
+
+impl Spinner {
+    fn stop(&mut self) {
+        self.spinning = false;
+        if self.drawn {
+            if let Some(sink) = &self.sink {
+                sink("\r\u{1b}[2K");
+            }
+            self.drawn = false;
+        }
     }
 }
 

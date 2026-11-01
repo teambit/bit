@@ -67,9 +67,9 @@ pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {
 pub fn ignored(overrides: &FieldMaps, lifecycle: Lifecycle) -> Vec<String> {
     overrides[field_index(lifecycle)]
         .iter()
-        .filter(|(_, version)| version.trim() == REMOVE)
-        .map(|(name, _)| name.trim())
-        .filter(|name| !name.is_empty())
-        .map(str::to_owned)
+        .filter_map(|(name, version)| {
+            let name = name.trim();
+            (version.trim() == REMOVE && !name.is_empty()).then(|| name.to_owned())
+        })
         .collect()
 }

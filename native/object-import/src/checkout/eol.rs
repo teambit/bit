@@ -36,7 +36,7 @@ fn suspicious_prefix(bytes: &[u8]) -> bool {
 }
 
 fn ordinary(byte: u8) -> bool {
-    (7..=14).contains(&byte) || (32..=127).contains(&byte)
+    matches!(byte, 7..=14 | 32..=127)
 }
 
 fn utf8_sequence(bytes: &[u8], index: &mut usize) -> bool {

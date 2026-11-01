@@ -45,8 +45,7 @@ impl State {
             || self.sources.len() >= MAX_ENTRIES
         {
             self.sources.clear();
-            self.bytes = 0;
-            self.key_bytes = 0;
+            (self.bytes, self.key_bytes) = (0, 0);
         }
         self.sources.insert(key, body);
         self.bytes = self.bytes.saturating_add(weight);

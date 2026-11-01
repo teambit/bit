@@ -24,13 +24,13 @@ pub fn external_env_packages(
     let mut packages = IndexMap::new();
     for component in components {
         let env = aspect_id_without_version(component.env_id.trim());
-        if env.is_empty() {
-            continue;
-        }
-        let local = components
-            .iter()
-            .any(|candidate| candidate.id.to_string_without_version().trim() == env);
-        if CORE_ENVS.contains(&env) || local || packages.contains_key(env) {
+        if env.is_empty()
+            || CORE_ENVS.contains(&env)
+            || packages.contains_key(env)
+            || components
+                .iter()
+                .any(|candidate| candidate.id.to_string_without_version().trim() == env)
+        {
             continue;
         }
         let id = bare_id(env);

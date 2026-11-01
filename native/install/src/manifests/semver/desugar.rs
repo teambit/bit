@@ -152,8 +152,8 @@ fn xrange(matched: &str, groups: &[Option<&str>], suffix: &str) -> String {
 fn replace_xranges(comp: &str, suffix: &str) -> String {
     split_whitespace(comp)
         .into_iter()
+        .map(str::trim)
         .map(|part| {
-            let part = part.trim();
             replace_first(Token::Xrange, part, |groups| {
                 xrange(groups[0].unwrap_or_default(), groups, suffix)
             })

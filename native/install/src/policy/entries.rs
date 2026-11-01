@@ -145,12 +145,10 @@ fn array_entry(
     lifecycle: Lifecycle,
     options: &VariantOptions,
 ) -> Option<PolicyEntry> {
-    let name = item
-        .get("name")
-        .or_else(|| item.get("packageName"))?
-        .as_str()
-        .map(str::trim)
-        .filter(|name| !name.is_empty())?;
+    let name = string(
+        item.get("name")
+            .or_else(|| item.get("packageName")),
+    )?;
     let version = string(
         item.get("version")
             .or_else(|| item.get("supportedRange")),
@@ -161,7 +159,7 @@ fn array_entry(
         hidden: options.hidden.unwrap_or_else(|| flag("hidden")),
         optional: flag("optional"),
         source: Some(options.source.unwrap_or("config").to_owned()),
-        ..entry(name, &version, lifecycle)
+        ..entry(&name, &version, lifecycle)
     })
 }
 

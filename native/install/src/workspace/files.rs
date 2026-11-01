@@ -325,16 +325,11 @@ impl Scan<'_> {
 
     /// `.bit.map.json` anywhere; a `.bitmap` other than the root's own.
     fn scan_ignored_file(&self, name: &str, path: &str) -> bool {
-        if name == ".bit.map.json" {
-            return true;
-        }
-        if name != super::bitmap::BITMAP {
-            return false;
-        }
-        if self.workspace_root {
-            path.contains('/')
-        } else {
-            path == format!("{}/{}", self.start, name)
+        match name {
+            ".bit.map.json" => true,
+            super::bitmap::BITMAP if self.workspace_root => path.contains('/'),
+            super::bitmap::BITMAP => path == format!("{}/{}", self.start, name),
+            _ => false,
         }
     }
 }

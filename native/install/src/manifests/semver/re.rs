@@ -100,12 +100,9 @@ const TOKENS: [Token; 12] = [
 
 /// The compiled expression of `token`.
 pub(super) fn re(token: Token) -> &'static Regex {
-    static COMPILED: OnceLock<Vec<Regex>> = OnceLock::new();
+    static COMPILED: OnceLock<[Regex; 12]> = OnceLock::new();
     let compiled = COMPILED.get_or_init(|| {
-        TOKENS
-            .iter()
-            .map(|token| Regex::new(&source(*token)).expect("npm semver expressions compile"))
-            .collect()
+        TOKENS.map(|token| Regex::new(&source(token)).expect("npm semver expressions compile"))
     });
     &compiled[token as usize]
 }

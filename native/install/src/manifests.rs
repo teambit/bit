@@ -179,7 +179,7 @@ impl ManifestOptions {
 pub struct ManifestOutcome {
     pub plan: InstallPlan,
     /// Manifests before `installComponents` applies the mutable linked-dependency options.
-    pub pre_link_projects: Vec<crate::model::Project>,
+    pub pre_link_projects: Vec<Project>,
     /// Env peer overrides (`overrides: true` in `env.jsonc`), already folded into `plan.overrides`.
     pub peer_overrides: DependencyMap,
     /// `logger.consoleWarning` lines (conflicting env peers).

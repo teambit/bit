@@ -35,7 +35,7 @@ pub(super) fn load_with_overlay(
         }
         return parallel::load(files, total);
     }
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(files.len());
     for file in files {
         validate(file, &mut seen, file.read_token.is_some())?;
         let loaded = if let Some(token) = file.read_token {

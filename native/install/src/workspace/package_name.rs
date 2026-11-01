@@ -118,15 +118,14 @@ fn fill_placeholders(
             rest = &tail[1..];
             continue;
         };
-        let value = match &tail[1..close] {
-            "name" => Some(name.replace('/', ".")),
-            "scope" => Some(scope.unwrap_or("undefined").to_owned()),
-            "scopeId" => Some(scope_id.unwrap_or("undefined").to_owned()),
-            "owner" => Some(owner.unwrap_or("undefined").to_owned()),
-            "main" => Some("undefined".to_owned()),
-            _ => None,
-        };
-        output.push_str(&value.unwrap_or_default());
+        match &tail[1..close] {
+            "name" => output.push_str(&name.replace('/', ".")),
+            "scope" => output.push_str(scope.unwrap_or("undefined")),
+            "scopeId" => output.push_str(scope_id.unwrap_or("undefined")),
+            "owner" => output.push_str(owner.unwrap_or("undefined")),
+            "main" => output.push_str("undefined"),
+            _ => {}
+        }
         rest = &tail[close + 1..];
     }
     output.push_str(rest);

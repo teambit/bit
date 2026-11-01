@@ -30,7 +30,7 @@ pub(super) fn rows(
     let prepared = crate::merge_history::merge::Prepared {
         base: base_bodies
             .iter()
-            .map(|body| body.as_deref())
+            .map(Option::as_deref)
             .collect(),
         other: target
             .iter()

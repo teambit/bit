@@ -30,7 +30,7 @@ fn load_files(
     {
         return parallel(directory, manifests, total, compressed);
     }
-    let mut files = Vec::new();
+    let mut files = Vec::with_capacity(manifests.len());
     for file in manifests {
         let remaining =
             MAX_BYTES.checked_sub(*total).ok_or_else(|| invalid("checkout prepared raw limit"))?;

@@ -130,7 +130,10 @@ impl Bitmap {
             .remove(SCHEMA_FIELD)
             .or_else(|| json.remove("version"))
             .and_then(|schema| schema.as_str().map(str::to_owned));
-        let lane = json.remove(LANE_KEY).and_then(|lane| lane_info(&lane));
+        let lane = json
+            .remove(LANE_KEY)
+            .as_ref()
+            .and_then(lane_info);
         throw_for_duplicate_root_dirs(path, &json)?;
         let entries = json
             .iter()

@@ -84,15 +84,10 @@ pub async fn env_policy(
         );
     }
     if let Some(manifest) = reader.resolved(env_id)? {
-        let policy = manifest
+        return manifest
             .get("policy")
-            .cloned()
-            .unwrap_or(Value::Null);
-        return if policy.is_object() {
-            env::from_config(&policy, false)
-        } else {
-            Ok(EnvPolicy::default())
-        };
+            .filter(|policy| policy.is_object())
+            .map_or_else(|| Ok(EnvPolicy::default()), |policy| env::from_config(policy, false));
     }
     let default_env = host.env_falls_back(env_id).await?;
     let config = host.env_policy(env_id).await?;

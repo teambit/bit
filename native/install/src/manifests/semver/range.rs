@@ -47,7 +47,8 @@ fn replace_gte0(comp: &str) -> String {
 fn parse_part(range: &str, flavor: Flavor) -> io::Result<Vec<Comparator>> {
     let comparators = comparator_strings(range, flavor)
         .iter()
-        .map(|comp| Comparator::parse(comp))
+        .map(String::as_str)
+        .map(Comparator::parse)
         .collect::<io::Result<Vec<_>>>()?;
     if flavor == Flavor::V6 {
         return Ok(comparators);

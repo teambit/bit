@@ -1,11 +1,12 @@
 pub(crate) use verification::{verify_manifest, verify_manifest_value};
 
+mod verification;
+
 use std::{
     collections::{HashMap, HashSet},
     io::{self, Read, Write},
     path::{Path, PathBuf},
 };
-mod verification;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

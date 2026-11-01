@@ -1,4 +1,6 @@
-use super::{ManifestFile, hash, invalid, manifest, metadata, same_manifest, validate_files};
+use super::{
+    MAX_FILES, ManifestFile, hash, invalid, manifest, metadata, same_manifest, validate_files,
+};
 use serde_json::Value;
 use std::{io, path::Path};
 pub(crate) fn verify_manifest(
@@ -14,7 +16,7 @@ pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Re
     let Some(items) = expected.as_array() else {
         return Err(invalid("checkout invalid expected manifest"));
     };
-    if items.len() > 4096 {
+    if items.len() > MAX_FILES {
         return Err(invalid("checkout plan manifest file count out of bounds"));
     }
     let expected: Vec<ManifestFile> =

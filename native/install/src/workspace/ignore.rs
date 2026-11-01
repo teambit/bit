@@ -185,8 +185,9 @@ fn prefix() -> Vec<Replacer> {
 fn suffix() -> Vec<Replacer> {
     vec![
         replacer(r"^(?=[^\^])", false, |_, _, pattern| {
-            let has_inner_slash = Regex::new(r"\/(?!$)")
-                .expect("slash regex")
+            static INNER_SLASH: OnceLock<Regex> = OnceLock::new();
+            let has_inner_slash = INNER_SLASH
+                .get_or_init(|| Regex::new(r"\/(?!$)").expect("slash regex"))
                 .find(pattern)
                 .is_some();
             if has_inner_slash { "^".to_owned() } else { r"(?:^|\/)".to_owned() }

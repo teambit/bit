@@ -15,12 +15,15 @@ impl std::error::Error for Failure {
 pub(super) fn retain(error: flate2::DecompressError) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, Failure(error))
 }
+fn is_trim_char(ch: char) -> bool {
+    ch.is_whitespace() || ch.is_control()
+}
 pub(crate) fn message(error: &io::Error) -> Option<&str> {
     error
         .get_ref()?
         .downcast_ref::<Failure>()?
         .0
         .message()
-        .map(|msg| msg.trim_matches(|ch: char| ch.is_whitespace() || ch.is_control()))
+        .map(|msg| msg.trim_matches(is_trim_char))
         .filter(|message| !message.is_empty())
 }

@@ -26,16 +26,11 @@ impl ComponentId {
     /// The scope the component is or will be exported to.
     #[must_use]
     pub fn effective_scope(&self) -> Option<&str> {
-        self.scope
-            .as_deref()
+        [self.scope.as_deref(), self.default_scope.as_deref()]
+            .into_iter()
+            .flatten()
             .map(|scope| scope.trim().trim_matches('/'))
-            .filter(|scope| !scope.is_empty())
-            .or_else(|| {
-                self.default_scope
-                    .as_deref()
-                    .map(|scope| scope.trim().trim_matches('/'))
-                    .filter(|scope| !scope.is_empty())
-            })
+            .find(|scope| !scope.is_empty())
     }
 
     /// `scope/name`, without the version.
@@ -45,12 +40,9 @@ impl ComponentId {
         if name.is_empty() {
             return String::new();
         }
-        match self
-            .effective_scope()
-            .map(|scope| scope.trim_matches('/'))
-        {
-            Some(scope) if !scope.is_empty() => format!("{scope}/{name}"),
-            _ => name.to_owned(),
+        match self.effective_scope() {
+            Some(scope) => format!("{scope}/{name}"),
+            None => name.to_owned(),
         }
     }
 }

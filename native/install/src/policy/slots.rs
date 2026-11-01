@@ -37,10 +37,11 @@ pub async fn registry(
     if candidates.is_empty() {
         return Ok(Vec::new());
     }
-    let Some(registry) = host.dependency_policies(&candidates).await? else {
-        return Ok(Vec::new());
-    };
-    Ok(parse(&registry))
+    Ok(host
+        .dependency_policies(&candidates)
+        .await?
+        .as_ref()
+        .map_or_else(Vec::new, parse))
 }
 
 /// Configured extension ids that are not core aspects and whose loading may run a

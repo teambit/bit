@@ -144,10 +144,10 @@ impl Record {
     fn bytes(&self) -> usize {
         self.component.id.len()
             + self.component.id_without_version.len()
-            + self.component.version.as_ref().map_or(0, String::len)
-            + self.options.version.as_ref().map_or(0, String::len)
+            + self.component.version.as_deref().map_or(0, str::len)
+            + self.options.version.as_deref().map_or(0, str::len)
             + self.target.len()
-            + self.current.value.as_ref().map_or(0, String::len)
+            + self.current.value.as_deref().map_or(0, str::len)
             + 256
     }
     fn observe(&mut self, stage: Stage) -> Value {

@@ -60,12 +60,7 @@ pub(crate) fn read_source_shared(
     raw: &Budget,
     packed: &Budget,
 ) -> io::Result<SourceRecord> {
-    let identity = crate::validate::hexadecimal(&hash);
-    let file = File::open(
-        directory
-            .join(&identity[..2])
-            .join(&identity[2..]),
-    )?;
+    let file = File::open(object_path(directory, hash))?;
     let compressed = packed.read(file)?;
     let object = inflate_with(&compressed, MAX_BYTES + 256, Some(raw))?;
     source_contents(compressed, &object, hash, MAX_BYTES)
@@ -103,21 +98,19 @@ pub(crate) fn read_shared(
     raw: &Budget,
     packed: &Budget,
 ) -> io::Result<Vec<u8>> {
-    let identity = crate::validate::hexadecimal(&hash);
-    let compressed = packed.read(File::open(
-        directory
-            .join(&identity[..2])
-            .join(&identity[2..]),
-    )?)?;
+    let compressed = packed.read(File::open(object_path(directory, hash))?)?;
     inflate_with(&compressed, MAX_BYTES + 256, Some(raw))
 }
 
-fn packed(directory: &Path, hash: [u8; 20], compressed_total: &mut usize) -> io::Result<Vec<u8>> {
+fn object_path(directory: &Path, hash: [u8; 20]) -> std::path::PathBuf {
     let identity = crate::validate::hexadecimal(&hash);
-    let path = directory
+    directory
         .join(&identity[..2])
-        .join(&identity[2..]);
-    let file = File::open(path)?;
+        .join(&identity[2..])
+}
+
+fn packed(directory: &Path, hash: [u8; 20], compressed_total: &mut usize) -> io::Result<Vec<u8>> {
+    let file = File::open(object_path(directory, hash))?;
     let metadata = file.metadata()?;
     let remaining = MAX_BYTES.saturating_sub(*compressed_total);
     if !metadata.is_file() || metadata.len() > remaining as u64 {

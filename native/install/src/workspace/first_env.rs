@@ -92,6 +92,7 @@ fn is_env_component(id: &str, envs: &[(String, bool)], objects: &ScopeObjects) -
     {
         return Ok(*is_env);
     }
-    let Some(model) = objects.aspect(id)? else { return Ok(false) };
-    Ok(model.has_env_manifest() || model.uses_env_of_envs())
+    Ok(objects
+        .aspect(id)?
+        .is_some_and(|model| model.has_env_manifest() || model.uses_env_of_envs()))
 }

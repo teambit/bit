@@ -30,9 +30,9 @@ pub fn workspace_policy(
     merge_config_policy: Option<&Value>,
 ) -> Vec<PolicyEntry> {
     let from_config = entries::from_workspace_config(&config.policy);
-    let from_package_json = root_package_json.map(entries::from_package_json).unwrap_or_default();
+    let from_package_json = root_package_json.map_or_else(Vec::new, entries::from_package_json);
     let from_merge_config =
-        merge_config_policy.map(entries::from_workspace_config).unwrap_or_default();
+        merge_config_policy.map_or_else(Vec::new, entries::from_workspace_config);
     merge(vec![from_config, merge(vec![from_package_json, from_merge_config])])
 }
 

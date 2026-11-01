@@ -21,11 +21,8 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
         .enumerate()
     {
         if !file.overwrite && fs::metadata(&file.path).is_ok() {
-            completed = completed.saturating_add(1);
             skipped.push(index);
-            continue;
-        }
-        if write(file, body, &mut directories).is_err() {
+        } else if write(file, body, &mut directories).is_err() {
             break;
         }
         completed = completed.saturating_add(1);

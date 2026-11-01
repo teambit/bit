@@ -292,8 +292,9 @@ impl Scripts {
         }
         let mut scripts = IndexMap::new();
         for (list, allowed) in [(self.allow, true), (self.disallow, false)] {
-            let names = list.unwrap_or_default();
-            for name in names
+            for name in list
+                .as_deref()
+                .unwrap_or_default()
                 .split(',')
                 .map(str::trim)
                 .filter(|name| !name.is_empty())

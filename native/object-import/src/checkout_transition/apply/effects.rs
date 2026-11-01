@@ -152,14 +152,12 @@ fn update(
     file.plan_index = row["bodyPlanIndex"]
         .as_u64()
         .ok_or_else(|| invalid("checkout update body missing"))? as usize;
-    file.alias_kind = if kind == "overrideFiles" { "current" } else { "other" };
-    file.alias_index = row[if kind == "overrideFiles" { "current" } else { "other" }]
+    let override_file = kind == "overrideFiles";
+    file.alias_kind = if override_file { "current" } else { "other" };
+    file.alias_index = row[file.alias_kind]
         .as_u64()
         .ok_or_else(|| invalid("checkout update alias missing"))? as usize;
-    status.insert(
-        trimmed_path.into(),
-        json!(if kind == "overrideFiles" { "overridden" } else { "updated" }),
-    );
+    status.insert(trimmed_path.into(), json!(if override_file { "overridden" } else { "updated" }));
     Ok(None)
 }
 

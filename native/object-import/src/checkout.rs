@@ -38,11 +38,9 @@ impl Input {
         state: &'a cache::State,
         use_cache: bool,
     ) -> Option<&'a Vec<u8>> {
-        if use_cache || self.prefer_cached {
-            state.get(&request.directory, self.hash)
-        } else {
-            None
-        }
+        (use_cache || self.prefer_cached)
+            .then(|| state.get(&request.directory, self.hash))
+            .flatten()
     }
 }
 struct Request {

@@ -22,10 +22,7 @@ pub(super) fn write(bodies: &[Body]) -> io::Result<()> {
         return Ok(());
     };
     if first.offset.is_none() {
-        for body in bodies {
-            body.spool()?;
-        }
-        return Ok(());
+        return bodies.iter().try_for_each(Body::spool);
     }
     let file = OpenOptions::new()
         .write(true)

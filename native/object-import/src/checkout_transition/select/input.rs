@@ -77,15 +77,14 @@ pub(super) fn validate(request: &Begin) -> io::Result<()> {
     if invalid_id(&request.component.id)
         || invalid_id(&request.component.id_without_version)
         || request.options.ancestor.is_some_and(|count| count > 4096)
-        || invalid_version(request.component.version.as_ref())
-        || invalid_version(request.options.version.as_ref())
+        || invalid_version(request.component.version.as_deref())
+        || invalid_version(request.options.version.as_deref())
         || request.options.version_per_id
             .as_ref()
             .is_some_and(|value| {
-                !value.is_object()
-                    || value
-                        .as_object()
-                        .is_some_and(|map| !map.is_empty())
+                value
+                    .as_object()
+                    .is_none_or(|map| !map.is_empty())
             })
     {
         return Err(invalid("checkout select input budget"));
@@ -99,7 +98,7 @@ pub(super) fn validate(request: &Begin) -> io::Result<()> {
     Ok(())
 }
 
-fn invalid_version(version: Option<&String>) -> bool {
+fn invalid_version(version: Option<&str>) -> bool {
     version.is_some_and(|value| {
         value.len() > 32768
             || value.chars().any(char::is_control)

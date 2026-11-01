@@ -80,20 +80,24 @@ impl Plan {
     }
 }
 impl State {
+    pub(super) fn retained_totals(&self) -> (usize, usize) {
+        self.plans
+            .values()
+            .fold((0_usize, 0_usize), |(bytes, bodies), existing| {
+                (
+                    bytes.saturating_add(existing.bytes()),
+                    bodies.saturating_add(existing.bodies.len()),
+                )
+            })
+    }
+
     pub(super) fn retain(
         &mut self,
         mut plan: Plan,
         input: &Value,
         directory: &std::path::Path,
     ) -> io::Result<Value> {
-        let retained: usize = self.plans
-            .values()
-            .map(Plan::bytes)
-            .fold(0_usize, usize::saturating_add);
-        let count: usize = self.plans
-            .values()
-            .map(|plan| plan.bodies.len())
-            .fold(0_usize, usize::saturating_add);
+        let (retained, count) = self.retained_totals();
         if retained.saturating_add(plan.bytes()) > 32 * 1024 * 1024
             || count.saturating_add(plan.bodies.len()) > 4096
             || self.plans.len() >= 4096

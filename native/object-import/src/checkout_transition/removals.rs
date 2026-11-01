@@ -16,11 +16,13 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let mut statuses = plan.statuses.clone();
     let mut removals = Vec::new();
     if request.tracked {
+        let targeted_paths: std::collections::HashSet<String> = plan.target
+            .iter()
+            .map(|target| normalize_rel(&target.relative_path))
+            .collect();
         for current in &plan.current {
             let current_norm = normalize_rel(&current.relative_path);
-            let targeted = plan.target
-                .iter()
-                .any(|target| normalize_rel(&target.relative_path) == current_norm);
+            let targeted = targeted_paths.contains(&current_norm);
             if !(targeted || request.workspace_root && current_norm == ".bitmap") {
                 statuses.push(
                     json!({"relativePath":current.relative_path.trim(),"status":"removed"}),

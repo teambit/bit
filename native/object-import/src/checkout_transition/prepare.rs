@@ -109,17 +109,17 @@ fn retain_inputs(
         .map(plan::Body::new)
         .collect::<Vec<_>>();
     let target_indices = (0..bodies.len()).collect::<Vec<_>>();
-    let mut current_files = Vec::new();
-    for (index, file) in current.iter().enumerate() {
+    let mut current_files = Vec::with_capacity(current.len());
+    for (current_wire, file) in request.current.iter().zip(current) {
         let plan_index = bodies.len();
         bodies.push(plan::Body::new(file.normalized.clone()));
         current_files.push(plan::Current {
-            relative_path: request.current[index].relative_path.trim().to_owned(),
-            path: request.current[index].path.clone(),
-            protected: request.current[index].protected,
+            relative_path: current_wire.relative_path.trim().to_owned(),
+            path: current_wire.path.clone(),
+            protected: current_wire.protected,
             plan_index,
             shares_buffer: file.raw == file.normalized,
-            raw_hash: request.current[index].snapshot_hash.trim().to_owned(),
+            raw_hash: current_wire.snapshot_hash.trim().to_owned(),
         });
     }
     bodies.extend(merged_bodies);

@@ -60,33 +60,33 @@ fn initial(
         })
         .collect::<Vec<_>>();
     let mut status = serde_json::Map::new();
-    for row in &plan.statuses {
-        status.insert(
-            row["relativePath"]
-                .as_str()
-                .map(str::trim)
-                .filter(|path| !path.is_empty())
-                .ok_or_else(|| invalid("checkout initial status path"))?
-                .into(),
-            row["status"].clone(),
-        );
-    }
+    insert_statuses(&mut status, &plan.statuses, "checkout initial status path")?;
     let removal = super::removals::apply(
         json!({"token":request.token,"tracked":request.tracked,"workspaceRoot":request.workspace_root}),
         state,
     )?;
-    for row in removal["statuses"].as_array().ok_or_else(|| invalid("checkout removal statuses"))? {
+    let removal_rows =
+        removal["statuses"].as_array().ok_or_else(|| invalid("checkout removal statuses"))?;
+    insert_statuses(&mut status, removal_rows, "checkout removal path")?;
+    Ok((files, status, removal))
+}
+fn insert_statuses(
+    status: &mut serde_json::Map<String, Value>,
+    rows: &[Value],
+    message: &'static str,
+) -> io::Result<()> {
+    for row in rows {
         status.insert(
             row["relativePath"]
                 .as_str()
                 .map(str::trim)
                 .filter(|path| !path.is_empty())
-                .ok_or_else(|| invalid("checkout removal path"))?
+                .ok_or_else(|| invalid(message))?
                 .into(),
             row["status"].clone(),
         );
     }
-    Ok((files, status, removal))
+    Ok(())
 }
 pub(super) fn path(plan: &plan::Plan, row: &Value) -> io::Result<String> {
     if let Some(index) = row["current"].as_u64() {

@@ -44,12 +44,15 @@ pub fn aspect_env_ids(
 
 fn seed_core_ids(core: &[&str]) -> Vec<String> {
     let mut ids = Vec::new();
-    for raw_id in core {
-        let trimmed = raw_id.trim();
-        if !trimmed.is_empty()
-            && !ids
-                .iter()
-                .any(|existing| existing == trimmed)
+    for trimmed in core
+        .iter()
+        .copied()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    {
+        if !ids
+            .iter()
+            .any(|existing| existing == trimmed)
         {
             ids.push(trimmed.to_owned());
         }

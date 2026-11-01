@@ -100,9 +100,7 @@ fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<Policy
                 ),
             )
         })?;
-    let name = non_empty_field(item, "name")
-        .or_else(|| non_empty_field(item, "packageName"))
-        .unwrap_or_default();
+    let name = entry_name(item).unwrap_or_default();
     let flag = |field: &str| item.get(field).is_some_and(truthy);
     Ok(PolicyEntry {
         force: options.force.unwrap_or_else(|| flag("force")),
@@ -142,8 +140,8 @@ pub fn merge_manifests(parent: &Value, child: &Value) -> Value {
             .collect();
         merged.extend(children);
         merged.retain(|entry| {
-            trimmed_field(entry, "version") != Some("-")
-                && trimmed_field(entry, "supportedRange") != Some("-")
+            non_empty_field(entry, "version") != Some("-")
+                && non_empty_field(entry, "supportedRange") != Some("-")
         });
         policy.insert(key.to_owned(), Value::Array(merged));
     }
@@ -155,15 +153,7 @@ pub fn merge_manifests(parent: &Value, child: &Value) -> Value {
 }
 
 fn entry_name(entry: &Value) -> Option<&str> {
-    trimmed_field(entry, "name").or_else(|| trimmed_field(entry, "packageName"))
-}
-
-fn trimmed_field<'a>(entry: &'a Value, field: &str) -> Option<&'a str> {
-    entry
-        .get(field)
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|text| !text.is_empty())
+    non_empty_field(entry, "name").or_else(|| non_empty_field(entry, "packageName"))
 }
 
 /// The dev-files customizer: `{ ...parent.patterns, ...child.patterns }`.

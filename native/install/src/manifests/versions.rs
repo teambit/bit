@@ -88,13 +88,11 @@ pub(super) fn without_version(id: &str) -> &str {
 /// `id@version` → `version`.
 pub(super) fn version_of(id: &str) -> Option<&str> {
     let trimmed = id.trim();
-    match trimmed.rfind('@') {
-        Some(index) if index > 0 && !trimmed[index + 1..].contains('/') => {
-            let version = trimmed[index + 1..].trim();
-            (!version.is_empty()).then_some(version)
-        }
-        _ => None,
-    }
+    trimmed
+        .rfind('@')
+        .filter(|&index| index > 0 && !trimmed[index + 1..].contains('/'))
+        .map(|index| trimmed[index + 1..].trim())
+        .filter(|version| !version.is_empty())
 }
 
 /// Bit's core envs (`EnvsMain.getCoreEnvsIds`).

@@ -82,12 +82,14 @@ pub(super) struct Token {
     pub(super) token: String,
 }
 
+fn is_token_trim_char(ch: char) -> bool {
+    ch.is_whitespace() || ch == '\0'
+}
+
 fn deserialize_token<'de, Deser>(deserializer: Deser) -> Result<String, Deser::Error>
 where
     Deser: serde::Deserializer<'de>,
 {
     let token = String::deserialize(deserializer)?;
-    Ok(token
-        .trim_matches(|ch: char| ch.is_whitespace() || ch == '\0')
-        .to_owned())
+    Ok(token.trim_matches(is_token_trim_char).to_owned())
 }

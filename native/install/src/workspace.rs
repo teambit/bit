@@ -169,14 +169,14 @@ impl Workspace {
     ) -> io::Result<Self> {
         let merge_config = MergeConfig::load(root)?;
         let scope_path = scope_path(root);
-        let ignored = config.workspace.ignored_files.clone().unwrap_or_default();
+        let ignored = config.workspace.ignored_files.as_deref().unwrap_or_default();
         let mut loader = Loader {
             root,
             config,
             core_ids: core_aspect_ids,
             rules: FileRules::load(
                 root,
-                &ignored,
+                ignored,
                 config.workspace.track_all_files.unwrap_or(false),
             )?,
             objects: ScopeObjects::new(&scope_path),

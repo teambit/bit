@@ -243,14 +243,13 @@ impl ScopeObjects {
         version: Option<&str>,
     ) -> io::Result<Option<ModelData>> {
         let binding_prefix = model
-            .as_ref()
             .and_then(|model| model.get("bindingPrefix"))
             .and_then(Value::as_str)
             .map(str::to_owned);
-        let version = match version_hash(model, version) {
-            Some(hash) => self.read(&hash)?,
-            None => None,
-        };
+        let version = version_hash(model, version)
+            .map(|hash| self.read(&hash))
+            .transpose()?
+            .flatten();
         if model.is_none() && version.is_none() {
             return Ok(None);
         }
