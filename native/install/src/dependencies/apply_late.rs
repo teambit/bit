@@ -1,6 +1,8 @@
 //! `ApplyOverrides.populateDependencies` from the auto-detect overrides on: env
 //! peers of an env component, manually added dependencies, and the final
 //! component/package de-duplication.
+//!
+//! Resolves manually configured dependencies and deduplicates component vs. package entries.
 
 use super::{
     Subject, Workspace,

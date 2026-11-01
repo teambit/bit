@@ -1,4 +1,6 @@
 //! Consume pre-install subscriber mutations after manifest calculation, before the package engine.
+//!
+//! Applies subscriber overrides, layout settings, and resolution mutations to the install plan.
 use super::{Calculated, Loaded};
 use crate::{
     engine::{EngineInstallOptions, EngineSettings},

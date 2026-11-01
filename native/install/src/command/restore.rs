@@ -3,6 +3,7 @@
 //! the stored dependency graphs of the workspace components, merged into one.
 //!
 //! Falls back to a regular install when `rootComponents` is disabled or no graphs exist.
+//! Prunes unreachable nodes and normalizes peer provider versions across merged graphs.
 
 mod graph;
 mod peers;

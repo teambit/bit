@@ -1,4 +1,6 @@
-//! Public remote list and latest-version GraphQL, with bounded JSON responses.
+//! Public remote list and latest-version `GraphQL`, with bounded JSON responses.
+//!
+//! Supports fallback queries when communicating with older scope servers that lack `includeDeleted`.
 #[cfg(test)]
 mod tests;
 

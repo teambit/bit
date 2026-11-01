@@ -1,6 +1,8 @@
 //! `_checkPattern`, `_createRule` and `make_regex` of `node-ignore` 3.3.10.
-//! Every replacement step keeps the original JavaScript regular expression
-//! and is run with `regress`, so its matching is JavaScript's.
+//! Every replacement step keeps the original `JavaScript` regular expression
+//! and is run with `regress`, so its matching is `JavaScript`'s.
+//!
+//! Rejects prototype-polluting pattern keys and compiles gitignore rules into `regress` regexes.
 
 mod replace;
 

@@ -1,4 +1,6 @@
 //! `Http.pushToCentralHub`: scoped tar bytes and the exporter's NDJSON progress stream.
+//!
+//! Uploads component archives to the central hub and parses streamed status events.
 #[cfg(test)]
 mod tests;
 

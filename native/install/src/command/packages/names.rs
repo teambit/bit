@@ -1,5 +1,7 @@
 //! `package-name-utils.ts`: `extractPackageName` and `isValidPackageName`
 //! (`validate-npm-package-name`'s `validForOldPackages` check).
+//!
+//! Strips version specifiers from install arguments and validates scoped and unscoped package names.
 
 const ALLOWED_PREFIXES: [&str; 8] =
     ["https://", "http://", "git:", "git+ssh://", "git+https://", "file:", "link:", "workspace:"];

@@ -2,6 +2,7 @@
 //! workspace state loaded from disk (reloaded after every config edit).
 //!
 //! Tracks workspace root discovery, core aspect IDs, and Bit Cloud username caching.
+//! Declines unsupported package managers (such as Yarn) and non-workspace directories.
 
 pub(super) mod installation_components;
 

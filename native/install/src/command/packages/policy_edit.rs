@@ -1,4 +1,6 @@
 //! `addToRootPolicy` + `updateConfigPolicy` + `persistConfig('install')` for `workspace.jsonc`.
+//!
+//! Preserves `JSONC` comments and formatting while adding or removing root policy entries.
 
 #[cfg(test)]
 mod tests;

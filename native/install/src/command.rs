@@ -1,6 +1,7 @@
 //! `bit install` orchestration: `install.cmd.tsx` and `InstallMain.install`.
 //!
 //! Coordinates workspace configuration loading, root policy updates, and engine execution.
+//! Supports recurring watch/postinstall flows, lockfile restoration, and summary reporting.
 
 pub use packages::policy_edit::{
     remove_from_document as remove_root_policy_entries, update_document as add_root_policy_entries,

@@ -5,7 +5,7 @@
 //! rules `ignore().add(patterns)` would hold: the same regular expression
 //! sources, in the same order, with the same negation flags. Matching paths
 //! against them is left to the caller, which compiles each source as a
-//! JavaScript regular expression with the `i` flag.
+//! `JavaScript` regular expression with the `i` flag.
 //!
 //! node-ignore caches compiled regexes in a module-level object keyed by the
 //! pattern alone, so a pattern compiled once as positive stays positive when

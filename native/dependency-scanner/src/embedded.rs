@@ -1,4 +1,6 @@
 //! Work-stealing batch execution and output byte bounding for embedded scanner requests.
+//!
+//! Runs file scans across a Rayon thread pool while enforcing total response size limits.
 
 use crate::{File, Request, invalid_request, limits, scan};
 use rayon::{ThreadPool, prelude::*};

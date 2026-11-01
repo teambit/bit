@@ -1,6 +1,8 @@
 //! The object stream framing of `ObjectList.fromObjectStreamToTar`: one tar
 //! entry per compressed object named `[scope/]hash`, between `.BIT.START` and
 //! `.BIT.END` metadata entries. A `.BIT.ERROR` entry carries a server error.
+//!
+//! Packs and unpacks bounded object archives without exposing raw byte buffers to Node.js.
 
 #[cfg(test)]
 mod tests;

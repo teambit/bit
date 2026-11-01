@@ -1,4 +1,5 @@
 //! `_getComponentsManifestsAndRootPolicy`: policies, dependencies, and manifests.
+//! Computes workspace component dependency graphs, environment policies, and installation manifests.
 
 pub(super) use initial::calculate_linked;
 

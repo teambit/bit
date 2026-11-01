@@ -1,4 +1,6 @@
 //! Remote scope resolution (`getScopeRemotes` and the hub `remoteResolver`).
+//!
+//! Resolves scope names across workspace `remotes`, `global-remotes.json`, custom resolvers, and `bit.cloud` hub URLs.
 
 use crate::{GlobalConfig, http::Network, invalid, resolver::Resolver};
 use indexmap::IndexMap;

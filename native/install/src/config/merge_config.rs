@@ -1,4 +1,6 @@
 //! Parsing and resolution of `merge-conflict` and `<scope>/unmerged.json` config overrides.
+//!
+//! Extracts forced dependency policies and auto-detected dependency overrides from active lane merges.
 
 use super::{DEPENDENCY_RESOLVER_ASPECT, ENVS_ASPECT};
 use indexmap::IndexMap;

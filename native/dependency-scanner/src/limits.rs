@@ -1,4 +1,6 @@
 //! Request, source byte, and batch file size limits for the dependency scanner.
+//!
+//! Bounds individual source file reads and JSON request payloads before parsing.
 
 use std::{
     fs::File,

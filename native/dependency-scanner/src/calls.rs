@@ -1,4 +1,6 @@
 //! Call-expression classification for `require`, `require.resolve`, and optional chains.
+//!
+//! Detects optional-chained calls and non-string literal arguments across AST dialects.
 
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 /// Babel types every call after the first `?.` of a chain as `OptionalCallExpression`, which

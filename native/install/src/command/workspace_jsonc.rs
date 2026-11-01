@@ -3,6 +3,7 @@
 //! `<scope>/workspace-config-history`.
 //!
 //! Normalizes output line endings to match `AbstractVinyl`'s platform `eol.auto`.
+//! Appends history entries without failing the install command if backup writing fails.
 
 #[cfg(test)]
 mod tests;

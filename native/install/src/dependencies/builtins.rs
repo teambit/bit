@@ -1,5 +1,7 @@
 //! Node.js built-in modules (`require('module').builtinModules`), which are never
 //! external package dependencies.
+//!
+//! Recognizes `node:`-prefixed and bare core Node.js module specifiers during dependency resolution.
 
 const BUILTINS: [&str; 45] = [
     "assert",

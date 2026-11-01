@@ -1,6 +1,7 @@
 //! Native dependency facts before linking and after the actual manifest class load.
 //!
 //! Resolves environment policies, workspace policy entries, and per-component dependencies.
+//! Supports both unlinked initial resolution and post-link initialized resolution.
 use super::{dependency_options, workspace_aspects, workspace_policy};
 use crate::{
     command::session::{Loaded, Session},

@@ -2,6 +2,8 @@
 //! Calling either method crosses the remote mutation boundary. Any transport,
 //! cancellation, status or parse error after invocation may hide a committed
 //! delete; callers must never replay it through another implementation.
+//!
+//! Streams and bounds NDJSON/tar deletion responses from direct scopes and central hub endpoints.
 #[cfg(test)]
 mod tests;
 

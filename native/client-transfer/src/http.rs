@@ -1,6 +1,8 @@
 //! The `http(s)` remote transport (`scopes/scope/network/http/http.ts`): `POST <url>/api/scope/fetch`
 //! with a tar response, `POST <url>/graphql` for the remote scope's component list, and
-//! symphony GraphQL for hub scope resolution.
+//! symphony `GraphQL` for hub scope resolution.
+//!
+//! Enforces configured timeouts, proxy rules, TLS certificates, and cancellation bounds.
 
 pub use action_errors::{LaneNotFound, action_conflict, is_action_not_found};
 pub use hub::HubReply;

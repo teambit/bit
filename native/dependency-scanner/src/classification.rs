@@ -1,4 +1,6 @@
-//! Module format classification (`Supported`, `Fallback`, or `None`) for JavaScript ASTs.
+//! Module format classification (`Supported`, `Fallback`, or `None`) for `JavaScript` ASTs.
+//!
+//!Reproduces `ast-module-types` and `module-definition` heuristics on top of Oxc AST nodes.
 
 use oxc_ast::{
     AstKind,

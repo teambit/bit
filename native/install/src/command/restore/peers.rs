@@ -1,6 +1,8 @@
 //! `normalizePeerProviderVersions` and the node id helpers of `dependencies-graph.ts`:
 //! after merging graphs, every peer provider points at the best version the merged
 //! graph has for it.
+//!
+//! Rewrites peer suffix chains and merges colliding edge neighbor lists after normalization.
 
 use super::graph::{ROOT, edges, id, packages};
 use crate::manifests::semver::{self, SemVer};

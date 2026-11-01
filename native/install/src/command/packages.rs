@@ -1,6 +1,8 @@
 //! `bit install <packages>`: argument validation (`install.cmd.tsx`), version
 //! resolution with the save prefix (`_addPackages`, `getVersionWithSavePrefix`),
 //! and the `workspace.jsonc` policy update (`addToRootPolicy`, `updateConfigPolicy`).
+//!
+//! Resolves component ID arguments to their package names and updates root policy entries.
 
 pub(super) mod policy_edit;
 

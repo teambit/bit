@@ -1,4 +1,6 @@
 //! `Http.doctor` projects diagnostic metadata without transferring scope objects.
+//!
+//! Queries the remote `GraphQL` `doctor` operation and bounds the returned JSON payload.
 use super::Network;
 use crate::invalid;
 use futures_util::StreamExt;

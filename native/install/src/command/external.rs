@@ -1,6 +1,8 @@
 //! External package manager mode: `handleExternalPackageManagerPrompt`,
 //! `disableExternalPackageManagerMode`, and `writeDependenciesToPackageJson` of
 //! `install.main.runtime.ts`.
+//!
+//! Writes calculated dependencies to the root `package.json` or transitions out of external PM mode.
 
 #[cfg(test)]
 mod tests;

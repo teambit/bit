@@ -1,4 +1,6 @@
 //! Validate actual class-directory metadata against the native eligible component inventory.
+//!
+//! Synchronizes host-reported component roots and environment descriptors with `.bitmap` entries.
 #[cfg(test)]
 mod tests;
 

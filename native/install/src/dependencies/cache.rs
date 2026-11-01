@@ -6,6 +6,7 @@
 //! `index-v5/<sha256(key)>` as `\n<sha1(json)>\t<json>`, and the content lives at
 //! `content-v2/sha512/<hex digest>`.
 //! Honors the `no-fs-cache` flag in `BIT_FEATURES`.
+//! Validates cached file timestamps and config fingerprints before reusing stored dependency data.
 
 pub mod invalidation;
 

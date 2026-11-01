@@ -1,5 +1,6 @@
 //! Per-component dependency lists (`DependenciesLoader`): detection, `ApplyOverrides`,
 //! version resolution, and `extractDepsFromLegacy`.
+//! Coordinates source scanning, dependency cache reads/writes, and policy override application.
 
 pub mod cache;
 pub(crate) mod data;

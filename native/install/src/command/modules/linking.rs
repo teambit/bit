@@ -1,5 +1,7 @@
 //! The links around the engine run: `calculateLinkedDeps`, `linkCodemods`, and
 //! `syncCoreAspectLinksForEnvs`.
+//!
+//! Creates root `link:` dependencies, component `node_modules` links, and aspect environment links.
 
 use super::super::session::{Loaded, Session};
 use crate::{

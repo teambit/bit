@@ -1,3 +1,5 @@
+//! Remote fetch request options, traversal flags, and selection descriptors.
+
 use crate::GlobalConfig;
 use serde::Serialize;
 use serde_json::Value;
