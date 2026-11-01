@@ -1,4 +1,4 @@
-//! Unit tests for workspace engine framing, batch reads, and status queries.
+//! Unit tests for workspace engine [`serve`] framing, batch reads, and status queries.
 
 mod inventory;
 mod read_batches;

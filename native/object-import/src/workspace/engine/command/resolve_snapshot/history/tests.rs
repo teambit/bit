@@ -1,4 +1,4 @@
-//! Unit tests for `VersionHistory` object updates during tag snapshot resolution.
+//! Unit tests for `VersionHistory` object updates via [`tag_histories`] during tag snapshot resolution.
 
 use super::tag_histories;
 use crate::workspace::engine::{

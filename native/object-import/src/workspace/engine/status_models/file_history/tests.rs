@@ -1,4 +1,4 @@
-//! Unit tests for file history path traversal guards and duplicate file rejection.
+//! Unit tests for file history [`validate_file`] path traversal guards and [`file_hash`] duplicate rejection.
 
 use super::{file_hash, validate_file};
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Unit tests for tag pattern matching order and wildcard eligibility checks.
+//! Unit tests for tag [`pattern_order`] matching order and wildcard eligibility checks in `bit-object-import`.
 
 use super::pattern_order;
 use serde_json::json;

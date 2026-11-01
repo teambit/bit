@@ -1,4 +1,4 @@
-//! Unit tests for two-phase `.bitmap` checkout and lane switch finalization.
+//! Unit tests for two-phase [`bitmap`] checkout and [`Retained`] lane switch finalization.
 
 use super::{Retained, bitmap};
 use serde_json::{Value, json};

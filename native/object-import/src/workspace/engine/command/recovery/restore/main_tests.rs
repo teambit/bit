@@ -1,4 +1,4 @@
-//! Unit tests for restoring [`Main`] branch component models from `.bit/last-merged`.
+//! Unit tests for restoring [`Main`] branch component models from `.bit/last-merged` in `bit-object-import`.
 
 use super::Main;
 use serde_json::json;

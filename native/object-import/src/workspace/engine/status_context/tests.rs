@@ -1,4 +1,4 @@
-//! Unit tests for reading workspace status context, models, and lanes.
+//! Unit tests for [`read`]ing workspace status context [`Request`], models, and lanes.
 
 use super::{Request, read};
 use serde_json::{Value, json};

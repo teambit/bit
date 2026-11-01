@@ -1,4 +1,4 @@
-//! Unit tests for snap pattern filtering and negation guard rules.
+//! Unit tests for snap [`Options`] pattern filtering and negation guard rules via [`filter_pattern`].
 
 use super::{Options, filter_pattern};
 use serde_json::json;

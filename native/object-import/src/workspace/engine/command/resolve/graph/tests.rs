@@ -1,4 +1,4 @@
-//! Unit tests for resolve dependency graph [`edges`] types and saved graph leaves.
+//! Unit tests for resolve dependency graph [`edges`] types and saved graph leaves in `bit-object-import`.
 
 use super::edges;
 use serde_json::json;

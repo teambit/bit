@@ -1,4 +1,4 @@
-//! Unit tests for workspace engine request deserialization and strict field checks.
+//! Unit tests for workspace engine [`Request`] deserialization and strict field checks in `bit-object-import`.
 
 use super::Request;
 

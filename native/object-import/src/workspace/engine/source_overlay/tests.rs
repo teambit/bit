@@ -1,4 +1,4 @@
-//! Unit tests for spooled source overlay resolution without disk mutations.
+//! Unit tests for spooled [`SourceOverlay`] resolution and [`proof`] validation without disk mutations.
 
 use super::SourceOverlay;
 use crate::workspace::engine::{

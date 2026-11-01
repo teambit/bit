@@ -1,4 +1,4 @@
-//! Unit tests for separating `.bitmap` aspect configuration from structural targets via [`project`] and [`project_snapshot`].
+//! Unit tests for separating `.bitmap` aspect configuration from structural targets via [`project`] and [`project_snapshot`] in `bit-object-import`.
 
 use super::{project, project_snapshot};
 use serde_json::json;

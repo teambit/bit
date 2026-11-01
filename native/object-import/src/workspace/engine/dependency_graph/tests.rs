@@ -1,4 +1,4 @@
-//! Unit tests for workspace file dependency graph scanning and proof capture.
+//! Unit tests for workspace file dependency graph [`Request`] scanning and [`apply`] proof capture.
 
 use super::{Request, apply};
 use serde_json::{Value, json};

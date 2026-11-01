@@ -1,4 +1,4 @@
-//! Unit tests for local model tag version and orphaned version updates.
+//! Unit tests for local model [`object`] tag version and orphaned [`VersionState`] updates.
 
 use super::{Material, Participation, VersionState, object};
 use serde_json::json;

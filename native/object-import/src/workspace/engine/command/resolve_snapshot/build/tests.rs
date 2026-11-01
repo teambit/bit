@@ -1,4 +1,4 @@
-//! Unit tests for builder artifact hashing, confinement, and read proofs.
+//! Unit tests for builder [`artifacts`] and [`metadata`] hashing, confinement, and read [`proof`]s.
 
 use super::{artifacts, metadata};
 use crate::workspace::engine::{command::scratch::Directory, dependency_graph::proof};

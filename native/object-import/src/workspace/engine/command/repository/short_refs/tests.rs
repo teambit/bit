@@ -1,4 +1,4 @@
-//! Unit tests for short object hash prefix matching ([`matching_for_separator`], [`unique`]) and separator behavior.
+//! Unit tests for short object hash prefix matching ([`matching_for_separator`], [`unique`]) and separator behavior in `bit-object-import`.
 
 use super::{matching_for_separator, unique};
 use crate::workspace::engine::command::scratch::Directory;

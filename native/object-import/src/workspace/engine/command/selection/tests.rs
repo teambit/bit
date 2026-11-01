@@ -1,4 +1,4 @@
-//! Unit tests for checkout version selection messages and observation flags.
+//! Unit tests for checkout [`Options`] and [`Selection`] version messages and observation flags via [`select`].
 
 use super::{Options, Repository, Selection, select};
 use serde_json::{Value, json};

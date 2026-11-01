@@ -1,4 +1,4 @@
-//! Unit tests for lane switch eligibility, `onLanesOnly` tracking, and progress.
+//! Unit tests for lane switch [`Entry`] and [`Record`] eligibility, [`lane_only`] tracking, and progress.
 
 use super::{
     command_import::lane::{Entry, Id, Record},

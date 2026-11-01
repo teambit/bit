@@ -1,4 +1,4 @@
-//! Unit tests for fresh component dependency detection and policy resolution.
+//! Unit tests for fresh component [`Detect`] dependency [`detect`]ion and [`proof`] policy resolution.
 
 use super::{Detect, detect, proof};
 use serde_json::{Value, json};

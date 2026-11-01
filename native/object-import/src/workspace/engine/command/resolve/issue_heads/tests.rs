@@ -1,4 +1,4 @@
-//! Unit tests for issue head version [`capture`] and [`Repository`] absence proofs.
+//! Unit tests for issue head version [`capture`] and [`Repository`] absence proofs in `bit-object-import`.
 
 use super::{Repository, capture};
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Unit tests for transitive dependent cascade cycle [`reports`].
+//! Unit tests for transitive dependent cascade cycle [`reports`] in `bit-object-import`.
 
 use super::reports;
 use serde_json::json;

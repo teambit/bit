@@ -1,4 +1,4 @@
-//! Unit tests for `component.json` reset configuration [`document`] projection and [`validate_destination`] checks.
+//! Unit tests for `component.json` [`Prepared`] reset configuration [`document`] projection and [`validate_destination`] checks.
 
 use super::{Prepared, document, proof, validate_destination};
 use serde_json::json;

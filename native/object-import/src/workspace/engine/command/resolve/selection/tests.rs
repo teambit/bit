@@ -1,4 +1,4 @@
-//! Unit tests for pending vs. explicit workspace component selection order.
+//! Unit tests for pending vs. explicit workspace component [`select`] order in `bit-object-import`.
 
 use super::select;
 use serde_json::json;

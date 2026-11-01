@@ -1,4 +1,4 @@
-//! Unit tests for status `VersionHistory` readset validation and commit.
+//! Unit tests for status `VersionHistory` [`Request`] readset [`validate`] and [`commit`] phases.
 
 use super::{Request, commit, identity, proof, validate};
 use flate2::read::ZlibDecoder;

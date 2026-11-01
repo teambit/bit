@@ -1,4 +1,4 @@
-//! Unit tests for depth-first flattened dependency edge projection ([`project`]) and [`Repository`] proofs.
+//! Unit tests for depth-first flattened dependency edge projection ([`project`]), [`Row`], and [`Repository`] proofs.
 
 use super::{Repository, project};
 use crate::workspace::engine::command::{policy::Row, scratch};

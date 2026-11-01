@@ -1,4 +1,4 @@
-//! Unit tests for component log tag precedence and removal metadata projection.
+//! Unit tests for component log [`tags`] precedence and [`row`] removal metadata projection.
 
 use super::{row, tags};
 use serde_json::json;

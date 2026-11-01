@@ -1,4 +1,4 @@
-//! Unit tests for semantic version planning across selected and automatic components.
+//! Unit tests for semantic version [`plan`]ning across [`Material`], [`Participation`], and [`VersionState`].
 
 use super::{Material, plan};
 use crate::workspace::engine::command::resolve_snapshot::{Participation, VersionState};

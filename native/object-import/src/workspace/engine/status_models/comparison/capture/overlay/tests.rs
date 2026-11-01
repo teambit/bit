@@ -1,4 +1,4 @@
-//! Unit tests for callback source overlay manifest validation and capture.
+//! Unit tests for callback source overlay manifest [`Request`] and [`Target`] validation via [`capture`].
 
 use crate::workspace::engine::status_models::comparison::{Request, Target, capture};
 use serde_json::json;

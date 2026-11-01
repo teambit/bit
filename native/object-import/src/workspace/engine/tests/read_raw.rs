@@ -1,4 +1,4 @@
-//! Unit tests for binary raw workspace file reads and retained observations.
+//! Unit tests for binary raw workspace file reads ([`serve`], [`frame`]) and retained observations.
 
 use super::{Directory, POOL, frame, serve};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Unit tests for verifying published `VersionHistory` payloads during stash.
+//! Unit tests for verifying published `VersionHistory` payloads via [`verify_published`] during stash.
 
 use super::verify_published;
 use crate::read_budget::Budget;

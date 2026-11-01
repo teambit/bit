@@ -1,4 +1,4 @@
-//! Unit tests for command setup inactive metadata and addition destination proofs.
+//! Unit tests for command [`Prepare`] setup inactive metadata, [`component_controls`], and addition destination [`proof`]s.
 
 use super::{Prepare, component_controls, proof};
 use crate::workspace::engine::command::{lane_context, scratch::Directory};

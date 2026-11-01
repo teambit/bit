@@ -1,4 +1,4 @@
-//! Unit tests for shared output patch budgets across workspace diff components.
+//! Unit tests for shared [`Budgets`] output patch budgets across workspace diff [`Request`] and [`read`].
 
 use super::{Budgets, File, Request, read};
 use crate::read_budget::Budget;

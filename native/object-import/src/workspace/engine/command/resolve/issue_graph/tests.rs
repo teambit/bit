@@ -1,4 +1,4 @@
-//! Unit tests for [`external`] component issue graph adjacency and [`Repository`] model proofs.
+//! Unit tests for [`external`] component issue graph adjacency and [`Repository`] model proofs in `bit-object-import`.
 
 use super::{Repository, external};
 use crate::workspace::engine::command::scratch;

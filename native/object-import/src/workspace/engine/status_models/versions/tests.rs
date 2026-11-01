@@ -1,4 +1,4 @@
-//! Unit tests for deduplicating and validating dependency model head references.
+//! Unit tests for deduplicating and validating dependency model head references via [`include_heads`].
 
 use super::include_heads;
 use serde_json::json;

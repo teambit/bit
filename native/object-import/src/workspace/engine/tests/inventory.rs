@@ -1,4 +1,4 @@
-//! Unit tests for owned workspace inventory sessions and token lifecycle.
+//! Unit tests for owned workspace inventory [`State`] sessions and [`serve`] token lifecycle.
 
 use super::{Directory, POOL, frame};
 use crate::workspace::{engine::serve, snapshots::State};

@@ -1,4 +1,4 @@
-//! Unit tests for lane abort restoration of `.bitmap` and `workspace.jsonc` via [`prepare`] and [`proof`].
+//! Unit tests for lane abort [`Operation`] restoration of `.bitmap` and `workspace.jsonc` via [`prepare`] and [`proof`].
 
 use super::{Operation, prepare, proof};
 use crate::workspace::engine::command::scratch;

@@ -1,4 +1,4 @@
-//! Unit tests for `switch --pattern` multimatch filtering and error messages.
+//! Unit tests for `switch --pattern` [`Entry`] multimatch [`filter`]ing and error messages.
 
 use super::{Entry, filter};
 

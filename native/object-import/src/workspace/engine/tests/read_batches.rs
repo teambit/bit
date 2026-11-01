@@ -1,4 +1,4 @@
-//! Unit tests for parallel workspace file read batches and hash normalization.
+//! Unit tests for parallel workspace file read batches ([`Directory`], [`response`]) and hash normalization.
 
 use super::{Directory, response};
 use serde_json::json;

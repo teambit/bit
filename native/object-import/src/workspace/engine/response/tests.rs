@@ -1,4 +1,4 @@
-//! Unit tests for canonical error progress retention in workspace responses.
+//! Unit tests for [`canonical`] error progress retention ([`with_progress`], [`failure_data`]) in workspace responses.
 
 use super::{canonical, failure_data, is_canonical, with_progress};
 use serde_json::json;

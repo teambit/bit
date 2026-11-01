@@ -1,4 +1,4 @@
-//! Unit tests for workspace inventory directory prefix depth and count budgets.
+//! Unit tests for workspace inventory directory prefix depth and count budgets via [`validate_prefixes`].
 
 use super::validate_prefixes;
 #[test]

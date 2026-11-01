@@ -1,4 +1,4 @@
-//! Unit tests for detached stash `Version` object preparation and log retention.
+//! Unit tests for detached stash `Version` [`Allocation`] and [`Component`] object [`prepare`] and log retention.
 
 use super::{Allocation, Component, prepare, snapshots};
 use serde_json::json;
