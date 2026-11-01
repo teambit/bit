@@ -122,9 +122,13 @@ fn identity(object: &wire::Object) -> io::Result<String> {
 }
 
 fn encode(kind: String, hash: String, body: &[u8]) -> io::Result<Prepared> {
-    let length = String::from_utf8_lossy(body).encode_utf16().count();
+    let length = if body.is_ascii() {
+        body.len()
+    } else {
+        String::from_utf8_lossy(body).encode_utf16().count()
+    };
     let header = format!("{kind} {hash} {length}\0");
-    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    let mut encoder = ZlibEncoder::new(Vec::with_capacity(64), Compression::default());
     encoder.write_all(header.as_bytes())?;
     encoder.write_all(body)?;
     Ok(Prepared {

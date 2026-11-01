@@ -34,7 +34,7 @@ impl Batch {
         head_only: bool,
         force: bool,
     ) -> io::Result<Self> {
-        let mut normalized = Vec::new();
+        let mut normalized = Vec::with_capacity(identities.len());
         for id in identities {
             let trimmed = id.trim();
             let bare = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
@@ -114,7 +114,8 @@ impl Batch {
 }
 
 fn candidates(root: &Path) -> io::Result<Vec<String>> {
-    let index_bytes = fs::read(crate::scope_path(root).join("index.json"))?;
+    let scope_dir = crate::scope_path(root);
+    let index_bytes = fs::read(scope_dir.join("index.json"))?;
     if index_bytes.len() > 16 * 1024 * 1024 {
         return Err(invalid("reset batch index budget"));
     }
@@ -123,7 +124,7 @@ fn candidates(root: &Path) -> io::Result<Vec<String>> {
         .as_array()
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("reset batch index"))?;
-    let objects = crate::scope_path(root).join("objects");
+    let objects = scope_dir.join("objects");
     let mut selected = Vec::new();
     for row in rows {
         if row["isSymlink"] == true {

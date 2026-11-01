@@ -48,6 +48,7 @@ pub(super) struct Commit {
     pub(super) owner: Option<Owner>,
 }
 
+#[inline]
 fn deserialize_token<'de, Deser>(deserializer: Deser) -> Result<String, Deser::Error>
 where
     Deser: serde::Deserializer<'de>,

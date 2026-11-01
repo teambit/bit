@@ -14,6 +14,9 @@ pub(crate) struct Control {
 }
 
 pub(crate) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Control>> {
+    if identities.is_empty() {
+        return Ok(Vec::new());
+    }
     let path = crate::scope_path(root).join("unmerged.json");
     let before = match fs::read(&path) {
         Ok(bytes) => bytes,

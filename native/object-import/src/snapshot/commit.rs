@@ -98,7 +98,7 @@ pub(super) fn commit(
 fn preflight(objects: &[Object]) -> io::Result<Vec<Prepared>> {
     let mut total = 0_usize;
     let mut bodies = 0_usize;
-    let mut found = HashSet::new();
+    let mut found = HashSet::with_capacity(objects.len());
     let mut prepared = Vec::with_capacity(objects.len());
     for object in objects {
         hash(&object.hash)?;
@@ -178,7 +178,7 @@ fn read(workspace: &Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     if !metadata.is_file() || metadata.len() > maximum as u64 {
         return Err(invalid("snapshot workspace byte limit"));
     }
-    let mut raw = Vec::new();
+    let mut raw = Vec::with_capacity(usize::try_from(metadata.len()).unwrap_or(0));
     file.take((maximum + 1) as u64)
         .read_to_end(&mut raw)?;
     if raw.len() > maximum
@@ -190,9 +190,13 @@ fn read(workspace: &Workspace, maximum: usize) -> io::Result<Vec<u8>> {
 }
 fn prepare(object: &Object, body: &[u8]) -> io::Result<Prepared> {
     let hash = object.hash.trim();
-    let length = String::from_utf8_lossy(body).encode_utf16().count();
+    let length = if body.is_ascii() {
+        body.len()
+    } else {
+        String::from_utf8_lossy(body).encode_utf16().count()
+    };
     let header = format!("{} {hash} {length}\0", object.kind.name());
-    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    let mut encoder = ZlibEncoder::new(Vec::with_capacity(64), Compression::default());
     encoder.write_all(header.as_bytes())?;
     encoder.write_all(body)?;
     Ok(Prepared {

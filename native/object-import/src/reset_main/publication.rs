@@ -67,17 +67,25 @@ pub fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
 
 pub(crate) fn validate_file_id(file_id: &str) -> io::Result<()> {
     let file_id = file_id.trim();
-    if file_id.len() > 32
-        || file_id.split('-').count() != 6
-        || file_id
-            .split('-')
-            .any(|part| part.is_empty() || !part.bytes().all(|byte| byte.is_ascii_digit()))
-    {
+    if file_id.len() > 32 {
+        return Err(invalid("reset bitmap history receipt"));
+    }
+    let mut parts = file_id.split('-');
+    for _ in 0..6 {
+        if !parts
+            .next()
+            .is_some_and(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+        {
+            return Err(invalid("reset bitmap history receipt"));
+        }
+    }
+    if parts.next().is_some() {
         return Err(invalid("reset bitmap history receipt"));
     }
     Ok(())
 }
 
+#[inline]
 fn plan_inputs_unchanged(fresh: &Plan, plan: &Plan) -> bool {
     fresh.object == plan.object
         && fresh.bitmap == plan.bitmap

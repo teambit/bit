@@ -90,15 +90,13 @@ fn staged(repository: &Repository, result: &mut Discovery) -> io::Result<bool> {
 }
 
 fn membership(lane: &Value) -> io::Result<HashSet<String>> {
-    let mut ids = HashSet::new();
-    for row in lane["components"].as_array().ok_or_else(|| invalid("lane candidate rows"))? {
+    let components = lane["components"].as_array().ok_or_else(|| invalid("lane candidate rows"))?;
+    let dependents = lane["updateDependents"].as_array();
+    let mut ids = HashSet::with_capacity(components.len() + dependents.map_or(0, Vec::len));
+    for row in components {
         ids.insert(identity(&row["id"])?);
     }
-    for row in lane["updateDependents"]
-        .as_array()
-        .into_iter()
-        .flatten()
-    {
+    for row in dependents.into_iter().flatten() {
         let (id, _) = row
             .as_str()
             .map(str::trim)
@@ -112,7 +110,7 @@ fn membership(lane: &Value) -> io::Result<HashSet<String>> {
 }
 
 fn ordered(index: &Value, membership: &HashSet<String>) -> io::Result<Vec<String>> {
-    let mut ids = Vec::new();
+    let mut ids = Vec::with_capacity(membership.len());
     for row in index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -143,10 +141,13 @@ fn matching_member_id(row: &Value, membership: &HashSet<String>) -> io::Result<O
         let candidate = format!("{scope}/{name}");
         return Ok(membership.contains(&candidate).then_some(candidate));
     }
-    let suffix = format!("/{name}");
     let mut matches = membership
         .iter()
-        .filter(|member| member.ends_with(&suffix));
+        .filter(|member| {
+            member
+                .strip_suffix(name)
+                .is_some_and(|prefix| prefix.ends_with('/'))
+        });
     let Some(first) = matches.next().cloned() else { return Ok(None) };
     if matches.next().is_some() {
         return Err(invalid("lane candidate ambiguous unscoped member"));

@@ -98,9 +98,10 @@ fn parse_identity(identity: &str) -> io::Result<(&str, &str)> {
     let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
     bare.split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
-        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .filter(|(scope, name)| {
-            !scope.contains("..")
+            !scope.is_empty()
+                && !name.is_empty()
+                && !scope.contains("..")
                 && !name.contains("..")
                 && !scope.contains(['/', '\\', '\0'])
                 && !name.contains(['\\', '\0'])
@@ -118,6 +119,7 @@ fn validate_detached(component: &Value, selection: &Selection) -> io::Result<()>
     Ok(())
 }
 
+#[inline]
 fn is_removed_detached(hash: &Value, selection: &Selection) -> bool {
     hash.as_str()
         .map(str::trim)
@@ -128,6 +130,7 @@ fn is_removed_detached(hash: &Value, selection: &Selection) -> bool {
         })
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

@@ -61,7 +61,7 @@ fn workspace(source: &wire::Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     {
         return Err(invalid("workspace snapshot differs"));
     }
-    if source.normalization == wire::Normalization::Workspace && bytes.starts_with(&[239, 187, 191])
+    if source.normalization == wire::Normalization::Workspace && bytes.starts_with(b"\xef\xbb\xbf")
     {
         bytes.drain(..3);
     }
@@ -85,6 +85,7 @@ fn hex(text: &str, maximum: usize) -> io::Result<Vec<u8>> {
         .collect()
 }
 
+#[inline]
 fn hex_digit(byte: u8) -> io::Result<u8> {
     match byte {
         b'0'..=b'9' => Ok(byte - b'0'),

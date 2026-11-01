@@ -48,7 +48,7 @@ fn sorted_config(value: &Value) -> io::Result<Value> {
         return Err(invalid("prototype config sorter requires canonical fallback"));
     }
     let mut sorted = fields.to_vec();
-    sorted.sort_by(|left, right| left.0.cmp(&right.0));
+    sorted.sort_unstable_by(|left, right| left.0.cmp(&right.0));
     Ok(Value::Object(sorted))
 }
 
@@ -89,15 +89,15 @@ fn without_internal(value: &Value) -> io::Result<Value> {
     let Value::Object(fields) = value else {
         return Err(invalid("sorted config object"));
     };
-    Ok(Value::Object(
-        fields
+    let mut output = Vec::with_capacity(fields.len());
+    for (key, entry) in fields {
+        if !key
             .iter()
-            .filter(|(key, _)| {
-                !key.iter()
-                    .copied()
-                    .eq("__specific".encode_utf16())
-            })
-            .cloned()
-            .collect(),
-    ))
+            .copied()
+            .eq("__specific".encode_utf16())
+        {
+            output.push((key.clone(), entry.clone()));
+        }
+    }
+    Ok(Value::Object(output))
 }

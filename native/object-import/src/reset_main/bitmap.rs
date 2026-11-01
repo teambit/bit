@@ -67,6 +67,7 @@ pub(super) fn find_key(
     found.map(str::to_owned).ok_or_else(|| invalid("reset bitmap identity absent"))
 }
 
+#[inline]
 fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
     let key = key.trim();
     !key.is_empty()
@@ -76,6 +77,7 @@ fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
         && row.is_object()
 }
 
+#[inline]
 fn validate_row(row: &Value) -> io::Result<()> {
     if row["isAvailableOnCurrentLane"] == false
         || row["onLanesOnly"] == true

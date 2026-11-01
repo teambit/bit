@@ -43,7 +43,7 @@ fn local_refs(component: &Value) -> io::Result<HashMap<String, String>> {
     let state = component["state"]["versions"]
         .as_object()
         .ok_or_else(|| invalid("reset local versions map"))?;
-    let mut local = HashMap::new();
+    let mut local = HashMap::with_capacity(state.len());
     for (label, row) in state {
         if row["local"] != true {
             continue;
@@ -202,7 +202,10 @@ fn remove_labels(fields: Option<&mut Map<String, Value>>, labels: &[String]) -> 
     let fields = fields.ok_or_else(|| invalid("reset versions map"))?;
     for label in labels {
         fields.shift_remove(label);
-        fields.shift_remove(label.trim());
+        let trimmed = label.trim();
+        if trimmed.len() != label.len() {
+            fields.shift_remove(trimmed);
+        }
     }
     Ok(())
 }

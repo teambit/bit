@@ -61,7 +61,7 @@ impl WorkspaceSession {
         let mut reader = Cursor::new(frame);
         let mut magic = [0; 4];
         reader.read_exact(&mut magic)?;
-        let mut output = Vec::new();
+        let mut output = Vec::with_capacity(256);
         if !crate::protocol::serve_extension(
             magic,
             &mut reader,

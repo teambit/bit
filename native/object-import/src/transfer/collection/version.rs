@@ -79,7 +79,7 @@ fn artifacts(value: &Value) -> io::Result<Vec<[u8; 20]>> {
     if artifacts.len() > MAX_OBJECTS {
         return Err(invalid("artifact count exceeds bounds"));
     }
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(artifacts.len());
     for artifact in artifacts {
         let files = artifact
             .get("files")
@@ -126,7 +126,7 @@ fn hash(value: Option<&Value>) -> io::Result<[u8; 20]> {
     if text.len() != 40
         || !text
             .bytes()
-            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
     {
         return Err(invalid("unsupported transfer ref"));
     }

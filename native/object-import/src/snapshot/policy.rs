@@ -26,11 +26,10 @@ struct HeadPolicy {
 pub(super) fn plan(plan: &Plan) -> io::Result<Value> {
     validate(plan)?;
     let detached = detached(plan)?;
-    let mut output = json!({"detached":detached,"tag":plan.tag});
-    if let Some(parent) = parent(plan) {
-        output["parent"] = json!(parent);
-    }
-    Ok(output)
+    Ok(match parent(plan) {
+        Some(parent) => json!({"detached":detached,"tag":plan.tag,"parent":parent}),
+        None => json!({"detached":detached,"tag":plan.tag}),
+    })
 }
 fn validate(plan: &Plan) -> io::Result<()> {
     hash(&plan.hash)?;

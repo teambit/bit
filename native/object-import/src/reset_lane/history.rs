@@ -162,18 +162,18 @@ pub(super) fn lane_history(
 }
 
 pub(super) fn batch_ids(objects: &Path, removed: &[String]) -> io::Result<HashSet<String>> {
-    removed
-        .iter()
-        .map(|hash| {
-            let version = outbound::read_object(objects, hash, "Version")?;
-            Ok(version["batchId"]
-                .as_str()
-                .map(str::trim)
-                .filter(|id| !id.is_empty())
-                .map(str::to_owned))
-        })
-        .collect::<io::Result<Vec<_>>>()
-        .map(|rows| rows.into_iter().flatten().collect())
+    let mut ids = HashSet::with_capacity(removed.len());
+    for hash in removed {
+        let version = outbound::read_object(objects, hash, "Version")?;
+        if let Some(id) = version["batchId"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+        {
+            ids.insert(id.to_owned());
+        }
+    }
+    Ok(ids)
 }
 
 /// `VersionHistory` retains graph edges even when lean imports omit ancestor Version bodies.

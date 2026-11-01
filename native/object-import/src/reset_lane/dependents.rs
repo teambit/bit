@@ -142,9 +142,9 @@ fn tag(model: &Value, hash: &str) -> String {
         .unwrap_or_else(|| target.to_owned())
 }
 
-fn dependency_id(value: &Value) -> Option<String> {
+fn dependency_id(value: &Value) -> Option<std::borrow::Cow<'_, str>> {
     if let Some(id) = non_empty_str(value).or_else(|| non_empty_str(&value["id"])) {
-        return Some(id.to_owned());
+        return Some(std::borrow::Cow::Borrowed(id));
     }
     let id_obj = value
         .get("id")
@@ -164,7 +164,7 @@ fn dependency_id(value: &Value) -> Option<String> {
         .or_else(|| non_empty_str(&id_obj["version"]))
         .or_else(|| non_empty_str(&value["head"]))
         .or(inline_ver)?;
-    Some(format!("{scope}/{name}@{version}"))
+    Some(std::borrow::Cow::Owned(format!("{scope}/{name}@{version}")))
 }
 
 fn non_empty_str(value: &Value) -> Option<&str> {

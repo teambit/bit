@@ -129,15 +129,18 @@ impl State {
     }
 }
 impl Journal {
+    #[inline]
     fn kind(&self) -> &str {
         self.phases
             .get(self.phase)
             .copied()
             .unwrap_or("done")
     }
+    #[inline]
     fn serial(&self) -> bool {
         matches!(self.kind(), "addObjects" | "updateWorkspace")
     }
+    #[inline]
     fn expected(&self) -> usize {
         if self.serial() || self.phases != REPOSITORY { 1 } else { self.count }
     }
@@ -184,6 +187,7 @@ impl Journal {
         json!({"token":self.token,"revision":self.revision,"directive":{"kind":kind,"index":self.index,"count":if kind=="done" {0} else {self.expected()}}})
     }
 }
+#[inline]
 fn bound(count: usize) -> io::Result<()> {
     if count > 4096 {
         return Err(invalid("snapshot journal count limit"));

@@ -21,13 +21,11 @@ fn prune_empty_parent(parent: &Path) -> io::Result<()> {
     if parent.is_symlink() {
         return Ok(());
     }
-    let mut entries = match fs::read_dir(parent) {
-        Ok(entries) => entries,
+    let empty = match fs::read_dir(parent) {
+        Ok(mut entries) => entries.next().transpose()?.is_none(),
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(error),
     };
-    let empty = entries.next().transpose()?.is_none();
-    drop(entries);
     if empty {
         match fs::remove_dir(parent) {
             Ok(()) => {}

@@ -38,16 +38,16 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
     Ok(json!({"results":results}))
 }
 fn graph(components: &[Value]) -> io::Result<HashMap<String, Node>> {
-    let known: HashSet<_> = components
+    let ids: Vec<String> = components
         .iter()
         .map(|component| identity(&component["id"]))
         .collect::<io::Result<_>>()?;
-    let mut graph = HashMap::new();
+    let known: HashSet<&str> = ids.iter().map(String::as_str).collect();
+    let mut graph = HashMap::with_capacity(components.len());
     let mut count = 0;
-    for (index, component) in components.iter().enumerate() {
-        let from = identity(&component["id"])?;
+    for (index, (component, from)) in components.iter().zip(&ids).enumerate() {
         for (dependency, entry) in array(component, "dependencies")?.iter().enumerate() {
-            edge(&mut graph, &known, &mut count, &from, (index, component), (dependency, entry))?;
+            edge(&mut graph, &known, &mut count, from, (index, component), (dependency, entry))?;
         }
     }
     Ok(graph)
@@ -174,14 +174,14 @@ fn insert(graph: &mut HashMap<String, Node>, key: &str, id: &Value, locator: Val
 
 fn edge(
     graph: &mut HashMap<String, Node>,
-    known: &HashSet<String>,
+    known: &HashSet<&str>,
     count: &mut usize,
     from: &str,
     component: (usize, &Value),
     dependency: (usize, &Value),
 ) -> io::Result<()> {
     let to = identity(dependency.1)?;
-    if !known.contains(&to) {
+    if !known.contains(to.as_str()) {
         return Ok(());
     }
     *count += 1;

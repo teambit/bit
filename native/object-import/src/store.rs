@@ -40,7 +40,7 @@ impl Store {
         if hash.len() != 40
             || !hash
                 .bytes()
-                .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+                .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
         {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid Source identity"));
         }
@@ -283,9 +283,12 @@ fn open_index(path: &Path) -> io::Result<Option<fs::File>> {
 fn copy_index_attributes(original: &fs::File, file: &fs::File) -> io::Result<()> {
     use xattr::FileExt;
     let mut attributes: Vec<_> = original.list_xattr()?.collect();
-    let acl = std::ffi::OsString::from("system.posix_acl_access");
-    if !attributes.contains(&acl) {
-        attributes.push(acl);
+    let acl = std::ffi::OsStr::new("system.posix_acl_access");
+    if !attributes
+        .iter()
+        .any(|name| name == acl)
+    {
+        attributes.push(acl.to_os_string());
     }
     if attributes.len() > 64 {
         return Err(io::Error::other("index attribute count"));

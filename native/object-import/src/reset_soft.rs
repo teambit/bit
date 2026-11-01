@@ -138,10 +138,12 @@ fn identity(key: &str, row: &Value) -> io::Result<String> {
     Ok(format!("{scope}/{name}"))
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 
+#[inline]
 fn bare(value: &str) -> &str {
     let trimmed = value.trim();
     match trimmed.rsplit_once('@') {
@@ -150,6 +152,7 @@ fn bare(value: &str) -> &str {
     }
 }
 
+#[inline]
 fn matches(identity: &str, pattern: Option<&str>, selected: Option<&[String]>) -> bool {
     pattern.is_none_or(|pattern| bare(pattern) == identity)
         && selected.is_none_or(|ids| {
@@ -158,6 +161,7 @@ fn matches(identity: &str, pattern: Option<&str>, selected: Option<&[String]>) -
         })
 }
 
+#[inline]
 fn invalid_selection_count(
     pattern: Option<&str>,
     selected: Option<&[String]>,

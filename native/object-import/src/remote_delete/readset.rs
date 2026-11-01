@@ -20,6 +20,7 @@ pub(super) struct Readset {
 }
 
 impl Readset {
+    #[inline]
     pub(super) fn new(scope: &Path) -> Self {
         Self { objects: scope.join("objects"), entries: Vec::new(), bytes: 0 }
     }
@@ -78,11 +79,12 @@ impl Readset {
     }
 }
 
+#[inline]
 fn validate_hash(hash: &str) -> io::Result<()> {
     if hash.len() != 40
         || !hash
             .bytes()
-            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
     {
         return Err(invalid("remote object hash"));
     }

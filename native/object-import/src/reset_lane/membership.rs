@@ -18,12 +18,12 @@ pub(super) fn hidden_head(lane: &Value, identity: &str) -> io::Result<Option<Str
             .ok_or_else(|| invalid("lane reset hidden identity"))?;
         if id == identity {
             crate::merge_history::hash(hash)?;
-            if found.replace(hash.to_owned()).is_some() {
+            if found.replace(hash).is_some() {
                 return Err(invalid("lane reset duplicate hidden identity"));
             }
         }
     }
-    Ok(found)
+    Ok(found.map(str::to_owned))
 }
 
 pub(super) fn project(
@@ -52,6 +52,7 @@ pub(super) fn project(
     project_hidden(lane, &format!("{scope}/{name}"), selection)
 }
 
+#[inline]
 fn matches_component_row(id: &Value, scope: &str, name: &str) -> bool {
     let (row_scope, row_name) = super::row_id_parts(id);
     (row_scope == scope || row_scope.is_empty()) && row_name == name

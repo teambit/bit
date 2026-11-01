@@ -9,7 +9,8 @@ pub(super) fn remove_new_model(
     scope: &str,
     name: &str,
 ) -> io::Result<(ObjectChange, BytesChange)> {
-    let before = fs::read(crate::scope_path(root).join("index.json"))?;
+    let scope_dir = crate::scope_path(root);
+    let before = fs::read(scope_dir.join("index.json"))?;
     if before.len() > 16 * 1024 * 1024 {
         return Err(invalid("lane reset index budget"));
     }
@@ -24,7 +25,7 @@ pub(super) fn remove_new_model(
         .ok_or_else(|| invalid("lane reset model hash"))?;
     crate::merge_history::hash(hash)?;
     let hash = hash.to_owned();
-    let model_bytes = fs::read(object_path(&crate::scope_path(root).join("objects"), &hash))?;
+    let model_bytes = fs::read(object_path(&scope_dir.join("objects"), &hash))?;
     if model_bytes.len() > 32 * 1024 * 1024 {
         return Err(invalid("lane reset model budget"));
     }

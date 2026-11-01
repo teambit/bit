@@ -8,7 +8,12 @@ use std::collections::HashMap;
 pub(crate) struct TagIndex(HashMap<String, (String, bool)>);
 impl TagIndex {
     pub(crate) fn model(model: &serde_json::Value) -> Self {
-        let mut index = Self::default();
+        let capacity = ["orphanedVersions", "versions"]
+            .into_iter()
+            .filter_map(|field| model[field].as_object())
+            .map(serde_json::Map::len)
+            .sum();
+        let mut index = Self(HashMap::with_capacity(capacity));
         for field in ["orphanedVersions", "versions"] {
             let Some(tags) = model[field].as_object() else {
                 continue;

@@ -100,9 +100,10 @@ pub(super) fn capture(repository: &Repository) -> io::Result<ReadSet> {
 
 pub(super) fn capture_heads(repository: &Repository, heads: &[String]) -> io::Result<ReadSet> {
     let records = super::history::records(repository, heads)?;
-    let mut seen = HashSet::new();
+    let rows = records.as_array().ok_or_else(|| invalid("lane reset graph proofs"))?;
+    let mut seen = HashSet::with_capacity(rows.len());
     let mut proofs = repository.reads.clone();
-    for row in records.as_array().ok_or_else(|| invalid("lane reset graph proofs"))? {
+    for row in rows {
         let raw_hash = row["hash"]
             .as_str()
             .map(str::trim)

@@ -118,16 +118,17 @@ fn extensions(value: &Value) -> io::Result<Value> {
 
 fn is_builder(row: &Value) -> bool {
     const BUILDER: &str = "teambit.pipelines/builder";
-    for field in ["id", "name", "legacyId", "extensionId"] {
-        if let Value::String(units) = get(row, field) {
+    let ext_id = get(row, "extensionId");
+    for candidate in [get(row, "id"), get(row, "name"), get(row, "legacyId"), ext_id] {
+        if let Value::String(units) = candidate {
             let text = String::from_utf16_lossy(units);
             if text.trim().split('@').next() == Some(BUILDER) {
                 return true;
             }
         }
     }
-    let id = get(row, "extensionId");
-    let (Value::String(scope), Value::String(name)) = (get(id, "scope"), get(id, "name")) else {
+    let (Value::String(scope), Value::String(name)) = (get(ext_id, "scope"), get(ext_id, "name"))
+    else {
         return false;
     };
     String::from_utf16_lossy(scope).trim() == "teambit.pipelines"
@@ -138,6 +139,7 @@ fn is_builder(row: &Value) -> bool {
             == Some("builder")
 }
 
+#[inline]
 fn config(value: &Value) -> Value {
     if matches!(value,Value::String(units) if units.as_slice()==[u16::from(b'-')]) {
         Value::Object(Vec::new())

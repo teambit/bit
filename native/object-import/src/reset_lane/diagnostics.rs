@@ -47,7 +47,8 @@ pub(super) fn with_population(
     let message = canonical.message.clone();
     let existing = canonical.prefix.clone();
     let existing_proofs = canonical.proofs.clone();
-    let writes = changes
+    let mut prefix: Vec<Write> = Vec::with_capacity(changes.len() + existing.len());
+    for write in changes
         .into_iter()
         .filter_map(|change| {
             Some(Write {
@@ -57,9 +58,7 @@ pub(super) fn with_population(
             })
         })
         .chain(existing)
-        .collect::<Vec<_>>();
-    let mut prefix: Vec<Write> = Vec::new();
-    for write in writes {
+    {
         if !prefix
             .iter()
             .any(|previous| previous.path == write.path && previous.after == write.after)
@@ -119,7 +118,8 @@ pub fn apply_error_prefix(error: &io::Error) -> io::Result<()> {
 }
 
 fn validate(writes: &[Write]) -> io::Result<()> {
-    let mut previous: std::collections::HashMap<&Path, &[u8]> = std::collections::HashMap::new();
+    let mut previous: std::collections::HashMap<&Path, &[u8]> =
+        std::collections::HashMap::with_capacity(writes.len());
     for write in writes {
         if !write.path.is_absolute()
             || write.path.is_symlink()

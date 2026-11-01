@@ -25,15 +25,19 @@ impl Observation {
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn directory(&self) -> &Path {
         &self.directory
     }
+    #[inline]
     pub(super) fn files(&self) -> &BTreeMap<String, Vec<u8>> {
         &self.files
     }
+    #[inline]
     pub(super) fn file(&self, name: &str) -> Option<&[u8]> {
         self.files.get(name.trim()).map(Vec::as_slice)
     }
+    #[inline]
     pub(super) fn latest(&self) -> Option<&str> {
         self.files.last_key_value().map(|(name, _)| name.as_str())
     }

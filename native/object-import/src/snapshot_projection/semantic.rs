@@ -115,16 +115,18 @@ fn component_id(value: &Value) -> io::Result<String> {
     let scope = get(value, "scope");
     let scope_text = if scope.truthy()? { text(scope)? } else { String::new() };
     let scope_trimmed = scope_text.trim();
-    let mut id =
-        if scope_trimmed.is_empty() { name.to_owned() } else { format!("{scope_trimmed}/{name}") };
     let version = get(value, "version");
-    if version.truthy()? {
-        let ver_text = text(version)?;
-        let ver_trimmed = ver_text.trim();
-        if !ver_trimmed.is_empty() {
-            id.push('@');
-            id.push_str(ver_trimmed);
-        }
+    let ver_text = if version.truthy()? { text(version)? } else { String::new() };
+    let ver_trimmed = ver_text.trim();
+    let mut id = String::with_capacity(scope_trimmed.len() + name.len() + ver_trimmed.len() + 2);
+    if !scope_trimmed.is_empty() {
+        id.push_str(scope_trimmed);
+        id.push('/');
+    }
+    id.push_str(name);
+    if !ver_trimmed.is_empty() {
+        id.push('@');
+        id.push_str(ver_trimmed);
     }
     Ok(id)
 }

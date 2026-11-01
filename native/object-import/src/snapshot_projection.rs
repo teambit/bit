@@ -76,8 +76,10 @@ fn lane_history_identity(fields: &Value) -> io::Result<String> {
     if !is_sha1_hex(trimmed) {
         return Err(invalid("invalid laneHash"));
     }
-    let id = format!("{trimmed}:LaneHistory");
-    Ok(hexadecimal(&Sha1::digest(id.as_bytes())))
+    let mut hasher = Sha1::new();
+    hasher.update(trimmed.as_bytes());
+    hasher.update(b":LaneHistory");
+    Ok(hexadecimal(&hasher.finalize()))
 }
 
 pub fn serialize(kind: &str, fields: &Value, pretty: bool) -> io::Result<Vec<u8>> {
@@ -103,7 +105,7 @@ fn object(fields: &Value) -> io::Result<&[(Vec<u16>, Value)]> {
     let Value::Object(fields) = fields else {
         return Err(invalid("snapshot object fields required"));
     };
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(fields.len());
     if fields
         .iter()
         .any(|(key, _)| !seen.insert(key))
@@ -114,7 +116,7 @@ fn object(fields: &Value) -> io::Result<&[(Vec<u16>, Value)]> {
 }
 
 fn choose(fields: &Value, names: &[&str], truthy: bool) -> io::Result<Value> {
-    let mut selected = Vec::new();
+    let mut selected = Vec::with_capacity(names.len());
     for &name in names {
         let value = get(fields, name);
         if !truthy || value.truthy()? {

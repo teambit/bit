@@ -20,7 +20,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
                 .ok_or_else(|| invalid("snapshot dependency selected index"))?,
         ],
     };
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(selected.len());
     for index in selected {
         let component = &components[index];
         if component["removed"]
@@ -95,6 +95,7 @@ fn target_version(id: &Value) -> io::Result<String> {
         .map(str::to_owned)
         .ok_or_else(|| invalid("snapshot target version missing"))
 }
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -114,6 +115,7 @@ fn target(id: &Value, components: &[Value]) -> io::Result<Option<usize>> {
     }
     Ok(found)
 }
+#[inline]
 fn is_snap(version: &str) -> bool {
     version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit())
 }

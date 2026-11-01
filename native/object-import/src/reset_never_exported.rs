@@ -33,8 +33,9 @@ impl Plan {
         }
         let mut labels = Vec::new();
         let mut objects = Vec::new();
+        let objects_dir = crate::scope_path(root).join("objects");
         for (key, row) in rows.iter_mut() {
-            if let Some((label, path, data)) = select_row(root, key, row)? {
+            if let Some((label, path, data)) = select_row(&objects_dir, key, row)? {
                 labels.push(label);
                 objects.push((path, data));
                 let row_obj = row.as_object_mut().ok_or_else(|| invalid("never-exported row"))?;
@@ -42,8 +43,13 @@ impl Plan {
                 row_obj.shift_remove("nextVersion");
             }
         }
-        let after = crate::inspection::render_bitmap(&bitmap)?;
-        Ok(Self { root: root.to_owned(), before, after, objects, labels })
+        Ok(Self {
+            root: root.to_owned(),
+            before,
+            after: crate::inspection::render_bitmap(&bitmap)?,
+            objects,
+            labels,
+        })
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
@@ -81,7 +87,7 @@ impl Plan {
     }
 }
 
-fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<SelectedRow>> {
+fn select_row(objects_dir: &Path, key: &str, row: &Value) -> io::Result<Option<SelectedRow>> {
     let key = key.trim();
     if is_ignored_row(key, row) {
         return Ok(None);
@@ -108,14 +114,13 @@ fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<Selected
         .unwrap_or_default();
     let identity = format!("{scope}/{name}");
     let label = if version.is_empty() { identity } else { format!("{identity}@{version}") };
-    let (path, data) = read_object_file(root, name)?;
+    let (path, data) = read_object_file(objects_dir, name)?;
     Ok(Some((label, path, data)))
 }
 
-fn read_object_file(root: &Path, name: &str) -> io::Result<(PathBuf, Option<Vec<u8>>)> {
+fn read_object_file(objects_dir: &Path, name: &str) -> io::Result<(PathBuf, Option<Vec<u8>>)> {
     let hash = format!("{:x}", Sha1::digest(name.as_bytes()));
-    let path = crate::scope_path(root)
-        .join("objects")
+    let path = objects_dir
         .join(&hash[..2])
         .join(&hash[2..]);
     if path.is_symlink() {

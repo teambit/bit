@@ -18,9 +18,9 @@ pub(crate) fn read(
     if bytes.len() > 4 * 1024 * 1024 {
         return Err(invalid("reset staged config oversized"));
     }
-    let value: Value = crate::parse_jsonc(&bytes)?;
+    let mut value: Value = crate::parse_jsonc(&bytes)?;
     let rows = value
-        .as_array()
+        .as_array_mut()
         .filter(|rows| rows.len() <= 4096)
         .ok_or_else(|| invalid("reset staged config rows"))?;
     let mut selected = None;
@@ -33,7 +33,8 @@ pub(crate) fn read(
         }
     }
     selected
-        .and_then(|row| row.get("config"))
+        .and_then(|row| row.get_mut("config"))
+        .map(Value::take)
         .filter(|config| !config.is_null())
         .map(sanitized)
         .transpose()
@@ -108,15 +109,14 @@ pub(crate) fn restore(row: &mut Map<String, Value>, config: Option<Value>) {
     }
 }
 
-fn sanitized(config: &Value) -> io::Result<Value> {
-    let aspects = config.as_object().ok_or_else(|| invalid("reset staged aspect config"))?;
-    let mut result = aspects.clone();
-    for value in result.values_mut() {
+fn sanitized(mut config: Value) -> io::Result<Value> {
+    let aspects = config.as_object_mut().ok_or_else(|| invalid("reset staged aspect config"))?;
+    for value in aspects.values_mut() {
         if let Some(fields) = value.as_object_mut() {
             fields.shift_remove("__specific");
         }
     }
-    Ok(Value::Object(result))
+    Ok(config)
 }
 
 fn file(root: &Path, lane: Option<(&str, &str)>) -> io::Result<std::path::PathBuf> {

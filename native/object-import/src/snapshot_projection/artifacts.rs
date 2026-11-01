@@ -17,7 +17,7 @@ pub(super) fn convert(data: &Value) -> io::Result<Value> {
         .iter()
         .map(artifact)
         .collect::<io::Result<Vec<_>>>()?;
-    replace(data, "artifacts", &Value::Array(artifacts))
+    replace(data, "artifacts", Value::Array(artifacts))
 }
 fn artifact(artifact: &Value) -> io::Result<Value> {
     object(artifact)?;
@@ -36,7 +36,7 @@ fn artifact(artifact: &Value) -> io::Result<Value> {
         .iter()
         .map(reference)
         .collect::<io::Result<Vec<_>>>()?;
-    replace(artifact, "files", &Value::Array(refs))
+    replace(artifact, "files", Value::Array(refs))
 }
 fn reference(reference: &Value) -> io::Result<Value> {
     object(reference)?;
@@ -57,14 +57,23 @@ fn reference(reference: &Value) -> io::Result<Value> {
     }
     Ok(Value::Object(fields))
 }
-fn replace(value: &Value, name: &str, replacement: &Value) -> io::Result<Value> {
+fn replace(value: &Value, name: &str, replacement: Value) -> io::Result<Value> {
     let fields = object(value)?;
-    let key: Vec<_> = name.encode_utf16().collect();
+    let mut replacement = Some(replacement);
     Ok(Value::Object(
         fields
             .iter()
-            .map(|(name, value)| {
-                (name.clone(), if *name == key { replacement.clone() } else { value.clone() })
+            .map(|(field_name, field_value)| {
+                let next = if field_name
+                    .iter()
+                    .copied()
+                    .eq(name.encode_utf16())
+                {
+                    replacement.take().unwrap_or_else(|| field_value.clone())
+                } else {
+                    field_value.clone()
+                };
+                (field_name.clone(), next)
             })
             .collect(),
     ))

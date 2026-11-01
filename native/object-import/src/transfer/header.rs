@@ -50,10 +50,12 @@ fn split(mut name: &str) -> io::Result<(&str, &str)> {
     Ok((prefix, name))
 }
 
+#[inline]
 fn copy(block: &mut [u8; 512], offset: usize, bytes: &[u8]) {
     block[offset..offset + bytes.len()].copy_from_slice(bytes);
 }
 
+#[inline]
 fn octal(block: &mut [u8; 512], offset: usize, digits: usize, value: u64) -> io::Result<()> {
     if (value >> (digits * 3)) != 0 {
         return Err(super::invalid("tar numeric field exceeds bounds"));

@@ -18,9 +18,14 @@ pub(super) fn pending(
         .map(str::trim)
         .ok_or_else(|| invalid("reset history head"))?;
     crate::merge_history::hash(current)?;
-    let hash = format!("{:x}", Sha1::digest(format!("{identity}:VersionHistory").as_bytes()));
+    let mut hasher = Sha1::new();
+    hasher.update(identity.as_bytes());
+    hasher.update(b":VersionHistory");
+    let hash = crate::validate::hexadecimal(&hasher.finalize());
     let objects = crate::scope_path(root).join("objects");
-    let path = super::repository::object_path(root, &hash);
+    let path = objects
+        .join(&hash[..2])
+        .join(&hash[2..]);
     let (mut history, before) = load_or_init_history(&path, &objects, &hash, scope, name)?;
     let hist_scope = history["scope"].as_str().map_or("", str::trim);
     if (!hist_scope.is_empty() && hist_scope != scope)

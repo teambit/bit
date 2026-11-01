@@ -63,7 +63,7 @@ fn export(
     seconds: u32,
     strict: bool,
 ) -> io::Result<Vec<Descriptor>> {
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(versions.len());
     for (version, loaded) in versions.iter().zip(loaded) {
         result.push(snapshot(version.hash, loaded.compressed.clone(), scope, seconds));
     }
@@ -99,7 +99,7 @@ fn fetch(
     seconds: u32,
     include_artifacts: bool,
 ) -> io::Result<Vec<Descriptor>> {
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(versions.len());
     for (version, loaded) in versions.iter().zip(loaded) {
         for hash in &loaded.references.sources {
             result.push(reference(*hash, scope, seconds));
@@ -112,8 +112,7 @@ fn fetch(
         graphs(&mut result, &loaded.references, scope, seconds);
         result.push(snapshot(version.hash, loaded.compressed, scope, seconds));
     }
-    let mut seen = HashSet::new();
-    result.retain(|item| seen.insert(item.hash));
+    dedup(&mut result);
     bounded(&result)?;
     Ok(result)
 }
@@ -179,6 +178,6 @@ fn bounded(items: &[Descriptor]) -> io::Result<usize> {
 }
 
 fn dedup(items: &mut Vec<Descriptor>) {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(items.len());
     items.retain(|entry| seen.insert(entry.hash));
 }

@@ -7,7 +7,7 @@ pub(super) fn select(repository: &Repository, head_only: bool) -> io::Result<Sel
     let distance = distance(repository, &repository.heads.current)?;
     let mut local = hashes(&distance)?;
     add_detached(repository, &mut local)?;
-    let mut removed = Vec::new();
+    let mut removed = Vec::with_capacity(local.len());
     for hash in local {
         if eligible(repository, &hash)? {
             removed.push(hash);

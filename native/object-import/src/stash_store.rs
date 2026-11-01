@@ -45,11 +45,13 @@ impl PreparedLoad {
         Ok(Self { observation, filename, data })
     }
     /// The complete detached-Version and bitmap metadata, without Source bodies.
+    #[inline]
     #[must_use]
     pub fn data(&self) -> &Value {
         &self.data
     }
     /// The selected published filename, including its JSON extension.
+    #[inline]
     #[must_use]
     pub fn filename(&self) -> &str {
         &self.filename
@@ -131,12 +133,14 @@ fn component_id(id: &Value) -> io::Result<String> {
     }
     Ok(name)
 }
+#[inline]
 fn validate_id(id: &str) -> io::Result<()> {
     if id.is_empty() || id.contains(['/', '\\', '\0']) || matches!(id, "." | "..") {
         return Err(invalid("invalid stash ID"));
     }
     Ok(())
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }

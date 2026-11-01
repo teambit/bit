@@ -101,7 +101,8 @@ fn load_objects(
     name: &str,
     reads: &mut proofs::ReadSet,
 ) -> io::Result<Loaded> {
-    let bytes = proofs::read(&crate::scope_path(root).join("index.json"), reads)?
+    let scope_dir = crate::scope_path(root);
+    let bytes = proofs::read(&scope_dir.join("index.json"), reads)?
         .ok_or_else(|| invalid("lane reset scope index absent"))?;
     if bytes.len() > 16 * 1024 * 1024 {
         return Err(invalid("lane reset scope index oversized"));
@@ -109,7 +110,7 @@ fn load_objects(
     let index: Value = crate::parse_jsonc(&bytes)?;
     let lane_hash = indexed_hash(&index, "lanes", &bitmap.lane_scope, &bitmap.lane_name)?;
     let model_hash = indexed_hash(&index, "components", scope, name)?;
-    let objects = crate::scope_path(root).join("objects");
+    let objects = scope_dir.join("objects");
     let model = proofs::object(&objects, &model_hash, "Component", reads)?;
     if model["scope"].as_str().map(str::trim) != Some(scope)
         || model["name"].as_str().map(str::trim) != Some(name)
@@ -153,10 +154,9 @@ fn current(
             .map(str::trim)
             .filter(|head| !head.is_empty())
             .ok_or_else(|| invalid("lane reset head"))?
-            .to_owned()
     } else {
-        hidden.ok_or_else(|| invalid("lane reset membership absent"))?
+        hidden.as_deref().ok_or_else(|| invalid("lane reset membership absent"))?
     };
-    let bytes = crate::merge_history::hash(&current)?;
+    let bytes = crate::merge_history::hash(current)?;
     Ok(crate::validate::hexadecimal(&bytes))
 }

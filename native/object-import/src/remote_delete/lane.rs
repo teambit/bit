@@ -127,12 +127,16 @@ fn component_merged(index: &Value, readset: &mut Readset, row: &Value) -> io::Re
 
 fn contains_head(readset: &mut Readset, main: Option<&str>, head: &str) -> io::Result<bool> {
     let target = head.trim();
-    let mut pending = main
+    let Some(main_head) = main
         .map(str::trim)
         .filter(|hash| !hash.is_empty())
-        .map(str::to_owned)
-        .into_iter()
-        .collect::<Vec<_>>();
+    else {
+        return Ok(false);
+    };
+    if main_head.eq_ignore_ascii_case(target) {
+        return Ok(true);
+    }
+    let mut pending = vec![main_head.to_owned()];
     let mut visited = std::collections::HashSet::new();
     while let Some(current) = pending.pop() {
         if current.eq_ignore_ascii_case(target) {
@@ -144,14 +148,19 @@ fn contains_head(readset: &mut Readset, main: Option<&str>, head: &str) -> io::R
         if visited.len() > 4096 {
             return Err(invalid("remote lane version graph budget"));
         }
-        let version = readset.read(&current, "Version")?;
-        for parent in version["parents"]
-            .as_array()
-            .into_iter()
-            .flatten()
-        {
-            pending.push(hash(parent)?.to_owned());
-        }
+        push_parents(readset, &current, &mut pending)?;
     }
     Ok(false)
+}
+
+fn push_parents(readset: &mut Readset, current: &str, pending: &mut Vec<String>) -> io::Result<()> {
+    let version = readset.read(current, "Version")?;
+    for parent in version["parents"]
+        .as_array()
+        .into_iter()
+        .flatten()
+    {
+        pending.push(hash(parent)?.to_owned());
+    }
+    Ok(())
 }

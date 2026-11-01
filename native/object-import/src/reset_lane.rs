@@ -363,8 +363,9 @@ fn projected_index(
 }
 
 fn write_objects(root: &Path, objects: &[ObjectChange]) -> io::Result<()> {
+    let objects_dir = crate::scope_path(root).join("objects");
     for object in objects {
-        let path = object_path(&crate::scope_path(root).join("objects"), &object.hash);
+        let path = object_path(&objects_dir, &object.hash);
         if let Some(after) = &object.after {
             fs::create_dir_all(path.parent().ok_or_else(|| invalid("lane reset object path"))?)?;
             fs::write(path, after)?;

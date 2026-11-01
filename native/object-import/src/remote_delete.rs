@@ -218,7 +218,7 @@ fn load_components(
     index: &Value,
     ids: &[String],
 ) -> io::Result<LoadedComponents> {
-    let mut found = Vec::new();
+    let mut found = Vec::with_capacity(ids.len());
     let mut missing = Vec::new();
     for id in ids {
         let identity = identity(id)?;
@@ -237,8 +237,8 @@ fn load_components(
 }
 
 fn select_refs(found: Vec<(String, Value, String)>) -> io::Result<(Vec<String>, Vec<String>)> {
-    let mut removed = Vec::new();
-    let mut refs = Vec::new();
+    let mut removed = Vec::with_capacity(found.len());
+    let mut refs = Vec::with_capacity(found.len());
     for (identity, component, component_hash) in found {
         if component
             .get("versions")
@@ -323,7 +323,7 @@ pub(super) fn object_path(objects: &Path, hash: &str) -> PathBuf {
         .join(&hash[2..])
 }
 pub(super) fn unique(refs: Vec<String>) -> Vec<String> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(refs.len());
     refs.into_iter()
         .filter(|hash| seen.insert(hash.clone()))
         .collect()

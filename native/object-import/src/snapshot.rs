@@ -34,6 +34,7 @@ struct Owner {
     gid: u32,
 }
 impl Owner {
+    #[inline]
     fn pair(owner: Option<Self>) -> Option<(u32, u32)> {
         owner.map(|owner| (owner.uid, owner.gid))
     }
@@ -69,7 +70,8 @@ pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Resu
         .map_err(|_| invalid("snapshot invalid request"))
         .and_then(|request| apply(id, request))
         .unwrap_or_else(|_| Response::failure(id));
-    let mut output = serde_json::to_vec(&response).map_err(io::Error::other)?;
+    let mut output = Vec::with_capacity(128);
+    serde_json::to_writer(&mut output, &response).map_err(io::Error::other)?;
     if output.len() > MAX_JSON {
         return protocol::respond(writer, &Response::failure(id));
     }
@@ -106,9 +108,11 @@ fn apply(id: u32, request: Request) -> io::Result<Response> {
         }
     }
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+#[inline]
 fn count(count: usize) -> io::Result<()> {
     if count > MAX_FILES { Err(invalid("snapshot object count limit")) } else { Ok(()) }
 }

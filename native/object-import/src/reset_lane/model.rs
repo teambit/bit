@@ -62,7 +62,11 @@ fn remove_versions(model: &mut Value, selection: &Selection) -> io::Result<()> {
 
 fn remove_pending_state(model: &mut Value, labels: &[String]) -> io::Result<()> {
     let Some(state) = model.get_mut("state") else { return Ok(()) };
-    if let Some(versions) = state.get_mut("versions").and_then(Value::as_object_mut) {
+    if let Some(versions) = state
+        .get_mut("versions")
+        .and_then(Value::as_object_mut)
+        .filter(|versions| !versions.is_empty())
+    {
         for label in labels {
             versions.shift_remove(label.trim());
         }
@@ -100,6 +104,7 @@ fn remove_detached(model: &mut Value, removed: &[String]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn is_removed(value: &Value, removed: &[String]) -> bool {
     value
         .as_str()

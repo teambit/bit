@@ -43,12 +43,12 @@ impl Batch {
         head_only: bool,
         force: bool,
     ) -> io::Result<Self> {
-        let mut seen = HashSet::new();
-        let mut normalized = Vec::new();
+        let mut seen = HashSet::with_capacity(identities.len());
+        let mut normalized = Vec::with_capacity(identities.len());
         for id in identities {
             let trimmed = id.trim();
             let bare = trimmed.rsplit_once('@').map_or(trimmed, |(bare, _)| bare.trim());
-            if !bare.is_empty() && seen.insert(bare.to_owned()) {
+            if !bare.is_empty() && seen.insert(bare) {
                 normalized.push(bare.to_owned());
             }
         }
@@ -163,7 +163,7 @@ fn prepare_items(
     if identities.is_empty() {
         return Err(diagnostics::error("no components found to reset on your workspace"));
     }
-    let mut items: Vec<Plan> = Vec::new();
+    let mut items: Vec<Plan> = Vec::with_capacity(identities.len());
     for identity in identities {
         let item = Plan::prepare(root, identity, head_only, force)
             .map_err(|error| earlier_failure(&items, error))?;

@@ -64,14 +64,14 @@ pub fn read_raw_scope_object(
         .ok_or_else(|| invalid("missing object header"))?;
     let header_str =
         std::str::from_utf8(&raw[..end]).map_err(|_| invalid("object header is not UTF-8"))?;
-    let headers = header_str
-        .split(' ')
-        .map(str::to_owned)
-        .collect::<Vec<_>>();
-    if headers.len() != 3 {
+    let mut parts = header_str.split(' ');
+    let (Some(kind), Some(header_hash), Some(size), None) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
+    else {
         return Err(invalid("invalid object header"));
-    }
-    let (_, body) = repository::split(&raw, hash, &headers[0])?;
+    };
+    let (_, body) = repository::split(&raw, hash, kind)?;
+    let headers = vec![kind.to_owned(), header_hash.to_owned(), size.to_owned()];
     Ok(Some((headers, body.to_vec())))
 }
 

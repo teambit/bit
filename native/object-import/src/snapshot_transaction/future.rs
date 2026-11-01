@@ -95,6 +95,7 @@ fn choice<'a>(
         params.soft,
     ))
 }
+#[inline]
 fn default_choice<'a>(
     params: &'a Params,
     release: &'a str,
@@ -181,6 +182,7 @@ fn latest(component: &Component, semver: &Value) -> io::Result<Value> {
         .cloned()
         .unwrap_or_else(|| json!({"major":0,"minor":0,"patch":0,"prerelease":[]})))
 }
+#[inline]
 fn prelike(release: &str) -> bool {
     matches!(release.trim(), "prerelease" | "premajor" | "preminor" | "prepatch")
 }

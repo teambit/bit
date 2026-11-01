@@ -49,6 +49,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
     }
 }
 
+#[inline]
 fn object_bytes(objects: &[objects::Prepared]) -> usize {
     objects
         .iter()
@@ -157,6 +158,7 @@ fn path(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

@@ -62,7 +62,7 @@ pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io
     {
         return Err(invalid("lane reset restored bitmap key"));
     }
-    let existing = std::mem::take(rows);
+    let existing = std::mem::replace(rows, Map::with_capacity(rows.len() + 1));
     let mut restored = Some(row);
     for (existing_key, value) in existing {
         if restored.is_some() && should_insert_before(&existing_key, key) {
@@ -79,6 +79,7 @@ pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io
     Ok(())
 }
 
+#[inline]
 fn should_insert_before(existing_key: &str, key: &str) -> bool {
     existing_key.starts_with('$')
         || existing_key == "_bit_lane"

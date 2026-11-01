@@ -35,12 +35,16 @@ impl Repository {
             .map(str::trim)
             .ok_or_else(|| invalid("reset index hash"))?;
         let model_hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
-        let model_before = fs::read(object_path(root, &model_hash))?;
+        let objects = scope_dir.join("objects");
+        let model_before = fs::read(
+            objects
+                .join(&model_hash[..2])
+                .join(&model_hash[2..]),
+        )?;
         if model_before.len() > 32 * 1024 * 1024 {
             return Err(invalid("reset model budget"));
         }
-        let component =
-            outbound::read_object(&scope_dir.join("objects"), &model_hash, "Component")?;
+        let component = outbound::read_object(&objects, &model_hash, "Component")?;
         validate_component(&component, scope, name)?;
         Ok(Self {
             root: root.to_owned(),

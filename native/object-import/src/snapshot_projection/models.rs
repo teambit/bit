@@ -36,7 +36,8 @@ pub(super) fn component(fields: &Value) -> io::Result<Value> {
 
 fn detached(value: &Value) -> io::Result<Value> {
     object(value)?;
-    let mut output = Value::Object(Vec::new());
+    let mut output = Value::Object(Vec::with_capacity(3));
+    let mut active = false;
     for name in ["heads", "deleted"] {
         let Value::Array(values) = get(value, name) else {
             return Err(invalid("detached refs required"));
@@ -44,21 +45,20 @@ fn detached(value: &Value) -> io::Result<Value> {
         if values.len() > 4096 {
             return Err(invalid("detached refs limit"));
         }
-        insert(
-            &mut output,
-            name,
-            if values.is_empty() { Value::Undefined } else { Value::Array(values.clone()) },
-        );
+        let entry = if values.is_empty() {
+            Value::Undefined
+        } else {
+            active = true;
+            Value::Array(values.clone())
+        };
+        insert(&mut output, name, entry);
     }
-    insert(&mut output, "current", get(value, "current").clone());
-    if get(&output, "heads").truthy()?
-        || get(&output, "deleted").truthy()?
-        || get(&output, "current").truthy()?
-    {
-        Ok(output)
-    } else {
-        Ok(Value::Undefined)
+    let current = get(value, "current");
+    if current.truthy()? {
+        active = true;
     }
+    insert(&mut output, "current", current.clone());
+    Ok(if active { output } else { Value::Undefined })
 }
 
 pub(super) fn lane(fields: &Value) -> io::Result<Value> {

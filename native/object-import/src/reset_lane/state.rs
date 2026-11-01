@@ -97,7 +97,7 @@ impl BitmapState {
             .ok_or_else(|| invalid("lane reset bitmap row"))?;
         row.insert("version".into(), Value::String(version.clone()));
         row.shift_remove("nextVersion");
-        crate::reset_config::restore(row, self.staged_config.clone());
+        crate::reset_config::restore(row, self.staged_config.take());
         if version.is_empty()
             && model["versions"].as_object().is_some_and(serde_json::Map::is_empty)
             && model["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty)

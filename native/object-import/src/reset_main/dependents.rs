@@ -66,7 +66,7 @@ fn component_model(objects: &Path, row: &Value, same: bool) -> io::Result<Option
 fn references(component: &Value) -> io::Result<HashSet<&str>> {
     let versions =
         component["versions"].as_object().ok_or_else(|| invalid("reset dependent versions"))?;
-    let mut refs = HashSet::new();
+    let mut refs = HashSet::with_capacity(versions.len() + 1);
     for value in versions
         .values()
         .chain(
@@ -123,6 +123,7 @@ fn uses_removed(version: &Value, scope: &str, name: &str, removed: &HashSet<&str
             })
 }
 
+#[inline]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)

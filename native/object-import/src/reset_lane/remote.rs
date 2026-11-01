@@ -54,13 +54,13 @@ fn head_for(rows: &[Value], scope: &str, name: &str) -> io::Result<Option<String
                 .as_str()
                 .map(str::trim)
                 .ok_or_else(|| invalid("lane reset remote head"))?;
-            let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(head)?);
-            if found.replace(canonical).is_some() {
+            let digest = crate::merge_history::hash(head)?;
+            if found.replace(digest).is_some() {
                 return Err(invalid("lane reset duplicate remote head"));
             }
         }
     }
-    Ok(found)
+    Ok(found.map(|digest| crate::validate::hexadecimal(&digest)))
 }
 
 pub(super) fn exported_head(

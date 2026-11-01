@@ -164,7 +164,7 @@ pub(super) fn format(version: &Value) -> io::Result<String> {
     Ok(output)
 }
 
-fn part_text(value: &Value) -> io::Result<String> {
+fn part_text(value: &Value) -> io::Result<std::borrow::Cow<'_, str>> {
     if let Some(text) = value.as_str() {
         let trimmed = text.trim();
         if trimmed.is_empty()
@@ -174,11 +174,11 @@ fn part_text(value: &Value) -> io::Result<String> {
         {
             return Err(invalid("semver prerelease"));
         }
-        return Ok(trimmed.to_owned());
+        return Ok(std::borrow::Cow::Borrowed(trimmed));
     }
     value
         .as_u64()
-        .map(|number| number.to_string())
+        .map(|number| std::borrow::Cow::Owned(number.to_string()))
         .ok_or_else(|| invalid("semver prerelease"))
 }
 

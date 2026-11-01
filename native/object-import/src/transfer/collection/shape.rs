@@ -7,14 +7,17 @@ use crate::transfer::{MAX_OBJECTS, invalid};
 /// lists thousands of components.
 const MAX_VERSION_ARRAY: usize = 65_536;
 
+#[inline]
 pub(super) fn eligible(value: &Value) -> io::Result<()> {
     prepare(value, true)
 }
 
+#[inline]
 pub(crate) fn history(value: &Value) -> io::Result<()> {
     prepare(value, false)
 }
 
+#[inline]
 pub(crate) fn query(value: &Value) -> io::Result<()> {
     prepare(value, true)
 }
@@ -103,6 +106,7 @@ fn identity(value: Option<&Value>) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn segment(text: &str, slash: bool) -> bool {
     !text.is_empty()
         && text.len() <= 4096

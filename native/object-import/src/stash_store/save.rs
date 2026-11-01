@@ -17,7 +17,7 @@ impl PreparedSave {
         let observation = Observation::read(scope)?;
         let next = next_index(observation.latest())?;
         let filename = format!("stash-{next}.json");
-        let mut bytes = Vec::new();
+        let mut bytes = Vec::with_capacity(256);
         let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
         let mut serializer = serde_json::Serializer::with_formatter(&mut bytes, formatter);
         data.serialize(&mut serializer).map_err(io::Error::other)?;
@@ -26,6 +26,7 @@ impl PreparedSave {
         }
         Ok(Self { observation, filename, bytes })
     }
+    #[inline]
     #[must_use]
     pub fn filename(&self) -> &str {
         &self.filename
