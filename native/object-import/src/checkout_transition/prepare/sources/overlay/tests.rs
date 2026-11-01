@@ -1,4 +1,5 @@
-//! Unit tests for reading version and source objects through an import overlay.
+//! Unit tests for reading version and source objects through an import overlay
+//! in `bit-object-import`.
 
 use super::{MAX_BYTES, Overlay, body, wire};
 use flate2::{Compression, write::ZlibEncoder};

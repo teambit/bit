@@ -1,4 +1,5 @@
-//! Unit tests for component file scanning and ignore rule rebasing.
+//! Unit tests for component file scanning and ignore rule rebasing in
+//! `bit-install`.
 
 use super::{super::FileRules, write};
 use crate::workspace::rebase_ignore_pattern;

@@ -1,4 +1,5 @@
-//! `VersionHistory.merge` keeps incoming rows first and retains existing-only rows in order.
+//! `VersionHistory.merge` keeps incoming rows first and retains existing-only
+//! rows in order in `bit-object-import`.
 
 use super::merge;
 use crate::command_import::publish;

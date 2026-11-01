@@ -1,4 +1,5 @@
-//! Preserve the exact validated Node stream; compressors may emit different valid encodings.
+//! Preserves the exact validated Node stream; compressors may emit different
+//! valid encodings.
 
 mod compression;
 use serde_json::Value;

@@ -9,6 +9,7 @@ use std::{
     time::Duration,
 };
 
+/// Spinner frame interval used by the loader test harness.
 const FRAME: Duration = Duration::from_millis(80);
 
 fn recorder() -> (Sink, Arc<Mutex<String>>) {

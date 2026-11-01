@@ -1,4 +1,5 @@
-//! Unit tests for `ModelComponent` schema defaults and orphaned version merging.
+//! Unit tests for `ModelComponent` schema defaults and orphaned version merging
+//! in `bit-object-import`.
 
 use super::{json, model_from};
 #[test]

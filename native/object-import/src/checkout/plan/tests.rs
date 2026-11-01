@@ -1,4 +1,5 @@
-//! Unit tests for checkout plan computation and version resolution.
+//! Unit tests for checkout plan computation and version resolution in
+//! `bit-object-import`.
 
 use super::{plain_tag, serve};
 use crate::checkout::cache::State;

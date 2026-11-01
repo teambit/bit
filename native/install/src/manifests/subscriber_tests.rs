@@ -1,4 +1,5 @@
-//! Unit tests for `linkedDependencies` subscriber manifest merging.
+//! Unit tests for `linkedDependencies` subscriber manifest merging in
+//! `bit-install`.
 
 use super::subscriber_links;
 use crate::model::{InstallPlan, Project};

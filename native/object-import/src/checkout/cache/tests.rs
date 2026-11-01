@@ -1,4 +1,5 @@
-//! Unit tests for bounded source object caching across checkout repositories.
+//! Unit tests for bounded source object caching across checkout repositories in
+//! `bit-object-import`.
 
 use super::State;
 use std::path::Path;

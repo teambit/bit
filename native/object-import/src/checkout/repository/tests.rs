@@ -1,4 +1,5 @@
-//! Unit tests for bounded loose object inflation and header validation.
+//! Unit tests for bounded loose object inflation and header validation in
+//! `bit-object-import`.
 
 use flate2::{Compression, write::ZlibEncoder};
 use std::io::Write;

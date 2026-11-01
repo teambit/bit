@@ -1,4 +1,5 @@
-//! Unit tests for terminal output formatting, ANSI colors, and `pretty-time` durations.
+//! Unit tests for terminal output formatting, ANSI colors, and `pretty-time`
+//! durations in `bit-install`.
 
 use super::{Output, Sink, Style, pretty_time};
 use std::{

@@ -1,4 +1,5 @@
-//! Unit tests for `node-ignore` 3.3.10 regex generation and path filtering against golden cases.
+//! Unit tests for `node-ignore` 3.3.10 regex generation and path filtering
+//! against golden cases in `bit-install`.
 
 mod golden;
 

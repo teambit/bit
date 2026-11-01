@@ -1,4 +1,5 @@
-//! Unit tests for retargeting checkout plans across duplicate and new file bodies.
+//! Unit tests for retargeting checkout plans across duplicate and new file
+//! bodies in `bit-object-import`.
 
 use super::{additions, plan, statuses, wire};
 use serde_json::json;

@@ -1,4 +1,5 @@
-//! Unit tests for `Workspace::load` component aspect merging and environment resolution.
+//! Unit tests for [`Workspace::load`] component aspect merging and environment
+//! resolution in `bit-install`.
 
 use super::write;
 use crate::{

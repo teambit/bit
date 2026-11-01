@@ -1,4 +1,5 @@
-//! Unit tests for appending and updating `scope.json` remote lane tracking aliases.
+//! Unit tests for appending and updating `scope.json` remote lane tracking
+//! aliases in `bit-object-import`.
 
 use super::{Id, append};
 use serde_json::json;

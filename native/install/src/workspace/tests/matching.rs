@@ -1,4 +1,5 @@
-//! Unit tests for workspace variant matching, specificity sorting, and package naming.
+//! Unit tests for workspace variant matching, specificity sorting, and package
+//! naming in `bit-install`.
 
 use crate::{
     model::ComponentId,

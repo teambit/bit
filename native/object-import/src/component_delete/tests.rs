@@ -1,4 +1,5 @@
-//! Unit tests for component deletion batch preparation and outbound remote requests.
+//! Unit tests for component deletion batch preparation and outbound remote
+//! requests in `bit-object-import`.
 
 use super::{Batch, Scope, outbound};
 use serde_json::{Value, json};

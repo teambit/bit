@@ -1,4 +1,5 @@
-//! Unit tests for component rename identifier validation and source refactoring.
+//! Unit tests for component rename identifier validation and source refactoring
+//! in `bit-object-import`.
 
 use super::{identity, refactor};
 

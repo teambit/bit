@@ -1,4 +1,5 @@
-//! Unit tests for detecting aspect environment descriptors (`isUsingAspectEnv`).
+//! Unit tests for detecting aspect environment descriptors (`isUsingAspectEnv`)
+//! in `bit-install`.
 
 use super::aspect_env_ids;
 use crate::{

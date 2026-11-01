@@ -1,4 +1,5 @@
-//! Unit tests for new component batch removal and `.bitmap` history backups.
+//! Unit tests for new component batch removal and `.bitmap` history backups in
+//! `bit-object-import`.
 
 use super::NewBatch;
 use serde_json::json;

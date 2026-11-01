@@ -1,3 +1,6 @@
+//! Unit tests for workspace, environment, and variant dependency policy
+//! resolution in `bit-install`.
+
 use super::{
     DEPENDENCY_RESOLVER, VariantOptions, component_policy, entries,
     entries::{from_variant_config, merge},

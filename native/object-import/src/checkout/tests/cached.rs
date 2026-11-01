@@ -1,4 +1,5 @@
-//! Unit tests for cached source object reuse during checkout preflight.
+//! Unit tests for cached source object reuse during checkout preflight in
+//! `bit-object-import`.
 
 use super::{Directory, frame, pool, store, store_raw};
 use crate::checkout::{cache::State, serve};

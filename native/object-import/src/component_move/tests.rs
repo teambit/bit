@@ -1,4 +1,5 @@
-//! Unit tests for component directory move `.bitmap` projection and untracked path errors.
+//! Unit tests for component directory move `.bitmap` projection and untracked
+//! path errors in `bit-object-import`.
 
 use super::{Observed, project};
 use serde_json::json;

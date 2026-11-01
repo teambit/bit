@@ -1,4 +1,5 @@
-//! Unit tests for component rename batch planning and atomic publication.
+//! Unit tests for component rename batch planning and atomic publication in
+//! `bit-object-import`.
 
 use super::Batch;
 use crate::component_rename::{Options, Plan};

@@ -1,4 +1,5 @@
-//! Unit tests for checkout transition state lifecycle and file publication.
+//! Unit tests for checkout transition state lifecycle and file publication in
+//! `bit-object-import`.
 
 use super::{State, apply, plan};
 use flate2::{Compression, write::ZlibEncoder};

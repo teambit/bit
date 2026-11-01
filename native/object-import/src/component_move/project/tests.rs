@@ -1,4 +1,5 @@
-//! Unit tests for platform-specific component move path prefix matching.
+//! Unit tests for platform-specific component move path prefix matching in
+//! `bit-object-import`.
 
 #[test]
 fn native_join_and_linux_from_keep_the_published_windows_mismatch() {

@@ -1,4 +1,5 @@
-//! Unit tests for command-driven remote object import planning and publication.
+//! Unit tests for command-driven remote object import planning and publication
+//! in `bit-object-import`.
 
 mod canonical_model;
 mod graph;

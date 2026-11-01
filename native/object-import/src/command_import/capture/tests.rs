@@ -1,4 +1,5 @@
-//! Incoming `Source` capture retains the validated wire representation.
+//! Incoming `Source` capture retains the validated wire representation in
+//! `bit-object-import`.
 
 use super::Capture;
 use flate2::{Compression, write::ZlibEncoder};

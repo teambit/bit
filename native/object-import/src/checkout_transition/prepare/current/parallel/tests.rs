@@ -1,4 +1,5 @@
-//! Unit tests for parallel current workspace file reading and byte budget limits.
+//! Unit tests for parallel current workspace file reading and byte budget
+//! limits in `bit-object-import`.
 
 use super::{MAX_BYTES, wire};
 use std::{

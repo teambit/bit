@@ -1,4 +1,5 @@
-//! Unit tests for reading component model and `Version` metadata from local scope objects.
+//! Unit tests for reading component model and `Version` metadata from local
+//! scope objects in `bit-install`.
 
 use super::{ScopeObjects, sha1_hex};
 use crate::model::ComponentId;

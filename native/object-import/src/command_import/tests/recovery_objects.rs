@@ -1,4 +1,5 @@
-//! Unit tests for accepting verified recovery objects during pending imports.
+//! Unit tests for accepting verified recovery objects during pending imports in
+//! `bit-object-import`.
 
 use super::{Fixture, object_hash, publish};
 use std::fs;

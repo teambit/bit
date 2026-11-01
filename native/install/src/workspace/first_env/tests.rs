@@ -1,4 +1,5 @@
-//! Unit tests for resolving a component's environment from its first configured env aspect.
+//! Unit tests for resolving a component's environment from its first configured
+//! env aspect in `bit-install`.
 
 use super::resolve;
 use crate::{

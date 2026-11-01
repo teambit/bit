@@ -1,4 +1,5 @@
-//! Unit tests for component deprecation and undeprecation `.bitmap` configuration updates.
+//! Unit tests for component deprecation and undeprecation `.bitmap`
+//! configuration updates in `bit-object-import`.
 
 use super::{ASPECT, Value, json, selection, set_config, validate_range};
 fn bitmap() -> Value {

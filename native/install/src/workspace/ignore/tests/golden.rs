@@ -1,4 +1,5 @@
-//! Recorded from node-ignore 3.3.10, the version Bit lists component files with. Do not edit by hand.
+//! Recorded from `node-ignore` 3.3.10, the version Bit lists component files
+//! with. Do not edit by hand.
 pub(super) const REGEXES: &[(&str, &str, &str)] = &[
     ("node_modules", r"(?:^|\/)node_modules(?=$|\/)", r"(?:^|\/)node_modules(?=$|\/$)"),
     ("**/node_modules/**", r"^(?:.*\/)?node_modules\/.+", r"^(?:.*\/)?node_modules\/.+"),

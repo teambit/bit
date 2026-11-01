@@ -1,4 +1,5 @@
-//! Unit tests for cached graph import and versionless root progress accounting.
+//! Unit tests for cached graph import and versionless root progress accounting
+//! in `bit-object-import`.
 
 use super::{Fixture, prepare, prepare_cached};
 
