@@ -1,3 +1,5 @@
+//! Unit tests for formatting native-to-Node.js fallback trace warnings.
+
 use super::fallback_message;
 
 #[test]

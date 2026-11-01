@@ -1,4 +1,5 @@
 //! Verbose counts retain repeated lane traversals even when object retention is deduplicated.
+
 use super::{compare, fixture, objects, orphan};
 use crate::commands::move_paths::support;
 use serde_json::json;

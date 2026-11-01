@@ -1,3 +1,5 @@
+//! Unit tests for Node.js CLI delegation process construction and `PATH` prefixing.
+
 use super::{command, path_with};
 use crate::discovery::{NodeCli, Source, Target};
 use std::{

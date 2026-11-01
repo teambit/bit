@@ -1,3 +1,5 @@
+//! Unit tests for multi-write replay clock-phase launch gate matching.
+
 use super::{END, SECOND, START, delay, multiple_bitmap_writes};
 #[test]
 fn only_explicit_fork_and_recovery_operations_use_the_launch_gate() {

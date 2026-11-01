@@ -1,4 +1,5 @@
 //! Whole-state soft-deletion batches preserve unrelated component configuration.
+
 use crate::commands::move_paths::support::{self, bitmap, setup, successful};
 use serde_json::json;
 use std::fs;

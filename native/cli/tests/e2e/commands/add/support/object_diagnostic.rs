@@ -1,4 +1,5 @@
 //! Decode bounded object failures for diagnostics without changing compared bytes.
+
 use std::io::Read;
 
 pub(super) fn decode(bytes: &[u8]) -> Option<String> {

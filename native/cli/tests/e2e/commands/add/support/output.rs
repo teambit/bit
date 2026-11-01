@@ -1,4 +1,5 @@
 //! Complete independently qualified diagnostics, with exact comparison as the default.
+
 #[cfg(test)]
 mod tests;
 

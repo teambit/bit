@@ -1,3 +1,5 @@
+//! Unit tests for `bit snap` and `bit tag` version-bump and auto-dependent report formatting.
+
 use super::{SNAP, TAG, format};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::json;

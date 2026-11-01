@@ -1,3 +1,5 @@
+//! Unit tests for stream-error variant matching in replay output comparison.
+
 use super::assert_errors;
 
 fn variants() -> [String; 2] {

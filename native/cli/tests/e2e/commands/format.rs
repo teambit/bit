@@ -1,4 +1,5 @@
-//! Formatting checks compare the released command, full caches and the untouched remote.
+//! Formatting checks compare the released command, full caches, and the untouched remote.
+
 use super::move_paths::support;
 #[test]
 fn standard_format_checks_match_json_and_component_loading_without_a_bit_host() {

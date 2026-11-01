@@ -1,4 +1,5 @@
 //! Start from real exported metadata, then add isolated graph branches for the collector oracle.
+
 use crate::helper::Helper;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};

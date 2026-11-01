@@ -1,5 +1,6 @@
 //! Normalize only independently completed directory batches and their exact Files summary order.
-//! Root placement, ancestor order, paths, statuses and every diff byte remain checked.
+//! Root placement, ancestor order, paths, statuses, and every diff byte remain checked.
+
 use serde_json::Value;
 
 pub(super) fn normalize(output: &str) -> Value {

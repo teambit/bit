@@ -1,3 +1,5 @@
+//! Unit tests for discovering the Node.js CLI entry point across environment, checkout, and BVM installations.
+
 use super::{Environment, NodeCli, Source, Target, find_in};
 use std::{
     fs,

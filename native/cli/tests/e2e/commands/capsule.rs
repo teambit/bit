@@ -1,3 +1,5 @@
+//! End-to-end tests for the native `bit capsule` command family.
+
 use crate::{
     helper::{Helper, parse},
     known_failure::KnownResult,

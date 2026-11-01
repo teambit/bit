@@ -1,5 +1,5 @@
 //! `bit checkout` inputs the native command leaves to the Node.js CLI, each
-//! for its traced reason.
+//! for its traced reason (including grammar and host preflight checks).
 
 use std::{
     fs,

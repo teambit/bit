@@ -1,4 +1,5 @@
-//! Released compiler bytes, reports, caches and package links are compared at the same path.
+//! Released compiler bytes, reports, caches, and package links are compared at the same path.
+
 use super::move_paths::support;
 
 fn duration(output: &str) -> String {

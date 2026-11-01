@@ -1,4 +1,5 @@
 //! Public export into an actual Unix shared-group file scope.
+
 use crate::helper::{Helper, parse};
 use serde_json::Value;
 use sha1::{Digest, Sha1};

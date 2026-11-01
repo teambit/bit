@@ -1,3 +1,5 @@
+//! Unit tests for raw workspace-config history snapshot parsing and oracle comparison.
+
 use super::{Snapshot, oracle_mode, parse};
 use chrono::TimeZone;
 use serde_json::{Value, json};

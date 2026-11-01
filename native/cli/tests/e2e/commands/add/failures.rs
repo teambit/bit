@@ -1,4 +1,4 @@
-//! File/link failures retain the exact publication prefix before bitmap persistence.
+//! File/link failures retain the exact publication prefix before `.bitmap` persistence.
 use super::support::{compare, workspace};
 use std::fs;
 #[test]

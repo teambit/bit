@@ -1,3 +1,5 @@
+//! End-to-end error parity tests for `bit add` with invalid IDs, individual files, and nested paths.
+
 use super::support::{compare, workspace};
 #[test]
 fn invalid_id_version_and_conflicting_name_flags_leave_state_unchanged() {

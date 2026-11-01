@@ -1,4 +1,5 @@
 //! An exact caller-declared sequence of published writes retains its full raw history proof.
+
 mod raw;
 
 use crate::{

@@ -1,4 +1,5 @@
 //! Workspace collection owns partial failures and restoration without replaying through Node.
+
 use super::{objects, orphan};
 use crate::commands::move_paths::support;
 use std::{

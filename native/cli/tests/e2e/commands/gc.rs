@@ -1,4 +1,5 @@
 //! Bare-scope collection is compared at the same path, including every object and backup byte.
+
 mod boundaries;
 #[cfg(target_os = "linux")]
 mod cross_device;

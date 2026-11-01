@@ -1,4 +1,5 @@
 //! Soft deletion shares workspace predicates without recovery's scope-pool semantics.
+
 use crate::commands::move_paths::support::{self, bitmap, successful};
 
 #[test]

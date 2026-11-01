@@ -1,4 +1,5 @@
 //! Only the validated recovery timestamp and process ID differ between these invocations.
+
 use super::super::{compare, fixture, objects, orphan, tree};
 use crate::helper::{Helper, Run};
 use std::{

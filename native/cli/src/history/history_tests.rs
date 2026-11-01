@@ -1,3 +1,5 @@
+//! Unit tests for ISO-8601 timestamp formatting and `.bit/command-history` logging in [`History`].
+
 use super::{History, iso};
 use std::{ffi::OsString, fs};
 use tempfile::TempDir;

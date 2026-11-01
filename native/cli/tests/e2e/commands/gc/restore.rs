@@ -1,4 +1,5 @@
 //! Recovery compares existing object bytes and permissions, not only restored object counts.
+
 mod cleanup;
 mod conflicts;
 use super::{compare, fixture, objects, orphan};

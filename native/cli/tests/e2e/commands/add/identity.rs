@@ -1,4 +1,4 @@
-//! Re-tracking keeps published identities distinct from the workspace's current default scope.
+//! Re-tracking keeps published identities distinct from the workspace's current `defaultScope`.
 use super::support::{compare, workspace};
 use crate::helper::{config, remote};
 use serde_json::json;

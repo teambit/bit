@@ -1,3 +1,5 @@
+//! Remote scope fixture seeding for `bit diff` end-to-end tests.
+
 use super::{Helper, remote_parity_with, remote_versions};
 
 pub(super) fn publish_remote_fixture(helper: &Helper) {

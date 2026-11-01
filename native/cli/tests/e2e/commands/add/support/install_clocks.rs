@@ -1,4 +1,5 @@
 //! Opt-in exact-token projection for pnpm's independently generated installation clocks.
+
 use serde_json::Value;
 use std::collections::BTreeMap;
 pub(super) fn project(

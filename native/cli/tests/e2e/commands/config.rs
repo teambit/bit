@@ -1,4 +1,4 @@
-//! Port of `e2e/commands/config.e2e.ts`.
+//! Port of `e2e/commands/config.e2e.ts` for native `bit config` parity.
 
 use crate::helper::{Helper, Run, setup};
 use serde_json::Value;

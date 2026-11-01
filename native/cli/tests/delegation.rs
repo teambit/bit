@@ -1,5 +1,5 @@
 //! The built `bit` against a stub Node.js CLI that echoes its arguments and
-//! exits with a chosen code: what users see when a command is delegated.
+//! exits with a chosen code: what users see when a command is delegated or traced.
 
 use std::{
     fs,

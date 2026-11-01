@@ -1,3 +1,5 @@
+//! Raw workspace-config history snapshot reader and parser for replay comparison.
+
 #[cfg(test)]
 mod tests;
 

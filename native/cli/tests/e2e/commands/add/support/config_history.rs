@@ -1,4 +1,5 @@
 //! Normalize only validated workspace-config backup clock IDs, preserving snapshots and reasons.
+
 use super::{Backup, mode, validate_history_id};
 use std::{
     collections::{BTreeMap, BTreeSet},

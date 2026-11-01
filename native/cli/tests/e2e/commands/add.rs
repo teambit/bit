@@ -1,4 +1,4 @@
-//! Original add command grammar, tracking, main-file and ignore contracts.
+//! Original `bit add` command grammar, tracking, main-file, and ignore contracts.
 pub(crate) mod support;
 
 mod cleanup;
