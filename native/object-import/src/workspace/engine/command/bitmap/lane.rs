@@ -139,7 +139,7 @@ pub(super) fn membership(
 ) -> io::Result<bool> {
     let removed_set = removal_selection(context, updates, removed)?;
     let mut changed = false;
-    let mut kept = Vec::new();
+    let mut kept = Vec::with_capacity(rows.len());
     for row in rows.drain(..) {
         if removed_set.contains(&identity(&row)?) {
             changed = true;
@@ -234,8 +234,12 @@ pub(super) fn validate_roots(directory: &str, rows: &[Value]) -> io::Result<()> 
             .ok_or_else(|| invalid("command bitmap existing root"))?;
         if other != "."
             && (directory == other
-                || directory.starts_with(&format!("{other}/"))
-                || other.starts_with(&format!("{directory}/")))
+                || directory
+                    .strip_prefix(other)
+                    .is_some_and(|rest| rest.starts_with('/'))
+                || other
+                    .strip_prefix(directory)
+                    .is_some_and(|rest| rest.starts_with('/')))
         {
             return Err(invalid("command bitmap addition overlaps tracked root"));
         }

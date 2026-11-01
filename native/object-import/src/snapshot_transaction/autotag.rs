@@ -17,20 +17,20 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
     if components.len() > 4096 || changed.len() > 4096 {
         return Err(invalid("autotag component budget"));
     }
+    let mut changed_map = HashMap::with_capacity(changed.len());
     for id in changed {
-        identity(id)?;
+        changed_map
+            .entry(identity(id)?)
+            .or_insert(id);
     }
     let graph = graph(components)?;
     let mut results = Vec::new();
     for (index, component) in components.iter().enumerate() {
         let key = identity(&component["id"])?;
-        if changed
-            .iter()
-            .any(|id| identity(id).ok().as_ref() == Some(&key))
-        {
+        if changed_map.contains_key(&key) {
             continue;
         }
-        let triggered = triggers(&key, &graph, changed, &input["semver"])?;
+        let triggered = triggers(&key, &graph, &changed_map, &input["semver"])?;
         if !triggered.is_empty() {
             results.push(json!({"component":index,"triggeredBy":triggered}));
         }
@@ -148,7 +148,7 @@ fn numeric_key(name: &str) -> Option<u32> {
 fn triggers(
     key: &str,
     graph: &HashMap<String, Node>,
-    changed: &[Value],
+    changed: &HashMap<String, &Value>,
     semver: &Value,
 ) -> io::Result<Vec<Value>> {
     let mut visited = HashSet::new();
@@ -157,9 +157,7 @@ fn triggers(
     let mut triggered = Vec::new();
     for name in order {
         let node = &graph[&name];
-        if let Some(id) = changed
-            .iter()
-            .find(|id| identity(id).ok().as_ref() == Some(&name))
+        if let Some(&id) = changed.get(&name)
             && qualifies(id, &node.id, semver)?
         {
             triggered.push(node.locator.clone());

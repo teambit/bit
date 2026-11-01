@@ -7,19 +7,19 @@ use crate::transfer::{MAX_OBJECTS, invalid};
 /// lists thousands of components.
 const MAX_VERSION_ARRAY: usize = 65_536;
 
-pub(super) fn eligible(value: &Value) -> io::Result<Value> {
+pub(super) fn eligible(value: &Value) -> io::Result<()> {
     prepare(value, true)
 }
 
 pub(crate) fn history(value: &Value) -> io::Result<()> {
-    prepare(value, false).map(|_| ())
+    prepare(value, false)
 }
 
 pub(crate) fn query(value: &Value) -> io::Result<()> {
-    prepare(value, true).map(|_| ())
+    prepare(value, true)
 }
 
-fn prepare(value: &Value, artifacts: bool) -> io::Result<Value> {
+fn prepare(value: &Value, artifacts: bool) -> io::Result<()> {
     let mut clean = value.clone();
     dependencies(value, &mut clean)?;
     flattened(value, &mut clean)?;
@@ -35,8 +35,7 @@ fn prepare(value: &Value, artifacts: bool) -> io::Result<Value> {
     }
     edges(value, &mut clean)?;
     extensions(value, &mut clean, artifacts)?;
-    crate::merge_history::metadata::validate(&clean)?;
-    Ok(clean)
+    crate::merge_history::metadata::validate(&clean)
 }
 
 fn dependencies(value: &Value, clean: &mut Value) -> io::Result<()> {
@@ -107,9 +106,9 @@ fn identity(value: Option<&Value>) -> io::Result<()> {
 fn segment(text: &str, slash: bool) -> bool {
     !text.is_empty()
         && text.len() <= 4096
-        && text
-            .split('/')
-            .all(|part| !part.is_empty())
+        && !text.starts_with('/')
+        && !text.ends_with('/')
+        && !text.contains("//")
         && text
             .bytes()
             .all(|byte| {

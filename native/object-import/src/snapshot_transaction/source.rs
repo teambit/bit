@@ -76,17 +76,20 @@ fn workspace(source: &wire::Workspace, maximum: usize) -> io::Result<Vec<u8>> {
 
 fn hex(text: &str, maximum: usize) -> io::Result<Vec<u8>> {
     let text = text.trim();
-    if text.len() > maximum.min(MAX_RAW) * 2
-        || !text.len().is_multiple_of(2)
-        || !text.bytes().all(|byte| byte.is_ascii_hexdigit())
-    {
+    if text.len() > maximum.min(MAX_RAW) * 2 || !text.len().is_multiple_of(2) {
         return Err(invalid("Source body encoding limit"));
     }
     text.as_bytes()
         .chunks_exact(2)
-        .map(|chunk| {
-            u8::from_str_radix(std::str::from_utf8(chunk).map_err(io::Error::other)?, 16)
-                .map_err(io::Error::other)
-        })
+        .map(|chunk| Ok((hex_digit(chunk[0])? << 4) | hex_digit(chunk[1])?))
         .collect()
+}
+
+fn hex_digit(byte: u8) -> io::Result<u8> {
+    match byte {
+        b'0'..=b'9' => Ok(byte - b'0'),
+        b'a'..=b'f' => Ok(byte - b'a' + 10),
+        b'A'..=b'F' => Ok(byte - b'A' + 10),
+        _ => Err(invalid("Source body encoding limit")),
+    }
 }

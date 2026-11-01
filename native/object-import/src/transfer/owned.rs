@@ -1,6 +1,8 @@
 mod archive;
 mod freezer;
 mod spool;
+#[cfg(test)]
+mod tests;
 mod wire;
 
 use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, State, collection, invalid, object};
@@ -71,8 +73,8 @@ fn selection(request: &wire::Collect) -> io::Result<Vec<Descriptor>> {
         {
             return Err(invalid("unsupported objects collection"));
         }
-        let mut seen = HashSet::new();
-        let mut descriptors = Vec::new();
+        let mut seen = HashSet::with_capacity(request.refs.len());
+        let mut descriptors = Vec::with_capacity(request.refs.len());
         for text in &request.refs {
             let hash = crate::merge_history::hash(text)?;
             if seen.insert(hash) {
@@ -140,8 +142,8 @@ pub(super) fn initialize(state: &mut State, input: &Value) -> io::Result<Value> 
     if request.objects.len() > MAX_OBJECTS {
         return Err(invalid("transfer initialization count limit"));
     }
-    let mut entries = Vec::new();
-    let mut seen = HashSet::new();
+    let mut entries = Vec::with_capacity(request.objects.len());
+    let mut seen = HashSet::with_capacity(request.objects.len());
     for fragment in request.objects {
         let entry = fragment_entry(state, fragment)?;
         if seen.insert((entry.scope.clone(), entry.hash)) {
@@ -261,6 +263,3 @@ pub(super) fn archive(state: &State, input: &Value) -> io::Result<Value> {
         state.plans.get(request.token.trim()).ok_or_else(|| invalid("unknown transfer token"))?;
     archive::write(plan, &request)
 }
-
-#[cfg(test)]
-mod tests;

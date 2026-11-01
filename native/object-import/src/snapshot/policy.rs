@@ -77,14 +77,13 @@ fn parent(plan: &Plan) -> Option<&str> {
     if plan.is_legacy || head.eq_ignore_ascii_case(plan.version.trim()) || plan.has_tag {
         return None;
     }
-    if plan.head_policy.set_head_as_parent {
-        return Some(head);
-    }
-    Some(
-        plan.parent
+    if !plan.head_policy.set_head_as_parent
+        && let Some(parent) = plan.parent
             .as_deref()
             .map(str::trim)
             .filter(|parent| !parent.is_empty())
-            .unwrap_or(head),
-    )
+    {
+        return Some(parent);
+    }
+    Some(head)
 }

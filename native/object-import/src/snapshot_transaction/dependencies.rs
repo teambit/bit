@@ -36,22 +36,23 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
 fn row(index: usize, component: &Value, components: &[Value]) -> io::Result<Value> {
     let dependencies = dependency_rows(component, components)?;
     let extensions = extension_rows(component, components)?;
-    let mut resolver = Vec::new();
-    if component.get("resolver").is_some() {
-        resolver = resolver_rows(component, components)?;
-    }
+    let resolver = if component.get("resolver").is_some() {
+        resolver_rows(component, components)?
+    } else {
+        Vec::new()
+    };
     Ok(
         json!({"index":index,"dependencies":dependencies,"extensions":extensions,"resolver":resolver}),
     )
 }
 fn normalize_component_id(id: &Value, version: String) -> io::Result<Value> {
-    let mut normalized = id.clone();
-    if normalized.is_object() {
+    if id.is_object() {
+        let mut normalized = id.clone();
         normalized["version"] = Value::String(version);
         return Ok(normalized);
     }
-    let key = autotag::identity(&normalized)?;
-    normalized = if let Some((scope, name)) = key.split_once('/') {
+    let key = autotag::identity(id)?;
+    let normalized = if let Some((scope, name)) = key.split_once('/') {
         json!({"scope": scope, "name": name, "version": version})
     } else {
         json!({"name": key, "version": version})

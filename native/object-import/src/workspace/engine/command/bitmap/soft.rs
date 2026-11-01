@@ -24,7 +24,7 @@ fn normalized_row(key: &str, entry: &Value) -> io::Result<Value> {
         return Err(invalid("command bitmap component name"));
     }
     let (scope, name) = crate::reset_lane::bitmap::row_identity(key, entry);
-    if name.is_empty() {
+    if name.is_empty() || !entry.is_object() {
         return Err(invalid("command bitmap component name"));
     }
     let mut cloned = entry.clone();
@@ -78,7 +78,7 @@ impl Prepared {
     ) -> io::Result<()> {
         let bitmap = crate::recovery::jsonc::parse(&self.output)?;
         let mut entries = rows(&bitmap)?;
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::with_capacity(versions.len());
         for (id, version) in versions {
             let id_trimmed = id.trim();
             let version = version.trim();
@@ -111,7 +111,7 @@ impl Prepared {
     ) -> io::Result<()> {
         let bitmap = crate::recovery::jsonc::parse(&self.output)?;
         let mut entries = rows(&bitmap)?;
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::with_capacity(identities.len());
         for id in identities {
             let id_trimmed = id.trim();
             if id_trimmed.is_empty() || !seen.insert(id_trimmed) {

@@ -63,19 +63,12 @@ impl Prepared {
     /// Re-render the post-checkout bytes for Consumer.onDestroy after installation.
     pub(super) fn switch_lane(&mut self, context: &Value) -> io::Result<()> {
         let id = &context["lane"]["switchId"];
-        let (scope, name) = if let Some(raw) = id.as_str().map(str::trim) {
-            raw.split_once('/').unwrap_or(("", raw))
-        } else {
-            (
-                id["scope"]
-                    .as_str()
-                    .map(str::trim)
-                    .ok_or_else(|| invalid("switch lane scope"))?,
-                id["name"]
-                    .as_str()
-                    .map(str::trim)
-                    .ok_or_else(|| invalid("switch lane name"))?,
-            )
+        let (scope, name) = match id.as_str().map(str::trim) {
+            Some(raw) => raw.split_once('/').unwrap_or(("", raw)),
+            None => (
+                id["scope"].as_str().ok_or_else(|| invalid("switch lane scope"))?,
+                id["name"].as_str().ok_or_else(|| invalid("switch lane name"))?,
+            ),
         };
         let (scope, name) = (scope.trim(), name.trim());
         if name.is_empty() || (name != "main" && scope.is_empty()) {
@@ -107,17 +100,16 @@ impl Prepared {
         }
         let bitmap = crate::recovery::jsonc::parse(&self.output)?;
         let mut entries = rows(&bitmap)?;
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::with_capacity(identities.len());
         for id in identities {
             if !seen.insert(id) {
                 return Err(invalid("command duplicate lane-only identity"));
             }
-            let entry = entries
+            let fields = entries
                 .iter_mut()
                 .find(|entry| identity(entry).ok().as_ref() == Some(id))
+                .and_then(Value::as_object_mut)
                 .ok_or_else(|| invalid("command lane-only identity absent"))?;
-            let fields =
-                entry.as_object_mut().ok_or_else(|| invalid("command lane-only bitmap entry"))?;
             fields.insert("onLanesOnly".into(), Value::Bool(true));
             fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
         }
@@ -128,7 +120,6 @@ impl Prepared {
     }
 
     /// Reset removes overrides only for components actually passed to the writer.
-    /// Keep the original bytes intact for freshness checks and bitmap history.
     pub(super) fn clear_config(
         &mut self,
         context: &Value,
@@ -136,20 +127,17 @@ impl Prepared {
     ) -> io::Result<()> {
         let bitmap = crate::recovery::jsonc::parse(&self.output)?;
         let mut entries = rows(&bitmap)?;
-        let mut selected = HashSet::new();
+        let mut selected = HashSet::with_capacity(identities.len());
         for id in identities {
             if !selected.insert(id) {
                 return Err(invalid("reset duplicate configuration identity"));
             }
-            let entry = entries
+            let fields = entries
                 .iter_mut()
                 .find(|entry| identity(entry).ok().as_ref() == Some(id))
+                .and_then(Value::as_object_mut)
                 .ok_or_else(|| invalid("reset configuration identity absent"))?;
-            self.changed |= entry
-                .as_object_mut()
-                .ok_or_else(|| invalid("reset bitmap configuration"))?
-                .shift_remove("config")
-                .is_some();
+            self.changed |= fields.shift_remove("config").is_some();
         }
         self.output =
             render_rows(entries, &bitmap["$schema-version"], lane::header(context, &bitmap)?)?;
@@ -230,10 +218,10 @@ pub(super) fn auto_sync(
 
 /// Promote every selected export row in one bitmap write and one history entry.
 fn validate_updates(original: &[u8], updates: &[Update]) -> io::Result<()> {
-    let mut identities = HashSet::new();
-    if updates
+    let mut identities = HashSet::with_capacity(updates.len());
+    if !updates
         .iter()
-        .any(|update| !identities.insert(&update.identity))
+        .all(|update| identities.insert(&update.identity))
     {
         return Err(invalid("command duplicate bitmap update"));
     }
@@ -292,13 +280,13 @@ fn row_name(entry: &Value) -> io::Result<&str> {
         .ok_or_else(|| invalid("command bitmap name"))
 }
 fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Result<Vec<u8>> {
-    let mut names = HashMap::<String, usize>::new();
+    let mut names = HashMap::<String, usize>::with_capacity(rows.len());
     for entry in &rows {
         *names
             .entry(row_name(entry)?.to_owned())
             .or_default() += 1;
     }
-    let mut keyed = Vec::new();
+    let mut keyed = Vec::with_capacity(rows.len());
     for entry in rows {
         let name = row_name(&entry)?;
         let key = if names[name] > 1 { identity(&entry)? } else { name.to_owned() };
@@ -323,15 +311,15 @@ fn tag(context: &Value, identity: &str, version: &str) -> io::Result<String> {
         return Ok(version.to_owned());
     }
     let identity = identity.trim();
+    let (scope, name) = identity
+        .split_once('/')
+        .unwrap_or(("", identity));
     let models = context["models"].as_array().ok_or_else(|| invalid("command bitmap models"))?;
     let model = models
         .iter()
         .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().map_or("", str::trim),
-                model["name"].as_str().map_or("", str::trim),
-            ) == identity
+            model["scope"].as_str().map_or("", str::trim) == scope
+                && model["name"].as_str().map_or("", str::trim) == name
         })
         .ok_or_else(|| invalid("command bitmap model"))?;
     for field in ["versions", "orphanedVersions"] {

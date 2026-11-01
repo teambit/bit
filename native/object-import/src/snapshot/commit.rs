@@ -75,13 +75,13 @@ pub(super) fn commit(
     count(objects.len())?;
     let prepared = preflight(objects)?;
     let store = Store::new(directory.to_path_buf(), owner)?;
-    let mut written = Vec::new();
-    for object in &prepared {
+    let mut written = Vec::with_capacity(prepared.len());
+    for object in prepared {
         if store.write(&object.hash, &object.compressed).is_err() {
             break;
         }
         written.push(Written {
-            hash: object.hash.clone(),
+            hash: object.hash,
             inflated_size: object.inflated_size,
             compressed_size: object.compressed.len(),
         });
@@ -123,9 +123,11 @@ fn body(object: &Object, maximum: usize) -> io::Result<(usize, Vec<u8>)> {
             Ok((body.len(), body))
         }
         (None, Some(workspace)) if matches!(object.kind, Kind::Source) => {
-            let raw = read(workspace, maximum)?;
+            let mut raw = read(workspace, maximum)?;
             let size = raw.len();
-            let raw = if raw.starts_with(b"\xef\xbb\xbf") { raw[3..].to_vec() } else { raw };
+            if raw.starts_with(b"\xef\xbb\xbf") {
+                raw.drain(..3);
+            }
             let body = crate::checkout::eol::normalize(raw, false);
             validate_body(object, &body)?;
             Ok((size, body))

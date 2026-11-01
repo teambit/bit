@@ -11,10 +11,11 @@ pub(in crate::workspace::engine::command) fn context(
     let Some(stash) = &request.options.stash else {
         return Ok(());
     };
-    if !std::fs::symlink_metadata(request.root.join(".bitmap"))?.is_file() {
+    let bitmap_path = request.root.join(".bitmap");
+    if !std::fs::symlink_metadata(&bitmap_path)?.is_file() {
         return Err(invalid("stash bitmap"));
     }
-    let bitmap = crate::parse_jsonc(&std::fs::read(request.root.join(".bitmap"))?)?;
+    let bitmap = crate::parse_jsonc(&std::fs::read(&bitmap_path)?)?;
     let existing = identities(&bitmap)?;
     let mut additions = Vec::new();
     let mut targets = Vec::new();
@@ -127,7 +128,9 @@ fn addition(
         .filter(|val| !val.is_empty())
         .unwrap_or(scope);
     let identity = format!("{scope}/{name}");
-    if existing.contains(&format!("{original_scope}/{name}")) || existing.contains(&identity) {
+    if existing.contains(&identity)
+        || (original_scope != scope && existing.contains(&format!("{original_scope}/{name}")))
+    {
         return Ok(None);
     }
     let version = entry["id"]["version"]

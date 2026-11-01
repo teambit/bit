@@ -64,8 +64,8 @@ fn all_with(
     let captured = normalized::read(root, &targets, pool)?;
     let mut captured = captured.into_iter();
     targets.into_iter().map(|target| {
-        let mut metadata = Vec::new();
-        let mut files = Vec::new();
+        let mut metadata = Vec::with_capacity(target.files.len());
+        let mut files = Vec::with_capacity(target.files.len());
         for file in &target.files {
             let (observed, contents) = captured.next().ok_or_else(|| invalid("command capture count"))?;
             let token = snapshots.retain(snapshots::Observation {
@@ -101,8 +101,8 @@ fn targets(inputs: Vec<Value>, allow_root: bool) -> io::Result<Vec<comparison::T
     if inputs.len() > 4096 {
         return Err(invalid("command capture target count"));
     }
-    let mut seen = HashSet::new();
-    let mut directories = HashSet::new();
+    let mut seen = HashSet::with_capacity(inputs.len());
+    let mut directories = HashSet::with_capacity(inputs.len());
     inputs
         .into_iter()
         .map(|mut value| {

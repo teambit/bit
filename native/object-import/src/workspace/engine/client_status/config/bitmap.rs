@@ -84,7 +84,8 @@ fn target(key: &str, value: &Value, config: &Value) -> io::Result<Target> {
     };
     let (_, fallback) = crate::reset_lane::bitmap::row_identity(key, value);
     let name = fallback
-        .strip_prefix(&format!("{effective_scope}/"))
+        .strip_prefix(effective_scope)
+        .and_then(|rest| rest.strip_prefix('/'))
         .unwrap_or(fallback);
     identifier(name, true)?;
     identifier(effective_scope, false)?;
@@ -183,27 +184,26 @@ pub(crate) fn is_config_removed(config: &Value) -> bool {
 }
 
 pub(crate) fn is_extension_aspect(entry: &Value, id: &str) -> bool {
-    let id = id.trim();
     if let Some(name) = entry["name"]
         .as_str()
         .or_else(|| entry["legacyId"].as_str())
         .or_else(|| entry["extensionId"].as_str())
         .or_else(|| entry["id"].as_str())
-        .map(str::trim)
     {
-        return name == id || name.starts_with(&format!("{id}@"));
+        return matches_aspect_name(name, id);
     }
-    let Some((scope, bare_name)) = id.split_once('/') else {
+    let Some((scope, bare_name)) = id.trim().split_once('/') else {
         return false;
     };
     entry["extensionId"]["scope"].as_str().map(str::trim) == Some(scope.trim())
         && entry["extensionId"]["name"]
             .as_str()
-            .map(str::trim)
-            .is_some_and(|name| {
-                let bare = bare_name.trim();
-                name == bare || name.starts_with(&format!("{bare}@"))
-            })
+            .is_some_and(|name| matches_aspect_name(name, bare_name))
+}
+fn matches_aspect_name(name: &str, expected: &str) -> bool {
+    name.trim()
+        .strip_prefix(expected.trim())
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with('@'))
 }
 fn component_config(config: &Value) -> bool {
     config
@@ -236,26 +236,17 @@ fn aspect_fields(name: &str, value: &Value, fields: &serde_json::Map<String, Val
         "teambit.component/deprecation" => deprecation_config(fields),
         "teambit.component/remove" => removal_config(value, fields),
         "teambit.envs/envs" => fields.len() == 1 && value["env"].is_string(),
-        "teambit.component/dev-files" => fields
-            .keys()
-            .all(|key| key == "devFilePatterns"),
+        "teambit.component/dev-files" => {
+            fields.len() == 1 && fields.contains_key("devFilePatterns")
+        }
         "teambit.component/issues" => {
-            fields
-                .keys()
-                .all(|key| key == "ignoreIssues")
+            fields.len() == 1
                 && value["ignoreIssues"]
                     .as_array()
                     .is_some_and(|names| names.len() <= 4096 && names.iter().all(Value::is_string))
         }
-        "teambit.component/internalize" => {
-            fields
-                .keys()
-                .all(|key| key == "internal")
-                && value["internal"].is_boolean()
-        }
-        "teambit.pkg/pkg" => fields
-            .keys()
-            .all(|key| key == "packageJson"),
+        "teambit.component/internalize" => fields.len() == 1 && value["internal"].is_boolean(),
+        "teambit.pkg/pkg" => fields.len() == 1 && fields.contains_key("packageJson"),
         _ => true,
     }
 }

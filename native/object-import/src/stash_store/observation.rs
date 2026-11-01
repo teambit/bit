@@ -85,7 +85,7 @@ fn read_entry(
     *remaining = remaining
         .checked_sub(length)
         .ok_or_else(|| invalid("stash metadata exceeds read budget"))?;
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(length);
     fs::File::open(entry.path())?
         .take(u64::try_from(length).map_err(io::Error::other)? + 1)
         .read_to_end(&mut bytes)?;

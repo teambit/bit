@@ -132,7 +132,11 @@ fn resolver_key(document: &crate::jsonc::Document) -> String {
         .as_object()
         .and_then(|map| {
             map.keys()
-                .find(|key| key.as_str() == RESOLVER || key.starts_with(&format!("{RESOLVER}@")))
+                .find(|key| {
+                    key.as_str()
+                        .strip_prefix(RESOLVER)
+                        .is_some_and(|rest| rest.is_empty() || rest.starts_with('@'))
+                })
         })
         .cloned()
         .unwrap_or_else(|| RESOLVER.to_owned())
@@ -159,11 +163,11 @@ fn render_updates_kind(
         update_one(&mut document, &key, name, pair)?;
     }
     for (path, value) in [
-        (vec![key.as_str(), "policy", "peerDependencies"], json!({})),
-        (vec![key.as_str(), "linkCoreAspects"], json!(true)),
+        (&[key.as_str(), "policy", "peerDependencies"][..], json!({})),
+        (&[key.as_str(), "linkCoreAspects"][..], json!(true)),
     ] {
-        if defaults && document.get(&path).is_none() {
-            document.set(&path, &value);
+        if defaults && document.get(path).is_none() {
+            document.set(path, &value);
         }
     }
     // WorkspaceConfig.toVinyl delegates the serialized JSONC to AbstractVinyl,

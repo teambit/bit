@@ -67,10 +67,11 @@ fn action_path(reader: &mut impl Read, total: &mut usize) -> io::Result<Option<P
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
     let name = String::from_utf8(bytes).map_err(|_| invalid("workspace action path is not UTF-8"))?;
-    let path = PathBuf::from(&name);
-    if name.trim().is_empty()
-        || !path.is_absolute()
-        || name.chars().any(char::is_control)
+    if name.trim().is_empty() || name.chars().any(char::is_control) {
+        return Err(invalid("workspace action path must be absolute and contain no NUL"));
+    }
+    let path = PathBuf::from(name);
+    if !path.is_absolute()
         || path
             .components()
             .any(|comp| {

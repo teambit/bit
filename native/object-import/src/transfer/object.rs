@@ -44,11 +44,8 @@ pub(crate) fn read(
         }
         return Ok((body, outcome.inflated_bytes, "Source".to_owned()));
     }
-    metadata(&body, item.hash)?;
-    let inflated = crate::metadata::inflate(&body).ok_or_else(|| invalid("invalid metadata"))?;
-    let size = inflated.len();
-    let (kind, _) = inflated.split_once(' ').ok_or_else(|| invalid("missing object kind"))?;
-    Ok((body, size, kind.to_owned()))
+    let (_, size, kind) = parse_metadata(&body, item.hash)?;
+    Ok((body, size, kind))
 }
 
 pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io::Result<Vec<u8>> {
@@ -68,7 +65,7 @@ pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io
     if !metadata.is_file() || metadata.len() > maximum as u64 {
         return Err(invalid("transfer object exceeds bounds"));
     }
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
     file.take((maximum + 1) as u64)
         .read_to_end(&mut bytes)?;
     if bytes.len() > maximum {
@@ -78,6 +75,10 @@ pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io
 }
 
 pub(crate) fn metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<serde_json::Value> {
+    parse_metadata(bytes, hash).map(|(value, _, _)| value)
+}
+
+fn parse_metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<(serde_json::Value, usize, String)> {
     let inflated =
         crate::metadata::inflate(bytes).ok_or_else(|| invalid("unsupported transfer object"))?;
     let (header, body) =
@@ -99,7 +100,7 @@ pub(crate) fn metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<serde_json::V
     if !value.is_object() {
         return Err(invalid("transfer metadata is not an object"));
     }
-    Ok(value)
+    Ok((value, inflated.len(), fields[0].to_owned()))
 }
 
 fn known(kind: &str) -> bool {

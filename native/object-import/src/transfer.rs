@@ -69,7 +69,7 @@ pub(crate) fn prepare(
         compressed_bytes,
         archive_bytes: writer.bytes,
         objects_hash: crate::validate::hexadecimal(&objects.finalize()),
-        archive_hash: crate::validate::hexadecimal(&writer.digest.clone().finalize()),
+        archive_hash: crate::validate::hexadecimal(&std::mem::take(&mut writer.digest).finalize()),
     })
 }
 
@@ -77,10 +77,10 @@ fn collect(directory: &Path, items: Vec<Descriptor>) -> io::Result<Vec<([u8; 512
     if items.len() > MAX_OBJECTS {
         return Err(invalid("transfer object count exceeds bounds"));
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(items.len());
     let mut bytes = 0_usize;
     let mut inflated = 0_usize;
-    let mut entries = Vec::new();
+    let mut entries = Vec::with_capacity(items.len());
     for item in items {
         let name = object::name(&item)?;
         if !seen.insert(name.clone()) {

@@ -44,13 +44,17 @@ impl Store {
         {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid Source identity"));
         }
-        let state = Arc::clone(
-            self.written
-                .lock()
-                .map_err(|_| io::Error::other("Source write state poisoned"))?
-                .entry(hash.into())
-                .or_insert_with(|| Arc::new(Mutex::new(false))),
-        );
+        let state = {
+            let mut written =
+                self.written.lock().map_err(|_| io::Error::other("Source write state poisoned"))?;
+            if let Some(existing) = written.get(hash) {
+                Arc::clone(existing)
+            } else {
+                let created = Arc::new(Mutex::new(false));
+                written.insert(hash.to_owned(), Arc::clone(&created));
+                created
+            }
+        };
         let mut completed =
             state.lock().map_err(|_| io::Error::other("Source write state poisoned"))?;
         if *completed {
@@ -82,15 +86,7 @@ impl Store {
     /// Validate platform support and the existing index without publishing anything.
     pub(crate) fn validate_index_write(&self) -> io::Result<()> {
         let scope = self.directory.parent().ok_or_else(|| io::Error::other("missing scope"))?;
-        #[cfg(target_os = "linux")]
-        {
-            open_index(&scope.join("index.json"))?;
-            Ok(())
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            in_place_target(&scope.join("index.json"))
-        }
+        Self::validate_metadata_write(&scope.join("index.json"))
     }
 
     pub(crate) fn write_index(&self, contents: &[u8]) -> io::Result<()> {

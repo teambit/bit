@@ -59,13 +59,15 @@ fn next_index(latest: Option<&str>) -> io::Result<u64> {
     else {
         return Ok(1);
     };
-    let digits: String = latest
+    let part = latest
         .split('-')
         .nth(1)
-        .unwrap_or_default()
-        .chars()
-        .take_while(char::is_ascii_digit)
-        .collect();
+        .unwrap_or_default();
+    let end = part
+        .bytes()
+        .take_while(u8::is_ascii_digit)
+        .count();
+    let digits = &part[..end];
     if digits.is_empty() {
         return Err(invalid("unsupported stash filename index"));
     }

@@ -23,7 +23,8 @@ pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)
     }
     validate(&record, &prepared)?;
     let (warning, notifications) = publish(&record, &mut prepared, &input.file_id)?;
-    super::lane_history::applied(state, &record.request, &prepared.bitmap.publication_receipt()?)?;
+    let receipt = prepared.bitmap.publication_receipt()?;
+    super::lane_history::applied(state, &record.request, &receipt)?;
     let count = prepared.plan.result["components"].as_array().map_or(0, Vec::len);
     let mut output =
         json!({"applied":true,"warning":warning,"postPersistNotifications":notifications});
@@ -31,7 +32,7 @@ pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)
         completion.published()?;
         output["requiresSwitchCompletion"] = json!(true);
         output["token"] = json!(record.token);
-        output["ownedWorkspaceWrites"] = json!([prepared.bitmap.publication_receipt()?]);
+        output["ownedWorkspaceWrites"] = json!([receipt]);
         record.planned = Some(prepared);
         state.record = Some(record);
     }

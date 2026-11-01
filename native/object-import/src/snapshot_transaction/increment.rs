@@ -56,7 +56,8 @@ fn pre(version: &mut Value, identifier: Option<&str>) -> io::Result<()> {
     Ok(())
 }
 fn increment_parts(parts: &[Value]) -> io::Result<Vec<Value>> {
-    let mut values = parts.to_vec();
+    let mut values = Vec::with_capacity(parts.len() + 1);
+    values.extend_from_slice(parts);
     let numeric = values.iter().rposition(Value::is_number);
     if let Some(index) = numeric {
         let number = values[index].as_u64().ok_or_else(|| invalid("semver prerelease number"))?;
@@ -83,7 +84,7 @@ fn select_identifier(values: &mut Vec<Value>, identifier: Option<&str>) -> io::R
     Ok(())
 }
 fn parsed_parts(values: Vec<Value>) -> Vec<Value> {
-    let mut parsed = Vec::new();
+    let mut parsed = Vec::with_capacity(values.len());
     for value in values {
         if let Some(text) = value.as_str() {
             parsed.extend(text.split('.').map(parsed_part));

@@ -30,10 +30,12 @@ impl State {
         }
         self.load(identity, model, repository)?;
         let history = self.values.get_mut(identity).ok_or_else(|| invalid("command history"))?;
+        let mut changed = false;
         for head in heads.into_iter().flatten() {
-            if populate(root, history, head, repository)? {
-                self.changed.insert(identity.to_owned());
-            }
+            changed |= populate(root, history, head, repository)?;
+        }
+        if changed {
+            self.changed.insert(identity.to_owned());
         }
         crate::merge_history::status::distance(&history["versions"], heads[0], heads[1])
     }

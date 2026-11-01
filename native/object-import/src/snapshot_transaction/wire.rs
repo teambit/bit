@@ -61,7 +61,7 @@ where
     {
         return Err(serde::de::Error::custom("invalid snapshot token"));
     }
-    Ok(trimmed.to_owned())
+    Ok(if trimmed.len() == token.len() { token } else { trimmed.to_owned() })
 }
 
 #[derive(Deserialize)]

@@ -4,6 +4,8 @@ pub(in crate::workspace::engine) use bitmap::{
 pub(crate) use bitmap::{is_config_removed, is_extension_aspect};
 
 mod bitmap;
+#[cfg(test)]
+mod tests;
 
 use super::invalid;
 use crate::recovery::jsonc;
@@ -84,11 +86,12 @@ pub(in crate::workspace::engine) fn configuration_value(
     }
     let workspace = workspace_settings(config)?;
     extensions(config)?;
-    let scope = document(&crate::scope_path(root).join("scope.json"))?;
+    let scope_dir = crate::scope_path(root);
+    let scope = document(&scope_dir.join("scope.json"))?;
     if !lane && scope["lanes"]["current"].as_str().map_or("main", str::trim) != "main" {
         return Err(invalid("status non-main scope"));
     }
-    if !fs::symlink_metadata(crate::scope_path(root).join("objects"))?.is_dir() {
+    if !fs::symlink_metadata(scope_dir.join("objects"))?.is_dir() {
         return Err(invalid("status object directory"));
     }
     Ok(workspace)
@@ -96,17 +99,15 @@ pub(in crate::workspace::engine) fn configuration_value(
 
 fn aspect_value<'a>(config: &'a Value, id: &str) -> Option<&'a Value> {
     let id = id.trim();
-    let prefix = format!("{id}@");
-    config
-        .as_object()
-        .and_then(|map| {
-            map.get(id)
-                .or_else(|| {
-                    map.iter()
-                        .find_map(|(key, val)| {
-                            let trimmed = key.trim();
-                            (trimmed == id || trimmed.starts_with(&prefix)).then_some(val)
-                        })
+    let map = config.as_object()?;
+    map.get(id)
+        .or_else(|| {
+            map.iter()
+                .find_map(|(key, val)| {
+                    key.trim()
+                        .strip_prefix(id)
+                        .is_some_and(|rest| rest.is_empty() || rest.starts_with('@'))
+                        .then_some(val)
                 })
         })
 }
@@ -228,6 +229,3 @@ pub(in crate::workspace::engine) fn options(config: &Value, patterns: &[String])
     json!({"trackAllFiles":config["trackAllFiles"].as_bool().unwrap_or(false),
         "ignoredFiles":config.get("ignoredFiles").cloned().unwrap_or_else(|| json!([])),"patterns":patterns})
 }
-
-#[cfg(test)]
-mod tests;

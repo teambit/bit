@@ -1,5 +1,7 @@
 mod commit;
 mod policy;
+#[cfg(test)]
+mod tests;
 
 use crate::{protocol, store::Store};
 use serde::{Deserialize, Serialize};
@@ -67,12 +69,12 @@ pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Resu
         .map_err(|_| invalid("snapshot invalid request"))
         .and_then(|request| apply(id, request))
         .unwrap_or_else(|_| Response::failure(id));
-    let output = serde_json::to_vec(&response).map_err(io::Error::other)?;
+    let mut output = serde_json::to_vec(&response).map_err(io::Error::other)?;
     if output.len() > MAX_JSON {
         return protocol::respond(writer, &Response::failure(id));
     }
+    output.push(b'\n');
     writer.write_all(&output)?;
-    writer.write_all(b"\n")?;
     writer.flush()
 }
 fn apply(id: u32, request: Request) -> io::Result<Response> {
@@ -139,5 +141,3 @@ fn hash(hash: &str) -> io::Result<()> {
     }
     Ok(())
 }
-#[cfg(test)]
-mod tests;

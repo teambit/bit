@@ -12,7 +12,7 @@ pub(super) struct Loaded {
 
 pub(super) fn load(directory: &Path, versions: &[Version]) -> io::Result<Vec<Loaded>> {
     let mut bytes = 0;
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(versions.len());
     let mut records = versions.len();
     for version in versions {
         let compressed =
@@ -130,9 +130,5 @@ fn hash(value: Option<&Value>) -> io::Result<[u8; 20]> {
     {
         return Err(invalid("unsupported transfer ref"));
     }
-    let mut bytes = [0; 20];
-    for (index, byte) in bytes.iter_mut().enumerate() {
-        *byte = u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).map_err(io::Error::other)?;
-    }
-    Ok(bytes)
+    crate::merge_history::hash(text)
 }

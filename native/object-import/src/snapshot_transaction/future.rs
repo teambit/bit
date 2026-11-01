@@ -52,7 +52,7 @@ pub(super) fn plan(input: Value) -> io::Result<Value> {
     if request.components.len() > 4096 {
         return Err(invalid("snapshot version count limit"));
     }
-    let mut versions = Vec::new();
+    let mut versions = Vec::with_capacity(request.components.len());
     for component in &request.components {
         let choice = choice(component, &request.params, &request.semver)?;
         versions.push(resolve(component, &choice, &request.semver)?);
@@ -164,20 +164,22 @@ fn latest(component: &Component, semver: &Value) -> io::Result<Value> {
     if component.versions.len() > 4096 {
         return Err(invalid("snapshot tag count limit"));
     }
-    let mut latest = json!({"major":0,"minor":0,"patch":0,"prerelease":[]});
-    let mut initialized = false;
+    let mut best: Option<&Value> = None;
     for tag in &component.versions {
         let tag = tag.trim();
         let candidate =
             semver[tag].get("version").ok_or_else(|| invalid("snapshot invalid stored tag"))?;
-        if !initialized
-            || crate::config_merge::compare_versions(candidate, &latest)? == Ordering::Greater
+        if best
+            .map(|current| crate::config_merge::compare_versions(candidate, current))
+            .transpose()?
+            .is_none_or(|ordering| ordering == Ordering::Greater)
         {
-            latest = candidate.clone();
-            initialized = true;
+            best = Some(candidate);
         }
     }
-    Ok(latest)
+    Ok(best
+        .cloned()
+        .unwrap_or_else(|| json!({"major":0,"minor":0,"patch":0,"prerelease":[]})))
 }
 fn prelike(release: &str) -> bool {
     matches!(release.trim(), "prerelease" | "premajor" | "preminor" | "prepatch")

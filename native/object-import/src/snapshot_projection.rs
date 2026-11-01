@@ -42,9 +42,9 @@ pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Resu
         return Ok(hash.to_owned());
     }
     let (name, scope_text) = component_name_and_scope(fields)?;
-    let scoped = if scope_text.is_empty() { name.clone() } else { format!("{scope_text}/{name}") };
     let id = match kind {
-        "Component" => scoped,
+        "Component" if scope_text.is_empty() => name,
+        "Component" => format!("{scope_text}/{name}"),
         "VersionHistory" => {
             if scope_text.is_empty() {
                 return Err(invalid("snapshot empty history scope"));

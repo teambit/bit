@@ -162,11 +162,11 @@ impl Journal {
     fn advance(&mut self, next_count: Option<usize>) {
         if self.kind() == "updateWorkspace" {
             self.count = next_count.unwrap_or(self.count);
-        }
-        if self.kind() == "updateWorkspace" && self.index + 1 < self.count {
-            self.index += 1;
-            self.phase -= 1;
-            return;
+            if self.index + 1 < self.count {
+                self.index += 1;
+                self.phase -= 1;
+                return;
+            }
         }
         self.phase += 1;
         if self.kind() != "updateWorkspace" {
@@ -180,7 +180,8 @@ impl Journal {
         }
     }
     fn output(&self) -> Value {
-        json!({"token":self.token,"revision":self.revision,"directive":{"kind":self.kind(),"index":self.index,"count":if self.kind()=="done" {0} else {self.expected()}}})
+        let kind = self.kind();
+        json!({"token":self.token,"revision":self.revision,"directive":{"kind":kind,"index":self.index,"count":if kind=="done" {0} else {self.expected()}}})
     }
 }
 fn bound(count: usize) -> io::Result<()> {

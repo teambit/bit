@@ -103,7 +103,7 @@ fn commit(input: Value, state: &State) -> io::Result<Value> {
         state.plans.get(request.token.trim()).ok_or_else(|| invalid("stale snapshot token"))?;
     let owner = request.owner.map(|owner| (owner.uid, owner.gid));
     let store = crate::store::Store::new(request.objects_directory, owner)?;
-    let mut written = Vec::new();
+    let mut written = Vec::with_capacity(plan.objects.len());
     for object in &plan.objects {
         if store.write(&object.hash, &object.compressed).is_err() {
             break;

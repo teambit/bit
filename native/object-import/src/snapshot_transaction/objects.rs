@@ -26,7 +26,7 @@ pub(super) struct Prepared {
 pub(super) fn prepare(objects: Vec<wire::Object>, pretty: bool) -> io::Result<Vec<Prepared>> {
     let mut total = 0;
     let mut input_compressed = 0;
-    let mut hashes = HashSet::new();
+    let mut hashes = HashSet::with_capacity(objects.len());
     let mut inputs = Vec::with_capacity(objects.len());
     for mut object in objects {
         if object.kind.len() != object.kind.trim().len() {

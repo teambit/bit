@@ -127,14 +127,7 @@ fn artifacts(
     strict: bool,
 ) -> io::Result<()> {
     for hash in hashes {
-        bounded(result)?;
-        let bytes = result
-            .iter()
-            .map(|item| match &item.body {
-                Body::Snapshot(bytes) => bytes.len(),
-                _ => 0,
-            })
-            .sum::<usize>();
+        let bytes = bounded(result)?;
         match object::repository(directory, *hash, MAX_BYTES.saturating_sub(bytes)) {
             Ok(bytes) => result.push(snapshot(*hash, bytes, scope, seconds)),
             Err(error) if !strict && error.kind() == io::ErrorKind::NotFound => {}
@@ -169,7 +162,7 @@ fn snapshot(hash: [u8; 20], bytes: Vec<u8>, scope: Option<&str>, seconds: u32) -
     Descriptor { body: Body::Snapshot(bytes), ..reference(hash, scope, seconds) }
 }
 
-fn bounded(items: &[Descriptor]) -> io::Result<()> {
+fn bounded(items: &[Descriptor]) -> io::Result<usize> {
     if items.len() > MAX_OBJECTS {
         return Err(invalid("transfer collection count exceeds bounds"));
     }
@@ -182,7 +175,7 @@ fn bounded(items: &[Descriptor]) -> io::Result<()> {
     if bytes > MAX_BYTES {
         return Err(invalid("transfer collection bytes exceed bounds"));
     }
-    Ok(())
+    Ok(bytes)
 }
 
 fn dedup(items: &mut Vec<Descriptor>) {

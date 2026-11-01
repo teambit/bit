@@ -34,10 +34,9 @@ pub(super) fn files(root: &Path, target: &Target) -> io::Result<Value> {
 
 fn read_component(scope: &Path, directory: &Path, id: &str) -> io::Result<Option<Value>> {
     let bare_name = id.split_once('/').map_or(id, |(_, name)| name);
-    let candidates: Vec<[u8; 20]> = index_component_hash(scope, id)
+    let candidates = index_component_hash(scope, id)
         .into_iter()
-        .chain([Sha1::digest(id.as_bytes()).into(), Sha1::digest(bare_name.as_bytes()).into()])
-        .collect();
+        .chain([Sha1::digest(id.as_bytes()).into(), Sha1::digest(bare_name.as_bytes()).into()]);
     for hash in candidates {
         let mut compressed = 0;
         let object = match repository::read(directory, hash, 32 * 1024 * 1024, &mut compressed) {

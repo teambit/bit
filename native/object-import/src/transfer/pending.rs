@@ -28,11 +28,11 @@ pub(super) fn write(state: &State, input: &Value) -> io::Result<Value> {
         return Err(invalid("unknown pending transfer token"));
     }
     let plan = state.plans.get(token).ok_or_else(|| invalid("unknown pending transfer token"))?;
-    let mut hashes = HashMap::new();
+    let mut hashes = HashMap::with_capacity(plan.entries.len());
     for entry in &plan.entries {
         if hashes
-            .insert(entry.hash, &entry.compressed)
-            .is_some_and(|body| body != &entry.compressed)
+            .insert(entry.hash, entry.compressed.as_ref())
+            .is_some_and(|body| body != entry.compressed.as_ref())
         {
             return Err(invalid("conflicting scoped object bytes in pending directory"));
         }

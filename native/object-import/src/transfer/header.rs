@@ -55,10 +55,12 @@ fn copy(block: &mut [u8; 512], offset: usize, bytes: &[u8]) {
 }
 
 fn octal(block: &mut [u8; 512], offset: usize, digits: usize, value: u64) -> io::Result<()> {
-    let text = format!("{value:0digits$o} ");
-    if text.len() != digits + 1 {
+    if (value >> (digits * 3)) != 0 {
         return Err(super::invalid("tar numeric field exceeds bounds"));
     }
-    copy(block, offset, text.as_bytes());
+    for index in 0..digits {
+        block[offset + digits - 1 - index] = b'0' + ((value >> (index * 3)) & 7) as u8;
+    }
+    block[offset + digits] = b' ';
     Ok(())
 }

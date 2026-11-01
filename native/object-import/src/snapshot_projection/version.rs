@@ -34,7 +34,7 @@ const KEYS: &[&str] = &[
 ];
 
 pub(super) fn project(fields: &Value) -> io::Result<Value> {
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(KEYS.len());
     for &name in KEYS {
         let value = field(fields, name)?;
         if value.truthy()? {
@@ -105,7 +105,7 @@ fn extensions(value: &Value) -> io::Result<Value> {
     if rows.len() > 65536 {
         return Err(invalid("snapshot extensions limit"));
     }
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(rows.len());
     let mut builder_found = false;
     for row in rows {
         object(row)?;
@@ -147,7 +147,7 @@ fn config(value: &Value) -> Value {
 }
 
 fn extension(row: &Value, builder: bool) -> io::Result<Value> {
-    let mut fields = Vec::new();
+    let mut fields = Vec::with_capacity(5);
     for name in ["extensionId", "config", "data", "legacyId", "name"] {
         let value = if name == "config" {
             config(get(row, "rawConfig"))

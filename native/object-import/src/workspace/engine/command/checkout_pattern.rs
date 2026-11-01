@@ -26,6 +26,9 @@ pub(in crate::workspace::engine) fn select(
     {
         return Err(invalid("checkout selection state"));
     }
+    if input.identities.is_empty() {
+        return Err(invalid("checkout selected identities"));
+    }
     let known = record.targets
         .iter()
         .filter_map(target_identity)
@@ -37,7 +40,7 @@ pub(in crate::workspace::engine) fn select(
             trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
         })
         .collect::<HashSet<_>>();
-    if selected.is_empty() || selected.contains("") || !selected.is_subset(&known) {
+    if selected.contains("") || !selected.is_subset(&known) {
         return Err(invalid("checkout selected identities"));
     }
     proof::verify(&record.proofs)?;

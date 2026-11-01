@@ -51,7 +51,7 @@ fn reference(reference: &Value) -> io::Result<Value> {
             return Err(invalid("snapshot artifact relative path"));
         }
     }
-    let mut fields = Vec::new();
+    let mut fields = Vec::with_capacity(3);
     for (name, source) in [("relativePath", "relativePath"), ("file", "ref"), ("url", "url")] {
         fields.push((name.encode_utf16().collect(), get(reference, source).clone()));
     }

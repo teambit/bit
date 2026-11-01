@@ -19,12 +19,12 @@ pub(crate) struct Outcome {
 
 pub(crate) fn hexadecimal(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
-    bytes
-        .iter()
-        .flat_map(|byte| {
-            [char::from(HEX[(byte >> 4) as usize]), char::from(HEX[(byte & 15) as usize])]
-        })
-        .collect()
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for &byte in bytes {
+        output.push(char::from(HEX[usize::from(byte >> 4)]));
+        output.push(char::from(HEX[usize::from(byte & 15)]));
+    }
+    output
 }
 
 pub(crate) fn validate(compressed: &[u8], expected: [u8; 20]) -> Outcome {

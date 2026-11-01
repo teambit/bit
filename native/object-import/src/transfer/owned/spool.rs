@@ -16,7 +16,7 @@ impl Drop for Pending {
     }
 }
 pub(super) fn write(entries: &[Entry]) -> io::Result<Vec<PathBuf>> {
-    let mut pending = Pending::default();
+    let mut pending = Pending(Vec::with_capacity(entries.len()));
     for entry in entries {
         let path = entry.path
             .as_ref()

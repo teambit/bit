@@ -16,7 +16,8 @@ pub struct Semantic {
 pub fn semantic(fields: &Value) -> io::Result<Semantic> {
     object(fields)?;
     let (configs, assignments) = extensions::configs(get(fields, "extensions"))?;
-    let mut output = Vec::new();
+    let mut configs = Some(configs);
+    let mut output = Vec::with_capacity(12);
     for name in [
         "mainFile",
         "files",
@@ -36,7 +37,7 @@ pub fn semantic(fields: &Value) -> io::Result<Semantic> {
             "log" => choose(get(fields, name), &["message", "date", "username", "email"], false)?,
             "dependencies" | "devDependencies" => dependencies(get(fields, name))?,
             "extensionDependencies" => extensions::dependencies(get(fields, "extensions"))?,
-            "extensions" => configs.clone(),
+            "extensions" => configs.take().unwrap_or(Value::Undefined),
             _ => get(fields, name).clone(),
         };
         if retain(name, &value)? {

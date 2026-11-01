@@ -110,7 +110,7 @@ fn component_id(id: &Value) -> io::Result<String> {
         .map(str::trim)
         .filter(|name| !name.is_empty() && !name.contains(['\\', '\0']) && !name.contains(".."))
         .ok_or_else(|| invalid("stash component identity"))?;
-    let name = match id["scope"]
+    let mut name = match id["scope"]
         .as_str()
         .map(str::trim)
         .filter(|scope| !scope.is_empty())
@@ -121,11 +121,15 @@ fn component_id(id: &Value) -> io::Result<String> {
         }
         Some(_) => return Err(invalid("stash component identity")),
     };
-    Ok(id["version"]
+    if let Some(version) = id["version"]
         .as_str()
         .map(str::trim)
         .filter(|version| !version.is_empty())
-        .map_or_else(|| name.clone(), |version| format!("{name}@{version}")))
+    {
+        name.push('@');
+        name.push_str(version);
+    }
+    Ok(name)
 }
 fn validate_id(id: &str) -> io::Result<()> {
     if id.is_empty() || id.contains(['/', '\\', '\0']) || matches!(id, "." | "..") {

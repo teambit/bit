@@ -24,18 +24,28 @@ impl TagIndex {
     pub(crate) fn insert(&mut self, hash: &str, label: &str, normal: bool) {
         let (hash, label) = (hash.trim(), label.trim());
         if !hash.is_empty() && !label.is_empty() {
-            let key = hash.to_ascii_lowercase();
-            if !normal && self.0.get(&key).is_some_and(|(_, existing)| *existing) {
-                return;
+            match self.0.entry(hash.to_ascii_lowercase()) {
+                std::collections::hash_map::Entry::Occupied(mut entry) => {
+                    if normal || !entry.get().1 {
+                        entry.insert((label.to_owned(), normal));
+                    }
+                }
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert((label.to_owned(), normal));
+                }
             }
-            self.0.insert(key, (label.to_owned(), normal));
         }
     }
     pub(crate) fn get(&self, hash: &str) -> Option<(&str, bool)> {
         let hash = hash.trim();
         self.0
             .get(hash)
-            .or_else(|| self.0.get(&hash.to_ascii_lowercase()))
+            .or_else(|| {
+                hash.bytes()
+                    .any(|byte| byte.is_ascii_uppercase())
+                    .then(|| self.0.get(&hash.to_ascii_lowercase()))
+                    .flatten()
+            })
             .map(|(label, normal)| (label.as_str(), *normal))
     }
 }

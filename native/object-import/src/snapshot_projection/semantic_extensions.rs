@@ -16,8 +16,8 @@ pub(super) fn configs(value: &Value) -> io::Result<(Value, Vec<(usize, Value)>)>
         .map(|(index, row)| Ok((id(row)?.encode_utf16().collect::<Vec<_>>(), index, row)))
         .collect::<io::Result<Vec<_>>>()?;
     rows.sort_by(|left, right| left.0.cmp(&right.0));
-    let mut output = Vec::new();
-    let mut assignments = Vec::new();
+    let mut output = Vec::with_capacity(rows.len());
+    let mut assignments = Vec::with_capacity(rows.len());
     for (id, index, row) in rows {
         let sorted = sorted_config(get(row, "rawConfig"))?;
         let config = without_internal(&sorted)?;
@@ -59,7 +59,7 @@ pub(super) fn dependencies(value: &Value) -> io::Result<Value> {
     if entries.len() > 4096 {
         return Err(invalid("extensions limit"));
     }
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(entries.len());
     for row in entries {
         object(row)?;
         let id = get(row, "extensionId");

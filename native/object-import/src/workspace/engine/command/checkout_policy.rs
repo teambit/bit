@@ -1,6 +1,8 @@
 //! Inputs for `ConfigMergerMain.updateDepsInWorkspaceConfig` after checkout.
 
 mod publication;
+#[cfg(test)]
+mod tests;
 
 use super::{State, invalid, materialization};
 use serde::Deserialize;
@@ -73,18 +75,9 @@ pub(in crate::workspace::engine) fn complete(
     let policy = planned.checkout_policy
         .as_mut()
         .ok_or_else(|| invalid("command checkout policy preparation absent"))?;
-    if policy.ready {
-        return Err(invalid("command checkout policy already complete"));
-    }
-    let mut request = policy.input.clone();
-    request["semver"] = input.semver;
-    let updates = crate::config_merge::apply("configWorkspaceUpdates", &request)?;
-    let report = policy.publication.prepare(&updates)?;
-    policy.ready = true;
-    if let Some(report) = report {
+    if let Some(report) = policy.finish(input.semver)? {
         planned.plan.result["workspaceConfigUpdateResult"] = report;
     }
-    policy.validate()?;
     super::proof::verify(&record.proofs)?;
     let count = planned.plan.result["components"].as_array().map_or(0, Vec::len);
     let output = json!({"token":record.token,"result":planned.plan.result});
@@ -122,9 +115,7 @@ pub(super) fn receipt_versions<'a>(
         .as_object()
         .and_then(|ws| {
             ws.iter()
-                .find(|(key, _)| {
-                    key.as_str() == RESOLVER || key.starts_with(&format!("{RESOLVER}@"))
-                })
+                .find(|(key, _)| is_resolver_id(key))
                 .and_then(|(_, val)| val["policy"].as_object())
         });
     let Some(policy) = policy else { return Ok(None) };
@@ -162,9 +153,7 @@ fn component_versions<'a>(
                     || row["extensionId"]["name"]
                         .as_str()
                         .or_else(|| row["extensionId"].as_str())
-                        .is_some_and(|name| {
-                            name == RESOLVER || name.starts_with(&format!("{RESOLVER}@"))
-                        })
+                        .is_some_and(is_resolver_id)
             });
         let Some(dependencies) = resolver.and_then(|row| row["data"]["dependencies"].as_array())
         else {
@@ -255,5 +244,7 @@ fn policy_entry(field: &str, name: &str, value: &Value) -> io::Result<Value> {
     Ok(json!({"dependencyId":name,"lifecycleType":lifecycle,"value":{"version":version}}))
 }
 
-#[cfg(test)]
-mod tests;
+fn is_resolver_id(id: &str) -> bool {
+    id.strip_prefix(RESOLVER)
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with('@'))
+}

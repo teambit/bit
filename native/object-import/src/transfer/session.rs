@@ -37,6 +37,9 @@ impl State {
     }
 
     pub(super) fn cleanup_unused(&mut self) -> io::Result<()> {
+        if self.spool_paths.is_empty() {
+            return Ok(());
+        }
         let retained = self.collections
             .values()
             .flatten()
@@ -80,7 +83,7 @@ impl State {
         let request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
         let bytes = serde_json::to_vec(input).map_err(io::Error::other)?;
         let token = self.token(&bytes)?;
-        let transaction = transaction::Transaction::initialize(request, token)?;
+        let transaction = transaction::Transaction::initialize(&request, token)?;
         let output = transaction.output();
         self.transaction = Some(transaction);
         Ok(output)

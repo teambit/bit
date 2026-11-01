@@ -29,10 +29,10 @@ pub(super) fn write(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
         &request.path,
     )?;
     let wrappers = if fetch { Some(wrappers(plan, request)?) } else { None };
-    preflight(plan, request, fetch)?;
+    let headers = preflight(plan, request, fetch)?;
     candidate(&request.path)?;
     if let Some(wrappers) = wrappers {
-        return fetch_archive(plan, request, &wrappers);
+        return fetch_archive(plan, request, &wrappers, &headers);
     }
     export_archive(plan, request)
 }
@@ -67,8 +67,9 @@ fn export_archive(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
     )
 }
 
-fn preflight(plan: &Plan, request: &wire::Archive, fetch: bool) -> io::Result<()> {
+fn preflight(plan: &Plan, request: &wire::Archive, fetch: bool) -> io::Result<Vec<[u8; 512]>> {
     let offset = usize::from(fetch);
+    let mut headers = Vec::with_capacity(plan.entries.len());
     for (index, entry) in plan.entries.iter().enumerate() {
         let descriptor = Descriptor {
             hash: entry.hash,
@@ -76,13 +77,13 @@ fn preflight(plan: &Plan, request: &wire::Archive, fetch: bool) -> io::Result<()
             seconds: 0,
             body: Body::Repository,
         };
-        header::encode(
+        headers.push(header::encode(
             &object::name(&descriptor)?,
             entry.compressed.len(),
             request.mtime_seconds[index + offset],
-        )?;
+        )?);
     }
-    Ok(())
+    Ok(headers)
 }
 
 fn wrappers(plan: &Plan, request: &wire::Archive) -> io::Result<(Vec<u8>, Vec<u8>)> {
@@ -109,21 +110,13 @@ fn fetch_archive(
     plan: &Plan,
     request: &wire::Archive,
     wrappers: &(Vec<u8>, Vec<u8>),
+    headers: &[[u8; 512]],
 ) -> io::Result<Value> {
     let mut writer = Archive::new(&request.path)?;
     let start = header::encode(".BIT.START", wrappers.0.len(), request.mtime_seconds[0])?;
     writer.entry(&start, &wrappers.0)?;
-    for (index, entry) in plan.entries.iter().enumerate() {
-        let descriptor = Descriptor {
-            hash: entry.hash,
-            scope: entry.scope.clone(),
-            seconds: 0,
-            body: Body::Repository,
-        };
-        let name = object::name(&descriptor)?;
-        let header =
-            header::encode(&name, entry.compressed.len(), request.mtime_seconds[index + 1])?;
-        writer.entry(&header, &entry.compressed)?;
+    for (header, entry) in headers.iter().zip(&plan.entries) {
+        writer.entry(header, &entry.compressed)?;
     }
     let end = header::encode(
         ".BIT.END",
@@ -135,7 +128,7 @@ fn fetch_archive(
     writer.file.flush()?;
     writer.complete = true;
     Ok(
-        json!({"path":request.path,"count":plan.entries.len(),"objectsHash":plan.objects_hash,"bytes":writer.bytes,"sha1":crate::validate::hexadecimal(&writer.digest.clone().finalize())}),
+        json!({"path":request.path,"count":plan.entries.len(),"objectsHash":plan.objects_hash,"bytes":writer.bytes,"sha1":crate::validate::hexadecimal(&std::mem::take(&mut writer.digest).finalize())}),
     )
 }
 

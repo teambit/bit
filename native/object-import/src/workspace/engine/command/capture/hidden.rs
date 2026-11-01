@@ -36,6 +36,7 @@ pub(in crate::workspace::engine::command) fn from_model(
         .collect::<io::Result<Vec<_>>>()?;
     let contents = repository.source_batch(&references)?;
     let (files, paths) = retain_files(private_root, version.trim(), rows, contents, state)?;
+    let metadata = current["files"].clone();
     Ok(Captured {
         added: false,
         hidden: true,
@@ -47,9 +48,9 @@ pub(in crate::workspace::engine::command) fn from_model(
             version: version.trim().into(),
             directory: String::new(),
             files: paths,
-            current: current.clone(),
+            current,
         },
-        metadata: current["files"].clone(),
+        metadata,
         files: json!(files),
     })
 }
@@ -61,9 +62,9 @@ fn retain_files(
     contents: Vec<Vec<u8>>,
     state: &mut snapshots::State,
 ) -> io::Result<(Vec<Value>, Vec<String>)> {
-    let mut files = Vec::new();
-    let mut paths = Vec::new();
-    let mut seen = HashSet::new();
+    let mut files = Vec::with_capacity(rows.len());
+    let mut paths = Vec::with_capacity(rows.len());
+    let mut seen = HashSet::with_capacity(rows.len());
     for (row, bytes) in rows.iter().zip(contents) {
         let relative = row["relativePath"]
             .as_str()
@@ -95,14 +96,14 @@ fn retain_files(
     Ok((files, paths))
 }
 
-fn validate_relative(relative: &str, seen: &mut HashSet<String>) -> io::Result<()> {
+fn validate_relative<'a>(relative: &'a str, seen: &mut HashSet<&'a str>) -> io::Result<()> {
     if relative.len() > 4096
         || relative
             .split('/')
             .any(|part| part.is_empty() || matches!(part, "." | ".."))
         || relative.contains(['\\', ':', '\0'])
         || relative.chars().any(char::is_control)
-        || !seen.insert(relative.to_owned())
+        || !seen.insert(relative)
     {
         return Err(invalid("hidden lane file path"));
     }

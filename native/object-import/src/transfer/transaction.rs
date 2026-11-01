@@ -24,7 +24,7 @@ pub(super) struct Receipt {
 }
 
 pub(super) struct Transaction {
-    scopes: Vec<String>,
+    scope_count: usize,
     token: String,
     revision: u32,
     resuming: bool,
@@ -41,7 +41,7 @@ enum Phase {
 }
 
 impl Transaction {
-    pub(super) fn initialize(input: Initialize, token: String) -> io::Result<Self> {
+    pub(super) fn initialize(input: &Initialize, token: String) -> io::Result<Self> {
         if input.scopes.is_empty()
             || input.scopes.len() > MAX_OBJECTS
             || input.client_id.trim().is_empty()
@@ -65,7 +65,13 @@ impl Transaction {
             return Err(invalid("unsupported transfer transaction"));
         }
         let phase = if input.resuming { Phase::Validate } else { Phase::Push(0) };
-        Ok(Self { scopes: input.scopes, token, revision: 0, resuming: input.resuming, phase })
+        Ok(Self {
+            scope_count: input.scopes.len(),
+            token,
+            revision: 0,
+            resuming: input.resuming,
+            phase,
+        })
     }
 
     pub(super) fn receipt(&mut self, input: &Receipt) -> io::Result<Value> {
@@ -86,16 +92,16 @@ impl Transaction {
     fn next(&self, success: bool) -> Phase {
         match &self.phase {
             Phase::Push(index) if !success => cleanup((0..*index).collect(), "push"),
-            Phase::Push(index) if index + 1 == self.scopes.len() => Phase::Validate,
+            Phase::Push(index) if index + 1 == self.scope_count => Phase::Validate,
             Phase::Push(index) => Phase::Push(index + 1),
             Phase::Validate if !success && !self.resuming => {
-                cleanup((0..self.scopes.len()).collect(), "validate")
+                cleanup((0..self.scope_count).collect(), "validate")
             }
             Phase::Validate if !success => Phase::Failed("validate"),
             Phase::Validate => Phase::Persist(0, 1),
             Phase::Persist(_, 3) if !success => Phase::Failed("persist"),
             Phase::Persist(index, attempt) if !success => Phase::Persist(*index, attempt + 1),
-            Phase::Persist(index, _) if index + 1 == self.scopes.len() => Phase::Done,
+            Phase::Persist(index, _) if index + 1 == self.scope_count => Phase::Done,
             Phase::Persist(index, _) => Phase::Persist(index + 1, 1),
             Phase::Cleanup(_, reason) => Phase::Failed(reason),
             Phase::Done => Phase::Done,
@@ -107,7 +113,7 @@ impl Transaction {
         let directive = match &self.phase {
             Phase::Push(index) => json!({"kind":"push","indices":[index]}),
             Phase::Validate => {
-                json!({"kind":"validate","indices":(0..self.scopes.len()).collect::<Vec<_>>()})
+                json!({"kind":"validate","indices":(0..self.scope_count).collect::<Vec<_>>()})
             }
             Phase::Persist(index, attempt) => {
                 json!({"kind":"persist","indices":[index],"attempt":attempt})

@@ -15,19 +15,17 @@ pub(in crate::workspace::engine::command) fn prepare_export_scopes(
     }
     let mut bitmap = crate::recovery::jsonc::parse(&original)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("export bitmap object"))?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(components.len());
     let mut changed = false;
     for (scope, name) in components {
         let (scope, name) = (scope.trim(), name.trim());
         if scope.is_empty() || name.is_empty() {
             return Err(invalid("export bitmap identity"));
         }
-        let full = format!("{scope}/{name}");
-        if !seen.insert(full.clone()) {
+        if !seen.insert((scope, name)) {
             return Err(invalid("export duplicate bitmap identity"));
         }
-        let row =
-            find_export_row(rows, &full, scope, name).ok_or_else(|| invalid("export bitmap row"))?;
+        let row = find_export_row(rows, scope, name).ok_or_else(|| invalid("export bitmap row"))?;
         changed |= promote_export_row(row, scope, name)?;
     }
     let output =
@@ -49,24 +47,20 @@ impl Prepared {
 
 fn find_export_row<'a>(
     rows: &'a mut serde_json::Map<String, Value>,
-    full: &str,
     scope: &str,
     name: &str,
 ) -> Option<&'a mut Value> {
-    let key = rows
-        .iter()
-        .find(|(key, row)| export_row_matches(key, row, full, scope, name))
-        .map(|(key, _)| key.clone())?;
-    rows.get_mut(&key)
+    rows.iter_mut()
+        .find(|(key, row)| export_row_matches(key, row, scope, name))
+        .map(|(_, row)| row)
 }
 
-fn export_row_matches(key: &str, row: &Value, full: &str, scope: &str, name: &str) -> bool {
+fn export_row_matches(key: &str, row: &Value, scope: &str, name: &str) -> bool {
     let key = key.trim();
     if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
         return false;
     }
     let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
-    let _ = full;
     row_name.trim() == name && row_scope.map(str::trim) == Some(scope)
 }
 

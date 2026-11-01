@@ -26,7 +26,9 @@ pub(super) fn collect(input: &serde_json::Value) -> std::io::Result<Collect> {
     }
     let mut request: Collect =
         serde::Deserialize::deserialize(input).map_err(std::io::Error::other)?;
-    request.mode = request.mode.trim().to_owned();
+    if request.mode.len() != request.mode.trim().len() {
+        request.mode = request.mode.trim().to_owned();
+    }
     if request.versions.len() > super::super::MAX_OBJECTS
         || request.refs.len() > super::super::MAX_OBJECTS
     {
@@ -172,18 +174,21 @@ pub(super) struct Archive {
 
 pub(super) fn hexadecimal(text: &str) -> std::io::Result<Vec<u8>> {
     let text = text.trim();
-    if text.is_empty()
-        || !text.len().is_multiple_of(2)
-        || text.len() > super::super::MAX_BYTES * 2
-        || !text.bytes().all(|byte| byte.is_ascii_hexdigit())
+    if text.is_empty() || !text.len().is_multiple_of(2) || text.len() > super::super::MAX_BYTES * 2
     {
         return Err(invalid("invalid compressed metadata encoding"));
     }
     text.as_bytes()
         .chunks_exact(2)
-        .map(|chunk| {
-            let text = std::str::from_utf8(chunk).map_err(std::io::Error::other)?;
-            u8::from_str_radix(text, 16).map_err(std::io::Error::other)
-        })
+        .map(|chunk| Ok((hex_digit(chunk[0])? << 4) | hex_digit(chunk[1])?))
         .collect()
+}
+
+fn hex_digit(byte: u8) -> std::io::Result<u8> {
+    match byte {
+        b'0'..=b'9' => Ok(byte - b'0'),
+        b'a'..=b'f' => Ok(byte - b'a' + 10),
+        b'A'..=b'F' => Ok(byte - b'A' + 10),
+        _ => Err(invalid("invalid compressed metadata encoding")),
+    }
 }

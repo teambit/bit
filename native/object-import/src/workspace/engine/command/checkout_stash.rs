@@ -35,7 +35,7 @@ pub(super) fn validate(request: &Prepare) -> io::Result<()> {
     if stash.versions.len() > 4096 || stash.bitmap_entries.len() > 4096 {
         return Err(invalid("stash checkout selection budget"));
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(stash.versions.len());
     for row in &stash.versions {
         let identity = row.identity.trim();
         let (scope, name) = identity.split_once('/').unwrap_or_default();
@@ -113,7 +113,8 @@ fn validate_reset(options: &Options, stash: &super::input::StashOptions) -> io::
         {
             return Err(invalid("stash save reset options"));
         }
-        if ids.len() > 4096 || ids.iter().collect::<HashSet<_>>().len() != ids.len() {
+        let mut seen = HashSet::with_capacity(ids.len().min(4096));
+        if ids.len() > 4096 || !ids.iter().all(|id| seen.insert(id)) {
             return Err(invalid("stash save reset selection"));
         }
     }

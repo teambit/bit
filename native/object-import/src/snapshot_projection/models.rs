@@ -68,11 +68,13 @@ pub(super) fn lane(fields: &Value) -> io::Result<Value> {
     if components.len() > 65536 {
         return Err(invalid("lane components limit"));
     }
-    let components = components
-        .iter()
-        .map(lane_component_row)
-        .collect::<io::Result<Vec<_>>>()?;
-    let mut output = Vec::new();
+    let mut components = Some(Value::Array(
+        components
+            .iter()
+            .map(lane_component_row)
+            .collect::<io::Result<Vec<_>>>()?,
+    ));
+    let mut output = Vec::with_capacity(9);
     for name in [
         "name",
         "scope",
@@ -85,7 +87,7 @@ pub(super) fn lane(fields: &Value) -> io::Result<Value> {
         "overrideUpdateDependents",
     ] {
         let value = match name {
-            "components" => Value::Array(components.clone()),
+            "components" => components.take().unwrap_or(Value::Undefined),
             "readmeComponent" if get(fields, name).truthy()? => readme(get(fields, name))?,
             _ => get(fields, name).clone(),
         };

@@ -55,7 +55,10 @@ fn validate_addition_identity(identity: &str, destination: &Value) -> io::Result
     if bad_scope
         || name.is_empty()
         || identity.len() > 1024
-        || identity != format!("{scope}/{name}")
+        || identity
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            != Some(name)
         || identity
             .chars()
             .any(|ch| ch == '\\' || ch.is_control())

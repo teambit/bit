@@ -13,7 +13,7 @@ pub(super) fn run(input: &Finalize, state: &mut State) -> io::Result<(usize, Val
         return Err(invalid("command finalize already complete"));
     }
     proof::verify(&input.dependency_read_set)?;
-    record.proofs.extend(input.dependency_read_set.iter().cloned());
+    record.proofs.extend_from_slice(&input.dependency_read_set);
     record.proofs = proof::unique(record.proofs);
     let directory = scratch::Directory::create()?;
     let merge = prepared.plan.merge.as_mut().ok_or_else(|| invalid("command finalize nonmerge"))?;
