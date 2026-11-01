@@ -60,3 +60,28 @@ fn a_preserved_consumer_log_cannot_be_overridden_by_allocation() {
             .is_err(),
     );
 }
+
+#[test]
+fn new_component_without_consumer_log_uses_allocation_log_and_empty_parents() {
+    let component = Component {
+        identity: "scope/foo".into(),
+        id: json!({"scope":"scope","name":"foo"}),
+        version: json!({"schema":"2.0.0","mainFile":"foo.js","bindingPrefix":"@scope","extensions":[],"dependencies":[],"devDependencies":[],"flattenedDependencies":[],"flattenedEdges":[]}),
+        files: vec![],
+        previous: None,
+        bitmap_entry: json!({}),
+        new: true,
+    };
+    let allocation = Allocation {
+        identity: component.identity.clone(),
+        hash: "2222222222222222222222222222222222222222".into(),
+        log: Some(json!({"message":"stashed","date":"2"})),
+    };
+    let mut objects = vec![];
+    let version =
+        prepare(&component, &allocation, "2.2.94", &snapshots::State::default(), &mut objects)
+            .unwrap();
+    assert_eq!(version["parents"], json!([]));
+    assert_eq!(version["log"]["message"], "stashed");
+    assert_eq!(objects.len(), 1);
+}

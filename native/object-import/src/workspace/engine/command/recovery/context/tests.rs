@@ -1,4 +1,4 @@
-//! Unit tests for `merge --abort` pending component selection and ordering.
+//! Unit tests for `merge --abort` pending component [`select`] filtering and ordering.
 
 use super::{Prepare, select};
 use serde_json::json;

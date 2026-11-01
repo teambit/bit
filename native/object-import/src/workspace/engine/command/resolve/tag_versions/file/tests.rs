@@ -19,3 +19,9 @@ fn explicit_first_match_and_default_cover_selected_and_automatic_components() {
         Value::Null,
     );
 }
+
+#[test]
+fn absent_versions_file_returns_null_and_malformed_entries_field_declines() {
+    assert_eq!(tag_data(None, "remote/foo").unwrap(), Value::Null);
+    assert!(tag_data(Some(&json!({"entries":"invalid"})), "remote/foo").is_err());
+}

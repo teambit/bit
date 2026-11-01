@@ -26,3 +26,29 @@ fn captured_bom_source_remains_bound_until_publication() {
     std::fs::write(&path, b"exports.value = 2;\n").unwrap();
     assert!(proof::verify(&[retained]).is_err());
 }
+
+#[test]
+fn mismatched_raw_hash_or_missing_token_is_rejected_during_retain() {
+    let root = crate::workspace::engine::command::scratch::Directory::create().unwrap();
+    let path = root.0.join("index.js");
+    let raw = b"exports.value = 1;\n";
+    std::fs::write(&path, raw).unwrap();
+    let hash = crate::workspace::engine::hash(raw);
+    let mut snapshots = snapshots::State::default();
+    let token = snapshots
+        .retain(snapshots::Observation {
+            path: path.clone(),
+            raw_hash: hash,
+            snapshot_hash: crate::workspace::engine::hash(raw),
+            raw_bytes: raw.len(),
+            contents: raw.to_vec().into(),
+        })
+        .unwrap();
+    assert!(
+        retain(&json!({"path":path,"rawHash":"0".repeat(40),"readToken":token}), &snapshots)
+            .is_err(),
+    );
+    assert!(
+        retain(&json!({"path":path,"rawHash":"0".repeat(40),"readToken":999}), &snapshots).is_err(),
+    );
+}

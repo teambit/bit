@@ -337,3 +337,14 @@ fn core_aspects_keep_package_groups_before_component_groups_per_origin() {
         );
     }
 }
+
+#[test]
+fn empty_component_file_list_returns_empty_dependencies_and_valid_read_set() {
+    let fixture = Fixture::new();
+    let output = Fixture::run(fixture.request(&[])).unwrap();
+    assert_eq!(
+        output["detected"]["allDependencies"],
+        json!({"dependencies":[],"devDependencies":[],"peerDependencies":[]}),
+    );
+    assert_eq!(output["grammarInputs"], json!([]));
+}

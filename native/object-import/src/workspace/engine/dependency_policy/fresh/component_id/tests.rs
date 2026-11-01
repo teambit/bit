@@ -32,3 +32,10 @@ fn resolved_versions_precede_appended_default_scope_without_changing_scoped_orde
         assert_eq!(id["version"], "0.0.2");
     }
 }
+
+#[test]
+fn malformed_component_id_inputs_decline_cleanly() {
+    assert!(serialize(&json!({}), false).is_err());
+    assert!(serialize(&json!("missing-scope"), false).is_err());
+    assert!(serialize(&json!(42), false).is_err());
+}

@@ -99,3 +99,13 @@ fn keep_ours_updates_only_the_final_bitmap_without_a_component_writer_stage() {
         "2026-10-18-1-2-4 lane-switch\n",
     );
 }
+
+#[test]
+fn completion_with_unknown_token_and_no_installer_writes_rejects_cleanly() {
+    let input = super::Complete {
+        token: "nonexistent".into(),
+        file_id: "2026-10-18-1-2-5".into(),
+        owned_workspace_writes: Vec::new(),
+    };
+    assert!(super::complete(&input, &mut super::State::default()).is_err());
+}

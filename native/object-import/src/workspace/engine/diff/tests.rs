@@ -48,3 +48,9 @@ fn unchanged_batches_preserve_order_on_the_configured_workers_without_running_gi
         assert_eq!(output.len(), 65);
     }
 }
+
+#[test]
+fn empty_frozen_diff_batch_returns_empty_vec_immediately() {
+    let output = frozen(Vec::new(), "missing-git-must-not-run", false).unwrap();
+    assert!(output.is_empty());
+}

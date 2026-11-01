@@ -57,3 +57,9 @@ fn outbound_prepare_requires_typed_resolution_fields() {
     input["skipRemoteResolution"] = serde_json::json!("yes");
     assert!(serde_json::from_value::<Request>(input).is_err());
 }
+
+#[test]
+fn unknown_request_kind_fails_deserialization() {
+    let input = serde_json::json!({"kind":"unknownOperation","root":"/tmp"});
+    assert!(serde_json::from_value::<Request>(input).is_err());
+}

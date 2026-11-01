@@ -299,3 +299,14 @@ fn path_aliases_retain_every_string_key_required_by_cycle_replay() {
         3,
     );
 }
+
+#[test]
+fn empty_file_list_returns_empty_graph_and_tree_structures() {
+    let fixture = Fixture::new();
+    let output = fixture
+        .run(&[], Some(json!({})))
+        .unwrap();
+    assert_eq!(output["pathMap"], json!([]));
+    assert_eq!(output["tree"], json!({}));
+    assert_eq!(output["scannedPaths"], json!([]));
+}

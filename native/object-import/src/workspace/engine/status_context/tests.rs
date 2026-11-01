@@ -139,3 +139,10 @@ fn control_proofs_cover_changed_and_new_component_configuration() {
         assert!(super::proof::verify(&proofs).is_err(), "{file}");
     }
 }
+
+#[test]
+fn missing_workspace_configuration_declines_status_context_read() {
+    let fixture = Fixture::new();
+    fs::remove_file(fixture.0.join("workspace.jsonc")).unwrap();
+    assert!(fixture.context().is_err());
+}

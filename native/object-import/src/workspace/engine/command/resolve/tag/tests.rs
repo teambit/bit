@@ -63,3 +63,11 @@ fn overlapping_matches_count_loads_before_unique_publication() {
     assert_eq!(selected.load_count, 2);
     assert_eq!(selected.identities, candidates);
 }
+
+#[test]
+fn empty_patterns_return_empty_selection_with_zero_loads() {
+    let candidates = vec!["scope/first".into(), "scope/second".into()];
+    let selected = pattern_order(&candidates, &[], &[]).unwrap();
+    assert_eq!(selected.load_count, 0);
+    assert!(selected.identities.is_empty());
+}

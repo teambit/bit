@@ -1,4 +1,4 @@
-//! Unit tests for transitive dependent cascade cycle reporting.
+//! Unit tests for transitive dependent cascade cycle [`reports`].
 
 use super::reports;
 use serde_json::json;

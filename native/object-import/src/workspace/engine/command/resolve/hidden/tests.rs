@@ -1,4 +1,4 @@
-//! Unit tests for hidden lane dependent package enrichment and trigger reports.
+//! Unit tests for hidden lane dependent package enrichment ([`enrich_packages`]) and trigger [`reports`].
 
 use super::{enrich_packages, reports};
 use crate::command_import::lane::Entry;

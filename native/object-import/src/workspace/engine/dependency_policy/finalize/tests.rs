@@ -57,3 +57,10 @@ fn environment_self_policy_prefers_installed_version_over_workspace_range() {
     let output = finish(value);
     assert_eq!(output["state"]["packages"][0]["sample-peer"], "~1.2.3");
 }
+
+#[test]
+fn empty_finalize_input_produces_no_added_or_missing_packages() {
+    let output = finish(input());
+    assert_eq!(output["added"], json!([[], [], []]));
+    assert_eq!(output["missing"], json!([]));
+}

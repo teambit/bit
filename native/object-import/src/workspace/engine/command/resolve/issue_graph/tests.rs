@@ -1,4 +1,4 @@
-//! Unit tests for external component issue graph adjacency and model proofs.
+//! Unit tests for [`external`] component issue graph adjacency and [`Repository`] model proofs.
 
 use super::{Repository, external};
 use crate::workspace::engine::command::scratch;

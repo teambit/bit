@@ -7,3 +7,9 @@ fn parent_budget_declines_before_recursive_policy_evaluation() {
     assert!(validate_prefixes(&vec![format!("{}file", "a/".repeat(128)); 4096]).is_err());
     assert!(validate_prefixes(&["a/b/file".to_owned()]).is_ok());
 }
+
+#[test]
+fn empty_and_root_level_file_lists_pass_prefix_validation() {
+    assert!(validate_prefixes(&[]).is_ok());
+    assert!(validate_prefixes(&["index.ts".to_owned(), "README.md".to_owned()]).is_ok());
+}

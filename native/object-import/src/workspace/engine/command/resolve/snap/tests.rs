@@ -24,3 +24,14 @@ fn single_negation_cannot_turn_canonical_literal_resolution_into_glob_selection(
     let options: Options = serde_json::from_value(json!({"pattern":"!scope/two"})).unwrap();
     assert!(filter_pattern(known.clone(), &known, &[known[0].clone()], &options).is_err());
 }
+
+#[test]
+fn exact_literal_pattern_selects_matching_known_component() {
+    let known = vec!["scope/one".to_owned(), "scope/two".to_owned()];
+    let candidates = vec!["scope/two".to_owned()];
+    let options: Options = serde_json::from_value(json!({"pattern":"scope/two"})).unwrap();
+    assert_eq!(
+        filter_pattern(candidates.clone(), &known, &candidates, &options).unwrap(),
+        candidates,
+    );
+}

@@ -147,3 +147,17 @@ fn store_version(root: &Path, hash: &str, value: &Value) {
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
     std::fs::write(path, encoder.finish().unwrap()).unwrap();
 }
+
+#[test]
+fn explicit_version_missing_from_model_reports_not_found_message() {
+    let hash = "a".repeat(40);
+    let model = json!({"head":hash,"versions":{"1.0.0":hash}});
+    let selected = skipped("9.9.9", Some(&model), "1.0.0", &json!({}));
+    assert_eq!(selected["legitimate"], false);
+    assert!(
+        selected["message"]
+            .as_str()
+            .unwrap()
+            .contains("9.9.9"),
+    );
+}

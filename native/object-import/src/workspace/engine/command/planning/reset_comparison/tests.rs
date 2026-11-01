@@ -1,4 +1,4 @@
-//! Unit tests for proving file content or inventory changes during checkout reset.
+//! Unit tests for proving file content or inventory changes during checkout reset via [`prove_changed`].
 
 use super::prove_changed;
 use serde_json::json;

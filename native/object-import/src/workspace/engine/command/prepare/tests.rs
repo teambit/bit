@@ -1,4 +1,4 @@
-//! Unit tests for command target pattern selection and overlapping root checks.
+//! Unit tests for command target pattern [`selected`] matching and overlapping root [`validate`] checks.
 
 use super::{Prepare, checkout_lane::bitmap_identities, json, selected, validate};
 

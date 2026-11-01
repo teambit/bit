@@ -1,4 +1,4 @@
-//! Unit tests for component aspect extension and dependency policy projection.
+//! Unit tests for component aspect [`extensions`] and [`dependencies`] policy projection.
 
 use super::{Defaults, configured_entries, dependencies, extensions};
 use serde_json::{Value, json};

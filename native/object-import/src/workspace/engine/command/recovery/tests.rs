@@ -1,4 +1,4 @@
-//! Unit tests for post-restore stale source proof rejection and error receipts.
+//! Unit tests for post-restore stale source [`proof`] rejection and [`apply`] error receipts.
 
 use super::{
     super::{PreparedPlan, bitmap, history, planning, repository, scratch},

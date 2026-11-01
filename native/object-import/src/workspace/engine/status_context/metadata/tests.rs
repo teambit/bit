@@ -27,3 +27,10 @@ fn component_id_matches_accepts_object_and_string_ids() {
     let string_id = json!({"componentId":"scope.test/comp@1.0.0"});
     assert!(component_id_matches(&string_id, "scope.test/comp"));
 }
+
+#[test]
+fn component_id_matches_rejects_mismatched_or_missing_component_id() {
+    let object_id = json!({"componentId":{"scope":"scope.test","name":"other"}});
+    assert!(!component_id_matches(&object_id, "scope.test/comp"));
+    assert!(!component_id_matches(&json!({}), "scope.test/comp"));
+}

@@ -39,3 +39,15 @@ fn unowned_sources_wrong_hashes_and_duplicate_changes_are_rejected() {
     ];
     assert!(replace_owned_proofs(&mut proofs, &[before], &changes).is_err());
 }
+
+#[test]
+fn empty_change_list_leaves_unmodified_proofs_intact() {
+    let directory = Directory::create().unwrap();
+    let source = directory.0.join("source");
+    fs::write(&source, b"stable").unwrap();
+    let initial = proof::content(&source, b"stable");
+    let mut proofs = vec![initial.clone()];
+    replace_owned_proofs(&mut proofs, &[initial], &[]).unwrap();
+    assert_eq!(proofs.len(), 1);
+    proof::verify(&proofs).unwrap();
+}

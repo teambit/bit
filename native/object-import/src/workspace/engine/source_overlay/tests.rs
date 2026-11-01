@@ -215,3 +215,15 @@ fn existing_link_aliases_see_staged_content_and_retargeting_invalidates_proofs()
     std::os::unix::fs::symlink(&fixture.0, &alias).unwrap();
     assert!(proof::verify(&proofs).is_err());
 }
+
+#[test]
+fn empty_sealed_overlay_produces_verifiable_empty_proofs() {
+    let fixture = Fixture::new();
+    let overlay = SourceOverlay::new(&fixture.0)
+        .unwrap()
+        .seal()
+        .unwrap();
+    let proofs = overlay.proofs().unwrap();
+    assert!(proofs.is_empty());
+    proof::verify(&proofs).unwrap();
+}

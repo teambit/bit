@@ -21,3 +21,17 @@ fn cross_component_graph_uses_existing_versions_instead_of_new_snapshot_markers(
     assert_eq!(graph[1], json!({"source":second,"target":external,"type":"prod"}));
     assert!(!directory.0.join(".bit/objects").exists());
 }
+
+#[test]
+fn isolated_component_without_dependencies_produces_empty_flattened_list_and_graph() {
+    let first = json!({"scope":"scope","name":"first","version":"1.0.0"});
+    let current = json!({"dependencies":[],"devDependencies":[],"extensions":[]});
+    let inputs = HashMap::from([(key(&first), current.clone())]);
+    let directory = crate::workspace::engine::command::scratch::Directory::create().unwrap();
+    let mut repository = Repository::new(&directory.0, None);
+    let (flattened, graph) =
+        traverse(&first, &current, &inputs, &HashMap::new(), &mut repository, &HashMap::new())
+            .unwrap();
+    assert!(flattened.is_empty());
+    assert!(graph.is_empty());
+}

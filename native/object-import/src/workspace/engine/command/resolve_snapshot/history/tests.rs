@@ -122,3 +122,13 @@ fn tag_does_not_create_missing_history_or_touch_complete_history() {
     tag_histories(fixture.root(), &[material(&head)], &mut objects, &mut repository).unwrap();
     assert!(objects.is_empty());
 }
+
+#[test]
+fn tag_ignores_materials_with_empty_current_head() {
+    let fixture = Fixture::new();
+    let mut repository = Repository::new(fixture.root(), None);
+    let mut objects = Vec::new();
+    tag_histories(fixture.root(), &[material("")], &mut objects, &mut repository).unwrap();
+    assert!(objects.is_empty());
+    repository.validate().unwrap();
+}

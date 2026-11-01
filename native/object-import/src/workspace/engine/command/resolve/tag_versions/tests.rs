@@ -73,3 +73,12 @@ fn tag_ranges_rewrite_only_same_batch_direct_dependencies() {
     materials[1].version["extensions"][0]["data"]["componentRangePrefix"] = json!("invalid");
     assert!(super::ranges::update(&mut materials).is_err());
 }
+
+#[test]
+fn prerelease_tag_planning_assigns_initial_prerelease_version_for_new_component() {
+    let mut materials = [material("scope/new", false, &json!({}))];
+    let params = json!({"releaseType":"prerelease","preReleaseId":"alpha","incrementBy":1,"soft":false,"persist":false,"hasTagData":false});
+    plan(&mut materials, &params, &json!({}), &json!({}), &std::collections::HashMap::default())
+        .unwrap();
+    assert_eq!(materials[0].version_state.tagged_version.as_deref(), Some("0.0.1-alpha.0"));
+}

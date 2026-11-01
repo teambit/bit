@@ -23,3 +23,11 @@ fn missing_and_duplicate_pending_selections_decline() {
     assert!(select(&targets, &[row], Some(&["s/b".into()])).is_err());
     assert!(select(&targets, &[], None).is_err());
 }
+
+#[test]
+fn explicit_subset_preserves_target_order_and_rejects_unlisted_pending_rows() {
+    let targets = vec![json!({"identity":"s/a"}), json!({"identity":"s/b"})];
+    let pending = vec![json!({"id":{"scope":"s","name":"a"}})];
+    assert_eq!(select(&targets, &pending, Some(&["s/a".into()])).unwrap(), ["s/a"]);
+    assert!(select(&targets, &pending, Some(&["s/a".into(), "s/b".into()])).is_err());
+}

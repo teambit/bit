@@ -108,3 +108,13 @@ fn completed_build_replaces_planned_tasks() {
     assert_eq!(version["buildStatus"], "succeed");
     assert_eq!(version["extensions"][0]["data"], data);
 }
+
+#[test]
+fn empty_artifact_receipt_leaves_objects_and_proofs_unchanged() {
+    let directory = Directory::create().unwrap();
+    let mut value = json!({"artifactRoot": directory.0, "artifacts": [], "versions": []});
+    let (mut objects, mut proofs) = (Vec::new(), Vec::new());
+    artifacts(&mut value, &mut objects, &mut proofs).unwrap();
+    assert!(objects.is_empty());
+    assert!(proofs.is_empty());
+}

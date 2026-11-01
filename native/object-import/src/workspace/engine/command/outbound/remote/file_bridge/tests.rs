@@ -1,4 +1,4 @@
-//! Unit tests for the persistent Node file-remote action bridge process.
+//! Unit tests for the persistent Node [`FileBridge`] remote action bridge process.
 
 use super::FileBridge;
 use serde_json::json;

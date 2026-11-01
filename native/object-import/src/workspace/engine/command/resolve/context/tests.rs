@@ -1,4 +1,4 @@
-//! Unit tests for resolve context lane model and version loading.
+//! Unit tests for resolve context lane model and version loading via [`load_models`].
 
 use super::{Prepare, load_models};
 use serde_json::{Value, json};

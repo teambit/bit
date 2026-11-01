@@ -1,4 +1,4 @@
-//! Unit tests for resolve dependency graph edge types and saved graph leaves.
+//! Unit tests for resolve dependency graph [`edges`] types and saved graph leaves.
 
 use super::edges;
 use serde_json::json;

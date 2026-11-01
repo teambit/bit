@@ -1,4 +1,4 @@
-//! Unit tests for separating `.bitmap` aspect configuration from structural targets.
+//! Unit tests for separating `.bitmap` aspect configuration from structural targets via [`project`] and [`project_snapshot`].
 
 use super::{project, project_snapshot};
 use serde_json::json;

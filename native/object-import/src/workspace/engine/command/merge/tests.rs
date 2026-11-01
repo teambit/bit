@@ -1,4 +1,4 @@
-//! Unit tests for component merge action selection and divergent status decisions.
+//! Unit tests for component merge [`State`] action selection and divergent status decisions.
 
 use super::{Input, State};
 use serde_json::{Value, json};

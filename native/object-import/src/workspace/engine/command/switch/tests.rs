@@ -75,3 +75,9 @@ fn checkout_target_records_follow_the_published_status_order() {
         order_targets(&mut context, &["scope/comp1".to_owned(), "scope/other".to_owned()]).is_err(),
     );
 }
+
+#[test]
+fn validate_lane_accepts_absent_lane_when_switching_to_main() {
+    let main = Id { scope: String::new(), name: "main".into() };
+    validate_lane(&main, None).unwrap();
+}
