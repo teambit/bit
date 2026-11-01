@@ -1,4 +1,4 @@
-//! Unit tests for lane snap and merge state transitions, parent reconciliation, and atomic file commits.
+//! Unit tests for lane snap and merge [`State`] transitions, parent reconciliation, and atomic file commits.
 
 pub(super) static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
     rayon::ThreadPoolBuilder::new()

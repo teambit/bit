@@ -1,4 +1,4 @@
-//! Unit tests for lane reset batch candidate [`Discovery`] and model index ordering.
+//! Unit tests for lane reset batch candidate [`Discovery`], [`ordered`], and [`staged`] model index ordering.
 
 use super::{Discovery, ordered, staged};
 use crate::reset_lane::{Heads, Repository, diagnostics, object_path, outbound, selection};

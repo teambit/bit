@@ -1,5 +1,5 @@
-//! Unit tests for workspace file inspection sessions and snapshot lifecycle in
-//! `bit-object-import`.
+//! Unit tests for workspace file inspection [`State`] sessions and [`apply`]
+//! snapshot lifecycle in `bit-object-import`.
 
 use super::{State, apply, hash};
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Unit tests for workspace configuration [`extensions`] and [`ignored_issues`] validation.
+//! Unit tests for workspace configuration [`extensions`] and [`ignored_issues`] validation in `bit-object-import`.
 
 use super::{extensions, ignored_issues};
 use serde_json::json;

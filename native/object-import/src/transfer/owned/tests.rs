@@ -1,4 +1,4 @@
-//! Unit tests for owned transfer initialization, spool lifecycle, and staged object streaming via [`apply`].
+//! Unit tests for owned transfer initialization, spool lifecycle, and staged object streaming via [`apply`] in `bit-object-import`.
 
 use std::{fs, io::Write, path::Path};
 

@@ -1,4 +1,4 @@
-//! Unit tests for component version [`TagIndex`] hash indexing and tag precedence.
+//! Unit tests for component version [`TagIndex`] hash indexing and tag precedence in `bit-object-import`.
 
 use super::TagIndex;
 #[test]

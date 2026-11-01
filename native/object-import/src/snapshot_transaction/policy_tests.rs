@@ -1,4 +1,4 @@
-//! Seeded differential tests for [`future`] version increment and auto-tag graph policy.
+//! Seeded differential tests for [`future`] version increment and auto-tag graph policy in `bit-object-import`.
 
 use super::future;
 use serde_json::Value;

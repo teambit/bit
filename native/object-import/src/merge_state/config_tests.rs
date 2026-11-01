@@ -1,5 +1,5 @@
-//! Unit tests for workspace configuration conflict planning in merge state in
-//! `bit-object-import`.
+//! Unit tests for workspace configuration conflict planning in merge [`State`]
+//! and [`serve`] dispatch in `bit-object-import`.
 
 use super::{State, serve};
 use serde_json::{Value, json};

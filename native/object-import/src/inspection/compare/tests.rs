@@ -1,4 +1,4 @@
-//! Seeded equivalence tests for `isComponentModified` and
+//! Seeded equivalence tests for [`plan`], `isComponentModified`, and
 //! `isComponentSourceCodeModified` in `bit-object-import`.
 
 use super::plan;

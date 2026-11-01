@@ -1,4 +1,4 @@
-//! Unit tests for multi-component lane reset [`Batch`] execution and external dependent checks.
+//! Unit tests for multi-component lane reset [`Batch`] and [`Plan`] execution and external dependent checks.
 
 use super::Batch;
 use crate::reset_lane::{Plan, object_hash, object_path, outbound};

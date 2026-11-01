@@ -1,5 +1,5 @@
-//! Unit tests for compact and legacy `JavaScript` JSON wire serialization in
-//! `bit-object-import`.
+//! Unit tests for compact and legacy `JavaScript` JSON wire [`Value`]
+//! serialization in `bit-object-import`.
 
 use super::Value;
 use serde_json::json;

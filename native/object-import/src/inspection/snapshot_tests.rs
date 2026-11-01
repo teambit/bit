@@ -1,5 +1,5 @@
-//! Unit tests for in-memory owned snapshot capture during inspection in
-//! `bit-object-import`.
+//! Unit tests for in-memory owned snapshot [`begin`] and [`apply`] capture
+//! during inspection in `bit-object-import`.
 
 use super::{State, apply, begin, tests::Fixture};
 use serde_json::{Value, json};

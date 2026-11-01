@@ -1,4 +1,4 @@
-//! Unit tests for clearing soft-tagged `nextVersion` entries in `.bitmap` via [`Plan`].
+//! Unit tests for clearing soft-tagged `nextVersion` entries and preserving `.bitmap` layout via [`Plan`].
 
 use super::Plan;
 use serde_json::json;

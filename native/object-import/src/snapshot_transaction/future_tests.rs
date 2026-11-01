@@ -1,4 +1,4 @@
-//! Differential unit tests for [`future`] version planning against Node semver helpers.
+//! Differential unit tests for [`future`] version planning against Node semver helpers in `bit-object-import`.
 
 use super::future;
 use serde_json::{Value, json};

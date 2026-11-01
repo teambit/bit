@@ -1,5 +1,5 @@
-//! Unit tests for merge history graph traversal and file merge resolution in
-//! `bit-object-import`.
+//! Unit tests for merge history DAG traversal, common-ancestor discovery, and
+//! file merge resolution in `bit-object-import`.
 
 static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
     rayon::ThreadPoolBuilder::new()

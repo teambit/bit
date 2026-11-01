@@ -1,4 +1,4 @@
-//! Unit tests for [`WorkspaceSession`] stack frame size bounds.
+//! Unit tests for [`WorkspaceSession`] stack frame size bounds in `bit-object-import`.
 
 use super::WorkspaceSession;
 

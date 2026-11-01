@@ -1,4 +1,4 @@
-//! Unit tests for plus-prefixed dependency version placeholder and release range resolution.
+//! Unit tests for [`is_plus`] dependency version placeholder detection and [`resolve`] release range resolution.
 
 use super::{is_plus, resolve};
 

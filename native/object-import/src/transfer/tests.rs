@@ -1,4 +1,4 @@
-//! Unit tests for transfer [`Descriptor`] preparation, tar header encoding, and source body streaming via [`prepare`].
+//! Unit tests for transfer [`Descriptor`] preparation, tar header encoding, and source body streaming via [`prepare`] in `bit-object-import`.
 
 use std::{
     fs,

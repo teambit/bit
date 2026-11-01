@@ -1,5 +1,5 @@
-//! Seeded equivalence tests for `normalizeBitmapContentForVersioning` in
-//! `bit-object-import`.
+//! Seeded equivalence tests for [`normalize`] and
+//! `normalizeBitmapContentForVersioning` in `bit-object-import`.
 
 use super::bitmap::normalize;
 use serde_json::Value;

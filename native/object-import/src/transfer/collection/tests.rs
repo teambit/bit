@@ -1,4 +1,4 @@
-//! Unit tests for export and fetch object transfer collection ordering via [`select`] and [`prepare`].
+//! Unit tests for export and fetch object transfer collection ordering via [`select`] and [`prepare`] in `bit-object-import`.
 
 use std::{fs, io::Write};
 

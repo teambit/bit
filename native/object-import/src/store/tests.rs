@@ -1,4 +1,4 @@
-//! Unit tests for atomic concurrent object [`Store`] writes, metadata publication, and duplicate suppression.
+//! Unit tests for atomic concurrent object [`Store`] writes, metadata publication, and duplicate suppression in `bit-object-import`.
 
 use super::Store;
 use std::{

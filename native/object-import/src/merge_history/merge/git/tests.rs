@@ -1,5 +1,5 @@
-//! Unit tests for platform-aware three-way text merge conflict formatting in
-//! `bit-object-import`.
+//! Unit tests for [`workspace_merge_for_platform`] three-way text merge
+//! conflict formatting in `bit-object-import`.
 
 use super::workspace_merge_for_platform;
 

@@ -1,4 +1,4 @@
-//! Unit tests for merge transaction body preparation, spool packing, and conflict markers.
+//! Unit tests for merge transaction [`State`] body preparation, spool packing, and conflict markers.
 
 mod compact_receipts;
 mod parallel_reads;

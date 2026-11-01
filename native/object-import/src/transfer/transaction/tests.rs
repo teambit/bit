@@ -1,4 +1,4 @@
-//! Unit tests for multi-scope transfer transaction [`State`] directives, retries, and cleanup.
+//! Unit tests for multi-scope transfer transaction [`State`] directives, [`apply`] retries, and cleanup in `bit-object-import`.
 
 use crate::transfer::{State, apply};
 use serde_json::{Value, json};

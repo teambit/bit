@@ -1,4 +1,4 @@
-//! Unit tests for `.bitmap` [`Prepared`] lane-only flag transitions during lane switch.
+//! Unit tests for `.bitmap` [`Prepared`] lane-only flag transitions during lane switch in `bit-object-import`.
 
 use super::Prepared;
 use serde_json::json;

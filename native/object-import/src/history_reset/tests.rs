@@ -1,5 +1,5 @@
-//! Unit tests for `historyReset` candidate selection and local version
-//! retention in `bit-object-import`.
+//! Unit tests for `historyReset` [`State`] candidate selection and [`apply`]
+//! local version retention in `bit-object-import`.
 
 use super::{State, apply};
 use serde_json::{Value, json};

@@ -1,5 +1,5 @@
 //! Rename copies empty aspect config and stages deletion on main from a lane.
-//! These tests verify `.bitmap` [`aspect_config`] eligibility after rename.
+//! These tests verify `.bitmap` [`aspect_config`] eligibility after rename in `bit-object-import`.
 use super::aspect_config;
 use serde_json::json;
 

@@ -1,5 +1,5 @@
-//! Unit tests for `inspectionDiff` against captured workspace bytes and
-//! verified scope sources in `bit-object-import`.
+//! Unit tests for `inspectionDiff` [`apply`] against captured workspace bytes
+//! and verified scope sources in `bit-object-import`.
 
 use super::{State, apply, hash};
 use flate2::{Compression, write::ZlibEncoder};

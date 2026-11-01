@@ -1,4 +1,4 @@
-//! Unit tests for lane reset component model version state pruning via [`remove_versions`].
+//! Unit tests for lane reset component model [`Selection`] and version state pruning via [`remove_versions`].
 
 use super::remove_versions;
 use crate::reset_lane::Selection;

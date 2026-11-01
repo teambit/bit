@@ -1,5 +1,5 @@
-//! Unit tests for parallel model source reading and budget retry behavior
-//! during diffing in `bit-object-import`.
+//! Unit tests for parallel model source [`load`] reading and budget retry
+//! behavior during diffing in `bit-object-import`.
 
 use super::load;
 use crate::inspection::{hash, tests::Fixture, wire};

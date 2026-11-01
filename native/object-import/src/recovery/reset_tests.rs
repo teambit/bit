@@ -1,4 +1,4 @@
-//! Unit tests for component reset head selection, common ancestor shortcuts, and parent provenance planning.
+//! Unit tests for component reset [`plan`] head selection, [`walk`] common ancestor shortcuts, and parent provenance.
 
 use super::{plan, walk};
 use serde_json::{Value, json};

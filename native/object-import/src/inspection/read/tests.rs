@@ -1,5 +1,5 @@
-//! Unit tests for parallel workspace file capture and binary normalization in
-//! `bit-object-import`.
+//! Unit tests for parallel workspace file [`capture`] and binary [`wire`]
+//! normalization in `bit-object-import`.
 
 use super::{capture, wire};
 use crate::inspection::{hash, tests::Fixture};

@@ -1,4 +1,4 @@
-//! Unit tests for main-branch component reset [`Plan`] and [`Batch`] planning and publication.
+//! Unit tests for main-branch component reset [`Plan`] and [`Batch`] planning and [`outbound`] publication.
 
 use super::{Batch, Plan, outbound, repository::object_path};
 use serde_json::{Value, json};

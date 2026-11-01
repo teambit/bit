@@ -1,4 +1,4 @@
-//! Unit tests for workspace and artifact source normalization via [`read`] during snapshot transactions.
+//! Unit tests for workspace and artifact source [`wire`] normalization via [`read`] during snapshot transactions.
 
 use super::{read, wire};
 use serde_json::json;

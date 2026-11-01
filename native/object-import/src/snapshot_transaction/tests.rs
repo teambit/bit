@@ -1,4 +1,4 @@
-//! Unit tests for end-to-end snapshot transaction staging, dependency updates, and publication via [`apply`].
+//! Unit tests for end-to-end snapshot transaction [`State`] staging, dependency updates, and publication via [`apply`].
 
 use super::{State, apply};
 use serde_json::{Value, json};
