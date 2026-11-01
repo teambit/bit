@@ -1,3 +1,5 @@
+//! Replay `VersionHistory` distance stages recorded during checkout selection.
+
 use super::{Record, history, invalid};
 use serde_json::Value;
 use std::io;

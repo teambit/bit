@@ -1,4 +1,5 @@
-//! RemoveMain.getRemovedStagedFromMain reads all pending removal configuration.
+//! `RemoveMain.getRemovedStagedFromMain` reads all pending removal configuration.
+
 use super::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io};

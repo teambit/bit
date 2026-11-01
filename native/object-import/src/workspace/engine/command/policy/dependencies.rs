@@ -1,3 +1,5 @@
+//! Merged source dependency resolution, issue filtering, and policy projection.
+
 mod issues;
 mod overlay;
 #[cfg(test)]

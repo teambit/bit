@@ -1,4 +1,5 @@
-//! Repository short refs match every stored object, as Repository.getFullRefFromShortHash does.
+//! Repository short refs match every stored object, as `Repository.getFullRefFromShortHash` does.
+
 #[cfg(test)]
 mod tests;
 use crate::workspace::engine::invalid;

@@ -1,4 +1,5 @@
 //! Retain wildcard discovery history writes and validate every mutable input before publication.
+
 #[cfg(test)]
 mod tests;
 

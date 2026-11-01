@@ -1,3 +1,5 @@
+//! Aspect configuration, core aspect list, and callback extension projection for policy merges.
+
 pub(in crate::workspace::engine::command) use callbacks::extensions as callback_extensions;
 
 mod callbacks;

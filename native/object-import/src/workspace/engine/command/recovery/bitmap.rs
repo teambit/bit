@@ -1,3 +1,5 @@
+//! `.bitmap` component configuration projection and validation for recovery commands.
+
 #[cfg(test)]
 mod tests;
 

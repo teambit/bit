@@ -1,3 +1,5 @@
+//! Cached object repository reader, proof tracker, and short-hash resolver for commands.
+
 mod recovery;
 mod short_refs;
 

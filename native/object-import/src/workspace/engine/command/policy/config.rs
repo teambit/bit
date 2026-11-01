@@ -1,3 +1,5 @@
+//! Per-component `ConfigMerger` invocation and scope policy reconciliation.
+
 #[cfg(test)]
 mod tests;
 

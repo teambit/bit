@@ -5,6 +5,7 @@ use crate::workspace::snapshots;
 use serde_json::{Value, json};
 use std::io;
 
+/// Captures and plans materialization for newly discovered default-scope additions.
 #[inline]
 pub(super) fn prepare(
     record: &mut Record,

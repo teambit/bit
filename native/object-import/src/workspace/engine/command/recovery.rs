@@ -1,3 +1,5 @@
+//! Merge-abort and lane-abort recovery transactions from `last-merged` backups.
+
 pub(super) mod bitmap;
 mod context;
 mod lane;

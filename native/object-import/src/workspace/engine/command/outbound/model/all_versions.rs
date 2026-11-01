@@ -1,4 +1,5 @@
-//! Select the complete local Version ancestry for `ExportCmd --all-versions`.
+//! Select the complete local `Version` ancestry for `ExportCmd --all-versions`.
+
 use super::{Staged, history::parents, invalid};
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};

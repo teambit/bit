@@ -1,6 +1,7 @@
 //! Reset planning against a retained, potentially restored workspace context.
-//! Recovery validates the live controls before restoring metadata; bitmap commit
-//! subsequently requires the exact projected bytes, never the old live bitmap.
+//! Recovery validates the live controls before restoring metadata; `.bitmap` commit
+//! subsequently requires the exact projected bytes, never the old live `.bitmap`.
+
 use super::{
     PreparedPlan, Record, apply_command, bitmap, input, invalid, materialization, plan_command,
     planning, proof, reset_config,

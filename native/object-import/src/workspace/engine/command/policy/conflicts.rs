@@ -1,4 +1,5 @@
 //! Persist the published per-component configuration conflict document.
+
 use super::{Prepared, config, invalid};
 use serde_json::{Value, json};
 use std::{

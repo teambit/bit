@@ -1,3 +1,5 @@
+//! Tag-blocking component issue filtering for merged dependency policies.
+
 use super::{super::Row, invalid, projection};
 use serde_json::{Value, json};
 use std::io;

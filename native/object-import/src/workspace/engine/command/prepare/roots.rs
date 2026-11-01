@@ -1,4 +1,5 @@
 //! Validate ownership boundaries before selecting or combining checkout targets.
+
 use super::invalid;
 use serde_json::Value;
 use std::io;

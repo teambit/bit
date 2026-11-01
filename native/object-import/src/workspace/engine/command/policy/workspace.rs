@@ -6,6 +6,7 @@ use std::io;
 
 type Publication = super::super::checkout_policy::Prepared;
 
+/// Prepares workspace dependency resolver policy updates from merged component rows.
 pub(super) fn prepare(
     prepared: &mut Prepared,
     record: &Record,

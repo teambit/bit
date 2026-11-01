@@ -1,4 +1,5 @@
-//! Reconcile acknowledgements with component-level bitmap promotions.
+//! Reconcile acknowledgements with component-level `.bitmap` promotions.
+
 use super::{Prepared, Selected, invalid};
 use crate::store::Store;
 use rayon::prelude::*;

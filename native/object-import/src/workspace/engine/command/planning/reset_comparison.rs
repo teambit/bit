@@ -1,6 +1,7 @@
 //! A reset can discard unparseable working files only when their retained hashes
 //! prove a change independently of dependency metadata. Equal files still need
 //! the full semantic comparison; this is never a substitute dependency graph.
+
 #[cfg(test)]
 mod tests;
 use super::super::invalid;

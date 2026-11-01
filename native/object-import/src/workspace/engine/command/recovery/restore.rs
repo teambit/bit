@@ -1,3 +1,5 @@
+//! `last-merged` backup inspection and restoration planning for recovery transactions.
+
 mod main;
 mod paths;
 mod projection;

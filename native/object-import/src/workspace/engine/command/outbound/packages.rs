@@ -1,4 +1,5 @@
-//! Retain native linker inputs before transfer; Stage selects only acknowledged bitmap promotions.
+//! Retain native linker inputs before transfer; staging selects only acknowledged `.bitmap` promotions.
+
 use super::{Plan, Prepare, invalid, model};
 use crate::workspace::engine::{client_status::config, dependency_graph::proof};
 use serde_json::{Value, json};

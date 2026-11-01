@@ -1,3 +1,5 @@
+//! Lane component metadata, addition discovery, and target selection for checkout preparation.
+
 use super::{Operation, Prepare, selected};
 use crate::{
     command_import,

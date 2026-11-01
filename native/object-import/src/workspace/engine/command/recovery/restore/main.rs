@@ -1,4 +1,5 @@
-//! Restore main's mutable component objects from the upstream `LastMerged` snapshot.
+//! Restore `main`'s mutable component objects from the upstream `LastMerged` snapshot.
+
 #[cfg(test)]
 #[path = "main_tests.rs"]
 mod tests;

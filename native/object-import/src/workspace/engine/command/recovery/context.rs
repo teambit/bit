@@ -1,3 +1,5 @@
+//! Workspace context, model, and proof assembly for merge-abort recovery commands.
+
 mod guards;
 #[cfg(test)]
 mod tests;

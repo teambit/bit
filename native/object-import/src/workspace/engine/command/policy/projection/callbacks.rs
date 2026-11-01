@@ -1,4 +1,5 @@
 //! Validate JSON aspect facts returned by published callbacks without native object serialization.
+
 use super::{array, invalid};
 use serde_json::Value;
 use std::{collections::HashSet, io};

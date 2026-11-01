@@ -1,6 +1,5 @@
 //! Select already-scoped main-lane components and freeze their compressed
 //! object closure, or a zero-object repeat export, before remote side effects.
-
 pub(super) mod prefilter;
 
 mod all_versions;

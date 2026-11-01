@@ -1,3 +1,5 @@
+//! Incoming lane component addition planning during workspace checkout or switch.
+
 use super::{Planned, Record, capture, invalid, prepare_one};
 use crate::workspace::snapshots;
 use serde_json::{Value, json};

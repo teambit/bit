@@ -1,3 +1,4 @@
+//! Workspace command context, remote object import, and target selection preparation.
 mod checkout_import;
 mod checkout_lane;
 mod checkout_scope;
@@ -374,7 +375,6 @@ fn lane_selected(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
         })
         .collect())
 }
-
 fn extend_lane_targets(context: &Value, model_targets: &mut Vec<Value>) {
     checkout_scope::extend_model_targets(context, model_targets);
     for field in ["inactiveTargets", "addedTargets"] {

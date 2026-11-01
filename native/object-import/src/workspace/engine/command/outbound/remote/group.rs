@@ -1,4 +1,5 @@
 //! `Repository.getChownOptions`: configured Unix group ownership for pending objects.
+
 #[cfg(all(test, unix))]
 mod tests;
 use serde_json::Value;

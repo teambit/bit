@@ -1,3 +1,5 @@
+//! Saved flattened dependency graph equivalence validation against direct dependencies.
+
 use super::{Repository, direct, invalid, key, load, same_id};
 use serde_json::Value;
 use std::{collections::BTreeMap, io};

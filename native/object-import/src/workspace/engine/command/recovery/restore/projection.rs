@@ -1,3 +1,5 @@
+//! Post-restore control file expectation projection and dependency path validation.
+
 use super::{Prepared, invalid, proof};
 use std::{collections::BTreeMap, io, path::PathBuf};
 

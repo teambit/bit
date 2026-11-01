@@ -1,3 +1,5 @@
+//! Merged component file overlay assembly for post-merge dependency scanning.
+
 use super::{Record, invalid, planning};
 use crate::workspace::engine::source_overlay::SourceOverlay;
 use serde_json::Value;

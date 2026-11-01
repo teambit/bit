@@ -1,3 +1,5 @@
+//! Coordinate workspace command planning, `.bitmap` staging, and switch completion.
+
 use super::{
     Plan, PreparedPlan, Record, bitmap, checkout_policy, input, invalid, materialization,
     merge_planning, planning, proof,

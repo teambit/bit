@@ -1,4 +1,5 @@
-//! Scope-loaded merge components retain Version metadata without workspace load hooks.
+//! Scope-loaded merge components retain `Version` metadata without workspace load hooks.
+
 use super::{config, invalid, projection};
 use serde_json::{Value, json};
 use std::io;

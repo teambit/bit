@@ -1,4 +1,5 @@
-//! Select the Version refs sent by staged, repeat and head-only exports.
+//! Select the `Version` refs sent by staged, repeat, and head-only exports.
+
 use super::{Prepare, all_versions, invalid, repeat};
 use serde_json::Value;
 use std::{io, path::Path};

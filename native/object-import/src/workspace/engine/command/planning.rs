@@ -1,3 +1,5 @@
+//! Workspace checkout, switch, and merge planning orchestration.
+
 mod checkout_lane;
 mod checkout_scope;
 mod checkout_select;

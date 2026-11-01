@@ -1,3 +1,5 @@
+//! Extension identity uniqueness guards for recovered component `Version` objects.
+
 use super::{Value, invalid, io};
 #[inline]
 pub(super) fn extensions(context: &Value) -> io::Result<()> {

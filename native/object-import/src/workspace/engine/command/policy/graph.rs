@@ -1,3 +1,5 @@
+//! Flattened dependency graph and edge projection for merged component versions.
+
 mod previous;
 #[cfg(test)]
 mod tests;
