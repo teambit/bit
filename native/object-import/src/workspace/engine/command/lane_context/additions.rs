@@ -1,3 +1,5 @@
+//! Destination directory assignment and overlap checks for incoming lane additions.
+
 #[cfg(test)]
 mod tests;
 

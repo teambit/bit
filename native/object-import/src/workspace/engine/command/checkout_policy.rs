@@ -11,6 +11,7 @@ use std::{io, path::Path};
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
+/// Retained workspace dependency policy update state for a checkout transaction.
 #[derive(Debug, Clone)]
 pub(super) struct Prepared {
     input: Value,

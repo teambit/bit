@@ -1,5 +1,6 @@
 //! `ImportComponents.getFlattenedDepsUnique`: select workspace dependencies
-//! from the imported root Versions before planning any bitmap or file writes.
+//! from the imported root `Version` objects before planning any `.bitmap` or file writes.
+
 use super::{Prepare, Target, details, invalid, write};
 use crate::command_import::PreparedImport;
 use node_semver::npm;

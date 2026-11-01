@@ -1,4 +1,5 @@
 //! Shared scope, workspace, and global transport precedence and resolver bootstrap.
+
 use super::super::{Transport, invalid};
 use bit_client_transfer::{GlobalConfig, http::Network, remotes::Remotes, resolver::Resolver};
 use serde_json::Value;

@@ -1,3 +1,5 @@
+//! `VersionHistory` graph distance and ancestor caching for workspace commands.
+
 use super::{
     super::{invalid, status_history},
     repository::Repository,

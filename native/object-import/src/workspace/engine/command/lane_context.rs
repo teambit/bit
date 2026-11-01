@@ -1,6 +1,6 @@
 //! Command lane metadata for native merge and local switch planning.
-pub(super) mod visibility;
 
+pub(super) mod visibility;
 pub(super) mod additions;
 
 use super::input::Prepare;

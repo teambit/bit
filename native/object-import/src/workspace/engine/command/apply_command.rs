@@ -1,3 +1,5 @@
+//! Prepared workspace command application, publication, and receipt recording.
+
 #[cfg(test)]
 mod tests;
 

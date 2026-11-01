@@ -1,4 +1,5 @@
 //! Retain new target source writes and exact overwritten preimages.
+
 use super::{Planning, Replacement, WorkspaceFiles, existing, invalid, safe_destination};
 use std::{fs, io, path::PathBuf};
 

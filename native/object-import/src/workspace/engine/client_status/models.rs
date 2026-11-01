@@ -1,3 +1,5 @@
+//! Stored model file reference resolution and hashing for client status targets.
+
 use super::{Target, invalid};
 use crate::{checkout::repository, merge_history, read_version};
 use serde_json::{Value, json};

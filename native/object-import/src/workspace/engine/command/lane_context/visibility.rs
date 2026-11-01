@@ -1,3 +1,5 @@
+//! Component scope visibility and `.bitmap` projection across workspace lanes.
+
 #[cfg(test)]
 mod tests;
 use super::{Id, Record, config, invalid};

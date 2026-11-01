@@ -1,4 +1,4 @@
-//! Validated bitmap publication, lane headers, and history for workspace commands.
+//! Validated `.bitmap` publication, lane headers, and history for workspace commands.
 pub(super) use export::prepare_export_scopes;
 mod export;
 mod lane;

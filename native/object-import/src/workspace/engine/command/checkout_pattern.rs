@@ -1,4 +1,5 @@
 //! Bind CLI component predicates to the authoritative checkout owner before planning.
+
 use super::{State, input::Operation, invalid, proof};
 use serde::Deserialize;
 use serde_json::{Value, json};

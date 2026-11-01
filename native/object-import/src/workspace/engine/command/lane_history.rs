@@ -1,4 +1,5 @@
 //! Retain one refreshed history selection across complete checkout/install phases.
+
 pub(super) mod context;
 pub(super) mod heads;
 pub(in crate::workspace::engine) mod inspection;

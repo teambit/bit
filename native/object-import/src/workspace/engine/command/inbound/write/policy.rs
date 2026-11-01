@@ -1,4 +1,5 @@
 //! Shared `ConfigMerger` policy inputs for imported component versions.
+
 use super::super::{config, invalid};
 use serde_json::Value;
 use std::{io, path::Path};

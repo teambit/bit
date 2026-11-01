@@ -1,4 +1,5 @@
 //! `ComponentWriterMain.relocateOccupiedDirs`: filesystem-aware numbered targets.
+
 #[cfg(test)]
 mod tests;
 use crate::component_tracking::observe::Observed;

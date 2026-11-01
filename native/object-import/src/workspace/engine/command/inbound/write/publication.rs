@@ -1,4 +1,5 @@
-//! Publish prepared workspace files and bitmap history after the object import commits.
+//! Publish prepared workspace files and `.bitmap` history after the object import commits.
+
 use super::{History, Prepared, existing, invalid, safe_destination};
 use std::{
     collections::HashSet,

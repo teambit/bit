@@ -1,4 +1,5 @@
 //! Stashed new components retain their authored root and have no `ModelComponent`.
+
 use super::super::{Record, capture, input::Prepare, invalid, materialization, planning, scratch};
 use crate::workspace::snapshots;
 use serde_json::{Value, json};

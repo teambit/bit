@@ -1,4 +1,5 @@
 //! Shape the inbound import loader rows to the source CLI's prefetch phases.
+
 use super::Target;
 use crate::command_import::PreparedImport;
 use serde_json::{Value, json};

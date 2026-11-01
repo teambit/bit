@@ -1,3 +1,5 @@
+//! Lane header, visibility, and tracked target reconciliation for `.bitmap` updates.
+
 use super::{super::repository, Update, identity, invalid};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};

@@ -1,4 +1,5 @@
 //! Resolver policy precedence and npm `minVersion` range deduplication.
+
 #[cfg(test)]
 mod tests;
 use super::invalid;

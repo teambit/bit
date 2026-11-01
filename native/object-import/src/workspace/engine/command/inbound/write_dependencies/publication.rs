@@ -1,4 +1,5 @@
 //! Write dependencies with the published `package.json` and JSONC serializers.
+
 #[cfg(test)]
 mod tests;
 use super::invalid;

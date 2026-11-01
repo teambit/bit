@@ -1,4 +1,5 @@
 //! Retained workspace command transactions for checkout, merge, switch, snap, tag, stash, and export.
+
 pub(super) mod checkout_pattern;
 pub(super) mod checkout_policy;
 pub(crate) mod inbound;

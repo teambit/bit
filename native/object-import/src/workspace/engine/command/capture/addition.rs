@@ -1,3 +1,5 @@
+//! Destination capture for incoming-only components added during lane operations.
+
 #[cfg(test)]
 mod tests;
 

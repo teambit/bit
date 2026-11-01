@@ -1,4 +1,5 @@
-//! Bitmap promotion for an acknowledged original-scope export.
+//! `.bitmap` scope promotion and history staging for acknowledged exports.
+
 use super::Prepared;
 use crate::workspace::engine::invalid;
 use serde_json::Value;

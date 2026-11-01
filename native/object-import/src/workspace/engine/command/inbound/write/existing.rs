@@ -1,4 +1,5 @@
-//! Materialize a remote Version over an imported workspace component.
+//! Materialize a remote `Version` over an imported workspace component.
+
 #[cfg(test)]
 mod tests;
 use super::{

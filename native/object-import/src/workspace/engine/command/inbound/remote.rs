@@ -1,4 +1,5 @@
 //! Bounded scope acquisition and listing across HTTP and file remotes.
+
 pub(crate) mod file_list;
 pub(in crate::workspace::engine) mod inventory;
 

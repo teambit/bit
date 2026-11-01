@@ -1,4 +1,5 @@
-//! Root bitmap Sources retain canonical bytes alongside proofs of the original physical input.
+//! Root `.bitmap` sources retain canonical bytes alongside proofs of the original physical input.
+
 use super::{comparison, read};
 use crate::workspace::snapshots;
 use std::{collections::HashSet, io, path::Path};

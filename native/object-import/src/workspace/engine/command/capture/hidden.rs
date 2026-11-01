@@ -1,3 +1,5 @@
+//! Object-backed capture for hidden lane dependents outside workspace directories.
+
 #[cfg(test)]
 mod tests;
 

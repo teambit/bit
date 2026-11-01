@@ -1,4 +1,5 @@
-//! Preserve bitmap schema and current-lane metadata across inbound writes.
+//! Preserve `.bitmap` schema and current-lane metadata across inbound writes.
+
 #[cfg(test)]
 mod tests;
 

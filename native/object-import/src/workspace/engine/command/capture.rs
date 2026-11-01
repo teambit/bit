@@ -1,3 +1,5 @@
+//! Workspace component file, metadata, and hidden dependent state capture.
+
 pub(super) use addition::capture as addition;
 pub(super) use hidden::from_model;
 mod addition;

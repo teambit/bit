@@ -1,4 +1,5 @@
 //! Validate the bounded inbound command protocol before remote reads or writes.
+
 use super::{Prepare, invalid};
 use serde_json::Value;
 use std::io;

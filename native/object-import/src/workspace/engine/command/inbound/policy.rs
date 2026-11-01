@@ -1,4 +1,5 @@
 //! Complete shared `ConfigMerger` policy planning before inbound publication.
+
 use super::{State, invalid};
 use serde::Deserialize;
 use serde_json::Value;

@@ -1,4 +1,5 @@
 //! Retained stash checkout selection; snapshot refs need not appear in model tags/heads.
+
 pub(super) use additions::{context, materialize};
 mod additions;
 use super::{

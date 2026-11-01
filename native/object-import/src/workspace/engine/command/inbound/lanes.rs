@@ -14,6 +14,7 @@ use std::{
     path::Path,
 };
 
+/// Selected remote lanes and virtual remote overlays for an inbound lane fetch.
 struct Selection {
     lanes: Vec<(lane::Id, Option<String>)>,
     virtual_remotes: Vec<VirtualRemote>,

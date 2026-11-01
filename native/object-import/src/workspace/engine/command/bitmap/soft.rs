@@ -1,3 +1,5 @@
+//! Soft-tag and schema-normalized `.bitmap` row preparation for workspace commands.
+
 use super::{Prepared, invalid, lane, render_rows};
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io};

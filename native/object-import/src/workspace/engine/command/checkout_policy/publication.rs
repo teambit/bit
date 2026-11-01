@@ -1,4 +1,4 @@
-//! Plan workspace.jsonc bytes before the checkout writes component sources.
+//! Plan `workspace.jsonc` bytes before the checkout writes component sources.
 
 #[cfg(test)]
 mod tests;

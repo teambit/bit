@@ -1,4 +1,5 @@
 //! Stash restores authored entries without assigning a detached snapshot hash to `.bitmap`.
+
 use super::{Prepared, identity, invalid, lane, render_rows, rows};
 use serde_json::Value;
 use std::io;

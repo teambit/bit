@@ -1,3 +1,5 @@
+//! Deserialized request and option payloads for workspace command preparation.
+
 use serde::Deserialize;
 use std::path::PathBuf;
 

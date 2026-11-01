@@ -1,5 +1,6 @@
 //! Where imported components are written: the workspace's `defaultDirectory`,
 //! with the fixes `ComponentWriter` applies when directories collide.
+
 #[cfg(test)]
 mod tests;
 use super::super::{Target, invalid};

@@ -1,3 +1,5 @@
+//! Retained workspace status, snapshot, dependency, and command engine coordination.
+
 pub(crate) mod client_status;
 pub(crate) mod command;
 pub(crate) mod dependency_policy;
