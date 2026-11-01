@@ -1,4 +1,4 @@
-//! Project staged, snapped, merge-pending, and outdated component status rows.
+//! Project staged, snapped, merge-pending, and outdated component status rows for workspace status.
 use super::{Request, invalid, push};
 use serde_json::{Map, Value, json};
 use std::{cmp::Ordering, collections::HashSet, io};

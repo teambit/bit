@@ -1,4 +1,4 @@
-//! JSONC parsing and comment-preserving edits.
+//! `JSONC` parsing and comment-preserving document edits.
 //!
 //! Bit reads and writes `workspace.jsonc` with comment-json 4.2.5: the whole
 //! file is re-serialized with `stringify(data, undefined, 2)`, comments are

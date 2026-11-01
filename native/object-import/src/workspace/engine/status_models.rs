@@ -1,3 +1,5 @@
+//! Scope model, version, lane, and version-history loading for workspace status and inspection.
+
 pub(super) mod comparison;
 pub(in crate::workspace::engine) mod component_cat;
 pub(super) mod component_log;

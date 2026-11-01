@@ -1,3 +1,5 @@
+//! `VersionHistory` serialization, proof verification, and object-store persistence.
+
 #[cfg(test)]
 mod tests;
 

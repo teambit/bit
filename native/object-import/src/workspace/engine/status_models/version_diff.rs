@@ -1,4 +1,4 @@
-//! Compare two validated local Version objects without visiting workspace files.
+//! Compare two validated local `Version` objects without visiting workspace files.
 
 use super::{Request as ModelsRequest, Target, invalid, load_overlay, versions};
 use crate::{

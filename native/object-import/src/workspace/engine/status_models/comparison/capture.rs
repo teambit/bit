@@ -1,3 +1,5 @@
+//! Source file capture and normalization for semantic status comparisons.
+
 mod overlay;
 
 use super::{Request, Target, invalid};

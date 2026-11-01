@@ -16,7 +16,6 @@ pub(super) struct Request {
     versions: Vec<(String, Value)>,
     components: Vec<Component>,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Component {

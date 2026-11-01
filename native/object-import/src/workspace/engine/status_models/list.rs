@@ -29,7 +29,6 @@ pub(in crate::workspace::engine) struct Request {
     #[serde(default)]
     lane: Option<LaneId>,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LaneId {

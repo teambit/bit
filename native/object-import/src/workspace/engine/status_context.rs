@@ -1,3 +1,5 @@
+//! Workspace configuration, target metadata, and scope model loading for status queries.
+
 pub(super) mod configuration;
 pub(super) mod tracking;
 

@@ -1,3 +1,5 @@
+//! Source-overlay file lookup, metadata resolution, and ancestor proof capture.
+
 use super::{Entry, Metadata, SourceOverlay, invalid, proof};
 use std::{
     fs, io,

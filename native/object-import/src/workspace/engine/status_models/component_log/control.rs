@@ -1,4 +1,5 @@
 //! `ModelComponent.collectLogs` projects HEAD range/snap metadata over its history.
+
 use node_semver::{Range, Version};
 use serde_json::{Value, json};
 

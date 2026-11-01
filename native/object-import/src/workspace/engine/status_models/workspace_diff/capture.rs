@@ -1,3 +1,5 @@
+//! Capture workspace source files and metadata for status diff comparisons.
+
 use super::{Request, comparison, invalid};
 use crate::workspace::engine::read;
 use serde_json::{Value, json};

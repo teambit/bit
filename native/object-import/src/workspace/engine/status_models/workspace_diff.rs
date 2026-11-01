@@ -1,3 +1,5 @@
+//! Compare workspace files against local `Version` object models for status diffs.
+
 mod capture;
 mod files;
 

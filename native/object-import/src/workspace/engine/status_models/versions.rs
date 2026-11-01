@@ -1,4 +1,4 @@
-//! Resolve and validate `Version` object references for status models.
+//! Resolve and validate local `Version` object references for status models.
 
 #[cfg(test)]
 mod tests;

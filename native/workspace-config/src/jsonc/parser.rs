@@ -1,5 +1,5 @@
-//! comment-json 4.2.5 `parse`: attaches each comment to the symbol the
-//! JavaScript parser would, so `stringify` reproduces Bit's output.
+//! `comment-json` 4.2.5 parser: attaches each comment to the symbol the
+//! `JavaScript` parser would, so `stringify` reproduces Bit's output.
 
 use super::{
     lexer::{Kind, Token, invalid, tokenize},

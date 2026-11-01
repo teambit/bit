@@ -1,3 +1,5 @@
+//! Assemble staged, modified, pending, and invalid workspace status result sets.
+
 mod autotag;
 mod model;
 #[cfg(test)]

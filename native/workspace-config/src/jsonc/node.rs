@@ -1,4 +1,4 @@
-//! Comment-preserving JSONC AST nodes and JavaScript key ordering.
+//! Comment-preserving `JSONC` AST nodes and `JavaScript` key ordering.
 
 use indexmap::IndexMap;
 use serde_json::{Map, Number, Value};

@@ -10,7 +10,6 @@ use std::{
     io,
     path::PathBuf,
 };
-
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

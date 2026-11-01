@@ -1,4 +1,4 @@
-//! The subset of `minimatch` dev-file patterns use: `**`, `*`, `?`, `[...]`,
+//! The subset of `minimatch` dev-file patterns used in workspace configs: `**`, `*`, `?`, `[...]`,
 //! `{a,b}` and the extglobs `+(..)`, `*(..)`, `?(..)`, `@(..)`, `!(..)`.
 //! Like minimatch's defaults, wildcards never match a leading `.`.
 

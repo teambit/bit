@@ -1,3 +1,5 @@
+//! Active lane object loading, component head extraction, and remote lane ref resolution.
+
 use super::{Reader, invalid};
 use crate::read_budget::Budget;
 use serde_json::Value;

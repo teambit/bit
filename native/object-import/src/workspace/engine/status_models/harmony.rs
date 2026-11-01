@@ -6,7 +6,6 @@ mod tests;
 use super::invalid;
 use serde_json::{Value, json};
 use std::io;
-
 /// Harmony 1 predates always-scoped IDs, but imported scoped objects use the
 /// same file layout as Harmony 2. Never infer scopes for historical aliases.
 pub(in crate::workspace::engine) fn validate(value: &Value) -> io::Result<()> {

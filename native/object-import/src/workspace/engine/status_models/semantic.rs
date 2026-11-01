@@ -1,3 +1,5 @@
+//! Semantic `Version` object projection and canonical hashing for status comparison.
+
 use super::invalid;
 use crate::js_json::Value as Js;
 use serde_json::{Map, Value, json};

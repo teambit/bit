@@ -1,4 +1,5 @@
-//! Read the limited lane projection returned by an HTTP scope's GraphQL API.
+//! Read the limited lane projection returned by an HTTP scope's `GraphQL` API.
+
 use crate::{read_budget::Budget, workspace::engine::invalid};
 use bit_client_transfer::{GlobalConfig, http::Network, remotes::Remote};
 use serde::Deserialize;

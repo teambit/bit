@@ -1,4 +1,5 @@
-//! Local `bit log` history: validated model and Version reads, following parents from main's head.
+//! Local `bit log` history: validated model and `Version` reads, following parents from main's head.
+
 mod control;
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! `GlobalConfig.load` reads strict JSON; native readers leave a missing file unwritten.
+//! `GlobalConfig.load` reads strict JSON; native readers leave a missing config file unwritten.
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 

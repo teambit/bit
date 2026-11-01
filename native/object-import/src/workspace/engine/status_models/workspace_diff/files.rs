@@ -1,4 +1,4 @@
-//! Read and diff model and workspace file contents for `workspaceDiff`.
+//! Read and diff model and workspace file contents for workspace diff evaluations.
 
 #[cfg(test)]
 mod tests;

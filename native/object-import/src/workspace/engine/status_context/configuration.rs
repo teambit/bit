@@ -12,7 +12,6 @@ pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
     let workspace = config::document(&root.join("workspace.jsonc"))?;
     effective_value(workspace, home)
 }
-
 #[inline]
 fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
     let id = id.trim();

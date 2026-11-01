@@ -1,3 +1,5 @@
+//! Semantic and code-level comparison between workspace targets and stored `Version` objects.
+
 pub(in crate::workspace::engine) mod capture;
 
 use super::{invalid, semantic, versions};

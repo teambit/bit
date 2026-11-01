@@ -1,4 +1,4 @@
-//! `teambit.workspace/variants` matching (`@teambit/workspace.modules.match-pattern`
+//! `teambit.workspace/variants` pattern matching (`@teambit/workspace.modules.match-pattern`
 //! and `VariantsMain.byRootDirAndName`).
 
 pub use glob::matches as matches_namespace;

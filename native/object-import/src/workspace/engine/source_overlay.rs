@@ -1,4 +1,5 @@
 //! A command-owned view of files before its retained writes become visible.
+
 mod lookup;
 mod seal;
 mod source;

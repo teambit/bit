@@ -1,3 +1,5 @@
+//! Target and current file hash comparison for workspace status.
+
 use std::{collections::HashMap, io};
 
 use serde::Deserialize;

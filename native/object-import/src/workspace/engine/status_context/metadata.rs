@@ -1,3 +1,5 @@
+//! Component and scope JSON metadata loading and validation for status context.
+
 #[cfg(test)]
 mod tests;
 
