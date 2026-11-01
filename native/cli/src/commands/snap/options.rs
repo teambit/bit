@@ -1,7 +1,7 @@
 //! The native snap grammar: ordinary snaps only. Build, editor and
 //! hook-altering flags stay with the Node.js CLI.
 
-use serde_json::{Value, json};
+use serde_json::Value;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Options {
@@ -15,7 +15,7 @@ pub struct Options {
 /// `args` starts after the command name.
 pub fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    let mut seen: Vec<&str> = Vec::new();
+    let mut seen: Vec<&str> = Vec::with_capacity(4);
     let mut index = 0;
     while index < args.len() {
         let raw = args[index];
@@ -114,12 +114,12 @@ impl Options {
 
     /// The engine's snap options.
     pub fn request(&self) -> Value {
-        let mut options = json!({});
+        let mut options = serde_json::Map::new();
         if let Some(pattern) = &self.pattern {
-            options["pattern"] = json!(pattern);
+            options.insert("pattern".into(), Value::String(pattern.clone()));
         }
         if let Some(message) = &self.message {
-            options["message"] = json!(message);
+            options.insert("message".into(), Value::String(message.clone()));
         }
         for (key, set) in [
             ("unmodified", self.unmodified),
@@ -127,10 +127,10 @@ impl Options {
             ("skipAutoSnap", self.skip_auto_snap),
         ] {
             if set {
-                options[key] = json!(true);
+                options.insert(key.into(), Value::Bool(true));
             }
         }
-        options
+        Value::Object(options)
     }
 }
 

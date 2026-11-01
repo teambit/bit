@@ -63,11 +63,11 @@ fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
         "--silent=false" | "--all=false" => options.silent = false,
         arg if is_combined_reset_short(arg) => apply_combined_reset_short(arg, options),
         arg if !arg.starts_with('-')
-            && !arg.trim().is_empty()
+            && !arg.is_empty()
             && options.pattern.is_none()
             && arg.len() <= 4096 =>
         {
-            options.pattern = Some(arg.trim());
+            options.pattern = Some(arg);
         }
         _ => return None,
     }
@@ -216,16 +216,7 @@ fn route_hard(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Resu
         return run_batch(args, root, options.head, None, true);
     };
     if selection::complex(pattern) {
-        let selected = match options.selected
-            .clone()
-            .map_or_else(
-                || selection::identities(root, pattern).map(selection::Selected::ordinary),
-                Ok,
-            ) {
-            Ok(selected) => selected,
-            Err(error) => return Ok(Outcome::Declined(format!("reset selection: {error}"))),
-        };
-        return run_batch(args, root, options.head, Some(&selected), options.force);
+        return route_complex_hard(args, root, options, pattern);
     }
     let (identity, on_lane) = match selection::identity(root, pattern) {
         Ok(identity) => identity,
@@ -239,9 +230,30 @@ fn route_hard(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Resu
         Err(error) => return Ok(Outcome::Declined(format!("reset identity: {error}"))),
     };
     if on_lane {
-        return run_lane(args, root, &identity, options.head, options.force);
+        let selected = selection::Selected::ordinary(vec![identity]);
+        return run_lane_batch(args, root, options.head, Some(&selected), options.force);
     }
     run_main(args, root, &identity, options.head, options.force)
+}
+
+fn route_complex_hard(
+    args: &[OsString],
+    root: &Path,
+    options: &Options<'_>,
+    pattern: &str,
+) -> io::Result<Outcome> {
+    let owned;
+    let selected = match &options.selected {
+        Some(selected) => selected,
+        None => match selection::identities(root, pattern) {
+            Ok(ids) => {
+                owned = selection::Selected::ordinary(ids);
+                &owned
+            }
+            Err(error) => return Ok(Outcome::Declined(format!("reset selection: {error}"))),
+        },
+    };
+    run_batch(args, root, options.head, Some(selected), options.force)
 }
 
 fn run_main(
@@ -278,17 +290,6 @@ fn run_never_exported(args: &[OsString], root: &Path) -> io::Result<Outcome> {
     workspace_command::execute_with(root, args, "reset", &report, |_| {
         plan.commit(&workspace_command::file_id())
     })
-}
-
-fn run_lane(
-    args: &[OsString],
-    root: &Path,
-    identity: &str,
-    head_only: bool,
-    force: bool,
-) -> io::Result<Outcome> {
-    let selected = selection::Selected::ordinary(vec![identity.to_owned()]);
-    run_lane_batch(args, root, head_only, Some(&selected), force)
 }
 
 fn run_batch(
@@ -364,11 +365,15 @@ fn run_lane_batch(
 }
 
 fn run_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
+    let owned;
     let selected = match (&options.selected, options.pattern) {
-        (Some(selected), _) => Some(selected.clone()),
+        (Some(selected), _) => Some(selected),
         (None, Some(pattern)) if selection::complex(pattern) => {
             match selection::identities(root, pattern) {
-                Ok(ids) => Some(selection::Selected::ordinary(ids)),
+                Ok(ids) => {
+                    owned = selection::Selected::ordinary(ids);
+                    Some(&owned)
+                }
                 Err(error) => {
                     return Ok(Outcome::Declined(format!("soft reset selection: {error}")));
                 }
@@ -376,7 +381,7 @@ fn run_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result
         }
         (None, _) => None,
     };
-    let prepared = match &selected {
+    let prepared = match selected {
         Some(ids) => SoftPlan::prepare_selected(root, &ids.identities),
         None => SoftPlan::prepare(root, options.pattern),
     };
@@ -386,7 +391,7 @@ fn run_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result
     };
     let report = soft_report(args, &plan);
     workspace_command::execute_with(root, args, "reset", &report, |output| {
-        if let Some(selected) = &selected {
+        if let Some(selected) = selected {
             selected.render(output);
             selected.verify()?;
         }

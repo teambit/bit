@@ -69,10 +69,10 @@ pub(super) fn run(args: &[OsString]) -> io::Result<Outcome> {
                         .trim()
                         .trim_matches(['"', '\''])
                         .trim();
-                    !matches!(
-                        trimmed.to_ascii_lowercase().as_str(),
-                        "" | "0" | "false" | "no" | "off",
-                    )
+                    !trimmed.is_empty()
+                        && !["0", "false", "no", "off"]
+                            .iter()
+                            .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
                 })
             {
                 return Ok(Outcome::Declined("CI scope trust error stack".to_owned()));
@@ -90,22 +90,22 @@ fn parse_tokens(args: &[OsString]) -> Option<Vec<String>> {
         .iter()
         .skip(1)
         .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?
-        .into_iter()
         .filter(|token| {
-            !matches!(
-                *token,
-                "--no-color"
-                    | "--no-color=true"
-                    | "--no-color=false"
-                    | "--color"
-                    | "--color=true"
-                    | "--color=false"
-                    | "--color=always"
-                    | "--color=never",
-            )
+            !token.is_some_and(|val| {
+                matches!(
+                    val,
+                    "--no-color"
+                        | "--no-color=true"
+                        | "--no-color=false"
+                        | "--color"
+                        | "--color=true"
+                        | "--color=false"
+                        | "--color=always"
+                        | "--color=never",
+                )
+            })
         })
-        .collect::<Vec<_>>();
+        .collect::<Option<Vec<_>>>()?;
     let (&"trust", rest) = tokens.split_first()? else {
         return None;
     };
@@ -118,7 +118,7 @@ fn parse_tokens(args: &[OsString]) -> Option<Vec<String>> {
 
 fn parse_action(tokens: &[String]) -> Result<Action, Failure> {
     let raw_action = tokens.first().map_or("list", |action| action.trim());
-    let pattern = tokens.get(1).cloned();
+    let pattern = tokens.get(1).map(String::as_str);
     match raw_action {
         "list" | "enable" | "disable" if pattern.is_some() => {
             Err(Failure::Declined("unexpected pattern argument".to_owned()))
@@ -134,16 +134,16 @@ fn parse_action(tokens: &[String]) -> Result<Action, Failure> {
     }
 }
 
-fn require_pattern(action: &str, pattern: Option<String>) -> Result<String, Failure> {
+fn require_pattern(action: &str, pattern: Option<&str>) -> Result<String, Failure> {
     let Some(pattern) = pattern
-        .map(|value| value.trim().to_owned())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     else {
         return Err(Failure::User(format!(
             r#""{action}" requires a pattern. example: bit scope trust {action} acme.frontend"#,
         )));
     };
-    Ok(pattern)
+    Ok(pattern.to_owned())
 }
 
 fn prepare_and_execute(root: &Path, tokens: &[String], chalk: Chalk) -> Result<Report, Failure> {

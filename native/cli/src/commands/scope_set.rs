@@ -91,10 +91,10 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
         .get(1..)?
         .iter()
         .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?
-        .into_iter()
-        .filter(|tok| !tok.starts_with("--no-color") && !tok.starts_with("--color"))
-        .collect::<Vec<_>>();
+        .filter(|tok| {
+            !tok.is_some_and(|val| val.starts_with("--no-color") || val.starts_with("--color"))
+        })
+        .collect::<Option<Vec<_>>>()?;
     let (&"set", rest) = tokens.split_first()? else { return None };
     let positional = collect_non_flag_tokens(rest)?;
     let (scope_name, pattern) = match positional.as_slice() {

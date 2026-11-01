@@ -5,10 +5,6 @@ use std::{io, path::Path};
 
 pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
     for target in capture.captured.iter_mut().chain(&mut capture.comparisons) {
-        let files = array(target.get("files"), "snapshot source manifest")?
-            .iter()
-            .map(snapshot_file_path)
-            .collect::<io::Result<Vec<_>>>()?;
         let raw_dir = target["directory"]
             .as_str()
             .or_else(|| target["rootDir"].as_str())
@@ -17,6 +13,10 @@ pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
             .ok_or_else(|| decline("snapshot directory"))?;
         let trimmed = raw_dir.trim_start_matches("./").trim_end_matches('/');
         let directory = if trimmed.is_empty() { "." } else { trimmed };
+        let files = array(target.get("files"), "snapshot source manifest")?
+            .iter()
+            .map(snapshot_file_path)
+            .collect::<io::Result<Vec<_>>>()?;
         target["files"] = json!(crate::commands::diff::order::captured(
             &root.join(directory),
             &files,

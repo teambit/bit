@@ -305,29 +305,29 @@ fn find_component<'a>(
     ws: &'a Workspace,
     raw_id: &str,
 ) -> Option<(&'a BitmapEntry, &'a WorkspaceComponent)> {
-    ws.entries
-        .iter()
-        .zip(&ws.components)
-        .find(|(entry, _)| entry.owns_its_dir() && matches_entry(entry, raw_id))
-        .or_else(|| {
-            ws.entries
-                .iter()
-                .zip(&ws.components)
-                .find(|(entry, _)| matches_entry(entry, raw_id))
-        })
-}
-
-fn matches_entry(entry: &BitmapEntry, raw_id: &str) -> bool {
     let raw_id = raw_id.trim();
     let normalized = inventory::normalize(raw_id);
     let dir = normalized
         .strip_prefix("./")
         .unwrap_or(&normalized)
         .trim_end_matches('/');
-    entry.id.to_string_without_version() == raw_id
-        || entry.id.name == raw_id
+    ws.entries
+        .iter()
+        .zip(&ws.components)
+        .find(|(entry, _)| entry.owns_its_dir() && matches_entry(entry, raw_id, dir))
+        .or_else(|| {
+            ws.entries
+                .iter()
+                .zip(&ws.components)
+                .find(|(entry, _)| matches_entry(entry, raw_id, dir))
+        })
+}
+
+fn matches_entry(entry: &BitmapEntry, raw_id: &str, dir: &str) -> bool {
+    entry.id.name == raw_id
         || entry.key == raw_id
         || (!entry.root_dir.is_empty() && entry.root_dir.trim_end_matches('/') == dir)
+        || entry.id.to_string_without_version() == raw_id
 }
 
 fn is_supported_component(entry: &BitmapEntry, component: &WorkspaceComponent) -> bool {

@@ -46,7 +46,8 @@ pub(in crate::commands) fn resolve_pattern_entries<'a>(
             active
                 .iter()
                 .copied()
-                .find(|entry| entry.id.to_string_without_version() == identity)
+                .zip(&identities)
+                .find_map(|(entry, entry_id)| (entry_id == identity).then_some(entry))
         })
         .collect())
 }

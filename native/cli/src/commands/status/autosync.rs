@@ -19,8 +19,11 @@ pub(in crate::commands) struct Startup {
 }
 
 pub(in crate::commands) fn run_if_enabled(root: &Path) -> io::Result<()> {
+    if !root.join(".git").exists() {
+        return Ok(());
+    }
     let config = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if !crate::commands::build_cmd::is_bitmap_auto_sync(&config) || !root.join(".git").exists() {
+    if !crate::commands::build_cmd::is_bitmap_auto_sync(&config) {
         return Ok(());
     }
     let mut engine = Engine::new()?;
@@ -33,13 +36,16 @@ pub(in crate::commands) fn run(
     root: &Path,
     startup: &mut Startup,
 ) -> io::Result<()> {
+    if !root.join(".git").exists() {
+        return Ok(());
+    }
     let config = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
     let Some((_, workspace)) =
         crate::commands::update_cmd::aspect_entry(&config, "teambit.workspace/workspace")
     else {
         return Ok(());
     };
-    if workspace["bitmapAutoSync"] != true || !root.join(".git").exists() {
+    if workspace["bitmapAutoSync"] != true {
         return Ok(());
     }
     let bitmap = Bitmap::load(root, workspace["defaultScope"].as_str())?;
@@ -141,16 +147,10 @@ fn lookup_ids(bitmap: &Bitmap) -> Vec<String> {
         .iter()
         .filter(|entry| entry.lanes.available_on_current_lane)
         .filter_map(|entry| {
-            entry.id.scope
-                .as_deref()
+            entry.id
+                .effective_scope()
                 .map(str::trim)
                 .filter(|scope| !scope.is_empty())
-                .or_else(|| {
-                    entry.id.default_scope
-                        .as_deref()
-                        .map(str::trim)
-                        .filter(|scope| !scope.is_empty())
-                })
                 .map(|scope| {
                     let version = entry.id.version
                         .as_deref()

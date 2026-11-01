@@ -375,15 +375,10 @@ fn bitmap_row_version(
     let row_scope = row["scope"]
         .as_str()
         .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["defaultScope"]
-                .as_str()
-                .filter(|val| !val.is_empty())
-        })
+        .or_else(|| row["defaultScope"].as_str())
         .unwrap_or_default();
-    let matches = (row_name == name && (row_scope.is_empty() || row_scope == scope))
-        || key_id == full
-        || key_id.strip_prefix(&format!("{scope}/")) == Some(name);
+    let matches =
+        key_id == full || (row_name == name && (row_scope.is_empty() || row_scope == scope));
     if !matches {
         return None;
     }

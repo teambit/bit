@@ -37,7 +37,10 @@ fn is_ci_active() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
 }
 
@@ -143,22 +146,23 @@ fn consume_trailing_show_id<'a>(
 
 fn apply_short_bundle(arg: &str, options: &mut Options) -> bool {
     let arg = arg.trim();
+    let flags = &arg.as_bytes()[usize::from(arg.starts_with('-'))..];
     if !arg.starts_with('-')
         || arg.starts_with("--")
-        || arg.len() <= 2
-        || !arg[1..]
-            .chars()
-            .all(|ch| matches!(ch, 'j' | 'l' | 'r' | 'b' | 'c'))
+        || flags.len() <= 1
+        || !flags
+            .iter()
+            .all(|byte| matches!(byte, b'j' | b'l' | b'r' | b'b' | b'c'))
     {
         return false;
     }
-    for ch in arg[1..].chars() {
-        match ch {
-            'j' => options.json = true,
-            'l' => options.legacy = true,
-            'r' => options.remote = true,
-            'b' => options.browser = true,
-            'c' => options.compare = true,
+    for &byte in flags {
+        match byte {
+            b'j' => options.json = true,
+            b'l' => options.legacy = true,
+            b'r' => options.remote = true,
+            b'b' => options.browser = true,
+            b'c' => options.compare = true,
             _ => unreachable!(),
         }
     }

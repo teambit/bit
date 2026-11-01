@@ -31,21 +31,22 @@ pub(super) fn record_remote(
     extensions: &[Value],
     captured: &mut Capture,
 ) -> io::Result<()> {
-    if enabled && extensions.iter().any(is_remotely_removed_extension) {
-        let identity = text(
-            target
-                .get("identity")
-                .filter(|val| !val.is_null())
-                .or_else(|| target.get("id")),
-        )?
-        .trim();
-        if !identity.is_empty()
-            && !captured.remotely_removed
-                .iter()
-                .any(|existing| existing == identity)
-        {
-            captured.remotely_removed.push(identity.to_string());
-        }
+    if !enabled || !extensions.iter().any(is_remotely_removed_extension) {
+        return Ok(());
+    }
+    let identity = text(
+        target
+            .get("identity")
+            .filter(|val| !val.is_null())
+            .or_else(|| target.get("id")),
+    )?
+    .trim();
+    if !identity.is_empty()
+        && !captured.remotely_removed
+            .iter()
+            .any(|existing| existing == identity)
+    {
+        captured.remotely_removed.push(identity.to_string());
     }
     Ok(())
 }

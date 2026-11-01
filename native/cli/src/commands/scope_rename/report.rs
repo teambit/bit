@@ -13,7 +13,7 @@ pub(super) fn render(
         options.old.trim(),
         options.new.trim(),
     ));
-    let mut affected = Vec::new();
+    let mut affected = Vec::with_capacity(batch.len());
     for index in 0..batch.len() {
         let plan = batch.plan(index)?;
         let source = plan.identity.source
@@ -27,7 +27,7 @@ pub(super) fn render(
             plan.identity.target.trim(),
         )));
     }
-    let mut seen = Vec::new();
+    let mut seen = Vec::with_capacity(refactored.len());
     for id in refactored
         .iter()
         .map(|id| id.trim().trim_matches('/'))
@@ -52,7 +52,6 @@ fn section(name: &str, rows: &[String], format: &Formatter) -> String {
     if rows.is_empty() || name.is_empty() {
         return String::new();
     }
-    let mut output = vec![format.title(&format!("{name} ({})", rows.len()))];
-    output.extend_from_slice(rows);
-    output.join("\n")
+    let title = format.title(&format!("{name} ({})", rows.len()));
+    format!("{title}\n{}", rows.join("\n"))
 }

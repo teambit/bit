@@ -34,7 +34,9 @@ pub fn root_locale() -> bool {
         .next()
         .unwrap_or_default()
         .trim();
-    ROOT_LANGUAGES.contains(&language.to_ascii_lowercase().as_str())
+    ROOT_LANGUAGES
+        .iter()
+        .any(|root_lang| language.eq_ignore_ascii_case(root_lang))
 }
 
 /// Primary weight in root collation order: punctuation, then digits, then
@@ -65,17 +67,12 @@ pub fn supported(text: &str) -> bool {
 pub fn compare(left: &str, right: &str) -> Ordering {
     let left = left.trim();
     let right = right.trim();
-    let weights = |text: &str| {
-        text.chars()
-            .filter_map(primary)
-            .collect::<Vec<_>>()
-    };
-    let cases = |text: &str| {
-        text.chars()
-            .map(|character| character.is_ascii_uppercase())
-            .collect::<Vec<_>>()
-    };
-    weights(left)
-        .cmp(&weights(right))
-        .then_with(|| cases(left).cmp(&cases(right)))
+    left.chars()
+        .filter_map(primary)
+        .cmp(right.chars().filter_map(primary))
+        .then_with(|| {
+            left.chars()
+                .map(|character| character.is_ascii_uppercase())
+                .cmp(right.chars().map(|character| character.is_ascii_uppercase()))
+        })
 }

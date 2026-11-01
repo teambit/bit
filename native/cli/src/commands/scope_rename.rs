@@ -73,29 +73,27 @@ fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Ou
 }
 
 pub(super) fn unrecognized_subcommand(args: &[OsString], in_ws: bool) -> Option<String> {
-    let tokens = args
+    let filtered = args
         .iter()
         .skip(1)
-        .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?;
-    let filtered = tokens
-        .into_iter()
-        .map(str::trim)
+        .map(|arg| arg.to_str().map(str::trim))
         .filter(|token| {
-            !token.is_empty()
-                && !matches!(
-                    *token,
-                    "--no-color"
-                        | "--no-color=true"
-                        | "--no-color=false"
-                        | "--color"
-                        | "--color=true"
-                        | "--color=false"
-                        | "--color=always"
-                        | "--color=never",
-                )
+            !token.is_some_and(|val| {
+                val.is_empty()
+                    || matches!(
+                        val,
+                        "--no-color"
+                            | "--no-color=true"
+                            | "--no-color=false"
+                            | "--color"
+                            | "--color=true"
+                            | "--color=false"
+                            | "--color=always"
+                            | "--color=never",
+                    )
+            })
         })
-        .collect::<Vec<_>>();
+        .collect::<Option<Vec<_>>>()?;
     match filtered.as_slice() {
         [sub] => {
             let is_known = matches!(*sub, "fork" | "rename" | "rename-owner")
@@ -163,7 +161,10 @@ pub(super) fn ci_active() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
 }
 

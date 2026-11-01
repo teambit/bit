@@ -115,6 +115,14 @@ struct LoadFlags<'a> {
     manual: bool,
     strategy: Option<&'a str>,
 }
+fn parse_strategy_token(raw: &str) -> Option<&str> {
+    let trimmed = raw
+        .trim()
+        .trim_matches(['"', '\''])
+        .trim();
+    (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(trimmed)
+}
+
 impl<'a> LoadFlags<'a> {
     fn apply_arg(&mut self, arg: &'a str, iter: &mut impl Iterator<Item = &'a str>) -> Option<()> {
         if self.boolean(arg) {
@@ -124,27 +132,12 @@ impl<'a> LoadFlags<'a> {
             .strip_prefix("--auto-merge-resolve=")
             .or_else(|| arg.strip_prefix("-r="))
         {
-            let trimmed = val
-                .trim()
-                .trim_matches(['"', '\''])
-                .trim();
-            if trimmed.is_empty() || trimmed.starts_with('-') {
-                return None;
-            }
-            self.strategy = Some(trimmed);
+            self.strategy = Some(parse_strategy_token(val)?);
             return Some(());
         }
         match arg {
             "-r" | "--auto-merge-resolve" => {
-                self.strategy = Some(
-                    iter.next()
-                        .map(|val| {
-                            val.trim()
-                                .trim_matches(['"', '\''])
-                                .trim()
-                        })
-                        .filter(|value| !value.is_empty() && !value.starts_with('-'))?,
-                );
+                self.strategy = Some(iter.next().and_then(parse_strategy_token)?);
             }
             value
                 if !value.starts_with('-')

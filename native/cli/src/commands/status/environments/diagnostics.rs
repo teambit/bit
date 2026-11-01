@@ -11,8 +11,8 @@ pub(in crate::commands::status) fn issues(
     dependencies: &mut Value,
 ) -> io::Result<()> {
     let identity = validated_identity(target)?;
-    load_failures(context, identity, dependencies)?;
     let facts = &context["environmentFacts"][identity];
+    load_failures(context, facts, identity, dependencies)?;
     if facts["multiple"]
         .as_array()
         .is_some_and(|ids| ids.len() > 1)
@@ -36,11 +36,16 @@ pub(in crate::commands::status) fn issues(
     append_issue(dependencies, kind, &data)
 }
 
-fn load_failures(context: &Value, identity: &str, dependencies: &mut Value) -> io::Result<()> {
+fn load_failures(
+    context: &Value,
+    facts: &Value,
+    identity: &str,
+    dependencies: &mut Value,
+) -> io::Result<()> {
     let Some(failures) = context["environmentFacts"]["loadFailures"]
         .as_array()
         .filter(|arr| !arr.is_empty())
-        .or_else(|| context["environmentFacts"][identity]["loadFailures"].as_array())
+        .or_else(|| facts["loadFailures"].as_array())
     else {
         return Ok(());
     };

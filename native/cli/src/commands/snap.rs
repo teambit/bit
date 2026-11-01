@@ -57,7 +57,10 @@ fn outside_workspace_snap(
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
     {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
@@ -147,7 +150,9 @@ fn failure(
     startup: &Startup,
     error: io::Error,
 ) -> io::Result<Outcome> {
-    io::stdout().write_all(startup.stdout.as_bytes())?;
+    if !startup.stdout.is_empty() {
+        io::stdout().write_all(startup.stdout.as_bytes())?;
+    }
     workspace_command::execute_then(root, args, "snap", |output| {
         if warn {
             output.warning(MESSAGE_WARNING);

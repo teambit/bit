@@ -262,6 +262,9 @@ pub(super) fn apply_variant_policies(
     identity: &Identity<'_>,
     deps: &mut Vec<DepEntry>,
 ) {
+    if ws_config.variants.is_empty() {
+        return;
+    }
     let Ok(variant) = by_root_dir_and_name(
         &ws_config.variants,
         entry.root_dir.trim_end_matches('/'),

@@ -25,22 +25,24 @@ pub(super) fn complex(pattern: &str) -> bool {
 pub(super) fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)> {
     let pattern = pattern.trim();
     let bitmap = bitmap::read(root)?;
-    let matched: Vec<_> = bitmap.entries
+    let mut matched = bitmap.entries
         .iter()
         .filter(|entry| {
             entry.identity == pattern
                 || entry.identity
                     .split_once('/')
                     .is_some_and(|(_, name)| name == pattern)
-        })
-        .collect();
-    if matched.len() != 1 {
+        });
+    let Some(entry) = matched.next() else {
+        return Err(io::Error::other("reset identity absent or ambiguous"));
+    };
+    if matched.next().is_some() {
         return Err(io::Error::other("reset identity absent or ambiguous"));
     }
-    if !matched[0].on_current_lane_including_removed(&[]) || matched[0].staged_deprecation {
+    if !entry.on_current_lane_including_removed(&[]) || entry.staged_deprecation {
         return Err(io::Error::other("reset component unavailable on main"));
     }
-    Ok((matched[0].identity.clone(), bitmap.lane.is_some()))
+    Ok((entry.identity.clone(), bitmap.lane.is_some()))
 }
 
 pub(super) fn identities(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
@@ -84,7 +86,11 @@ pub(super) fn ci_active() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
 }
 

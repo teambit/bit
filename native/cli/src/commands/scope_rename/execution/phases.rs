@@ -172,6 +172,9 @@ fn row_id(key: &str, row: &Value) -> Option<String> {
     Some(format!("{scope}/{name}"))
 }
 fn order_changed(bitmap: &Value, order: &[String], changed: &[String]) -> io::Result<Vec<String>> {
+    if changed.is_empty() {
+        return Ok(Vec::new());
+    }
     let rows = bitmap.as_object().ok_or_else(|| io::Error::other("scope rename bitmap"))?;
     Ok(order
         .iter()

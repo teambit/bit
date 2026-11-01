@@ -242,7 +242,11 @@ pub const COMMANDS: &[Command] = &[
 
 pub fn find(name: &str) -> Option<&'static Command> {
     let trimmed = name.trim();
-    if trimmed.is_empty() || trimmed.len() > 64 || trimmed.contains(char::is_whitespace) {
+    if trimmed.is_empty()
+        || trimmed.len() > 64
+        || !trimmed.is_ascii()
+        || trimmed.bytes().any(|byte| byte.is_ascii_whitespace())
+    {
         return None;
     }
     COMMANDS

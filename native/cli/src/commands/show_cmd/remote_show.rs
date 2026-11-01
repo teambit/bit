@@ -205,8 +205,9 @@ fn build_loaded_from_version(
         .as_array()
         .cloned()
         .unwrap_or_default();
+    let is_removed = check_is_removed(&extensions);
     let binding_prefix = comp_val["bindingPrefix"].as_str().map(str::to_owned);
-    let model = ModelData { binding_prefix, extensions: extensions.clone(), files: files.clone() };
+    let model = ModelData { binding_prefix, extensions, files };
     let comp_id = ComponentId {
         scope: (!scope.is_empty()).then(|| scope.clone()),
         default_scope: None,
@@ -214,10 +215,10 @@ fn build_loaded_from_version(
         version: Some(version_str),
     };
     let package_name = model.package_name(&comp_id);
-    let is_removed = check_is_removed(&extensions);
     let identity = Identity { scope: &scope, name, package_name: &package_name };
     let mut deps: Vec<DepEntry> = Vec::new();
     apply_version_dependencies(ver_val, &model, &identity, &mut deps);
+    let ModelData { extensions, files, .. } = model;
     let entry = make_remote_bitmap_entry(&comp_id, &main_file);
     let component = make_remote_workspace_component(
         comp_id,

@@ -371,30 +371,26 @@ fn parse_list_invalid_limit(rest: &[&str]) -> Option<Subcommand> {
             "--json=false" => json = false,
             "-l" | "--limit" => {
                 idx += 1;
-                limit = Some((*rest.get(idx)?).to_owned());
+                limit = Some(*rest.get(idx)?);
             }
             arg if let Some(val) = arg
                 .strip_prefix("--limit=")
                 .or_else(|| arg.strip_prefix("-l=")) =>
             {
-                limit = Some(val.to_owned());
+                limit = Some(val);
             }
             _ => {}
         }
         idx += 1;
     }
     let raw = limit?;
-    if parse_positive_int(&raw).is_some() {
+    if parse_positive_int(raw).is_some() {
         return None;
     }
-    Some(Subcommand::ListInvalidLimit { raw, json })
+    Some(Subcommand::ListInvalidLimit { raw: raw.to_owned(), json })
 }
 
 pub(super) fn parse_positive_int(raw: &str) -> Option<u64> {
-    let trimmed = raw.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-    let val = trimmed.parse::<u64>().ok()?;
+    let val = raw.trim().parse::<u64>().ok()?;
     (val >= 1).then_some(val)
 }

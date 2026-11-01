@@ -32,12 +32,12 @@ pub(super) fn record(
         text(target.get("identity"))?.trim().to_string(),
         dependencies["state"].clone(),
     );
-    let mut row = entry.clone();
+    if js::truthy(Some(&version)) {
+        captured.comparisons.push(entry.clone());
+    }
+    let mut row = entry;
     row["peerDependencies"] = json!(peer_identities(dependencies)?);
     captured.captured.push(row);
-    if js::truthy(Some(&version)) {
-        captured.comparisons.push(entry);
-    }
     captured.components.push(Component {
         ignored: policy.ignored_issues()?,
         identity: full_identity(target)?,
@@ -64,7 +64,7 @@ pub(super) fn peer_identities(dependencies: &Value) -> io::Result<Vec<String>> {
 pub(super) fn dependency_identities(dependencies: &Value) -> io::Result<Vec<String>> {
     let state = &dependencies["state"];
     let entries = array(state.get("entries"), "dependency entries")?;
-    let mut identities = Vec::new();
+    let mut identities = Vec::with_capacity(entries.len());
     for indices in array(state.get("components"), "dependency lifecycles")? {
         for index in array(Some(indices), "dependency indices")? {
             identities.push(entry_identity_at(entries, index)?);

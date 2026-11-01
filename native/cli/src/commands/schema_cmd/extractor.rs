@@ -139,19 +139,18 @@ fn resolve_scope_pattern_schemas(scope_dir: &Path, pattern: &str) -> Option<Vec<
         .iter()
         .map(|(id, _)| id.as_str())
         .collect::<Vec<_>>();
-    let matched: std::collections::HashSet<String> =
+    let matched: std::collections::HashSet<&str> =
         patterns::matching(&refs, &patterns::split(pattern))
             .ok()?
             .into_iter()
-            .map(str::to_owned)
             .collect();
     if matched.is_empty() {
         return None;
     }
     let mut schemas = Vec::with_capacity(matched.len());
-    for (identity, comp_hash) in candidates {
-        if matched.contains(&identity) {
-            schemas.push(read_component_schema(scope_dir, &comp_hash, "latest")?);
+    for (identity, comp_hash) in &candidates {
+        if matched.contains(identity.as_str()) {
+            schemas.push(read_component_schema(scope_dir, comp_hash, "latest")?);
         }
     }
     Some(schemas)

@@ -28,10 +28,15 @@ pub(super) fn try_run(args: &[OsString], argv: &[&str]) -> io::Result<Option<Out
     Ok(Some(Outcome::Exit(code)))
 }
 
+fn is_positional_id(token: &str) -> bool {
+    let trimmed = token.trim();
+    !trimmed.is_empty() && !trimmed.starts_with('-')
+}
+
 fn split_id_from_argv<'a>(argv: &'a [&'a str]) -> (bool, &'a [&'a str]) {
     match argv {
-        [id, rest @ ..] if !id.trim().is_empty() && !id.trim().starts_with('-') => (true, rest),
-        [rest @ .., id] if !id.trim().is_empty() && !id.trim().starts_with('-') => (true, rest),
+        [id, rest @ ..] if is_positional_id(id) => (true, rest),
+        [rest @ .., id] if is_positional_id(id) => (true, rest),
         rest => (false, rest),
     }
 }

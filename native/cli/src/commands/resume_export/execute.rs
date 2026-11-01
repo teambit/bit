@@ -15,15 +15,19 @@ use tokio::task::JoinSet;
 
 pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
-    let mut plans = Vec::new();
-    let mut names = Vec::new();
+    let mut plans = Vec::with_capacity(options.remotes.len());
+    let mut names = Vec::with_capacity(options.remotes.len());
     for raw_name in &options.remotes {
-        let name = raw_name.trim().to_owned();
-        if name.is_empty() || names.contains(&name) {
+        let name = raw_name.trim();
+        if name.is_empty()
+            || names
+                .iter()
+                .any(|existing| existing == name)
+        {
             continue;
         }
-        names.push(name.clone());
-        match remote_action::prepare(&cwd, &name, true, options.delete) {
+        names.push(name.to_owned());
+        match remote_action::prepare(&cwd, name, true, options.delete) {
             Ok(Some(plan)) => plans.push(Arc::new(plan)),
             Ok(None) => {
                 return Ok(Outcome::Declined(

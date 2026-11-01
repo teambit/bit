@@ -76,7 +76,10 @@ fn ci_enabled() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
 }
 
@@ -188,20 +191,21 @@ fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
     let Some(flags) = arg.trim().strip_prefix('-') else {
         return false;
     };
-    if flags.len() < 2
-        || flags.starts_with('-')
-        || !flags
-            .chars()
-            .all(|ch| matches!(ch, 'd' | 'r' | 's' | 'n' | 'v'))
+    let bytes = flags.as_bytes();
+    if bytes.len() < 2
+        || bytes[0] == b'-'
+        || !bytes
+            .iter()
+            .all(|byte| matches!(byte, b'd' | b'r' | b's' | b'n' | b'v'))
     {
         return false;
     }
-    for ch in flags.chars() {
-        match ch {
-            'd' => options.dev = true,
-            'r' => options.rebuild = true,
-            's' => options.skip_ui_build = true,
-            'n' => options.no_browser = true,
+    for &byte in bytes {
+        match byte {
+            b'd' => options.dev = true,
+            b'r' => options.rebuild = true,
+            b's' => options.skip_ui_build = true,
+            b'n' => options.no_browser = true,
             _ => {}
         }
     }

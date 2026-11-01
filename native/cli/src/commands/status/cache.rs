@@ -14,23 +14,29 @@ const NO_FS_CACHE: &str = "no-fs-cache";
 /// `BIT_CONFIG_FEATURES`, the workspace's config store, `scope.json` or the
 /// global config. Layer precedence is not resolved: a mention anywhere declines.
 pub fn no_fs_cache(root: &Path) -> bool {
-    let from_env = ["BIT_FEATURES", "BIT_CONFIG_FEATURES"]
+    if ["BIT_FEATURES", "BIT_CONFIG_FEATURES"]
         .iter()
         .any(|name| {
             env::var_os(name).is_some_and(|value| mentions_no_fs_cache(&value.to_string_lossy()))
-        });
+        })
+    {
+        return true;
+    }
     let files = [
         root.join("workspace.jsonc"),
         crate::workspace::scope_path(root).join("scope.json"),
         global_config_dir().join("config.json"),
     ];
-    from_env
-        || files
-            .iter()
-            .any(|file| {
-                fs::read_to_string(file)
-                    .is_ok_and(|text| text.to_ascii_lowercase().contains(NO_FS_CACHE))
-            })
+    files
+        .iter()
+        .any(|file| {
+            fs::read(file)
+                .is_ok_and(|bytes| {
+                    bytes
+                        .windows(NO_FS_CACHE.len())
+                        .any(|window| window.eq_ignore_ascii_case(NO_FS_CACHE.as_bytes()))
+                })
+        })
 }
 
 fn mentions_no_fs_cache(value: &str) -> bool {

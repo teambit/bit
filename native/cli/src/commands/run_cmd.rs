@@ -36,15 +36,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("run arguments are not UTF-8".into()));
     };
-    let chalk = Chalk::detect(args);
     if is_help_form(&argv[1..]) {
+        let chalk = Chalk::detect(args);
         io::stdout()
             .lock()
             .write_all(command_help("run", chalk).as_bytes())?;
         return Ok(Outcome::Exit(ExitCode::SUCCESS));
     }
     if let Some(unknown) = run_unsupported_help(&argv[1..]) {
-        return print_unsupported_help(unknown, chalk);
+        return print_unsupported_help(unknown, Chalk::detect(args));
     }
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native run grammar".into()));
@@ -232,11 +232,8 @@ fn apply_inline_or_app(arg: &str, options: &mut Options) -> Option<()> {
         .or_else(|| arg.strip_prefix("-a="))
     {
         options.args = Some(val.to_owned());
-    } else if !arg.starts_with('-')
-        && !arg.trim().is_empty()
-        && options.app_name.is_none()
-    {
-        options.app_name = Some(arg.trim().to_owned());
+    } else if !arg.starts_with('-') && !arg.is_empty() && options.app_name.is_none() {
+        options.app_name = Some(arg.to_owned());
     } else {
         return None;
     }

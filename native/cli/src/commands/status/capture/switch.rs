@@ -102,7 +102,7 @@ impl Session<'_> {
             .iter()
             .map(|row| Ok((row_identity(row)?, row)))
             .collect::<io::Result<HashMap<_, _>>>()?;
-        let mut scanned = HashSet::new();
+        let mut scanned = HashSet::with_capacity(targets.len());
         for identity in order {
             self.scan_once(identity, &by_id, &mut scanned, capture)?;
             let response = self.environments.switch_one(self.context, capture, identity)?;
@@ -147,7 +147,8 @@ impl Session<'_> {
         capture: &mut Capture,
     ) -> io::Result<()> {
         let identity = identity.trim();
-        if scanned.insert(identity.to_owned()) {
+        if !scanned.contains(identity) {
+            scanned.insert(identity.to_owned());
             let target =
                 by_id.get(identity).ok_or_else(|| decline("switch callback target absent"))?;
             self.target(target, capture)?;

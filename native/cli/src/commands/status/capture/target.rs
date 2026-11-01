@@ -38,23 +38,20 @@ impl Scan<'_> {
             return Ok(());
         }
         let files = self.files(directory)?;
-        self.loaded_target(target, directory, &files, &policy, captured)
+        self.loaded_target(target, directory, files, &policy, captured)
     }
 
     fn loaded_target(
         &mut self,
         target: &Value,
         directory: &str,
-        files: &[String],
+        files: Vec<String>,
         policy: &policy::Policy,
         captured: &mut Capture,
     ) -> io::Result<()> {
         let files = files
-            .iter()
-            .map(String::as_str)
-            .map(|file| file.trim().trim_start_matches("./"))
-            .filter(|file| !file.is_empty())
-            .map(str::to_owned)
+            .into_iter()
+            .filter_map(normalize_target_file)
             .collect::<Vec<_>>();
         if self.behavior.missing_status_invalid
             && missing::status_invalid_files(self.root, target, directory, &files, captured)?
@@ -84,5 +81,16 @@ impl Scan<'_> {
             &policy.extensions,
             captured,
         )
+    }
+}
+
+fn normalize_target_file(file: String) -> Option<String> {
+    let trimmed = file.trim().trim_start_matches("./");
+    if trimmed.is_empty() {
+        None
+    } else if trimmed.len() == file.len() {
+        Some(file)
+    } else {
+        Some(trimmed.to_owned())
     }
 }

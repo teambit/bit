@@ -36,7 +36,8 @@ impl Environments {
         files: &[String],
     ) -> io::Result<Value> {
         let identity = text(target.get("identity"))?.trim();
-        let env = context["environmentFacts"][identity]["envId"]
+        let facts = &context["environmentFacts"][identity];
+        let env = facts["envId"]
             .as_str()
             .map(str::trim)
             .filter(|env| !env.is_empty())
@@ -47,14 +48,12 @@ impl Environments {
         {
             return Ok(Value::Null);
         }
-        if (bare_env == "teambit.harmony/node" && context["environmentFacts"][identity].is_null())
-            || context["environmentFacts"][identity]["nonLoaded"] == true
-        {
+        if (bare_env == "teambit.harmony/node" && facts.is_null()) || facts["nonLoaded"] == true {
             return Ok(Value::Null);
         }
         let directory = target_directory(root, target)?;
         let file_paths = target_file_paths(&directory, files);
-        self.host(root)?.call("detectDependencies", &json!({"envId":env,"files":file_paths,"componentDir":directory,"aspectIds":context["environmentFacts"][identity]["aspectIds"]}))
+        self.host(root)?.call("detectDependencies", &json!({"envId":env,"files":file_paths,"componentDir":directory,"aspectIds":facts["aspectIds"]}))
     }
 }
 

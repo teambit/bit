@@ -56,7 +56,10 @@ fn ci_active() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
 }
 
@@ -95,6 +98,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn run_diff(cwd: &Path, args: &[OsString], opts: &DiffOptions) -> io::Result<Outcome> {
+    if let Some(root) = workspace::root(cwd) {
+        if let Some(err) =
+            diagnose_workspace_diff_error(&root, &opts.component, Chalk::detect(args))
+        {
+            return emit_workspace_error(&root, args, "diff", opts.json, err);
+        }
+        return Ok(Outcome::Declined("schema diff delegated".into()));
+    }
     if is_outside_any_host(cwd) {
         return workspace_command::execute_failure_scope(
             cwd,
@@ -104,14 +115,6 @@ fn run_diff(cwd: &Path, args: &[OsString], opts: &DiffOptions) -> io::Result<Out
             "",
             io::Error::other(HOST_NOT_FOUND_ERR),
         );
-    }
-    if let Some(root) = workspace::root(cwd) {
-        if let Some(err) =
-            diagnose_workspace_diff_error(&root, &opts.component, Chalk::detect(args))
-        {
-            return emit_workspace_error(&root, args, "diff", opts.json, err);
-        }
-        return Ok(Outcome::Declined("schema diff delegated".into()));
     }
     if let Some(scope) = scope_root::discover().ok().flatten()
         && scope.bare

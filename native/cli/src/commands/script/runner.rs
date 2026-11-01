@@ -40,6 +40,9 @@ pub(in crate::commands) fn resolve_workspace_components(
 
 fn promote_bit_env_plugin_components(ws: &mut Workspace, core_ids: &[String]) {
     let plugin_envs = collect_plugin_env_ids(ws);
+    if plugin_envs.is_empty() {
+        return;
+    }
     for comp in &mut ws.components {
         assign_plugin_env_to_comp(comp, &plugin_envs, core_ids);
     }
@@ -84,12 +87,12 @@ fn assign_plugin_env_to_comp(
 fn is_matching_plugin_env(key: &str, plugin_envs: &[String], core_ids: &[String]) -> bool {
     let without = aspect_id_without_version(key);
     without != ENVS_ASPECT
-        && !core_ids
-            .iter()
-            .any(|core| core == without)
         && plugin_envs
             .iter()
             .any(|env_id| env_id == without)
+        && !core_ids
+            .iter()
+            .any(|core| core == without)
 }
 
 fn has_explicit_env(comp: &WorkspaceComponent) -> bool {

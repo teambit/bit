@@ -90,8 +90,8 @@ fn prepare(root: &Path, options: Options, startup: &mut Startup) -> io::Result<P
 }
 
 fn load_options(rows: &[Value]) -> io::Result<Value> {
-    let mut versions = Vec::new();
-    let mut entries = Vec::new();
+    let mut versions = Vec::with_capacity(rows.len());
+    let mut entries = Vec::with_capacity(rows.len());
     for row in rows {
         let (scope, name) = stash_id_parts(&row["id"])?;
         if name.is_empty() {
@@ -211,7 +211,10 @@ fn run_without_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
     {
         return Ok(Outcome::Declined("not inside a workspace".to_owned()));

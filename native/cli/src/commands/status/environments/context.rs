@@ -172,19 +172,18 @@ fn collect_prime_ids<'a>(
     core: &[String],
     aspects: &'a [String],
 ) -> Vec<&'a String> {
-    let mut ids = aspects
+    let mut seen = std::collections::HashSet::new();
+    aspects
         .iter()
         .chain(components.iter().flat_map(|component| component.config.keys()))
         .filter(|id| {
+            if !seen.insert(*id) || bit_install::policy::is_core_env(id) {
+                return false;
+            }
             let bare = bit_install::policy::split_version(id).0;
-            !(core.contains(id)
-                || core.iter().any(|item| item == bare)
-                || bit_install::policy::is_core_env(id))
+            !(core.contains(id) || core.iter().any(|item| item == bare))
         })
-        .collect::<Vec<_>>();
-    let mut seen = std::collections::HashSet::new();
-    ids.retain(|id| seen.insert(*id));
-    ids
+        .collect()
 }
 
 fn should_record_snapshot(

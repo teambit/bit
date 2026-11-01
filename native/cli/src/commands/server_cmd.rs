@@ -29,7 +29,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
     {
         let cwd = env::current_dir()?;
@@ -51,6 +54,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("server execution delegated".into()))
 }
 
+fn parse_nonzero_port(raw: &str) -> Option<u16> {
+    raw.trim()
+        .parse::<u16>()
+        .ok()
+        .filter(|&port| port >= 1)
+}
+
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
@@ -66,9 +76,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 if let Some(&next) = args.get(idx + 1)
                     && !next.starts_with('-')
                 {
-                    let parsed = next.trim().parse::<u16>().ok()?;
-                    (parsed >= 1).then_some(())?;
-                    options.port = Some(parsed);
+                    options.port = Some(parse_nonzero_port(next)?);
                     idx += 1;
                 }
             }
@@ -76,9 +84,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 .strip_prefix("--port=")
                 .or_else(|| val.strip_prefix("-p=")) =>
             {
-                let parsed = port.trim().parse::<u16>().ok()?;
-                (parsed >= 1).then_some(())?;
-                options.port = Some(parsed);
+                options.port = Some(parse_nonzero_port(port)?);
             }
             _ => return None,
         }

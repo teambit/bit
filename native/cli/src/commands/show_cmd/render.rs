@@ -157,7 +157,7 @@ fn build_extensions_array(loaded: &LoadedComponent, legacy: bool) -> Vec<Value> 
     let deps_json = serialize_deps(&loaded.deps);
     let mut has_dep_resolver = false;
     let mut has_dev_files = false;
-    let mut out = Vec::new();
+    let mut out = Vec::with_capacity(loaded.component.config.len() + loaded.model_extensions.len());
     for (ext_id, ext_cfg) in &loaded.component.config {
         let bare = aspect_id_without_version(ext_id);
         let is_dep_res = bare == DEPENDENCY_RESOLVER_ASPECT;
@@ -263,8 +263,11 @@ fn build_dev_files_map(loaded: &LoadedComponent) -> Value {
         file.contains(".spec.") || file.contains(".test.")
     });
     let is_readme = aspect_id_without_version(&loaded.component.env_id) == "teambit.mdx/readme";
-    let mut docs =
-        matching_files(&loaded.component.files, |file| !is_readme && file.contains(".docs."));
+    let mut docs = if is_readme {
+        Vec::new()
+    } else {
+        matching_files(&loaded.component.files, |file| file.contains(".docs."))
+    };
     let compositions = matching_files(&loaded.component.files, |file| {
         file.contains(".composition.") || file.contains(".compositions.")
     });

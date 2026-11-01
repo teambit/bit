@@ -84,10 +84,10 @@ fn is_script_source_file(path: &Path) -> bool {
     path.extension()
         .and_then(|ext| ext.to_str())
         .is_some_and(|ext| {
-            matches!(
-                ext.trim().to_ascii_lowercase().as_str(),
-                "ts" | "tsx" | "js" | "jsx" | "mjs" | "cjs",
-            )
+            let trimmed = ext.trim();
+            ["ts", "tsx", "js", "jsx", "mjs", "cjs"]
+                .iter()
+                .any(|candidate| trimmed.eq_ignore_ascii_case(candidate))
         })
 }
 
@@ -224,8 +224,11 @@ fn parse_single_entry(raw_entry: &str) -> Option<ParsedScript> {
     let colon_idx = find_top_level_colon(cleaned)?;
     let raw_key = cleaned[..colon_idx].trim();
     let raw_val = cleaned[colon_idx + 1..].trim();
-    let name = unquote_string(raw_key).unwrap_or_else(|| raw_key.to_owned());
-    let name = name.trim().to_owned();
+    let unquoted_key = unquote_string(raw_key);
+    let name = unquoted_key
+        .as_deref()
+        .unwrap_or(raw_key)
+        .trim();
     if name.is_empty() || raw_val.is_empty() {
         return None;
     }
@@ -233,7 +236,7 @@ fn parse_single_entry(raw_entry: &str) -> Option<ParsedScript> {
         Some(cmd) => ScriptHandler::Shell(cmd),
         None => ScriptHandler::Function(raw_val.to_owned()),
     };
-    Some(ParsedScript { name, handler })
+    Some(ParsedScript { name: name.to_owned(), handler })
 }
 
 fn strip_leading_comments(mut text: &str) -> &str {

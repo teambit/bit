@@ -24,7 +24,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
         _ => return None,
     };
     let mut options = Options { owner, ..Default::default() };
-    let mut names = Vec::new();
+    let mut names = Vec::with_capacity(2);
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         if arg == "--" {
@@ -39,18 +39,20 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+fn valid_name_token(token: &str) -> bool {
+    !token.is_empty()
+        && !token.starts_with('-')
+        && !token.contains(char::is_whitespace)
+        && !token.contains('\0')
+}
+
 fn consume_trailing_names<'a>(
     iter: impl Iterator<Item = &'a str>,
     names: &mut Vec<&'a str>,
 ) -> Option<()> {
     for rest in iter {
-        let trimmed = rest.trim();
-        (!trimmed.is_empty()
-            && !trimmed.starts_with('-')
-            && !trimmed.contains(char::is_whitespace)
-            && !trimmed.contains('\0'))
-        .then_some(())?;
-        names.push(trimmed);
+        valid_name_token(rest).then_some(())?;
+        names.push(rest);
     }
     Some(())
 }
@@ -61,12 +63,9 @@ fn apply_arg<'a>(
     options: &mut Options,
     names: &mut Vec<&'a str>,
 ) -> Option<()> {
-    let trimmed = arg.trim();
-    if !trimmed.starts_with('-') && !trimmed.is_empty() {
-        if trimmed.contains(char::is_whitespace) || trimmed.contains('\0') {
-            return None;
-        }
-        names.push(trimmed);
+    if !arg.starts_with('-') && !arg.is_empty() {
+        valid_name_token(arg).then_some(())?;
+        names.push(arg);
         return Some(());
     }
     match arg {

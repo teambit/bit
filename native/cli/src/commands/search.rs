@@ -88,15 +88,20 @@ fn execute_local_search(
 
 fn match_queries(ids: &[String], queries: &[String]) -> (Vec<String>, Vec<serde_json::Value>) {
     let mut all_set = BTreeSet::new();
-    let mut per_query = Vec::new();
     let unique_queries = deduplicate_preserve_order(queries);
+    let mut per_query = Vec::with_capacity(unique_queries.len());
+    let lowered_ids: Vec<String> = ids
+        .iter()
+        .map(|id| id.to_lowercase())
+        .collect();
 
     for query in unique_queries {
         let lower = query.to_lowercase();
         let matches: Vec<String> = ids
             .iter()
-            .filter(|id| id.to_lowercase().contains(&lower))
-            .cloned()
+            .zip(&lowered_ids)
+            .filter(|(_, lowered_id)| lowered_id.contains(&lower))
+            .map(|(id, _)| id.clone())
             .collect();
         for matched in &matches {
             all_set.insert(matched.clone());
@@ -114,13 +119,13 @@ fn match_queries(ids: &[String], queries: &[String]) -> (Vec<String>, Vec<serde_
     (sorted_all, per_query)
 }
 
-fn deduplicate_preserve_order(items: &[String]) -> Vec<String> {
-    let mut seen = std::collections::HashSet::new();
-    let mut result = Vec::new();
+fn deduplicate_preserve_order(items: &[String]) -> Vec<&str> {
+    let mut seen = std::collections::HashSet::with_capacity(items.len());
+    let mut result = Vec::with_capacity(items.len());
     for item in items {
         let trimmed = item.trim();
-        if !trimmed.is_empty() && seen.insert(trimmed.to_owned()) {
-            result.push(trimmed.to_owned());
+        if !trimmed.is_empty() && seen.insert(trimmed) {
+            result.push(trimmed);
         }
     }
     result

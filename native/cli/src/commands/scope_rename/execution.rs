@@ -21,22 +21,23 @@ pub(super) fn run(
     output: &bit_install::output::Output,
 ) -> io::Result<Report> {
     let selection = Selection::prepare(root, options)?;
-    selection.publish_default(&workspace_command::file_id())?;
+    let file_id = workspace_command::file_id();
+    selection.publish_default(&file_id)?;
     if let Some(scope) = &selection.default_scope {
         linker.call(root, "identityScopeDefault", &json!({"scope":scope}))?;
-        print!("{}", linker.take_stdout());
+        flush_stdout(linker);
     }
     let mut entries = prepare(root, &selection, linker)?;
     phases::initial(root, &mut entries, linker, chalk, output, options)?;
-    entries.batch.write(&workspace_command::file_id(), "rename")?;
-    entries.batch.publish_configuration(&workspace_command::file_id())?;
+    entries.batch.write(&file_id, "rename")?;
+    entries.batch.publish_configuration(&file_id)?;
     linker.forget_loaded();
     let mut changed = phases::targets(root, &mut entries, linker)?;
     if options.refactor {
         changed = phases::refactor(root, &mut entries, linker, output, &changed)?;
     }
     phases::materialize(root, &mut entries, linker)?;
-    entries.batch.finish(&workspace_command::file_id())?;
+    entries.batch.finish(&file_id)?;
     let ids = phases::ids(&entries.batch)?;
     if !ids.is_empty() {
         finish_linked_tooling(root, &entries.batch, &ids, options, linker, chalk)?;

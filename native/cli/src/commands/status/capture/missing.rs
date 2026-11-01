@@ -91,11 +91,7 @@ pub(super) fn status_invalid_files(
         return Ok(true);
     }
     let main = text(target.get("mainFile"))?.trim().trim_start_matches("./");
-    if files
-        .iter()
-        .any(|file| file.trim().trim_start_matches("./") == main)
-        || !missing(&root.join(directory).join(main))?
-    {
+    if contains_main_file(files, main) || !missing(&root.join(directory).join(main))? {
         return Ok(false);
     }
     record_status_invalid(
@@ -145,6 +141,12 @@ fn record_status_invalid(target: &Value, error: Value, captured: &mut Capture) -
     Ok(())
 }
 
+fn contains_main_file(files: &[String], main: &str) -> bool {
+    files
+        .iter()
+        .any(|file| file.trim().trim_start_matches("./") == main)
+}
+
 pub(super) fn main_file(
     root: &Path,
     enabled: bool,
@@ -158,11 +160,7 @@ pub(super) fn main_file(
         .and_then(Value::as_str)
         .map(|main| main.trim().trim_start_matches("./"))
         .filter(|main| !main.is_empty());
-    if main.is_some_and(|main| {
-        files
-            .iter()
-            .any(|file| file.trim().trim_start_matches("./") == main)
-    }) {
+    if main.is_some_and(|main| contains_main_file(files, main)) {
         return Ok(false);
     }
     if enabled

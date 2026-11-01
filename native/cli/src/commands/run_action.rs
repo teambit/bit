@@ -61,15 +61,17 @@ fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Out
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
     {
         return Ok(Outcome::Declined("CI run-action outside scope delegated".into()));
     }
-    let msg = format!(
-        "error: scope not found at {}",
-        Chalk::detect(args).bold(&cwd.display().to_string()),
-    );
+    let msg =
+        format!("error: scope not found at {}", Chalk::detect(args).bold(&cwd.to_string_lossy()));
     workspace_command::execute_failure_scope(
         cwd,
         args,

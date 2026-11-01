@@ -115,25 +115,33 @@ pub(super) fn find_bitmap_key(
             return Ok(key.clone());
         }
         if row_name == name && row_scope.is_empty() && fallback.is_none() {
-            fallback = Some(key.clone());
+            fallback = Some(key);
         }
     }
-    fallback.ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "detached bitmap key absent"))
+    fallback
+        .cloned()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "detached bitmap key absent"))
 }
 
 /// Encode a Bit scope object into a valid RFC 1950 zlib stream using stored deflate blocks.
 pub(super) fn encode_object(kind: &str, hash: &str, value: &Value) -> io::Result<Vec<u8>> {
     let body = serde_json::to_string(value).map_err(io::Error::other)?;
     let raw = format!("{kind} {hash} {}\0{body}", body.encode_utf16().count()).into_bytes();
-    let mut out = vec![0x78, 0x01];
-    let chunks: Vec<&[u8]> = if raw.is_empty() { vec![&[]] } else { raw.chunks(65535).collect() };
-    for (index, chunk) in chunks.iter().enumerate() {
-        let last = u8::from(index + 1 == chunks.len());
-        let len = u16::try_from(chunk.len()).unwrap_or(0);
-        out.push(last);
-        out.extend_from_slice(&len.to_le_bytes());
-        out.extend_from_slice(&(!len).to_le_bytes());
-        out.extend_from_slice(chunk);
+    let mut out = Vec::with_capacity(raw.len() + 16);
+    out.extend_from_slice(&[0x78, 0x01]);
+    if raw.is_empty() {
+        out.extend_from_slice(&[1, 0, 0, 0xff, 0xff]);
+    } else {
+        let chunks = raw.chunks(65535);
+        let total = chunks.len();
+        for (index, chunk) in chunks.enumerate() {
+            let last = u8::from(index + 1 == total);
+            let len = u16::try_from(chunk.len()).unwrap_or(0);
+            out.push(last);
+            out.extend_from_slice(&len.to_le_bytes());
+            out.extend_from_slice(&(!len).to_le_bytes());
+            out.extend_from_slice(chunk);
+        }
     }
     out.extend_from_slice(&adler32(&raw).to_be_bytes());
     Ok(out)

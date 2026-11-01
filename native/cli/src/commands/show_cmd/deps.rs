@@ -34,24 +34,31 @@ pub(super) struct Identity<'a> {
 
 impl Identity<'_> {
     pub(super) fn is_self(&self, candidate: &str) -> bool {
-        let base_id = if self.scope.is_empty() {
-            self.name.to_owned()
-        } else {
-            format!("{}/{}", self.scope, self.name)
-        };
-        let scoped_pkg = format!("@{}/{}", self.scope, self.name);
-        let scoped_dot_pkg = format!("@{}/{}", self.scope, self.name.replace('/', "."));
         let stripped = strip_pkg_version(candidate.trim());
-        stripped == self.package_name
-            || stripped == scoped_pkg
-            || stripped == scoped_dot_pkg
-            || stripped == base_id
-            || stripped == self.name
-            || stripped.starts_with(&format!("{}/", self.package_name))
-            || stripped.starts_with(&format!("{base_id}/"))
-            || stripped.starts_with(&format!("{scoped_pkg}/"))
-            || stripped.starts_with(&format!("{scoped_dot_pkg}/"))
+        if eq_or_subpath(stripped, self.package_name) || eq_or_subpath(stripped, self.name) {
+            return true;
+        }
+        let after_at = stripped.strip_prefix('@').unwrap_or(stripped);
+        let Some(rest) = after_at
+            .strip_prefix(self.scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+        else {
+            return false;
+        };
+        if eq_or_subpath(rest, self.name) {
+            return true;
+        }
+        stripped.starts_with('@')
+            && self.name.contains('/')
+            && eq_or_subpath(rest, &self.name.replace('/', "."))
     }
+}
+
+fn eq_or_subpath(candidate: &str, target: &str) -> bool {
+    candidate == target
+        || candidate
+            .strip_prefix(target)
+            .is_some_and(|rest| rest.starts_with('/'))
 }
 
 fn strip_pkg_version(raw: &str) -> &str {

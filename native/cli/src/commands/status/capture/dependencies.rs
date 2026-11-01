@@ -54,11 +54,7 @@ impl Scan<'_> {
                 .or_else(|| target.get("id")),
         )?
         .trim();
-        let normalized_dir = directory
-            .trim()
-            .trim_start_matches("./")
-            .trim_end_matches('/');
-        let is_root = normalized_dir.is_empty() || normalized_dir == ".";
+        let is_root = is_root_directory(directory);
         let mut dependencies = if is_root
             || captured.cache.no_fs_cache
             || captured.cache.reset
@@ -89,11 +85,9 @@ impl Scan<'_> {
         cached: &Value,
     ) -> io::Result<(Value, fresh::Pending)> {
         let (detected, pending) = self.detect(target, files, policy)?;
-        let current = |deps: &Value| {
-            policy::current_metadata(target, policy, deps).map(|meta| meta.to_string())
-        };
-        let issues = |deps: &Value| deps.get("issues").map(Value::to_string);
-        if current(&detected)? != current(cached)? || issues(&detected) != issues(cached) {
+        let detected_meta = policy::current_metadata(target, policy, &detected)?;
+        let cached_meta = policy::current_metadata(target, policy, cached)?;
+        if detected_meta != cached_meta || detected.get("issues") != cached.get("issues") {
             return Err(decline("cached dependencies differ from a fresh detection"));
         }
         Ok((detected, pending))
@@ -134,13 +128,7 @@ impl Scan<'_> {
         let is_root_dir = target["directory"]
             .as_str()
             .or_else(|| target["rootDir"].as_str())
-            .is_some_and(|dir| {
-                let normalized = dir
-                    .trim()
-                    .trim_start_matches("./")
-                    .trim_end_matches('/');
-                normalized.is_empty() || normalized == "."
-            });
+            .is_some_and(is_root_directory);
         let custom = if is_root_dir {
             Value::Null
         } else {
@@ -158,4 +146,12 @@ impl Scan<'_> {
             result => result,
         }
     }
+}
+
+fn is_root_directory(dir: &str) -> bool {
+    let normalized = dir
+        .trim()
+        .trim_start_matches("./")
+        .trim_end_matches('/');
+    normalized.is_empty() || normalized == "."
 }

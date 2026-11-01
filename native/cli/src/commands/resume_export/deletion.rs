@@ -90,7 +90,11 @@ fn is_truthy_env(key: &str) -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
 }
 
@@ -101,6 +105,7 @@ async fn ask(
     delete: bool,
 ) -> io::Result<Answers> {
     let export_id = export_id.trim();
+    let action = if delete { "RemovePendingDir" } else { "PendingDirStatus" };
     let mut answers = Answers::default();
     let limit = plans
         .first()
@@ -113,10 +118,7 @@ async fn ask(
             let plan = Arc::clone(plan);
             let name = name.clone();
             let payload = json!({"clientId":export_id});
-            tasks.spawn(async move {
-                let action = if delete { "RemovePendingDir" } else { "PendingDirStatus" };
-                (name, plan.action(action, &payload).await)
-            });
+            tasks.spawn(async move { (name, plan.action(action, &payload).await) });
         }
         let Some(result) = tasks.join_next().await else { break };
         let (name, result) = result.map_err(io::Error::other)?;

@@ -194,7 +194,7 @@ pub(super) fn load_version_history_with_local_versions(
         .map(str::to_owned)
         .collect();
     while let Some(hash) = stack.pop() {
-        if !known.insert(hash.clone()) {
+        if known.contains(&hash) {
             continue;
         }
         let parents = read_version_parents(scope_dir, &hash)?;
@@ -203,6 +203,7 @@ pub(super) fn load_version_history_with_local_versions(
                 stack.push(parent.clone());
             }
         }
+        known.insert(hash.clone());
         versions.push(json!({ "hash": hash, "parents": parents }));
     }
     Some(json!({ "versions": versions }))

@@ -25,10 +25,10 @@ pub(super) fn supported(
             .all(|id| {
                 let trimmed = id.trim();
                 let bare = bit_install::policy::split_version(trimmed).0;
-                (core
-                    .iter()
-                    .any(|item| item == trimmed || item == bare))
-                    && (!bit_install::policy::is_core_env(trimmed) || bare == "teambit.react/react")
+                (!bit_install::policy::is_core_env(trimmed) || bare == "teambit.react/react")
+                    && core
+                        .iter()
+                        .any(|item| item == trimmed || item == bare)
             })
 }
 

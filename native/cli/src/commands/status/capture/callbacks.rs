@@ -38,6 +38,7 @@ impl CacheWrites {
     }
 
     pub(in crate::commands::status) fn retain_callback_proofs(&mut self, proofs: &[Value]) {
+        self.environment_reads.reserve(proofs.len());
         for proof in proofs {
             if !self.environment_reads.contains(proof) {
                 self.environment_reads.push(proof.clone());
@@ -88,26 +89,25 @@ pub fn issue_callbacks(
 
 /// Workspace loading failures retained by the published provider host.
 pub fn workspace_issues(capture: &Capture) -> io::Result<Vec<String>> {
-    match &capture.cache.callbacks.host {
-        Some(host) => {
-            let result = host.call("statusWorkspaceIssues", &serde_json::json!({}));
-            capture.cache.retain_callback_stdout(&host.take_stdout());
-            let raw: Vec<String> = serde_json::from_value(result?).map_err(io::Error::other)?;
-            let mut issues = Vec::with_capacity(raw.len());
-            for issue in raw {
-                let trimmed = issue.trim();
-                if !trimmed.is_empty()
-                    && !issues
-                        .iter()
-                        .any(|existing| existing == trimmed)
-                {
-                    issues.push(trimmed.to_owned());
-                }
-            }
-            Ok(issues)
+    let Some(host) = &capture.cache.callbacks.host else {
+        return Ok(Vec::new());
+    };
+    let result = host.call("statusWorkspaceIssues", &serde_json::json!({}));
+    capture.cache.retain_callback_stdout(&host.take_stdout());
+    let raw: Vec<String> = serde_json::from_value(result?).map_err(io::Error::other)?;
+    let mut issues = Vec::with_capacity(raw.len());
+    for issue in raw {
+        let trimmed = issue.trim();
+        if !trimmed.is_empty()
+            && !issues
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
+            let owned = if trimmed.len() == issue.len() { issue } else { trimmed.to_owned() };
+            issues.push(owned);
         }
-        None => Ok(Vec::new()),
     }
+    Ok(issues)
 }
 
 /// Output produced by permitted Harmony callbacks, buffered until command preflight completes.

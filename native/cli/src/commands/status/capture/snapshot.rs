@@ -72,18 +72,20 @@ pub fn snapshot_pre_snap(
 
 fn replace_source_proofs(capture: &mut Capture, output: &Value) -> io::Result<()> {
     for change in array(output.get("changedWorkspaceSources"), "pre-snapshot source changes")? {
-        let before = &change["before"];
-        let after = &change["after"];
-        for entry in capture.cache.pending.iter_mut().chain(&mut capture.cache.replacements) {
-            entry.replace_source_proof(before, after);
-        }
-        for proof in &mut capture.cache.environment_reads {
-            if proof == before {
-                *proof = after.clone();
-            }
-        }
+        replace_single_proof(capture, &change["before"], &change["after"]);
     }
     Ok(())
+}
+
+fn replace_single_proof(capture: &mut Capture, before: &Value, after: &Value) {
+    for entry in capture.cache.pending.iter_mut().chain(&mut capture.cache.replacements) {
+        entry.replace_source_proof(before, after);
+    }
+    for proof in &mut capture.cache.environment_reads {
+        if proof == before {
+            *proof = after.clone();
+        }
+    }
 }
 
 /// Whether lifecycle callbacks require the published aspect host.
@@ -100,7 +102,10 @@ fn snapshot_params_require_host(params: &Value) -> bool {
                     .trim()
                     .trim_matches(['"', '\''])
                     .trim();
-                !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "false" | "0" | "no" | "off")
+                !trimmed.is_empty()
+                    && !["false", "0", "no", "off"]
+                        .iter()
+                        .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
             });
     let build_enabled = params["build"].as_bool() == Some(true)
         || params["build"]
@@ -238,10 +243,7 @@ pub fn snapshot_control_reads(capture: &mut Capture, reads: &Value) -> io::Resul
             .filter(|proof| proof["path"].as_str().map(str::trim) == Some(path))
             .collect::<Vec<_>>();
         for before in before {
-            replace_source_proofs(
-                capture,
-                &json!({"changedWorkspaceSources":[{"before":before,"after":after}]}),
-            )?;
+            replace_single_proof(capture, &before, after);
         }
     }
     Ok(())

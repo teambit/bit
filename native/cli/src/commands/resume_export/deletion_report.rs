@@ -20,13 +20,18 @@ pub(super) fn failed_lines(failed: &IndexMap<String, String>) -> Vec<String> {
 }
 
 fn failed_section(formatter: &Formatter, failed: &IndexMap<String, String>) -> String {
+    if failed.is_empty() {
+        return String::new();
+    }
+    let error_symbol = formatter.error_symbol();
+    let items: Vec<_> = failed_lines(failed)
+        .into_iter()
+        .map(|line| Formatter::item_with(&line, &error_symbol))
+        .collect();
     formatter.section(
-        &format!("{} failed scopes", formatter.error_symbol()),
+        &format!("{error_symbol} failed scopes"),
         "(these scopes could not be reached, nothing was deleted from them)",
-        &failed_lines(failed)
-            .iter()
-            .map(|line| Formatter::item_with(line, &formatter.error_symbol()))
-            .collect::<Vec<_>>(),
+        &items,
     )
 }
 
@@ -54,11 +59,12 @@ pub(super) fn probe(
     to_clear: &[String],
 ) -> String {
     let export_id = export_id.trim();
+    let warn_symbol = formatter.warn_symbol();
     Formatter::join(&[
         formatter.section("pending objects to delete", &format!(r#"(of the export-id "{export_id}")"#), &to_clear.iter().map(|name| formatter.item(name.trim())).collect::<Vec<_>>()),
-        formatter.section(&format!("{} scopes that no longer hold these objects", formatter.warn_symbol()),
+        formatter.section(&format!("{warn_symbol} scopes that no longer hold these objects"),
             "a scope drops the pending objects as soon as it persisted them, so this export may be\npartially persisted already. if it is, deleting the rest leaves these scopes with\ndependencies that were never exported. run without \"--delete\" to persist instead.",
-            &probe.absent.iter().map(|name| Formatter::item_with(name.trim(), &formatter.warn_symbol())).collect::<Vec<_>>()),
+            &probe.absent.iter().map(|name| Formatter::item_with(name.trim(), &warn_symbol)).collect::<Vec<_>>()),
         if probe.unknown.is_empty() { String::new() } else {
             warning(formatter, &format!("{} scope(s) run a server that can't report whether anything is pending, so the check above skipped them", probe.unknown.len()))
         },

@@ -219,7 +219,7 @@ fn capture_environment(
     let inventory = Inventory::new(&options)?;
     let mut behavior = capture_options.scan_behavior();
     behavior.callbacks |= snapshot || checkout;
-    let mut captured = initialize(root, context, !targets.is_empty(), capture_options)?;
+    let mut captured = initialize(root, context, targets.len(), capture_options)?;
     let mut facts = None;
     let scan = Scan {
         engine,
@@ -273,18 +273,18 @@ fn validate_write(
 fn initialize(
     root: &Path,
     context: &Value,
-    has_targets: bool,
+    target_count: usize,
     capture_options: CaptureOptions,
 ) -> io::Result<Capture> {
     let no_fs_cache = cache::no_fs_cache(root);
     let reset = !no_fs_cache
         && !context["importCacheInitialized"].as_bool().unwrap_or(false)
-        && has_targets
+        && target_count > 0
         && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
     Ok(Capture {
-        captured: Vec::new(),
-        comparisons: Vec::new(),
-        components: Vec::new(),
+        captured: Vec::with_capacity(target_count),
+        comparisons: Vec::with_capacity(target_count),
+        components: Vec::with_capacity(target_count),
         environment_facts: {
             let mut facts = context["environmentFacts"].clone();
             facts["checkoutCacheMisses"] = json!({});
@@ -292,7 +292,7 @@ fn initialize(
         },
         remotely_removed: Vec::new(),
         invalid: HashMap::new(),
-        dependency_states: HashMap::new(),
+        dependency_states: HashMap::with_capacity(target_count),
         cache: CacheWrites {
             reset,
             no_fs_cache,
