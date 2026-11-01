@@ -1,4 +1,6 @@
 //! Native `InitCmd`: provision and repair the workspace/scope filesystem.
+//!
+//! Orchestrates [`options`], [`plan`], [`workspace`], [`scope`], [`index`], [`assets`], and [`apply`].
 mod apply;
 mod assets;
 mod config;

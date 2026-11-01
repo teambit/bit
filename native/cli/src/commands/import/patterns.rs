@@ -1,5 +1,7 @@
 //! `getBitIdsForNonLanes`: the ids `bit import` fetches, with each wildcard
 //! pattern listed on its remote (`Lister.getRemoteCompIdsByWildcards`).
+//!
+//! Resolves [`has_wildcard`] patterns against remotes via [`Engine`] for [`Options`].
 
 use super::options::{Options, has_wildcard};
 use crate::commands::{

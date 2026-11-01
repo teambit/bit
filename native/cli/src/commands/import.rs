@@ -2,6 +2,8 @@
 //! reports (`commandInbound*`). Wildcard patterns are listed on their remotes
 //! first, and an import that writes components installs them afterwards
 //! unless `-x` is given.
+//!
+//! Re-exports [`RecoverOptions`], [`recover_import`], and [`recover_scope_import`] for internal callers.
 
 pub(in crate::commands) use recover::{
     RecoverOptions, recover_import, recover_probe, recover_scope_import,

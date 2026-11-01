@@ -1,6 +1,6 @@
 //! The import and fetch reports: the engine's receipt, validated, then
 //! `ImportCmd.report` and `FetchCmd.report` of `@teambit/importer` over the
-//! engine's receipt.
+//! engine's receipt via [`Id`] and [`Chalk`].
 
 #[cfg(test)]
 mod report_tests;

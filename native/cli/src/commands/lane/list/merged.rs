@@ -1,4 +1,6 @@
 //! Node's lane merge-filter text report.
+//!
+//! [`report`] formats `--merged` and `--not-merged` [`LaneData`] lists with [`Formatter`].
 use super::LaneData;
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 

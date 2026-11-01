@@ -1,6 +1,8 @@
 //! `ComponentWriter.finalizeWrite` after the native write: the installation
 //! `installPackagesGracefully` runs, through the native installer and the
-//! JavaScript host. The compile `compileGracefully` repeats runs inside it.
+//! `JavaScript` host. The compile `compileGracefully` repeats runs inside it.
+//!
+//! Dispatches [`Input`] and [`Terminal`] configuration through [`install`] and `canonical`.
 
 mod canonical;
 

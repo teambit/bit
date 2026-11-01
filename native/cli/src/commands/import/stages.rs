@@ -1,4 +1,6 @@
 //! Native graph selection and write-dependency continuations retain one inbound owner.
+//!
+//! Coordinates [`Lifecycle`], [`Engine`], and [`Progress`] across [`Planned`] import stages.
 use super::{Planned, lifecycle::Lifecycle, options::Options, output, prepare_into, report};
 use crate::commands::{
     color::Chalk,

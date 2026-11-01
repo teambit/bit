@@ -1,4 +1,6 @@
 //! `bit lane create` for a local workspace on main.
+//!
+//! Creates a new local lane object and switches `.bitmap` tracking into a [`Report`].
 use crate::{
     commands::{
         color::Chalk,

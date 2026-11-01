@@ -1,4 +1,6 @@
 //! Retain pre-import documentation on main and dependency status caches on lanes.
+//!
+//! Uses [`Engine`] and [`Capture`] to snapshot and restore workspace state across [`Options`].
 use super::options::Options;
 use crate::commands::{
     engine::Engine,

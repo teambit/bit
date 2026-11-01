@@ -1,4 +1,6 @@
 //! Native `bit lane updates` and `bit lane history-diff` scope validation.
+//!
+//! Resolves lane entries via [`resolve_lane_entry`] and [`diagnose_lane_lookup_error`].
 
 use super::{
     super::{list, scope_root},

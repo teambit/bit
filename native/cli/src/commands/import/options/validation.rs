@@ -1,3 +1,6 @@
+//! Command-line flag and wildcard pattern validation for `bit import` and `bit fetch`.
+//!
+//! [`args`] verifies supported flags and [`valid_pattern`] syntax before workspace execution.
 use super::{DependencyOptions, WriteOptions, has_wildcard, valid_pattern};
 
 #[inline]

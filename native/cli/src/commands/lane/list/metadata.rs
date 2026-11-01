@@ -1,4 +1,6 @@
 //! Lane readme and hidden update-dependent metadata for inspection.
+//!
+//! Defines [`Tracking`] and [`components_report`] over [`LaneData`] with [`Formatter`].
 use super::{Chalk, DELETED_DATA_SCHEMA, Formatter, LaneData, array, decline, text};
 use serde_json::{Value, json};
 use std::io;

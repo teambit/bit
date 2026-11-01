@@ -1,4 +1,6 @@
 //! Native `bit lane diff` handling when a base version object is missing on the filesystem.
+//!
+//! Queries [`Engine`] and renders component file/config diffs via [`files`], [`git`], and [`Report`].
 
 use super::{list, show};
 use crate::{

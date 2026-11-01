@@ -1,4 +1,6 @@
 //! Native `bit internalize [component-pattern]` (`scopes/component/internalize/internalize-cmd.ts`).
+//!
+//! Re-exports [`consume_trailing_internalize`] and applies workspace internalization mutations.
 
 pub(in crate::commands) use super::lint_cmd::consume_trailing_internalize;
 

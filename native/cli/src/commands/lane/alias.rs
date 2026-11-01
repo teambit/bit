@@ -1,4 +1,6 @@
 //! Change the local tracking alias of a lane; the lane object is unchanged.
+//!
+//! Updates local lane alias mappings and formats the resulting [`Report`] with [`Chalk`].
 use super::{list, show};
 use crate::{
     commands::{

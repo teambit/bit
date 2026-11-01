@@ -1,4 +1,6 @@
 //! Retain configured providers and the installation host around authoritative import planning.
+//!
+//! [`Lifecycle`] coordinates [`Engine`], [`Installer`], and [`ProjectedLinker`] across [`Planned`] stages.
 use super::{Planned, options::Options, render_with_progress};
 use crate::commands::{
     add::ProjectedLinker, engine::Engine, installation::Installer, workspace_command,

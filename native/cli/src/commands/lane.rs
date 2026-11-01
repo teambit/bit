@@ -2,6 +2,8 @@
 //! (`workspace_command`) with the lane options, the lane step, and the whole
 //! merge report; and `bit lane list` (`list`). Other `bit lane` commands are
 //! left to the Node.js CLI.
+//!
+//! Exposes [`scope_root`] and dispatches lane subcommands (`alias`, `create`, `current`, `diff`, `history`, `import`, `list`, `manage`, `remove`, `show`).
 
 pub(crate) mod scope_root;
 

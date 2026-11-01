@@ -1,4 +1,6 @@
 //! Retain `InstallMain.install` while Rust runs the supported stock pnpm call.
+//!
+//! Implements [`CanonicalInstall`] over [`Host`] using [`EffectiveConfig`] and [`WorkspaceConfig`].
 
 use crate::{commands::status::cache::cache_root, host::Host};
 use bit_install::{

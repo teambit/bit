@@ -1,4 +1,6 @@
 //! Local lane removal after selecting and validating every target.
+//!
+//! Validates local lanes via [`list`] and produces a deletion [`Report`] with [`Chalk`].
 
 use super::{
     super::{

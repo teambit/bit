@@ -1,4 +1,6 @@
 //! Predictable CI errors delegate before providers because the released handler prints V8 stacks.
+//!
+//! [`requires_node`] checks whether CI mode should delegate missing history targets to Node.js.
 use crate::commands::status::cache::cache_root;
 use std::{env, path::Path};
 

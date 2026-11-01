@@ -1,4 +1,6 @@
 //! `InitCmd` flags, with optional values for `--bare` and `--agent`.
+//!
+//! Defines [`Options`] and flag parsing from [`OsString`] CLI arguments.
 use std::ffi::OsString;
 
 #[derive(Default)]

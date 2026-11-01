@@ -1,6 +1,8 @@
 //! The parts of `ComponentID` (and the legacy `BitId` behind it) that
 //! `diffMetadata` uses: parsing, equality with and without the version, and
 //! the version as stored, where `latest` counts as no version.
+//!
+//! Exposes [`Id`] for normalized component identity comparisons across diff and status commands.
 
 use crate::commands::status::js::{decline, text};
 use serde_json::Value;

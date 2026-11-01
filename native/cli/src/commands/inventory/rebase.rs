@@ -1,5 +1,7 @@
 //! `rebaseIgnorePattern` of `component-map.ts`: a nested `.gitignore` or
 //! `.bitignore` pattern, made relative to the workspace.
+//!
+//! Exposes [`pattern`] and [`normalize`] for workspace-relative ignore rule rebasing.
 
 /// `pattern` from the ignore file in `dir` (a Linux-style relative path).
 #[must_use]

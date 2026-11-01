@@ -1,4 +1,6 @@
 //! Native `bit graph [id]` (`scopes/component/graph/graph-cmd.ts`).
+//!
+//! Dispatches workspace ([`execute_workspace_graph`]) and bare-scope ([`execute_scope_graph`]) graph queries.
 
 pub(super) mod builder;
 pub(super) mod model;

@@ -1,4 +1,6 @@
 //! Import adoption and noninteractive reverse-graph selection flags.
+//!
+//! Defines [`AdoptionOptions`] and [`DependentsOptions`] serialized into engine request payloads.
 use serde_json::{Value, json};
 
 #[derive(Debug, Default, PartialEq, Eq)]

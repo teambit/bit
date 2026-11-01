@@ -1,4 +1,6 @@
 //! Native `bit globals` (`GlobalsCmd` in `scopes/harmony/global-config/globals.cmd.ts`).
+//!
+//! Resolves global config, cache, and log directories into plain or `--json` output.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,6 @@
 //! Released lane checkout/revert grammar; JSON belongs only to lane revert.
+//!
+//! Defines [`Options`] for `bit lane checkout` and `bit lane revert` invocations.
 
 pub(super) struct Options {
     pub id: String,
