@@ -1,4 +1,5 @@
 //! Native destination paths and Bit's slash-separated file identities use different separators.
+
 #[cfg(test)]
 mod tests;
 use super::invalid;

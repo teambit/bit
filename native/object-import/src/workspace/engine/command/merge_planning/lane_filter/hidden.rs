@@ -1,3 +1,5 @@
+//! Package name projection for hidden lane dependents during merge planning.
+
 use super::{Value, invalid, json};
 use crate::workspace::engine::command::capture::Captured;
 use std::io;

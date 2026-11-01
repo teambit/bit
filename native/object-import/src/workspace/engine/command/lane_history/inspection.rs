@@ -1,4 +1,5 @@
 //! Retain the published `lane history` remote refresh until report validation.
+
 use super::super::{State, inbound, invalid, lane_context};
 use crate::{
     command_import::{self, lane},

@@ -1,3 +1,5 @@
+//! Unrelated merge history observation and failure reporting.
+
 use super::{Input, invalid, removed};
 use serde_json::{Value, json};
 use std::io;

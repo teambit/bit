@@ -1,5 +1,5 @@
 //! Freeze the ordinary current lane, its component models, and the local
-//! Version closure before the export transaction starts.
+//! `Version` closure before the export transaction starts.
 pub(super) use self::exhaustive::lane_entries;
 mod exhaustive;
 mod hidden;

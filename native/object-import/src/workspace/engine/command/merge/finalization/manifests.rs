@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod tests;
+
 use super::{Prepared, invalid, json, pretty};
 use serde_json::{Value, json as value};
 use std::{collections::HashSet, io};

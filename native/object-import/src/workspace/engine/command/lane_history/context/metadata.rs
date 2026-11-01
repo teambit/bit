@@ -1,3 +1,5 @@
+//! Workspace status context projection for historical lane checkout targets.
+
 use super::{invalid, status_context};
 use crate::workspace::engine::{
     client_status::config,

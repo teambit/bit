@@ -1,3 +1,5 @@
+//! Native merge status calculation and strategy resolution for workspace commands.
+
 mod unrelated;
 use super::invalid;
 use serde_json::{Value, json};

@@ -1,3 +1,5 @@
+//! `staged-snaps` and `unmerged.json` preparation for finalized merge snapshots.
+
 use super::{Input, Prepared, invalid, json, pretty, proof};
 use serde_json::{Value, json as value};
 use std::{io, path::Path};

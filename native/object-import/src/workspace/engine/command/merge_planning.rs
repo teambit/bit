@@ -1,3 +1,5 @@
+//! Candidate selection, fast-forward, three-way merge, and policy planning for merge commands.
+
 pub(super) use candidates::select_targets;
 
 mod candidates;

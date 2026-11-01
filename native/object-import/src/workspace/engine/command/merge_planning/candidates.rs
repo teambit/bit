@@ -1,4 +1,5 @@
 //! Implicit component merges select diverged local and remote heads.
+
 use super::{
     super::input::{Operation, Prepare},
     Repository, history, invalid, model,

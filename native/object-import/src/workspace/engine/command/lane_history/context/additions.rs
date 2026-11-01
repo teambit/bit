@@ -1,4 +1,5 @@
-//! Attach historical component additions missing from the current workspace bitmap.
+//! Attach historical component additions missing from the current workspace `.bitmap`.
+
 use super::{command_import, invalid, phase};
 use crate::workspace::engine::command::{
     input::Prepare,

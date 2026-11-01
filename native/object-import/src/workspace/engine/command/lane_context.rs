@@ -1,7 +1,7 @@
 //! Command lane metadata for native merge and local switch planning.
 
-pub(super) mod visibility;
 pub(super) mod additions;
+pub(super) mod visibility;
 
 use super::input::Prepare;
 use crate::{

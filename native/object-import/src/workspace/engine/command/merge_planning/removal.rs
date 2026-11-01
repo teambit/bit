@@ -1,3 +1,5 @@
+//! Removed component directory validation and cleanup planning during merges.
+
 use super::{Prepared, Selected, invalid, planning};
 use serde_json::json;
 use std::{fs, io, path::Path};

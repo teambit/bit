@@ -1,3 +1,5 @@
+//! Lane target capture validation and hidden dependent metadata filtering for merge planning.
+
 pub(super) use hidden::prepare_hidden_metadata;
 mod hidden;
 #[cfg(test)]

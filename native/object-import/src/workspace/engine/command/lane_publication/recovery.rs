@@ -1,3 +1,5 @@
+//! Pre-merge `last-merged` backup preparation and atomic publication.
+
 #[cfg(test)]
 #[path = "recovery_tests.rs"]
 mod tests;

@@ -1,3 +1,5 @@
+//! Remote scope host resolution and hub endpoint discovery for outbound exports.
+
 use super::{Prepare, invalid};
 use bit_client_transfer::{
     GlobalConfig,

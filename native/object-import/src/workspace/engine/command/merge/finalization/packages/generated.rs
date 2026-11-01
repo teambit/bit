@@ -1,3 +1,5 @@
+//! Default Node environment `package.json` synthesis for unlinked workspace components.
+
 use super::{Input, Map, Value, invalid, value};
 use std::io;
 

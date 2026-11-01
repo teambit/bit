@@ -1,3 +1,4 @@
+//! Three-way merge body planning, conflict detection, and destination validation.
 mod paths;
 mod reload;
 mod unrelated;
@@ -38,12 +39,10 @@ pub(in crate::workspace::engine::command) struct Prepared {
     pub(in crate::workspace::engine::command) conflict_paths: Vec<String>,
     destinations: Destinations,
 }
-
 struct Destinations {
     request: Value,
     removals: Vec<PathBuf>,
 }
-
 enum Conflict {
     Resolved,
     Ours,
@@ -62,7 +61,6 @@ impl Conflict {
         }
     }
 }
-
 impl BodyInput<'_> {
     pub(in crate::workspace::engine::command) fn labels(&self) -> io::Result<Value> {
         let name = |lane: &Value, field: &str| -> io::Result<String> {
@@ -152,7 +150,6 @@ impl State {
         Prepared::new(input, plan, &applied, &removals)
     }
 }
-
 impl Prepared {
     pub(in crate::workspace::engine::command) fn no_write(&self) -> bool {
         matches!(self.conflict, Conflict::Ours | Conflict::Unrelated(_))
@@ -239,7 +236,6 @@ impl Prepared {
         state.materialize(self.destinations.request.clone())
     }
 }
-
 fn output_files(applied: &Value) -> io::Result<Vec<Value>> {
     let bodies =
         applied["bodies"].as_array().ok_or_else(|| invalid("command merge body manifest"))?;
@@ -285,7 +281,6 @@ fn manifest(side: &VersionSide<'_>) -> io::Result<Value> {
         .collect::<Vec<_>>();
     Ok(json!({"hash":side.hash,"files":files}))
 }
-
 fn conflict_paths(input: &BodyInput<'_>, plan: &Value) -> io::Result<Vec<String>> {
     if input.options.strategy.as_deref().map(str::trim) != Some("manual") {
         return Ok(Vec::new());
@@ -310,7 +305,6 @@ fn conflict_paths(input: &BodyInput<'_>, plan: &Value) -> io::Result<Vec<String>
         })
         .collect()
 }
-
 pub(in crate::workspace::engine::command) fn equivalent_dependencies(
     value: &Value,
     current: &Value,
@@ -342,7 +336,6 @@ pub(in crate::workspace::engine::command) fn equivalent_dependencies(
         .then_some(())
         .ok_or_else(|| invalid("merge dependency metadata differs"))
 }
-
 fn current_version(input: &BodyInput<'_>) -> io::Result<Value> {
     let mut version = harmony::project(input.sides[1].value)?;
     for field in [

@@ -1,4 +1,5 @@
 //! Validate the canonical lane readme snap precondition.
+
 use super::invalid;
 use serde_json::Value;
 use std::io;

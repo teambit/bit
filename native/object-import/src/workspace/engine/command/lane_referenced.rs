@@ -1,4 +1,5 @@
 //! Prepare referenced lane objects after squash-rebase planning completes.
+
 use super::{Record, invalid, planning, repository::Repository};
 use serde_json::Value;
 use std::io;

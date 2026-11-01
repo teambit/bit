@@ -1,3 +1,5 @@
+//! Auto-snap `Version` metadata, dependency graph, and receipt validation.
+
 use super::{Input, invalid};
 use crate::js_json::Value as Js;
 use serde_json::{Value, json};

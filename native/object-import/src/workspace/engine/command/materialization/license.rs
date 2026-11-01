@@ -1,4 +1,5 @@
-//! Scope licenses are separate Vinyl writes, never tracked Version Source bodies.
+//! Scope licenses are separate Vinyl writes, never tracked `Version` `Source` bodies.
+
 use super::{Input, invalid, validate_path};
 use std::{
     fs, io,

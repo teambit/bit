@@ -1,3 +1,5 @@
+//! Lane object, history, squash, and `last-merged` recovery publication for lane commands.
+
 pub(super) use recovery::encode_model;
 mod objects;
 mod recovery;

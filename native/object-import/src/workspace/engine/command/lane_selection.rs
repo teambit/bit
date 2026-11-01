@@ -1,5 +1,6 @@
 //! Canonical post-status lane filtering. Glob matching is a bounded grammar
 //! receipt; dependency ancestry, import decisions and excluded rows stay native.
+
 #[cfg(test)]
 mod tests;
 

@@ -1,3 +1,5 @@
+//! `Version` parent squashing and replacement tracking during lane merges onto `main`.
+
 #[cfg(test)]
 #[path = "squash_tests.rs"]
 mod tests;

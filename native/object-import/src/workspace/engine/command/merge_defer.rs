@@ -1,4 +1,5 @@
 //! Retain one merge capture while deferring its snapshot until after materialization.
+
 use super::{State, input::Operation, invalid, proof};
 use serde::Deserialize;
 use serde_json::{Value, json};

@@ -1,4 +1,5 @@
 //! Construct `ConfigMerger` policy rows for fast-forward and divergent merges.
+
 #[cfg(test)]
 mod tests;
 

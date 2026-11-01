@@ -1,3 +1,5 @@
+//! Auto-snap `Version` and `Source` object synthesis during workspace merges.
+
 mod metadata;
 mod sources;
 #[cfg(test)]

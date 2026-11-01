@@ -1,4 +1,4 @@
-//! A workspace-root Version must not overwrite the live map or a nested component's files.
+//! A workspace-root `Version` must not overwrite the live map or a nested component's files.
 
 #[cfg(test)]
 mod tests;

@@ -1,3 +1,5 @@
+//! Component file, license, and root safety preparation for workspace materialization.
+
 mod license;
 mod root;
 

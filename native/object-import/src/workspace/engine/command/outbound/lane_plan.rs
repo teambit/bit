@@ -1,4 +1,5 @@
 //! Group a lane's selected component closure and lane objects for one remote.
+
 use super::{
     Pending, Plan, Prepare, Publication, ResumeContext, invalid, lane_model::LaneSelected,
     lane_publication, remote,

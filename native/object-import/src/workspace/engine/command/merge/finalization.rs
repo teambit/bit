@@ -1,3 +1,5 @@
+//! Post-merge manifest, package, metadata, and staged-snap finalization.
+
 #[cfg(test)]
 mod snapshot_tests;
 #[cfg(test)]

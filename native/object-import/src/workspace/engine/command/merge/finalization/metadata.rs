@@ -1,4 +1,5 @@
 //! Generated package `JsonVinyl` uses write-file-atomic, breaking hardlink aliases.
+
 #[cfg(test)]
 mod tests;
 use std::{

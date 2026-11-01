@@ -1,4 +1,5 @@
-//! Select only lane-origin Versions newer than the remote lane head.
+//! Select only lane-origin `Version` objects newer than the remote lane head.
+
 use super::{ComponentContext, ComponentId, MAX_OBJECTS, exhaustive, invalid, model};
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};

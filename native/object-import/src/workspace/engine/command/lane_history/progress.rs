@@ -1,4 +1,5 @@
 //! Preserve an actual started import when validation fails before its success receipt.
+
 #[cfg(test)]
 mod tests;
 use super::phase;

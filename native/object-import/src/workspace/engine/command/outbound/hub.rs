@@ -1,4 +1,5 @@
 //! Resolve configured and hub scopes once, then retain the central export acknowledgement.
+
 pub(super) use resolution::{Resolution, global as configuration, resolve};
 
 mod resolution;

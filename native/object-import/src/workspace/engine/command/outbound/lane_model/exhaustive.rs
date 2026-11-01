@@ -1,4 +1,5 @@
-//! Select every tracked lane/main component and its complete Version ancestry.
+//! Select every tracked lane/main component and its complete `Version` ancestry.
+
 use super::{ComponentId, Loaded, MAX_OBJECTS, Prepare, invalid, model};
 use serde_json::{Value, json};
 use std::{collections::HashSet, fs, io, path::Path};

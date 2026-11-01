@@ -1,3 +1,5 @@
+//! `Source` object hashing and compression for auto-snapped merge files.
+
 #[cfg(test)]
 mod tests;
 

@@ -1,4 +1,5 @@
 //! Merge-pending checks on a lane use lane heads, including a new lane's absent remote head.
+
 use crate::workspace::engine::{command::Record, dependency_graph::proof, invalid};
 use serde_json::Value;
 use std::io;

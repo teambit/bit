@@ -1,3 +1,5 @@
+//! Fast-forward metadata and dependency cache guard verification.
+
 #[cfg(test)]
 mod tests;
 
