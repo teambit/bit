@@ -1,5 +1,7 @@
 //! Dependency policies aspects register through `registerDependenciesPolicies`
 //! (the "slots" layer of `mergeVariantPolicies`).
+//!
+//! Queries the host only for non-core configured aspects that may register slot policies.
 
 #[cfg(test)]
 mod tests;

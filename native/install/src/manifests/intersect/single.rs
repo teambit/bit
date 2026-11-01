@@ -1,4 +1,6 @@
 //! `SingleVer` and `SingleRange` representations for `semver-range-intersect`.
+//!
+//! Normalizes comparator sets into exact versions or bounded lower/upper intervals.
 
 use super::{
     super::semver::{Comparator, SemVer},

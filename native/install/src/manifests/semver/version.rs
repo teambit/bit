@@ -1,4 +1,6 @@
 //! [`SemVer`] of npm's `semver` (strict parsing).
+//!
+//! Parses major, minor, patch, and prerelease identifiers and implements `coerce` and `gt`.
 
 use super::re::{Token, groups, re};
 use std::{cmp::Ordering, io};

@@ -1,5 +1,7 @@
 //! Package names of external envs: envs that are neither core envs nor
 //! workspace components, as `getPackageName` names the env component.
+//!
+//! Resolves external environment package names from scope model metadata or default naming rules.
 
 #[cfg(test)]
 mod tests;

@@ -2,6 +2,8 @@
 //! Bit's scan exclusions, the workspace ignore rules, the generated files Bit
 //! owns, and the component's own ignore file. The workspace-root component
 //! (`.`) also honors nested ignore files and leaves nested components out.
+//!
+//! Walks component directories and filters paths against `.gitignore` and `.bitignore` rules.
 
 use super::{bitmap::WORKSPACE_ROOT_DIR, ignore::Ignore};
 use indexmap::IndexMap;

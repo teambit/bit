@@ -1,4 +1,6 @@
 //! `.bitmap` (`BitMap.loadFromContentWithoutLoadingFiles`).
+//!
+//! Parses `.bitmap` entries, active `_bit_lane` metadata, and lane availability flags.
 
 use crate::{jsonc, model::ComponentId};
 use serde_json::{Map, Value};

@@ -2,6 +2,8 @@
 //! config-merge file, `component.json`, the model's component-specific
 //! aspects, workspace variants and the model's other aspects, first wins per
 //! aspect. Then its env (`calculateEnvId`).
+//!
+//! Resolves component aspect lists and determines the effective environment ID.
 
 pub use crate::policy::CORE_ENVS;
 

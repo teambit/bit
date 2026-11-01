@@ -1,5 +1,7 @@
 //! `hoistDependencies`: per package, pick the root version and keep the
 //! conflicting requirements in their respective components.
+//!
+//! Evaluates preserved root policies, peer range intersections, and highest-version hoisting rules.
 
 use super::{Deduped, IndexEntry, Item};
 use crate::manifests::{

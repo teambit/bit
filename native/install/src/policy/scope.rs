@@ -1,6 +1,8 @@
 //! Read-only access to the workspace scope objects: component models, `Version`s,
 //! and their `Source` files. Objects are loose zlib files whose inflated contents
 //! are `<type> <hash> <size>\0<body>`.
+//!
+//! Locates `.bit` or `.git/bit` object stores and inflates component, version, and source blobs.
 
 use flate2::read::ZlibDecoder;
 use serde_json::Value;

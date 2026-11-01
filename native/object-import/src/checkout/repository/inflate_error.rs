@@ -1,4 +1,6 @@
 //! Retain the decompressor cause without changing ordinary checkout decline diagnostics.
+//!
+//! Wraps `flate2::DecompressError` in `io::Error` so callers can inspect the underlying zlib message.
 use std::{fmt, io};
 #[derive(Debug)]
 struct Failure(flate2::DecompressError);

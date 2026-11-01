@@ -3,6 +3,8 @@
 //! `env.json` (`hasEnvManifest`) or whose own env is `teambit.envs/env` — is the
 //! component's env. An aspect that is not in the workspace is read from the
 //! scope at its configured version, or at its head without one.
+//!
+//! Assigns fallback environment IDs from configured environment aspects on components.
 
 #[cfg(test)]
 mod tests;

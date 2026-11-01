@@ -1,5 +1,7 @@
 //! Legacy overrides views of a merged component policy
 //! (`toLegacyAutoDetectOverrides`, `toLegacyDepsOverrides`).
+//!
+//! Splits merged [`PolicyEntry`] slices into forced, non-forced, and ignored [`FieldMaps`].
 
 use crate::model::{Lifecycle, PolicyEntry};
 use indexmap::IndexMap;

@@ -1,6 +1,8 @@
 //! What the local scope knows about a component: its `Version`'s extensions and
 //! the model's `bindingPrefix`. Objects are zlib-deflated files at
 //! `<scope>/objects/<2 hex>/<38 hex>` holding `<type> <hash> <size>\0<json>`.
+//!
+//! Reads component models and version objects to extract stored extensions, files, and package names.
 
 #[cfg(test)]
 mod tests;

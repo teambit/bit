@@ -1,3 +1,5 @@
+//! Loose `Source` and metadata object inflation and SHA-1 verification for checkout.
+
 pub(crate) use inflate_error::message as inflate_message;
 mod inflate_error;
 #[cfg(test)]

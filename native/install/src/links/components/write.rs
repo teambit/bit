@@ -1,4 +1,6 @@
 //! Package manifest serialization and command-owned atomic publication errors.
+//!
+//! Atomically writes formatted `package.json` manifests via temporary sibling files while rejecting symlink targets.
 
 use super::{Manifest, is_symlink};
 use std::{fs, io, path::Path};

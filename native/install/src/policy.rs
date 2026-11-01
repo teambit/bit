@@ -1,4 +1,6 @@
 //! Workspace, variant, and env dependency policies.
+//!
+//! Combines `workspace.jsonc`, `package.json`, `merge-conflict`, variant, and environment policies.
 
 pub mod entries;
 pub mod env;

@@ -2,6 +2,7 @@
 //! `toJson`, and the `linkedDependencies` merge of `installComponents`.
 //!
 //! Produces the root and component manifests included in the [`InstallPlan`].
+//! Computes deterministic manifest hashes to detect multi-cycle install convergence.
 
 use super::{
     ManifestInput,

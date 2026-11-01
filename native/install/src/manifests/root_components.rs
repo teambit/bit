@@ -2,6 +2,7 @@
 //! (`_getRootManifests`).
 //!
 //! Assembles isolated root component manifests and their forced env dependencies.
+//! Injects workspace component link specifiers and remote filter policies into `.bit_roots` projects.
 
 use super::{
     ManifestInput,

@@ -1,3 +1,5 @@
+//! Bounded in-memory cache of verified `Source` object bodies across checkout operations.
+
 #[cfg(test)]
 mod tests;
 

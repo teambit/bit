@@ -1,6 +1,8 @@
 //! `buildLoadGroups`: the order `workspace.list` returns the components in. The
 //! manifests preserve it (`componentsManifestsMap`), and the env peers resolve their
 //! conflicts in it: the version an env lists last wins.
+//!
+//! Orders core environments, custom workspace environments, configured extensions, and regular components.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,6 @@
-//! `Comparator` of npm's `semver`.
+//! [`Comparator`] of npm's `semver`.
+//!
+//! Parses `<op><version>` comparators and evaluates version satisfaction and comparator intersections.
 
 use super::{
     Flavor, Range,

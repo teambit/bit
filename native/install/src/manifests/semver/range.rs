@@ -1,4 +1,6 @@
-//! `Range` of npm's `semver`, in its semver 6 and semver 7 forms.
+//! [`Range`] of npm's `semver`, in its semver 6 and semver 7 forms.
+//!
+//! Parses `||`-separated comparator sets, caches compiled ranges, and evaluates `satisfies` and `intersects`.
 
 use super::{
     Flavor,

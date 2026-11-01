@@ -1,6 +1,8 @@
 //! Console output in Bit's CLI style: the `ora` loader Bit's logger drives
 //! (`components/legacy/loader/loader.ts`, ora 5 with the `dots` spinner on
 //! stdout), `chalk` colors and `pretty-time` durations.
+//!
+//! Manages terminal spinners, ANSI color formatting, and elapsed time rendering.
 
 #[cfg(test)]
 mod tests;

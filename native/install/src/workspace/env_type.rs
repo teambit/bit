@@ -2,6 +2,8 @@
 //! data stored in their Version) has type `aspect` export their types from the
 //! generated `package.json`. A component that was never tagged has no descriptor
 //! yet, so the core aspect envs stay a fallback.
+//!
+//! Collects core and custom environment IDs whose stored env descriptor type is `aspect`.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,6 @@
 //! Link a component from a native manifest already prepared by a VCS operation.
+//!
+//! Materializes component `node_modules` links and `package.json` files without invoking host transformers.
 
 use super::{
     ComponentLinks, FileLink, LinkKind, Manifest, SOURCE_DIR, WorkspaceComponent,

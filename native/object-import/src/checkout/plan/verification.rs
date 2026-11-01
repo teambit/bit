@@ -1,3 +1,5 @@
+//! Checkout manifest verification against stored `Version` objects and tag syntax validation.
+
 use super::{
     MAX_FILES, ManifestFile, hash, invalid, manifest, metadata, same_manifest, validate_files,
 };

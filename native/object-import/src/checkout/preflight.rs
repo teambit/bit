@@ -1,3 +1,5 @@
+//! Parallel and sequential checkout source preflight loading with bounded memory budgets.
+
 use super::{Input, MAX_BYTES, Request, cache, eol, invalid, repository, sequential_preflight};
 use crate::read_budget::Budget;
 use rayon::{ThreadPool, prelude::*};

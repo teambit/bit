@@ -1,3 +1,5 @@
+//! Binary file detection (`isbinaryfile` 4.0.6) and platform line-ending normalization.
+
 #[cfg(test)]
 mod tests;
 

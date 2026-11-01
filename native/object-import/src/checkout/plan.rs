@@ -1,18 +1,18 @@
+//! Checkout file-status diffing, manifest verification, and source preloading.
 pub(crate) use verification::{verify_manifest, verify_manifest_value};
-
+#[cfg(test)]
+mod tests;
 mod verification;
 
+use super::{MAX_BYTES, MAX_PATH, cache, invalid, repository};
+use crate::protocol;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::{
     collections::{HashMap, HashSet},
     io::{self, Read, Write},
     path::{Path, PathBuf},
 };
-
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-use super::{MAX_BYTES, MAX_PATH, cache, invalid, repository};
-use crate::protocol;
 use verification::plain_tag;
 
 const MAX_JSON: usize = 4 * 1024 * 1024;
@@ -398,6 +398,3 @@ fn compare(request: &Request, version_hash: String, files: Vec<ManifestFile>) ->
     }
     Plan { version_hash, files, statuses, removals }
 }
-
-#[cfg(test)]
-mod tests;

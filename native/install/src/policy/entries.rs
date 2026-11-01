@@ -1,5 +1,7 @@
 //! Policy entries from config objects (`WorkspacePolicyFactory`, `VariantPolicy.fromConfigObject`)
 //! and the shared `mergePolices` deduplication rule.
+//!
+//! Extracts runtime, dev, and peer policy entries and deduplicates them in priority order.
 
 use crate::model::{Lifecycle, Manifest, PolicyEntry};
 use serde_json::{Map, Value};

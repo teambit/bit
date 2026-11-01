@@ -1,6 +1,8 @@
 //! The range desugaring of npm's `semver` (`replaceCaret`, `replaceTilde`,
 //! `replaceXRange`, `replaceStars`, `hyphenReplace`). semver 6 and 7 differ
 //! only in the `-0` suffix 7 appends to exclusive upper bounds.
+//!
+//! Expands shorthand semver operators into explicit `>=` and `<` comparator pairs.
 
 use super::{
     Flavor,
