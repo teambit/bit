@@ -36,9 +36,11 @@ pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Resul
     }
     Ok(ordered)
 }
+#[inline]
 fn is_real_directory(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink())
 }
+#[inline]
 fn contains_files(files: &HashSet<String>, directory: &str) -> bool {
     let trimmed = directory.trim().trim_matches('/');
     if trimmed.is_empty() || trimmed == "." {
@@ -51,6 +53,7 @@ fn contains_files(files: &HashSet<String>, directory: &str) -> bool {
                 .is_some_and(|rest| rest.starts_with('/'))
         })
 }
+#[inline]
 fn entries(directory: &Path) -> io::Result<Vec<PathBuf>> {
     let mut entries = fs::read_dir(directory)?
         .map(|entry| entry.map(|entry| entry.path()))

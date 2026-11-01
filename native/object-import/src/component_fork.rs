@@ -19,7 +19,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub source: String,
     pub target: Option<String>,
@@ -31,6 +31,7 @@ pub struct Options {
     pub no_link: bool,
 }
 /// File and control preimages remain owned until the caller publishes the copy.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     identity: identity::Identity,
@@ -75,17 +76,21 @@ impl Plan {
         Ok(plan)
     }
     #[must_use]
+    #[inline]
     pub fn target_identity(&self) -> &str {
         &self.identity.target
     }
     #[must_use]
-    pub fn bitmap(&self) -> &Value {
+    #[inline]
+    pub const fn bitmap(&self) -> &Value {
         &self.bitmap
     }
     #[must_use]
+    #[inline]
     pub fn configuration(&self) -> &Value {
         &self.bitmap[&self.identity.key]["config"]
     }
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()
     }
@@ -166,14 +171,17 @@ impl Plan {
         Ok(())
     }
 }
+#[inline]
 fn required(observed: &mut Observed, path: &Path) -> io::Result<Vec<u8>> {
     observed
         .read(path)?
         .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "fork source/control file"))
 }
+#[inline]
 fn invalid(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message.into())
 }
+#[inline]
 fn unsupported(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::Unsupported, message.into())
 }

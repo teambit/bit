@@ -2,9 +2,11 @@
 use super::{Plan, invalid};
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn initial(plan: &mut Plan, file_id: &str, reason: &str) -> io::Result<()> {
     write(&plan.root, &mut plan.controls.expected, &plan.controls.initial, file_id, reason)
 }
+#[inline]
 pub(super) fn final_bitmap(plan: &mut Plan, file_id: &str) -> io::Result<()> {
     write(&plan.root, &mut plan.controls.expected, &plan.controls.bitmap, file_id, "rename")
 }
@@ -73,6 +75,7 @@ pub(super) fn finish_original(
     }
     Ok(())
 }
+#[inline]
 fn remove(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {
@@ -84,6 +87,7 @@ fn remove(path: &Path) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn retirement_reason(plan: &Plan) -> String {
     if plan.options.deprecate {
         format!("deprecate {}", plan.identity.source_id())

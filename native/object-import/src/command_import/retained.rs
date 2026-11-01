@@ -30,12 +30,14 @@ impl PreparedImport {
         self.capture.accept_published(&files)?;
         Ok((files, receipts))
     }
+    #[inline]
     pub(crate) fn commit_retained(&mut self) -> io::Result<HashMap<PathBuf, Vec<u8>>> {
         let files = self.publication_files()?;
         self.commit()?;
         self.capture.accept_published(&files)?;
         Ok(files)
     }
+    #[inline]
     pub(crate) fn accept_published(&mut self, files: &HashMap<PathBuf, Vec<u8>>) -> io::Result<()> {
         self.capture.accept_published(files)
     }
@@ -105,12 +107,14 @@ impl super::capture::Capture {
         self.validate()
     }
 }
+#[inline]
 fn object_path(directory: &Path, hash: &str) -> io::Result<PathBuf> {
     let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
     Ok(directory
         .join(&canonical[..2])
         .join(&canonical[2..]))
 }
+#[inline]
 fn pretty(value: &Value, newline: bool) -> io::Result<Vec<u8>> {
     let mut bytes = serde_json::to_vec_pretty(value).map_err(io::Error::other)?;
     if newline {
@@ -119,6 +123,7 @@ fn pretty(value: &Value, newline: bool) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+#[inline]
 pub(crate) fn write_receipt(path: &Path, before: Option<&[u8]>, after: &[u8]) -> Value {
     let hash = |bytes: &[u8]| crate::validate::hexadecimal(&Sha256::digest(bytes));
     json!({"path":path,"beforeHash":before.map(hash),"afterHash":hash(after)})

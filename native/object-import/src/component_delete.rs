@@ -16,13 +16,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Scope {
     Entire,
     Range(String),
     Snaps(Vec<String>),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     bitmap: BitmapChange,
@@ -33,31 +34,37 @@ pub struct Plan {
     entire: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct BitmapChange {
     before: Vec<u8>,
     after: Vec<u8>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct RepositorySnapshot {
     index_before: Vec<u8>,
     objects: Vec<FrozenObject>,
     policy: policy::Decision,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct FrozenObject {
     path: PathBuf,
     before: Vec<u8>,
 }
 
 impl Plan {
+    #[inline]
     pub fn prepare(root: &Path, name: &str, scope: Scope) -> io::Result<Self> {
         Self::prepare_with(root, name, scope, false, None, false)
     }
 
+    #[inline]
     pub fn prepare_lane(root: &Path, name: &str, scope: Scope) -> io::Result<Self> {
         Self::prepare_with(root, name, scope, true, None, false)
     }
 
+    #[inline]
     pub fn prepare_lane_with_dependencies(
         root: &Path,
         name: &str,
@@ -67,6 +74,7 @@ impl Plan {
         Self::prepare_with(root, name, scope, true, Some(components), false)
     }
 
+    #[inline]
     pub fn needs_dependency_graph(root: &Path) -> io::Result<bool> {
         let bitmap = recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?;
         Ok(component_count(&bitmap)? > 1)
@@ -109,21 +117,25 @@ impl Plan {
     }
 
     #[must_use]
+    #[inline]
     pub fn full_id(&self) -> &str {
         &self.full_id
     }
     #[must_use]
-    pub fn entire(&self) -> bool {
+    #[inline]
+    pub const fn entire(&self) -> bool {
         self.entire
     }
 
     #[must_use]
-    pub fn pin(&self) -> Option<&Pin> {
+    #[inline]
+    pub const fn pin(&self) -> Option<&Pin> {
         self.repository.policy.pin.as_ref()
     }
 
     #[must_use]
-    pub fn policy_loaded(&self) -> bool {
+    #[inline]
+    pub const fn policy_loaded(&self) -> bool {
         self.repository.policy.loaded
     }
 

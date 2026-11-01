@@ -36,6 +36,7 @@ pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {
     })
 }
 
+#[inline]
 fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
     row[field]
         .as_str()
@@ -70,6 +71,7 @@ pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
         })
         .ok_or_else(|| invalid(format!("component {id} was not found")))
 }
+#[inline]
 pub(crate) fn resolve(bitmap: &Value, id: &str) -> io::Result<String> {
     let key = key(bitmap, id)?;
     identity(key, &bitmap[key]).ok_or_else(|| invalid("component identity"))

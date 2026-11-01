@@ -6,6 +6,7 @@ use std::{
     io::{self, Write},
     path::Path,
 };
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Configuration(Change);
 impl Configuration {
     pub(super) fn prepare(root: &Path, identities: &[&str]) -> io::Result<Option<Self>> {
@@ -33,9 +34,11 @@ impl Configuration {
         .into_bytes();
         Ok(Some(Self(Change { path, before, after })))
     }
+    #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         self.0.validate()
     }
+    #[inline]
     pub(super) fn write(&self, root: &Path, file_id: &str) -> io::Result<()> {
         self.backup(root, file_id)?;
         self.0.write()

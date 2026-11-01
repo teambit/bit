@@ -18,6 +18,7 @@ use std::{
 };
 
 /// New components are removed together after the stash metadata has been saved.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NewBatch {
     root: PathBuf,
     bitmap: BitmapChange,
@@ -26,6 +27,7 @@ pub struct NewBatch {
 }
 impl NewBatch {
     /// Capture one bitmap preimage and validate every selected destination.
+    #[inline]
     pub fn prepare(root: &Path, identities: &[String]) -> io::Result<Self> {
         Self::prepare_with_components(root, identities, &[])
     }
@@ -103,6 +105,7 @@ impl NewBatch {
         Ok(())
     }
 }
+#[inline]
 pub(super) fn remove_sources(selected: &[Selected]) -> io::Result<()> {
     remove_source_paths(selected.iter().filter_map(|row| row.files.as_deref()))
 }

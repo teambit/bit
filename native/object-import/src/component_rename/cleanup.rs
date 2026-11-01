@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Tree {
     directories: BTreeMap<PathBuf, Vec<String>>,
     observed: crate::component_tracking::observe::Observed,
@@ -79,6 +80,7 @@ pub(super) fn validate(plan: &Plan) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 pub(super) fn apply(plan: &Plan) -> io::Result<()> {
     if plan.cleanup.is_none() {
         return Ok(());
@@ -86,6 +88,7 @@ pub(super) fn apply(plan: &Plan) -> io::Result<()> {
     validate(plan)?;
     crate::component_remove::remove_path(&plan.root.join(plan.identity.source_directory.trim()))
 }
+#[inline]
 fn reparse(metadata: &fs::Metadata) -> bool {
     #[cfg(windows)]
     {

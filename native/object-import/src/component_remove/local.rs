@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LocalBatch {
     root: PathBuf,
     before: Vec<u8>,
@@ -21,6 +22,7 @@ pub struct LocalBatch {
     proofs: crate::component_tracking::observe::Observed,
 }
 impl LocalBatch {
+    #[inline]
     pub fn prepare(
         root: &Path,
         identities: &[String],
@@ -33,10 +35,12 @@ impl LocalBatch {
         }
         preparation::prepare(root, identities, keep_files, track, components)
     }
+    #[inline]
     pub fn bitmap(&self) -> io::Result<Value> {
         crate::parse_jsonc(&self.before)
     }
     #[must_use]
+    #[inline]
     pub fn identities(&self) -> Vec<String> {
         self.selected
             .iter()
@@ -44,6 +48,7 @@ impl LocalBatch {
             .collect()
     }
     #[must_use]
+    #[inline]
     pub fn lane_identities(&self) -> Vec<String> {
         self.models
             .iter()

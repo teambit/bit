@@ -34,6 +34,7 @@ pub(in crate::component_remove) fn validate(
     Ok(())
 }
 
+#[inline]
 fn bare_id(id: &str) -> &str {
     let trimmed = id.trim();
     trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim())

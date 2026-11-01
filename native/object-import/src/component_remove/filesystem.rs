@@ -49,6 +49,7 @@ pub(crate) fn validate_ancestors(root: &Path, relative: &Path) -> io::Result<()>
     Ok(())
 }
 
+#[inline]
 pub(super) fn safe_relative(path: &Path) -> bool {
     !path.as_os_str().is_empty()
         && path
@@ -56,6 +57,7 @@ pub(super) fn safe_relative(path: &Path) -> bool {
             .all(|component| matches!(component, Component::Normal(_)))
 }
 
+#[inline]
 pub(crate) fn validate_directory(path: &Path) -> io::Result<()> {
     let kind = match fs::symlink_metadata(path) {
         Ok(metadata) => metadata.file_type(),
@@ -68,6 +70,7 @@ pub(crate) fn validate_directory(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(crate) fn remove_path(path: &Path) -> io::Result<()> {
     match fs::remove_dir_all(path) {
         Ok(()) => Ok(()),
@@ -76,6 +79,7 @@ pub(crate) fn remove_path(path: &Path) -> io::Result<()> {
     }
 }
 
+#[inline]
 pub(crate) fn validate_file_id(value: &str) -> io::Result<()> {
     let value = value.trim();
     let mut count = 0usize;

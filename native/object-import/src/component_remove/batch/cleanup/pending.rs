@@ -26,6 +26,7 @@ pub(super) fn prepare(root: &Path, selected: &[Selected]) -> io::Result<Option<C
     Ok(Some(Change { path, before, after: text.into_bytes() }))
 }
 
+#[inline]
 fn matches_selected_record(row: &Value, selected: &[Selected]) -> bool {
     let (entry_scope, entry_name) = crate::component_remove::lane::lane_id_parts(&row["id"]);
     selected

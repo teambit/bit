@@ -92,6 +92,7 @@ fn entry(
     }
     Err(invalid("component scope state requires canonical removal"))
 }
+#[inline]
 fn model(root: &Path, id: &str, keep: bool, kind: RowKind) -> io::Result<VersionedPlan> {
     match kind {
         RowKind::Staged => VersionedPlan::prepare(root, id, keep),

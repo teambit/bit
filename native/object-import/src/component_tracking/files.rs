@@ -84,6 +84,7 @@ fn filtered(
     Ok(kept)
 }
 
+#[inline]
 fn is_root_only(directory: &str, path: &str) -> bool {
     let rel = if directory == "." {
         Some(path)
@@ -154,6 +155,7 @@ fn ignore_directories(paths: &[String]) -> Vec<String> {
     directories
 }
 
+#[inline]
 fn observe_ignore(plan: &mut Plan, directory: &str) -> io::Result<()> {
     let dir = plan.root.join(directory);
     plan.observed.read(&dir.join(".bitignore"))?;

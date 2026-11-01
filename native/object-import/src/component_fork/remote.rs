@@ -12,6 +12,7 @@ use bit_client_transfer::{
 use serde_json::Value;
 use std::io;
 
+#[derive(Debug)]
 pub struct RemoteCapture {
     sources: Vec<Value>,
     objects: Vec<Value>,
@@ -94,16 +95,20 @@ impl RemoteCapture {
         Ok(capture)
     }
     #[must_use]
+    #[inline]
     pub fn sources(&self) -> &[Value] {
         &self.sources
     }
     #[must_use]
+    #[inline]
     pub fn objects(&self) -> &[Value] {
         &self.objects
     }
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()
     }
+    #[inline]
     fn empty() -> Self {
         Self {
             sources: Vec::new(),

@@ -12,6 +12,7 @@ pub struct Options {
 }
 impl Options {
     #[must_use]
+    #[inline]
     pub(super) fn normalized(&self) -> Self {
         Self {
             source: self.source.trim().to_owned(),

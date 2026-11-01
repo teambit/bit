@@ -6,6 +6,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 
+#[inline]
 pub(super) fn insert(
     bitmap: &mut Value,
     options: &Options,
@@ -79,6 +80,7 @@ fn copy(output: &mut Value, source: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn non_empty_field<'a>(value: &'a Value, field: &str) -> Option<&'a str> {
     value[field]
         .as_str()

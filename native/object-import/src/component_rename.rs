@@ -31,12 +31,13 @@ use std::{
 
 /// Pure regex programs shared by an ordered rename batch. File bytes and
 /// workspace controls are deliberately read again after provider callbacks.
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct PreparationContext {
     patterns: Arc<refactor::PatternCache>,
 }
 
 /// Source and target IDs, directories and exported-state policy.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Identity {
     pub source: String,
     pub target: String,
@@ -50,6 +51,7 @@ pub struct Identity {
 impl Identity {
     /// The resolved source identity used in published bitmap-history reasons.
     #[must_use]
+    #[inline]
     pub fn source_id(&self) -> String {
         self.source_version
             .as_deref()
@@ -59,6 +61,7 @@ impl Identity {
     }
 }
 /// A mutation stays in memory until the caller owns the operation lifecycle.
+#[derive(Debug, Clone)]
 pub struct Plan {
     root: PathBuf,
     pub identity: Identity,
@@ -69,6 +72,7 @@ pub struct Plan {
     cleanup: Option<cleanup::Tree>,
     context: PreparationContext,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Controls {
     bitmap: Value,
     initial: Value,
@@ -79,6 +83,7 @@ struct Controls {
 }
 impl Plan {
     /// Read filesystem sources in Rust and retain every source/control preimage.
+    #[inline]
     pub fn prepare(root: &Path, options: &Options, facts: &Value) -> io::Result<Self> {
         Self::prepare_with_context(root, options, facts, &PreparationContext::default())
     }
@@ -122,6 +127,7 @@ impl Plan {
         Ok(plan)
     }
     /// Rebuild after provider hydration, including any changed sources or config.
+    #[inline]
     pub fn rehydrate(&mut self, options: &Options, facts: &Value) -> io::Result<()> {
         let next = Self::prepare_with_context(&self.root, options, facts, &self.context)?;
         *self = next;
@@ -129,15 +135,18 @@ impl Plan {
     }
     /// Native projected tracking state after the rename has finished.
     #[must_use]
-    pub fn bitmap(&self) -> &Value {
+    #[inline]
+    pub const fn bitmap(&self) -> &Value {
         &self.controls.bitmap
     }
     /// Check all preimages before the first path or config is modified.
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()?;
         cleanup::validate(self)
     }
     /// Publish the first identity-only bitmap stage for an unversioned source.
+    #[inline]
     pub fn begin(&mut self, file_id: &str) -> io::Result<()> {
         self.validate()?;
         if !self.identity.exported {
@@ -146,16 +155,19 @@ impl Plan {
         Ok(())
     }
     /// Materialize source changes after validating their original bytes.
+    #[inline]
     pub fn apply_files(&self) -> io::Result<()> {
         files::validate(self)?;
         files::apply(self)
     }
     /// Target-add bitmap used by exported component on-add tooling before source removal.
     #[must_use]
-    pub fn added_bitmap(&self) -> &Value {
+    #[inline]
+    pub const fn added_bitmap(&self) -> &Value {
         &self.controls.initial
     }
     /// Exact published intermediate bitmap used by the post-removal target/list reload.
+    #[inline]
     pub fn published_bitmap(&self) -> io::Result<Value> {
         crate::parse_jsonc(&self.controls.expected)
     }

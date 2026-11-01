@@ -11,6 +11,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Copy {
     pub source: PathBuf,
     pub destination: PathBuf,
@@ -159,6 +160,7 @@ fn private_root(root: &Path, path: &Path, prefix: &str) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 pub(super) fn relative_path(path: &str) -> io::Result<()> {
     if path.is_empty()
         || path.contains('\\')
@@ -170,6 +172,7 @@ pub(super) fn relative_path(path: &str) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 pub(super) fn apply(files: &[Copy]) -> io::Result<()> {
     for file in files {
         if let Some(parent) = file.destination.parent() {
@@ -180,6 +183,7 @@ pub(super) fn apply(files: &[Copy]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(super) fn budget(files: &[Copy]) -> io::Result<()> {
     let total = files
         .iter()

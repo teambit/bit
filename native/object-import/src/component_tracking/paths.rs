@@ -153,9 +153,11 @@ fn glob_entry(
     Ok(())
 }
 
+#[inline]
 fn magic(pattern: &str) -> bool {
     pattern.contains(['*', '?', '[', '{', '('])
 }
+#[inline]
 fn display(cwd: &Path, path: &Path) -> String {
     diagnostic(
         &path
@@ -165,6 +167,7 @@ fn display(cwd: &Path, path: &Path) -> String {
     )
 }
 
+#[inline]
 pub(super) fn diagnostic(path: &str) -> String {
     path.replace('/', std::path::MAIN_SEPARATOR_STR)
 }

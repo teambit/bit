@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Observed {
     files: BTreeMap<PathBuf, Option<Vec<u8>>>,
     directories: BTreeMap<PathBuf, Vec<String>>,

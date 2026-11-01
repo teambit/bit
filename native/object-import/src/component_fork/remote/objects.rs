@@ -41,12 +41,14 @@ pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Resul
     }
     Ok((version, files, version_id(&model, id, &hash), compressed))
 }
+#[inline]
 fn trimmed_str(value: &Value) -> Option<&str> {
     value
         .as_str()
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
+#[inline]
 fn row_matches_target(row: &Value, target_scope: &str, target_name: &str) -> bool {
     let (row_scope, row_name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
@@ -171,6 +173,7 @@ pub(super) fn configs(version: &Value) -> io::Result<Value> {
     }
     Ok(configs)
 }
+#[inline]
 fn missing(id: &str) -> io::Error {
     let id = id.trim();
     io::Error::new(io::ErrorKind::NotFound, format!(r#"error: component "{id}" was not found"#))

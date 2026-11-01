@@ -1,5 +1,6 @@
 use super::{Change, Plan, Value, dependent_file, refactor, unsupported};
 use std::io;
+#[inline]
 pub(in crate::component_rename) fn packages_all(
     plan: &mut Plan,
     matchers: &mut refactor::PackageMatchers,
@@ -121,6 +122,7 @@ fn batch_component(
 }
 
 /// Workspace.write precedes `ComponentWriter`, so existing injected hardlinks see import changes.
+#[inline]
 pub(in crate::component_rename) fn workspace_refactor(plan: &mut Plan) -> io::Result<()> {
     super::validate(plan)?;
     for file in &mut plan.files {

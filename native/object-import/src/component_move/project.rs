@@ -50,6 +50,7 @@ pub(super) fn apply(
     }
     Ok(changes)
 }
+#[inline]
 fn normalize_root_dir(row: &Value) -> Option<String> {
     let trimmed = row["rootDir"].as_str()?.trim();
     let normalized = if trimmed.contains('\\') {
@@ -90,11 +91,13 @@ fn internal(
     }
     Ok(changes)
 }
+#[inline]
 fn identity(key: &str, row: &Value) -> io::Result<String> {
     let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
     let scope = row_scope.ok_or_else(|| unsupported("unscoped move component"))?;
     Ok(format!("{scope}/{row_name}"))
 }
+#[inline]
 fn id(key: &str, identity: &str, row: &Value) -> String {
     row["version"]
         .as_str()
@@ -110,6 +113,7 @@ fn id(key: &str, identity: &str, row: &Value) -> String {
 
 // ComponentMap.updateDirLocation compares native path.join output with a Linux
 // normalized dirFrom. Its Windows nested-directory mismatch is observable.
+#[inline]
 fn matches_from(file: &str, from: &str, windows: bool) -> bool {
     if windows { file.replace('/', r"\").starts_with(from) } else { file.starts_with(from) }
 }

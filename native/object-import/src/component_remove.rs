@@ -31,6 +31,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     bitmap: BitmapChange,
@@ -42,12 +43,13 @@ pub struct Plan {
     lane: Option<Lane>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct BitmapChange {
     before: Vec<u8>,
     after: Vec<u8>,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum RowKind {
     New,
     Staged,
@@ -57,6 +59,7 @@ pub(crate) enum RowKind {
 }
 
 impl Plan {
+    #[inline]
     pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
         Self::prepare_with(root, name, keep_files, RowKind::New)
     }
@@ -81,15 +84,18 @@ impl Plan {
     }
 
     #[must_use]
+    #[inline]
     pub fn identity(&self) -> &str {
         &self.identity
     }
 
     #[must_use]
-    pub fn main_exists(&self) -> bool {
+    #[inline]
+    pub const fn main_exists(&self) -> bool {
         self.main_exists
     }
 
+    #[inline]
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         self.validate_before_commit(file_id)?;
         self.apply(file_id)
@@ -126,6 +132,7 @@ impl Plan {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Selected {
     pub(crate) key: String,
     pub(crate) identity: String,

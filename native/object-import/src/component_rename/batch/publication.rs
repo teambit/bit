@@ -18,6 +18,7 @@ pub(super) fn merge(target: &mut Value, before: &Value, after: &Value) -> io::Re
     }
     Ok(())
 }
+#[inline]
 fn merge_entry(
     target: &mut serde_json::Map<String, Value>,
     previous: Option<&Value>,

@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Lane {
     pub(super) scope: String,
     pub(super) name: String,
@@ -18,6 +19,7 @@ pub(crate) struct Lane {
     pub(super) value: Value,
 }
 
+#[inline]
 pub(crate) fn lane_id_parts(id: &Value) -> (&str, &str) {
     if let Some(raw) = id.as_str() {
         let trimmed = raw.trim();
@@ -106,6 +108,7 @@ fn find_lane_hash(index_before: &[u8], scope: &str, name: &str) -> io::Result<St
     Ok(crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?))
 }
 
+#[inline]
 pub(crate) fn matches_component_entry(entry: &Value, scope: &str, name: &str) -> bool {
     let (entry_scope, entry_name) = lane_id_parts(&entry["id"]);
     let (scope, name) = (scope.trim(), name.trim());

@@ -10,10 +10,12 @@ pub(super) enum Writer {
 }
 impl Writer {
     #[must_use]
+    #[inline]
     pub(super) const fn target(exported: bool, preserve: bool) -> Self {
         if exported || preserve { Self::Workspace } else { Self::Component }
     }
     #[must_use]
+    #[inline]
     pub(super) fn contents(self, bytes: Vec<u8>, windows: bool) -> Vec<u8> {
         match self {
             // ComponentWriter persists AbstractVinyl through eol.auto().

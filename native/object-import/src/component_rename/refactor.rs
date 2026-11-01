@@ -12,7 +12,7 @@ type Compiled = Result<Arc<Regex>, String>;
 
 /// Compilation is lazy so an invalid pattern still fails at the first text
 /// source that uses it, after any earlier missing-file or binary-file checks.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub(super) struct PatternCache(Mutex<HashMap<String, Arc<OnceLock<Compiled>>>>);
 impl PatternCache {
     fn get(&self, pattern: &str) -> io::Result<Arc<Regex>> {
@@ -37,17 +37,20 @@ impl PatternCache {
     }
 }
 
+#[inline]
 pub(crate) fn content(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
     ContentMatcher::new(source, target, Arc::new(PatternCache::default())).apply(bytes)
 }
 
 /// One rename plan keeps the three compiled replacements across all its files.
+#[derive(Debug, Clone)]
 pub(super) struct ContentMatcher {
     patterns: [String; 3],
     targets: [String; 3],
     cache: Arc<PatternCache>,
 }
 impl ContentMatcher {
+    #[inline]
     pub(super) fn new(source: &str, target: &str, cache: Arc<PatternCache>) -> Self {
         Self {
             patterns: [source.into(), camel(source, false), camel(source, true)],
@@ -73,10 +76,12 @@ impl ContentMatcher {
         Ok(text.into_bytes())
     }
 }
+#[inline]
 pub(crate) fn package(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
     PackageMatcher::new(source, target).apply(bytes)
 }
 /// A phase-local matcher compiles only when its first nonbinary file is reached.
+#[derive(Debug, Clone)]
 pub(super) struct PackageMatcher {
     source: String,
     target: String,
@@ -84,6 +89,7 @@ pub(super) struct PackageMatcher {
     cache: Option<Arc<PatternCache>>,
 }
 impl PackageMatcher {
+    #[inline]
     pub(super) fn new(source: &str, target: &str) -> Self {
         Self {
             source: source.trim().into(),
@@ -92,6 +98,7 @@ impl PackageMatcher {
             cache: None,
         }
     }
+    #[inline]
     pub(super) fn with_cache(source: &str, target: &str, cache: Arc<PatternCache>) -> Self {
         Self {
             source: source.trim().into(),
@@ -100,6 +107,7 @@ impl PackageMatcher {
             cache: Some(cache),
         }
     }
+    #[inline]
     pub(super) fn apply(&mut self, bytes: &[u8]) -> io::Result<Vec<u8>> {
         Ok(self
             .apply_cow(Cow::Borrowed(bytes))?
@@ -150,6 +158,7 @@ fn replace_package_matches(regex: &Regex, text: &str, target: &str) -> Option<St
         result
     })
 }
+#[derive(Debug, Clone)]
 pub(super) struct PackageMatchers(Vec<PackageMatcher>);
 impl PackageMatchers {
     #[cfg(test)]

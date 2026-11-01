@@ -67,6 +67,7 @@ fn validate_existing(
     }
     Ok(())
 }
+#[inline]
 pub(super) fn relative(root: &Path, path: &Path) -> io::Result<String> {
     let stripped = path
         .strip_prefix(root)
@@ -114,6 +115,7 @@ pub(super) fn observe_parents(
     }
     Ok(())
 }
+#[inline]
 fn normalize(path: &Path) -> PathBuf {
     let mut result = PathBuf::new();
     for part in path.components() {

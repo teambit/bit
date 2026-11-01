@@ -12,6 +12,7 @@ use std::{
     sync::Arc,
 };
 
+#[derive(Debug, Clone)]
 pub(super) struct Change {
     pub(super) source: PathBuf,
     pub(super) destination: PathBuf,
@@ -255,6 +256,7 @@ pub(super) fn validate(plan: &Plan) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn leaf(name: &str) -> &str {
     name.rsplit('/').next().unwrap_or(name)
 }

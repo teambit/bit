@@ -58,6 +58,7 @@ fn changes(plans: &[VersionedPlan]) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
         })
         .collect()
 }
+#[inline]
 fn intersect(value: &mut Value, after: &Value) -> io::Result<()> {
     let (rows, retained) = if let Some(rows) = value.as_array_mut() {
         (rows, after.as_array().ok_or_else(|| invalid("staged removal shape"))?)

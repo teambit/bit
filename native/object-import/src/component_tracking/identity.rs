@@ -117,6 +117,7 @@ pub(super) fn scope(
     }
     Ok(scope.into())
 }
+#[inline]
 pub(crate) fn workspace_aspect(workspace: &Value) -> &Value {
     workspace
         .as_object()
@@ -228,6 +229,7 @@ fn chunk(name: &str) -> String {
     output
 }
 
+#[inline]
 fn camel_boundary(characters: &[char], index: usize, character: char) -> bool {
     if !character.is_ascii_uppercase() || index == 0 {
         return false;
@@ -240,9 +242,11 @@ fn camel_boundary(characters: &[char], index: usize, character: char) -> bool {
             && next.is_some_and(|next| next.is_ascii_lowercase() || next.is_ascii_digit()))
 }
 
+#[inline]
 pub(super) fn id(name: &str, scope: &str, version: &str) -> String {
     if version.is_empty() { format!("{scope}/{name}") } else { format!("{scope}/{name}@{version}") }
 }
+#[inline]
 pub(super) fn model(facts: &Value, name: &str, scope: &str) -> Option<Value> {
     facts["models"]
         .as_array()?

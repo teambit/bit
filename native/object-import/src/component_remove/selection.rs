@@ -59,6 +59,7 @@ fn matching(bitmap: &serde_json::Value, parts: &[&str]) -> io::Result<Vec<String
     }
     Ok(result)
 }
+#[inline]
 fn matches(id: &str, parts: &[&str]) -> bool {
     let id = strip_version(id);
     let short_name = id.split_once('/').map(|(_, name)| name);
@@ -76,6 +77,7 @@ fn matches(id: &str, parts: &[&str]) -> bool {
             .filter_map(|part| part.strip_prefix('!'))
             .any(matched)
 }
+#[inline]
 fn strip_version(value: &str) -> &str {
     let trimmed = value.trim();
     match trimmed.rsplit_once('@') {

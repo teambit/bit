@@ -11,6 +11,7 @@ use std::{
 };
 const ASPECT: &str = "teambit.component/deprecation";
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     before: Vec<u8>,
@@ -67,24 +68,30 @@ impl Plan {
         Ok(plan)
     }
     #[must_use]
+    #[inline]
     pub fn changed(&self) -> &[String] {
         &self.changed
     }
     #[must_use]
+    #[inline]
     pub fn unchanged(&self) -> &[String] {
         &self.unchanged
     }
     #[must_use]
-    pub fn bitmap(&self) -> &Value {
+    #[inline]
+    pub const fn bitmap(&self) -> &Value {
         &self.bitmap
     }
+    #[inline]
     pub fn original_bitmap(&self) -> io::Result<Value> {
         crate::parse_jsonc(&self.before)
     }
     #[must_use]
+    #[inline]
     pub fn hydration_ids(&self) -> &[String] {
         &self.loads
     }
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         if fs::read(self.root.join(".bitmap"))? != self.before {
             return Err(invalid("component bitmap changed before deprecation"));
@@ -92,6 +99,7 @@ impl Plan {
         self.proofs.validate()?;
         Ok(())
     }
+    #[inline]
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         self.validate()?;
         if self.changed.is_empty() || self.bitmap == crate::parse_jsonc(&self.before)? {

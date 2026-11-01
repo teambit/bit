@@ -9,6 +9,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+#[derive(Debug, Clone)]
 pub struct Batch {
     root: PathBuf,
     plans: Vec<Plan>,
@@ -68,28 +69,35 @@ impl Batch {
         })
     }
     #[must_use]
+    #[inline]
     pub fn len(&self) -> usize {
         self.plans.len()
     }
     #[must_use]
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.plans.is_empty()
     }
     #[must_use]
-    pub fn bitmap(&self) -> &Value {
+    #[inline]
+    pub const fn bitmap(&self) -> &Value {
         &self.bitmap
     }
+    #[inline]
     pub fn plan(&self, index: usize) -> io::Result<&Plan> {
         self.plans.get(index).ok_or_else(|| invalid("scope rename plan index"))
     }
+    #[inline]
     pub fn plan_mut(&mut self, index: usize) -> io::Result<&mut Plan> {
         self.plans.get_mut(index).ok_or_else(|| invalid("scope rename plan index"))
     }
     /// Stage renamed IDs in memory; exported additions are published separately.
+    #[inline]
     pub fn stage(&mut self, index: usize) -> io::Result<()> {
         let initial = self.plan(index)?.controls.initial.clone();
         publication::merge(&mut self.bitmap, &self.original, &initial)
     }
+    #[inline]
     pub fn write(&mut self, file_id: &str, reason: &str) -> io::Result<()> {
         publication::write(&self.root, &mut self.expected, &self.bitmap, file_id, reason)
     }

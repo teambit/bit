@@ -3,7 +3,7 @@ use serde_json::Value;
 use std::io;
 
 /// Published `bit add` inputs; environment resolution supplies `config` metadata.
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub paths: Vec<String>,
     pub id: Option<String>,
@@ -53,6 +53,7 @@ impl Options {
         Ok(())
     }
 }
+#[inline]
 fn existing_root(bitmap: &Value) -> bool {
     bitmap
         .as_object()

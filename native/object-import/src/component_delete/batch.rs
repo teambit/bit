@@ -4,6 +4,7 @@ use crate::{component_remove::backup_bitmap, inspection};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Batch {
     plans: Vec<Plan>,
     after: Vec<u8>,
@@ -50,9 +51,11 @@ impl Batch {
         Ok(Self { plans, after: inspection::render_workspace_bitmap(&bitmap)? })
     }
     #[must_use]
+    #[inline]
     pub fn plans(&self) -> &[Plan] {
         &self.plans
     }
+    #[inline]
     pub fn bitmap(&self) -> io::Result<Value> {
         crate::parse_jsonc(&self.plans[0].bitmap.before)
     }

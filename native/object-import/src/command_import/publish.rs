@@ -11,6 +11,7 @@ use std::{
     path::Path,
 };
 
+#[inline]
 pub(super) fn object(hash: &str, kind: &str, value: Value) -> io::Result<Object> {
     let kind = kind.trim();
     let serialized = serialized(hash, kind, &value)?;
@@ -25,6 +26,7 @@ pub(super) fn object(hash: &str, kind: &str, value: Value) -> io::Result<Object>
     })
 }
 /// Reuse an immutable wire object only when its entire serialized representation is unchanged.
+#[inline]
 pub(super) fn reusing(
     hash: &str,
     kind: &str,
@@ -50,6 +52,7 @@ pub(super) fn reusing_candidates(
     object(hash, kind, value)
 }
 
+#[inline]
 fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     let hash = hash.trim();
     let kind = kind.trim();

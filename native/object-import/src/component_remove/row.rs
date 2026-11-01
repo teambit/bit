@@ -44,6 +44,7 @@ pub(super) fn supported_row<'a>(
     Ok((name, scope))
 }
 
+#[inline]
 fn has_supported_version(key: &str, row: &Value, kind: RowKind) -> bool {
     let version = row["version"]
         .as_str()
@@ -58,6 +59,7 @@ fn has_supported_version(key: &str, row: &Value, kind: RowKind) -> bool {
     if kind == RowKind::New { version.is_none() } else { version.is_some() }
 }
 
+#[inline]
 fn scope<'a>(row: &'a Value, fallback: Option<&'a str>) -> io::Result<&'a str> {
     row["scope"]
         .as_str()
@@ -115,6 +117,7 @@ fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
         && !crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         && valid_optional_row_fields(row)
 }
+#[inline]
 fn valid_optional_row_fields(row: &Value) -> bool {
     row.get("localOnly").is_none_or(Value::is_boolean)
         && row.get("exported").is_none_or(Value::is_boolean)

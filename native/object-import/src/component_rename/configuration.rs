@@ -125,6 +125,7 @@ fn copied_config(facts: &Value) -> io::Result<serde_json::Map<String, Value>> {
     }
     Ok(config)
 }
+#[inline]
 fn copy_config(config: &mut serde_json::Map<String, Value>, name: &str, value: &Value) {
     let name = name.trim();
     let bare = name.split('@').next().unwrap_or(name);
@@ -212,6 +213,7 @@ fn rename_aspects(plan: &mut Plan) {
         false,
     );
 }
+#[inline]
 fn matches_source_id(candidate: &str, source: &str) -> bool {
     let candidate = candidate.trim();
     let source = source.trim();

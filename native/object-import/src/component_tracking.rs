@@ -18,6 +18,7 @@ use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
 /// The in-memory bitmap and component inventory consumed by the native linker.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: std::path::PathBuf,
     cwd: std::path::PathBuf,
@@ -61,20 +62,24 @@ impl Plan {
     }
     /// Projected bitmap; this must remain in memory until linking has succeeded.
     #[must_use]
-    pub fn bitmap(&self) -> &Value {
+    #[inline]
+    pub const fn bitmap(&self) -> &Value {
         &self.bitmap
     }
     /// Added component rows, including component-relative ordered source paths.
     #[must_use]
+    #[inline]
     pub fn components(&self) -> &[Value] {
         &self.components
     }
     /// Published already-used, empty-directory and out-of-sync warnings.
     #[must_use]
-    pub fn warnings(&self) -> &Value {
+    #[inline]
+    pub const fn warnings(&self) -> &Value {
         &self.warnings
     }
     /// Reject changes to retained files and directory entries before publication.
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()
     }

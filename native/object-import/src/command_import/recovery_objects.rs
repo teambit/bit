@@ -36,8 +36,10 @@ impl PreparedImport {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct LooseObject;
 impl LooseObject {
+    #[inline]
     fn path(objects_dir: &Path, canonical_hash: &str) -> std::path::PathBuf {
         objects_dir
             .join(&canonical_hash[..2])

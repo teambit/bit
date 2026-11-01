@@ -14,6 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VersionedPlan {
     workspace: Plan,
     index: Change,
@@ -23,18 +24,21 @@ pub struct VersionedPlan {
     history: Option<HistoryState>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct HistoryState {
     path: PathBuf,
     before: Option<Vec<u8>>,
     after: Option<Vec<u8>>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Change {
     path: PathBuf,
     before: Vec<u8>,
     after: Option<Vec<u8>>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct ModelSelection<'a> {
     scope: &'a str,
     name: &'a str,
@@ -42,14 +46,17 @@ struct ModelSelection<'a> {
 }
 
 impl VersionedPlan {
+    #[inline]
     pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
         Self::prepare_kind(root, name, keep_files, RowKind::Staged, false)
     }
 
+    #[inline]
     pub fn prepare_imported(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
         Self::prepare_kind(root, name, keep_files, RowKind::Imported, false)
     }
 
+    #[inline]
     pub fn prepare_lane_snap(
         root: &Path,
         name: &str,
@@ -87,21 +94,25 @@ impl VersionedPlan {
         Ok(Self { workspace, index, staged, objects, lane, history })
     }
 
+    #[inline]
     pub(super) fn package_path(&mut self, path: PathBuf) {
         self.workspace.package = path;
     }
-    pub(super) fn is_staged(&self) -> bool {
+    #[inline]
+    pub(super) const fn is_staged(&self) -> bool {
         (self.staged.is_some() || self.workspace.lane.is_some())
             && self.workspace.main_exists
     }
 
     #[must_use]
+    #[inline]
     pub fn identity(&self) -> &str {
         self.workspace.identity()
     }
 
     #[must_use]
-    pub fn removed_from_lane(&self) -> bool {
+    #[inline]
+    pub const fn removed_from_lane(&self) -> bool {
         self.lane.is_some()
     }
 

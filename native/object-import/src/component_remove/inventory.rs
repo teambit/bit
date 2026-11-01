@@ -26,6 +26,7 @@ pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Re
     Ok(!inventory::tracking_scan(&root.join(directory), &excluded, directory == ".")?.is_empty())
 }
 
+#[inline]
 fn normalize_dir(dir: &str) -> std::borrow::Cow<'_, str> {
     let trimmed = dir.trim();
     if trimmed.contains('\\') {
@@ -35,6 +36,7 @@ fn normalize_dir(dir: &str) -> std::borrow::Cow<'_, str> {
     }
 }
 
+#[inline]
 fn is_removed_row(row: &Value) -> bool {
     crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         || row["config"]
@@ -53,6 +55,7 @@ fn is_removed_row(row: &Value) -> bool {
             .is_some_and(|rem| bit_workspace_config::truthy(&rem["removed"]))
 }
 
+#[inline]
 fn is_nested_root_dir(directory: &str, candidate: &str) -> bool {
     candidate != directory
         && (directory == "."

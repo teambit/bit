@@ -86,6 +86,7 @@ pub(super) fn validate(root: &Path, state: &HistoryState) -> io::Result<()> {
     }
 }
 
+#[inline]
 pub(super) fn write(state: &HistoryState) -> io::Result<()> {
     if let Some(bytes) = &state.after {
         fs::create_dir_all(state.path.parent().ok_or_else(|| invalid("history path"))?)?;
@@ -94,6 +95,7 @@ pub(super) fn write(state: &HistoryState) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn ensure_absent(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {
         Ok(_) => Err(invalid("lane VersionHistory appeared before removal")),
@@ -135,6 +137,7 @@ impl super::VersionedPlan {
     }
 }
 
+#[inline]
 fn parse_history_identity(identity: &str, on_lane: bool) -> io::Result<(&str, &str)> {
     identity
         .trim()
@@ -146,6 +149,7 @@ fn parse_history_identity(identity: &str, on_lane: bool) -> io::Result<(&str, &s
         })
 }
 
+#[inline]
 fn read_history(root: &Path, path: &Path) -> io::Result<Option<Vec<u8>>> {
     match fs::symlink_metadata(path) {
         Ok(_) => {

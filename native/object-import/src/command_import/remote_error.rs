@@ -8,11 +8,13 @@ struct Failure {
     cause: io::Error,
 }
 impl fmt::Display for Failure {
+    #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.cause.fmt(formatter)
     }
 }
 impl std::error::Error for Failure {}
+#[inline]
 pub(super) fn mark(scope: Option<&str>, error: io::Error) -> io::Error {
     if let Some(scope) = scope
         .map(str::trim)
@@ -23,6 +25,7 @@ pub(super) fn mark(scope: Option<&str>, error: io::Error) -> io::Error {
     }
     error
 }
+#[inline]
 pub(crate) fn message(error: &io::Error) -> Option<String> {
     let failure = error.get_ref()?.downcast_ref::<Failure>()?;
     let scope = failure.scope.trim();

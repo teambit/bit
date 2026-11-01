@@ -8,18 +8,21 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::component_remove) struct Cleanup {
     manifest: Option<Change>,
     configuration: Option<Configuration>,
     staged: Option<Change>,
     pending: Option<Change>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Change {
     pub(super) path: PathBuf,
     pub(super) before: Vec<u8>,
     pub(super) after: Vec<u8>,
 }
 impl Change {
+    #[inline]
     pub(in crate::component_remove) fn validate(&self) -> io::Result<()> {
         let metadata = fs::symlink_metadata(&self.path)?;
         if !metadata.is_file()
@@ -30,6 +33,7 @@ impl Change {
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn write(&self) -> io::Result<()> {
         fs::write(&self.path, &self.after)
     }

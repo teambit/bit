@@ -8,19 +8,20 @@ use node_semver::Version;
 use serde_json::Value;
 use std::{collections::HashSet, fs, io, path::Path};
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DependencyComponent {
     pub identity: String,
     pub package_name: String,
     pub dependencies: Vec<String>,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Decision {
     pub(super) pin: Option<Pin>,
     pub(super) loaded: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pin {
     pub package_name: String,
     pub version: String,
@@ -129,6 +130,7 @@ fn validate_graph(bitmap: &Value, components: &[DependencyComponent]) -> io::Res
     Ok(())
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()

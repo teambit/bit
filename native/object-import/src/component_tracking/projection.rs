@@ -4,6 +4,7 @@ use super::{Options, Plan, error, files, identity, main_file, rows};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Candidate {
     name: String,
     generated: bool,
@@ -324,6 +325,7 @@ fn latest_semantic(model: &Value) -> Option<String> {
         .map(|(_, version)| version.clone())
 }
 
+#[inline]
 fn relative_files(directory: &str, files: &[String]) -> Vec<String> {
     files
         .iter()
@@ -335,6 +337,7 @@ fn relative_files(directory: &str, files: &[String]) -> Vec<String> {
         })
         .collect()
 }
+#[inline]
 fn sorted(mut files: Vec<String>) -> Vec<String> {
     files.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     files

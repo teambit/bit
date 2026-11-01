@@ -22,6 +22,7 @@ pub(super) fn metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     }
     model_metadata(plan, id)
 }
+#[inline]
 fn local_aspect(row: &Value) -> Option<&Value> {
     let cfg = row["config"].as_object()?;
     cfg.get(ASPECT)
@@ -86,6 +87,7 @@ fn resolve_model_version<'a>(model: &'a Value, id: &'a str) -> Option<&'a str> {
         })
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -105,6 +107,7 @@ fn model_hash(plan: &mut Plan, id: &str) -> io::Result<Option<String>> {
         .and_then(|row| non_empty_str(&row["hash"]));
     Ok(found.map(str::to_owned))
 }
+#[inline]
 fn matches_indexed_component(row: &Value, bare: &str) -> bool {
     let bare = bare.trim();
     let (scope_part, name_part) = bare

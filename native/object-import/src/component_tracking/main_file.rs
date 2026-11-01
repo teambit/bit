@@ -128,6 +128,7 @@ pub(super) fn resolve(
     }
     Ok(Some(main))
 }
+#[inline]
 fn find_case_insensitive<'a>(files: &'a [String], relative: &str) -> Option<&'a String> {
     if relative.is_ascii() {
         files
@@ -183,6 +184,7 @@ fn format_dsl(main: &str, file: &str) -> String {
     )
 }
 
+#[inline]
 fn missing(id: &str) -> io::Error {
     let id = id.trim();
     error(format!(

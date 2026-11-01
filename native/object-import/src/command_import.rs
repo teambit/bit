@@ -27,23 +27,25 @@ use capture::{Capture, Object};
 use serde_json::Value;
 use std::{collections::HashMap, io, path::PathBuf};
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Target {
     /// Bitmap scope, before defaultScope is substituted for unexported IDs.
     pub(crate) scope: Option<String>,
     pub(crate) name: String,
     pub(crate) version: String,
 }
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Overlay {
     objects: HashMap<String, Object>,
     pub(crate) remote_refs: HashMap<String, Value>,
     lane_refs: HashMap<(String, String), Value>,
 }
 impl Overlay {
+    #[inline]
     pub(crate) fn object_references(&self) -> impl Iterator<Item = &str> {
         self.objects.keys().map(String::as_str)
     }
+    #[inline]
     pub(crate) fn read(&self, hash: &str, kind: &str) -> io::Result<Option<&Value>> {
         let kind = kind.trim();
         self.objects
@@ -56,9 +58,11 @@ impl Overlay {
             })
             .transpose()
     }
+    #[inline]
     pub(crate) fn source(&self, hash: &str) -> Option<&[u8]> {
         self.objects.get(hash.trim()).and_then(|record| record.source.as_deref())
     }
+    #[inline]
     pub(crate) fn trace_source(&self, hash: &str) -> io::Result<()> {
         let hash = hash.trim();
         let record = self.objects.get(hash).ok_or_else(|| invalid("import Source receipt"))?;
@@ -70,6 +74,7 @@ impl Overlay {
             record.inflated_size,
         )
     }
+    #[inline]
     pub(crate) fn models(&self) -> Vec<&Value> {
         self.objects
             .values()
@@ -77,23 +82,26 @@ impl Overlay {
             .filter_map(|record| record.value.as_ref())
             .collect()
     }
+    #[inline]
     pub(crate) fn refs(&self, scope: &str) -> Option<&[Value]> {
         self.remote_refs
             .get(scope.trim())
             .and_then(Value::as_array)
             .map(Vec::as_slice)
     }
+    #[inline]
     pub(crate) fn lane_refs(&self, scope: &str, name: &str) -> Option<&[Value]> {
         self.lane_refs
             .get(&(scope.trim().to_owned(), name.trim().to_owned()))
             .and_then(Value::as_array)
             .map(Vec::as_slice)
     }
+    #[inline]
     pub(crate) fn compressed(&self, hash: &str) -> Option<&[u8]> {
         self.objects.get(hash.trim()).map(|record| record.bytes.as_slice())
     }
 }
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Progress {
     pub(crate) requested: Option<usize>,
     pub(crate) object_request: bool,
@@ -102,6 +110,7 @@ pub(crate) struct Progress {
     pub(crate) components: std::collections::HashSet<String>,
     pub(crate) objects: std::collections::HashSet<String>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct PreparedImport {
     pub(crate) overlay: Overlay,
     pub(crate) progress: Vec<Progress>,
@@ -112,12 +121,13 @@ pub(crate) struct PreparedImport {
     cache: Cache,
     writes: Writes,
 }
-#[derive(Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct MainRefresh {
     pub(crate) count: usize,
     pub(crate) objects: usize,
 }
 impl MainRefresh {
+    #[inline]
     fn observe(&mut self, model: &Value) {
         self.count += 1;
         self.objects += usize::from(model["head"].is_null());
@@ -164,12 +174,14 @@ impl PreparedImport {
             .is_some_and(|first| is_unmapped(first) && external.all(is_unmapped))
     }
 
+    #[inline]
     pub(crate) fn recovery_staged(&mut self, bytes: Option<&[u8]>) -> io::Result<()> {
         std::str::from_utf8(bytes.unwrap_or_default())
             .map_err(io::Error::other)?
             .clone_into(&mut self.cache.staged);
         Ok(())
     }
+    #[inline]
     pub(crate) fn accept_recovery_staged(
         &mut self,
         root: &std::path::Path,
@@ -177,11 +189,13 @@ impl PreparedImport {
     ) -> io::Result<()> {
         self.capture.accept_restored(&crate::scope_path(root).join("staged-snaps"), bytes)
     }
+    #[inline]
     pub(crate) fn planned_index(&self) -> &Value {
         &self.writes.index
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Environment {
     local_directory: PathBuf,
     remote_overrides: HashMap<String, PathBuf>,
@@ -190,7 +204,7 @@ struct Environment {
     remotes: Value,
     local_scope: String,
 }
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Cache {
     staged: String,
     only_if_built: bool,
@@ -201,6 +215,7 @@ struct Cache {
     fetched_lane: Option<lane::Record>,
     switch_existing_versions: bool,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Writes {
     remote_objects: Vec<(PathBuf, String, Value)>,
     index: Value,
@@ -211,14 +226,17 @@ struct Writes {
     switch_warning: Option<String>,
 }
 impl PreparedImport {
+    #[inline]
     pub(crate) fn switch_warning(&self) -> Option<&str> {
         self.writes.switch_warning.as_deref()
     }
 
+    #[inline]
     pub(crate) fn mark_post_write_bitmap_history(&mut self) {
         self.writes.post_write_bitmap_history = true;
     }
 
+    #[inline]
     pub(crate) fn post_write_bitmap_history(&self) -> bool {
         self.writes.post_write_bitmap_history
     }
@@ -299,9 +317,11 @@ fn validate_virtual_object(hash: &str, compressed: &[u8]) -> io::Result<usize> {
     }
     Ok(raw.len())
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+#[inline]
 fn object_hash(identity: &str) -> String {
     use sha1::{Digest, Sha1};
     crate::validate::hexadecimal(&Sha1::digest(identity.as_bytes()))

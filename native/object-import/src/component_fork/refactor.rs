@@ -7,10 +7,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Refactor {
     groups: Vec<Group>,
     observed: Observed,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Group {
     files: Vec<files::Copy>,
     initial: Vec<Vec<u8>>,
@@ -36,10 +38,12 @@ impl Refactor {
         plan.validate()?;
         Ok(plan)
     }
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()
     }
     #[must_use]
+    #[inline]
     pub fn ast_inputs(&self) -> Vec<(PathBuf, Vec<u8>)> {
         self.groups
             .iter()

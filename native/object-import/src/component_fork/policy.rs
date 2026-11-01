@@ -61,6 +61,7 @@ fn excluded_dependency(row: &Value, excluded: Option<&Vec<Value>>) -> bool {
                 || component_identity(row).as_deref() == Some(identity.as_str())
         })
 }
+#[inline]
 fn component_identity(component: &Value) -> Option<String> {
     component
         .as_str()
@@ -78,6 +79,7 @@ fn component_identity(component: &Value) -> Option<String> {
         })
 }
 
+#[inline]
 fn version_with_prefix(version: &str, prefix: &str) -> io::Result<String> {
     if version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Ok(format!("0.0.0-{version}"));

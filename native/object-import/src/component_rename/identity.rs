@@ -71,9 +71,11 @@ fn extract_source_version(key: &str, source: &Value) -> Option<String> {
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
         .map(str::to_owned)
 }
+#[inline]
 pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, &'a Value)> {
     select_row(bitmap, id, false)
 }
+#[inline]
 pub(super) fn selected_any<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, &'a Value)> {
     select_row(bitmap, id, true)
 }
@@ -134,6 +136,7 @@ pub(crate) fn row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {
     }
     key_id.split_once('/').map_or(key_id, |(_, name)| name.trim())
 }
+#[inline]
 pub(crate) fn scope(row: &Value) -> Option<&str> {
     row["scope"]
         .as_str()
@@ -146,6 +149,7 @@ pub(crate) fn scope(row: &Value) -> Option<&str> {
                 .filter(|scope| !scope.is_empty())
         })
 }
+#[inline]
 pub(crate) fn row_scope<'a>(key: &'a str, row: &'a Value) -> Option<&'a str> {
     scope(row)
         .or_else(|| {

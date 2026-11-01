@@ -6,6 +6,7 @@ use std::{
     path::{Component, Path},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Identity {
     pub target: String,
     pub key: String,
@@ -136,6 +137,7 @@ pub(super) fn source_id<'a>(
         .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .ok_or_else(|| unsupported("fork requires scoped source identity"))
 }
+#[inline]
 pub(super) fn leaf(name: &str) -> &str {
     let name = name.trim();
     name.rsplit('/')
@@ -143,6 +145,7 @@ pub(super) fn leaf(name: &str) -> &str {
         .unwrap_or(name)
         .trim()
 }
+#[inline]
 fn scope_name(scope: &str) -> io::Result<()> {
     if scope.is_empty()
         || !scope

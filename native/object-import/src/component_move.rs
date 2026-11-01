@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     before: Vec<u8>,
@@ -48,20 +49,24 @@ impl Plan {
         })
     }
     #[must_use]
-    pub fn bitmap(&self) -> &Value {
+    #[inline]
+    pub const fn bitmap(&self) -> &Value {
         &self.bitmap
     }
     #[must_use]
+    #[inline]
     pub fn changes(&self) -> &[Value] {
         &self.changes
     }
     #[must_use]
+    #[inline]
     pub fn identities(&self) -> Vec<String> {
         self.changes
             .iter()
             .filter_map(change_identity)
             .collect()
     }
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()
     }
