@@ -1,4 +1,4 @@
-//! Remote lane refresh retains advanced lane metadata during historical `bit checkout`.
+//! End-to-end tests verifying remote lane refresh retains advanced lane metadata during historical `bit checkout`.
 
 use crate::helper::{Helper, config::read_jsonc};
 use std::{ffi::OsStr, fs};

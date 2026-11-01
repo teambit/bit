@@ -1,4 +1,4 @@
-//! Main and implicit lane fetches preserve fetch ordering, lane-first result ordering, and `.bitmap` state.
+//! End-to-end tests verifying main and implicit lane fetches preserve fetch ordering, lane-first result ordering, and `.bitmap` state.
 
 mod cross_scope;
 use crate::helper::{Helper, config::read_jsonc};

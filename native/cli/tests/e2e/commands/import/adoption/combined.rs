@@ -1,4 +1,4 @@
-//! Owned source replacement must advance only its exact proofs before `--write-deps` recapture.
+//! End-to-end tests verifying owned source replacement advances only its exact proofs before `--write-deps` recapture.
 
 use super::{command, dependents, file};
 use crate::{

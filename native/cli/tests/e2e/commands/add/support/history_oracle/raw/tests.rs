@@ -1,4 +1,4 @@
-//! Unit tests for raw workspace-config history snapshot parsing and oracle comparison.
+//! Unit tests for raw workspace-config history [`Snapshot`] parsing ([`parse`]) and oracle comparison ([`oracle_mode`]).
 
 use super::{Snapshot, oracle_mode, parse};
 use chrono::TimeZone;

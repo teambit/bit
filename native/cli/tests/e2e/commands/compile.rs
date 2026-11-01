@@ -1,4 +1,4 @@
-//! Released `bit compile` emitted bytes, reports, caches, and package links are compared at the same path.
+//! End-to-end tests comparing released `bit compile` emitted bytes, reports, caches, and package links at the same path.
 
 use super::move_paths::support;
 

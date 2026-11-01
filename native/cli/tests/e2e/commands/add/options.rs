@@ -1,4 +1,4 @@
-//! Option handling, `trackAllFiles`, and multi-component scaling tests for the native `bit add` command.
+//! End-to-end option handling, `trackAllFiles`, and multi-component scaling tests for the native `bit add` command.
 
 use super::support::{compare, workspace};
 use crate::helper::config;

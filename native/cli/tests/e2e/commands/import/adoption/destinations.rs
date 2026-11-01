@@ -1,4 +1,4 @@
-//! Destination directory conflict, `--path`, and `--write-to-empty-dir` relocation tests for `bit import`.
+//! End-to-end destination directory conflict, `--path`, and `--write-to-empty-dir` relocation tests for `bit import`.
 
 use super::{command, exported, file, untrack};
 use crate::{

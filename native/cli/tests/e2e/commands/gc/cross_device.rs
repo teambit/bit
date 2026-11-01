@@ -1,4 +1,4 @@
-//! A real tmpfs (`EXDEV`) backup forces the released collector's cross-device copy/remove path.
+//! End-to-end tests using a real tmpfs (`EXDEV`) backup to force the collector's cross-device copy/remove path.
 
 use super::{compare_with_snapshot, fixture, objects, orphan, tree};
 use std::{

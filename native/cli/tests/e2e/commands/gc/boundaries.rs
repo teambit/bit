@@ -1,4 +1,4 @@
-//! Unsupported version or log metadata is delegated while the original object store remains intact.
+//! End-to-end tests ensuring unsupported version or log metadata is delegated while the original object store remains intact.
 
 use super::{fixture, objects, orphan, tree};
 use crate::helper::Helper;

@@ -1,4 +1,4 @@
-//! Align multi-write replay launch phases without altering either process's clock, environment, or history.
+//! Align multi-write replay launch phases ([`align`]) without altering either process's clock, environment, or history.
 
 #[cfg(test)]
 mod tests;

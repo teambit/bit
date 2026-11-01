@@ -1,4 +1,4 @@
-//! Whole-state soft-deletion batches preserve unrelated component configuration and historic snap sources.
+//! End-to-end tests verifying soft-deletion batches preserve unrelated component configuration and historic snap sources.
 
 use crate::commands::move_paths::support::{self, bitmap, setup, successful};
 use serde_json::json;

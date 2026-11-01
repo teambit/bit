@@ -1,4 +1,4 @@
-//! Real configured provider effects precede graph facts; `--write-deps` loads published targets.
+//! End-to-end tests verifying configured provider effects precede graph facts and `--write-deps` loads published targets.
 
 use super::{command, dependents, exported, file};
 use crate::{

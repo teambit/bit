@@ -1,4 +1,4 @@
-//! Recovery (`bit gc --restore` / `--restore-overwrite`) compares existing object bytes and permissions, not only restored object counts.
+//! End-to-end tests ensuring `bit gc --restore` and `--restore-overwrite` compare existing object bytes and permissions.
 
 mod cleanup;
 mod conflicts;

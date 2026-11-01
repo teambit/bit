@@ -1,4 +1,4 @@
-//! Unit tests for stream-error variant matching in replay output comparison.
+//! Unit tests for stream-error variant matching ([`assert_errors`]) in replay output comparison.
 
 use super::assert_errors;
 

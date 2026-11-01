@@ -1,4 +1,4 @@
-//! Soft deletion shares workspace state/env predicates without recovery's scope-pool semantics.
+//! End-to-end tests verifying soft deletion shares workspace state/env predicates without recovery's scope-pool semantics.
 
 use crate::commands::move_paths::support::{self, bitmap, successful};
 
