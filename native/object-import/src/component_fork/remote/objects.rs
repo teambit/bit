@@ -24,8 +24,9 @@ pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Resul
         return Err(unsupported("fork remote version type"));
     }
     let mut total = 0usize;
-    let mut files = Vec::new();
-    for row in source_rows(&version)? {
+    let rows = source_rows(&version)?;
+    let mut files = Vec::with_capacity(rows.len());
+    for row in rows {
         let (path, hash) = source(row)?;
         compressed.push((hash.into(), retain(scope, hash, observed)?));
         let bytes = crate::checkout::repository::source(
@@ -75,8 +76,9 @@ pub(super) fn http(items: &[ObjectItem], id: &str) -> io::Result<Captured> {
         return Err(unsupported("fork remote version type"));
     }
     let version: Value = crate::parse_jsonc(bytes)?;
-    let mut files = Vec::new();
-    for row in source_rows(&version)? {
+    let rows = source_rows(&version)?;
+    let mut files = Vec::with_capacity(rows.len());
+    for row in rows {
         let (path, hash) = source(row)?;
         let (kind, bytes) = objects.get(hash).ok_or_else(|| missing(id))?;
         if kind != "Source" {

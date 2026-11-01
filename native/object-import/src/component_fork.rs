@@ -127,7 +127,16 @@ impl Plan {
     }
     #[must_use]
     pub fn target_materialized(&self) -> Value {
-        json!({"identity":self.identity.target,"directory":self.identity.directory,"mainFile":self.identity.main,"files":self.files.iter().map(|file|json!({"from":file.source,"to":file.destination})).collect::<Vec<_>>()})
+        let files: Vec<_> = self.files
+            .iter()
+            .map(|file| json!({"from":file.source,"to":file.destination}))
+            .collect();
+        json!({
+            "identity": self.identity.target,
+            "directory": self.identity.directory,
+            "mainFile": self.identity.main,
+            "files": files,
+        })
     }
     #[must_use]
     pub fn ast_inputs(&self) -> Vec<(PathBuf, Vec<u8>)> {

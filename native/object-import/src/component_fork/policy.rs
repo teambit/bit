@@ -49,14 +49,14 @@ fn excluded_dependency(row: &Value, excluded: Option<&Vec<Value>>) -> bool {
     else {
         return row["id"].as_str().map(str::trim) == Some("@teambit/legacy");
     };
-    let Some(identity) = component_identity(component) else { return false };
-    excluded.is_some_and(|rows| {
-        rows.iter()
-            .any(|row| {
-                row.as_str().map(str::trim) == Some(identity.as_str())
-                    || component_identity(row).as_deref() == Some(identity.as_str())
-            })
-    })
+    let (Some(rows), Some(identity)) = (excluded, component_identity(component)) else {
+        return false;
+    };
+    rows.iter()
+        .any(|row| {
+            row.as_str().map(str::trim) == Some(identity.as_str())
+                || component_identity(row).as_deref() == Some(identity.as_str())
+        })
 }
 fn component_identity(component: &Value) -> Option<String> {
     component

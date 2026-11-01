@@ -29,12 +29,13 @@ pub(super) fn prepare(root: &Path, selected: &[Selected]) -> io::Result<Option<C
 fn matches_selected_record(row: &Value, selected: &[Selected]) -> bool {
     selected
         .iter()
-        .filter(|entry| {
-            entry.version
-                .as_deref()
-                .is_some_and(|version| !version.trim().is_empty())
-        })
         .any(|entry| {
+            if entry.version
+                .as_deref()
+                .is_none_or(|version| version.trim().is_empty())
+            {
+                return false;
+            }
             let identity = entry.identity.trim();
             let (scope, name) = identity
                 .split_once('/')

@@ -26,10 +26,10 @@ pub fn probe_remote(
             for id in ids {
                 let trimmed = id.trim();
                 let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());
-                let (scope, _) = bare
+                let scope = bare
                     .split_once('/')
-                    .map(|(scope, name)| (scope.trim(), name.trim()))
-                    .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+                    .filter(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+                    .map(|(scope, _)| scope.trim())
                     .ok_or_else(|| super::batch::invalid("recovery remote identity"))?;
                 let deleted = match remotes.resolve(scope, network).await? {
                     Remote::File(path) => objects::file(&path, trimmed)?,

@@ -57,8 +57,9 @@ impl Batch {
         proofs.ancestors(root, root)?;
         let before = required(&mut proofs, &root.join(".bitmap"))?;
         let bitmap = crate::parse_jsonc(&before)?;
-        let mut batch = Self { root: root.into(), bitmap, items: vec![], proofs };
+        let mut batch = Self { root: root.into(), bitmap, items: Vec::new(), proofs };
         let selected = selection::select(&mut batch, pattern)?;
+        batch.items.reserve(selected.len());
         for id in selected {
             let mut item = classification::classify(&mut batch, &id)?;
             item.configuration = configuration::prepare(&mut batch, &item)?;

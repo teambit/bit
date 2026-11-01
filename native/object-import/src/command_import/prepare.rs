@@ -325,10 +325,9 @@ fn version_ref(model: &Value, version: &str) -> io::Result<String> {
             .map(str::to_owned)
             .ok_or_else(|| invalid("import model head absent"));
     }
-    model["orphanedVersions"]
-        .get(version)
-        .unwrap_or_else(|| &model["versions"][version])
+    model["orphanedVersions"][version]
         .as_str()
+        .or_else(|| model["versions"][version].as_str())
         .map(str::trim)
         .filter(|hash| !hash.is_empty())
         .map(str::to_owned)

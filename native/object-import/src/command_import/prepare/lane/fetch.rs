@@ -56,13 +56,11 @@ impl PreparedImport {
         let remotes = self.environment.remotes.clone();
         let directory = remote(self, &remotes, id.scope.trim())?;
         let hash = lane_hash(self, &directory, id, supplied_hash)?;
-        let record = self.capture
+        let value = self.capture
             .object(&directory, &hash, "Lane")?
-            .ok_or_else(|| invalid("remote Lane missing"))?;
-        let value = record.value
-            .as_ref()
-            .ok_or_else(|| invalid("remote Lane body"))?
-            .clone();
+            .ok_or_else(|| invalid("remote Lane missing"))?
+            .value
+            .ok_or_else(|| invalid("remote Lane body"))?;
         validate_value(id, &value)?;
         self.progress.push(Progress {
             reason: Some(format!("for fetching lane {}/{}", id.scope.trim(), id.name.trim())),

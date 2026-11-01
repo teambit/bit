@@ -39,7 +39,7 @@ fn projection(parsed: &Value) -> io::Result<Value> {
         .unwrap_or_default();
     extensions.retain(|key, _| {
         let trimmed = key.trim();
-        trimmed != REMOVE && !trimmed.starts_with(&format!("{REMOVE}@"))
+        trimmed != REMOVE && !trimmed.starts_with("teambit.component/remove@")
     });
     extensions.insert(REMOVE.into(), serde_json::json!({"removed":false}));
     let mut value = serde_json::json!({

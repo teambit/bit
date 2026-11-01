@@ -33,14 +33,15 @@ impl Batch {
             )?);
         }
         let first = plans.first().ok_or_else(|| invalid("no components selected for deletion"))?;
-        let mut bitmap = crate::parse_jsonc(&first.bitmap.before)?;
+        let before = crate::parse_jsonc(&first.bitmap.before)?;
+        let mut bitmap = before.clone();
         for plan in &plans {
             if plan.bitmap.before != first.bitmap.before {
                 return Err(invalid("component workspace changed before deletion"));
             }
             let projected = crate::parse_jsonc(&plan.bitmap.after)?;
             for (key, row) in projected.as_object().ok_or_else(|| invalid("component bitmap"))? {
-                if row != &crate::parse_jsonc(&plan.bitmap.before)?[key] {
+                if row != &before[key] {
                     bitmap[key] = row.clone();
                 }
             }

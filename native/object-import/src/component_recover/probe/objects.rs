@@ -126,7 +126,7 @@ pub(super) fn http(items: &[ObjectItem], id: &str) -> io::Result<bool> {
 }
 pub(crate) type Objects = HashMap<String, (String, Vec<u8>)>;
 pub(crate) fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Option<Value>)> {
-    let mut objects = HashMap::new();
+    let mut objects = HashMap::with_capacity(items.len());
     let mut model = None;
     let mut total = 0;
     for item in items {
@@ -215,20 +215,20 @@ fn removed(model: &Value, version: &Value, hash: &str) -> bool {
     {
         return true;
     }
-    let tag = model["versions"]
+    let Some(tag_ver) = model["versions"]
         .as_object()
         .into_iter()
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter())
         .find(|(_, reference)| reference.as_str().map(str::trim) == Some(hash))
-        .map(|(tag, _)| tag.trim());
-    let range = config["range"]
+        .and_then(|(tag, _)| node_semver::Version::parse(tag.trim()).ok())
+    else {
+        return false;
+    };
+    config["range"]
         .as_str()
-        .map(str::trim)
-        .and_then(|range| node_semver::Range::parse(range).ok());
-    tag.and_then(|tag| node_semver::Version::parse(tag).ok())
-        .zip(range)
-        .is_some_and(|(tag, range)| range.satisfies(&tag))
+        .and_then(|range| node_semver::Range::parse(range.trim()).ok())
+        .is_some_and(|range| range.satisfies(&tag_ver))
 }
 fn missing(id: &str) -> io::Error {
     io::Error::new(io::ErrorKind::NotFound, format!("component {id} was not found"))

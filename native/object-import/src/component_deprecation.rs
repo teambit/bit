@@ -137,16 +137,15 @@ impl Plan {
 }
 fn unchanged(metadata: &Value, replacement: Option<&str>, range: Option<&str>, undo: bool) -> bool {
     let deprecated = metadata["deprecate"].as_bool() == Some(true);
-    let clearable = deprecated
-        || metadata["range"]
-            .as_str()
-            .is_some_and(|value| !value.trim().is_empty());
     if undo {
-        !clearable
+        !deprecated
+            && metadata["range"]
+                .as_str()
+                .is_none_or(|value| value.trim().is_empty())
     } else {
-        replacement.is_none_or(|val| val.trim().is_empty())
+        deprecated
+            && replacement.is_none_or(|val| val.trim().is_empty())
             && range.is_none_or(|val| val.trim().is_empty())
-            && deprecated
     }
 }
 pub fn set_config(

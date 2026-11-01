@@ -181,13 +181,8 @@ pub(super) fn has_edges(plan: &mut PreparedImport, version: &Value) -> io::Resul
                 .ok_or_else(|| invalid("import dependency edges missing"))?
         };
         let edges: Value = crate::parse_jsonc(&bytes).map_err(io::Error::other)?;
-        if edges.as_array().is_none() {
-            return Err(invalid("import dependency edges shape"));
-        }
-        if edges
-            .as_array()
-            .is_some_and(|edges| !edges.is_empty())
-        {
+        let list = edges.as_array().ok_or_else(|| invalid("import dependency edges shape"))?;
+        if !list.is_empty() {
             return Ok(true);
         }
     }

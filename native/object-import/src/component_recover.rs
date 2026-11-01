@@ -370,8 +370,8 @@ fn frozen(root: &Path, hash: &str) -> io::Result<Object> {
         .join("objects")
         .join(&canonical[..2])
         .join(&canonical[2..]);
-    let kind = fs::symlink_metadata(&path)?.file_type();
-    if !kind.is_file() || kind.is_symlink() || fs::metadata(&path)?.len() > MAX_BYTES as u64 {
+    let meta = fs::symlink_metadata(&path)?;
+    if !meta.is_file() || meta.file_type().is_symlink() || meta.len() > MAX_BYTES as u64 {
         return Err(invalid("component object path"));
     }
     Ok(Object { before: fs::read(&path)?, path })

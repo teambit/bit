@@ -87,5 +87,7 @@ fn remove(document: &mut Document, identity: &str) -> bool {
 
 fn matches_aspect_identity(candidate: &str, identity: &str) -> bool {
     let (candidate, identity) = (candidate.trim(), identity.trim());
-    candidate == identity || candidate.starts_with(&format!("{identity}@"))
+    candidate
+        .strip_prefix(identity)
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with('@'))
 }

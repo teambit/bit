@@ -157,12 +157,18 @@ impl RemoteCapture {
         }
         self.write_objects(objects)?;
         let configs = objects::configs(version)?;
-        let trimmed = id.trim();
-        let bare_id = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());
+        let bare_id = id
+            .trim()
+            .rsplit_once('@')
+            .map_or_else(|| id.trim(), |(prefix, _)| prefix.trim());
         let main_file = version["mainFile"]
             .as_str()
             .map_or_else(|| version["mainFile"].clone(), |main| Value::String(main.trim().into()));
-        self.sources.push(serde_json::json!({"identity":bare_id,"version":version_id,"sourceDirectory":directory.path(),"mainFile":main_file,"files":files.iter().map(|(path,_)|serde_json::json!({"relativePath":path})).collect::<Vec<_>>(),"versionData":version,"sourceConfigs":configs}));
+        let relative_files: Vec<_> = files
+            .iter()
+            .map(|(path, _)| serde_json::json!({"relativePath":path}))
+            .collect();
+        self.sources.push(serde_json::json!({"identity":bare_id,"version":version_id,"sourceDirectory":directory.path(),"mainFile":main_file,"files":relative_files,"versionData":version,"sourceConfigs":configs}));
         self.directories.push(directory);
         Ok(())
     }

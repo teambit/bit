@@ -143,8 +143,8 @@ fn select_all(root: &Path, bitmap: &Value, identities: &[String]) -> io::Result<
         return Err(invalid("stash removal batch limit"));
     }
     let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
-    let mut keys = HashSet::new();
-    let mut selected = Vec::new();
+    let mut keys = HashSet::with_capacity(identities.len());
+    let mut selected = Vec::with_capacity(identities.len());
     for identity in identities {
         if identity.trim().is_empty() {
             return Err(invalid("stash removal identity is empty"));

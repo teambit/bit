@@ -9,11 +9,12 @@ pub(super) fn locations(
     from: &str,
     to: &str,
 ) -> io::Result<(PathBuf, PathBuf, bool)> {
-    if from.trim().is_empty() || to.trim().is_empty() {
+    let (from_trimmed, to_trimmed) = (from.trim(), to.trim());
+    if from_trimmed.is_empty() || to_trimmed.is_empty() {
         return Err(invalid("move source and destination paths must not be empty"));
     }
-    let source = normalize(&cwd.join(from.trim()));
-    let destination = normalize(&cwd.join(to.trim()));
+    let source = normalize(&cwd.join(from_trimmed));
+    let destination = normalize(&cwd.join(to_trimmed));
     if fs::symlink_metadata(&source).is_ok_and(|meta| meta.file_type().is_symlink())
         || fs::symlink_metadata(&destination).is_ok_and(|meta| meta.file_type().is_symlink())
     {

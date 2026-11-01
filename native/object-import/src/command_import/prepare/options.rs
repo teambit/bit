@@ -52,14 +52,7 @@ impl PreparedImport {
         if targets.len() > 4096 {
             return Err(super::invalid("import lane dependency target limit"));
         }
-        let scoped = targets
-            .iter()
-            .filter(|target| {
-                target.scope
-                    .as_deref()
-                    .is_some_and(|scope| !scope.trim().is_empty())
-            })
-            .collect::<Vec<_>>();
+        let scoped = scoped_targets(targets);
         if scoped.is_empty() {
             return Ok(());
         }
@@ -85,14 +78,7 @@ impl PreparedImport {
         if targets.len() > 4096 {
             return Err(super::invalid("import main fetch target limit"));
         }
-        let scoped = targets
-            .iter()
-            .filter(|target| {
-                target.scope
-                    .as_deref()
-                    .is_some_and(|scope| !scope.trim().is_empty())
-            })
-            .collect::<Vec<_>>();
+        let scoped = scoped_targets(targets);
         if scoped.is_empty() {
             return Ok(());
         }
@@ -103,6 +89,17 @@ impl PreparedImport {
     }
 }
 
+fn scoped_targets(targets: &[Target]) -> Vec<&Target> {
+    targets
+        .iter()
+        .filter(|target| {
+            target.scope
+                .as_deref()
+                .is_some_and(|scope| !scope.trim().is_empty())
+        })
+        .collect()
+}
+
 pub(crate) fn prepare_recovery_with_virtual(
     root: &Path,
     global_remotes_file: &Path,
@@ -110,14 +107,7 @@ pub(crate) fn prepare_recovery_with_virtual(
     fetch: impl FnOnce(&[Target]) -> io::Result<Vec<VirtualRemote>>,
 ) -> io::Result<PreparedImport> {
     let mut plan = super::prepare_lane(root, global_remotes_file)?;
-    let scoped = targets
-        .iter()
-        .filter(|target| {
-            target.scope
-                .as_deref()
-                .is_some_and(|scope| !scope.trim().is_empty())
-        })
-        .collect::<Vec<_>>();
+    let scoped = scoped_targets(targets);
     let (local, remote) = super::recovery::retain(&mut plan, &scoped)?;
     let mut available = local.clone();
     let requested = remote

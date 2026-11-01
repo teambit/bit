@@ -15,19 +15,20 @@ impl PreparedImport {
             if bytes.is_empty() || bytes.len() > 32 * 1024 * 1024 {
                 return Err(invalid("import recovery object size"));
             }
-            let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
+            let trimmed = hash.trim();
+            let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(trimmed)?);
             let path = LooseObject::path(&crate::scope_path(root), &canonical);
             let metadata = fs::symlink_metadata(&path)?;
             if !metadata.is_file()
                 || metadata.file_type().is_symlink()
-                || metadata.len() != bytes.len() as u64
+                || u64::try_from(bytes.len()).ok() != Some(metadata.len())
                 || fs::read(&path)? != *bytes
             {
                 return Err(invalid("import restored component changed"));
             }
             self.capture.accept_known(&path, bytes);
             self.overlay.objects.remove(&canonical);
-            self.overlay.objects.remove(hash.trim());
+            self.overlay.objects.remove(trimmed);
             self.overlay.objects.remove(hash.as_str());
         }
         Ok(())

@@ -62,8 +62,9 @@ fn model_metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
         .map_or_else(
             || serde_json::json!({}),
             |row| {
-                if row["config"].is_object()
-                    && !row["config"].as_object().is_none_or(serde_json::Map::is_empty)
+                if row["config"]
+                    .as_object()
+                    .is_some_and(|cfg| !cfg.is_empty())
                 {
                     row["config"].clone()
                 } else {

@@ -93,7 +93,7 @@ pub(super) fn after_import(batch: &mut Batch, published: &serde_json::Value) -> 
             let metadata = fs::symlink_metadata(&file.source)?;
             if !metadata.is_file()
                 || metadata.file_type().is_symlink()
-                || metadata.len() != file.proof.len() as u64
+                || u64::try_from(file.proof.len()).ok() != Some(metadata.len())
                 || fs::read(&file.source)? != file.proof
             {
                 return Err(invalid("recovery retained Source changed during import"));

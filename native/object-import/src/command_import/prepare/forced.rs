@@ -13,7 +13,10 @@ pub(super) fn finish(plan: &mut PreparedImport, roots: &[&Target]) -> io::Result
         return Ok(());
     }
     phase.ids.retain(|id| identities.contains(without_version(id)));
-    let received = phase.components.clone();
+    let received: HashSet<String> = phase.components
+        .iter()
+        .map(|rec| rec.trim().to_owned())
+        .collect();
     let dependencies = collect_forced_dependencies(plan, roots, &received)?;
     plan.prepare_versions_with_reason(
         &dependencies,
@@ -39,11 +42,7 @@ fn collect_forced_dependencies(
             if !seen.insert(key.clone()) {
                 continue;
             }
-            if received.contains(&id)
-                || received
-                    .iter()
-                    .any(|rec| rec.trim() == id)
-            {
+            if received.contains(&id) {
                 plan.cache.unbuilt.remove(&key);
             }
             dependencies.push(dependency);

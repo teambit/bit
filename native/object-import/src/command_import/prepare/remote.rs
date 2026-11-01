@@ -28,24 +28,10 @@ pub(in crate::command_import) fn settings_for_lane(
 }
 
 fn is_non_main_lane(current: &Value) -> bool {
-    let lane = current
-        .as_str()
-        .map(str::trim)
-        .filter(|lane| !lane.is_empty())
-        .or_else(|| {
-            current["name"]
-                .as_str()
-                .map(str::trim)
-                .filter(|lane| !lane.is_empty())
-        })
-        .or_else(|| {
-            current["id"]
-                .as_str()
-                .map(str::trim)
-                .filter(|lane| !lane.is_empty())
-        })
-        .or_else(|| {
-            current["id"]["name"]
+    let lane = [current, &current["name"], &current["id"], &current["id"]["name"]]
+        .into_iter()
+        .find_map(|value| {
+            value
                 .as_str()
                 .map(str::trim)
                 .filter(|lane| !lane.is_empty())

@@ -27,7 +27,7 @@ pub(super) fn prepare(
     if files.len() > 16384 {
         return Err(unsupported("fork file count budget"));
     }
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(files.len());
     let mut destinations = BTreeSet::new();
     for file in files {
         let relative = file
@@ -106,12 +106,13 @@ pub(super) fn source_path(
             },
             PathBuf::from,
         );
-    if !directory.starts_with(root) {
-        private_root(&directory, &directory.join(relative), "bit-native-fork-")?;
-    }
     let path = directory.join(relative);
+    let inside_workspace = directory.starts_with(root);
+    if !inside_workspace {
+        private_root(&directory, &path, "bit-native-fork-")?;
+    }
     observed.ancestors(
-        if directory.starts_with(root) { root } else { &directory },
+        if inside_workspace { root } else { &directory },
         path.parent().ok_or_else(|| unsupported("fork source parent"))?,
     )?;
     Ok(path)

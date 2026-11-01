@@ -51,7 +51,9 @@ fn append_parents(version: &Value, pending: &mut Vec<String>) -> io::Result<()> 
     else {
         return Ok(());
     };
-    for parent in parents.as_array().ok_or_else(|| invalid("import history parents"))? {
+    let parents = parents.as_array().ok_or_else(|| invalid("import history parents"))?;
+    pending.reserve(parents.len());
+    for parent in parents {
         let hash = ref_str(parent).ok_or_else(|| invalid("import history parent"))?;
         crate::merge_history::hash(hash)?;
         pending.push(hash.to_owned());

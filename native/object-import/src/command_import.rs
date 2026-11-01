@@ -73,10 +73,8 @@ impl Overlay {
     pub(crate) fn models(&self) -> Vec<&Value> {
         self.objects
             .values()
-            .filter_map(|record| {
-                (record.kind == "Component").then_some(())?;
-                record.value.as_ref()
-            })
+            .filter(|record| record.kind == "Component")
+            .filter_map(|record| record.value.as_ref())
             .collect()
     }
     pub(crate) fn refs(&self, scope: &str) -> Option<&[Value]> {
@@ -167,8 +165,9 @@ impl PreparedImport {
     }
 
     pub(crate) fn recovery_staged(&mut self, bytes: Option<&[u8]>) -> io::Result<()> {
-        self.cache.staged =
-            String::from_utf8(bytes.unwrap_or_default().to_vec()).map_err(io::Error::other)?;
+        std::str::from_utf8(bytes.unwrap_or_default())
+            .map_err(io::Error::other)?
+            .clone_into(&mut self.cache.staged);
         Ok(())
     }
     pub(crate) fn accept_recovery_staged(

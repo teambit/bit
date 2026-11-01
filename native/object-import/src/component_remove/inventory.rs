@@ -53,5 +53,9 @@ fn is_removed_row(row: &Value) -> bool {
 }
 
 fn is_nested_root_dir(directory: &str, candidate: &str) -> bool {
-    candidate != directory && (directory == "." || candidate.starts_with(&format!("{directory}/")))
+    candidate != directory
+        && (directory == "."
+            || candidate
+                .strip_prefix(directory)
+                .is_some_and(|rest| rest.starts_with('/')))
 }

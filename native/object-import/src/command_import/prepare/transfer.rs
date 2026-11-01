@@ -131,7 +131,7 @@ fn receive_history(
     }
     plan.progress
         .last_mut()
-        .unwrap()
+        .ok_or_else(|| invalid("import progress phase"))?
         .objects
         .insert(hash.clone());
     let old = if let Some(retained) = plan.overlay.objects.get(&hash) {

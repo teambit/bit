@@ -108,15 +108,14 @@ impl PreparedImport {
                 && ids
                     .iter()
                     .any(|id| id.starts_with(&format!("{scope}/")))
+                && let std::collections::hash_map::Entry::Vacant(entry) = self
+                    .overlay
+                    .objects
+                    .entry(object_hash(scope))
             {
-                let hash = object_hash(scope);
-                self.overlay.objects
-                    .entry(hash.clone())
-                    .or_insert(super::super::publish::object(
-                        &hash,
-                        "ScopeMeta",
-                        json!({"name":scope}),
-                    )?);
+                let object =
+                    super::super::publish::object(entry.key(), "ScopeMeta", json!({"name":scope}))?;
+                entry.insert(object);
             }
         }
         Ok(())

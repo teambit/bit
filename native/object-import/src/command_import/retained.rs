@@ -40,7 +40,8 @@ impl PreparedImport {
         self.capture.accept_published(files)
     }
     fn publication_files(&self) -> io::Result<HashMap<PathBuf, Vec<u8>>> {
-        let mut files = HashMap::new();
+        let mut files =
+            HashMap::with_capacity(self.overlay.objects.len() + self.writes.remote_objects.len());
         for (hash, object) in &self.overlay.objects {
             files.insert(
                 object_path(&self.environment.local_directory, hash)?,
@@ -73,23 +74,12 @@ impl PreparedImport {
         if let Some(bytes) = &self.writes.switch_tracking {
             files.insert(scope.join("scope.json"), bytes.clone());
         }
+        let remotes_dir = scope.join("refs/remotes");
         for (remote, rows) in &self.overlay.remote_refs {
-            files.insert(
-                scope
-                    .join("refs/remotes")
-                    .join(remote.trim())
-                    .join("main"),
-                pretty(rows, false)?,
-            );
+            files.insert(remotes_dir.join(remote.trim()).join("main"), pretty(rows, false)?);
         }
         for ((remote, lane), rows) in &self.overlay.lane_refs {
-            files.insert(
-                scope
-                    .join("refs/remotes")
-                    .join(remote.trim())
-                    .join(lane.trim()),
-                pretty(rows, false)?,
-            );
+            files.insert(remotes_dir.join(remote.trim()).join(lane.trim()), pretty(rows, false)?);
         }
         if let Some(path) = &self.environment.global_remotes {
             files.insert(path.clone(), b"{}".to_vec());

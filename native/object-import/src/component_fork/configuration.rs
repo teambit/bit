@@ -25,18 +25,7 @@ fn config(options: &Options, source: &Value) -> io::Result<Value> {
         copy(&mut result, source)?;
     }
     if !options.no_link {
-        let (scope, name) = source_id(options, source)?;
-        let mut id = json!({"name":name,"scope":scope});
-        let version = source_version(source);
-        if let Some(version) = version {
-            id["version"] = json!(version);
-        }
-        let id = source
-            .get("sourceId")
-            .filter(|id| id.is_object())
-            .cloned()
-            .unwrap_or(id);
-        result["teambit.component/forking"] = json!({"forkedFrom":id});
+        result["teambit.component/forking"] = json!({"forkedFrom":forked_from(options, source)?});
     }
     if let Some(overrides) = source.get("config") {
         for (key, value) in
@@ -50,6 +39,17 @@ fn config(options: &Options, source: &Value) -> io::Result<Value> {
         }
     }
     Ok(result)
+}
+fn forked_from(options: &Options, source: &Value) -> io::Result<Value> {
+    let (scope, name) = source_id(options, source)?;
+    if let Some(id) = source.get("sourceId").filter(|id| id.is_object()) {
+        return Ok(id.clone());
+    }
+    let mut id = json!({"name":name,"scope":scope});
+    if let Some(version) = source_version(source) {
+        id["version"] = json!(version);
+    }
+    Ok(id)
 }
 fn source_version(source: &Value) -> Option<&str> {
     source["version"]

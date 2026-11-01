@@ -20,14 +20,13 @@ impl PreparedImport {
         let directory = self.environment.local_directory.clone();
         let mut missing = Vec::new();
         for target in targets {
-            let hash = read_model(self, &directory, target)?
-                .and_then(|model| version_ref(&model, &target.version).ok());
-            let version = hash
-                .as_ref()
-                .map(|hash| read_version(self, hash))
+            let present = read_model(self, &directory, target)?
+                .and_then(|model| version_ref(&model, &target.version).ok())
+                .map(|hash| read_version(self, &hash))
                 .transpose()?
-                .flatten();
-            if version.is_none() {
+                .flatten()
+                .is_some();
+            if !present {
                 missing.push(target.clone());
             }
         }

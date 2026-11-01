@@ -84,8 +84,7 @@ impl Plan {
         let before = fs::read(root.join(".bitmap"))?;
         let mut bitmap = recovery::jsonc::parse(&before)?;
         let entire = matches!(scope, Scope::Entire);
-        let selected =
-            select_target(root, &bitmap, name, &scope, lane, components.is_some(), update_main)?;
+        let selected = select_target(root, &bitmap, name, &scope, lane, update_main)?;
         let version = selected.version.as_deref().ok_or_else(|| invalid("component version"))?;
         let mut repository = if let Some(lane) = &selected.lane {
             lane_state(root, lane, version)?
@@ -167,24 +166,16 @@ fn select_target(
     name: &str,
     scope: &Scope,
     lane: bool,
-    _graph: bool,
     update_main: bool,
 ) -> io::Result<component_remove::Selected> {
     let keep_files = !matches!(scope, Scope::Entire);
     if update_main && !bitmap["_bit_lane"].is_null() {
         let mut main = bitmap.clone();
-        main.as_object_mut()
-            .ok_or_else(|| invalid("component bitmap"))?
-            .shift_remove("_bit_lane");
-        for row in main
-            .as_object_mut()
-            .ok_or_else(|| invalid("component bitmap"))?
-            .values_mut()
-        {
-            if let Some(row) = row.as_object_mut() {
-                row.shift_remove("onLanesOnly");
-                row.shift_remove("isAvailableOnCurrentLane");
-            }
+        let rows = main.as_object_mut().ok_or_else(|| invalid("component bitmap"))?;
+        rows.shift_remove("_bit_lane");
+        for row in rows.values_mut().filter_map(Value::as_object_mut) {
+            row.shift_remove("onLanesOnly");
+            row.shift_remove("isAvailableOnCurrentLane");
         }
         return select(root, &main, name, keep_files, RowKind::Staged)
             .or_else(|_| select(root, &main, name, keep_files, RowKind::Imported));

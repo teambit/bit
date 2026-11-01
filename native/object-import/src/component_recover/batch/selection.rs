@@ -26,14 +26,12 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
         return None;
     }
     let version = non_empty_field(row, "version")
-        .filter(|version| !matches!(*version, "latest" | "head"))
-        .or_else(|| {
-            key_ver.filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
-        });
-    Some(format!(
-        "{scope}/{name}{}",
-        version.map_or_else(String::new, |version| format!("@{version}")),
-    ))
+        .or_else(|| key_ver.filter(|ver| !ver.is_empty()))
+        .filter(|version| !matches!(*version, "latest" | "head"));
+    Some(match version {
+        Some(version) => format!("{scope}/{name}@{version}"),
+        None => format!("{scope}/{name}"),
+    })
 }
 fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
     row[field]
@@ -116,6 +114,7 @@ fn single(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
         return Ok(vec![id]);
     }
     let index = repository::index(batch)?;
+    let target = bare(pattern);
     let rows: Vec<_> = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -126,7 +125,7 @@ fn single(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
                 return false;
             }
             let (row_scope, row_name) = repository::row_id_parts(&row["id"]);
-            row_name == bare(pattern) || format!("{row_scope}/{row_name}") == bare(pattern)
+            row_name == target || format!("{row_scope}/{row_name}") == target
         })
         .collect();
     if rows.len() == 1 {
@@ -140,13 +139,14 @@ fn single(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
 }
 fn lane_component(batch: &mut Batch, pattern: &str) -> io::Result<Option<String>> {
     let Some(lane) = repository::lane(batch)? else { return Ok(None) };
+    let target = bare(pattern);
     let rows: Vec<_> = lane["components"]
         .as_array()
         .into_iter()
         .flatten()
         .filter(|row| {
             let (row_scope, row_name) = repository::row_id_parts(&row["id"]);
-            row_name == bare(pattern) || format!("{row_scope}/{row_name}") == bare(pattern)
+            row_name == target || format!("{row_scope}/{row_name}") == target
         })
         .collect();
     if rows.len() > 1 {

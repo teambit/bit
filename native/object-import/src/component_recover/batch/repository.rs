@@ -149,14 +149,9 @@ pub(super) fn version(batch: &mut Batch, id: &str, model: &Value) -> io::Result<
         .map(|version| {
             model["versions"][version]
                 .as_str()
+                .or_else(|| model["orphanedVersions"][version].as_str())
                 .map(str::trim)
                 .filter(|hash| !hash.is_empty())
-                .or_else(|| {
-                    model["orphanedVersions"][version]
-                        .as_str()
-                        .map(str::trim)
-                        .filter(|hash| !hash.is_empty())
-                })
                 .unwrap_or(version)
                 .to_owned()
         })
@@ -179,8 +174,9 @@ pub(in crate::component_recover) fn removal(version: &Value) -> Value {
         .map_or_else(
             || serde_json::json!({}),
             |row| {
-                if row["config"].is_object()
-                    && !row["config"].as_object().is_none_or(serde_json::Map::is_empty)
+                if row["config"]
+                    .as_object()
+                    .is_some_and(|cfg| !cfg.is_empty())
                 {
                     row["config"].clone()
                 } else if row["data"].is_object() {

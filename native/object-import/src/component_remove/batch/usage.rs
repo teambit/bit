@@ -15,9 +15,10 @@ pub(in crate::component_remove) fn validate(
         else {
             return Err(invalid("stash removal component identity"));
         };
+        let bare = bare_id(identity);
         if identities
             .iter()
-            .any(|removed| bare_id(removed) == bare_id(identity))
+            .any(|removed| bare_id(removed) == bare)
         {
             continue;
         }

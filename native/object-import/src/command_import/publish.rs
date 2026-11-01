@@ -98,24 +98,19 @@ impl PreparedImport {
         Ok(())
     }
     fn publish_refs(&self) -> io::Result<()> {
-        let scope = self.environment.local_directory
+        let remotes_dir = self.environment.local_directory
             .parent()
-            .ok_or_else(|| invalid("import local scope"))?;
+            .ok_or_else(|| invalid("import local scope"))?
+            .join("refs/remotes");
         for (remote, rows) in &self.overlay.remote_refs {
             write_file(
-                &scope
-                    .join("refs/remotes")
-                    .join(remote.trim())
-                    .join("main"),
+                &remotes_dir.join(remote.trim()).join("main"),
                 &serde_json::to_vec_pretty(rows).map_err(io::Error::other)?,
             )?;
         }
         for ((remote, lane), rows) in &self.overlay.lane_refs {
             write_file(
-                &scope
-                    .join("refs/remotes")
-                    .join(remote.trim())
-                    .join(lane.trim()),
+                &remotes_dir.join(remote.trim()).join(lane.trim()),
                 &serde_json::to_vec_pretty(rows).map_err(io::Error::other)?,
             )?;
         }

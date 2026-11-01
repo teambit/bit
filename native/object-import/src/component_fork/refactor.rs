@@ -26,7 +26,8 @@ impl Refactor {
         if rows.len() > 4096 || pairs.len() > 4096 {
             return Err(unsupported("fork refactor batch limit"));
         }
-        let mut plan = Self { groups: Vec::new(), observed: Observed::default() };
+        let mut plan =
+            Self { groups: Vec::with_capacity(rows.len()), observed: Observed::default() };
         for row in rows {
             let group = group(root, row, pairs, package, ast, &mut plan.observed)?;
             plan.groups.push(group);
@@ -112,12 +113,13 @@ fn group(
         .filter(|value| !value.is_empty())
         .ok_or_else(|| unsupported("fork refactor component root"))?;
     files::relative_path(directory)?;
-    let mut group = Group { files: Vec::new(), initial: Vec::new() };
-    for file in row["files"]
+    let files = row["files"]
         .as_array()
         .filter(|files| files.len() <= 16384)
-        .ok_or_else(|| unsupported("fork refactor files"))?
-    {
+        .ok_or_else(|| unsupported("fork refactor files"))?;
+    let mut group =
+        Group { files: Vec::with_capacity(files.len()), initial: Vec::with_capacity(files.len()) };
+    for file in files {
         let relative = refactor_relative_path(file)?;
         let destination = root.join(directory).join(relative);
         observed.ancestors(

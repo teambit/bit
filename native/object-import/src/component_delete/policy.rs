@@ -207,7 +207,7 @@ fn latest(model: &Value) -> io::Result<Option<String>> {
         .map(|tag| {
             let trimmed = tag.trim();
             Version::parse(trimmed)
-                .map(|version| (version, trimmed.to_owned()))
+                .map(|version| (version, trimmed))
                 .map_err(io::Error::other)
         })
         .collect::<io::Result<Vec<_>>>()
@@ -215,6 +215,6 @@ fn latest(model: &Value) -> io::Result<Option<String>> {
             versions
                 .into_iter()
                 .max_by(|(left, _), (right, _)| left.cmp(right))
-                .map(|(_, tag)| tag)
+                .map(|(_, tag)| tag.to_owned())
         })
 }

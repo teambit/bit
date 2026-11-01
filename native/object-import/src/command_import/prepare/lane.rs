@@ -80,16 +80,9 @@ impl PreparedImport {
             Target { scope: Some(scope.into()), name: name.into(), version: "latest".into() };
         let remotes = self.environment.remotes.clone();
         let directory = remote(self, &remotes, scope)?;
-        self.progress
-            .last_mut()
-            .ok_or_else(|| invalid("lane main progress"))?
-            .ids
-            .push(format!("{identity}@latest"));
-        self.progress
-            .last_mut()
-            .unwrap()
-            .objects
-            .insert(super::super::object_hash(scope));
+        let row = self.progress.last_mut().ok_or_else(|| invalid("lane main progress"))?;
+        row.ids.push(format!("{identity}@latest"));
+        row.objects.insert(super::super::object_hash(scope));
         let Some(model) = read_model(self, &directory, &target)? else { return Ok(()) };
         let Some(head) = model["head"].as_str() else { return Ok(()) };
         let local = self.environment.local_directory.clone();

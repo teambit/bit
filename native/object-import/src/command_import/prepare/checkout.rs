@@ -33,7 +33,7 @@ impl PreparedImport {
         }
         self.checkout_off_lane(&targets, &remote_targets, &remotes)?;
         super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
-        self.checkout_lane_refresh(id, &Record { hash, value, is_new: false })?;
+        self.publish_imported_lane(id, &Record { hash, value, is_new: false })?;
         self.validate()
     }
     /// Fetch lane objects for both lane heads and distinct tracked workspace versions.
@@ -78,10 +78,6 @@ impl PreparedImport {
         }
         self.validate()?;
         Ok(targets)
-    }
-    fn checkout_lane_refresh(&mut self, id: &Id, incoming: &Record) -> io::Result<()> {
-        self.publish_imported_lane(id, incoming)?;
-        Ok(())
     }
 
     fn checkout_off_lane(

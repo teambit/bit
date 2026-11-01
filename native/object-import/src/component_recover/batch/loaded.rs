@@ -50,8 +50,9 @@ fn remove_extension_config(extensions: &[Value]) -> Option<&Value> {
             crate::workspace::engine::client_status::config::is_extension_aspect(row, REMOVE)
         })
         .map(|row| {
-            if row["config"].is_object()
-                && !row["config"].as_object().is_none_or(serde_json::Map::is_empty)
+            if row["config"]
+                .as_object()
+                .is_some_and(|cfg| !cfg.is_empty())
             {
                 &row["config"]
             } else if row["data"].is_object() {

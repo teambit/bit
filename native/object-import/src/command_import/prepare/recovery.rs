@@ -11,15 +11,12 @@ pub(super) fn retain<'a>(
     let mut remote = Vec::new();
     let directory = plan.environment.local_directory.clone();
     for target in targets {
-        let model = read_model(plan, &directory, target)?;
-        let staged = model.as_ref().is_some_and(staged);
-        if !staged {
+        if let Some(model) = read_model(plan, &directory, target)?.filter(staged) {
+            retain_version(plan, target, &model, &directory)?;
+            local.push(*target);
+        } else {
             remote.push(*target);
-            continue;
         }
-        let model = model.ok_or_else(|| invalid("recovery local model"))?;
-        retain_version(plan, target, &model, &directory)?;
-        local.push(*target);
     }
     Ok((local, remote))
 }

@@ -1,4 +1,8 @@
 //! A fetched switch adds a local alias only when that remote lane is not already tracked.
+
+#[cfg(test)]
+mod tests;
+
 use super::{Entry, Id, PreparedImport, Record, invalid, text};
 use serde_json::{Value, json};
 use std::{fs, io, path::PathBuf};
@@ -236,6 +240,3 @@ fn valid_lane_component_name(name: &str) -> bool {
                         })
             })
 }
-
-#[cfg(test)]
-mod tests;

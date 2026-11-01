@@ -19,11 +19,7 @@ pub(super) fn refresh_all<'a>(
     let mut directories = HashMap::new();
     let mut available = Vec::new();
     for target in scoped {
-        let remote_name = target.scope
-            .as_deref()
-            .map(str::trim)
-            .filter(|scope| !scope.is_empty())
-            .ok_or_else(|| invalid("import scope"))?;
+        let remote_name = target_scope(target)?;
         if remote_name == plan.environment.local_scope {
             available.push(*target);
             continue;
@@ -36,11 +32,7 @@ pub(super) fn refresh_all<'a>(
         ..Default::default()
     });
     for target in scoped {
-        let remote_name = target.scope
-            .as_deref()
-            .map(str::trim)
-            .filter(|scope| !scope.is_empty())
-            .ok_or_else(|| invalid("import scope"))?;
+        let remote_name = target_scope(target)?;
         if remote_name == plan.environment.local_scope {
             continue;
         }
@@ -52,6 +44,14 @@ pub(super) fn refresh_all<'a>(
         }
     }
     Ok(available)
+}
+
+fn target_scope(target: &Target) -> io::Result<&str> {
+    target.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("import scope"))
 }
 fn record_main_refresh(
     plan: &mut PreparedImport,
@@ -93,11 +93,7 @@ fn refresh(
     ignore_missing: bool,
 ) -> io::Result<bool> {
     let local = plan.environment.local_directory.clone();
-    let scope = target.scope
-        .as_deref()
-        .map(str::trim)
-        .filter(|scope| !scope.is_empty())
-        .ok_or_else(|| invalid("import scope"))?;
+    let scope = target_scope(target)?;
     let model = match read_model(plan, directory, target)? {
         Some(model) => model,
         None if ignore_missing => return Ok(false),

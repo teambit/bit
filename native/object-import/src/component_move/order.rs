@@ -17,7 +17,7 @@ pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Resul
         .filter(|file| !file.is_empty())
         .collect::<HashSet<_>>();
     let mut pending = VecDeque::from([root.join(directory.trim().trim_matches('/'))]);
-    let mut ordered = vec![];
+    let mut ordered = Vec::with_capacity(remaining.len());
     while let Some(parent) = pending.pop_front() {
         let entries = entries(&parent)?;
         let mut directories = vec![];

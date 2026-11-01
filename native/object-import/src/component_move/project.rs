@@ -67,7 +67,8 @@ fn internal(
     bitmap: &Value,
     observed: &mut Observed,
 ) -> io::Result<Vec<Value>> {
-    if !to.starts_with(&format!("{directory}/")) {
+    let prefix = format!("{directory}/");
+    if !to.starts_with(&prefix) {
         return Err(unsupported("move nested sources outside component root"));
     }
     let files = crate::component_tracking::source_inventory(root, directory, bitmap, observed)?;
@@ -78,7 +79,6 @@ fn internal(
         .filter(|file| matches_from(file, from, cfg!(windows)))
     {
         let next = old.replacen(from, to, 1);
-        let prefix = format!("{directory}/");
         let old = old.strip_prefix(&prefix).ok_or_else(|| invalid("move component path"))?;
         let next = next.strip_prefix(&prefix).ok_or_else(|| invalid("move component path"))?;
         if row["mainFile"] == old {

@@ -213,10 +213,11 @@ fn increment_path(path: &str, bitmap: &Value) -> String {
         .iter()
         .copied()
         .find(|other| *other == path || path.starts_with(&format!("{other}/")));
+    let path_prefix = format!("{path}/");
     let conflicts = parent.is_some()
         || paths
             .iter()
-            .any(|other| *other == path || other.starts_with(&format!("{path}/")));
+            .any(|other| *other == path || other.starts_with(&path_prefix));
     if !conflicts {
         return path.into();
     }

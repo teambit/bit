@@ -87,15 +87,12 @@ impl Plan {
     }
 }
 fn change_identity(row: &Value) -> Option<String> {
-    if let Some(identity) = row["identity"]
-        .as_str()
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .or_else(|| {
-            row["id"]
-                .as_str()
+    if let Some(identity) = [&row["identity"], &row["id"]]
+        .into_iter()
+        .find_map(|val| {
+            val.as_str()
                 .map(str::trim)
-                .filter(|value| !value.is_empty())
+                .filter(|text| !text.is_empty())
         })
     {
         let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());

@@ -26,16 +26,13 @@ pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {
         return None;
     }
     let version = non_empty_field(row, "version")
-        .or_else(|| {
-            key_ver
-                .map(str::trim)
-                .filter(|value| !value.is_empty())
-        })
+        .or_else(|| key_ver.filter(|value| !value.is_empty()))
         .unwrap_or_default();
-    Some(format!(
-        "{scope}/{name}{}",
-        if version.is_empty() { String::new() } else { format!("@{version}") },
-    ))
+    Some(if version.is_empty() {
+        format!("{scope}/{name}")
+    } else {
+        format!("{scope}/{name}@{version}")
+    })
 }
 
 fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {

@@ -15,16 +15,13 @@ pub(super) fn package(root: &Path, scope: &str, name: &str) -> io::Result<PathBu
     if owner.is_empty() || (scope.contains('.') && rest.is_empty()) || name.is_empty() {
         return Err(invalid("component package path"));
     }
-    let filename = if rest.is_empty() {
-        name.replace('/', ".")
-    } else {
-        format!("{}.{}", rest, name.replace('/', "."))
-    };
-    let package = root
-        .join("node_modules")
+    let dotted_name = name.replace('/', ".");
+    let filename = if rest.is_empty() { dotted_name } else { format!("{rest}.{dotted_name}") };
+    let node_modules = root.join("node_modules");
+    let package = node_modules
         .join(format!("@{owner}"))
         .join(filename);
-    if !package.starts_with(root.join("node_modules")) {
+    if !package.starts_with(&node_modules) {
         return Err(invalid("component package path"));
     }
     validate_ancestors(

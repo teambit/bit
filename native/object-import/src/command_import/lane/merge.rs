@@ -136,11 +136,11 @@ fn replace_hidden(value: &mut Value, entry: &Entry) {
 }
 fn prune_hidden(value: &mut Value, incoming: &Value) -> io::Result<bool> {
     let default_scope = value["scope"].as_str().map(str::trim);
-    let incoming = entries(incoming)?
+    let incoming: std::collections::HashSet<String> = entries(incoming)?
         .into_iter()
         .filter(|row| row.hidden)
         .map(|row| row.identity)
-        .collect::<Vec<_>>();
+        .collect();
     let Some(rows) = value.get("updateDependents").and_then(Value::as_array) else {
         return Ok(false);
     };
@@ -148,11 +148,7 @@ fn prune_hidden(value: &mut Value, incoming: &Value) -> io::Result<bool> {
         .iter()
         .filter(|row| {
             super::hidden_entry(row, default_scope)
-                .is_ok_and(|parsed| {
-                    incoming
-                        .iter()
-                        .any(|identity| identity == &parsed.identity)
-                })
+                .is_ok_and(|parsed| incoming.contains(&parsed.identity))
         })
         .cloned()
         .collect::<Vec<_>>();

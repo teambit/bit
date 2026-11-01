@@ -38,8 +38,9 @@ impl PreparedImport {
     }
     fn merge_remote_history(&mut self, directory: &std::path::Path, hash: &str) -> io::Result<()> {
         let history_hash = crate::lane_history::hash(hash);
-        let incoming = self.capture.object(directory, &history_hash, "LaneHistory")?;
-        let Some(incoming) = incoming else { return Ok(()) };
+        let Some(incoming) = self.capture.object(directory, &history_hash, "LaneHistory")? else {
+            return Ok(());
+        };
         let existing = self.capture.object(
             &self.environment.local_directory.clone(),
             &history_hash,

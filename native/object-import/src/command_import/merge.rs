@@ -90,8 +90,11 @@ fn plan(existing: &Value, incoming: &Value, origin: bool) -> io::Result<MergePla
 }
 fn apply_tags(result: &mut Value, tags: &[Vec<[String; 2]>; 3], plan: &Value) -> io::Result<()> {
     for action in plan["actions"].as_array().ok_or_else(|| invalid("import model actions"))? {
-        let side = action[1].as_u64().ok_or_else(|| invalid("import model side"))? as usize;
-        let index = action[2].as_u64().ok_or_else(|| invalid("import model index"))? as usize;
+        let side = usize::try_from(action[1].as_u64().ok_or_else(|| invalid("import model side"))?)
+            .map_err(|_| invalid("import model side"))?;
+        let index =
+            usize::try_from(action[2].as_u64().ok_or_else(|| invalid("import model index"))?)
+                .map_err(|_| invalid("import model index"))?;
         let [tag, hash] = tags
             .get(side)
             .and_then(|rows| rows.get(index))

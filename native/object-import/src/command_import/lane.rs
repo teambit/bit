@@ -83,7 +83,7 @@ impl PreparedImport {
         if histories.len() != self.writes.lane_histories.len() {
             return Err(invalid("import LaneHistory receipt count"));
         }
-        let mut objects = Vec::new();
+        let mut objects = Vec::with_capacity(histories.len());
         for ((hash, value), plan) in histories.into_iter().zip(&self.writes.lane_histories) {
             if plan["hash"] != hash
                 || value["laneHash"] != plan["lane"]["hash"]
@@ -93,7 +93,8 @@ impl PreparedImport {
             {
                 return Err(invalid("import LaneHistory receipt identity"));
             }
-            objects.push((hash.clone(), super::publish::object(&hash, "LaneHistory", value)?));
+            let object = super::publish::object(&hash, "LaneHistory", value)?;
+            objects.push((hash, object));
         }
         self.overlay.objects.extend(objects);
         self.writes.lane_histories.clear();

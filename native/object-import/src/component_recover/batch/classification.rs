@@ -3,13 +3,11 @@ use std::io;
 pub(super) fn classify(batch: &mut Batch, id: &str) -> io::Result<Item> {
     let id = id.trim();
     let key = selection::key(&batch.bitmap, id)?;
-    let row = key
-        .as_ref()
-        .map(|key| batch.bitmap[key].clone());
     let bare = selection::bare(id);
     let model = repository::model(batch, bare)?;
-    if let Some(row) = &row {
-        let (action, files) = tracked(batch, id, row, model.as_ref())?;
+    if let Some(key_ref) = &key {
+        let row = batch.bitmap[key_ref].clone();
+        let (action, files) = tracked(batch, id, &row, model.as_ref())?;
         return Ok(Item { id: id.into(), key, action, files, configuration: None });
     }
     let action = if let Some(model) = model {

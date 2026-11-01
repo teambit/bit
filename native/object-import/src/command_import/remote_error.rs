@@ -27,8 +27,7 @@ pub(super) fn mark(scope: Option<&str>, error: io::Error) -> io::Error {
 pub(crate) fn message(error: &io::Error) -> Option<String> {
     let failure = error.get_ref()?.downcast_ref::<Failure>()?;
     let scope = failure.scope.trim();
-    let message = crate::checkout::repository::inflate_message(&failure.cause)?;
-    let message = message.trim();
+    let message = crate::checkout::repository::inflate_message(&failure.cause)?.trim();
     if scope.is_empty() || message.is_empty() {
         return None;
     }
