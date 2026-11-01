@@ -1,4 +1,4 @@
-//! Unit tests for `node-ignore` 3.3.10 pattern compilation ([`Compiler`], [`Ignore`], [`Rule`]) and caching in
+//! Unit tests for `node-ignore` 3.3.10 pattern compilation ([`Compiler`], [`Ignore`], [`Rule`]) and regex caching in
 //! `bit-ignore`.
 
 use crate::{Compiler, Ignore, Rule, UnsupportedPattern};

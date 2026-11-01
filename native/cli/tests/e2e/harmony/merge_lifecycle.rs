@@ -1,4 +1,4 @@
-//! Complete automatic merge lifecycle agrees with the released CLI on fresh
+//! Complete automatic merge lifecycle ([`node`], [`divergent`]) agrees with the released CLI on fresh
 //! repositories across divergent component and lane merges.
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};

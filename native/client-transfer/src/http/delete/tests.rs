@@ -1,5 +1,5 @@
 //! Unit tests for HTTP remote deletion requests and retry behavior on [`Network`] in
-//! `bit-client-transfer`.
+//! `bit-client-transfer` remote operations.
 
 use super::super::Network;
 use crate::{Cancellation, GlobalConfig};

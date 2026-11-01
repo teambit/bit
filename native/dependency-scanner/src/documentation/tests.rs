@@ -1,5 +1,5 @@
 //! Unit tests for empty documentation proof detection ([`proves_empty_docs`]) in
-//! `bit-dependency-scanner`.
+//! `bit-dependency-scanner` source analysis.
 
 use super::proves_empty_docs;
 

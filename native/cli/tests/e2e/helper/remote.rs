@@ -1,5 +1,5 @@
 //! Remote fixtures remain independent of the pinned Windows pending-object glob
-//! bug when publishing local exports to remote scopes.
+//! bug when publishing local exports to bare remote scopes.
 use super::{Helper, config, setup};
 use serde_json::Value;
 use std::{collections::HashSet, ffi::OsStr, path::Path, process::Command};

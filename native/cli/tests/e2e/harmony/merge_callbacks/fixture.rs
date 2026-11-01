@@ -1,4 +1,4 @@
-//! Shared workspace and provider fixtures for `bit merge` and `bit lane merge` callback tests.
+//! Shared [`workspace`] and [`node`] provider fixtures for `bit merge` and `bit lane merge` callback tests.
 //! Sets up custom aspect environments and helper comparison routines for merge callbacks.
 
 use crate::helper::{Helper, config};

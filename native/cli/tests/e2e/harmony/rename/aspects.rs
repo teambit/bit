@@ -1,5 +1,5 @@
 //! Aspect-specific rename behavior across workspace and exported components.
-//! Verifies aspect ID rewriting inside `*.aspect.ts` and workspace configuration updates.
+//! Verifies aspect ID rewriting inside `*.aspect.ts` and `workspace.jsonc` configuration updates.
 
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},

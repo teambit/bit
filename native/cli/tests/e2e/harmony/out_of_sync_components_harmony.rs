@@ -1,5 +1,5 @@
 //! End-to-end tests for `e2e/harmony/out-of-sync-components-harmony.e2e.ts`.
-//! Covers syncing `.bitmap` and local scope versions when workspace and scope diverge.
+//! Covers syncing `.bitmap` and local scope versions when workspace and scope state diverge.
 
 use crate::helper::{Helper, config};
 

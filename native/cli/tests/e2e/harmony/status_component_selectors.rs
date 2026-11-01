@@ -1,5 +1,5 @@
-//! Read-only component-pattern and state-selector parity for native diff and
-//! status (`$modified`, `$new`, exclusions, and glob patterns).
+//! Read-only component-pattern and state-selector parity for native `diff` and
+//! `status` (`$modified`, `$new`, exclusions, and glob patterns).
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use std::ffi::OsStr;

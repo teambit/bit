@@ -1,5 +1,5 @@
 //! Unit tests for HTTP status error mapping and exception messages on [`Network`] in
-//! `bit-client-transfer`.
+//! `bit-client-transfer` upload responses.
 
 use super::{GlobalConfig, Network};
 use std::{

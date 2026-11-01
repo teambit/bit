@@ -1,5 +1,5 @@
 //! Lane-scoped component rename and merge propagation contracts.
-//! Verifies source removal propagation when merging a lane rename back to `main`.
+//! Verifies source removal propagation when merging a lane rename back to `main` (`bit lane merge`).
 
 use crate::{
     commands::move_paths::support::{self, aspect, json, setup, successful},

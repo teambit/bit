@@ -1,4 +1,4 @@
-//! Related merged components are resolved together by the retained snapshot
+//! Related merged components ([`divergent`], [`incoming`]) are resolved together by the retained snapshot
 //! lifecycle across clean and mixed-conflict dependent graphs.
 use crate::helper::{Helper, config, parse};
 use serde_json::Value;

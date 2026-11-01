@@ -1,5 +1,5 @@
 //! End-to-end tests for `e2e/harmony/scope-trust.e2e.ts`.
-//! Covers `trustedScopes` enforcement and refusal diagnostics when loading external aspects.
+//! Covers `trustedScopes` enforcement and refusal diagnostics when loading external workspace aspects.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

@@ -1,5 +1,5 @@
 //! Saved graph adjacency remains usable without optional external model
-//! metadata when running `status` and `graph` commands.
+//! metadata when running `bit status` and `bit graph` commands.
 
 use crate::helper::{
     Helper,

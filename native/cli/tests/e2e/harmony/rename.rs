@@ -1,5 +1,5 @@
 //! Rename's original new/exported identity, source transformation, and lane
-//! contracts across workspace and scope boundaries.
+//! contracts across workspace and scope boundaries (`bit rename`).
 mod aspects;
 mod cleanup;
 mod exported;

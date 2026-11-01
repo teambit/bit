@@ -1,5 +1,5 @@
 //! Resolved per-component merge configuration participates in the native
-//! continuation and consumes the `merge-conflict` document.
+//! continuation and consumes the `merge-conflict` document ([`resolved_configuration_is_snapshotted_and_conflict_document_is_consumed`]).
 use super::{compare, pending};
 use crate::helper::config;
 use std::fs;

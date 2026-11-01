@@ -1,4 +1,4 @@
-//! Cache hits are compared at the same absolute workspace path, preserving file timestamps.
+//! Cache hits ([`copy`]) are compared at the same absolute workspace path, preserving file timestamps.
 //! Verifies that `merge` with a warm filesystem cache matches the released CLI at the original path.
 
 use super::{compare_results, fixture};

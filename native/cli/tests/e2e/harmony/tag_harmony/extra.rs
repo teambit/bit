@@ -1,5 +1,5 @@
 //! Detached head branch tagging, export, and lane-to-main tag merge scenarios.
-//! Covers `--detach-head` patch maintenance on older major branches and export parity.
+//! Covers `--detach-head` patch maintenance on older major branches and `bit export` parity.
 
 use crate::helper::Helper;
 

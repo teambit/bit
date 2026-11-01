@@ -1,5 +1,5 @@
 //! Status lazily persists existing ancestry even before the stash is
-//! allocated (`VersionHistory` population on `stash save`).
+//! allocated (`VersionHistory` population during `stash save`).
 use super::{command, compare_stashes, controls, object_path, workspace};
 use sha1::{Digest, Sha1};
 use std::{fs, io::Read, path::Path};

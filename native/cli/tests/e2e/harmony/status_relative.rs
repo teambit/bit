@@ -1,5 +1,5 @@
 //! Relative cross-component and nested untracked dependency detection parity
-//! tests for `bit status --json`.
+//! tests for `bit status` and `bit status --json`.
 
 use crate::helper::Helper;
 use std::{ffi::OsStr, fmt::Write as _};

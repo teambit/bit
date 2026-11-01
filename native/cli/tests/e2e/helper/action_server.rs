@@ -1,5 +1,5 @@
 //! A recording HTTP action endpoint ([`Server`] and [`Request`]) for released and native protocol
-//! comparisons.
+//! payload comparisons.
 use serde_json::Value;
 use std::{
     io::{BufRead, BufReader, Read, Write},

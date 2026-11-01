@@ -1,5 +1,5 @@
 //! End-to-end tests for `e2e/harmony/status-harmony.e2e.ts`.
-//! Covers `bit status` and `bit status --json` parity across modified, staged, and invalid components.
+//! Covers `bit status` and `bit status --json` parity across modified, staged, and invalid workspace components.
 
 use crate::{
     helper::{FOO_FIXTURE, Helper, len, parse, strip_ansi},

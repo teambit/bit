@@ -1,4 +1,4 @@
-//! Linking fails after object persistence and pending-state cleanup, before the final `.bitmap` write.
+//! Linking fails after object persistence and pending-state cleanup, before the final `.bitmap` write ([`failed_package_callback_preserves_the_published_objects_and_cleared_pending_prefix`]).
 //! Verifies that a failing package callback during `lane merge` preserves published objects and cleared state.
 
 use super::fixture;

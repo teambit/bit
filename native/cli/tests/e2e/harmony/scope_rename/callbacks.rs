@@ -1,5 +1,5 @@
 //! Scope rename lifecycle callback invocation and workspace config updates.
-//! Verifies custom aspect callback execution and `workspace.jsonc` key updates on `scope rename`.
+//! Verifies custom aspect callback execution and `workspace.jsonc` key updates during `scope rename`.
 
 use crate::{
     commands::move_paths::support::{self, bitmap, compare, setup, successful},

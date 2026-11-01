@@ -1,4 +1,4 @@
-//! Unrelated lane histories retain their published source and ancestry choices
+//! Unrelated lane histories ([`unrelated`], [`unrelated_with`], [`reading`]) retain their published source and ancestry choices
 //! across merge history end-to-end scenarios and `--resolve-unrelated` merges.
 mod reading;
 use crate::helper::{Helper, config};

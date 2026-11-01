@@ -1,5 +1,5 @@
 //! End-to-end tests for the `local and remote do not have the same head` section of `e2e/harmony/snap.e2e.ts`.
-//! Covers diverged `main` snap merges, conflict resolution, and export guards.
+//! Covers diverged `main` snap merges, conflict resolution, and pre-export guards.
 
 use super::remote_ref_head;
 use crate::helper::{Helper, len, parse};

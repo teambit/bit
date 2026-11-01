@@ -1,5 +1,5 @@
 //! End-to-end tests for `e2e/harmony/scripts.e2e.ts`.
-//! Covers `bit script --list`, script execution, `env get` script display, and version mismatch guards.
+//! Covers `bit script --list`, script execution, `env get` script display, and env version mismatch guards.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

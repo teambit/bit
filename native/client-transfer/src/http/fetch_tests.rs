@@ -1,4 +1,5 @@
 //! Unit tests for HTTP object archive fetching ([`Network`], [`FetchOptions`]) in `bit-client-transfer`.
+//! Covers `.BIT.START` / `.BIT.END` stream validation and cancellation handling.
 
 use super::{GlobalConfig, Network};
 use crate::{Cancellation, fetch::FetchOptions};

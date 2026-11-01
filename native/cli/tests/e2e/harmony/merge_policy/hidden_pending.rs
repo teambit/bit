@@ -1,4 +1,4 @@
-//! Upstream hidden cascades also follow visible merge snapshots across
+//! Upstream hidden cascades ([`cascade`], [`workspace`]) also follow visible merge snapshots across
 //! merge policy scenarios and `last-merged` state cleanup.
 mod cascade;
 use crate::helper::{Helper, config, parse};

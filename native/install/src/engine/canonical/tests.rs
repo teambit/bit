@@ -1,5 +1,5 @@
 //! Unit tests for canonical package manager engine request validation ([`CanonicalInstall`], [`Request`]) in
-//! `bit-install`.
+//! `bit-install` pnpm engine invocations.
 
 use super::{
     CanonicalInstall,

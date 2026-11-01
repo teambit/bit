@@ -1,5 +1,5 @@
 //! Status command options and workspace configuration precedence parity tests.
-//! Covers `--strict`, `--warnings`, `--lanes`, and circular dependency flags.
+//! Covers `--strict`, `--warnings`, `--lanes`, and circular dependency check flags.
 
 use crate::helper::{Helper, parse};
 use std::{ffi::OsStr, fs};

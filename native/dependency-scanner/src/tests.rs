@@ -1,5 +1,5 @@
 //! Unit tests for single-file `TypeScript` and `JavaScript` dependency scanning ([`scan`], [`File`])
-//! in `bit-dependency-scanner`.
+//! in `bit-dependency-scanner`. Covers type imports, specifier aliases, and comment filtering.
 
 use super::{File, scan};
 use serde_json::json;

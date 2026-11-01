@@ -1,4 +1,4 @@
-//! Moving an unversioned component deletes its entire old root, including
+//! Moving an unversioned component deletes its entire old root directory, including
 //! ignored bytes, unless `--preserve` is passed.
 use crate::commands::move_paths::support::{self, bitmap, successful};
 use std::fs;

@@ -1,5 +1,5 @@
 //! Unit tests for [`Network`] HTTP action requests and responses in `bit-client-transfer`.
-//! Covers canonical route headers, JSON payloads, and status code handling.
+//! Covers canonical route headers, JSON payloads, and HTTP status code handling.
 
 use super::{GlobalConfig, Network};
 use serde_json::{Value, json};

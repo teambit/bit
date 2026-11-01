@@ -1,5 +1,5 @@
 //! Unit tests for HTTP scope inventory listing ([`Network`], [`list_variables`]) and legacy fallback in
-//! `bit-client-transfer`.
+//! `bit-client-transfer` remote queries.
 
 use super::{Network, list_variables};
 use crate::GlobalConfig;

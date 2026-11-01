@@ -1,5 +1,5 @@
 //! Unit tests for core aspect detection order ([`detect`], [`CoreAspect`]) across source and compiled files
-//! in `bit-install`.
+//! in `bit-install` dependency resolution.
 
 use super::{Resolver, Subject, Workspace, detect};
 use crate::{

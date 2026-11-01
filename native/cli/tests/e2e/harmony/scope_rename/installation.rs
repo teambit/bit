@@ -1,5 +1,5 @@
 //! Scope rename real package installation and compilation parity tests.
-//! Verifies that `scope rename` triggers `node_modules` package linking and compilation.
+//! Verifies that `scope rename` triggers `node_modules` package linking and component compilation.
 mod startup_progress;
 
 use crate::{

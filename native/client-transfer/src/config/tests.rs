@@ -1,5 +1,5 @@
 //! Unit tests for layered transport configuration precedence ([`GlobalConfig`] and [`layers`]) in
-//! `bit-client-transfer`.
+//! `bit-client-transfer` HTTP clients.
 
 use super::{GlobalConfig, layers};
 use serde_json::json;

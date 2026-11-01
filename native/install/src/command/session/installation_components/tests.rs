@@ -1,5 +1,5 @@
 //! Unit tests for host component ordering ([`ordered`]) and directory validation in
-//! `bit-install`.
+//! `bit-install` session initialization.
 
 use super::ordered;
 use crate::model::WorkspaceComponent;

@@ -1,5 +1,5 @@
 //! End-to-end tests for `e2e/harmony/track-directories-harmony.e2e.ts`.
-//! Covers `rootDir` tracking in `.bitmap`, auto-tracking new files, and parent directory re-add.
+//! Covers `rootDir` tracking in `.bitmap`, auto-tracking new files, and parent directory re-adding.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

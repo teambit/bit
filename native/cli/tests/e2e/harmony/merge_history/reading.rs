@@ -1,4 +1,4 @@
-//! History views keep published BFS lane marking, range overlays, and formatting.
+//! History views ([`compare_log`]) keep published BFS lane marking, range overlays, and formatting.
 //! Compares `log` output across `--json`, `--parents`, `--one-line`, and color modes.
 use super::node;
 use crate::helper::{Helper, config};
