@@ -18,16 +18,16 @@ fn removed_entry(file: &Value, path: &str) -> Value {
     Value::String(entry.to_owned())
 }
 pub(super) fn apply(input: &Value, current: &[Value]) -> io::Result<Value> {
-    let mut statuses = input["filesStatus"]
+    let statuses = input["filesStatus"]
         .as_array()
         .filter(|rows| rows.len() <= 8192)
-        .ok_or_else(|| invalid("merge removal statuses"))?
-        .clone();
-    let mut removed = Vec::new();
+        .ok_or_else(|| invalid("merge removal statuses"))?;
     if !boolean(input, "tracked")? {
-        return Ok(json!({"filesStatus":statuses,"removals":removed}));
+        return Ok(json!({"filesStatus":statuses,"removals":[]}));
     }
     let root = boolean(input, "workspaceRoot")?;
+    let mut statuses = statuses.clone();
+    let mut removed = Vec::new();
     for file in current {
         let path = relative_path(file)?;
         if !(root && path == ".bitmap") && status(&mut statuses, path)? == "removed" {

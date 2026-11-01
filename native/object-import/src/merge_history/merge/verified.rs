@@ -55,8 +55,13 @@ fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()>
 }
 
 fn normalize_path(path: &str) -> String {
-    let replaced = path.trim().replace('\\', "/");
-    let mut current = replaced.as_str();
+    let trimmed = path.trim();
+    let replaced = if trimmed.contains('\\') {
+        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(trimmed)
+    };
+    let mut current = replaced.as_ref();
     while let Some(stripped) = current.strip_prefix("./") {
         current = stripped;
     }
@@ -68,5 +73,5 @@ fn normalize_path(path: &str) -> String {
     {
         return String::new();
     }
-    current.to_owned()
+    if current.len() == replaced.len() { replaced.into_owned() } else { current.to_owned() }
 }

@@ -16,6 +16,7 @@ pub(super) fn single(path: &Path) -> io::Result<bool> {
     Ok(is_single_regular_handle(&info))
 }
 
+#[inline]
 fn is_single_regular_handle(info: &winapi_util::file::Information) -> bool {
     info.number_of_links() == 1
         && info.file_attributes() & (DIRECTORY | DEVICE | REPARSE_POINT | OFFLINE) == 0

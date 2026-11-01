@@ -183,11 +183,15 @@ fn decode_backup_lane(backup_bytes: &[u8], expected_hash: &str) -> io::Result<Va
         .ok_or_else(invalid)?;
     let header = std::str::from_utf8(&raw[..nul]).map_err(|_| invalid())?;
     let body = std::str::from_utf8(&raw[nul + 1..]).map_err(|_| invalid())?;
-    let fields = header.split(' ').collect::<Vec<_>>();
-    if fields.len() != 3
-        || fields[0] != "Lane"
-        || fields[1] != expected_hash
-        || fields[2].parse::<usize>().ok() != Some(body.encode_utf16().count())
+    let mut fields = header.split(' ');
+    let expected_units = if body.is_ascii() { body.len() } else { body.encode_utf16().count() };
+    if fields.next() != Some("Lane")
+        || fields.next() != Some(expected_hash)
+        || fields
+            .next()
+            .and_then(|size| size.parse::<usize>().ok())
+            != Some(expected_units)
+        || fields.next().is_some()
     {
         return Err(invalid());
     }
@@ -199,8 +203,9 @@ fn active_lane_components(
     lane: &Value,
     bitmap: &Value,
 ) -> io::Result<Vec<Value>> {
-    let mut components = Vec::new();
-    for entry in lane["components"].as_array().ok_or_else(invalid)? {
+    let entries = lane["components"].as_array().ok_or_else(invalid)?;
+    let mut components = Vec::with_capacity(entries.len());
+    for entry in entries {
         let head = entry["head"]
             .as_str()
             .map(str::trim)

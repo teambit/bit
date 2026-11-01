@@ -10,12 +10,18 @@ pub(super) fn apply(input: &Value) -> io::Result<Value> {
     if unrelated == Some("manual") {
         return Err(invalid("unsupported merge strategy"));
     }
-    let mut output = json!({"action":"load","load":if !has_merge || strategy==Some("theirs"){"remote"}else{"current"},"keepLocalVersion":has_merge && strategy==Some("theirs"),"pending":has_merge,"manualPaths":has_merge && conflicts && strategy==Some("manual")});
-    early_action(has_merge, conflicts, strategy, unrelated, &mut output);
-    output["shouldSquash"] = json!(boolean(input, "shouldSquash")? && has_merge);
-    output["requiresCurrent"] = json!(output["action"] != "load" || unrelated.is_some());
-    output["currentMissing"] =
-        json!(output["requiresCurrent"] == true && !boolean(input, "hasCurrent")?);
+    let (action, pending) = early_action(has_merge, conflicts, strategy, unrelated);
+    let requires_current = action != "load" || unrelated.is_some();
+    let mut output = json!({
+        "action": action,
+        "load": if !has_merge || strategy == Some("theirs") { "remote" } else { "current" },
+        "keepLocalVersion": has_merge && strategy == Some("theirs"),
+        "pending": pending,
+        "manualPaths": has_merge && conflicts && strategy == Some("manual"),
+        "shouldSquash": boolean(input, "shouldSquash")? && has_merge,
+        "requiresCurrent": requires_current,
+        "currentMissing": requires_current && !boolean(input, "hasCurrent")?,
+    });
     head_policy(input, has_merge, unrelated, &mut output)?;
     Ok(output)
 }
@@ -84,12 +90,12 @@ fn early_action(
     conflicts: bool,
     strategy: Option<&str>,
     unrelated: Option<&str>,
-    output: &mut Value,
-) {
+) -> (&'static str, bool) {
     if has_merge && conflicts && strategy == Some("ours") {
-        output["action"] = json!("oursConflict");
+        ("oursConflict", has_merge)
     } else if unrelated == Some("ours") {
-        output["action"] = json!("unrelatedOurs");
-        output["pending"] = json!(true);
+        ("unrelatedOurs", true)
+    } else {
+        ("load", has_merge)
     }
 }

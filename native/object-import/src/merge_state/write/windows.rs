@@ -25,13 +25,14 @@ pub(super) fn open(path: &Path) -> io::Result<fs::File> {
         .custom_flags(OPEN_REPARSE_POINT)
         .open(path)?;
     let after = winapi_util::file::information(&file)?;
-    validate(&after)?;
     if !same_file_identity(&before, &after) {
         return Err(invalid("merge state file changed"));
     }
+    validate(&after)?;
     Ok(file)
 }
 
+#[inline]
 fn same_file_identity(
     before: &winapi_util::file::Information,
     after: &winapi_util::file::Information,
@@ -40,6 +41,7 @@ fn same_file_identity(
         && before.file_index() == after.file_index()
 }
 
+#[inline]
 fn validate(info: &winapi_util::file::Information) -> io::Result<()> {
     if info.number_of_links() != 1
         || info.file_attributes() & (REPARSE_POINT | DIRECTORY_ATTRIBUTE | DEVICE_ATTRIBUTE) != 0

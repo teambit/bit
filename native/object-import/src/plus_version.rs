@@ -4,6 +4,7 @@
 mod tests;
 
 /// `isPlusVersion`: exact, caret and tilde placeholders follow the resolved dependency.
+#[inline]
 #[must_use]
 pub fn is_plus(version: &str) -> bool {
     matches!(version.trim(), "+" | "+^" | "+~")
@@ -31,7 +32,10 @@ pub fn resolve(version: &str, resolved: Option<&str>, fallback: &str) -> String 
             .starts_with("0.0.0-")
         && node_semver::npm::valid(resolved).is_some()
     {
-        format!("{prefix}{resolved}")
+        let mut prefixed = String::with_capacity(prefix.len() + resolved.len());
+        prefixed.push_str(prefix);
+        prefixed.push_str(resolved);
+        prefixed
     } else {
         resolved.to_owned()
     }

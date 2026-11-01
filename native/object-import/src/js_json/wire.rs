@@ -110,7 +110,11 @@ fn encode_utf16_str<Error: serde::de::Error>(value: &str) -> Result<Vec<u16>, Er
     if value.len() > 32 * 1024 * 1024 {
         return Err(serde::de::Error::custom("JavaScript string length limit"));
     }
-    Ok(value.encode_utf16().collect())
+    Ok(if value.is_ascii() {
+        value.bytes().map(u16::from).collect()
+    } else {
+        value.encode_utf16().collect()
+    })
 }
 pub(super) fn text<'de, Input: Deserializer<'de>>(input: Input) -> Result<Vec<u16>, Input::Error> {
     Ok(Utf16::deserialize(input)?.0)

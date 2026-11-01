@@ -151,9 +151,8 @@ fn remote(moved: &mut Moved, scope_path: &Path, model: &Value) -> io::Result<Opt
     };
     let parsed = crate::parse_jsonc(&bytes)?;
     let rows = parsed.as_array().ok_or_else(invalid)?;
-    let full = format!("{scope}/{name}");
     rows.iter()
-        .find(|row| remote_row_matches(row, scope, name, &full))
+        .find(|row| remote_row_matches(row, scope, name))
         .map(|row| {
             row["head"]
                 .as_str()
@@ -186,12 +185,20 @@ fn read_remote_main(
     }
 }
 
-fn remote_row_matches(row: &Value, scope: &str, name: &str, full: &str) -> bool {
+fn remote_row_matches(row: &Value, scope: &str, name: &str) -> bool {
     let row_scope = row["id"]["scope"].as_str().map_or("", str::trim);
     (row["id"]["name"].as_str().map(str::trim) == Some(name)
         && (row_scope.is_empty() || row_scope == scope))
-        || row["id"].as_str().map(str::trim) == Some(full)
-        || row["id"].as_str().map(str::trim) == Some(name)
+        || row["id"]
+            .as_str()
+            .map(str::trim)
+            .is_some_and(|raw_id| {
+                raw_id == name
+                    || raw_id
+                        .strip_prefix(scope)
+                        .and_then(|rest| rest.strip_prefix('/'))
+                        == Some(name)
+            })
 }
 
 fn resolve_workspace_hash<'a>(model: &'a Value, workspace: &'a str, head: &'a str) -> &'a str {

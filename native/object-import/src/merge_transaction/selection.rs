@@ -66,7 +66,14 @@ fn parse_string_identity(raw: &str) -> io::Result<(Option<&str>, &str)> {
 
 fn visible(input: &Value) -> io::Result<Vec<usize>> {
     let results = array(input, "results")?;
-    let hidden = array(input, "hidden")?
+    let hidden_rows = array(input, "hidden")?;
+    if hidden_rows.is_empty() {
+        for row in results {
+            identity(row)?;
+        }
+        return Ok((0..results.len()).collect());
+    }
+    let hidden = hidden_rows
         .iter()
         .map(identity)
         .collect::<io::Result<std::collections::HashSet<_>>>()?;

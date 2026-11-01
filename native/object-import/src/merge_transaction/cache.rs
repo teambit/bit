@@ -19,10 +19,11 @@ impl Capsules {
         let field = if side == "other" { "target" } else { "base" };
         let raw_hash = input[field]["files"][index]["hash"]
             .as_str()
+            .map(str::trim)
             .ok_or_else(|| invalid("merge Source reference selector"))?;
-        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash.trim())?);
+        crate::merge_history::hash(raw_hash)?;
         let source =
-            if let Some(index) = self.seen.get(&hash) { *index } else { self.retain(&hash)? };
+            if let Some(&index) = self.seen.get(raw_hash) { index } else { self.retain(raw_hash)? };
         Ok(json!({"source":source,"ref":{"side":side,"index":index}}))
     }
     fn retain(&mut self, hash: &str) -> io::Result<usize> {
@@ -115,11 +116,10 @@ pub(super) fn receipts(input: &Value, output: &mut Value, trace: Trace) -> io::R
         .ok_or_else(|| invalid("merge body receipts"))?
         .iter()
         .filter_map(|body| {
-            let raw_hash = body["spoolHash"].as_str()?;
-            let canonical =
-                crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash).ok()?);
+            let raw_hash = body["spoolHash"].as_str()?.trim();
+            crate::merge_history::hash(raw_hash).ok()?;
             Some((
-                canonical,
+                raw_hash.to_owned(),
                 (PathBuf::from(body["spoolPath"].as_str()?), body["spoolOffset"].as_u64()),
             ))
         })

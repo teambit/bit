@@ -78,7 +78,8 @@ impl Plan {
 
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
-        let mut index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
+        let scope_dir = bit_workspace_config::scope_path(root);
+        let mut index = match fs::read(scope_dir.join("index.json")) {
             Ok(bytes) => match crate::parse_jsonc(&bytes)? {
                 Value::Array(components) => json!({ "components": components, "lanes": [] }),
                 other => other,
@@ -98,9 +99,7 @@ impl Documents {
         }
         Ok(Self {
             index,
-            scope_json: recovery::jsonc::parse(&fs::read(
-                bit_workspace_config::scope_path(root).join("scope.json"),
-            )?)?,
+            scope_json: recovery::jsonc::parse(&fs::read(scope_dir.join("scope.json"))?)?,
             bitmap: recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?,
         })
     }

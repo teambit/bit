@@ -57,28 +57,25 @@ pub(super) fn plan(input: &Plan) -> io::Result<Value> {
 fn validate(input: &Plan) -> io::Result<bool> {
     hash(input.version.trim())?;
     hash(input.version_hash.trim())?;
-    for reference in [&input.parent, &input.lane.existing_visible_head, &input.lane.model_head]
-        .into_iter()
-        .flatten()
-        .map(|val| val.trim())
-        .filter(|val| !val.is_empty())
-    {
-        hash(reference)?;
-    }
+    let has_parent = optional_hash(input.parent.as_deref())?;
+    let has_visible_head = optional_hash(input.lane.existing_visible_head.as_deref())?;
+    let has_model_head = optional_hash(input.lane.model_head.as_deref())?;
     if input.options.detach_head && input.options.override_head {
         return Err(invalid("conflicting lane head options"));
     }
-    let has_parent = input.parent
-        .as_deref()
-        .is_some_and(|val| !val.trim().is_empty());
-    let has_visible_head = input.lane.existing_visible_head
-        .as_deref()
-        .is_some_and(|val| !val.trim().is_empty());
-    let has_model_head = input.lane.model_head
-        .as_deref()
-        .is_some_and(|val| !val.trim().is_empty());
     if !has_parent && (has_visible_head || has_model_head) {
         return Err(invalid("lane snapshot requires previous version"));
     }
     Ok(has_visible_head)
+}
+
+fn optional_hash(value: Option<&str>) -> io::Result<bool> {
+    let Some(trimmed) = value
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    else {
+        return Ok(false);
+    };
+    hash(trimmed)?;
+    Ok(true)
 }

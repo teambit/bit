@@ -14,7 +14,7 @@ pub(super) struct Writer {
 
 impl Writer {
     pub(super) fn new(pretty: bool) -> Self {
-        Self { output: Vec::new(), nodes: 0, pretty, spaces: 2 }
+        Self { output: Vec::with_capacity(256), nodes: 0, pretty, spaces: 2 }
     }
 
     pub(super) fn spacing(&mut self, spaces: usize) {
@@ -70,7 +70,7 @@ impl Writer {
             self.separator(index, next_depth)?;
             self.value(value, next_depth)?;
         }
-        self.close(b"]", true, depth)
+        self.close(b"]", depth)
     }
 
     fn object(&mut self, fields: &[(Vec<u16>, Value)], depth: usize) -> io::Result<()> {
@@ -86,7 +86,7 @@ impl Writer {
             self.bytes(if self.pretty { b": " } else { b":" })?;
             self.value(value, next_depth)?;
         }
-        self.close(b"}", true, depth)
+        self.close(b"}", depth)
     }
 
     fn separator(&mut self, index: usize, depth: usize) -> io::Result<()> {
@@ -99,8 +99,8 @@ impl Writer {
         Ok(())
     }
 
-    fn close(&mut self, close: &[u8], nonempty: bool, depth: usize) -> io::Result<()> {
-        if nonempty && self.pretty {
+    fn close(&mut self, close: &[u8], depth: usize) -> io::Result<()> {
+        if self.pretty {
             self.indent(depth)?;
         }
         self.bytes(close)

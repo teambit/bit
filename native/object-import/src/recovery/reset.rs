@@ -184,16 +184,20 @@ fn resolve<'a>(input: &'a Value, label: &'a str, remaining: &[&str]) -> io::Resu
     text(&normal.ok_or_else(|| invalid("reset missing tag"))?["hash"])
 }
 fn tag(label: &str) -> bool {
-    label.split('.').count() == 3
-        && label
-            .split('.')
-            .all(|part| {
-                !part.is_empty()
-                    && (part == "0" || !part.starts_with('0'))
-                    && part
-                        .parse::<u64>()
-                        .is_ok_and(|value| value <= 9_007_199_254_740_991)
-            })
+    let mut parts = label.split('.');
+    let valid_part = |part: Option<&str>| {
+        part.is_some_and(|text| {
+            !text.is_empty()
+                && (text == "0" || !text.starts_with('0'))
+                && text
+                    .parse::<u64>()
+                    .is_ok_and(|value| value <= 9_007_199_254_740_991)
+        })
+    };
+    valid_part(parts.next())
+        && valid_part(parts.next())
+        && valid_part(parts.next())
+        && parts.next().is_none()
 }
 fn validate(input: &Value) -> io::Result<()> {
     if input
@@ -228,8 +232,9 @@ fn validate(input: &Value) -> io::Result<()> {
     Ok(())
 }
 fn records(input: &Value, field: &str) -> io::Result<()> {
-    let mut labels = HashSet::new();
-    for entry in array(input, field)? {
+    let entries = array(input, field)?;
+    let mut labels = HashSet::with_capacity(entries.len());
+    for entry in entries {
         let label = text(&entry["label"])?;
         if label.is_empty() || label.len() > 4096 || !labels.insert(label) {
             return Err(invalid("reset duplicate label"));

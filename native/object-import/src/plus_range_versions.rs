@@ -38,27 +38,20 @@ fn dependency_usage(dependency: &Value) -> Option<String> {
     {
         return Some(format!(r#"{name}: "{range}""#));
     }
-    let identity = dependency["id"]
-        .as_str()
-        .or_else(|| dependency.as_str())
-        .map_or_else(
-            || {
-                let target = dependency
-                    .get("id")
-                    .filter(|sub| sub.is_object())
-                    .unwrap_or(dependency);
-                format!("{}/{}", text(&target["scope"]), text(&target["name"]))
-            },
-            |id| {
-                let trimmed = id.trim();
-                trimmed
-                    .rsplit_once('@')
-                    .filter(|(base, _)| !base.trim().is_empty())
-                    .map_or(trimmed, |(base, _)| base.trim())
-                    .to_owned()
-            },
-        );
-    Some(format!(r#"{identity}: "{range}""#))
+    if let Some(id) = dependency["id"].as_str().or_else(|| dependency.as_str()) {
+        let trimmed = id.trim();
+        let identity = trimmed
+            .rsplit_once('@')
+            .filter(|(base, _)| !base.trim().is_empty())
+            .map_or(trimmed, |(base, _)| base.trim());
+        Some(format!(r#"{identity}: "{range}""#))
+    } else {
+        let target = dependency
+            .get("id")
+            .filter(|sub| sub.is_object())
+            .unwrap_or(dependency);
+        Some(format!(r#"{}/{}: "{range}""#, text(&target["scope"]), text(&target["name"])))
+    }
 }
 fn resolver_usages(usages: &mut Vec<String>, extensions: &[Value]) {
     let Some(resolver) = extensions

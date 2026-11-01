@@ -23,12 +23,18 @@ pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &
             names.push((key.as_slice(), value));
         }
     }
+    if indices.is_empty() {
+        return Ok(names);
+    }
     indices.sort_unstable_by_key(|entry| entry.0);
-    Ok(indices
-        .into_iter()
-        .map(|(_, key, value)| (key, value))
-        .chain(names)
-        .collect())
+    let mut ordered = Vec::with_capacity(indices.len() + names.len());
+    ordered.extend(
+        indices
+            .into_iter()
+            .map(|(_, key, value)| (key, value)),
+    );
+    ordered.extend(names);
+    Ok(ordered)
 }
 
 fn validate_key<'a>(key: &'a [u16], seen: &mut HashSet<&'a [u16]>) -> io::Result<()> {

@@ -76,12 +76,13 @@ mod transfer;
 mod validate;
 mod workspace;
 
+fn blank_string(ver: &serde_json::Value) -> bool {
+    ver.as_str()
+        .is_none_or(|text| text.trim().is_empty())
+}
+
 /// Serialize workspace component rows with the published bitmap header and property order.
 pub fn render_workspace_bitmap(value: &serde_json::Value) -> std::io::Result<Vec<u8>> {
-    let blank_string = |ver: &serde_json::Value| {
-        ver.as_str()
-            .is_none_or(|text| text.trim().is_empty())
-    };
     if value
         .as_object()
         .is_none_or(|rows| {

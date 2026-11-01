@@ -7,8 +7,17 @@ pub(super) fn run(
     bytes: &[u8],
     pool: &rayon::ThreadPool,
 ) -> io::Result<Value> {
-    if matches!(
-        &request,
+    if is_parallel(&request) {
+        pool.install(|| apply(request, state, bytes))
+    } else {
+        apply(request, state, bytes)
+    }
+}
+
+#[inline]
+const fn is_parallel(request: &Request) -> bool {
+    matches!(
+        request,
         Request::MergePrepare(_)
             | Request::MergeApply(_)
             | Request::CheckoutPrepare(_)
@@ -22,9 +31,5 @@ pub(super) fn run(
             | Request::HistoryQueryBlame(_)
             | Request::HistoryQueryDiff(_)
             | Request::TransferCollect(_),
-    ) {
-        pool.install(|| apply(request, state, bytes))
-    } else {
-        apply(request, state, bytes)
-    }
+    )
 }

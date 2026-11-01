@@ -91,7 +91,7 @@ pub(crate) fn serve(
         },
         Err(_) => failure(id),
     };
-    let mut output = Output(Vec::new());
+    let mut output = Output(Vec::with_capacity(256));
     if serde_json::to_writer(&mut output, &response).is_err() {
         return protocol::respond(writer, &failure(id));
     }
@@ -143,13 +143,13 @@ pub(crate) fn hash(hash: &str) -> io::Result<[u8; 20]> {
     {
         return Err(invalid("history invalid hash"));
     }
+    let digit = |byte: u8| if byte <= b'9' { byte - b'0' } else { byte - b'a' + 10 };
     let mut bytes = [0; 20];
     for (index, pair) in hash
         .as_bytes()
         .chunks_exact(2)
         .enumerate()
     {
-        let digit = |byte: u8| if byte <= b'9' { byte - b'0' } else { byte - b'a' + 10 };
         bytes[index] = digit(pair[0]) * 16 + digit(pair[1]);
     }
     Ok(bytes)

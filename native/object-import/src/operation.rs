@@ -94,7 +94,7 @@ fn history(plan: &HistoryPlan) -> Value {
 }
 
 fn unique(existing: &[String], incoming: &[String]) -> Vec<[usize; 2]> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(existing.len() + incoming.len());
     [existing, incoming]
         .into_iter()
         .enumerate()
@@ -253,9 +253,9 @@ pub(crate) fn project_index(value: Value) -> io::Result<Value> {
 
 fn index(components: &[IndexEntry], lanes: &[IndexEntry], objects: &[IndexObject]) -> Value {
     let mut state = IndexState {
-        found: HashMap::new(),
+        found: HashMap::with_capacity(components.len() + lanes.len() + objects.len()),
         counts: [components.len(), lanes.len()],
-        actions: Vec::new(),
+        actions: Vec::with_capacity(objects.len()),
     };
     state.add_existing("component", components);
     state.add_existing("lane", lanes);

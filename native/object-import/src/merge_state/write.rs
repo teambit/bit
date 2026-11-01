@@ -26,14 +26,13 @@ pub(crate) fn commit_metadata(
     };
     let mut file = open(path, existing.as_ref())?;
     file.set_len(0)?;
-    if let Some(metadata) = metadata {
+    let apply_after = restore || cfg!(windows);
+    if !apply_after && let Some(metadata) = metadata {
         apply_metadata(&file, metadata)?;
     }
     file.write_all(contents.as_bytes())?;
     file.flush()?;
-    if (restore || cfg!(windows))
-        && let Some(metadata) = metadata
-    {
+    if apply_after && let Some(metadata) = metadata {
         apply_metadata(&file, metadata)?;
     }
     Ok(())

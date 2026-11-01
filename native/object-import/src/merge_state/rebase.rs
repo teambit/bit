@@ -14,6 +14,9 @@ pub(super) struct Version {
 pub(super) fn plan(existing: &[String], incoming: &[Version]) -> io::Result<Value> {
     references_valid(existing)?;
     validate_incoming(incoming)?;
+    if existing.is_empty() || incoming.is_empty() {
+        return Ok(json!({}));
+    }
     let mut existing_by_hash = std::collections::HashMap::with_capacity(existing.len());
     for (index, existing_hash) in existing.iter().enumerate() {
         existing_by_hash.entry(existing_hash.trim()).or_insert(index);

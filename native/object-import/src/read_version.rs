@@ -63,8 +63,7 @@ impl<'a> Reader<'a> {
         {
             return Err(invalid("invalid Version header size"));
         }
-        let body_text = std::str::from_utf8(body).map_err(io::Error::other)?;
-        let value: Value = serde_json::from_str(body_text).map_err(io::Error::other)?;
+        let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
         if self.query || self.history_artifacts {
             crate::history_query::validate_version(&value)?;
         } else {
@@ -72,6 +71,7 @@ impl<'a> Reader<'a> {
         }
         parents(&value)?;
         if self.query {
+            let body_text = std::str::from_utf8(body).map_err(io::Error::other)?;
             self.metadata =
                 Some((body_text.to_owned(), object.len(), self.compressed.saturating_sub(before)));
         }

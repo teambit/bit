@@ -76,9 +76,10 @@ fn dependency_version(dependency: &Value) -> Option<&str> {
 pub(super) fn candidates(input: &Value) -> io::Result<Value> {
     let scope = identity(&input["owner"])?.0;
     let mut checked = hashes(input, "checked")?;
-    let mut added = Vec::new();
-    let mut selected = Vec::new();
-    for (index, dependency) in rows(input, "dependencies")?.iter().enumerate() {
+    let dependencies = rows(input, "dependencies")?;
+    let mut added = Vec::with_capacity(dependencies.len());
+    let mut selected = Vec::with_capacity(dependencies.len());
+    for (index, dependency) in dependencies.iter().enumerate() {
         if identity(dependency)?.0 != scope {
             continue;
         }
@@ -96,8 +97,9 @@ pub(super) fn candidates(input: &Value) -> io::Result<Value> {
 }
 pub(super) fn missing(input: &Value) -> io::Result<Value> {
     let existing = hashes(input, "existing")?;
-    let mut missing = Vec::new();
-    for (index, value) in rows(input, "candidates")?.iter().enumerate() {
+    let candidates = rows(input, "candidates")?;
+    let mut missing = Vec::with_capacity(candidates.len());
+    for (index, value) in candidates.iter().enumerate() {
         let hash = value
             .as_str()
             .map(str::trim)
@@ -114,8 +116,9 @@ pub(super) fn pattern(input: &Value) -> io::Result<Value> {
         .iter()
         .map(identity)
         .collect::<io::Result<HashSet<_>>>()?;
-    let mut selected = Vec::new();
-    for (index, dependency) in rows(input, "dependencies")?.iter().enumerate() {
+    let dependencies = rows(input, "dependencies")?;
+    let mut selected = Vec::with_capacity(dependencies.len());
+    for (index, dependency) in dependencies.iter().enumerate() {
         if excluded.contains(&identity(dependency)?) {
             selected.push(index);
         }

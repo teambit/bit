@@ -51,7 +51,12 @@ fn convert_object(values: &serde_json::Map<String, serde_json::Value>) -> io::Re
         if key.len() > 32768 {
             return Err(io::Error::other("JSON object key limit"));
         }
-        entries.push((key.encode_utf16().collect(), convert(value)?));
+        let units = if key.is_ascii() {
+            key.bytes().map(u16::from).collect()
+        } else {
+            key.encode_utf16().collect()
+        };
+        entries.push((units, convert(value)?));
     }
     Ok(Value::Object(entries))
 }

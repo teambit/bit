@@ -11,7 +11,7 @@ pub(super) struct State {
 }
 #[derive(Clone)]
 struct Record {
-    mode: String,
+    mode: &'static str,
     cursor: usize,
     index: usize,
     batch: usize,
@@ -79,7 +79,7 @@ const LANE: &[&str] = &[
 ];
 impl Record {
     fn phases(&self) -> &[&str] {
-        match self.mode.as_str() {
+        match self.mode {
             "status" => STATUS,
             "apply" => APPLY,
             _ => LANE,
@@ -135,14 +135,21 @@ impl Record {
         Ok(())
     }
 }
+fn parse_mode(mode: &str) -> Option<&'static str> {
+    match mode.trim() {
+        "status" => Some("status"),
+        "apply" => Some("apply"),
+        "lane" => Some("lane"),
+        _ => None,
+    }
+}
 impl State {
     pub(super) fn begin(&mut self, input: Value) -> io::Result<Value> {
         let request: Begin = serde_json::from_value(input).map_err(io::Error::other)?;
         bound(request.count)?;
-        let mode = request.mode.trim().to_owned();
-        if !["status", "apply", "lane"].contains(&mode.as_str()) || self.records.len() >= 4096 {
+        let Some(mode) = parse_mode(&request.mode).filter(|_| self.records.len() < 4096) else {
             return Err(invalid("merge journal mode or limit"));
-        }
+        };
         let parent_token = request.parent_token
             .as_deref()
             .map(str::trim)

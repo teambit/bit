@@ -32,15 +32,18 @@ fn apply_stage(
     if rows.len() != selected.len() || (expected_stage == Some("modified") && rows != selected) {
         return Err(invalid("merge invalid completion permutation"));
     }
-    let source = rows
+    if rows.is_empty() {
+        return Ok(());
+    }
+    let mut remaining = rows
         .iter()
         .copied()
         .collect::<HashSet<_>>();
-    let selected_set = selected
-        .iter()
-        .copied()
-        .collect::<HashSet<_>>();
-    if source.len() != rows.len() || source != selected_set {
+    if remaining.len() != rows.len()
+        || selected
+            .iter()
+            .any(|row| !remaining.remove(row))
+    {
         return Err(invalid("merge invalid completion permutation"));
     }
     for (destination, source) in rows.into_iter().zip(selected) {

@@ -24,7 +24,11 @@ pub(super) fn plan(filename: &Path, current: &[String]) -> io::Result<Value> {
     if !file.metadata()?.is_file() {
         return Err(invalid("bitmap file"));
     }
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(
+        usize::try_from(link_meta.len())
+            .unwrap_or(0)
+            .min(4 * 1024 * 1024 + 1),
+    );
     file.take(4 * 1024 * 1024 + 1)
         .read_to_end(&mut bytes)?;
     if bytes.len() > 4 * 1024 * 1024 {
@@ -111,11 +115,17 @@ fn identity(key: &str, component: &Value) -> io::Result<()> {
     Ok(())
 }
 fn version_text(value: &str) -> bool {
-    (value.len() == 40 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
-        || value.split('.').count() == 3
-            && value
-                .split('.')
-                .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+    if value.len() == 40 && value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return true;
+    }
+    let mut parts = value.split('.');
+    let valid_part = |part: Option<&str>| {
+        part.is_some_and(|text| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit()))
+    };
+    valid_part(parts.next())
+        && valid_part(parts.next())
+        && valid_part(parts.next())
+        && parts.next().is_none()
 }
 fn identifier(value: &str, namespaced: bool) -> bool {
     !value.is_empty()

@@ -4,6 +4,9 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn classify_all(execution: &Execution<'_>) -> io::Result<Vec<Value>> {
+    if execution.request.current.is_empty() {
+        return Ok(Vec::new());
+    }
     if should_classify_serially(execution) {
         execution.request.current
             .iter()

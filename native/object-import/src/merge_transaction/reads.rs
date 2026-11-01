@@ -85,13 +85,12 @@ fn record_source_trace(
         }
         std::collections::hash_map::Entry::Vacant(vacant) => vacant,
     };
+    if inflated_size < body.len() || count >= 4096 {
+        return Err(invalid("merge Source receipt budget"));
+    }
     trace.compressed = trace.compressed.saturating_add(compressed_size);
     trace.retained_bytes = trace.retained_bytes.saturating_add(body.len());
-    if inflated_size < body.len()
-        || trace.compressed > 32 * 1024 * 1024
-        || trace.retained_bytes > 32 * 1024 * 1024
-        || count >= 4096
-    {
+    if trace.compressed > 32 * 1024 * 1024 || trace.retained_bytes > 32 * 1024 * 1024 {
         return Err(invalid("merge Source receipt budget"));
     }
     entry.insert(Receipt { body: body.to_vec(), compressed_size, inflated_size });

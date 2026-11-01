@@ -150,7 +150,7 @@ pub(crate) fn serve(
         MAX_JSON
     };
     if let Ok(data) = request.and_then(|req| execution::run(req, state, &bytes, pool)) {
-        let mut output = Output(Vec::new(), output_limit);
+        let mut output = Output(Vec::with_capacity(256), output_limit);
         let response =
             json!({"version":1,"id":id,"completed":1,"skipped":[],"failed":false,"data":data});
         if serde_json::to_writer(&mut output, &response).is_ok() {

@@ -44,7 +44,7 @@ pub(super) fn git(
     if output.fetch_add(stdout.len(), Ordering::Relaxed).saturating_add(stdout.len()) > MAX_RAW {
         return Err(invalid("merge aggregate Git output limit"));
     }
-    interpret(status, &stdout, &stderr)
+    interpret(status, stdout, &stderr)
 }
 fn execute(
     labels: [&str; 2],
@@ -118,7 +118,7 @@ fn workspace_merge_for_platform(
         fs::write(path, crate::checkout::eol::normalize(bytes.to_vec(), false))?;
     }
     let (status, stdout, stderr) = execute(labels, paths)?;
-    let merged = interpret(status, &stdout, &stderr)?;
+    let merged = interpret(status, stdout, &stderr)?;
     if merged["isBinaryConflict"] == true {
         return Err(invalid("inbound binary merge conflict"));
     }
@@ -129,15 +129,19 @@ fn workspace_merge_for_platform(
         .ok_or_else(|| invalid("inbound merge output"))?;
     Ok((crate::checkout::eol::normalize(output.as_bytes().to_vec(), windows), conflict.is_some()))
 }
-fn interpret(status: std::process::ExitStatus, stdout: &[u8], stderr: &[u8]) -> io::Result<Value> {
+fn interpret(
+    status: std::process::ExitStatus,
+    stdout: Vec<u8>,
+    stderr: &[u8],
+) -> io::Result<Value> {
     if status.success() {
-        Ok(json!({"output":String::from_utf8_lossy(stdout).into_owned(),"conflict":null}))
+        Ok(json!({"output":lossy_string(stdout),"conflict":null}))
     } else if status
         .code()
         .is_some_and(|code| code != 0)
         && !stdout.is_empty()
     {
-        Ok(json!({"output":null,"conflict":String::from_utf8_lossy(stdout).into_owned()}))
+        Ok(json!({"output":null,"conflict":lossy_string(stdout)}))
     } else if status.code() == Some(255)
         && String::from_utf8_lossy(stderr).contains("Cannot merge binary files")
     {
@@ -145,6 +149,11 @@ fn interpret(status: std::process::ExitStatus, stdout: &[u8], stderr: &[u8]) -> 
     } else {
         Err(invalid("Git merge failed"))
     }
+}
+
+fn lossy_string(bytes: Vec<u8>) -> String {
+    String::from_utf8(bytes)
+        .unwrap_or_else(|err| String::from_utf8_lossy(err.as_bytes()).into_owned())
 }
 
 fn spawn(labels: [&str; 2], paths: [PathBuf; 3]) -> io::Result<Process> {
@@ -163,7 +172,7 @@ fn spawn(labels: [&str; 2], paths: [PathBuf; 3]) -> io::Result<Process> {
 
 pub(crate) fn config_conflict(paths: [PathBuf; 3]) -> io::Result<String> {
     let (status, stdout, stderr) = execute(["ours", "theirs"], paths)?;
-    let value = interpret(status, &stdout, &stderr)?;
+    let value = interpret(status, stdout, &stderr)?;
     value["conflict"]
         .as_str()
         .map(str::to_owned)

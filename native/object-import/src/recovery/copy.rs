@@ -29,7 +29,9 @@ pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
         acl(destination)?;
     }
     ancestors(source)?;
-    ancestors(destination)?;
+    if source.parent() != destination.parent() {
+        ancestors(destination)?;
+    }
     Ok(())
 }
 fn regular(path: &Path, metadata: fs::Metadata) -> io::Result<fs::Metadata> {
@@ -106,7 +108,7 @@ fn distinct(
 
 #[cfg(target_os = "linux")]
 fn acl(path: &Path) -> io::Result<()> {
-    if xattr::list(path)?.any(|name| name.to_string_lossy().starts_with("system.posix_acl")) {
+    if xattr::list(path)?.any(|name| name.as_encoded_bytes().starts_with(b"system.posix_acl")) {
         return Err(invalid("unsupported recovery copy ACL"));
     }
     Ok(())

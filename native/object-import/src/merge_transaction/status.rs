@@ -171,12 +171,13 @@ impl Cursor {
         Ok(())
     }
     fn removed_divergence(&mut self, value: &Value) -> io::Result<()> {
-        self.removed.other_lane = boolean(value, "otherLanePresent")?;
-        let ignore = if self.removed.other_lane {
+        let other_lane = boolean(value, "otherLanePresent")?;
+        let ignore = if other_lane {
             !boolean(value, "error")? && !boolean(value, "targetAhead")?
         } else {
             !self.removed.on_main
         };
+        self.removed.other_lane = other_lane;
         if ignore {
             self.deleted();
         } else {
@@ -299,11 +300,8 @@ impl State {
     }
     pub(super) fn receipt(&mut self, input: Value, owner: &journal::State) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
-        let token = request.token.trim().to_owned();
-        let mut cursor = self.records
-            .get(&token)
-            .cloned()
-            .ok_or_else(|| invalid("stale merge status"))?;
+        let token = request.token.trim();
+        let cursor = self.records.get_mut(token).ok_or_else(|| invalid("stale merge status"))?;
         owner.verify(&cursor.identity.token, cursor.identity.index)?;
         if cursor.revision != request.revision
             || cursor.observe != request.observe.trim()
@@ -311,13 +309,12 @@ impl State {
         {
             return Err(invalid("stale merge status receipt"));
         }
-        cursor.transition(&request.value)?;
-        cursor.revision = cursor.revision
+        let next_revision = cursor.revision
             .checked_add(1)
             .ok_or_else(|| invalid("merge status revision overflow"))?;
-        let output = cursor.output(&token);
-        self.records.insert(token, cursor);
-        Ok(output)
+        cursor.transition(&request.value)?;
+        cursor.revision = next_revision;
+        Ok(cursor.output(token))
     }
     pub(super) fn finish(&mut self, tokens: &[String]) {
         self.records.retain(|_, cursor| !tokens.contains(&cursor.identity.token));

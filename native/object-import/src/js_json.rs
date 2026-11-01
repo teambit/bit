@@ -26,7 +26,12 @@ pub enum Value {
 impl Value {
     #[must_use]
     pub fn text(text: &str) -> Self {
-        Self::String(text.encode_utf16().collect())
+        let units = if text.is_ascii() {
+            text.bytes().map(u16::from).collect()
+        } else {
+            text.encode_utf16().collect()
+        };
+        Self::String(units)
     }
 
     #[cfg(test)]
@@ -97,7 +102,7 @@ pub fn stringify_indented(value: &Value, spaces: usize) -> io::Result<Vec<u8>> {
 
 fn number(bits: &str) -> io::Result<f64> {
     let bits = bits.trim();
-    if bits.len() != 16 || !bits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+    if bits.len() != 16 || bits.starts_with('+') {
         return Err(invalid("invalid JavaScript number bits"));
     }
     let parsed =

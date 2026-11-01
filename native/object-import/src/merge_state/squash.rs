@@ -64,11 +64,11 @@ fn rewrite(input: &Policy, previous: &[String], common: Option<&str>) -> io::Res
     };
     let previous_parents: Vec<_> = previous
         .iter()
-        .map(|entry| entry.trim().to_owned())
+        .map(|entry| entry.trim())
         .collect();
-    let parents = match parent {
+    let parents: Vec<&str> = match parent {
         Some(_) if legacy => previous_parents.clone(),
-        Some(parent) => vec![parent.to_owned()],
+        Some(parent) => vec![parent],
         None => Vec::new(),
     };
     Ok(

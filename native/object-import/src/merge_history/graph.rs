@@ -158,7 +158,7 @@ pub(super) fn load(request: &Load) -> io::Result<Value> {
 }
 pub(super) fn subset(versions: &[Version], from: &str, stop: &[String]) -> Vec<String> {
     let from = from.trim();
-    let mut index = HashMap::new();
+    let mut index = HashMap::with_capacity(versions.len());
     for version in versions {
         index.entry(version.hash.trim()).or_insert(version);
     }
@@ -305,12 +305,13 @@ pub(super) fn diverge(
     validate(versions)?;
     hash(source)?;
     hash(target)?;
+    let source_version = versions
+        .iter()
+        .find(|version| version.hash.trim() == source)
+        .ok_or_else(|| invalid("history missing head"))?;
     if !versions
         .iter()
-        .any(|version| version.hash.trim() == source)
-        || !versions
-            .iter()
-            .any(|version| version.hash.trim() == target)
+        .any(|version| version.hash.trim() == target)
     {
         return Err(invalid("history missing head"));
     }
@@ -327,10 +328,7 @@ pub(super) fn diverge(
         .iter()
         .filter(|item| !distance.source.contains(item))
         .collect();
-    let version_unrelated = versions
-        .iter()
-        .find(|version| version.hash.trim() == source)
-        .is_some_and(|version| version.unrelated.as_deref().map(str::trim) == Some(target));
+    let version_unrelated = source_version.unrelated.as_deref().map(str::trim) == Some(target);
     let mut data = json!({"sourceOnly":source_only,"targetOnly":target_only,"noCommon":closest.is_none()&&!unrelated&&!version_unrelated});
     if let Some(common) = closest {
         data["common"] = json!(common);

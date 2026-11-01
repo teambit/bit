@@ -72,11 +72,11 @@ fn lane_matches(row: &Value, scope: &str, name: &str) -> bool {
     )
 }
 
-fn canonical_lane_id(raw_id: &str) -> io::Result<String> {
+fn canonical_lane_parts(raw_id: &str) -> io::Result<(&str, &str)> {
     let Some((raw_scope, raw_name)) = raw_id.trim().split_once('/') else {
         return Err(invalid("lane ID"));
     };
-    Ok(format!("{}/{}", raw_scope.trim(), raw_name.trim()))
+    Ok((raw_scope.trim(), raw_name.trim()))
 }
 
 fn select_all(
@@ -86,14 +86,14 @@ fn select_all(
     ids: &[String],
 ) -> io::Result<Vec<String>> {
     let mut hashes = Vec::with_capacity(ids.len());
-    let mut seen = HashSet::new();
-    let mut seen_hashes = HashSet::new();
+    let mut seen = HashSet::with_capacity(ids.len());
+    let mut seen_hashes = HashSet::with_capacity(ids.len());
     for raw_id in ids {
-        let canonical = canonical_lane_id(raw_id)?;
-        if !seen.insert(canonical.clone()) {
+        let (scope, name) = canonical_lane_parts(raw_id)?;
+        if !seen.insert((scope, name)) {
             return Err(invalid("lane removal ID"));
         }
-        let hash = select_one(root, rows, current, &canonical)?;
+        let hash = select_one(root, rows, current, scope, name)?;
         if !seen_hashes.insert(hash.clone()) {
             return Err(invalid("duplicate lane hash"));
         }
@@ -102,9 +102,13 @@ fn select_all(
     Ok(hashes)
 }
 
-fn select_one(root: &Path, rows: &mut Vec<Value>, current: &Value, id: &str) -> io::Result<String> {
-    let (raw_scope, raw_name) = id.split_once('/').ok_or_else(|| invalid("lane ID"))?;
-    let (scope, name) = (raw_scope.trim(), raw_name.trim());
+fn select_one(
+    root: &Path,
+    rows: &mut Vec<Value>,
+    current: &Value,
+    scope: &str,
+    name: &str,
+) -> io::Result<String> {
     if !valid_part(scope) || !valid_part(name) || name == "main" {
         return Err(invalid("lane removal ID"));
     }

@@ -11,7 +11,7 @@ pub(crate) fn inflate(compressed: &[u8]) -> Option<String> {
         return None;
     }
     let mut decoder = Decompress::new(true);
-    let mut chunk = vec![0; 64 * 1024];
+    let mut chunk = [0_u8; 16 * 1024];
     let mut output = Vec::with_capacity(compressed.len().min(MAX_BYTES));
     while !inflate_step(&mut decoder, compressed, &mut chunk, &mut output)? {}
     if decoder.total_in() != compressed.len() as u64 {

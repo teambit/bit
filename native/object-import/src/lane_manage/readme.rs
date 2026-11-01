@@ -50,9 +50,10 @@ impl ReadmePlan {
         };
         let mut objects = Objects::read(root, &lane_hash, &target)?;
         let Some(readme) = objects.lane
-            .get("readmeComponent")
+            .as_object_mut()
+            .ok_or_else(invalid)?
+            .remove("readmeComponent")
             .filter(|value| !value.is_null())
-            .cloned()
         else {
             return Ok(Self::NoReadme(label));
         };
@@ -91,10 +92,6 @@ fn record_readme_removal(
     mut log: Value,
     history_key: &str,
 ) -> io::Result<()> {
-    objects.lane
-        .as_object_mut()
-        .ok_or_else(invalid)?
-        .remove("readmeComponent");
     let components = history_components(&objects.lane)?;
     let dependents = objects.lane["updateDependents"]
         .as_array()
@@ -133,7 +130,6 @@ fn remove_readme_from_bitmap(
     {
         return Err(invalid());
     }
-    let remote_lane_id = format!("{}/{}", target.scope, target.name);
     if let Some(cfg_obj) = entry.get_mut("config").and_then(Value::as_object_mut)
         && let Some((_, lanes)) = cfg_obj
             .iter_mut()
@@ -142,7 +138,7 @@ fn remove_readme_from_bitmap(
             })
         && let Some(readme_cfg) = lanes.get_mut("readme").and_then(Value::as_object_mut)
     {
-        readme_cfg.remove(&remote_lane_id);
+        readme_cfg.remove(&format!("{}/{}", target.scope, target.name));
     }
     Ok(())
 }

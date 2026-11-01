@@ -40,12 +40,17 @@ struct Lane {
     scope: String,
 }
 impl Lane {
-    fn value(&self) -> io::Result<Value> {
+    fn validate(&self) -> io::Result<()> {
         for value in [&self.name, &self.scope] {
             if value.trim().is_empty() || value.len() > 32768 || value.contains('\0') {
                 return Err(invalid("invalid reconciliation lane"));
             }
         }
+        Ok(())
+    }
+
+    fn value(&self) -> io::Result<Value> {
+        self.validate()?;
         Ok(json!({"name":self.name.trim(),"scope":self.scope.trim()}))
     }
 }
@@ -58,11 +63,11 @@ pub(super) fn plan(input: &Plan) -> io::Result<Value> {
     for parent in &input.current_parents {
         hash(parent.trim())?;
     }
-    let lane = input.entry.lane.value()?;
+    input.entry.lane.validate()?;
     match &input.entry.unrelated {
-        Some(Unrelated::Legacy(true)) => legacy_unrelated(input, &lane),
+        Some(Unrelated::Legacy(true)) => legacy_unrelated(input),
         Some(Unrelated::Current(relation)) => current_unrelated(input, relation),
-        _ if input.entry.should_squash == Some(true) => squashed(input, &lane),
+        _ if input.entry.should_squash == Some(true) => squashed(input),
         _ => Ok(merged(input)),
     }
 }
@@ -90,9 +95,10 @@ fn needs_merge_message(input: &Plan) -> bool {
 fn parents(input: &Plan, parent: &str) -> Vec<String> {
     if input.is_legacy { trimmed_parents(input) } else { vec![parent.into()] }
 }
-fn legacy_unrelated(input: &Plan, lane: &Value) -> io::Result<Value> {
+fn legacy_unrelated(input: &Plan) -> io::Result<Value> {
     let previous = previous(input)?;
     let parents = parents(input, input.entry.head.trim());
+    let lane = input.entry.lane.value()?;
     Ok(json!({"mode":"unrelated","parents":parents,
         "unrelated":{"head":previous,"lane":lane},"setMergeMessage":false}))
 }
@@ -107,11 +113,12 @@ fn current_unrelated(input: &Plan, relation: &Relation) -> io::Result<Value> {
     Ok(json!({"mode":"unrelated","parents":parents,
         "unrelated":{"head":unrelated_head,"lane":lane},"setMergeMessage":false}))
 }
-fn squashed(input: &Plan, lane: &Value) -> io::Result<Value> {
+fn squashed(input: &Plan) -> io::Result<Value> {
     let parent = input.current_parents
         .first()
         .map(|val| val.trim())
         .ok_or_else(|| invalid("squashed snapshot requires first parent"))?;
+    let lane = input.entry.lane.value()?;
     Ok(json!({"mode":"squashed","parents":trimmed_parents(input),
         "squashed":{"previousParents":[parent,input.entry.head.trim()],"lane":lane},
         "setMergeMessage":needs_merge_message(input)}))

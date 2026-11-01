@@ -14,23 +14,20 @@ pub(crate) fn distance(
     graph::validate(&versions)?;
     let source = source
         .map(str::trim)
-        .filter(|head| !head.is_empty())
-        .map(|head| hash(head).map(|digest| crate::validate::hexadecimal(&digest)))
-        .transpose()?;
+        .filter(|head| !head.is_empty());
     let target = target
         .map(str::trim)
-        .filter(|head| !head.is_empty())
-        .map(|head| hash(head).map(|digest| crate::validate::hexadecimal(&digest)))
-        .transpose()?;
-    for head in [&source, &target].into_iter().flatten() {
+        .filter(|head| !head.is_empty());
+    for head in [source, target].into_iter().flatten() {
+        hash(head)?;
         if !versions
             .iter()
-            .any(|row| row.hash.trim().eq_ignore_ascii_case(head))
+            .any(|row| row.hash.trim() == head)
         {
             return Err(invalid("status history requires population"));
         }
     }
-    match (source.as_deref(), target.as_deref()) {
+    match (source, target) {
         (Some(source), Some(target)) => graph::diverge(&versions, source, target, false),
         (Some(source), None) => Ok(
             json!({"sourceOnly":graph::subset(&versions, source, &[]),"targetOnly":[],"noCommon":false}),

@@ -33,20 +33,23 @@ fn validate_files(value: &Value) -> io::Result<()> {
         .ok_or_else(|| invalid("history missing Version files"))?;
     count(files.len())?;
     for file in files {
-        if !file.is_object()
-            || file
-                .get("relativePath")
-                .is_some_and(|val| {
-                    !val.is_null()
-                        && val
-                            .as_str()
-                            .is_none_or(|text| text.trim().is_empty())
-                })
+        let Some(object) = file.as_object() else {
+            return Err(invalid("history invalid Version file"));
+        };
+        if object
+            .get("relativePath")
+            .is_some_and(|val| {
+                !val.is_null()
+                    && val
+                        .as_str()
+                        .is_none_or(|text| text.trim().is_empty())
+            })
         {
             return Err(invalid("history invalid Version file"));
         }
         hash(
-            file.get("file")
+            object
+                .get("file")
                 .and_then(Value::as_str)
                 .ok_or_else(|| invalid("history missing Source ref"))?,
         )?;

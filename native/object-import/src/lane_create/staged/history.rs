@@ -20,7 +20,12 @@ pub(super) fn prepare(
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(invalid)?;
-    let hash = format!("{:x}", Sha1::digest(format!("{scope}/{name}:VersionHistory").as_bytes()));
+    let mut sha1 = Sha1::new();
+    sha1.update(scope.as_bytes());
+    sha1.update(b"/");
+    sha1.update(name.as_bytes());
+    sha1.update(b":VersionHistory");
+    let hash = crate::validate::hexadecimal(&sha1.finalize());
     let path = directory
         .join(&hash[..2])
         .join(&hash[2..]);

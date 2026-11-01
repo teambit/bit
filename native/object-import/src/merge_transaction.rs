@@ -72,18 +72,15 @@ fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
     let index = input["index"]
         .as_u64()
         .filter(|index| *index < 4096)
-        .and_then(|index| usize::try_from(index).ok())
-        .ok_or_else(|| invalid("merge component index"))?;
+        .ok_or_else(|| invalid("merge component index"))? as usize;
     state.verify(token, index)
 }
 fn verify_owner(input: &Value, state: &journal::State) -> io::Result<()> {
     let token = parse_token(input, "merge owner token")?;
-    let index = input["index"]
-        .as_u64()
-        .filter(|index| *index == 0)
-        .and_then(|index| usize::try_from(index).ok())
-        .ok_or_else(|| invalid("merge operation index"))?;
-    state.verify_owner(token, index)
+    if input["index"].as_u64() != Some(0) {
+        return Err(invalid("merge operation index"));
+    }
+    state.verify_owner(token, 0)
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

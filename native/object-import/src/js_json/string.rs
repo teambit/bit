@@ -25,6 +25,9 @@ pub(super) fn write(writer: &mut Writer, units: &[u16]) -> io::Result<()> {
 
 fn single(writer: &mut Writer, unit: u16) -> io::Result<()> {
     const HEX: &[u8; 16] = b"0123456789abcdef";
+    if (0x20..0x80).contains(&unit) && unit != 34 && unit != 92 {
+        return writer.bytes(&[unit as u8]);
+    }
     let escaped = match unit {
         8 => Some(b"\\b".as_slice()),
         9 => Some(b"\\t".as_slice()),

@@ -13,13 +13,16 @@ mod tests;
 use serde_json::Value;
 use std::{io, path::Path};
 
+#[inline]
 pub(crate) fn reset(input: &Value) -> io::Result<Value> {
     reset::plan(input)
 }
 
+#[inline]
 pub(crate) fn bitmap(path: &Path, current: &[String]) -> io::Result<Value> {
     bitmap::plan(path, current)
 }
+#[inline]
 pub(crate) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

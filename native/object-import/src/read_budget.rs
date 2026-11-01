@@ -9,10 +9,12 @@ use std::{
 pub(crate) struct Budget(AtomicUsize);
 
 impl Budget {
+    #[inline]
     pub(crate) fn new(bytes: usize) -> Self {
         Self(AtomicUsize::new(bytes))
     }
 
+    #[inline]
     pub(crate) fn reserve(&self, bytes: usize) -> io::Result<()> {
         if bytes == 0 {
             return Ok(());
@@ -38,7 +40,9 @@ impl Budget {
         }
         self.reserve(length)?;
         let mut bytes = vec![0; length];
-        input.read_exact(&mut bytes)?;
+        if length > 0 {
+            input.read_exact(&mut bytes)?;
+        }
         if input.read(&mut [0])? != 0 {
             return Err(invalid("parallel read file grew"));
         }
@@ -46,6 +50,7 @@ impl Budget {
     }
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

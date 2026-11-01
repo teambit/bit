@@ -12,15 +12,18 @@ pub(super) fn read(directory: &Path, references: &[String]) -> io::Result<Value>
     let mut messages = Vec::with_capacity(references.len());
     for reference in references {
         let version = reader.read(reference.trim())?;
-        messages.push(Value::String(version_log_message(&version).to_owned()));
+        messages.push(version_log_message(version));
     }
     Ok(json!({"messages":messages}))
 }
 
-fn version_log_message(version: &Value) -> &str {
-    version
-        .get("log")
-        .and_then(|log| log.get("message"))
-        .and_then(Value::as_str)
-        .unwrap_or_default()
+fn version_log_message(mut version: Value) -> Value {
+    match version
+        .get_mut("log")
+        .and_then(|log| log.get_mut("message"))
+        .map(Value::take)
+    {
+        Some(Value::String(message)) => Value::String(message),
+        _ => Value::String(String::new()),
+    }
 }

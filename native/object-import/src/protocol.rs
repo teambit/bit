@@ -7,6 +7,7 @@ use std::io::{self, Read, Write};
 
 pub(crate) const MAX_BATCH_BYTES: usize = 128 * 1024 * 1024;
 
+#[inline]
 pub(crate) fn word(reader: &mut impl Read) -> io::Result<u32> {
     let mut bytes = [0; 4];
     reader.read_exact(&mut bytes)?;
@@ -14,7 +15,8 @@ pub(crate) fn word(reader: &mut impl Read) -> io::Result<u32> {
 }
 
 pub(crate) fn respond(writer: &mut impl Write, response: &impl Serialize) -> io::Result<()> {
-    let mut bytes = serde_json::to_vec(response).map_err(io::Error::other)?;
+    let mut bytes = Vec::with_capacity(128);
+    serde_json::to_writer(&mut bytes, response).map_err(io::Error::other)?;
     if bytes.len() > MAX_BATCH_BYTES {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "response exceeds frame limit"));
     }

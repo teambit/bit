@@ -13,7 +13,7 @@ struct Binding {
     index: usize,
     directory: PathBuf,
     objects: PathBuf,
-    rows: Vec<Value>,
+    row_count: usize,
     groups: Vec<Value>,
     current: Vec<Value>,
     ordered: bool,
@@ -60,8 +60,8 @@ impl State {
                 ordered: false,
                 directory,
                 objects,
-                current: array(&input, "current")?,
-                rows: array(&response, "mergeRows")?,
+                current: take_array(&mut input, "current")?,
+                row_count: array_len(&response, "mergeRows")?,
                 groups: array(&response, "sourceGroups")?,
             },
         );
@@ -121,7 +121,7 @@ impl State {
         if binding.ordered {
             return Err(invalid("merge completion order already acknowledged"));
         }
-        let indices = super::order::permutation(input, &binding.groups, binding.rows.len())?;
+        let indices = super::order::permutation(input, &binding.groups, binding.row_count)?;
         let output = crate::checkout_transition::order(
             &token,
             &indices,
@@ -235,6 +235,18 @@ fn array(input: &Value, field: &str) -> io::Result<Vec<Value>> {
     input[field]
         .as_array()
         .cloned()
+        .ok_or_else(|| invalid("merge plan metadata array"))
+}
+fn take_array(input: &mut Value, field: &str) -> io::Result<Vec<Value>> {
+    match input.get_mut(field).map(Value::take) {
+        Some(Value::Array(rows)) => Ok(rows),
+        _ => Err(invalid("merge plan metadata array")),
+    }
+}
+fn array_len(input: &Value, field: &str) -> io::Result<usize> {
+    input[field]
+        .as_array()
+        .map(Vec::len)
         .ok_or_else(|| invalid("merge plan metadata array"))
 }
 

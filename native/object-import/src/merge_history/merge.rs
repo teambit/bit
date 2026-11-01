@@ -291,8 +291,7 @@ fn missing(
         if current_paths.contains(file.path.as_str()) {
             continue;
         }
-        let base = base_indices.get(file.path.as_str()).copied();
-        let Some(base) = base else {
+        let Some(&base) = base_indices.get(file.path.as_str()) else {
             let mut row = json!({"kind":"addFiles","other":index});
             other_body(&mut row, index, prepared, wire_bodies);
             added.push(row);
@@ -328,7 +327,7 @@ fn load_models(
     total: &mut usize,
     compressed: &mut usize,
 ) -> io::Result<Vec<Vec<u8>>> {
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(files.len());
     files
         .iter()
         .map(|file| {

@@ -6,7 +6,6 @@ mod staged;
 use self::origin::{Origin, read_merge_move_backup};
 use crate::{inspection, recovery, store::Store, workspace::engine::command::outbound};
 use serde_json::{Value, json};
-use sha1::{Digest, Sha1};
 use std::{
     fs, io,
     path::{Path, PathBuf},
@@ -247,7 +246,7 @@ impl Objects {
         let history = json!({"name":name,"scope":scope,"laneHash":lane_hash,"history":{history_key:{"log":history_log,"components":history_components,"updateDependents":[]}}});
         Ok(Self {
             lane_hash: lane_hash.into(),
-            history_hash: hash(format!("{lane_hash}:LaneHistory").as_bytes()),
+            history_hash: crate::lane_history::hash(lane_hash),
             lane,
             history,
         })
@@ -325,9 +324,6 @@ fn valid_history_key(value: &str) -> bool {
 
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, "unsupported lane creation")
-}
-fn hash(bytes: &[u8]) -> String {
-    format!("{:x}", Sha1::digest(bytes))
 }
 fn valid_name(value: &str) -> bool {
     !value.is_empty()

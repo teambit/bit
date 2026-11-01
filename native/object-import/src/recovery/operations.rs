@@ -42,11 +42,13 @@ impl State {
         let mut digest = Sha1::new();
         digest.update(revision.to_be_bytes());
         digest.update(bytes);
-        self.token = Some(crate::validate::hexadecimal(&digest.finalize()));
+        let token = crate::validate::hexadecimal(&digest.finalize());
+        let output = json!({"token": &token});
+        self.token = Some(token);
         self.revision = revision;
         self.operations = operations;
         self.index = 0;
-        Ok(json!({"token":self.token}))
+        Ok(output)
     }
     pub(crate) fn advance(&mut self, token: &str, count: usize) -> io::Result<Value> {
         let token = token.trim();
@@ -58,8 +60,8 @@ impl State {
             return Err(invalid("stale recovery operation"));
         }
         let start = self.index;
-        while self.index - start < count {
-            if self.operations[self.index].apply().is_err() {
+        for operation in &self.operations[start..start + count] {
+            if operation.apply().is_err() {
                 break;
             }
             self.index += 1;

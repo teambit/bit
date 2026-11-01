@@ -52,10 +52,6 @@ fn is_non_empty_string_array(value: &Value) -> bool {
 
 fn valid_history_entry(id: &str, entry: &Value) -> bool {
     let id = id.trim();
-    let valid_components = is_non_empty_string_array(&entry["components"]);
-    let valid_dependents = entry
-        .get("updateDependents")
-        .is_none_or(|dependents| dependents.is_null() || is_non_empty_string_array(dependents));
     !id.is_empty()
         && id.len() <= 256
         && !id.contains('\0')
@@ -64,15 +60,17 @@ fn valid_history_entry(id: &str, entry: &Value) -> bool {
             .as_str()
             .and_then(|date| date.trim().parse::<i64>().ok())
             .is_some()
-        && valid_components
-        && valid_dependents
+        && is_non_empty_string_array(&entry["components"])
+        && entry
+            .get("updateDependents")
+            .is_none_or(|dependents| dependents.is_null() || is_non_empty_string_array(dependents))
 }
 
 pub(crate) fn hash(lane_hash: &str) -> String {
     let mut sha1 = Sha1::new();
     sha1.update(lane_hash.trim().as_bytes());
     sha1.update(b":LaneHistory");
-    format!("{:x}", sha1.finalize())
+    crate::validate::hexadecimal(&sha1.finalize())
 }
 
 fn invalid() -> io::Error {

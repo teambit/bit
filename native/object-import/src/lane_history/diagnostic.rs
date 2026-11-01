@@ -55,19 +55,23 @@ fn local_contains(root: &Path, lane_hash: &str, history_id: &str) -> io::Result<
 
 fn file_remote(root: &Path, global: &Path, scope: &str) -> io::Result<bool> {
     let local = document(&crate::scope_path(root).join("scope.json"))?;
+    if let Some(host) = local["remotes"]
+        .get(scope)
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+    {
+        return Ok(host
+            .strip_prefix("file://")
+            .is_some_and(|path| !path.trim().is_empty()));
+    }
     let global = match document(global) {
         Ok(value) => value,
         Err(error) if error.kind() == io::ErrorKind::NotFound => Value::Null,
         Err(error) => return Err(error),
     };
-    let host = local["remotes"]
+    let host = global["remotes"]
         .get(scope)
-        .filter(|value| {
-            value
-                .as_str()
-                .is_some_and(|text| !text.trim().is_empty())
-        })
-        .or_else(|| global["remotes"].get(scope))
         .unwrap_or_else(|| &global[scope]);
     Ok(host
         .as_str()

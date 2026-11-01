@@ -24,12 +24,12 @@ pub(super) fn dependents(
 }
 
 fn build_reverse(readset: &mut Readset, index: &Value) -> io::Result<Reverse> {
-    let mut reverse = Reverse::new();
-    for row in index["components"]
+    let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
-        .ok_or_else(|| invalid("component index"))?
-    {
+        .ok_or_else(|| invalid("component index"))?;
+    let mut reverse = Reverse::with_capacity(rows.len());
+    for row in rows {
         if row["isSymlink"] == true {
             continue;
         }
@@ -60,12 +60,13 @@ fn add_component(
     let mut seen = IndexSet::new();
     let tags = crate::tag_index::TagIndex::model(model);
     while let Some(version_hash) = queue.pop_front() {
-        if !seen.insert(version_hash.clone()) {
+        if seen.contains(version_hash.as_str()) {
             continue;
         }
-        if seen.len() > 4096 {
+        if seen.len() >= 4096 {
             return Err(invalid("component version graph budget"));
         }
+        seen.insert(version_hash.clone());
         let version = match readset.read(&version_hash, "Version") {
             Ok(value) => value,
             Err(error) if error.kind() == io::ErrorKind::NotFound => continue,

@@ -143,26 +143,33 @@ impl State {
         Ok((retained, false, !removed.is_empty()))
     }
 }
+fn parse_raw_identity(raw: &str) -> Identity {
+    let raw = raw
+        .trim()
+        .split('@')
+        .next()
+        .unwrap_or(raw)
+        .trim();
+    let (scope, name) = raw
+        .split_once('/')
+        .map_or((None, raw), |(scope, name)| {
+            let scope = scope.trim();
+            ((!scope.is_empty()).then(|| scope.to_owned()), name.trim())
+        });
+    Identity { scope, name: name.to_owned() }
+}
 fn identity(entry: &Value) -> io::Result<Identity> {
     let id = entry.get("id").ok_or_else(|| invalid("missing unmerged identity"))?;
-    let mut identity = if let Some(raw) = id.as_str() {
-        let raw = raw
-            .trim()
-            .split('@')
-            .next()
-            .unwrap_or(raw)
-            .trim();
-        let (scope, name) = raw
-            .split_once('/')
-            .map_or((None, raw), |(scope, name)| (Some(scope.to_owned()), name));
-        Identity { scope, name: name.to_owned() }
+    let identity = if let Some(raw) = id.as_str() {
+        parse_raw_identity(raw)
     } else {
-        serde_json::from_value(id.clone()).map_err(io::Error::other)?
+        let mut parsed: Identity = serde_json::from_value(id.clone()).map_err(io::Error::other)?;
+        parsed.name = parsed.name.trim().to_owned();
+        parsed.scope = parsed.scope
+            .map(|scope| scope.trim().to_owned())
+            .filter(|scope| !scope.is_empty());
+        parsed
     };
-    identity.name = identity.name.trim().to_owned();
-    identity.scope = identity.scope
-        .map(|scope| scope.trim().to_owned())
-        .filter(|scope| !scope.is_empty());
     if identity.name.is_empty()
         || identity.name.len() > 4096
         || identity.name.contains('\0')
