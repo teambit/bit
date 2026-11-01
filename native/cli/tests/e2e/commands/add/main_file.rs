@@ -1,4 +1,4 @@
-//! Main-file resolution and case-sensitivity tests for the native `bit add` command.
+//! End-to-end main-file resolution and case-sensitivity tests for the native `bit add` command.
 
 use super::support::{compare, workspace};
 use crate::helper::config;

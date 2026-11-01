@@ -1,4 +1,4 @@
-//! Unit tests for `bit status` option parsing and status section report formatting.
+//! Unit tests for `bit status` [`Flags`] option parsing ([`parse`]) and status section [`report`] formatting.
 
 use super::{Flags, parse, report};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};

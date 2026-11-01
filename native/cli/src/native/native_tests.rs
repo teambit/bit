@@ -1,4 +1,4 @@
-//! Unit tests for formatting native-to-Node.js fallback trace warnings.
+//! Unit tests for formatting native-to-Node.js fallback trace warnings ([`fallback_message`]).
 
 use super::fallback_message;
 

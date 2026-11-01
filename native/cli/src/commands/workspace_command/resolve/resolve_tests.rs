@@ -1,4 +1,4 @@
-//! Unit tests for target pattern selection, preparation receipt validation, and squash/auto-snap log attachment.
+//! Unit tests for target pattern selection ([`pattern_ids`]), preparation receipt validation ([`validate_preparation`]), and [`squash_logs`] / [`auto_snap_report`] attachment.
 
 use super::{
     Kind,

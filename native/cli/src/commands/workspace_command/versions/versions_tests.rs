@@ -1,4 +1,4 @@
-//! Unit tests for `bit snap` and `bit tag` version-bump and auto-dependent report formatting.
+//! Unit tests for `bit snap` ([`SNAP`]) and `bit tag` ([`TAG`]) version-bump and auto-dependent report formatting ([`format`]).
 
 use super::{SNAP, TAG, format};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};

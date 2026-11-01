@@ -1,4 +1,4 @@
-//! Unit tests for bare-scope `VersionHistory` atomic publication, trash moves, and ancestry checks.
+//! Unit tests for bare-scope `VersionHistory` [`Plan`] atomic publication, trash moves, and ancestry checks.
 
 use super::{Plan, fs};
 

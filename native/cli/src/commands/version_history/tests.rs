@@ -1,4 +1,4 @@
-//! Unit tests for `bit version-history` subcommand and flag parsing.
+//! Unit tests for `bit version-history` [`Subcommand`] and flag parsing ([`parse_subcommand`]).
 
 use super::{Subcommand, parse_subcommand};
 

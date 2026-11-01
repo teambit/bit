@@ -1,4 +1,4 @@
-//! Unit tests for replacing `file:` workspace dependency specifiers with component versions in [`Replacer`].
+//! Unit tests for replacing `file:` [`WorkspaceComponent`] dependency specifiers with component versions in [`Replacer`].
 
 use super::{Replacer, WorkspaceComponent};
 

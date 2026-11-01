@@ -1,4 +1,4 @@
-//! End-to-end error parity tests for `bit add` with invalid IDs, individual files, outside paths, and nested component paths.
+//! End-to-end error parity tests for `bit add` with invalid IDs, individual files, outside paths, and nested component directories.
 
 use super::support::{compare, workspace};
 #[test]

@@ -1,4 +1,4 @@
-//! Unit tests for aspect configuration origin precedence and variant specificity rules.
+//! Unit tests for aspect configuration origin precedence and variant specificity rules ([`RESOLVER`]).
 
 use serde_json::{Value, json};
 

@@ -1,4 +1,4 @@
-//! Original `bit add` command grammar, tracking, main-file, embedded-scope, and ignore contracts.
+//! End-to-end tests for original `bit add` command grammar, tracking, main-file, embedded-scope, and ignore contracts.
 pub(crate) mod support;
 
 mod cleanup;

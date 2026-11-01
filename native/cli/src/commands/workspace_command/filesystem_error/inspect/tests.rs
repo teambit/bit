@@ -1,4 +1,4 @@
-//! Error property strings retain Node's quote selection and control-character escaping (`util.inspect`).
+//! Error property strings retain Node's quote selection and control-character escaping (`util.inspect` parity).
 use std::process::Command;
 
 #[test]

@@ -1,4 +1,4 @@
-//! `bit diff` inputs the native command leaves to the Node.js CLI, each for
+//! Integration tests for `bit diff` inputs the native command leaves to the Node.js CLI, each for
 //! its traced reason (including unresolved patterns, workspace checks, and missing host package).
 
 use std::{

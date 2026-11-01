@@ -1,4 +1,4 @@
-//! Unit tests for component head proof validation and external dependency vertex checks.
+//! Unit tests for [`Component`] head proof validation ([`ordinary_heads_for`]) and [`external_vertices`] dependency checks.
 
 use super::{Component, external_vertices, ordinary_heads_for, versioned};
 use serde_json::{Value, json};

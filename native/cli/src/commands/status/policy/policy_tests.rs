@@ -1,4 +1,4 @@
-//! Unit tests for component ID package-name conversion and pending extension config projection.
+//! Unit tests for component ID [`package_name`] conversion and pending extension config projection.
 
 use super::names::package_name;
 use serde_json::json;

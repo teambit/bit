@@ -1,4 +1,4 @@
-//! Unit tests for `bit templates` option parsing and workspace/component template catalog formatting.
+//! Unit tests for `bit templates` [`Options`] parsing ([`parse_options`]) and workspace/component template catalog formatting ([`select_templates`], [`format_templates_report`]).
 
 use super::{
     Options, can_use_builtin_workspace_templates,

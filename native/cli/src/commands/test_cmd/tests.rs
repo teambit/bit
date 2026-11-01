@@ -1,4 +1,4 @@
-//! Unit tests for `bit test` option parsing and fast workspace classification.
+//! Unit tests for `bit test` [`Options`] parsing ([`parse_options`]) and [`FastOutcome`] workspace classification ([`classify_workspace`]).
 
 use super::{FastOutcome, Options, classify_workspace, parse_options};
 use crate::commands::color::Chalk;

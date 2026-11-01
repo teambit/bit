@@ -1,4 +1,4 @@
-//! Unit tests for tag/snap build, skip-tests, skip-tasks, and editor workflow flag parsing.
+//! Unit tests for [`Kind::Tag`] and [`Kind::Snap`] build, skip-tests, skip-tasks, and editor workflow flag parsing ([`parse`]).
 
 use super::parse;
 use crate::commands::workspace_command::resolve::Kind;

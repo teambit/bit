@@ -1,4 +1,4 @@
-//! Unit tests for `bit version-history show` topological ordering and text rendering.
+//! Unit tests for `bit version-history show` topological ordering and text [`render`]ing.
 
 use super::{Chalk, render};
 use serde_json::json;

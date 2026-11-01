@@ -1,4 +1,4 @@
-//! Unit tests for `bit validate` option parsing, workspace classification, and source/type checks.
+//! Unit tests for `bit validate` [`Options`] parsing ([`parse_options`]), [`FastOutcome`] workspace classification ([`classify_workspace`]), and source/type checks ([`check_ts_content`], [`lint_source_content`]).
 
 use super::{
     Chalk, FastOutcome, Options, classify_workspace,

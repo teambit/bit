@@ -1,4 +1,4 @@
-//! Unit tests for `bit uninstall` positional package argument extraction.
+//! Unit tests for `bit uninstall` positional package argument extraction ([`parse_arguments`]).
 
 use super::parse_arguments;
 use std::ffi::OsString;

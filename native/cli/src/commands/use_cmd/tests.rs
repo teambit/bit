@@ -1,4 +1,4 @@
-//! Unit tests for `bit use` target parsing and configured aspect detection.
+//! Unit tests for `bit use` target parsing ([`parse_target`]) and configured aspect detection ([`is_extension_configured`]).
 
 use super::{is_extension_configured, parse_target};
 use serde_json::json;

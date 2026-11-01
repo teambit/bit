@@ -1,4 +1,4 @@
-//! Unit tests for `teambit.component/remove` extension configuration validation.
+//! Unit tests for `teambit.component/remove` extension configuration validation ([`validate_removal_config`]).
 
 use super::validate_removal_config;
 use serde_json::json;

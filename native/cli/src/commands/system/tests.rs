@@ -1,4 +1,4 @@
-//! Unit tests for `bit system` subcommand parsing and unrecognized-subcommand errors.
+//! Unit tests for `bit system` [`Parsed`] subcommand parsing ([`parse_args`]) and unrecognized-subcommand errors ([`format_unrecognized`]).
 
 use super::{Chalk, Parsed, format_unrecognized, parse_args};
 use std::ffi::OsString;

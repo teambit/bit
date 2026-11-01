@@ -1,4 +1,4 @@
-//! Unit tests for `bit switch` empty-workspace and fetched-head report formatting.
+//! Unit tests for `bit switch` empty-workspace and fetched-head [`Options`] report formatting ([`format`]).
 
 use super::{Chalk, Options, format};
 use crate::commands::test_support::expected_success_symbols;
