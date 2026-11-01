@@ -124,6 +124,7 @@ impl Inventory {
                     .map(|pattern| pattern.trim())
                     .filter(|pattern| !pattern.is_empty() && !pattern.starts_with('#'))
                     .map(|pattern| rebase::pattern(pattern, &row.directory))
+                    .filter(|rebased| !rebased.is_empty())
             })
             .collect();
         // Compiled in this order: the regex cache is shared.

@@ -17,7 +17,10 @@ use serde_json::{Value, json};
 use std::{env, ffi::OsString, io};
 
 pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
-    let Some(options) = super::super::switch::import_options(&argv[2..]) else {
+    let Some(options) = argv
+        .get(2..)
+        .and_then(super::super::switch::import_options)
+    else {
         return Ok(Outcome::Declined("outside the native lane import grammar".into()));
     };
     let cwd = env::current_dir()?;
@@ -36,7 +39,9 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         Ok(current) => current,
         Err(error) => return Ok(Outcome::Declined(format!("lane import: {error}"))),
     };
-    if current["name"] == "main" || current.as_str() == Some("main") {
+    if current["name"].as_str().map(str::trim) == Some("main")
+        || current.as_str().map(str::trim) == Some("main")
+    {
         return super::super::switch::lane_import(args, argv);
     }
     let providers = bootstrap(&root)?;

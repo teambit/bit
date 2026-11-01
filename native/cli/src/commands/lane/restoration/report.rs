@@ -121,8 +121,10 @@ fn project_statuses(components: Option<&mut Value>, chalk: Chalk) -> io::Result<
 }
 
 pub(super) fn merge(first: &mut Value, second: &Value) -> io::Result<()> {
+    let obj =
+        first.as_object_mut().ok_or_else(|| io::Error::other("lane history checkout result"))?;
     for key in ["components", "addedComponents"] {
-        let mut rows = first
+        let mut rows = obj
             .get(key)
             .and_then(Value::as_array)
             .cloned()
@@ -134,10 +136,7 @@ pub(super) fn merge(first: &mut Value, second: &Value) -> io::Result<()> {
                 .cloned()
                 .unwrap_or_default(),
         );
-        first
-            .as_object_mut()
-            .ok_or_else(|| io::Error::other("lane history checkout result"))?
-            .insert(key.into(), Value::Array(rows));
+        obj.insert(key.into(), Value::Array(rows));
     }
     Ok(())
 }

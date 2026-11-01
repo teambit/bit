@@ -90,7 +90,7 @@ fn component(value: &Value, hash: &str) -> io::Result<Value> {
         .as_str()
         .map(str::trim)
         .filter(|scope| !scope.is_empty());
-    Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":false,"hash":hash}))
+    Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":false,"hash":hash.trim()}))
 }
 
 fn lane(value: &Value, hash: &str) -> io::Result<Value> {
@@ -105,5 +105,5 @@ fn lane(value: &Value, hash: &str) -> io::Result<Value> {
             .as_str()
             .map_or_else(|| scope.clone(), |text| json!(text.trim()));
     }
-    Ok(json!({"id":id,"hash":hash}))
+    Ok(json!({"id":id,"hash":hash.trim()}))
 }

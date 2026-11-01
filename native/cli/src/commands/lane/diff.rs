@@ -182,8 +182,8 @@ fn inspect_component(
     chalk: Chalk,
 ) -> io::Result<Step> {
     let objects_dir = bit_object_import::scope_path(root).join("objects");
-    let id = text(component.get("id"))?;
-    let to_head = text(component.get("head"))?;
+    let id = text(component.get("id"))?.trim();
+    let to_head = text(component.get("head"))?.trim();
     let Some(from_head) = find_model(models, id)
         .filter(|_| has_object(&objects_dir, to_head))
         .and_then(|model| resolve_from_head(from_lane, model, id))

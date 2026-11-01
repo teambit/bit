@@ -58,6 +58,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 !matches!(
                     val.to_string_lossy()
                         .trim()
+                        .trim_matches(['"', '\''])
+                        .trim()
                         .to_ascii_lowercase()
                         .as_str(),
                     "" | "0" | "false" | "no" | "off",

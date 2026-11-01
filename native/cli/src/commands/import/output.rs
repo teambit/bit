@@ -96,7 +96,7 @@ pub(super) fn validate_lane_groups(prepared: &Value, options: &Options) -> io::R
         || counts
             .iter()
             .filter_map(Value::as_u64)
-            .sum::<u64>()
+            .fold(0u64, u64::saturating_add)
             != rows.len() as u64
     {
         return Err(io::Error::other("native inbound lane groups"));

@@ -23,20 +23,21 @@ pub(super) fn values<'a>(args: &[&'a str]) -> Option<Values<'a>> {
     let mut values = Values { args: Vec::new(), write_deps: None, dependents_via: None };
     let mut arguments = args.iter().copied();
     while let Some(argument) = arguments.next() {
-        if argument == "--" {
+        let trimmed_arg = argument.trim();
+        if trimmed_arg == "--" {
             values.args.push("--");
             values.args.extend(arguments);
             break;
         }
-        if let Some(handled) = inline_value(&mut values, argument) {
+        if let Some(handled) = inline_value(&mut values, trimmed_arg) {
             handled?;
             continue;
         }
-        let field = match argument {
+        let field = match trimmed_arg {
             "--write-deps" => &mut values.write_deps,
             "--dependents-via" => &mut values.dependents_via,
-            value => {
-                values.args.push(value);
+            _ => {
+                values.args.push(argument);
                 continue;
             }
         };

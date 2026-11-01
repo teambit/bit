@@ -91,10 +91,14 @@ impl Planned {
 }
 
 fn has_active_lane(value: &Value) -> bool {
-    value
-        .as_str()
-        .or_else(|| value.get("name").and_then(Value::as_str))
-        .or_else(|| value.get("id").and_then(Value::as_str))
-        .map(str::trim)
-        .is_some_and(|name| !name.is_empty() && name != "main" && !name.ends_with("/main"))
+    [
+        value.as_str(),
+        value.get("name").and_then(Value::as_str),
+        value.get("id").and_then(Value::as_str),
+    ]
+    .into_iter()
+    .flatten()
+    .map(str::trim)
+    .find(|name| !name.is_empty())
+    .is_some_and(|name| name != "main" && !name.ends_with("/main"))
 }

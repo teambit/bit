@@ -59,7 +59,7 @@ pub(super) fn valid_name(name: &str) -> io::Result<String> {
                 || "$-_!".contains(*character)
         })
         .collect::<String>();
-    if name.is_empty() {
+    if name.trim_matches('.').is_empty() {
         return Err(io::Error::other(
             "scope name created by directory name have to contains at least one character or number",
         ));

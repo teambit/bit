@@ -147,6 +147,8 @@ pub(super) fn yn(value: &str) -> bool {
     matches!(
         value
             .trim()
+            .trim_matches(['"', '\''])
+            .trim()
             .to_ascii_lowercase()
             .as_str(),
         "true" | "1" | "yes" | "y" | "on",

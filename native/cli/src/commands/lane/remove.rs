@@ -82,8 +82,11 @@ fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
             let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
         })
 }
 
@@ -93,8 +96,8 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
     let mut silent = false;
     let mut remote = false;
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
-        match arg {
+    while let Some(raw_arg) = iter.next() {
+        match raw_arg.trim() {
             "--" => {
                 consume_trailing_remove_names(iter, &mut names)?;
                 break;
@@ -107,12 +110,12 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
             "--silent=false" => silent = false,
             "-r" | "--remote" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
-            name if !name.trim().starts_with('-')
-                && !name.trim().is_empty()
-                && name.trim().len() <= 256
+            name if !name.starts_with('-')
+                && !name.is_empty()
+                && name.len() <= 256
                 && names.len() < 32 =>
             {
-                names.push(name.trim().to_owned());
+                names.push(name.to_owned());
             }
             short => apply_remove_short_bundle(short, &mut force, &mut silent, &mut remote)?,
         }

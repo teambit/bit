@@ -53,14 +53,14 @@ fn legacy_links_json(items: &[ComponentLinkItem]) -> Vec<Value> {
                 .iter()
                 .map(|link| {
                     json!({
-                        "from": link.from,
-                        "to": link.to,
+                        "from": link.from.trim(),
+                        "to": link.to.trim(),
                         "existsBefore": link.exists_before,
                     })
                 })
                 .collect();
             json!({
-                "id": item.id,
+                "id": item.id.trim(),
                 "bound": bound,
             })
         })
@@ -72,7 +72,7 @@ fn codemods_json(items: &[CodemodResult]) -> Vec<Value> {
         .iter()
         .map(|item| {
             json!({
-                "id": item.id,
+                "id": item.id.trim(),
                 "changedFiles": item.changed_files,
                 "warnings": [],
             })

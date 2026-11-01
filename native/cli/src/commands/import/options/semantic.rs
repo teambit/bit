@@ -16,7 +16,8 @@ fn directories(options: &Options) -> Option<&'static str> {
     }
     options.write.path
         .as_deref()
-        .filter(|path| !path.trim().is_empty())
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .map(|_| "--path and --write-to-empty-dir cannot be used together")
 }
 fn missing_ids(options: &Options) -> Option<&'static str> {

@@ -341,6 +341,7 @@ fn read_flattened_edges(
 
 fn parse_dep_item(item: &Value) -> Option<String> {
     item.as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())
         .map(str::to_owned)
         .or_else(|| format_dep_id(item))
@@ -349,11 +350,15 @@ fn parse_dep_item(item: &Value) -> Option<String> {
 fn parse_edge_item(item: &Value) -> Option<(String, String, String)> {
     if let Some(arr) = item.as_array() {
         let [src, dst, edge_type] = arr.as_slice() else { return None };
-        return Some((parse_dep_item(src)?, parse_dep_item(dst)?, edge_type.as_str()?.to_owned()));
+        let kind = edge_type
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())?;
+        return Some((parse_dep_item(src)?, parse_dep_item(dst)?, kind.to_owned()));
     }
-    Some((
-        parse_dep_item(&item["source"])?,
-        parse_dep_item(&item["target"])?,
-        item["type"].as_str()?.to_owned(),
-    ))
+    let kind = item["type"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())?;
+    Some((parse_dep_item(&item["source"])?, parse_dep_item(&item["target"])?, kind.to_owned()))
 }

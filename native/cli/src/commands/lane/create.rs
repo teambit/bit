@@ -25,10 +25,13 @@ struct Options<'a> {
 fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let mut options = Options { name: "", scope: None, alias: None, fork_lane_new_scope: false };
     let mut rest = args.iter().copied();
-    while let Some(arg) = rest.next() {
+    while let Some(raw_arg) = rest.next() {
+        let arg = raw_arg.trim();
         if arg == "--" {
-            rest.all(|name| !name.starts_with('-') && set_lane_name(&mut options.name, name))
-                .then_some(())?;
+            rest.all(|name| {
+                !name.trim().starts_with('-') && set_lane_name(&mut options.name, name)
+            })
+            .then_some(())?;
             break;
         }
         let ok = if arg.starts_with('-') {

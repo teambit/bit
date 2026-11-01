@@ -190,7 +190,8 @@ impl Read {
     }
 
     fn inline_flag(&mut self, raw_flag: &str, value: &str, allow_extra: bool) -> Option<()> {
-        let flag = lane_alias(raw_flag);
+        let flag = lane_alias(raw_flag.trim());
+        let value = value.trim();
         if is_boolean_flag(flag, allow_extra) {
             match value {
                 "true" if !self.has(flag) => self.flags.push(flag.to_string()),
@@ -245,7 +246,7 @@ fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
     let mut read = Read::default();
     let mut index = 0;
     while index < args.len() {
-        let arg = lane_alias(args[index]);
+        let arg = lane_alias(args[index].trim());
         index += 1;
         if arg == "--" {
             read.trailing_positionals(&args[index..])?;

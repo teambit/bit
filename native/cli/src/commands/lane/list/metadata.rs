@@ -42,15 +42,15 @@ pub(in crate::commands::lane::list) fn lane(
     if value["schema"] != DELETED_DATA_SCHEMA {
         return Err(decline("a lane Node migrates to record deleted components"));
     }
-    let name = text(value.get("name"))?;
-    let scope = text(value.get("scope"))?;
+    let name = text(value.get("name"))?.trim();
+    let scope = text(value.get("scope"))?.trim();
     let components = array(value.get("components"), "lane components")?
         .iter()
         .filter(|component| component["isDeleted"] != true)
         .map(|component| {
             Ok(json!({
                 "id": scoped_id(&component["id"])?,
-                "head": text(component.get("head"))?,
+                "head": text(component.get("head"))?.trim(),
             }))
         })
         .collect::<io::Result<Vec<_>>>()?;

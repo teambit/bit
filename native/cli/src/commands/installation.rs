@@ -188,6 +188,7 @@ impl Installer {
                 .iter()
                 .filter_map(|id| {
                     let (name, version) = id.trim().rsplit_once('@')?;
+                    let (name, version) = (name.trim(), version.trim());
                     (!name.is_empty() && !version.is_empty()).then(|| {
                         (name.to_string(), version.to_string())
                     })

@@ -139,7 +139,11 @@ pub(in crate::commands::lane) fn project(row: &Value) -> io::Result<LaneData> {
         .ok_or_else(|| io::Error::other("HTTP lane id"))?
         .clone();
     let components = array(row.get("components"), "HTTP lane components")?.to_vec();
-    let main = id["name"].as_str().map(str::trim) == Some("main");
+    let main = id["name"]
+        .as_str()
+        .or_else(|| id.as_str())
+        .map(str::trim)
+        == Some("main");
     Ok(LaneData {
         id,
         alias: None,

@@ -235,6 +235,18 @@ impl Terminal {
 
 pub(in crate::commands) struct JsHost(Arc<Host>, bool);
 
+impl JsHost {
+    fn flush_stdout(&self) -> io::Result<()> {
+        let output = self.0.take_stdout();
+        if !self.1 && !output.is_empty() {
+            let mut stdout = io::stdout().lock();
+            stdout.write_all(output.as_bytes())?;
+            stdout.flush()?;
+        }
+        Ok(())
+    }
+}
+
 #[async_trait]
 impl bit_install::Host for JsHost {
     async fn prepare_build_scripts_path(&self) -> io::Result<Option<String>> {
@@ -253,12 +265,7 @@ impl bit_install::Host for JsHost {
         let result =
             self.call::<Value>("switchInstallationComponents", json!({"phase":phase,"ids":ids}))
                 .await;
-        let output = self.0.take_stdout();
-        if !self.1 {
-            let mut stdout = io::stdout().lock();
-            stdout.write_all(output.as_bytes())?;
-            stdout.flush()?;
-        }
+        self.flush_stdout()?;
         result.map(Some)
     }
 
@@ -287,12 +294,7 @@ impl bit_install::Host for JsHost {
         let receipt =
             self.call::<Value>("historyInstallationComponents", json!({"aspectIds":aspect_ids}))
                 .await;
-        let output = self.0.take_stdout();
-        if !self.1 {
-            let mut stdout = io::stdout().lock();
-            stdout.write_all(output.as_bytes())?;
-            stdout.flush()?;
-        }
+        self.flush_stdout()?;
         match &receipt?["error"] {
             Value::Null => Ok(true),
             Value::String(message) if !message.trim().is_empty() => {
@@ -307,12 +309,7 @@ impl bit_install::Host for JsHost {
             return Ok(None);
         }
         let result = self.call::<Value>("switchInstallSubscribers", request.clone()).await;
-        let output = self.0.take_stdout();
-        if !self.1 {
-            let mut stdout = io::stdout().lock();
-            stdout.write_all(output.as_bytes())?;
-            stdout.flush()?;
-        }
+        self.flush_stdout()?;
         let result = result?;
         Ok((!result.is_null()).then_some(result))
     }
@@ -320,12 +317,7 @@ impl bit_install::Host for JsHost {
     async fn configured_aspect_classes(&self) -> io::Result<()> {
         if lane_installation() {
             let result = self.call::<Value>("switchConfiguredAspectClasses", json!({})).await;
-            let output = self.0.take_stdout();
-            if !self.1 {
-                let mut stdout = io::stdout().lock();
-                stdout.write_all(output.as_bytes())?;
-                stdout.flush()?;
-            }
+            self.flush_stdout()?;
             result?;
         }
         Ok(())

@@ -284,5 +284,8 @@ fn ordered_ids(ids: &[String], order: &[String]) -> io::Result<Vec<String>> {
 }
 fn bare_id(raw: &str) -> &str {
     let trimmed = raw.trim();
-    trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
+    match trimmed.rsplit_once('@') {
+        Some((base, _)) if !base.trim().is_empty() => base.trim(),
+        _ => trimmed,
+    }
 }

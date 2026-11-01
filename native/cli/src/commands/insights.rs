@@ -58,8 +58,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut opts = Options::default();
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
-        match arg {
+    while let Some(raw_arg) = iter.next() {
+        match raw_arg.trim() {
             "--" => {
                 consume_trailing_insight_names(iter, &mut opts.names)?;
                 break;

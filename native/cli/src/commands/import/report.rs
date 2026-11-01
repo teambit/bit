@@ -99,9 +99,9 @@ fn details_row(row: &Value) -> io::Result<Details> {
     let map = object(row)?;
     let versions: Vec<String> = array(map.get("versions"), "versions")?
         .iter()
-        .map(|version| text(Some(version)).map(str::to_string))
+        .map(|version| text(Some(version)).map(|ver| ver.trim().to_string()))
         .collect::<io::Result<_>>()?;
-    let status = text(map.get("status"))?;
+    let status = text(map.get("status"))?.trim();
     let latest = map.get("latestVersion").unwrap_or(&Value::Null);
     let removed = map.get("removed");
     let conflicts = conflict_paths(map.get("filesStatus"))?;
@@ -109,7 +109,7 @@ fn details_row(row: &Value) -> io::Result<Details> {
         && versions.len() <= 4096
         && versions
             .iter()
-            .all(|version| version.len() <= 256)
+            .all(|version| !version.is_empty() && version.len() <= 256)
         && (latest.is_null() || latest.is_string())
         && map
             .get("filesStatus")

@@ -129,8 +129,8 @@ fn handle_outside_workspace(
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options { pattern: None, revert: false, list: false, json: false };
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
-        match arg {
+    while let Some(raw_arg) = iter.next() {
+        match raw_arg.trim() {
             "--" => {
                 consume_trailing_internalize(iter, &mut options.pattern)?;
                 break;

@@ -280,7 +280,7 @@ fn sort_outdated_desc(outdated: &mut [OutdatedVersion]) -> Option<()> {
     let mut parsed = Vec::with_capacity(outdated.len());
     for item in outdated.iter() {
         let (_, ver) = item.version.rsplit_once('@')?;
-        parsed.push(node_semver::Version::parse(ver).ok()?);
+        parsed.push(node_semver::Version::parse(ver.trim()).ok()?);
     }
     let mut indexed: Vec<(node_semver::Version, OutdatedVersion)> = parsed
         .into_iter()

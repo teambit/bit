@@ -111,6 +111,15 @@ fn uses_workspace_config_files(options: &Options) -> bool {
     options.flags.external_pm
         || options.defaults.directory
             .as_deref()
-            .map(|value| value.trim().trim_start_matches("./"))
-            .is_some_and(|value| value.starts_with("bit-components"))
+            .map(|value| {
+                value
+                    .trim()
+                    .trim_start_matches("./")
+                    .trim_start_matches(r".\")
+            })
+            .is_some_and(|value| {
+                value == "bit-components"
+                    || value.starts_with("bit-components/")
+                    || value.starts_with(r"bit-components\")
+            })
 }

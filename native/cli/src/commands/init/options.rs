@@ -43,7 +43,7 @@ pub(super) fn parse(args: &[OsString]) -> Option<Options> {
         .map(|arg| arg.to_str())
         .peekable();
     while let Some(arg) = args.next() {
-        let arg = arg?;
+        let arg = arg?.trim();
         if arg == "--" {
             consume_trailing_init_path(args, &mut options)?;
             break;
@@ -119,7 +119,7 @@ fn required<'a>(args: &mut impl Iterator<Item = Option<&'a str>>) -> Option<Stri
 
 fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
     let (key, val) = arg.split_once('=')?;
-    let val = val.trim();
+    let (key, val) = (key.trim(), val.trim());
     match key {
         "--bare" | "-b" => {
             options.bare = Some(val.to_owned());

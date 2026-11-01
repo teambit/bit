@@ -247,21 +247,20 @@ fn id_is_modified(
 
 fn bitmap_component_id(rows: &serde_json::Map<String, Value>, id: &str) -> Option<String> {
     let id = id.trim();
-    let without_ver = match id.rsplit_once('@') {
-        Some((base, _)) if !base.trim().is_empty() => base.trim(),
-        _ => id,
-    };
+    let without_ver = id
+        .rsplit_once('@')
+        .filter(|(base, _)| !base.trim().is_empty())
+        .map_or(id, |(base, _)| base.trim());
     let (requested_scope, name) = without_ver.split_once('/')?;
     let (requested_scope, name) = (requested_scope.trim(), name.trim());
     let (key, row) = rows
         .iter()
         .find(|(key, row)| bitmap_row_matches_scope_name(key, row, requested_scope, name))?;
-    let key_ver = key.rsplit_once('@').map(|(_, ver)| ver.trim());
     let version = row["version"]
         .as_str()
+        .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
         .map(str::trim)
-        .filter(|val| !val.is_empty())
-        .or_else(|| key_ver.filter(|val| !val.is_empty()))?;
+        .filter(|val| !val.is_empty())?;
     Some(format!("{requested_scope}/{name}@{version}"))
 }
 
@@ -271,18 +270,16 @@ fn bitmap_row_matches_scope_name(key: &str, row: &Value, scope: &str, name: &str
         return false;
     }
     let trimmed_key = key.trim();
-    let key_id = trimmed_key.rsplit_once('@').map_or(trimmed_key, |(id, _)| id.trim());
+    let key_id = trimmed_key
+        .rsplit_once('@')
+        .filter(|(id, _)| !id.trim().is_empty())
+        .map_or(trimmed_key, |(id, _)| id.trim());
     let row_name = crate::commands::update_cmd::bitmap_row_name(key, row);
     let row_scope = row["scope"]
         .as_str()
+        .or_else(|| row["defaultScope"].as_str())
         .map(str::trim)
         .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["defaultScope"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())
-        })
         .or_else(|| key_id.split_once('/').map(|(prefix, _)| prefix.trim()));
     row_name.trim() == name && row_scope == Some(scope)
 }

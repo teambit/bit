@@ -122,12 +122,11 @@ fn prepare(root: &std::path::Path, name: &str, alias: &str) -> io::Result<(Value
     };
     let local_name = name.split_once('/').map_or_else(|| name.trim(), |(_, value)| value.trim());
     let alias = alias.trim();
-    if let Some(index) = tracking
-        .iter()
-        .position(|row| row["localLane"].as_str().map(str::trim) == Some(local_name))
-    {
-        tracking.remove(index);
-    }
+    tracking.retain(|row| {
+        row["localLane"].as_str().map(str::trim) != Some(local_name)
+            && !(row["remoteScope"].as_str().map(str::trim) == Some(scope.as_str())
+                && row["remoteLane"].as_str().map(str::trim) == Some(lane_name.as_str()))
+    });
     let data = json!({"localLane":alias,"remoteLane":lane_name,"remoteScope":scope});
     if let Some(existing) = tracking
         .iter_mut()

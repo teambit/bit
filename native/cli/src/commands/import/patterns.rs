@@ -109,27 +109,7 @@ fn matched(list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
 }
 
 fn component_id(component: &Value) -> io::Result<String> {
-    let base = if let Some(id) = component
-        .get("id")
-        .or_else(|| component.get("identity"))
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-    {
-        id.to_owned()
-    } else {
-        let object = component["id"].as_object().ok_or_else(|| decline("remote list id"))?;
-        let name = text(object.get("name"))?.trim();
-        match object
-            .get("scope")
-            .and_then(Value::as_str)
-            .map(str::trim)
-            .filter(|scope| !scope.is_empty())
-        {
-            Some(scope) => format!("{scope}/{name}"),
-            None => name.to_owned(),
-        }
-    };
+    let base = component_base_id(component)?;
     if let Some((prefix, ver)) = base.rsplit_once('@') {
         let (prefix, ver) = (prefix.trim(), ver.trim());
         if !prefix.is_empty() && !ver.is_empty() {
@@ -149,4 +129,32 @@ fn component_id(component: &Value) -> io::Result<String> {
         .filter(|value| !value.is_empty())
         .ok_or_else(|| decline("remote list id"))?;
     Ok(format!("{base}@{version}"))
+}
+
+fn component_base_id(component: &Value) -> io::Result<String> {
+    if let Some(id) = component
+        .get("id")
+        .or_else(|| component.get("identity"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        return Ok(id.to_owned());
+    }
+    let object = component["id"].as_object().ok_or_else(|| decline("remote list id"))?;
+    let name = text(object.get("name"))?.trim();
+    if name.is_empty() {
+        return Err(decline("remote list id"));
+    }
+    Ok(
+        match object
+            .get("scope")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+        {
+            Some(scope) => format!("{scope}/{name}"),
+            None => name.to_owned(),
+        },
+    )
 }

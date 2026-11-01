@@ -16,6 +16,9 @@ pub(super) fn apply(plan: Plan) -> io::Result<()> {
                 {
                     fs::create_dir_all(parent)?;
                 }
+                if fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+                    remove_leaf(&path)?;
+                }
                 fs::write(path, bytes)?;
             }
         }

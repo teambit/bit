@@ -85,7 +85,11 @@ impl Id {
 
     /// `id.toString()`.
     pub fn display(&self) -> String {
-        match self.version.as_deref().filter(|_| self.has_version()) {
+        match self.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|_| self.has_version())
+        {
             Some(version) => format!("{}@{version}", self.without_version()),
             None => self.without_version(),
         }

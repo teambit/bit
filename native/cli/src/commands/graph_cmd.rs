@@ -148,7 +148,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
     while idx < args.len() {
-        if args[idx] == "--" {
+        if args[idx].trim() == "--" {
             consume_trailing_graph_id(&args[idx + 1..], &mut options)?;
             break;
         }
@@ -170,7 +170,7 @@ fn consume_trailing_graph_id(rest: &[&str], options: &mut Options) -> Option<()>
 }
 
 fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
-    let arg = args[*idx];
+    let arg = args[*idx].trim();
     match arg {
         "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
         | "--color=false" | "--color=always" | "--color=never" => {}

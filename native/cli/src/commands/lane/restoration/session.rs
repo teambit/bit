@@ -212,6 +212,7 @@ pub(super) fn render_failure(
     if let Some(callback) = error
         .get_ref()
         .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>())
+        && (!callback.startup.is_empty() || !callback.output.is_empty())
     {
         print!("{}{}", callback.startup, callback.output);
     }

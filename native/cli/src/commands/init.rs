@@ -136,25 +136,16 @@ fn defaults(options: &mut options::Options) -> io::Result<()> {
 }
 
 fn default_option_value(global: &serde_json::Value, key: &str) -> Option<String> {
+    let clean = |raw: &str| {
+        let trimmed = raw
+            .trim()
+            .trim_matches(['"', '\''])
+            .trim();
+        (!trimmed.is_empty()).then(|| trimmed.to_owned())
+    };
     bit_workspace_config::environment_value(key)
-        .map(|val| {
-            val.trim()
-                .trim_matches(['"', '\''])
-                .trim()
-                .to_owned()
-        })
-        .filter(|val| !val.is_empty())
-        .or_else(|| {
-            global[key]
-                .as_str()
-                .map(|val| {
-                    val.trim()
-                        .trim_matches(['"', '\''])
-                        .trim()
-                })
-                .filter(|val| !val.is_empty())
-                .map(str::to_owned)
-        })
+        .and_then(|val| clean(&val))
+        .or_else(|| global[key].as_str().and_then(clean))
 }
 
 fn failure(args: &[OsString], error: &str) -> io::Result<Outcome> {

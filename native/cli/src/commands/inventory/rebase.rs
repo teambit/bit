@@ -11,7 +11,7 @@ pub fn pattern(pattern: &str, dir: &str) -> String {
         Some(body) => (true, body.trim()),
         None => (false, pattern),
     };
-    if body.is_empty() {
+    if body.trim_matches('/').is_empty() {
         return String::new();
     }
     let anchored = body

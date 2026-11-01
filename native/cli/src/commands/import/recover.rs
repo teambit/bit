@@ -28,6 +28,12 @@ pub(in crate::commands) fn recover_probe(
     root: &Path,
     ids: &[String],
 ) -> io::Result<std::collections::BTreeMap<String, bool>> {
+    if ids
+        .iter()
+        .all(|id| id.trim().is_empty())
+    {
+        return Ok(std::collections::BTreeMap::new());
+    }
     let cli = workspace_command::NodeCli::find()?;
     let config = crate::commands::status::cache::cache_root().join("config");
     let transport = serde_json::json!({"globalConfigDir":config,"nodeExecutable":cli.node,"bitDir":cli.bit_dir,"bitVersion":cli.version});

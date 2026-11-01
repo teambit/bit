@@ -288,7 +288,7 @@ fn sorted(value: &Value) -> io::Result<Vec<(&str, &Value)>> {
     rows.sort_by_key(|(_, row)| {
         row["log"]["date"]
             .as_str()
-            .and_then(|date| date.parse::<i64>().ok())
+            .and_then(|date| date.trim().parse::<i64>().ok())
     });
     Ok(rows)
 }
@@ -319,7 +319,10 @@ fn text_rows(rows: &[(String, Value)], single: bool) -> io::Result<String> {
 }
 
 fn text_row(id: &str, row: &Value, single: bool) -> io::Result<String> {
-    let date = row["log"]["date"].as_str().ok_or_else(invalid)?;
+    let date = row["log"]["date"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(invalid)?;
     let millis: i64 = date.parse().map_err(|_| invalid())?;
     let date = chrono::DateTime::from_timestamp_millis(millis)
         .ok_or_else(invalid)?

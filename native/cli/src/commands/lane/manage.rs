@@ -52,10 +52,11 @@ fn parse_lane_target_args<'a>(args: &[&'a str]) -> Option<(&'a str, Option<&'a s
     let mut target = None;
     let mut lane_name = None;
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
+    while let Some(raw_arg) = iter.next() {
+        let arg = raw_arg.trim();
         if arg == "--" {
             for val in iter {
-                (!val.starts_with('-') && set_unique(&mut target, val)).then_some(())?;
+                (!val.trim().starts_with('-') && set_unique(&mut target, val)).then_some(())?;
             }
             break;
         }

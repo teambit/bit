@@ -93,21 +93,24 @@ fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
         context["targets"].as_array().ok_or_else(|| io::Error::other("import cache targets"))?;
     Ok(targets
         .iter()
-        .filter(|row| {
-            row["identity"]
+        .filter(|row| target_bare_id(row).is_some_and(|id| requested.contains(id)))
+        .cloned()
+        .collect())
+}
+
+fn target_bare_id(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .or_else(|| {
+            row["id"]
                 .as_str()
                 .map(str::trim)
                 .filter(|id| !id.is_empty())
-                .or_else(|| {
-                    row["id"]
-                        .as_str()
-                        .map(str::trim)
-                        .filter(|id| !id.is_empty())
-                })
-                .is_some_and(|id| requested.contains(bare(id)))
         })
-        .cloned()
-        .collect())
+        .map(bare)
+        .filter(|id| !id.is_empty())
 }
 
 impl Prepared {
@@ -145,18 +148,7 @@ fn documentation(
     let identities = targets
         .iter()
         .map(|target| {
-            target["identity"]
-                .as_str()
-                .map(str::trim)
-                .filter(|id| !id.is_empty())
-                .or_else(|| {
-                    target["id"]
-                        .as_str()
-                        .map(str::trim)
-                        .filter(|id| !id.is_empty())
-                })
-                .map(bare)
-                .filter(|id| !id.is_empty())
+            target_bare_id(target)
                 .map(str::to_owned)
                 .ok_or_else(|| io::Error::other("import documentation identity"))
         })

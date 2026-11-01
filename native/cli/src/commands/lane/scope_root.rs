@@ -126,11 +126,15 @@ fn diagnose_unscoped_component_error(
 fn row_has_name(row: &Value, bare_id: &str) -> bool {
     let target = bare_id.trim();
     row["id"]["name"].as_str().map(str::trim) == Some(target)
+        || row["name"].as_str().map(str::trim) == Some(target)
         || row["id"]
             .as_str()
             .is_some_and(|id_str| {
                 let trimmed = id_str.trim();
-                let without_ver = trimmed.rsplit_once('@').map_or(trimmed, |(bare, _)| bare.trim());
+                let without_ver = trimmed
+                    .rsplit_once('@')
+                    .filter(|(bare, _)| !bare.trim().is_empty())
+                    .map_or(trimmed, |(bare, _)| bare.trim());
                 without_ver.rsplit_once('/').map_or(without_ver, |(_, nm)| nm.trim()) == target
             })
 }

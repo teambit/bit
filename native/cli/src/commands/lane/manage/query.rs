@@ -80,8 +80,8 @@ fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, boo
     let mut lane_name = None;
     let mut json = false;
     let mut iter = lane_args.iter().copied();
-    while let Some(arg) = iter.next() {
-        match arg {
+    while let Some(raw_arg) = iter.next() {
+        match raw_arg.trim() {
             "--" => {
                 match (iter.next(), iter.next()) {
                     (None, None) => {}

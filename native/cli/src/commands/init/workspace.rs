@@ -121,22 +121,19 @@ fn reset_new(value: &mut Value, lane_only: bool) -> io::Result<()> {
 
 fn reset_component_row(key: &str, row: &Value) -> Value {
     let trimmed_key = key.trim();
-    let key_id = trimmed_key.rsplit_once('@').map_or(trimmed_key, |(id, _)| id.trim());
+    let key_id = trimmed_key
+        .rsplit_once('@')
+        .filter(|(id, _)| !id.trim().is_empty())
+        .map_or(trimmed_key, |(id, _)| id.trim());
     let key_scope = key_id
         .split_once('/')
         .map(|(scope, _)| scope.trim())
         .filter(|scope| !scope.is_empty());
-    let scope = row["scope"]
-        .as_str()
+    let scope = [row["scope"].as_str(), row["defaultScope"].as_str(), key_scope]
+        .into_iter()
+        .flatten()
         .map(str::trim)
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| {
-            row["defaultScope"]
-                .as_str()
-                .map(str::trim)
-                .filter(|scope| !scope.is_empty())
-        })
-        .or(key_scope)
+        .find(|scope| !scope.is_empty())
         .map(str::to_owned);
     let name = row["name"]
         .as_str()
@@ -150,11 +147,7 @@ fn reset_component_row(key: &str, row: &Value) -> Value {
         })
         .to_owned();
     let mut fresh = json!({"name":name,"scope":"","version":"","rootDir":row["rootDir"],"mainFile":row["mainFile"]});
-    if let Some(scope) = scope
-        .as_deref()
-        .map(str::trim)
-        .filter(|scope| !scope.is_empty())
-    {
+    if let Some(scope) = scope.as_deref() {
         fresh["defaultScope"] = json!(scope);
     }
     fresh

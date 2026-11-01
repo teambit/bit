@@ -53,6 +53,7 @@ fn run(host: &Host, payload: &Value, info: &HostInfo) -> io::Result<Continuation
     }
     let path = result["path"]
         .as_str()
+        .map(str::trim)
         .filter(|path| !path.is_empty())
         .ok_or_else(|| io::Error::other("published build-script PATH"))?;
     Ok(Continuation::Resume(run_prepared(prepared, path.to_owned())))

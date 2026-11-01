@@ -308,26 +308,28 @@ fn emit_json(root: &Path, bare: bool, args: &[OsString], lane: &Value) -> io::Re
 
 pub(super) fn show_report(lane: &LaneData, chalk: Chalk) -> io::Result<String> {
     let format = Formatter::new(chalk);
-    let name = lane.id["name"].as_str().unwrap_or_default();
+    let name = lane.id["name"].as_str().map_or("", str::trim);
     let id = if lane.is_main() {
         "main".to_string()
     } else {
-        format!("{}/{name}", text(lane.id.get("scope"))?)
+        format!("{}/{name}", text(lane.id.get("scope"))?.trim())
     };
     Ok(Formatter::join(&[format.title(&id), metadata(lane)?, components_report(lane, &format)]))
 }
 
 fn metadata(lane: &LaneData) -> io::Result<String> {
-    let name = text(lane.id.get("name"))?;
+    let name = text(lane.id.get("name"))?.trim();
     let mut meta = Vec::new();
     if let Some((log, _)) = &lane.lane {
         if !log.is_null() {
             let author = log["username"]
                 .as_str()
+                .map(str::trim)
                 .filter(|value| !value.is_empty())
                 .unwrap_or("N/A");
             let email = log["email"]
                 .as_str()
+                .map(str::trim)
                 .filter(|value| !value.is_empty())
                 .unwrap_or("N/A");
             meta.push(format!("author: {author} <{email}>"));
@@ -335,7 +337,7 @@ fn metadata(lane: &LaneData) -> io::Result<String> {
                 meta.push(created);
             }
         }
-        let scope = text(lane.id.get("scope"))?;
+        let scope = text(lane.id.get("scope"))?.trim();
         meta.push(format!("link: https://bit.cloud/{}/~lane/{name}", scope.replacen('.', "/", 1)));
     }
     Ok(meta.join("\n"))
@@ -344,6 +346,7 @@ fn metadata(lane: &LaneData) -> io::Result<String> {
 fn created(log: &Value) -> io::Result<Option<String>> {
     let Some(date) = log["date"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     else {
         return Ok(None);

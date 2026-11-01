@@ -336,6 +336,13 @@ pub(super) fn read_for_scope(
     Ok((lanes, with_alias(current, &tracking)?))
 }
 
+fn non_empty_str<'a>(val: &'a Value, key: &str) -> Option<&'a str> {
+    val[key]
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn bare_main_components(
     engine: &mut Engine,
     root: &Path,
@@ -347,19 +354,9 @@ fn bare_main_components(
     Ok(models
         .iter()
         .filter_map(|model| {
-            let head = model["head"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())?;
-            let scope = model["scope"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())
-                .unwrap_or(default_scope);
-            let name = model["name"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())?;
+            let head = non_empty_str(model, "head")?;
+            let scope = non_empty_str(model, "scope").unwrap_or(default_scope);
+            let name = non_empty_str(model, "name")?;
             let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
                 .unwrap_or_else(|| head.to_owned());
             Some(json!({"id":format!("{scope}/{name}@{label}"),"head":label}))
@@ -379,13 +376,14 @@ fn main_components(
     let models = array(listed.get("components"), "models")?;
     let mut components = Vec::new();
     for entry in entries {
+        let identity = entry.identity.trim();
         if entry.version.is_none() {
-            components.push(json!({"id": entry.identity, "head": "latest"}));
+            components.push(json!({"id": identity, "head": "latest"}));
             continue;
         }
-        let (entry_scope, entry_name) = entry.identity
+        let (entry_scope, entry_name) = identity
             .split_once('/')
-            .unwrap_or(("", entry.identity.as_str()));
+            .unwrap_or(("", identity));
         let model = models
             .iter()
             .find(|model| {
@@ -394,16 +392,12 @@ fn main_components(
                     && (model_scope.is_empty() || model_scope == entry_scope.trim())
             })
             .ok_or_else(|| decline("a component without a model"))?;
-        let Some(head) = model["head"]
-            .as_str()
-            .map(str::trim)
-            .filter(|val| !val.is_empty())
-        else {
+        let Some(head) = non_empty_str(model, "head") else {
             continue;
         };
         let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
             .unwrap_or_else(|| head.to_owned());
-        components.push(json!({"id": format!("{}@{label}", entry.identity), "head": label}));
+        components.push(json!({"id": format!("{identity}@{label}"), "head": label}));
     }
     Ok(components)
 }

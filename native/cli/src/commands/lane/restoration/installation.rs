@@ -53,7 +53,10 @@ fn compile(
     output: &Output,
 ) -> io::Result<()> {
     let compiled = host.call("switchCompile", &json!({"installationSucceeded":succeeded}));
-    print!("{}", host.take_stdout());
+    let stdout = host.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
     let compiled = compiled?;
     if let Some(error) = compiler_error(&compiled["error"])? {
         let trimmed = error.trim();

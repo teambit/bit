@@ -26,6 +26,9 @@ fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
     let (path, bytes) = file?;
     let relative = path.to_string_lossy().into_owned();
     let path = root.join(path);
+    if fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+        return None;
+    }
     if let Some(parent) = path
         .parent()
         .filter(|dir| !dir.as_os_str().is_empty())

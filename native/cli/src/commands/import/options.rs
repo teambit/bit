@@ -143,7 +143,8 @@ fn split<'a>(args: &[&'a str]) -> Option<(Vec<String>, Vec<&'a str>)> {
     let mut ids = Vec::new();
     let mut flags: Vec<&str> = Vec::new();
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
+    while let Some(raw_arg) = iter.next() {
+        let arg = raw_arg.trim();
         if arg == "--" {
             consume_trailing_import_ids(iter, &mut ids)?;
             break;
@@ -177,7 +178,8 @@ fn consume_trailing_import_ids<'a>(
     iter: impl Iterator<Item = &'a str>,
     ids: &mut Vec<String>,
 ) -> Option<()> {
-    for arg in iter {
+    for raw_arg in iter {
+        let arg = raw_arg.trim();
         (!arg.is_empty()
             && !arg.starts_with('-')
             && arg.len() <= 4096

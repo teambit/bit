@@ -22,13 +22,18 @@ impl Options {
             skip_install: false,
             json: false,
         };
-        let mut iter = args[2..].iter().copied();
+        let mut iter = args
+            .get(2..)
+            .unwrap_or_default()
+            .iter()
+            .copied();
         while let Some(value) = iter.next() {
-            if value == "--" {
+            let trimmed = value.trim();
+            if trimmed == "--" {
                 crate::commands::eject::consume_trailing_eject(iter, &mut options.id)?;
                 break;
             }
-            options.apply_arg(value)?;
+            options.apply_arg(trimmed)?;
         }
         (!options.id.is_empty() && options.id.len() <= 256).then_some(options)
     }
