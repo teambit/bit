@@ -1,4 +1,6 @@
 //! `ResumeExportCmd` pending-object probe, deletion, race and failure reports.
+//!
+//! Formats [`Answers`] and [`failed_lines`] summaries with [`Formatter`].
 use super::deletion::Answers;
 use crate::commands::workspace_command::format::Formatter;
 use indexmap::IndexMap;

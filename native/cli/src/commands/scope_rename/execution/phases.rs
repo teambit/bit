@@ -1,3 +1,6 @@
+//! Initial and final linking, refactoring, and publication phases for `bit scope rename`.
+//!
+//! [`initial`] and follow-up helpers coordinate [`Entries`], [`ProjectedLinker`], and [`Batch`] commits.
 use super::{Batch, Chalk, Entries, ProjectedLinker, Value, json, workspace_command};
 use std::{io, path::Path};
 pub(super) fn initial(

@@ -1,4 +1,6 @@
 //! Native stash orchestration; detached objects precede reset and new-component removal.
+//!
+//! Dispatches `save`, `list`, and `load` subcommands parsed by `options` with [`Startup`] autosync.
 mod options;
 
 use super::{

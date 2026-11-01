@@ -1,5 +1,7 @@
 //! Native `bit snap [component-pattern]`: the engine plans and writes the
-//! snaps (`workspace_command::resolve`), with the snap options and report.
+//! snaps ([`resolve`]), with the snap [`options`] and [`Report`].
+//!
+//! Coordinates [`Startup`] autosync, [`Planned`] execution, and [`versions`] output formatting.
 
 mod options;
 

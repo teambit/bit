@@ -1,4 +1,6 @@
 //! Native `bit scope set <scope-name> [component-pattern]` (`ScopeSetCmd`).
+//!
+//! Updates workspace or component default scopes via [`selection`] and formats a [`Report`].
 
 pub(in crate::commands) mod selection;
 #[cfg(test)]

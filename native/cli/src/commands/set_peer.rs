@@ -1,4 +1,6 @@
 //! Native `bit set-peer <component-id> <range>` and `bit unset-peer <component-id>` (`scopes/dependencies/dependencies/dependencies-cmd.ts`).
+//!
+//! Resolves component entries ([`resolve_component_entry`], [`find_bitmap_row_mut`]) and updates peer dependency configuration.
 
 #[cfg(test)]
 mod tests;

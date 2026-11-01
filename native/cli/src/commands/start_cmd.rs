@@ -1,4 +1,6 @@
 //! Native `bit start [component-pattern]` (`scopes/ui-foundation/ui/start.cmd.tsx`, alias `c`).
+//!
+//! Validates workspace and UI server flags before delegating or reporting into [`Outcome`].
 
 #[cfg(test)]
 mod tests;

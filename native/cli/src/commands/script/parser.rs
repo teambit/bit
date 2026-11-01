@@ -1,4 +1,6 @@
 //! Source-file parser and function evaluator for `env.scripts()` (`Scripts.from(...)`).
+//!
+//! Extracts [`ScriptHandler`] shell commands and log statements from environment source files.
 
 use std::{
     fs,

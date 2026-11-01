@@ -1,4 +1,6 @@
 //! `RemoveCmd`'s local, noninteractive flag grammar.
+//!
+//! Defines [`Options`] and [`parse`] for `bit remove <pattern>` CLI arguments.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Options<'a> {
     pub pattern: &'a str,

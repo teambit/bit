@@ -1,4 +1,4 @@
-//! Native reset of local main and lane histories while preserving working-tree bytes.
+//! Native reset of local main and lane histories ([`LaneBatch`]) while preserving working-tree bytes.
 
 mod main_ext;
 mod reports;

@@ -1,4 +1,6 @@
 //! Native `bit schema <pattern>` (`scopes/semantics/schema/schema.cmd.ts`, alias `api`).
+//!
+//! Dispatches workspace ([`resolve_workspace_schema`]) and bare-scope ([`resolve_scope_schema_json`]) schema queries.
 
 mod extractor;
 #[cfg(test)]

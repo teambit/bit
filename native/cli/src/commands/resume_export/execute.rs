@@ -1,4 +1,6 @@
 //! Validate every configured remote before serial, retryable export persistence.
+//!
+//! Executes [`Plan`] remote actions for [`Options`] and formats the resulting [`Report`].
 use super::Options;
 use crate::{
     commands::{

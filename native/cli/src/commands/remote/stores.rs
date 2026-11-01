@@ -1,4 +1,6 @@
 //! Scope discovery (`findScopePath`), `GlobalRemotes`, and `ScopeJson` persistence for `bit remote`.
+//!
+//! Executes [`Action`] and [`Options`] against scope and global remote stores and formats output with [`table`].
 
 use super::options::{Action, Options};
 use crate::commands::{

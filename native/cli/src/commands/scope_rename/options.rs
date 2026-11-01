@@ -1,3 +1,6 @@
+//! Command-line flag and positional argument parser for `bit scope rename`.
+//!
+//! [`parse`] validates `bit scope rename <current-scope> <new-scope>` flags into [`Options`].
 use bit_object_import::component_scope_rename::Options;
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let filtered: Vec<&str> = args

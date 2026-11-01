@@ -1,4 +1,6 @@
 //! Pure source inventory and eligibility precede Harmony providers and publication.
+//!
+//! Builds [`Prepared`] from [`Plan`], [`Batch`], and [`Engine`] facts for [`Options`].
 use crate::commands::{engine::Engine, workspace_command};
 use bit_install::{config::WorkspaceConfig, workspace::Workspace};
 use bit_object_import::component_rename::{Options, Plan, batch::Batch};

@@ -1,4 +1,6 @@
 //! Native `bit show <component-name>` (`scopes/component/component/show/show.cmd.ts`).
+//!
+//! Coordinates [`remote_show`], [`workspace_show`], `deps`, [`deps_policy`], `render`, and `help`.
 
 pub(crate) mod remote_show;
 

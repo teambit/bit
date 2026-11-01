@@ -1,4 +1,6 @@
 //! Published stash grammar; `--pattern` is a boolean in Bit 2.2.94.
+//!
+//! Defines [`Options`] for `bit stash [save|list|load]` and serializes checkout [`Value`] options.
 use serde_json::{Value, json};
 
 pub(super) enum Options {

@@ -1,4 +1,6 @@
 //! Node recursive removal: try the directory itself before touching its children.
+//!
+//! [`remove`] deletes staged pending directories and files with Node-compatible error semantics.
 use std::{fs, io, path::Path};
 
 pub(super) fn remove(path: &Path) -> io::Result<()> {

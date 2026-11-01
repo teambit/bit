@@ -1,3 +1,6 @@
+//! Command-line flag and positional argument parser for `bit rename`.
+//!
+//! [`parse`] validates `bit rename <current-name> <new-name>` flags into [`Options`].
 use bit_object_import::component_rename::Options;
 
 pub(super) fn parse(argv: &[&str]) -> Option<Options> {

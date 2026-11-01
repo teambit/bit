@@ -1,4 +1,4 @@
-//! Native `bit ripple <sub-command>` (`scopes/cloud/ripple/ripple.cmd.ts`).
+//! Native `bit ripple <sub-command>` (`scopes/cloud/ripple/ripple.cmd.ts`) producing a [`Report`].
 
 #[cfg(test)]
 mod tests;

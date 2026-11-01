@@ -1,4 +1,6 @@
-//! Published TypeScript transformers use private spools; Rust retains every workspace path.
+//! Published `TypeScript` transformers use private spools; Rust retains every workspace path.
+//!
+//! Invokes AST import rewrites through [`ProjectedLinker`] for a component rename [`Plan`].
 use crate::commands::add::ProjectedLinker;
 use bit_object_import::component_rename::Plan;
 use serde_json::json;

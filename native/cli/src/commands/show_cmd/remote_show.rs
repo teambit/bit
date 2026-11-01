@@ -1,4 +1,4 @@
-//! Remote and scope-level component loading for native `bit show`.
+//! Remote and scope-level [`LoadedComponent`] loading for native `bit show` ([`Options`], [`render_remote_outcome`]).
 
 pub(super) use super::render_remote_outcome;
 use super::{

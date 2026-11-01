@@ -1,4 +1,6 @@
 //! Decline startup callbacks and lane hydration before issuing any remote action.
+//!
+//! [`supported`] checks `workspace.jsonc` ([`parse_jsonc`]) and [`Installer`] constraints before effects.
 use crate::commands::installation::Installer;
 use bit_workspace_config::parse_jsonc;
 use serde_json::Value;

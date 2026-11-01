@@ -1,4 +1,6 @@
 //! Configured HTTP actions and native file pending-directory plans; preparation performs no remote requests.
+//!
+//! Coordinates [`startup`], `file`, and `errors` to execute remote export/delete actions into a [`Report`].
 pub(super) mod startup;
 
 mod errors;

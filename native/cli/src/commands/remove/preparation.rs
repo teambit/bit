@@ -1,4 +1,6 @@
 //! Native status classification and metadata receipts for `RemoveMain`.
+//!
+//! Resolves target [`ids`] via [`select_ids`] and prepares [`LocalBatch`] removal plans for [`Options`].
 use super::options::Options;
 use bit_object_import::component_remove::{LocalBatch, select_ids};
 use serde_json::{Value, json};

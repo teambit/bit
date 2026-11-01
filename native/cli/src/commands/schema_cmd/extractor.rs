@@ -1,4 +1,6 @@
 //! Stored schema lookup and workspace pattern matching for `bit schema`.
+//!
+//! Resolves component entries via [`resolve_component_entry`] and [`patterns`] matching.
 
 use crate::{
     commands::{

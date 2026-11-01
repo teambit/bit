@@ -1,4 +1,6 @@
 //! Scalar published remote resolution for read-only native inventory.
+//!
+//! Resolves [`Remotes`] and [`GlobalConfig`] via [`Host`] when needed for read-only remote queries.
 use super::{color::Chalk, status::cache::cache_root};
 use crate::{
     discovery::{self, Target},
