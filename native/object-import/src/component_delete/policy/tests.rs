@@ -1,3 +1,5 @@
+//! Unit tests for active `main` tag selection and dependency graph coverage validation.
+
 use super::{DependencyComponent, latest, validate_graph};
 use serde_json::json;
 

@@ -1,3 +1,5 @@
+//! Unit tests for rebasing retained read proofs across native import writes.
+
 use crate::command_import::capture::Capture;
 use std::{collections::HashMap, fs, path::PathBuf};
 

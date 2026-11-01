@@ -1,3 +1,5 @@
+//! Unit tests for local component batch removal and dependency cleanup.
+
 use super::LocalBatch;
 use serde_json::{Value, json};
 use std::{

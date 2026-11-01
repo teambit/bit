@@ -1,3 +1,5 @@
+//! Unit tests for remote component fork object extraction and error reporting.
+
 use super::{objects, single_error};
 use crate::component_tracking::observe::Observed;
 use bit_client_transfer::tar::ObjectItem;

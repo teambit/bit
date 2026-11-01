@@ -1,3 +1,5 @@
+//! Unit tests for `node-ignore` 3.3.10 regex generation and path filtering against golden cases.
+
 mod golden;
 
 use super::{Ignore, parts, source};

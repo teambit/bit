@@ -1,3 +1,5 @@
+//! Unit tests for retargeting checkout plans across duplicate and new file bodies.
+
 use super::{additions, plan, statuses, wire};
 use serde_json::json;
 use std::path::{Path, PathBuf};

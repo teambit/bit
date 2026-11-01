@@ -1,3 +1,5 @@
+//! Unit tests for component file scanning and ignore rule rebasing.
+
 use super::{super::FileRules, write};
 use crate::workspace::rebase_ignore_pattern;
 use pretty_assertions::assert_eq;

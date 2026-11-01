@@ -1,3 +1,5 @@
+//! Unit tests for detecting aspect environment descriptors (`isUsingAspectEnv`).
+
 use super::aspect_env_ids;
 use crate::{
     model::{ComponentId, WorkspaceComponent},

@@ -1,3 +1,5 @@
+//! Unit tests for cached source object reuse during checkout preflight.
+
 use super::{Directory, frame, pool, store, store_raw};
 use crate::checkout::{cache::State, serve};
 use serde_json::Value;

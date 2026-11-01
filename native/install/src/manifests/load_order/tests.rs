@@ -1,3 +1,5 @@
+//! Unit tests for component load group ordering (`buildLoadGroups`).
+
 use super::load_order;
 use crate::manifests::tests::component;
 use serde_json::json;

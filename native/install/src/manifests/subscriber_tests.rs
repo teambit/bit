@@ -1,3 +1,5 @@
+//! Unit tests for `linkedDependencies` subscriber manifest merging.
+
 use super::subscriber_links;
 use crate::model::{InstallPlan, Project};
 use serde_json::json;

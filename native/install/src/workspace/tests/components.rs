@@ -1,3 +1,5 @@
+//! Unit tests for `Workspace::load` component aspect merging and environment resolution.
+
 use super::write;
 use crate::{
     config::WorkspaceConfig,

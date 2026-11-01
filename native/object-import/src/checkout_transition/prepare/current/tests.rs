@@ -1,3 +1,5 @@
+//! Unit tests for retained current workspace snapshot verification during checkout transition.
+
 use super::{digest, wire};
 use crate::workspace::snapshots::{Observation, State};
 

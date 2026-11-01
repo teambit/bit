@@ -1,3 +1,5 @@
+//! Unit tests for appending and updating `scope.json` remote lane tracking aliases.
+
 use super::{Id, append};
 use serde_json::json;
 

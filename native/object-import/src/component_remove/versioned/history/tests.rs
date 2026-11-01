@@ -1,3 +1,5 @@
+//! Unit tests for versioned component removal `VersionHistory` validation.
+
 use super::{HistoryState, read_history, validate};
 use std::{
     fs,

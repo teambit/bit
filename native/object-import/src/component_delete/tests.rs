@@ -1,3 +1,5 @@
+//! Unit tests for component deletion batch preparation and outbound remote requests.
+
 use super::{Batch, Scope, outbound};
 use serde_json::{Value, json};
 use std::{

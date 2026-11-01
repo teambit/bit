@@ -1,3 +1,5 @@
+//! Unit tests for component rename batch planning and atomic publication.
+
 use super::Batch;
 use crate::component_rename::{Options, Plan};
 use serde_json::{Value, json};

@@ -1,3 +1,5 @@
+//! Unit tests for local lane alias resolution and `updateDependents` entry extraction.
+
 use super::{Id, entries, resolve_local};
 use serde_json::json;
 

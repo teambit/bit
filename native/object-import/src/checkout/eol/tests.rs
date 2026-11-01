@@ -1,3 +1,5 @@
+//! Unit tests for binary file classification and end-of-line normalization.
+
 use super::{binary, normalize};
 #[test]
 fn detects_binary_nuls_pdfs_controls_and_suspicious_byte_density() {

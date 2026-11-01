@@ -1,3 +1,5 @@
+//! Unit tests for component directory move `.bitmap` projection and untracked path errors.
+
 use super::{Observed, project};
 use serde_json::json;
 #[test]

@@ -1,4 +1,4 @@
-//! Cases of `hoist-dependencies.spec.ts`, plus the dedupe entry points.
+//! Cases of `hoist-dependencies.spec.ts`, plus the deduplication entry points.
 
 use super::{Deduped, IndexEntry, Item, dedupe, exclude_workspace, hoist::hoist, policy_manifest};
 use crate::{

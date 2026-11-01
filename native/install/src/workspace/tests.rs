@@ -1,3 +1,5 @@
+//! Unit tests for workspace component loading, file scanning, and variant matching.
+
 mod components;
 mod files;
 mod matching;

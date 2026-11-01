@@ -1,4 +1,4 @@
-//! End-to-end cases of `plan`, with expectations traced through the TypeScript sources.
+//! End-to-end cases of [`plan`], with expectations traced through the TypeScript sources.
 
 use super::{
     ManifestContext, ManifestInput, ManifestOptions, ManifestOutcome, Policies, RemoteFilter,

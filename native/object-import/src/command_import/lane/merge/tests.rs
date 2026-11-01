@@ -1,3 +1,5 @@
+//! Unit tests for lane entry equality and `updateDependents` replacement order.
+
 use super::{Entry, json, replace_entry, same_entries};
 
 #[test]

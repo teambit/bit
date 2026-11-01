@@ -1,3 +1,5 @@
+//! Unit tests for checkout transition state lifecycle and file publication.
+
 use super::{State, apply, plan};
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};

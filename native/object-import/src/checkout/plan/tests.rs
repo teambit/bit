@@ -1,3 +1,5 @@
+//! Unit tests for checkout plan computation and version resolution.
+
 use super::{plain_tag, serve};
 use crate::checkout::cache::State;
 use flate2::{Compression, write::ZlibEncoder};

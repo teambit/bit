@@ -1,4 +1,5 @@
-//! Incoming Source capture retains the validated wire representation.
+//! Incoming `Source` capture retains the validated wire representation.
+
 use super::Capture;
 use flate2::{Compression, write::ZlibEncoder};
 use sha1::{Digest, Sha1};

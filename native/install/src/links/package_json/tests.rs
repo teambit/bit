@@ -1,3 +1,5 @@
+//! Unit tests for workspace component `package.json` synthesis and transformers.
+
 use super::{PackageJsonContext, finish, snap_to_semver, transformed};
 use crate::model::{
     ComponentDependencies, ComponentDependency, ComponentId, Lifecycle, Manifest,

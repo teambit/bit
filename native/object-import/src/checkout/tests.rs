@@ -1,3 +1,5 @@
+//! Unit tests for parallel checkout source verification and materialization.
+
 mod cached;
 mod source_reads;
 

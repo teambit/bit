@@ -1,3 +1,5 @@
+//! Unit tests for parallel raw source object reads without filesystem writes.
+
 use super::{Directory, frame, pool, store};
 use crate::checkout::{cache, read_sources};
 use serde_json::Value;

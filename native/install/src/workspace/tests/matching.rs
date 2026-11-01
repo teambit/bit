@@ -1,3 +1,5 @@
+//! Unit tests for workspace variant matching, specificity sorting, and package naming.
+
 use crate::{
     model::ComponentId,
     workspace::{

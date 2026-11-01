@@ -1,3 +1,5 @@
+//! Unit tests for new component batch removal and `.bitmap` history backups.
+
 use super::NewBatch;
 use serde_json::json;
 use std::{

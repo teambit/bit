@@ -1,3 +1,5 @@
+//! Unit tests for local component fork planning, source refactoring, and `.bitmap` updates.
+
 use super::{Options, Plan};
 use serde_json::{Value, json};
 use std::{fs, io};

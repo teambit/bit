@@ -1,3 +1,5 @@
+//! Unit tests for resolving a component's environment from its first configured env aspect.
+
 use super::resolve;
 use crate::{
     model::{ComponentId, WorkspaceComponent},

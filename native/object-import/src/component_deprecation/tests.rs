@@ -1,3 +1,5 @@
+//! Unit tests for component deprecation and undeprecation `.bitmap` configuration updates.
+
 use super::{ASPECT, Value, json, selection, set_config, validate_range};
 fn bitmap() -> Value {
     json!({"foo":{"name":"foo","scope":"scope","version":"1.0.0","rootDir":"foo"},"bar":{"name":"bar","defaultScope":"scope","rootDir":"bar"}})

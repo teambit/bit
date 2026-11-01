@@ -1,3 +1,5 @@
+//! Unit tests for npm `semver` 7.7.1 compatibility against golden fixtures.
+
 use super::{coerce, gt, satisfies, satisfies_including_prerelease, valid_range};
 use serde_json::Value;
 

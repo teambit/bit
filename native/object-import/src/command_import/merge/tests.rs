@@ -1,3 +1,5 @@
+//! Unit tests for `ModelComponent` schema defaults and orphaned version merging.
+
 use super::{json, model_from};
 #[test]
 fn omitted_schema_with_head_matches_canonical_harmony_parse_default() {

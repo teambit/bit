@@ -1,3 +1,5 @@
+//! Unit tests for bounded source object caching across checkout repositories.
+
 use super::State;
 use std::path::Path;
 #[test]

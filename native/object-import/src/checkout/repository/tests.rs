@@ -1,3 +1,5 @@
+//! Unit tests for bounded loose object inflation and header validation.
+
 use flate2::{Compression, write::ZlibEncoder};
 use std::io::Write;
 

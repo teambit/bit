@@ -1,3 +1,5 @@
+//! Unit tests for checkout selection state machine checkpoints and receipts.
+
 use super::State;
 use serde_json::{Value, json};
 

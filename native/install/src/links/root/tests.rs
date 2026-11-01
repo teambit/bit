@@ -1,3 +1,5 @@
+//! Unit tests for root `link:` dependencies and core aspect store linking.
+
 use super::{
     LinkOptions, link_core_aspects_to_hoisted_store, linked_root_deps,
     sync_core_aspect_links_for_envs,

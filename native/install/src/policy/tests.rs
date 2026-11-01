@@ -18,7 +18,7 @@ use pretty_assertions::assert_eq;
 use serde_json::{Value, json};
 use std::{collections::HashMap, fs, io, io::Write, path::Path, sync::Mutex};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct TestHost {
     pub policies: HashMap<String, Value>,
     /// `env_policy` calls: envs loaded to read their policy.

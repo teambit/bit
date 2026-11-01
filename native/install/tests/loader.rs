@@ -1,4 +1,4 @@
-//! Bit's loader is one per process, as in Node: every `Output` drives the same spinner
+//! Bit's loader is one per process, as in Node: every [`Output`] drives the same spinner
 //! and the same `logger.off()`/`logger.on()` switch. The cases share that state, so they
 //! run in order in one test, in this binary's own process.
 

@@ -1,3 +1,5 @@
+//! Unit tests for parallel current workspace file reading and byte budget limits.
+
 use super::{MAX_BYTES, wire};
 use std::{
     fs,

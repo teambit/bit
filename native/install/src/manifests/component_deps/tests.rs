@@ -1,3 +1,5 @@
+//! Unit tests for `WorkspaceManifestFactory.buildComponentDependenciesMap`.
+
 use super::{Dep, dependency_list, missing, to_deps_object, update_version};
 use crate::{
     manifests::{

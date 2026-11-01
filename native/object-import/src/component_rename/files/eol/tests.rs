@@ -1,3 +1,5 @@
+//! Unit tests for end-of-line preservation and normalization during component rename writes.
+
 use super::Writer;
 
 #[test]

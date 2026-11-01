@@ -1,3 +1,5 @@
+//! Unit tests for terminal output formatting, ANSI colors, and `pretty-time` durations.
+
 use super::{Output, Sink, Style, pretty_time};
 use std::{
     sync::{Arc, Mutex},

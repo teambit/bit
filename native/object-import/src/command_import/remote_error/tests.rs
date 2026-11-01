@@ -1,3 +1,5 @@
+//! Unit tests for remote zlib inflation error classification and guidance messages.
+
 use super::{mark, message};
 #[test]
 fn remote_inflate_keeps_legacy_display_but_exposes_real_scoped_zlib_failure() {

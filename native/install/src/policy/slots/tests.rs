@@ -1,3 +1,5 @@
+//! Unit tests for aspect-registered dependency policy slots (`registerDependenciesPolicies`).
+
 use super::{Registration, candidates, component_slots, registry};
 use crate::{
     host::{AfterInstall, AfterInstallResult, CoreAspect, Host},

@@ -1,4 +1,5 @@
 //! `VersionHistory.merge` keeps incoming rows first and retains existing-only rows in order.
+
 use super::merge;
 use crate::command_import::publish;
 use serde_json::{Value, json};

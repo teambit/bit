@@ -1,4 +1,5 @@
 //! Preserve the exact validated Node stream; compressors may emit different valid encodings.
+
 mod compression;
 use serde_json::Value;
 const HASH: &str = "1916562e4f80016ca7cfb37975c8257ab52506d8";

@@ -1,3 +1,5 @@
+//! Unit tests for `LaneHistory` entry merging during lane refresh.
+
 use super::merge_history;
 use serde_json::json;
 

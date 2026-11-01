@@ -1,3 +1,5 @@
+//! Unit tests for component rename identifier validation and source refactoring.
+
 use super::{identity, refactor};
 
 #[test]

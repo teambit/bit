@@ -1,3 +1,5 @@
+//! Unit tests for resolving external environment package names from scope objects.
+
 use super::external_env_packages;
 use crate::{
     policy::tests::component,

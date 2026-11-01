@@ -1,3 +1,5 @@
+//! Unit tests for reading component model and `Version` metadata from local scope objects.
+
 use super::{ScopeObjects, sha1_hex};
 use crate::model::ComponentId;
 use flate2::{Compression, write::ZlibEncoder};

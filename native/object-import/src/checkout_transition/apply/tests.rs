@@ -1,3 +1,5 @@
+//! Unit tests for checkout transition file application and platform error paths.
+
 use super::error_path_for_platform;
 #[test]
 fn canonical_error_paths_preserve_nested_platform_separators() {
