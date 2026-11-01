@@ -1,3 +1,5 @@
+//! Workspace path normalization, symlink guards, and tree observation for component moves.
+
 use super::{Observed, invalid, unsupported};
 use std::{
     fs, io,

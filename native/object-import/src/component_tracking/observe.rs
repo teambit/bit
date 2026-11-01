@@ -1,3 +1,5 @@
+//! Bounded regular-file digest and directory-entry observation for read-then-write plans.
+
 #[cfg(test)]
 mod tests;
 

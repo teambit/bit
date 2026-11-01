@@ -1,3 +1,5 @@
+//! `.bitmap` root directory and internal path projection for component moves.
+
 #[cfg(test)]
 mod tests;
 

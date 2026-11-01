@@ -1,3 +1,5 @@
+//! File-ownership filtering and already-used warning generation for `bit add` candidates.
+
 use super::{Candidate, Plan, error, rows};
 use serde_json::{Value, json};
 use std::io;

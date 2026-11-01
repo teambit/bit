@@ -1,3 +1,5 @@
+//! Directory scanning, ignore filtering, and file ordering for `bit add` component tracking.
+
 use super::{Plan, error, paths, unsupported};
 use crate::workspace::engine::inventory;
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Mover's default `RemovePath` recursively removes the old root before writing new files.
+//! `Mover` default `RemovePath` recursive removal of the old component root before writing new files.
 use super::{Observed, Plan, unsupported};
 use std::{
     collections::BTreeMap,

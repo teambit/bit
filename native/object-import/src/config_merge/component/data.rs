@@ -1,3 +1,5 @@
+//! Three-way aspect data merge and conflict detection for non-dependency-resolver aspects.
+
 #[cfg(test)]
 #[path = "data_tests.rs"]
 mod tests;

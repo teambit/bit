@@ -1,3 +1,5 @@
+//! Per-component aspect configuration and data merge planning (`ConfigMerger`).
+
 pub(super) use engine::Engine;
 
 mod data;

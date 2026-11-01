@@ -1,4 +1,4 @@
-//! Local removal of a staged tagged or imported Component.
+//! Local removal of a staged tagged or imported `Component` object.
 
 pub(super) use publication::publish;
 

@@ -1,4 +1,4 @@
-//! `RenamingMain` uses `ComponentWriter` only for an unversioned, non-preserved target.
+//! `RenamingMain` end-of-line policy: `ComponentWriter` normalization only for unversioned, non-preserved targets.
 
 #[cfg(test)]
 mod tests;

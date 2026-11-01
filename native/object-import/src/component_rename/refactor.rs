@@ -1,4 +1,4 @@
-//! Published ordered global replacements; binary component sources remain unchanged.
+//! Published ordered global regex replacements for component renames; binary sources remain unchanged.
 use super::{invalid, unsupported};
 use regress::Regex;
 use std::{

@@ -1,4 +1,4 @@
-//! The pre-ignore scan determines `BitMap`'s missing-directory error even for empty directories.
+//! Pre-ignore directory scan determining `BitMap` missing-directory errors even for empty directories.
 use crate::workspace::engine::inventory;
 use serde_json::Value;
 use std::{io, path::Path};

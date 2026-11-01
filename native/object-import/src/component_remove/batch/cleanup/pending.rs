@@ -1,4 +1,4 @@
-//! Repository.deleteRecordsFromUnmergedComponents writes only when a removed model had a record.
+//! `Repository.deleteRecordsFromUnmergedComponents` writes when a removed model had a pending record.
 use super::{Change, read_optional};
 use crate::component_remove::{Selected, invalid};
 use serde_json::Value;

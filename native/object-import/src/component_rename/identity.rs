@@ -1,3 +1,5 @@
+//! Source and target component identity, scope, directory, and main-file resolution for renames.
+
 use super::{Identity, Options, invalid, unsupported};
 use serde_json::Value;
 use std::{

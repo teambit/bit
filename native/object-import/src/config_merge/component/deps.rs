@@ -1,3 +1,5 @@
+//! Three-way `teambit.dependencies/dependency-resolver` configuration and data merge strategy.
+
 pub(super) use model::State;
 
 mod config;

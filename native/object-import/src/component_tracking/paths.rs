@@ -1,3 +1,5 @@
+//! Glob/directory candidate selection and workspace-relative path normalization for `bit add`.
+
 #[cfg(test)]
 mod tests;
 

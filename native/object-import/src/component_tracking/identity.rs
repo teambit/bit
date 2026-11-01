@@ -1,3 +1,5 @@
+//! Component name, namespace, and scope resolution for `bit add` component tracking.
+
 use super::{Options, error, rows, unsupported};
 use serde_json::{Value, json};
 use std::{io, path::Path};

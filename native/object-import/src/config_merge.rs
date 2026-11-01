@@ -1,3 +1,5 @@
+//! Three-way aspect configuration, dependency-resolver, and workspace-policy merge engine.
+
 pub(crate) use conflict::Conflict;
 
 mod component;

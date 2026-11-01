@@ -1,4 +1,4 @@
-//! The safety check before removing a new aspect used by retained components.
+//! Safety check before removing a new aspect component used by retained workspace components.
 use super::super::invalid;
 use serde_json::Value;
 use std::io;

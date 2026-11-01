@@ -1,4 +1,4 @@
-//! Comment-preserving `WorkspaceConfig.removeExtension` and its backup history.
+//! Comment-preserving `WorkspaceConfig.removeExtension` edits and backup history.
 use super::{Change, read_optional};
 use bit_workspace_config::jsonc::Document;
 use std::{

@@ -1,3 +1,5 @@
+//! Published `bit add` options and workspace-root tracking validation.
+
 use super::error;
 use serde_json::Value;
 use std::io;

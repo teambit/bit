@@ -1,4 +1,4 @@
-//! Scope-wide identity selection and default-scope publication precede retained batch rename.
+//! Scope-wide identity selection and default-scope publication preceding retained batch rename.
 pub use crate::component_rename::batch::Batch;
 mod configuration;
 mod selection;

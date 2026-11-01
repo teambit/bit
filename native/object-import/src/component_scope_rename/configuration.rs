@@ -1,4 +1,4 @@
-//! WorkspaceConfig.write records the old bytes before changing the workspace default scope.
+//! `WorkspaceConfig.write` backup and default-scope update for `workspace.jsonc`.
 use std::{
     fs,
     io::{self, Write},

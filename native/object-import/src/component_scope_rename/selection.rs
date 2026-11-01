@@ -1,3 +1,5 @@
+//! `.bitmap` component selection and scope/owner prefix matching for `bit scope rename`.
+
 use super::{Options, Value};
 use std::io;
 #[inline]

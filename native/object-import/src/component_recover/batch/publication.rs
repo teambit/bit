@@ -1,3 +1,5 @@
+//! Verified source file, `component.json`, and `.bitmap` publication for component recovery batches.
+
 use super::{Action, Batch, invalid};
 use std::{fs, io, path::Path};
 pub(super) fn commit(batch: &Batch, file_id: &str) -> io::Result<()> {

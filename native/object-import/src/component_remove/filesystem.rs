@@ -1,4 +1,4 @@
-//! Shared guarded workspace paths and best-effort bitmap backup mechanics.
+//! Shared guarded workspace path validation and best-effort `.bitmap` backup mechanics.
 use super::invalid;
 use std::{
     fs, io,

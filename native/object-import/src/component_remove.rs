@@ -1,4 +1,4 @@
-//! Untrack a workspace component with the bitmap and file lifecycle of
+//! Untrack a workspace component with the `.bitmap` and file lifecycle of
 //! local `bit remove`.
 
 pub use batch::NewBatch;

@@ -1,4 +1,4 @@
-//! Validate a bitmap row before native local removal.
+//! Validate a `.bitmap` row before native local component removal.
 
 use super::{RowKind, invalid, valid_name, valid_scope};
 use serde_json::Value;

@@ -1,3 +1,5 @@
+//! Preimage capture, selection validation, and `.bitmap` projection for local component removal batches.
+
 use super::{Cleanup, LocalBatch};
 use crate::component_remove::{RowKind, Selected, VersionedPlan, batch, invalid, select};
 use serde_json::Value;

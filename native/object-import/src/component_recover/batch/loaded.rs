@@ -1,4 +1,4 @@
-//! Only callback-visible aspect configuration refines workspace-loaded classifications.
+//! Callback-visible aspect configuration refinement for workspace-loaded recovery classifications.
 use super::{Action, Batch, REMOVE, Value, configuration, invalid, selection};
 use std::io;
 

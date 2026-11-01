@@ -1,4 +1,4 @@
-//! Validate the active lane and its component head before local file operations.
+//! Validate the active lane and its component head before local removal file operations.
 
 use super::{RowKind, invalid, valid_name, valid_scope};
 use crate::workspace::engine::command::outbound;

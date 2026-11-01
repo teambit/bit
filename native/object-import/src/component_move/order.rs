@@ -1,4 +1,4 @@
-//! `ComponentMap`'s globby file order: breadth first, with native Windows enumeration.
+//! `ComponentMap` globby file ordering: breadth-first traversal with native directory enumeration.
 use super::{paths, unsupported};
 use std::{
     collections::{HashSet, VecDeque},

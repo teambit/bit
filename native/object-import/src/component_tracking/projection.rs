@@ -1,3 +1,5 @@
+//! Candidate projection, ownership checks, and `.bitmap` row assembly for `bit add`.
+
 mod ownership;
 mod usage;
 use super::{Options, Plan, error, files, identity, main_file, rows};

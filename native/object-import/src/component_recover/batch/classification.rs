@@ -1,3 +1,5 @@
+//! Tracked `.bitmap` and scope-head classification for component recovery batches.
+
 use super::{Action, Batch, Item, REMOVE, Value, invalid, repository, selection};
 use std::io;
 pub(super) fn classify(batch: &mut Batch, id: &str) -> io::Result<Item> {

@@ -1,4 +1,4 @@
-//! Retain the whole local remove operation before scope, source and control publication.
+//! Retain the whole local remove operation before scope, source, and control publication.
 mod preparation;
 #[cfg(test)]
 mod tests;

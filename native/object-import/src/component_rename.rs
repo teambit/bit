@@ -1,4 +1,4 @@
-//! Retained component identity, source refactoring and bitmap publication for `rename`.
+//! Retained component identity, source refactoring, and `.bitmap` publication for `rename`.
 pub mod batch;
 /// Shared pure ordered source, filename and package refactoring for new component copies.
 pub(crate) mod copy_refactor {

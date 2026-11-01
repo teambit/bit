@@ -1,3 +1,5 @@
+//! Source file inventory transformation and dependent refactoring for component renames.
+
 pub(super) mod batch;
 mod eol;
 mod preflight;

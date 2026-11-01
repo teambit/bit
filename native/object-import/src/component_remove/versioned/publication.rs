@@ -1,4 +1,5 @@
 //! Compose independent scope removals against one retained index and lane preimage.
+
 use super::{Change, VersionedPlan, history, invalid, outbound};
 use serde_json::Value;
 use std::{collections::HashSet, fs, io, path::PathBuf};
