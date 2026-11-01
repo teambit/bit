@@ -50,7 +50,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("the arguments are not UTF-8".to_string()));
     };
-    let Some(options) = options::parse(&argv[1..]) else {
+    let Some(options) = argv.get(1..).and_then(options::parse) else {
         return Ok(Outcome::Declined("outside the native diff grammar".to_string()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {

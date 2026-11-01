@@ -31,7 +31,11 @@ pub(super) fn read(request: Request<'_>) -> io::Result<Vec<Value>> {
                 target
                     .get("identity")
                     .or_else(|| target.get("id")),
-            )?;
+            )?
+            .trim();
+            if identity.is_empty() {
+                return Err(decline("parent diff target has no identity"));
+            }
             let target_version = request.requested_version
                 .or_else(|| target["version"].as_str())
                 .or_else(|| target["head"].as_str())

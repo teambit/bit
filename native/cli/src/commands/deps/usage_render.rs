@@ -112,6 +112,7 @@ pub(super) fn name_ver_from_dep_path(
 }
 
 pub(super) fn compare_versions(left: &str, right: &str) -> std::cmp::Ordering {
+    let (left, right) = (left.trim(), right.trim());
     match (node_semver::Version::parse(left), node_semver::Version::parse(right)) {
         (Ok(left_ver), Ok(right_ver)) => left_ver.cmp(&right_ver),
         _ => left.cmp(right),

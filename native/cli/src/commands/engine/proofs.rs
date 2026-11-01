@@ -59,7 +59,7 @@ fn frames(proofs: &[&Value]) -> io::Result<Vec<Range<usize>>> {
     let mut bytes = overhead;
     for (index, proof) in proofs.iter().enumerate() {
         let length = serde_json::to_vec(proof)?.len();
-        if length > MAX_REQUEST - overhead {
+        if length > MAX_REQUEST.saturating_sub(overhead) {
             return Err(io::Error::other("status input limit"));
         }
         if index - start == MAX_PROOFS || bytes + length + usize::from(index > start) > MAX_REQUEST

@@ -40,11 +40,15 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
         return Ok(None);
     }
     let path = if cfg!(windows) { path.replace('/', r"\") } else { path.replace('\\', "/") };
+    let path = path
+        .strip_prefix("./")
+        .or_else(|| path.strip_prefix(r".\"))
+        .unwrap_or(&path);
     let raw = text(file.get("rawDiff"))?;
     let raw = raw
         .strip_suffix('\n')
         .map_or(raw, |raw| raw.strip_suffix('\r').unwrap_or(raw));
-    let diff = files::format(raw, &labels.0, &labels.1, &path);
+    let diff = files::format(raw, &labels.0, &labels.1, path);
     if diff.is_empty() {
         return Ok(None);
     }

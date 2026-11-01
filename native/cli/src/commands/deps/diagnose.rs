@@ -35,7 +35,13 @@ pub(super) fn run_package(
     let report = match inspect(root, package) {
         Ok(report) => report,
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|val| {
+                    let text = val.to_string_lossy();
+                    let trimmed = text.trim();
+                    !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+                })
+            {
                 return Ok(Outcome::Declined("CI deps diagnose error stack".into()));
             }
             return workspace_command::execute_then(root, args, "diagnose", |_| {

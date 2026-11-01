@@ -34,7 +34,13 @@ pub(super) fn run(
     let rows = match inspect(root, component, dependency) {
         Ok(rows) => rows,
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|val| {
+                    let text = val.to_string_lossy();
+                    let trimmed = text.trim();
+                    !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+                })
+            {
                 return Ok(Outcome::Declined("CI deps blame error stack".into()));
             }
             return workspace_command::execute_then(root, args, "blame", |_| {

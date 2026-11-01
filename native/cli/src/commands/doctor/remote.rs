@@ -110,6 +110,8 @@ fn take_examine_results(response: &mut Value) -> io::Result<Vec<Value>> {
         Ok(std::mem::take(arr))
     } else if response["examineResult"].is_object() {
         Ok(vec![response["examineResult"].take()])
+    } else if response.get("examineResult").is_some_and(Value::is_null) {
+        Ok(Vec::new())
     } else {
         Err(io::Error::other("remote doctor results"))
     }

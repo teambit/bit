@@ -312,7 +312,10 @@ fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {
     while idx < rest.len() {
         let arg = rest[idx];
         if arg == "--" {
-            consume_trailing_usage_dep(&rest[idx + 1..], &mut dep_name)?;
+            crate::commands::lint_cmd::consume_trailing_internalize(
+                rest[idx + 1..].iter().copied(),
+                &mut dep_name,
+            )?;
             break;
         }
         if let Some(val) = arg.strip_prefix("--depth=") {
@@ -333,10 +336,6 @@ fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {
         idx += 1;
     }
     Some((dep_name?, depth))
-}
-
-fn consume_trailing_usage_dep(tail: &[&str], dep_name: &mut Option<String>) -> Option<()> {
-    crate::commands::lint_cmd::consume_trailing_internalize(tail.iter().copied(), dep_name)
 }
 
 fn parse_write(rest: &[&str]) -> Option<Subcommand> {

@@ -115,7 +115,11 @@ fn dep_matches_query(dep: &ResolvedDep, name: &str, req_ver: Option<&str>) -> bo
         || dep.id == name
         || dep.comp_name.as_deref() == Some(name)
         || dep.comp_bare_id.as_deref() == Some(name);
-    name_ok && req_ver.is_none_or(|ver| dep.version == ver || snap_to_semver(ver) == dep.version)
+    name_ok
+        && req_ver
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+            .is_none_or(|ver| dep.version == ver || snap_to_semver(ver) == dep.version)
 }
 
 fn find_usages_in_lockfile(

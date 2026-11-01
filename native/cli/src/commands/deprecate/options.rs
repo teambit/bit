@@ -37,7 +37,10 @@ fn apply_arg<'a>(
     range: &mut Option<&'a str>,
 ) -> Option<usize> {
     match args[index] {
-        "--no-color" | "--no-color=true" | "--no-color=false" => Some(index + 1),
+        "--no-color" | "--no-colors" | "--no-color=true" | "--no-color=false" | "--color"
+        | "--colors" | "--color=true" | "--color=false" | "--color=always" | "--color=never" => {
+            Some(index + 1)
+        }
         "--new-id" if !undo => {
             set_non_conflicting(replacement, valid_val(args.get(index + 1)?)?)?;
             Some(index + 2)

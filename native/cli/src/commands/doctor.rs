@@ -24,7 +24,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("doctor arguments are not UTF-8".into()));
     };
-    let Some(options) = Options::parse(&argv[1..]) else {
+    let Some(options) = argv.get(1..).and_then(Options::parse) else {
         return Ok(Outcome::Declined("outside the native doctor grammar".into()));
     };
     let in_ci = env::var("CI")

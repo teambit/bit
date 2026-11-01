@@ -153,12 +153,16 @@ fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<Re
     let Some((pkg_name, ver)) = model_item_pkg_and_ver(item, obj_id.as_deref(), identity) else {
         return;
     };
-    let is_comp = item["__type"].as_str() == Some("component");
-    let raw_id = obj_id.as_deref().unwrap_or(pkg_name);
+    let is_comp = item["__type"].as_str().map(str::trim) == Some("component");
+    let raw_id = obj_id
+        .as_deref()
+        .unwrap_or(pkg_name)
+        .trim();
     let bare = raw_id
         .split('@')
         .next()
-        .unwrap_or(raw_id);
+        .unwrap_or(raw_id)
+        .trim();
     let id =
         if is_comp && !raw_id.contains('@') { format!("{raw_id}@{ver}") } else { raw_id.into() };
     let comp_name = is_comp.then(|| {

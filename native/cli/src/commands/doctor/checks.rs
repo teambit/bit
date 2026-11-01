@@ -103,7 +103,7 @@ fn environments(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> {
             .map(|row| format!(
                 r#"symlink path: "{}", broken link: "{}""#,
                 row["symlinkPath"].as_str().unwrap_or_default(),
-                row["brokePath"].as_str().unwrap_or_default()
+                row["brokePath"].as_str().unwrap_or_default(),
             ))
             .collect::<Vec<_>>()
             .join("\n"),
@@ -129,7 +129,7 @@ fn environments(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> {
     ))
 }
 fn visit(directory: &Path, broken: &mut Vec<Value>) -> io::Result<()> {
-    if !directory.exists() {
+    if !directory.is_dir() {
         return Ok(());
     }
     for entry in fs::read_dir(directory)? {

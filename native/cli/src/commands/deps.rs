@@ -105,7 +105,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("deps arguments are not UTF-8".into()));
     };
-    let Some(subcommand) = parse_subcommand(&argv[1..]) else {
+    let Some(subcommand) = argv.get(1..).and_then(parse_subcommand) else {
         return Ok(Outcome::Declined("outside native deps grammar".into()));
     };
     let chalk = Chalk::detect(args);

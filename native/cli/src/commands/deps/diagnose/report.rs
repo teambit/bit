@@ -316,13 +316,7 @@ fn append_peers(
         .filter(|pkg| pkg.peer && pkg.versions.len() > 1)
         .collect::<Vec<_>>();
     peers.sort_by(|left, right| {
-        right.copies
-            .cmp(&left.copies)
-            .then_with(|| {
-                right.versions
-                    .len()
-                    .cmp(&left.versions.len())
-            })
+        (right.copies, right.versions.len()).cmp(&(left.copies, left.versions.len()))
     });
     if peers.is_empty() {
         return;
@@ -336,25 +330,21 @@ fn append_peers(
     if origins {
         append_origins(sections, &peers, formatter);
     } else {
-        sections.extend([
-            String::new(),
-            formatter.hint("  Tip: use --origins to see which envs and components contribute each peer version"),
-        ]);
+        let tip =
+            "  Tip: use --origins to see which envs and components contribute each peer version";
+        sections.extend([String::new(), formatter.hint(tip)]);
     }
 }
 
 fn peer_rows(peers: &[&PackageInfo]) -> Vec<Vec<String>> {
     let mut rows =
         vec![vec!["Package".into(), "Declared versions".into(), "Installed copies".into()]];
-    for package in peers {
-        let copies = if package.copies == 0 {
-            "0 (not installed)".to_owned()
-        } else {
-            package.copies.to_string()
-        };
+    for pkg in peers {
+        let copies =
+            if pkg.copies == 0 { "0 (not installed)".into() } else { pkg.copies.to_string() };
         rows.push(vec![
-            package.name.clone(),
-            format!("{} ({})", package.versions.len(), package.versions.join(", ")),
+            pkg.name.clone(),
+            format!("{} ({})", pkg.versions.len(), pkg.versions.join(", ")),
             copies,
         ]);
     }
@@ -366,24 +356,17 @@ fn append_origins(sections: &mut Vec<String>, peers: &[&PackageInfo], formatter:
     for package in peers {
         lines.push(format!("  {}", formatter.chalk.bold(&package.name)));
         for version in &package.versions {
-            let mut components = package.origins
+            let mut comps = package.origins
                 .iter()
                 .filter(|origin| &origin.version == version)
+                .map(|origin| origin.component_id.as_str())
                 .take(5)
                 .collect::<Vec<_>>();
-            components.sort_by(|left, right| left.component_id.cmp(&right.component_id));
-            if components.is_empty() {
-                continue;
+            comps.sort_unstable();
+            if !comps.is_empty() {
+                lines.push(format!("    {}", formatter.chalk.cyan(version)));
+                lines.push(format!("      components: {}", comps.join(", ")));
             }
-            lines.push(format!("    {}", formatter.chalk.cyan(version)));
-            lines.push(format!(
-                "      components: {}",
-                components
-                    .iter()
-                    .map(|origin| origin.component_id.as_str())
-                    .collect::<Vec<_>>()
-                    .join(", "),
-            ));
         }
     }
     if !lines.is_empty() {
@@ -402,11 +385,11 @@ fn peer_table(rows: &[Vec<String>], chalk: Chalk) -> String {
         .skip(1)
         .zip(rows.iter().skip(1))
     {
-        let copies = &row[2];
-        if copies != "0 (not installed)" {
-            continue;
-        }
-        if let Some(start) = line.rfind(copies) {
+        if let Some(copies) = row
+            .get(2)
+            .filter(|val| val.as_str() == "0 (not installed)")
+            && let Some(start) = line.rfind(copies)
+        {
             line.replace_range(start..start + copies.len(), &chalk.dim(copies));
         }
     }

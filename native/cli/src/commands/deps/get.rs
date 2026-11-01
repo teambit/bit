@@ -329,10 +329,12 @@ fn child_component_deps(
     bitmap_val: &Value,
     comp_id: &str,
 ) -> Vec<(String, &'static str)> {
+    let comp_id = comp_id.trim();
     let bare = comp_id
         .split('@')
         .next()
-        .unwrap_or(comp_id);
+        .unwrap_or(comp_id)
+        .trim();
     if let Some(children) = workspace_child_deps(root, ctx, bitmap_val, bare) {
         return children;
     }

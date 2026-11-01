@@ -172,7 +172,12 @@ fn extension_configs(
         if trimmed.is_empty() {
             continue;
         }
-        let (ours, theirs) = (left.configs.get(name), right.configs.get(name));
+        let ours = left.configs
+            .get(name)
+            .or_else(|| left.configs.get(trimmed));
+        let theirs = right.configs
+            .get(name)
+            .or_else(|| right.configs.get(trimmed));
         if let (Some(ours), Some(theirs)) = (ours, theirs)
             && stringify(ours, false)? == stringify(theirs, false)?
         {

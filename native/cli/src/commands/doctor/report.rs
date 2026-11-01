@@ -111,7 +111,9 @@ fn table(rows: &[Vec<String>]) -> String {
     let mut widths = vec![0; rows.first().map_or(0, Vec::len)];
     for row in rows {
         for (index, cell) in row.iter().enumerate() {
-            widths[index] = widths[index].max(width(cell) + 2);
+            if let Some(col_width) = widths.get_mut(index) {
+                *col_width = (*col_width).max(width(cell) + 2);
+            }
         }
     }
     let mut output = border(&widths, ['╔', '╤', '╗', '═']);

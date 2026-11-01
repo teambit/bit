@@ -15,8 +15,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("deprecation arguments are not UTF-8".into()));
     };
-    let undo = argv[0].trim() == "undeprecate";
-    let Some(options) = options::parse(&argv[1..], undo) else {
+    let Some((first, tail)) = argv.split_first() else {
+        return Ok(Outcome::Declined("outside native deprecation grammar".into()));
+    };
+    let undo = first.trim() == "undeprecate";
+    let Some(options) = options::parse(tail, undo) else {
         return Ok(Outcome::Declined("outside native deprecation grammar".into()));
     };
     let cwd = env::current_dir()?;

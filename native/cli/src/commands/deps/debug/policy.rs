@@ -170,7 +170,9 @@ fn unresolved_plus(values: &Value) -> Vec<String> {
         .into_iter()
         .flat_map(|entries| entries.iter())
         .filter(|(_, value)| value.as_str().map(str::trim) == Some("+"))
-        .map(|(name, _)| name.trim().to_owned())
+        .map(|(name, _)| name.trim())
+        .filter(|name| !name.is_empty())
+        .map(str::to_owned)
         .collect()
 }
 

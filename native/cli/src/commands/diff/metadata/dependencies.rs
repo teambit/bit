@@ -66,6 +66,9 @@ pub(super) fn package_dependencies(
 
 fn pkg_version(map: &Map<String, Value>, name: &str) -> io::Result<Option<String>> {
     let trimmed = name.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
     map.get(name)
         .or_else(|| map.get(trimmed))
         .or_else(|| {

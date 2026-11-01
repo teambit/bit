@@ -43,8 +43,11 @@ pub(super) fn is_hub_component_modified(
     if v_kind != "Version" {
         return None;
     }
-    let comp_dir = root.join(row["rootDir"].as_str().unwrap_or(""));
-    are_version_files_modified(&scope_dir, &comp_dir, &ver_val)
+    let root_dir = row["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())?;
+    are_version_files_modified(&scope_dir, &root.join(root_dir), &ver_val)
 }
 
 fn are_version_files_modified(scope_dir: &Path, comp_dir: &Path, ver_val: &Value) -> Option<bool> {

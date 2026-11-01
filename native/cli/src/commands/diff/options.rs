@@ -60,9 +60,11 @@ fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize)
     if matches!(
         arg,
         "--no-color"
+            | "--no-colors"
             | "--no-color=true"
             | "--no-color=false"
             | "--color"
+            | "--colors"
             | "--color=true"
             | "--color=false"
             | "--color=always"

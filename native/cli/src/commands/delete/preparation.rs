@@ -38,6 +38,7 @@ impl Prepared {
         rows: &[serde_json::Value],
     ) -> io::Result<Self> {
         let bitmap = selection::bitmap(root)?;
+        validate(&bitmap, ids, options)?;
         let lane = bit_workspace_config::truthy(&bitmap["_bit_lane"]);
         let facts = dependency_facts(rows)?;
         let mut plan =

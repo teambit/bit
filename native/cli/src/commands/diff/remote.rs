@@ -38,13 +38,14 @@ pub(super) fn prepare(
     let exported = progress::exported_ids(root);
     let mut ids = Vec::new();
     for target in selected {
-        let identity = text(
+        let raw_id = text(
             target
                 .get("identity")
                 .or_else(|| target.get("id")),
         )?
         .trim();
-        if exported.iter().any(|id| id == identity) {
+        let identity = raw_id.rsplit_once('@').map_or(raw_id, |(base, _)| base.trim());
+        if !identity.is_empty() && exported.iter().any(|id| id == identity) {
             push_target_versions(target, identity, options, &mut ids);
         }
     }

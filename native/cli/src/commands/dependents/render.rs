@@ -21,11 +21,18 @@ pub(super) struct DepGraph {
 
 impl DepGraph {
     pub(super) fn add_node(&mut self, id: &str) {
-        self.nodes.insert(id.trim().to_owned());
+        let id = id.trim();
+        if !id.is_empty() {
+            self.nodes.insert(id.to_owned());
+        }
     }
 
     pub(super) fn add_edge(&mut self, src: &str, dst: &str, dep_type: &'static str) {
-        let (src, dst) = (src.trim().to_owned(), dst.trim().to_owned());
+        let (src, dst) = (src.trim(), dst.trim());
+        if src.is_empty() || dst.is_empty() || src == dst {
+            return;
+        }
+        let (src, dst) = (src.to_owned(), dst.to_owned());
         self.nodes.insert(src.clone());
         self.nodes.insert(dst.clone());
         if let Some(existing) = self.edges

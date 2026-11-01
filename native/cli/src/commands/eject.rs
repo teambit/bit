@@ -263,8 +263,12 @@ fn eject_hub_package_and_untrack(
     name: &str,
 ) -> io::Result<()> {
     let version = bitmap_row_version(key, row);
-    let root_dir = row["rootDir"].as_str().unwrap_or_default();
-    let main_file = row["mainFile"].as_str().unwrap_or("index.js");
+    let root_dir = row["rootDir"].as_str().map_or("", str::trim);
+    let main_file = row["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .filter(|file| !file.is_empty())
+        .unwrap_or("index.js");
     let pkg_name = pkg_name_for(scope, name);
     remove_nm_pkg(root, &pkg_name);
     if !options.skip_dependency_installation && root_dir != "." {

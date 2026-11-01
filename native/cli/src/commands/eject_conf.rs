@@ -256,7 +256,7 @@ fn render_ejected_file(
         serde_json::to_string_pretty(&comp_json).map_err(|err| Failure::Declined(err.to_string()))?;
     Ok(EjectedFile {
         abs_path: abs_path.to_path_buf(),
-        rel_path: Path::new(&entry.root_dir)
+        rel_path: Path::new(entry.root_dir.trim())
             .join("component.json")
             .to_string_lossy()
             .into_owned(),

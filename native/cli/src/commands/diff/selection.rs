@@ -40,10 +40,17 @@ fn literal(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
         return Err(decline("pattern outside the native grammar"));
     }
     let normalized = inventory::normalize(pattern);
-    let directory = normalized.strip_prefix("./").unwrap_or(&normalized);
+    let directory = normalized
+        .strip_prefix("./")
+        .unwrap_or(&normalized)
+        .trim_end_matches('/');
     let by_directory = matching(targets, |target| {
         let cand = inventory::normalize(field(target, "directory"));
-        cand.strip_prefix("./").unwrap_or(&cand) == directory
+        let cand = cand
+            .strip_prefix("./")
+            .unwrap_or(&cand)
+            .trim_end_matches('/');
+        !cand.is_empty() && cand == directory
     });
     let selected = if by_directory.is_empty() {
         matching(targets, |target| {

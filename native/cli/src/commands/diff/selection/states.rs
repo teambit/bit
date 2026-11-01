@@ -246,7 +246,7 @@ impl State<'_> {
 
     fn head(&self, target: &Value, aspect: &str) -> Value {
         let Some(model) = self.model(target) else { return Value::Null };
-        let id = target["identity"].as_str().unwrap_or_default();
+        let id = target["identity"].as_str().map_or("", str::trim);
         let head = self.context["laneHeads"]
             .get(id)
             .unwrap_or_else(|| &model["head"]);
@@ -278,7 +278,7 @@ impl State<'_> {
             return false;
         }
         let Some(model) = self.model(target) else { return false };
-        let id = target["identity"].as_str().unwrap_or_default();
+        let id = target["identity"].as_str().map_or("", str::trim);
         let merging = self.context["unmerged"]
             .as_array()
             .into_iter()

@@ -35,6 +35,9 @@ pub(in crate::commands) fn captured(
 }
 
 pub(super) fn filesystem(root: &Path, files: &[String]) -> io::Result<Vec<String>> {
+    if files.is_empty() {
+        return Ok(Vec::new());
+    }
     let normalized: Vec<String> = files
         .iter()
         .map(|file| file.trim().replace('\\', "/"))

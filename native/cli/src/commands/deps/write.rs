@@ -64,11 +64,7 @@ pub(super) fn prepare_write(
 fn collect_variant_policies(ctx: &WorkspaceDepsContext, rows: &mut Vec<CandidateRow>) {
     for (_, variant_map) in &ctx.ws_config.variants {
         for (key, cfg) in variant_map {
-            let bare_key = key
-                .trim()
-                .split('@')
-                .next()
-                .unwrap_or("");
+            let bare_key = bit_install::config::aspect_id_without_version(key.trim());
             if bare_key == DEPENDENCY_RESOLVER_ASPECT && cfg.is_object() {
                 push_policy_rows(&cfg["policy"], rows);
             }

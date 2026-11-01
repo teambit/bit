@@ -44,6 +44,11 @@ impl Context {
             bit_object_import::parse_jsonc(&fs::read(bit_dir.join("package.json"))?)
                 .map_err(io::Error::other)?;
         let node = std::process::Command::new(&self.cli.node).arg("--version").output()?;
+        let node_version = if node.status.success() {
+            String::from_utf8_lossy(&node.stdout).trim().to_owned()
+        } else {
+            String::new()
+        };
         let platform = match env::consts::OS {
             "windows" => "win32",
             other => other,
@@ -51,10 +56,15 @@ impl Context {
         let bit_version = package["version"]
             .as_str()
             .map_or_else(|| package["version"].clone(), |ver| json!(ver.trim()));
-        Ok(json!({"nodeVersion":String::from_utf8_lossy(&node.stdout).trim(),
-            "runningTimestamp":self.timestamp,"platform":platform,"bitVersion":bit_version,
-            "npmVersion":vendors::version("npm","--version",true),"yarnVersion":vendors::version("yarn","-v",false),
-            "userDetails":format!("{}<{}>",self.setting("user.name",""),self.setting("user.email",""))}))
+        Ok(json!({
+            "nodeVersion": node_version,
+            "runningTimestamp": self.timestamp,
+            "platform": platform,
+            "bitVersion": bit_version,
+            "npmVersion": vendors::version("npm", "--version", true),
+            "yarnVersion": vendors::version("yarn", "-v", false),
+            "userDetails": format!("{}<{}>", self.setting("user.name", ""), self.setting("user.email", "")),
+        }))
     }
     pub fn setting<'a>(&'a self, key: &str, default: &'a str) -> &'a str {
         self.config[key.trim()]

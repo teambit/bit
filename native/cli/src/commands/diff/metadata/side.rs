@@ -210,7 +210,7 @@ fn data_peers(extensions: &[Value]) -> io::Result<Vec<Id>> {
         .iter()
         .find(|extension| crate::commands::update_cmd::matches_aspect(extension, RESOLVER));
     let rows = resolver
-        .and_then(|e| e.get("data"))
+        .and_then(|ext| ext.get("data"))
         .and_then(|data| data.get("dependencies"));
     array(rows, "resolver dependencies")?
         .iter()
@@ -237,7 +237,7 @@ fn data_peers(extensions: &[Value]) -> io::Result<Vec<Id>> {
 fn configs(extensions: &[Value], sorted: bool) -> io::Result<Map<String, Value>> {
     let mut rows: Vec<&Value> = extensions.iter().collect();
     if sorted {
-        rows.sort_by(|a, b| utf16_cmp(name(a), name(b)));
+        rows.sort_by(|left, right| utf16_cmp(name(left), name(right)));
     }
     let mut result = Map::new();
     for extension in rows {
@@ -249,21 +249,21 @@ fn configs(extensions: &[Value], sorted: bool) -> io::Result<Map<String, Value>>
             None => Map::new(),
         };
         config.remove("__specific");
-        if config.is_empty() {
+        let key = name(extension).to_string();
+        if config.is_empty() || key.is_empty() {
             continue;
         }
         if sorted {
             let mut keys: Vec<String> = config.keys().cloned().collect();
-            keys.sort_by(|a, b| utf16_cmp(a, b));
+            keys.sort_by(|left, right| utf16_cmp(left, right));
             config = keys
                 .into_iter()
-                .map(|key| {
-                    let value = config[&key].clone();
-                    (key, value)
+                .map(|item| {
+                    let value = config[&item].clone();
+                    (item, value)
                 })
                 .collect();
         }
-        let key = name(extension).to_string();
         object(&json!({ &key: 0 }))?;
         result.insert(key, Value::Object(config));
     }

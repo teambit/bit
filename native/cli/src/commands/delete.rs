@@ -48,10 +48,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));
     };
-    if is_hard_delete(&argv[1..]) {
-        return hard::run(args, &argv[1..]);
+    let Some(tail) = argv.get(1..) else {
+        return Ok(Outcome::Declined("outside the native delete grammar".into()));
+    };
+    if is_hard_delete(tail) {
+        return hard::run(args, tail);
     }
-    let Some(options) = options::parse(&argv[1..]) else {
+    let Some(options) = options::parse(tail) else {
         return Ok(Outcome::Declined("outside the native delete grammar".into()));
     };
     let root = match resolve_delete_root(args, &options)? {

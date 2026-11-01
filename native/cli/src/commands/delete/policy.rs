@@ -39,7 +39,10 @@ impl Policy {
                 &[(package_name.to_owned(), version.clone())],
                 ExistingEntries::Skip,
             )?;
-            items.push(format!("{package_name}@{version}"));
+            let item = format!("{package_name}@{version}");
+            if !items.contains(&item) {
+                items.push(item);
+            }
         }
         Ok(Some(Self { before, document, items }))
     }

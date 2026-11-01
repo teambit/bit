@@ -127,13 +127,18 @@ pub(super) fn format(result: &Value, chalk: Chalk, options: &Options) -> io::Res
 fn one(row: &Value, chalk: Chalk, options: &Options) -> io::Result<String> {
     let id = text(row.get("id"))?.trim();
     if row["hasDiff"] != true {
-        let id = text(row.get("_fullId"))?.trim();
+        let full_id = row
+            .get("_fullId")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .unwrap_or(id);
         let suffix = if options.output.name_only || options.output.stat {
             ""
         } else {
             " (consider running with --verbose)"
         };
-        return Ok(format!("no diff for {}{suffix}", chalk.bold(id)));
+        return Ok(format!("no diff for {}{suffix}", chalk.bold(full_id)));
     }
     let title = format!("showing diff for {}", chalk.bold(id));
     if options.output.name_only || options.output.stat {

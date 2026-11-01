@@ -349,8 +349,8 @@ fn collect_all_versions(comp_val: &Value) -> Vec<(String, String)> {
     for field in ["versions", "orphanedVersions"] {
         let Some(map) = comp_val[field].as_object() else { continue };
         for (ver, hash_val) in map {
-            if let Some(hash) = hash_val.as_str() {
-                versions.push((ver.clone(), hash.to_owned()));
+            if let Some(hash) = non_empty(hash_val).filter(|_| !ver.trim().is_empty()) {
+                versions.push((ver.trim().to_owned(), hash.to_owned()));
             }
         }
     }

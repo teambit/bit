@@ -56,7 +56,11 @@ fn label<'a>(line: Option<&'a str>, prefix: &str, suffix: &str) -> io::Result<&'
         .map(str::trim)
         .filter(|label| !label.is_empty())
         .ok_or_else(|| decline("dependency diff label"))?;
-    Ok(label.strip_suffix(suffix).map_or(label, str::trim))
+    let stripped = label.strip_suffix(suffix).map_or(label, str::trim);
+    if stripped.is_empty() {
+        return Err(decline("dependency diff label"));
+    }
+    Ok(stripped)
 }
 
 fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {

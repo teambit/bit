@@ -211,7 +211,7 @@ fn validate_manual_component(
     let mut without_manual = entry.clone();
     if let Some(config) = &mut without_manual.config {
         config.retain(|key, _| {
-            bit_install::config::aspect_id_without_version(key) != DEPENDENCY_RESOLVER_ASPECT
+            bit_install::config::aspect_id_without_version(key.trim()) != DEPENDENCY_RESOLVER_ASPECT
         });
     }
     let (deps, _) = ctx.collect_component_deps(&without_manual, component, None);

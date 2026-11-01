@@ -63,7 +63,7 @@ fn missing_head_symptoms(missing: &[Value]) -> String {
             .map(|row| format!(
                 "  {} (head: {})",
                 row["id"].as_str().unwrap_or_default(),
-                row["head"].as_str().unwrap_or_default()
+                row["head"].as_str().unwrap_or_default(),
             ))
             .collect::<Vec<_>>()
             .join("\n"),
@@ -79,16 +79,18 @@ fn read_index(scope: &Path) -> io::Result<Value> {
 fn row_scope_and_name(row: &Value) -> (&str, &str) {
     if let Some(id_str) = row["id"].as_str() {
         let bare = id_str
+            .trim()
             .split('@')
             .next()
-            .unwrap_or(id_str);
+            .unwrap_or(id_str)
+            .trim();
         return bare
             .split_once('/')
-            .unwrap_or(("", bare));
+            .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     }
     (
-        row["id"]["scope"].as_str().unwrap_or_default(),
-        row["id"]["name"].as_str().unwrap_or_default(),
+        row["id"]["scope"].as_str().map_or("", str::trim),
+        row["id"]["name"].as_str().map_or("", str::trim),
     )
 }
 fn text(value: &Value) -> io::Result<&str> {

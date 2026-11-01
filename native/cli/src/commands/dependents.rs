@@ -33,7 +33,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("dependents arguments are not UTF-8".into()));
     };
-    let Some(options) = parse_options(&argv[1..]) else {
+    let Some(options) = argv.get(1..).and_then(parse_options) else {
         return Ok(Outcome::Declined("outside native dependents grammar".into()));
     };
     if env::var_os("CI")

@@ -290,13 +290,19 @@ impl WorkspaceDepsContext {
 
 pub(super) fn parse_manifest_comp_id(comp_id: &Value) -> Option<(&str, &str, Option<&str>)> {
     if let (Some(scope), Some(name)) = (comp_id["scope"].as_str(), comp_id["name"].as_str()) {
-        return Some((scope, name, comp_id["version"].as_str()));
+        let (scope, name) = (scope.trim(), name.trim());
+        let ver = comp_id["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty());
+        return (!scope.is_empty() && !name.is_empty()).then_some((scope, name, ver));
     }
-    let raw = comp_id.as_str()?;
+    let raw = comp_id.as_str()?.trim();
     let (bare, ver) = raw
         .rsplit_once('@')
-        .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
+        .map_or((raw, None), |(id, ver)| (id, Some(ver.trim())));
     let (scope, name) = bare.split_once('/')?;
+    let (scope, name) = (scope.trim(), name.trim());
     (!scope.is_empty() && !name.is_empty()).then_some((
         scope,
         name,
@@ -305,9 +311,7 @@ pub(super) fn parse_manifest_comp_id(comp_id: &Value) -> Option<(&str, &str, Opt
 }
 
 pub(super) fn scanned_specifiers(comp_dir: &Path, rel_file: &str) -> Vec<String> {
-    let Ok(source) = fs::read_to_string(comp_dir.join(rel_file)) else {
-        return Vec::new();
-    };
+    let Ok(source) = fs::read_to_string(comp_dir.join(rel_file)) else { return Vec::new() };
     let Ok(scanned) = bit_dependency_scanner::scan_source(rel_file.to_owned(), source) else {
         return Vec::new();
     };
@@ -334,12 +338,10 @@ fn normalize_rel_path(path: &Path) -> String {
 fn extract_package_name(specifier: &str) -> &str {
     let specifier = specifier.trim();
     if specifier.starts_with('@') {
-        let mut indices = specifier.match_indices('/');
-        let _ = indices.next();
-        match indices.next() {
-            Some((idx, _)) => &specifier[..idx],
-            None => specifier,
-        }
+        specifier
+            .match_indices('/')
+            .nth(1)
+            .map_or(specifier, |(idx, _)| &specifier[..idx])
     } else {
         specifier
             .split('/')

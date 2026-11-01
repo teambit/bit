@@ -61,14 +61,20 @@ fn missing_component_error(root: &Path, options: &options::Options) -> Option<St
         return None;
     }
     let normalized = inventory::normalize(pattern);
-    let directory = normalized.strip_prefix("./").unwrap_or(&normalized);
+    let directory = normalized
+        .strip_prefix("./")
+        .unwrap_or(&normalized)
+        .trim_end_matches('/');
     let exists = map.entries
         .iter()
         .any(|entry| {
             let entry_dir = inventory::normalize(&entry.root_dir);
-            let entry_dir = entry_dir.strip_prefix("./").unwrap_or(&entry_dir);
+            let entry_dir = entry_dir
+                .strip_prefix("./")
+                .unwrap_or(&entry_dir)
+                .trim_end_matches('/');
             let entry_id = entry.identity.trim();
-            entry_dir == directory
+            (!entry_dir.is_empty() && entry_dir == directory)
                 || entry_id == pattern
                 || entry_id
                     .split_once('/')

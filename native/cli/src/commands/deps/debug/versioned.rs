@@ -235,7 +235,10 @@ fn model_env(model: &ModelData) -> Option<&'static str> {
             !id.is_empty()
                 && !id
                     .split_once('@')
-                    .is_some_and(|(_, ver)| ver.trim().is_empty())
+                    .is_some_and(|(_, ver)| {
+                        let ver = ver.trim();
+                        ver.is_empty() || ver.contains('@') || ver.chars().any(char::is_whitespace)
+                    })
         })?;
     if envs.next().is_some() {
         return None;

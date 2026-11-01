@@ -29,6 +29,9 @@ pub(super) fn save(
     {
         fs::create_dir_all(parent)?;
     }
+    if fs::symlink_metadata(&output).is_ok_and(|meta| meta.file_type().is_symlink()) {
+        fs::remove_file(&output)?;
+    }
     let file = fs::File::create(&output)?;
     let mut builder = tar::Builder::new(file);
     builder.follow_symlinks(false);

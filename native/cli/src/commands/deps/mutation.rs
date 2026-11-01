@@ -78,7 +78,9 @@ impl BitmapMutation {
             self.bitmap_changed,
             &self.reason,
         )?;
-        let _ = fs::remove_dir_all(deps_dir(&self.root));
+        if self.bitmap_changed || !self.comp_json_edits.is_empty() {
+            let _ = fs::remove_dir_all(deps_dir(&self.root));
+        }
         Ok(())
     }
 }

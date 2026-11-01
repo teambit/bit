@@ -24,7 +24,8 @@ impl Options {
     pub fn parse(args: &[&str]) -> Option<Self> {
         let mut options = Self::default();
         let mut cursor = 0;
-        while let Some(&arg) = args.get(cursor) {
+        while let Some(&raw_arg) = args.get(cursor) {
+            let arg = raw_arg.trim();
             if arg == "--" {
                 options.consume_trailing_name(&args[cursor + 1..])?;
                 break;

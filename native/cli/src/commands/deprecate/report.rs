@@ -78,16 +78,16 @@ fn format_range_summary(
     unchanged_state: &str,
     format: &Formatter,
 ) -> Option<String> {
-    if changed.len() == 1 && unchanged.is_empty() {
+    if let ([only], []) = (changed, unchanged) {
         return Some(format.success_summary(&format!(
             r#"versions of "{}" matching the range "{range}" have been {verb} successfully"#,
-            changed[0].trim(),
+            only.trim(),
         )));
     }
-    if changed.is_empty() && unchanged.len() == 1 {
+    if let ([], [only]) = (changed, unchanged) {
         return Some(format.hint(&format!(
             r#"the range "{range}" of "{}" is {unchanged_state}. no changes have been made"#,
-            unchanged[0].trim(),
+            only.trim(),
         )));
     }
     None

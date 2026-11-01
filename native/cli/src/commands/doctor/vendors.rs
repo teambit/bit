@@ -59,11 +59,18 @@ pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
 
 #[cfg(not(windows))]
 fn executable(command: &str) -> std::path::PathBuf {
-    command.trim().into()
+    command
+        .trim()
+        .trim_matches(['"', '\''])
+        .trim()
+        .into()
 }
 #[cfg(windows)]
 fn executable(command: &str) -> std::path::PathBuf {
-    let command = command.trim();
+    let command = command
+        .trim()
+        .trim_matches(['"', '\''])
+        .trim();
     let command_path = std::path::Path::new(command);
     if command_path.extension().is_some() {
         return command_path.into();
@@ -71,7 +78,11 @@ fn executable(command: &str) -> std::path::PathBuf {
     let extensions = std::env::var("PATHEXT").unwrap_or_else(|_| ".COM;.EXE;.BAT;.CMD".into());
     let path = std::env::var_os("PATH").unwrap_or_default();
     for directory in std::env::split_paths(&path) {
-        for extension in extensions.split(';') {
+        for extension in extensions
+            .split(';')
+            .map(str::trim)
+            .filter(|ext| !ext.is_empty())
+        {
             let candidate = directory.join(format!("{command}{extension}"));
             if candidate.is_file() {
                 return candidate;

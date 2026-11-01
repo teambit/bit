@@ -111,6 +111,9 @@ impl TempDir {
             NEXT.fetch_add(1, Ordering::Relaxed),
         );
         let dir = std::env::temp_dir().join(name);
+        if dir.exists() {
+            let _ = fs::remove_dir_all(&dir);
+        }
         fs::create_dir_all(&dir)?;
         Ok(Self(dir))
     }

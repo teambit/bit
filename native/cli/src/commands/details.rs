@@ -28,12 +28,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn valid_args(args: &[OsString]) -> bool {
+    if args.is_empty() {
+        return false;
+    }
     let mut iter = args.iter().skip(1);
     while let Some(arg) = iter.next() {
-        match arg.to_str() {
+        match arg.to_str().map(str::trim) {
             Some(
-                "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
-                | "--color=false" | "--color=always" | "--color=never",
+                "--no-color" | "--no-colors" | "--no-color=true" | "--no-color=false" | "--color"
+                | "--colors" | "--color=true" | "--color=false" | "--color=always"
+                | "--color=never",
             ) => {}
             Some("--") => return iter.next().is_none(),
             _ => return false,

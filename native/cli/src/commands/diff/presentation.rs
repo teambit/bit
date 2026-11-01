@@ -75,6 +75,9 @@ pub(super) fn one(
     )?
     .trim();
     let identity = raw_id.rsplit_once('@').map_or(raw_id, |(base, _)| base.trim());
+    if identity.is_empty() {
+        return Err(decline("diff row has empty identity"));
+    }
     let target = find_captured_target(capture, identity)
         .ok_or_else(|| decline("diff row without a captured target"))?;
     let version = target_version(target);

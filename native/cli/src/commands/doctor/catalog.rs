@@ -53,9 +53,16 @@ impl Diagnosis {
     }
     pub fn result(&self, bare: Value, symptoms: &str, treatment: &str) -> Value {
         let valid = is_valid(&bare);
-        let mut result = json!({"diagnosisMetaData":{"category":self.category,"name":self.name,"description":self.description},
-            "bareResult":null,"formattedSymptoms":if valid {""} else {symptoms.trim()},
-            "formattedManualTreat":if valid {""} else {treatment.trim()}});
+        let mut result = json!({
+            "diagnosisMetaData": {
+                "category": self.category,
+                "name": self.name,
+                "description": self.description,
+            },
+            "bareResult": null,
+            "formattedSymptoms": if valid { "" } else { symptoms.trim() },
+            "formattedManualTreat": if valid { "" } else { treatment.trim() },
+        });
         result["bareResult"] = bare;
         result
     }

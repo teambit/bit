@@ -26,7 +26,7 @@ pub(in crate::commands) fn validate(
         let main = row["mainFile"]
             .as_str()
             .map(str::trim)
-            .filter(|file| !file.is_empty())
+            .filter(|file| is_safe_rel_path(file))
             .ok_or_else(|| io::Error::other("component main file"))?;
         if !root
             .join(directory)
@@ -37,6 +37,15 @@ pub(in crate::commands) fn validate(
         }
     }
     Ok(())
+}
+
+fn is_safe_rel_path(file: &str) -> bool {
+    let path = Path::new(file);
+    !file.is_empty()
+        && !path.is_absolute()
+        && !path
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
 }
 
 fn missing_directory(directory: &str, chalk: Chalk) -> io::Error {
