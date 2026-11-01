@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/switch-lanes.e2e.ts` for `bit switch` parity.
+//! Covers switching to remote and local lanes, aliases, diffing, and snapping.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse, strip_ansi};
 use std::fs;

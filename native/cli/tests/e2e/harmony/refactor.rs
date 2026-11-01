@@ -1,4 +1,5 @@
 //! End-to-end tests for `e2e/harmony/refactor.e2e.ts`.
+//! Covers `bit refactor dependency-name` validation and source import rewriting.
 
 use crate::helper::{Helper, remote};
 use std::fs;

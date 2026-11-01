@@ -1,4 +1,5 @@
 //! End-to-end tests for `e2e/harmony/revert.e2e.ts`.
+//! Covers `bit revert` file restoration while keeping the current `.bitmap` version.
 
 use crate::{
     harmony::lane_adoption::output::durations,

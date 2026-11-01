@@ -1,5 +1,5 @@
 //! Complete automatic merge lifecycle agrees with the released CLI on fresh
-//! repositories.
+//! repositories across divergent component and lane merges.
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 

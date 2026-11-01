@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/update-dependents-cascade.e2e.ts` for hidden dependent cascade on snap.
+//! Covers transitive `updateDependents` cascades, promotion on import, and divergence guards.
 
 mod older;
 

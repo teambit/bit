@@ -1,5 +1,5 @@
 //! Published source-class callbacks mutate memory, not the original
-//! filesystem.
+//! filesystem, during `bit rename` execution.
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},
     helper::{Helper, config, remote},

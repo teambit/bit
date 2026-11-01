@@ -1,4 +1,5 @@
 //! Linking fails after object persistence and pending-state cleanup, before the final `.bitmap` write.
+//! Verifies that a failing package callback during `lane merge` preserves published objects and cleared state.
 
 use super::fixture;
 use crate::helper::Helper;

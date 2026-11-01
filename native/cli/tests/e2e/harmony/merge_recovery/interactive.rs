@@ -1,5 +1,5 @@
 //! Declining confirmation leaves the native workspace untouched; acceptance
-//! restores it once.
+//! restores it once during interactive `merge --abort`.
 use crate::helper::{self, Run};
 use std::{io::Write, path::Path, process::Stdio};
 

@@ -1,5 +1,5 @@
 //! Real environment hooks separate the published second-resolution mutation
-//! backups.
+//! backups for `scope rename` tests.
 use crate::{
     commands::move_paths::support::setup,
     helper::{Helper, config},

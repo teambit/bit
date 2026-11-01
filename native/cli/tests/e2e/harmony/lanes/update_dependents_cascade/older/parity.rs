@@ -1,4 +1,5 @@
 //! Compare the shared direct-cascade path with the released CLI, including stored metadata.
+//! Verifies stdout, stderr, and stored version metadata parity for direct hidden cascades.
 
 use super::fixture;
 use crate::helper::{Helper, parse};

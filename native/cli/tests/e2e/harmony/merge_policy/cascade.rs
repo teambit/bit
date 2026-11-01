@@ -1,5 +1,5 @@
 //! Related merged components are resolved together by the retained snapshot
-//! lifecycle.
+//! lifecycle across clean and mixed-conflict dependent graphs.
 use crate::helper::{Helper, config, parse};
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};

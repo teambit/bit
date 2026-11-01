@@ -1,4 +1,5 @@
 //! End-to-end tests for `e2e/harmony/no-files.e2e.ts`.
+//! Verifies `list` and `status` resilience when component files or directories are deleted or ignored.
 
 use crate::helper::{Helper, parse};
 

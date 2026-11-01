@@ -1,4 +1,5 @@
 //! Scope rename refactoring across mixed exported, new, and aspect components.
+//! Verifies `--refactor` and `--deprecate` import chain and aspect key rewrites.
 
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},

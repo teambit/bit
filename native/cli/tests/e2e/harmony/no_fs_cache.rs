@@ -1,5 +1,5 @@
 //! The `no-fs-cache` feature detects dependencies afresh without touching the
-//! dependency cache, across read and write commands.
+//! dependency cache, across read and write commands (`status`, `show`, `tag`, `snap`).
 
 use crate::helper::{FOO_FIXTURE, Helper, Run, parse};
 use std::{ffi::OsStr, fs, path::Path};

@@ -1,5 +1,5 @@
 //! Rename's original new/exported identity, source transformation, and lane
-//! contracts.
+//! contracts across workspace and scope boundaries.
 mod aspects;
 mod cleanup;
 mod exported;

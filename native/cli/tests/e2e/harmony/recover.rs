@@ -1,4 +1,5 @@
 //! End-to-end tests for `e2e/harmony/recover.e2e.ts`.
+//! Covers `bit recover` before and after snapping, across lanes, and with dependents.
 
 use crate::helper::{Helper, config, parse, remote};
 

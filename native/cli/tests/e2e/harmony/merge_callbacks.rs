@@ -1,4 +1,5 @@
 //! One retained published provider session spans native merge, pre-snap, and builder phases.
+//! Covers component merge and lane merge callback retention and `--build` execution.
 
 mod artifacts;
 mod fixture;

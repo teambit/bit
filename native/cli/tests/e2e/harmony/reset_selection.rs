@@ -1,5 +1,5 @@
 //! Reset component patterns publish a single coherent selected batch across
-//! reset selection scenarios.
+//! reset selection scenarios (`--head`, `--soft`, and multi-pattern selectors).
 use crate::helper::{Helper, config};
 use std::ffi::OsStr;
 

@@ -1,4 +1,5 @@
 //! Exported component rename provenance, deprecation, and refactoring contracts.
+//! Covers `--deprecate`, `--refactor`, and `renamedFrom` / `newId` metadata links.
 
 use crate::{
     commands::move_paths::support::{self, aspect, bitmap, compare, json, successful},

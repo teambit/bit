@@ -1,5 +1,5 @@
 //! Published continuation and abort run configured callbacks around native
-//! retained merge state.
+//! retained merge state for `--resolve` and `--abort` workflows.
 mod configuration;
 mod interactive;
 use crate::helper::{Helper, config};

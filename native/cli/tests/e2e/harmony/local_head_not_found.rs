@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/local-head-not-found.e2e.ts` for missing local head recovery.
+//! Verifies actionable `LocalHeadNotFound` diagnostics and remote head object recovery.
 
 use crate::helper::{Helper, parse};
 use sha1::{Digest, Sha1};

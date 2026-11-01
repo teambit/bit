@@ -1,4 +1,5 @@
 //! Upstream cascade regression: hidden dependencies may refer to older lane snapshots.
+//! Verifies that hidden entries pointing at older lane snaps still cascade to the new head.
 
 mod parity;
 

@@ -1,5 +1,5 @@
 //! Actual builder artifacts and failure publication boundaries during snapshot
-//! creation.
+//! creation (`--build`, custom `modifyPackageJson`, and artifact persistence).
 use super::workspace;
 use crate::helper::{Helper, config, parse};
 use std::ffi::OsStr;

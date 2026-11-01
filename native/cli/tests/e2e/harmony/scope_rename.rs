@@ -1,5 +1,5 @@
 //! Scope-wide operations compare complete same-path state and retained mutation
-//! prefixes.
+//! prefixes across `scope rename` and `scope set` workflows.
 mod callbacks;
 mod fixture;
 mod installation;

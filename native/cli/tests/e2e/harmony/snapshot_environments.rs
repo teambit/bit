@@ -1,5 +1,5 @@
 //! Snapshot extension hooks retain data and source transformations without Node
-//! VCS writes.
+//! VCS writes across `tag` and `snap` executions.
 mod build;
 mod plus_ranges;
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};

@@ -1,4 +1,5 @@
 //! End-to-end tests for `e2e/harmony/new-component-id-exists-on-remote.e2e.ts`.
+//! Verifies non-blocking remote collision warnings on `bit add` and suggestions to import or rename.
 
 use crate::helper::Helper;
 

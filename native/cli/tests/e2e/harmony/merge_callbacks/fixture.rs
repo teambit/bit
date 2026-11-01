@@ -1,4 +1,5 @@
 //! Shared workspace and provider fixtures for `bit merge` and `bit lane merge` callback tests.
+//! Sets up custom aspect environments and helper comparison routines for merge callbacks.
 
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs, path::Path};

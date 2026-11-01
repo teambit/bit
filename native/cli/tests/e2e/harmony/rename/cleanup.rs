@@ -1,5 +1,5 @@
 //! Moving an unversioned component deletes its entire old root, including
-//! ignored bytes.
+//! ignored bytes, unless `--preserve` is passed.
 use crate::commands::move_paths::support::{self, bitmap, successful};
 use std::fs;
 
