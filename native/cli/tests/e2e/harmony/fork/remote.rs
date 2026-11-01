@@ -1,3 +1,5 @@
+//! Remote component `bit fork` and provenance retention tests.
+
 use super::support;
 use crate::commands::move_paths::support::{compare, json, successful};
 

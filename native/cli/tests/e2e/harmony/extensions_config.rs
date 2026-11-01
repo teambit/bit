@@ -1,4 +1,4 @@
-//! `e2e/harmony/extensions-config.e2e.ts`.
+//! Port of `e2e/harmony/extensions-config.e2e.ts` for core and custom extension configuration.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

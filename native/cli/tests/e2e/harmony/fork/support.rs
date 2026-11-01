@@ -1,3 +1,5 @@
+//! Shared workspace and origin verification helpers for `bit fork` end-to-end tests.
+
 use crate::{
     commands::move_paths::support,
     helper::{Helper, config, remote},

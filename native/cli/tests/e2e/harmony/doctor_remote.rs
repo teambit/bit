@@ -1,4 +1,5 @@
-//! Actual published remote doctor queries and result rendering match across transports.
+//! Actual published remote `bit doctor` queries and result rendering match across transports.
+
 mod server;
 use crate::helper::{Helper, config};
 use serde_json::{Value, json};

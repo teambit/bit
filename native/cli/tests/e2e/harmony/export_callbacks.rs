@@ -1,4 +1,5 @@
-//! Export retains configured providers across remote persistence, package linking and hooks.
+//! `bit export` retains configured providers across remote persistence, package linking, and hooks.
+
 mod remote;
 use crate::helper::{Helper, config};
 use serde_json::json;

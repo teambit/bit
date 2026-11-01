@@ -1,4 +1,4 @@
-//! Cases from:
+//! End-to-end cases from:
 //! - `e2e/harmony/dependencies.e2e.ts`
 //! - `e2e/harmony/diff-component-peer.e2e.ts`
 //! - `e2e/harmony/deps-write.e2e.ts`

@@ -1,4 +1,4 @@
-//! `e2e/harmony/export-harmony.e2e.ts`.
+//! Port of `e2e/harmony/export-harmony.e2e.ts` for native `bit export` parity.
 
 use crate::helper::{Helper, remote};
 

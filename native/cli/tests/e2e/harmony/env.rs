@@ -1,4 +1,4 @@
-//! `e2e/harmony/env.e2e.ts`.
+//! Port of `e2e/harmony/env.e2e.ts` for native `bit env` parity.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

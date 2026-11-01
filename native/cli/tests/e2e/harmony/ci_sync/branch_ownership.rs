@@ -1,4 +1,4 @@
-//! E2E tests for `bit ci sync: branch ownership and first contact`.
+//! End-to-end tests for `bit ci sync: branch ownership and first contact`.
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-branch-ownership.e2e.ts`

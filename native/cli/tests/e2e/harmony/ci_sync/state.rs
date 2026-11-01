@@ -1,4 +1,4 @@
-//! E2E tests for `bit ci sync — state model v2`.
+//! End-to-end tests for `bit ci sync — state model v2`.
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-state.e2e.ts`

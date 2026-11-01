@@ -1,6 +1,7 @@
 //! A coalescible progress event may redraw before the non-coalescible store banner.
 //! Remove only a qualified clock-controlled zero-add redraw: the banner either
 //! repeats its counters or advances resolution from one to two. Keep all other bytes.
+
 mod tests;
 const START: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
 const COUNTERS: &str = "Progress: resolved 1, reused 0, downloaded 0, added 0";

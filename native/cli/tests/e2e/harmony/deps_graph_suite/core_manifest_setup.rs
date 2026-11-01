@@ -1,4 +1,5 @@
 //! Capsule fixtures do not need remote verification of built-in environment identities.
+
 use crate::helper::{Helper, config};
 use serde_json::json;
 use std::{ffi::OsStr, fs};

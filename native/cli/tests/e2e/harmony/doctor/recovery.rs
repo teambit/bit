@@ -1,4 +1,5 @@
-//! Canonical index repair is selected before native doctor output or writes.
+//! Canonical index repair is selected before native `bit doctor` output or writes.
+
 use crate::helper::Helper;
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};

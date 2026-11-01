@@ -1,4 +1,5 @@
-//! Complete `ConfigCmd` sequences retain store bytes, origin precedence and rendering.
+//! Complete `ConfigCmd` sequences retain store bytes, origin precedence, and rendering.
+
 use crate::helper::{Helper, setup};
 use std::{ffi::OsStr, fs, path::Path};
 

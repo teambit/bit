@@ -1,4 +1,4 @@
-//! E2E tests for dependency policies, scripts, optional dependencies, hoisting, and deduplication:
+//! End-to-end tests for dependency policies, scripts, optional dependencies, hoisting, and deduplication:
 //! - `e2e/harmony/add-missing-deps-custom-detector.e2e.ts`
 //! - `e2e/harmony/deduplication.e2e.ts`
 //! - `e2e/harmony/dependencies/allow-scripts.e2e.ts`

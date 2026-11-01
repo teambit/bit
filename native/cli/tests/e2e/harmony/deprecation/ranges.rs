@@ -1,3 +1,5 @@
+//! Version range deprecation and `bit log` presentation tests for `bit deprecate --range`.
+
 use super::{DEPRECATION, listed};
 use crate::{
     commands::move_paths::support::{self, aspect, json, successful},

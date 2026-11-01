@@ -1,4 +1,5 @@
-//! Broken remote Sources must preserve the released failure and complete publication prefix.
+//! Broken remote `Source` objects must preserve the released failure and complete publication prefix.
+
 use super::support;
 use crate::{
     commands::move_paths::support::{compare, setup},

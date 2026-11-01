@@ -1,4 +1,5 @@
-//! Doctor's built-in diagnoses, table rendering and diagnostic archives.
+//! `bit doctor` built-in diagnoses, table rendering, and diagnostic archives.
+
 mod proxy;
 mod recovery;
 use crate::helper::Helper;

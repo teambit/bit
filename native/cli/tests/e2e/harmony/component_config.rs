@@ -1,4 +1,4 @@
-//! `e2e/harmony/component-config.e2e.ts`.
+//! Port of `e2e/harmony/component-config.e2e.ts` for `component.json` and `eject-conf` parity.
 
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};

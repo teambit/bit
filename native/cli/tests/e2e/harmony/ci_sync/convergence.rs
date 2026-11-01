@@ -1,4 +1,4 @@
-//! E2E tests for `bit ci sync: what counts as work, and what converges`.
+//! End-to-end tests for `bit ci sync: what counts as work, and what converges`.
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-convergence.e2e.ts`

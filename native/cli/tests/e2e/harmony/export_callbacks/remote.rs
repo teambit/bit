@@ -1,5 +1,6 @@
 //! Callback qualification uses the released HTTP publisher, whose `ObjectList`
 //! reaches `saveObjects` directly instead of the pinned broken file-pending glob.
+
 use crate::helper::Helper;
 use std::process::Child;
 

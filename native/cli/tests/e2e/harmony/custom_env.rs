@@ -1,4 +1,4 @@
-//! Cases from:
+//! End-to-end cases from:
 //! - `e2e/harmony/custom-env.e2e.ts`
 //! - `e2e/harmony/custom-env-operations.e2e.ts`
 

@@ -1,3 +1,5 @@
+//! End-to-end tests for HTTP transport across `export`, `log`, `import`, `remove`, and `lane list`.
+
 use crate::helper::{Helper, config};
 use serde_json::json;
 use std::ffi::OsStr;

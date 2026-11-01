@@ -1,3 +1,5 @@
+//! Configured provider callback tests for `bit fork`.
+
 use super::support;
 use crate::{
     commands::move_paths::support::{bitmap, compare, setup, successful},

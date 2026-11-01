@@ -1,4 +1,4 @@
-//! `e2e/harmony/eject-harmony.e2e.ts`.
+//! Port of `e2e/harmony/eject-harmony.e2e.ts` for native `bit eject` parity.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

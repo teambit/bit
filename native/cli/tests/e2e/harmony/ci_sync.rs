@@ -1,4 +1,4 @@
-//! Cases from `e2e/harmony/ci-sync-*.e2e.ts`:
+//! End-to-end cases from `e2e/harmony/ci-sync-*.e2e.ts`:
 //! - `e2e/harmony/ci-sync-lane-cycle.e2e.ts`
 //! - `e2e/harmony/ci-sync-scopes.e2e.ts`
 //! - `e2e/harmony/ci-sync-branch-ownership.e2e.ts`

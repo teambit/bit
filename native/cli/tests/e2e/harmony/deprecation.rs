@@ -1,4 +1,5 @@
-//! Local deprecation, persisted ranges and the published downstream readers.
+//! Local deprecation, persisted ranges, and the published downstream readers.
+
 mod lifecycle;
 mod ranges;
 use crate::commands::move_paths::support::{self, aspect, bitmap, compare, json, successful};

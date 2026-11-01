@@ -1,4 +1,4 @@
-//! Shared fixture helpers mirroring `e2e/harmony/ci-sync-support.ts`.
+//! Shared fixture helpers mirroring `e2e/harmony/ci-sync-support.ts` for `bit ci sync` tests.
 
 use crate::helper::{Helper, config, parse, strip_ansi};
 use serde_json::{Value, json};

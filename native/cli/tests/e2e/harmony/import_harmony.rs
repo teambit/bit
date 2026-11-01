@@ -1,4 +1,4 @@
-//! `e2e/harmony/import-harmony.e2e.ts`.
+//! Port of `e2e/harmony/import-harmony.e2e.ts` for Harmony `bit import` parity.
 
 use crate::{
     helper::{Helper, config, parse},

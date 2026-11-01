@@ -1,4 +1,5 @@
-//! Generated package bytes and source-link shapes stay observable after export.
+//! Generated package bytes and source-link shapes stay observable after `bit export`.
+
 use crate::helper::config;
 use std::{fs, path::Path};
 

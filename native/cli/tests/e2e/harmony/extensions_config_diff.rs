@@ -1,4 +1,4 @@
-//! `e2e/harmony/extensions-config-diff.e2e.ts`.
+//! Port of `e2e/harmony/extensions-config-diff.e2e.ts` for extension configuration diff parity.
 
 use crate::helper::{Helper, parse, strip_ansi};
 use serde_json::json;

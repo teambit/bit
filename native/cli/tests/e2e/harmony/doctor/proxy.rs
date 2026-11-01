@@ -1,4 +1,5 @@
-//! An offline CONNECT proxy serving the published BVM request over real HTTPS.
+//! An offline `CONNECT` proxy serving the published BVM request over real HTTPS.
+
 use crate::helper::setup;
 use std::{
     ffi::OsString,

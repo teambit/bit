@@ -1,3 +1,5 @@
+//! Exported deprecation lifecycle and remote reporting tests for `bit deprecate` and `bit undeprecate`.
+
 use super::DEPRECATION;
 use crate::{
     commands::move_paths::support::{self, aspect, bitmap, json, successful},

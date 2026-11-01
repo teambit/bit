@@ -1,4 +1,5 @@
-//! Checkout and revert use the published workspace component-pattern grammar.
+//! `bit checkout` and `bit revert` use the published workspace component-pattern grammar.
+
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 

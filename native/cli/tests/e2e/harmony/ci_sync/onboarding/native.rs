@@ -1,4 +1,5 @@
 //! Native onboarding compares complete command bytes and workspace/history state.
+
 use crate::{commands::add::support, helper::Helper};
 use std::{collections::BTreeMap, fs};
 

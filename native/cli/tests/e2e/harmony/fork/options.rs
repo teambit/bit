@@ -1,3 +1,5 @@
+//! Option handling tests for `bit fork` (`--path`, `--scope`, `--preserve`, `--no-link`, `--refactor`).
+
 use super::support;
 use crate::{
     commands::move_paths::support::{self as paired, bitmap, setup, successful},

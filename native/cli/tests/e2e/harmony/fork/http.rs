@@ -1,4 +1,5 @@
-//! Real released file-backed HTTP scope; private fork capture must not import objects.
+//! Real released file-backed HTTP scope; private `bit fork` capture must not import objects.
+
 use super::support;
 use crate::commands::{diff_completion::http as server, move_paths::support::successful};
 use std::{collections::BTreeMap, fs, path::Path};

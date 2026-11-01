@@ -1,4 +1,5 @@
-//! Export operation grammar and local reconciliation match the pinned published CLI.
+//! `bit export` operation grammar and local reconciliation match the pinned published CLI.
+
 mod packages;
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs, path::Path};

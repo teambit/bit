@@ -1,4 +1,4 @@
-//! `e2e/harmony/debug-load.e2e.ts`.
+//! Port of `e2e/harmony/debug-load.e2e.ts` for native `bit debug-load` parity.
 
 use crate::helper::Helper;
 use serde_json::{Value, json};

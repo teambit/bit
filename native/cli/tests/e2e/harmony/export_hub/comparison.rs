@@ -1,3 +1,5 @@
+//! Scope object and control file comparison helpers for central-hub `bit export` tests.
+
 use crate::helper::config;
 use serde_json::Value;
 use std::{fs, io::Read, path::Path};
