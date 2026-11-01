@@ -1,3 +1,5 @@
+//! Unit tests for shared output patch budgets across workspace diff components.
+
 use super::{Budgets, File, Request, read};
 use crate::read_budget::Budget;
 use serde_json::json;

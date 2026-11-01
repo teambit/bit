@@ -1,3 +1,5 @@
+//! Unit tests for status result modified component and auto-tag computation.
+
 use super::{Request, read};
 use serde_json::{Value, json};
 

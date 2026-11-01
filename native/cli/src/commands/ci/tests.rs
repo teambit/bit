@@ -1,3 +1,5 @@
+//! Unit tests for `bit ci` subcommand parsing and sync option validation.
+
 use super::{
     Subcommand, SyncOptions, merge::MergeOptions, parse_subcommand, pr::PrOptions,
     validate_sync_options,

@@ -1,3 +1,5 @@
+//! Unit tests for `artifacts` command options, extraction, filtering, and rendering.
+
 use super::{
     Options,
     extractor::{ArtifactFile, ArtifactItem, ComponentArtifacts, parse_builder_artifacts},

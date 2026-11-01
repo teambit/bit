@@ -1,3 +1,5 @@
+//! Unit tests for retained workspace snapshot ownership and LRU eviction.
+
 use super::{MAX_BYTES, MAX_FILES, MAX_TOKEN, Observation, State};
 use std::path::PathBuf;
 

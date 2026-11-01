@@ -1,3 +1,5 @@
+//! Unit tests for `bit clear-cache` argument parsing and local/remote cache cleanup.
+
 use super::{clear_caches, format_remote_report, format_report, parse_args};
 use crate::commands::color::Chalk;
 use serde_json::json;

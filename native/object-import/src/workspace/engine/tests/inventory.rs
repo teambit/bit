@@ -1,3 +1,5 @@
+//! Unit tests for owned workspace inventory sessions and token lifecycle.
+
 use super::{Directory, POOL, frame};
 use crate::workspace::{engine::serve, snapshots::State};
 use serde_json::{Value, json};

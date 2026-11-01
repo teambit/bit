@@ -1,3 +1,5 @@
+//! Unit tests for `bit cat-object`, `bit cat-component`, and `bit cat-lane` parsing and lookup diagnostics.
+
 use super::{
     IdJsonOptions, ObjectOptions,
     lookup::{diagnose_component_lookup_error, diagnose_lane_lookup_error},

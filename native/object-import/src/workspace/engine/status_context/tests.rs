@@ -1,3 +1,5 @@
+//! Unit tests for reading workspace status context, models, and lanes.
+
 use super::{Request, read};
 use serde_json::{Value, json};
 use std::{
@@ -7,6 +9,7 @@ use std::{
 };
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

@@ -1,3 +1,5 @@
+//! Unit tests for ANSI color formatting of `add` warnings and errors.
+
 use super::{Chalk, error, native_io};
 use crate::host::callback_error::CallbackError;
 use std::io;

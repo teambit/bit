@@ -1,3 +1,5 @@
+//! Unit tests for workspace file materialization framing and overwrite rules.
+
 use std::{
     fs,
     io::Cursor,
@@ -11,6 +13,7 @@ use super::serve;
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
+#[derive(Debug)]
 pub(super) struct Directory(pub(super) PathBuf);
 
 impl Directory {

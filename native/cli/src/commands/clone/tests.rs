@@ -1,3 +1,5 @@
+//! Unit tests for `bit clone` argument parsing and target directory validation.
+
 use super::{Options, parse_component_name, parse_options, validate_outside_workspace};
 use std::fs;
 

@@ -1,3 +1,5 @@
+//! Unit tests for control file preimage proofs and symlink rejection.
+
 use super::{bounded_proof, refresh};
 use std::fs;
 

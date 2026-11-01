@@ -1,3 +1,5 @@
+//! Unit tests for `fileStatus` target comparison and batch size limits.
+
 use serde_json::json;
 
 use super::response;

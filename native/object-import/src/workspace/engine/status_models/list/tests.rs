@@ -1,3 +1,5 @@
+//! Unit tests for reading deprecation, lane readmes, and lane head mappings.
+
 use super::{deprecated, lane_readme_of, parse_lane_heads};
 use serde_json::json;
 

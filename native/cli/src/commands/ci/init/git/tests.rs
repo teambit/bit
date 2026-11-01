@@ -1,4 +1,5 @@
-//! Released branch validation uses ECMAScript whitespace rather than Rust's Unicode set.
+//! Released branch validation uses ECMAScript whitespace rather than Rust's Unicode set (including
+//! empty-string trimming).
 #[test]
 fn branch_validation_and_trimming_preserve_the_released_unicode_distinction() {
     assert!(!super::valid_branch("release\u{feff}next"));

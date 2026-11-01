@@ -1,3 +1,5 @@
+//! Unit tests for workspace engine request deserialization and strict field checks.
+
 use super::Request;
 
 #[test]

@@ -1,3 +1,5 @@
+//! Unit tests for `aspect` subcommands, inspection tables, and config deep merging.
+
 use super::{
     GetOpts, ListOpts, Subcommand,
     inspect::{

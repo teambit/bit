@@ -1,3 +1,5 @@
+//! Unit tests for status `VersionHistory` readset validation and commit.
+
 use super::{Request, commit, identity, proof, validate};
 use flate2::read::ZlibDecoder;
 use serde_json::{Value, json};
@@ -9,6 +11,7 @@ use std::{
 };
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

@@ -1,3 +1,5 @@
+//! Unit tests for `app` command option parsing and app component discovery.
+
 use super::{
     Options, discover_workspace_apps, extract_app_name, is_empty_app_workspace, parse_options,
 };

@@ -1,3 +1,5 @@
+//! Unit tests for workspace file byte-equivalence and unchanged diff batching.
+
 use super::{equivalent, frozen};
 
 #[test]

@@ -1,3 +1,5 @@
+//! Unit tests for Harmony `Version` schema normalization and semantic hashing.
+
 use super::{project, validate};
 use serde_json::json;
 

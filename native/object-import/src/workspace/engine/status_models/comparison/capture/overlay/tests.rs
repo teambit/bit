@@ -1,3 +1,5 @@
+//! Unit tests for callback source overlay manifest validation and capture.
+
 use crate::workspace::engine::status_models::comparison::{Request, Target, capture};
 use serde_json::json;
 use std::{
@@ -6,6 +8,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

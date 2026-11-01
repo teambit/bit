@@ -1,3 +1,5 @@
+//! Unit tests for spooled source overlay resolution without disk mutations.
+
 use super::SourceOverlay;
 use crate::workspace::engine::{
     dependency_graph::proof,
@@ -10,6 +12,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

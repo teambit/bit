@@ -1,4 +1,5 @@
 //! Preserve unrelated errors while translating proven blocked-parent mkdir failures.
+//! Also verifies platform-specific package segment separators.
 use super::{error, mkdir_not_directory};
 use std::{io, path::Path};
 

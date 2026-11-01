@@ -1,3 +1,5 @@
+//! Unit tests for workspace inventory directory prefix depth and count budgets.
+
 use super::validate_prefixes;
 #[test]
 fn parent_budget_declines_before_recursive_policy_evaluation() {

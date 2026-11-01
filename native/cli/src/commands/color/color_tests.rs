@@ -1,3 +1,5 @@
+//! Unit tests for ANSI styling and nested color wrapping in [`Chalk`].
+
 use super::Chalk;
 
 /// `chalk.red(...)` with level 1 in chalk 4.1.2.

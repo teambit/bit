@@ -1,3 +1,5 @@
+//! Differential tests for JavaScript-compatible JSON serialization against Node.
+
 #[path = "../src/js_json.rs"]
 pub mod js_json;
 

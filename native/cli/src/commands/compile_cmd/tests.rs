@@ -1,3 +1,5 @@
+//! Unit tests for `bit compile` option parsing and component selector validation.
+
 use super::{Options, parse_options, validate_compile_selectors};
 use std::fs;
 use tempfile::tempdir;

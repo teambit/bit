@@ -1,3 +1,5 @@
+//! Unit tests for `bit dependents` option parsing, transitive dependent traversal, and report rendering.
+
 use super::{
     Options, is_unscoped_bitmap_row, parse_options,
     render::{DepGraph, DependentInfo, render_dependents_report},

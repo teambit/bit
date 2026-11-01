@@ -1,3 +1,5 @@
+//! Unit tests for `check-types` option parsing and TypeScript type checking.
+
 use super::{Options, checker::check_ts_content, is_empty_workspace, parse_options};
 use std::fs;
 

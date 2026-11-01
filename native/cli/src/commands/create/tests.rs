@@ -1,3 +1,5 @@
+//! Unit tests for `bit create` option parsing and scope/template-name validation.
+
 use super::{Options, parse_options, validate_options};
 use std::fs;
 use tempfile::tempdir;

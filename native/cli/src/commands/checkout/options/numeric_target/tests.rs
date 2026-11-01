@@ -1,3 +1,5 @@
+//! Unit tests for yargs-compatible numeric target string normalization.
+
 use super::normalize;
 #[test]
 fn scientific_hex_and_decimal_targets_follow_yargs_number_then_string() {

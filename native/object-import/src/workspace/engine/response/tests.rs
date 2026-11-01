@@ -1,3 +1,5 @@
+//! Unit tests for canonical error progress retention in workspace responses.
+
 use super::{canonical, failure_data, is_canonical, with_progress};
 use serde_json::json;
 use std::io;

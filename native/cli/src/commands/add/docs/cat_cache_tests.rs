@@ -1,3 +1,5 @@
+//! Unit tests for `cat-component` documentation cache preparation and reuse.
+
 use super::cat_prepare;
 use serde_json::json;
 use std::{fs, path::Path};

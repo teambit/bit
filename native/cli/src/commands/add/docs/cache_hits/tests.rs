@@ -1,3 +1,5 @@
+//! Unit tests for component documentation cache hits, timestamps, and fallback.
+
 use super::{hit, prepare};
 use crate::commands::add::docs::sources::observe;
 use serde_json::json;

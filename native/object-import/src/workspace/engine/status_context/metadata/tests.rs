@@ -1,3 +1,5 @@
+//! Unit tests for status context component configuration and ID matching.
+
 use super::{component_id_matches, configuration};
 use serde_json::json;
 

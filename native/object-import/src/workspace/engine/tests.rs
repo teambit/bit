@@ -1,13 +1,16 @@
+//! Unit tests for workspace engine framing, batch reads, and status queries.
+
+mod inventory;
+mod read_batches;
+mod read_raw;
+mod status;
+
 static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
     rayon::ThreadPoolBuilder::new()
         .num_threads(4)
         .build()
         .unwrap()
 });
-mod inventory;
-mod read_batches;
-mod read_raw;
-mod status;
 use super::serve;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
@@ -18,6 +21,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> Self {

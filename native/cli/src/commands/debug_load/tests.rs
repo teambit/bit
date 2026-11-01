@@ -1,3 +1,5 @@
+//! Unit tests for `bit show --legacy` / debug load option parsing and workspace component lookup.
+
 use super::{Options, check_missing_workspace_component, parse_options};
 use std::fs;
 
