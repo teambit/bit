@@ -17,15 +17,15 @@ pub(crate) fn process(input: &str, pool: &ThreadPool) -> Result<Value, serde_jso
         return Ok(json!({"version":1,"id":request.id,"files":[]}));
     }
     let remaining = AtomicUsize::new(8 * 1024 * 1024);
-    let files: Vec<Option<Value>> = pool.install(|| {
+    let Some(files): Option<Vec<Value>> = pool.install(|| {
         request.files
             .par_iter()
             .map(|file| bounded(file, !request.options.is_empty(), &remaining))
             .collect::<Result<_, _>>()
-    })?;
-    if files.iter().any(Option::is_none) {
+    })?
+    else {
         return Ok(invalid_request("embedded scanner output limit"));
-    }
+    };
     Ok(json!({"version":1,"id":request.id,"files":files}))
 }
 

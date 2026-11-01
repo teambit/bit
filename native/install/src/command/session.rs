@@ -53,8 +53,12 @@ impl Session<'_> {
     /// Bit's core aspect ids, `teambit.harmony/bit` included.
     pub fn core_ids(&self) -> Vec<String> {
         let mut ids = Vec::with_capacity(self.info.core_aspects.len() + 1);
-        for aspect in &self.info.core_aspects {
-            let trimmed = aspect.id.trim();
+        let raw_ids = self.info.core_aspects
+            .iter()
+            .map(|aspect| aspect.id.as_str())
+            .chain([BIT_ASPECT]);
+        for raw in raw_ids {
+            let trimmed = raw.trim();
             if !trimmed.is_empty()
                 && !ids
                     .iter()
@@ -62,12 +66,6 @@ impl Session<'_> {
             {
                 ids.push(trimmed.to_owned());
             }
-        }
-        if !ids
-            .iter()
-            .any(|existing| existing == BIT_ASPECT)
-        {
-            ids.push(BIT_ASPECT.to_string());
         }
         ids
     }

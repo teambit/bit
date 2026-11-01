@@ -20,14 +20,15 @@ struct Proof {
     nodes: usize,
 }
 impl Proof {
-    fn enter(&mut self) -> bool {
+    fn walk_within(&mut self, step: impl FnOnce(&mut Self)) {
         self.nodes += 1;
         if !self.accepted || self.depth >= 128 || self.nodes > 16384 {
             self.accepted = false;
-            return false;
+            return;
         }
         self.depth += 1;
-        true
+        step(self);
+        self.depth -= 1;
     }
 }
 impl<'a> Visit<'a> for Proof {
@@ -41,34 +42,19 @@ impl<'a> Visit<'a> for Proof {
             self.accepted = false;
             return;
         }
-        if self.enter() {
-            walk::walk_statement(self, node);
-            self.depth -= 1;
-        }
+        self.walk_within(|proof| walk::walk_statement(proof, node));
     }
     fn visit_jsx_element(&mut self, node: &JSXElement<'a>) {
-        if self.enter() {
-            walk::walk_jsx_element(self, node);
-            self.depth -= 1;
-        }
+        self.walk_within(|proof| walk::walk_jsx_element(proof, node));
     }
     fn visit_jsx_fragment(&mut self, node: &JSXFragment<'a>) {
-        if self.enter() {
-            walk::walk_jsx_fragment(self, node);
-            self.depth -= 1;
-        }
+        self.walk_within(|proof| walk::walk_jsx_fragment(proof, node));
     }
     fn visit_ts_type(&mut self, node: &TSType<'a>) {
-        if self.enter() {
-            walk::walk_ts_type(self, node);
-            self.depth -= 1;
-        }
+        self.walk_within(|proof| walk::walk_ts_type(proof, node));
     }
     fn visit_expression(&mut self, node: &Expression<'a>) {
-        if self.enter() {
-            walk::walk_expression(self, node);
-            self.depth -= 1;
-        }
+        self.walk_within(|proof| walk::walk_expression(proof, node));
     }
     fn visit_identifier_reference(&mut self, node: &IdentifierReference<'a>) {
         if matches!(node.name.as_str(), "module" | "exports" | "eval" | "globalThis" | "global") {

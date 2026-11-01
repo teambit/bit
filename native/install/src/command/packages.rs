@@ -55,8 +55,9 @@ fn component_package_name(argument: &str, loaded: &Loaded) -> Option<String> {
                     .as_deref()
                     .is_some_and(|scope| format!("{scope}/{}", component.id.name) == id)
         })
-        .map(|component| component.package_name.trim().to_owned())
+        .map(|component| component.package_name.trim())
         .filter(|name| !name.is_empty())
+        .map(str::to_owned)
 }
 
 /// `_addPackages`: resolve each package, add it to the workspace policy and persist it.

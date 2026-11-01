@@ -70,9 +70,6 @@ fn parse_absolute_str(text: &str) -> Option<PathBuf> {
 }
 
 fn projects(manifests: &Map<String, Value>, root: &Path) -> Option<Vec<Project>> {
-    if manifests.is_empty() {
-        return None;
-    }
     let parsed: Vec<Project> = manifests
         .iter()
         .map(|(dir, manifest)| {

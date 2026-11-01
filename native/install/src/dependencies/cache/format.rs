@@ -10,27 +10,30 @@ const PACKAGE_FIELDS: [&str; 3] =
 /// The serialized data, with the keys in the order `DependenciesData.serialize` writes.
 #[must_use]
 pub fn serialize(detected: &Detected) -> Value {
-    let mut packages = Map::new();
-    for (index, field) in PACKAGE_FIELDS.iter().enumerate() {
-        let entries: Map<String, Value> = detected.packages[index]
-            .iter()
-            .filter_map(|(name, version)| {
-                let name = name.trim();
-                (!name.is_empty()).then(|| {
-                    (name.to_owned(), Value::String(version.trim().to_owned()))
+    let packages: Map<String, Value> = PACKAGE_FIELDS
+        .iter()
+        .zip(&detected.packages)
+        .map(|(field, map)| {
+            let entries: Map<String, Value> = map
+                .iter()
+                .filter_map(|(name, version)| {
+                    let name = name.trim();
+                    (!name.is_empty()).then(|| {
+                        (name.to_owned(), Value::String(version.trim().to_owned()))
+                    })
                 })
-            })
-            .collect();
-        packages.insert((*field).to_owned(), Value::Object(entries));
-    }
-    let mut components = Map::new();
-    for (index, field) in COMPONENT_FIELDS.iter().enumerate() {
-        let entries: Vec<Value> = detected.components[index]
-            .iter()
-            .map(dependency)
-            .collect();
-        components.insert((*field).to_owned(), Value::Array(entries));
-    }
+                .collect();
+            ((*field).to_owned(), Value::Object(entries))
+        })
+        .collect();
+    let components: Map<String, Value> = COMPONENT_FIELDS
+        .iter()
+        .zip(&detected.components)
+        .map(|(field, list)| {
+            let entries: Vec<Value> = list.iter().map(dependency).collect();
+            ((*field).to_owned(), Value::Array(entries))
+        })
+        .collect();
     let core_aspects: Vec<&str> = detected.core_aspects
         .iter()
         .map(|aspect| aspect.trim())

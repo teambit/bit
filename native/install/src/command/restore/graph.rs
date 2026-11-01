@@ -35,10 +35,10 @@ pub fn merge(graph: &mut Value, incoming: &Value) {
     }
     normalize_peer_provider_versions(graph);
     prune_unreachable_from_root(graph);
-    if graph["pnpmfileChecksum"].is_null() {
-        graph
-            .as_object_mut()
-            .map(|object| object.remove("pnpmfileChecksum"));
+    if graph["pnpmfileChecksum"].is_null()
+        && let Some(object) = graph.as_object_mut()
+    {
+        object.remove("pnpmfileChecksum");
     }
 }
 

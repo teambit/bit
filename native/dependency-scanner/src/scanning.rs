@@ -130,13 +130,12 @@ fn normalized_kind(file: &File) -> String {
         .map(str::trim)
         .filter(|kind| !kind.is_empty())
         .or_else(|| {
-            let path = file.path
+            let file_name = file.path
                 .trim()
-                .trim_end_matches(['/', '\\']);
-            let file_name = path
+                .trim_end_matches(['/', '\\'])
                 .rsplit(['/', '\\'])
                 .next()
-                .unwrap_or(path);
+                .unwrap_or_default();
             std::path::Path::new(file_name).extension().and_then(std::ffi::OsStr::to_str)
         })
         .unwrap_or("")

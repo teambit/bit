@@ -61,18 +61,19 @@ impl Detected {
     /// `DependenciesData.deserialize` of a dependency cache entry.
     #[must_use]
     pub fn from_cache(data: &Value) -> Self {
-        let mut detected = Self::default();
-        for (index, field) in COMPONENT_FIELDS.iter().enumerate() {
-            detected.components[index] = legacy_dependencies(&data["allDependencies"][field]);
-            detected.packages[index] =
-                string_map(&data["allPackagesDependencies"][PACKAGE_FIELDS[index]]);
-        }
         let issues = &data["issues"];
-        detected.missing = missing_from_issues(issues);
-        detected.missing_files = missing_files_from_issues(issues);
-        detected.untracked = untracked_from_issues(issues);
-        detected.core_aspects = string_list(&data["coreAspects"]);
-        detected
+        Self {
+            components: COMPONENT_FIELDS.map(|field| {
+                legacy_dependencies(&data["allDependencies"][field])
+            }),
+            packages: PACKAGE_FIELDS.map(|field| {
+                string_map(&data["allPackagesDependencies"][field])
+            }),
+            missing: missing_from_issues(issues),
+            missing_files: missing_files_from_issues(issues),
+            untracked: untracked_from_issues(issues),
+            core_aspects: string_list(&data["coreAspects"]),
+        }
     }
 
     /// Whether Bit would not cache this data (`shouldBlockSavingInCache`): every

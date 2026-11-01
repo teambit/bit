@@ -64,10 +64,10 @@ pub fn remove_from_document(document: &mut Document, packages: &[String]) -> boo
     let retained: Vec<Entry> = policy
         .into_iter()
         .filter(|(_, name, _)| {
+            let trimmed_name = name.trim();
             !packages
                 .iter()
-                .map(|package| package.trim())
-                .any(|package| package == name.trim())
+                .any(|package| package.trim() == trimmed_name)
         })
         .collect();
     let changed = retained.len() != original_len;

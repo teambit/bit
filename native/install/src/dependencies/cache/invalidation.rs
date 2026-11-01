@@ -109,8 +109,7 @@ fn file_times(file: &Path) -> io::Result<Vec<f64>> {
 fn bucket_times(text: &str) -> Vec<f64> {
     let mut latest: Vec<(Value, Value)> = Vec::new();
     for line in text
-        .split('\n')
-        .map(|line| line.strip_suffix('\r').unwrap_or(line))
+        .lines()
         .filter(|line| !line.is_empty())
     {
         let mut pieces = line.split('\t');

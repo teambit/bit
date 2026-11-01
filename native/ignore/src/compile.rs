@@ -74,9 +74,7 @@ impl Compiler {
 
     /// `_checkPattern` then `_createRule`; `None` for blank lines and comments.
     pub fn rule(&mut self, origin: &str) -> Result<Option<Rule>, UnsupportedPattern> {
-        if origin.contains('\0') || PROTOTYPE_KEYS.contains(&origin) {
-            return Err(UnsupportedPattern(origin.to_string()));
-        }
+        check_supported(origin)?;
         if origin.is_empty() || self.blank_line.find(origin).is_some() || origin.starts_with('#') {
             return Ok(None);
         }
@@ -91,9 +89,7 @@ impl Compiler {
 
     /// `make_regex(pattern, negative)`.
     fn make_regex(&mut self, pattern: &str, negative: bool) -> Result<String, UnsupportedPattern> {
-        if pattern.contains('\0') || PROTOTYPE_KEYS.contains(&pattern) {
-            return Err(UnsupportedPattern(pattern.to_string()));
-        }
+        check_supported(pattern)?;
         if let Some(source) = self.cache.get(pattern) {
             return Ok(source.clone());
         }
@@ -105,6 +101,13 @@ impl Compiler {
         self.cache.insert(pattern.to_string(), source.clone());
         Ok(source)
     }
+}
+
+fn check_supported(pattern: &str) -> Result<(), UnsupportedPattern> {
+    if pattern.contains('\0') || PROTOTYPE_KEYS.contains(&pattern) {
+        return Err(UnsupportedPattern(pattern.to_string()));
+    }
+    Ok(())
 }
 
 fn js(source: &str) -> Regex {

@@ -121,7 +121,8 @@ fn parse(entry: &Value) -> CustomDetection {
             .collect(),
         Value::Object(map) => map
             .keys()
-            .map(|key| key.trim())
+            .map(String::as_str)
+            .map(str::trim)
             .filter(|key| !key.is_empty())
             .map(str::to_owned)
             .collect(),

@@ -124,28 +124,31 @@ pub fn env_own_peers(
     detected: &mut Detected,
 ) -> io::Result<Vec<String>> {
     let Some(own) = subject.own_env.as_ref() else { return Ok(Vec::new()) };
-    let mut manifest: indexmap::IndexMap<String, String> = indexmap::IndexMap::new();
-    for entry in &own.self_policy {
-        let name = entry.name.trim();
-        if !name.is_empty() {
-            manifest.insert(name.to_owned(), entry.version.trim().to_owned());
-        }
-    }
+    let manifest: indexmap::IndexMap<&str, &str> = own.self_policy
+        .iter()
+        .filter_map(|entry| {
+            let name = entry.name.trim();
+            (!name.is_empty()).then_some((name, entry.version.trim()))
+        })
+        .collect();
     if manifest.is_empty() {
         return Ok(Vec::new());
     }
     for packages in &mut detected.packages {
-        packages.retain(|name, _| !manifest.contains_key(name));
+        packages.retain(|name, _| !manifest.contains_key(name.as_str()));
     }
-    for (name, version) in &manifest {
+    for (&name, &version) in &manifest {
         let version = if version == overrides::ADD {
             env_peer_version(workspace, subject, resolver, name)?
         } else {
-            version.clone()
+            version.to_owned()
         };
-        detected.packages[RUNTIME].insert(name.clone(), version);
+        detected.packages[RUNTIME].insert(name.to_owned(), version);
     }
-    Ok(manifest.into_keys().collect())
+    Ok(manifest
+        .into_keys()
+        .map(str::to_owned)
+        .collect())
 }
 
 /// `resolveEnvPeerDepVersion`: installed, workspace policy, model, else `*`.

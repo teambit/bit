@@ -29,19 +29,20 @@ pub fn update(
     inputs: &VersionInputs<'_>,
     detected: &mut Detected,
 ) {
-    for (index, lifecycle) in
-        [Lifecycle::Runtime, Lifecycle::Dev, Lifecycle::Peer].iter().enumerate()
-    {
-        let mut dependencies = std::mem::take(&mut detected.components[index]);
-        for dependency in &mut dependencies {
-            let package = dependency.package_name.clone();
-            if let Some(id) =
-                resolve(workspace, subject, inputs, &dependency.id, *lifecycle, package.as_deref())
-            {
+    let lifecycles = [Lifecycle::Runtime, Lifecycle::Dev, Lifecycle::Peer];
+    for (lifecycle, dependencies) in lifecycles.into_iter().zip(&mut detected.components) {
+        for dependency in dependencies {
+            if let Some(id) = resolve(
+                workspace,
+                subject,
+                inputs,
+                &dependency.id,
+                lifecycle,
+                dependency.package_name.as_deref(),
+            ) {
                 dependency.id = id;
             }
         }
-        detected.components[index] = dependencies;
     }
 }
 

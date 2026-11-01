@@ -60,6 +60,8 @@ fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Re
 
 // JsonVinyl persists through AbstractVinyl's eol.auto, after backing up the original bytes.
 fn platform_eol(text: &str) -> String {
-    let lf = text.replace("\r\n", "\n").replace('\r', "\n");
-    if cfg!(windows) { lf.replace('\n', "\r\n") } else { lf }
+    let eol = if cfg!(windows) { "\r\n" } else { "\n" };
+    text.replace("\r\n", "\n")
+        .replace('\r', "\n")
+        .replace('\n', eol)
 }

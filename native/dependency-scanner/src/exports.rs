@@ -8,18 +8,25 @@ fn peel<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
 fn identifier(expression: &Expression<'_>, name: &str) -> bool {
     matches!(peel(expression), Expression::Identifier(value) if value.name == name)
 }
+fn is_module_exports_member(
+    optional: bool,
+    object: &Expression<'_>,
+    is_exports_prop: bool,
+) -> bool {
+    !optional && identifier(object, "module") && is_exports_prop
+}
 fn module_exports(expression: &Expression<'_>) -> bool {
     match peel(expression) {
-        Expression::StaticMemberExpression(member) => {
-            !member.optional
-                && identifier(&member.object, "module")
-                && member.property.name == "exports"
-        }
-        Expression::ComputedMemberExpression(member) => {
-            !member.optional
-                && identifier(&member.object, "module")
-                && identifier(&member.expression, "exports")
-        }
+        Expression::StaticMemberExpression(member) => is_module_exports_member(
+            member.optional,
+            &member.object,
+            member.property.name == "exports",
+        ),
+        Expression::ComputedMemberExpression(member) => is_module_exports_member(
+            member.optional,
+            &member.object,
+            identifier(&member.expression, "exports"),
+        ),
         _ => false,
     }
 }
@@ -30,15 +37,20 @@ pub(crate) fn is_exports(target: &AssignmentTarget<'_>) -> bool {
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(value) => value.name == "exports",
         AssignmentTarget::StaticMemberExpression(member) => {
-            !member.optional
-                && (attached(&member.object)
-                    || (identifier(&member.object, "module") && member.property.name == "exports"))
+            (!member.optional && attached(&member.object))
+                || is_module_exports_member(
+                    member.optional,
+                    &member.object,
+                    member.property.name == "exports",
+                )
         }
         AssignmentTarget::ComputedMemberExpression(member) => {
-            !member.optional
-                && (attached(&member.object)
-                    || (identifier(&member.object, "module")
-                        && identifier(&member.expression, "exports")))
+            (!member.optional && attached(&member.object))
+                || is_module_exports_member(
+                    member.optional,
+                    &member.object,
+                    identifier(&member.expression, "exports"),
+                )
         }
         AssignmentTarget::PrivateFieldExpression(member) => {
             !member.optional && attached(&member.object)

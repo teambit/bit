@@ -224,14 +224,12 @@ async fn add_missing_peers(session: &Session<'_>, loaded: Loaded) -> io::Result<
     let plan = &calculated.outcome.plan;
     let missing =
         crate::engine::missing_peers(&plan.projects, &plan.overrides, &loaded.engine).await?;
-    if missing.is_empty() {
-        session.output.console("No missing peer dependencies found.");
-        return Ok(loaded);
-    }
     let packages: Vec<String> = missing
         .iter()
-        .filter(|(name, range)| !name.trim().is_empty() && !range.trim().is_empty())
-        .map(|(name, range)| format!("{}@{}", name.trim(), range.trim()))
+        .filter_map(|(name, range)| {
+            let (name, range) = (name.trim(), range.trim());
+            (!name.is_empty() && !range.is_empty()).then(|| format!("{name}@{range}"))
+        })
         .collect();
     if packages.is_empty() {
         session.output.console("No missing peer dependencies found.");

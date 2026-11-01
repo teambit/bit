@@ -43,15 +43,16 @@ async fn load_with_status(
 }
 
 pub(crate) fn identity(component: &WorkspaceComponent) -> String {
-    let id = component.id.to_string_without_version();
-    match component.id.version
+    let mut id = component.id.to_string_without_version();
+    if let Some(version) = component.id.version
         .as_deref()
         .map(str::trim)
         .filter(|version| !version.is_empty())
     {
-        Some(version) => format!("{id}@{version}"),
-        None => id,
+        id.push('@');
+        id.push_str(version);
     }
+    id
 }
 
 fn ordered(

@@ -28,10 +28,8 @@ impl CanonicalInstall {
     /// Return `None` before build-script PATH preparation or engine effects.
     #[must_use]
     pub fn prepare(payload: &Value, info: &HostInfo) -> Option<Self> {
-        let request = parse::Request::new(payload)?;
-        if !request.environment.can_inherit_parent() {
-            return None;
-        }
+        let request = parse::Request::new(payload)
+            .filter(|request| request.environment.can_inherit_parent())?;
         let (settings, options, plan) = settings::prepare(&request, info)?;
         Some(Self { settings, options, plan, payload: payload.clone(), info: info.clone() })
     }

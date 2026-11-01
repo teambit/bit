@@ -150,19 +150,19 @@ impl WorkspaceConfig {
         else {
             return Vec::new();
         };
+        let trim_non_empty = |item: &str| {
+            let trimmed = item.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_owned())
+        };
         match value {
             Value::Array(items) => items
                 .iter()
                 .filter_map(Value::as_str)
-                .map(str::trim)
-                .filter(|item| !item.is_empty())
-                .map(str::to_owned)
+                .filter_map(trim_non_empty)
                 .collect(),
             Value::String(text) => text
                 .split(',')
-                .map(str::trim)
-                .filter(|item| !item.is_empty())
-                .map(str::to_owned)
+                .filter_map(trim_non_empty)
                 .collect(),
             _ => Vec::new(),
         }

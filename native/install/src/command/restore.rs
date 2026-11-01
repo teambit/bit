@@ -45,13 +45,10 @@ pub fn input(
         let Some(stored) = stored_graph(&scope, &id, component.id.version.as_deref())? else {
             continue;
         };
-        merged = Some(match merged {
-            None => stored,
-            Some(mut graph) => {
-                graph::merge(&mut graph, &stored);
-                graph
-            }
-        });
+        match &mut merged {
+            None => merged = Some(stored),
+            Some(graph) => graph::merge(graph, &stored),
+        }
     }
     let Some(graph) = merged else {
         warn(session, NO_GRAPH);

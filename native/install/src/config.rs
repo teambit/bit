@@ -105,21 +105,20 @@ impl DependencyResolverConfig {
     /// `nodeLinker`: `hoisted` for yarn, otherwise `isolated` unless configured.
     #[must_use]
     pub fn node_linker(&self) -> &str {
-        match (
-            self.node_linker
-                .as_deref()
-                .map(str::trim)
-                .filter(|linker| !linker.is_empty()),
-            self.package_manager.as_deref().map(aspect_id_without_version),
-        ) {
-            (Some(linker), _) => linker,
-            (None, Some(pm))
-                if pm == "yarn" || pm == "@teambit/dependencies.yarn" || pm.ends_with("/yarn") =>
-            {
-                "hoisted"
-            }
-            _ => "isolated",
+        if let Some(linker) = self.node_linker
+            .as_deref()
+            .map(str::trim)
+            .filter(|linker| !linker.is_empty())
+        {
+            return linker;
         }
+        let is_yarn = self.package_manager
+            .as_deref()
+            .map(aspect_id_without_version)
+            .is_some_and(|pm| {
+                matches!(pm, "yarn" | "@teambit/dependencies.yarn") || pm.ends_with("/yarn")
+            });
+        if is_yarn { "hoisted" } else { "isolated" }
     }
 
     /// `linkCoreAspects`, default `true`.

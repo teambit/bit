@@ -139,10 +139,7 @@ impl EffectiveConfig {
         if key.is_empty() {
             return None;
         }
-        if let Some(value) = bit_workspace_config::environment_value(key) {
-            return Some(value);
-        }
-        self.store.get(key).cloned()
+        bit_workspace_config::environment_value(key).or_else(|| self.store.get(key).cloned())
     }
 
     /// `getConfigBoolean`: `"true"`/`"false"`; anything else is an error.

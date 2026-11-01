@@ -204,18 +204,10 @@ impl<'a> Resolver<'a> {
         if !(specifier.starts_with('.') || specifier.starts_with('/')) {
             return self.resolve_from(component, file, specifier, false);
         }
-        let extension = |path: &str| {
-            Path::new(path)
-                .extension()
-                .and_then(|extension| extension.to_str())
-                .map(str::to_owned)
-        };
+        let spec_ext = Path::new(specifier).extension().and_then(std::ffi::OsStr::to_str);
+        let file_ext = Path::new(file).extension().and_then(std::ffi::OsStr::to_str);
         let retry = result.is_none()
-            && extension(specifier)
-                .is_some_and(|dependency| {
-                    Some(&dependency) != extension(file).as_ref()
-                        && DEFAULT_LOOKUPS.contains(&dependency.as_str())
-                });
+            && spec_ext.is_some_and(|ext| Some(ext) != file_ext && DEFAULT_LOOKUPS.contains(&ext));
         if !retry {
             return Ok(Resolved::MissingFile(specifier.to_owned()));
         }

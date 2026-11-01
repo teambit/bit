@@ -23,12 +23,11 @@ pub(super) fn apply(workspace: &mut Workspace, order: &[String]) -> io::Result<(
         .iter()
         .map(|identity| {
             let key = normalize_order_identity(identity);
-            (!key.is_empty())
-                .then(|| {
-                    rows.remove(key)
-                        .or_else(|| rows.remove(identity.trim()))
-                })
-                .flatten()
+            if key.is_empty() {
+                return Err(io::Error::other("installation component order identity"));
+            }
+            rows.remove(key)
+                .or_else(|| rows.remove(identity.trim()))
                 .ok_or_else(|| io::Error::other("installation component order identity"))
         })
         .collect::<io::Result<Vec<_>>>()?;

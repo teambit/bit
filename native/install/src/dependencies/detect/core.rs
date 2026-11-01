@@ -57,13 +57,13 @@ fn relative(from: &Path, to: &Path) -> String {
         .take_while(|(left, right)| left == right)
         .count();
     let mut path = PathBuf::new();
-    for _ in common..from.len() {
-        path.push("..");
-    }
-    for component in &to[common..] {
-        if !component.as_os_str().is_empty() {
-            path.push(component.as_os_str());
-        }
-    }
+    path.extend(std::iter::repeat_n("..", from.len() - common));
+    path.extend(
+        to[common..]
+            .iter()
+            .copied()
+            .map(std::path::Component::as_os_str)
+            .filter(|part| !part.is_empty()),
+    );
     path.to_string_lossy().replace('\\', "/")
 }

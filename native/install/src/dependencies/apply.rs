@@ -68,16 +68,14 @@ fn remove_ignored_packages(deps: &FieldMaps, detected: &mut Detected) {
 
 /// `removeDevAndEnvDepsIfTheyAlsoRegulars`.
 fn remove_dev_if_regular(detected: &mut Detected) {
-    let regular: Vec<String> = detected.packages[RUNTIME]
-        .keys()
-        .cloned()
-        .collect();
-    detected.packages[DEV].retain(|name, _| !regular.contains(name));
-    let runtime_ids: Vec<_> = detected.components[RUNTIME]
-        .iter()
-        .map(|dependency| dependency.id.clone())
-        .collect();
-    detected.components[DEV].retain(|dependency| !runtime_ids.contains(&dependency.id));
+    let [runtime_packages, dev_packages, _] = &mut detected.packages;
+    dev_packages.retain(|name, _| !runtime_packages.contains_key(name));
+    let [runtime_components, dev_components, _] = &mut detected.components;
+    dev_components.retain(|dependency| {
+        !runtime_components
+            .iter()
+            .any(|runtime| runtime.id == dependency.id)
+    });
 }
 
 /// `applyPeersFromComponentModel`: peers recorded in the model that the code uses.

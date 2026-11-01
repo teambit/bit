@@ -138,9 +138,7 @@ fn suffix() -> Vec<Step> {
     ]
 }
 
-/// `POSITIVE_REPLACERS`: a plain name matches itself and what is under it.
-pub fn positive() -> Vec<Step> {
-    let ending = Step::new(r"(?:[^*\/])$", false, |found, _| format!(r"{}(?=$|\/)", found.matched));
+fn with_ending(ending: Step) -> Vec<Step> {
     prefix()
         .into_iter()
         .chain([ending])
@@ -148,12 +146,12 @@ pub fn positive() -> Vec<Step> {
         .collect()
 }
 
+/// `POSITIVE_REPLACERS`: a plain name matches itself and what is under it.
+pub fn positive() -> Vec<Step> {
+    with_ending(Step::new(r"(?:[^*\/])$", false, |found, _| format!(r"{}(?=$|\/)", found.matched)))
+}
+
 /// `NEGATIVE_REPLACERS`: a negation does not re-include a directory's content.
 pub fn negative() -> Vec<Step> {
-    let ending = Step::new(r"(?:[^*])$", false, |found, _| format!(r"{}(?=$|\/$)", found.matched));
-    prefix()
-        .into_iter()
-        .chain([ending])
-        .chain(suffix())
-        .collect()
+    with_ending(Step::new(r"(?:[^*])$", false, |found, _| format!(r"{}(?=$|\/$)", found.matched)))
 }

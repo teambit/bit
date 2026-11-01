@@ -216,19 +216,22 @@ fn compare(left: &str, right: &str) -> std::cmp::Ordering {
     }
 }
 
-/// `parsePkgId`: `name@version` without the peer suffix.
-pub fn parse_package_id(package: &str) -> Option<(String, String)> {
-    let base = without_peer_suffix(package);
+fn split_package_id(node: &str) -> Option<(&str, &str)> {
+    let base = without_peer_suffix(node);
     let at = base.rfind('@').filter(|at| *at > 0)?;
     let (name, version) = (base[..at].trim(), base[at + 1..].trim());
-    (!name.is_empty() && !version.is_empty()).then(|| (name.to_owned(), version.to_owned()))
+    (!name.is_empty() && !version.is_empty()).then_some((name, version))
+}
+
+/// `parsePkgId`: `name@version` without the peer suffix.
+pub fn parse_package_id(package: &str) -> Option<(String, String)> {
+    let (name, version) = split_package_id(package)?;
+    Some((name.to_owned(), version.to_owned()))
 }
 
 /// `getVersionFromNodeId`: a valid or coerced semver.
 pub fn version_of(node: &str) -> Option<String> {
-    let base = without_peer_suffix(node);
-    let at = base.rfind('@').filter(|at| *at > 0)?;
-    let version = base[at + 1..].trim();
+    let (_, version) = split_package_id(node)?;
     if SemVer::parse(version).is_ok() { Some(version.to_owned()) } else { semver::coerce(version) }
 }
 

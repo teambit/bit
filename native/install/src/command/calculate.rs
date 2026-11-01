@@ -378,18 +378,20 @@ fn remote_filter(session: &Session<'_>, loaded: &Loaded) -> io::Result<RemoteFil
     let local_remotes = scope.remotes
         .keys()
         .chain(global.keys())
-        .map(|remote| remote.trim().to_string())
-        .filter(|remote| !remote.is_empty())
+        .filter_map(|remote| {
+            let trimmed = remote.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_owned())
+        })
         .collect();
     let registry_scopes = loaded.engine.registry.registries.scopes
         .keys()
-        .map(|name| {
-            name.trim()
-                .trim_start_matches('@')
+        .filter_map(|name| {
+            let trimmed = name
                 .trim()
-                .to_string()
+                .trim_start_matches('@')
+                .trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_owned())
         })
-        .filter(|name| !name.is_empty())
         .collect();
     Ok(RemoteFilter { local_remotes, registry_scopes })
 }

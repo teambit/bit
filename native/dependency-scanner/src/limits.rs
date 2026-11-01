@@ -8,6 +8,10 @@ pub(crate) const REQUEST_BYTES: usize = 8 * 1024 * 1024;
 pub(crate) const SOURCE_BYTES: usize = 1024 * 1024;
 pub(crate) const BATCH_FILES: usize = 4096;
 
+fn too_large_error() -> io::Error {
+    io::Error::new(io::ErrorKind::FileTooLarge, "source exceeds 1 MiB limit; use legacy fallback")
+}
+
 pub(crate) fn read_source(path: &Path) -> io::Result<String> {
     let file = File::open(path)?;
     let size = file
@@ -15,10 +19,7 @@ pub(crate) fn read_source(path: &Path) -> io::Result<String> {
         .ok()
         .map(|meta| meta.len());
     if size.is_some_and(|len| len > SOURCE_BYTES as u64) {
-        return Err(io::Error::new(
-            io::ErrorKind::FileTooLarge,
-            "source exceeds 1 MiB limit; use legacy fallback",
-        ));
+        return Err(too_large_error());
     }
     let capacity = size
         .and_then(|len| usize::try_from(len).ok())
@@ -27,10 +28,7 @@ pub(crate) fn read_source(path: &Path) -> io::Result<String> {
     file.take((SOURCE_BYTES + 1) as u64)
         .read_to_end(&mut bytes)?;
     if bytes.len() > SOURCE_BYTES {
-        return Err(io::Error::new(
-            io::ErrorKind::FileTooLarge,
-            "source exceeds 1 MiB limit; use legacy fallback",
-        ));
+        return Err(too_large_error());
     }
     String::from_utf8(bytes).map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
 }
@@ -40,10 +38,7 @@ pub(crate) fn source<'source>(
     path: &Path,
 ) -> io::Result<std::borrow::Cow<'source, str>> {
     match inline {
-        Some(source) if source.len() > SOURCE_BYTES => Err(io::Error::new(
-            io::ErrorKind::FileTooLarge,
-            "source exceeds 1 MiB limit; use legacy fallback",
-        )),
+        Some(source) if source.len() > SOURCE_BYTES => Err(too_large_error()),
         Some(source) => Ok(std::borrow::Cow::Borrowed(source)),
         None => {
             let trimmed = path.to_str().map_or(path, |raw| Path::new(raw.trim()));

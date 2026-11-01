@@ -26,23 +26,23 @@ pub fn build(
     policy: Vec<PolicyEntry>,
 ) -> ComponentDependencies {
     let mut list = ComponentDependencies::default();
-    for (index, lifecycle) in LIFECYCLES.iter().enumerate() {
-        for dependency in &detected.components[index] {
+    for (lifecycle, dependencies) in LIFECYCLES.into_iter().zip(&detected.components) {
+        for dependency in dependencies {
             let package_name = dependency.package_name
                 .as_deref()
                 .map(str::trim)
                 .filter(|name| !name.is_empty())
                 .map_or_else(|| workspace.package_name(&dependency.id), str::to_owned);
-            list.components.push(component(dependency.id.clone(), package_name, *lifecycle, false));
+            list.components.push(component(dependency.id.clone(), package_name, lifecycle, false));
         }
     }
     list.components.extend(extensions(workspace, subject, inputs));
-    for (index, lifecycle) in LIFECYCLES.iter().enumerate() {
-        for (name, version) in &detected.packages[index] {
+    for (lifecycle, packages) in LIFECYCLES.into_iter().zip(&detected.packages) {
+        for (name, version) in packages {
             list.packages.push(PackageDependency {
                 name: name.clone(),
                 version: version.clone(),
-                lifecycle: *lifecycle,
+                lifecycle,
                 optional: false,
             });
         }

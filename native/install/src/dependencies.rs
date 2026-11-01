@@ -133,12 +133,11 @@ impl Workspace<'_> {
 #[must_use]
 pub fn default_package_name(id: &ComponentId) -> String {
     let scope = id.effective_scope().unwrap_or_default();
-    let owner = scope.split('.').next().unwrap_or(scope);
-    let name = format!("{scope}.{}", id.name.replace('/', "."));
-    let stripped = name
-        .strip_prefix(&format!("{owner}."))
-        .unwrap_or(&name);
-    format!("@{owner}/{stripped}")
+    let flat_name = id.name.replace('/', ".");
+    match scope.split_once('.') {
+        Some((owner, sub_scope)) => format!("@{owner}/{sub_scope}.{flat_name}"),
+        None => format!("@{scope}/{flat_name}"),
+    }
 }
 
 /// One component being computed.

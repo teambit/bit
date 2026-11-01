@@ -318,17 +318,11 @@ fn persist_allow_scripts(
                     );
                 }
             }
-            if document
-                .get(&[DEPENDENCY_RESOLVER_ASPECT, "policy"])
-                .is_none()
-            {
-                document.set(&[DEPENDENCY_RESOLVER_ASPECT, "policy"], &json!({}));
-            }
-            if document
-                .get(&[DEPENDENCY_RESOLVER_ASPECT, "linkCoreAspects"])
-                .is_none()
-            {
-                document.set(&[DEPENDENCY_RESOLVER_ASPECT, "linkCoreAspects"], &json!(true));
+            for (field, default) in [("policy", json!({})), ("linkCoreAspects", json!(true))] {
+                let path = [DEPENDENCY_RESOLVER_ASPECT, field];
+                if document.get(&path).is_none() {
+                    document.set(&path, &default);
+                }
             }
         },
     )

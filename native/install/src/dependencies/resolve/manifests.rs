@@ -159,13 +159,15 @@ fn peer_range(manifest: &Value, concrete: Option<&str>) -> Option<String> {
     else {
         return Some("*".to_owned());
     };
-    if !["~", "^", ">="].contains(&default) {
+    if !matches!(default, "~" | "^" | ">=") {
         return Some(default.to_owned());
     }
-    let concrete = concrete.map_or("", str::trim);
-    if concrete.is_empty() {
+    let Some(concrete) = concrete
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    else {
         return Some("*".to_owned());
-    }
+    };
     Some(if node_semver::Version::parse(concrete).is_ok() {
         format!("{default}{concrete}")
     } else {

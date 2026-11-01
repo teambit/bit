@@ -31,13 +31,12 @@ pub async fn cloud_username(global: &GlobalConfig, timeout: Duration) -> Option<
     if base_url.is_empty() {
         return None;
     }
-    let url = format!("{base_url}/graphql");
     let client = reqwest::Client::builder()
         .timeout(timeout)
         .build()
         .ok()?;
     let response = client
-        .post(&url)
+        .post(format!("{base_url}/graphql"))
         .header("Content-Type", "application/json")
         .header("Authorization", format!("Bearer {token}"))
         .json(&json!({ "query": GET_CURRENT_USER }))

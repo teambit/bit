@@ -83,10 +83,7 @@ pub fn lexical(source: &str) -> Vec<String> {
             let after = &rest[index + keyword.len()..];
             rest = after;
             if before.is_some_and(|character| {
-                character.is_alphanumeric()
-                    || character == '_'
-                    || character == '$'
-                    || character == '.'
+                character.is_alphanumeric() || matches!(character, '_' | '$' | '.')
             }) {
                 continue;
             }

@@ -217,15 +217,14 @@ fn adjust_envs(config: &mut Map<String, Value>) {
         .get(ENVS_ASPECT)
         .and_then(|envs| envs.get("env"))
         .and_then(Value::as_str)
+        .map(str::to_owned)
     else {
         return;
     };
-    let env = env.to_owned();
     let id = env
         .split('@')
         .next()
-        .unwrap_or_default()
-        .to_owned();
+        .unwrap_or_default();
     config.insert(ENVS_ASPECT.to_owned(), serde_json::json!({ "env": id }));
     config.insert(env, Value::Object(Map::new()));
 }

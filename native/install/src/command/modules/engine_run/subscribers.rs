@@ -40,12 +40,16 @@ pub(super) async fn run(
 }
 
 fn component_id(id: &crate::model::ComponentId) -> String {
-    let identity = id.to_string_without_version();
-    id.version
+    let mut identity = id.to_string_without_version();
+    if let Some(version) = id.version
         .as_deref()
         .map(str::trim)
-        .filter(|version| !version.is_empty())
-        .map_or_else(|| identity.clone(), |version| format!("{identity}@{version}"))
+        .filter(|ver| !ver.is_empty())
+    {
+        identity.push('@');
+        identity.push_str(version);
+    }
+    identity
 }
 
 fn package_options(

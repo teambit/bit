@@ -35,7 +35,10 @@ pub fn is_valid_package_name(name: &str) -> bool {
     if name.is_empty() || name.starts_with(['.', '_']) || name.trim() != name {
         return false;
     }
-    if BLOCKLIST.contains(&name.to_lowercase().as_str()) {
+    if BLOCKLIST
+        .iter()
+        .any(|blocked| name.eq_ignore_ascii_case(blocked))
+    {
         return false;
     }
     if is_url_safe(name) {

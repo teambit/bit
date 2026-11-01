@@ -66,18 +66,16 @@ pub async fn run(
 /// A dependency pinned to a never-published snap: point at `bit import` instead of
 /// the package manager's "No matching version found".
 fn enrich(error: io::Error, calculated: &Calculated, output: &Output) -> io::Error {
-    let (code, message) = match EngineError::from_io(&error) {
-        Some(engine_error) => (engine_error.code.clone(), engine_error.message.clone()),
-        None => (None, error.to_string()),
-    };
-    let candidate = code
-        .as_deref()
+    let engine_error = EngineError::from_io(&error);
+    let message = engine_error.map_or_else(|| error.to_string(), |err| err.message.clone());
+    let code = engine_error
+        .and_then(|err| err.code.as_deref())
         .map(str::trim)
-        .filter(|code| !code.is_empty())
-        .map_or_else(
-            || message.to_ascii_lowercase().contains("no matching version found"),
-            |code| NO_MATCHING_VERSION.contains(&code),
-        );
+        .filter(|val| !val.is_empty());
+    let candidate = code.map_or_else(
+        || message.to_ascii_lowercase().contains("no matching version found"),
+        |val| NO_MATCHING_VERSION.contains(&val),
+    );
     if !candidate {
         return error;
     }

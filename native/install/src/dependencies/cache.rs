@@ -112,16 +112,7 @@ pub fn put(cache: &Path, key: &str, data: &str) -> io::Result<()> {
         "metadata": { "timestamp": now },
     })
     .to_string();
-    let bucket = segmented(&cache.join("index-v5"), &hex(&Sha256::digest(key.as_bytes())));
-    fs::create_dir_all(bucket.parent().unwrap_or(cache))?;
-    let mut file = fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&bucket)?;
-    io::Write::write_all(
-        &mut file,
-        format!("\n{}\t{entry}", hex(&Sha1::digest(entry.as_bytes()))).as_bytes(),
-    )
+    append_index_entry(cache, key, &entry)
 }
 
 /// `cacache.rm.entry`: append a null-integrity tombstone without creating content.
@@ -140,6 +131,10 @@ pub fn remove_entry(cache: &Path, key: &str) -> io::Result<()> {
         .map_err(io::Error::other)?
         .as_millis();
     let entry = json!({"key":key,"integrity":null,"time":now}).to_string();
+    append_index_entry(cache, key, &entry)
+}
+
+fn append_index_entry(cache: &Path, key: &str, entry: &str) -> io::Result<()> {
     let bucket = segmented(&cache.join("index-v5"), &hex(&Sha256::digest(key.as_bytes())));
     fs::create_dir_all(bucket.parent().unwrap_or(cache))?;
     let mut file = fs::OpenOptions::new()

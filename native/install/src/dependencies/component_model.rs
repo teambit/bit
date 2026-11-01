@@ -26,11 +26,9 @@ impl ComponentModel {
     #[must_use]
     pub fn packages(&self) -> FieldMaps {
         let Some(version) = &self.version else { return FieldMaps::default() };
-        [
-            string_map(&version["packageDependencies"]),
-            string_map(&version["devPackageDependencies"]),
-            string_map(&version["peerPackageDependencies"]),
-        ]
+        ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"].map(|field| {
+            string_map(&version[field])
+        })
     }
 
     /// `getAllPackageDependencies()`: runtime then dev packages.

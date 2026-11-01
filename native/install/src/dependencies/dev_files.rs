@@ -145,12 +145,13 @@ pub fn dev_patterns(
     let mut patterns: IndexMap<String, Vec<String>> = IndexMap::new();
     patterns.insert("config".to_owned(), configured_dev_patterns(component));
     patterns.insert(TESTER.to_owned(), env.tests.clone().unwrap_or_else(|| config.tests.clone()));
-    let mut docs = env.docs.clone().unwrap_or_default();
-    docs.extend(config.docs.iter().cloned());
-    patterns.insert(DOCS.to_owned(), docs);
-    let mut compositions = env.compositions.clone().unwrap_or_default();
-    compositions.extend(config.compositions.iter().cloned());
-    patterns.insert(COMPOSITIONS.to_owned(), compositions);
+    for (aspect, env_list, cfg_list) in
+        [(DOCS, &env.docs, &config.docs), (COMPOSITIONS, &env.compositions, &config.compositions)]
+    {
+        let mut combined = env_list.clone().unwrap_or_default();
+        combined.extend(cfg_list.iter().cloned());
+        patterns.insert(aspect.to_owned(), combined);
+    }
     let env_id = split_version(&component.env_id).0.trim();
     match &env.patterns {
         Some(Value::Object(named)) => {

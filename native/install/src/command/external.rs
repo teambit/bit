@@ -163,10 +163,10 @@ fn remove_postinstall_script(root: &Path) -> io::Result<()> {
         return Ok(());
     }
     scripts.remove("postinstall");
-    if scripts.is_empty() {
-        manifest
-            .as_object_mut()
-            .map(|object| object.remove("scripts"));
+    if scripts.is_empty()
+        && let Some(object) = manifest.as_object_mut()
+    {
+        object.remove("scripts");
     }
     let written = stringify_package(&manifest, &detect_indent(&text), detect_newline(&text))?;
     fs::write(&path, written)

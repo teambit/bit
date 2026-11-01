@@ -57,10 +57,10 @@ impl Ignore {
         compiler: &mut Compiler,
         patterns: impl IntoIterator<Item = &'pattern str>,
     ) -> Result<&mut Self, UnsupportedPattern> {
-        for pattern in patterns {
-            if pattern.is_empty() {
-                continue;
-            }
+        for pattern in patterns
+            .into_iter()
+            .filter(|pat| !pat.is_empty())
+        {
             for line in pattern
                 .split('\n')
                 .map(|line| line.strip_suffix('\r').unwrap_or(line))

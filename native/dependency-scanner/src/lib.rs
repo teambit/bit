@@ -185,10 +185,10 @@ impl<'a> Visit<'a> for Scanner {
             if ts {
                 dep.is_type_import = Some(node.export_kind == ImportOrExportKind::Type);
             } else {
-                for s in &node.specifiers {
+                for spec in &node.specifiers {
                     dep.import_specifiers.push(Specifier {
-                        is_default: s.local.name() == "default",
-                        name: identifier_name(&s.exported),
+                        is_default: spec.local.name() == "default",
+                        name: identifier_name(&spec.exported),
                         exported: Some(true),
                     });
                 }
@@ -209,8 +209,8 @@ impl<'a> Visit<'a> for Scanner {
         walk::walk_export_all_declaration(self, node);
     }
     fn visit_export_named_declaration(&mut self, node: &ExportNamedDeclaration<'a>) {
-        for s in &node.specifiers {
-            self.exported(s.exported.name().as_str());
+        for spec in &node.specifiers {
+            self.exported(spec.exported.name().as_str());
         }
         walk::walk_export_named_declaration(self, node);
     }
@@ -230,8 +230,8 @@ impl<'a> Visit<'a> for Scanner {
         ) {
             self.unsupported = true;
         }
-        if let Expression::StringLiteral(s) = &node.source {
-            self.add(s.value.as_str(), node.span);
+        if let Expression::StringLiteral(lit) = &node.source {
+            self.add(lit.value.as_str(), node.span);
         }
         walk::walk_import_expression(self, node);
     }

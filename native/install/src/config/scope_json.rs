@@ -49,11 +49,10 @@ fn strings<'de, Source: serde::Deserializer<'de>>(
         .into_iter()
         .filter_map(|(key, value)| {
             let trimmed = key.trim();
-            (!trimmed.is_empty())
-                .then(|| {
-                    Some((trimmed.to_owned(), super::workspace_config::config_string(&value)?))
-                })
-                .flatten()
+            if trimmed.is_empty() {
+                return None;
+            }
+            Some((trimmed.to_owned(), super::workspace_config::config_string(&value)?))
         })
         .collect())
 }

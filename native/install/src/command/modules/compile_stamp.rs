@@ -92,14 +92,13 @@ pub(super) fn check(stamp: &Path, inputs: &Inputs<'_>) -> io::Result<Option<Vec<
     }
     let Some(current) = current_outputs(&stored)? else { return Ok(None) };
     let Some(sorted) = sort_outputs(&stored.outputs, &current)? else { return Ok(None) };
-    sorted.damaged
+    Ok(sorted.damaged
         .into_iter()
         .map(|(to, sha256)| {
             let from = sorted.intact.get(sha256)?;
             Some(Restore { from: from.to_path_buf(), to: to.to_path_buf() })
         })
-        .collect::<Option<Vec<_>>>()
-        .map_or(Ok(None), |restores| Ok(Some(restores)))
+        .collect())
 }
 
 /// The outputs that exist now, by path; `None` when one of them was not recorded.
@@ -113,10 +112,10 @@ fn current_outputs(stored: &Stamp) -> io::Result<Option<HashMap<PathBuf, Output>
         .iter()
         .map(Output::path)
         .collect();
-    let unrecorded = current
+    let all_recorded = current
         .keys()
-        .any(|path| !recorded.contains(path.as_path()));
-    Ok((!unrecorded).then_some(current))
+        .all(|path| recorded.contains(path.as_path()));
+    Ok(all_recorded.then_some(current))
 }
 
 /// The recorded files that are intact (by content) and those that are not.

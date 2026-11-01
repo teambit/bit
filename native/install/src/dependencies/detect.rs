@@ -244,14 +244,14 @@ fn packages(
         }
     }
     let lower = file.to_ascii_lowercase();
-    let typescript = lower.ends_with(".ts")
-        || lower.ends_with(".tsx")
-        || lower.ends_with(".mts")
-        || lower.ends_with(".cts");
+    let typescript = [".ts", ".tsx", ".mts", ".cts"]
+        .iter()
+        .any(|ext| lower.ends_with(ext));
     if typescript {
-        let names = found.keys().chain(tree.missing.iter());
-        let types: Vec<(String, String)> =
-            names.filter_map(|name| types_package(workspace, subject, name)).collect();
+        let types = found
+            .keys()
+            .chain(&tree.missing)
+            .filter_map(|name| types_package(workspace, subject, name));
         detected.packages[field_index(Lifecycle::Dev)].extend(types);
     }
     let field = if is_dev { Lifecycle::Dev } else { Lifecycle::Runtime };
