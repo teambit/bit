@@ -1,4 +1,4 @@
-//! Unit tests for platform separator behavior in implicit tracked lane selection.
+//! Unit tests for platform separator behavior in implicit tracked lane selection via [`tracked_for_separator`].
 
 use super::tracked_for_separator;
 use std::{

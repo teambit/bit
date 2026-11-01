@@ -1,4 +1,4 @@
-//! Unit tests for checkout dependency policy receipt version filtering.
+//! Unit tests for checkout dependency policy [`receipt_versions`] filtering.
 
 use super::receipt_versions;
 use serde_json::json;

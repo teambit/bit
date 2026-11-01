@@ -1,4 +1,4 @@
-//! Unit tests for discarding incomplete lane history import progress rows.
+//! Unit tests for discarding incomplete lane history import progress rows via [`discard_incomplete`].
 
 use super::discard_incomplete;
 use serde_json::json;

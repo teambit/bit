@@ -1,4 +1,4 @@
-//! Unit tests for lane merge recovery backup preparation and validation.
+//! Unit tests for lane merge [`Recovery`] backup preparation, validation, and commit.
 
 use super::Recovery;
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Unit tests for lane history phase selection and selected history proofs.
+//! Unit tests for lane history phase [`selection`] and selected history proofs.
 
 use super::selection;
 use serde_json::json;

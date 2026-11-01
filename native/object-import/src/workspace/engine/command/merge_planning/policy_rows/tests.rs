@@ -1,4 +1,4 @@
-//! Unit tests for merge policy file sorting and added component binding prefixes.
+//! Unit tests for merge policy [`sorted_files`] ordering and added component binding prefixes.
 
 use super::sorted_files;
 use serde_json::json;

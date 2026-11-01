@@ -1,4 +1,4 @@
-//! Unit tests for lane addition destination placeholders and prospective metadata.
+//! Unit tests for lane addition destination [`directory`] placeholders and prospective metadata.
 
 use super::{directory, json};
 

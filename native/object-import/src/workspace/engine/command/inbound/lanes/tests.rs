@@ -1,4 +1,4 @@
-//! Unit tests for inbound lane ID validation and virtual remote merging.
+//! Unit tests for inbound lane ID [`parse_id`] validation and [`VirtualRemote`] [`merge_remote`] merging.
 
 use super::{merge_remote, parse_id, validate_virtual_bounds};
 use crate::command_import::VirtualRemote;

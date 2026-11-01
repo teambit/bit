@@ -1,4 +1,4 @@
-//! Unit tests for export and fetch object transfer collection ordering.
+//! Unit tests for export and fetch object transfer collection ordering via [`select`] and [`prepare`].
 
 use std::{fs, io::Write};
 

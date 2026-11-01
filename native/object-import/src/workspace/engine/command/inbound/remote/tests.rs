@@ -1,4 +1,4 @@
-//! Unit tests for remote lane listing and HTTP wildcard lane fetching.
+//! Unit tests for remote lane listing ([`remote_lane`]) and HTTP wildcard lane fetching ([`http_lane`]).
 
 use super::{http_lane, lane_list, remote_lane};
 use crate::{command_import::lane, workspace::engine::command::outbound};

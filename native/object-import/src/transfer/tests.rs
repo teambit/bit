@@ -1,4 +1,4 @@
-//! Unit tests for transfer descriptor preparation and source body streaming.
+//! Unit tests for transfer [`Descriptor`] preparation, tar header encoding, and source body streaming via [`prepare`].
 
 use std::{
     fs,

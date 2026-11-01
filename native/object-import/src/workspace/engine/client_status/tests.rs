@@ -1,4 +1,4 @@
-//! Unit tests for cold client status preparation, scanning, and completion.
+//! Unit tests for cold client status [`prepare`], [`scan`], [`finish`], and [`complete`] phases.
 
 use super::{Finish, Prepare, Scan, State, complete, finish, prepare, scan};
 use flate2::{Compression, write::ZlibEncoder};

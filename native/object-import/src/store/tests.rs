@@ -1,4 +1,4 @@
-//! Unit tests for atomic concurrent object store writes and duplicate suppression.
+//! Unit tests for atomic concurrent object [`Store`] writes, metadata publication, and duplicate suppression.
 
 use super::Store;
 use std::{

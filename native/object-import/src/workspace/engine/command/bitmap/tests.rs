@@ -1,4 +1,4 @@
-//! Unit tests for `.bitmap` override clearing, history snapshots, and updates.
+//! Unit tests for `.bitmap` [`Prepared`] override clearing, history snapshots, and [`Update`] commits.
 
 use super::{Prepared, Update, prepare_after, prepare_bytes, validate_history_file_id};
 use serde_json::{Value, json};

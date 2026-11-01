@@ -1,4 +1,4 @@
-//! Unit tests for lane-aware `.bitmap` updates and header ordering.
+//! Unit tests for lane-aware `.bitmap` [`Update`] preparation and header ordering via [`prepare_bytes`].
 
 use super::{Update, prepare_bytes};
 use serde_json::{Value, json};

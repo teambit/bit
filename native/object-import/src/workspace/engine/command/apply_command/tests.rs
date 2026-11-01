@@ -1,4 +1,4 @@
-//! Unit tests for post-persistence event notification and dependency readset proofs.
+//! Unit tests for post-persistence event [`notify`] execution and dependency readset proofs.
 
 use super::notify;
 use crate::workspace::engine::command::scratch;

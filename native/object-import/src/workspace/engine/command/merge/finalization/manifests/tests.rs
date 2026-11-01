@@ -1,4 +1,4 @@
-//! Unit tests for pending `node_modules` package manifest plans and commit.
+//! Unit tests for [`Prepared`] pending `node_modules` package manifest plans and commit.
 
 use super::super::Prepared;
 use crate::workspace::engine::command::scratch::Directory;

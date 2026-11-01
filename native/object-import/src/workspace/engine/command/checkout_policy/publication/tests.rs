@@ -1,4 +1,4 @@
-//! Unit tests for checkout workspace dependency policy update publication.
+//! Unit tests for checkout [`Prepared`] workspace dependency policy update publication and `JSONC` rendering.
 
 use super::Prepared;
 use serde_json::json;

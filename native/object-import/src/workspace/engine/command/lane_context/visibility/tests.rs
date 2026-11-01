@@ -1,4 +1,4 @@
-//! Unit tests for lane component visibility and switch target selection.
+//! Unit tests for lane component visibility ([`targets`], [`inactive_targets`]) and [`switch_targets`] selection.
 
 use super::{inactive_targets, json, switch_targets, targets};
 use std::collections::HashSet;

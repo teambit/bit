@@ -1,4 +1,4 @@
-//! Unit tests for lane squash commit message replacement and modification logs.
+//! Unit tests for lane squash commit message replacement via [`replace_message`] and modification logs.
 
 use super::replace_message;
 use serde_json::json;

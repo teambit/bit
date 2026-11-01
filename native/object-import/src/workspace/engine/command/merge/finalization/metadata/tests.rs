@@ -1,4 +1,4 @@
-//! Unit tests for unlinking before replacing generated `package.json` manifests.
+//! Unit tests for unlinking before replacing generated `package.json` manifests via [`replace`].
 
 use super::replace;
 use crate::workspace::engine::command::scratch;

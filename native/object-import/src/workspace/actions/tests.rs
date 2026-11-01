@@ -1,4 +1,4 @@
-//! Unit tests for workspace filesystem action batch execution.
+//! Unit tests for workspace filesystem action batch execution and frame validation via [`serve`].
 
 use super::serve;
 use crate::workspace::tests::Directory;

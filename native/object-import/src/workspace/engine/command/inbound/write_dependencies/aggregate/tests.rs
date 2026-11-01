@@ -1,4 +1,4 @@
-//! Unit tests for `--write-deps` root precedence, ranges, and key ordering.
+//! Unit tests for `--write-deps` root precedence, ranges, and key ordering via [`prepare`].
 
 use super::prepare;
 use serde_json::json;

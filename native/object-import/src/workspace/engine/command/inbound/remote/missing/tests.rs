@@ -1,4 +1,4 @@
-//! Unit tests for missing version and dependency graph request discovery.
+//! Unit tests for missing version and dependency graph request discovery via [`requests`].
 
 use super::requests;
 use crate::validate::hexadecimal;

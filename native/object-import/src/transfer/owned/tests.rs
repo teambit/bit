@@ -1,4 +1,4 @@
-//! Unit tests for owned transfer initialization and staged object streaming.
+//! Unit tests for owned transfer initialization, spool lifecycle, and staged object streaming via [`apply`].
 
 use std::{fs, io::Write, path::Path};
 

@@ -1,4 +1,4 @@
-//! Unit tests for merge lifecycle persistence notifications on empty merges.
+//! Unit tests for [`Prepared`] merge lifecycle persistence notifications on empty merges.
 
 use super::{Prepared, merge};
 use crate::workspace::engine::command::scratch;

@@ -1,4 +1,4 @@
-//! Unit tests for component version tag hash indexing and precedence.
+//! Unit tests for component version [`TagIndex`] hash indexing and tag precedence.
 
 use super::TagIndex;
 #[test]

@@ -1,4 +1,4 @@
-//! Unit tests for private workspace source capture and wire budget bounds.
+//! Unit tests for private workspace source capture ([`all`], [`all_for_checkout`]) and wire budget bounds.
 
 use super::{all, all_for_checkout, read, snapshots};
 use serde_json::json;

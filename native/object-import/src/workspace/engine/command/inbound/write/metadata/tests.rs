@@ -1,4 +1,4 @@
-//! Unit tests for `.bitmap` live component ID ordering and scope resolution.
+//! Unit tests for `.bitmap` live component ID ordering, metadata validation, and scope resolution.
 
 use serde_json::json;
 

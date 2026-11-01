@@ -1,4 +1,4 @@
-//! Unit tests for merge destination path validation and canonical relative paths.
+//! Unit tests for merge destination path [`validate`] and [`canonical_relative`] checks.
 
 use super::{canonical_relative, validate};
 use crate::workspace::engine::command::scratch::Directory;

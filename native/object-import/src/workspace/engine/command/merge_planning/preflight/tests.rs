@@ -1,4 +1,4 @@
-//! Unit tests for merge preflight target file validation and dependent rejection.
+//! Unit tests for merge preflight [`validate_target`] file validation and dependent rejection.
 
 use super::validate_target;
 use serde_json::json;

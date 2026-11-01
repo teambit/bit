@@ -1,4 +1,4 @@
-//! Unit tests for parallel hidden lane component source capture from the object store.
+//! Unit tests for parallel hidden lane component source capture from [`Repository`] via [`from_model`].
 
 use super::{Repository, from_model, json, snapshots};
 use flate2::{Compression, write::ZlibEncoder};
