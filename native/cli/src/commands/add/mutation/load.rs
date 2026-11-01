@@ -23,6 +23,7 @@ pub(super) struct Loaded {
     pub capture: capture::Capture,
 }
 
+#[inline]
 pub(super) fn prepare(
     root: &Path,
     bitmap: &Value,
@@ -66,6 +67,7 @@ fn prepare_with(
     Ok(Loaded { engine, projection, capture })
 }
 
+#[inline]
 pub(super) fn projected(
     root: &Path,
     bitmap: &Value,
@@ -76,6 +78,7 @@ pub(super) fn projected(
     Ok((engine, projection))
 }
 
+#[inline]
 pub(super) fn projected_with_engine(
     root: &Path,
     bitmap: &Value,
@@ -114,6 +117,7 @@ fn project(
     Ok(environments)
 }
 
+#[inline]
 pub(super) fn commit(root: &Path, loaded: &mut Loaded) -> io::Result<()> {
     cache::restrict(root, &mut loaded.capture);
     loaded.engine.validate_read_set(
@@ -123,6 +127,7 @@ pub(super) fn commit(root: &Path, loaded: &mut Loaded) -> io::Result<()> {
     capture::commit(&mut loaded.engine, root, &loaded.projection.context, &loaded.capture)
 }
 
+#[inline]
 pub(super) fn host(capture: &mut capture::Capture) -> io::Result<Arc<Host>> {
     let environment = capture::take_callback_environment(capture)
         .ok_or_else(|| io::Error::other("identity callback environment"))?;
@@ -133,6 +138,7 @@ pub(super) fn host(capture: &mut capture::Capture) -> io::Result<Arc<Host>> {
     ))
 }
 
+#[inline]
 pub(super) fn capture(
     root: &Path,
     bitmap: &Value,
@@ -142,6 +148,7 @@ pub(super) fn capture(
 ) -> io::Result<capture::Capture> {
     capture_with(root, bitmap, identities, environment, stdout, true, true)
 }
+#[inline]
 pub(super) fn capture_cached(
     root: &Path,
     bitmap: &Value,
@@ -263,6 +270,7 @@ pub(super) fn enrich(loaded: &mut Loaded) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -279,6 +287,7 @@ fn row_identity(row: &Value) -> Option<&str> {
 }
 
 /// `NodeModuleLinker` clears loaded classes when generated package metadata changes.
+#[inline]
 pub(super) fn invalidate_changed(
     root: &Path,
     components: &[bit_install::model::WorkspaceComponent],

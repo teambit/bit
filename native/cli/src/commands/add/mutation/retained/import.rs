@@ -89,6 +89,7 @@ impl Retained {
         Ok(matched)
     }
 }
+#[inline]
 fn content_path(proof: &Value) -> io::Result<&Path> {
     proof["path"]
         .as_str()
@@ -98,6 +99,7 @@ fn content_path(proof: &Value) -> io::Result<&Path> {
         .filter(|path| path.is_absolute())
         .ok_or_else(|| invalid("import content proof path"))
 }
+#[inline]
 fn content(proof: &Value) -> bool {
     proof
         .as_object()
@@ -125,11 +127,13 @@ fn receipt(write: &Value) -> io::Result<(Value, Value)> {
         json!({"path":path,"hash":normalize_hash(&write["afterHash"])}),
     ))
 }
+#[inline]
 fn normalize_hash(value: &Value) -> Value {
     value
         .as_str()
         .map_or_else(|| value.clone(), |text| Value::String(text.trim().to_owned()))
 }
+#[inline]
 fn hash(value: &Value) -> bool {
     value.is_null()
         || value
@@ -142,6 +146,7 @@ fn hash(value: &Value) -> bool {
                         .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
             })
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
 }

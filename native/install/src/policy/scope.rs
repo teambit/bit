@@ -32,6 +32,7 @@ impl Eq for Scope {}
 impl Scope {
     /// The scope of the workspace at `root`, when it has one.
     #[must_use]
+    #[inline]
     pub fn find(root: &Path) -> Option<Self> {
         [root.join(".bit"), root.join(".git").join("bit")]
             .into_iter()
@@ -41,6 +42,7 @@ impl Scope {
 
     /// Retain content proofs for every scope object read through this handle.
     #[must_use]
+    #[inline]
     pub fn recording(mut self) -> Self {
         self.proofs = Some(Arc::new(Mutex::new(Vec::new())));
         self
@@ -48,6 +50,7 @@ impl Scope {
 
     /// Immutable proofs suitable for `dependencyFreshValidate`.
     #[must_use]
+    #[inline]
     pub fn read_set(&self) -> Vec<Value> {
         self.proofs
             .as_ref()
@@ -62,12 +65,14 @@ impl Scope {
 
     /// The scope directory.
     #[must_use]
+    #[inline]
     pub fn path(&self) -> &Path {
         &self.path
     }
 
     /// `<scope>/cache/components/deps`, Bit's dependency cache.
     #[must_use]
+    #[inline]
     pub fn dependency_cache(&self) -> PathBuf {
         self.path
             .join("cache")
@@ -109,6 +114,7 @@ impl Scope {
     }
 
     /// The JSON body of an object of the given type.
+    #[inline]
     pub fn json(&self, hash: &str, kind: &str) -> io::Result<Option<Value>> {
         self.object(hash, kind)?
             .map(|body| bit_object_import::parse_jsonc(&body))
@@ -217,6 +223,7 @@ fn index_row_matches(row: &Value, target_scope: Option<&str>, target_name: &str)
 
 /// `isHash` of `@teambit/component-version`: 3 to 40 lowercase hex characters.
 #[must_use]
+#[inline]
 pub fn is_hash(version: &str) -> bool {
     let version = version.trim();
     (3..=40).contains(&version.len())
@@ -227,6 +234,7 @@ pub fn is_hash(version: &str) -> bool {
 
 /// `snapToSemver`: a snap hash becomes `0.0.0-<hash>`.
 #[must_use]
+#[inline]
 pub fn snap_to_semver(version: &str) -> String {
     let version = version.trim();
     if is_hash(version) { format!("0.0.0-{version}") } else { version.to_owned() }
@@ -234,6 +242,7 @@ pub fn snap_to_semver(version: &str) -> String {
 
 /// Lowercase hex SHA-1, the scope object hash.
 #[must_use]
+#[inline]
 pub fn hex_sha1(bytes: &[u8]) -> String {
     Sha1::digest(bytes)
         .iter()
@@ -244,11 +253,13 @@ pub fn hex_sha1(bytes: &[u8]) -> String {
         })
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 
 /// A content proof of a local environment manifest, including its absence.
+#[inline]
 pub fn read_proof(path: &Path) -> io::Result<Value> {
     match fs::read(path) {
         Ok(bytes) => Ok(proof_from_bytes(path, Some(&bytes))),
@@ -259,6 +270,7 @@ pub fn read_proof(path: &Path) -> io::Result<Value> {
 
 /// Build a content proof from already bounded bytes, or an observed absence.
 #[must_use]
+#[inline]
 pub fn proof_from_bytes(path: &Path, bytes: Option<&[u8]>) -> Value {
     serde_json::json!({"path":path,"hash":bytes.map(|bytes|format!("{:x}",Sha256::digest(bytes)))})
 }

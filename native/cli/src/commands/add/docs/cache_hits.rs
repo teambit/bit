@@ -17,6 +17,7 @@ pub(super) struct Plan {
     pub proven: Vec<Value>,
 }
 
+#[inline]
 pub(super) fn prepare(
     root: &Path,
     cache: &Path,
@@ -66,6 +67,7 @@ fn partition(
     }
     Ok(plan)
 }
+#[inline]
 pub(super) fn inspect(
     root: &Path,
     cache: &Path,
@@ -161,18 +163,21 @@ pub(super) fn source_path(root: &Path, component: &Value, file: &Value) -> io::R
         .collect())
 }
 
+#[inline]
 fn file_relative_path(file: &Value) -> Option<&str> {
     non_empty_str(file)
         .or_else(|| non_empty_str(&file["relativePath"]))
         .or_else(|| non_empty_str(&file["path"]))
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
 }

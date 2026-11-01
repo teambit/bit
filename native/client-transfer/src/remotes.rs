@@ -30,6 +30,7 @@ pub enum Remote {
 
 impl Remote {
     /// `connect()` in `network-lib.ts`.
+    #[inline]
     pub fn from_host(host: &str) -> io::Result<Self> {
         let host = host.trim();
         if host.starts_with("ssh://") || host.starts_with("bit://") {
@@ -67,12 +68,14 @@ pub struct Remotes {
 
 impl Remotes {
     /// Whether an unconfigured scope would invoke the workspace resolver callback.
+    #[inline]
     #[must_use]
     pub fn has_custom_resolver(&self) -> bool {
         self.resolver.is_some()
     }
 
     /// A locally configured file/HTTP remote, without a resolver or hub request.
+    #[inline]
     pub fn configured(&self, scope: &str) -> io::Result<Option<Remote>> {
         self.hosts
             .get(scope.trim())
@@ -103,6 +106,7 @@ impl Remotes {
     }
 
     /// Resolve scopes without a configured remote through `resolver` instead of the hub.
+    #[inline]
     #[must_use]
     pub fn with_resolver(mut self, resolver: Option<Resolver>) -> Self {
         self.resolver = resolver;
@@ -139,6 +143,7 @@ impl Remotes {
 
     /// One resolution per scope, hub and resolver for the whole process: a command
     /// builds a `Remotes` per step (`bit import` lists, then fetches).
+    #[inline]
     fn cache_key(&self, scope: &str) -> String {
         let resolver =
             self.resolver.as_ref().map_or("", |resolver| resolver.path.as_str());
@@ -167,6 +172,7 @@ impl Remotes {
 }
 
 /// `ScopeNotFoundOrDenied`.
+#[inline]
 #[must_use]
 pub fn not_found_or_denied(scope: &str) -> io::Error {
     io::Error::new(

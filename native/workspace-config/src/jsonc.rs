@@ -23,6 +23,7 @@ use std::{fmt, io};
 
 /// Parse JSONC (comments and trailing commas) into plain JSON, keeping the
 /// key order JavaScript would.
+#[inline]
 pub fn parse(text: &str) -> io::Result<Value> {
     Ok(Document::parse(text)?.value())
 }
@@ -36,6 +37,7 @@ pub struct Document {
 }
 
 impl Document {
+    #[inline]
     pub fn parse(text: &str) -> io::Result<Self> {
         let parsed = parser::parse(text)?;
         Ok(Self { root: parsed.root, before_all: parsed.before_all, after_all: parsed.after_all })
@@ -43,12 +45,14 @@ impl Document {
 
     /// The whole document as plain JSON.
     #[must_use]
+    #[inline]
     pub fn value(&self) -> Value {
         self.root.to_value()
     }
 
     /// The root node, with comments.
     #[must_use]
+    #[inline]
     pub const fn root(&self) -> &Node {
         &self.root
     }
@@ -96,6 +100,7 @@ impl Document {
 
     /// `obj[key] = value` at `path`: an existing key keeps its position and
     /// its comments, a new key is appended. Empty `path` replaces the root.
+    #[inline]
     pub fn set(&mut self, path: &[&str], value: &Value) {
         let Some((key, parent)) = path.split_last() else {
             self.root = Node::from_value(value);
@@ -127,6 +132,7 @@ impl Document {
 
     /// comment-json `assign(target, source)` on the object at `path`: each
     /// source key is set in order, keeping existing positions and comments.
+    #[inline]
     pub fn assign(&mut self, path: &[&str], source: &serde_json::Map<String, Value>) {
         let object = self.object_mut(path);
         object.entries.reserve(source.len());
@@ -138,6 +144,7 @@ impl Document {
     /// Delete every key of the object at `path`, then assign `entries` in their
     /// order: how `updateConfigPolicy` rewrites a policy field so its entries
     /// end up in the new order while each entry's comments survive.
+    #[inline]
     pub fn replace_entries(&mut self, path: &[&str], entries: &IndexMap<String, Value>) {
         let object = self.object_mut(path);
         object.entries.clear();

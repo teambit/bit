@@ -18,6 +18,7 @@ impl ProjectedLinker {
     }
 
     /// `ComponentWriter` updates the live bitmap before its retained Host installs.
+    #[inline]
     pub(in crate::commands) fn project_installation_workspace(
         root: &Path,
         environment: &mut crate::commands::status::environments::Environments,
@@ -130,12 +131,14 @@ impl ProjectedLinker {
         Ok(projection.loading_components())
     }
 
+    #[inline]
     pub(in crate::commands) fn import_acknowledge(&mut self, writes: &[Value]) -> io::Result<()> {
         self.retained.acknowledge_import(writes)?;
         self.retained.validate()
     }
 }
 
+#[inline]
 fn strip_version(id: &str) -> String {
     let trimmed = id.trim();
     match trimmed.rsplit_once('@') {

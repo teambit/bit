@@ -13,6 +13,7 @@ use std::{
 const KEY: &str = "identityControlReadSet";
 const MAX_CONTROL: u64 = 32 * 1024 * 1024;
 
+#[inline]
 pub(super) fn validate(engine: &mut Engine, context: &Value) -> io::Result<()> {
     engine.validate_read_set(
         context["controlReadSet"]
@@ -39,6 +40,7 @@ pub(super) fn retain(context: &Value, capture: &mut Capture) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn proof_path(proof: &Value) -> Option<&str> {
     proof
         .as_str()
@@ -66,6 +68,7 @@ fn proof_path(proof: &Value) -> Option<&str> {
         })
 }
 
+#[inline]
 pub(super) fn reads(facts: &Value) -> &[Value] {
     facts[KEY]
         .as_array()
@@ -95,6 +98,7 @@ pub(super) fn refresh(path: &Path) -> io::Result<Value> {
     bounded_proof(path, file)
 }
 
+#[inline]
 fn bounded_proof(path: &Path, file: fs::File) -> io::Result<Value> {
     let metadata = file.metadata()?;
     if !metadata.is_file() {

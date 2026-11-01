@@ -5,6 +5,7 @@ use serde_json::Value;
 use std::{io, path::Path};
 
 impl ProjectedLinker {
+    #[inline]
     pub(in crate::commands) fn fork_bitmap_preimage(&self, root: &Path) -> io::Result<Value> {
         let path = bitmap_path(root)?;
         self.retained.validate()?;
@@ -38,10 +39,14 @@ impl ProjectedLinker {
     }
 }
 
+#[inline]
 fn bitmap_path(root: &Path) -> io::Result<std::path::PathBuf> {
     if !root.is_absolute()
-        || root.as_os_str().is_empty()
-        || root.to_string_lossy().trim().is_empty()
+        || root
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
     {
         return Err(io::Error::other("fork bitmap workspace root is empty"));
     }

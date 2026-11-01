@@ -90,12 +90,14 @@ fn components(plan: &Plan, projection: &Projection) -> Vec<WorkspaceComponent> {
         .collect()
 }
 
+#[inline]
 fn non_empty_str(value: &serde_json::Value) -> Option<&str> {
     value
         .as_str()
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
+#[inline]
 fn validate(prepared: &mut Prepared, capture: &capture::Capture) -> io::Result<()> {
     prepared.engine.validate_read_set(
         &capture.dependency_read_set(),
@@ -103,6 +105,7 @@ fn validate(prepared: &mut Prepared, capture: &capture::Capture) -> io::Result<(
     )
 }
 
+#[inline]
 pub(super) fn link(
     root: &Path,
     projection: &Projection,
@@ -177,6 +180,7 @@ fn aspect_environments(components: &[WorkspaceComponent], aspects: &[String]) ->
         .map(str::to_owned)
         .collect()
 }
+#[inline]
 fn report(plan: &Plan, json: bool, chalk: Chalk) -> io::Result<Report> {
     let data = if json {
         serde_json::to_string_pretty(&report::json(plan.components(), plan.warnings()))?

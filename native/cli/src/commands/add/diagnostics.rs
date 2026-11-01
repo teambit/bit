@@ -1,6 +1,7 @@
 //! Released CI diagnostics include Node stacks, so predictable errors delegate before providers.
 use super::projection::Projection;
 use std::{env, fs, io, path::Path};
+#[inline]
 pub(super) fn ci() -> bool {
     env::var_os("CI").is_some_and(|value| !value.is_empty())
 }
@@ -33,6 +34,7 @@ pub(super) fn links(root: &Path, projection: &Projection) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn matches_target(target: &serde_json::Value, identity: &str) -> bool {
     let expected = identity.trim();
     !expected.is_empty()
@@ -68,10 +70,12 @@ fn blocked_package(package: &Path) -> io::Result<bool> {
     }
     Ok(false)
 }
+#[inline]
 fn blocked_manifest(path: &Path) -> io::Result<bool> {
     Ok(metadata(path)?
         .is_some_and(|metadata| metadata.is_dir() || metadata.file_type().is_symlink()))
 }
+#[inline]
 fn metadata(path: &Path) -> io::Result<Option<fs::Metadata>> {
     match fs::symlink_metadata(path) {
         Ok(metadata) => Ok(Some(metadata)),

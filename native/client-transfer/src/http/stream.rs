@@ -58,6 +58,7 @@ struct Chunks {
     current: io::Cursor<Vec<u8>>,
 }
 impl Read for Chunks {
+    #[inline]
     fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
         if output.is_empty() {
             return Ok(0);

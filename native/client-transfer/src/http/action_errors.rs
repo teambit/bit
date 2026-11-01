@@ -21,6 +21,7 @@ pub(super) async fn throw_for_action_status(response: Response) -> io::Result<Re
     Err(action_error(error_code(error).or_else(|| error_code(&parsed)), error, &url, message))
 }
 
+#[inline]
 fn error_code(error: &Value) -> Option<u64> {
     error["code"]
         .as_u64()
@@ -31,6 +32,7 @@ fn error_code(error: &Value) -> Option<u64> {
         })
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -75,6 +77,7 @@ fn action_error(code: Option<u64>, error: &Value, url: &str, message: String) ->
 }
 
 /// Structured remote merge conflicts, whose CLI report applies terminal colors.
+#[inline]
 #[must_use]
 pub fn action_conflict(error: &io::Error) -> Option<&Value> {
     error
@@ -94,6 +97,7 @@ impl std::fmt::Display for ActionConflict {
 impl std::error::Error for ActionConflict {}
 
 /// Whether a remote rejected an action because its server predates that action.
+#[inline]
 #[must_use]
 pub fn is_action_not_found(error: &io::Error) -> bool {
     error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<ActionNotFound>)
@@ -182,6 +186,7 @@ impl std::fmt::Display for LaneNotFound {
 impl std::error::Error for LaneNotFound {}
 
 /// `UnexpectedNetworkError`.
+#[inline]
 pub(super) fn unexpected(message: &str) -> io::Error {
     let message = message.trim();
     io::Error::new(
@@ -190,6 +195,7 @@ pub(super) fn unexpected(message: &str) -> io::Error {
     )
 }
 
+#[inline]
 pub(super) fn network_error(error: &reqwest::Error) -> io::Error {
     unexpected(&error.to_string())
 }

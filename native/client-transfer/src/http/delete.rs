@@ -18,11 +18,13 @@ const MAX_DELETE_LINES: usize = 4096;
 impl Network {
     /// `Http.deleteMany` for components on a configured HTTP scope. `ids`
     /// are unversioned `scope/name` strings selected by the public command.
+    #[inline]
     pub async fn delete_scope(&self, url: &str, ids: &[String], force: bool) -> io::Result<Value> {
         self.delete_scope_ids(url, ids, force, false).await
     }
 
     /// `Http.deleteMany` for lanes on a configured HTTP scope.
+    #[inline]
     pub async fn delete_scope_lanes(
         &self,
         url: &str,
@@ -68,11 +70,13 @@ impl Network {
 
     /// `Http.deleteViaCentralHub`: one endpoint receives all component IDs,
     /// each still versioned `@latest` as selected by `removeComponents`.
+    #[inline]
     pub async fn delete_hub(&self, url: &str, ids: &[String], force: bool) -> io::Result<Value> {
         self.delete_hub_ids(url, ids, force, false).await
     }
 
     /// `Http.deleteViaCentralHub` for lanes, with `laneIds` in its JSON body.
+    #[inline]
     pub async fn delete_hub_lanes(
         &self,
         url: &str,
@@ -168,6 +172,7 @@ fn final_hub_line(bytes: &[u8]) -> io::Result<Value> {
     Ok(last)
 }
 
+#[inline]
 fn validate_removed(result: &Value) -> io::Result<()> {
     let oversized = ["removedComponentIds", "missingComponents", "removedFromLane", "removedLanes"]
         .into_iter()

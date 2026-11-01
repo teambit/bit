@@ -25,14 +25,17 @@ pub struct AspectEntry {
 
 impl AspectEntry {
     /// The id `mergeConfigs` compares, ignoring versions.
+    #[inline]
     fn merge_key(&self) -> (bool, &str) {
         (self.core, aspect_id_without_version(&self.id))
     }
 
+    #[inline]
     fn is_removed(&self) -> bool {
         self.config.as_str().map(str::trim) == Some("-")
     }
 
+    #[inline]
     fn env_config(&self) -> Option<&str> {
         self.config
             .get("env")
@@ -109,6 +112,7 @@ pub fn from_model(extensions: &[Value]) -> Vec<AspectEntry> {
         .collect()
 }
 
+#[inline]
 fn strip_head_or_latest(id: &str) -> Option<String> {
     let trimmed = id.trim();
     let stripped = trimmed
@@ -153,6 +157,7 @@ fn serialized_id(id: &Map<String, Value>) -> Option<String> {
 
 /// Whether the model entry is component-specific (`__specific: true`).
 #[must_use]
+#[inline]
 pub fn is_specific(entry: &AspectEntry) -> bool {
     entry.config.get(SPECIFIC_FIELD) == Some(&Value::Bool(true))
 }
@@ -204,6 +209,7 @@ pub struct Merger<'a> {
 
 impl<'a> Merger<'a> {
     #[must_use]
+    #[inline]
     pub const fn new(resolver: Resolver<'a>) -> Self {
         Self { resolver, lists: Vec::new(), removed: Vec::new(), env_found: false }
     }
@@ -214,7 +220,7 @@ impl<'a> Merger<'a> {
         }
         let self_id = self.resolver.component.to_string_without_version();
         let prefer = !matches!(origin, Origin::BitmapFile | Origin::ComponentJsonFile);
-        let mut kept = Vec::new();
+        let mut kept = Vec::with_capacity(entries.len());
         for mut entry in entries {
             if entry.is_removed() {
                 self.removed.push(entry.id.clone());
@@ -261,6 +267,7 @@ impl<'a> Merger<'a> {
 
     /// [`merge_lists`] of every origin, minus removed aspects.
     #[must_use]
+    #[inline]
     pub fn finish(self) -> Vec<AspectEntry> {
         let mut merged = merge_lists(self.lists);
         merged.retain(|entry| {
@@ -307,12 +314,14 @@ fn drop_envs(mut entries: Vec<AspectEntry>, env: Option<&str>) -> Vec<AspectEntr
     entries
 }
 
+#[inline]
 fn is_core_env(id: &str) -> bool {
     CORE_ENVS.contains(&aspect_id_without_version(id))
 }
 
 /// The merged aspects as `{ id: config }`, without Bit's internal `__specific` field.
 #[must_use]
+#[inline]
 pub fn to_config(entries: &[AspectEntry]) -> Map<String, Value> {
     entries
         .iter()

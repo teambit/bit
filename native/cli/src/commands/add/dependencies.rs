@@ -3,6 +3,7 @@ use bit_install::model::{ComponentDependencies, Lifecycle, PackageDependency};
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(in crate::commands) fn packages(
     captured: &[Value],
 ) -> io::Result<Vec<(String, ComponentDependencies)>> {
@@ -11,6 +12,7 @@ pub(in crate::commands) fn packages(
         .map(component_packages)
         .collect()
 }
+#[inline]
 fn component_packages(row: &Value) -> io::Result<(String, ComponentDependencies)> {
     let identity = row["identity"]
         .as_str()

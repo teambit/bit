@@ -20,6 +20,7 @@ pub struct HubReply {
 
 impl Network {
     /// The hub retries an identical object set three times, unlike a direct scope upload.
+    #[inline]
     pub async fn push_central(
         &self,
         url: &str,
@@ -127,6 +128,7 @@ fn accept_chunk(
     Ok(())
 }
 
+#[inline]
 fn observed_line(
     bytes: &[u8],
     end: &mut Value,
@@ -163,6 +165,7 @@ fn line(bytes: &[u8], end: &mut Value, messages: &mut Vec<String>) -> io::Result
     Ok(())
 }
 
+#[inline]
 fn finish(
     url: &str,
     status: StatusCode,

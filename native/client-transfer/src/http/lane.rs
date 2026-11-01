@@ -38,6 +38,7 @@ impl Network {
     }
 }
 
+#[inline]
 fn parse_lanes_response(bytes: &[u8]) -> io::Result<Vec<Value>> {
     let parsed: Value = serde_json::from_slice(bytes).map_err(io::Error::other)?;
     if let Some(message) = parsed["errors"][0]["message"]
@@ -59,6 +60,7 @@ fn parse_lanes_response(bytes: &[u8]) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+#[inline]
 fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
     if let Some(raw) = id.as_str() {
         raw.trim()
@@ -84,6 +86,7 @@ fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
     }
 }
 
+#[inline]
 fn lane_projection(lane: &Value) -> io::Result<Value> {
     let (scope, name) = parse_lane_id(&lane["id"])?;
     let rows = lane["components"].as_array().ok_or_else(|| invalid("remote lane components"))?;

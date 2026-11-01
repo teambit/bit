@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
 impl ProjectedLinker {
+    #[inline]
     pub(in crate::commands) fn capture_cached(
         &mut self,
         root: &Path,
@@ -48,6 +49,7 @@ impl ProjectedLinker {
         self.cached_classes(root, &rows)?;
         Ok(rows)
     }
+    #[inline]
     pub(in crate::commands) fn link_retained(
         &mut self,
         root: &Path,
@@ -87,6 +89,7 @@ impl ProjectedLinker {
         self.restore(host)?;
         linked
     }
+    #[inline]
     fn cached_classes(&mut self, root: &Path, rows: &[Value]) -> io::Result<()> {
         if rows.is_empty() {
             return Ok(());
@@ -103,19 +106,16 @@ fn refreshed(
     mut rows: Vec<Value>,
     components: &[bit_install::model::WorkspaceComponent],
 ) -> io::Result<Vec<Value>> {
-    let by_id: std::collections::HashMap<String, &bit_install::model::WorkspaceComponent> =
-        components
-            .iter()
-            .map(|component| {
-                (
-                    component.id
-                        .to_string_without_version()
-                        .trim()
-                        .to_owned(),
-                    component,
-                )
-            })
-            .collect();
+    let mut by_id = std::collections::HashMap::with_capacity(components.len());
+    for component in components {
+        by_id.insert(
+            component.id
+                .to_string_without_version()
+                .trim()
+                .to_owned(),
+            component,
+        );
+    }
     for row in &mut rows {
         let identity = row["identity"]
             .as_str()
@@ -139,6 +139,7 @@ fn refreshed(
     Ok(rows)
 }
 
+#[inline]
 fn link_rows(
     root: &Path,
     projection: &super::super::projection::Projection,

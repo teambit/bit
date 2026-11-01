@@ -24,6 +24,7 @@ pub struct Ignore {
 
 impl Ignore {
     #[must_use]
+    #[inline]
     pub fn new() -> Self {
         Self::default()
     }
@@ -48,6 +49,7 @@ impl Ignore {
     }
 
     /// `ignore().add(otherIgnore)`: append its rules.
+    #[inline]
     pub fn extend(&mut self, other: &Self) -> &mut Self {
         self.rules.extend(other.rules.iter().cloned());
         self.cache.clear();
@@ -55,11 +57,13 @@ impl Ignore {
     }
 
     #[must_use]
+    #[inline]
     pub const fn is_empty(&self) -> bool {
         self.rules.is_empty()
     }
 
     /// The paths that are not ignored, in order.
+    #[inline]
     pub fn filter(&mut self, paths: &[String]) -> Vec<String> {
         paths
             .iter()
@@ -68,6 +72,7 @@ impl Ignore {
             .collect()
     }
 
+    #[inline]
     pub fn ignores(&mut self, path: &str) -> bool {
         !self.keep(path)
     }
@@ -98,6 +103,7 @@ impl Ignore {
         keep
     }
 
+    #[inline]
     fn test(&self, path: &str) -> bool {
         let mut ignored = false;
         for rule in &self.rules {
@@ -109,6 +115,7 @@ impl Ignore {
     }
 }
 
+#[inline]
 fn is_object_prototype_key(path: &str) -> bool {
     matches!(
         path.trim(),
@@ -128,12 +135,14 @@ fn is_object_prototype_key(path: &str) -> bool {
 }
 
 /// `_createRule`.
+#[inline]
 fn rule(pattern: &str) -> io::Result<Rule> {
     let (negative, body) = parts(pattern);
     Ok(Rule { regex: compile(&body, negative)?, negative })
 }
 
 /// A leading `!` negates; a leading `\!` or `\#` is a literal `!` or `#`.
+#[inline]
 fn parts(pattern: &str) -> (bool, String) {
     let (negative, body) = pattern
         .strip_prefix('!')
@@ -156,10 +165,12 @@ struct Replacer {
     replace: Replace,
 }
 
+#[inline]
 fn replacer(source: &str, global: bool, replace: Replace) -> Replacer {
     Replacer { regex: Regex::new(source).expect("node-ignore replacer regex"), global, replace }
 }
 
+#[inline]
 fn group(found: &Match, text: &str, index: usize) -> Option<String> {
     found
         .group(index)

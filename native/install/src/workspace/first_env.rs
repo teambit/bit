@@ -61,6 +61,7 @@ fn first_env(
 }
 
 /// `teambit.envs/envs` names the env, or the default env is configured itself.
+#[inline]
 fn has_configured_env(component: &WorkspaceComponent) -> bool {
     component.config
         .keys()
@@ -75,6 +76,7 @@ fn has_configured_env(component: &WorkspaceComponent) -> bool {
             .is_some_and(|env| !env.trim().is_empty())
 }
 
+#[inline]
 fn is_env_component(
     id: &str,
     envs: &std::collections::HashMap<String, bool>,

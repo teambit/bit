@@ -16,6 +16,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[inline]
 pub(super) fn load(
     root: &Path,
     environment: &mut Environments,
@@ -72,6 +73,7 @@ pub(super) fn prepare(
 }
 
 impl Prepared {
+    #[inline]
     pub(in crate::commands) fn source_proofs(&self) -> Vec<Value> {
         self.observed
             .iter()
@@ -81,6 +83,7 @@ impl Prepared {
             .collect()
     }
 
+    #[inline]
     pub(in crate::commands) fn publish(self) -> io::Result<()> {
         // Deferred source proofs are consumed before onLoad. Its authorized edits must
         // not replace the documentation the consumer already parsed from its old files.

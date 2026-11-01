@@ -3,6 +3,7 @@ use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
 /// Read `<directory>/config.json`, retaining ordinary JSON parsing diagnostics.
+#[inline]
 pub fn read_global_config(directory: &Path) -> io::Result<Value> {
     read_global_config_with(directory, |_, error| io::Error::other(error))
 }
@@ -39,6 +40,7 @@ pub fn read_global_config_with(
 
 /// Install's supported scalar setting projection preserves empty strings and boolean/number text.
 #[must_use]
+#[inline]
 pub fn config_string(value: &Value) -> Option<String> {
     match value {
         Value::String(value) => Some(value.clone()),

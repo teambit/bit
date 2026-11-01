@@ -41,6 +41,7 @@ const TRANSPORT_KEYS: &[&str] = &[
 ];
 
 /// `BIT_CONFIG_*` overrides workspace settings, then scope settings, then global settings.
+#[inline]
 #[must_use]
 pub fn effective(global: GlobalConfig, scope: &Value, workspace: &Value) -> GlobalConfig {
     layers(global, scope, workspace, |key| {
@@ -51,6 +52,7 @@ pub fn effective(global: GlobalConfig, scope: &Value, workspace: &Value) -> Glob
     })
 }
 
+#[inline]
 fn layers(
     global: GlobalConfig,
     scope: &Value,
@@ -74,6 +76,7 @@ fn layers(
     .collect()
 }
 
+#[inline]
 fn normalize_entry((key, value): (String, Value)) -> Option<(String, Value)> {
     let trimmed = key.trim();
     if trimmed.is_empty() {

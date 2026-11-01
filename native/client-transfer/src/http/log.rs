@@ -45,6 +45,7 @@ async fn bounded_body(response: Response) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+#[inline]
 fn parse(bytes: &[u8], endpoint: &str) -> io::Result<Vec<Value>> {
     let mut parsed: Value = serde_json::from_slice(bytes).map_err(|_| {
             invalid(&format!("fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}"))
@@ -67,6 +68,7 @@ fn parse(bytes: &[u8], endpoint: &str) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+#[inline]
 fn validate_row(mut row: Value) -> io::Result<Value> {
     let Some(object) = row.as_object() else { return Err(invalid("remote log row")) };
     let expected = ["message", "username", "email", "date", "hash", "tag"];

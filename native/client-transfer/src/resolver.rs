@@ -53,6 +53,7 @@ pub struct Resolver {
 
 impl Resolver {
     /// The resolver `scope.json` names, if any.
+    #[inline]
     #[must_use]
     pub fn configured(
         scope_json: &Value,

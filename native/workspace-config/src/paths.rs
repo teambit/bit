@@ -3,12 +3,14 @@ use std::{env, path::PathBuf};
 
 /// `GLOBAL_CONFIG` contains config.json below `CACHE_ROOT`.
 #[must_use]
+#[inline]
 pub fn global_config_dir() -> PathBuf {
     cache_root().join("config")
 }
 
 /// `CACHE_ROOT` honors `BIT_GLOBALS_DIR` before the published platform-specific defaults.
 #[must_use]
+#[inline]
 pub fn cache_root() -> PathBuf {
     if let Some(dir) = non_empty_env("BIT_GLOBALS_DIR") {
         return dir;
@@ -25,12 +27,14 @@ pub fn cache_root() -> PathBuf {
     }
 }
 
+#[inline]
 fn home_dir() -> PathBuf {
     non_empty_env(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
         .or_else(|| non_empty_env("HOME"))
         .unwrap_or_default()
 }
 
+#[inline]
 fn non_empty_env(key: &str) -> Option<PathBuf> {
     let val = env::var_os(key)?;
     if let Some(text) = val.to_str() {

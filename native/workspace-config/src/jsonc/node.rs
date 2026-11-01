@@ -62,6 +62,7 @@ impl Object {
     }
 }
 
+#[inline]
 fn array_index(key: &str) -> Option<u32> {
     if key.is_empty()
         || (key.len() > 1 && key.starts_with('0'))
@@ -135,6 +136,7 @@ impl Node {
 
 /// A JavaScript number as a JSON number: integral values within the safe
 /// integer range become integers.
+#[inline]
 fn number(value: f64) -> Value {
     const SAFE: f64 = 9_007_199_254_740_991.0;
     let value = if value == 0.0 { 0.0 } else { value };

@@ -45,6 +45,7 @@ pub struct Selection {
 }
 
 impl FetchOptions {
+    #[inline]
     fn normalize_lane_id(lane_id: Option<String>) -> Option<String> {
         let id = lane_id?;
         let trimmed = id.trim();
@@ -58,6 +59,7 @@ impl FetchOptions {
     }
 
     /// `importWithoutDeps` with `fetchHeadIfLocalIsBehind` (`getExternalManyWithoutDeps`).
+    #[inline]
     #[must_use]
     pub fn latest(lane_id: Option<String>, delta: bool) -> Self {
         let lane_id = Self::normalize_lane_id(lane_id);
@@ -80,6 +82,7 @@ impl FetchOptions {
     }
 
     /// `importWithoutDeps` with the defaults: the given versions only.
+    #[inline]
     #[must_use]
     pub fn without_dependencies(lane_id: Option<String>) -> Self {
         let lane_id = Self::normalize_lane_id(lane_id);
@@ -93,6 +96,7 @@ impl FetchOptions {
     }
 
     /// `getExternalMany`: versions with their dependencies.
+    #[inline]
     #[must_use]
     pub fn with_dependencies(lane_id: Option<String>, only_if_built: bool) -> Self {
         let lane_id = Self::normalize_lane_id(lane_id);
@@ -114,6 +118,7 @@ impl FetchOptions {
     /// `importLanes`: lane objects. `bit install` reaches it through
     /// `workspace.getCurrentRemoteLane()`, which keeps the default
     /// `includeLaneHistory = false`, so no `LaneHistory` is fetched.
+    #[inline]
     #[must_use]
     pub fn lanes() -> Self {
         Self {
@@ -130,6 +135,7 @@ impl FetchOptions {
 const DEFAULT_CONCURRENCY: usize = 15;
 
 /// `concurrentFetchLimit()`: `concurrency.fetch` from the bit config, else 15.
+#[inline]
 #[must_use]
 pub fn concurrency(global: &GlobalConfig) -> usize {
     ["concurrency.fetch", "concurrency_fetch", "network.concurrency", "network_concurrency"]

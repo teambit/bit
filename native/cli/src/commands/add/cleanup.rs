@@ -1,6 +1,7 @@
 //! Consumer destruction cleans temporary files before publishing the bitmap.
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn temporary(root: &Path) -> io::Result<()> {
     // Published pathExists follows symlinks and treats inaccessible/missing paths
     // as absent. In particular, a dangling temporary symlink is left untouched.
@@ -10,6 +11,7 @@ pub(super) fn temporary(root: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn has_temporary_path(root: &Path) -> bool {
     root.is_absolute()
         && root

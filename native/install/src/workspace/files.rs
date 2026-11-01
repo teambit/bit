@@ -38,6 +38,7 @@ const BIT_IGNORE: &str = ".bitignore";
 const SKIPPED_DIRS: [&str; 4] = ["node_modules", ".bit", ".git", ".bitTmp"];
 const MAX_DEPTH: usize = 128;
 
+#[inline]
 fn bit_list(track_all_files: bool) -> Vec<&'static str> {
     let mut list = ALWAYS_IGNORE_LIST.to_vec();
     if !track_all_files {
@@ -61,6 +62,7 @@ fn ignore_file(path: &Path) -> io::Result<Vec<String>> {
 }
 
 /// `retrieveUserIgnoreList`: `.bitignore` when it exists, otherwise `.gitignore`.
+#[inline]
 pub fn user_ignore_list(dir: &Path) -> io::Result<Vec<String>> {
     let bit_ignore = dir.join(BIT_IGNORE);
     if bit_ignore.exists() { ignore_file(&bit_ignore) } else { ignore_file(&dir.join(GIT_IGNORE)) }
@@ -75,6 +77,7 @@ pub struct FileRules {
 }
 
 impl FileRules {
+    #[inline]
     pub fn load(root: &Path, ignored_files: &[String], track_all_files: bool) -> io::Result<Self> {
         let mut git_ignore = Ignore::new();
         git_ignore
@@ -179,6 +182,7 @@ impl FileRules {
 }
 
 /// `.bitmap` stays tracked by the workspace-root component whatever the ignore rules say.
+#[inline]
 fn keep_workspace_map_file(mut filtered: Vec<String>, paths: &[String]) -> Vec<String> {
     if !filtered
         .iter()
@@ -327,6 +331,7 @@ impl Scan<'_> {
     }
 
     /// `.bit.map.json` anywhere; a `.bitmap` other than the root's own.
+    #[inline]
     fn scan_ignored_file(&self, name: &str, path: &str) -> bool {
         match name {
             ".bit.map.json" => true,

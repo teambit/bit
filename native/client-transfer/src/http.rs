@@ -56,6 +56,7 @@ pub struct Listed {
 }
 
 impl Listed {
+    #[inline]
     fn parse(component: &Value) -> io::Result<Self> {
         let id = &component["id"];
         let text = |key: &str| {
@@ -77,6 +78,7 @@ impl Listed {
     }
 
     /// `ComponentID.toString()`.
+    #[inline]
     #[must_use]
     pub fn id(&self) -> String {
         match &self.version {
@@ -96,6 +98,7 @@ pub struct Retry {
 }
 
 impl Retry {
+    #[inline]
     fn from_config(global: &GlobalConfig) -> Self {
         let number = |key: &str, default: u64| {
             config_str(global, key)
@@ -111,6 +114,7 @@ impl Retry {
     }
 
     /// `p-retry` (`retry`) delay before attempt `attempt + 1`.
+    #[inline]
     #[must_use]
     pub fn delay(&self, attempt: u32) -> Duration {
         let factor = u64::from(self.factor).saturating_pow(attempt);
@@ -131,6 +135,7 @@ pub struct Network {
 
 impl Network {
     /// Attach the operation's cancellation owner before issuing any remote request.
+    #[inline]
     #[must_use]
     pub fn with_cancellation(mut self, cancellation: Cancellation) -> Self {
         self.cancellation = cancellation;
@@ -255,6 +260,7 @@ impl Network {
     }
 
     /// `Http.fetch()`: the objects of `ids` as a tar of `[scope/]hash` entries.
+    #[inline]
     pub async fn fetch(
         &self,
         url: &str,
@@ -342,6 +348,7 @@ impl Network {
     }
 }
 
+#[inline]
 fn request_id() -> io::Result<String> {
     let mut bytes = [0; 16];
     getrandom::fill(&mut bytes).map_err(|error| io::Error::other(error.to_string()))?;

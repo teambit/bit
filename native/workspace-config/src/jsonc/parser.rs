@@ -55,10 +55,12 @@ pub(super) fn parse(text: &str) -> io::Result<Parsed> {
 }
 
 impl Parser {
+    #[inline]
     fn current(&self) -> Option<&Token> {
         self.tokens.get(self.index)
     }
 
+    #[inline]
     fn next(&mut self) {
         let previous = self.tokens.get(self.index).map(|token| token.end_line);
         self.index += 1;
@@ -78,6 +80,7 @@ impl Parser {
         }
     }
 
+    #[inline]
     fn is_punct(&self, expected: char) -> io::Result<bool> {
         match self.current() {
             None => Err(self.unexpected()),
@@ -85,10 +88,12 @@ impl Parser {
         }
     }
 
+    #[inline]
     fn expect(&self, expected: char) -> io::Result<()> {
         if self.is_punct(expected)? { Ok(()) } else { Err(self.unexpected()) }
     }
 
+    #[inline]
     fn symbol(&self, prefix: &str) -> String {
         match &self.prop {
             Some(prop) => format!("{prefix}:{prop}"),
@@ -96,6 +101,7 @@ impl Parser {
         }
     }
 
+    #[inline]
     fn define(&mut self, key: String, comments: Vec<Comment>) {
         if let Some(host) = self.hosts.last_mut() {
             host.insert(key, comments);
@@ -124,6 +130,7 @@ impl Parser {
         }
     }
 
+    #[inline]
     fn assign(&mut self, prefix: &str) {
         if let Some(comments) = self.unassigned.take() {
             self.define(self.symbol(prefix), comments);
@@ -147,11 +154,13 @@ impl Parser {
         self.define(self.symbol("after"), after);
     }
 
+    #[inline]
     fn enter(&mut self) {
         self.hosts.push(Comments::new());
         self.props.push(self.prop.take());
     }
 
+    #[inline]
     fn leave(&mut self, started: bool) -> Comments {
         if started {
             self.assign("after");
@@ -167,6 +176,7 @@ impl Parser {
 
     /// Between two members: `after-value` of the previous one, the comma,
     /// then inline `after` comments. `true` when a trailing comma closes.
+    #[inline]
     fn separator(&mut self, close: char) -> io::Result<bool> {
         self.assign("after-value");
         self.expect(',')?;

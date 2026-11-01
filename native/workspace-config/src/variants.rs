@@ -40,6 +40,7 @@ pub struct VariantConfig {
 
 /// `byRootDirAndName`: every pattern matching the component's root dir or
 /// name, sorted by specificity (ties: the later pattern first).
+#[inline]
 pub fn by_root_dir_and_name(
     variants: &[(String, Map<String, Value>)],
     root_dir: &str,
@@ -152,6 +153,7 @@ fn is_match_item(root_dir: &str, name: &str, item: &str) -> io::Result<ItemMatch
 }
 
 /// `isMatchDirPatternItem`: the root dir is the pattern dir or inside it.
+#[inline]
 fn dir_match(root_dir: &str, item: &str) -> ItemMatch {
     let pattern = item
         .trim()
@@ -180,6 +182,7 @@ fn dir_match(root_dir: &str, item: &str) -> ItemMatch {
 }
 
 /// `isMatchNamespacePatternItem`: `{ui/*}` against the component name.
+#[inline]
 fn namespace_match(name: &str, item: &str) -> ItemMatch {
     let after_open = item.strip_prefix('{').unwrap_or(item);
     let without_brackets = match after_open.strip_suffix('}') {

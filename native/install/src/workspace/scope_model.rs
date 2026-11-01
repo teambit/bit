@@ -36,6 +36,7 @@ pub struct ModelData {
 impl ModelData {
     /// The `teambit.envs/envs` data of the Version, where the env descriptor
     /// (`type`, `id`) is stored at tag time.
+    #[inline]
     fn envs_data(&self) -> Option<&Value> {
         self.extensions
             .iter()
@@ -45,6 +46,7 @@ impl ModelData {
 
     /// `isUsingAspectEnv`: the env descriptor's type is `aspect`.
     #[must_use]
+    #[inline]
     pub fn uses_aspect_env(&self) -> bool {
         self.envs_data()
             .and_then(|data| data.get("type"))
@@ -55,6 +57,7 @@ impl ModelData {
 
     /// `hasEnvManifest`: the Version ships an `env.jsonc` or `env.json`.
     #[must_use]
+    #[inline]
     pub fn has_env_manifest(&self) -> bool {
         self.files
             .iter()
@@ -64,6 +67,7 @@ impl ModelData {
     /// The component's own env is `teambit.envs/env`: an env loaded as an env plugin
     /// (`*.bit-env.*`), not as an aspect with a provider.
     #[must_use]
+    #[inline]
     pub fn uses_env_of_envs(&self) -> bool {
         self.extensions.iter().any(uses_env_of_envs)
     }
@@ -152,12 +156,14 @@ pub struct ScopeObjects {
     objects: PathBuf,
 }
 
+#[inline]
 fn is_hash(value: &str) -> bool {
     value.len() == 40 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 impl ScopeObjects {
     #[must_use]
+    #[inline]
     pub fn new(scope: &Path) -> Self {
         Self { scope: scope.to_path_buf(), objects: scope.join("objects") }
     }
@@ -311,6 +317,7 @@ fn version_hash(model: Option<&Value>, version: Option<&str>) -> Option<String> 
 }
 
 #[must_use]
+#[inline]
 pub fn sha1_hex(text: &str) -> String {
     Sha1::digest(text.as_bytes())
         .iter()
@@ -320,6 +327,7 @@ pub fn sha1_hex(text: &str) -> String {
         })
 }
 
+#[inline]
 fn corrupt(path: &Path) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, format!("corrupted scope object {}", path.display()))
 }

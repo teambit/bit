@@ -36,6 +36,7 @@ fn expand_braces(pattern: &str) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn find_comma_brace_pair(pattern: &str) -> Option<(usize, usize)> {
     let mut opens = Vec::new();
     for (index, character) in pattern.char_indices() {
@@ -51,6 +52,7 @@ fn find_comma_brace_pair(pattern: &str) -> Option<(usize, usize)> {
     None
 }
 
+#[inline]
 fn segments(pattern: &[&str], name: &[&str]) -> bool {
     match (pattern.split_first(), name.split_first()) {
         (None, None) => true,
@@ -67,6 +69,7 @@ fn segments(pattern: &[&str], name: &[&str]) -> bool {
     }
 }
 
+#[inline]
 fn segment_matches(pattern: &str, name: &str) -> bool {
     if name.starts_with('.') && !pattern.starts_with('.') {
         return false;
@@ -110,6 +113,7 @@ fn class(rest: &[char], name: &[char]) -> bool {
     found != negated && wildcard(&rest[close + 1..], &name[1..])
 }
 
+#[inline]
 fn match_class_body(body: &[char], head: char) -> Option<bool> {
     let mut found = false;
     let mut index = 0;

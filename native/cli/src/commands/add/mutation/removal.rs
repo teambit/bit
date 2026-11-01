@@ -4,6 +4,7 @@ use crate::commands::{engine::Engine, workspace_command};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 impl ProjectedLinker {
+    #[inline]
     pub(in crate::commands) fn capture_consumers(
         &mut self,
         root: &Path,
@@ -20,8 +21,11 @@ impl ProjectedLinker {
         ids: &[String],
     ) -> io::Result<Vec<Value>> {
         if !root.is_absolute()
-            || root.as_os_str().is_empty()
-            || root.to_string_lossy().trim().is_empty()
+            || root
+                .as_os_str()
+                .as_encoded_bytes()
+                .iter()
+                .all(u8::is_ascii_whitespace)
         {
             return Err(io::Error::other("consumer status workspace root is empty"));
         }
@@ -50,6 +54,7 @@ impl ProjectedLinker {
     }
 }
 
+#[inline]
 fn normalize_ids(ids: &[String]) -> Vec<String> {
     let mut seen = std::collections::HashSet::with_capacity(ids.len());
     ids.iter()
@@ -62,6 +67,7 @@ fn normalize_ids(ids: &[String]) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn unchecked_ids(rows: &[Value]) -> Vec<String> {
     rows.iter()
         .filter(|row| !row["modified"].is_boolean())

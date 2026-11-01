@@ -19,6 +19,7 @@ pub(super) struct Retained {
 }
 
 impl Retained {
+    #[inline]
     pub(super) fn forget_loaded(&mut self) {
         // Keep source spool ownership and its aggregate budget across reloads.
         self.rows.clear();
@@ -43,9 +44,11 @@ impl Retained {
         }
         Ok(())
     }
+    #[inline]
     pub(super) const fn has_started(&self) -> bool {
         self.started
     }
+    #[inline]
     pub(super) fn start(&mut self) -> bool {
         let first = !self.started;
         self.started = true;
@@ -78,6 +81,7 @@ impl Retained {
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn add_proofs(&mut self, proofs: Vec<Value>) {
         self.read_set.extend(proofs);
     }
@@ -94,6 +98,7 @@ impl Retained {
                 .map_or(Value::Bool(false), |row| row["modified"].clone());
         }
     }
+    #[inline]
     pub(super) fn read_receipts(&self) -> Vec<Value> {
         self.read_set
             .iter()
@@ -101,6 +106,7 @@ impl Retained {
             .chain(self.controls.values().cloned())
             .collect()
     }
+    #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         let reads = self.read_receipts();
         crate::commands::engine::Engine::new()?
@@ -133,6 +139,7 @@ impl Retained {
     }
 }
 
+#[inline]
 fn row_id(row: &Value) -> Option<&str> {
     trimmed_str(&row["identity"])
         .or_else(|| trimmed_str(&row["id"]))
@@ -140,6 +147,7 @@ fn row_id(row: &Value) -> Option<&str> {
         .filter(|id| !id.is_empty())
 }
 
+#[inline]
 fn trimmed_str(value: &Value) -> Option<&str> {
     value
         .as_str()

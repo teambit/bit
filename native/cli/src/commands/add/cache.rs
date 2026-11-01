@@ -26,6 +26,7 @@ pub(in crate::commands) fn restrict(root: &Path, capture: &mut Capture) {
     capture.cache.block_dependencies(&identities);
 }
 
+#[inline]
 fn identity(value: &str) -> &str {
     let trimmed = value.trim();
     trimmed.split_once('@').map_or(trimmed, |(identity, _)| identity.trim())
@@ -58,12 +59,14 @@ impl Manifests {
                 .collect(),
         )
     }
+    #[inline]
     pub(super) fn changed(&self) -> bool {
         self.0
             .iter()
             .any(|(path, before)| before.is_none() || serialized(path).as_ref() != before.as_ref())
     }
 }
+#[inline]
 fn serialized(path: &Path) -> Option<String> {
     if fs::metadata(path).ok()?.len() > 4 * 1024 * 1024 {
         return None;

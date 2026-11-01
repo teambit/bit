@@ -55,6 +55,7 @@ pub fn pack(items: &[ObjectItem], max_bytes: usize) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+#[inline]
 fn valid_scope(scope: &str) -> bool {
     !scope.is_empty()
         && scope != "."
@@ -64,6 +65,7 @@ fn valid_scope(scope: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte))
 }
 
+#[inline]
 fn outbound_name(item: &ObjectItem) -> io::Result<String> {
     let hash = item.hash.trim();
     if !is_hash(hash) || item.compressed.len() > MAX_OBJECT_BYTES {
@@ -77,12 +79,14 @@ fn outbound_name(item: &ObjectItem) -> io::Result<String> {
 }
 
 /// Parse a complete fetch response.
+#[inline]
 pub fn read(bytes: &[u8]) -> io::Result<Vec<ObjectItem>> {
     read_bounded(bytes, MAX_ARCHIVE_BYTES)
 }
 
 /// Parse while keeping both the archive and inflated entry allocation under
 /// a caller-specific budget.
+#[inline]
 pub fn read_bounded(bytes: &[u8], max_bytes: usize) -> io::Result<Vec<ObjectItem>> {
     if max_bytes > MAX_ARCHIVE_BYTES || bytes.len() > max_bytes {
         return Err(invalid("remote fetch archive exceeds bounds"));
@@ -150,6 +154,7 @@ fn read_entry<Reader: Read>(
     Ok((name, data))
 }
 
+#[inline]
 fn require_end(start: Option<Value>, ended: bool) -> io::Result<()> {
     if start
         .as_ref()
@@ -164,6 +169,7 @@ fn require_end(start: Option<Value>, ended: bool) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn item(name: &str, compressed: Vec<u8>) -> io::Result<ObjectItem> {
     let trimmed = name.trim();
     let (scope, hash) = match trimmed.split_once('/') {
@@ -180,6 +186,7 @@ fn item(name: &str, compressed: Vec<u8>) -> io::Result<ObjectItem> {
     Ok(ObjectItem { hash: hash.to_string(), compressed, scope })
 }
 
+#[inline]
 pub(crate) fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,

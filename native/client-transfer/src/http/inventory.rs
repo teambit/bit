@@ -17,10 +17,13 @@ impl std::fmt::Display for OldServerFallbackError {
 impl std::error::Error for OldServerFallbackError {}
 
 /// The published warning was already observable before a failed retry.
+#[inline]
+#[must_use]
 pub fn old_server_fallback(error: &io::Error) -> bool {
     error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<OldServerFallbackError>)
 }
 
+#[inline]
 fn fallback_error(error: &io::Error) -> io::Error {
     io::Error::other(OldServerFallbackError(error.to_string()))
 }
@@ -32,6 +35,7 @@ const MAX_GRAPHQL_BYTES: usize = 8 * 1024 * 1024;
 
 impl Network {
     /// `Http.list` with the published `includeDeleted` projection.
+    #[inline]
     pub async fn inventory(
         &self,
         url: &str,
@@ -137,6 +141,7 @@ impl Network {
     }
 }
 
+#[inline]
 fn list_variables(namespaces: Option<&str>, include_deleted: bool) -> Value {
     let mut variables = Map::new();
     if let Some(namespaces) = namespaces
@@ -151,6 +156,7 @@ fn list_variables(namespaces: Option<&str>, include_deleted: bool) -> Value {
     Value::Object(variables)
 }
 
+#[inline]
 fn unknown_include_deleted(response: &Value) -> bool {
     response["errors"][0]["message"]
         .as_str()
@@ -159,6 +165,7 @@ fn unknown_include_deleted(response: &Value) -> bool {
         })
 }
 
+#[inline]
 fn graphql_error(response: &Value) -> io::Result<()> {
     if let Some(message) = response["errors"][0]["message"]
         .as_str()
@@ -190,6 +197,7 @@ fn inventory_rows(response: &Value, include_deleted: bool) -> io::Result<Vec<Val
         .collect()
 }
 
+#[inline]
 fn removed_config(component: &Value) -> Option<&Value> {
     component["aspects"]
         .as_array()?

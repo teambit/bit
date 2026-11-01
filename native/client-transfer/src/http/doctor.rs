@@ -51,6 +51,7 @@ impl Network {
     }
 }
 
+#[inline]
 fn projection(mut value: Value, scope: &str) -> io::Result<Value> {
     let scope = scope.trim();
     if let Some(message) = value["errors"][0]["message"]

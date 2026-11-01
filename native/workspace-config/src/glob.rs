@@ -5,6 +5,7 @@
 /// `matchPatterns(file, splitPatterns(patterns))` of `@teambit/toolbox.path.match-patterns`:
 /// matches an include pattern and no `!`-prefixed exclude pattern.
 #[must_use]
+#[inline]
 pub fn match_patterns(file: &str, patterns: &[String]) -> bool {
     let (excludes, includes): (Vec<&str>, Vec<&str>) = patterns
         .iter()
@@ -59,6 +60,7 @@ fn match_parts(parts: &[&str], segments: &[&str]) -> bool {
     }
 }
 
+#[inline]
 fn match_segment(pattern: &str, segment: &str) -> bool {
     if segment.starts_with('.') && !pattern.starts_with('.') {
         return false;
@@ -82,6 +84,7 @@ fn glob(pattern: &[char], text: &[char]) -> bool {
     }
 }
 
+#[inline]
 fn literal(rest: &[char], character: char, text: &[char]) -> bool {
     text.first() == Some(&character) && glob(rest, &text[1..])
 }
@@ -124,6 +127,7 @@ fn extglob(kind: char, body: &[char], rest: &[char], text: &[char]) -> bool {
     }
 }
 
+#[inline]
 fn one_then(alternatives: &[Vec<char>], rest: &[char], text: &[char]) -> bool {
     (0..=text.len()).any(|split| {
         alternatives
@@ -134,6 +138,7 @@ fn one_then(alternatives: &[Vec<char>], rest: &[char], text: &[char]) -> bool {
 }
 
 /// One or more alternatives followed by `rest`.
+#[inline]
 fn repeat(alternatives: &[Vec<char>], rest: &[char], text: &[char]) -> bool {
     (1..=text.len()).any(|split| {
         alternatives

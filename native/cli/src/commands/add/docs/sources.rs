@@ -15,9 +15,11 @@ pub(super) struct Source {
     modified: SystemTime,
 }
 impl Source {
+    #[inline]
     pub(super) fn bytes(&self) -> &[u8] {
         &self.bytes
     }
+    #[inline]
     pub(super) fn mtime_ms(&self) -> f64 {
         match self.modified.duration_since(UNIX_EPOCH) {
             Ok(duration) => milliseconds(duration),
@@ -25,6 +27,7 @@ impl Source {
         }
     }
 }
+#[inline]
 fn milliseconds(duration: std::time::Duration) -> f64 {
     (duration.as_secs() as f64).mul_add(1000.0, f64::from(duration.subsec_nanos()) / 1_000_000.0)
 }
@@ -61,6 +64,7 @@ pub(super) fn observe(root: &Path, components: &[Value]) -> io::Result<BTreeMap<
     Ok(output)
 }
 
+#[inline]
 fn relative_path<'a>(directory: &str, file: &'a Value) -> io::Result<&'a str> {
     let relative = file["relativePath"]
         .as_str()

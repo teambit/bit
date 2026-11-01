@@ -6,10 +6,12 @@ use std::fmt::Write as _;
 const INDENT: &str = "  ";
 
 /// Whitespace as JavaScript's `String.prototype.trim` sees it.
+#[inline]
 fn is_js_whitespace(character: char) -> bool {
     (character.is_whitespace() && character != '\u{0085}') || character == '\u{feff}'
 }
 
+#[inline]
 fn trim_end(value: &str) -> &str {
     value.trim_end_matches(is_js_whitespace)
 }
@@ -46,6 +48,7 @@ fn process(comments: Option<&[Comment]>, deeper_gap: &str, display_block: bool) 
     output
 }
 
+#[inline]
 fn join(one: &str, two: &str, gap: &str) -> String {
     match (one.is_empty(), two.is_empty()) {
         (false, false) => format!("{one}{}\n{gap}", two.trim_matches(is_js_whitespace)),
@@ -55,6 +58,7 @@ fn join(one: &str, two: &str, gap: &str) -> String {
     }
 }
 
+#[inline]
 fn join_content(inside: &str, comments: &Comments, gap: &str) -> String {
     let deeper_gap = format!("{gap}{INDENT}");
     let comment = process(comments.get("before").map(Vec::as_slice), &deeper_gap, true);
@@ -63,6 +67,7 @@ fn join_content(inside: &str, comments: &Comments, gap: &str) -> String {
 
 /// Escapes like comment-json: only the characters with a short escape are
 /// replaced; the rest of its "escapable" set is written as is.
+#[inline]
 fn quote(value: &str) -> String {
     let mut output = String::with_capacity(value.len() + 2);
     output.push('"');
@@ -82,6 +87,7 @@ fn quote(value: &str) -> String {
     output
 }
 
+#[inline]
 fn number(value: f64) -> String {
     if value.is_finite() {
         let normalized = if value == 0.0 { 0.0 } else { value };
@@ -111,6 +117,7 @@ struct Members<'a> {
 }
 
 impl Members<'_> {
+    #[inline]
     fn comments(&self, prefix: &str, key: &str) -> String {
         if self.comments.is_empty() {
             return String::new();
@@ -137,6 +144,7 @@ impl Members<'_> {
         }
     }
 
+    #[inline]
     fn close(mut self, gap: &str) -> String {
         let after = process(self.comments.get("after").map(Vec::as_slice), &self.deeper_gap, false);
         self.inside.push_str(&join(&self.after_comma, &after, &self.deeper_gap));
@@ -189,6 +197,7 @@ fn object(object: &Object, gap: &str) -> String {
 
 /// The document: `before-all` comments (left-trimmed), the root, then
 /// `after-all` comments (right-trimmed).
+#[inline]
 pub(super) fn document(root: &Node, before_all: &[Comment], after_all: &[Comment]) -> String {
     let body = node(root, "");
     if !matches!(root, Node::Array(..) | Node::Object(_)) {

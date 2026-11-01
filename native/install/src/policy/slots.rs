@@ -72,6 +72,7 @@ pub fn candidates(
 
 /// A configured id that is not a core aspect, nor the component's env when that is
 /// an env plugin.
+#[inline]
 fn may_register(
     id: &str,
     component: &WorkspaceComponent,
@@ -91,6 +92,7 @@ fn may_register(
 
 /// The env's own env is `teambit.envs/env`: a workspace env by its loaded env, any
 /// other by its scope objects. An env the scope does not hold is loaded to find out.
+#[inline]
 fn is_env_plugin(
     env_id: &str,
     components: &[WorkspaceComponent],
@@ -109,6 +111,7 @@ fn is_env_plugin(
 /// The component configures an extension id that is not a core aspect. On a core env,
 /// that is the same as [`candidates`] being non-empty, without classifying the env.
 #[must_use]
+#[inline]
 pub fn configures_non_core(component: &WorkspaceComponent, core_aspects: &[CoreAspect]) -> bool {
     component.config
         .keys()
@@ -117,6 +120,7 @@ pub fn configures_non_core(component: &WorkspaceComponent, core_aspects: &[CoreA
 
 /// A Bit core aspect, a core env or an id Bit reserves.
 #[must_use]
+#[inline]
 pub fn is_core(id: &str, core_aspects: &[CoreAspect]) -> bool {
     let id = id.trim();
     let bare = super::split_version(id).0;
@@ -132,6 +136,7 @@ pub fn is_core(id: &str, core_aspects: &[CoreAspect]) -> bool {
 }
 
 /// `[[registrar, policy], ...]` as the host returns `policiesRegistry.toArray()`.
+#[inline]
 fn parse(registry: &Value) -> Vec<Registration> {
     registry
         .as_array()

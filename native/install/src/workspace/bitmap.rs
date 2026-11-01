@@ -27,6 +27,7 @@ pub struct LaneInfo {
 impl LaneInfo {
     /// `scope/name`, as `LaneId.toString()` prints it.
     #[must_use]
+    #[inline]
     pub fn id(&self) -> String {
         format!("{}/{}", self.scope, self.name)
     }
@@ -84,6 +85,7 @@ impl BitmapEntry {
 
     /// Owns its directory now: available on the current lane and not removed.
     #[must_use]
+    #[inline]
     pub fn owns_its_dir(&self) -> bool {
         self.lanes.available_on_current_lane && !self.is_removed()
     }
@@ -98,6 +100,7 @@ pub struct Bitmap {
 }
 
 /// `.bitmap`, or the legacy `.bit.map.json`.
+#[inline]
 fn location(root: &Path) -> Option<PathBuf> {
     [BITMAP, OLD_BITMAP]
         .iter()
@@ -105,6 +108,7 @@ fn location(root: &Path) -> Option<PathBuf> {
         .find(|path| path.exists())
 }
 
+#[inline]
 fn invalid(path: &Path, message: &str) -> io::Error {
     io::Error::new(
         io::ErrorKind::InvalidData,
@@ -173,7 +177,7 @@ fn lane_info(lane: &Value) -> Option<LaneInfo> {
 }
 
 fn throw_for_duplicate_root_dirs(path: &Path, json: &Map<String, Value>) -> io::Result<()> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(json.len());
     for (key, value) in json {
         if matches!(key.as_str(), SCHEMA_FIELD | "version" | LANE_KEY) {
             continue;
@@ -196,6 +200,7 @@ fn throw_for_duplicate_root_dirs(path: &Path, json: &Map<String, Value>) -> io::
     Ok(())
 }
 
+#[inline]
 fn string(value: &Value, field: &str) -> Option<String> {
     value
         .get(field)

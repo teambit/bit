@@ -6,6 +6,7 @@ use bit_install::model::WorkspaceComponent;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(in crate::commands) fn overlay(
     components: &mut [WorkspaceComponent],
     captured: &[Value],
@@ -59,6 +60,7 @@ fn apply_captured(component: &mut WorkspaceComponent, row: &Value) -> io::Result
     Ok(())
 }
 
+#[inline]
 fn matches_captured(row: &Value, expected: &str) -> bool {
     let expected = expected.trim();
     !expected.is_empty()
@@ -100,6 +102,7 @@ pub(super) fn error(root: &Path, components: &[WorkspaceComponent], error: io::E
     })
 }
 
+#[inline]
 fn mkdir_not_directory(error: &io::Error) -> bool {
     error.kind() == io::ErrorKind::NotADirectory
         || cfg!(windows) && error.raw_os_error() == Some(183)

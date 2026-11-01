@@ -43,14 +43,17 @@ pub(in crate::commands) fn cat_prepare(root: &Path, component: Value) -> Option<
 }
 
 impl CatDocs {
+    #[inline]
     pub(in crate::commands) fn misses(&self) -> &[Value] {
         &self.plan.misses
     }
 
+    #[inline]
     pub(in crate::commands) fn components(&self) -> &[Value] {
         &self.components
     }
 
+    #[inline]
     pub(in crate::commands) fn absorb(&mut self, receipt: &Value) -> io::Result<Option<String>> {
         let error = parse_doc_receipt(receipt)?;
         self.host_published = true;
@@ -87,6 +90,7 @@ impl CatDocs {
     }
 }
 
+#[inline]
 fn parse_doc_receipt(receipt: &Value) -> io::Result<Option<String>> {
     if receipt["published"] != true
         && !receipt["published"]

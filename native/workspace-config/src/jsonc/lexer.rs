@@ -22,6 +22,7 @@ pub(super) struct Token {
     pub(super) end_line: usize,
 }
 
+#[inline]
 pub(super) fn invalid(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message.into())
 }
@@ -32,6 +33,7 @@ struct Lexer<'a> {
     line: usize,
 }
 
+#[inline]
 pub(super) fn tokenize(text: &str) -> io::Result<Vec<Token>> {
     let mut lexer = Lexer { text, chars: text.char_indices().peekable(), line: 1 };
     let mut tokens = Vec::with_capacity(text.len() / 8);
@@ -41,11 +43,13 @@ pub(super) fn tokenize(text: &str) -> io::Result<Vec<Token>> {
     Ok(tokens)
 }
 
+#[inline]
 fn is_line_terminator(character: char) -> bool {
     matches!(character, '\n' | '\r' | '\u{2028}' | '\u{2029}')
 }
 
 impl Lexer<'_> {
+    #[inline]
     fn bump_line(&mut self, character: char) {
         if character == '\r'
             && self.chars
@@ -189,6 +193,7 @@ impl Lexer<'_> {
 
 /// `0 | [1-9][0-9]*`, optional fraction and exponent: what `JSON.parse` accepts
 /// after an optional minus sign.
+#[inline]
 fn is_json_number(raw: &str) -> bool {
     let bytes = raw.as_bytes();
     let integer = digits(bytes);
@@ -201,6 +206,7 @@ fn is_json_number(raw: &str) -> bool {
     exponent(rest) == Some(rest.len())
 }
 
+#[inline]
 fn digits(bytes: &[u8]) -> usize {
     bytes
         .iter()
@@ -209,6 +215,7 @@ fn digits(bytes: &[u8]) -> usize {
 }
 
 /// The length of an optional `.digits` part; `None` when the dot has no digits.
+#[inline]
 fn fraction(bytes: &[u8]) -> Option<usize> {
     let Some(rest) = bytes.strip_prefix(b".") else { return Some(0) };
     let count = digits(rest);
@@ -216,6 +223,7 @@ fn fraction(bytes: &[u8]) -> Option<usize> {
 }
 
 /// The length of an optional `e[+-]digits` part; `None` when it has no digits.
+#[inline]
 fn exponent(bytes: &[u8]) -> Option<usize> {
     let Some(rest) = bytes
         .strip_prefix(b"e")

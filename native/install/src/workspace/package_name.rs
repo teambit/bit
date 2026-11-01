@@ -7,6 +7,7 @@ const PKG_ASPECT: &str = "teambit.pkg/pkg";
 
 /// `getBindingPrefixByDefaultScope`: `@<owner>`, the part of the scope before the first dot.
 #[must_use]
+#[inline]
 pub fn binding_prefix_by_default_scope(scope: &str) -> String {
     let trimmed = scope.trim();
     let owner = trimmed
@@ -18,6 +19,7 @@ pub fn binding_prefix_by_default_scope(scope: &str) -> String {
 }
 
 /// `parseScope`: `owner.scope` → (owner, scope).
+#[inline]
 fn parse_scope(scope_id: Option<&str>) -> (Option<&str>, Option<&str>) {
     match scope_id
         .map(str::trim)
@@ -79,6 +81,7 @@ pub fn component_package_name(
     format!("{prefix}/{without_prefix}")
 }
 
+#[inline]
 fn configured_package_name(aspects: &Map<String, Value>) -> Option<&str> {
     aspects
         .iter()

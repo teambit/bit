@@ -28,6 +28,7 @@ pub fn stringify_package(value: &Value, indent: &str, newline: Option<&str>) -> 
 
 /// `detect-newline` 3: the more frequent of CRLF and LF, `None` without newlines.
 #[must_use]
+#[inline]
 pub fn detect_newline(text: &str) -> Option<&'static str> {
     let total = text.matches('\n').count();
     if total == 0 {
@@ -80,6 +81,7 @@ enum Leading {
     None,
 }
 
+#[inline]
 fn leading(line: &str) -> Leading {
     let run = |character: char| line.len() - line.trim_start_matches(character).len();
     match line.as_bytes().first() {
@@ -128,6 +130,7 @@ impl IndentSteps {
         self.entries.len() - 1
     }
 
+    #[inline]
     fn position(&self, step: i64) -> Option<usize> {
         self.entries
             .iter()
@@ -135,6 +138,7 @@ impl IndentSteps {
     }
 
     /// `getMostUsed`: the first step with the most uses, then the most weight.
+    #[inline]
     fn most_used(&self) -> usize {
         let (mut amount, mut max_used, mut max_weight) = (0_i64, 0_u64, 0_u64);
         for (step, [used, weight]) in &self.entries {

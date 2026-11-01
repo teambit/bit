@@ -32,6 +32,7 @@ impl Drop for Restore {
 }
 impl Cancellation {
     /// Capture the construction thread's owner; no owner means an independent operation.
+    #[inline]
     #[must_use]
     pub fn current() -> Self {
         CURRENT
@@ -39,6 +40,7 @@ impl Cancellation {
             .unwrap_or_default()
     }
     /// Scope synchronous construction on this thread, restoring nested owners even on panic.
+    #[inline]
     pub fn scope<ResultValue>(
         cancellation: &Self,
         function: impl FnOnce() -> ResultValue,
@@ -47,15 +49,18 @@ impl Cancellation {
         let _restore = Restore(previous);
         function()
     }
+    #[inline]
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
+    #[inline]
     pub fn cancel(&self) {
         if !self.0.cancelled.swap(true, Ordering::AcqRel) {
             self.0.changed.notify_waiters();
         }
     }
+    #[inline]
     #[must_use]
     pub fn is_cancelled(&self) -> bool {
         self.0.cancelled.load(Ordering::Acquire)
@@ -91,6 +96,7 @@ impl Cancellation {
     }
 }
 
+#[inline]
 fn cancelled_error() -> io::Error {
     io::Error::new(io::ErrorKind::Interrupted, "operation cancelled")
 }

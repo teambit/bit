@@ -107,6 +107,7 @@ fn json_file(path: &Path) -> io::Result<Option<Manifest>> {
 
 /// Root dirs of the components that own their directory now, other than the
 /// workspace root: what the workspace-root component's scan leaves out.
+#[inline]
 fn owning_dirs(entries: &[BitmapEntry]) -> Vec<String> {
     entries
         .iter()
@@ -137,6 +138,7 @@ struct Loader<'a> {
 impl Workspace {
     /// Load every `.bitmap` entry. `core_aspect_ids` are Bit's core aspects
     /// (configured without a scope or version).
+    #[inline]
     pub fn load(
         root: &Path,
         config: &WorkspaceConfig,
@@ -147,6 +149,7 @@ impl Workspace {
     }
 
     /// Load component inventory and effective configuration from a retained bitmap.
+    #[inline]
     pub fn load_projected(
         root: &Path,
         config: &WorkspaceConfig,
@@ -205,6 +208,7 @@ impl Workspace {
 
     /// The component that owns the workspace root (`rootDir: "."`), when it owns it now.
     #[must_use]
+    #[inline]
     pub fn root_component(&self) -> Option<&WorkspaceComponent> {
         self.entries
             .iter()
@@ -214,6 +218,7 @@ impl Workspace {
     }
 
     /// Components on the current lane that are not removed (`listIds`).
+    #[inline]
     pub fn active(&self) -> impl Iterator<Item = (&BitmapEntry, &WorkspaceComponent)> {
         self.entries
             .iter()
@@ -259,6 +264,7 @@ impl Loader<'_> {
         })
     }
 
+    #[inline]
     fn files(&mut self, entry: &BitmapEntry) -> io::Result<Vec<String>> {
         let root_dir = entry.root_dir.trim();
         if root_dir.is_empty() {

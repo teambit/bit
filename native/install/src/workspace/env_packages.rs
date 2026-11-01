@@ -48,6 +48,7 @@ pub fn external_env_packages(
 }
 
 /// `scope/name` (the scope may contain dots, the name slashes).
+#[inline]
 fn bare_id(id: &str) -> ComponentId {
     let id = id.trim().trim_matches('/');
     let (scope, name) = id.split_once('/').unwrap_or(("", id));

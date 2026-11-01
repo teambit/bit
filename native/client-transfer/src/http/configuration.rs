@@ -79,6 +79,7 @@ pub(super) fn tls(
     Ok(builder.tls_certs_merge(certificates))
 }
 
+#[inline]
 fn strict_bool(value: &Value) -> Option<bool> {
     if let Some(flag) = value.as_bool() {
         return Some(flag);
@@ -93,6 +94,7 @@ fn strict_bool(value: &Value) -> Option<bool> {
     }
 }
 
+#[inline]
 pub(super) fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a str> {
     global
         .get(key)
@@ -101,6 +103,7 @@ pub(super) fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a 
         .filter(|value| !value.is_empty())
 }
 
+#[inline]
 fn config_u64(global: &GlobalConfig, keys: &[&str]) -> Option<u64> {
     keys.iter()
         .find_map(|key| {
@@ -114,6 +117,7 @@ fn config_u64(global: &GlobalConfig, keys: &[&str]) -> Option<u64> {
         })
 }
 
+#[inline]
 fn identity(
     builder: reqwest::ClientBuilder,
     global: &GlobalConfig,
