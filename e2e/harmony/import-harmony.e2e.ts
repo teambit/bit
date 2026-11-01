@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
+import { FLATTENED_DEPS_IN_SOURCE } from '@teambit/harmony.modules.feature-toggle';
 chai.use(chaiFs);
 
 describe('import functionality on Harmony', function () {
@@ -33,7 +34,6 @@ describe('import functionality on Harmony', function () {
         npmCiRegistry.destroy();
       });
       describe('installing dependencies as packages, requiring them and then running build-one-graph', () => {
-        // let importOutput;
         before(() => {
           helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
@@ -49,11 +49,7 @@ describe('import functionality on Harmony', function () {
           expect(localScope).to.have.lengthOf(0);
 
           helper.command.runCmd('bit insights'); // this command happened to run the build-one-graph.
-          // importOutput = helper.command.importAllComponents();
         });
-        // it('should import the components objects that were installed as packages', () => {
-        //   expect(importOutput).to.have.string('successfully imported one component');
-        // });
         it('the scope should have the dependencies and the flattened dependencies', () => {
           const localScope = helper.command.listLocalScopeParsed();
           expect(localScope).to.have.lengthOf(3);
@@ -73,19 +69,6 @@ describe('import functionality on Harmony', function () {
         });
         it('bit status should be clean with no errors', () => {
           helper.command.expectStatusToBeClean();
-        });
-      });
-      describe('import with --path flag', () => {
-        before(() => {
-          helper.scopeHelper.reInitWorkspace();
-          npmCiRegistry.setResolver();
-          helper.command.importComponentWithOptions('comp1', { p: 'src' });
-        });
-        it('should import to the specified path', () => {
-          expect(path.join(helper.scopes.localPath, 'src')).to.be.a.directory();
-          const bitMap = helper.bitMap.read();
-          const bitMapEntry = bitMap.comp1;
-          expect(bitMapEntry.rootDir).to.equal('src');
         });
       });
       describe('installing a component as a package and then importing it directly', () => {
@@ -131,7 +114,7 @@ describe('import functionality on Harmony', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importAllComponents();
       helper.fixtures.populateComponents(1, undefined, ' v2');
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
     });
     it('should export with no errors about missing artifacts (pkg file) from the first tag', () => {
       expect(() => helper.command.export()).to.not.throw();
@@ -235,7 +218,6 @@ describe('import functionality on Harmony', function () {
         helper.command.importComponent('*');
       });
       it('should change the parent directory path and add _1 to the path', () => {
-        helper.scopes.remoteWithoutOwner;
         const parentDir = path.join(helper.scopes.localPath, helper.scopes.remoteWithoutOwner, 'foo_1');
         expect(parentDir).to.be.a.directory();
         const originalParentDir = path.join(helper.scopes.localPath, helper.scopes.remoteWithoutOwner, 'foo');
@@ -308,7 +290,7 @@ describe('import functionality on Harmony', function () {
       });
     }
   );
-  describe('changing the component default directory', () => {
+  describe('controlling where the component is written (defaultDirectory placeholders and --path)', () => {
     let beforeImport: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -332,6 +314,12 @@ describe('import functionality on Harmony', function () {
       helper.scopeHelper.getClonedWorkspace(beforeImport);
       helper.workspaceJsonc.setComponentsDir('{hello}/{name}');
       expect(() => helper.command.importComponent('comp1')).to.throw();
+    });
+    it('should write to the given path when --path is used', () => {
+      helper.scopeHelper.getClonedWorkspace(beforeImport);
+      helper.command.importComponentWithOptions('comp1', { p: 'src' });
+      expect(path.join(helper.scopes.localPath, 'src')).to.be.a.directory();
+      expect(helper.bitMap.read().comp1.rootDir).to.equal('src');
     });
   });
   describe('importing a component with @types dependency when current workspace does not have it', () => {
@@ -506,6 +494,33 @@ describe('import functionality on Harmony', function () {
       const componentJson = helper.componentJson.read('comp1');
       expect(componentJson.extensions).to.have.property(fullEnvId);
       expect(componentJson.extensions).to.not.have.property(`${fullEnvId}@0.0.1`);
+    });
+  });
+  describe('flattened dependencies saved in a separate object', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.setFeatures(FLATTENED_DEPS_IN_SOURCE);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.resetFeatures();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x --fetch-deps');
+    });
+    it('the remote should have only the ref to the flattened dependencies in the Version', () => {
+      const version = helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`, helper.scopes.remotePath);
+      expect(version).to.have.property('flattenedDependenciesRef');
+      expect(version).to.not.have.property('flattenedDependencies');
+    });
+    it('should import the object with the flattened dependencies', () => {
+      const version = helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      const flattened = helper.command.catObject(version.flattenedDependenciesRef, true);
+      expect(flattened).to.have.members([`${helper.scopes.remote}/comp2@0.0.1`, `${helper.scopes.remote}/comp3@0.0.1`]);
+    });
+    it('should import the flattened dependencies into the scope', () => {
+      expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp2@0.0.1`)).to.not.throw();
+      expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp3@0.0.1`)).to.not.throw();
     });
   });
 });

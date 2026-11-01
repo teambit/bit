@@ -72,38 +72,14 @@ describe('eject command on Harmony', function () {
       });
     });
     describe('eject with --keep-files flag', () => {
-      let ejectOutput: string;
       before(() => {
         helper.scopeHelper.getClonedWorkspace(scopeBeforeEject);
-        ejectOutput = helper.command.ejectComponents('comp1', '--keep-files');
+        helper.command.ejectComponents('comp1', '--keep-files');
       });
-      it('should indicate that the eject was successful', () => {
-        expect(ejectOutput).to.have.string(successEjectMessage);
-      });
-      it('should save the component in workspace.jsonc', () => {
-        const workspaceJson = helper.workspaceJsonc.read();
-        expect(workspaceJson['teambit.dependencies/dependency-resolver'].policy.dependencies).to.have.property(
-          `@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`
-        );
-      });
-      it('should have the component files as a package (in node_modules)', () => {
-        const fileInPackage = path.join(`node_modules/@${DEFAULT_OWNER}`, `${scopeWithoutOwner}.comp1`, 'index.js');
-        expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
-      });
+      // the rest of the eject behavior (workspace.jsonc policy, package in node_modules, .bitmap,
+      // clean status, scope objects) is identical to the default eject and asserted above.
       it('should keep the original component files from the file-system intact', () => {
         expect(path.join(helper.scopes.localPath, 'comp1')).to.be.a.directory();
-      });
-      it('should delete the component from bit.map', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap).to.not.have.property('comp1');
-      });
-      it('bit status should show a clean state', () => {
-        helper.command.expectStatusToBeClean();
-      });
-      it('should not delete the objects from the scope', () => {
-        const listScope = helper.command.listLocalScopeParsed();
-        const ids = listScope.map((l) => l.id);
-        expect(ids).to.include(`${helper.scopes.remote}/comp1`);
       });
     });
   });

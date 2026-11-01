@@ -4,7 +4,7 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { CompositionCompareSection } from '@teambit/compositions.ui.composition-compare-section';
 import { CompositionCompare } from '@teambit/compositions.ui.composition-compare';
 import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare';
@@ -99,18 +99,9 @@ export class CompositionsUI {
       usePreviewSandboxSlot,
       usePreviewPropsSlot
     );
-    const pinnedSection = new CompositionsSection(
-      compositions,
-      { menuBarWidgetSlot: compositions.menuBarWidgetSlot },
-      emptyStateSlot,
-      usePreviewSandboxSlot,
-      usePreviewPropsSlot,
-      true
-    );
     const compositionCompare = new CompositionCompareSection(compositions);
     component.registerRoute(section.route);
     component.registerNavigation(section.navigationLink, section.order);
-    component.registerPinnedWidget(pinnedSection.navigationLink, pinnedSection.order);
     componentCompare.registerNavigation(compositionCompare);
     componentCompare.registerRoutes([compositionCompare.route]);
     // Inline preview tab for the redesigned ComponentComparePage / lane-compare. Owned by the

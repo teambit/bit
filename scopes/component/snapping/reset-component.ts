@@ -131,8 +131,9 @@ export async function removeLocalVersionsForMultipleComponents(
     const candidateComponentsIdsStr = candidateComponentsIds.map((id) => id.toString());
     candidateComponentsIds.forEach((bitId: ComponentID) => {
       const dependents = dependencyGraph.getImmediateDependentsPerId(bitId);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const dependentsNotCandidates = dependents.filter((dependent) => !candidateComponentsIdsStr.includes(dependent));
+      const dependentsNotCandidates = dependents.filter(
+        (dependent) => !candidateComponentsIdsStr.includes(dependent as string)
+      );
       if (dependentsNotCandidates.length) {
         throw new BitError( // $FlowFixMe
           `unable to untag ${bitId}, the version ${bitId.version} has the following dependent(s) ${dependents.join(

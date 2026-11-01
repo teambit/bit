@@ -26,7 +26,7 @@ describe('bit reset when on lane', function () {
       helper.command.snapAllComponentsWithoutBuild();
       headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.switchLocalLane('main');
-      helper.command.mergeLane('dev');
+      helper.command.mergeLaneWithoutBuild('dev');
       helper.command.resetAll();
     });
     it('should not delete the head of the lane', () => {
@@ -48,27 +48,6 @@ describe('bit reset when on lane', function () {
     });
     it('bit reset should not throw', () => {
       expect(() => helper.command.resetAll()).to.not.throw();
-    });
-  });
-  // this state is now impossible because we blocked the option to create a lane when there are
-  describe.skip('reset on lane after fork from another non-exported lane', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1, false);
-      helper.command.createLane();
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-      helper.command.createLane('dev2');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-    });
-    it('bit status should show two snaps as staged', () => {
-      const status = helper.command.statusJson();
-      expect(status.stagedComponents[0].versions).to.have.lengthOf(2);
-    });
-    it('bit reset should reset the component to new', () => {
-      expect(() => helper.command.resetAll()).to.not.throw();
-      const status = helper.command.statusJson();
-      expect(status.newComponents).to.have.lengthOf(1);
     });
   });
   describe('reset on lane after fork from another exported lane', () => {
@@ -99,7 +78,7 @@ describe('bit reset when on lane', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane('dev2');
-      helper.command.mergeLane(`${helper.scopes.remote}/dev`);
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
     it('bit status should show not only one version as staged, but two', () => {
@@ -132,7 +111,7 @@ describe('bit reset when on lane', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev2', '-x');
-      helper.command.mergeLane(`${helper.scopes.remote}/dev`, '-x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`, '-x');
     });
     // previously, it was throwing VersionNotFound error as it doesn't have the version objects snapped on the other lane
     it('bit reset should not throw', () => {

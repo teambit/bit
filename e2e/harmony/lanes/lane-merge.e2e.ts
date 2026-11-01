@@ -57,7 +57,7 @@ describe('bit lane merge operations', function () {
     describe('merging the dev lane when the lane is ahead (no diverge)', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(afterSwitchingLocal);
-        helper.command.mergeLane('dev');
+        helper.command.mergeLaneWithoutBuild('dev');
       });
       it('should merge the lane', () => {
         const mergedLanes = helper.command.listLanes('--merged');
@@ -75,7 +75,7 @@ describe('bit lane merge operations', function () {
       });
       describe('tagging the components', () => {
         before(() => {
-          helper.command.tagIncludeUnmodified();
+          helper.command.tagIncludeUnmodifiedWithoutBuild();
         });
         it('should be able to export with no errors', () => {
           expect(() => helper.command.export()).not.to.throw();
@@ -88,7 +88,7 @@ describe('bit lane merge operations', function () {
         helper.scopeHelper.getClonedRemoteScope(afterSwitchingRemote);
         helper.fixtures.populateComponents(2, undefined, 'v3');
         helper.command.snapAllComponentsWithoutBuild();
-        helper.command.mergeLane('dev', '--auto-merge-resolve ours --no-squash');
+        helper.command.mergeLaneWithoutBuild('dev', '--auto-merge-resolve ours --no-squash');
       });
       it('should merge the lane', () => {
         const mergedLanes = helper.command.listLanes('--merged');
@@ -100,7 +100,7 @@ describe('bit lane merge operations', function () {
       });
       describe('tagging the components', () => {
         before(() => {
-          helper.command.tagIncludeUnmodified();
+          helper.command.tagIncludeUnmodifiedWithoutBuild();
         });
         it('should be able to export with no errors', () => {
           expect(() => helper.command.export()).not.to.throw();
@@ -134,20 +134,6 @@ describe('bit lane merge operations', function () {
     });
     it('bit status should be clean', () => {
       helper.command.expectStatusToBeClean();
-    });
-    // previously, the behavior was to checkout to the same version it had before
-    it.skip('should checkout to the same version the origin branch had before the switch', () => {
-      helper.bitMap.expectToHaveId('bar/foo', '0.0.1');
-    });
-    // previously, the behavior was to checkout to the same version it had before
-    it.skip('bit status should not show the component as modified only as pending update', () => {
-      const status = helper.command.statusJson();
-      expect(status.modifiedComponents).to.have.lengthOf(0);
-      expect(status.outdatedComponents).to.have.lengthOf(1);
-      expect(status.importPendingComponents).to.have.lengthOf(0);
-      expect(status.stagedComponents).to.have.lengthOf(0);
-      expect(status.invalidComponents).to.have.lengthOf(0);
-      expect(status.newComponents).to.have.lengthOf(0);
     });
   });
 

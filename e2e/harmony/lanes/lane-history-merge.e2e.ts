@@ -36,7 +36,7 @@ describe('lane history with merge operations', function () {
       helper.command.switchLocalLane('lane-a', '-x');
 
       // Merge lane-b into lane-a (fast-forward since lane-a hasn't changed)
-      helper.command.mergeLane('lane-b', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-b', '-x');
 
       // Get history after merge
       historyAfterMerge = helper.command.laneHistoryParsed();

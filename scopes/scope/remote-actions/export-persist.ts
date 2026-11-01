@@ -3,8 +3,7 @@ import type { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
 import { saveObjects } from '@teambit/export';
 import type { Lane } from '@teambit/objects';
-import type { AuthData } from '@teambit/scope.network';
-import type { Action } from './action';
+import type { Action, AuthData } from './action';
 
 type Options = { clientId: string };
 

@@ -28,8 +28,23 @@ ignore_pr_authors = [
 # ignore_pr_title = ["^chore", "^ci"]
 
 [review_agent]
+# A re-review triggered by a push looks only at what changed since the previous review, instead of
+# going over the whole PR again. This is the documented default; it is stated here so the repo owns
+# the setting rather than inheriting it, and so it is not left to a portal-level default.
+enable_incremental_review = true
+
 # Extra instructions for the Issues Agent (bug, security, performance detection).
-# issues_user_guidelines = ""
+# There is no setting that stops a finding from being raised again after it was answered, so the two
+# rules below are asked for in the prompt instead.
+issues_user_guidelines = """
+- Do not raise a finding that has already been raised on this PR and answered, unless a later commit
+  changed the code it is about. Where a maintainer has replied explaining that the behavior is
+  deliberate, treat the matter as settled rather than reopening it in a new round.
+- Judge a finding that asks for a test to move from the e2e suite to a unit test by the CI cost the
+  move would actually remove - the number of processes the case spawns, not the number of assertions
+  it makes. A case that reuses a workspace an adjacent case already builds spawns nothing of its own,
+  so moving it saves no CI time and the finding is not worth raising.
+"""
 
 # Extra instructions for the Compliance Agent (rule checking).
 # compliance_user_guidelines = ""

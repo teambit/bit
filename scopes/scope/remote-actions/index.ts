@@ -1,4 +1,4 @@
-export { Action } from './action';
+export { Action, AuthData } from './action';
 export { ExportPersist } from './export-persist';
 export { ExportValidate } from './export-validate';
 export { FetchMissingHistory } from './fetch-missing-history';

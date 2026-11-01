@@ -1,5 +1,13 @@
 import type { Logger } from '@teambit/logger';
 import { git } from './git';
+import { gitHubApiUrl, gitHubServerHost, parseGitHubRepo, remoteHost } from './sync/github-client';
+
+/** A GitHub repository and the host it lives on — the host picks the API its lookups go to. */
+interface GitHubRepository {
+  /** `owner/repo` */
+  repo: string;
+  host: string;
+}
 
 /**
  * Utility class for detecting source branch names in CI environments after PR merge.
@@ -109,6 +117,11 @@ export class SourceBranchDetector {
         this.logger.console('Not a GitHub repository, skipping GitHub API approach');
         return null;
       }
+      const api = gitHubApiUrl(githubRepository.host);
+      if ('error' in api) {
+        this.logger.console(`Skipping GitHub API approach: ${api.error}`);
+        return null;
+      }
 
       // Get commit SHA - use provided one or current HEAD
       const targetCommit = commitSha || (await git.revparse(['HEAD']));
@@ -120,7 +133,7 @@ export class SourceBranchDetector {
       this.logger.console(`Querying GitHub API for PR info using commit SHA: ${targetCommit.trim()}`);
 
       // Query GitHub API for pull requests associated with this commit
-      const apiUrl = `https://api.github.com/repos/${githubRepository}/commits/${targetCommit.trim()}/pulls`;
+      const apiUrl = `${api.url}/repos/${githubRepository.repo}/commits/${targetCommit.trim()}/pulls`;
 
       // Try with token first (if available), then without token for public repos
       const githubToken = process.env.GITHUB_TOKEN;
@@ -174,48 +187,37 @@ export class SourceBranchDetector {
   }
 
   /**
-   * Attempts to determine the GitHub repository (owner/repo) from environment variables
-   * or by parsing the git remote origin URL. Works across different CI platforms.
+   * Attempts to determine the GitHub repository (owner/repo) and its host from the git remote origin URL
+   * or, without a GitHub origin, from environment variables. Works across different CI platforms.
+   * The origin comes first — as in `GitHubClient.fromEnv` — because it names both the repository the
+   * merge happened in and its host; the runner's variables may describe another repository or instance.
    */
-  private async getGitHubRepository(): Promise<string | null> {
+  private async getGitHubRepository(): Promise<GitHubRepository | null> {
     try {
-      // First, try environment variables (GitHub Actions)
+      // First, parse the git remote origin URL (github.com, or the GITHUB_SERVER_URL host)
+      const remoteUrl = (await git.raw(['config', '--get', 'remote.origin.url']).catch(() => undefined))?.trim();
+      const repoFromRemote = remoteUrl ? parseGitHubRepo(remoteUrl) : undefined;
+      const hostFromRemote = remoteUrl ? remoteHost(remoteUrl) : undefined;
+      if (repoFromRemote && hostFromRemote) {
+        this.logger.console(`Extracted GitHub repository from git remote: ${repoFromRemote} (${hostFromRemote})`);
+        return { repo: repoFromRemote, host: hostFromRemote };
+      }
+
+      // GitHub Actions — the repository lives on the GITHUB_SERVER_URL instance
       if (process.env.GITHUB_REPOSITORY) {
         this.logger.console(`Found GitHub repository from GITHUB_REPOSITORY: ${process.env.GITHUB_REPOSITORY}`);
-        return process.env.GITHUB_REPOSITORY;
+        return { repo: process.env.GITHUB_REPOSITORY, host: gitHubServerHost() };
       }
 
-      // CircleCI provides repository info in different format
+      // CircleCI provides repository info in different format, and the clone URL names the host
       if (process.env.CIRCLE_PROJECT_USERNAME && process.env.CIRCLE_PROJECT_REPONAME) {
         const repo = `${process.env.CIRCLE_PROJECT_USERNAME}/${process.env.CIRCLE_PROJECT_REPONAME}`;
-        this.logger.console(`Found GitHub repository from CircleCI: ${repo}`);
-        return repo;
+        const host = remoteHost(process.env.CIRCLE_REPOSITORY_URL ?? '') ?? 'github.com';
+        this.logger.console(`Found GitHub repository from CircleCI: ${repo} (${host})`);
+        return { repo, host };
       }
 
-      // Fallback: parse from git remote origin URL
-      this.logger.console('Attempting to extract GitHub repository from git remote origin');
-      const remoteUrl = await git.raw(['config', '--get', 'remote.origin.url']);
-
-      if (remoteUrl) {
-        const trimmedUrl = remoteUrl.trim();
-
-        // Match GitHub URLs in various formats:
-        // https://github.com/owner/repo.git
-        // git@github.com:owner/repo.git
-        // https://github.com/owner/repo
-        const githubPatterns = [/github\.com[:/]([^/]+)\/([^/.]+)(?:\.git)?/, /github\.com\/([^/]+)\/([^/.]+)/];
-
-        for (const pattern of githubPatterns) {
-          const match = trimmedUrl.match(pattern);
-          if (match) {
-            const repo = `${match[1]}/${match[2]}`;
-            this.logger.console(`Extracted GitHub repository from git remote: ${repo}`);
-            return repo;
-          }
-        }
-      }
-
-      this.logger.console('Unable to determine GitHub repository from environment or git remote');
+      this.logger.console('Unable to determine GitHub repository from git remote or environment');
       return null;
     } catch (e: any) {
       this.logger.console(`Error determining GitHub repository: ${e.toString()}`);

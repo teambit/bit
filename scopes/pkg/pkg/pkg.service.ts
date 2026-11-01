@@ -1,14 +1,8 @@
-import type {
-  EnvService,
-  EnvDefinition,
-  Env,
-  EnvContext,
-  ServiceTransformationMap,
-  GetNpmIgnoreContext,
-} from '@teambit/envs';
+import type { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import highlight from 'cli-highlight';
 import chalk from 'chalk';
 import type { PackageJsonProps } from './pkg.main.runtime';
+import type { GetNpmIgnoreContext } from './package-generator';
 
 export type PkgDescriptor = {
   id: string;

@@ -183,6 +183,8 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
   // allow the body to shrink inside flex/grid hosts so it scrolls its own (wide) content
   // horizontally instead of forcing the page wider.
   min-width: 0;
+  // lets a widget row size to the visible pane (`100cqi`) rather than the scrolled track.
+  container-type: inline-size;
 }
 
 // Unified: the track grows to the longest line so the body scrolls it horizontally (one scrollbar).
@@ -207,7 +209,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
   }
 
   .unifiedRow {
-    grid-template-columns: 50px 50px 22px minmax(0, 1fr);
+    grid-template-columns: var(--diff-gutter-width, 50px) var(--diff-gutter-width, 50px) 22px minmax(0, 1fr);
   }
 
   .row {
@@ -246,7 +248,16 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // virtualized rows aligned.
 .unifiedRow {
   display: grid;
-  grid-template-columns: 50px 50px 22px minmax(var(--diff-code-width, 60ch), 1fr);
+  grid-template-columns: var(--diff-gutter-width, 50px) var(--diff-gutter-width, 50px) 22px minmax(
+      var(--diff-code-width, 60ch),
+      1fr
+    );
+
+  // Let unusually wide glyphs extend the shared `ch`-based estimate. The body owns horizontal
+  // scrolling, so visible overflow remains reachable without widening the page.
+  .code {
+    overflow: visible;
+  }
 }
 
 // Split view: each side is a strict 50% so BOTH are always visible and the row never exceeds the
@@ -258,7 +269,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 
 .splitCell {
   display: grid;
-  grid-template-columns: 50px minmax(0, 1fr);
+  grid-template-columns: var(--diff-gutter-width, 50px) minmax(0, 1fr);
   background-color: inherit;
   min-width: 0;
 
@@ -306,7 +317,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
   }
   .gutterNum:nth-of-type(2) {
     position: sticky;
-    left: 50px;
+    left: var(--diff-gutter-width, 50px);
     z-index: 2;
   }
   .sign {
@@ -363,6 +374,9 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // intra-line (word-level) change emphasis
 .intra {
   background: color-mix(in srgb, $accent 16%, transparent);
+  // `<mark>` defaults to `color: MarkText` (black). Untokenized text (e.g. a Dockerfile) has no inline
+  // color, so without this the changed characters render black on the dark theme's tint.
+  color: inherit;
   border-radius: 2px;
   padding: 1px 0;
 }
@@ -377,7 +391,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 
 .gapRow {
   display: grid;
-  grid-template-columns: 50px 1fr;
+  grid-template-columns: var(--diff-gutter-width, 50px) 1fr;
   align-items: center;
   background: color-mix(in srgb, $accent 4%, $surface);
   border-top: 1px solid color-mix(in srgb, $border 70%, transparent);
@@ -427,4 +441,99 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
     color: $accent;
     text-decoration: underline;
   }
+}
+
+// --- host annotations (gutter content, line widgets, highlighted ranges) ---
+
+// the gutter's one free slot, shared by an annotation badge and the hover add-affordance. Both are
+// taken out of flow so the line number keeps its right-aligned position. The viewer widens the gutter
+// (`--diff-gutter-width`) for long line numbers, so the slot never covers the digits.
+.gutterNum {
+  position: relative;
+}
+
+.gutterAnnotation,
+.lineAction {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  min-width: 16px;
+  line-height: 1;
+}
+
+.lineAction {
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: $accent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid $accent;
+    outline-offset: 1px;
+  }
+}
+
+// reveal per side so a split row only offers the affordance on the half being pointed at.
+.unifiedRow:hover .lineAction,
+.splitCell:hover .lineAction {
+  opacity: 1;
+}
+
+// Lines covered by an annotation's range, and the annotation currently being addressed. Painted as a
+// translucent wash in a pseudo-element rather than a background-color so it composites over the
+// add/del tints instead of replacing them (both are single-class selectors, so a background here
+// would simply win and a commented-on added line would lose its green).
+.rangeLine,
+.activeLine {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+}
+
+.rangeLine::after {
+  background: color-mix(in srgb, $accent 8%, transparent);
+}
+
+.activeLine::after {
+  background: color-mix(in srgb, $accent 16%, transparent);
+  box-shadow: inset 2px 0 0 $accent;
+}
+
+// a full-width host block anchored under its line — variable height, so it opts the file out of
+// fixed-row virtualization (see `hasWidgets` in the viewer).
+.widgetRow {
+  // The unified track is as wide as the longest code line. Sized and pinned to the visible pane, the
+  // widget wraps its text there instead of widening the track, and stays in view when the code is
+  // scrolled sideways. `contain` keeps its content out of the track's max-content width.
+  position: sticky;
+  left: 0;
+  width: 100cqi;
+  max-width: 100%;
+  box-sizing: border-box;
+  contain: inline-size;
+  background: $surface-1;
+  border-top: 1px solid $border;
+  border-bottom: 1px solid $border;
+  font-family: inherit;
+  // the widget is host-owned content, not code — let it use normal text selection and wrapping.
+  white-space: normal;
+  user-select: text;
 }

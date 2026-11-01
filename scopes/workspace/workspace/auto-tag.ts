@@ -25,7 +25,19 @@ export async function getAutoTagInfo(
   const idsToLoad = new ComponentIdList(...potentialComponents, ...changedComponents);
   const workspaceComponents = await workspace.getMany(idsToLoad, undefined, false);
   const components = workspaceComponents.map((workspaceComponent) => workspaceComponent.state._consumer);
-  const graph = buildGraph(components);
+  return getAutoTagInfoFromComponents(components, changedComponents);
+}
+
+/**
+ * returns the components that depend on the `changedComponents`, directly or through other `components`.
+ * the dependencies are matched by component-id, not by version. the `changedComponents` don't have to be part of
+ * `components` (e.g. when snapping from a scope, the candidates are the lane components).
+ */
+export function getAutoTagInfoFromComponents(
+  components: Component[],
+  changedComponents: ComponentIdList
+): AutoTagResult[] {
+  const graph = buildGraph(components, changedComponents);
 
   const autoTagResults: AutoTagResult[] = [];
   components.forEach((component) => {
@@ -71,20 +83,22 @@ export async function getAutoTagInfo(
   return autoTagResults;
 }
 
-function buildGraph(components: Component[]): Graph {
+function buildGraph(components: Component[], changedComponents: ComponentIdList): Graph {
   const graph = new Graph();
-  const componentsIds = ComponentIdList.fromArray(components.map((c) => c.id));
+  const componentsIds = ComponentIdList.fromArray([...components.map((c) => c.id), ...changedComponents]);
 
   components.forEach((component) => {
     const idStr = component.id.toStringWithoutVersion();
     component.getAllDependencies().forEach((dependency: Dependency) => {
-      if (componentsIds.searchWithoutVersion(dependency.id)) {
-        const depId = dependency.id.toStringWithoutVersion();
-        // save the full ComponentID of a string id to be able to retrieve it later with no confusion
-        if (!graph.hasNode(idStr)) graph.setNode(idStr, component.id);
-        if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
-        graph.setEdge(idStr, depId);
-      }
+      if (!componentsIds.searchWithoutVersion(dependency.id)) return;
+      const depId = dependency.id.toStringWithoutVersion();
+      // the component uses the version set in its config (e.g. "bit deps set"), not the workspace one. so a change in
+      // the workspace one doesn't affect it.
+      if (component.isDependencyVersionFromConfig(dependency.id)) return;
+      // save the full ComponentID of a string id to be able to retrieve it later with no confusion
+      if (!graph.hasNode(idStr)) graph.setNode(idStr, component.id);
+      if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
+      graph.setEdge(idStr, depId);
     });
   });
   return graph;

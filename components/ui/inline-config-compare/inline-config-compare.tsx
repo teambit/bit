@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { gql } from '@apollo/client';
 import { useComponentCompare, InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
+import { useAspectRegistryRegister, useDiffMode } from '@teambit/component.ui.component-compare.component-compare';
 import { DiffLoadingSkeleton } from '@teambit/code.ui.inline-diff-viewer';
 import { DiffViewer, computeDiffLines, statsFromItems, type DiffViewMode } from '@teambit/code.ui.diff-viewer';
 
@@ -43,6 +43,7 @@ type AspectData = {
 
 type AspectDiff = {
   aspectId: string;
+  status: 'NEW' | 'DELETED' | 'MODIFIED';
   configChanged: boolean;
   baseConfig: string;
   compareConfig: string;
@@ -112,6 +113,7 @@ export function InlineConfigCompare() {
 
       diffs.push({
         aspectId,
+        status: !baseAspect ? 'NEW' : !compareAspect ? 'DELETED' : 'MODIFIED',
         configChanged,
         baseConfig,
         compareConfig,
@@ -124,6 +126,21 @@ export function InlineConfigCompare() {
     return diffs;
     // key on the stable Apollo data refs — baseAspects/compareAspects are re-derived (`|| []`) every render
   }, [loading, baseData, compareData]);
+
+  const sidebarAspects = useMemo(() => {
+    // Clear entries from the previous base/compare pair while the canonical aspect IDs load. The
+    // bulk compare result only has field names, which are not valid targets for this view's anchors.
+    if (loading) return [];
+    return aspectDiffs.map(({ aspectId, status }) => ({
+      name: aspectId,
+      status,
+    }));
+  }, [loading, aspectDiffs]);
+
+  // Register the same canonical aspect IDs used by the rendered data-file-id anchors. The bulk
+  // compare response exposes changed field names instead, which are useful as an early placeholder
+  // but cannot scroll to these aspect-level sections.
+  useAspectRegistryRegister(componentIdStr || undefined, sidebarAspects);
 
   if (loading) {
     return <DiffLoadingSkeleton sections={2} />;
@@ -143,7 +160,7 @@ export function InlineConfigCompare() {
         return (
           <div
             key={aspect.aspectId}
-            data-file-id={componentIdStr ? `${componentIdStr}:${shortName}` : undefined}
+            data-file-id={componentIdStr ? `${componentIdStr}:${aspect.aspectId}` : undefined}
             style={CELL_WRAP}
           >
             {aspect.configChanged && (

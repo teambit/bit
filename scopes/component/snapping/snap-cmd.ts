@@ -21,7 +21,7 @@ import {
 } from '@teambit/legacy.constants';
 import type { Logger } from '@teambit/logger';
 import type { SnappingMain, SnapResults } from './snapping.main.runtime';
-import { outputIdsIfExists, compInBold } from './tag-cmd';
+import { outputIdsIfExists, compInBold, dependentsWithPinnedDepsSection } from './tag-cmd';
 import type { BasicTagSnapParams } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
@@ -201,9 +201,16 @@ export function snapResultReport(results: SnapResults): string | Report {
   };
 
   const removedSection = outputIdsIfExists('removed components', removedComponents);
+  const pinnedSection = dependentsWithPinnedDepsSection(results.dependentsWithPinnedDeps, 'snapped');
 
   const warningsSection =
     warnings && warnings.length ? warnings.map((w) => `${warnSymbol} ${chalk.yellow(w)}`).join('\n') : '';
+
+  const workspaceRootHint = results.autoAddedWorkspaceRoot
+    ? formatHint(
+        `(${compInBold(results.autoAddedWorkspaceRoot)} is the workspace-root component. it was new or modified, so it was snapped along: the other components record the root version they were snapped with)`
+      )
+    : '';
 
   const laneStr = laneName ? ` on "${laneName}" lane` : '';
   const summary = formatSuccessSummary(`${totalCount} component(s) snapped${laneStr}`);
@@ -232,7 +239,9 @@ export function snapResultReport(results: SnapResults): string | Report {
   const data = joinSections([
     newSection,
     changedSection,
+    workspaceRootHint,
     autoSnapSection,
+    pinnedSection,
     removedSection,
     warningsSection,
     footerParts,
@@ -245,7 +254,15 @@ export function snapResultReport(results: SnapResults): string | Report {
   // Build detailed output (with full auto-snapped listing)
   const { newSection: newDetailed, changedSection: changedDetailed } = buildSections(formatCompDetailed);
   const detailedFooter = [summary, snapExplanation].filter(Boolean).join('\n');
-  const details = joinSections([newDetailed, changedDetailed, removedSection, warningsSection, detailedFooter]);
+  const details = joinSections([
+    newDetailed,
+    changedDetailed,
+    workspaceRootHint,
+    pinnedSection,
+    removedSection,
+    warningsSection,
+    detailedFooter,
+  ]);
 
   return { data, code: 0, details };
 }

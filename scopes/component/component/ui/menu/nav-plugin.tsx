@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { SlotRegistry } from '@teambit/harmony';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
@@ -9,6 +10,16 @@ export type NavPluginProps = {
   displayName?: string;
   ignoreQueryParams?: boolean;
   hideInMinimalMode?: boolean;
+  /**
+   * in minimal mode on mobile, keep this tab visible next to the compact "More" menu instead of
+   * collapsing it into the menu.
+   */
+  primaryInMinimalMode?: boolean;
+  /**
+   * compact content (e.g. an icon) to render instead of `children` for a primary tab in minimal
+   * mode on mobile, where the row is shared with the breadcrumb and menu actions.
+   */
+  minimalMobileChildren?: React.ReactNode;
 } & LinkProps;
 
 export type NavPlugin = {

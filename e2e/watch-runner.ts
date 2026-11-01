@@ -1,6 +1,5 @@
 /* eslint no-console: 0 */
 import chalk from 'chalk';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import type { ChildProcess } from 'child_process';
 import childProcess from 'child_process';
 import rightpad from 'pad-right';
@@ -26,8 +25,7 @@ export default class WatchRunner {
     return new Promise((resolve, reject) => {
       const cwd = this.helper.scopes.localPath;
       this.watchProcess = childProcess.spawn(this.helper.command.bitBin, ['watch', '--verbose'], { cwd });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.watchProcess.stdout.on('data', (data) => {
+      this.watchProcess.stdout!.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         const msg = this.isHarmony ? STARTED_WATCHING_MSG_HARMONY : STARTED_WATCHING_MSG;
         if (data.includes(msg)) {
@@ -35,8 +33,7 @@ export default class WatchRunner {
           resolve();
         }
       });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.watchProcess.stderr.on('data', (data) => {
+      this.watchProcess.stderr!.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
         reject(new Error(`watcher failed with the following stderr ${data}`));
       });
@@ -55,8 +52,7 @@ export default class WatchRunner {
       const timer = setTimeout(() => {
         reject(new Error(`watcher exceed the limit of ${timeoutAfter} ms, the message "${msg}" was not received`));
       }, timeoutAfter);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.watchProcess.stdout.on('data', (data) => {
+      this.watchProcess.stdout!.on('data', (data) => {
         if (data.includes(msg)) {
           clearTimeout(timer);
           resolve(data);

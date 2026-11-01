@@ -35,7 +35,7 @@ describe('set default owner and scope', function () {
       helper.command.addComponent('utils', { i: 'utils/is-type' });
       const rawLinkOutput = helper.command.link('-j');
       parsedLinkOutput = JSON.parse(rawLinkOutput);
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
     });
     it('should create link with default owner as prefix', () => {
       const linkFolderPath = path.normalize(`node_modules/${componentPackageName}`);
@@ -64,7 +64,8 @@ describe('set default owner and scope', function () {
         it('should store scope name with the format owner.scope in the models', () => {
           expect(compModel.scope).to.equal(defaultScope);
         });
-        it('should store scope name with the format owner.scope in the models', () => {
+        // this had the same title as the it above it; they assert different properties.
+        it('should store the default owner as the bindingPrefix in the models', () => {
           expect(compModel.bindingPrefix).to.equal(`@${DEFAULT_OWNER}`);
           expect(versionModel.bindingPrefix).to.equal(`@${DEFAULT_OWNER}`);
         });

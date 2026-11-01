@@ -27,7 +27,7 @@ describe('bit lane merge-abort command', function () {
       helper.command.export();
       helper.command.switchLocalLane('lane-a', '-x');
       bitMapBeforeMerge = helper.bitMap.read();
-      helper.command.mergeLane('lane-b', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-b', '-x');
       bitMapAfterMerge = helper.bitMap.read();
       helper.command.mergeAbortLane('-x');
     });
@@ -62,12 +62,37 @@ describe('bit lane merge-abort command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('lane-a', '-x');
-      helper.command.mergeLane(`${helper.scopes.remote}/lane-b`, '-x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/lane-b`, '-x');
       helper.fs.expectDirToExist(`${helper.scopes.remote}/comp2`);
       helper.command.mergeAbortLane('-x');
     });
     it('should delete the newly introduced component root-dirs', () => {
       helper.fs.expectPathNotToExist(`${helper.scopes.remote}/comp2`);
+    });
+  });
+  describe('when a lane was merged into main', () => {
+    let headOnMainBeforeMerge: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      headOnMainBeforeMerge = helper.command.getHead('comp1');
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/lane-a`, '-x');
+      helper.command.mergeAbortLane('-x');
+    });
+    it('should revert the head of main to the state before the merge', () => {
+      expect(helper.command.getHead(`${helper.scopes.remote}/comp1`)).to.equal(headOnMainBeforeMerge);
+    });
+    it('should not leave the merged snaps staged for export', () => {
+      expect(helper.command.statusJson().stagedComponents).to.have.lengthOf(0);
     });
   });
 });

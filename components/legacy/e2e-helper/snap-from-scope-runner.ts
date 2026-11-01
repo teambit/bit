@@ -11,6 +11,7 @@
 import { loadBit } from '@teambit/bit';
 import type { SnappingMain } from '@teambit/snapping';
 import { SnappingAspect } from '@teambit/snapping';
+import { ComponentIdList } from '@teambit/component-id';
 
 async function main(): Promise<void> {
   const [, , scopePath, snapDataJson, optionsJson] = process.argv;
@@ -24,6 +25,9 @@ async function main(): Promise<void> {
     updateDependents: options.updateDependents,
     push: options.push,
     message: options.message,
+    tag: options.tag,
+    // skips loading the components' aspects (e.g. envs) in capsules, which requires their packages in a registry
+    loadAspectOnlyForIds: options.skipLoadingAspects ? new ComponentIdList() : undefined,
     build: false,
     disableTagAndSnapPipelines: true,
   });

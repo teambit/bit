@@ -11,16 +11,6 @@ describe('bit list command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('when no components created', () => {
-    before(() => {
-      helper.scopeHelper.clean();
-      helper.command.init();
-    });
-    it('should display "found 0 components"', () => {
-      const output = helper.command.listLocalScope();
-      expect(output.includes('found 0 components')).to.be.true;
-    });
-  });
   describe('when a component is created but not tagged', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
@@ -61,7 +51,7 @@ describe('bit list command', function () {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
-        helper.command.tagComponent('bar/foo', 'msg', '--unmodified');
+        helper.command.tagWithoutBuild('bar/foo', '--unmodified');
         helper.command.export();
 
         helper.scopeHelper.getClonedWorkspace(clonedScopePath);

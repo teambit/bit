@@ -8,7 +8,8 @@ import type { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { SidebarAspect } from '@teambit/sidebar';
 import type { ComponentTreeNode } from '@teambit/component-tree';
 import type { UIRootUI as UIRoot, UiUI } from '@teambit/ui';
-import { UIAspect, UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
+import { UIAspect } from '@teambit/ui';
 import type { ComponentType, ReactNode } from 'react';
 import React from 'react';
 import type { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
@@ -248,7 +249,6 @@ export class ScopeUI {
     const contexts = this.contextSlot.values();
     // eslint-disable-next-line react/prop-types
     const ComponentUrlFuncProvider: ScopeContextType = ({ children }) => (
-      // @ts-ignore TODO: fix this
       <ComponentUrlProvider value={componentUrlFn || this.componentUrlFunc}>{children}</ComponentUrlProvider>
     );
 

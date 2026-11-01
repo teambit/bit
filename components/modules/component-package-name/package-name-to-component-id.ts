@@ -2,6 +2,8 @@ import type { ComponentIdObj } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 
+export type PackageManifestFetcher = { fetchFullPackageManifest: (packageName: string) => Promise<any> };
+
 /**
  * Utility function to check if a string looks like a package name vs component ID
  * @param id - The string to check
@@ -23,7 +25,7 @@ export function isLikelyPackageName(id: string): boolean {
  */
 export async function resolveComponentIdFromPackageName(
   packageName: string,
-  dependencyResolver: { fetchFullPackageManifest: (name: string) => Promise<any> }
+  dependencyResolver: PackageManifestFetcher
 ): Promise<ComponentID> {
   if (!packageName.startsWith('@')) {
     throw new BitError(

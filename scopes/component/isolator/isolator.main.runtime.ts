@@ -1,7 +1,8 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, isEqual, pick, uniqBy } from 'lodash';
@@ -27,12 +28,13 @@ import type {
   PackageManagerInstallOptions,
   NodeLinker,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE, resolvePlusVersion } from '@teambit/dependency-resolver';
 import type { Logger, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
+import { importMultipleDistsArtifacts } from '@teambit/legacy.scope';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import {
@@ -50,7 +52,6 @@ import {
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
-  importMultipleDistsArtifacts,
   DataToPersist,
   RemovePath,
 } from '@teambit/component.sources';
@@ -223,11 +224,6 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * get existing capsule without doing any changes, no writes, no installations.
    */
   getExistingAsIs?: boolean;
-
-  /**
-   * place the package-manager cache on the capsule-root
-   */
-  cachePackagesOnCapsulesRoot?: boolean;
 
   /**
    * do not build graph with all dependencies. isolate the seeders only.
@@ -597,6 +593,8 @@ export class IsolatorMain {
     cacheLockFileOnly = false
   ): void {
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
+    // keyed by the dirs, so isolating again into the same dated dir doesn't add another hook for the same move
+    const hookKey = `teambit.component/isolator:move-capsules:${datedCapsuleDir}:${targetCapsuleDir}:${cacheLockFileOnly}`;
     this.cli.registerOnBeforeExit(async () => {
       const allDirs = await this.getAllCapsulesDirsFromRoot(datedCapsuleDir);
       if (cacheLockFileOnly) {
@@ -604,7 +602,7 @@ export class IsolatorMain {
       } else {
         await this.moveCapsulesToTargetDir(allDirs, datedCapsuleDir, targetCapsuleDir);
       }
-    });
+    }, hookKey);
   }
 
   private async getAllCapsulesDirsFromRoot(rootDir: string): Promise<string[]> {
@@ -882,7 +880,6 @@ export class IsolatorMain {
     await this.writeComponentsInCapsules(components, capsuleList, legacyScope, opts);
     await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     if (installOptions.installPackages) {
-      const cachePackagesOnCapsulesRoot = opts.cachePackagesOnCapsulesRoot ?? false;
       const linkingOptions = opts.linkingOptions ?? {};
       let installLongProcessLogger: LongProcessLogger | undefined;
       // Only show the log message in case we are going to install something
@@ -913,7 +910,6 @@ export class IsolatorMain {
             const linkedDependencies = await this.linkInCapsules(cyclicCapsuleList, capsulesWithPackagesData);
             linkedDependencies[capsulesDir] = rootLinks;
             await this.installInCapsules(capsulesDir, cyclicCapsuleList, installOptions, {
-              cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
               nodeLinker: opts.nodeLinker,
@@ -948,7 +944,6 @@ export class IsolatorMain {
               linkedDependencies[capsulesDir] = rootLinks;
             }
             await this.installInCapsules(capsule.path, newCapsuleList, installOptions, {
-              cachePackagesOnCapsulesRoot,
               linkedDependencies,
               packageManager: opts.packageManager,
               nodeLinker: opts.nodeLinker,
@@ -966,7 +961,6 @@ export class IsolatorMain {
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
-          cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
           dependenciesGraph,
@@ -1092,7 +1086,6 @@ export class IsolatorMain {
     capsuleList: CapsuleList,
     isolateInstallOptions: IsolateComponentsInstallOptions,
     opts: {
-      cachePackagesOnCapsulesRoot?: boolean;
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
       nodeLinker?: NodeLinker;
@@ -1101,7 +1094,6 @@ export class IsolatorMain {
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
-      cacheRootDirectory: opts.cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
       installingContext: { inCapsule: true },
       packageManager: opts.packageManager,
       nodeLinker: opts.nodeLinker,
@@ -1498,8 +1490,9 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] =
-            dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
+          manifest[keyName][entry.packageName] = dep.versionRange
+            ? resolvePlusVersion(dep.versionRange, version)
+            : version;
         }
       });
       await Promise.all(promises);
@@ -1537,7 +1530,10 @@ export class IsolatorMain {
     clonedFiles.forEach((file) => file.updatePaths({ newBase: writeToPath }));
     dataToPersist.removePath(new RemovePath(writeToPath));
     clonedFiles.map((file) => dataToPersist.addFile(file));
-    const packageJson = this.preparePackageJsonToWrite(component, writeToPath, ids);
+    const shouldMergePkgJsonFromLastBuild = Boolean(
+      populateArtifactsFromComps && !opts?.populateArtifactsIgnorePkgJson
+    );
+    const packageJson = this.preparePackageJsonToWrite(component, writeToPath, ids, shouldMergePkgJsonFromLastBuild);
     if (!legacyComp.id.hasVersion()) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
@@ -1549,7 +1545,7 @@ export class IsolatorMain {
     await PackageJsonTransformer.applyTransformers(component, packageJson as any);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
-    if (populateArtifactsFromComps && !opts?.populateArtifactsIgnorePkgJson) {
+    if (populateArtifactsFromComps && shouldMergePkgJsonFromLastBuild) {
       const compParent = this.getCompForArtifacts(component, populateArtifactsFromComps);
       this.mergePkgJsonFromLastBuild(compParent, packageJson);
     }
@@ -1602,10 +1598,16 @@ export class IsolatorMain {
     return compParent;
   }
 
+  /**
+   * @param includePeers whether to write the component peers. needed when the package.json of the last build is merged
+   * into this one (see mergePkgJsonFromLastBuild), which keeps only the dependencies that exist here. otherwise, a peer
+   * keeps the version of the last build, e.g. a lane snap of a component that was tagged since then.
+   */
   private preparePackageJsonToWrite(
     component: Component,
     bitDir: string,
-    componentDepsToIgnore: ComponentIdList
+    componentDepsToIgnore: ComponentIdList,
+    includePeers = false
   ): PackageJsonFile {
     const legacyComp: ConsumerComponent = component.state._consumer;
     const compDeps = this.dependencyResolver.getComponentDependencies(component);
@@ -1624,13 +1626,16 @@ export class IsolatorMain {
           id: depId,
           isDependency: true,
         });
-        acc[packageName] = versionWithRange || packageDependency;
+        acc[packageName] = versionWithRange
+          ? resolvePlusVersion(versionWithRange, packageDependency, versionWithRange)
+          : packageDependency;
         return acc;
       }, {});
     };
     const bitDependencies = getBitDependencies(legacyComp.dependencies.getAllIds());
     const bitDevDependencies = getBitDependencies(legacyComp.devDependencies.getAllIds());
     const bitExtensionDependencies = getBitDependencies(legacyComp.extensions.extensionsBitIds);
+    const bitPeerDependencies = includePeers ? getBitDependencies(legacyComp.peerDependencies.getAllIds()) : {};
     const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp);
     const main = pathNormalizeToLinux(legacyComp.mainFile);
     packageJson.addOrUpdateProperty('main', main);
@@ -1640,6 +1645,7 @@ export class IsolatorMain {
         ...bitDevDependencies,
         ...bitExtensionDependencies,
       });
+      packageJsonFile.addPeerDependencies(bitPeerDependencies);
     };
     addDependencies(packageJson);
     const currentVersion = getComponentPackageVersion(component);

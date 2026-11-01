@@ -1,6 +1,7 @@
-import { Aspect, RuntimeDefinition } from '@teambit/harmony';
+import { Aspect } from '@teambit/harmony';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 
-export const UIRuntime = new RuntimeDefinition('ui');
+export { UIRuntime };
 
 export const UIAspect = Aspect.create({
   id: 'teambit.ui-foundation/ui',

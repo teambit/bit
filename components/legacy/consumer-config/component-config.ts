@@ -2,12 +2,12 @@ import mapSeries from 'p-map-series';
 import { pickBy, isEmpty } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
-import type { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import type { PackageJsonFile } from '@teambit/component.sources';
 import AbstractConfig from './abstract-config';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 
-export type ComponentConfigLoadOptions = Pick<ComponentLoadOptions, 'loadExtensions' | 'originatedFromHarmony'>;
+// the options of legacy consumer-component's ComponentLoadOptions read here (consumer-component depends on this component)
+export type ComponentConfigLoadOptions = { loadExtensions?: boolean; originatedFromHarmony?: boolean };
 
 type ConfigProps = {
   lang?: string;
@@ -48,7 +48,7 @@ export class ComponentConfig extends AbstractConfig {
     return pickBy(componentObject, isPropDefaultOrEmpty);
   }
 
-  mergeWithComponentData(component: Component) {
+  mergeWithComponentData(component: { lang: string }) {
     this.lang = this.lang || component.lang;
   }
 
@@ -103,10 +103,4 @@ export class ComponentConfig extends AbstractConfig {
     }
     return [];
   }
-}
-
-export function getBindingPrefixByDefaultScope(defaultScope: string): string {
-  const splittedScope = defaultScope.split('.');
-  const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
-  return `@${defaultOwner}`;
 }

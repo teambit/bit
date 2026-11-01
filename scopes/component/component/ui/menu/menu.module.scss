@@ -10,6 +10,10 @@
 }
 
 .topBarMinimal {
+  // Size from content (not 100%) so the breadcrumb beside it only shrinks when space is short.
+  flex: 1 1 auto;
+  width: auto;
+
   @media screen and (max-width: $br-md) {
     // The breadcrumb owns the remaining mobile space, while this menu keeps the intrinsic width
     // of its pinned actions and right-side controls.
@@ -78,6 +82,27 @@
   > * {
     width: 100%;
   }
+}
+
+// Desktop minimal mode: Overview + Preview sit outside the ResponsiveNavbar so they can never
+// collapse into its overflow menu. Matches the navbar's tab row (8px gap, 14px, no wrapping).
+.minimalFixedNav {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  height: 100%;
+  margin-right: 8px;
+  font-size: var(--bit-p-xs, 14px);
+  white-space: nowrap;
+  color: var(--on-background-color, #2b2b2b);
+
+  @media screen and (max-width: $br-md) {
+    display: none;
+  }
+}
+
+.minimalPrimaryTab {
+  height: 100%;
 }
 
 .hideMinimalMobileNav {

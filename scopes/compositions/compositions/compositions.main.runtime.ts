@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { AspectData, Component, IComponent } from '@teambit/component';
 import { ComponentMap } from '@teambit/component';
 import type { ScopeMain } from '@teambit/scope';

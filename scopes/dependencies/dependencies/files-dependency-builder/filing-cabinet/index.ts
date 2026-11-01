@@ -37,7 +37,7 @@ type Options = {
   dependency: string; // previous name was "partial"
   filename: string;
   directory: string;
-  config: Record<string, any>;
+  config?: Record<string, any>;
   webpackConfig?: Record<string, any>;
   configPath?: string;
   resolveConfig?: Record<string, any>;

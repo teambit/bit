@@ -218,7 +218,7 @@ describe('component id with wildcard', function () {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
-        helper.command.tagIncludeUnmodified('0.0.5');
+        helper.command.tagIncludeUnmodifiedWithoutBuild('0.0.5');
 
         // as an intermediate step, make sure all components are staged
         const status = helper.command.statusJson();
@@ -250,17 +250,6 @@ describe('component id with wildcard', function () {
           expect(bitMap['utils/fs/write'].version).to.equal('0.0.5');
           expect(bitMap['bar/foo'].version).to.equal('0.0.5');
         });
-      });
-    });
-    describe('merge with wildcard', () => {
-      before(() => {
-        helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
-        helper.command.tagAllWithoutBuild();
-        helper.command.tagIncludeUnmodified('0.0.5');
-
-        // as an intermediate step, make sure all components are staged
-        const status = helper.command.statusJson();
-        expect(status.stagedComponents).to.have.lengthOf(5);
       });
     });
     describe('diff with wildcard', () => {

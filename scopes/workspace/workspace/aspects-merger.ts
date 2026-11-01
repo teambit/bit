@@ -84,6 +84,8 @@ export class AspectsMerger {
       ? ExtensionDataList.fromConfigObject(mergeConfigCombined)
       : undefined;
 
+    // the merge config may be gone since the last load (e.g. after the merge snap), so don't keep its deps
+    delete this.mergeConfigDepsResolverDataCache[componentId.toString()];
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
     const scopeExtensionsBeforeClone = this.getComponentFromScopeWithoutDuplications(componentFromScope);
     const scopeExtensions = ExtensionDataList.fromArray(scopeExtensionsBeforeClone.map((e) => e.clone()));

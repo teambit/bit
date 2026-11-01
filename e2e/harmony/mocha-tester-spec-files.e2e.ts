@@ -1,8 +1,5 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-
-chai.use(chaiFs);
 
 describe('Mocha Tester - spec files handling', function () {
   this.timeout(0);
@@ -121,15 +118,15 @@ describe('second spec file', () => {
       helper.fs.outputFile('comp1/second.spec.ts', specFileWithNamesFixture('second spec file', 'second-file test'));
       helper.fs.outputFile('comp2/comp2.spec.ts', specFileWithNamesFixture('comp2 spec file', 'comp2 test'));
     });
-    it('should run only the tests of the given file', () => {
+    // the file-scoping and the component-scoping used to be two tests that ran the exact same
+    // `bit test comp1/first.spec.ts`; they assert on different parts of one output, so it is
+    // captured once here rather than paying for a second full tester run.
+    it('should run only the tests of the given file, and only test the component that owns it', () => {
       const output = helper.command.test('comp1/first.spec.ts', true);
       expect(output).to.have.string('first-file test');
       expect(output).to.not.have.string('second-file test');
       expect(output).to.not.have.string('comp2 test');
       expect(output).to.have.string('1 passing');
-    });
-    it('should test only the component that owns the given file', () => {
-      const output = helper.command.test('comp1/first.spec.ts', true);
       expect(output).to.have.string('testing total of 1 components');
     });
     it('should support multiple test-file paths', () => {

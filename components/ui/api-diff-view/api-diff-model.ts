@@ -38,8 +38,14 @@ export type SchemaSideAvailability = {
   reason?: SchemaUnavailableReason;
 };
 
+/**
+ * the status of a result in the UI. `UNSUPPORTED` is UI-only: the backend's GraphQL schema has no API
+ * diff support (an older Bit), so there is no result to show. See `UNSUPPORTED_API_DIFF`.
+ */
+export type APIDiffResultStatus = APIDiffComputeStatus | 'UNSUPPORTED';
+
 export type APIDiffResult = {
-  status: APIDiffComputeStatus;
+  status: APIDiffResultStatus;
   base: SchemaSideAvailability;
   compare: SchemaSideAvailability;
   hasChanges: boolean;
@@ -56,3 +62,30 @@ export type APIDiffResult = {
   nonBreaking: number;
   patch: number;
 };
+
+/**
+ * The result the UI uses when the backend cannot compute API diffs at all (its GraphQL schema lacks
+ * the query or its fields). It has no changes, so every consumer that reads `hasChanges` or the change
+ * lists treats it as "nothing to show", and `ComponentApiDiffSection` renders a neutral notice for it.
+ */
+export const UNSUPPORTED_API_DIFF: APIDiffResult = Object.freeze({
+  status: 'UNSUPPORTED',
+  base: { available: false },
+  compare: { available: false },
+  hasChanges: false,
+  impact: 'PATCH',
+  internalImpact: 'PATCH',
+  publicChanges: [],
+  internalChanges: [],
+  unresolvedExports: [],
+  added: 0,
+  removed: 0,
+  modified: 0,
+  breaking: 0,
+  nonBreaking: 0,
+  patch: 0,
+}) as APIDiffResult;
+
+export function isApiDiffUnsupported(result?: APIDiffResult | null): boolean {
+  return result?.status === 'UNSUPPORTED';
+}

@@ -118,7 +118,7 @@ export class ReactApp implements Application {
       html: htmlConfig,
       targets: [
         {
-          entries: await this.getEntries(),
+          entries: await this.getEntries(context.hostRootDir),
           components: [context.appComponent],
           outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'browser')),
           hostDependencies: this.getHostDependencies(),
@@ -199,9 +199,11 @@ export class ReactApp implements Application {
     context.capsule.fs.writeFileSync(join(ssrAppDir, 'runner.js'), runner);
     const capsuleSsrDir = context.capsule.fs.getPath(ssrAppDir);
     const installer = this.dependencyResolver.getInstaller({
-      packageManager: 'teambit.dependencies/yarn',
+      packageManager: 'teambit.dependencies/pnpm',
       rootDir: capsuleSsrDir,
-      cacheRootDirectory: capsuleSsrDir,
+      // the ssr dir is deployed as is, so its node_modules must be flat and self-contained
+      nodeLinker: 'hoisted',
+      installingContext: { inCapsule: true },
     });
     await installer.install(capsuleSsrDir, this.getSsrPolicy(), new ComponentMap(new Map()));
     return ssrAppDir;
@@ -324,7 +326,7 @@ export class ReactApp implements Application {
   }
 
   private async getDevServerContext(context: AppContext): Promise<DevServerContext> {
-    const entries = await this.getEntries();
+    const entries = await this.getEntries(context.hostRootDir);
     return Object.assign(context, {
       entry: entries,
       rootPath: '',

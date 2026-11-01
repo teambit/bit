@@ -29,6 +29,10 @@ export function isFailedPhase(phase?: string): boolean {
   return p === 'FAILURE' || p === 'FAILED';
 }
 
+export function isSuccessPhase(phase?: string): boolean {
+  return phase?.toUpperCase() === 'SUCCESS';
+}
+
 /**
  * strip "@hash" or "@version" suffix from a component ID.
  * e.g. "scope/name@abc123" → "scope/name"

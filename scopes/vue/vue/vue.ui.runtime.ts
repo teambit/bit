@@ -1,4 +1,4 @@
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { APIReferenceAspect } from '@teambit/api-reference';
 import { VueAspect } from './vue.aspect';
 import { VueSchema } from './vue.schema';

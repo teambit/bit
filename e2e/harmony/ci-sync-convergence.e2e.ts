@@ -120,11 +120,6 @@ describe('bit ci sync: what counts as work, and what converges', function () {
   // "commits after the state commit" counts zero — the edit used to be invisible and the pair read as
   // converged while the lane never received it. The conflict-halt comment's resolve-by-hand recipe
   // (bit lane import + fix + one commit) produces exactly this shape.
-
-  // A single commit that bundles a source edit WITH a `.bitmap` write is the state commit itself, so
-  // "commits after the state commit" counts zero — the edit used to be invisible and the pair read as
-  // converged while the lane never received it. The conflict-halt comment's resolve-by-hand recipe
-  // (bit lane import + fix + one commit) produces exactly this shape.
   describe('a commit bundling a source edit with a .bitmap write is dev work, not convergence', () => {
     const LANE = 'bundled-commit';
     let defaultBranch: string;
@@ -171,12 +166,6 @@ describe('bit ci sync: what counts as work, and what converges', function () {
   // and writes NOTHING — no ledger commit, no push, no CI re-trigger. The suspicion re-plans the probe
   // on every later run, and every one of them is equally free of writes; the tip-sha assertions are
   // what prove that.
-
-  // `commitTouchesBeyondBitmap` asks "any path other than `.bitmap`", so a file no component tracks
-  // plans the probe too. The probe is a status READ: finding nothing pending it settles as converged
-  // and writes NOTHING — no ledger commit, no push, no CI re-trigger. The suspicion re-plans the probe
-  // on every later run, and every one of them is equally free of writes; the tip-sha assertions are
-  // what prove that.
   describe('a probe that finds nothing pending settles without writing anything', () => {
     const LANE = 'clean-probe';
     let defaultBranch: string;
@@ -215,11 +204,6 @@ describe('bit ci sync: what counts as work, and what converges', function () {
       expect(branchTipSha(LANE)).to.equal(devTipSha);
     });
   });
-
-  // A squash rewrite builds the squashed commit's body by concatenating the squashed commits' messages
-  // (GitHub's squash-merge does exactly this) — and a synced branch's history is full of ledger messages
-  // ending in `[bit-sync]` on its own line. The result is a developer's commit wearing the reconciler's
-  // signature; reading it as ours would declare convergence over content the lane never received.
 
   // A squash rewrite builds the squashed commit's body by concatenating the squashed commits' messages
   // (GitHub's squash-merge does exactly this) — and a synced branch's history is full of ledger messages
@@ -281,9 +265,6 @@ describe('bit ci sync: what counts as work, and what converges', function () {
       expect(branchTipSha(LANE)).to.equal(shaBefore);
     });
   });
-
-  // The cross-scope split: foreign CONTENT is refused outright; a foreign HOST is fine as long as the
-  // content is this repo's, addressed by its scope-qualified id.
 
   // A branch commit that touches no bit-tracked file (docs, CI config) keeps `hasDevCommits` true
   // forever — `stateCommit` (sync-state.ts, derived from `.bitmap`'s content, never commit messages)
@@ -447,10 +428,4 @@ describe('bit ci sync: what counts as work, and what converges', function () {
       expect(helper.command.listLanesParsed().currentLane).to.equal('main');
     });
   });
-
-  // A branch commit that touches no bit-tracked file (docs, CI config) keeps `hasDevCommits` true
-  // forever — `stateCommit` (sync-state.ts, derived from `.bitmap`'s content, never commit messages)
-  // cannot advance past it. So export-branch is re-planned on every run, and what keeps that from
-  // looping is that the probe is a READ: finding nothing to push it writes nothing, so no ledger
-  // commit lands on the branch and no CI run is re-triggered.
 });

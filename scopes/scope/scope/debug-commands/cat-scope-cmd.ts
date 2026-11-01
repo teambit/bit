@@ -35,10 +35,10 @@ export class CatScopeCmd implements Command {
     const payload = await catScope(scopePath || process.cwd(), full);
     if (jsonExtra) {
       payload.forEach((obj) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        obj.hash = obj.hash().toString();
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        obj.type = obj.constructor.name;
+        // the objects are serialized as JSON, so the `hash` method and the `type` are replaced by plain values
+        const plainObject = obj as unknown as Record<string, unknown>;
+        plainObject.hash = obj.hash().toString();
+        plainObject.type = obj.constructor.name;
       });
     }
     return payload;

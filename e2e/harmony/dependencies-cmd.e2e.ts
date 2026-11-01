@@ -34,6 +34,9 @@ describe('bit dependencies command', function () {
         const show = helper.command.showComponent('comp1');
         expect(show).to.have.string('lodash@3.3.1');
       });
+      it('bit status should not show a package with a version set in the config as a pinned dependency', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.PinnedDependencies.name);
+      });
       describe('adding another dep as a devDep', () => {
         let showConfig: Record<string, any>;
         before(() => {
@@ -53,6 +56,7 @@ describe('bit dependencies command', function () {
           before(() => {
             helper.command.ejectConf('comp1');
             helper.command.dependenciesSet('comp1', 'some-pkg@1.1.2', '--dev');
+            showConfig = helper.command.showAspectConfig('comp1', Extensions.dependencyResolver);
           });
           it('should not remove the dep that was added before', () => {
             const dep = showConfig.data.dependencies.find((d) => d.id === 'lodash');
@@ -122,6 +126,38 @@ describe('bit dependencies command', function () {
       it('should ignore it and not consider it as a dependency', () => {
         const deps = helper.command.getCompDepsIdsFromData('comp1');
         expect(deps).to.not.include(`${helper.scopes.remote}/comp1@0.0.1`);
+      });
+    });
+    describe('setting an old version of a workspace component', () => {
+      let tagOutput: string;
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(2);
+        helper.command.tagAllWithoutBuild();
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+        helper.command.dependenciesSet('comp1', `${comp2Pkg}@0.0.1`);
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('should keep the version from the config when tagging the dependency with it', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        expect(comp1.dependencies[0].id.version).to.equal('0.0.1');
+        expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+      });
+      it('bit status should show the version set by the config as an issue that does not block the tag', () => {
+        helper.command.expectStatusToHaveIssue(IssuesClasses.PinnedDependencies.name);
+      });
+      describe('tagging the dependency', () => {
+        before(() => {
+          tagOutput = helper.command.tagWithoutBuild('comp2', '--unmodified');
+        });
+        it('should not auto-tag the dependent', () => {
+          expect(tagOutput).to.have.string('1 component(s) tagged');
+          expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+        });
+        it('should show the dependent that was not auto-tagged and the version it keeps', () => {
+          expect(tagOutput).to.have.string('dependents not auto-tagged');
+          expect(tagOutput).to.have.string(`${helper.scopes.remote}/comp1`);
+        });
       });
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('adding component dependency', () => {

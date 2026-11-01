@@ -84,7 +84,6 @@ export default class BitMapHelper {
     return fs.writeJsonSync(bitmapFile, bitmap, { spaces: 2 });
   }
   printFilesInCaseOfError(files: Record<string, any>[]): string {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filesStr = files.map((f) => f.name).join(', ');
     return `Files in bitmap file: ${filesStr}`;
   }

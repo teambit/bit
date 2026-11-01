@@ -11,7 +11,9 @@
  */
 
 import pMapSeries from 'p-map-series';
-import { HeadNotFound, ParentNotFound, VersionNotFound } from '@teambit/legacy.scope';
+import { HeadNotFound } from './head-not-found';
+import { ParentNotFound } from './parent-not-found';
+import { VersionNotFound } from './version-not-found';
 import type { VersionParents, ModelComponent, Version, Ref, Repository } from '@teambit/objects';
 
 export type VersionInfo = {
@@ -29,6 +31,21 @@ export type VersionInfo = {
   onLane: boolean;
 };
 
+export type VersionObjectsByHash = Map<string, Version>;
+
+/**
+ * index version objects by hash, the first object of a hash wins. a caller walking many components over the same
+ * version objects (e.g. the remote merge of an export) should index them once and pass the index.
+ */
+export function indexVersionObjects(versionObjects: Version[]): VersionObjectsByHash {
+  const versionObjectsByHash: VersionObjectsByHash = new Map();
+  versionObjects.forEach((v) => {
+    const hashStr = v.hash().toString();
+    if (!versionObjectsByHash.has(hashStr)) versionObjectsByHash.set(hashStr, v);
+  });
+  return versionObjectsByHash;
+}
+
 /**
  * by default it starts the traverse from the head or lane-head, unless "startFrom" is passed.
  * if versionObjects passed, use it instead of loading from the repo.
@@ -44,17 +61,19 @@ export async function getAllVersionsInfo({
   modelComponent: ModelComponent;
   repo?: Repository;
   throws?: boolean; // in case objects are missing
-  versionObjects?: Version[];
+  versionObjects?: Version[] | VersionObjectsByHash;
   startFrom?: Ref | null; // by default, start from the head
   stopAt?: Ref[] | null; // by default, stop when the parents is empty
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const processedHashes = new Set<string>();
+  const versionObjectsByHash =
+    versionObjects instanceof Map ? versionObjects : indexVersionObjects(versionObjects || []);
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
     if (!versionObjects && !repo) {
       throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
     }
-    const foundInVersionObjects = versionObjects?.find((v) => v.hash().isEqual(ref));
+    const foundInVersionObjects = versionObjectsByHash.get(ref.toString());
     if (foundInVersionObjects) return foundInVersionObjects;
     if (repo) return (await ref.load(repo)) as Version;
     return undefined;
@@ -72,7 +91,8 @@ export async function getAllVersionsInfo({
     parents: [],
     onLane: !foundOnMain,
   };
-  const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
+  const stopHashes = new Set((stopAt || []).map((r) => r.toString()));
+  const shouldStop = (ref: Ref): boolean => stopHashes.has(ref.toString());
   const head = await getVersionObj(laneHead);
   if (head) {
     if (shouldStop(head.hash())) {
@@ -216,10 +236,16 @@ export async function getAllVersionParents({
 }): Promise<VersionParents[]> {
   const versionHistory = await modelComponent.getVersionHistory(repo);
   const versionParents: VersionParents[] = [];
+  // indexed by hash: a linear search per item makes this quadratic in the size of the history, which is slow for
+  // components with thousands of versions. `versionParents` keeps the order.
+  const byHash = new Map<string, VersionParents>();
   const push = (versionParentsItem: VersionParents) => {
-    const existing = versionParents.find((v) => v.hash.isEqual(versionParentsItem.hash));
-    if (!existing) versionParents.push(versionParentsItem);
-    else {
+    const key = versionParentsItem.hash.toString();
+    const existing = byHash.get(key);
+    if (!existing) {
+      versionParents.push(versionParentsItem);
+      byHash.set(key, versionParentsItem);
+    } else {
       // override it
       Object.keys(existing).forEach((field) => (existing[field] = versionParentsItem[field]));
     }
@@ -242,7 +268,7 @@ export async function getAllVersionParents({
   if (versionParentsFromObjects) {
     versionParentsFromObjects.forEach((versionParentItem) => push(versionParentItem));
     const allParentsFromObj = versionParentsFromObjects.map((v) => v.parents).flat();
-    const missingParents = allParentsFromObj.filter((parent) => !versionParents.some((v) => v.hash.isEqual(parent)));
+    const missingParents = allParentsFromObj.filter((parent) => !byHash.has(parent.toString()));
     if (missingParents.length) {
       if (missingRefsFromVersionHistory) {
         // stops the recursion
@@ -275,8 +301,16 @@ export function getSubsetOfVersionParents(
 ): VersionParents[] {
   const results: VersionParents[] = [];
   const processedHashes = new Set<string>();
-  const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
-  const getVersionParent = (ref: Ref) => versionParents.find((v) => v.hash.isEqual(ref));
+  // indexed by hash: a linear search per parent makes the walk quadratic in the size of the history.
+  // the first entry of a hash wins, as with a search.
+  const byHash = new Map<string, VersionParents>();
+  versionParents.forEach((v) => {
+    const key = v.hash.toString();
+    if (!byHash.has(key)) byHash.set(key, v);
+  });
+  const stopHashes = new Set((stopAt || []).map((r) => r.toString()));
+  const shouldStop = (ref: Ref): boolean => stopHashes.has(ref.toString());
+  const getVersionParent = (ref: Ref) => byHash.get(ref.toString());
 
   const head = getVersionParent(from);
   if (!head || shouldStop(head.hash)) return [];

@@ -1,6 +1,13 @@
 import { expect } from 'chai';
 import type { PackageManifest } from '@pnpm/types';
-import { createReadPackageHooks, mergeBitLockfileAttrs, resolveScriptPolicies, sortDepsRequiringBuild } from './lynx';
+import {
+  createReadPackageHooks,
+  removeCoreDependencies,
+  mergeBitLockfileAttrs,
+  packageNameOfDepPath,
+  resolveScriptPolicies,
+  sortDepsRequiringBuild,
+} from './lynx';
 
 describe('resolveScriptPolicies()', () => {
   it('should pass through the pnpm allow-all builds flag', () => {
@@ -10,7 +17,7 @@ describe('resolveScriptPolicies()', () => {
     });
   });
 
-  it('should preserve explicit never-built packages instead of passing the allow-all builds flag', () => {
+  it('should deny never-built packages alongside the allow-all builds flag', () => {
     expect(
       resolveScriptPolicies({
         dangerouslyAllowAllScripts: true,
@@ -20,7 +27,7 @@ describe('resolveScriptPolicies()', () => {
       allowBuilds: {
         'native-pkg': false,
       },
-      neverBuildPackageNames: ['native-pkg'],
+      dangerouslyAllowAllBuilds: true,
     });
   });
 });
@@ -89,5 +96,67 @@ describe('mergeBitLockfileAttrs()', () => {
 
   it('should write nothing when there is neither a computed list nor a recorded block', () => {
     expect(mergeBitLockfileAttrs(undefined, undefined)).to.equal(undefined);
+  });
+});
+
+describe('packageNameOfDepPath()', () => {
+  it('should take the name of a registry dependency', () => {
+    expect(packageNameOfDepPath('esbuild@0.16.12')).to.equal('esbuild');
+  });
+
+  it('should keep the scope', () => {
+    expect(packageNameOfDepPath('@teambit/harmony@0.4.7')).to.equal('@teambit/harmony');
+  });
+
+  it('should drop the peer suffix', () => {
+    expect(packageNameOfDepPath('react-xarrows@2.0.2(react@18.3.1)')).to.equal('react-xarrows');
+  });
+
+  it('should stop at the version even when the resolution carries an @', () => {
+    expect(packageNameOfDepPath('fuse-native@https://codeload.github.com/refinio/fuse-native/tar.gz/bba3d9')).to.equal(
+      'fuse-native'
+    );
+    expect(packageNameOfDepPath('private-pkg@git+ssh://git@github.com/org/private-pkg.git')).to.equal('private-pkg');
+    expect(packageNameOfDepPath('@org/private-pkg@git+ssh://git@github.com/org/private-pkg.git')).to.equal(
+      '@org/private-pkg'
+    );
+  });
+});
+
+describe('removeCoreDependencies()', () => {
+  const manifest = {
+    name: 'comp',
+    version: '1.0.0',
+    dependencies: {
+      '@teambit/legacy': 'workspace:*',
+      '@teambit/harmony': 'npm:@teambit/harmony@0.4.12',
+      lodash: '4.17.21',
+    },
+    peerDependencies: { '@teambit/harmony': '^0.4.0', react: '^19.0.0' },
+  };
+
+  it('should remove the core dependencies whatever their spec, and as peers', () => {
+    expect(removeCoreDependencies(manifest)).to.deep.equal({
+      name: 'comp',
+      version: '1.0.0',
+      dependencies: { lodash: '4.17.21' },
+      peerDependencies: { react: '^19.0.0' },
+    });
+  });
+
+  it('should keep the link: dependencies Bit links itself', () => {
+    const linked = { ...manifest, dependencies: { '@teambit/legacy': 'link:../legacy' } };
+    expect(removeCoreDependencies(linked).dependencies).to.deep.equal({ '@teambit/legacy': 'link:../legacy' });
+  });
+
+  it('should keep harmony when the workspace forces its version', () => {
+    const result = removeCoreDependencies(manifest, '0.4.12');
+    expect(result.dependencies).to.have.property('@teambit/harmony');
+    expect(result.dependencies).not.to.have.property('@teambit/legacy');
+  });
+
+  it('should return the manifest itself when there is nothing to remove', () => {
+    const plain = { name: 'plain', version: '1.0.0', dependencies: { lodash: '4.17.21' } };
+    expect(removeCoreDependencies(plain)).to.equal(plain);
   });
 });

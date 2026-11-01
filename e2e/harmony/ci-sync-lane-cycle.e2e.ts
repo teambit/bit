@@ -208,9 +208,6 @@ describe('bit ci sync: the lane/branch reconcile cycle', function () {
     });
   });
 
-  // F must observe pristine remote refs WHILE drift exists — exactly the state E needs before it
-  // runs — so F comes first and E right after it.
-
   // Properties that live only at the loop level: a deleted lane is still visited (via the branch half
   // of the enumeration), one halted lane must not abort the rest, lanes must not contaminate each
   // other (comp3 exists on lane A only), and an ordinary branch must survive the run.
@@ -380,7 +377,4 @@ describe('bit ci sync: the lane/branch reconcile cycle', function () {
       expect(rerun.output).to.include(`${LANE_B} -> noop (converged)`);
     });
   });
-
-  // Walks one lane branch through all three ownership outcomes, plus the branch with inherited
-  // history that must never be touched.
 });

@@ -1,10 +1,7 @@
-import chai, { expect } from 'chai';
-import path from 'path';
+import { expect } from 'chai';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('merge lanes - remote lane operations', function () {
   this.timeout(0);
@@ -33,7 +30,7 @@ describe('merge lanes - remote lane operations', function () {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
-        helper.command.mergeLane(`${helper.scopes.remote}/dev`);
+        helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`);
       });
       it('should save the files to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
@@ -72,18 +69,18 @@ describe('merge lanes - remote lane operations', function () {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
-        mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
+        mergeOutput = helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`, '--workspace --verbose');
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('merge skipped');
         expect(mergeOutput).to.have.string('not in the workspace');
       });
+      // an empty .bitmap is what proves nothing was written for these components; a previous test
+      // here asserted that a legacy "components/bar/foo" path is absent, which this scenario never
+      // creates in the first place, so it could not fail
       it('bitmap should not save any component', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
         expect(Object.keys(bitMap)).to.have.lengthOf(0);
-      });
-      it('should not save the files to the filesystem', () => {
-        expect(path.join(helper.scopes.localPath, 'components/bar/foo')).to.not.be.a.path();
       });
       it('bit status should show clean state', () => {
         const output = helper.command.runCmd('bit status');
@@ -107,7 +104,7 @@ describe('merge lanes - remote lane operations', function () {
         importedScope = helper.scopeHelper.cloneWorkspace();
         helper.scopeHelper.getClonedWorkspace(authorScope);
         helper.fixtures.populateComponents(undefined, undefined, ' v2');
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.exportLane();
 
         helper.scopeHelper.getClonedWorkspace(importedScope);

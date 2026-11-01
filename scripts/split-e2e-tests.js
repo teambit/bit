@@ -66,7 +66,11 @@ function main() {
   const showStats = process.argv.includes('--stats');
   const dirArg = process.argv.find((arg) => arg.startsWith('--dir='));
   const scanDirs = dirArg
-    ? dirArg.slice('--dir='.length).split(',').filter(Boolean).map((dir) => path.join(REPO_ROOT, dir))
+    ? dirArg
+        .slice('--dir='.length)
+        .split(',')
+        .filter(Boolean)
+        .map((dir) => path.join(REPO_ROOT, dir))
     : [E2E_DIR];
   const excludeArg = process.argv.find((arg) => arg.startsWith('--exclude-dir='));
   const excludeDirs = excludeArg ? excludeArg.slice('--exclude-dir='.length).split(',').filter(Boolean) : [];

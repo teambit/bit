@@ -52,7 +52,7 @@ export class ModelComponentMerger {
 
   private deleteOrphanedVersionsOnExport() {
     // makes sure that components received with orphanedVersions, this property won't be saved
-    if (this.isExport) this.existingComponent.orphanedVersions = {};
+    if (this.isExport) this.existingComponent.clearOrphanedVersions();
   }
 
   private setHead(locallyChanged: boolean) {
@@ -122,9 +122,7 @@ export class ModelComponentMerger {
         this.isIncomingFromOrigin &&
         !this.existingComponent.hasLocalTag(existingVersion)
       ) {
-        const ref = this.existingComponent.versions[existingVersion];
-        delete this.existingComponent.versions[existingVersion];
-        this.existingComponent.setOrphanedVersion(existingVersion, ref);
+        this.existingComponent.moveVersionToOrphaned(existingVersion);
       }
     });
   }

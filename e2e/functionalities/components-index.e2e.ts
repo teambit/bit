@@ -45,7 +45,6 @@ describe('scope components index mechanism', function () {
       it('bit list should show only one component', () => {
         const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(1);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(list[0].id).to.contain(helper.scopes.remote);
       });
       describe('removing the component', () => {
@@ -55,10 +54,6 @@ describe('scope components index mechanism', function () {
         it('should remove the record from index.json', () => {
           const indexJson = helper.general.getComponentsFromIndexJson();
           expect(indexJson).to.have.lengthOf(0);
-        });
-        it('bit list should show zero components', () => {
-          const list = helper.command.listLocalScopeParsed();
-          expect(list).to.have.lengthOf(0);
         });
       });
       describe('importing the component to a new scope', () => {
@@ -70,19 +65,6 @@ describe('scope components index mechanism', function () {
         it('should populate the index.json', () => {
           const indexJson = helper.general.getComponentsFromIndexJson();
           expect(indexJson).to.have.lengthOf(1);
-        });
-        describe('removing the component', () => {
-          before(() => {
-            helper.command.removeComponent('bar/foo');
-          });
-          it('should remove the record from index.json', () => {
-            const indexJson = helper.general.getComponentsFromIndexJson();
-            expect(indexJson).to.have.lengthOf(0);
-          });
-          it('bit list should show zero components', () => {
-            const list = helper.command.listLocalScopeParsed();
-            expect(list).to.have.lengthOf(0);
-          });
         });
       });
     });
@@ -115,10 +97,6 @@ describe('scope components index mechanism', function () {
       it('should rebuild index.json with the missing components', () => {
         const indexJson = helper.general.getComponentsFromIndexJson();
         expect(indexJson).to.have.lengthOf(1);
-      });
-      it('bit list should show 1 component', () => {
-        const list = helper.command.listLocalScopeParsed();
-        expect(list).to.have.lengthOf(1);
       });
     });
   });

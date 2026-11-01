@@ -1,6 +1,6 @@
 import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import React from 'react';
 import type { Harmony } from '@teambit/harmony';
 

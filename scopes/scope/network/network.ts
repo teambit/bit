@@ -1,10 +1,9 @@
 import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { PushOptions, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import type { ListScopeResult } from '@teambit/legacy.component-list';
 import type { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import type { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
-import type { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
+import type { LaneData, ScopeDescriptor, RemovedObjects, ListScopeResult } from '@teambit/legacy.scope';
 import type { DoctorResponse } from '@teambit/doctor';
 
 export interface Network {
@@ -27,6 +26,11 @@ export interface Network {
   latestVersions(bitIds: ComponentIdList): Promise<string[]>;
   graph(bitId?: ComponentID): Promise<DependencyGraph>;
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]>;
+  /**
+   * remove hidden `lane.updateDependents` entries (the dependents Ripple CI cascaded onto the lane)
+   * from the lane on this remote. omitting `ids` removes all of them. resolves to true if the lane changed.
+   */
+  removeLaneUpdateDependents(laneId: string, ids?: string[]): Promise<boolean>;
   hasObjects(hashes: string[]): Promise<string[]>;
   doctor(diagnosisName?: string): Promise<DoctorResponse>;
 }

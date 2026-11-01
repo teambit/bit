@@ -6,7 +6,12 @@ import jsDocParse from './jsdoc';
 import reactParse from './react';
 import type { Doclet } from './types';
 
-export default async function parse(file: SourceFile, componentFsCache: FsCache): Promise<Doclet[]> {
+/**
+ * `componentFsCache` caches the results per file path on the filesystem. without it (e.g. outside a workspace, where
+ * the files are in memory), the file is always parsed.
+ */
+export default async function parse(file: SourceFile, componentFsCache?: FsCache): Promise<Doclet[]> {
+  if (!componentFsCache) return parseFile(file.contents.toString(), file.relative);
   const docsFromCache = await componentFsCache.getDocsFromCache(file.path);
   if (docsFromCache && docsFromCache.timestamp) {
     const stat = await fs.stat(file.path);

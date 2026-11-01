@@ -73,20 +73,36 @@ export function SandboxPermissionExecutor({
   return null;
 }
 
+/**
+ * Runs registered `UseSandboxPermission` hooks against a shared `SandboxManager` and passes
+ * the aggregated sandbox value to `children` as a render prop. Like `PreviewPropsAggregator`,
+ * computation happens synchronously within the render pass (executors are sibling children
+ * that mutate the manager before the consumer reads it), so the value exists on the very
+ * first commit — before the preview iframe mounts and starts its navigation. The previous
+ * effect-driven flow (`onSandboxChange` firing from `useEffect`) delivered the value one
+ * commit after the iframe had already started loading, and a `sandbox` attribute set on a
+ * live iframe only applies to its next navigation — so the initial document kept the
+ * flags it mounted with.
+ */
 export function SandboxPermissionsAggregator({
   hooks,
   onSandboxChange,
   component,
+  children,
 }: {
   hooks: UseSandboxPermission[];
+  /**
+   * @deprecated fires from an effect, one commit after the iframe mounts — too late for the
+   * initial navigation. Use the `children` render prop instead.
+   */
   onSandboxChange?: (sandboxValue: string) => void;
   component?: ComponentModel;
+  children?: (sandboxValue: string) => ReactNode;
 }) {
-  const managerRef = useRef(new SandboxManager());
-
-  useEffect(() => {
-    onSandboxChange?.(managerRef.current.toString());
-  });
+  // Fresh manager per render so a hook that stops granting a permission doesn't leak the
+  // previous render's grant. Executors below mutate it in source order before
+  // SandboxPermissionsConsumer reads it.
+  const manager = new SandboxManager();
 
   return (
     <>
@@ -94,12 +110,31 @@ export function SandboxPermissionsAggregator({
         <SandboxPermissionExecutor
           key={`sanbox-permission-executor-${i}`}
           usePermissionHook={usePermissionHook}
-          manager={managerRef.current}
+          manager={manager}
           component={component}
         />
       ))}
+      <SandboxPermissionsConsumer manager={manager} onSandboxChange={onSandboxChange}>
+        {children}
+      </SandboxPermissionsConsumer>
     </>
   );
+}
+
+function SandboxPermissionsConsumer({
+  manager,
+  onSandboxChange,
+  children,
+}: {
+  manager: SandboxManager;
+  onSandboxChange?: (sandboxValue: string) => void;
+  children?: (sandboxValue: string) => ReactNode;
+}) {
+  const sandboxValue = manager.toString();
+  useEffect(() => {
+    onSandboxChange?.(sandboxValue);
+  });
+  return <>{children?.(sandboxValue)}</>;
 }
 
 export class PreviewPropsManager {

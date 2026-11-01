@@ -3,22 +3,21 @@ import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import type { SourceFile } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
-import type { Component, ComponentMain } from '@teambit/component';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
+import type { AspectDefinition, Component, ComponentMain, RegularCompDescriptor } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { EnvPolicyConfigObject } from './env-policy-config';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { IssuesMain } from '@teambit/issues';
 import { IssuesAspect } from '@teambit/issues';
-import type { EnvJsoncPatterns } from '@teambit/dev-files';
 import pMapSeries from 'p-map-series';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
@@ -26,6 +25,8 @@ import { head, uniq } from 'lodash';
 import type { WorkerMain } from '@teambit/worker';
 import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
+import { BitId } from '@teambit/legacy-bit-id';
+import { AsyncLocalStorage } from 'async_hooks';
 import type { EnvService } from './services';
 import type { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -38,6 +39,13 @@ import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin, BIT_ENV_PATTERN } from './env.plugin';
 import { EnvJsoncDetector } from './env-jsonc.detector';
+
+export type EnvJsoncPatterns = {
+  compositions?: string[];
+  docs?: string[];
+  tests?: string[];
+  [key: string]: string[] | undefined;
+};
 
 export type EnvJsonc = {
   extends?: string;
@@ -72,13 +80,7 @@ export type EnvTransformer = (env: Environment) => Environment;
 
 export type ServicesRegistry = SlotRegistry<Array<EnvService<any>>>;
 
-export type RegularCompDescriptor = {
-  id: string;
-  icon?: string;
-  type?: string;
-  name?: string;
-  description?: string;
-};
+export type { RegularCompDescriptor };
 export type EnvCompDescriptorProps = RegularCompDescriptor & {
   resolvedEnvJsonc?: ResolvedEnvJsonc;
   services?: {
@@ -120,6 +122,8 @@ export class EnvsMain {
    * Ids of envs (not neccesrraly loaded successfully)
    */
   public envIds = new Set<string>();
+  /** set inside a `skipNotLoadedWarnings` scope. see that method. */
+  private notLoadedWarningsMuted = new AsyncLocalStorage<true>();
 
   static runtime = MainRuntime;
 
@@ -208,6 +212,32 @@ export class EnvsMain {
     this.failedToLoadExt.clear();
   }
 
+  /**
+   * run `fn` with the "env was not loaded" warnings muted.
+   *
+   * the workspace loads components in groups, and one of those groups holds components that are
+   * loaded only so they can be registered as the env of another component. the env of *those*
+   * components (the env-of-env) is scheduled only when the env component itself is one of the
+   * requested ids, so during that pass an unregistered env says nothing about whether it's
+   * installed - warning about it is a false positive. e.g. "bit show <comp>" used to report that
+   * the env of <comp>'s env "was not loaded (run bit install)" on a perfectly healthy workspace.
+   *
+   * this is a scope rather than a param because the warning is reached from many aspects that
+   * calculate the env during the load slot (tester, docs, pkg, compositions, dev-files), so muting
+   * a single call site only moves the warning to the next one. it is execution-local rather than a
+   * field because loads run concurrently (the graphql resolver fans ids out with Promise.all), and
+   * a shared flag would let one load mute an unrelated one and hide a genuinely missing env.
+   */
+  async skipNotLoadedWarnings<T>(fn: () => Promise<T>): Promise<T> {
+    // the promise is created inside run() so the whole execution of `fn` is within the scope.
+    // (assigned via `let` because some @types/node versions type `run` as returning void)
+    let promise!: Promise<T>;
+    this.notLoadedWarningsMuted.run(true, () => {
+      promise = fn();
+    });
+    return promise;
+  }
+
   getFailedToLoadEnvs() {
     const failedToLoadEnvs = Array.from(this.failedToLoadEnvs);
     // Add all extensions which are also envs
@@ -240,9 +270,15 @@ export class EnvsMain {
       'teambit.envs/env',
       'teambit.mdx/readme',
       'teambit.harmony/bit-custom-aspect',
-      // note: empty-env is deliberately not listed here although it is a core aspect. components
-      // listed here are excluded from the env load-groups (their own env is assumed to be core as
-      // well), while empty-env's own env is an external env that must be loaded like any other.
+      // empty-env ships with bit like the envs above. leaving it out makes every isCoreEnv() guard
+      // treat it as an external env: `bit install` then adds its npm package to the env root and
+      // pulls the entire bit core into the workspace, and env-policy/dev-files lookups fetch the
+      // env component from the remote instead of using the loaded aspect.
+      // listing it was once reverted because, in the bit repo itself, loading the empty-env
+      // component alone (e.g. `bit show teambit.harmony/empty-env`) reports its own env
+      // (core-aspect-env) as not loaded. that is how the load-groups treat every core env here
+      // (react/node/aspect report the same) and the component still compiles and builds.
+      'teambit.harmony/empty-env',
     ];
   }
 
@@ -380,7 +416,10 @@ export class EnvsMain {
   async recursivelyMergeWithParentManifest(object: EnvJsonc, envExtendsDeps?: LegacyDependency[]): Promise<EnvJsonc> {
     if (!object.extends) return object;
     const parentEnvId = object.extends;
-    const resolver = this.getAllRegisteredEnvJsoncResolvers()[0];
+    // a workspace registers a resolver that loads the parent env from the workspace. outside a workspace (e.g. a bare
+    // scope), there is none, so load it from the component host.
+    const resolver =
+      this.getAllRegisteredEnvJsoncResolvers()[0] || ((envId, deps) => this.resolveEnvManifestFromHost(envId, deps));
 
     const parentObject: EnvJsonc = await resolver(parentEnvId, envExtendsDeps);
     const mergedObject = this.mergeEnvManifests(parentObject, object);
@@ -388,6 +427,36 @@ export class EnvsMain {
       return this.recursivelyMergeWithParentManifest(mergedObject);
     }
     return mergedObject;
+  }
+
+  /**
+   * the id (with the version, when known) to load the parent env by, for an env.jsonc that "extends" `envId`.
+   * the version is taken from the dependencies of the extending env, as `envId` normally has no version.
+   */
+  getParentEnvIdToLoad(envId: string, envExtendsDeps: LegacyDependency[] = []): string {
+    const envIdWithoutVersion = BitId.getStringWithoutVersion(envId);
+    const foundEnv = envExtendsDeps.find(
+      (dep) => dep.id.toStringWithoutVersion() === envIdWithoutVersion || dep.packageName === envIdWithoutVersion
+    );
+    if (!foundEnv?.id) return envId;
+    // a new component (not snapped yet) has no version to load
+    return foundEnv.id.version.includes('-new') ? foundEnv.id.toStringWithoutVersion() : foundEnv.id.toString();
+  }
+
+  private async resolveEnvManifestFromHost(envId: string, envExtendsDeps?: LegacyDependency[]): Promise<EnvJsonc> {
+    if (this.isCoreEnv(envId)) return {};
+    const envComponent = await this.getEnvComponentByEnvId(this.getParentEnvIdToLoad(envId, envExtendsDeps));
+    // the parent's own dependencies determine the version of its parent, if it "extends" another env too. unlike
+    // getOrCalculateEnvManifest, don't retry without them on failure, which would load another version of that env.
+    const envManifest =
+      this.getEnvManifest(envComponent) ||
+      (await this.calculateEnvManifest(
+        envComponent,
+        undefined,
+        envComponent.state._consumer.dependencies.dependencies
+      ));
+    if (!envManifest) throw new BitError(`unable to find env.jsonc file in ${envId}`);
+    return envManifest;
   }
 
   mergeEnvManifests(parent: EnvJsonc, child: EnvJsonc): EnvJsonc {
@@ -698,7 +767,7 @@ export class EnvsMain {
           this.envIds.add(envDef.id);
           return envDef;
         }
-        if (!opts.skipWarnings) {
+        if (!opts.skipWarnings && !this.notLoadedWarningsMuted.getStore()) {
           // Do not allow a non existing env
           this.printWarningIfFirstTime(
             matchedEntry.id.toString(),

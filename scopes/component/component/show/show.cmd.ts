@@ -64,7 +64,7 @@ to see the legacy bit show, please use "--legacy" flag`);
   private async resolveIdWithoutWorkspace(id: string): Promise<string> {
     if (isLikelyPackageName(id)) {
       try {
-        const compId = await resolveComponentIdFromPackageName(id, this.component.dependencyResolver);
+        const compId = await resolveComponentIdFromPackageName(id, this.component.getPackageManifestFetcher());
         return compId.toString();
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);

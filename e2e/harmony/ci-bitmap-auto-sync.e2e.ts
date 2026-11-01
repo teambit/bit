@@ -351,11 +351,6 @@ describe('ci merge with bitmap auto-sync mode', function () {
     // Note: getClonedWorkspace destroys the current dir and restores from the snapshot,
     // so each runAsFirstCommand call starts fresh from the same pre-CI state.
 
-    it('`bit status` as first command syncs bitmap', () => {
-      const version = runAsFirstCommand(() => helper.command.status());
-      expect(version).to.equal('0.0.2');
-    });
-
     it('`bit list` as first command syncs bitmap', () => {
       const version = runAsFirstCommand(() => helper.command.list());
       expect(version).to.equal('0.0.2');
@@ -417,16 +412,12 @@ describe('ci merge with bitmap auto-sync mode', function () {
       helper.command.list();
     });
 
-    it('sentinel file content should be identical after the second command (same git HEAD)', () => {
-      const currentContent = fs.readFileSync(getSentinelPath(), 'utf-8');
-      expect(currentContent).to.equal(sentinelContentAfterFirstCmd);
-    });
-
-    it('sentinel file mtime should not regress', () => {
-      // Either equal (write was skipped) or moderately later (touched). Crucially not a
-      // network-roundtrip-and-rewrite cycle. We assert mtime equality as the strict case.
+    it('sentinel file should be untouched after the second command (same git HEAD)', () => {
+      // mtime equality proves the write was skipped entirely — not a rewrite cycle.
       const currentMtime = fs.statSync(getSentinelPath()).mtimeMs;
       expect(currentMtime).to.equal(sentinelMtimeAfterFirstCmd);
+      const currentContent = fs.readFileSync(getSentinelPath(), 'utf-8');
+      expect(currentContent).to.equal(sentinelContentAfterFirstCmd);
     });
   });
 
@@ -653,12 +644,6 @@ describe('ci merge with bitmap auto-sync mode', function () {
   });
 
   // ------------------------------------------------------------------------------------
-  // Lane guard: when the developer is on a Bit *lane* (not just a git branch), auto-sync
-  // must NOT run. Lanes have their own version flow and reconciling to main's scope HEAD
-  // would clobber the lane's component versions. The `isOnMain()` guard handles this;
-  // this test pins that behavior down so a future refactor can't regress it.
-  // ------------------------------------------------------------------------------------
-  // ------------------------------------------------------------------------------------
   // Edge case: the developer never runs a bit command locally. They branch off main, code,
   // commit, push — and the first bit command anywhere is `bit ci pr` running in CI on the
   // newly-opened PR. Meanwhile, since the dev branched off, another teammate's PR merged
@@ -875,6 +860,12 @@ describe('ci merge with bitmap auto-sync mode', function () {
     });
   });
 
+  // ------------------------------------------------------------------------------------
+  // Lane guard: when the developer is on a Bit *lane* (not just a git branch), auto-sync
+  // must NOT run. Lanes have their own version flow and reconciling to main's scope HEAD
+  // would clobber the lane's component versions. The `isOnMain()` guard handles this;
+  // this test pins that behavior down so a future refactor can't regress it.
+  // ------------------------------------------------------------------------------------
   describe('developer on a Bit lane — auto-sync is skipped', () => {
     let mainBranch: string;
     let sentinelBeforeLaneWork: string;

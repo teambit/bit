@@ -59,8 +59,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
     ...component.peerPackageDependencies,
   };
   const parsedDevPackageDependencies = parsePackages(allDevPackages) || [];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter((x) => x);
+  const peerPackageDependencies = ([] as string[]).concat(parsePackages(allPeerPackages) || []).filter((x) => x);
   const overrides = component.overrides.componentOverridesData;
 
   obj.id = component.id._legacy.toStringWithoutScope();
@@ -76,8 +75,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
   obj.dependencies = dependencies
     .toStringOfIds()
     .sort()
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    .concat(parsePackages(allPackages))
+    .concat(parsePackages(allPackages) || [])
     .filter((x) => x);
   obj.devDependencies = devDependencies
     .toStringOfIds()

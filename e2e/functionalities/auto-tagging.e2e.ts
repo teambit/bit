@@ -37,12 +37,9 @@ describe('auto tagging functionality', function () {
     });
     it('should update the dependencies and the flattenedDependencies of the dependent with the new versions', () => {
       const barFoo = helper.command.catComponent('comp2@latest');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.dependencies[0].id.name).to.equal('comp3');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.flattenedDependencies).to.deep.include({
         scope: helper.scopes.remote,
         name: 'comp3',
@@ -51,18 +48,14 @@ describe('auto tagging functionality', function () {
     });
     it('should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions', () => {
       const barFoo = helper.command.catComponent('comp1@latest');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.dependencies[0].id.name).to.equal('comp2');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.flattenedDependencies).to.deep.include({
         scope: helper.scopes.remote,
         name: 'comp3',
         version: '0.0.2',
       });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.flattenedDependencies).to.deep.include({
         scope: helper.scopes.remote,
         name: 'comp2',
@@ -173,7 +166,6 @@ describe('auto tagging functionality', function () {
           version: '0.0.2',
         });
 
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barC.flattenedDependencies).to.have.lengthOf(2);
       });
     });
@@ -287,7 +279,6 @@ describe('auto tagging functionality', function () {
         expect(details).to.have.string('bar/a@0.0.2');
 
         const barA = helper.command.catComponent(`${helper.scopes.remote}/bar/a`);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const barAVersions = Object.keys(barA.versions);
         expect(barAVersions).to.include('0.0.1');
         expect(barAVersions).to.include('0.0.2');

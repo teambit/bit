@@ -25,9 +25,15 @@ export async function getBitIgnoreFile(dir: string): Promise<string[]> {
   return gitignore(fileContent);
 }
 
+/**
+ * the patterns the user wrote: .bitignore when it exists, otherwise .gitignore.
+ */
+export async function retrieveUserIgnoreList(consumerRoot: string): Promise<string[]> {
+  return (await isBitIgnoreFileExistsInDir(consumerRoot))
+    ? getBitIgnoreFile(consumerRoot)
+    : getGitIgnoreFile(consumerRoot);
+}
+
 export async function retrieveIgnoreList(consumerRoot: string): Promise<string[]> {
-  const userIgnoreList = (await isBitIgnoreFileExistsInDir(consumerRoot))
-    ? await getBitIgnoreFile(consumerRoot)
-    : await getGitIgnoreFile(consumerRoot);
-  return [...userIgnoreList, ...IGNORE_LIST];
+  return [...(await retrieveUserIgnoreList(consumerRoot)), ...IGNORE_LIST];
 }

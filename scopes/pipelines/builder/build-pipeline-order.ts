@@ -75,35 +75,28 @@ export function calculatePipelineOrder(
   let tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
   if (tasks.length) {
-    const originalLength = tasksQueue.length;
-    tasksQueue = new TasksQueue(
-      ...tasksQueue.filter(({ task }) => tasks.includes(task.name) || tasks.includes(task.aspectId))
-    );
-    if (tasksQueue.length === 0 && originalLength > 0) {
-      throw new Error(
-        `Pipeline error - no tasks found matching the specified filter: "${tasks.join(', ')}". Available tasks: ${getAvailableTaskNames(flattenedPipeline).join(', ')}`
-      );
-    }
+    // a filter may match none of the tasks of this pipeline (e.g. a build task while running the snap
+    // pipeline). BuilderMain.build() validates the filter against all the pipelines that run.
+    tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => isTaskInFilter(task, tasks)));
   }
   if (skipTests) {
     tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== Extensions.tester));
   }
   if (skipTasks.length) {
-    tasksQueue = new TasksQueue(
-      ...tasksQueue.filter(({ task }) => !skipTasks.includes(task.name) && !skipTasks.includes(task.aspectId))
-    );
+    tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => !isTaskInFilter(task, skipTasks)));
   }
 
   return tasksQueue;
 }
 
-function getAvailableTaskNames(tasks: BuildTask[]): string[] {
-  const uniqueTaskNames = new Set<string>();
-  tasks.forEach((task) => {
-    uniqueTaskNames.add(task.name);
-    uniqueTaskNames.add(task.aspectId);
-  });
-  return Array.from(uniqueTaskNames).sort();
+/**
+ * a task matches a filter entry when the entry is the task-name (e.g. "build_application"), the
+ * task-aspect-id (e.g. "teambit.harmony/application") or the full task-id as shown by
+ * `bit build --list-tasks` (e.g. "teambit.harmony/application:build_application").
+ */
+export function isTaskInFilter(task: { aspectId: string; name: string }, filter: string[]): boolean {
+  const taskId = BuildTaskHelper.serializeId(task);
+  return filter.some((entry) => entry === task.name || entry === task.aspectId || entry === taskId);
 }
 
 function addTasksToGraph(tasksQueue: TasksQueue, dataPerLocation: DataPerLocation[], location: Location) {

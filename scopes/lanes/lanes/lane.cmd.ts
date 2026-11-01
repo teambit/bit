@@ -252,6 +252,7 @@ export class LaneCreateCmd implements Command {
   ];
   description = `creates a new lane and switches to it`;
   extendedDescription = `a lane created from main (default-lane) is empty until components are snapped.
+if main has snaps that were not exported, they are moved to the new lane, and main goes back to its remote state.
 a lane created from another lane contains all the components of the original lane.`;
   alias = '';
   options = [
@@ -290,8 +291,13 @@ a lane created from another lane contains all the components of the original lan
       `successfully created and checked out to lane ${chalk.bold(result.alias || result.laneId.name)}`
     );
     const note = currentLane ? formatHint(`note - your new lane will be based on lane ${currentLane.name}`) : '';
+    const movedFromMain = formatSection(
+      'moved from main',
+      'these components had snaps on main that were not exported. the snaps were moved to the new lane',
+      (result.movedFromMain || []).map((id) => formatItem(id.toString()))
+    );
     const scopeInfo = formatHint(`this lane will be exported to ${remoteScopeOrDefaultScope}`);
-    return joinSections([summary, note, scopeInfo]);
+    return joinSections([summary, note, movedFromMain, scopeInfo]);
   }
 }
 
@@ -519,6 +525,100 @@ export class LaneHistoryCmd implements Command {
         ...(item.updateDependents?.length && { updateDependents: item.updateDependents }),
       };
     });
+  }
+}
+
+export class LaneUpdatesCmd implements Command {
+  name = 'updates [lane-name]';
+  description = 'show the dependents Ripple CI cascaded onto a lane, default to the current lane';
+  extendedDescription = `after a lane is exported, Ripple CI may snap the dependents of the lane components against the new
+heads and add them to the lane as hidden "update" entries. they are part of the lane graph (Ripple CI builds them, merge
+refreshes them) but stay hidden from the workspace ("bit status", .bitmap).
+the entries are read from the remote lane. the local lane object is used only when the remote is unavailable.
+use --undo to remove them from the lane, on the remote and locally, e.g. when the cascade is not wanted.`;
+  alias = '';
+  group = 'collaborate';
+  options = [
+    ['', 'undo', 'remove the cascaded dependents from the lane, on the remote and locally'],
+    ['j', 'json', 'return the results in json format'],
+  ] as CommandOptions;
+  loader = true;
+  remoteOp = true;
+  // the entries live on the remote lane, so a named lane can be inspected from a bare scope as well
+  skipWorkspace = true;
+
+  constructor(private lanes: LanesMain) {}
+
+  private async getLaneId(laneName?: string): Promise<LaneId> {
+    const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.lanes.getCurrentLaneId();
+    if (!laneId) {
+      throw new BitError('unable to detect the current lane, specify a lane name, e.g. "bit lane updates scope/name"');
+    }
+    if (laneId.isDefault()) {
+      throw new BitError('the default lane (main) has no cascaded updates. switch to a lane or specify a lane name');
+    }
+    return laneId;
+  }
+
+  async report([laneName]: [string], { undo }: { undo?: boolean }): Promise<string> {
+    const laneId = await this.getLaneId(laneName);
+    if (undo) return this.reportUndo(laneId);
+
+    const { ids, source, remoteError } = await this.lanes.getLaneUpdateDependents(laneId);
+    const sourceHint =
+      source === 'remote'
+        ? ''
+        : formatHint(
+            source === 'no-remote-lane'
+              ? 'showing the local lane object, the lane was not found on the remote'
+              : `showing the local lane object, the remote lane could not be fetched: ${remoteError}`
+          );
+    if (!ids.length) {
+      return joinSections([`no dependents were cascaded onto lane "${laneId.toString()}" by Ripple CI.`, sourceHint]);
+    }
+    const items = ids.map((id) => formatItem(id.toString()));
+    const section = formatSection(
+      `updates cascaded onto lane "${laneId.toString()}"`,
+      '(use --undo to remove them from the lane)',
+      items
+    );
+    return joinSections([section, sourceHint]);
+  }
+
+  private async reportUndo(laneId: LaneId): Promise<string> {
+    const { removed, remoteSkipped, localChanged } = await this.lanes.undoLaneUpdateDependents(laneId);
+    if (!removed.length) {
+      const nothingToRemove = `no cascaded updates to remove from lane "${laneId.toString()}".`;
+      return localChanged ? `${nothingToRemove} stale entries were cleaned from the local lane.` : nothingToRemove;
+    }
+    const noun = removed.length === 1 ? 'update' : 'updates';
+    const summary = formatSuccessSummary(`removed ${removed.length} cascaded ${noun} from lane "${laneId.toString()}"`);
+    const items = removed.map((id) => formatItem(id.toString()));
+    const hint = remoteSkipped
+      ? formatHint('the lane was not found on the remote, so only the local lane object was changed')
+      : '';
+    return joinSections([[summary, ...items].join('\n'), hint]);
+  }
+
+  async json([laneName]: [string], { undo }: { undo?: boolean }) {
+    const laneId = await this.getLaneId(laneName);
+    if (undo) {
+      const { removed, remoteChanged, localChanged, remoteSkipped } = await this.lanes.undoLaneUpdateDependents(laneId);
+      return {
+        laneId: laneId.toString(),
+        removed: removed.map((id) => id.toString()),
+        remoteChanged,
+        localChanged,
+        remoteSkipped,
+      };
+    }
+    const { ids, source, remoteError } = await this.lanes.getLaneUpdateDependents(laneId);
+    return {
+      laneId: laneId.toString(),
+      updateDependents: ids.map((id) => id.toString()),
+      source,
+      ...(remoteError && { remoteError }),
+    };
   }
 }
 

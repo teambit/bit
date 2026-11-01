@@ -2,7 +2,7 @@ import type { DevFilesMain } from '@teambit/dev-files';
 import { DevFilesAspect } from '@teambit/dev-files';
 import type { Harmony } from '@teambit/harmony';
 import { merge, omit } from 'lodash';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { CompilerMain, Compiler } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
 import type { BuildTask } from '@teambit/builder';
@@ -108,6 +108,8 @@ export type UseEslintModifiers = {
 export type UsePrettierModifiers = {
   transformers: PrettierConfigTransformer[];
 };
+
+const getReactSchemas = () => [ReactSchema];
 
 export class ReactMain {
   constructor(
@@ -479,7 +481,7 @@ export class ReactMain {
     }
 
     if (application) application.registerAppType(appType);
-    if (schemaMain) schemaMain.registerSchemaClasses(() => [ReactSchema]);
+    if (schemaMain) schemaMain.registerSchemaClasses(getReactSchemas);
     if (tsAspect) tsAspect.registerApiTransformer([new ReactAPITransformer()]);
 
     return react;

@@ -23,7 +23,7 @@ describe('import lanes', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.exportLane();
 
       const laneObj = helper.command.catLane('dev');

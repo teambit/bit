@@ -1,7 +1,6 @@
 import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy.constants';
 import { getStringifyArgs, inflate } from '@teambit/legacy.utils';
 import { typesObj as types } from '@teambit/legacy.scope';
-import type BitObject from './object';
 import { clone } from 'lodash';
 
 export default class BitRawObject {
@@ -12,11 +11,11 @@ export default class BitRawObject {
   _ref: string;
 
   constructor(
-    buffer: Buffer,
-    ref: string | null | undefined,
-    type: string | null | undefined,
-    content: Buffer | null | undefined,
-    parsedContent: any | null | undefined
+    buffer?: Buffer,
+    ref?: string | null,
+    type?: string | null,
+    content?: Buffer | null,
+    parsedContent?: any | null
   ) {
     let headers;
     let contentFromBuffer;
@@ -28,10 +27,8 @@ export default class BitRawObject {
     this.content = content || contentFromBuffer;
     this.headers = headers ? headers.split(SPACE_DELIMITER) : undefined;
     const typeFromHeader = this.headers ? this.headers[0] : undefined;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.type = type || typeFromHeader;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this._ref = ref;
+    this.type = (type || typeFromHeader)!;
+    this._ref = ref!;
     this.parsedContent = parsedContent || this.getParsedContent();
   }
 
@@ -109,8 +106,7 @@ export default class BitRawObject {
     return [];
   }
 
-  static async fromDeflatedBuffer(fileContents: Buffer, ref: string | null | undefined): Promise<BitObject> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  static async fromDeflatedBuffer(fileContents: Buffer, ref: string | null | undefined): Promise<BitRawObject> {
     return inflate(fileContents).then((buffer) => new BitRawObject(buffer, ref));
   }
 
@@ -126,7 +122,6 @@ export default class BitRawObject {
   clone() {
     const parsedContent = this.parsedContent ? clone(this.parsedContent) : undefined;
     // TODO: Should also clone the buffers (content)
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitRawObject(undefined, this._ref, this.type, this.content, parsedContent);
   }
 }

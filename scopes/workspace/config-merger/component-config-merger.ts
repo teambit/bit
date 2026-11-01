@@ -106,7 +106,8 @@ export class ComponentConfigMerger {
       const otherExt = this.otherAspects.findExtension(id, true);
       if (otherExt) {
         // try to 3-way-merge
-        return this.mergePerStrategy({ id, currentExt, otherExt, baseExt });
+        const result = this.mergePerStrategy({ id, currentExt, otherExt, baseExt });
+        return id === DependencyResolverAspect.id ? result : this.keepSpecificOfOther(result, isSpecific(otherExt));
       }
       // exist in current but not in other
       if (baseExt) {
@@ -141,9 +142,12 @@ export class ComponentConfigMerger {
         return { id, conflict: { currentConfig: '-', otherConfig: this.getConfig(otherExt) } };
       }
       // exist in other but not in current and base, so it got created on other.
-      return { id, mergedConfig: this.getConfig(otherExt) };
+      return this.keepSpecificOfOther({ id, mergedConfig: this.getConfig(otherExt) }, isSpecific(otherExt));
     });
-    const envResult = this.envStrategy();
+    const envResult = this.keepSpecificOfOther(
+      this.envStrategy(),
+      isSpecific(this.otherAspects.findCoreExtension(EnvsAspect.id))
+    );
     this.logger.debug(`*** end config-merger for ${this.compIdStr} ***\n`);
     return new ConfigMergeResult(
       this.compIdStr,
@@ -258,6 +262,19 @@ export class ComponentConfigMerger {
       }
     }
     return this.basicConfigMerge(mergeStrategyParams);
+  }
+
+  /**
+   * a merged config (not a conflict) is the config of "other". when it's set there specifically on the component (e.g.
+   * by "bit env set"), keep it specific, so it keeps taking precedence over workspace variants after the merge.
+   * (the flag is ignored when comparing the configs, see getConfig()).
+   */
+  private keepSpecificOfOther(
+    result: MergeStrategyResult | null,
+    isOtherSpecific?: boolean
+  ): MergeStrategyResult | null {
+    if (!isOtherSpecific || !result?.mergedConfig || result.mergedConfig === '-') return result;
+    return { ...result, mergedConfig: { ...result.mergedConfig, __specific: true } };
   }
 
   private areConfigsEqual(configA: GenericConfigOrRemoved, configB: GenericConfigOrRemoved) {
@@ -693,4 +710,8 @@ export class ComponentConfigMerger {
     if (!config.policy) return [];
     return VariantPolicy.fromConfigObject(config.policy).entries;
   }
+}
+
+function isSpecific(ext?: ExtensionDataEntry): boolean {
+  return Boolean(ext && ext.rawConfig !== '-' && ext.rawConfig?.__specific);
 }

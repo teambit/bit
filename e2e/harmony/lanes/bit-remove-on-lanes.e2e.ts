@@ -31,29 +31,6 @@ describe('bit lane command', function () {
       const lane = helper.command.showOneLaneParsed('dev');
       expect(lane.components).to.have.lengthOf(3);
     });
-    // --from-lane is disabled for now until we see a real use case for it
-    describe.skip('removing a component that has no dependents with --from-lane', () => {
-      let output;
-      before(() => {
-        output = helper.command.removeComponent('comp1', '--from-lane');
-      });
-      it('should indicate that the component was removed from the lane', () => {
-        expect(output).to.have.string('lane');
-        expect(output).to.have.string('successfully removed components');
-      });
-      it('should remove the component from the lane', () => {
-        const lane = helper.command.showOneLaneParsed('dev');
-        expect(lane.components).to.have.lengthOf(2);
-        lane.components.forEach((c) => expect(c.id.name).to.not.have.string('comp1'));
-      });
-      it('should not remove the component from .bitmap', () => {
-        const head = helper.command.getHead('comp1');
-        helper.bitMap.expectToHaveId('comp1', head, helper.scopes.remote);
-      });
-      it('should not delete the files from the filesystem', () => {
-        expect(path.join(helper.scopes.localPath, 'comp1/index.js')).to.be.a.file();
-      });
-    });
     describe('removing a component that has no dependents', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(beforeRemoval);
@@ -66,34 +43,6 @@ describe('bit lane command', function () {
       it('should delete the files from the filesystem', () => {
         expect(path.join(helper.scopes.localPath, 'comp1')).to.not.be.a.path();
       });
-    });
-  });
-  // --from-lane is disabled for now until we see a real use case for it
-  describe.skip('remove a new component when on a lane with --from-lane flag', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.fixtures.populateComponents(1);
-      helper.command.createLane();
-      helper.command.removeComponent('comp1', '--from-lane');
-    });
-    it('should remove the component from the .bitmap file', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.not.have.property('comp1');
-    });
-  });
-  // --from-lane is disabled for now until we see a real use case for it
-  describe.skip('remove a non-lane component when on a lane with --from-lane flag', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagWithoutBuild();
-      helper.command.export();
-      helper.command.createLane();
-      helper.command.removeComponent('comp1', '--from-lane');
-    });
-    it('should remove the component from the .bitmap file', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.not.have.property('comp1');
     });
   });
   describe('soft remove on lane', () => {

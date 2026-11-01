@@ -13,7 +13,6 @@ type BuildOpts = {
   dev: boolean;
   rebuild: boolean;
   install: boolean;
-  cachePackagesOnCapsulesRoot: boolean;
   reuseCapsules: boolean;
   rewrite?: boolean; //relevant only when reuseCapsules is set
   reinstall?: boolean; //relevant only when reuseCapsules is set
@@ -61,9 +60,9 @@ the "--rewrite" flag ensures the component files are fresh, and the "--tasks" en
       '',
       'tasks <string>',
       `build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.
-specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+specify the task-name (e.g. "TypescriptCompiler"), the task-aspect-id (e.g. teambit.compilation/compiler)
+or the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)`,
     ],
-    ['', 'cache-packages-on-capsule-root', 'set the package-manager cache on the capsule root'],
     [
       '',
       'list-tasks <string>',
@@ -75,7 +74,8 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       '',
       'skip-tasks <string>',
       `skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.
-  specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+  specify the task-name (e.g. "TypescriptCompiler"), the task-aspect-id (e.g. teambit.compilation/compiler)
+  or the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)`,
     ],
     [
       '',
@@ -105,7 +105,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       unmodified = false,
       dev = false,
       install = false,
-      cachePackagesOnCapsulesRoot = false,
       reuseCapsules = false,
       rewrite = false,
       reinstall = false,
@@ -150,7 +149,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
         linkingOptions: { linkTeambitBit: !install },
         emptyRootDir: !reuseCapsules,
         getExistingAsIs: reuseCapsules && !rewrite && !reinstall,
-        cachePackagesOnCapsulesRoot,
       },
       {
         dev,

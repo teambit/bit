@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
@@ -27,6 +28,7 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
 import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import type { EjectMain, EjectResults } from '@teambit/eject';
 import { EjectAspect } from '@teambit/eject';
 import type { ExportOrigin } from '@teambit/scope.network';
@@ -36,13 +38,14 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import { writeLastExport } from './last-export';
-import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref, Version } from '@teambit/objects';
-import { ObjectList } from '@teambit/objects';
+import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Version } from '@teambit/objects';
+import { ObjectList, Ref } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
-import { getAllVersionHashes } from '@teambit/component.snap-distance';
+import { getAllVersionHashes, hasVersionByRef } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
+import { getUpdateDependentsToExport } from './update-dependents-to-export';
 
 export type OnExportIdTransformer = (id: ComponentID) => ComponentID;
 
@@ -50,7 +53,6 @@ const BEFORE_EXPORT = 'exporting component';
 const BEFORE_EXPORTS = 'exporting components';
 const BEFORE_LOADING_COMPONENTS = 'loading components';
 
-type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 type ObjectListPerName = { [name: string]: ObjectList };
 export type ObjectsPerRemote = {
   remote: Remote;
@@ -80,7 +82,8 @@ export type PushToScopesParams = {
 type ObjectsPerRemoteExtended = ObjectsPerRemote & {
   objectListPerName: ObjectListPerName;
   idsToChangeLocally: ComponentIdList;
-  componentsAndObjects: ModelComponentAndObjects[];
+  modelComponents: ModelComponent[];
+  updateDependentsChanged?: boolean;
 };
 
 type ExportParams = {
@@ -473,7 +476,8 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       const anySquashed = [...headPerCompIdStr.values()].some(({ headVersion }) => headVersion.squashed);
       if (!anySquashed) return; // no squash in this export set — no snap could have been dropped
       await mapSeries([...headPerCompIdStr.values()], async ({ entry: headEntry, headVersion }) => {
-        await mapSeries(headVersion.getAllFlattenedDependencies(), async (depId) => {
+        const flattenedDependencies = await headVersion.loadFlattenedDependencies(scope.objects);
+        await mapSeries(flattenedDependencies, async (depId) => {
           // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`),
           // so same-scope is all that needs shipping. also filters out most of the flattened list.
           if (depId.scope !== headEntry.modelComponent.scope) return;
@@ -512,10 +516,14 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
+      // fetched in parallel to the calculation of the versions to export, which doesn't depend on it
+      const remoteLanePromise = lane ? this.fetchRemoteLaneToCompareUpdateDependents(scope, lane) : undefined;
+      remoteLanePromise?.catch(() => {}); // it's awaited (and throws) later. avoid an unhandled rejection meanwhile.
       const remote: Remote = await resolveRemote(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
-      const componentsAndObjects: ModelComponentAndObjects[] = [];
+      const exportedModelComponents: ModelComponent[] = [];
       const objectList = new ObjectList();
+      const allObjectItems: ObjectItem[] = [];
       const objectListPerName: ObjectListPerName = {};
 
       const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
@@ -537,12 +545,14 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           .map((r) => r.refs)
           .flat()
           .map((ref) => ref.toString());
-        const existingOnRemote = await scope.scopeImporter.checkWhatHashesExistOnRemote(remoteNameStr, allHashesAsStr);
+        const existingOnRemote = new Set(
+          await scope.scopeImporter.checkWhatHashesExistOnRemote(remoteNameStr, allHashesAsStr)
+        );
         // for lanes, some snaps might be already on the remote, and the reason they're staged is due to a previous merge.
         const refsToExportPerComponent = refsToPotentialExportPerComponent.map(({ modelComponent, refs }) => {
           const filteredOutRefs: string[] = [];
           const refsToExport = refs.filter((ref) => {
-            const existing = existingOnRemote.includes(ref.toString());
+            const existing = existingOnRemote.has(ref.toString());
             if (existing) filteredOutRefs.push(ref.toString());
             return !existing;
           });
@@ -582,20 +592,18 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           throwForMissingArtifacts,
           idFromWorkspace
         );
-        const objectsList = await new ObjectList(objectItems).toBitObjects();
-        const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
-        await this.convertToCorrectScope(scope, componentAndObject, remoteNameStr, bitIds, ids);
+        this.convertToCorrectScope(modelComponent, remoteNameStr, ids);
         const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
         modelComponent.addScopeListItem(remoteObj);
-        componentsAndObjects.push(componentAndObject);
-        const componentBuffer = await modelComponent.compress();
-        const componentData = { ref: modelComponent.hash(), buffer: componentBuffer, type: modelComponent.getType() };
-        const objectsBuffer = await Promise.all(
-          componentAndObject.objects.map(async (obj) => bitObjectToObjectItem(obj))
-        );
-        const allObjectsData = [componentData, ...objectsBuffer];
+        exportedModelComponents.push(modelComponent);
+        const componentData = await bitObjectToObjectItem(modelComponent);
+        // the version objects and their files/artifacts are not modified during export, so their raw (already
+        // compressed) buffers are sent as is. parsing and re-compressing them is very costly for components with
+        // many files (e.g. tens of thousands of bundled pages).
+        const allObjectsData = [componentData, ...objectItems];
         objectListPerName[modelComponent.name] = new ObjectList(allObjectsData);
-        objectList.addIfNotExist(allObjectsData);
+        // not `push(...allObjectsData)`, a component can have more objects than the max number of function arguments.
+        allObjectsData.forEach((objectItem) => allObjectItems.push(objectItem));
       };
 
       // The lean-lane filter (drop main-origin refs belonging to foreign components) is now
@@ -604,7 +612,11 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       const refsToExportPerComponent = (await getRefsToExportPerComp()).filter(({ refs }) => refs.length > 0);
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
+      objectList.addIfNotExist(allObjectItems);
+      let updateDependentsChanged = false;
       if (lane) {
+        // after the versions to export were calculated, as it may change the heads of the hidden entries.
+        updateDependentsChanged = await this.setUpdateDependentsFromRemote(scope, lane, await remoteLanePromise);
         const laneHistory = await scope.lanes.getOrCreateLaneHistory(lane);
         const laneHistoryData = await bitObjectToObjectItem(laneHistory);
         objectList.addIfNotExist([laneHistoryData]);
@@ -612,7 +624,14 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         objectList.addIfNotExist([laneData]);
       }
 
-      return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
+      return {
+        remote,
+        objectList,
+        objectListPerName,
+        idsToChangeLocally,
+        modelComponents: exportedModelComponents,
+        updateDependentsChanged,
+      };
     };
 
     const manyObjectsPerRemote = laneObject
@@ -650,14 +669,19 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       Array<{ exported: ComponentIdList; updatedLocally: ComponentIdList; newIdsOnRemote: ComponentID[] }>
     > => {
       return mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemoteExtended) => {
-        const { remote, idsToChangeLocally, componentsAndObjects, exportedIds } = objectsPerRemote;
+        const { remote, idsToChangeLocally, modelComponents, exportedIds, updateDependentsChanged } = objectsPerRemote;
         const remoteNameStr = remote.name;
 
-        componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
+        // only the model-components were changed (scope-list, scope-name). the versions and their files already exist
+        // locally untouched, re-adding them would re-write all of them to the filesystem.
+        modelComponents.forEach((modelComponent) => scope.objects.add(modelComponent));
 
         // update lanes
         if (lane) {
-          if (idsToChangeLocally.length) {
+          // the flag is needed for this export only. kept locally, the next export might resurrect removed entries.
+          const hadOverrideFlag = lane.shouldOverrideUpdateDependents();
+          lane.setOverrideUpdateDependents(false);
+          if (idsToChangeLocally.length || updateDependentsChanged || hadOverrideFlag) {
             // otherwise, we don't want to update scope-name of components in the lane object
             scope.objects.add(lane);
           }
@@ -669,7 +693,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           const remoteLaneId = LaneId.from(DEFAULT_LANE, remoteNameStr);
           await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);
           await Promise.all(
-            componentsAndObjects.map(async ({ component }) => {
+            modelComponents.map(async (component) => {
               await scope.objects.remoteLanes.addEntry(remoteLaneId, component.toComponentId(), component.getHead());
             })
           );
@@ -697,34 +721,88 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       );
     };
     process.on('SIGINT', warnCancelExport);
-    let centralHubResults;
     try {
-      if (resumeExportId) {
-        const remotes = manyObjectsPerRemote.map((o) => o.remote);
-        await validateRemotes(remotes, resumeExportId);
-        await persistRemotes(manyObjectsPerRemote, resumeExportId);
-      } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
-        centralHubResults = await pushAllToCentralHub();
-      } else {
-        // await pushToRemotes();
-        await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+      let centralHubResults;
+      try {
+        if (resumeExportId) {
+          const remotes = manyObjectsPerRemote.map((o) => o.remote);
+          await validateRemotes(remotes, resumeExportId);
+          await persistRemotes(manyObjectsPerRemote, resumeExportId);
+        } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
+          centralHubResults = await pushAllToCentralHub();
+        } else {
+          // await pushToRemotes();
+          await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+        }
+      } catch (err: any) {
+        throw addScopesInvolvedToError(
+          err,
+          manyObjectsPerRemote.map((o) => o.remote.name)
+        );
       }
-    } catch (err: any) {
-      throw addScopesInvolvedToError(
-        err,
-        manyObjectsPerRemote.map((o) => o.remote.name)
-      );
-    }
 
-    this.logger.setStatusLine('updating data locally...');
-    const results = await updateLocalObjects(laneObject);
-    process.removeListener('SIGINT', warnCancelExport);
-    return {
-      newIdsOnRemote: results.map((r) => r.newIdsOnRemote).flat(),
-      exported: ComponentIdList.uniqFromArray(results.map((r) => r.exported).flat()),
-      updatedLocally: ComponentIdList.uniqFromArray(results.map((r) => r.updatedLocally).flat()),
-      rippleJobs: centralHubResults?.rippleJobs || [],
+      this.logger.setStatusLine('updating data locally...');
+      const results = await updateLocalObjects(laneObject);
+      return {
+        newIdsOnRemote: results.map((r) => r.newIdsOnRemote).flat(),
+        exported: ComponentIdList.uniqFromArray(results.map((r) => r.exported).flat()),
+        updatedLocally: ComponentIdList.uniqFromArray(results.map((r) => r.updatedLocally).flat()),
+        rippleJobs: centralHubResults?.rippleJobs || [],
+      };
+    } finally {
+      process.removeListener('SIGINT', warnCancelExport);
+    }
+  }
+
+  private async fetchRemoteLaneToCompareUpdateDependents(scope: Scope, lane: Lane): Promise<Lane | undefined> {
+    if (lane.isNew || !lane.updateDependents?.length) return undefined;
+    try {
+      const [remoteLane] = await scope.scopeImporter.importLanes([lane.toLaneId()]);
+      return remoteLane;
+    } catch (err: any) {
+      // e.g. the lane was deleted on the remote. the export creates it again.
+      if (err instanceof LaneNotFound) return undefined;
+      throw err;
+    }
+  }
+
+  /**
+   * sets the hidden lane entries (`lane.updateDependents`) to export according to the remote lane (see
+   * `getUpdateDependentsToExport`), and raises `overrideUpdateDependents` when they differ from the remote.
+   * returns true when the local entries were changed (e.g. an entry that was removed on the remote).
+   */
+  private async setUpdateDependentsFromRemote(scope: Scope, lane: Lane, remoteLane?: Lane): Promise<boolean> {
+    if (!remoteLane) return false;
+    const localUpdateDependents = lane.updateDependents || [];
+    const remoteUpdateDependents = remoteLane.updateDependents || [];
+    const isLocalAhead = async (localId: ComponentID, remoteId: ComponentID): Promise<boolean> => {
+      try {
+        const modelComponent = await scope.getModelComponentIfExist(localId.changeVersion(undefined));
+        if (!modelComponent) return false;
+        const localHead = Ref.from(localId.version as string);
+        return await hasVersionByRef(modelComponent, Ref.from(remoteId.version as string), scope.objects, localHead);
+      } catch (err: any) {
+        this.logger.warn(`unable to check whether ${localId.toString()} is ahead of ${remoteId.toString()}`, err);
+        return false;
+      }
     };
+    const updateDependents = await getUpdateDependentsToExport({
+      localUpdateDependents,
+      remoteUpdateDependents,
+      localComponents: lane.toComponentIds(),
+      includeNewEntries: lane.shouldOverrideUpdateDependents(),
+      isLocalAhead,
+    });
+    const toSortedStr = (ids: ComponentID[]) =>
+      ids
+        .map((id) => id.toString())
+        .sort()
+        .join();
+    const exportedStr = toSortedStr(updateDependents);
+    lane.setOverrideUpdateDependents(exportedStr !== toSortedStr(remoteUpdateDependents));
+    if (exportedStr === toSortedStr(localUpdateDependents)) return false;
+    lane.setUpdateDependents(updateDependents);
+    return true;
   }
 
   private transformToOneObjectListWithScopeData(objectsPerRemote: ObjectsPerRemote[]): ObjectList {
@@ -829,25 +907,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
    *
    * This is the Harmony version of "convertToCorrectScope". No more codemod and no more hash changes.
    */
-  private async convertToCorrectScope(
-    scope: Scope,
-    componentsObjects: ModelComponentAndObjects,
-    remoteScope: string,
-    exportingIds: ComponentIdList,
-    ids: ComponentIdList,
-    shouldFork = false // not in used currently, but might be needed soon
-  ): Promise<boolean> {
-    const shouldChangeScope = shouldFork
-      ? remoteScope !== componentsObjects.component.scope
-      : !componentsObjects.component.scope;
-    const hasComponentChanged = shouldChangeScope;
-    if (shouldChangeScope) {
-      const idWithFutureScope = ids.searchWithoutScopeAndVersion(componentsObjects.component.toComponentId());
-      componentsObjects.component.scope = idWithFutureScope?.scope || remoteScope;
-    }
-
-    // return true if one of the versions has changed or the component itself
-    return hasComponentChanged;
+  private convertToCorrectScope(modelComponent: ModelComponent, remoteScope: string, ids: ComponentIdList): void {
+    if (modelComponent.scope) return;
+    const idWithFutureScope = ids.searchWithoutScopeAndVersion(modelComponent.toComponentId());
+    modelComponent.scope = idWithFutureScope?.scope || remoteScope;
   }
 
   private async getComponentsToExport(

@@ -25,47 +25,8 @@ chai.use(chaiFs);
     npmCiRegistry.destroy();
     helper.scopeHelper.destroy();
   });
-  describe('simple scenario', () => {
-    before(() => {
-      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
-      const name = `@ci/${randomStr}.{name}`;
-      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-
-      // comp2 is a dependency of comp1
-      helper.fixtures.populateComponents(2);
-      helper.fs.outputFile(`comp1/index.js`, `const comp2 = require("@ci/${randomStr}.comp2");`);
-      helper.command.tagAllComponents('--patch');
-      helper.command.export();
-
-      // A new version of comp2 is created
-      helper.scopeHelper.reInitWorkspace();
-      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-      helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importComponent(`comp2`);
-      helper.fs.outputFile(`${scopeWithoutOwner}/comp2/foo.js`, '');
-      helper.command.tagComponent('comp2', 'tag2', '--ver=0.0.2');
-      helper.command.export();
-
-      // comp1 is imported and the newest version of comp2 is installed
-      helper.scopeHelper.reInitWorkspace();
-      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-      helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importComponent(`comp1`);
-      helper.command.install(`@ci/${randomStr}.comp2@0.0.2`);
-    });
-    it('should install the dependency from the workspace policy to the root modules directory', () => {
-      expect(
-        helper.fixtures.fs.readJsonFile(`node_modules/@ci/${randomStr}.comp2/package.json`).componentId.version
-      ).to.equal('0.0.2');
-    });
-    it('should not nest/install the version from the component model to the component node_modules dir', () => {
-      expect(
-        path.join(helper.fixtures.scopes.localPath, `${remote}/comp1/node_modules/@ci/${randomStr}.comp2`)
-      ).to.not.be.a.path();
-    });
-  });
+  // the simple scenario (root install of a newer version than the component model's + no nesting when the root
+  // version satisfies the dependent) is covered by comp5 and the root-manifest assertions below.
   describe('complex scenario', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

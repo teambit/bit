@@ -3,7 +3,7 @@ import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import type { ComponentID } from '@teambit/component-id';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { Scope } from '..';
-import { LaneNotFound } from '@teambit/legacy.scope-api';
+import { LaneNotFound } from '../exceptions';
 import { logger } from '@teambit/legacy.logger';
 import type { LaneComponent, LaneLog, LaneItem, BitObject, Repository, Lane, Version } from '@teambit/objects';
 import { IndexType, LaneHistory } from '@teambit/objects';
@@ -32,6 +32,24 @@ export default class Lanes {
     const lane = obj[0] as Lane;
     lane.isNew = Boolean(this.scopeJson.lanes.new?.find((l) => l === lane.name));
     return lane;
+  }
+
+  /**
+   * remove the hidden `lane.updateDependents` entries, the dependents Ripple CI cascaded onto the lane.
+   * this is the one implementation of the removal: the cloud UI and "bit lane updates --undo" reach it
+   * through the graphql resolver, a file-system remote through `Fs`.
+   * only OMITTING `ids` removes all of them. an empty array removes nothing - it comes from a caller that
+   * resolved zero entries, and must not be read as "remove everything".
+   * returns true if the lane has changed.
+   */
+  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<boolean> {
+    const lane = await this.loadLane(laneId);
+    if (!lane) throw new LaneNotFound(laneId.scope, laneId.toString());
+    if (ids) lane.removeComponentsFromUpdateDependents(ids);
+    else lane.removeAllUpdateDependents();
+    if (!lane.hasChanged) return false;
+    await this.saveLane(lane, { laneHistoryMsg: 'remove update-dependents' });
+    return true;
   }
 
   async getOrCreateLaneHistory(laneObject: Lane): Promise<LaneHistory> {

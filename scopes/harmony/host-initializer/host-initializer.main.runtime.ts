@@ -12,7 +12,8 @@ import type { WorkspaceExtensionProps } from '@teambit/config';
 import { WorkspaceConfig } from '@teambit/config';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime, formatSuccessSummary, formatHint, formatTitle } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, formatSuccessSummary, formatHint, formatTitle } from '@teambit/cli';
 import { ObjectsWithoutConsumer } from './objects-without-consumer';
 import { HostInitializerAspect } from './host-initializer.aspect';
 import { InitCmd } from './init-cmd';
@@ -65,7 +66,7 @@ export class HostInitializerMain {
     workspaceConfigProps: WorkspaceExtensionProps = {},
     generator?: string,
     agent?: string,
-    options: { skipDefaultMcp?: boolean } = {}
+    options: { skipDefaultMcp?: boolean; skipAgentInstructions?: boolean } = {}
   ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string; mcpFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
@@ -122,7 +123,11 @@ export class HostInitializerMain {
     let agentFileWritten: string | undefined;
     let mcpFileWritten: string | undefined;
     if (created) {
-      agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+      // a clone skips both: its root files come from the component, and only what the component
+      // versions belongs at the root
+      if (!options.skipAgentInstructions) {
+        agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
+      }
       // Keep `.mcp.json` in sync with the agent template, which tells the
       // agent that the workspace ships a Cloud MCP config. Skipped only when
       // the caller (interactive init) knows the user explicitly opted out.
@@ -347,7 +352,7 @@ export class HostInitializerMain {
       const response = (await prompt({
         type: 'toggle',
         name: 'useExternalPackageManager',
-        message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
+        message: 'Would you like to use npm or pnpm externally instead of Bit-managed installation?',
         enabled: 'Yes',
         disabled: 'No',
         cancel: promptCancel,
@@ -538,7 +543,7 @@ node_modules
       if (interactiveConfig.externalPackageManager) {
         initMessage += `\n  External package manager mode enabled`;
         initMessage += formatHint(
-          `\n  Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`
+          `\n  Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('npm install')}) to install dependencies`
         );
       } else if (interactiveConfig.generator) {
         initMessage += formatHint(`\n  Run ${chalk.cyan('bit install')} to install dependencies`);

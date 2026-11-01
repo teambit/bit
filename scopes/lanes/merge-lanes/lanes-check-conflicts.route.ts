@@ -1,4 +1,4 @@
-import type { Route, Request, Response } from '@teambit/express';
+import type { Route, Request, Response, Middleware } from '@teambit/express';
 import { Verb } from '@teambit/express';
 import type { Logger } from '@teambit/logger';
 import type { MergeLanesMain } from './merge-lanes.main.runtime';
@@ -13,7 +13,7 @@ export class LanesCheckConflictsRoute implements Route {
   route = '/lanes/check-conflicts';
   verb = Verb.READ;
 
-  middlewares = [
+  middlewares: Middleware[] = [
     async (req: Request, res: Response) => {
       const { body } = req;
       const sourceLane = body.sourceLane;

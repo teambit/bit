@@ -1,8 +1,7 @@
-import type { PluginDefinition } from '@teambit/aspect-loader';
 import type { Harmony } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component';
 import type { WorkerMain } from '@teambit/worker';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { LoggerMain } from '@teambit/logger';
 import { flatten } from 'lodash';
 import { ServiceHandlerContext as EnvContext } from './services/service-handler-context';
@@ -15,7 +14,7 @@ import type { EnvsRegistry, ServicesRegistry } from './environments.main.runtime
  */
 export const BIT_ENV_PATTERN = '*.bit-env.*';
 
-export class EnvPlugin implements PluginDefinition {
+export class EnvPlugin {
   constructor(
     private envSlot: EnvsRegistry,
     private servicesRegistry: ServicesRegistry,

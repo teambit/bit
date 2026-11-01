@@ -5,7 +5,7 @@ import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ComponentCompareUI } from '@teambit/component-compare';
 import { ComponentCompareAspect } from '@teambit/component-compare';
 import { OverviewCompare } from '@teambit/docs.ui.overview-compare';

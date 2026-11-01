@@ -5,9 +5,9 @@ import type { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import type { BuildStatus } from '@teambit/legacy.constants';
 import type { ComponentLog } from '@teambit/objects';
-import type { DependencyList } from '@teambit/dependency-resolver';
 import { slice } from 'lodash';
 import type { ComponentFactory } from './component-factory';
+import type { ComponentDependencyList } from './component-dependencies';
 import type ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
 import type { Config as ComponentConfig } from './config';
@@ -150,7 +150,10 @@ export class Component implements IComponent {
     return filteredLogs;
   }
 
-  getDependencies(): DependencyList {
+  /**
+   * @deprecated use `DependencyResolverMain.getDependencies(component)`, which returns the full `DependencyList`.
+   */
+  getDependencies(): ComponentDependencyList {
     return this.factory.getDependencies(this);
   }
 

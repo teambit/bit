@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 
 import { Logger } from './logger';
 import { LoggerAspect } from './logger.aspect';

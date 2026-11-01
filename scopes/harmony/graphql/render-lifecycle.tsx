@@ -9,7 +9,7 @@ import type { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import { pick } from 'lodash';
 
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
-import type { SSR } from '@teambit/ui';
+import type * as SSR from '@teambit/react.rendering.ssr';
 
 import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';
 import { GraphQLProvider } from './graphql-provider';

@@ -1,10 +1,5 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-import chaiString from 'chai-string';
-
-chai.use(chaiFs);
-chai.use(chaiString);
 
 /**
  * This test verifies that components are compiled with their own env's tsconfig settings,

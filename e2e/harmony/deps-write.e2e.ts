@@ -17,7 +17,7 @@ describe('dependencies write', function () {
       },
     });
     helper.command.install('--add-missing-deps');
-    helper.command.tagAllComponents('--skip-tests');
+    helper.command.tagAllWithoutBuild('--skip-tests');
     helper.command.export();
   });
   after(() => {

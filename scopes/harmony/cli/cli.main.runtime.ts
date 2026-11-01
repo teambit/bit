@@ -126,11 +126,13 @@ export class CLIMain {
    * not unhandledRejection
    *
    * @param onBeforeExitFn
+   * @param key a later registration with the same key replaces this one, also from another harmony load in the same
+   * process. pass it for a hook that is registered on every load (see the legacy logger's registerOnBeforeExitFn).
    * @returns
    */
-  registerOnBeforeExit(onBeforeExitFn: OnBeforeExitFn) {
+  registerOnBeforeExit(onBeforeExitFn: OnBeforeExitFn, key?: string) {
     this.onBeforeExitSlot.register(onBeforeExitFn);
-    legacyLogger.registerOnBeforeExitFn(onBeforeExitFn);
+    legacyLogger.registerOnBeforeExitFn(onBeforeExitFn, key);
     return this;
   }
 

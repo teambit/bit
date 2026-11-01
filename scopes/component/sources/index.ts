@@ -18,8 +18,6 @@ export {
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
-  importMultipleDistsArtifacts,
-  importAllArtifactsFromLane,
   convertBuildArtifactsFromModelObject,
   convertBuildArtifactsToModelObject,
   reStructureBuildArtifacts,

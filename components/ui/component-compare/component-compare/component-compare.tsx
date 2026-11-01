@@ -34,7 +34,7 @@ import { useApiDiff } from '@teambit/semantics.ui.api-diff-view';
 import type { APIDiffResult } from '@teambit/semantics.ui.api-diff-view';
 import type { ComponentComparePair, CompareComponentData } from './compare-data-context';
 import { useCompareData } from './compare-data-context';
-import { useFileRegistryRegister, useAspectRegistryRegister, useFileRegistry } from './file-registry';
+import { useFileRegistryRegister, useFileRegistry } from './file-registry';
 
 import styles from './component-compare.module.scss';
 
@@ -1019,20 +1019,15 @@ function CompareRegistryEntry({ compareId }: { compareId: string }) {
       .map((f) => ({ name: f.fileName, status: f.status }));
   }, [data]);
 
-  const aspectRegistryFiles = useMemo(() => {
-    if (data === undefined) return undefined;
-    if (data === null) return [];
-    return (data.aspects || []).map((a) => ({ name: a.fieldName, status: 'MODIFIED' }));
-  }, [data]);
-
   useFileRegistryRegister(componentIdStr, registryFiles);
-  useAspectRegistryRegister(componentIdStr, aspectRegistryFiles);
 
   return null;
 }
 
 /**
- * feeds the FileRegistry from the bulk `CompareDataProvider` for every component pair that has a base.
+ * feeds code files into the FileRegistry from the bulk `CompareDataProvider` for every component pair
+ * that has a base. Configuration entries are deliberately registered by `InlineConfigCompare` only:
+ * the bulk response contains field names rather than the canonical aspect IDs used by its DOM anchors.
  * renders one null-rendering `CompareRegistryEntry` per pair — no per-component queries are fired.
  */
 export function RegistryFeeder({ pairs }: { pairs: ComponentComparePair[] }) {

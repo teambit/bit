@@ -138,3 +138,92 @@ export const LargeVirtualizedDiff = () => (
     />
   </div>
 );
+
+// --- Annotated diff (gutter badges, under-line widget, highlighted range) ---
+
+const reviewOld = `export function total(items: Item[]) {
+  let sum = 0;
+  for (const item of items) {
+    sum += item.price;
+  }
+  return sum;
+}
+`;
+
+const reviewNew = `export function total(items: Item[]) {
+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+`;
+
+const avatar = (initial: string, color: string) => (
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      background: color,
+      color: '#fff',
+      fontSize: 9,
+      fontWeight: 700,
+      fontFamily: 'sans-serif',
+    }}
+  >
+    {initial}
+  </span>
+);
+
+const commentCard = (author: string, body: string) => (
+  <div style={{ padding: '10px 14px', fontFamily: 'sans-serif', fontSize: 13, lineHeight: 1.5 }}>
+    <strong style={{ fontSize: 12 }}>{author}</strong>
+    <div style={{ color: '#4a4a4a' }}>{body}</div>
+  </div>
+);
+
+export const AnnotatedDiff = () => (
+  <div style={wrap}>
+    <DiffViewer
+      fileName="src/cart/total.ts"
+      oldContent={reviewOld}
+      newContent={reviewNew}
+      defaultView="unified"
+      onLineAction={(context) => {
+        // eslint-disable-next-line no-console
+        console.log('line action', context);
+      }}
+      annotations={[
+        { id: 'a', line: 2, gutter: avatar('R', '#6c5ce7') },
+        {
+          id: 'a',
+          line: 2,
+          widget: commentCard('rani', 'reduce reads well here — does quantity always exist on Item?'),
+        },
+        { id: 'b', line: 3, side: 'old', gutter: avatar('J', '#37b26c') },
+      ]}
+    />
+  </div>
+);
+
+export const AnnotatedDiffWithActiveRange = () => (
+  <div style={wrap}>
+    <DiffViewer
+      fileName="src/cart/total.ts"
+      oldContent={reviewOld}
+      newContent={reviewNew}
+      defaultView="split"
+      onLineAction={() => {}}
+      annotations={[
+        {
+          id: 'range',
+          line: 2,
+          side: 'old',
+          range: { start: 2, end: 6 },
+          active: true,
+          gutter: avatar('J', '#37b26c'),
+        },
+      ]}
+    />
+  </div>
+);

@@ -6,7 +6,7 @@ import { CFG_HUB_DOMAIN_KEY, DEFAULT_HUB_DOMAIN, CFG_USER_TOKEN_KEY, getSymphony
 import type { Scope } from '@teambit/legacy.scope';
 import { getAuthHeader, getFetcherWithAgent } from '@teambit/scope.network';
 import { logger } from '@teambit/legacy.logger';
-import { ScopeNotFoundOrDenied } from '../exceptions/scope-not-found-or-denied';
+import { ScopeNotFoundOrDenied } from '../exceptions';
 
 const hubDomain = getConfig(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 const symphonyUrl = getSymphonyUrl();

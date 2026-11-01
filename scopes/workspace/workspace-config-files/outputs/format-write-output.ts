@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { relative } from 'path';
+import { joinSections } from '@teambit/cli';
 import type {
   OneConfigWriterIdResult,
   WriteConfigFilesResult,
@@ -7,7 +8,8 @@ import type {
 } from '../workspace-config-files.main.runtime';
 import type { WriteConfigCmdFlags } from '../ws-config.cmd';
 import { formatCleanOutput } from './format-clean-output';
-import { SUMMARY, WRITE_TITLE } from './write-outputs-texts';
+import { formatSkippedOutput } from './format-skipped-output';
+import { getSummary, WRITE_TITLE } from './write-outputs-texts';
 import type { EnvsWrittenExtendingConfigFile, EnvsWrittenExtendingConfigFiles } from '../writers';
 
 export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult, flags: WriteConfigCmdFlags): string {
@@ -17,8 +19,9 @@ export function formatWriteOutput(writeConfigFilesResult: WriteConfigFilesResult
   const writeResultsOutput = getWriteResultsOutput(writeResults, wsDir, isDryRun);
 
   const cleanWriteOutput = cleanResultsOutput ? `${cleanResultsOutput}\n${writeResultsOutput}` : writeResultsOutput;
+  const skippedOutput = formatSkippedOutput(writeResults.skippedPaths, wsDir);
 
-  return `${cleanWriteOutput}\n\n${SUMMARY}`;
+  return joinSections([cleanWriteOutput, skippedOutput, getSummary(writeResults.skippedPaths)]);
 }
 
 function getWriteResultsOutput(writeResults: WriteResults, wsDir: string, isDryRun: boolean) {

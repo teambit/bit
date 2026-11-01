@@ -99,30 +99,6 @@
   line-height: 1.5;
 }
 
-/* ---- Separator ---- */
-
-.sep {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 32px auto 20px;
-  max-width: 340px;
-}
-
-.sepLine {
-  flex: 1;
-  height: 1px;
-  background: var(--border-medium-color);
-}
-
-.sepLabel {
-  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-  font-size: 11px;
-  color: var(--on-background-low-color);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
 /* ---- DIY rows ---- */
 
 .diyGrid {

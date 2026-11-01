@@ -15,6 +15,7 @@ import { testsResultsToJUnitFormat } from './utils/junit-generator';
  */
 export class TesterTask implements BuildTask {
   readonly name = 'TestComponents';
+  readonly description = 'Testing components';
   readonly dependencies = [CompilerAspect.id];
   constructor(
     readonly aspectId: string,

@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { ObjectsAspect } from './objects.aspect';
 
 export class ObjectsMain {

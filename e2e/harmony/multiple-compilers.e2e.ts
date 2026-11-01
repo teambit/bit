@@ -1,12 +1,10 @@
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
-import chaiString from 'chai-string';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
-chai.use(chaiString);
 
 describe('multiple compilers - babel and typescript', function () {
   this.timeout(0);
@@ -36,29 +34,18 @@ describe('multiple compilers - babel and typescript', function () {
         helper.command.compile();
         distDir = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
       });
-      it('should generate dists on the workspace', () => {
-        expect(distDir).to.be.a.directory();
-        expect(path.join(distDir, 'foo.js')).to.be.a.file();
-      });
-      it('should be able to run the dist file', () => {
+      // a "should generate dists on the workspace" test used to precede this one, asserting the dist
+      // directory and foo.js exist. running foo.js below already proves both, so it is folded in.
+      it('should generate dists on the workspace and be able to run the dist file', () => {
         expect(path.join(distDir, 'foo.js')).to.be.a.file();
         const result = helper.command.runCmd(`node ${path.join(distDir, 'foo.js')}`);
         expect(result).to.have.string('hello');
       });
-      describe('compile on capsules', () => {
-        let capsulePath;
-        before(() => {
-          helper.command.build();
-          capsulePath = helper.command.getCapsuleOfComponent('bar');
-        });
-        it('should generate the dists on the capsule via babel compiler', () => {
-          expect(path.join(capsulePath, 'dist')).to.be.a.directory();
-          expect(path.join(capsulePath, 'dist/foo.js')).to.be.a.file();
-        });
-        it('should generate the d.ts on the capsule via typescript compiler', () => {
-          expect(path.join(capsulePath, 'dist/foo.d.ts')).to.be.a.file();
-        });
-      });
+      // a "compile on capsules" describe used to run `bit build` here only to assert that
+      // dist/foo.js and dist/foo.d.ts exist on the capsule. the tagging describe below runs the
+      // same build pipeline (tagAllComponents passes --build) and asserts on the saved artifacts,
+      // which is strictly stronger: the same files, plus which compiler generated each one. the
+      // standalone `bit build` entrypoint is still exercised by "different envs in the dependency graph".
       describe('tagging the component', () => {
         let artifacts: any[];
         before(() => {

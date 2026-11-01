@@ -15,7 +15,7 @@ export default class FindCycles implements Insight {
     this.graphBuilder = graphBuilder;
   }
   private async runInsight(opts?: RunInsightOptions): Promise<RawResult> {
-    const graph = await this.graphBuilder.getGraphIds(opts?.ids);
+    const graph = await this.graphBuilder.getGraphIds(opts?.ids, { excludeOutdatedEdgesOfModified: true });
     if (!graph) {
       return {
         message: '',

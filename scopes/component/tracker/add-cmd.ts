@@ -9,12 +9,13 @@ import type { AddActionResults, Warnings } from './add-components';
 import type { TrackerMain } from './tracker.main.runtime';
 
 type AddFlags = {
-  id: string | null | undefined;
+  id?: string;
   main: string | null | undefined;
-  namespace: string | null | undefined;
+  namespace?: string;
   scope?: string;
   env?: string;
   override: boolean;
+  root?: boolean;
 };
 
 type AddResults = {
@@ -41,6 +42,7 @@ export class AddCmd implements Command {
       `sets the component's scope. if not entered, the default-scope from workspace.jsonc will be used`,
     ],
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants if exists)"],
+    ['', 'root', 'track the workspace root itself as a component, which owns every file no other component claims'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
@@ -90,7 +92,7 @@ export class AddCmd implements Command {
 
   async json(
     [paths = []]: [string[]],
-    { id, main, namespace, scope, env, override = false }: AddFlags
+    { id, main, namespace, scope, env, override = false, root = false }: AddFlags
   ): Promise<AddResults> {
     if (namespace && id) {
       throw new BitError(
@@ -101,14 +103,13 @@ export class AddCmd implements Command {
     const normalizedPaths: PathOsBased[] = paths.map((p) => pathNormalizeToLinux(path.normalize(p)));
     const { addedComponents, warnings }: AddActionResults = await this.tracker.addForCLI({
       componentPaths: normalizedPaths,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       id,
       main: main ? pathNormalizeToLinux(path.normalize(main)) : undefined,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       namespace,
       defaultScope: scope,
       override,
       env,
+      root,
     });
     return {
       addedComponents: addedComponents.map((added) => ({

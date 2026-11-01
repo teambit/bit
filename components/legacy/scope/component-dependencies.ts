@@ -25,7 +25,6 @@ export default class ComponentWithDependencies {
     this.missingDependencies = props.missingDependencies || [];
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get allDependencies() {
     return [...this.dependencies, ...this.devDependencies, ...this.peerDependencies, ...this.extensionDependencies];
   }

@@ -20,7 +20,11 @@ export async function getScopeComponent({
   showDependents?: boolean;
   showDependencies?: boolean;
   loadScopeFromCache?: boolean;
-}): Promise<{ component: Component[] | Component }> {
+}): Promise<{
+  component: Component[] | Component;
+  dependentsInfo?: DependenciesInfo[];
+  dependenciesInfo?: DependenciesInfo[];
+}> {
   const bitId = ComponentID.fromString(id); // user used --remote so we know it has a scope
 
   if (scopePath) {
@@ -33,22 +37,18 @@ export async function getScopeComponent({
   const consumer: Consumer | undefined = await loadConsumerIfExist();
   const remote = await getRemoteByName(bitId.scope, consumer);
   loader.start('showing a component...');
-  const component = await remote.show(bitId);
+  const component = (await remote.show(bitId))!;
   let dependenciesInfo: DependenciesInfo[] = [];
   let dependentsInfo: DependenciesInfo[] = [];
   if (showDependents || showDependencies) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepGraph = await remote.graph(component.id);
     if (showDependents) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependentsInfo = componentDepGraph.getDependentsInfo(component.id);
     }
     if (showDependencies) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependenciesInfo = componentDepGraph.getDependenciesInfo(component.id);
     }
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return { component, dependentsInfo, dependenciesInfo };
 
   async function showComponentUsingScope(scope: Scope) {

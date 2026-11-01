@@ -3,11 +3,13 @@ import mapSeries from 'p-map-series';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy.constants';
-import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import type { Ref, Lane } from '@teambit/objects';
 import { RemovedObjects } from '../removed-components';
 import type Scope from '../scope';
+
+/** the workspace (legacy Consumer) a removal runs in. restated because the consumer depends on the scope. */
+export type RemovalWorkspace = { getCurrentLaneObject(): Promise<Lane | undefined> };
 
 /**
  * remove components from the model.
@@ -19,9 +21,15 @@ export default class RemoveModelComponents {
   scope: Scope;
   bitIds: ComponentIdList;
   force: boolean;
-  consumer: Consumer | null | undefined;
+  consumer: RemovalWorkspace | null | undefined;
   currentLane?: Lane | null = null;
-  constructor(scope: Scope, bitIds: ComponentIdList, force: boolean, consumer?: Consumer, currentLane?: Lane | null) {
+  constructor(
+    scope: Scope,
+    bitIds: ComponentIdList,
+    force: boolean,
+    consumer?: RemovalWorkspace,
+    currentLane?: Lane | null
+  ) {
     this.scope = scope;
     this.bitIds = bitIds;
     this.force = force;

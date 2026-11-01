@@ -72,7 +72,9 @@ chai.use(chaiFs);
         await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
         await addDistTag({ package: '@pnpm.e2e/bar', version: '100.0.0', distTag: 'latest' });
         helper.command.install('--add-missing-deps');
-        helper.command.tagAllComponents('--skip-tests');
+        // ExtractSchema runs a tsserver over the env's core-aspect types (bit's own source in this repo), which
+        // adds ~0.9GB and gets the tag OOM-killed on CI's 4GB machines. the schema is irrelevant to these tests.
+        helper.command.tagAllComponents('--skip-tests --skip-tasks ExtractSchema');
         helper.command.export();
 
         const versionObj = helper.command.catComponent('comp1@latest');
@@ -200,14 +202,11 @@ chai.use(chaiFs);
       let snapWithoutGraph: any;
       let tagWithGraph: any;
       let tagWithoutGraph: any;
-      before(async () => {
+      before(() => {
         const randomStr = generateRandomStr(4);
         const name = `@ci/${randomStr}.{name}`;
         helper.scopeHelper.setWorkspaceWithRemoteScope();
-        npmCiRegistry = new NpmCiRegistry(helper);
-        npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-        await npmCiRegistry.init();
-        npmCiRegistry.setRegistry();
+        new NpmCiRegistry(helper).configureCustomNameInPackageJsonHarmony(name);
         helper.fixtures.populateComponents(1);
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
         helper.command.install();
@@ -221,7 +220,6 @@ chai.use(chaiFs);
         tagWithoutGraph = helper.command.catComponent('comp1@latest');
       });
       after(() => {
-        npmCiRegistry.destroy();
         helper.scopeHelper.destroy();
       });
       it('should attach the dependencies graph to the snap by default', () => {

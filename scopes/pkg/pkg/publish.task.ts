@@ -8,6 +8,7 @@ import type { Publisher } from './publisher';
  */
 export class PublishTask implements BuildTask {
   readonly name = 'PublishComponents';
+  readonly description = 'Publishing components to the package registry';
   readonly location: TaskLocation = 'end';
   constructor(
     readonly aspectId: string,

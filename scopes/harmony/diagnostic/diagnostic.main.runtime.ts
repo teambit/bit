@@ -2,7 +2,7 @@ import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ExpressMain } from '@teambit/express';
 import { ExpressAspect } from '@teambit/express';
 import type { GraphqlMain } from '@teambit/graphql';

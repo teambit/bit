@@ -30,7 +30,8 @@ export function doctorSchema(scopeMain: ScopeMain): Schema {
         platform: String!
         bitVersion: String!
         npmVersion: String
-        yarnVersion: String
+        # kept for older clients that still query it. always null.
+        yarnVersion: String @deprecated(reason: "Yarn support was removed")
         userDetails: String!
       }
 

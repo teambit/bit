@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { TransformOptions } from '@babel/core';
 import type Mocha from 'mocha';
 import type { Logger, LoggerMain } from '@teambit/logger';

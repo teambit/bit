@@ -99,7 +99,6 @@ export function DependenciesGraph({
 
   return (
     <ComponentGraphContext.Provider value={context}>
-      {/* @ts-ignore - TODO - remove when ReactFlowProvider will be of type `FC<PropsWithChildren<{}>>` instead of `FC` (#5746) */}
       <ReactFlowProvider>
         <ReactFlow
           draggable={false}

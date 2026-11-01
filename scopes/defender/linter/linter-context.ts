@@ -1,10 +1,9 @@
 import type { ComponentMap } from '@teambit/component';
 import type { ExecutionContext } from '@teambit/envs';
 
-export type EslintFixType = 'problem' | 'suggestion' | 'layout';
-export type OxlintFixType = 'all' | 'suggestions' | 'dangerously';
-export type FixType = EslintFixType | OxlintFixType | string;
-export type FixTypes = Array<FixType>;
+import type { FixTypes } from '@teambit/envs.contracts';
+
+export type { EslintFixType, OxlintFixType, FixType, FixTypes } from '@teambit/envs.contracts';
 
 export interface LinterOptions {
   /**

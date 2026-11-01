@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   padding-right: 8px;
-  color: #fff;
+  color: var(--on-surface-color, #2b2b2b);
 
   > span {
     padding-left: 8px;
@@ -28,7 +28,7 @@
 .diffOnlySettings .splitSettings {
   padding-bottom: 8px;
   &:hover {
-    background: var(--on-surface-neutral-low-color, #282828);
+    background: var(--surface-neutral-hover-color, #f4f5f6);
   }
 }
 
@@ -37,9 +37,9 @@
 .wordWrapSettings {
   > label {
     padding: 8px 8px 8px 0px;
-    color: #fff;
+    color: var(--on-surface-color, #2b2b2b);
     &:hover {
-      background: var(--on-surface-neutral-low-color, #282828) !important;
+      background: var(--surface-neutral-hover-color, #f4f5f6) !important;
     }
   }
 }

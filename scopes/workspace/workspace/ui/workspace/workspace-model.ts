@@ -1,8 +1,7 @@
 // import { ComponentMeta } from '@teambit/component';
-import type { ComponentModelProps } from '@teambit/component';
+import type { ComponentModelProps, DeprecationInfo } from '@teambit/component';
 import { ComponentID, ComponentModel } from '@teambit/component';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
-import type { DeprecationInfo } from '@teambit/deprecation';
 import type { Descriptor } from '@teambit/envs';
 
 import type { ComponentStatus } from '../../workspace-component/component-status';

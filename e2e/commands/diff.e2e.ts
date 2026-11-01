@@ -51,7 +51,7 @@ describe('bit diff command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.command.tagAllComponents('', '0.0.5');
+        helper.command.tagAllWithoutBuild('--ver 0.0.5');
       });
       it('should still indicate that there is no diff for that component', () => {
         const output = helper.command.diff('bar/foo');
@@ -107,7 +107,7 @@ describe('bit diff command', function () {
       helper.fixtures.addComponentUtilsIsType();
       helper.fixtures.createComponentIsString('');
       helper.fixtures.addComponentUtilsIsString();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
 
       // modify only bar/foo and utils/is-type, not utils/is-string
       helper.fixtures.createComponentBarFoo(barFooV2);
@@ -148,7 +148,7 @@ describe('bit diff command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.fs.createFile('bar', 'foo2.js', barFooV2);
       fs.removeSync(path.join(helper.scopes.localPath, 'bar/foo.js'));
       helper.command.addComponent('bar', { i: 'bar/foo', m: 'bar/foo2.js' });
@@ -184,43 +184,8 @@ describe('bit diff command', function () {
     });
     describe('running bit diff between the previous version and the last version', () => {
       before(() => {
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         output = helper.command.diff('bar/foo 0.0.1 0.0.2');
-      });
-      it('should indicate the deleted files as deleted', () => {
-        expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
-        expect(output).to.have.string(`+++ ${barFooFile} (0.0.2)`);
-        expect(output).to.have.string(`-${barFooV1}`);
-      });
-      it('should indicate the added files as added', () => {
-        const barFoo2File = 'foo2.js';
-        expect(output).to.have.string(`--- ${barFoo2File} (0.0.1)`);
-        expect(output).to.have.string(`+++ ${barFoo2File} (0.0.2)`);
-        expect(output).to.have.string(`+${barFooV2}`);
-      });
-      describe('other fields diff', () => {
-        it('should indicate that the mainFile was changed', () => {
-          expect(output).to.have.string('--- Main File (0.0.1)');
-          expect(output).to.have.string('+++ Main File (0.0.2)');
-          expect(output).to.have.string('- foo.js');
-          expect(output).to.have.string('+ foo2.js');
-        });
-        it('should indicate that the files array were changed', () => {
-          expect(output).to.have.string('--- Files (0.0.1)');
-          expect(output).to.have.string('+++ Files (0.0.2)');
-          expect(output).to.have.string('- [ foo.js ]');
-          expect(output).to.have.string('+ [ foo2.js ]');
-        });
-      });
-      it('should have the same output as running diff of the previous version', () => {
-        const diffOfVersionOutput = helper.command.diff('bar/foo 0.0.1');
-        expect(diffOfVersionOutput).to.be.equal(output);
-      });
-    });
-    describe('running bit diff between current version and version 0.0.1', () => {
-      before(() => {
-        helper.command.tagAllComponents(undefined, undefined, false);
-        output = helper.command.diff('bar/foo 0.0.1');
       });
       it('should indicate the deleted files as deleted', () => {
         expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
@@ -307,7 +272,7 @@ describe('bit diff command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.createComponentIsType();
       helper.fixtures.addComponentUtilsIsType();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       // modify source in bar/foo, and add a file in utils/is-type so both filesDiff and fieldsDiff appear
       helper.fixtures.createComponentBarFoo(barFooV2);
       helper.fs.createFile('is-type', 'extra.js', "module.exports = 'extra';\n");

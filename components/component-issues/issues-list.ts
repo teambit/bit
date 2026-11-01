@@ -1,3 +1,4 @@
+import stripAnsi from 'strip-ansi';
 import type { ComponentIssue, IssueObject } from './component-issue';
 import { ImportNonMainFiles } from './import-non-main-files';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
@@ -23,6 +24,7 @@ import { ImportFromDirectory } from './import-from-directory';
 import { DeprecatedDependencies } from './deprecated-dependencies';
 import { RemovedEnv } from './removed-env';
 import { LoadFailures } from './load-failures';
+import { PinnedDependencies } from './pinned-dependencies';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -49,6 +51,7 @@ export const IssuesClasses = {
   SelfReference,
   ImportFromDirectory,
   LoadFailures,
+  PinnedDependencies,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 
@@ -86,7 +89,7 @@ export class IssuesList {
   toObjectWithDataAsString(): { type: string; description: string; data: string }[] {
     return this._issues.map((issue) => ({
       ...issue.toObject(),
-      data: issue.dataToString().trim(),
+      data: stripAnsi(issue.dataToString()).trim(),
     }));
   }
 
@@ -143,10 +146,14 @@ export class IssuesList {
     return new IssuesList(this._issues.filter((issue) => issue.isTagBlocker));
   }
 
+  /**
+   * for non-terminal consumers (json output, IDE, GraphQL). dataToString() colors the output for the CLI, and chalk
+   * colors are process-global (bit-server enables them), so the ANSI codes are stripped here.
+   */
   toObjectIncludeDataAsString(): Array<IssueObject & { dataAsString: string }> {
     return this._issues.map((issue) => ({
       ...issue.toObject(),
-      dataAsString: issue.dataToString(),
+      dataAsString: stripAnsi(issue.dataToString()),
     }));
   }
 

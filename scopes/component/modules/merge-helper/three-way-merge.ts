@@ -213,7 +213,6 @@ async function getMergeResults(
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(scope);
   const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFilePathP = tmp.save(modifiedFile.fsFile.contents);
     const writeFile = async (file: SourceFileModel): Promise<PathOsBased> => {
       const content = await file.file.load(scope.objects);

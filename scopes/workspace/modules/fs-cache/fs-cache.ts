@@ -10,6 +10,9 @@ const WORKSPACE_CACHE = 'cache';
 const COMPONENTS_CACHE = 'components';
 const DOCS = 'docs';
 const DEPS = 'deps';
+const RETRYABLE_FS_ERRORS = ['ENOTEMPTY', 'EPERM', 'EBUSY'];
+const FS_MAX_ATTEMPTS = 10;
+const FS_RETRY_DELAY_MS = 100;
 
 export class FsCache {
   readonly basePath: PathOsBasedAbsolute;
@@ -38,19 +41,12 @@ export class FsCache {
 
   async deleteAllDependenciesDataCache() {
     const cacheDir = this.getCachePath(DEPS);
-    try {
-      await cacache.rm.all(cacheDir);
-    } catch (err: any) {
-      if (err.code === 'ENOTEMPTY') {
-        // it happens when one process is deleting the cache and another one is writing to it.
-        // it rarely happens. if it happens, wait for a second and try again.
-        logger.error(`failed deleting the cache directory ${cacheDir}. retrying...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        await cacache.rm.all(cacheDir);
-      } else {
-        throw err;
-      }
-    }
+    // the deps cache dir holds nothing else, so removing it entirely equals cacache.rm.all.
+    // components keep reading/writing entries while it's deleted (loaded in parallel, or by another
+    // process), which fails the rmdir: ENOTEMPTY on posix, EPERM/EBUSY on Windows (also when an
+    // antivirus/indexer holds a handle). all of these are transient, so retry with a linear backoff.
+    cacache.clearMemoized();
+    await this.retryOnTransientFsError(() => fs.remove(cacheDir), `deleting the cache directory ${cacheDir}`);
   }
 
   async deleteDependenciesDataCache(idStr: string) {
@@ -58,7 +54,23 @@ export class FsCache {
   }
 
   async listDependenciesDataCache() {
-    return cacache.ls(this.getCachePath(DEPS));
+    const cacheDir = this.getCachePath(DEPS);
+    // listing reads every index bucket. if the dir is deleted meanwhile (by another loader or process), a missing
+    // bucket is fine (cacache ignores ENOENT), but on Windows a bucket that is pending deletion fails readdir with
+    // EPERM. it's transient as well, so retry the same way as the deletion.
+    return this.retryOnTransientFsError(() => cacache.ls(cacheDir), `listing the cache directory ${cacheDir}`);
+  }
+
+  private async retryOnTransientFsError<T>(fn: () => Promise<T>, description: string): Promise<T> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        if (!RETRYABLE_FS_ERRORS.includes(err.code) || attempt >= FS_MAX_ATTEMPTS) throw err;
+        logger.debug(`failed ${description} (${err.code}), retrying (attempt ${attempt})`);
+        await new Promise((resolve) => setTimeout(resolve, FS_RETRY_DELAY_MS * attempt));
+      }
+    }
   }
 
   private async saveStringDataInCache(key: string, cacheName: string, data: any) {

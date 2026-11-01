@@ -123,7 +123,11 @@ environments control how components are built, tested, linted, and deployed.`;
       }
       let envWithErr = isLoaded ? envIdStr : `${envIdStr} ${chalk.red('(not loaded)')}`;
 
-      const envComp = await this.envs.getEnvComponentByEnvId(envId.toString());
+      // a core env ships with bit and cannot be deleted. loading its component here would only
+      // fetch it from the remote, for nothing.
+      const envIdWithoutVersion = envId.toStringWithoutVersion();
+      const isCore = this.envs.isCoreEnv(envIdWithoutVersion) || this.envs.isCoreAspect(envIdWithoutVersion);
+      const envComp = isCore ? undefined : await this.envs.getEnvComponentByEnvId(envIdStr);
       if (envComp && envComp.isDeleted()) {
         envWithErr = `${envIdStr} ${chalk.red('(deleted)')}`;
       }

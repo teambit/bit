@@ -12,7 +12,12 @@ export class SchemaRegistry {
     this._schemas = {};
   }
 
+  /**
+   * pass a module-level function. a function created in an aspect provider keeps the provider's scope, and with it
+   * the harmony instance, alive until the schemas are resolved. registering the same function again does nothing.
+   */
   static registerGetSchemas(getSchemas: GetSchemaFunc) {
+    if (this.instance._getSchemas.includes(getSchemas)) return;
     this.instance._getSchemas.push(getSchemas);
   }
 

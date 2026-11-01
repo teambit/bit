@@ -24,16 +24,14 @@ export default class OrphanSymlinkObjects extends Diagnosis {
     const consumer = await loadConsumer();
     const symlinks = await consumer.scope.objects.list([Symlink]);
     const orphanSymlinks = new ComponentIdList();
-    const objectsToDelete = [];
+    const objectsToDelete: string[] = [];
     await Promise.all(
       symlinks.map(async (symlink) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const realComponentId: ComponentID = symlink.getRealComponentId();
+        const realComponentId = (symlink as Symlink).getRealComponentId();
         const realModelComponent = ModelComponent.fromBitId(realComponentId);
         const foundComponent = await consumer.scope.objects.load(realModelComponent.hash());
         if (!foundComponent) {
           orphanSymlinks.push(realComponentId);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           objectsToDelete.push(consumer.scope.objects.objectPath(symlink.hash()));
         }
       })

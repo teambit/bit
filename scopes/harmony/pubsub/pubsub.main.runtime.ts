@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 
 import type { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';

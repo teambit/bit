@@ -186,6 +186,35 @@ describe('GitHubHostProvider', () => {
     expect(selection.reason).to.contain('no git host provider is configured');
   });
 
+  // GitHub Enterprise Server: Actions names the instance in GITHUB_SERVER_URL, and that host's remotes
+  // must select this provider exactly as github.com remotes do — or the run degrades to git-only.
+  it('claims, configures and is selected for a GitHub Enterprise Server remote', () => {
+    const ghesKeys = ['GITHUB_API_URL', 'GITHUB_SERVER_URL'];
+    const savedGhes = ghesKeys.map((key) => process.env[key]);
+    process.env.GITHUB_API_URL = 'https://ghe.corp.example/api/v3';
+    process.env.GITHUB_SERVER_URL = 'https://ghe.corp.example';
+    process.env.BIT_GITHUB_TOKEN = 'tok';
+    try {
+      ['https://ghe.corp.example/acme/store.git', 'git@ghe.corp.example:acme/store.git'].forEach((remote) => {
+        const provider = new GitHubHostProvider();
+        expect(provider.matchesRemote(remote), remote).to.equal(true);
+        expect(provider.isConfigured(remote), remote).to.equal(true);
+        expect(selectGitHostProvider([new GitHubHostProvider()], remote).provider?.name, remote).to.equal('github');
+      });
+      ['https://evil.example/ghe.corp.example/x.git', 'https://ghe.corp.example.evil.com/x.git'].forEach((remote) => {
+        expect(new GitHubHostProvider().matchesRemote(remote), remote).to.equal(false);
+        expect(new GitHubHostProvider().isConfigured(remote), remote).to.equal(false);
+      });
+    } finally {
+      ghesKeys.forEach((key, i) => {
+        if (savedGhes[i] === undefined) delete process.env[key];
+        else process.env[key] = savedGhes[i];
+      });
+    }
+    // without GITHUB_SERVER_URL the same host is nobody's
+    expect(new GitHubHostProvider().matchesRemote('https://ghe.corp.example/acme/store.git')).to.equal(false);
+  });
+
   it('reports what is missing rather than failing obscurely when a PR call happens unconfigured', async () => {
     let message = '';
     await new GitHubHostProvider().findPrByBranch('lane-x').catch((err) => {

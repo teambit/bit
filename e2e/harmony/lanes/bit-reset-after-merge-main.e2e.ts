@@ -49,7 +49,7 @@ describe('bit reset after merging main into a lane', function () {
       helper.command.export();
 
       helper.command.switchLocalLane('dev', '-x');
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs -x');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs -x');
       headOnLaneAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
       afterMerge = helper.scopeHelper.cloneWorkspace();
     });
@@ -105,7 +105,7 @@ describe('bit reset after merging main into a lane', function () {
 
       // merge lane into main so main has the same snap
       helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane(`${helper.scopes.remote}/dev`, '-x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`, '-x');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
@@ -116,7 +116,7 @@ describe('bit reset after merging main into a lane', function () {
 
       // switch back to lane and merge main
       helper.command.switchLocalLane('dev', '-x');
-      helper.command.mergeLane('main', '-x');
+      helper.command.mergeLaneWithoutBuild('main', '-x');
       headOnLaneAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
       afterMerge = helper.scopeHelper.cloneWorkspace();
     });
@@ -177,7 +177,7 @@ describe('bit reset after merging main into a lane', function () {
       helper.command.export();
 
       helper.command.switchLocalLane('dev', '-x');
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs --no-snap -x');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs --no-snap -x');
     });
 
     it('lane head should not have changed', () => {

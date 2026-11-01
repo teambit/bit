@@ -16,6 +16,10 @@ export function TopBarNav({
   children,
   displayName,
   ignoreQueryParams,
+  // menu layout flags, not link attributes
+  hideInMinimalMode: _hideInMinimalMode,
+  primaryInMinimalMode: _primaryInMinimalMode,
+  minimalMobileChildren: _minimalMobileChildren,
   ...rest
 }: NavPluginProps) {
   const { search } = useLocation(); // sticky query params

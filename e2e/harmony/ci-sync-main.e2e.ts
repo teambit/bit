@@ -176,15 +176,6 @@ describe('bit ci sync: main-scope reconciliation', function () {
     });
   });
 
-  // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both
-  // on the run that pushes and on the converged rerun.
-  // A component's main file can legitimately move (an env stops emitting `dist/`, so main goes back
-  // to source) and the old path is deleted in git. The repository's `.bitmap` still names the old
-  // path, so the component cannot be loaded at all - and one such entry used to fail the whole
-  // main-scope checkout, turning every scheduled run red. Healed inside the reconciler.
-
-  // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both
-  // on the run that pushes and on the converged rerun.
   // A component's main file can legitimately move (an env stops emitting `dist/`, so main goes back
   // to source) and the old path is deleted in git. The repository's `.bitmap` still names the old
   // path, so the component cannot be loaded at all - and one such entry used to fail the whole
@@ -250,6 +241,8 @@ describe('bit ci sync: main-scope reconciliation', function () {
     });
   });
 
+  // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both
+  // on the run that pushes and on the converged rerun.
   describe('main-scope direct push (mainSync: direct-push)', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;
@@ -288,10 +281,6 @@ describe('bit ci sync: main-scope reconciliation', function () {
       expect(remoteBranchExists(SYNC_BRANCH)).to.be.false;
     });
   });
-
-  // Properties that live only at the loop level: a deleted lane is still visited (via the branch half
-  // of the enumeration), one halted lane must not abort the rest, lanes must not contaminate each
-  // other (comp3 exists on lane A only), and an ordinary branch must survive the run.
 
   describe('a stale bit-sync/main that conflicts with the default branch', () => {
     const SYNC_BRANCH = 'bit-sync/main';
@@ -379,7 +368,7 @@ describe('bit ci sync: main-scope reconciliation', function () {
       return path.join(helper.scopes.localPath, '.github', 'workflows', name);
     }
 
-    it('scaffolds both workflow files with the real default branch substituted, adds the sync config block, prints the checklist, and exits 0', () => {
+    it('scaffolds both workflow files with the real default branch substituted, adds the sync config block, prints the report once, and exits 0', () => {
       const { output, exitCode } = runBit('bit ci sync --init');
       expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
       expect(fs.existsSync(workflowPath('bit-sync.yml')), 'bit-sync.yml should have been written').to.be.true;
@@ -394,17 +383,21 @@ describe('bit ci sync: main-scope reconciliation', function () {
       expect(syncYml).to.include('main-sync-branch: bit-sync/main');
       expect(releaseYml).to.include("github.event.pull_request.head.ref != 'bit-sync/main'");
 
-      expect(output).to.include('wrote .github/workflows/bit-sync.yml');
-      expect(output).to.include('wrote .github/workflows/bit-release.yml');
-      expect(output).to.include('added "teambit.git/ci": { "sync": {} } to workspace.jsonc');
+      expect(output).to.match(/\.github\/workflows\/bit-sync\.yml\s+syncs lanes and branches/);
+      expect(output).to.match(/\.github\/workflows\/bit-release\.yml\s+releases the scope/);
+      expect(output).to.match(/workspace\.jsonc\s+added "teambit\.git\/ci": \{ "sync": \{\} \}/);
       expect(helper.workspaceJsonc.read()['teambit.git/ci'].sync).to.deep.equal({});
 
-      // the manual-steps checklist
-      expect(output).to.include('BIT_CONFIG_ACCESS_TOKEN');
-      expect(output).to.include('BIT_SYNC_GH_TOKEN');
-      expect(output).to.include('Components > Export');
-      expect(output).to.include('drops its custom headers');
-      expect(output).to.include('fetch-depth: 0');
+      // one report, no reconcile banner, the branch the remote names
+      expect(output.match(/Scaffolded bit ci sync/g), output).to.have.length(1);
+      expect(output.match(/steps to go live/g), output).to.have.length(1);
+      expect(output).to.not.include('Initializing sync command');
+      expect(output).to.include(`(default branch: ${defaultBranch})`);
+      expect(output).to.not.include("didn't name its default branch");
+      // origin is a bare repository on disk: no server to suggest, no placeholder command
+      expect(output).to.not.include('GITHUB_SERVER_URL');
+      expect(output).to.include('git push -u origin HEAD');
+      expect(output).to.include('Run bit ci sync --init again');
     });
 
     it('is idempotent: a second run skips both files and the config block, and still exits 0', () => {
@@ -412,17 +405,94 @@ describe('bit ci sync: main-scope reconciliation', function () {
       const releaseYmlBefore = fs.readFileSync(workflowPath('bit-release.yml'), 'utf8');
       const { output, exitCode } = runBit('bit ci sync --init');
       expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
-      expect(output).to.include('skipped .github/workflows/bit-sync.yml');
-      expect(output).to.include('skipped .github/workflows/bit-release.yml');
-      expect(output).to.include('workspace.jsonc already configures "teambit.git/ci".sync');
+      expect(output).to.match(/\.github\/workflows\/bit-sync\.yml\s+already exists, left unchanged/);
+      expect(output).to.match(/\.github\/workflows\/bit-release\.yml\s+already exists, left unchanged/);
+      expect(output).to.match(/workspace\.jsonc\s+already configures sync, left unchanged/);
+      expect(output.match(/Scaffolded bit ci sync/g), output).to.have.length(1);
       expect(fs.readFileSync(workflowPath('bit-sync.yml'), 'utf8')).to.equal(syncYmlBefore);
       expect(fs.readFileSync(workflowPath('bit-release.yml'), 'utf8')).to.equal(releaseYmlBefore);
+    });
+
+    it('stages files that exist but were never committed, and prints no commit once they are committed', () => {
+      const repo = helper.scopes.localPath;
+      const before = runBit('bit ci sync --init');
+      expect(before.exitCode, before.output).to.equal(0);
+      // the two runs above left the workflows and workspace.jsonc uncommitted: a re-run must still stage them
+      expect(before.output).to.match(/git add -- \S*bit-sync\.yml \S*bit-release\.yml \S*workspace\.jsonc/);
+      helper.command.runCmd(
+        'git add -A && git -c user.email=e2e@bit.dev -c user.name=e2e commit -q -m "mirror the scope"',
+        repo
+      );
+      const after = runBit('bit ci sync --init');
+      expect(after.exitCode, after.output).to.equal(0);
+      expect(after.output).to.include('nothing to commit');
+      expect(after.output).to.not.include('git commit');
+      expect(after.output).to.include('git push -u origin HEAD');
+    });
+
+    it('force-adds workflow files that .gitignore matches, so the rest of step 1 still runs', () => {
+      const repoDir = helper.fs.createNewDirectory();
+      helper.command.runCmd('git init', repoDir);
+      helper.command.runCmd('bit init --skip-interactive', repoDir);
+      fs.appendFileSync(path.join(repoDir, '.gitignore'), '\n.github/\n');
+      helper.command.runCmd(
+        'git add -A && git -c user.email=e2e@bit.dev -c user.name=e2e commit -q -m "workspace"',
+        repoDir
+      );
+      // a change the user staged before: the printed commit must leave it out
+      fs.writeFileSync(path.join(repoDir, 'unrelated.txt'), 'staged before --init\n');
+      helper.command.runCmd('git add unrelated.txt', repoDir);
+      const { output, exitCode } = runBit('bit ci sync --init', repoDir);
+      expect(exitCode, output).to.equal(0);
+      const add = 'git add -- workspace.jsonc AGENTS.md';
+      const forceAdd = 'git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml';
+      const commit =
+        "git commit -m 'Mirror my-scope' -- workspace.jsonc AGENTS.md .github/workflows/bit-sync.yml .github/workflows/bit-release.yml";
+      expect(output).to.include(add);
+      expect(output).to.include(forceAdd);
+      expect(output).to.include('.gitignore matches these');
+      // printed with the paths on a continuation line
+      expect(output).to.match(
+        /git commit -m 'Mirror my-scope' -- \\\n\s+workspace\.jsonc AGENTS\.md \.github\/workflows\/bit-sync\.yml \.github\/workflows\/bit-release\.yml\n/
+      );
+      // the printed commands really work: both workflows are committed, the unrelated file stays staged
+      helper.command.runCmd(
+        `${add} && ${forceAdd} && git -c user.email=e2e@bit.dev -c user.name=e2e ${commit.slice('git '.length)}`,
+        repoDir
+      );
+      const committed = helper.command.runCmd('git show --name-only --format= HEAD', repoDir);
+      expect(committed).to.include('.github/workflows/bit-sync.yml');
+      expect(committed).to.include('.github/workflows/bit-release.yml');
+      expect(committed).to.include('workspace.jsonc');
+      expect(committed).to.include('AGENTS.md');
+      expect(committed).to.not.include('unrelated.txt');
+      expect(helper.command.runCmd('git diff --cached --name-only', repoDir)).to.include('unrelated.txt');
+    });
+
+    it('force-adds ignored workflow files also before the first commit, which git add -A would skip', () => {
+      const repoDir = helper.fs.createNewDirectory();
+      helper.command.runCmd('git init', repoDir);
+      helper.command.runCmd('bit init --skip-interactive', repoDir);
+      fs.appendFileSync(path.join(repoDir, '.gitignore'), '\n.github/\n');
+      const { output, exitCode } = runBit('bit ci sync --init', repoDir);
+      expect(exitCode, output).to.equal(0);
+      expect(output).to.match(
+        /git add -A\n\s+git add -f -- \.github\/workflows\/bit-sync\.yml \.github\/workflows\/bit-release\.yml\n/
+      );
+      helper.command.runCmd(
+        'git add -A && git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml',
+        repoDir
+      );
+      const staged = helper.command.runCmd('git diff --cached --name-only', repoDir);
+      expect(staged).to.include('.github/workflows/bit-sync.yml');
+      expect(staged).to.include('.github/workflows/bit-release.yml');
     });
 
     // Built by hand because bit refuses to `init` a workspace inside another workspace — the repo root
     // must be a plain git repo that is NOT itself a workspace, exactly how a monorepo looks.
     it('should write the workflows at the REPOSITORY root when the workspace is in a subdirectory', () => {
-      const repoRoot = path.join(path.dirname(helper.scopes.localPath), `subdir-repo-${Date.now()}`);
+      // a tracked directory under the e2e root: helper.scopeHelper.destroy() removes it
+      const repoRoot = helper.fs.createNewDirectory();
       const wsDir = path.join(repoRoot, 'packages', 'app');
       fs.mkdirpSync(wsDir);
       helper.command.runCmd('git init', repoRoot);
@@ -432,7 +502,7 @@ describe('bit ci sync: main-scope reconciliation', function () {
       // non-vacuous: the run really used the SUBDIRECTORY workspace
       expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
       expect(fs.existsSync(path.join(wsDir, 'workspace.jsonc')), 'the subdir must be its own workspace').to.be.true;
-      expect(output).to.include('added "teambit.git/ci": { "sync": {} } to workspace.jsonc');
+      expect(output).to.match(/workspace\.jsonc\s+added "teambit\.git\/ci"/);
       expect(fs.readFileSync(path.join(wsDir, 'workspace.jsonc'), 'utf8')).to.include('teambit.git/ci');
       expect(fs.existsSync(path.join(repoRoot, 'workspace.jsonc'))).to.be.false;
 
@@ -441,16 +511,70 @@ describe('bit ci sync: main-scope reconciliation', function () {
         'bit-sync.yml belongs at the repo root, where GitHub looks for it'
       ).to.be.true;
       expect(fs.existsSync(path.join(repoRoot, '.github', 'workflows', 'bit-release.yml'))).to.be.true;
+      // the actions must chdir into the workspace
+      ['bit-sync.yml', 'bit-release.yml'].forEach((file) =>
+        expect(fs.readFileSync(path.join(repoRoot, '.github', 'workflows', file), 'utf8'), file).to.include(
+          "ws-dir: 'packages/app'"
+        )
+      );
       expect(
         fs.existsSync(path.join(wsDir, '.github')),
         'no .github may be created under the subdirectory workspace — GitHub would never discover it'
       ).to.be.false;
       // the reported path resolves from where the user is standing
-      expect(output).to.match(/wrote .*\.github[/\\]workflows[/\\]bit-sync\.yml/);
-      expect(output).to.not.match(/wrote \.github[/\\]workflows[/\\]bit-sync\.yml/);
+      const reportedSyncYml = path.join('..', '..', '.github', 'workflows', 'bit-sync.yml');
+      expect(output).to.include(`${reportedSyncYml} `);
+      expect(output, 'a cwd-relative path that misses the repository root').to.not.match(
+        /^\s+\S+ \.github[/\\]workflows[/\\]bit-sync\.yml/m
+      );
+      // no remote: the branch is a guess, and the repository is created from its root, not the subdirectory
+      expect(output).to.include('no remote names the default branch');
+      expect(output).to.include(`--source ${path.join('..', '..')} --remote origin --push`);
+    });
+
+    /**
+     * A repository with a GitHub `origin`, never contacted: `origin/HEAD` is set by hand, so the default
+     * branch is detected locally. `env` pins the server, so the host's own GITHUB_* variables don't leak in.
+     */
+    function initWithGitHubOrigin(originUrl: string, env: Record<string, string>) {
+      const repoDir = helper.fs.createNewDirectory();
+      helper.command.runCmd('git init', repoDir);
+      helper.command.runCmd('bit init --skip-interactive', repoDir);
+      helper.command.runCmd(`git remote add origin ${originUrl}`, repoDir);
+      helper.command.runCmd('git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/trunk', repoDir);
+      const { output, exitCode } = runBit('bit ci sync --init', repoDir, env);
+      expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
+      const syncYml = fs.readFileSync(path.join(repoDir, '.github', 'workflows', 'bit-sync.yml'), 'utf8');
+      return { output, syncYml };
+    }
+
+    it('prints the github.com steps as commands for the origin repository', () => {
+      const { output, syncYml } = initWithGitHubOrigin('https://github.com/acme/shop.git', {
+        GITHUB_SERVER_URL: 'https://github.com',
+        GITHUB_API_URL: 'https://api.github.com',
+      });
+      expect(syncYml).to.include("branches-ignore: ['trunk', 'bit-sync/**']");
+      // a workspace at the repository root leaves ws-dir commented out
+      expect(syncYml).to.include('# ws-dir: packages/my-workspace');
+      expect(output).to.include('mirrored to acme/shop (default branch: trunk)');
+      expect(output).to.include('Next: 3 steps to go live');
+      expect(output).to.include('gh secret set BIT_CONFIG_ACCESS_TOKEN -R acme/shop');
+      expect(output).to.include('gh secret set BIT_SYNC_GH_TOKEN -R acme/shop');
+      expect(output).to.include('https://github.com/apps/bit-git-sync');
+      expect(output).to.not.include('/dispatches');
+    });
+
+    it('prints the dispatch webhook on the server API for a GitHub Enterprise Server origin', () => {
+      const { output } = initWithGitHubOrigin('https://ghe.corp.example/acme/store.git', {
+        GITHUB_SERVER_URL: 'https://ghe.corp.example',
+        GITHUB_API_URL: 'https://ghe.corp.example/api/v3',
+      });
+      expect(output).to.include('mirrored to ghe.corp.example/acme/store (default branch: trunk)');
+      expect(output).to.include('gh secret set BIT_CONFIG_ACCESS_TOKEN -R ghe.corp.example/acme/store');
+      expect(output).to.include('https://ghe.corp.example/api/v3/repos/acme/store/dispatches');
+      expect(output).to.include('Authorization: Bearer');
+      expect(output).to.include('drops its custom headers');
+      expect(output).to.not.include('github.com/apps/bit-git-sync');
     });
   });
-
-  // `bit add` + a committed versionless `.bitmap` entry + the component's first export on a lane —
-  // the onboarding quickstart's state, and the one the adoption retry exists for.
 });

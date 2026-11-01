@@ -5,8 +5,8 @@ import type { DoctorMain, DoctorOptions } from './doctor.main.runtime';
 
 type Flags = {
   list?: boolean;
-  save?: string;
-  archive?: string;
+  save?: string | boolean;
+  archive?: string | boolean;
   includeNodeModules?: boolean;
   includePublic?: boolean;
   excludeLocalScope?: boolean;
@@ -83,9 +83,8 @@ can generate diagnostic reports and workspace archives for debugging and support
     if ((includeNodeModules || excludeLocalScope) && !archive) {
       throw new Error('to use --include-node-modules or --exclude-local-scope please specify --archive');
     }
-    let filePath = save;
+    let filePath = typeof save === 'string' ? save : undefined;
     // Happen when used --save without specify the location
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (save === true || archive === true) {
       filePath = '.';
     }

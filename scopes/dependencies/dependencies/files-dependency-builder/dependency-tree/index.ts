@@ -83,12 +83,11 @@ module.exports._getDependencies = async function (config) {
   const isDependenciesArray = Array.isArray(dependenciesRaw);
   debug(`extracted ${dependencies.length} dependencies: `, dependencies);
 
-  const resolvedDependencies = [];
-  const pathMapDependencies = [];
-  const pathMapFile = { file: config.filename };
+  const resolvedDependencies: string[] = [];
+  const pathMapDependencies: Array<Record<string, any>> = [];
+  const pathMapFile: Record<string, any> = { file: config.filename };
 
   dependencies.forEach((dependency) => processDependency(dependency));
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   pathMapFile.dependencies = pathMapDependencies;
   config.pathMap.push(pathMapFile);
   return resolvedDependencies;
@@ -98,7 +97,7 @@ module.exports._getDependencies = async function (config) {
       debug(`skipping an http dependency: ${dependency}`);
       return;
     }
-    const cabinetParams = {
+    const cabinetParams: Parameters<typeof cabinet>[0] = {
       dependency,
       filename: config.filename,
       directory: config.directory,
@@ -111,7 +110,6 @@ module.exports._getDependencies = async function (config) {
     };
     if (!isDependenciesArray && dependenciesRaw[dependency].isScript !== undefined) {
       // used for vue
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       cabinetParams.isScript = dependenciesRaw[dependency].isScript;
     }
     let result;
@@ -137,16 +135,13 @@ module.exports._getDependencies = async function (config) {
       debug(`skipping non-empty but non-existent resolution: ${result} for dependency: ${dependency}`);
       return;
     }
-    const pathMap = { importSource: dependency, resolvedDep: result };
+    const pathMap: Record<string, any> = { importSource: dependency, resolvedDep: result };
     if (!isDependenciesArray && dependenciesRaw[dependency].importSpecifiers) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       pathMap.importSpecifiers = dependenciesRaw[dependency].importSpecifiers;
     }
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     pathMapDependencies.push(pathMap);
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     resolvedDependencies.push(result);
   }
   function addToNonExistent(dependency) {
@@ -166,7 +161,8 @@ module.exports._getDependencies = async function (config) {
  * pathMap and get rid of tree.
  */
 async function traverse(config) {
-  const tree = [];
+  // an array that is used as a map (keyed by file path), the callers rely on it being an array
+  const tree = [] as unknown as Record<string, string[]> & unknown[];
   const stack = [config.filename];
   while (stack.length) {
     const dependency = stack.pop();
@@ -193,7 +189,6 @@ async function traverse(config) {
       debug(`number of dependencies after filtering: ${dependencies.length}`);
     }
     debug('cabinet-resolved all dependencies: ', dependencies);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     tree[dependency] = dependencies;
     const filePathMap = config.pathMap.find((pathMapEntry) => pathMapEntry.file === dependency);
     if (!filePathMap) throw new Error(`file ${dependency} is missing from PathMap`);
@@ -221,7 +216,6 @@ async function traverse(config) {
     }
     debug(`found ${dependency} in the cache`);
     const dependencies = config.visited[dependency].pathMap.dependencies.map((d) => d.resolvedDep);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     tree[dependency] = dependencies;
     config.pathMap.push(config.visited[dependency].pathMap);
     if (config.visited[dependency].missing) {

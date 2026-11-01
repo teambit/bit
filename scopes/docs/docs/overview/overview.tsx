@@ -84,7 +84,6 @@ export function Overview({
   const [isLoading, setLoading] = useState(defaultLoadingState);
   const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
   const previewPropsHooks = usePreviewPropsSlot?.values() ?? [];
-  const [sandboxValue, setSandboxValue] = useState('');
   const iframeQueryParams = `onlyOverview=${component.preview?.onlyOverview || 'false'}&skipIncludes=${
     component.preview?.skipIncludes || component.preview?.onlyOverview
   }`;
@@ -114,11 +113,6 @@ export function Overview({
       className={classNames(styles.overviewWrapper, isLoading && styles.noOverflow)}
       key={`${component.id.toString()}`}
     >
-      <SandboxPermissionsAggregator
-        hooks={previewSandboxHooks}
-        onSandboxChange={setSandboxValue}
-        component={component}
-      />
       {showHeader && (
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
@@ -139,52 +133,60 @@ export function Overview({
               <CompositionGallerySkeleton compositionsLength={Math.min(component.compositions.length, 3)} />
             </ReadmeSkeleton>
           )}
-          <PreviewPropsAggregator hooks={previewPropsHooks} component={component}>
-            {(previewAttrs) =>
-              !isMinimal && !renderCompositionsFirst ? (
-                <>
-                  <ComponentPreview
-                    {...previewAttrs}
-                    onLoad={onPreviewLoad}
-                    previewName="overview"
-                    pubsub={true}
-                    queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-                    viewport={null}
-                    fullContentHeight
-                    disableScroll={true}
-                    sandbox={sandboxValue}
-                    {...rest}
-                    component={component}
-                    style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-                  />
-                  {component.preview?.onlyOverview && !isLoading && (
-                    <CompositionGallery component={component} sandbox={sandboxValue} />
-                  )}
-                </>
-              ) : (
-                <>
-                  {component.preview?.onlyOverview && !isLoading && (
-                    <CompositionGallery component={component} sandbox={sandboxValue} />
-                  )}
-                  <ComponentPreview
-                    {...previewAttrs}
-                    onLoad={onPreviewLoad}
-                    previewName="overview"
-                    pubsub={true}
-                    queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
-                    viewport={null}
-                    fullContentHeight
-                    disableScroll={true}
-                    propagateError={isMinimal}
-                    sandbox={sandboxValue}
-                    {...rest}
-                    component={component}
-                    style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
-                  />
-                </>
-              )
-            }
-          </PreviewPropsAggregator>
+          {/* the sandbox value is computed synchronously within this render pass, so the
+              preview iframe below mounts with the `sandbox` attribute already in place.
+              delivering it via state (effect -> setState) would commit the iframe first
+              and apply the sandbox only after its navigation had already started. */}
+          <SandboxPermissionsAggregator hooks={previewSandboxHooks} component={component}>
+            {(sandboxValue) => (
+              <PreviewPropsAggregator hooks={previewPropsHooks} component={component}>
+                {(previewAttrs) =>
+                  !isMinimal && !renderCompositionsFirst ? (
+                    <>
+                      <ComponentPreview
+                        {...previewAttrs}
+                        onLoad={onPreviewLoad}
+                        previewName="overview"
+                        pubsub={true}
+                        queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+                        viewport={null}
+                        fullContentHeight
+                        disableScroll={true}
+                        sandbox={sandboxValue}
+                        {...rest}
+                        component={component}
+                        style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+                      />
+                      {component.preview?.onlyOverview && !isLoading && (
+                        <CompositionGallery component={component} sandbox={sandboxValue} />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {component.preview?.onlyOverview && !isLoading && (
+                        <CompositionGallery component={component} sandbox={sandboxValue} />
+                      )}
+                      <ComponentPreview
+                        {...previewAttrs}
+                        onLoad={onPreviewLoad}
+                        previewName="overview"
+                        pubsub={true}
+                        queryParams={[iframeQueryParams, overviewPropsValues?.queryParams || '']}
+                        viewport={null}
+                        fullContentHeight
+                        disableScroll={true}
+                        propagateError={isMinimal}
+                        sandbox={sandboxValue}
+                        {...rest}
+                        component={component}
+                        style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
+                      />
+                    </>
+                  )
+                }
+              </PreviewPropsAggregator>
+            )}
+          </SandboxPermissionsAggregator>
 
           {component.preview?.onlyOverview && !isLoading && TaggedAPI && (
             <TaggedAPI componentId={component.id.toString()} />

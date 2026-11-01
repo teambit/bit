@@ -1,6 +1,6 @@
 import vinylFile from 'vinyl-file';
 import { logger } from '@teambit/legacy.logger';
-import type { Repository, SourceFileModel } from '@teambit/objects';
+import type { Repository, Source, SourceFileModel } from '@teambit/objects';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
@@ -45,13 +45,11 @@ export default class SourceFile extends AbstractVinyl {
   }
 
   static async loadFromSourceFileModel(file: SourceFileModel, repository: Repository): Promise<SourceFile> {
-    const content = await file.file.load(repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const content = (await file.file.load(repository)) as Source;
     return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
   }
 
   clone(): this {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new SourceFile(this);
+    return new SourceFile(this as unknown as ConstructorParameters<typeof SourceFile>[0]) as this;
   }
 }

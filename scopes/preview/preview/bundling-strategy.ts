@@ -8,6 +8,10 @@ type ComputeTargetsExtraContextKeys = {
 };
 
 export type ComputeTargetsContext = BuildContext & ComputeTargetsExtraContextKeys;
+
+/** what the strategies need to locate their output dir. both a build and a bundler context satisfy it. */
+export type OutputDirContext = Pick<BundlerContext, 'id' | 'capsuleNetwork'>;
+
 export interface BundlingStrategy {
   /**
    * name of the bundling strategy.

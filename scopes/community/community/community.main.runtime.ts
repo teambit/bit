@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { BASE_COMMUNITY_DOMAIN, BASE_DOCS_DOMAIN } from '@teambit/legacy.constants';
 // import { HelloWorldStarter } from '@teambit/community.starters.hello-world';
 // import { } from '@teambit/community.starters.hello-world-angular';

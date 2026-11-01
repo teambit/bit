@@ -3,8 +3,8 @@ import type { BitId } from '@teambit/legacy-bit-id';
 import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ComponentLog } from '@teambit/objects';
-import type { AspectDefinition } from '@teambit/aspect-loader';
-import type { DependencyList } from '@teambit/dependency-resolver';
+import type { AspectDefinition } from './aspect-definition';
+import type { ComponentDependencyList } from './component-dependencies';
 import type { Component, InvalidComponent } from './component';
 import type { State } from './state';
 import type { Snap } from './snap';
@@ -71,6 +71,15 @@ export type FilterAspectsOptions = {
   filterByRuntime?: boolean;
 };
 
+export type GetGraphIdsOpts = {
+  /**
+   * remove edges of modified workspace components (and their dependents) that won't exist once they're snapped.
+   * useful for detecting cycles the next snap creates. relevant for the workspace only.
+   * see GraphIdsFromFsBuilder.removeOutdatedEdgesOfModified() for more details.
+   */
+  excludeOutdatedEdgesOfModified?: boolean;
+};
+
 export interface ComponentFactory {
   /**
    * name of the component host.
@@ -132,11 +141,11 @@ export interface ComponentFactory {
    * get graph of the given component-ids and all their dependencies (recursively/flattened).
    * the nodes are ComponentIds and is much faster than `this.getGraph()`.
    */
-  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<CompIdGraph>;
+  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean, opts?: GetGraphIdsOpts): Promise<CompIdGraph>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 
-  getDependencies(component: Component): DependencyList;
+  getDependencies(component: Component): ComponentDependencyList;
 
   componentPackageName(component: Component): string;
 

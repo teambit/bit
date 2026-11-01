@@ -1,8 +1,6 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('multi testers', function () {
   this.timeout(0);
@@ -50,16 +48,15 @@ describe('multi testers', function () {
         const numOfTestSuites = matches.length;
         expect(numOfTestSuites).to.equal(2);
       });
-      it('bit test should mentions the custom-pattern-1 spec file', () => {
+      // the "mentions the spec file" assertions used to be their own its, but a passing "✓ <it text>"
+      // already implies jest picked the file up. they assert on the same captured output, so they are
+      // co-located here rather than spread over four its.
+      it('bit test should run and pass the custom-pattern-1 spec via Jest output', () => {
         expect(output).to.have.string('comp1.custom-pattern-1.spec');
-      });
-      it('bit test should show the passing custom-pattern-1 spec via Jest output', () => {
         expect(output).to.have.string('✓ custom-pattern-1 it text');
       });
-      it('bit test should mentions the custom-pattern-2 spec file', () => {
+      it('bit test should run and pass the custom-pattern-2 spec via Jest output', () => {
         expect(output).to.have.string('comp1.custom-pattern-2.spec');
-      });
-      it('bit test should show the passing custom-pattern-2 spec via Jest output', () => {
         expect(output).to.have.string('✓ custom-pattern-2 it text');
       });
     });
@@ -73,16 +70,15 @@ describe('multi testers', function () {
         const numOfTestSuites = matches.length;
         expect(numOfTestSuites).to.equal(2);
       });
-      it('bit test should mentions the custom-pattern-1 spec file', () => {
+      // titles here used to say "bit test" - copy-pasted from the describe above. this describe runs
+      // "bit build", which reaches the testers through MultiTesterTask rather than through the env's
+      // tester() handler, so it is a genuinely different wiring and is kept.
+      it('bit build should run and pass the custom-pattern-1 spec via Jest output', () => {
         expect(output).to.have.string('comp1.custom-pattern-1.spec');
-      });
-      it('bit test should show the passing custom-pattern-1 spec via Jest output', () => {
         expect(output).to.have.string('✓ custom-pattern-1 it text');
       });
-      it('bit test should mentions the custom-pattern-2 spec file', () => {
+      it('bit build should run and pass the custom-pattern-2 spec via Jest output', () => {
         expect(output).to.have.string('comp1.custom-pattern-2.spec');
-      });
-      it('bit test should show the passing custom-pattern-2 spec via Jest output', () => {
         expect(output).to.have.string('✓ custom-pattern-2 it text');
       });
     });

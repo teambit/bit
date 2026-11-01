@@ -1,8 +1,9 @@
 import path from 'path';
+import { sortBy } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import type { SourceFile } from '@teambit/component.sources';
 import type { MergeResultsThreeWay } from './three-way-merge';
-import type { PathOsBased } from '@teambit/toolbox.path.path';
+import { pathNormalizeToLinux, type PathOsBased } from '@teambit/toolbox.path.path';
 import { FileStatus, MergeOptions, type MergeStrategy } from './merge-version';
 
 /**
@@ -83,5 +84,7 @@ export function applyModifiedVersion(
     filesStatus[file.filePath] = FileStatus.updated;
   });
 
-  return { filesStatus, modifiedFiles };
+  // added files are pushed to the end. sort them as a workspace does (see ComponentMap.sort), otherwise a snap from a
+  // scope records them, and the data calculated from them (e.g. dev-files), in a different order.
+  return { filesStatus, modifiedFiles: sortBy(modifiedFiles, (file) => pathNormalizeToLinux(file.relative)) };
 }

@@ -78,8 +78,7 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
    * then when working on the same components in Windows and Linux they won't appear as modified
    */
   toSourceAsLinuxEOL(): Source {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return Source.from(eol.lf(this.contents));
+    return Source.from(eol.lf(this.contents) as Buffer);
   }
 
   async _getStatIfFileExists(): Promise<fs.Stats | null | undefined> {

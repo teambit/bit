@@ -1,5 +1,5 @@
 import type { SourceFile } from '@teambit/component.sources';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';
@@ -8,7 +8,7 @@ import { Slot } from '@teambit/harmony';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { EnvsAspect } from '@teambit/envs';
-import type { EnvJsonc, EnvsMain } from '@teambit/envs';
+import type { EnvJsonc, EnvJsoncPatterns, EnvsMain } from '@teambit/envs';
 import type {
   ConsumerComponent as LegacyComponent,
   Dependency as LegacyDependency,
@@ -41,12 +41,7 @@ type DevPattern = string[] | DevPatternDescriptor;
  */
 export type DevPatterns = ((component: Component) => DevPattern) | DevPattern;
 
-export type EnvJsoncPatterns = {
-  compositions?: string[];
-  docs?: string[];
-  tests?: string[];
-  [key: string]: string[] | undefined;
-};
+export type { EnvJsoncPatterns };
 
 /**
  * slot for dev file patterns.

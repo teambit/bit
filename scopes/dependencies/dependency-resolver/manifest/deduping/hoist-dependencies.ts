@@ -3,6 +3,7 @@ import semver from 'semver';
 import { parseRange } from 'semver-intersect';
 import { intersect } from 'semver-range-intersect';
 import { isHash } from '@teambit/component-version';
+import { isPlusVersion } from '../../plus-version';
 
 import {
   DEV_DEP_LIFECYCLE_TYPE,
@@ -260,7 +261,7 @@ function handleRangesAndVersions(
   const allVersions = groups.versions.map((item) => item.range);
   const mostCommonVersion = findMostCommonVersion(allVersions);
   // Include versions here since we might have a specific version which match the best version as well
-  const rangesVersions = indexItems.map((item) => item.range);
+  const rangesVersions = indexItems.map((item) => item.range).filter((range) => Boolean(semver.validRange(range)));
   const bestRange = findBestRange(rangesVersions);
   const lifeCycleType = getLifecycleType(indexItems);
   const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[lifeCycleType];
@@ -273,7 +274,7 @@ function handleRangesAndVersions(
   if (bestRange.count < mostCommonVersion.count) {
     dedupedDependencies.rootDependencies[depKeyName][packageName] = mostCommonVersion.version;
     filterFunc = (item) => {
-      if (item.range === mostCommonVersion) return true;
+      if (item.range === mostCommonVersion.version) return true;
       return false;
     };
   } else {
@@ -450,7 +451,12 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
 export function isRange(version: string, compIdStr: string) {
   const validRange = semver.validRange(version);
   if (!validRange) {
-    if (!isHash(version) && !version.startsWith('workspace:') && !version.startsWith('npm:') && version !== '+') {
+    if (
+      !isHash(version) &&
+      !version.startsWith('workspace:') &&
+      !version.startsWith('npm:') &&
+      !isPlusVersion(version)
+    ) {
       throw new Error(
         `fatal: the version "${version}" originated from a dependent "${compIdStr}" is invalid semver range and not a hash`
       );

@@ -16,7 +16,7 @@ export default class Tmp extends Repository {
     return path.join(this.getPath(), p);
   }
 
-  async save(data: string, ext = '.js'): Promise<PathOsBased> {
+  async save(data: string | Buffer, ext = '.js'): Promise<PathOsBased> {
     const fileName = v4();
     const filePath = this.composePath(`${fileName}${ext}`);
     await fs.outputFile(filePath, data);
