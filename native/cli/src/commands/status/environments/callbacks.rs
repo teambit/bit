@@ -66,6 +66,7 @@ fn callback_info(host: &Host, context: &Value, capture: &Capture) -> io::Result<
     Ok(info)
 }
 
+#[inline]
 fn checked_cache(host: &Host, capture: &mut Capture) -> io::Result<()> {
     let checked = host.call("statusDependencyCacheChecked", &json!({}))?;
     if !checked.is_boolean() {
@@ -100,6 +101,7 @@ pub(super) fn switch_begin(
     Ok(Some(SwitchStage { directory, issues: info["issues"] == true }))
 }
 
+#[inline]
 fn switch_component(context: &Value, capture: &Capture, identity: &str) -> io::Result<Value> {
     let identity = identity.trim();
     component_rows(capture, context)?
@@ -108,6 +110,7 @@ fn switch_component(context: &Value, capture: &Capture, identity: &str) -> io::R
         .ok_or_else(|| decline("switch callback target missing"))
 }
 
+#[inline]
 pub(super) fn switch_one(
     host: &Host,
     context: &Value,
@@ -120,6 +123,7 @@ pub(super) fn switch_one(
     Ok(result)
 }
 
+#[inline]
 pub(super) fn switch_stage_row(
     host: &Host,
     context: &Value,
@@ -135,12 +139,14 @@ pub(super) fn switch_stage_row(
     Ok(())
 }
 
+#[inline]
 pub(super) fn switch_resume(host: &Host, capture: &Capture) -> io::Result<Value> {
     let result = host.call("switchStatusResume", &json!({}))?;
     capture.cache.retain_callback_stdout(&host.take_stdout());
     Ok(result)
 }
 
+#[inline]
 pub(super) fn switch_accept(
     capture: &mut Capture,
     result: &Value,
@@ -154,6 +160,7 @@ pub(super) fn switch_accept(
     apply(capture, row)
 }
 
+#[inline]
 pub(super) fn switch_finish(
     host: &Host,
     capture: &mut Capture,
@@ -319,6 +326,7 @@ pub(in crate::commands::status) fn issue_callbacks(
     ))
 }
 
+#[inline]
 fn core_ids() -> io::Result<Vec<String>> {
     serde_json::from_str(include_str!(
         "../../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"

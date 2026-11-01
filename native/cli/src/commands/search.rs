@@ -119,6 +119,7 @@ fn match_queries(ids: &[String], queries: &[String]) -> (Vec<String>, Vec<serde_
     (sorted_all, per_query)
 }
 
+#[inline]
 fn deduplicate_preserve_order(items: &[String]) -> Vec<&str> {
     let mut seen = std::collections::HashSet::with_capacity(items.len());
     let mut result = Vec::with_capacity(items.len());
@@ -131,6 +132,7 @@ fn deduplicate_preserve_order(items: &[String]) -> Vec<&str> {
     result
 }
 
+#[inline]
 fn load_workspace_ids(root: &Path) -> Vec<String> {
     let default_scope = workspace_default_scope(root);
     let Ok(bitmap) = Bitmap::load(root, default_scope.as_deref()) else {
@@ -143,6 +145,7 @@ fn load_workspace_ids(root: &Path) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn workspace_default_scope(root: &Path) -> Option<String> {
     let content = fs::read_to_string(root.join("workspace.jsonc")).ok()?;
     let doc = Document::parse(&content).ok()?;
@@ -173,6 +176,7 @@ fn parse_args(args: &[OsString]) -> Option<SearchArgs> {
     Some(parsed)
 }
 
+#[inline]
 fn apply_search_arg(str_arg: &str, parsed: &mut SearchArgs) -> Option<()> {
     match str_arg {
         "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
@@ -200,6 +204,7 @@ fn apply_search_arg(str_arg: &str, parsed: &mut SearchArgs) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn consume_trailing_search_queries<'a>(
     iter: impl Iterator<Item = &'a OsString>,
     queries: &mut Vec<String>,

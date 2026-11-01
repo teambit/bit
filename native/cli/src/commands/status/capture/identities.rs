@@ -49,6 +49,7 @@ pub(super) fn record(
 }
 
 /// The identities of the peer lifecycle.
+#[inline]
 pub(super) fn peer_identities(dependencies: &Value) -> io::Result<Vec<String>> {
     let state = &dependencies["state"];
     let entries = array(state.get("entries"), "dependency entries")?;
@@ -61,6 +62,7 @@ pub(super) fn peer_identities(dependencies: &Value) -> io::Result<Vec<String>> {
 }
 
 /// Every dependency identity, in lifecycle order.
+#[inline]
 pub(super) fn dependency_identities(dependencies: &Value) -> io::Result<Vec<String>> {
     let state = &dependencies["state"];
     let entries = array(state.get("entries"), "dependency entries")?;
@@ -73,6 +75,7 @@ pub(super) fn dependency_identities(dependencies: &Value) -> io::Result<Vec<Stri
     Ok(identities)
 }
 
+#[inline]
 fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
     let entry = index
         .as_u64()
@@ -86,6 +89,8 @@ fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
 }
 
 /// The identity without its `@version`.
+#[must_use]
+#[inline]
 pub(super) fn base_identity(identity: &str) -> &str {
     let identity = identity.trim();
     identity

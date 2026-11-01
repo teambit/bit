@@ -39,6 +39,7 @@ pub(in crate::commands) fn run(
     result.map(|_| ())
 }
 
+#[inline]
 fn core_aspect_ids() -> io::Result<Vec<String>> {
     serde_json::from_str(include_str!(
         "../../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"

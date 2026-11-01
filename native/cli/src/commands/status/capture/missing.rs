@@ -4,6 +4,7 @@ use super::{Capture, Component, decline, full_identity, text};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+#[inline]
 pub(super) fn status_removed(target: &Value, captured: &mut Capture) -> io::Result<bool> {
     if target["locallyRemoved"] != true {
         return Ok(false);
@@ -43,6 +44,7 @@ pub(super) fn status_pending(
     Ok(true)
 }
 
+#[inline]
 pub(super) fn capture(
     root: &Path,
     enabled: bool,
@@ -124,10 +126,12 @@ fn has_any_file(dir: &Path) -> io::Result<bool> {
     Ok(false)
 }
 
+#[inline]
 fn component_not_found(directory: &str) -> Value {
     json!({"isUserError":true,"name":"ComponentNotFoundInPath","code":127,"path":directory})
 }
 
+#[inline]
 fn record_status_invalid(target: &Value, error: Value, captured: &mut Capture) -> io::Result<()> {
     let identity = text(target.get("identity"))?.trim();
     captured.invalid.insert(identity.to_owned(), error);
@@ -141,6 +145,7 @@ fn record_status_invalid(target: &Value, error: Value, captured: &mut Capture) -
     Ok(())
 }
 
+#[inline]
 fn contains_main_file(files: &[String], main: &str) -> bool {
     files
         .iter()
@@ -173,6 +178,7 @@ pub(super) fn main_file(
     Err(decline("status main file not captured"))
 }
 
+#[inline]
 fn missing(path: &Path) -> io::Result<bool> {
     match path.symlink_metadata() {
         Ok(_) => Ok(false),
@@ -181,6 +187,7 @@ fn missing(path: &Path) -> io::Result<bool> {
     }
 }
 
+#[inline]
 pub(super) fn record_incomplete(
     target: &Value,
     directory: &str,

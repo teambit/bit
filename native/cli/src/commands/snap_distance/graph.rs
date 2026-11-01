@@ -64,6 +64,7 @@ pub(super) fn build_parents_map(vh_val: &Value) -> Option<HashMap<&str, Vec<&str
     Some(parents_map)
 }
 
+#[inline]
 fn parent_hash(parent: &Value) -> Option<&str> {
     parent
         .as_str()
@@ -111,6 +112,7 @@ pub(super) fn collect_successors<'a>(
     Some(result)
 }
 
+#[inline]
 fn push_unvisited_parents<'a>(
     parents_map: &HashMap<&'a str, Vec<&'a str>>,
     curr: &'a str,
@@ -149,6 +151,7 @@ fn bfs_first<'a>(
     None
 }
 
+#[inline]
 fn extract_vh_versions(val: &Value) -> Option<Vec<Value>> {
     if let Some(arr) = val["versions"].as_array() {
         return Some(arr.clone());
@@ -209,6 +212,7 @@ pub(super) fn load_version_history_with_local_versions(
     Some(json!({ "versions": versions }))
 }
 
+#[inline]
 fn read_version_parents(scope_dir: &Path, hash: &str) -> Option<Vec<String>> {
     let (kind, ver) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
     if kind != "Version" {

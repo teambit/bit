@@ -33,6 +33,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_rename(args)
 }
 
+#[inline]
 fn first_subcommand(args: &[OsString]) -> Option<String> {
     args.iter()
         .skip(1)
@@ -153,6 +154,7 @@ fn prepare_rename_linker(
     Ok(linker)
 }
 
+#[inline]
 pub(super) fn ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -168,6 +170,7 @@ pub(super) fn ci_active() -> bool {
         })
 }
 
+#[inline]
 fn handle_outside_workspace(
     cwd: &std::path::Path,
     args: &[OsString],
@@ -186,6 +189,7 @@ fn handle_outside_workspace(
     }
 }
 
+#[inline]
 fn decline_preflight(error: &io::Error) -> bool {
     error.kind() != io::ErrorKind::InvalidInput
         || error.to_string().trim().is_empty()

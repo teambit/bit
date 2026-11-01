@@ -12,6 +12,7 @@ pub(super) enum Services {
     Compiler,
 }
 
+#[inline]
 pub(super) fn supported(
     component: &WorkspaceComponent,
     core: &[String],
@@ -71,10 +72,12 @@ pub(super) fn facts(component: &WorkspaceComponent, issues: bool) -> Value {
 }
 
 impl Environments {
+    #[inline]
     pub(in crate::commands) fn for_builtin_services() -> Self {
         Self { builtin_services: Services::Tools, ..Self::new() }
     }
 
+    #[inline]
     pub(in crate::commands) fn for_compiler_services() -> Self {
         Self { builtin_services: Services::Compiler, ..Self::new() }
     }
@@ -98,6 +101,7 @@ impl Environments {
         Ok(())
     }
 
+    #[inline]
     pub(in crate::commands::status) fn require_write(
         &self,
         root: &Path,
@@ -111,6 +115,7 @@ impl Environments {
     }
 }
 
+#[inline]
 fn validate_service_root(root: &Path) -> io::Result<()> {
     if root.as_os_str().is_empty()
         || root

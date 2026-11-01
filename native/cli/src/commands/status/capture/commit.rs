@@ -41,6 +41,7 @@ pub fn commit(
     Ok(())
 }
 
+#[inline]
 fn commit_pending_cache(engine: &mut Engine, root: &Path, capture: &Capture) -> io::Result<()> {
     let entries = capture.cache.entries();
     let reset = checkout_reset(capture);
@@ -89,6 +90,7 @@ pub(super) fn publish_import_dependencies(
     Ok(())
 }
 
+#[inline]
 fn checkout_reset(capture: &Capture) -> bool {
     capture.cache.reset && capture.environment_facts["checkoutLoaderCacheChecked"] != true
 }

@@ -48,6 +48,7 @@ pub(super) fn try_run(
     render_remote_outcome(cwd, args, options, &loaded)
 }
 
+#[inline]
 pub(super) fn load_from_local_scope(scope_dir: &Path, raw_id: &str) -> Option<LoadedComponent> {
     let raw_id = raw_id.trim();
     let (bare_id, explicit_ver) = raw_id
@@ -74,6 +75,7 @@ pub(super) fn remote_has_version(root: &Path, scope_name: &str, name: &str, ver:
     kind == "Component" && resolve_scope_version(&comp_val, Some(ver)).is_some()
 }
 
+#[inline]
 fn split_remote_id(raw_id: &str) -> Option<(&str, &str, Option<&str>)> {
     let raw_id = raw_id.trim().trim_matches('/');
     if raw_id.starts_with('@') {
@@ -299,6 +301,7 @@ pub(in crate::commands) fn resolve_scope_version(
     Some((tag, head.to_owned()))
 }
 
+#[inline]
 pub(crate) fn find_tag_for_hash(comp_val: &Value, target_hash: &str) -> Option<String> {
     ["versions", "orphanedVersions"]
         .into_iter()
@@ -352,6 +355,7 @@ fn extract_config_map(extensions: &[Value]) -> Map<String, Value> {
     map
 }
 
+#[inline]
 fn check_is_removed(extensions: &[Value]) -> bool {
     extensions
         .iter()

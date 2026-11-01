@@ -28,11 +28,13 @@ pub(super) fn try_run(args: &[OsString], argv: &[&str]) -> io::Result<Option<Out
     Ok(Some(Outcome::Exit(code)))
 }
 
+#[inline]
 fn is_positional_id(token: &str) -> bool {
     let trimmed = token.trim();
     !trimmed.is_empty() && !trimmed.starts_with('-')
 }
 
+#[inline]
 fn split_id_from_argv<'a>(argv: &'a [&'a str]) -> (bool, &'a [&'a str]) {
     match argv {
         [id, rest @ ..] if is_positional_id(id) => (true, rest),
@@ -73,6 +75,7 @@ fn presentation(argv: &[&str]) -> Option<(ExitCode, Option<&'static str>)> {
     argument_error(id, flags).map(|error| (ExitCode::FAILURE, Some(error)))
 }
 
+#[inline]
 fn argument_error(id: bool, flags: &[&str]) -> Option<&'static str> {
     if !id {
         Some("Not enough non-option arguments: got 0, need at least 1")
@@ -83,6 +86,7 @@ fn argument_error(id: bool, flags: &[&str]) -> Option<&'static str> {
     }
 }
 
+#[inline]
 fn command_help(chalk: Chalk) -> String {
     let description = chalk.bold("display component metadata, dependencies, and configuration");
     let component = chalk.green("  component-name");

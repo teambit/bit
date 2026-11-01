@@ -6,6 +6,7 @@ use std::{ffi::OsString, io, path::Path};
 
 impl Environments {
     /// Preserve already-buffered provider output before another metadata adapter drains it.
+    #[inline]
     pub(in crate::commands) fn take_tracking_stdout(&self) -> String {
         self.host.as_ref().map_or_else(String::new, Host::take_stdout)
     }
@@ -33,6 +34,7 @@ impl Environments {
     }
 
     /// Start a tracking callback session before installing its projected bitmap.
+    #[inline]
     pub(in crate::commands) fn for_tracking() -> Self {
         Self::new()
     }
@@ -88,6 +90,7 @@ impl Environments {
     }
 
     /// Replace only in-memory tracking records; the native plan retains disk publication.
+    #[inline]
     pub(in crate::commands) fn project_tracking(
         &mut self,
         root: &Path,
@@ -98,6 +101,7 @@ impl Environments {
     }
 
     /// Keep loaded identity classes while projecting later writes from the same command.
+    #[inline]
     pub(in crate::commands) fn project_tracking_retained(
         &mut self,
         root: &Path,
@@ -124,6 +128,7 @@ impl Environments {
     }
 
     /// Transfer the same provider and component caches to native package/link adapters.
+    #[inline]
     pub(in crate::commands) fn into_tracking_host(mut self) -> Option<Host> {
         self.host.take()
     }

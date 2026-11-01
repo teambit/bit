@@ -108,6 +108,7 @@ fn load_options(rows: &[Value]) -> io::Result<Value> {
     Ok(json!({"versions":versions,"bitmapEntries":entries}))
 }
 
+#[inline]
 fn stash_id_parts(id: &Value) -> io::Result<(Option<&str>, &str)> {
     if let Some(raw) = id.as_str() {
         let raw = raw.trim();
@@ -126,6 +127,7 @@ fn stash_id_parts(id: &Value) -> io::Result<(Option<&str>, &str)> {
     ))
 }
 
+#[inline]
 fn stash_new_entry(row: &Value, scope: Option<&str>, name: &str, hash: &str) -> io::Result<Value> {
     let mut entry = row["bitmapEntry"].clone();
     if !entry.is_object() {
@@ -195,6 +197,7 @@ fn execute(
     Ok(Report { data, code: 0, details: None })
 }
 
+#[inline]
 fn unrecognized_stash_report(args: &[OsString], sub: &str) -> String {
     let format = Formatter::new(Chalk::detect(args));
     format!(
@@ -204,19 +207,7 @@ fn unrecognized_stash_report(args: &[OsString], sub: &str) -> String {
 }
 
 fn run_without_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
-    if env::var_os("CI")
-        .is_some_and(|val| {
-            let text = val.to_string_lossy();
-            let trimmed = text
-                .trim()
-                .trim_matches(['"', '\''])
-                .trim();
-            !trimmed.is_empty()
-                && !["0", "false", "no", "off"]
-                    .iter()
-                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
-        })
-    {
+    if super::scope_rename::ci_active() {
         return Ok(Outcome::Declined("not inside a workspace".to_owned()));
     }
     let (cmd, msg) = match options {
@@ -233,6 +224,7 @@ fn run_without_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io
     workspace_command::execute_failure_scope(cwd, args, cmd, false, "", io::Error::other(msg))
 }
 
+#[inline]
 fn list_report(rows: &[Value]) -> io::Result<String> {
     rows.iter()
         .map(|row| {

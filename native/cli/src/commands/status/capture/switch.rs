@@ -17,6 +17,7 @@ struct Session<'a> {
     facts: &'a mut Option<fresh::Facts>,
 }
 
+#[inline]
 pub(super) fn scan(scan: Scan<'_>, targets: &[Value], capture: &mut Capture) -> io::Result<bool> {
     let Scan {
         engine,
@@ -85,6 +86,7 @@ impl Session<'_> {
         Ok(Some(order))
     }
 
+    #[inline]
     fn plain(&mut self, targets: &[Value], capture: &mut Capture) -> io::Result<()> {
         for target in targets {
             self.target(target, capture)?;
@@ -139,6 +141,7 @@ impl Session<'_> {
         }
     }
 
+    #[inline]
     fn scan_once(
         &mut self,
         identity: &str,
@@ -156,6 +159,7 @@ impl Session<'_> {
         Ok(())
     }
 
+    #[inline]
     fn target(&mut self, target: &Value, capture: &mut Capture) -> io::Result<()> {
         Scan {
             engine: &mut *self.engine,
@@ -195,6 +199,7 @@ fn restore_target_order(targets: &[Value], capture: &mut Capture) -> io::Result<
     Ok(())
 }
 
+#[inline]
 fn row_identity(row: &Value) -> io::Result<&str> {
     let identity = if let Some(value) = row.as_str() {
         value.trim()

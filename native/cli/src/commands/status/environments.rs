@@ -44,6 +44,7 @@ pub(in crate::commands) struct Environments {
 }
 
 impl Environments {
+    #[inline]
     pub(super) fn new() -> Self {
         Self {
             host: None,
@@ -158,6 +159,7 @@ impl Environments {
         Ok(())
     }
 
+    #[inline]
     pub(super) fn require_native_write(root: &Path, context: &Value) -> io::Result<()> {
         Self::require_native_write_for(
             root,
@@ -228,6 +230,7 @@ impl Environments {
     }
 }
 
+#[inline]
 fn store_component_facts(enriched: &mut Value, component: &WorkspaceComponent, facts: Value) {
     if facts["loadFailures"]
         .as_array()
@@ -277,6 +280,7 @@ fn component(root: &Path, context: &Value, target: &Value) -> io::Result<Workspa
     })
 }
 
+#[inline]
 fn stored_env(context: &Value, target: &Value) -> String {
     stored_extensions(context, target)
         .and_then(|extensions| {
@@ -315,6 +319,7 @@ fn stored_extensions<'a>(context: &'a Value, target: &Value) -> Option<&'a Vec<V
         .and_then(|row| row[1]["extensions"].as_array())
 }
 
+#[inline]
 fn local_proofs(components: &[WorkspaceComponent]) -> io::Result<Vec<Value>> {
     components
         .iter()
@@ -340,6 +345,7 @@ fn root_aspects(context: &Value, core: &[String]) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn needs_facts(component: &WorkspaceComponent, core: &[String], aspects: &[String]) -> bool {
     component.is_env
         || bit_install::policy::split_version(&component.env_id).0 != "teambit.harmony/node"
@@ -353,6 +359,7 @@ fn needs_facts(component: &WorkspaceComponent, core: &[String], aspects: &[Strin
             })
 }
 
+#[inline]
 fn selected(component: &WorkspaceComponent, targets: &[Value]) -> bool {
     let bare = component.id.to_string_without_version();
     targets
@@ -360,6 +367,7 @@ fn selected(component: &WorkspaceComponent, targets: &[Value]) -> bool {
         .any(|target| target["identity"].as_str().map(str::trim) == Some(bare.as_str()))
 }
 
+#[inline]
 fn core_ids() -> io::Result<Vec<String>> {
     serde_json::from_str(include_str!(
         "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"

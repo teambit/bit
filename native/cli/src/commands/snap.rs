@@ -74,6 +74,7 @@ fn outside_workspace_snap(
     })
 }
 
+#[inline]
 fn should_warn_message(options: &options::Options, workflow: &resolve::workflow::Workflow) -> bool {
     options.message
         .as_deref()
@@ -143,6 +144,7 @@ fn prepare(
     Ok((planned, report, progress))
 }
 
+#[inline]
 fn failure(
     root: &Path,
     args: &[OsString],
@@ -162,6 +164,7 @@ fn failure(
     })
 }
 
+#[inline]
 fn render_progress(
     output: &bit_install::output::Output,
     progress: Option<&Progress>,

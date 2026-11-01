@@ -15,6 +15,7 @@ const ROOT_LANGUAGES: &[&str] = &[
 
 /// Whether this process's default locale collates ids like the root locale.
 /// ICU takes it from `LC_ALL`, then `LC_MESSAGES`, then `LANG`.
+#[must_use]
 pub fn root_locale() -> bool {
     let locale = ["LC_ALL", "LC_MESSAGES", "LANG"]
         .iter()
@@ -41,6 +42,7 @@ pub fn root_locale() -> bool {
 
 /// Primary weight in root collation order: punctuation, then digits, then
 /// letters regardless of case. `None` for characters this module does not handle.
+#[inline]
 fn primary(character: char) -> Option<u8> {
     Some(match character {
         '_' => 0,
@@ -57,6 +59,8 @@ fn primary(character: char) -> Option<u8> {
 }
 
 /// Whether every character of `text` has a known weight.
+#[must_use]
+#[inline]
 pub fn supported(text: &str) -> bool {
     text.chars()
         .all(|character| primary(character).is_some())
@@ -64,6 +68,8 @@ pub fn supported(text: &str) -> bool {
 
 /// The root collation order of two supported strings: primary weights
 /// first, then case, lowercase before uppercase.
+#[must_use]
+#[inline]
 pub fn compare(left: &str, right: &str) -> Ordering {
     let left = left.trim();
     let right = right.trim();

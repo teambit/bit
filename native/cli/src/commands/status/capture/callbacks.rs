@@ -15,6 +15,7 @@ pub(super) struct Callbacks {
 }
 
 impl CacheWrites {
+    #[inline]
     pub(in crate::commands::status) fn retain_snapshot_data(
         &mut self,
         identity: &str,
@@ -23,6 +24,7 @@ impl CacheWrites {
         self.callbacks.snapshot_data.insert(identity.trim().to_owned(), data);
     }
 
+    #[inline]
     pub(in crate::commands::status) fn retain_callback_directory(
         &mut self,
         directory: tempfile::TempDir,
@@ -30,6 +32,7 @@ impl CacheWrites {
         self.callbacks.directories.push(directory);
     }
 
+    #[inline]
     pub(in crate::commands::status) fn retain_callback_host(
         &mut self,
         host: Option<crate::host::Host>,
@@ -37,6 +40,7 @@ impl CacheWrites {
         self.callbacks.host = host;
     }
 
+    #[inline]
     pub(in crate::commands::status) fn retain_callback_proofs(&mut self, proofs: &[Value]) {
         self.environment_reads.reserve(proofs.len());
         for proof in proofs {
@@ -46,6 +50,7 @@ impl CacheWrites {
         }
     }
 
+    #[inline]
     pub(in crate::commands::status) fn retain_callback_stdout(&self, output: &str) {
         if !output.is_empty() {
             self.callbacks.load_stdout
@@ -55,6 +60,7 @@ impl CacheWrites {
         }
     }
 
+    #[inline]
     pub(in crate::commands::status) fn retain_callback_startup(&self, output: &str) {
         if !output.is_empty() {
             self.callbacks.startup_stdout
@@ -111,6 +117,8 @@ pub fn workspace_issues(capture: &Capture) -> io::Result<Vec<String>> {
 }
 
 /// Output produced by permitted Harmony callbacks, buffered until command preflight completes.
+#[must_use]
+#[inline]
 pub fn callback_load_stdout(capture: &Capture) -> String {
     capture.cache.callbacks.load_stdout
         .lock()
@@ -118,6 +126,8 @@ pub fn callback_load_stdout(capture: &Capture) -> String {
         .clone()
 }
 
+#[must_use]
+#[inline]
 pub fn callback_issue_stdout(capture: &Capture) -> String {
     capture.cache.callbacks.issue_stdout
         .lock()
@@ -125,6 +135,8 @@ pub fn callback_issue_stdout(capture: &Capture) -> String {
         .clone()
 }
 
+#[must_use]
+#[inline]
 pub fn callback_startup_stdout(capture: &Capture) -> String {
     capture.cache.callbacks.startup_stdout
         .lock()
@@ -133,12 +145,14 @@ pub fn callback_startup_stdout(capture: &Capture) -> String {
 }
 
 /// Transfer the retained provider session to a later native operation in the same command.
+#[inline]
 pub(in crate::commands) fn take_callback_environment(
     capture: &mut Capture,
 ) -> Option<super::super::environments::Environments> {
     capture.cache.callbacks.host.take().map(super::super::environments::Environments::from_host)
 }
 
+#[inline]
 pub(in crate::commands) fn restore_callback_host(capture: &mut Capture, host: crate::host::Host) {
     capture.cache.callbacks.host = Some(host);
 }

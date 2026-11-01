@@ -38,6 +38,7 @@ pub(super) struct LoadedComponent {
 }
 
 impl LoadedComponent {
+    #[inline]
     pub(super) fn full_id(&self) -> String {
         let base = if self.scope.is_empty() {
             self.entry.id.name.clone()
@@ -119,6 +120,7 @@ fn render_workspace_outcome(
     .map(Some)
 }
 
+#[inline]
 fn invalid_default_scope_error(root: &Path) -> Option<String> {
     let ws_config = WorkspaceConfig::load(root).ok()?;
     let default_scope = ws_config.workspace.default_scope.as_deref()?;
@@ -233,6 +235,7 @@ fn missing_local_version_outcome(
     }
 }
 
+#[inline]
 fn load_local_model(
     scope_dir: &Path,
     scope: &str,
@@ -286,6 +289,7 @@ fn is_supported_workspace(ws_config: &WorkspaceConfig) -> bool {
     !has_variant_dep_resolver && !has_peer_policy
 }
 
+#[inline]
 fn has_bitmap_peer_component(ws: &Workspace) -> bool {
     ws.entries
         .iter()
@@ -323,6 +327,7 @@ fn find_component<'a>(
         })
 }
 
+#[inline]
 fn matches_entry(entry: &BitmapEntry, raw_id: &str, dir: &str) -> bool {
     entry.id.name == raw_id
         || entry.key == raw_id
@@ -330,6 +335,7 @@ fn matches_entry(entry: &BitmapEntry, raw_id: &str, dir: &str) -> bool {
         || entry.id.to_string_without_version() == raw_id
 }
 
+#[inline]
 fn is_supported_component(entry: &BitmapEntry, component: &WorkspaceComponent) -> bool {
     if entry.id.version.is_some() {
         return false;
@@ -354,6 +360,7 @@ fn is_supported_component(entry: &BitmapEntry, component: &WorkspaceComponent) -
     true
 }
 
+#[inline]
 fn resolve_main_file(entry: &BitmapEntry, component: &WorkspaceComponent) -> String {
     let trimmed = entry.main_file.trim();
     if !trimmed.is_empty() {

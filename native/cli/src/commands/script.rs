@@ -75,6 +75,7 @@ fn run_outside_workspace(cwd: &Path, args: &[OsString], chalk: Chalk) -> io::Res
     })
 }
 
+#[inline]
 fn bare_scope_has_no_envs(scope_path: &Path) -> bool {
     let Ok(bytes) = fs::read(scope_path.join("scope.json")) else {
         return false;
@@ -86,6 +87,7 @@ fn bare_scope_has_no_envs(scope_path: &Path) -> bool {
     read_allowed_envs(config).is_empty()
 }
 
+#[inline]
 fn missing_script_outcome(args: &[OsString]) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     if let Some(root) = workspace::root(&cwd) {
@@ -119,6 +121,7 @@ fn finish_script_outcome(
     }
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -169,6 +172,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(Options { script_name, list })
 }
 
+#[inline]
 pub(super) fn fast_workspace_message(root: &Path, chalk: Chalk) -> io::Result<Option<String>> {
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
     if super::build_cmd::is_bitmap_auto_sync(&ws_config) {
@@ -184,6 +188,7 @@ pub(super) fn fast_workspace_message(root: &Path, chalk: Chalk) -> io::Result<Op
     Ok(None)
 }
 
+#[inline]
 pub(super) fn active_component_count(bitmap: &Value) -> usize {
     bitmap
         .as_object()

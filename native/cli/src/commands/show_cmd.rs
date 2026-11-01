@@ -29,6 +29,7 @@ pub(super) struct Options {
     pub compare: bool,
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -84,6 +85,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("show execution delegated".into()))
 }
 
+#[inline]
 pub(super) fn missing_host_error(cwd: &Path, options: &Options) -> Option<&'static str> {
     if options.legacy
         || workspace::root(cwd).is_some()
@@ -132,6 +134,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn consume_trailing_show_id<'a>(
     iter: impl Iterator<Item = &'a str>,
     id: &mut Option<String>,
@@ -144,6 +147,7 @@ fn consume_trailing_show_id<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_short_bundle(arg: &str, options: &mut Options) -> bool {
     let arg = arg.trim();
     let flags = &arg.as_bytes()[usize::from(arg.starts_with('-'))..];
@@ -190,6 +194,7 @@ fn render_remote_outcome(
     Ok(Some(outcome))
 }
 
+#[inline]
 fn format_remote_report(
     options: &Options,
     loaded: &workspace_show::LoadedComponent,

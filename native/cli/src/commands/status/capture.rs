@@ -83,6 +83,7 @@ pub struct CacheWrites {
 
 impl CacheWrites {
     /// Tracking loads can acquire link issues before their generated packages exist.
+    #[inline]
     pub(in crate::commands) fn block_dependencies(
         &mut self,
         identities: &std::collections::HashSet<String>,
@@ -95,10 +96,12 @@ impl CacheWrites {
     }
 
     /// `forceDependencyCacheReset`: the whole cache is replaced on commit.
+    #[inline]
     pub fn force_reset(&mut self) {
         self.reset = true;
     }
 
+    #[inline]
     fn is_empty(&self) -> bool {
         self.pending.is_empty() && self.replacements.is_empty() && !self.reset
     }
@@ -152,6 +155,7 @@ pub struct CaptureOptions {
 }
 
 impl CaptureOptions {
+    #[inline]
     fn validate_targets(&self, targets: &[Value]) -> io::Result<()> {
         if !self.missing_status_invalid
             && !self.allow_special_states
@@ -162,6 +166,7 @@ impl CaptureOptions {
         Ok(())
     }
 
+    #[inline]
     fn scan_behavior(&self) -> ScanBehavior {
         ScanBehavior {
             verify: self.verify,
@@ -175,6 +180,8 @@ impl CaptureOptions {
 
 impl Capture {
     /// `capture.dependencyReadSet`: the read sets of every fresh detection.
+    #[must_use]
+    #[inline]
     pub fn dependency_read_set(&self) -> Vec<Value> {
         self.cache.pending
             .iter()
@@ -245,6 +252,7 @@ fn capture_environment(
     Ok(captured)
 }
 
+#[inline]
 fn validate_documentation(engine: &mut Engine, context: &Value) -> io::Result<()> {
     engine.validate_read_set(
         context["documentationReadSet"]
@@ -254,6 +262,7 @@ fn validate_documentation(engine: &mut Engine, context: &Value) -> io::Result<()
     )
 }
 
+#[inline]
 fn validate_write(
     root: &Path,
     context: &Value,
@@ -369,6 +378,7 @@ impl Scan<'_> {
 }
 
 /// `{ ...request, ...policy.input }`.
+#[inline]
 pub fn spread(request: &mut Value, input: &Value) -> io::Result<()> {
     let request = request.as_object_mut().ok_or_else(|| decline("status request"))?;
     for (key, value) in input.as_object().ok_or_else(|| decline("status policy input"))? {

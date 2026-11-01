@@ -44,6 +44,7 @@ pub(super) fn initial(
     }
     Ok(())
 }
+#[inline]
 fn load_added(
     root: &Path,
     bitmap: &Value,
@@ -82,7 +83,7 @@ pub(super) fn targets(
     linker: &mut ProjectedLinker,
 ) -> io::Result<Vec<String>> {
     let pairs = pairs(entries)?;
-    let mut changed = Vec::new();
+    let mut changed = Vec::with_capacity(entries.batch.len());
     for index in 0..entries.batch.len() {
         let target = entries.batch.plan(index)?.identity.target.clone();
         let rows =
@@ -141,11 +142,13 @@ pub(super) fn materialize(
     }
     Ok(())
 }
+#[inline]
 pub(super) fn ids(batch: &Batch) -> io::Result<Vec<String>> {
     (0..batch.len())
         .map(|index| Ok(batch.plan(index)?.identity.target.clone()))
         .collect()
 }
+#[inline]
 fn bitmap_ids(bitmap: &Value) -> io::Result<Vec<String>> {
     Ok(bitmap
         .as_object()
@@ -154,6 +157,7 @@ fn bitmap_ids(bitmap: &Value) -> io::Result<Vec<String>> {
         .filter_map(|(key, row)| row_id(key, row))
         .collect())
 }
+#[inline]
 fn row_id(key: &str, row: &Value) -> Option<String> {
     if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
         return None;
@@ -189,6 +193,7 @@ fn order_changed(bitmap: &Value, order: &[String], changed: &[String]) -> io::Re
         })
         .collect())
 }
+#[inline]
 fn row_version_or_id(id: &str, key: &str, row: &Value) -> String {
     row["version"]
         .as_str()
@@ -250,6 +255,7 @@ fn refresh(
     entries.batch.refresh(index, &entries.facts[index])
 }
 
+#[inline]
 fn published_bitmap(root: &Path) -> io::Result<Value> {
     bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)
 }

@@ -115,6 +115,7 @@ struct LoadFlags<'a> {
     manual: bool,
     strategy: Option<&'a str>,
 }
+#[inline]
 fn parse_strategy_token(raw: &str) -> Option<&str> {
     let trimmed = raw
         .trim()
@@ -150,6 +151,8 @@ impl<'a> LoadFlags<'a> {
         }
         Some(())
     }
+
+    #[inline]
     fn boolean(&mut self, arg: &str) -> bool {
         let (flag, val) = match arg {
             "--force-ours" | "--force-ours=true" => (&mut self.ours, true),
@@ -164,6 +167,7 @@ impl<'a> LoadFlags<'a> {
         true
     }
 
+    #[inline]
     fn finish(self) -> Options {
         if self.ours && self.theirs {
             return Options::Error(

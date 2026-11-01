@@ -72,11 +72,14 @@ impl Pending {
     }
 
     /// Keep source receipts validated while suppressing a cache-blocked detection write.
+    #[inline]
     pub(in crate::commands) fn block_cache(&mut self) {
         self.cacheable = false;
     }
 
     /// The same entry under another identity.
+    #[must_use]
+    #[inline]
     pub fn renamed(&self, identity: String) -> Self {
         Self {
             cacheable: self.cacheable,
@@ -87,10 +90,13 @@ impl Pending {
     }
 
     /// `<id>@<version>`.
+    #[must_use]
+    #[inline]
     pub fn identity(&self) -> &str {
         &self.identity
     }
 
+    #[inline]
     pub(in crate::commands::status) fn replace_source_proof(
         &mut self,
         before: &Value,
@@ -106,6 +112,8 @@ impl Pending {
     }
 
     /// The files the detection read, which the engine checks again before writing.
+    #[must_use]
+    #[inline]
     pub fn read_set(&self) -> &[Value] {
         self.read_set
             .as_array()
@@ -146,8 +154,10 @@ pub fn dependency_grammar() -> io::Result<Value> {
 }
 
 /// `getCoreAspectPackageName`: `teambit.x/a/b` is `@teambit/a.b`.
+#[inline]
 fn core_package_name(id: &str) -> String {
-    let mut pkg = String::from("@teambit/");
+    let mut pkg = String::with_capacity(9 + id.len());
+    pkg.push_str("@teambit/");
     for (idx, part) in id
         .trim()
         .split('/')

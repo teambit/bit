@@ -110,6 +110,7 @@ fn format_lifecycle_deps(deps: &[DepEntry], lifecycle: &str) -> String {
     out.join("\n")
 }
 
+#[inline]
 fn dep_label(dep: &DepEntry) -> String {
     if dep.dep_type == "component" && dep.id.contains('@') {
         dep.id.clone()
@@ -118,6 +119,7 @@ fn dep_label(dep: &DepEntry) -> String {
     }
 }
 
+#[inline]
 fn component_dep_list(deps: &[DepEntry], lifecycle: &str) -> Vec<Value> {
     deps.iter()
         .filter(|dep| dep.lifecycle == lifecycle && dep.dep_type == "component")
@@ -131,6 +133,7 @@ fn component_dep_list(deps: &[DepEntry], lifecycle: &str) -> Vec<Value> {
         .collect()
 }
 
+#[inline]
 fn package_dep_map(deps: &[DepEntry], lifecycle: &str) -> Map<String, Value> {
     deps.iter()
         .filter(|dep| dep.lifecycle == lifecycle && dep.dep_type == "package")
@@ -138,6 +141,7 @@ fn package_dep_map(deps: &[DepEntry], lifecycle: &str) -> Map<String, Value> {
         .collect()
 }
 
+#[inline]
 fn serialize_deps(deps: &[DepEntry]) -> Vec<Value> {
     deps.iter()
         .map(|dep| {
@@ -190,6 +194,7 @@ fn build_extensions_array(loaded: &LoadedComponent, legacy: bool) -> Vec<Value> 
     out
 }
 
+#[inline]
 fn resolve_extension_data(
     loaded: &LoadedComponent,
     bare_id: &str,
@@ -205,6 +210,7 @@ fn resolve_extension_data(
     find_model_ext_data(&loaded.model_extensions, bare_id).unwrap_or_else(|| json!({}))
 }
 
+#[inline]
 fn find_model_ext_data(model_exts: &[Value], bare_id: &str) -> Option<Value> {
     model_exts
         .iter()
@@ -244,6 +250,7 @@ fn append_unlisted_model_extensions(loaded: &LoadedComponent, legacy: bool, out:
     }
 }
 
+#[inline]
 fn has_any_dev_files(loaded: &LoadedComponent) -> bool {
     let is_readme = aspect_id_without_version(&loaded.component.env_id) == "teambit.mdx/readme";
     is_readme
@@ -285,6 +292,7 @@ fn build_dev_files_map(loaded: &LoadedComponent) -> Value {
     })
 }
 
+#[inline]
 fn matching_files(files: &[String], predicate: impl Fn(&str) -> bool) -> Vec<Value> {
     files
         .iter()
@@ -294,6 +302,7 @@ fn matching_files(files: &[String], predicate: impl Fn(&str) -> bool) -> Vec<Val
         .collect()
 }
 
+#[inline]
 fn format_extension_entry(ext_id: &str, config: &Value, data: &Value, legacy: bool) -> Value {
     if legacy {
         json!({
@@ -312,6 +321,7 @@ fn format_extension_entry(ext_id: &str, config: &Value, data: &Value, legacy: bo
     }
 }
 
+#[inline]
 fn extract_package_properties(loaded: &LoadedComponent) -> Value {
     for (ext_id, ext_cfg) in &loaded.component.config {
         if aspect_id_without_version(ext_id) == PKG_ASPECT

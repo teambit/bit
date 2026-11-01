@@ -110,6 +110,7 @@ impl Node {
 }
 
 /// Node's `node_modules` lookup: the closest `<ancestor>/node_modules/<name>`.
+#[inline]
 fn resolve_package(from: &Path, name: &str) -> Option<PathBuf> {
     let name = name.trim();
     if name.is_empty() {
@@ -120,6 +121,7 @@ fn resolve_package(from: &Path, name: &str) -> Option<PathBuf> {
         .find(|dir| dir.join("package.json").is_file())
 }
 
+#[inline]
 fn builtin_names(modules: &[String]) -> Vec<String> {
     let mut names: Vec<String> = Vec::with_capacity(modules.len() * 2);
     for raw_module in modules {
@@ -131,6 +133,7 @@ fn builtin_names(modules: &[String]) -> Vec<String> {
     names
 }
 
+#[inline]
 fn push_module_forms(names: &mut Vec<String>, module: &str) {
     let bare = module.strip_prefix("node:").map_or(module, str::trim);
     if bare.is_empty() {

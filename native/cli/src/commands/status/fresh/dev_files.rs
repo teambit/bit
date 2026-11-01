@@ -17,6 +17,7 @@ const NAMES: [&str; 4] = [
     r"^(?!\.)(?=.)[^/]*?\.composition(?:s)?\.[^/]*?$",
 ];
 
+#[inline]
 fn names() -> &'static [Regex] {
     static NAMES_RE: OnceLock<Vec<Regex>> = OnceLock::new();
     NAMES_RE.get_or_init(|| {
@@ -39,6 +40,7 @@ pub enum Group {
 }
 
 impl Group {
+    #[inline]
     fn names(self) -> &'static [Regex] {
         let all = names();
         match self {
@@ -50,6 +52,8 @@ impl Group {
 }
 
 /// `files.filter(file => matchPatterns(file, group))`.
+#[must_use]
+#[inline]
 pub fn group_files(files: &[String], group: Group) -> Vec<String> {
     files
         .iter()
@@ -61,6 +65,8 @@ pub fn group_files(files: &[String], group: Group) -> Vec<String> {
 }
 
 /// `file` is a relative path with `/` separators.
+#[must_use]
+#[inline]
 pub fn is_dev_file(file: &str) -> bool {
     matches(file, names())
 }

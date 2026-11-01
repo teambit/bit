@@ -84,6 +84,7 @@ impl Scan<'_> {
     }
 }
 
+#[inline]
 fn normalize_target_file(file: String) -> Option<String> {
     let trimmed = file.trim().trim_start_matches("./");
     if trimmed.is_empty() {

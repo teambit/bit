@@ -162,7 +162,7 @@ fn scope_pattern_candidates(scope_dir: &Path) -> Option<Vec<(String, String)>> {
     if rows.len() > 128 {
         return None;
     }
-    let mut candidates = Vec::new();
+    let mut candidates = Vec::with_capacity(rows.len());
     for row in rows
         .iter()
         .filter(|row| row["isSymlink"] != true)
@@ -189,6 +189,7 @@ fn scope_pattern_candidates(scope_dir: &Path) -> Option<Vec<(String, String)>> {
     Some(candidates)
 }
 
+#[inline]
 fn load_bitmap(root: &Path) -> Option<Bitmap> {
     let ws_bytes = fs::read(root.join("workspace.jsonc")).ok()?;
     let ws_val = bit_object_import::parse_jsonc(&ws_bytes).ok()?;
@@ -260,6 +261,7 @@ pub(super) fn extract_stored_schema(scope_dir: &Path, ver_val: &Value) -> Option
     bit_object_import::parse_jsonc(&body).ok()
 }
 
+#[inline]
 fn extract_direct_schema_data(data: &Value) -> Option<Value> {
     if data["schema"].is_object() {
         return Some(data["schema"].clone());
@@ -290,6 +292,7 @@ fn find_schema_artifact_hash(builder_ext: &Value) -> Option<String> {
         })
 }
 
+#[inline]
 fn is_schema_artifact(art: &Value) -> bool {
     art["task"]["id"]
         .as_str()
@@ -305,6 +308,7 @@ fn is_schema_artifact(art: &Value) -> bool {
         || art["name"].as_str() == Some("schema")
 }
 
+#[inline]
 fn extract_first_file_hash(files_val: &Value) -> Option<String> {
     let arr = files_val["refs"].as_array().or_else(|| files_val.as_array())?;
     let first = arr.first()?;

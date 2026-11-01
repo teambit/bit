@@ -31,6 +31,7 @@ pub(in crate::commands) enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error.to_string())
     }
@@ -113,7 +114,7 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
 }
 
 pub(super) fn collect_non_flag_tokens<'a>(rest: &[&'a str]) -> Option<Vec<&'a str>> {
-    let mut positional = Vec::new();
+    let mut positional = Vec::with_capacity(rest.len());
     let mut iter = rest.iter().map(|token| token.trim());
     while let Some(token) = iter.next() {
         if token == "--" {
@@ -140,6 +141,7 @@ pub(super) fn collect_non_flag_tokens<'a>(rest: &[&'a str]) -> Option<Vec<&'a st
     Some(positional)
 }
 
+#[inline]
 fn collect_trailing<'a>(
     positional: &mut Vec<&'a str>,
     iter: impl Iterator<Item = &'a str>,
@@ -257,6 +259,7 @@ fn update_bitmap_default_scope(
     Ok(changed)
 }
 
+#[inline]
 fn has_version(key: &str, row: &Value) -> bool {
     row["version"]
         .as_str()
@@ -331,6 +334,7 @@ fn set_entry_default_scope(
 }
 
 impl Prepared {
+    #[inline]
     fn commit(self, chalk: Chalk) -> io::Result<Report> {
         match self {
             Self::Workspace(plan) => plan.commit(chalk),

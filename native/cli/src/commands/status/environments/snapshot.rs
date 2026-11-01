@@ -82,6 +82,7 @@ fn source_callbacks(
     Ok(array(manifest.get("files"), "snapshot source names")?.iter().any(is_callback_source_file))
 }
 
+#[inline]
 fn root_excludes(
     root: &Path,
     context: &Value,
@@ -107,6 +108,7 @@ fn root_excludes(
         .collect())
 }
 
+#[inline]
 fn is_callback_source_file(file: &Value) -> bool {
     file["relativePath"]
         .as_str()

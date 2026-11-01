@@ -33,11 +33,13 @@ struct Options {
     target_snap: Option<String>,
 }
 
+#[inline]
 fn is_hex40(text: &str) -> bool {
     let trimmed = text.trim();
     trimmed.len() == 40 && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -114,6 +116,7 @@ fn validate_target(
     missing_target.then(|| emit_missing_target_error(root, args)).transpose()
 }
 
+#[inline]
 fn is_valid_scoped_id(raw_id: &str, bare: &str) -> bool {
     !raw_id.starts_with('@')
         && bare
@@ -144,14 +147,8 @@ fn emit_missing_target_error(root: &ScopeRoot, args: &[OsString]) -> io::Result<
     if is_ci_active() {
         return Ok(Outcome::Declined("CI snap-distance error stack".into()));
     }
-    emit_failure(
-        root,
-        args,
-        "snap-distance",
-        true,
-        false,
-        "either provide both source and target snaps or none".into(),
-    )
+    let msg = "either provide both source and target snaps or none".into();
+    emit_failure(root, args, "snap-distance", true, false, msg)
 }
 
 fn compute_local_remote_distance(
@@ -253,6 +250,7 @@ pub(in crate::commands) fn bitmap_lane_scope_and_name(bitmap: &Value) -> Option<
     Some((id["scope"].as_str().map_or("", str::trim), name))
 }
 
+#[inline]
 pub(in crate::commands) fn is_on_non_main_lane(bitmap: &Value) -> bool {
     bitmap_lane_scope_and_name(bitmap).is_some_and(|(_, name)| name != "main")
 }
@@ -393,6 +391,7 @@ fn bitmap_row_version(
         })
 }
 
+#[inline]
 fn read_remote_main_head(scope_dir: &Path, scope: &str, name: &str) -> Option<Option<String>> {
     read_remote_ref_head(scope_dir, scope, "main", scope, name)
 }

@@ -38,6 +38,7 @@ pub(in crate::commands) fn parse_env_scripts_in_dir(dir: &Path) -> EnvScripts {
     EnvScripts::default()
 }
 
+#[inline]
 fn file_sort_key(path: &Path) -> (u8, String, String) {
     let name = path
         .file_name()
@@ -69,6 +70,7 @@ fn collect_source_files(dir: &Path) -> Vec<PathBuf> {
     out
 }
 
+#[inline]
 fn collect_subdir_files(path: &Path) -> Vec<PathBuf> {
     let dir_name = path
         .file_name()
@@ -80,6 +82,7 @@ fn collect_subdir_files(path: &Path) -> Vec<PathBuf> {
     collect_source_files(path)
 }
 
+#[inline]
 fn is_script_source_file(path: &Path) -> bool {
     path.extension()
         .and_then(|ext| ext.to_str())
@@ -145,6 +148,7 @@ fn extract_braced_inner(text: &str) -> Option<&str> {
     None
 }
 
+#[inline]
 fn skip_token(bytes: &[u8], idx: usize) -> Option<usize> {
     match bytes[idx] {
         b'\'' | b'"' | b'`' => Some(skip_quoted(bytes, idx)),
@@ -154,6 +158,7 @@ fn skip_token(bytes: &[u8], idx: usize) -> Option<usize> {
     }
 }
 
+#[inline]
 fn skip_quoted(bytes: &[u8], start: usize) -> usize {
     let quote = bytes[start];
     let mut idx = start + 1;
@@ -169,6 +174,7 @@ fn skip_quoted(bytes: &[u8], start: usize) -> usize {
     bytes.len()
 }
 
+#[inline]
 fn skip_line_comment(bytes: &[u8], mut idx: usize) -> usize {
     while idx < bytes.len() && bytes[idx] != b'\n' {
         idx += 1;
@@ -176,6 +182,7 @@ fn skip_line_comment(bytes: &[u8], mut idx: usize) -> usize {
     idx
 }
 
+#[inline]
 fn skip_block_comment(bytes: &[u8], mut idx: usize) -> usize {
     while idx + 1 < bytes.len() {
         if bytes[idx] == b'*' && bytes[idx + 1] == b'/' {
@@ -212,6 +219,7 @@ fn split_top_level_entries(inner: &str) -> Vec<&str> {
     entries
 }
 
+#[inline]
 fn push_non_empty<'a>(entries: &mut Vec<&'a str>, slice: &'a str) {
     let trimmed = slice.trim();
     if !trimmed.is_empty() {
@@ -276,6 +284,7 @@ fn find_top_level_colon(text: &str) -> Option<usize> {
     None
 }
 
+#[inline]
 fn unquote_string(raw: &str) -> Option<String> {
     let trimmed = raw.trim();
     let first = *trimmed.as_bytes().first()?;
@@ -328,7 +337,7 @@ fn find_closing_paren(text: &str) -> Option<usize> {
 
 fn render_log_arg(arg: &str, component_count: usize) -> Option<String> {
     let inner = unquote_string(arg)?;
-    let mut out = String::new();
+    let mut out = String::with_capacity(inner.len());
     let mut rest = inner.as_str();
     while let Some(start) = rest.find("${") {
         out.push_str(&rest[..start]);
@@ -344,6 +353,7 @@ fn render_log_arg(arg: &str, component_count: usize) -> Option<String> {
     Some(out)
 }
 
+#[inline]
 fn eval_template_expr(expr: &str, component_count: usize) -> String {
     let trimmed = expr.trim();
     if trimmed.contains("components") && trimmed.contains("length") {

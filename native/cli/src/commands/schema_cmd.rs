@@ -48,6 +48,7 @@ pub(super) enum ParsedCommand {
     Diff(DiffOptions),
 }
 
+#[inline]
 fn ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -189,6 +190,7 @@ fn try_run_bare_scope(
     Ok(None)
 }
 
+#[inline]
 fn emit_workspace_error(
     root: &Path,
     args: &[OsString],
@@ -203,10 +205,12 @@ fn emit_workspace_error(
     }
 }
 
+#[inline]
 pub(super) fn is_missing_host(cwd: &Path, options: &Options) -> bool {
     !options.remote && is_outside_any_host(cwd)
 }
 
+#[inline]
 fn is_outside_any_host(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
         && !cwd
@@ -218,6 +222,7 @@ fn is_outside_any_host(cwd: &Path) -> bool {
             })
 }
 
+#[inline]
 pub(super) fn parse_command(args: &[&str]) -> Option<ParsedCommand> {
     if args
         .iter()
@@ -230,7 +235,7 @@ pub(super) fn parse_command(args: &[&str]) -> Option<ParsedCommand> {
 }
 
 fn parse_diff_options(args: &[&str]) -> Option<DiffOptions> {
-    let mut positional = Vec::new();
+    let mut positional = Vec::with_capacity(4);
     let mut json = false;
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
@@ -258,6 +263,7 @@ fn parse_diff_options(args: &[&str]) -> Option<DiffOptions> {
     })
 }
 
+#[inline]
 fn consume_trailing_schema_args<'a>(
     iter: impl Iterator<Item = &'a str>,
     positional: &mut Vec<&'a str>,
@@ -271,7 +277,7 @@ fn consume_trailing_schema_args<'a>(
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut positional = Vec::new();
+    let mut positional = Vec::with_capacity(1);
     let mut remote = false;
     let mut json = false;
     let mut iter = args.iter().copied();

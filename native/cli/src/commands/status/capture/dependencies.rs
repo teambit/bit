@@ -77,6 +77,7 @@ impl Scan<'_> {
 
     /// `verifyFreshDependencies`: the cached dependencies detected again;
     /// any difference in metadata or issues declines.
+    #[inline]
     fn verified(
         &mut self,
         target: &Value,
@@ -94,6 +95,7 @@ impl Scan<'_> {
     }
 
     /// `dependencyPolicyCached`.
+    #[inline]
     fn cached(
         &mut self,
         target: &Value,
@@ -148,6 +150,7 @@ impl Scan<'_> {
     }
 }
 
+#[inline]
 fn is_root_directory(dir: &str) -> bool {
     let normalized = dir
         .trim()

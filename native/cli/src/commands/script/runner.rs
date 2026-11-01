@@ -38,6 +38,7 @@ pub(in crate::commands) fn resolve_workspace_components(
     Ok((ws_config, ws))
 }
 
+#[inline]
 fn promote_bit_env_plugin_components(ws: &mut Workspace, core_ids: &[String]) {
     let plugin_envs = collect_plugin_env_ids(ws);
     if plugin_envs.is_empty() {
@@ -84,6 +85,7 @@ fn assign_plugin_env_to_comp(
     comp.env_id = matched_key;
 }
 
+#[inline]
 fn is_matching_plugin_env(key: &str, plugin_envs: &[String], core_ids: &[String]) -> bool {
     let without = aspect_id_without_version(key);
     without != ENVS_ASPECT
@@ -95,6 +97,7 @@ fn is_matching_plugin_env(key: &str, plugin_envs: &[String], core_ids: &[String]
             .any(|core| core == without)
 }
 
+#[inline]
 fn has_explicit_env(comp: &WorkspaceComponent) -> bool {
     comp.config.contains_key(DEFAULT_ENV)
         || comp.config
@@ -114,7 +117,7 @@ pub(super) fn read_allowed_envs(ws_jsonc: &Value) -> Vec<String> {
     let Some(arr) = scripts_val.and_then(|val| val["envs"].as_array()) else {
         return Vec::new();
     };
-    let mut allowed = Vec::new();
+    let mut allowed = Vec::with_capacity(arr.len());
     for env_id in arr
         .iter()
         .filter_map(Value::as_str)
@@ -131,6 +134,7 @@ pub(super) fn read_allowed_envs(ws_jsonc: &Value) -> Vec<String> {
     allowed
 }
 
+#[inline]
 pub(super) fn is_env_allowed(env_id: &str, allowed_envs: &[String]) -> bool {
     let env_id = env_id.trim().trim_matches('/');
     if env_id.is_empty() {
@@ -207,6 +211,7 @@ fn build_env_groups<'a>(
     Ok(out)
 }
 
+#[inline]
 pub(in crate::commands) fn find_workspace_env_component<'a>(
     ws: &'a Workspace,
     bare_env_id: &str,
@@ -240,10 +245,9 @@ fn render_list(groups: &[EnvGroup<'_>], chalk: Chalk) -> String {
 }
 
 fn format_group_scripts(group: &EnvGroup<'_>, chalk: Chalk) -> Vec<String> {
-    let mut lines = vec![
-        chalk.cyan(&format!("\nEnvironment: {}", group.env_id)),
-        chalk.gray(&format!("  (used by {} component(s))", group.components.len())),
-    ];
+    let mut lines = Vec::with_capacity(group.env_scripts.scripts.len() + 2);
+    lines.push(chalk.cyan(&format!("\nEnvironment: {}", group.env_id)));
+    lines.push(chalk.gray(&format!("  (used by {} component(s))", group.components.len())));
     for script in &group.env_scripts.scripts {
         let handler_str = match &script.handler {
             ScriptHandler::Function(_) => chalk.gray("[function]"),
@@ -261,7 +265,7 @@ fn run_named_script(
     chalk: Chalk,
 ) -> Result<String, ScriptFailure> {
     let script_name = script_name.trim();
-    let mut results = Vec::new();
+    let mut results = Vec::with_capacity(groups.len() * 2);
     for group in groups {
         if !group.env_scripts.has_scripts_method {
             continue;
@@ -316,6 +320,7 @@ fn execute_shell_command(root: &Path, command_str: &str, chalk: Chalk) -> String
     }
 }
 
+#[inline]
 fn execute_function_body(body: &str, component_count: usize, chalk: Chalk) -> String {
     let logs = eval_function_logs(body, component_count);
     let success = chalk.green("✓ Script function executed successfully");

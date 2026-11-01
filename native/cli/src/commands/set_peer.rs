@@ -54,6 +54,7 @@ fn run_unset(args: &[OsString]) -> io::Result<Outcome> {
     run_action(args, "unset-peer", &action)
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|value| {
@@ -101,6 +102,7 @@ fn run_action(args: &[OsString], label: &'static str, action: &PeerAction) -> io
     }
 }
 
+#[inline]
 fn parse_set_args(args: &[&str]) -> Option<PeerAction> {
     let filtered = super::scope_set::collect_non_flag_tokens(args)?;
     let [component_id, range] = filtered.as_slice() else {
@@ -112,6 +114,7 @@ fn parse_set_args(args: &[&str]) -> Option<PeerAction> {
     Some(PeerAction::Set { component_id: (*component_id).to_owned(), range: (*range).to_owned() })
 }
 
+#[inline]
 fn parse_unset_args(args: &[&str]) -> Option<PeerAction> {
     let filtered = super::scope_set::collect_non_flag_tokens(args)?;
     let [component_id] = filtered.as_slice() else {
@@ -123,10 +126,12 @@ fn parse_unset_args(args: &[&str]) -> Option<PeerAction> {
     Some(PeerAction::Unset { component_id: (*component_id).to_owned() })
 }
 
+#[inline]
 fn is_single_component_arg(id: &str) -> bool {
     is_supported_pattern(id) && !id.contains(['*', ',', '!'])
 }
 
+#[inline]
 fn is_safe_range_arg(range: &str) -> bool {
     !range.is_empty()
         && !range.starts_with('-')
@@ -237,6 +242,7 @@ pub(in crate::commands) fn load_dep_resolver_config(
     load_scope_dep_resolver_config(root, entry, comp_json_propagate)
 }
 
+#[inline]
 fn clean_dep_resolver_value(val: &Value) -> Result<Option<Value>, Failure> {
     if val.as_str() == Some("-") {
         return Ok(None);
@@ -324,6 +330,7 @@ fn normalize_scope_dep_resolver_policy(cleaned: &mut Map<String, Value>) {
     }
 }
 
+#[inline]
 fn collect_forced_policy_entries(arr: &[Value]) -> Map<String, Value> {
     arr.iter()
         .filter(|item| item["force"].as_bool() == Some(true))
@@ -335,6 +342,7 @@ fn collect_forced_policy_entries(arr: &[Value]) -> Map<String, Value> {
 }
 
 impl Prepared {
+    #[inline]
     fn commit(self, chalk: Chalk) -> io::Result<Report> {
         self.mutation.flush()?;
         let formatter = Formatter::new(chalk);

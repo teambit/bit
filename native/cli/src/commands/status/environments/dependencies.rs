@@ -57,6 +57,7 @@ impl Environments {
     }
 }
 
+#[inline]
 fn target_directory(root: &Path, target: &Value) -> io::Result<std::path::PathBuf> {
     let dir = text(
         target
@@ -68,6 +69,7 @@ fn target_directory(root: &Path, target: &Value) -> io::Result<std::path::PathBu
     Ok(root.join(dir))
 }
 
+#[inline]
 fn target_file_paths(directory: &Path, files: &[String]) -> Vec<std::path::PathBuf> {
     files
         .iter()

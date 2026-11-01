@@ -52,6 +52,7 @@ pub(in crate::commands) fn resolve_pattern_entries<'a>(
         .collect())
 }
 
+#[inline]
 fn parse_bare_literal(pattern: &str) -> Result<&str, Failure> {
     let pattern = pattern.trim();
     if pattern.starts_with('@') {
@@ -108,6 +109,7 @@ fn resolve_literal_entry<'a>(
     )))
 }
 
+#[inline]
 fn is_known_scope_or_valid_scoped_id(root: &Path, pattern: &str) -> Result<bool, Failure> {
     if let Some((scope, name)) = pattern.split_once('/') {
         validate_scope_name(scope)?;
@@ -134,6 +136,7 @@ pub(in crate::commands) fn exists_in_scope_index(root: &Path, name: &str) -> boo
         })
 }
 
+#[inline]
 pub(in crate::commands) fn row_has_name(row: &Value, name: &str) -> bool {
     let name = name.trim();
     row["id"]["name"].as_str().map(str::trim) == Some(name)
@@ -154,6 +157,7 @@ pub(in crate::commands) fn row_has_name(row: &Value, name: &str) -> bool {
             })
 }
 
+#[inline]
 pub(in crate::commands) fn valid_id_chunk(chunk: &str) -> bool {
     !chunk.is_empty()
         && !chunk.contains("//")
@@ -166,6 +170,7 @@ pub(in crate::commands) fn valid_id_chunk(chunk: &str) -> bool {
             })
 }
 
+#[inline]
 pub(in crate::commands) fn validate_component_name(name: &str) -> Result<(), Failure> {
     if valid_id_chunk(name) {
         return Ok(());
@@ -175,6 +180,7 @@ pub(in crate::commands) fn validate_component_name(name: &str) -> Result<(), Fai
     )))
 }
 
+#[inline]
 pub(in crate::commands) fn valid_scope_str(scope: &str) -> bool {
     scope.len() >= 2
         && !scope.starts_with('.')
@@ -191,6 +197,7 @@ pub(in crate::commands) fn valid_scope_str(scope: &str) -> bool {
             })
 }
 
+#[inline]
 pub(in crate::commands) fn validate_scope_name(scope: &str) -> Result<(), Failure> {
     if valid_scope_str(scope) {
         return Ok(());
@@ -200,6 +207,7 @@ pub(in crate::commands) fn validate_scope_name(scope: &str) -> Result<(), Failur
     )))
 }
 
+#[inline]
 pub(in crate::commands) fn entry_full_id(entry: &BitmapEntry) -> String {
     let identity = entry.id.to_string_without_version();
     match &entry.id.version {

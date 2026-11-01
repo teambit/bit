@@ -9,6 +9,7 @@ use bit_install::{
 use serde_json::Value;
 use std::{fs, path::Path};
 
+#[inline]
 pub(super) fn apply_version_dependencies(
     ver_val: &Value,
     model: &ModelData,
@@ -118,6 +119,7 @@ fn apply_legacy_comp_dep(
     );
 }
 
+#[inline]
 fn resolve_legacy_pkg_name(item: &Value, scope: &str, name: &str) -> String {
     item["packageName"]
         .as_str()
@@ -198,12 +200,14 @@ fn apply_model_policy_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec
     );
 }
 
+#[inline]
 fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<DepEntry>) {
     if let Some(dep) = model_dep_entry(item, identity) {
         upsert_dep(deps, dep);
     }
 }
 
+#[inline]
 fn resolve_model_dep_id(item: &Value, is_comp: bool) -> Option<String> {
     let obj_id = crate::commands::graph_cmd::builder::format_dep_id(&item["componentId"])
         .or_else(|| crate::commands::graph_cmd::builder::format_dep_id(&item["id"]));
@@ -281,6 +285,7 @@ pub(super) fn apply_variant_policies(
     }
 }
 
+#[inline]
 pub(super) fn apply_component_json_policy(
     dir: &Path,
     identity: &Identity<'_>,

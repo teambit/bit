@@ -70,16 +70,15 @@ fn mode(args: &[OsString]) -> Option<(Mode, bool)> {
         .filter(|arg| !is_mode_flag(arg))
         .collect();
     let flags = report::parse(&report_args)?;
-    let selected = if quick {
-        Mode::Quick(json)
-    } else if json {
-        Mode::Json(flags)
-    } else {
-        Mode::Report(flags)
+    let selected = match (quick, json) {
+        (true, _) => Mode::Quick(json),
+        (false, true) => Mode::Json(flags),
+        (false, false) => Mode::Report(flags),
     };
     Some((selected, logged))
 }
 
+#[inline]
 fn is_mode_flag(arg: &str) -> bool {
     matches!(
         arg,
@@ -135,6 +134,7 @@ fn strip_log_flags<'a>(args: &[&'a str]) -> (Vec<&'a str>, bool) {
     (out, logged)
 }
 
+#[inline]
 fn push_status_arg<'a>(out: &mut Vec<&'a str>, arg: &'a str) {
     if arg.starts_with('-')
         && !arg.starts_with("--")
@@ -248,6 +248,7 @@ fn prepare_report(
     Ok((output, loaded, loads))
 }
 
+#[inline]
 fn active_components(
     context: &Value,
     components: &[issues::Component],
@@ -260,6 +261,7 @@ fn active_components(
         .collect())
 }
 
+#[inline]
 fn current_lane_id(context: &Value) -> io::Result<String> {
     if let Some(id) = context.get("currentLaneId") {
         let trimmed = text(Some(id))?.trim();
@@ -348,7 +350,7 @@ fn result_targets(
 
 /// Every version string the semver grammar must describe.
 fn semver_values(context: &Value, targets: &[Value]) -> io::Result<Vec<String>> {
-    let mut values = Vec::new();
+    let mut values = Vec::with_capacity(targets.len() * 2);
     for target in targets {
         values.push(text(target.get("version"))?.to_string());
         for dependency in array(target.get("dependencies"), "dependencies")? {
@@ -366,6 +368,7 @@ fn semver_values(context: &Value, targets: &[Value]) -> io::Result<Vec<String>> 
 }
 
 /// A model's version names, orphaned versions and head.
+#[inline]
 fn model_versions(model: &Value, values: &mut Vec<String>) -> io::Result<()> {
     for field in ["versions", "orphanedVersions"] {
         if let Some(versions) = js::nullish(model.get(field)) {
@@ -377,6 +380,7 @@ fn model_versions(model: &Value, values: &mut Vec<String>) -> io::Result<()> {
 }
 
 /// `value ?? ''` for a string field.
+#[inline]
 fn nullish_text(value: Option<&Value>) -> io::Result<String> {
     js::nullish(value).map_or_else(|| Ok(String::new()), |val| text(Some(val)).map(str::to_string))
 }

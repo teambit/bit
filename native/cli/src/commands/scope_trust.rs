@@ -36,6 +36,7 @@ enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error.to_string())
     }
@@ -134,6 +135,7 @@ fn parse_action(tokens: &[String]) -> Result<Action, Failure> {
     }
 }
 
+#[inline]
 fn require_pattern(action: &str, pattern: Option<&str>) -> Result<String, Failure> {
     let Some(pattern) = pattern
         .map(str::trim)
@@ -253,6 +255,7 @@ impl WorkspaceTrust {
         ])
     }
 
+    #[inline]
     fn inferred_owner_pattern(&self) -> Option<String> {
         if self.default_scope.is_empty() {
             return None;
@@ -263,6 +266,7 @@ impl WorkspaceTrust {
         (!owner.is_empty()).then(|| format!("{owner}.*"))
     }
 
+    #[inline]
     fn enable(&self) -> Result<(), Failure> {
         if self.opted_in {
             return Ok(());
@@ -336,6 +340,7 @@ impl WorkspaceTrust {
     }
 }
 
+#[inline]
 fn is_valid_pattern(pattern: &str) -> bool {
     if let Some(owner) = pattern.strip_suffix(".*") {
         return !owner.contains('.') && valid_scope_str(owner);
@@ -343,6 +348,7 @@ fn is_valid_pattern(pattern: &str) -> bool {
     valid_scope_str(pattern)
 }
 
+#[inline]
 fn valid_scope_str(scope: &str) -> bool {
     scope.len() >= 2
         && !scope.starts_with('.')

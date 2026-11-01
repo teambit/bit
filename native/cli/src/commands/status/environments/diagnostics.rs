@@ -94,6 +94,7 @@ fn removed(context: &Value, facts: &Value, dependencies: &mut Value) -> io::Resu
     Ok(())
 }
 
+#[inline]
 fn append_issue(dependencies: &mut Value, kind: &str, data: &Value) -> io::Result<()> {
     if dependencies["issues"].is_null() {
         dependencies["issues"] = json!([]);
@@ -105,6 +106,7 @@ fn append_issue(dependencies: &mut Value, kind: &str, data: &Value) -> io::Resul
     Ok(())
 }
 
+#[inline]
 fn validated_identity(target: &Value) -> io::Result<&str> {
     let identity = text(
         target

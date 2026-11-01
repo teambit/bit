@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use std::{io, path::Path};
 
 /// Initialize configured providers, then capture controls after their canonical bootstrap writes.
+#[inline]
 pub(in crate::commands) fn read_context(
     engine: &mut crate::commands::engine::Engine,
     root: &Path,
@@ -18,6 +19,7 @@ pub(in crate::commands) fn read_context(
 }
 
 /// Snapshot-specific provider startup precedes native command control receipts.
+#[inline]
 pub(in crate::commands) fn read_snapshot_context(
     engine: &mut crate::commands::engine::Engine,
     root: &Path,
@@ -37,6 +39,7 @@ pub(in crate::commands) fn read_snapshot_context(
 }
 
 /// Installation process facts share a Host, while ordinary provider startup still runs.
+#[inline]
 pub(in crate::commands) fn read_inherited_context(
     engine: &mut crate::commands::engine::Engine,
     root: &Path,
@@ -186,6 +189,7 @@ fn collect_prime_ids<'a>(
         .collect()
 }
 
+#[inline]
 fn should_record_snapshot(
     snapshot: bool,
     components: &[WorkspaceComponent],
@@ -203,6 +207,7 @@ fn should_record_snapshot(
             })
 }
 
+#[inline]
 fn validate_context_paths(root: &Path, home: &Path) -> io::Result<()> {
     let is_blank = |path: &Path| {
         path.as_os_str().is_empty()

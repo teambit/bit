@@ -47,6 +47,7 @@ pub(super) fn render(
         section("refactored components", &changed, format),
     ]))
 }
+#[inline]
 fn section(name: &str, rows: &[String], format: &Formatter) -> String {
     let name = name.trim();
     if rows.is_empty() || name.is_empty() {

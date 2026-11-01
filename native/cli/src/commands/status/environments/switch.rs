@@ -20,10 +20,12 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
+    #[inline]
     fn switch_host(&self) -> io::Result<&Host> {
         self.host.as_ref().ok_or_else(|| decline("switch callback host"))
     }
 
+    #[inline]
     pub(in crate::commands::status) fn switch_one(
         &self,
         context: &Value,
@@ -36,6 +38,7 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
+    #[inline]
     pub(in crate::commands::status) fn switch_stage_row(
         &self,
         context: &Value,
@@ -48,6 +51,7 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
+    #[inline]
     pub(in crate::commands::status) fn switch_resume(
         &self,
         capture: &Capture,
@@ -57,6 +61,7 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
+    #[inline]
     pub(in crate::commands::status) fn switch_accept(
         &self,
         capture: &mut Capture,
@@ -68,6 +73,7 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
+    #[inline]
     pub(in crate::commands::status) fn switch_finish(
         &mut self,
         capture: &mut Capture,
@@ -99,6 +105,7 @@ impl Environments {
         if host_failed { error } else { self.callback_failure(capture, error) }
     }
 
+    #[inline]
     fn callback_failure(&self, capture: &Capture, error: io::Error) -> io::Error {
         let output = self.host.as_ref().map_or_else(String::new, Host::take_stdout);
         crate::host::callback_error::CallbackError::wrap(
@@ -109,6 +116,7 @@ impl Environments {
     }
 }
 
+#[inline]
 fn validated_switch_id(identity: &str) -> io::Result<&str> {
     let identity = identity.trim();
     if identity.is_empty() {

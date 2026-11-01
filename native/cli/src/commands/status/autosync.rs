@@ -18,6 +18,7 @@ pub(in crate::commands) struct Startup {
     pub(in crate::commands) snapshot_tail: Option<Value>,
 }
 
+#[inline]
 pub(in crate::commands) fn run_if_enabled(root: &Path) -> io::Result<()> {
     if !root.join(".git").exists() {
         return Ok(());
@@ -107,6 +108,7 @@ fn synchronize(
     Ok(())
 }
 
+#[inline]
 fn git_head(root: &Path) -> Option<String> {
     if let Some(head) = git_dir_head(&root.join(".git")) {
         return Some(head);
@@ -123,6 +125,7 @@ fn git_head(root: &Path) -> Option<String> {
         .filter(|head| !head.is_empty())
 }
 
+#[inline]
 fn git_dir_head(git: &Path) -> Option<String> {
     if !git.is_dir() {
         return None;
@@ -142,6 +145,7 @@ fn git_dir_head(git: &Path) -> Option<String> {
     }
 }
 
+#[inline]
 fn lookup_ids(bitmap: &Bitmap) -> Vec<String> {
     bitmap.entries
         .iter()
@@ -192,6 +196,7 @@ fn progress(startup: &mut Startup, ids: usize, prepared: &Value, synced: u64) ->
     Ok(())
 }
 
+#[inline]
 fn presentation() -> bool {
     let mut json = false;
     for arg in std::env::args().skip(1) {

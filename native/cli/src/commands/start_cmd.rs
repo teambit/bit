@@ -42,6 +42,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("start server execution delegated".into()))
 }
 
+#[must_use]
+#[inline]
 pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
         && !cwd
@@ -54,6 +56,7 @@ pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
             })
 }
 
+#[must_use]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
@@ -68,6 +71,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -83,6 +87,7 @@ fn ci_enabled() -> bool {
         })
 }
 
+#[inline]
 fn consume_trailing_start_pattern(rest: &[&str], pattern: &mut Option<String>) -> Option<()> {
     for &val in rest {
         let val = val.trim();
@@ -96,6 +101,7 @@ fn consume_trailing_start_pattern(rest: &[&str], pattern: &mut Option<String>) -
     Some(())
 }
 
+#[inline]
 fn is_ignored_start_flag(arg: &str) -> bool {
     matches!(
         arg,
@@ -150,6 +156,7 @@ fn apply_start_token(args: &[&str], idx: &mut usize, options: &mut Options) -> O
     Some(())
 }
 
+#[inline]
 fn take_optional_arg(args: &[&str], idx: &mut usize) -> String {
     if let Some(&next) = args.get(*idx + 1)
         && !next.trim().starts_with('-')
@@ -187,6 +194,7 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
     let Some(flags) = arg.trim().strip_prefix('-') else {
         return false;

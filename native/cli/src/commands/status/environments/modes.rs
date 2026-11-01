@@ -2,6 +2,7 @@
 use super::{Environments, Host, Path, Value, component, io, json, text};
 
 impl Environments {
+    #[inline]
     pub(in crate::commands) fn for_stash_callbacks() -> Self {
         Self::new()
     }
@@ -25,10 +26,13 @@ impl Environments {
         host.call("stashAdded", &json!({"ids":ids}))?;
         Ok(host.take_stdout())
     }
+
+    #[inline]
     pub(in crate::commands) fn from_host(host: Host) -> Self {
         Self { host: Some(host), ..Self::new() }
     }
 
+    #[inline]
     pub(in crate::commands) fn continue_snapshot(self, build: bool) -> io::Result<Self> {
         if let Some(host) = &self.host {
             host.call("snapshotContinuation", &json!({}))?;
@@ -36,39 +40,47 @@ impl Environments {
         Ok(self.for_snapshot_build(build))
     }
 
+    #[inline]
     pub(in crate::commands) fn for_snapshot_build(mut self, build: bool) -> Self {
         self.snapshot = true;
         self.snapshot_build = build;
         self
     }
 
+    #[inline]
     pub(in crate::commands::status) fn is_snapshot(&self) -> bool {
         self.snapshot
     }
 
+    #[inline]
     pub(in crate::commands) fn for_checkout(mut self) -> Self {
         self.checkout = true;
         self
     }
 
     /// Import publishes eligible dependency data before actual onLoad subscribers run.
+    #[inline]
     pub(in crate::commands) fn for_import_callbacks(mut self, cache_initialized: bool) -> Self {
         self.import = Some(cache_initialized);
         self
     }
 
+    #[inline]
     pub(in crate::commands::status) fn is_import(&self) -> bool {
         self.import.is_some()
     }
 
+    #[inline]
     pub(in crate::commands::status) fn import_cache_initialized(&self) -> bool {
         self.import == Some(true)
     }
 
+    #[inline]
     pub(in crate::commands::status) fn is_checkout(&self) -> bool {
         self.checkout
     }
 
+    #[inline]
     pub(in crate::commands) fn with_issue_facts(mut self, enabled: bool) -> Self {
         self.issue_facts = enabled;
         self
@@ -123,6 +135,7 @@ pub(in crate::commands::status) fn dev_files(
     Ok(dev_files(&comp, &dev_patterns(&comp, &config, &env)))
 }
 
+#[inline]
 fn strings(value: &Value) -> Vec<String> {
     match value {
         Value::Array(values) => values

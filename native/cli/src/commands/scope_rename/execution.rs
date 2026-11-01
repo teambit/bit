@@ -69,6 +69,7 @@ fn prepare(
     Ok(Entries { batch: Batch::prepare(root, plans)?, facts })
 }
 
+#[inline]
 fn flush_stdout(linker: &mut ProjectedLinker) {
     let stdout = linker.take_stdout();
     if !stdout.is_empty() {
@@ -98,6 +99,7 @@ fn install(root: &Path, linker: &mut ProjectedLinker) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn finish_linked_tooling(
     root: &Path,
     batch: &Batch,

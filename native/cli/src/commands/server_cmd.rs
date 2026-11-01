@@ -54,6 +54,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("server execution delegated".into()))
 }
 
+#[inline]
 fn parse_nonzero_port(raw: &str) -> Option<u16> {
     raw.trim()
         .parse::<u16>()

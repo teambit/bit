@@ -21,6 +21,7 @@ pub fn snapshot_host(
 }
 
 /// Retain hosted default component metadata before planned tasks are requested.
+#[inline]
 pub fn snapshot_hydrate(
     capture: &mut Capture,
     context: &Value,
@@ -34,6 +35,8 @@ pub fn snapshot_hydrate(
 }
 
 /// Per-component aspect data returned by hydrated snapshot callbacks.
+#[must_use]
+#[inline]
 pub fn snapshot_data<'a>(capture: &'a Capture, identity: &str) -> Option<&'a Value> {
     capture.cache.callbacks.snapshot_data.get(identity.trim())
 }
@@ -70,6 +73,7 @@ pub fn snapshot_pre_snap(
     Ok(output["value"].clone())
 }
 
+#[inline]
 fn replace_source_proofs(capture: &mut Capture, output: &Value) -> io::Result<()> {
     for change in array(output.get("changedWorkspaceSources"), "pre-snapshot source changes")? {
         replace_single_proof(capture, &change["before"], &change["after"]);
@@ -77,6 +81,7 @@ fn replace_source_proofs(capture: &mut Capture, output: &Value) -> io::Result<()
     Ok(())
 }
 
+#[inline]
 fn replace_single_proof(capture: &mut Capture, before: &Value, after: &Value) {
     for entry in capture.cache.pending.iter_mut().chain(&mut capture.cache.replacements) {
         entry.replace_source_proof(before, after);
@@ -89,10 +94,13 @@ fn replace_single_proof(capture: &mut Capture, before: &Value, after: &Value) {
 }
 
 /// Whether lifecycle callbacks require the published aspect host.
+#[must_use]
+#[inline]
 pub fn snapshot_required(capture: &Capture, _context: &Value, params: &Value) -> bool {
     capture.cache.callbacks.host.is_some() || snapshot_params_require_host(params)
 }
 
+#[inline]
 fn snapshot_params_require_host(params: &Value) -> bool {
     let editor_enabled = params["editor"].as_bool() == Some(true)
         || params["editor"]

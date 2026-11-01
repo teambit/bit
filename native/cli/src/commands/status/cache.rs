@@ -13,6 +13,7 @@ const NO_FS_CACHE: &str = "no-fs-cache";
 /// Whether `no-fs-cache` may be enabled in any config layer: `BIT_FEATURES`,
 /// `BIT_CONFIG_FEATURES`, the workspace's config store, `scope.json` or the
 /// global config. Layer precedence is not resolved: a mention anywhere declines.
+#[must_use]
 pub fn no_fs_cache(root: &Path) -> bool {
     if ["BIT_FEATURES", "BIT_CONFIG_FEATURES"]
         .iter()
@@ -39,6 +40,7 @@ pub fn no_fs_cache(root: &Path) -> bool {
         })
 }
 
+#[inline]
 fn mentions_no_fs_cache(value: &str) -> bool {
     value
         .split([',', ';', ':', ' ', '\t', '\n', '\r'])
@@ -51,6 +53,8 @@ fn mentions_no_fs_cache(value: &str) -> bool {
         })
 }
 
+#[must_use]
+#[inline]
 pub fn hex(bytes: &[u8]) -> String {
     use std::fmt::Write;
     bytes

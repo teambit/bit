@@ -3,7 +3,7 @@
 
 use serde_json::Value;
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub pattern: Option<String>,
     pub message: Option<String>,
@@ -13,6 +13,7 @@ pub struct Options {
 }
 
 /// `args` starts after the command name.
+#[must_use]
 pub fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut seen: Vec<&str> = Vec::with_capacity(4);
@@ -50,6 +51,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn canonical_flag(raw: &str) -> &str {
     match raw.trim() {
         "-m" => "--message",
@@ -61,11 +63,13 @@ fn canonical_flag(raw: &str) -> &str {
 }
 
 /// A bounded workspace pattern, including state predicates.
+#[inline]
 fn pattern(text: &str) -> bool {
     !text.trim().is_empty() && text.len() <= 4096 && !text.contains('\0')
 }
 
 impl Options {
+    #[inline]
     fn trailing_positionals(&mut self, trailing: &[&str]) -> Option<()> {
         for &pos in trailing {
             (!pos.starts_with('-')).then_some(())?;
@@ -75,6 +79,7 @@ impl Options {
     }
 
     /// The one pattern.
+    #[inline]
     fn positional(&mut self, text: &str) -> Option<()> {
         if self.pattern.is_some() || !pattern(text) {
             return None;
@@ -113,6 +118,8 @@ impl Options {
     }
 
     /// The engine's snap options.
+    #[must_use]
+    #[inline]
     pub fn request(&self) -> Value {
         let mut options = serde_json::Map::new();
         if let Some(pattern) = &self.pattern {

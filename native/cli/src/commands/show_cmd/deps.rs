@@ -33,6 +33,7 @@ pub(super) struct Identity<'a> {
 }
 
 impl Identity<'_> {
+    #[inline]
     pub(super) fn is_self(&self, candidate: &str) -> bool {
         let stripped = strip_pkg_version(candidate.trim());
         if eq_or_subpath(stripped, self.package_name) || eq_or_subpath(stripped, self.name) {
@@ -54,6 +55,7 @@ impl Identity<'_> {
     }
 }
 
+#[inline]
 fn eq_or_subpath(candidate: &str, target: &str) -> bool {
     candidate == target
         || candidate
@@ -61,6 +63,7 @@ fn eq_or_subpath(candidate: &str, target: &str) -> bool {
             .is_some_and(|rest| rest.starts_with('/'))
 }
 
+#[inline]
 fn strip_pkg_version(raw: &str) -> &str {
     if let Some(rest) = raw.strip_prefix('@') {
         match rest.find('@') {
@@ -103,6 +106,7 @@ pub(super) fn collect_dependencies(ctx: &CompContext<'_>) -> Vec<DepEntry> {
     deps
 }
 
+#[inline]
 fn is_dev_file(rel_file: &str, env_id: &str) -> bool {
     let is_readme = aspect_id_without_version(env_id) == "teambit.mdx/readme";
     rel_file.contains(".spec.")
@@ -122,6 +126,7 @@ fn scan_component_files(ctx: &CompContext<'_>, identity: &Identity<'_>, deps: &m
     }
 }
 
+#[inline]
 fn apply_scanned_specifier(
     ctx: &CompContext<'_>,
     identity: &Identity<'_>,
@@ -140,6 +145,7 @@ fn apply_scanned_specifier(
     }
 }
 
+#[inline]
 fn scanned_specifiers(comp_dir: &Path, rel_file: &str) -> Vec<String> {
     let Ok(source) = fs::read_to_string(comp_dir.join(rel_file)) else {
         return Vec::new();
@@ -177,6 +183,7 @@ fn resolve_relative_import(
     add_workspace_component_dep(other, Some((rel_file, &other.main_file)), deps);
 }
 
+#[inline]
 fn path_within_dir(resolved: &str, root_dir: &str) -> bool {
     let dir = root_dir.trim().trim_matches('/');
     !dir.is_empty()
@@ -248,6 +255,7 @@ fn resolve_package_import(
     }
 }
 
+#[inline]
 fn extract_package_name(specifier: &str) -> &str {
     let specifier = specifier.trim();
     if specifier.starts_with('@') {
@@ -333,6 +341,7 @@ fn lookup_package_version(
     None
 }
 
+#[inline]
 pub(super) fn remove_dep(deps: &mut Vec<DepEntry>, target: &str) {
     let target = target.trim();
     deps.retain(|dep| dep.id != target && dep.package_name.as_deref() != Some(target));

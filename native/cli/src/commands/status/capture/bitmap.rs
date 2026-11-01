@@ -4,6 +4,7 @@ use super::{Capture, missing, text};
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(super) fn capture_special(
     context: &Value,
     target: &Value,
@@ -15,6 +16,7 @@ pub(super) fn capture_special(
     missing::status_pending(context, target, captured)
 }
 
+#[inline]
 pub(super) fn has_special_state(targets: &[Value]) -> bool {
     targets
         .iter()
@@ -51,6 +53,7 @@ pub(super) fn record_remote(
     Ok(())
 }
 
+#[inline]
 fn is_remotely_removed_extension(extension: &Value) -> bool {
     crate::commands::update_cmd::matches_aspect(extension, "teambit.component/remove")
         && (extension["config"]["removed"] == true || extension["data"]["removed"] == true)

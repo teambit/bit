@@ -3,6 +3,7 @@ use super::{Capture, array, decline, text};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+#[inline]
 pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
     for target in capture.captured.iter_mut().chain(&mut capture.comparisons) {
         let raw_dir = target["directory"]
@@ -26,6 +27,7 @@ pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn snapshot_file_path(file: &Value) -> io::Result<String> {
     let value = if file.is_string() {
         Some(file)

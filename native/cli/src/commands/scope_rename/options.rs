@@ -39,6 +39,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn valid_name_token(token: &str) -> bool {
     !token.is_empty()
         && !token.starts_with('-')
@@ -46,6 +47,7 @@ fn valid_name_token(token: &str) -> bool {
         && !token.contains('\0')
 }
 
+#[inline]
 fn consume_trailing_names<'a>(
     iter: impl Iterator<Item = &'a str>,
     names: &mut Vec<&'a str>,
@@ -57,6 +59,7 @@ fn consume_trailing_names<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_arg<'a>(
     arg: &'a str,
     owner: bool,
@@ -78,6 +81,7 @@ fn apply_arg<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_scope_rename_flag(arg: &str, options: &mut Options) -> Option<()> {
     match arg {
         "-p" | "--preserve" | "--preserve=true" => options.preserve = true,
