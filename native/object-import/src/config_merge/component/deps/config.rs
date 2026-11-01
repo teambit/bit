@@ -1,3 +1,5 @@
+//! Dependency-resolver policy configuration merge across `current`, `other`, and `base`.
+
 use super::{State, append, field};
 use serde_json::json;
 use std::io;

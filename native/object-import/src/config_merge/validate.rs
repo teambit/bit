@@ -1,3 +1,5 @@
+//! Input schema validation for component, workspace-update, and workspace-merge config requests.
+
 use super::{array, invalid, text};
 use serde_json::Value;
 use std::io;

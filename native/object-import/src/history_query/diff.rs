@@ -1,3 +1,5 @@
+//! Single-file unified diff generation between historical `Source` snapshots.
+
 use super::{
     invalid,
     sources::{Cache, Sources},

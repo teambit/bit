@@ -1,3 +1,5 @@
+//! Parallel workspace file capture with serial fallback on shared byte-budget contention.
+
 use super::{File, capture_file, capture_shared, wire};
 use crate::read_budget::Budget;
 use rayon::prelude::*;

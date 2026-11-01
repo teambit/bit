@@ -1,3 +1,5 @@
+//! Tagged and compact `serde` deserialization for [`Value`].
+
 #[cfg(test)]
 #[path = "wire/tests.rs"]
 mod tests;

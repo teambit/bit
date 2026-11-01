@@ -1,3 +1,5 @@
+//! `ECMAScript` property ordering (integer indices first, then insertion order) for `js_json` objects.
+
 use super::{Value, invalid};
 use std::{collections::HashSet, io};
 

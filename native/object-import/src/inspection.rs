@@ -1,3 +1,5 @@
+//! Workspace file inspection, `.bitmap` rendering, `Version` comparison, and unified diff planning.
+
 pub(crate) use bitmap::{
     component_row, normalize as normalize_bitmap, render as render_bitmap,
     render_workspace as render_workspace_bitmap,

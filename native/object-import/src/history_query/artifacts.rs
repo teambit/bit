@@ -1,3 +1,5 @@
+//! `teambit.pipelines/builder` artifact inventory validation for repository history queries.
+
 use super::invalid;
 use serde_json::Value;
 use std::io;

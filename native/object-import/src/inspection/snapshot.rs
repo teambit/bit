@@ -1,3 +1,5 @@
+//! Retained inspection snapshot capacity accounting and memory-ownership mode validation.
+
 use super::{MAX_BYTES, MAX_FILES, State, invalid, wire};
 use std::io;
 

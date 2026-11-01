@@ -1,3 +1,5 @@
+//! `.bitmap` canonicalization, removed-component filtering, and indented JSON rendering.
+
 use super::invalid;
 use crate::js_json::{self, Value as Js};
 use serde_json::{Map, Value};

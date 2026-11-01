@@ -1,3 +1,5 @@
+//! Reverse dependency index construction and dependent filtering for `bit reset`.
+
 use super::{bound, invalid, text};
 use serde::Deserialize;
 use serde_json::{Value, json};

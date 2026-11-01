@@ -1,3 +1,5 @@
+//! `VersionHistory` population and ancestry traversal over local and overlay `Version` objects.
+
 use super::{invalid, overlay_indices};
 use indexmap::IndexMap;
 use serde::Deserialize;

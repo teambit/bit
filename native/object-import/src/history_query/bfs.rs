@@ -1,3 +1,5 @@
+//! Breadth-first `Version` graph traversal and tag/orphan attribution for history queries.
+
 use super::invalid;
 use serde::Deserialize;
 use serde_json::{Value, json};

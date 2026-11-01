@@ -1,3 +1,5 @@
+//! Retained workspace snapshot observation lookup and shared byte-budget accounting.
+
 use super::{hash, invalid, raw, wire};
 use crate::{
     read_budget::Budget,

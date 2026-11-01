@@ -1,3 +1,5 @@
+//! Cold-command in-memory workspace file modification check without external snapshot tokens.
+
 use super::{MAX_BYTES, MAX_FILES, files, invalid, read, wire};
 use serde_json::Value;
 use std::{io, path::Path};

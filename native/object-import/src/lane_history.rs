@@ -1,4 +1,4 @@
-//! Read a local lane's validated history object without a Node object round trip.
+//! Read a local lane's validated `LaneHistory` object without a `Node.js` object round trip.
 pub use diagnostic::ci_requires_published_diagnostic;
 mod diagnostic;
 use crate::workspace::engine::command::outbound;

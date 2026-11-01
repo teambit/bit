@@ -1,3 +1,5 @@
+//! Workspace dependency update planning (`configWorkspaceUpdates`) for merged components.
+
 use super::{array, invalid, semver, text};
 use serde_json::{Value, json};
 use std::{cmp::Ordering, io};

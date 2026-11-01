@@ -1,3 +1,5 @@
+//! Wire request payloads for workspace file inspection and model comparison operations.
+
 use serde::Deserialize;
 use std::path::PathBuf;
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

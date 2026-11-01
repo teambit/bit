@@ -1,3 +1,5 @@
+//! Per-file modification status classification (`new`, `unchanged`, `modified`, `deleted`) against model files.
+
 use super::{invalid, read, wire};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};

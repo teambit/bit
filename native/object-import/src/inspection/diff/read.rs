@@ -1,3 +1,5 @@
+//! Bounded serial and parallel `Source` object body loading for inspection diffs.
+
 #[cfg(test)]
 mod tests;
 

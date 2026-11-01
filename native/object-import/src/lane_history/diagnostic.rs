@@ -1,4 +1,4 @@
-//! CI prints released V8 stacks for history errors; prove known keys without effects.
+//! CI diagnostic check for `V8` stack preservation on unknown `LaneHistory` keys.
 #[cfg(test)]
 mod tests;
 use crate::command_import::{self, lane::Id};

@@ -1,3 +1,5 @@
+//! Dependency-resolver auto-detected dependency data merge across `current`, `other`, and `base`.
+
 use super::{State, append, field, model::version};
 use serde_json::{Value, json};
 use std::io;

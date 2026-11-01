@@ -1,3 +1,5 @@
+//! Candidate, pattern, soft-remove, and never-exported component selection for `bit reset`.
+
 use super::{bound, invalid, text};
 use serde::Deserialize;
 use serde_json::{Value, json};

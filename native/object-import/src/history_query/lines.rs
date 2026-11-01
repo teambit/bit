@@ -1,4 +1,4 @@
-//! The default jsdiff line tokenizer and Myers path tie-break, without Git blame semantics.
+//! Default `jsdiff` line tokenizer and Myers path tie-breaking without Git blame semantics.
 use super::invalid;
 use std::{collections::HashMap, io};
 

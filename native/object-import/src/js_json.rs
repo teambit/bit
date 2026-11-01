@@ -1,3 +1,5 @@
+//! Accessor-free `JavaScript` data representation and `JSON.stringify` formatting.
+
 #[path = "js_json/object.rs"]
 mod object;
 #[path = "js_json/string.rs"]

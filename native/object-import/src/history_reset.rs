@@ -1,3 +1,5 @@
+//! `bit reset` history, dependent-index, candidate-selection, and phase-journal operations.
+
 pub(crate) use journal::State;
 
 mod dependents;

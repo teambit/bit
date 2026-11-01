@@ -1,3 +1,5 @@
+//! `LaneHistory` entry pruning and `UTF-16` key validation during `bit reset`.
+
 use super::{bound, invalid, text};
 use crate::js_json;
 use serde::Deserialize;

@@ -1,3 +1,5 @@
+//! Shared dependency-resolver merge state, policy normalization, and semver version selection.
+
 use super::{
     super::{
         super::{invalid, semver},

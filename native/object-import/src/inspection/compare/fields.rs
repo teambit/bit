@@ -1,3 +1,5 @@
+//! `UTF-16` `js_json` object field access, `.bitmap` filtering, and dependency alignment for comparison.
+
 #[cfg(test)]
 #[path = "fields/tests.rs"]
 mod tests;

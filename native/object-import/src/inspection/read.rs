@@ -1,3 +1,5 @@
+//! Bounded workspace file reading, hash computation, and optional snapshot spooling.
+
 mod parallel;
 mod retained;
 #[cfg(test)]

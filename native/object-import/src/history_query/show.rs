@@ -1,3 +1,5 @@
+//! Topological sorting and node/edge graph construction for `bit log` / `show` history views.
+
 use super::invalid;
 use serde::Deserialize;
 use serde_json::{Value, json};

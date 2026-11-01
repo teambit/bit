@@ -1,3 +1,5 @@
+//! Semver version comparison and prerelease identifier ordering for `config-merge`.
+
 use super::{array, invalid};
 use serde_json::Value;
 use std::{cmp::Ordering, io};

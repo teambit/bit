@@ -1,3 +1,5 @@
+//! Workspace `workspace.jsonc` dependency policy aggregation and conflict resolution (`configWorkspaceMerge`).
+
 use super::{array, invalid, semver, text};
 use serde_json::{Value, json};
 use std::io;

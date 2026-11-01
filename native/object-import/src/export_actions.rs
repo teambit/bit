@@ -1,4 +1,4 @@
-//! Reuse a caller's published file-scope server adapter without moving component bodies.
+//! Reuse a caller's published file-scope server adapter without moving component object bodies.
 #[cfg(test)]
 mod tests;
 

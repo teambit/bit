@@ -1,3 +1,5 @@
+//! Bounded byte-buffer writer for compact and pretty-printed `js_json` values.
+
 use std::io;
 
 use super::{Value, invalid, number, object, string};

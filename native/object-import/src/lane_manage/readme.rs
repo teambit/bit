@@ -1,4 +1,5 @@
 //! Remove the readme component reference from a local lane (`bit lane remove-readme`).
+
 use super::{Documents, Objects, Original, invalid};
 use crate::{inspection, store::Store};
 use serde_json::{Value, json};

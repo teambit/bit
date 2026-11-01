@@ -1,3 +1,5 @@
+//! Local-only snap/tag selection and `Version` parent resolution for `bit reset`.
+
 use super::{bound, invalid, text};
 use serde::Deserialize;
 use serde_json::{Value, json};

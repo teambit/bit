@@ -1,3 +1,5 @@
+//! Workspace-versus-model file diff planning (`inspectionDiff`) using retained file snapshots.
+
 mod read;
 
 use super::{invalid, wire};

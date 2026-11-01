@@ -1,3 +1,5 @@
+//! `UTF-16` code-unit and surrogate-pair JSON string escaping for `js_json` serialization.
+
 use super::writer::Writer;
 use std::io;
 

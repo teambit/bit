@@ -1,3 +1,5 @@
+//! `teambit.envs/envs` aspect resolution and three-way environment configuration merge.
+
 use super::{
     super::{array, invalid, semver},
     Engine,

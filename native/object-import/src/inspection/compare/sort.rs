@@ -1,3 +1,5 @@
+//! Deterministic array and map key sorting for semantic `Version` comparisons.
+
 use super::{super::invalid, fields};
 use crate::js_json::Value as Js;
 use serde_json::{Value, json};

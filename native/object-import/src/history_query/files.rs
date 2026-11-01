@@ -1,3 +1,5 @@
+//! File-level historical lineage filtering and hidden-parent linking across `Version` rows.
+
 use super::invalid;
 use serde::Deserialize;
 use serde_json::{Value, json};

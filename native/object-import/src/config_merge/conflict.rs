@@ -1,3 +1,5 @@
+//! `config-merge` conflict file formatting, parsing, and `git merge-file` invocation.
+
 use super::{array, invalid, text};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};

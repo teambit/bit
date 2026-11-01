@@ -1,3 +1,5 @@
+//! Line-by-line historical blame attribution across ordered `Version` log records.
+
 use super::{
     invalid, lines,
     sources::{Cache, Sources},

@@ -1,3 +1,5 @@
+//! Session-scoped history query plan registry and token lifecycle management.
+
 use super::{bfs, blame, diff, files, invalid, populate, sources::Cache};
 use serde::Deserialize;
 use serde_json::{Value, json};

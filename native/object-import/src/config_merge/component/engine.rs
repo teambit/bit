@@ -1,3 +1,5 @@
+//! `ConfigMerger` execution state, trace/debug log collection, and aspect lookup helpers.
+
 use super::super::{array, invalid, text};
 use serde_json::{Value, json};
 use std::io;
