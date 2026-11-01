@@ -2,6 +2,7 @@ use super::{MAX_BYTES, MAX_FILES, State, invalid, wire};
 use std::io;
 
 impl State {
+    #[inline]
     pub(crate) fn enable_memory_snapshots(&mut self) {
         self.memory_snapshots = true;
     }

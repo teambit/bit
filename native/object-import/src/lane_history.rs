@@ -7,6 +7,7 @@ use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
 /// Return the history for a lane already resolved in the local index.
+#[inline]
 pub fn read(root: &Path, lane_hash: &str) -> io::Result<Value> {
     read_at(&crate::scope_path(root), lane_hash)
 }
@@ -66,6 +67,7 @@ fn valid_history_entry(id: &str, entry: &Value) -> bool {
             .is_none_or(|dependents| dependents.is_null() || is_non_empty_string_array(dependents))
 }
 
+#[inline]
 pub(crate) fn hash(lane_hash: &str) -> String {
     let mut sha1 = Sha1::new();
     sha1.update(lane_hash.trim().as_bytes());
@@ -73,6 +75,7 @@ pub(crate) fn hash(lane_hash: &str) -> String {
     crate::validate::hexadecimal(&sha1.finalize())
 }
 
+#[inline]
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, "unsupported local lane history")
 }

@@ -7,6 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+#[inline]
 pub(super) fn prepare(scope: &Path, ids: &[String], force: bool) -> io::Result<Plan> {
     let guard = ScopeGuard::prepare(scope)?;
     let mut readset = Readset::new(scope);

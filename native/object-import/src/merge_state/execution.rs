@@ -1,6 +1,7 @@
 use super::{Request, State, apply};
 use serde_json::Value;
 use std::io;
+#[inline]
 pub(super) fn run(
     request: Request,
     state: &mut State,

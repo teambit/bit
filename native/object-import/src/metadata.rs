@@ -20,6 +20,7 @@ pub(crate) fn inflate(compressed: &[u8]) -> Option<String> {
     String::from_utf8(output).ok()
 }
 
+#[inline]
 fn inflate_step(
     decoder: &mut Decompress,
     compressed: &[u8],

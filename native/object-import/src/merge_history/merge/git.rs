@@ -11,12 +11,13 @@ use std::{
     process::{Child, Command, Stdio},
     sync::atomic::{AtomicUsize, Ordering},
 };
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct MergeBytes<'a> {
     pub(super) current: &'a [u8],
     pub(super) base: &'a [u8],
     pub(super) other: &'a [u8],
 }
+#[derive(Debug)]
 struct Process(Child);
 impl Drop for Process {
     fn drop(&mut self) {
@@ -87,6 +88,7 @@ fn execute(
 }
 
 /// Merge an already verified workspace body against its imported Version.
+#[inline]
 pub(crate) fn workspace_merge(
     current: &[u8],
     base: &[u8],

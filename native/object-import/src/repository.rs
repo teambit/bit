@@ -6,6 +6,7 @@ use std::{io, path::Path};
 /// Read a scope object through the repository decoder. Missing files return `None`;
 /// malformed headers, compressed data and over-budget objects are errors. Source
 /// bodies are never projected into the diagnostic JSON metadata.
+#[inline]
 pub fn read_scope_object(scope: &Path, identity: &str) -> io::Result<Option<(String, Value)>> {
     read_object_directory(&scope.join("objects"), identity)
 }
@@ -75,6 +76,7 @@ pub fn read_raw_scope_object(
     Ok(Some((headers, body.to_vec())))
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

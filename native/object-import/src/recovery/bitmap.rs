@@ -182,10 +182,12 @@ fn lane(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn truthy(value: &Value) -> bool {
     !value.is_null() && value != false && value != "" && value != 0
 }
 
+#[inline]
 fn scope_text(value: &str) -> bool {
     value.len() >= 2
         && value.len() <= 4096

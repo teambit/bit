@@ -25,7 +25,7 @@ pub(crate) fn read_graph(objects: &Path, heads: &[String]) -> io::Result<Value> 
     .map_err(io::Error::other)?;
     graph::load(&request).map(|mut value| value["versions"].take())
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
@@ -42,7 +42,7 @@ enum Request {
     },
     MergeFiles(merge::Request),
 }
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,
     id: u32,
@@ -52,6 +52,7 @@ struct Response {
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<Value>,
 }
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Output(Vec<u8>);
 impl Write for Output {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
@@ -99,6 +100,7 @@ pub(crate) fn serve(
     writer.write_all(b"\n")?;
     writer.flush()
 }
+#[inline]
 fn failure(id: u32) -> Response {
     Response { version: 1, id, completed: 0, skipped: Vec::new(), failed: true, data: None }
 }
@@ -114,9 +116,11 @@ fn apply(request: Request) -> io::Result<(usize, Value)> {
         Request::MergeFiles(request) => Ok((1, merge::merge(&request)?)),
     }
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+#[inline]
 fn count(count: usize) -> io::Result<()> {
     if count > MAX_FILES { Err(invalid("history count limit")) } else { Ok(()) }
 }

@@ -1,6 +1,7 @@
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};
 use std::io;
+#[inline]
 fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
     let values = input[field]
         .as_array()

@@ -17,6 +17,7 @@ pub(super) fn read(directory: &Path, references: &[String]) -> io::Result<Value>
     Ok(json!({"messages":messages}))
 }
 
+#[inline]
 fn version_log_message(mut version: Value) -> Value {
     match version
         .get_mut("log")

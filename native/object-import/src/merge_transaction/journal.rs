@@ -4,12 +4,12 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     records: HashMap<String, Record>,
     sequence: u64,
 }
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
     mode: &'static str,
     cursor: usize,
@@ -19,7 +19,7 @@ struct Record {
     revision: u32,
     parent: Option<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Begin {
     mode: String,
@@ -27,7 +27,7 @@ struct Begin {
     parent_token: Option<String>,
     import_main: Option<bool>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Receipt {
     token: String,

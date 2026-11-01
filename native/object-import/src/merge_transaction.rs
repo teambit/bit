@@ -60,6 +60,7 @@ pub(crate) fn prepare_with_workspace(
 ) -> io::Result<Value> {
     state.bodies.prepare(input, &state.journal, Some(snapshots))
 }
+#[inline]
 fn parse_token<'a>(input: &'a Value, message: &'static str) -> io::Result<&'a str> {
     input["token"]
         .as_str()
@@ -67,6 +68,7 @@ fn parse_token<'a>(input: &'a Value, message: &'static str) -> io::Result<&'a st
         .filter(|val| !val.is_empty() && val.len() <= 256 && !val.contains('\0'))
         .ok_or_else(|| invalid(message))
 }
+#[inline]
 fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
     let token = parse_token(input, "merge owner token")?;
     let index = input["index"]
@@ -75,6 +77,7 @@ fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
         .ok_or_else(|| invalid("merge component index"))? as usize;
     state.verify(token, index)
 }
+#[inline]
 fn verify_owner(input: &Value, state: &journal::State) -> io::Result<()> {
     let token = parse_token(input, "merge owner token")?;
     if input["index"].as_u64() != Some(0) {
@@ -82,6 +85,7 @@ fn verify_owner(input: &Value, state: &journal::State) -> io::Result<()> {
     }
     state.verify_owner(token, 0)
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

@@ -37,6 +37,7 @@ pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &
     Ok(ordered)
 }
 
+#[inline]
 fn validate_key<'a>(key: &'a [u16], seen: &mut HashSet<&'a [u16]>) -> io::Result<()> {
     if key.len() > 32768 {
         return Err(invalid("JavaScript object key limit"));
@@ -47,6 +48,7 @@ fn validate_key<'a>(key: &'a [u16], seen: &mut HashSet<&'a [u16]>) -> io::Result
     Ok(())
 }
 
+#[inline]
 fn index(key: &[u16]) -> Option<u32> {
     if key.is_empty() || key.len() > 10 || (key.len() > 1 && key[0] == u16::from(b'0')) {
         return None;

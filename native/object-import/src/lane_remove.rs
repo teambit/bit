@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     before: Vec<u8>,
@@ -66,12 +67,14 @@ impl Plan {
     }
 }
 
+#[inline]
 fn lane_matches(row: &Value, scope: &str, name: &str) -> bool {
     crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
         row, scope, name,
     )
 }
 
+#[inline]
 fn canonical_lane_parts(raw_id: &str) -> io::Result<(&str, &str)> {
     let Some((raw_scope, raw_name)) = raw_id.trim().split_once('/') else {
         return Err(invalid("lane ID"));

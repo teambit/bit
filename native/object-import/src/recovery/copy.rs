@@ -7,6 +7,7 @@ use std::{fs, io, path::Path};
 /// File copying uses fresh source contents and preserves the existing destination
 /// inode while copying source permissions. Unsupported link/platform metadata
 /// declines before opening the destination; the caller retries only this step.
+#[inline]
 pub(crate) fn file(source: &Path, destination: &Path) -> io::Result<()> {
     validate(source, destination)?;
     fs::copy(source, destination)?;

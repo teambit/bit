@@ -76,6 +76,7 @@ mod transfer;
 mod validate;
 mod workspace;
 
+#[inline]
 fn blank_string(ver: &serde_json::Value) -> bool {
     ver.as_str()
         .is_none_or(|text| text.trim().is_empty())

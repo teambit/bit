@@ -1,6 +1,7 @@
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};
 use std::io;
+#[inline]
 fn relative_path(file: &Value) -> io::Result<&str> {
     file.as_str()
         .or_else(|| file["relativePath"].as_str())
@@ -9,6 +10,7 @@ fn relative_path(file: &Value) -> io::Result<&str> {
         .filter(|value| !value.is_empty() && value.len() <= 32768 && !value.contains('\0'))
         .ok_or_else(|| invalid("merge current relative path"))
 }
+#[inline]
 fn removed_entry(file: &Value, path: &str) -> Value {
     let entry = file["path"]
         .as_str()

@@ -25,7 +25,7 @@ use std::{
 };
 
 const MAX_JSON: usize = 4 * 1024 * 1024;
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",

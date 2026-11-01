@@ -6,6 +6,7 @@ const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_RECORDS: usize = 4096;
 /// Versions have mutable bodies under stable identifiers, so every reader starts
 /// a fresh bounded batch instead of using the immutable Source snapshot cache.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Reader<'a> {
     directory: &'a Path,
     compressed: usize,
@@ -16,6 +17,7 @@ pub(crate) struct Reader<'a> {
     metadata: Option<(String, usize, usize)>,
 }
 impl<'a> Reader<'a> {
+    #[inline]
     pub(crate) fn new(directory: &'a Path) -> io::Result<Self> {
         merge_history::path(directory)?;
         Ok(Self {
@@ -28,19 +30,23 @@ impl<'a> Reader<'a> {
             metadata: None,
         })
     }
+    #[inline]
     pub(crate) fn query(directory: &'a Path) -> io::Result<Self> {
         let mut reader = Self::new(directory)?;
         reader.query = true;
         Ok(reader)
     }
+    #[inline]
     pub(crate) fn history_with_artifacts(directory: &'a Path) -> io::Result<Self> {
         let mut reader = Self::new(directory)?;
         reader.history_artifacts = true;
         Ok(reader)
     }
+    #[inline]
     pub(crate) fn metadata(&self) -> Option<&(String, usize, usize)> {
         self.metadata.as_ref()
     }
+    #[inline]
     pub(crate) fn stats(&self) -> (usize, usize) {
         (self.records, self.raw)
     }

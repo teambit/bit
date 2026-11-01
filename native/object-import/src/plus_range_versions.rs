@@ -101,14 +101,17 @@ fn environment_usages(usages: &mut Vec<String>, field: &str, entries: &Value) {
         );
     }
 }
+#[inline]
 fn env_usage(usages: &mut Vec<String>, field: &str, name: &str, value: &Value) {
     if is_range(value) {
         usages.push(format!(r#"env.jsonc policy.{field} {name}: "{}""#, text(value)));
     }
 }
+#[inline]
 fn is_range(value: &Value) -> bool {
     matches!(value.as_str().map(str::trim), Some("+^" | "+~"))
 }
+#[inline]
 fn text(value: &Value) -> &str {
     value
         .as_str()

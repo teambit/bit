@@ -11,6 +11,7 @@ pub fn is_plus(version: &str) -> bool {
 }
 
 /// `resolvePlusVersion`: prefix only release tags, retaining snaps and existing ranges.
+#[inline]
 #[must_use]
 pub fn resolve(version: &str, resolved: Option<&str>, fallback: &str) -> String {
     let Some(prefix) = version

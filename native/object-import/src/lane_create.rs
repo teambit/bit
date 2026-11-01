@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     scope: String,
@@ -21,6 +22,7 @@ pub struct Plan {
     moved: staged::Moved,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Objects {
     lane_hash: String,
     history_hash: String,
@@ -28,13 +30,14 @@ struct Objects {
     history: Value,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Documents {
     index: Value,
     scope_json: Value,
     bitmap: Value,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Options<'a> {
     pub alias: &'a str,
     pub fork_lane_new_scope: bool,
@@ -113,6 +116,7 @@ impl Plan {
         self.documents.publish(&self.root, &store)
     }
 
+    #[inline]
     #[must_use]
     pub fn scope(&self) -> &str {
         &self.scope
@@ -130,6 +134,7 @@ impl Plan {
             .collect()
     }
 
+    #[inline]
     #[must_use]
     pub fn parent_name(&self) -> Option<&str> {
         self.parent_name.as_deref()

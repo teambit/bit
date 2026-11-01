@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Plan {
     is_legacy: bool,
@@ -12,7 +12,7 @@ pub(super) struct Plan {
     previously_used_version: Option<String>,
     entry: Entry,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Entry {
     head: String,
@@ -20,20 +20,20 @@ struct Entry {
     unrelated: Option<Unrelated>,
     should_squash: Option<bool>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(untagged)]
 enum Unrelated {
     Legacy(bool),
     Current(Relation),
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Relation {
     unrelated_head: String,
     unrelated_lane: Lane,
     head_on_current_lane: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Lane {
     name: String,

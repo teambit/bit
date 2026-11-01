@@ -88,6 +88,7 @@ fn populate(
     Ok(())
 }
 
+#[inline]
 fn added_record(moved: &mut Moved, directory: &Path, row: &Value) -> io::Result<Value> {
     let reference = row["hash"]
         .as_str()

@@ -35,7 +35,7 @@ type Plans = HashMap<String, Arc<[read::File]>>;
 
 const MAX_FILES: usize = 4096;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub(crate) struct State {
     plans: Plans,
     revision: u64,
@@ -117,9 +117,11 @@ fn manifest(token: &str, files: &[read::File], request: &wire::Begin) -> Value {
     json!({"token":token,"count":files.len(),"files":summaries,"retainedReads":retained_reads,"spooledFiles":spooled_files})
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+#[inline]
 fn hash(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }

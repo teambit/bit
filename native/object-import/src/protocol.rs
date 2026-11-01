@@ -54,6 +54,7 @@ pub(crate) fn serve_extension(
     Ok(true)
 }
 
+#[inline]
 fn serve_workspace(
     magic: [u8; 4],
     reader: &mut impl Read,

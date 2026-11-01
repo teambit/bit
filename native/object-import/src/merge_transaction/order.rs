@@ -55,6 +55,7 @@ fn apply_stage(
     Ok(())
 }
 
+#[inline]
 fn indices(value: &Value, loads: bool) -> io::Result<Vec<usize>> {
     value
         .as_array()

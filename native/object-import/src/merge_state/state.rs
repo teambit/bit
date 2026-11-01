@@ -24,14 +24,14 @@ pub(crate) struct Operations {
     pub(crate) checkout_transition: crate::checkout_transition::State,
     pub(crate) transfer: crate::transfer::State,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub(super) enum Action {
     Add { entry: Value },
     Remove { ids: Vec<Identity> },
     RemoveAll,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Identity {
     scope: Option<String>,

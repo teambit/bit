@@ -13,6 +13,7 @@ const DIRECTORY_ATTRIBUTE: u64 = 0x0010;
 const DEVICE_ATTRIBUTE: u64 = 0x0040;
 const REPARSE_POINT: u64 = 0x0400;
 
+#[inline]
 pub(super) fn open(path: &Path) -> io::Result<fs::File> {
     let original = OpenOptions::new()
         .read(true)

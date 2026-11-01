@@ -95,6 +95,7 @@ fn find_removed_staged<'a>(rows: &'a [Value], scope: &str, name: &str) -> Option
         })
 }
 
+#[inline]
 fn non_empty<'a>(value: Option<&'a Value>, message: &str) -> io::Result<&'a str> {
     value
         .and_then(Value::as_str)
@@ -103,6 +104,7 @@ fn non_empty<'a>(value: Option<&'a Value>, message: &str) -> io::Result<&'a str>
         .ok_or_else(|| invalid(message))
 }
 
+#[inline]
 pub(crate) fn restore(row: &mut Map<String, Value>, config: Option<Value>) {
     if let Some(config) = config {
         row.entry("config").or_insert(config);
@@ -138,6 +140,7 @@ fn file(root: &Path, lane: Option<(&str, &str)>) -> io::Result<std::path::PathBu
         .join(format!("{name}.json")))
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

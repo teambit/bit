@@ -11,12 +11,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Change<'a> {
     Rename(&'a str),
     Scope(&'a str),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     original: Original,
@@ -24,16 +25,19 @@ pub struct Plan {
     documents: Documents,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Original {
     name: String,
     scope: String,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Objects {
     lane_hash: String,
     history_hash: String,
     lane: Value,
     history: Value,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Documents {
     index: Value,
     scope_json: Value,

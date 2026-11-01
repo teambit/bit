@@ -6,7 +6,7 @@ use std::{
     io,
     path::PathBuf,
 };
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Version {
     pub(super) hash: String,
@@ -16,7 +16,7 @@ pub(super) struct Version {
     #[serde(skip_serializing_if = "Option::is_none")]
     squashed: Option<Vec<String>>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Load {
     objects_directory: PathBuf,
@@ -206,6 +206,7 @@ fn edges_of(version: &Version, full: bool) -> Vec<String> {
     result.retain(|item| seen.insert(item.clone()));
     result
 }
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Graph {
     edges: HashMap<String, Vec<String>>,
 }
@@ -249,6 +250,7 @@ impl Graph {
         None
     }
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Distance {
     graph: Graph,
     source: Vec<String>,

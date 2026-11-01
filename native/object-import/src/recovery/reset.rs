@@ -66,6 +66,7 @@ fn outcome(
     Ok(tags != 0 || head.is_some() || lane_local.is_some())
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Selection {
     hash: Option<String>,
     provenance: Option<Value>,

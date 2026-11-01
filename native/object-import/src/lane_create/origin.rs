@@ -10,6 +10,7 @@ use std::{
     path::Path,
 };
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Origin {
     pub parent_name: Option<String>,
     pub components: Vec<Value>,

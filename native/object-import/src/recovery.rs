@@ -26,6 +26,7 @@ pub(crate) fn bitmap(path: &Path, current: &[String]) -> io::Result<Value> {
 pub(crate) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+#[inline]
 pub(crate) fn path(path: &Path) -> io::Result<()> {
     let Some(name) = path.to_str() else {
         return Err(invalid("invalid recovery path"));

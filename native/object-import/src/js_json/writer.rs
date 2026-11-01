@@ -5,6 +5,7 @@ use super::{Value, invalid, number, object, string};
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_NODES: usize = 262_144;
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Writer {
     output: Vec<u8>,
     nodes: usize,
@@ -13,14 +14,17 @@ pub(super) struct Writer {
 }
 
 impl Writer {
+    #[inline]
     pub(super) fn new(pretty: bool) -> Self {
         Self { output: Vec::with_capacity(256), nodes: 0, pretty, spaces: 2 }
     }
 
+    #[inline]
     pub(super) fn spacing(&mut self, spaces: usize) {
         self.spaces = spaces;
     }
 
+    #[inline]
     pub(super) fn finish(self) -> Vec<u8> {
         self.output
     }

@@ -54,6 +54,7 @@ fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()>
     Ok(())
 }
 
+#[inline]
 fn normalize_path(path: &str) -> String {
     let trimmed = path.trim();
     let replaced = if trimmed.contains('\\') {

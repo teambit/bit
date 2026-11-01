@@ -28,6 +28,7 @@ enum TaggedValue {
     Object(#[serde(deserialize_with = "entries")] Vec<(Vec<u16>, Value)>),
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct ValueVisitor;
 impl<'de> Visitor<'de> for ValueVisitor {
     type Value = Value;
@@ -71,8 +72,10 @@ impl<'de> Deserialize<'de> for Value {
     }
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[repr(transparent)]
 struct Utf16(Vec<u16>);
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct TextVisitor;
 impl<'de> Visitor<'de> for TextVisitor {
     type Value = Utf16;

@@ -8,6 +8,7 @@ pub(super) struct State {
     checkout: crate::checkout_transition::State,
     bindings: HashMap<String, Binding>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Binding {
     owner: String,
     index: usize,

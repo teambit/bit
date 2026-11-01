@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Plan {
     version: String,
@@ -15,7 +15,7 @@ pub(super) struct Plan {
     #[serde(flatten)]
     options: Options,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Lane {
     existing_visible_head: Option<String>,
@@ -26,7 +26,7 @@ struct Lane {
     #[serde(rename = "removed")]
     _removed: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Options {
     detach_head: bool,

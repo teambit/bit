@@ -3,12 +3,12 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     records: HashMap<String, Cursor>,
     sequence: u64,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Identity {
     token: String,
@@ -18,13 +18,13 @@ struct Identity {
     has_consumer: bool,
     has_workspace: bool,
 }
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Removed {
     marked: bool,
     other_lane: bool,
     on_main: bool,
 }
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Cursor {
     identity: Identity,
     revision: u32,
@@ -34,7 +34,7 @@ struct Cursor {
     target_only: bool,
     result: Option<Value>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Receipt {
     token: String,

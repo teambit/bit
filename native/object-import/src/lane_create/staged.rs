@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Moved {
     pub components: Vec<Value>,
     objects: Vec<(String, &'static str, Value)>,

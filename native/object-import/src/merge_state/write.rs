@@ -7,6 +7,7 @@ use std::{
     path::Path,
 };
 
+#[inline]
 pub(crate) fn commit(path: &Path, contents: &str) -> io::Result<()> {
     commit_metadata(path, contents, None, false)
 }

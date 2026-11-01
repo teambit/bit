@@ -85,6 +85,7 @@ pub(super) fn bucket(input: &Value) -> io::Result<Value> {
     )
 }
 
+#[inline]
 fn early_action(
     has_merge: bool,
     conflicts: bool,

@@ -212,6 +212,7 @@ fn id(value: &Value) -> Option<String> {
     ))
 }
 
+#[inline]
 fn non_empty(value: &Value) -> Option<&str> {
     value
         .as_str()

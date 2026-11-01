@@ -22,6 +22,7 @@ pub(super) fn classify_all(execution: &Execution<'_>) -> io::Result<Vec<Value>> 
     }
 }
 
+#[inline]
 fn should_classify_serially(execution: &Execution<'_>) -> bool {
     execution.request.current.len() < 2
         || execution.other.is_empty()

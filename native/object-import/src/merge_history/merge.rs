@@ -18,7 +18,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 use workers::classify_all;
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {
     objects_directory: PathBuf,
@@ -27,33 +27,33 @@ pub(super) struct Request {
     other: Vec<Model>,
     current: Vec<Current>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Labels {
     current: String,
     other: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Model {
     path: String,
     hash: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Current {
     path: String,
     workspace: Option<Workspace>,
     source: Option<Source>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Workspace {
     path: PathBuf,
     hash: String,
     linux_hash: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Source {
     hash: String,

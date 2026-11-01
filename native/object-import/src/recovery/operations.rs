@@ -8,14 +8,14 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{fs, io, path::PathBuf};
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) enum Operation {
     Copy { source: PathBuf, destination: PathBuf },
     Remove { path: PathBuf },
     EnsureDir { path: PathBuf },
 }
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     token: Option<String>,
     operations: Vec<Operation>,

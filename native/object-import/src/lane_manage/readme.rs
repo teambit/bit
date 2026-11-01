@@ -7,11 +7,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReadmePlan {
     NoReadme(String),
     Remove(Box<ReadmeRemoval>),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReadmeRemoval {
     root: PathBuf,
     label: String,
@@ -20,6 +22,7 @@ pub struct ReadmeRemoval {
 }
 
 impl ReadmeRemoval {
+    #[inline]
     #[must_use]
     pub fn label(&self) -> &str {
         &self.label
@@ -220,10 +223,12 @@ fn lane_row_parts(row: &Value) -> Option<(&str, &str)> {
     Some((name, scope))
 }
 
+#[inline]
 pub(super) fn lane_row_identity(row: &Value) -> Option<(String, String)> {
     lane_row_parts(row).map(|(name, scope)| (name.to_owned(), scope.to_owned()))
 }
 
+#[inline]
 pub(super) fn matches_lane_row(row: &Value, name: &str, scope: &str) -> bool {
     lane_row_parts(row) == Some((name, scope))
 }

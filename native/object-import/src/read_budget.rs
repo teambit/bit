@@ -6,6 +6,7 @@ use std::{
 
 /// A request owns one byte allowance, shared by all of its worker reads.
 /// Failed reads abandon the entire allowance before canonical retry.
+#[derive(Debug)]
 pub(crate) struct Budget(AtomicUsize);
 
 impl Budget {

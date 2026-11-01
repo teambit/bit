@@ -8,20 +8,20 @@ use std::{
 
 type Tags = Vec<[String; 2]>;
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum Operation {
     Version { existing: String, incoming: String },
     VersionHistory(HistoryPlan),
     Component(ComponentPlan),
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct HistoryPlan {
     existing: Vec<String>,
     incoming: Vec<String>,
     stored: Vec<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct ComponentPlan {
     existing: Tags,
     incoming: Tags,
@@ -31,20 +31,20 @@ struct ComponentPlan {
     heads: [Vec<String>; 2],
     deleted: [Vec<String>; 2],
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct IndexPlan {
     components: Vec<IndexEntry>,
     lanes: Vec<IndexEntry>,
     objects: Vec<IndexObject>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct IndexEntry {
     hash: String,
     id: Value,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct IndexObject {
     hash: String,
     id: Value,

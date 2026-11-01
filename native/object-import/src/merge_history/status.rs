@@ -4,6 +4,7 @@ use std::io;
 
 /// Cached command histories are read-only here. An absent head requires the
 /// canonical population/write checkpoint before a cold command can proceed.
+#[inline]
 pub(crate) fn distance(
     records: &Value,
     source: Option<&str>,

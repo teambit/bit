@@ -55,6 +55,7 @@ fn check_header(hash: &str, serialized: &[u8], models: bool) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

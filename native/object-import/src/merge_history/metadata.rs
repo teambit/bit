@@ -56,6 +56,7 @@ fn validate_files(value: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn truthy(value: &Value) -> bool {
     !value.is_null()
         && value != &Value::Bool(false)
@@ -63,6 +64,7 @@ fn truthy(value: &Value) -> bool {
             .as_str()
             .is_none_or(|text| !text.trim().is_empty())
 }
+#[inline]
 fn empty_array(value: &Value, field: &str) -> io::Result<()> {
     match value.get(field) {
         None => Ok(()),

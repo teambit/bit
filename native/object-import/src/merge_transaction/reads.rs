@@ -3,7 +3,7 @@ use crate::checkout::repository::SourceRecord;
 use serde_json::{Value, json};
 use std::{cell::RefCell, collections::HashMap, io};
 thread_local! {static ACTIVE: RefCell<Option<Trace>> = const {RefCell::new(None)};}
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Trace {
     pub(super) records: HashMap<String, Receipt>,
     source_reads: usize,
@@ -11,11 +11,13 @@ pub(super) struct Trace {
     compressed: usize,
     retained_bytes: usize,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Receipt {
     pub(super) body: Vec<u8>,
     pub(super) compressed_size: usize,
     pub(super) inflated_size: usize,
 }
+#[derive(Debug)]
 pub(super) struct Scope {
     previous: Option<Trace>,
     finished: bool,

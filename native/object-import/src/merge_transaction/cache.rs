@@ -6,6 +6,7 @@ use std::{
     io::{self, Write},
     path::PathBuf,
 };
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Capsules {
     trace: Trace,
     seen: HashMap<String, usize>,

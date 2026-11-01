@@ -19,6 +19,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     scope: PathBuf,
     before_index: Vec<u8>,
@@ -29,13 +30,13 @@ pub struct Plan {
     lanes: bool,
     basis: Basis,
 }
-
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Basis {
     guard: ScopeGuard,
     readset: Readset,
 }
-
 /// Scope metadata is checked before any remote group is launched and again before a write.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScopeGuard {
     scope: PathBuf,
     legacy: Vec<u8>,
@@ -71,12 +72,13 @@ impl ScopeGuard {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Selection {
     removed: Vec<String>,
     missing: Vec<String>,
     dependent: Value,
 }
-
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct LoadedComponents {
     found: Vec<(String, Value, String)>,
     missing: Vec<String>,
