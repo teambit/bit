@@ -1,4 +1,4 @@
-//! End-to-end tests verifying snapshot source manifests use the linker's `package.json` exclusion rule under `trackAllFiles`.
+//! End-to-end tests verifying snapshot source manifests use the linker's `package.json` exclusion rule under `trackAllFiles` ([`tracked_package_json_is_linked_without_generated_metadata_matching_node`]).
 
 use crate::helper::{Helper, config};
 use std::{

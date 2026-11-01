@@ -1,4 +1,4 @@
-//! Capsule fixtures do not need remote verification of built-in environment identities.
+//! Capsule fixtures ([`prepare`]) do not need remote verification of built-in environment identities.
 //!
 //! Covers custom aspect assignment and no-network guard script generation.
 

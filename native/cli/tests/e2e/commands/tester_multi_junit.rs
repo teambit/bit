@@ -1,4 +1,4 @@
-//! Multi-component `JUnit` (`--junit`) comparisons preserve suite contents and write effects.
+//! Multi-component `JUnit` (`--junit`) comparisons ([`compare`], [`compare_file_order`], [`detail_error_order`]) preserve suite contents and write effects.
 
 use super::{
     add::support, move_paths, tester_multi::summary_order, tester_multi_detail::detail_order,

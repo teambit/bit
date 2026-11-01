@@ -1,4 +1,4 @@
-//! End-to-end tests verifying pending merge configuration (`unmerged.json`) is captured by ordinary `bit snap --unmerged` publication.
+//! End-to-end tests verifying pending merge configuration (`unmerged.json`) is captured by ordinary [`COMMAND`] (`bit snap --unmerged`) publication.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;

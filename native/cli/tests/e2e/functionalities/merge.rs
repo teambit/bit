@@ -1,4 +1,4 @@
-//! Port of `e2e/functionalities/merge.e2e.ts` for component version merge behavior.
+//! Port of `e2e/functionalities/merge.e2e.ts` for component version merge behavior ([`re_exporting_and_importing_an_existing_version`]).
 //!
 //! Tests version conflict rejection on export/import and `import --merge` strategies (`manual`, `theirs`, `ours`).
 

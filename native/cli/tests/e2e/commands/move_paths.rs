@@ -1,4 +1,4 @@
-//! End-to-end tests for original `bit move` directory, imported-directory, and manually moved source contracts.
+//! End-to-end tests for original `bit move` directory, imported-directory, and manually moved source contracts ([`workspace`], [`cleanup`], [`internal`], [`providers`]).
 
 pub(crate) mod support;
 

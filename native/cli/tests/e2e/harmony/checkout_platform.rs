@@ -1,4 +1,4 @@
-//! Real repository checkout preserves platform bytes and removes obsolete component sources.
+//! Real repository checkout preserves platform bytes and removes obsolete component sources ([`license`], [`versions`], [`compare`]).
 //!
 //! Covers CRLF/binary preservation, obsolete file cleanup, corrupt object atomicity, `.git/bit` scopes, and root checkout.
 

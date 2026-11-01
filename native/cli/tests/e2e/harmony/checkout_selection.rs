@@ -1,4 +1,4 @@
-//! `bit checkout` and `bit revert` use the published workspace component-pattern grammar.
+//! `bit checkout` and `bit revert` use the published workspace component-pattern grammar ([`workspace`], [`compare`], [`compare_with`], [`compare_owned`]).
 //!
 //! Covers globs, negation, `$modified` intersections, short snapshot hashes, ambiguity errors, and numeric yargs coercion.
 

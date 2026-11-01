@@ -1,4 +1,4 @@
-//! Exported deprecation lifecycle and remote reporting tests for `bit deprecate` and `bit undeprecate`.
+//! Exported deprecation lifecycle and remote reporting tests for `bit deprecate` and `bit undeprecate` ([`exported`]).
 //!
 //! Verifies `.bitmap` config cleanup after export, `--include-deprecated` on wildcard import, and `DeprecatedDependencies` status issues.
 

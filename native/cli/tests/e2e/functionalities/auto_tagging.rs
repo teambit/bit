@@ -1,4 +1,4 @@
-//! Port of `e2e/functionalities/auto-tagging.e2e.ts` for dependent auto-tagging parity.
+//! Port of `e2e/functionalities/auto-tagging.e2e.ts` for dependent auto-tagging parity ([`with_dependencies_of_dependencies`]).
 //!
 //! Covers transitive dependents, cyclic dependency auto-tag propagation, and single-bump diamond graphs.
 

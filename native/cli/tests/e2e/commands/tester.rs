@@ -1,4 +1,4 @@
-//! End-to-end tests ensuring built-in `bit test` JSON ([`timings`]) compares command fields, source/scope bytes, and loader caches.
+//! End-to-end tests ensuring built-in `bit test` JSON ([`timings`], [`component_timings`]) compares command fields, source/scope bytes, and loader caches.
 
 use super::move_paths::support;
 use serde_json::Value;

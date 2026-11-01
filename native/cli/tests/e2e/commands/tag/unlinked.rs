@@ -1,4 +1,4 @@
-//! Tagging creates the generated component package when `bit link` has not run.
+//! Tagging creates the generated component [`package`] when `bit link` has not run ([`compare`]).
 
 use crate::helper::{FOO_FIXTURE, Helper, config};
 use std::{ffi::OsStr, fs, path::Path};

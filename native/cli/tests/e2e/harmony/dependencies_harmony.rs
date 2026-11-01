@@ -1,4 +1,4 @@
-//! End-to-end cases from:
+//! End-to-end cases ([`dependencies_env_component_and_missing_dist_and_auto_detect_peers`]) from:
 //! - `e2e/harmony/dependencies.e2e.ts`
 //! - `e2e/harmony/diff-component-peer.e2e.ts`
 //! - `e2e/harmony/deps-write.e2e.ts`

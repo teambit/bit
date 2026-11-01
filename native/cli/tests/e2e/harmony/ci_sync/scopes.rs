@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit ci sync: lanes whose scopes differ from this repository`.
+//! End-to-end tests for `bit ci sync: lanes whose scopes differ from this repository` ([`remote_lane_heads`]).
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-scopes.e2e.ts`

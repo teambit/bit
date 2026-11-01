@@ -1,4 +1,4 @@
-//! Port of `e2e/flows/big-file.e2e.ts` for CRLF large file tracking and tagging parity.
+//! Port of `e2e/flows/big-file.e2e.ts` for CRLF large file tracking and tagging parity ([`fixture_content`], [`setup_big_file`]).
 
 use crate::helper::{FOO_FIXTURE, Helper};
 use std::{fs, path::Path};

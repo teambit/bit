@@ -1,4 +1,4 @@
-//! A changed workspace-root joins members without inheriting their release request.
+//! A changed workspace-root ([`workspace`], [`provenance`]) joins members without inheriting their release request.
 
 use super::soft::{bitmap, compare_command};
 use crate::helper::{Helper, parse};

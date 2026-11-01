@@ -1,4 +1,4 @@
-//! Port of `e2e/flows/delete-files.e2e.ts` for deleted component file handling in `bit status` and `bit tag`.
+//! Port of `e2e/flows/delete-files.e2e.ts` for deleted component file handling in `bit status` and `bit tag` ([`after_adding_it`], [`tag_and_then_delete_a_file`]).
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 

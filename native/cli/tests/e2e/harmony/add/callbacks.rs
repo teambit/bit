@@ -1,4 +1,4 @@
-//! Published callbacks observe the same newly tracked classes before generated packages are linked.
+//! Published callbacks ([`configured`]) observe the same newly tracked classes before generated packages are linked.
 //!
 //! Verifies `onLoad` and package extension callbacks and rollback behavior on callback or filesystem link failure.
 

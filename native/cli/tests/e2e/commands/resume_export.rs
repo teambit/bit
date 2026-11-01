@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit resume-export` recovery protocol, failures, and reports against the released CLI.
+//! End-to-end tests for `bit resume-export` recovery protocol, failures, and reports against the released CLI ([`file`]).
 
 mod file;
 

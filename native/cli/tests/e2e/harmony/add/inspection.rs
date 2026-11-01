@@ -1,4 +1,4 @@
-//! Inspect the actual published consumers of native-produced tracking records.
+//! Inspect ([`show`], [`fragment`], [`policy`]) the actual published consumers of native-produced tracking records.
 //!
 //! Provides `show` and `status` helpers for asserting environment, policy, and issue parity after `bit add`.
 

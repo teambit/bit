@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit ci sync: branch ownership and first contact`.
+//! End-to-end tests for `bit ci sync: branch ownership and first contact` ([`ci_sync_branch_ownership_decides_what_close_pr_may_delete`]).
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-branch-ownership.e2e.ts`

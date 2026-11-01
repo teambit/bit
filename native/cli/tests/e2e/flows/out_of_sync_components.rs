@@ -1,4 +1,4 @@
-//! Port of `e2e/flows/out-of-sync-componets.e2e.ts` for out-of-sync `.bitmap` and scope state.
+//! Port of `e2e/flows/out-of-sync-componets.e2e.ts` for out-of-sync `.bitmap` and scope state ([`consumer_with_a_new_component_and_scope_with_the_same_component_as_staged`]).
 
 use crate::helper::Helper;
 

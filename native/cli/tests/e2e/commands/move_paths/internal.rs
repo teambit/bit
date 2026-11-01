@@ -1,4 +1,4 @@
-//! End-to-end tests verifying internal path relocation (`bit move`) uses the component's complete retained ignore policy.
+//! End-to-end tests verifying internal path relocation (`bit move`) uses the component's complete retained ignore policy ([`nested_directory_moves_ignored_bytes_but_reports_only_tracked_files`]).
 
 use super::support::{bitmap, compare, setup, workspace};
 use std::fs;

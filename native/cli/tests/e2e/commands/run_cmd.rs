@@ -1,4 +1,4 @@
-//! End-to-end parity tests for the native `bit run` application execution command.
+//! End-to-end parity tests for the native `bit run` application execution command ([`run_help_matches_node`]).
 
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::{ffi::OsStr, fs};

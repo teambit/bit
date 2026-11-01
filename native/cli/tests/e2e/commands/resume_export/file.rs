@@ -1,4 +1,4 @@
-//! End-to-end tests for file pending-object recovery (`bit resume-export`) against restored scopes and the released CLI.
+//! End-to-end tests for file pending-object recovery (`bit resume-export`) against restored scopes and the released CLI ([`order`]).
 
 mod order;
 use crate::helper::{Helper, Run};

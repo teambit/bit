@@ -1,4 +1,4 @@
-//! End-to-end tests verifying published identity operations retain `.bitTmp` consumer temporary files, including successful noops.
+//! End-to-end tests verifying published identity operations retain `.bitTmp` consumer temporary files, including successful noops ([`successful_move_retains_existing_consumer_temporary_files`]).
 
 use super::support::{compare, successful, workspace};
 use std::fs;

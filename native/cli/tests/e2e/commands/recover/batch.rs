@@ -1,4 +1,4 @@
-//! End-to-end tests verifying ordinary `bit recover` uses one final `.bitmap` publication after all selected actions.
+//! End-to-end tests verifying ordinary `bit recover` uses one final `.bitmap` publication after all selected [`REMOVE`] actions.
 
 use crate::commands::move_paths::support::{bitmap, setup, successful, workspace};
 use std::fs;

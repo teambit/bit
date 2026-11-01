@@ -1,4 +1,4 @@
-//! Local deprecation, persisted ranges, and the published downstream readers.
+//! Local deprecation, persisted ranges, and the published downstream readers ([`lifecycle`], [`ranges`], [`DEPRECATION`]).
 //!
 //! Covers `bit deprecate` and `bit undeprecate` on single and wildcard targets, `--new-id` replacement metadata, and `checkout reset`.
 

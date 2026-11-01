@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit ci sync: what counts as work, and what converges`.
+//! End-to-end tests for `bit ci sync: what counts as work, and what converges` ([`ci_sync_rejected_sync_commit_push_reports_benign_race`]).
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-convergence.e2e.ts`

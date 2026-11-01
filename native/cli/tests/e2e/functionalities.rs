@@ -1,4 +1,4 @@
-//! End-to-end core functionality suites (`e2e/functionalities/`).
+//! End-to-end core functionality suites (`e2e/functionalities/`: [`auto_tagging`], [`binary_files`], [`components_index`], [`dev_dependencies`], [`dynamic_namespaces`], [`env_peer_deps_install`], [`merge`], [`peer_dependencies`], [`peer_dependency_component`], [`repository_hooks_aspects`], [`workspace_config`]).
 //!
 //! Groups auto-tagging, binary files, component index, dependency resolution, merge, and workspace config tests.
 

@@ -1,4 +1,4 @@
-//! Complete `ConfigCmd` sequences retain store bytes, origin precedence, and rendering.
+//! Complete `ConfigCmd` sequences ([`compare`]) retain store bytes, origin precedence, and rendering.
 //!
 //! Verifies `config get`, `config set`, `config del`, and `config list` across global, scope, workspace, and env origins.
 

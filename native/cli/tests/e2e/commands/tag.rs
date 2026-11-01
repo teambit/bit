@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/tag.e2e.ts` for native `bit tag` semver, dependency, and lane parity.
+//! End-to-end port of `e2e/commands/tag.e2e.ts` for native `bit tag` semver, dependency, and lane parity ([`lane`], [`registry`], [`root`], [`soft`], [`states`], [`unlinked`], [`qualification`]).
 
 mod lane;
 mod registry;

@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/reset.e2e.ts` for native `bit reset` and `bit untag` parity.
+//! End-to-end port of `e2e/commands/reset.e2e.ts` for native `bit reset` and `bit untag` parity ([`cat_component`], [`list_local_scope`], [`read_bitmap`]).
 
 use crate::helper::{FOO_FIXTURE, Helper, Run, parse};
 use serde_json::Value;

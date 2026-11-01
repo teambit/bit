@@ -1,4 +1,4 @@
-//! Port of `e2e/functionalities/env-peer-deps-install.e2e.ts` for environment peer dependency installation.
+//! Port of `e2e/functionalities/env-peer-deps-install.e2e.ts` for environment peer dependency installation ([`create_react_and_check_types`]).
 //!
 //! Verifies that creating a React component installs `@types/react` and passes `check-types`.
 

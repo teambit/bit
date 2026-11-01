@@ -1,4 +1,4 @@
-//! Port of `e2e/functionalities/dynamic-namespaces.e2e.ts` for multi-level component namespaces.
+//! Port of `e2e/functionalities/dynamic-namespaces.e2e.ts` for multi-level component namespaces ([`VERY_LONG_NAME`], [`setup_multi_level`]).
 //!
 //! Covers deeply nested component IDs across `cat-component`, `status`, `list`, `show`, `import`, and ID conflict detection.
 

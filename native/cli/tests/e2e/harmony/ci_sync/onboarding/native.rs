@@ -1,4 +1,4 @@
-//! Native onboarding compares complete command bytes and workspace/history state.
+//! Native onboarding compares complete command bytes and workspace/history state ([`initial_scaffolding_matches_node_and_writes_without_the_published_runtime`]).
 //!
 //! Verifies that `bit ci sync --init` executes without the `JavaScript` host and preserves comments, staged files, and error prefixes.
 

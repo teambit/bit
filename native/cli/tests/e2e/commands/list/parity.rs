@@ -1,4 +1,4 @@
-//! End-to-end `ListCmd` (`bit list`) output and read-only [`inventory`] parity tests.
+//! End-to-end `ListCmd` (`bit list`) output and read-only [`inventory`] / [`capture`] parity tests.
 
 use crate::helper::{Helper, Run};
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Version range deprecation and `bit log` presentation tests for `bit deprecate --range`.
+//! Version range deprecation and `bit log` presentation tests for `bit deprecate --range` ([`two_versions`], [`assert_log`]).
 //!
 //! Verifies range-scoped deprecation across `log --json`, `show`, `list`, `import`, and major version bumps.
 

@@ -1,4 +1,4 @@
-//! End-to-end `ShowCmd` (`bit show`) argument handling tests before component loading.
+//! End-to-end `ShowCmd` (`bit show`) argument handling tests before component loading ([`show_help_and_argument_errors_match_released_node`]).
 
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};

@@ -1,4 +1,4 @@
-//! Port of `e2e/flows/id-with-wildcard.e2e.ts` for wildcard component ID matching in tag, remove, and untag.
+//! Port of `e2e/flows/id-with-wildcard.e2e.ts` for wildcard component ID matching in tag, remove, and untag ([`setup_wildcard_workspace`], [`wildcard_tag_remove_and_untag`]).
 
 use crate::helper::{Helper, config, parse, remote};
 use std::ffi::OsStr;

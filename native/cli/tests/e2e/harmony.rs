@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/` covering workspace, scope, lane, and merge workflows.
+//! End-to-end tests for `e2e/harmony/` covering workspace, scope, lane, and merge workflows ([`add`], [`bit_ignore`], [`delete`], [`deprecation`], [`fork`], [`lanes`], [`refactor`], [`rename`]).
 mod add;
 mod bit_ignore;
 mod delete;

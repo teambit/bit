@@ -1,4 +1,4 @@
-//! Status sections derived from durable `.bitmap` state.
+//! Status sections derived from durable `.bitmap` state ([`pending_import`], [`parity`], [`text_parity`]).
 //!
 //! Verifies `localOnly`, `softTaggedComponents`, `locallySoftRemoved`, `remotelySoftRemoved`, and `importPendingComponents`.
 

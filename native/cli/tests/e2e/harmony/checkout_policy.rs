@@ -1,4 +1,4 @@
-//! `bit checkout` workspace policy updates follow the published Node.js CLI.
+//! `bit checkout` workspace policy updates follow the published Node.js CLI ([`node`], [`source`]).
 //!
 //! Verifies `workspace.jsonc` dependency policy updates, conflict strategies, and `JSONC` comment preservation on `checkout head`.
 

@@ -1,4 +1,4 @@
-//! Port of `e2e/functionalities/peer-dependency-component.e2e.ts` for component peer dependencies.
+//! Port of `e2e/functionalities/peer-dependency-component.e2e.ts` for component peer dependencies ([`set_peer_and_unset_peer_component_workflows`]).
 //!
 //! Exercises `set-peer` and `unset-peer` workflows, default peer range prefixes, and `.bitmap` config preservation.
 

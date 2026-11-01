@@ -1,4 +1,4 @@
-//! Discover and materialize new default-scope components during `bit checkout head`.
+//! Discover and materialize new default-scope components during `bit checkout head` ([`checkout_head_includes_new_components_from_the_default_scope`]).
 //!
 //! Verifies `checkout head --include-new-from-scope` parity against the Node.js CLI.
 

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/aspect.e2e.ts` for native `bit aspect` parity.
+//! Port of `e2e/harmony/aspect.e2e.ts` for native `bit aspect` parity ([`aspect_set_eject_conf_and_unset_on_component_json`]).
 //!
 //! Covers `aspect set` (including `--merge`), `aspect unset`, `aspect get`, `aspect list`, `aspect list-core`, and `aspect update`.
 

@@ -1,4 +1,4 @@
-//! Compiled extension hydration stays an adapter around Rust checkout selection and files.
+//! Compiled extension hydration stays an adapter around Rust checkout selection and files ([`checkout_with_compiled_onload_callbacks_matches_node`]).
 //!
 //! Verifies `onLoad` callbacks, error rollback, unsupported transport fallback, and `.bitTmp` cleanup across `checkout`, `revert`, and `switch`.
 

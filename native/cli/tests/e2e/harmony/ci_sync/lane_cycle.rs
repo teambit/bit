@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit ci sync: the lane/branch reconcile cycle`.
+//! End-to-end tests for `bit ci sync: the lane/branch reconcile cycle` ([`ci_sync_lane_branch_reconcile_cycle`]).
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-lane-cycle.e2e.ts`

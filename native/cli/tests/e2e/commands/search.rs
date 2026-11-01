@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/search.e2e.ts` for native `bit search` local and JSON parity.
+//! End-to-end port of `e2e/commands/search.e2e.ts` for native `bit search` local and JSON parity ([`setup_workspace`]).
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 

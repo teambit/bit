@@ -1,4 +1,4 @@
-//! New snapshots recreate an unlinked component package and source links.
+//! New snapshots recreate an unlinked component package and source links ([`compare`], [`application`], [`sources`], [`unmerged`]).
 
 mod application;
 mod sources;

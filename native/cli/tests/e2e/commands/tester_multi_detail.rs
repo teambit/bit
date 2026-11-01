@@ -1,4 +1,4 @@
-//! Detailed multi-component `bit test --json` reports retain each component's files, errors, and coverage.
+//! Detailed multi-component `bit test --json` reports ([`detail_order`]) retain each component's files, errors, and coverage.
 
 use super::{move_paths::support, tester::timings};
 use serde_json::Value;

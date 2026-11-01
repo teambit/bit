@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/bit-ignore.e2e.ts` for `.bitignore` and `.gitignore` tracking rules.
+//! Port of `e2e/harmony/bit-ignore.e2e.ts` for `.bitignore` and `.gitignore` tracking rules ([`populate_comp1`], [`component_files`]).
 //!
 //! Verifies component-level and root-level `.bitignore`/`.gitignore` precedence and `ignoredFiles` workspace config.
 

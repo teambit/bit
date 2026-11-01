@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/component-config.e2e.ts` for `component.json` and `eject-conf` parity.
+//! Port of `e2e/harmony/component-config.e2e.ts` for `component.json` and `eject-conf` parity ([`eject_config_for_new_component`]).
 //!
 //! Covers `eject-conf` on new and tagged components, `--propagate`, `--override`, and config precedence across `component.json` and variants.
 

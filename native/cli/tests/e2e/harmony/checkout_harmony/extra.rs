@@ -1,4 +1,4 @@
-//! Additional tests for `e2e/harmony/checkout-harmony.e2e.ts` parity.
+//! Additional tests for `e2e/harmony/checkout-harmony.e2e.ts` parity ([`checkout_head_and_latest_and_non_existing_local_version`]).
 //!
 //! Exercises `checkout head`, `checkout latest`, `checkout reset`, short snap hashes, lanes, and `--include-new-from-scope`.
 

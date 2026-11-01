@@ -1,4 +1,4 @@
-//! Text `--summary` behavior against the released `bit test` runner.
+//! Text `--summary` behavior ([`without_duration`]) against the released `bit test` runner.
 
 use super::move_paths::support;
 

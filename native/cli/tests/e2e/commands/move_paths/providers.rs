@@ -1,4 +1,4 @@
-//! End-to-end tests ensuring configured provider writes occur before authoritative operation planning, once per command.
+//! End-to-end tests ensuring [`configured`] provider writes occur before authoritative operation planning, once per command.
 
 use super::support::{self, bitmap, setup, successful};
 use crate::helper::{Helper, config};

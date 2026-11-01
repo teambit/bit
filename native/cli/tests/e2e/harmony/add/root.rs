@@ -1,4 +1,4 @@
-//! Workspace-root component tracking and nested ownership tests for `bit add --root`.
+//! Workspace-root component tracking and nested ownership tests for `bit add --root` ([`assert_loaded_root_sources`]).
 //!
 //! Verifies `.bitmap` boundaries, nested component file handoff, collision errors, and skipped dependency detectors.
 

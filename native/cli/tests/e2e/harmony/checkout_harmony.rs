@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/checkout-harmony.e2e.ts` for native `bit checkout` parity.
+//! Port of `e2e/harmony/checkout-harmony.e2e.ts` for native `bit checkout` parity ([`extra`], [`non_existing_and_after_component_created`]).
 //!
 //! Covers version switching, dependency graphs, file additions/deletions, and merge conflict strategies (`--manual`, `theirs`, `ours`).
 

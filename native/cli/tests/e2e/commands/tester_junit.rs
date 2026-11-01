@@ -1,4 +1,4 @@
-//! End-to-end tests verifying released `JUnit` (`--junit`) files ([`project`]) preserve test details, timestamps, and observable writes.
+//! End-to-end tests verifying released `JUnit` (`--junit`) files ([`project`], [`compare`]) preserve test details, timestamps, and observable writes.
 
 use super::{add::support, move_paths, tester::timings};
 use crate::helper::{Helper, Run};

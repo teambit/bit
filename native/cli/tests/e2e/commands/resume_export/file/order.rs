@@ -1,4 +1,4 @@
-//! Pending-directory probes append same-category answers in asynchronous completion order.
+//! Pending-directory probes ([`normalize`]) append same-category answers in asynchronous completion order.
 
 pub(super) fn normalize(output: &str, mixed_scope: Option<&str>) -> String {
     let Some(scope) = mixed_scope else { return output.to_owned() };

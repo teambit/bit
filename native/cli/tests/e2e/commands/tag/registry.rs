@@ -1,4 +1,4 @@
-//! Real registry facts leave semantic version planning and writes in Rust.
+//! Real [`Registry`] facts leave semantic version planning and writes in Rust.
 
 use super::soft::{bitmap, compare_command};
 use crate::helper::{FOO_FIXTURE, Helper, config};

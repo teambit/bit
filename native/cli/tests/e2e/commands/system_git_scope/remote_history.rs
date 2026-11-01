@@ -1,4 +1,4 @@
-//! End-to-end tests comparing remote `bit version-history` action requests and reports against the released CLI.
+//! End-to-end tests comparing remote `bit version-history` action requests and reports against the released CLI via [`Server`].
 use crate::helper::{Helper, action_server::Server};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
