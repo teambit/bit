@@ -68,9 +68,15 @@ pub(super) fn bitmap_key(
         } else {
             key
         };
-        rows.insert(key, row);
+        if rows.insert(key, row).is_some() {
+            return Err(invalid("inbound duplicate bitmap key"));
+        }
     }
-    Ok(format!("{scope}/{name}"))
+    let target_key = format!("{scope}/{name}");
+    if rows.contains_key(&target_key) {
+        return Err(invalid("inbound duplicate bitmap key"));
+    }
+    Ok(target_key)
 }
 
 pub(super) fn existing_mut<'a>(

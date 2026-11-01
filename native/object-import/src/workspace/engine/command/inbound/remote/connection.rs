@@ -54,6 +54,11 @@ pub(super) fn bare(
     directory: &Path,
     transport: &Transport,
 ) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
+    if !fs::symlink_metadata(directory.join("scope.json"))?.is_file()
+        || !fs::symlink_metadata(directory.join("objects"))?.is_dir()
+    {
+        return Err(invalid("bare inbound objects"));
+    }
     let scope: Value =
         crate::parse_jsonc(&fs::read(directory.join("scope.json"))?).map_err(io::Error::other)?;
     let local = scope["name"]
@@ -61,9 +66,6 @@ pub(super) fn bare(
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("bare inbound local scope"))?;
-    if !directory.join("objects").is_dir() {
-        return Err(invalid("bare inbound objects"));
-    }
     let global = bit_client_transfer::config::effective(
         global_config(transport)?,
         &scope["config"],

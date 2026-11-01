@@ -269,9 +269,9 @@ pub(crate) fn candidate_component_hashes(scope_dir: &Path, scope: &str, name: &s
 
 fn indexed_component_hashes(scope_dir: &Path, scope: &str, name: &str) -> Vec<String> {
     let index_path = scope_dir.join("index.json");
-    if std::fs::metadata(&index_path)
+    if std::fs::symlink_metadata(&index_path)
         .ok()
-        .is_none_or(|meta| meta.len() > 16 * 1024 * 1024)
+        .is_none_or(|meta| !meta.is_file() || meta.len() > 16 * 1024 * 1024)
     {
         return Vec::new();
     }

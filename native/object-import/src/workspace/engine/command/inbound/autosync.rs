@@ -114,27 +114,30 @@ fn indexed_component_hash(root: &Path, id: &str) -> Option<String> {
         .split_once('/')
         .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     let index_path = crate::scope_path(root).join("index.json");
-    if fs::metadata(&index_path).ok()?.len() > 16 * 1024 * 1024 {
+    let meta = fs::symlink_metadata(&index_path).ok()?;
+    if !meta.is_file() || meta.len() > 16 * 1024 * 1024 {
         return None;
     }
-    let bytes = fs::read(index_path).ok()?;
-    let index: Value = crate::parse_jsonc(&bytes).ok()?;
-    let rows = index["components"].as_array().or_else(|| index.as_array())?;
-    rows.iter()
-        .find(|row| {
-            let Some((row_scope_opt, row_name)) = super::remote::file_list::row_id_parts(row)
-            else {
-                return false;
-            };
-            let row_scope = row_scope_opt.unwrap_or_default().trim();
-            row["isSymlink"] != true
-                && row_name.trim() == name
-                && (row_scope == scope || row_scope.is_empty())
-        })
+    let index: Value = crate::parse_jsonc(&fs::read(index_path).ok()?).ok()?;
+    index["components"]
+        .as_array()
+        .or_else(|| index.as_array())?
+        .iter()
+        .find(|row| indexed_row_matches(row, scope, name))
         .and_then(|row| row["hash"].as_str())
         .map(str::trim)
         .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
+}
+
+fn indexed_row_matches(row: &Value, scope: &str, name: &str) -> bool {
+    let Some((row_scope_opt, row_name)) = super::remote::file_list::row_id_parts(row) else {
+        return false;
+    };
+    let row_scope = row_scope_opt.unwrap_or_default().trim();
+    row["isSymlink"] != true
+        && row_name.trim() == name
+        && (row_scope == scope || row_scope.is_empty())
 }
 
 fn head(model: &Value) -> Option<String> {

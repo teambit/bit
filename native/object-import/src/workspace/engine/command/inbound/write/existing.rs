@@ -385,7 +385,11 @@ pub(super) fn check(root: &Path, path: &Path, before: &[u8]) -> io::Result<()> {
     {
         current.push(part);
         let metadata = fs::symlink_metadata(&current)?;
-        if current == path && (!metadata.is_file() || fs::read(&current)? != before) {
+        if current == path
+            && (!metadata.is_file()
+                || metadata.len() != before.len() as u64
+                || fs::read(&current)? != before)
+        {
             return Err(invalid("inbound existing workspace file changed"));
         } else if current != path && !metadata.is_dir() {
             return Err(invalid("inbound existing workspace parent linked"));

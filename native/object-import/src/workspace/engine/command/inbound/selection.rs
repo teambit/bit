@@ -61,10 +61,14 @@ fn valid_target_parts(scope: &str, name: &str, raw_version: &str) -> bool {
     let valid_segment =
         |part: &str| !part.is_empty() && !part.contains("..") && !part.contains('\\');
     valid_segment(scope)
+        && scope.len() <= 512
         && valid_segment(name)
+        && name.len() <= 1024
         && !name.contains('*')
         && !name.starts_with('/')
+        && !name.ends_with('/')
         && !raw_version.is_empty()
+        && raw_version.len() <= 256
         && ![scope, name, raw_version]
             .into_iter()
             .any(|part| part.chars().any(char::is_control))

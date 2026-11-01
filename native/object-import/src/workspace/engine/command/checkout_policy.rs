@@ -225,10 +225,18 @@ fn insert_version(groups: &mut Vec<(String, Vec<String>)>, name: &str, version: 
 fn workspace_entries(policy: &serde_json::Map<String, Value>) -> io::Result<Vec<Value>> {
     let mut entries = Vec::new();
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
-        let Some(dependencies) = policy.get(field).and_then(Value::as_object) else {
+        let Some(raw) = policy
+            .get(field)
+            .filter(|val| !val.is_null())
+        else {
             continue;
         };
+        let dependencies =
+            raw.as_object().ok_or_else(|| invalid("command workspace policy entry"))?;
         for (name, value) in dependencies {
+            if entries.len() >= 4096 {
+                return Err(invalid("command workspace policy entry"));
+            }
             entries.push(policy_entry(field, name, value)?);
         }
     }

@@ -58,7 +58,10 @@ impl Attributes {
             return Err(invalid("unsupported inbound bitmap attributes"));
         }
         let backup = match fs::symlink_metadata(backup) {
-            Ok(metadata) => Some(metadata),
+            Ok(metadata) if metadata.is_file() && !metadata.file_type().is_symlink() => {
+                Some(metadata)
+            }
+            Ok(_) => return Err(invalid("unsupported inbound bitmap attributes")),
             Err(error) if error.kind() == io::ErrorKind::NotFound => None,
             Err(error) => return Err(error),
         };

@@ -218,14 +218,25 @@ fn current_dependencies(row: &Value) -> io::Result<Vec<Target>> {
             .into_iter()
             .flatten()
         {
+            if dependencies.len() >= 16384 {
+                return Err(invalid("inbound resolved graph dependencies"));
+            }
             dependencies.push(current_target(dependency)?);
         }
     }
+    append_peer_dependencies(row, &mut dependencies)?;
+    Ok(dependencies)
+}
+
+fn append_peer_dependencies(row: &Value, dependencies: &mut Vec<Target>) -> io::Result<()> {
     for id in row["peerDependencies"]
         .as_array()
         .into_iter()
         .flatten()
     {
+        if dependencies.len() >= 16384 {
+            return Err(invalid("inbound resolved graph dependencies"));
+        }
         let id = id.as_str().ok_or_else(|| invalid("inbound peer graph identity"))?;
         let mut target = super::super::requested_target(id)?;
         if !id.contains('@') {
@@ -233,5 +244,5 @@ fn current_dependencies(row: &Value) -> io::Result<Vec<Target>> {
         }
         dependencies.push(target);
     }
-    Ok(dependencies)
+    Ok(())
 }

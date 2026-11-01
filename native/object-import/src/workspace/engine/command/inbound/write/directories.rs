@@ -181,7 +181,11 @@ pub(super) fn default_directory(root: &Path) -> io::Result<String> {
         Some(value) => value
             .as_str()
             .map(str::trim)
-            .filter(|template| !template.is_empty())
+            .filter(|template| {
+                !template.is_empty()
+                    && template.len() <= 1024
+                    && !template.chars().any(char::is_control)
+            })
             .ok_or_else(|| invalid("inbound workspace default directory"))?,
     };
     Ok(if template.contains("{name}") {

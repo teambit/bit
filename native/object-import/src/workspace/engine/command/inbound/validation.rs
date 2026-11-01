@@ -32,7 +32,9 @@ fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
     validate_dependencies(input)?;
     validate_lane_ids(input)?;
     validate_adoption(input)?;
-    if publication && !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
+    if (publication && !valid_write_mode(input))
+        || std::fs::symlink_metadata(input.root.join(".bitTmp")).is_ok()
+    {
         return Err(invalid("inbound command requires canonical lifecycle"));
     }
     Ok(())

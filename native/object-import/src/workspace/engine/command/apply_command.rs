@@ -146,7 +146,10 @@ pub(super) fn publish_bitmap(
 // publication records each invocation and performs the same best-effort notification.
 pub(super) fn notify(root: &std::path::Path) -> usize {
     let directory = crate::scope_path(root).join("events");
-    let _notification = std::fs::create_dir_all(&directory)
-        .and_then(|()| std::fs::write(directory.join("onPostObjectsPersist"), b""));
+    let target = directory.join("onPostObjectsPersist");
+    if !directory.is_symlink() && !target.is_symlink() {
+        let _notification =
+            std::fs::create_dir_all(&directory).and_then(|()| std::fs::write(target, b""));
+    }
     1
 }

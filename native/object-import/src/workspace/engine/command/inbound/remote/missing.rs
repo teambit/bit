@@ -135,7 +135,11 @@ impl Objects<'_> {
     fn body(&self, hash: &str, kind: &str) -> Option<Vec<u8>> {
         let hash = hash.trim();
         let identity = merge_history::hash(hash).ok()?;
-        let raw = match self.fetched.get(hash) {
+        let canonical = hexadecimal(&identity);
+        let raw = match self.fetched
+            .get(hash)
+            .or_else(|| self.fetched.get(canonical.as_str()))
+        {
             Some(compressed) => repository::inflate(compressed, LIMIT).ok()?,
             None => repository::read(self.local, identity, LIMIT, &mut 0).ok()?,
         };

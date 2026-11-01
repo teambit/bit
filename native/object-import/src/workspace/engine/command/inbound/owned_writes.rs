@@ -4,22 +4,13 @@ use serde_json::Value;
 use std::{collections::HashMap, io};
 
 pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
+    if receipts.len() > 16384 {
+        return Err(invalid("inbound owned publication count"));
+    }
     let mut positions = HashMap::<String, usize>::new();
     let mut result: Vec<Value> = Vec::new();
     for mut receipt in receipts {
-        let path = receipt["path"]
-            .as_str()
-            .or_else(|| receipt["filePath"].as_str())
-            .map(str::trim)
-            .filter(|path| !path.is_empty())
-            .ok_or_else(|| invalid("inbound owned path"))?
-            .to_owned();
-        super::super::super::path(std::path::Path::new(&path))?;
-        let before = digest(&receipt, "beforeHash", "before");
-        let after = digest(&receipt, "afterHash", "after");
-        receipt["path"] = Value::String(path.clone());
-        receipt["beforeHash"] = before.clone();
-        receipt["afterHash"] = after.clone();
+        let (path, before, after) = normalize_receipt(&mut receipt)?;
         if let Some(&index) = positions.get(&path) {
             if result[index]["afterHash"] != before {
                 return Err(invalid("inbound owned publication preimages disagree"));
@@ -31,6 +22,26 @@ pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
         }
     }
     Ok(result)
+}
+
+fn normalize_receipt(receipt: &mut Value) -> io::Result<(String, Value, Value)> {
+    let path = receipt["path"]
+        .as_str()
+        .or_else(|| receipt["filePath"].as_str())
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .ok_or_else(|| invalid("inbound owned path"))?
+        .to_owned();
+    super::super::super::path(std::path::Path::new(&path))?;
+    let before = digest(receipt, "beforeHash", "before");
+    let after = digest(receipt, "afterHash", "after");
+    if !(before.is_null() || before.is_string()) || !(after.is_null() || after.is_string()) {
+        return Err(invalid("inbound owned publication digest"));
+    }
+    receipt["path"] = Value::String(path.clone());
+    receipt["beforeHash"] = before.clone();
+    receipt["afterHash"] = after.clone();
+    Ok((path, before, after))
 }
 
 fn digest(receipt: &Value, direct_key: &str, nested_key: &str) -> Value {

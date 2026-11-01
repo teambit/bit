@@ -39,7 +39,13 @@ pub(super) fn validate(request: &Prepare) -> io::Result<()> {
     for row in &stash.versions {
         let identity = row.identity.trim();
         let (scope, name) = identity.split_once('/').unwrap_or_default();
-        if !seen.insert(identity) || scope.trim().is_empty() || name.trim().is_empty() {
+        if !seen.insert(identity)
+            || identity.len() > 1024
+            || identity.contains(['\\', '\0'])
+            || identity.chars().any(char::is_control)
+            || scope.trim().is_empty()
+            || name.trim().is_empty()
+        {
             return Err(invalid("stash checkout duplicate identity"));
         }
         crate::merge_history::hash(row.version.trim())?;

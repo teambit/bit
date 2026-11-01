@@ -6,8 +6,10 @@ use std::io;
 pub(super) fn append(prepared: &mut Prepared, context: &Value) -> io::Result<()> {
     let bitmap = crate::parse_jsonc(&prepared.output)?;
     let mut rows = rows(&bitmap)?;
-    let additions =
-        context["stashAdditions"].as_array().ok_or_else(|| invalid("stash bitmap additions"))?;
+    let additions = context["stashAdditions"]
+        .as_array()
+        .filter(|items| items.len() <= 4096)
+        .ok_or_else(|| invalid("stash bitmap additions"))?;
     for saved in additions {
         let mut entry = saved.clone();
         let root = entry["rootDir"]

@@ -62,7 +62,8 @@ fn collect(path: &Path, scope: &str, pattern: &Regex, rows: &[Value]) -> io::Res
 }
 
 pub(super) fn matcher(scope: &str, namespaces: &str) -> io::Result<Regex> {
-    if namespaces.is_empty() || namespaces.len() > 4096 {
+    if namespaces.is_empty() || namespaces.len() > 4096 || namespaces.chars().any(char::is_control)
+    {
         return Err(invalid("inbound file pattern"));
     }
     let full = if namespaces.starts_with(&format!("{scope}/")) {
@@ -70,7 +71,8 @@ pub(super) fn matcher(scope: &str, namespaces: &str) -> io::Result<Regex> {
     } else {
         format!("{scope}/{namespaces}")
     };
-    Regex::new(&format!("^{}$", full.replace('*', ".*"))).map_err(io::Error::other)
+    let escaped = full.replace('.', r"\.").replace('*', ".*");
+    Regex::new(&format!("^{escaped}$")).map_err(io::Error::other)
 }
 
 pub(super) fn lane(path: &Path, id: &lane::Id) -> io::Result<Vec<Listed>> {

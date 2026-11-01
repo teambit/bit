@@ -60,7 +60,8 @@ fn read_component(scope: &Path, directory: &Path, id: &str) -> io::Result<Option
 
 fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
     let index_path = scope.join("index.json");
-    if std::fs::metadata(&index_path).ok()?.len() > 16 * 1024 * 1024 {
+    let meta = std::fs::symlink_metadata(&index_path).ok()?;
+    if !meta.is_file() || meta.len() > 16 * 1024 * 1024 {
         return None;
     }
     let bytes = std::fs::read(index_path).ok()?;

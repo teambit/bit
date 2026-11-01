@@ -76,6 +76,9 @@ fn select(
     } else {
         selection::ids(input)?
     };
+    if ids.len() > 32 {
+        return Err(invalid("inbound implicit lane count"));
+    }
     for text in &ids {
         let id = parse_id(text, &mut seen)?;
         let fetched = remote::lane_objects(input, &id)?;

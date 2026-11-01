@@ -45,6 +45,13 @@ fn select(
 }
 
 fn selected(ids: &[String], excluded: &mut HashSet<String>) -> io::Result<Vec<Target>> {
+    if ids.len() > 4096 {
+        return Err(invalid("inbound dependent target limit"));
+    }
+    let mut counts = HashMap::<&str, usize>::new();
+    for id in ids {
+        *counts.entry(bare(id)).or_default() += 1;
+    }
     let mut result = Vec::new();
     for id in ids {
         let identity = bare(id);
@@ -52,10 +59,10 @@ fn selected(ids: &[String], excluded: &mut HashSet<String>) -> io::Result<Vec<Ta
             continue;
         }
         let mut target = super::requested_target(id)?;
-        if ids
-            .iter()
-            .filter(|other| bare(other) == identity)
-            .count()
+        if counts
+            .get(identity)
+            .copied()
+            .unwrap_or(0)
             > 1
         {
             target.version = "latest".into();

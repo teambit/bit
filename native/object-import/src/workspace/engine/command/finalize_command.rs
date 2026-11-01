@@ -4,7 +4,7 @@ use std::io;
 pub(super) fn run(input: &Finalize, state: &mut State) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command finalize owner absent"))?;
     let token = input.token.trim();
-    if token.is_empty() || record.token != token {
+    if token.is_empty() || record.token != token || !input.snap_receipt.is_object() {
         return Err(invalid("command finalize token"));
     }
     let mut prepared =

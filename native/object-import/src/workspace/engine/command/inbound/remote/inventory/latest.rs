@@ -86,7 +86,11 @@ async fn group(
                 let Some((_, ver)) = row.rsplit_once('@') else {
                     return true;
                 };
-                ver.trim().is_empty() || identity(row).ok() != identity(requested).ok()
+                let ver = ver.trim();
+                ver.is_empty()
+                    || ver.len() > 256
+                    || ver.chars().any(char::is_control)
+                    || identity(row).ok() != identity(requested).ok()
             })
     {
         return Err(invalid("remote latest versions result"));

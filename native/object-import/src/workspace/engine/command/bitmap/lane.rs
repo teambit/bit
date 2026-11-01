@@ -92,10 +92,14 @@ pub(super) fn promote_inactive_scope(
 ) -> io::Result<()> {
     if context.get("lane").is_some()
         && entry["isAvailableOnCurrentLane"] == false
-        && entry["scope"] == ""
+        && entry["scope"]
+            .as_str()
+            .is_some_and(|scope| scope.trim().is_empty())
     {
         let (scope, _) = update.identity
             .split_once('/')
+            .map(|(scope, rest)| (scope.trim(), rest))
+            .filter(|(scope, _)| !scope.is_empty())
             .ok_or_else(|| invalid("command bitmap promoted scope"))?;
         entry["scope"] = json!(scope);
     }

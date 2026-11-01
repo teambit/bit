@@ -48,6 +48,9 @@ pub(super) fn prepare_workspace(
         .as_deref()
         .map(str::trim)
         .filter(|id| !id.is_empty());
+    if let Some(id) = file_id {
+        super::super::bitmap::validate_history_file_id(id)?;
+    }
     write::prepare(&input.root, targets, import, file_id, options).map(Some)
 }
 

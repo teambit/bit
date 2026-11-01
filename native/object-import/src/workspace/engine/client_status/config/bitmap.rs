@@ -130,18 +130,11 @@ fn validate_entry(value: &Value) -> io::Result<()> {
 }
 
 fn validate_flags(value: &Value) -> io::Result<()> {
+    let valid_bool = |key: &str| value.get(key).is_none_or(Value::is_boolean);
     if value
         .get("name")
         .is_some_and(|val| !val.is_string() && !val.is_null())
-        || value
-            .get("localOnly")
-            .is_some_and(|flag| !flag.is_boolean())
-        || value
-            .get("onLanesOnly")
-            .is_some_and(|flag| !flag.is_boolean())
-        || value
-            .get("isAvailableOnCurrentLane")
-            .is_some_and(|flag| !flag.is_boolean())
+        || !["localOnly", "onLanesOnly", "isAvailableOnCurrentLane"].into_iter().all(valid_bool)
         || value
             .get("nextVersion")
             .is_some_and(|next| !next.is_object())
@@ -252,7 +245,7 @@ fn aspect_fields(name: &str, value: &Value, fields: &serde_json::Map<String, Val
                 .all(|key| key == "ignoreIssues")
                 && value["ignoreIssues"]
                     .as_array()
-                    .is_some_and(|names| names.iter().all(Value::is_string))
+                    .is_some_and(|names| names.len() <= 4096 && names.iter().all(Value::is_string))
         }
         "teambit.component/internalize" => {
             fields
@@ -293,7 +286,7 @@ fn replacement_id(value: &Value) -> bool {
         .is_some_and(|id| {
             id.get("name")
                 .and_then(Value::as_str)
-                .is_some_and(|name| !name.is_empty())
+                .is_some_and(|name| !name.trim().is_empty())
                 && id
                     .iter()
                     .all(|(key, value)| {

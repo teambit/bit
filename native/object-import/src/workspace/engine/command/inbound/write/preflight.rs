@@ -128,36 +128,51 @@ fn check_sources(root: &Path, row: &Value, version: &Value) -> io::Result<()> {
     crate::checkout::plan::relative_path(directory)?;
     let files = version["files"]
         .as_array()
-        .filter(|files| files.len() <= 4096)
+        .filter(|files| !files.is_empty() && files.len() <= 4096)
         .ok_or_else(|| invalid("inbound existing files"))?;
     let mut compressed = 0;
     let mut bytes = 0_usize;
+    let mut seen = std::collections::HashSet::new();
     for file in files {
         let relative = file["relativePath"]
             .as_str()
             .map(str::trim)
             .ok_or_else(|| invalid("inbound existing file path"))?;
         crate::checkout::plan::relative_path(relative)?;
-        let hash = file["file"]
-            .as_str()
-            .map(str::trim)
-            .ok_or_else(|| invalid("inbound existing Source"))?;
-        let body = crate::checkout::repository::source(
-            &crate::scope_path(root).join("objects"),
-            crate::merge_history::hash(hash)?,
-            32 * 1024 * 1024,
-            &mut compressed,
-        )?;
-        bytes = bytes
-            .checked_add(body.len())
-            .filter(|bytes| *bytes <= super::MAX_WRITTEN_BYTES)
-            .ok_or_else(|| invalid("inbound preflight source budget"))?;
-        let path = root.join(directory).join(relative);
-        match std::fs::symlink_metadata(&path) {
-            Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
-            Err(error) => return Err(error),
-            Ok(_) => existing::check(root, &path, &crate::checkout::eol::auto(body))?,
+        if !seen.insert(relative) {
+            return Err(invalid("inbound duplicate existing file"));
         }
+        check_source_file(root, directory, relative, file, &mut compressed, &mut bytes)?;
     }
     Ok(())
+}
+
+fn check_source_file(
+    root: &Path,
+    directory: &str,
+    relative: &str,
+    file: &Value,
+    compressed: &mut usize,
+    bytes: &mut usize,
+) -> io::Result<()> {
+    let hash = file["file"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("inbound existing Source"))?;
+    let body = crate::checkout::repository::source(
+        &crate::scope_path(root).join("objects"),
+        crate::merge_history::hash(hash)?,
+        32 * 1024 * 1024,
+        compressed,
+    )?;
+    *bytes = bytes
+        .checked_add(body.len())
+        .filter(|total| *total <= super::MAX_WRITTEN_BYTES)
+        .ok_or_else(|| invalid("inbound preflight source budget"))?;
+    let path = root.join(directory).join(relative);
+    match std::fs::symlink_metadata(&path) {
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error),
+        Ok(_) => existing::check(root, &path, &crate::checkout::eol::auto(body)),
+    }
 }

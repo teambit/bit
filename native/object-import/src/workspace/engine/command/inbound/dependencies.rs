@@ -66,14 +66,20 @@ fn all(input: &Prepare, roots: &[Target], imported: &PreparedImport) -> io::Resu
         let (_, version) = root_version(input, root, imported)?;
         let deps = version["flattenedDependencies"]
             .as_array()
+            .filter(|rows| rows.len() <= 16384)
             .ok_or_else(|| invalid("inbound flattened dependencies"))?;
-        let dev_deps = version["flattenedDevDependencies"].as_array();
+        let dev_deps = version["flattenedDevDependencies"]
+            .as_array()
+            .filter(|rows| rows.len() <= 16384);
         result.extend(
             deps.iter()
                 .chain(dev_deps.into_iter().flatten())
                 .map(target)
                 .collect::<io::Result<Vec<_>>>()?,
         );
+        if result.len() > 16384 {
+            return Err(invalid("inbound dependency graph limit"));
+        }
     }
     Ok(result)
 }

@@ -101,7 +101,7 @@ pub(super) fn finish(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     let plan = state.plan.as_mut().ok_or_else(|| invalid("status requires prepare"))?;
-    if plan.pending != Some(input.token) {
+    if plan.pending != Some(input.token) || input.ignored_root.len() > 4096 {
         return Err(invalid("status stale inventory"));
     }
     plan.pending = None;
@@ -112,6 +112,7 @@ pub(super) fn finish(
     let (_, manifest) = inventory::finish(request, &mut plan.inventory, pool)?;
     let paths = manifest["files"]
         .as_array()
+        .filter(|files| files.len() <= 4096)
         .ok_or_else(|| invalid("status manifest"))?
         .iter()
         .map(|file| {
@@ -123,13 +124,11 @@ pub(super) fn finish(
                 .ok_or_else(|| invalid("status manifest path"))
         })
         .collect::<io::Result<Vec<_>>>()?;
+    let root = plan.root.join(&target.directory);
     if pool.install(|| {
-        crate::inspection::modified(
-            &plan.root.join(&target.directory),
-            &paths,
-            target.directory == ".",
-            || models::files(&plan.root, target),
-        )
+        crate::inspection::modified(&root, &paths, target.directory == ".", || {
+            models::files(&plan.root, target)
+        })
     })? {
         plan.modified.push(target.id.clone());
     }

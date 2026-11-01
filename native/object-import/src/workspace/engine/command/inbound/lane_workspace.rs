@@ -77,21 +77,26 @@ struct Choice {
 }
 
 fn choose(input: &Prepare, roots: &[Target], entries: Vec<lane::Entry>) -> io::Result<Choice> {
-    let visible = entries
-        .into_iter()
-        .filter(|entry| !entry.hidden)
-        .map(|entry| {
-            let raw = entry.identity.trim();
-            let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
-            let key = bare
-                .split_once('/')
-                .map_or_else(|| bare.to_owned(), |(sc, nm)| format!("{}/{}", sc.trim(), nm.trim()));
-            (key, entry.head.trim().to_owned())
-        })
-        .collect::<HashMap<_, _>>();
+    let visible = visible_entries(entries)?;
     let bitmap = config::document(&input.root.join(".bitmap"))?;
     let (selected, main, changed) = select(input, roots, &visible, &bitmap)?;
     Ok(Choice { selected, main, changed })
+}
+
+fn visible_entries(entries: Vec<lane::Entry>) -> io::Result<HashMap<String, String>> {
+    let mut visible = HashMap::new();
+    for entry in entries.into_iter().filter(|entry| !entry.hidden) {
+        let raw = entry.identity.trim();
+        let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
+        let key = bare
+            .split_once('/')
+            .map_or_else(|| bare.to_owned(), |(sc, nm)| format!("{}/{}", sc.trim(), nm.trim()));
+        let head = entry.head.trim().to_owned();
+        if key.is_empty() || head.is_empty() || visible.insert(key, head).is_some() {
+            return Err(invalid("inbound lane component identity"));
+        }
+    }
+    Ok(visible)
 }
 
 fn finish(

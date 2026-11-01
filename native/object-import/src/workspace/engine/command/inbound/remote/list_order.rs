@@ -14,7 +14,17 @@ pub(super) async fn main(
     fork_order: bool,
 ) -> io::Result<Vec<Listed>> {
     match remote {
-        Remote::Http(url) => network.list(url, Some(namespaces)).await,
+        Remote::Http(url) => {
+            let rows = network.list(url, Some(namespaces)).await?;
+            if rows.len() > 16384
+                || rows
+                    .iter()
+                    .any(|row| row.scope.trim() != scope.trim() || row.name.trim().is_empty())
+            {
+                return Err(super::invalid("inbound HTTP list result"));
+            }
+            Ok(rows)
+        }
         Remote::File(path) => {
             let mut rows = file_list::list(path, scope, namespaces)?;
             if fork_order {

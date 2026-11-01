@@ -19,6 +19,7 @@ pub(in crate::workspace::engine) fn select(
 ) -> io::Result<(usize, Value)> {
     let record = state.record.as_mut().ok_or_else(|| invalid("checkout selection owner absent"))?;
     if record.token != input.token.trim()
+        || input.identities.len() > 4096
         || !matches!(record.request.operation, Operation::Checkout | Operation::Merge)
         || !record.request.defer_checkout_pattern
         || record.planned.is_some()

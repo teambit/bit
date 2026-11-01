@@ -55,6 +55,9 @@ fn tracked_for_separator(root: &Path, separator: char) -> io::Result<Vec<String>
         return Ok(Vec::new());
     }
     let base = crate::scope_path(root).join("refs/remotes");
+    if fs::symlink_metadata(&base).is_ok_and(|meta| meta.file_type().is_symlink()) {
+        return Err(invalid("inbound remote lane symlink"));
+    }
     if !base.try_exists()? {
         return Ok(Vec::new());
     }
@@ -68,7 +71,9 @@ fn tracked_for_separator(root: &Path, separator: char) -> io::Result<Vec<String>
             .file_name()
             .into_string()
             .map_err(|_| invalid("inbound remote scope UTF8"))?;
-        ids.extend(scope_lanes(&scope.path(), &scope_name)?);
+        if !scope_name.trim().is_empty() && !scope_name.starts_with('.') {
+            ids.extend(scope_lanes(&scope.path(), &scope_name)?);
+        }
     }
     ids.sort_by(|left, right| right.cmp(left));
     if ids.len() > 32 {

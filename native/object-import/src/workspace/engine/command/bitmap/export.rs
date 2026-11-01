@@ -10,6 +10,9 @@ pub(in crate::workspace::engine::command) fn prepare_export_scopes(
     original: Vec<u8>,
     components: &[(String, String)],
 ) -> io::Result<Prepared> {
+    if original.len() > 4 * 1024 * 1024 || components.len() > 4096 {
+        return Err(invalid("export bitmap bounds"));
+    }
     let mut bitmap = crate::recovery::jsonc::parse(&original)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("export bitmap object"))?;
     let mut seen = HashSet::new();

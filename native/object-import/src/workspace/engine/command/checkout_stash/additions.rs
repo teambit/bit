@@ -11,19 +11,21 @@ pub(in crate::workspace::engine::command) fn context(
     let Some(stash) = &request.options.stash else {
         return Ok(());
     };
+    if !std::fs::symlink_metadata(request.root.join(".bitmap"))?.is_file() {
+        return Err(invalid("stash bitmap"));
+    }
     let bitmap = crate::parse_jsonc(&std::fs::read(request.root.join(".bitmap"))?)?;
     let existing = identities(&bitmap)?;
     let mut additions = Vec::new();
     let mut targets = Vec::new();
     let mut seen = HashSet::new();
     for entry in &stash.bitmap_entries {
-        let Some((identity, version, row)) = addition(entry, &existing)? else {
+        let Some((identity, version, mut row)) = addition(entry, &existing)? else {
             continue;
         };
         if !seen.insert(identity.clone()) {
             return Err(invalid("stash duplicate new identity"));
         }
-        let mut row = row;
         targets.push(json!({"identity":identity,"directory":entry["rootDir"],"version":"","mainFile":entry["mainFile"],"config":null,"bitmapConfig":row["config"],"stashVersion":version}));
         row["stashVersion"] = json!(version);
         additions.push(row);

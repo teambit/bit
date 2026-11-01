@@ -284,23 +284,23 @@ fn apply_update(entry: &mut Value, context: &Value, update: &Update) -> io::Resu
     }
     Ok(true)
 }
+fn row_name(entry: &Value) -> io::Result<&str> {
+    entry["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("command bitmap name"))
+}
 fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Result<Vec<u8>> {
     let mut names = HashMap::<String, usize>::new();
     for entry in &rows {
-        let name = entry["name"]
-            .as_str()
-            .map(str::trim)
-            .filter(|name| !name.is_empty())
-            .ok_or_else(|| invalid("command bitmap name"))?;
-        *names.entry(name.to_owned()).or_default() += 1;
+        *names
+            .entry(row_name(entry)?.to_owned())
+            .or_default() += 1;
     }
     let mut keyed = Vec::new();
     for entry in rows {
-        let name = entry["name"]
-            .as_str()
-            .map(str::trim)
-            .filter(|name| !name.is_empty())
-            .ok_or_else(|| invalid("command bitmap name"))?;
+        let name = row_name(&entry)?;
         let key = if names[name] > 1 { identity(&entry)? } else { name.to_owned() };
         keyed.push((key, crate::inspection::component_row(&entry)?));
     }
@@ -365,7 +365,8 @@ pub(super) fn validate_history_file_id(file_id: &str) -> io::Result<()> {
 }
 impl Prepared {
     pub(super) fn validate(&self) -> io::Result<()> {
-        if fs::read(self.root.join(".bitmap"))? != self.original {
+        let path = self.root.join(".bitmap");
+        if !fs::symlink_metadata(&path)?.is_file() || fs::read(&path)? != self.original {
             return Err(invalid("command bitmap changed"));
         }
         Ok(())
@@ -373,7 +374,7 @@ impl Prepared {
     pub(super) fn publication_receipt(&self) -> io::Result<Value> {
         let after = if self.changed { &self.output } else { &self.original };
         let path = self.root.join(".bitmap");
-        if fs::read(&path)? != *after {
+        if !fs::symlink_metadata(&path)?.is_file() || fs::read(&path)? != *after {
             return Err(invalid("switch bitmap publication changed"));
         }
         Ok(crate::command_import::write_receipt(&path, Some(&self.original), after))

@@ -65,6 +65,8 @@ impl State {
         for (identity, hash, version) in versions {
             let identity = identity.trim();
             let hash = hash.trim();
+            crate::merge_history::hash(hash)?;
+            crate::read_version::parents(version)?;
             let Some(history) = self.values.get_mut(identity) else {
                 continue;
             };

@@ -330,16 +330,23 @@ fn file_component(
 /// `ModelComponent.getHeadRegardlessOfLaneAsTagOrHash` searches the newest
 /// ordinary tag first, then orphaned tags, before using the raw head.
 fn latest_from_model(model: &Value) -> io::Result<String> {
-    let head = model["head"].as_str().ok_or_else(|| invalid("remote file model head"))?;
+    let head = model["head"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("remote file model head"))?;
     crate::merge_history::hash(head)?;
     for field in ["versions", "orphanedVersions"] {
         if let Some(versions) = model[field].as_object()
             && let Some((tag, _)) = versions
                 .iter()
                 .rev()
-                .find(|(_, value)| value.as_str() == Some(head))
+                .find(|(_, value)| {
+                    value
+                        .as_str()
+                        .is_some_and(|val| val.trim().eq_ignore_ascii_case(head))
+                })
         {
-            return Ok(tag.clone());
+            return Ok(tag.trim().to_owned());
         }
     }
     Ok(head.to_owned())

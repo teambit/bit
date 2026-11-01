@@ -111,8 +111,12 @@ impl Prepared {
     ) -> io::Result<()> {
         let bitmap = crate::recovery::jsonc::parse(&self.output)?;
         let mut entries = rows(&bitmap)?;
+        let mut seen = HashSet::new();
         for id in identities {
             let id_trimmed = id.trim();
+            if id_trimmed.is_empty() || !seen.insert(id_trimmed) {
+                return Err(invalid("tag persist bitmap identity"));
+            }
             let entry = entries
                 .iter_mut()
                 .find(|entry| identity(entry).ok().as_deref() == Some(id_trimmed))

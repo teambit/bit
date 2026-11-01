@@ -74,6 +74,9 @@ impl Prepared {
 }
 
 fn update_map(updates: &[Value]) -> io::Result<Map<String, Value>> {
+    if updates.len() > 4096 {
+        return Err(invalid("command workspace policy update row"));
+    }
     let mut mapped = Map::new();
     for update in updates {
         let row = update
@@ -88,10 +91,12 @@ fn update_map(updates: &[Value]) -> io::Result<Map<String, Value>> {
         let before = row[1]
             .as_str()
             .map(str::trim)
+            .filter(|ver| !ver.is_empty())
             .ok_or_else(|| invalid("command policy old version"))?;
         let after = row[2]
             .as_str()
             .map(str::trim)
+            .filter(|ver| !ver.is_empty())
             .ok_or_else(|| invalid("command policy new version"))?;
         if mapped
             .insert(name.to_owned(), json!([before, after]))

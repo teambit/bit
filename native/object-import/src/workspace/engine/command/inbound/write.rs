@@ -156,7 +156,6 @@ fn prepare_targets(
     changes.component_order = metadata::component_order(root, rows)?;
     Ok(changes)
 }
-
 fn target_directories(
     root: &Path,
     template: &str,
@@ -180,7 +179,6 @@ fn target_directories(
         directories::assign(root, template, &new, rows, !options.track_only, retained)
     }
 }
-
 struct Planning<'a> {
     root: &'a Path,
     imported: &'a PreparedImport,
@@ -189,7 +187,6 @@ struct Planning<'a> {
     track_only: bool,
     lane: Option<&'a Value>,
 }
-
 fn plan_target(
     context: &Planning<'_>,
     target: &Target,
@@ -202,9 +199,11 @@ fn plan_target(
         .iter()
         .find_map(|(key, row)| matches_target(key, row, target).then(|| row.clone()));
     let directory = if let Some(row) = &existing {
-        let dir =
-            row["rootDir"].as_str().ok_or_else(|| invalid("inbound existing root directory"))?;
-        dir.trim().to_owned()
+        row["rootDir"]
+            .as_str()
+            .ok_or_else(|| invalid("inbound existing root directory"))?
+            .trim()
+            .to_owned()
     } else {
         directories.next().ok_or_else(|| invalid("inbound new root directory"))?
     };
@@ -231,7 +230,6 @@ fn plan_target(
         plan_new_target(context, target, &directory, rows, changes)
     }
 }
-
 fn plan_new_target(
     context: &Planning<'_>,
     target: &Target,
@@ -251,7 +249,6 @@ fn plan_new_target(
     }
     new_files::prepare(context, files, changes)
 }
-
 fn prepare_target(
     root: &Path,
     directory: &str,
@@ -287,7 +284,6 @@ fn prepare_target(
     rows.insert(key, json!({"name":name,"scope":scope,"version":version_name,"mainFile":main,"rootDir":directory}));
     Ok(files)
 }
-
 pub(super) fn requires_canonical_history_check(
     lane: Option<&Value>,
     target: &Target,
@@ -302,7 +298,6 @@ pub(super) fn requires_canonical_history_check(
         && ver.bytes().all(|byte| byte.is_ascii_hexdigit())
         && (head.is_empty() || (hash.trim() != head && !version["origin"]["lane"].is_null()))
 }
-
 fn new_directory(
     root: &Path,
     directory: &str,
@@ -328,8 +323,6 @@ fn new_directory(
         Err(error) => Err(error),
     }
 }
-
-/// `getWorkspacePolicyFromConfig()`: each root policy entry's version.
 fn target_files(
     root: &Path,
     directory: &str,
@@ -359,22 +352,23 @@ fn target_files(
         crate::merge_history::hash(hash)?;
         let source =
             import.overlay.source(hash).ok_or_else(|| invalid("inbound imported Source"))?;
-        let path = root.join(directory).join(relative);
-        files.push((path, crate::checkout::eol::auto(source.to_vec())));
+        files.push((
+            root.join(directory).join(relative),
+            crate::checkout::eol::auto(source.to_vec()),
+        ));
     }
     if !seen.contains(main.trim()) {
         return Err(invalid("inbound main file missing"));
     }
     Ok(files)
 }
-
 fn safe_destination(root: &Path, path: &Path) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(io::Error::other)?;
     let mut current = root.to_owned();
     for part in relative.components() {
         current.push(part);
         match fs::symlink_metadata(&current) {
-            Ok(metadata) if current != path && metadata.is_dir() => {}
+            Ok(meta) if current != path && meta.is_dir() && !meta.file_type().is_symlink() => {}
             Ok(_) => return Err(invalid("inbound workspace destination occupied or linked")),
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error),
@@ -382,7 +376,6 @@ fn safe_destination(root: &Path, path: &Path) -> io::Result<()> {
     }
     Ok(())
 }
-
 pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, String)> {
     let requested = requested.trim();
     let hash = if requested.is_empty() || matches!(requested, "latest" | "head") {
@@ -402,7 +395,11 @@ pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, Str
         .into_iter()
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter().rev())
-        .find(|(_, value)| value.as_str().map(str::trim) == Some(hash))
+        .find(|(_, value)| {
+            value
+                .as_str()
+                .is_some_and(|val| val.trim().eq_ignore_ascii_case(hash))
+        })
         .map_or_else(|| hash.to_owned(), |(tag, _)| tag.trim().to_owned());
     Ok((name, hash.to_owned()))
 }

@@ -18,6 +18,9 @@ pub(super) fn bitmap_metadata(rows: &mut Map<String, Value>) -> io::Result<(Valu
     let schema =
         rows.shift_remove("$schema-version").ok_or_else(|| invalid("inbound bitmap schema"))?;
     let lane = rows.shift_remove("_bit_lane");
+    if rows.len() > 4096 {
+        return Err(invalid("inbound workspace bitmap lifecycle"));
+    }
     if let Some(lane) = &lane {
         crate::command_import::lane::parse_lane_id(&lane["id"])?.validate()?;
         if !lane["exported"].is_boolean() {

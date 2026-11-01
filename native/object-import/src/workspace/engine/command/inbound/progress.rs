@@ -25,7 +25,10 @@ pub(super) fn rows(
     }
     let latest_roots = roots
         .iter()
-        .filter(|root| root.version.trim() == "latest")
+        .filter(|root| {
+            let ver = root.version.trim();
+            ver.is_empty() || ver.eq_ignore_ascii_case("latest") || ver.eq_ignore_ascii_case("head")
+        })
         .count()
         * usize::from(depth);
     let object_phase = depth && (head_dependencies || latest_roots > 0);

@@ -8,7 +8,10 @@ pub(super) fn prepare(
     roots: &[Target],
     id: &lane::Id,
 ) -> io::Result<(Vec<Target>, PreparedImport)> {
-    if !input.ids.is_empty()
+    id.validate()?;
+    if id.is_main()
+        || roots.len() > 4096
+        || !input.ids.is_empty()
         || input.options.dependencies.import_dependencies
         || input.options.dependencies.import_head_dependencies
     {

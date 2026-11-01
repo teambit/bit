@@ -12,6 +12,9 @@ pub(super) fn read(
     let mut bitmaps = HashSet::new();
     for target in targets {
         for file in &target.files {
+            if paths.len() >= 16384 {
+                return Err(super::invalid("command capture file count"));
+            }
             let path = comparison::capture::source_path(root, target, file)?;
             if is_root_bitmap(&target.directory, file) {
                 bitmaps.insert(path.clone());

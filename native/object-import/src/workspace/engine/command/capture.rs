@@ -98,7 +98,11 @@ pub(super) fn lane_visibility(captured: &mut [Captured], context: &Value) -> io:
     Ok(())
 }
 fn targets(inputs: Vec<Value>, allow_root: bool) -> io::Result<Vec<comparison::Target>> {
+    if inputs.len() > 4096 {
+        return Err(invalid("command capture target count"));
+    }
     let mut seen = HashSet::new();
+    let mut directories = HashSet::new();
     inputs
         .into_iter()
         .map(|mut value| {
@@ -111,6 +115,7 @@ fn targets(inputs: Vec<Value>, allow_root: bool) -> io::Result<Vec<comparison::T
             comparison::capture::validate(&target)?;
             if (!allow_root && target.directory.trim() == ".")
                 || !seen.insert(target.identity.trim().to_owned())
+                || !directories.insert(target.directory.trim().to_owned())
             {
                 return Err(invalid("command root or duplicate component"));
             }

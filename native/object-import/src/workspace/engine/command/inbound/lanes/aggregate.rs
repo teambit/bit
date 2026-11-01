@@ -99,7 +99,11 @@ fn adjust(receipt: &mut Value, before: &HashMap<String, Vec<String>>) -> io::Res
         let versions =
             row["versions"].as_array_mut().ok_or_else(|| invalid("inbound group versions"))?;
         versions.retain(|version| {
-            let Some(ver) = version.as_str().map(str::trim) else {
+            let Some(ver) = version
+                .as_str()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+            else {
                 return false;
             };
             !previous
@@ -122,7 +126,11 @@ fn adjust(receipt: &mut Value, before: &HashMap<String, Vec<String>>) -> io::Res
 }
 
 fn has_version(versions: &Value, latest: &Value) -> bool {
-    let Some(latest) = latest.as_str().map(str::trim) else {
+    let Some(latest) = latest
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    else {
         return false;
     };
     versions

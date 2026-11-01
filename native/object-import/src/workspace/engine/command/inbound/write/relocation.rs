@@ -139,6 +139,7 @@ fn unavailable(
             row_name.trim(),
         )));
     }
+    crate::checkout::plan::relative_path(directory)?;
     let path = root.join(directory);
     retain_parents(root, &path, observed)?;
     match fs::symlink_metadata(&path) {

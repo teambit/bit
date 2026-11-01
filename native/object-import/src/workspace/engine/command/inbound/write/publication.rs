@@ -62,7 +62,8 @@ impl Prepared {
     }
 
     fn check_bitmap(&self, stage: &str) -> io::Result<()> {
-        if fs::read(self.root.join(".bitmap"))? != self.bitmap_before {
+        let path = self.root.join(".bitmap");
+        if !fs::symlink_metadata(&path)?.is_file() || fs::read(&path)? != self.bitmap_before {
             return Err(invalid(&format!("inbound bitmap changed {stage}")));
         }
         Ok(())
@@ -72,7 +73,7 @@ impl Prepared {
         let mut dirs = HashSet::new();
         for (path, _) in &self.changes.additions {
             let mut parent = path.parent().ok_or_else(|| invalid("inbound destination parent"))?;
-            while parent != self.root && !parent.exists() {
+            while parent != self.root && fs::symlink_metadata(parent).is_err() {
                 dirs.insert(parent.to_owned());
                 parent = parent.parent().ok_or_else(|| invalid("inbound destination ancestor"))?;
             }

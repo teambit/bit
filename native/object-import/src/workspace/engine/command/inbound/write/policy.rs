@@ -105,7 +105,9 @@ impl super::Prepared {
 impl super::Prepared {
     pub(in super::super) fn published_bitmap_proof(&self) -> io::Result<Value> {
         let path = self.root.join(".bitmap");
-        if std::fs::read(&path)? != self.bitmap_after {
+        if !std::fs::symlink_metadata(&path)?.is_file()
+            || std::fs::read(&path)? != self.bitmap_after
+        {
             return Err(invalid("inbound published bitmap changed"));
         }
         serde_json::to_value(super::super::super::proof::content(&path, &self.bitmap_after))
@@ -141,6 +143,9 @@ impl super::Prepared {
         before: Option<&[u8]>,
         after: &[u8],
     ) -> io::Result<()> {
+        if !std::fs::symlink_metadata(path)?.is_file() {
+            return Err(invalid("inbound owned file changed after publication"));
+        }
         let actual =
             crate::read_budget::Budget::new(32 * 1024 * 1024).read(std::fs::File::open(path)?)?;
         if actual != after {

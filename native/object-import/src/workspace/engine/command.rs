@@ -106,19 +106,24 @@ pub(super) struct Apply {
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }
+fn valid_token(token: &str) -> bool {
+    let trimmed = token.trim();
+    !trimmed.is_empty() && trimmed.len() <= 256 && !trimmed.chars().any(char::is_control)
+}
+
 pub(super) fn plan(
     input: &Plan,
     snapshots: &mut crate::workspace::snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    if input.token.trim().is_empty() {
+    if !valid_token(&input.token) {
         return Err(invalid("command plan token"));
     }
     plan_command::run(input, snapshots, pool)
 }
 
 pub(super) fn apply(input: &Apply, state: &mut State) -> io::Result<(usize, Value)> {
-    if input.token.trim().is_empty() || input.file_id.trim().is_empty() {
+    if !valid_token(&input.token) || input.file_id.trim().is_empty() {
         return Err(invalid("command apply token"));
     }
     apply_command::run(input, state)
@@ -133,7 +138,7 @@ pub(super) struct Finalize {
     dependency_read_set: Vec<proof::Proof>,
 }
 pub(super) fn finalize(input: &Finalize, state: &mut State) -> io::Result<(usize, Value)> {
-    if input.token.trim().is_empty() {
+    if !valid_token(&input.token) {
         return Err(invalid("command finalize token"));
     }
     finalize_command::run(input, state)
@@ -146,7 +151,7 @@ pub(super) struct LaneFinalize {
     lane_receipt: Value,
 }
 pub(super) fn finalize_lane(input: &LaneFinalize, state: &mut State) -> io::Result<(usize, Value)> {
-    if input.token.trim().is_empty() {
+    if !valid_token(&input.token) {
         return Err(invalid("command lane finalize token"));
     }
     lane_finalize::run(input, state)

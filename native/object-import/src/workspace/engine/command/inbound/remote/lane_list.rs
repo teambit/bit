@@ -33,8 +33,16 @@ pub(super) fn lane_targets(
     let (hash, entries) = remote_lane(id, items)?;
     let targets = entries
         .into_iter()
-        .map(|entry| format!("{}@{}", entry.identity.trim(), entry.head.trim()))
-        .collect();
+        .map(|entry| {
+            let raw = entry.identity.trim();
+            let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
+            let head = entry.head.trim();
+            if bare.is_empty() || head.is_empty() {
+                return Err(invalid("inbound lane component identity"));
+            }
+            Ok(format!("{bare}@{head}"))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
     Ok((hash, targets))
 }
 

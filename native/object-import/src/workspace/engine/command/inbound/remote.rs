@@ -208,21 +208,44 @@ pub(super) fn active_lane(root: &Path) -> io::Result<Option<lane::Id>> {
 }
 
 pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
-    let (remotes, network) = if let Some(root) = &input.root {
+    let (remotes, network) = log_connection(input)?;
+    let (scope, normalized) = log_identity(&input.identity)?;
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    let (rows, parents_available): (Vec<Value>, bool) = runtime.block_on(async {
+        match remotes.resolve(&scope, &network).await? {
+            Remote::Http(url) => Ok::<_, io::Error>((network.log(&url, &normalized).await?, false)),
+            Remote::File(path) => Ok((component_log::read_file_remote(&path, &normalized)?, true)),
+        }
+    })?;
+    Ok((rows.len(), json!({"logs": rows, "parentsAvailable": parents_available})))
+}
+
+fn log_connection(input: &RemoteLog) -> io::Result<(Remotes, Network)> {
+    if let Some(root) = &input.root {
         let (remotes, network, _, _) = connect(root, &input.transport)?;
-        (remotes, network)
-    } else {
-        let global = global_config(&input.transport)?;
-        let remotes = Remotes::load(&Value::Null, &input.transport.global_config_dir, &global)?;
-        let network = Network::new(
-            &global,
-            &input.transport.bit_version,
-            None,
-            input.transport.token.as_deref(),
-        )?;
-        (remotes, network)
-    };
-    let (scope, name) = input.identity
+        return Ok((remotes, network));
+    }
+    let global = global_config(&input.transport)?;
+    let remotes = Remotes::load(&Value::Null, &input.transport.global_config_dir, &global)?;
+    let network = Network::new(
+        &global,
+        &input.transport.bit_version,
+        None,
+        input.transport.token.as_deref(),
+    )?;
+    Ok((remotes, network))
+}
+
+fn log_identity(identity: &str) -> io::Result<(String, String)> {
+    if identity.len() > 1024
+        || identity.contains("..")
+        || identity
+            .chars()
+            .any(|ch| ch == '\\' || ch.is_control())
+    {
+        return Err(invalid("remote log identity"));
+    }
+    let (scope, name) = identity
         .trim()
         .split_once('/')
         .ok_or_else(|| invalid("remote log identity"))?;
@@ -230,15 +253,7 @@ pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
     if scope.is_empty() || name.is_empty() || name.starts_with('/') || name.contains("..") {
         return Err(invalid("remote log identity"));
     }
-    let normalized = format!("{scope}/{name}");
-    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
-    let (rows, parents_available): (Vec<Value>, bool) = runtime.block_on(async {
-        match remotes.resolve(scope, &network).await? {
-            Remote::Http(url) => Ok::<_, io::Error>((network.log(&url, &normalized).await?, false)),
-            Remote::File(path) => Ok((component_log::read_file_remote(&path, &normalized)?, true)),
-        }
-    })?;
-    Ok((rows.len(), json!({"logs": rows, "parentsAvailable": parents_available})))
+    Ok((scope.to_owned(), format!("{scope}/{name}")))
 }
 
 async fn fetch_lane(

@@ -96,10 +96,12 @@ fn retain_files(
 }
 
 fn validate_relative(relative: &str, seen: &mut HashSet<String>) -> io::Result<()> {
-    if relative
-        .split('/')
-        .any(|part| part.is_empty() || matches!(part, "." | ".."))
+    if relative.len() > 4096
+        || relative
+            .split('/')
+            .any(|part| part.is_empty() || matches!(part, "." | ".."))
         || relative.contains(['\\', ':', '\0'])
+        || relative.chars().any(char::is_control)
         || !seen.insert(relative.to_owned())
     {
         return Err(invalid("hidden lane file path"));

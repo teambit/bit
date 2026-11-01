@@ -138,7 +138,11 @@ fn ignored_files(ignored: Option<&Value>) -> io::Result<()> {
         if patterns.len() > 4096
             || patterns
                 .iter()
-                .any(|pattern| !pattern.is_string())
+                .any(|pattern| {
+                    pattern
+                        .as_str()
+                        .is_none_or(|text| text.len() > 4096 || text.contains('\0'))
+                })
         {
             return Err(invalid("status ignoredFiles limit"));
         }

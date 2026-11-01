@@ -1,6 +1,5 @@
 //! Retained public inbound transfer. Prepare performs remote I/O and validates
 //! the complete import without touching the user's repository; Apply publishes.
-
 pub(in crate::workspace::engine) mod autosync;
 pub(in crate::workspace::engine) mod dependents;
 pub(crate) mod details;
@@ -19,7 +18,6 @@ mod protocol_tests;
 mod selection;
 mod validation;
 mod write;
-
 use super::{
     super::{client_status::config, invalid},
     State,
@@ -33,7 +31,6 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-
 /// Reuse inbound configuration and authentication without persisting recovery probes.
 pub fn recovery_remote_connection(
     root: &Path,
@@ -178,7 +175,6 @@ struct ReceiptRoots<'a> {
     prefetched: &'a [Target],
     head_dependencies: bool,
 }
-
 pub(in crate::workspace::engine) fn prepare(
     input: &Prepare,
     state: &mut State,
@@ -204,7 +200,6 @@ pub(in crate::workspace::engine) fn prepare(
     }
     finish(input, &roots, &targets, import, state, token)
 }
-
 fn receipt(
     root: &Path,
     targets: &[Target],
@@ -228,7 +223,6 @@ fn receipt(
         json!({"token":token,"owner":"rust","importedIds":imported_ids,"importDetails":details,"progress":progress}),
     )
 }
-
 /// Each pattern with the components its remote lists, in the remote's order.
 pub(in crate::workspace::engine) fn list(input: &List) -> io::Result<(usize, Value)> {
     for path in [&input.root, &input.transport.global_config_dir] {
@@ -244,16 +238,15 @@ pub(in crate::workspace::engine) fn list(input: &List) -> io::Result<(usize, Val
     let lists = remote::list(input)?
         .into_iter()
         .map(|(pattern, listed)| {
-            let map_item = |item: &bit_client_transfer::http::Listed| {
-                json!({"id":item.id(),"deprecated":item.deprecated})
-            };
-            let components: Vec<_> = listed.iter().map(map_item).collect();
+            let components: Vec<_> = listed
+                .iter()
+                .map(|item| json!({"id":item.id(),"deprecated":item.deprecated}))
+                .collect();
             json!({"pattern":pattern,"components":components})
         })
         .collect::<Vec<_>>();
     Ok((lists.len(), json!({ "lists": lists })))
 }
-
 pub(in crate::workspace::engine) fn apply(
     input: &Apply,
     state: &mut State,
@@ -290,7 +283,6 @@ pub(in crate::workspace::engine) fn apply(
     let count = receipt["importedIds"].as_array().map_or(0, Vec::len);
     Ok((count, receipt))
 }
-
 fn validate_receipt_mode(input: &Apply, state: &State) -> io::Result<()> {
     if input.omit_owned_write_receipts {
         let retained = state.inbound.as_ref().ok_or_else(|| invalid("inbound owner missing"))?;
@@ -300,7 +292,6 @@ fn validate_receipt_mode(input: &Apply, state: &State) -> io::Result<()> {
     }
     Ok(())
 }
-
 fn commit_inbound(retained: &mut Retained, omit_receipts: bool) -> io::Result<Option<Vec<Value>>> {
     let mut writes = if omit_receipts {
         retained.import.commit_retained()?;
@@ -316,7 +307,6 @@ fn commit_inbound(retained: &mut Retained, omit_receipts: bool) -> io::Result<Op
     }
     Ok(writes)
 }
-
 pub(in crate::workspace::engine) fn lane_updates(
     input: &super::super::status_models::lane_updates::Request,
     state: &State,
@@ -329,7 +319,6 @@ pub(in crate::workspace::engine) fn lane_updates(
     }
     super::super::status_models::lane_updates::read(input, &retained.import.overlay, pool)
 }
-
 fn targets(input: &Prepare) -> io::Result<Vec<Target>> {
     if input.ids.is_empty() {
         return bitmap_targets(&input.root);
@@ -339,26 +328,24 @@ fn targets(input: &Prepare) -> io::Result<Vec<Target>> {
         .map(|id| requested_target(id))
         .collect()
 }
-
 fn identity(target: &Target) -> io::Result<String> {
-    let scope = target.scope
-        .as_deref()
-        .map(str::trim)
-        .filter(|sc| !sc.is_empty())
-        .ok_or_else(|| invalid("inbound scope"))?;
-    Ok(format!("{scope}/{}@{}", target.name.trim(), target.version.trim()))
+    let (scope, name, version) =
+        (target.scope.as_deref().map_or("", str::trim), target.name.trim(), target.version.trim());
+    if scope.is_empty() || name.is_empty() || version.is_empty() {
+        return Err(invalid("inbound target identity"));
+    }
+    Ok(format!("{scope}/{name}@{version}"))
 }
 fn imported_identity(
     root: &Path,
     target: &Target,
     imported: &command_import::PreparedImport,
 ) -> io::Result<String> {
-    let scope = target.scope
-        .as_deref()
-        .map(str::trim)
-        .filter(|sc| !sc.is_empty())
-        .ok_or_else(|| invalid("inbound target scope"))?;
+    let scope = target.scope.as_deref().map_or("", str::trim);
     let name = target.name.trim();
+    if scope.is_empty() || name.is_empty() {
+        return Err(invalid("inbound target identity"));
+    }
     let model = details::model(root, imported, scope, name)?;
     let ver = target.version.trim();
     let version = if matches!(ver, "" | "latest" | "head") {
@@ -389,12 +376,11 @@ fn prepare_recovery(
     input: &Prepare,
     targets: &[Target],
 ) -> io::Result<command_import::PreparedImport> {
-    let fetch = |requested: &[Target]| remote::objects(input, requested);
     command_import::prepare_recovery_with_virtual(
         &input.root,
         &input.global_remotes_file,
         targets,
-        fetch,
+        |requested| remote::objects(input, requested),
     )
 }
 pub(in crate::workspace::engine) fn local_preflight(input: &Prepare) -> io::Result<(usize, Value)> {
@@ -402,13 +388,13 @@ pub(in crate::workspace::engine) fn local_preflight(input: &Prepare) -> io::Resu
     if input.options.objects_only || input.options.lanes {
         return Ok((0, json!({"eligible":true})));
     }
-    let parse_literal = |id: &String| (!id.contains('*')).then(|| requested_target(id));
     let targets = if input.ids.is_empty() {
         bitmap_targets(&input.root)?
     } else {
         input.ids
             .iter()
-            .filter_map(parse_literal)
+            .filter(|id| !id.contains('*'))
+            .map(|id| requested_target(id))
             .collect::<io::Result<Vec<_>>>()?
     };
     write::preflight(&input.root, &targets, preparation::write_options(input, false))?;
