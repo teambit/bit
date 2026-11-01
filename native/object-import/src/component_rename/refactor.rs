@@ -204,7 +204,7 @@ fn replace_compiled(text: &str, new: &str, regex: &Regex) -> String {
 }
 fn camel(name: &str, pascal: bool) -> String {
     let mut upper = pascal;
-    let mut result = String::new();
+    let mut result = String::with_capacity(name.len());
     for character in name.chars() {
         if matches!(character, '-' | '_' | '/' | '.') {
             upper = pascal || !result.is_empty();

@@ -81,11 +81,14 @@ fn version<'a>(rows: &'a [Value], hash: &str) -> io::Result<&'a Value> {
 }
 fn file_hash(version: &Value, relative: &str) -> io::Result<Option<String>> {
     let clean = |path: &str| {
-        let mut out = path.trim().replace('\\', "/");
-        while let Some(rest) = out.strip_prefix("./") {
-            out = rest.to_owned();
+        let mut trimmed = path.trim();
+        while let Some(rest) = trimmed
+            .strip_prefix("./")
+            .or_else(|| trimmed.strip_prefix(r".\"))
+        {
+            trimmed = rest;
         }
-        out
+        trimmed.replace('\\', "/")
     };
     let normalized = clean(relative);
     let files = version
@@ -117,7 +120,7 @@ fn parent_hash(
     relative: &str,
     current: &str,
 ) -> io::Result<Option<String>> {
-    let mut hashes = Vec::new();
+    let mut hashes = Vec::with_capacity(parents.len());
     for parent in parents {
         let parent = parent.as_str().ok_or_else(|| invalid("history file parent ref"))?;
         hashes.push(file_hash(version(rows, parent)?, relative)?);

@@ -12,7 +12,7 @@ pub(super) fn validate(value: &Value) -> io::Result<()> {
     let Some(artifacts) = builder
         .get("data")
         .and_then(|data| data.get("artifacts"))
-        .filter(|value| !value.is_null() && value != &&Value::Bool(false))
+        .filter(|value| !value.is_null() && value.as_bool() != Some(false))
     else {
         return Ok(());
     };

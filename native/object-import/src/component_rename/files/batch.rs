@@ -6,9 +6,9 @@ pub(in crate::component_rename) fn packages_all(
 ) -> io::Result<bool> {
     let mut changed = false;
     for file in &mut plan.files {
-        let before = file.bytes.clone();
-        file.bytes = matchers.apply(&file.bytes)?;
-        changed |= file.bytes != before;
+        let replaced = matchers.apply(&file.bytes)?;
+        changed |= replaced != file.bytes;
+        file.bytes = replaced;
     }
     if plan.options.preserve && !changed {
         plan.files.clear();
@@ -103,7 +103,7 @@ fn batch_component(
         .as_array()
         .filter(|rows| rows.len() <= 16_384)
         .ok_or_else(|| unsupported("scope rename loaded files"))?;
-    let mut changes = Vec::new();
+    let mut changes = Vec::with_capacity(files.len());
     let mut changed = false;
     for file in files {
         let relative = file
@@ -114,9 +114,9 @@ fn batch_component(
             .filter(|value| !value.is_empty())
             .ok_or_else(|| unsupported("scope rename loaded path"))?;
         let (mut change, _) = dependent_file(plan, &component, directory, relative, initial)?;
-        let before = change.bytes.clone();
-        change.bytes = matchers.apply(&change.bytes)?;
-        changed |= before != change.bytes;
+        let replaced = matchers.apply(&change.bytes)?;
+        changed |= replaced != change.bytes;
+        change.bytes = replaced;
         changes.push(change);
     }
     Ok(if changed { changes } else { Vec::new() })

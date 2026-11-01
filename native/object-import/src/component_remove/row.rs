@@ -13,7 +13,11 @@ pub(super) fn supported_row<'a>(
     let key_id = key_trimmed.rsplit_once('@').map_or(key_trimmed, |(id, _)| id.trim());
     let (id_scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
     let scope = scope(row, id_scope)?;
-    let identity = (key_id == name || key_id == format!("{scope}/{name}"))
+    let identity = (key_id == name
+        || key_id
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            == Some(name))
         && valid_name(name)
         && valid_scope(scope);
     let row_scope = row["scope"]

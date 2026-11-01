@@ -28,18 +28,14 @@ fn prerelease(left: &[Value], right: &[Value]) -> io::Result<Ordering> {
     Ok(left.len().cmp(&right.len()))
 }
 fn identifier(left: &Value, right: &Value) -> io::Result<Ordering> {
-    if let (Some(left_number), Some(right_number)) = (numeric(left), numeric(right)) {
-        return Ok(left_number.total_cmp(&right_number));
-    }
-    if numeric(left).is_some() && right.is_string() {
-        return Ok(Ordering::Less);
-    }
-    if numeric(right).is_some() && left.is_string() {
-        return Ok(Ordering::Greater);
-    }
-    match (left.as_str(), right.as_str()) {
-        (Some(left_text), Some(right_text)) => Ok(left_text.cmp(right_text)),
-        _ => Err(invalid("semver identifier")),
+    match (numeric(left), numeric(right)) {
+        (Some(left_number), Some(right_number)) => Ok(left_number.total_cmp(&right_number)),
+        (Some(_), None) if right.is_string() => Ok(Ordering::Less),
+        (None, Some(_)) if left.is_string() => Ok(Ordering::Greater),
+        _ => match (left.as_str(), right.as_str()) {
+            (Some(left_text), Some(right_text)) => Ok(left_text.cmp(right_text)),
+            _ => Err(invalid("semver identifier")),
+        },
     }
 }
 pub(super) fn satisfies(input: &Value, version: &str, range: &str) -> io::Result<bool> {

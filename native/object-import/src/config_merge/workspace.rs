@@ -37,12 +37,7 @@ fn aggregate(records: &[Value], field: &str) -> io::Result<Groups> {
     if groups.len() > 4096 {
         return Err(invalid("config aggregation budget"));
     }
-    groups.sort_by_key(|(name, _)| {
-        name.parse::<u32>()
-            .ok()
-            .filter(|number| *number != u32::MAX && number.to_string() == *name)
-            .map_or((1, 0), |number| (0, number))
-    });
+    sort_versions(&mut groups);
     Ok(groups)
 }
 fn aggregate_record(groups: &mut Groups, record: &Value, field: &str) -> io::Result<()> {

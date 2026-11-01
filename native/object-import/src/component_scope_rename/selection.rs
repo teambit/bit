@@ -7,7 +7,8 @@ pub(super) fn scope(scope: &str, options: &Options) -> Option<String> {
     }
     if options.owner {
         scope
-            .strip_prefix(&format!("{old}."))
+            .strip_prefix(old)
+            .and_then(|rest| rest.strip_prefix('.'))
             .map(str::trim)
             .filter(|suffix| !suffix.is_empty())
             .map(|suffix| format!("{new}.{suffix}"))

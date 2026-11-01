@@ -44,22 +44,17 @@ pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
 }
 
 pub(super) fn plan(root: &Path, scope: &str, name: &str, head: &str) -> io::Result<HistoryState> {
-    let (scope, name, head) = (scope.trim(), name.trim(), head.trim());
+    let (scope, name) = (scope.trim(), name.trim());
     let hash = format!("{:x}", Sha1::digest(format!("{scope}/{name}:VersionHistory").as_bytes()));
-    let path = crate::scope_path(root)
-        .join("objects")
+    let objects = crate::scope_path(root).join("objects");
+    let path = objects
         .join(&hash[..2])
         .join(&hash[2..]);
-    let versions = ancestry(&crate::scope_path(root).join("objects"), head)?;
-    let value = json!({"name":name,"scope":scope,"versions":versions,"graphCompleteRefs":[]});
+    let value = json!({"name":name,"scope":scope,"versions":ancestry(&objects, head.trim())?,"graphCompleteRefs":[]});
     match fs::symlink_metadata(&path) {
         Ok(metadata) if metadata.file_type().is_file() && !metadata.file_type().is_symlink() => {
             let before = fs::read(&path)?;
-            let existing = outbound::read_object(
-                &crate::scope_path(root).join("objects"),
-                &hash,
-                "VersionHistory",
-            )?;
+            let existing = outbound::read_object(&objects, &hash, "VersionHistory")?;
             if existing != value {
                 return Err(invalid("existing lane VersionHistory differs from snap ancestry"));
             }

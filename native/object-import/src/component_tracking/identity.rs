@@ -157,7 +157,10 @@ pub(super) fn vendor(workspace: &Value, directory: &str) -> bool {
     } else {
         (parent, directory)
     };
-    directory == parent || directory.starts_with(&format!("{parent}/"))
+    directory == parent
+        || directory
+            .strip_prefix(&parent)
+            .is_some_and(|rest| rest.starts_with('/'))
 }
 
 fn variant_scope(workspace: &Value, directory: &str, name: &str) -> io::Result<Option<String>> {
@@ -214,7 +217,7 @@ pub(super) fn validate(name: &str) -> io::Result<()> {
 fn chunk(name: &str) -> String {
     let text = name.replace('.', "").replace(' ', "-");
     let characters = text.chars().collect::<Vec<_>>();
-    let mut output = String::new();
+    let mut output = String::with_capacity(text.len());
     for (index, character) in characters.iter().copied().enumerate() {
         if camel_boundary(&characters, index, character) {
             output.push('-');

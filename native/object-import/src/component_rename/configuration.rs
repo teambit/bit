@@ -116,8 +116,8 @@ fn copied_config(facts: &Value) -> io::Result<serde_json::Map<String, Value>> {
         let name = extension["name"]
             .as_str()
             .or_else(|| extension["legacyId"].as_str())
-            .map(str::to_owned)
-            .or_else(|| aspect_id(&extension["extensionId"]))
+            .map(std::borrow::Cow::Borrowed)
+            .or_else(|| aspect_id(&extension["extensionId"]).map(std::borrow::Cow::Owned))
             .ok_or_else(|| unsupported("rename captured aspect identity"))?;
         if extension["config"].is_object() {
             copy_config(&mut config, &name, &extension["config"]);

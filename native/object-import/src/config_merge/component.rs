@@ -62,20 +62,21 @@ fn current(engine: &mut Engine<'_>) -> io::Result<()> {
 }
 fn other(engine: &mut Engine<'_>) -> io::Result<()> {
     for (index, entry) in array(engine.input, "other")?.iter().enumerate() {
-        let mut id = entry["stringId"]
+        let raw_id = entry["stringId"]
             .as_str()
             .map(str::trim)
             .filter(|id| !id.is_empty())
-            .ok_or_else(|| invalid("extension id"))?
-            .to_owned();
-        if engine.handled.contains(&id) {
+            .ok_or_else(|| invalid("extension id"))?;
+        if engine.handled
+            .iter()
+            .any(|handled| handled == raw_id)
+        {
             continue;
         }
-        engine.handled.push(id.clone());
-        let Some(selected) = other_id(engine, entry, &id)? else {
+        engine.handled.push(raw_id.into());
+        let Some(id) = other_id(engine, entry, raw_id)? else {
             continue;
         };
-        id = selected;
         if engine.find("base", &id)?.is_some() {
             engine.rows.push(json!({"id":id,"conflict":{"kind":"basic","current":{"value":"-"},"other":Engine::source("other",index)}}));
         } else {

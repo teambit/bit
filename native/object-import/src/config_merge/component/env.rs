@@ -20,14 +20,9 @@ fn one(engine: &mut Engine<'_>, side: &str) -> io::Result<Value> {
         .ok_or_else(|| invalid("missing env extension"))?;
     let id = extension["config"]["env"]
         .as_str()
+        .or_else(|| extension["data"]["id"].as_str())
         .map(str::trim)
         .filter(|id| !id.is_empty())
-        .or_else(|| {
-            extension["data"]["id"]
-                .as_str()
-                .map(str::trim)
-                .filter(|id| !id.is_empty())
-        })
         .ok_or_else(|| invalid("missing env"))?;
     let mut env = json!({"id":id});
     if let Some(index) = engine.find(side, id)? {

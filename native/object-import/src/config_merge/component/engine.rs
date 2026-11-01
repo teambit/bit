@@ -81,7 +81,7 @@ impl<'a> Engine<'a> {
         json!({"source":{"side":side,"index":index}})
     }
     fn equal(&self, left: &Value, right: &Value) -> io::Result<bool> {
-        let serialized = |selector: &Value| -> io::Result<String> {
+        let serialized = |selector: &Value| -> io::Result<std::borrow::Cow<'_, str>> {
             if let Some(source) = selector.get("source") {
                 let side = text(source, "side")?.trim();
                 let index =
@@ -90,9 +90,11 @@ impl<'a> Engine<'a> {
                     .get(side)
                     .and_then(|rows| rows.get(index))
                     .ok_or_else(|| invalid("config selector"))?;
-                Ok(text(entry, "configJson")?.into())
+                Ok(std::borrow::Cow::Borrowed(text(entry, "configJson")?))
             } else {
-                serde_json::to_string(&selector["value"]).map_err(io::Error::other)
+                serde_json::to_string(&selector["value"])
+                    .map(std::borrow::Cow::Owned)
+                    .map_err(io::Error::other)
             }
         };
         Ok(serialized(left)? == serialized(right)?)

@@ -39,8 +39,11 @@ pub(super) fn diff(mut request: Request, cache: &mut Cache) -> io::Result<Value>
         return Err(invalid("history diff path"));
     }
     request.relative_path = trimmed_path.into();
-    let mut sources =
-        Sources::new(request.objects_directory.clone(), request.snapshot_directory.clone(), cache)?;
+    let mut sources = Sources::new(
+        std::mem::take(&mut request.objects_directory),
+        request.snapshot_directory.take(),
+        cache,
+    )?;
     let left = request.left
         .as_deref()
         .map(str::trim)

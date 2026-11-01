@@ -70,15 +70,11 @@ fn matches(id: &str, parts: &[&str]) -> bool {
     };
     parts
         .iter()
-        .filter(|part| !part.trim().starts_with('!'))
+        .filter(|part| !part.starts_with('!'))
         .any(|part| matched(part))
         && !parts
             .iter()
-            .filter_map(|part| {
-                part.trim()
-                    .strip_prefix('!')
-                    .map(str::trim)
-            })
+            .filter_map(|part| part.strip_prefix('!'))
             .any(matched)
 }
 fn strip_version(value: &str) -> &str {

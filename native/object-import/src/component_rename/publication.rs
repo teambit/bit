@@ -19,7 +19,7 @@ fn write(
     let metadata = fs::symlink_metadata(&path)?;
     if !metadata.is_file()
         || metadata.file_type().is_symlink()
-        || metadata.len() != plan.controls.expected.len() as u64
+        || u64::try_from(plan.controls.expected.len()).ok() != Some(metadata.len())
         || fs::read(&path)? != plan.controls.expected
     {
         return Err(invalid("rename bitmap changed before publication"));

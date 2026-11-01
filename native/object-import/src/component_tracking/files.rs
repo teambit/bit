@@ -186,7 +186,11 @@ fn excluded(plan: &Plan, directory: &str, batch: &[String]) -> Vec<std::path::Pa
     directories
         .into_iter()
         .filter(|other| {
-            other != directory && (directory == "." || other.starts_with(&format!("{directory}/")))
+            other != directory
+                && (directory == "."
+                    || other
+                        .strip_prefix(directory)
+                        .is_some_and(|rest| rest.starts_with('/')))
         })
         .map(|directory| plan.root.join(directory))
         .chain(std::iter::once(crate::scope_path(&plan.root)))

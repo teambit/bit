@@ -239,20 +239,25 @@ fn directory(
 fn destination(root: &Path, source: &str, target: &str) -> io::Result<()> {
     if source == "."
         || target == "."
-        || source.starts_with(&format!("{target}/"))
-        || target.starts_with(&format!("{source}/"))
+        || source
+            .strip_prefix(target)
+            .is_some_and(|rest| rest.starts_with('/'))
+        || target
+            .strip_prefix(source)
+            .is_some_and(|rest| rest.starts_with('/'))
     {
         return Err(unsupported("rename overlapping root"));
     }
+    let target_path = root.join(target);
     if source != target
-        && let Ok(metadata) = fs::symlink_metadata(root.join(target))
+        && let Ok(metadata) = fs::symlink_metadata(&target_path)
     {
         if !metadata.is_dir() {
             return Err(invalid(format!(
                 r#"unable to create component at "{target}", this path already exists"#,
             )));
         }
-        if fs::read_dir(root.join(target))?.next().is_some() {
+        if fs::read_dir(&target_path)?.next().is_some() {
             return Err(invalid(format!(
                 r#"unable to create component at "{target}", this directory is not empty"#,
             )));

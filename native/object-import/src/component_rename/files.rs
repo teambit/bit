@@ -23,10 +23,11 @@ pub(super) struct Change {
 pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     let component = facts["components"]
         .as_array()
-        .and_then(|rows| rows.iter().find(|row| identity_matches(row, &plan.identity.source)));
-    let files = component
-        .and_then(|row| row["files"].as_array())
+        .and_then(|rows| rows.iter().find(|row| identity_matches(row, &plan.identity.source)))
         .ok_or_else(|| unsupported("rename source file inventory"))?;
+    let files =
+        component["files"].as_array().ok_or_else(|| unsupported("rename source file inventory"))?;
+    plan.files.reserve(files.len());
     let mut destinations = BTreeSet::new();
     let content = refactor::ContentMatcher::new(
         leaf(&plan.identity.source_name),
@@ -41,12 +42,7 @@ pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
             .map(str::trim)
             .filter(|path| !path.is_empty())
             .ok_or_else(|| unsupported("rename source file path"))?;
-        let change = change(
-            plan,
-            relative,
-            component.ok_or_else(|| unsupported("rename source inventory"))?,
-            &content,
-        )?;
+        let change = change(plan, relative, component, &content)?;
         if !destinations.insert(change.destination.clone()) {
             return Err(invalid("rename file collision"));
         }

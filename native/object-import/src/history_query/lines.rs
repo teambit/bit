@@ -80,22 +80,17 @@ fn step(
 }
 fn choose(remove: Option<Path>, add: Option<&Path>, can_remove: bool, can_add: bool) -> Path {
     match (remove.filter(|_| can_remove), add.filter(|_| can_add)) {
-        (Some(rem), Some(added)) if rem.old < added.old => {
-            let mut path = added.clone();
-            push(&mut path, 1, 1);
-            path
-        }
-        (Some(mut rem), _) => {
+        (Some(mut rem), added) if added.is_none_or(|added| rem.old >= added.old) => {
             rem.old += 1;
             push(&mut rem, 2, 1);
             rem
         }
-        (None, Some(added)) => {
+        (_, Some(added)) => {
             let mut path = added.clone();
             push(&mut path, 1, 1);
             path
         }
-        (None, None) => Path { old: 0, runs: Vec::new() },
+        _ => Path { old: 0, runs: Vec::new() },
     }
 }
 fn terminal(path: &Path, diagonal: isize, old: usize, new: usize) -> bool {

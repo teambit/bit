@@ -69,19 +69,17 @@ fn other_changed(state: &mut State<'_, '_>) -> io::Result<()> {
     Ok(())
 }
 fn one(state: &mut State<'_, '_>, name: &str) -> io::Result<()> {
-    let current = state.policies[0]
-        .iter()
-        .find(|dep| dep["dependencyId"].as_str().map(str::trim) == Some(name))
-        .cloned();
     let Some(other) = state.policies[1]
         .iter()
         .find(|dep| dep["dependencyId"].as_str().map(str::trim) == Some(name))
-        .cloned()
     else {
         return Ok(());
     };
-    let Some(current) = current else {
-        return state.add_policy(&other);
+    let Some(current) = state.policies[0]
+        .iter()
+        .find(|dep| dep["dependencyId"].as_str().map(str::trim) == Some(name))
+    else {
+        return state.add_policy(&other.clone());
     };
     let current_version = &current["value"]["version"];
     let other_version = &other["value"]["version"];
@@ -93,12 +91,12 @@ fn one(state: &mut State<'_, '_>, name: &str) -> io::Result<()> {
         return Ok(());
     }
     if base_version == Some(current_version) {
-        return state.add_policy(&other);
+        return state.add_policy(&other.clone());
     }
     if local(state, name, other_version.as_str())? {
         return Ok(());
     }
-    resolve(state, name, &current, &other)
+    resolve(state, name, &current.clone(), &other.clone())
 }
 fn resolve(
     state: &mut State<'_, '_>,

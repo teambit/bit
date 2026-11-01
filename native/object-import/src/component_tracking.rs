@@ -50,7 +50,7 @@ impl Plan {
             cwd: cwd.to_owned(),
             before,
             bitmap,
-            components: Vec::new(),
+            components: Vec::with_capacity(directories.len()),
             warnings: json!({"alreadyUsed":{},"emptyDirectory":[],"existInScope":[]}),
             observed,
             dirty: false,

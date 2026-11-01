@@ -77,9 +77,12 @@ fn find(name: &str, directory: &str, files: &[String]) -> Option<String> {
     {
         return Some(found.clone());
     }
-    if let Some(found) = files
-        .iter()
-        .find(|file| format!("{clean_dir}/{file}") == name)
+    if let Some(stripped) = name
+        .strip_prefix(clean_dir)
+        .and_then(|rest| rest.strip_prefix('/'))
+        && let Some(found) = files
+            .iter()
+            .find(|file| file.as_str() == stripped)
     {
         return Some(found.clone());
     }

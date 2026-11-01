@@ -48,7 +48,7 @@ impl Drop for Binding {
 /// Capture the adapter when dispatching an operation onto its worker pool.
 #[must_use]
 pub fn current() -> Option<Handler> {
-    CURRENT.with(|current| current.borrow().clone())
+    CURRENT.with_borrow(Clone::clone)
 }
 
 /// Bind an adapter to this operation and restore the prior binding on return or unwind.

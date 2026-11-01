@@ -66,15 +66,13 @@ fn reason(
     };
     let other = &engine.input["other"][other_index];
     let base = base.map(|index| &engine.input["base"][index]);
-    if entry_version(Some(current)) != entry_version(Some(other)) {
-        if entry_version(base) == entry_version(Some(other)) {
+    let other_ver = entry_version(Some(other));
+    if entry_version(Some(current)) != other_ver {
+        let base_ver = entry_version(base);
+        if base_ver == other_ver {
             return Ok(None);
         }
-        return Ok(Some(format!(
-            "version changed. base: {}, other: {}",
-            entry_version(base),
-            entry_version(Some(other)),
-        )));
+        return Ok(Some(format!("version changed. base: {base_ver}, other: {other_ver}")));
     }
     if equal(current, other) {
         return Ok(None);
@@ -93,16 +91,16 @@ fn reason(
 }
 
 fn equal(left: &serde_json::Value, right: &serde_json::Value) -> bool {
-    let keys = |entry: &serde_json::Value| {
-        entry["dataUndefinedKeys"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter_map(serde_json::Value::as_str)
-            .map(str::trim)
-            .filter(|key| !key.is_empty())
-            .map(str::to_owned)
-            .collect::<std::collections::BTreeSet<_>>()
-    };
-    left["data"] == right["data"] && keys(left) == keys(right)
+    left["data"] == right["data"] && undefined_keys(left) == undefined_keys(right)
+}
+
+fn undefined_keys(entry: &serde_json::Value) -> std::collections::BTreeSet<&str> {
+    entry["dataUndefinedKeys"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|key| !key.is_empty())
+        .collect()
 }

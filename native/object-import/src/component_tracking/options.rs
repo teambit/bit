@@ -16,13 +16,14 @@ pub struct Options {
 }
 impl Options {
     pub(super) fn validate(&self, directories: &[String], bitmap: &Value) -> io::Result<()> {
-        let has_id = self.id
+        let trimmed_id = self.id
             .as_deref()
-            .is_some_and(|id| !id.trim().is_empty());
+            .map(str::trim)
+            .filter(|id| !id.is_empty());
         let has_ns = self.namespace
             .as_deref()
             .is_some_and(|ns| !ns.trim().is_empty());
-        if has_id && has_ns {
+        if trimmed_id.is_some() && has_ns {
             return Err(error(
                 "please use either [id] or [namespace] to add a particular component - they cannot be used together",
             ));
@@ -41,10 +42,7 @@ impl Options {
             ));
         }
         if directories.len() > 1
-            && let Some(id) = self.id
-                .as_deref()
-                .map(str::trim)
-                .filter(|id| !id.is_empty())
+            && let Some(id) = trimmed_id
         {
             return Err(error(format!(
                 "the --id flag ({id}) is used for a single component only, however, got {} paths",

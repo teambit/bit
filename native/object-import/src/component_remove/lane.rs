@@ -64,9 +64,10 @@ pub(super) fn select_lane(
 
 fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     let (scope, name) = (scope.trim(), name.trim());
-    let index_before = fs::read(crate::scope_path(root).join("index.json"))?;
+    let scope_path = crate::scope_path(root);
+    let index_before = fs::read(scope_path.join("index.json"))?;
     let hash = find_lane_hash(&index_before, scope, name)?;
-    let path = crate::scope_path(root)
+    let path = scope_path
         .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
@@ -76,7 +77,7 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
         return Err(invalid("current lane object path"));
     }
     let before = fs::read(&path)?;
-    let value = outbound::read_object(&crate::scope_path(root).join("objects"), &hash, "Lane")?;
+    let value = outbound::read_object(&scope_path.join("objects"), &hash, "Lane")?;
     if value["scope"].as_str().map(str::trim) != Some(scope)
         || value["name"].as_str().map(str::trim) != Some(name)
     {

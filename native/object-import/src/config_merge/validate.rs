@@ -174,12 +174,12 @@ fn undefined_keys(entry: &Value) -> io::Result<()> {
     let Some(keys) = entry.get("dataUndefinedKeys") else {
         return Ok(());
     };
-    let mut seen = std::collections::BTreeSet::new();
-    for key in keys
+    let keys = keys
         .as_array()
         .filter(|keys| keys.len() <= 4096)
-        .ok_or_else(|| invalid("undefined data keys"))?
-    {
+        .ok_or_else(|| invalid("undefined data keys"))?;
+    let mut seen = std::collections::HashSet::with_capacity(keys.len());
+    for key in keys {
         let key = key
             .as_str()
             .map(str::trim)

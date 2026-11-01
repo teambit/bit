@@ -72,8 +72,7 @@ impl VersionedPlan {
             .ok_or_else(|| invalid("tagged component identity"))?;
         let version = workspace.version.as_deref().ok_or_else(|| invalid("tagged version"))?;
         let (index, model_hash) = index_change(root, scope, component_name, kind)?;
-        let (staged, _staged_version) =
-            staged_selection(root, scope, component_name, kind, workspace.lane.as_ref())?;
+        let staged = staged_selection(root, scope, component_name, kind, workspace.lane.as_ref())?;
         let objects = object_changes(
             root,
             &ModelSelection { scope, name: component_name, model_hash: &model_hash },
@@ -171,13 +170,12 @@ fn staged_selection(
     name: &str,
     kind: RowKind,
     lane: Option<&super::Lane>,
-) -> io::Result<(Option<Change>, Option<String>)> {
+) -> io::Result<Option<Change>> {
     if !matches!(kind, RowKind::Staged | RowKind::LaneSnap) {
         validate_no_staged(root, scope, name)?;
-        return Ok((None, None));
+        return Ok(None);
     }
-    let (change, staged_version) = staged_change(root, scope, name, lane)?;
-    Ok((Some(change), Some(staged_version)))
+    staged_change(root, scope, name, lane).map(Some)
 }
 
 fn lane_change(lane: &super::Lane, scope: &str, name: &str) -> io::Result<Change> {
@@ -295,7 +293,7 @@ fn staged_change(
     scope: &str,
     name: &str,
     lane: Option<&super::Lane>,
-) -> io::Result<(Change, String)> {
+) -> io::Result<Change> {
     let path = if let Some(lane) = lane {
         crate::scope_path(root)
             .join("staged-config")
@@ -309,7 +307,7 @@ fn staged_change(
     let mut staged: Value = crate::parse_jsonc(&before)?;
     let rows = staged.as_array_mut().ok_or_else(|| invalid("staged component config"))?;
     let position = unique_position(rows, scope, name)?;
-    let staged_version = rows[position]["id"]["version"]
+    rows[position]["id"]["version"]
         .as_str()
         .or_else(|| rows[position]["version"].as_str())
         .or_else(|| {
@@ -319,11 +317,10 @@ fn staged_change(
         })
         .map(str::trim)
         .filter(|value| !value.is_empty())
-        .ok_or_else(|| invalid("staged version"))?
-        .to_owned();
+        .ok_or_else(|| invalid("staged version"))?;
     rows.remove(position);
     let after = serde_json::to_vec_pretty(&staged)?;
-    Ok((Change { path, before, after: Some(after) }, staged_version))
+    Ok(Change { path, before, after: Some(after) })
 }
 
 fn validate_no_staged(root: &Path, scope: &str, name: &str) -> io::Result<()> {

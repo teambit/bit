@@ -50,16 +50,16 @@ impl Observed {
     }
     pub(crate) fn directory(&mut self, path: &Path) -> io::Result<Vec<String>> {
         let names = directory(path)?;
+        if let Some(original) = self.directories.get(path) {
+            if original != &names {
+                return Err(unsupported("tracking directory changed during planning"));
+            }
+            return Ok(names);
+        }
         if self.directories.len() >= 65536 {
             return Err(unsupported("tracking directory limit"));
         }
-        if self.directories
-            .get(path)
-            .is_some_and(|original| original != &names)
-        {
-            return Err(unsupported("tracking directory changed during planning"));
-        }
-        self.directories.entry(path.to_owned()).or_insert_with(|| names.clone());
+        self.directories.insert(path.to_owned(), names.clone());
         Ok(names)
     }
     pub(crate) fn ancestors(&mut self, root: &Path, path: &Path) -> io::Result<()> {

@@ -116,7 +116,7 @@ fn expand(root: &Path, pattern: &Path, observed: &mut Observed) -> io::Result<Ve
                 continue;
             }
             let path = directory.join(name);
-            glob_entry(root, &path, &pattern, &mut directories, &mut matches)?;
+            glob_entry(root, path, &pattern, &mut directories, &mut matches)?;
         }
         if directories.len() + matches.len() > 65536 {
             return Err(unsupported("tracking glob limit"));
@@ -132,20 +132,20 @@ fn expand(root: &Path, pattern: &Path, observed: &mut Observed) -> io::Result<Ve
 }
 fn glob_entry(
     root: &Path,
-    path: &Path,
+    path: PathBuf,
     pattern: &str,
     directories: &mut Vec<PathBuf>,
     matches: &mut Vec<PathBuf>,
 ) -> io::Result<()> {
-    let metadata = fs::symlink_metadata(path)?;
+    let metadata = fs::symlink_metadata(&path)?;
     if metadata.file_type().is_symlink() {
         return Err(unsupported("tracking glob symlinks"));
     }
-    if bit_workspace_config::glob::matches(pattern, &relative(root, path)?) {
-        matches.push(path.to_owned());
+    if bit_workspace_config::glob::matches(pattern, &relative(root, &path)?) {
+        matches.push(path.clone());
     }
     if metadata.is_dir() {
-        directories.push(path.to_owned());
+        directories.push(path);
     }
     Ok(())
 }

@@ -221,7 +221,7 @@ fn dependencies(engine: &Engine<'_>, side: &str) -> io::Result<Vec<Value>> {
     if entries.len() > 4096 {
         return Err(invalid("dependency budget"));
     }
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(entries.len());
     for entry in entries {
         let dep = normalize_dependency(entry, &extension["data"]["policy"])?;
         result.push(dep);

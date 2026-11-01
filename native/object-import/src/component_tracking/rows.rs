@@ -94,9 +94,7 @@ fn normalize(rows: &mut Map<String, Value>) -> io::Result<()> {
         };
         let duplicates = original
             .iter()
-            .filter(|(other_key, other)| row_name(other_key, other) == Some(name))
-            .count()
-            > 1;
+            .any(|(other_key, other)| other_key != key && row_name(other_key, other) == Some(name));
         let key = if duplicates {
             format!("{}/{name}", scope(row).ok_or_else(|| unsupported("tracking duplicate scope"))?)
         } else {

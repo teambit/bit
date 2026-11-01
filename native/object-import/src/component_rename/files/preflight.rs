@@ -27,12 +27,12 @@ pub(super) fn dependent(
         path.parent().ok_or_else(|| unsupported("rename dependent parent"))?,
     )?;
     let before = super::super::required(&mut plan.observed, &path)?;
-    let loaded = overlaid(plan, component, relative, before)?;
-    matcher.apply(&loaded)?;
     let metadata = fs::symlink_metadata(&path)?;
     if !metadata.is_file() || metadata.file_type().is_symlink() {
         return Err(unsupported("rename dependent target is not a regular file"));
     }
+    let loaded = overlaid(plan, component, relative, before)?;
+    matcher.apply(&loaded)?;
     Ok(())
 }
 

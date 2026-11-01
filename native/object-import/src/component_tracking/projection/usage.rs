@@ -79,5 +79,7 @@ fn is_owned_by_other(
     let row_scope = rows::scope(row).unwrap_or_default();
     (name != candidate_name || row_scope != candidate_scope.trim())
         && root != "."
-        && file.starts_with(&format!("{root}/"))
+        && file
+            .strip_prefix(root)
+            .is_some_and(|rest| rest.starts_with('/'))
 }

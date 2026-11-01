@@ -111,8 +111,7 @@ fn assign(
         let lines = part.value
             .strip_suffix('\n')
             .unwrap_or(&part.value)
-            .split('\n')
-            .collect::<Vec<_>>();
+            .split('\n');
         if part.kind == 2 {
             collect_removed(&mut removed, lines, line);
             continue;
@@ -127,8 +126,12 @@ fn assign(
     previous_lines(rows, added, &removed);
     Ok(())
 }
-fn collect_removed<'a>(removed: &mut HashMap<usize, &'a str>, lines: Vec<&'a str>, start: usize) {
-    for (index, text) in lines.into_iter().enumerate() {
+fn collect_removed<'a>(
+    removed: &mut HashMap<usize, &'a str>,
+    lines: impl Iterator<Item = &'a str>,
+    start: usize,
+) {
+    for (index, text) in lines.enumerate() {
         removed.insert(start.saturating_add(index), text);
     }
 }

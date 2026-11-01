@@ -1,4 +1,8 @@
 //! `RenamingMain` uses `ComponentWriter` only for an unversioned, non-preserved target.
+
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Writer {
     Component,
@@ -22,6 +26,3 @@ impl Writer {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

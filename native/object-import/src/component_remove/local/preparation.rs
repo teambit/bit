@@ -12,8 +12,8 @@ pub(super) fn prepare(
 ) -> io::Result<LocalBatch> {
     let before = fs::read(root.join(".bitmap"))?;
     let mut bitmap = crate::parse_jsonc(&before)?;
-    let mut keys = std::collections::HashSet::new();
-    let mut selected = Vec::new();
+    let mut keys = std::collections::HashSet::with_capacity(identities.len());
+    let mut selected = Vec::with_capacity(identities.len());
     let mut models = Vec::new();
     for id in identities {
         let (row, model) = entry(root, &bitmap, id, keep)?;
@@ -28,11 +28,9 @@ pub(super) fn prepare(
     packages(root, &mut selected, &mut models, components)?;
     let proofs = proofs(root, &selected)?;
     let cleanup = Cleanup::prepare(root, &bitmap, &selected, components)?;
+    let rows = bitmap.as_object_mut().ok_or_else(|| invalid("component bitmap"))?;
     for row in &selected {
-        bitmap
-            .as_object_mut()
-            .ok_or_else(|| invalid("component bitmap"))?
-            .shift_remove(&row.key);
+        rows.shift_remove(&row.key);
     }
     Ok(LocalBatch {
         root: root.into(),

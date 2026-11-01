@@ -44,11 +44,10 @@ pub(crate) fn apply(kind: &str, input: &Value) -> io::Result<Value> {
     match kind {
         "configWorkspaceUpdates" => updates::plan(input),
         "configWorkspaceMerge" => workspace::plan(input),
-        "configComponent" => {
+        _ => {
             validate::component(input)?;
             component::plan(input)
         }
-        _ => Err(invalid("unsupported config operation")),
     }
 }
 fn invalid(message: &str) -> io::Error {

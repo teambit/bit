@@ -88,7 +88,7 @@ fn shorten(
             row.name
                 .rsplit('/')
                 .next()
-                .unwrap()
+                .unwrap_or(&row.name)
                 .to_owned()
         })
         .collect::<Vec<_>>();
@@ -99,7 +99,7 @@ fn shorten(
         let name = candidate.name
             .rsplit('/')
             .next()
-            .unwrap();
+            .unwrap_or(&candidate.name);
         let existing = bitmap
             .as_object()
             .is_some_and(|rows| {
@@ -325,7 +325,8 @@ fn relative_files(directory: &str, files: &[String]) -> Vec<String> {
     files
         .iter()
         .map(|file| {
-            file.strip_prefix(&format!("{directory}/"))
+            file.strip_prefix(directory)
+                .and_then(|rest| rest.strip_prefix('/'))
                 .unwrap_or(file)
                 .to_owned()
         })

@@ -41,10 +41,12 @@ pub(super) fn merge(
     Ok(())
 }
 fn append(policy: &mut Value, field: &str, row: Value) {
-    if policy.get(field).is_none() {
-        policy[field] = json!([]);
-    }
-    if let Some(rows) = policy[field].as_array_mut() {
+    if let Some(map) = policy.as_object_mut()
+        && let Some(rows) = map
+            .entry(field)
+            .or_insert_with(|| json!([]))
+            .as_array_mut()
+    {
         rows.push(row);
     }
 }

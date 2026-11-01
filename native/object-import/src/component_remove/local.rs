@@ -76,15 +76,16 @@ impl LocalBatch {
             return Err(invalid("component bitmap changed before removal"));
         }
         self.proofs.validate()?;
-        for row in &self.selected {
-            for path in row.files
-                .iter()
-                .chain(std::iter::once(&row.package))
-            {
-                if !path.as_os_str().is_empty() {
-                    super::validate_directory(path)?;
-                }
-            }
+        for path in self.selected
+            .iter()
+            .flat_map(|row| {
+                row.files
+                    .iter()
+                    .chain(std::iter::once(&row.package))
+            })
+            .filter(|path| !path.as_os_str().is_empty())
+        {
+            super::validate_directory(path)?;
         }
         self.cleanup.validate()?;
         for model in &self.models {

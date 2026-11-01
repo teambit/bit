@@ -19,7 +19,7 @@ pub(super) fn publish(
     let metadata = fs::symlink_metadata(&path)?;
     if !metadata.is_file()
         || metadata.file_type().is_symlink()
-        || metadata.len() != before.len() as u64
+        || u64::try_from(before.len()).ok() != Some(metadata.len())
         || fs::read(&path)? != before
     {
         return Err(io::Error::other("scope rename workspace.jsonc target changed before write"));

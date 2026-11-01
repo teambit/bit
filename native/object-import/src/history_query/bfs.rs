@@ -191,8 +191,20 @@ fn load(
     }
     append(walk, row)
 }
+struct ByteCount(usize);
+impl io::Write for ByteCount {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.0 += buf.len();
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
 fn append(walk: &mut Walk, row: Value) -> io::Result<()> {
-    walk.bytes += serde_json::to_vec(&row).map_err(io::Error::other)?.len();
+    let mut counter = ByteCount(0);
+    serde_json::to_writer(&mut counter, &row).map_err(io::Error::other)?;
+    walk.bytes += counter.0;
     if walk.bytes > 4 * 1024 * 1024 - 256 || walk.queue.len() > 65536 {
         return Err(invalid("history query output limit"));
     }

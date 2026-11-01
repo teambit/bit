@@ -76,7 +76,7 @@ impl Selection {
             let metadata = fs::symlink_metadata(&path)?;
             if !metadata.is_file()
                 || metadata.file_type().is_symlink()
-                || metadata.len() != expected.len() as u64
+                || u64::try_from(expected.len()).ok() != Some(metadata.len())
                 || fs::read(&path)? != *expected
             {
                 return Err(io::Error::other("scope rename inputs changed"));

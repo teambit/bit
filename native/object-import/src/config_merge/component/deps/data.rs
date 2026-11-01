@@ -40,28 +40,29 @@ fn dep_id(dep: &Value) -> Option<&str> {
 }
 
 fn log_side_data(state: &mut State<'_, '_>, index: usize, side: &str) {
+    use std::fmt::Write as _;
     let entries = state.data[index]
         .iter()
         .filter(|dep| index == 0 || dep["source"].as_str().map(str::trim) == Some("auto"))
         .collect::<Vec<_>>();
-    let lines = entries
-        .iter()
-        .map(|dep| {
-            let kind = dep["__type"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())
-                .unwrap_or("undefined");
-            let ver = dep["version"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())
-                .unwrap_or("undefined");
-            format!("{} {} {}", kind, dep_id(dep).unwrap_or("undefined"), ver)
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-    state.engine.log("debug", format!("{side}Data, {}\n{lines}", entries.len()));
+    let mut message = format!("{side}Data, {}\n", entries.len());
+    for (idx, dep) in entries.iter().enumerate() {
+        if idx > 0 {
+            message.push('\n');
+        }
+        let kind = dep["__type"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .unwrap_or("undefined");
+        let ver = dep["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .unwrap_or("undefined");
+        let _ = write!(message, "{kind} {} {ver}", dep_id(dep).unwrap_or("undefined"));
+    }
+    state.engine.log("debug", message);
 }
 fn one(state: &mut State<'_, '_>, id: &str) -> io::Result<()> {
     state.engine.log("trace", format!("depData.id, {id}"));

@@ -12,7 +12,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
         .unwrap_or(&[]);
     fields(merged)?;
     fields(scope)?;
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(merged.len() + scope.len());
     for field in merged {
         let field_name = field["field"].as_str().map(str::trim);
         output.push(one(
@@ -38,7 +38,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
     Ok(json!({"fields":output,"appendOrder":order}))
 }
 fn fields(input: &[Value]) -> io::Result<()> {
-    let mut names = Vec::new();
+    let mut names = Vec::with_capacity(input.len());
     for field in input {
         validate::fields(field, &["field", "entries"])?;
         let name = text(field, "field")?.trim();

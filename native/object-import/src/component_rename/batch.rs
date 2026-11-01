@@ -211,7 +211,16 @@ impl Batch {
     }
     #[must_use]
     pub fn refactored_materialized(&self) -> Value {
-        serde_json::json!({"identity":"","directory":"","mainFile":"","files":self.refactored.iter().map(|file|serde_json::json!({"from":file.source,"to":file.destination})).collect::<Vec<_>>()})
+        let files: Vec<_> = self.refactored
+            .iter()
+            .map(|file| serde_json::json!({"from":file.source,"to":file.destination}))
+            .collect();
+        serde_json::json!({
+            "identity": "",
+            "directory": "",
+            "mainFile": "",
+            "files": files,
+        })
     }
     pub fn added_identity(&self, index: usize) -> io::Result<String> {
         let plan = self.plan(index)?;
@@ -235,8 +244,10 @@ impl Batch {
         Ok(format!("{scope}/{}", plan.identity.target_name))
     }
     pub fn refresh(&mut self, index: usize, facts: &Value) -> io::Result<()> {
-        let options = self.plan(index)?.options.clone();
-        let context = self.plan(index)?.context.clone();
+        let (options, context) = {
+            let existing = self.plan(index)?;
+            (existing.options.clone(), existing.context.clone())
+        };
         let mut plan = Plan::prepare_with_context(&self.root, &options, facts, &context)?;
         let directory = plan.root.join(&plan.identity.source_directory);
         plan.files.retain(|file| file.source.starts_with(&directory));

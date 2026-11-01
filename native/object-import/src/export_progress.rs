@@ -29,7 +29,7 @@ pub fn scope<Output>(sender: &SyncSender<Event>, work: impl FnOnce() -> Output) 
 
 #[must_use]
 pub(crate) fn current() -> Option<SyncSender<Event>> {
-    CURRENT.with(|current| current.borrow().clone())
+    CURRENT.with_borrow(Clone::clone)
 }
 
 pub(crate) fn with_sender<Output>(
@@ -44,9 +44,6 @@ pub(crate) fn with_sender<Output>(
 /// Return whether the owning caller received this phase; no observer means no output.
 #[must_use]
 pub fn emit(event: Event) -> bool {
-    let Some(sender) = current() else {
-        return false;
-    };
     let event = match event {
         Event::Transfer { scope, objects } => {
             let scope = scope.trim();
@@ -71,5 +68,9 @@ pub fn emit(event: Event) -> bool {
         }
         other => other,
     };
-    sender.send(event).is_ok()
+    CURRENT.with_borrow(|current| {
+        current
+            .as_ref()
+            .is_some_and(|sender| sender.send(event).is_ok())
+    })
 }

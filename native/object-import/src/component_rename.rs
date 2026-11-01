@@ -193,13 +193,15 @@ impl Plan {
                     .map(|(_, row)| row)
             })
             .map_or(Value::Null, |row| row["mainFile"].clone());
+        let files: Vec<_> = self.files
+            .iter()
+            .map(|file| serde_json::json!({"from":file.source,"to":file.destination}))
+            .collect();
         serde_json::json!({
-            "identity":self.identity.target,
-            "directory":self.identity.target_directory,
-            "mainFile":main_file,
-            "files":self.files.iter().map(|file| serde_json::json!({
-                "from":file.source,"to":file.destination
-            })).collect::<Vec<_>>()
+            "identity": self.identity.target,
+            "directory": self.identity.target_directory,
+            "mainFile": main_file,
+            "files": files,
         })
     }
     /// Apply the reloaded target's actual in-memory `SourceFile` changes before native refactoring.

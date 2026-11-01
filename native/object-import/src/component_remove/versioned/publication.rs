@@ -59,16 +59,15 @@ fn changes(plans: &[VersionedPlan]) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
         .collect()
 }
 fn intersect(value: &mut Value, after: &Value) -> io::Result<()> {
-    if let Some(rows) = value.as_array_mut() {
-        let retained = after.as_array().ok_or_else(|| invalid("staged removal shape"))?;
-        rows.retain(|row| retained.contains(row));
+    let (rows, retained) = if let Some(rows) = value.as_array_mut() {
+        (rows, after.as_array().ok_or_else(|| invalid("staged removal shape"))?)
     } else {
-        let rows =
-            value["components"].as_array_mut().ok_or_else(|| invalid("scope removal shape"))?;
-        let retained =
-            after["components"].as_array().ok_or_else(|| invalid("scope removal shape"))?;
-        rows.retain(|row| retained.contains(row));
-    }
+        (
+            value["components"].as_array_mut().ok_or_else(|| invalid("scope removal shape"))?,
+            after["components"].as_array().ok_or_else(|| invalid("scope removal shape"))?,
+        )
+    };
+    rows.retain(|row| retained.contains(row));
     Ok(())
 }
 fn write_lanes(plans: &[VersionedPlan]) -> io::Result<()> {

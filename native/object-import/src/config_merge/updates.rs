@@ -65,7 +65,12 @@ fn decide(
             if semver::greater(semver, component, workspace)? {
                 plan.conflict(input, name, workspace, component, peer);
             } else {
-                plan.skip(name, &format!("the workspace version {workspace} is greater than {component} from the component"));
+                plan.skip(
+                    name,
+                    format_args!(
+                        "the workspace version {workspace} is greater than {component} from the component",
+                    ),
+                );
             }
         }
         (false, false) => ranges(plan, semver, name, workspace, component)?,
@@ -96,7 +101,9 @@ fn ranges(
     }
     plan.skip(
         name,
-        &format!("the workspace range {workspace} is greater than {component} from the component"),
+        format_args!(
+            "the workspace range {workspace} is greater than {component} from the component",
+        ),
     );
     Ok(())
 }
@@ -116,13 +123,18 @@ fn component_version_range(
         plan.warnings.push(format!("unable to calculate the min version of {workspace}"));
         plan.skip(
             name,
-            &format!("unable to calculate the min version of {workspace} from the workspace"),
+            format_args!("unable to calculate the min version of {workspace} from the workspace"),
         );
         return Ok(());
     };
     if semver::compare(minimum, &semver[component]["version"])? == Ordering::Greater {
         let minimum_text = text(&semver[workspace], "minimumText")?;
-        plan.skip(name, &format!("the workspace range {workspace} (min version {minimum_text}) is greater than {component} from the component"));
+        plan.skip(
+            name,
+            format_args!(
+                "the workspace range {workspace} (min version {minimum_text}) is greater than {component} from the component",
+            ),
+        );
         return Ok(());
     }
     if semver::satisfies(semver, component, workspace)? {
@@ -159,13 +171,15 @@ fn component_range_version(
         let minimum_text = text(&semver[component], "minimumText")?;
         plan.skip(
             name,
-            &format!("the min version from comp {minimum_text} is less than {workspace} from ws"),
+            format_args!(
+                "the min version from comp {minimum_text} is less than {workspace} from ws",
+            ),
         );
     }
     Ok(())
 }
 impl Plan {
-    fn skip(&mut self, name: &str, reason: &str) {
+    fn skip(&mut self, name: &str, reason: impl std::fmt::Display) {
         self.logs.push(format!("{name} - not updating. {reason}"));
     }
     fn update(&mut self, name: &str, workspace: &str, component: &str) {
@@ -209,7 +223,7 @@ impl Plan {
         if range == workspace {
             self.skip(
                 name,
-                &format!(
+                format_args!(
                     "the workspace range {workspace} already matches {component} from the component",
                 ),
             );

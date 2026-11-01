@@ -143,7 +143,7 @@ pub(crate) fn select(
     keep_files: bool,
     kind: RowKind,
 ) -> io::Result<Selected> {
-    let (key, row) = find_row(bitmap, name, kind)?;
+    let (key, row) = find_row(bitmap, name)?;
     let (component_name, scope) = supported_row(key, row, kind)?;
     let version = row_version(key, row, kind);
     let lane = select_row_lane(root, bitmap, scope, component_name, version.as_deref(), kind)?;
@@ -196,11 +196,7 @@ fn row_version(key: &str, row: &Value, kind: RowKind) -> Option<String> {
     })
 }
 
-pub(super) fn find_row<'a>(
-    bitmap: &'a Value,
-    name: &str,
-    _kind: RowKind,
-) -> io::Result<(&'a String, &'a Value)> {
+fn find_row<'a>(bitmap: &'a Value, name: &str) -> io::Result<(&'a String, &'a Value)> {
     let name = name.trim();
     let bare_name = name.rsplit_once('@').map_or(name, |(prefix, _)| prefix.trim());
     bitmap
