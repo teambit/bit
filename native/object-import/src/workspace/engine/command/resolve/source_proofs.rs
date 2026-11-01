@@ -37,15 +37,20 @@ fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof
         .ok_or_else(|| invalid("resolve retained hash"))?;
     let observed =
         snapshots.get(token, path, raw).ok_or_else(|| invalid("resolve retained source"))?;
-    let mut bytes = Vec::new();
-    if observed.raw_bytes == observed.contents.len() + 3 {
-        bytes.extend_from_slice(&[239, 187, 191]);
-    }
-    bytes.extend_from_slice(&observed.contents);
-    if crate::workspace::engine::hash(&bytes) != raw {
+    let bom_buf;
+    let bytes: &[u8] = if observed.raw_bytes == observed.contents.len() + 3 {
+        let mut buf = Vec::with_capacity(observed.raw_bytes);
+        buf.extend_from_slice(&[239, 187, 191]);
+        buf.extend_from_slice(&observed.contents);
+        bom_buf = buf;
+        &bom_buf
+    } else {
+        &observed.contents
+    };
+    if crate::workspace::engine::hash(bytes) != raw {
         return Err(invalid("resolve retained source integrity"));
     }
-    Ok(proof::content(path, &bytes))
+    Ok(proof::content(path, bytes))
 }
 
 pub(super) fn owned_paths(

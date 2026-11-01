@@ -12,13 +12,14 @@ impl Directory {
         if !meta.is_dir() || meta.file_type().is_symlink() {
             return Err(io::Error::other("command scratch parent directory"));
         }
+        let builder = private_builder();
+        let pid = std::process::id();
         for _ in 0..64 {
             let path = parent.join(format!(
-                "bit-native-command-{}-{}",
-                std::process::id(),
+                "bit-native-command-{pid}-{}",
                 SEQUENCE.fetch_add(1, Ordering::Relaxed),
             ));
-            match private_builder().create(&path) {
+            match builder.create(&path) {
                 Ok(()) => return Ok(Self(path)),
                 Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
                 Err(error) => return Err(error),
@@ -26,8 +27,7 @@ impl Directory {
         }
         Err(io::Error::other("command scratch directory allocation limit"))
     }
-}
-impl Directory {
+
     /// An empty subdirectory for one of several users of this directory.
     pub(super) fn child(&self, index: usize) -> io::Result<PathBuf> {
         let meta = fs::symlink_metadata(&self.0)?;

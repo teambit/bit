@@ -55,12 +55,9 @@ pub(super) fn finalize(
     }
     let package_manifest_plans =
         prepared.publication.package_manifest_plans(&prepared.snapshot.versions)?;
-    let staged_objects = prepared.snapshot.staged_objects().to_vec();
-    let versions = prepared.snapshot.versions.clone();
+    let output = json!({"token":retained.record.token,"result":retained.result,"stagedObjects":prepared.snapshot.staged_objects(),"versions":prepared.snapshot.versions,"packageManifestPlans":package_manifest_plans});
     retained.finalized = Phase::Prepared(Box::new(prepared));
-    Ok(
-        json!({"token":retained.record.token,"result":retained.result,"stagedObjects":staged_objects,"versions":versions,"packageManifestPlans":package_manifest_plans}),
-    )
+    Ok(output)
 }
 
 fn finalize_soft(retained: &mut Retained, receipt: &Value) -> io::Result<Value> {

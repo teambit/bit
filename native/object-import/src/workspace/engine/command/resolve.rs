@@ -188,21 +188,19 @@ pub(in crate::workspace::engine) fn tag_candidates(
 ) -> io::Result<(usize, Value)> {
     let mut retained =
         snapshots.command.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
-    let result = (|| {
-        let token = input.token.trim();
-        if token.is_empty()
-            || retained.record.token != token
-            || retained.tag.is_none()
-            || !retained.materials.is_empty()
-            || !matches!(retained.finalized, publication::Phase::Pending(_))
-        {
-            return Err(invalid("tag candidates state"));
-        }
-        let captured =
-            super::capture::all(&retained.record.request.root, input.current, snapshots, pool)?;
-        let ids = tag::candidate_ids(&mut retained, &captured)?;
-        Ok((ids.len(), json!({"token":retained.record.token,"candidateIds":ids})))
-    })();
+    let token = input.token.trim();
+    if token.is_empty()
+        || retained.record.token != token
+        || retained.tag.is_none()
+        || !retained.materials.is_empty()
+        || !matches!(retained.finalized, publication::Phase::Pending(_))
+    {
+        snapshots.command.resolve = Some(retained);
+        return Err(invalid("tag candidates state"));
+    }
+    let result = super::capture::all(&retained.record.request.root, input.current, snapshots, pool)
+        .and_then(|captured| tag::candidate_ids(&mut retained, &captured))
+        .map(|ids| (ids.len(), json!({"token":retained.record.token,"candidateIds":ids})));
     snapshots.command.resolve = Some(retained);
     result
 }

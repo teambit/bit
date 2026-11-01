@@ -108,7 +108,7 @@ pub(super) struct Apply {
 }
 fn valid_token(token: &str) -> bool {
     let trimmed = token.trim();
-    !trimmed.is_empty() && trimmed.len() <= 256 && !trimmed.chars().any(char::is_control)
+    (1..=256).contains(&trimmed.len()) && !trimmed.chars().any(char::is_control)
 }
 
 pub(super) fn plan(

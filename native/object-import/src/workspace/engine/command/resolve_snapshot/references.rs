@@ -71,9 +71,9 @@ fn update_scoped_id(
             hashes.get(identity.as_str()).copied()
         });
     if let Some(hash) = target
-        && fields.contains_key("version")
+        && let Some(version) = fields.get_mut("version")
     {
-        fields.insert("version".into(), json!(hash));
+        *version = json!(hash);
     }
 }
 
@@ -95,7 +95,7 @@ fn resolve_string_target<'a>(
     }
     hashes
         .get(identity)
-        .map(|hash| (identity.to_owned(), *hash))
+        .map(|hash| (format!("{identity}@{hash}"), *hash))
 }
 
 fn update_string_id(
@@ -104,10 +104,12 @@ fn update_string_id(
     pinned: &HashSet<String>,
 ) {
     for key in ["id", "componentId", "identity"] {
-        if let Some((identity, hash)) = resolve_string_target(fields, key, hashes, pinned) {
-            fields.insert(key.into(), json!(format!("{identity}@{hash}")));
-            if key == "id" && fields.contains_key("version") {
-                fields.insert("version".into(), json!(hash));
+        if let Some((rewritten, hash)) = resolve_string_target(fields, key, hashes, pinned) {
+            fields.insert(key.into(), json!(rewritten));
+            if key == "id"
+                && let Some(version) = fields.get_mut("version")
+            {
+                *version = json!(hash);
             }
         }
     }

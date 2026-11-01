@@ -63,7 +63,6 @@ pub(super) fn preflight(
     let opts = Options { imported_index, snapshot };
     prepare(root, context, materials, &versions, pending, &receipt, opts)?.validate()
 }
-
 fn resolve_markers(value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result<()> {
     match value {
         Value::Array(rows) => {
@@ -80,7 +79,6 @@ fn resolve_markers(value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result
     }
     Ok(())
 }
-
 fn resolve_field(key: &str, value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result<()> {
     if key == "id"
         && let Some((identity, suffix)) = value
@@ -106,7 +104,6 @@ fn resolve_field(key: &str, value: &mut Value, heads: &HashMap<&str, &str>) -> i
     }
     Ok(())
 }
-
 struct Batch<'a> {
     identities: HashSet<&'a str>,
     updates: Vec<bitmap::Update>,
@@ -114,7 +111,6 @@ struct Batch<'a> {
     removed: Vec<String>,
     removed_paths: Vec<PathBuf>,
 }
-
 fn batch<'a>(
     context: &'a Value,
     materials: &'a [resolve_snapshot::Material],
@@ -123,10 +119,11 @@ fn batch<'a>(
     if materials.len() != versions.len() || materials.is_empty() {
         return Err(invalid("resolve publication count"));
     }
+    let count = materials.len();
     let mut output = Batch {
-        identities: HashSet::new(),
-        updates: Vec::new(),
-        inputs: Vec::new(),
+        identities: HashSet::with_capacity(count),
+        updates: Vec::with_capacity(count),
+        inputs: Vec::with_capacity(count),
         removed: Vec::new(),
         removed_paths: Vec::new(),
     };
@@ -135,7 +132,6 @@ fn batch<'a>(
     }
     Ok(output)
 }
-
 fn add_material_to_batch<'a>(
     context: &'a Value,
     material: &'a resolve_snapshot::Material,
@@ -208,14 +204,12 @@ fn directory<'a>(context: &'a Value, material: &resolve_snapshot::Material) -> i
         .filter(|dir| !dir.is_empty())
         .ok_or_else(|| invalid("resolve publication directory"))
 }
-
 fn reason(receipt: &Value, tag: bool) -> String {
     let message = receipt["log"]["message"].as_str().map_or("", str::trim);
     let label = if tag { "tag" } else { "snap" };
     let msg = if message.is_empty() { "N/A" } else { message };
     format!("{label} (message: {msg})")
 }
-
 fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Vec<String> {
     if crate::command_import::lane::parse_lane_id(&context["lane"]["currentId"])
         .ok()
@@ -231,7 +225,6 @@ fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Ve
         .map(|material| material.identity.clone())
         .collect()
 }
-
 pub(super) fn prepare(
     root: &Path,
     context: &Value,
@@ -260,7 +253,6 @@ pub(super) fn prepare(
     output.validate()?;
     Ok(output)
 }
-
 fn prepare_resolve_bitmap(
     root: &Path,
     context: &Value,
@@ -272,22 +264,23 @@ fn prepare_resolve_bitmap(
     let original = fs::read(root.join(".bitmap"))?;
     let mut bitmap = bitmap::prepare_bytes(root, original, context, &batch.updates, &batch.removed)
         .map_err(|error| io::Error::new(error.kind(), format!("resolve bitmap: {error}")))?;
-    let update_ids = || {
-        batch.updates
+    let is_tag =
+        materials.iter().any(|material| material.version_state.tagged_version.is_some());
+    if is_tag || options.snapshot {
+        let update_ids: Vec<_> = batch.updates
             .iter()
             .map(|row| row.identity.clone())
-            .collect::<Vec<_>>()
-    };
-    if materials.iter().any(|material| material.version_state.tagged_version.is_some()) {
-        bitmap.clear_next_versions(context, &update_ids())?;
-    }
-    if options.snapshot {
-        bitmap.clear_config(context, &update_ids())?;
+            .collect();
+        if is_tag {
+            bitmap.clear_next_versions(context, &update_ids)?;
+        }
+        if options.snapshot {
+            bitmap.clear_config(context, &update_ids)?;
+        }
     }
     bitmap.mark_lane_new(context, lane_new)?;
     Ok(bitmap)
 }
-
 fn prepare_resolve_finalization(
     root: &Path,
     materials: &[resolve_snapshot::Material],

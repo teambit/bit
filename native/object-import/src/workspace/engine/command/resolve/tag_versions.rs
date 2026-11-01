@@ -53,6 +53,7 @@ fn components(
     next: &HashMap<String, &Value>,
 ) -> io::Result<Vec<Value>> {
     let auto_root = params["autoAddedWorkspaceRoot"].as_str().map(str::trim);
+    let versions_file = params.get("versionsFile");
     materials
         .iter()
         .map(|material| {
@@ -69,7 +70,8 @@ fn components(
                         .into_iter()
                         .flat_map(serde_json::Map::keys),
                 )
-                .map(|tag| tag.trim())
+                .map(String::as_str)
+                .map(str::trim)
                 .filter(|tag| !tag.is_empty())
                 .collect();
             let pending = next
@@ -79,7 +81,7 @@ fn components(
             Ok(json!({"versions":all_tags,
             "isAutoTag":material.participation.automatic && !material.participation.selected,
             "isAutoAddedRoot":is_auto_root,"enteredVersion":entered.get(identity),
-            "nextVersion":pending["version"],"nextPreRelease":pending["preRelease"],"tagData":file::for_component(params.get("versionsFile"),identity,is_auto_root)?}))
+            "nextVersion":pending["version"],"nextPreRelease":pending["preRelease"],"tagData":file::for_component(versions_file,identity,is_auto_root)?}))
         })
         .collect::<io::Result<Vec<_>>>()
 }

@@ -104,11 +104,15 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>
     }
     let cache =
         result["cache"].as_object().ok_or_else(|| invalid("status dependency cache shape"))?;
-    let mut files = request.files.clone();
     let component_json = request.component_root.join("component.json");
-    if !files.contains(&component_json) {
+    let files = if request.files.contains(&component_json) {
+        std::borrow::Cow::Borrowed(&request.files[..])
+    } else {
+        let mut files = Vec::with_capacity(request.files.len() + 1);
+        files.extend_from_slice(&request.files);
         files.push(component_json);
-    }
+        std::borrow::Cow::Owned(files)
+    };
     let input = serde_json::from_value(
         json!({"root":request.component_root,"files":files,"timestamp":cache["timestamp"]}),
     )

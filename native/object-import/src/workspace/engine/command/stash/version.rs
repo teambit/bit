@@ -63,6 +63,7 @@ pub(super) fn prepare(
 
     let sources = capture_files(&mut version, component, snapshots)?;
     let hash = crate::validate::hexadecimal(&crate::merge_history::hash(allocation.hash.trim())?);
+    objects.reserve(1 + sources.len());
     objects.push(snapshot::object("Version", Some(&hash), version.clone())?);
     objects.extend(sources);
     Ok(version)
@@ -85,8 +86,9 @@ fn capture_files(
     component: &Component,
     snapshots: &snapshots::State,
 ) -> io::Result<Vec<Value>> {
-    let mut files = Vec::new();
-    let mut sources = Vec::new();
+    let count = component.files.len();
+    let mut files = Vec::with_capacity(count);
+    let mut sources = Vec::with_capacity(count);
     for file in &component.files {
         let (row, source) = sources::capture_file(version, file, snapshots)?;
         files.push(row);

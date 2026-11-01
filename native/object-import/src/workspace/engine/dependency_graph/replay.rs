@@ -154,11 +154,14 @@ impl Replay {
         if self.receipts.bytes > 8 * 1024 * 1024 {
             return Err(invalid("dependency graph replay output limit"));
         }
-        if fresh {
-            self.receipts.first.insert(file.to_owned(), self.path_map.len());
-        }
-        let first = self.receipts.first.entry(file.to_owned()).or_insert(self.path_map.len());
-        self.receipts.origins.push(*first);
+        let index = self.path_map.len();
+        let first = if fresh {
+            self.receipts.first.insert(file.to_owned(), index);
+            index
+        } else {
+            *self.receipts.first.entry(file.to_owned()).or_insert(index)
+        };
+        self.receipts.origins.push(first);
         self.path_map.push(value);
         Ok(())
     }

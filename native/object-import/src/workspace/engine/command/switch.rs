@@ -65,41 +65,34 @@ impl LaneSelection {
         }
         let targets = context["targets"].as_array().ok_or_else(|| invalid("switch targets"))?;
         let current = entries(self.current_lane.as_ref())?;
-        let keep = targets
-            .iter()
-            .map(|target| {
-                let identity = target["identity"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|id| !id.is_empty())
-                    .ok_or_else(|| invalid("switch identity"))?;
-                let has_main = repository::model(context, identity)?
-                    .is_some_and(|model| {
-                        model["head"]
-                            .as_str()
-                            .is_some_and(|head| !head.trim().is_empty())
-                    });
-                if !has_main
-                    && current
-                        .iter()
-                        .any(|entry| entry.identity.trim() == identity)
-                {
-                    self.lane_only.insert(identity.to_owned());
-                }
-                Ok(!self.lane_only.contains(identity) || has_main)
-            })
-            .collect::<io::Result<Vec<_>>>()?;
-        let retained: Vec<Value> = targets
-            .iter()
-            .zip(keep)
-            .filter(|(_, keep)| *keep)
-            .map(|(target, _)| target.clone())
-            .collect();
+        let mut retained = Vec::with_capacity(targets.len());
+        for target in targets {
+            let identity = target["identity"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .ok_or_else(|| invalid("switch identity"))?;
+            let has_main = repository::model(context, identity)?
+                .is_some_and(|model| {
+                    model["head"]
+                        .as_str()
+                        .is_some_and(|head| !head.trim().is_empty())
+                });
+            if !has_main
+                && current
+                    .iter()
+                    .any(|entry| entry.identity.trim() == identity)
+            {
+                self.lane_only.insert(identity.to_owned());
+            }
+            if !self.lane_only.contains(identity) || has_main {
+                retained.push(target.clone());
+            }
+        }
         context["targets"] = json!(retained);
         context["lane"]["switchLaneOnly"] = json!(self.lane_only);
         Ok(())
     }
-
     fn load(request: &Prepare) -> io::Result<Self> {
         let bitmap = config::document(&request.root.join(".bitmap"))?;
         let settings = config::configuration_for_command(&request.root, true)?;
@@ -129,7 +122,6 @@ impl LaneSelection {
             })?;
         Ok(Self { imported, bitmap, current, destination, lane, current_lane, lane_only, chosen })
     }
-
     fn metadata(&mut self, request: &Prepare, pool: &rayon::ThreadPool) -> io::Result<Value> {
         let input = status_context::Request {
             root: request.root.clone(),
@@ -159,7 +151,6 @@ impl LaneSelection {
             "additions":additions,"addedTargets":added_targets,"targets":selected});
         Ok(context)
     }
-
     fn allows(&self, identity: &str) -> bool {
         let identity = identity.trim();
         self.chosen
@@ -169,7 +160,6 @@ impl LaneSelection {
                     .any(|id| id.trim() == identity)
             })
     }
-
     fn additions(
         &mut self,
         root: &std::path::Path,
@@ -214,7 +204,6 @@ impl LaneSelection {
         Ok((additions, targets, selected))
     }
 }
-
 fn validate_lane(
     id: &command_import::lane::Id,
     lane: Option<&command_import::lane::Record>,
@@ -231,7 +220,6 @@ fn validate_lane(
     }
     Ok(())
 }
-
 fn lane_only(bitmap: &Value, default_scope: Option<&str>) -> io::Result<HashSet<String>> {
     let fallback = default_scope
         .map(str::trim)
@@ -259,7 +247,6 @@ fn lane_only(bitmap: &Value, default_scope: Option<&str>) -> io::Result<HashSet<
         })
         .collect()
 }
-
 fn validate_membership(
     context: &Value,
     selection: &LaneSelection,
@@ -293,7 +280,6 @@ fn validate_membership(
         .map(|entry| (entry.identity.trim().to_owned(), entry.head.trim().to_owned()))
         .collect())
 }
-
 fn entries(
     record: Option<&command_import::lane::Record>,
 ) -> io::Result<Vec<command_import::lane::Entry>> {
@@ -302,7 +288,6 @@ fn entries(
         .transpose()
         .map(Option::unwrap_or_default)
 }
-
 fn attach_versions(context: &mut Value) -> io::Result<()> {
     let versions = context["targets"]
         .as_array()
@@ -320,7 +305,6 @@ fn attach_versions(context: &mut Value) -> io::Result<()> {
     }
     Ok(())
 }
-
 fn target_version(context: &Value, target: &Value) -> io::Result<String> {
     let identity = target["identity"]
         .as_str()

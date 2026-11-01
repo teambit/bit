@@ -145,12 +145,17 @@ pub(super) fn local_model(material: &Material, hash: &str) -> io::Result<Value> 
         return snapshot::local_model(&material.model, hash);
     };
     let tag = tag.trim();
-    let mut model = material.model.clone();
-    let tags = model["versions"].as_object_mut().ok_or_else(|| invalid("tag model versions"))?;
-    if tag.is_empty() || tags.contains_key(tag) {
+    if tag.is_empty() {
         return Err(invalid("tag version already exists"));
     }
-    tags.insert(tag.to_owned(), json!(hash));
+    let mut model = material.model.clone();
+    let tags = model["versions"].as_object_mut().ok_or_else(|| invalid("tag model versions"))?;
+    if tags
+        .insert(tag.to_owned(), json!(hash))
+        .is_some()
+    {
+        return Err(invalid("tag version already exists"));
+    }
     if let Some(orphaned) = model
         .get_mut("orphanedVersions")
         .filter(|val| !val.is_null())

@@ -233,7 +233,7 @@ fn verify_range(proof: &Proof, range: &Range) -> io::Result<usize> {
     range.offset.checked_add(range.length).ok_or_else(|| invalid("dependency range overflow"))?;
     let mut file = fs::File::open(&proof.path)?;
     file.seek(SeekFrom::Start(range.offset))?;
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(range.length as usize);
     file.take(range.length).read_to_end(&mut bytes)?;
     if bytes.len() as u64 != range.length
         || !proof.hash
@@ -247,7 +247,7 @@ fn verify_range(proof: &Proof, range: &Range) -> io::Result<usize> {
 }
 
 pub(in crate::workspace::engine) fn unique(proofs: Vec<Proof>) -> Vec<Proof> {
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(proofs.len());
     proofs
         .into_iter()
         .filter(|proof| seen.insert(proof.clone()))

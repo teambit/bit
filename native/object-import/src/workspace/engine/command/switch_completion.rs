@@ -62,7 +62,7 @@ impl Retained {
             tracking.validate()?;
         }
         cleanup(&self.root)?;
-        let mut writes = Vec::new();
+        let mut writes = Vec::with_capacity(2);
         if let Some(tracking) = &self.tracking {
             writes.push(tracking.commit()?);
         }
@@ -70,6 +70,12 @@ impl Retained {
         writes.push(self.bitmap.publication_receipt()?);
         Ok(json!({"completed":true,"warning":warning,"ownedWorkspaceWrites":writes}))
     }
+}
+fn completion(record: &Record) -> io::Result<&Retained> {
+    record.planned
+        .as_ref()
+        .and_then(|plan| plan.switch_completion.as_ref())
+        .ok_or_else(|| invalid("switch completion plan absent"))
 }
 pub(in crate::workspace::engine) fn complete(
     input: &Complete,
@@ -81,27 +87,17 @@ pub(in crate::workspace::engine) fn complete(
         return Err(invalid("switch completion has no acknowledged installer bitmap writes"));
     }
     let token = input.token.trim();
-    if token.is_empty()
-        || state.record
-            .as_ref()
-            .is_none_or(|record| record.token != token)
-    {
-        return Err(invalid("switch completion token"));
-    }
-    let retained = state.record
+    let Some(record) = state.record
         .as_ref()
-        .and_then(|record| record.planned.as_ref())
-        .and_then(|plan| plan.switch_completion.as_ref())
-        .ok_or_else(|| invalid("switch completion plan absent"))?;
-    if !retained.applied {
+        .filter(|record| !token.is_empty() && record.token == token)
+    else {
+        return Err(invalid("switch completion token"));
+    };
+    if !completion(record)?.applied {
         return Err(invalid("switch checkout not published"));
     }
     let record = state.record.take().ok_or_else(|| invalid("switch completion owner absent"))?;
-    let retained = record.planned
-        .as_ref()
-        .and_then(|plan| plan.switch_completion.as_ref())
-        .ok_or_else(|| invalid("switch completion plan absent"))?;
-    let mut output = retained.commit(file_id)?;
+    let mut output = completion(&record)?.commit(file_id)?;
     output["token"] = json!(record.token);
     Ok((1, output))
 }

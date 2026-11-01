@@ -145,7 +145,10 @@ impl Resolver<'_> {
         builtins: &HashSet<&str>,
     ) -> io::Result<Row> {
         let mut row = Row {
-            path_map: PathMap { file: filename.to_owned(), dependencies: Vec::new() },
+            path_map: PathMap {
+                file: filename.to_owned(),
+                dependencies: Vec::with_capacity(dependencies.len()),
+            },
             missing: Vec::new(),
             missing_packages: Vec::new(),
             registered: Vec::new(),

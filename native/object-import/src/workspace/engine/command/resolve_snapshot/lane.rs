@@ -73,7 +73,11 @@ fn update(
     if hidden {
         update_hidden(lane, identity, head, index, already_hidden)
     } else {
-        update_visible(lane, scope, name, head, index, already_hidden, removed)
+        if already_hidden {
+            remove_hidden(lane, identity)?;
+        }
+        update_visible(lane, scope, name, head, index, removed);
+        Ok(())
     }
 }
 
@@ -115,10 +119,9 @@ fn update_hidden(
     if !already_hidden {
         lane["overrideUpdateDependents"] = json!(true);
     }
-    if lane["updateDependents"].is_null() {
-        lane["updateDependents"] = json!([]);
+    if !lane["updateDependents"].is_null() {
+        remove_hidden(lane, identity)?;
     }
-    remove_hidden(lane, identity)?;
     if lane["updateDependents"].is_null() {
         lane["updateDependents"] = json!([]);
     }
@@ -135,12 +138,8 @@ fn update_visible(
     name: &str,
     head: &str,
     index: Option<usize>,
-    already_hidden: bool,
     removed: bool,
-) -> io::Result<()> {
-    if already_hidden {
-        remove_hidden(lane, &format!("{scope}/{name}"))?;
-    }
+) {
     let mut entry = json!({"id":{"scope":scope,"name":name},"head":head});
     if removed {
         entry["isDeleted"] = json!(true);
@@ -153,7 +152,6 @@ fn update_visible(
             .unwrap()
             .push(entry);
     }
-    Ok(())
 }
 
 fn history(

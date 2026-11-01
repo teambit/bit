@@ -21,7 +21,7 @@ pub(super) fn include(
     {
         return Ok(false);
     }
-    let Some(root) = target(&retained.record.context).cloned() else { return Ok(false) };
+    let Some(root) = target(&retained.record.context) else { return Ok(false) };
     let identity = root["identity"]
         .as_str()
         .map(str::trim)
@@ -37,14 +37,15 @@ pub(super) fn include(
         .iter()
         .find(|current| current.target.identity.trim() == identity)
         .ok_or_else(|| invalid("workspace-root capture absent"))?;
+    let identity = identity.to_owned();
     let mut options =
         retained.snap.clone().ok_or_else(|| invalid("workspace-root snapshot options"))?;
     options.unmodified = false;
     if !snap::eligible(retained, current, &options)? {
         return Ok(false);
     }
-    selected.push(identity.to_string());
-    retained.record.context[AUTO] = json!(identity);
+    retained.record.context[AUTO] = json!(&identity);
+    selected.push(identity);
     Ok(true)
 }
 

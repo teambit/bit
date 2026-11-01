@@ -75,28 +75,18 @@ fn eligible(
     current: &capture::Captured,
     include_new: bool,
 ) -> io::Result<Option<(Value, Option<String>)>> {
-    let model = repository::model(&retained.context, &current.target.identity)?;
-    let previous = if current.target.version.trim().is_empty() {
-        None
-    } else {
-        Some(versions::reference(
-            &model.ok_or_else(|| invalid("stash missing model"))?,
-            current.target.version.trim(),
-        )?)
-    };
-    let stored = match &previous {
-        Some(hash) => retained.repository.read(hash, "Version")?,
-        None => json!({"schema":"2.0.0","extensions":[]}),
-    };
-    if previous.is_none() && !include_new {
+    let version = current.target.version.trim();
+    if version.is_empty() {
+        return Ok(include_new.then(|| (json!({"schema":"2.0.0","extensions":[]}), None)));
+    }
+    let model = repository::model(&retained.context, &current.target.identity)?
+        .ok_or_else(|| invalid("stash missing model"))?;
+    let hash = versions::reference(&model, version)?;
+    let stored = retained.repository.read(&hash, "Version")?;
+    if comparison::compare(&current.target, &current.metadata, &stored)?["modified"] != true {
         return Ok(None);
     }
-    if previous.is_some()
-        && comparison::compare(&current.target, &current.metadata, &stored)?["modified"] != true
-    {
-        return Ok(None);
-    }
-    Ok(Some((stored, previous)))
+    Ok(Some((stored, Some(hash))))
 }
 
 fn validate(retained: &Retained, input: &Plan) -> io::Result<()> {
@@ -182,6 +172,7 @@ fn component(
 fn find_entry(bitmap: &Value, identity: &str, directory: &str) -> io::Result<Value> {
     let identity = identity.trim();
     let directory = directory.trim();
+    let id_parts = identity.rsplit_once('/');
     bitmap
         .as_object()
         .ok_or_else(|| invalid("stash bitmap object"))?
@@ -201,8 +192,9 @@ fn find_entry(bitmap: &Value, identity: &str, directory: &str) -> io::Result<Val
             let (_, name) = crate::reset_lane::bitmap::row_identity(key, entry);
             let name = name.trim();
             entry["rootDir"].as_str().map(norm_root_dir) == Some(directory)
-                && (format!("{scope}/{name}") == identity
-                    || (scope.is_empty() && identity.ends_with(&format!("/{name}"))))
+                && id_parts.is_some_and(|(id_scope, id_name)| {
+                    name == id_name && (scope == id_scope || scope.is_empty())
+                })
         })
         .map(|(_, entry)| entry.clone())
         .ok_or_else(|| invalid("stash bitmap entry"))

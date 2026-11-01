@@ -80,11 +80,11 @@ fn warnings(
     Ok(output)
 }
 
-fn latest_tag<'a>(material: &'a Material, semver: &Value) -> io::Result<Option<&'a str>> {
+fn latest_tag<'a>(material: &'a Material, semver: &'a Value) -> io::Result<Option<&'a str>> {
     let tags =
         material.model["versions"].as_object().ok_or_else(|| invalid("tag warning versions"))?;
     let orphaned = material.model["orphanedVersions"].as_object();
-    let mut latest: Option<&str> = None;
+    let mut latest: Option<(&'a str, &'a Value)> = None;
     for tag in tags
         .keys()
         .chain(orphaned.into_iter().flat_map(serde_json::Map::keys))
@@ -93,14 +93,13 @@ fn latest_tag<'a>(material: &'a Material, semver: &Value) -> io::Result<Option<&
             semver[tag].get("version").ok_or_else(|| invalid("tag stored semver metadata"))?;
         let dominated = match latest {
             None => true,
-            Some(current) => {
-                crate::config_merge::compare_versions(candidate, &semver[current]["version"])?
-                    == Ordering::Greater
+            Some((_, current)) => {
+                crate::config_merge::compare_versions(candidate, current)? == Ordering::Greater
             }
         };
         if dominated {
-            latest = Some(tag);
+            latest = Some((tag, candidate));
         }
     }
-    Ok(latest)
+    Ok(latest.map(|(tag, _)| tag))
 }

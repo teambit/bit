@@ -13,12 +13,8 @@ pub(in crate::workspace::engine) struct PackageFinalize {
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }
-pub(in crate::workspace::engine::command::resolve) fn finalize(
-    input: PackageFinalize,
-    state: &mut State,
-) -> io::Result<(usize, Value)> {
-    let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
-    let token = input.token.trim();
+fn validate_package_token(retained: &super::Retained, token: &str) -> io::Result<()> {
+    let token = token.trim();
     if token.is_empty()
         || retained.record.token != token
         || retained.materials.is_empty()
@@ -26,6 +22,15 @@ pub(in crate::workspace::engine::command::resolve) fn finalize(
     {
         return Err(invalid("snapshot package token"));
     }
+    Ok(())
+}
+
+pub(in crate::workspace::engine::command::resolve) fn finalize(
+    input: PackageFinalize,
+    state: &mut State,
+) -> io::Result<(usize, Value)> {
+    let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
+    validate_package_token(retained, &input.token)?;
     if input.manifests.len() > retained.materials.len() {
         return Err(invalid("snapshot package manifest count"));
     }
@@ -54,14 +59,7 @@ pub(in crate::workspace::engine::command::resolve) fn stage(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
-    let token = input.token.trim();
-    if token.is_empty()
-        || retained.record.token != token
-        || retained.materials.is_empty()
-        || (retained.snap.is_none() && retained.record.context["callbackLifecycle"] != true)
-    {
-        return Err(invalid("snapshot package token"));
-    }
+    validate_package_token(retained, &input.token)?;
     super::validate(retained)?;
     let Phase::Prepared(prepared) = &mut retained.finalized else {
         return Err(invalid("snapshot package phase"));

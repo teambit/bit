@@ -11,7 +11,8 @@ pub(super) fn sources(
     objects: &mut Vec<Value>,
     preserve_order: bool,
 ) -> io::Result<()> {
-    let mut files = Vec::new();
+    let mut files = Vec::with_capacity(material.files.len());
+    objects.reserve(material.files.len());
     for file in &material.files {
         let (row, source) = capture_file(version, file, snapshots)?;
         files.push(row);

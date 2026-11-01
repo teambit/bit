@@ -82,7 +82,7 @@ fn checkout_targets(request: &Prepare, context: &Value) -> io::Result<Vec<Value>
 }
 
 fn preparation_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
-    let mut proofs = Vec::new();
+    let mut proofs = Vec::with_capacity(7);
     for name in [
         ".bitmap",
         "workspace.jsonc",
@@ -138,14 +138,14 @@ pub(super) fn validate_licenses(
 }
 
 fn license_scopes(context: &Value) -> io::Result<std::collections::HashSet<&str>> {
-    let mut scopes = std::collections::HashSet::new();
+    let visible = context["targets"].as_array().ok_or_else(|| invalid("command target scopes"))?;
+    let mut scopes = std::collections::HashSet::with_capacity(visible.len() + 1);
     let scope_name = context["scope"]["name"]
         .as_str()
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("command scope name"))?;
     scopes.insert(scope_name);
-    let visible = context["targets"].as_array().ok_or_else(|| invalid("command target scopes"))?;
     let lane = context["lane"]["targets"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);

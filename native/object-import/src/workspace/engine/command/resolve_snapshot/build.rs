@@ -54,24 +54,16 @@ pub(super) fn artifacts(
     objects: &mut Vec<Value>,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
-    let Some(artifacts) = receipt.get("artifacts") else { return Ok(()) };
-    let artifacts: Vec<GeneratedFile> =
-        serde_json::from_value(artifacts.clone()).map_err(io::Error::other)?;
+    let Some(raw) = receipt.get_mut("artifacts").map(Value::take) else { return Ok(()) };
+    let artifacts: Vec<GeneratedFile> = serde_json::from_value(raw).map_err(io::Error::other)?;
     if artifacts.is_empty() {
         return Ok(());
     }
     if artifacts.len() > 4096 {
         return Err(invalid("snapshot artifact count"));
     }
-    let root = receipt["artifactRoot"]
-        .as_str()
-        .map(str::trim)
-        .filter(|root| !root.is_empty())
-        .ok_or_else(|| invalid("snapshot artifact root"))?;
-    let root = PathBuf::from(root);
-    if !root.is_absolute() || !fs::symlink_metadata(&root)?.is_dir() {
-        return Err(invalid("snapshot artifact root"));
-    }
+    let root = artifact_root(receipt)?;
+    objects.reserve(artifacts.len());
     let mut used = 0;
     for artifact in artifacts {
         regular(&root, &artifact.path)?;
@@ -89,6 +81,19 @@ pub(super) fn artifacts(
         );
     }
     Ok(())
+}
+
+fn artifact_root(receipt: &Value) -> io::Result<PathBuf> {
+    let root = receipt["artifactRoot"]
+        .as_str()
+        .map(str::trim)
+        .filter(|root| !root.is_empty())
+        .map(PathBuf::from)
+        .ok_or_else(|| invalid("snapshot artifact root"))?;
+    if !root.is_absolute() || !fs::symlink_metadata(&root)?.is_dir() {
+        return Err(invalid("snapshot artifact root"));
+    }
+    Ok(root)
 }
 
 fn regular(root: &Path, path: &Path) -> io::Result<()> {

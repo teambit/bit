@@ -15,6 +15,8 @@ pub(in super::super) fn append_skipped(
     let lane_only = context["lane"]["switchLaneOnly"]
         .as_array()
         .ok_or_else(|| invalid("switch lane-only result"))?;
+    let added_targets = context["lane"]["addedTargets"].as_array();
+    let lane_heads = &context["lane"]["switchLaneHeads"];
     let failed = result["failedComponents"]
         .as_array_mut()
         .ok_or_else(|| invalid("switch failure result"))?;
@@ -27,16 +29,14 @@ pub(in super::super) fn append_skipped(
             || targets
                 .iter()
                 .any(|target| target["identity"].as_str().map(str::trim) == Some(identity))
-            || context["lane"]["addedTargets"]
-                .as_array()
-                .is_some_and(|rows| {
-                    rows.iter()
-                        .any(|row| row["identity"].as_str().map(str::trim) == Some(identity))
-                })
+            || added_targets.is_some_and(|rows| {
+                rows.iter()
+                    .any(|row| row["identity"].as_str().map(str::trim) == Some(identity))
+            })
         {
             continue;
         }
-        if let Some(head) = context["lane"]["switchLaneHeads"][identity]
+        if let Some(head) = lane_heads[identity]
             .as_str()
             .map(str::trim)
             .filter(|head| !head.is_empty())

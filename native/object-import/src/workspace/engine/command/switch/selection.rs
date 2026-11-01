@@ -1,4 +1,7 @@
 //! Filter the published switch pool after fetching and before native materialization.
+#[cfg(test)]
+mod tests;
+
 use super::{Prepare, invalid, validation::canonical};
 use crate::command_import::lane::Entry;
 use serde_json::Value;
@@ -42,7 +45,8 @@ pub(super) fn chosen(
 
 fn has_tracked(rows: &serde_json::Map<String, Value>) -> bool {
     rows.keys()
-        .map(|key| key.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .any(|trimmed| !trimmed.starts_with('$') && !matches!(trimmed, "_bit_lane" | "version"))
 }
 
@@ -127,6 +131,3 @@ pub(super) fn attach(context: &mut Value, request: &Prepare) -> io::Result<()> {
     context["lane"]["switchWorkspaceOnly"] = serde_json::json!(options.workspace_only);
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

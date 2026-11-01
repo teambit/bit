@@ -4,6 +4,8 @@ pub(super) use report::report;
 
 mod published;
 mod report;
+#[cfg(test)]
+mod tests;
 
 use super::{
     super::{capture, invalid, repository, resolve_snapshot::Material},
@@ -52,24 +54,22 @@ pub(super) fn select(
     if options.persist {
         return select_persist(retained, &options, input);
     }
-    let pending = candidate_selection(retained, captured)?;
-    let candidates = &pending.identities;
-    let snapped = head_snaps(retained, captured)?;
-    let snap = retained.snap.as_ref().ok_or_else(|| invalid("tag snapshot options"))?;
+    let unmerged = retained.snap.as_ref().ok_or_else(|| invalid("tag snapshot options"))?.unmerged;
     if !options.patterns.is_empty() {
-        return filter_patterns(captured, candidates, &options.patterns, input);
+        let pending = candidate_selection(retained, captured)?;
+        return filter_patterns(captured, &pending.identities, &options.patterns, input);
     }
     if input.tag_selections.is_some() {
         return Err(invalid("tag unexpected selection receipt"));
     }
     if options.snapped {
-        return Ok(Selection::unique(snapped));
+        return head_snaps(retained, captured).map(Selection::unique);
     }
-    if snap.unmerged {
+    if unmerged {
         return super::selection::select(&retained.record.targets, &retained.pending, None)
             .map(Selection::unique);
     }
-    Ok(pending)
+    candidate_selection(retained, captured)
 }
 
 pub(super) fn candidate_ids(
@@ -269,9 +269,9 @@ pub(super) fn versions(
             .map(str::trim)
             .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("tag selected identity"))?;
-        if !entered.contains_key(id) {
-            entered.insert(id.into(), row["version"].clone());
-        }
+        entered
+            .entry(id.to_owned())
+            .or_insert_with(|| row["version"].clone());
     }
     let next = retained.record.targets
         .iter()
@@ -285,6 +285,3 @@ pub(super) fn versions(
         .collect();
     super::tag_versions::plan(materials, &params, &Value::Object(entered), &input.semver, &next)
 }
-
-#[cfg(test)]
-mod tests;

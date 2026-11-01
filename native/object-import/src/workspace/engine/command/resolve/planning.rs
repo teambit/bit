@@ -39,11 +39,7 @@ pub(super) fn prepare(
     let mut result = report(retained, &input.semver, &selected, &materials, &automatic)?;
     projection::attach_pinned_dependents(retained, &input.components, &materials, &mut result);
     let mut output = response(retained, &selected, &materials, &result, (auto_loaded, load_count));
-    if retained.snap.is_none() && retained.tag.is_none() {
-        output["autoSnapResults"] = json!(automatic);
-    }
-    output["issueGraph"] = issue_graph;
-    snapshot_metadata(retained, &materials, &mut output);
+    snapshot_metadata(retained, &materials, &automatic, issue_graph, &mut output);
     retained.finalized.callbacks_mut()?.paths = super::source_proofs::owned_paths(
         &retained.record.request.root,
         &input.current,
@@ -54,7 +50,6 @@ pub(super) fn prepare(
     retained.result = result;
     Ok(output)
 }
-
 fn select_current(
     retained: &mut Retained,
     captured: &[capture::Captured],
@@ -74,8 +69,17 @@ fn select_current(
     retained.record.proofs.extend(super::source_proofs::capture(captured, snapshots)?);
     Ok(selection)
 }
-
-fn snapshot_metadata(retained: &Retained, materials: &[Material], output: &mut Value) {
+fn snapshot_metadata(
+    retained: &Retained,
+    materials: &[Material],
+    automatic: &[Value],
+    issue_graph: Value,
+    output: &mut Value,
+) {
+    if retained.snap.is_none() && retained.tag.is_none() {
+        output["autoSnapResults"] = json!(automatic);
+    }
+    output["issueGraph"] = issue_graph;
     if let Some(root) = super::root::added(retained) {
         output["autoAddedWorkspaceRoot"] = json!(root);
     }
@@ -83,7 +87,6 @@ fn snapshot_metadata(retained: &Retained, materials: &[Material], output: &mut V
         output["tagRegistryVersions"] = json!(materials.iter().map(|material|json!({"identity":material.identity,"extensions":material.version["extensions"],"bindingPrefix":material.model["bindingPrefix"]})).collect::<Vec<_>>());
     }
 }
-
 fn report(
     retained: &Retained,
     semver: &Value,
@@ -101,7 +104,6 @@ fn report(
     super::root::report(retained, materials, &mut result);
     Ok(result)
 }
-
 fn retain_proofs(retained: &mut Retained, proofs: Vec<super::proof::Proof>) -> io::Result<()> {
     retained.record.proofs.extend(proofs);
     retained.record.repository.validate()?;
@@ -316,21 +318,18 @@ fn ensure_attached_or_unrelated(
     reference: &str,
     model: &Value,
 ) -> io::Result<Option<Value>> {
-    let lane_targets = retained.record.context["lane"]["targets"].as_array();
-    let head = lane_targets
+    let lane_head = retained.record.context["lane"]["targets"]
+        .as_array()
         .and_then(|rows| {
             rows.iter()
                 .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.trim()))
         })
-        .and_then(|row| row["currentHead"].as_str())
+        .and_then(|row| row["currentHead"].as_str());
+    let head = [lane_head, model["head"].as_str()]
+        .into_iter()
+        .flatten()
         .map(str::trim)
-        .filter(|head| !head.is_empty())
-        .or_else(|| {
-            model["head"]
-                .as_str()
-                .map(str::trim)
-                .filter(|head| !head.is_empty())
-        })
+        .find(|head| !head.is_empty())
         .or_else(|| {
             ["versions", "orphanedVersions"]
                 .into_iter()
@@ -354,7 +353,6 @@ fn ensure_attached_or_unrelated(
     }
     Ok(pending)
 }
-
 pub(super) fn preflight(
     retained: &mut Retained,
     materials: &mut [Material],
@@ -378,7 +376,6 @@ pub(super) fn preflight(
         is_snap,
     )
 }
-
 fn project_materials(
     retained: &mut Retained,
     input: &Plan,
@@ -397,7 +394,6 @@ fn project_materials(
     }
     Ok(())
 }
-
 pub(super) fn capture_for_snapshot(
     retained: &Retained,
     current: Vec<Value>,

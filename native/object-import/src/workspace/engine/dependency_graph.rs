@@ -114,7 +114,8 @@ fn capture_view(
     validate::validate(request)?;
     let builtins: HashSet<_> = request.builtins
         .iter()
-        .map(|item| item.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .filter(|item| !item.is_empty())
         .collect();
     let mut pending = request.files.clone();
@@ -153,7 +154,7 @@ impl Capture {
         pending: &mut Vec<PathBuf>,
         budget: &Budget,
     ) -> io::Result<Vec<PathBuf>> {
-        let mut batch = Vec::new();
+        let mut batch = Vec::with_capacity(pending.len());
         for file in pending.drain(..) {
             let name = file
                 .to_str()

@@ -58,13 +58,20 @@ fn rekey(rows: &mut Value, identity: &str, hash: &str) -> io::Result<()> {
     if edges.len() > 16384 {
         return Err(invalid("resolve graph budget"));
     }
-    let identity = identity.trim();
+    let Some((id_scope, id_name)) = identity
+        .trim()
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+    else {
+        return Ok(());
+    };
     let hash = hash.trim();
     for edge in edges {
         let source = &mut edge["source"];
-        let scope = source["scope"].as_str().map_or("", str::trim);
-        let name = source["name"].as_str().map_or("", str::trim);
-        if !scope.is_empty() && !name.is_empty() && format!("{scope}/{name}") == identity {
+        if source["scope"].as_str().map(str::trim) == Some(id_scope)
+            && source["name"].as_str().map(str::trim) == Some(id_name)
+        {
             source["version"] = json!(hash);
         }
     }

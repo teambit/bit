@@ -12,12 +12,12 @@ pub(super) fn apply(request: &Request, plan: &mut Plan) {
             {
                 continue;
             }
-            seen.insert(trimmed.to_owned());
+            seen.insert(trimmed);
             update(request, plan, field, trimmed, value);
         }
     }
 }
-fn detected(request: &Request, plan: &Plan, name: &str, seen: &HashSet<String>) -> bool {
+fn detected(request: &Request, plan: &Plan, name: &str, seen: &HashSet<&str>) -> bool {
     let name = name.trim();
     plan.components
         .iter()

@@ -76,10 +76,11 @@ fn prepare_conflict(
     Ok(Some((path, text)))
 }
 fn retained_sections(text: &str, identities: &HashSet<&str>) -> Vec<String> {
-    let divider = "-".repeat(80);
+    const DIVIDER: &str =
+        "--------------------------------------------------------------------------------";
     let clean = text
         .lines()
-        .filter(|line| *line != divider && !line.starts_with('#'))
+        .filter(|line| *line != DIVIDER && !line.starts_with('#'))
         .collect::<Vec<_>>()
         .join("\n");
     clean
@@ -93,7 +94,7 @@ fn retained_sections(text: &str, identities: &HashSet<&str>) -> Vec<String> {
             (!id.is_empty()
                 && !matches_selected(id, identities)
                 && !matches_selected(base, identities))
-            .then(|| format!("{divider}\n[*] {id}\n{divider}\n{content}"))
+            .then(|| format!("{DIVIDER}\n[*] {id}\n{DIVIDER}\n{content}"))
         })
         .collect()
 }

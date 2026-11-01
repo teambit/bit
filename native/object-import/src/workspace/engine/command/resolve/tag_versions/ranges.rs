@@ -8,7 +8,7 @@ use std::{
 // Workspace-level range policy is guarded by context eligibility. This retained
 // projection carries the canonical stored/current resolver prefix.
 pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
-    let mut versions = HashMap::new();
+    let mut versions = HashMap::with_capacity(materials.len());
     for material in materials.iter() {
         let identity = material.identity.trim().to_owned();
         let version = material.version_state.tagged_version
@@ -22,8 +22,7 @@ pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
         }
     }
     for material in materials {
-        let prefix = prefix(&material.version)?;
-        let Some(prefix) = prefix else { continue };
+        let Some(prefix) = prefix(&material.version)? else { continue };
         let pinned = super::super::super::resolve_snapshot::pinned_dependencies(&material.version);
         update_dependencies(&mut material.version, prefix, &versions, &pinned)?;
     }

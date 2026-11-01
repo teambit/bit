@@ -70,7 +70,12 @@ fn rebuild(
     }
     let staged =
         previous.staged_snaps.as_deref().ok_or_else(|| invalid("snapshot build was not staged"))?;
-    let receipt = build_receipt(&previous.receipt, &input)?;
+    let receipt = build_receipt(
+        &previous.receipt,
+        input.versions,
+        input.artifacts,
+        input.artifact_root.as_ref(),
+    )?;
     let staged = staged.to_vec();
     let mut prepared = super::prepare_snapshot(retained, receipt, snapshots)?;
     prepared.publication.keep_staged_snaps(&retained.record.request.root, &staged)?;
@@ -84,22 +89,27 @@ fn rebuild(
     Ok(output)
 }
 
-fn build_receipt(original: &Value, input: &BuildFinalize) -> io::Result<Value> {
+fn build_receipt(
+    original: &Value,
+    versions: Vec<Value>,
+    artifacts: Vec<Value>,
+    artifact_root: Option<&PathBuf>,
+) -> io::Result<Value> {
     let mut receipt = original.clone();
-    receipt["artifacts"] = json!(&input.artifacts);
-    receipt["artifactRoot"] = json!(&input.artifact_root);
+    receipt["artifacts"] = Value::Array(artifacts);
+    receipt["artifactRoot"] = json!(artifact_root);
     let allocations =
         receipt["versions"].as_array_mut().ok_or_else(|| invalid("snapshot allocations"))?;
-    if input.versions.len() != allocations.len() {
+    if versions.len() != allocations.len() {
         return Err(invalid("snapshot builder version count"));
     }
-    for (allocation, version) in allocations.iter_mut().zip(&input.versions) {
+    for (allocation, version) in allocations.iter_mut().zip(versions) {
         let alloc_id = version_identity(allocation);
-        let ver_id = version_identity(version);
+        let ver_id = version_identity(&version);
         if alloc_id.is_none() || alloc_id != ver_id {
             return Err(invalid("snapshot builder version identity"));
         }
-        allocation["buildData"] = version.clone();
+        allocation["buildData"] = version;
     }
     Ok(receipt)
 }

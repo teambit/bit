@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::super::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io};
@@ -11,7 +14,6 @@ pub(super) fn select(
     pattern: Option<&[String]>,
 ) -> io::Result<Vec<String>> {
     let unresolved = pending_identities(pending)?;
-    let mut seen = HashSet::new();
     let selected = pattern.map_or_else(
         || unresolved.clone(),
         |list| {
@@ -23,6 +25,7 @@ pub(super) fn select(
     if selected.is_empty() || selected.len() > 4096 {
         return Err(invalid("resolve empty or excessive selection"));
     }
+    let mut seen = HashSet::with_capacity(selected.len());
     for id in &selected {
         if id.is_empty() || !seen.insert(id.clone()) || !unresolved.contains(id) {
             return Err(invalid("resolve selection is not pending"));
@@ -35,8 +38,8 @@ pub(super) fn select(
 }
 
 fn pending_identities(pending: &[Value]) -> io::Result<Vec<String>> {
-    let mut unresolved = Vec::new();
-    let mut seen = HashSet::new();
+    let mut unresolved = Vec::with_capacity(pending.len());
+    let mut seen = HashSet::with_capacity(pending.len());
     for row in pending {
         let id = identity(&row["id"])?;
         if !seen.insert(id.clone()) {
@@ -76,6 +79,3 @@ fn has_target_identity(targets: &[Value], id: &str) -> bool {
         .iter()
         .any(|target| target["identity"].as_str().map(str::trim) == Some(id))
 }
-
-#[cfg(test)]
-mod tests;

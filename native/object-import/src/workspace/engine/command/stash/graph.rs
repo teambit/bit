@@ -1,4 +1,7 @@
 //! Stash dependency IDs are the pre-allocation IDs, never pending snap markers.
+#[cfg(test)]
+mod tests;
+
 use super::{Component, Repository, invalid};
 use crate::workspace::engine::status_models::{harmony, versions};
 use serde_json::{Value, json};
@@ -192,13 +195,19 @@ fn traverse(
     while let Some(edge) = stack.pop() {
         let target = edge["target"].clone();
         insert(&mut graph, edge);
-        if !seen.insert(key(&target)) {
+        let target_key = key(&target);
+        if !seen.insert(target_key.clone()) {
             continue;
         }
-        flattened.push(ordered_id(&target, identities));
-        let mut children = if let Some(version) = inputs.get(&key(&target)) {
+        flattened.push(
+            identities
+                .get(&target_key)
+                .unwrap_or(&target)
+                .clone(),
+        );
+        let mut children = if let Some(version) = inputs.get(&target_key) {
             edges(&target, version)?
-        } else if let Some(rows) = saved.get(&key(&target)) {
+        } else if let Some(rows) = saved.get(&target_key) {
             rows.clone()
         } else {
             edges(&target, &load(&target, repository)?)?
@@ -240,9 +249,6 @@ fn load(id: &Value, repository: &mut Repository) -> io::Result<Value> {
     };
     harmony::project(&repository.read(&reference, "Version")?)
 }
-
-#[cfg(test)]
-mod tests;
 
 fn ordered_id(id: &Value, identities: &HashMap<String, Value>) -> Value {
     identities

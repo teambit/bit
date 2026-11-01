@@ -119,12 +119,13 @@ pub(in crate::workspace::engine) fn prepare(
     );
     let imported =
         crate::command_import::prepare_lane(&request.root, &request.global_remotes_file)?;
+    let repository = Repository::new(&request.root, Some(imported));
     let result = json!({"token":token,"context":context});
     state.stash = Some(Box::new(Retained {
-        root: request.root.clone(),
+        root: request.root,
         token,
         context,
-        repository: Repository::new(&request.root, Some(imported)),
+        repository,
         proofs,
         components: Vec::new(),
         prepared: None,

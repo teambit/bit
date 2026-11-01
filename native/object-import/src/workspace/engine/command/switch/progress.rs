@@ -32,6 +32,7 @@ pub(in crate::workspace::engine::command) fn additions(
     let added = context["lane"]["addedTargets"]
         .as_array()
         .ok_or_else(|| invalid("switch addition count"))?;
+    targets.reserve(added.len());
     for target in added {
         targets.push(addition_target(target)?);
     }

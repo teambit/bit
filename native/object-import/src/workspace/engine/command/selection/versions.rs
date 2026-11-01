@@ -219,7 +219,7 @@ pub(super) fn has(
                 .any(|row| {
                     row["hash"]
                         .as_str()
-                        .is_some_and(|hash| hash.to_ascii_lowercase().starts_with(&lower_version))
+                        .is_some_and(|hash| hash.starts_with(&lower_version))
                 })
         }))
 }
@@ -260,7 +260,7 @@ fn parents(version: &Value) -> io::Result<&Vec<Value>> {
 fn records(heads: &[&str], repository: &mut Repository, full: bool) -> io::Result<Value> {
     let mut pending = heads
         .iter()
-        .map(|hash| hash.trim().to_ascii_lowercase())
+        .map(|hash| (*hash).to_owned())
         .collect::<Vec<_>>();
     let mut seen = HashSet::new();
     let mut rows = Vec::new();

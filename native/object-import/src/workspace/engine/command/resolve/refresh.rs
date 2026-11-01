@@ -96,6 +96,7 @@ fn refresh(
     let mut components = input.components;
     planning::bind_new(retained, &retained.selected, &captured, &mut components)?;
     let previous = std::mem::take(&mut retained.materials);
+    retained.materials.reserve(previous.len());
     for material in previous {
         if material.hidden {
             retained.materials.push(material);
@@ -144,7 +145,7 @@ fn replace_owned_proofs(
     if changes.len() > before.len() {
         return Err(invalid("snapshot callback source ownership"));
     }
-    let mut paths = std::collections::HashSet::new();
+    let mut paths = HashSet::with_capacity(changes.len());
     for change in changes {
         if !change.after.is_content()
             || change.before.path != change.after.path

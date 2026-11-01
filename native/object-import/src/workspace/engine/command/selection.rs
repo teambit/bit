@@ -28,7 +28,7 @@ pub(super) fn select(
         begin(options, selection)?,
         state,
     )?;
-    let mut observed = Vec::new();
+    let mut observed = Vec::with_capacity(10);
     for _ in 0..10 {
         let directive = &cursor["directive"];
         if directive["kind"] != "observe" {

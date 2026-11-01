@@ -55,15 +55,14 @@ pub(super) fn commit(
     selected: Option<&[String]>,
     pool: &rayon::ThreadPool,
 ) -> io::Result<usize> {
-    let plans = match &retained.graph.history_plans {
-        Some(plans) => plans.clone(),
+    let plans = match retained.graph.history_plans.take() {
+        Some(plans) => plans,
         None => plans(retained, selected, pool)?,
     };
-    let request = serde_json::from_value(json!({"root":retained.root,"plans":plans}))
+    let request = serde_json::from_value(json!({"root":&retained.root,"plans":&plans}))
         .map_err(io::Error::other)?;
     status_history::commit(&request)?;
     accept(retained, &plans)?;
-    retained.graph.history_plans = None;
     Ok(plans.len())
 }
 
@@ -93,7 +92,7 @@ fn contains(ids: &[String], target: &Value) -> bool {
 }
 
 fn accept(retained: &mut Retained, plans: &[Value]) -> io::Result<()> {
-    let mut files = HashMap::new();
+    let mut files = HashMap::with_capacity(plans.len());
     let budget = crate::read_budget::Budget::new(16 * 1024 * 1024);
     let inflated = crate::read_budget::Budget::new(8 * 1024 * 1024);
     for plan in plans {
@@ -120,7 +119,7 @@ fn verify_published(
     budget: &crate::read_budget::Budget,
 ) -> io::Result<()> {
     budget.reserve(expected.len() + 1)?;
-    let mut actual = Vec::new();
+    let mut actual = Vec::with_capacity(expected.len());
     flate2::read::ZlibDecoder::new(packed)
         .take(u64::try_from(expected.len()).map_err(io::Error::other)? + 1)
         .read_to_end(&mut actual)?;

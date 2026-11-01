@@ -13,22 +13,14 @@ pub(super) fn initial(detected: &Value, finish: &Value) -> io::Result<Value> {
     let mut components = vec![Vec::new(), Vec::new(), Vec::new()];
     for (index, field) in ["dependencies", "devDependencies", "peerDependencies"].iter().enumerate()
     {
-        let empty = json!([]);
-        let rows = detected["allDependencies"].get(field).unwrap_or(&empty);
-        for row in rows.as_array().ok_or_else(|| invalid("status cached component dependencies"))? {
+        let Some(rows) = detected["allDependencies"].get(*field) else { continue };
+        let rows =
+            rows.as_array().ok_or_else(|| invalid("status cached component dependencies"))?;
+        components[index].reserve(rows.len());
+        entries.reserve(rows.len());
+        for row in rows {
             components[index].push(entries.len());
-            let range = row
-                .get("versionRange")
-                .filter(|val| !val.is_null())
-                .or_else(|| row.get("peerVersionRange"))
-                .cloned()
-                .unwrap_or(Value::Null);
-            let pkg_name = row["packageName"]
-                .as_str()
-                .map(str::trim)
-                .filter(|name| !name.is_empty());
-            entries.push(json!({"identity":identity(&row["id"])? ,
-                "packageName":pkg_name,"versionRange":range}));
+            entries.push(entry(row)?);
         }
     }
     let packages: Vec<_> =
@@ -43,6 +35,20 @@ pub(super) fn initial(detected: &Value, finish: &Value) -> io::Result<Value> {
             .collect();
     Ok(json!({"entries":entries,"components":components,"packages":packages,
         "ignored":ignored(finish)?,"missing":issues::missing(&detected["issues"])?}))
+}
+
+fn entry(row: &Value) -> io::Result<Value> {
+    let range = row
+        .get("versionRange")
+        .filter(|val| !val.is_null())
+        .or_else(|| row.get("peerVersionRange"))
+        .cloned()
+        .unwrap_or(Value::Null);
+    let pkg_name = row["packageName"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty());
+    Ok(json!({"identity":identity(&row["id"])?,"packageName":pkg_name,"versionRange":range}))
 }
 
 fn ignored(finish: &Value) -> io::Result<Vec<Vec<String>>> {

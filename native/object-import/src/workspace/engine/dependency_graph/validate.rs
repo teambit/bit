@@ -44,7 +44,9 @@ fn custom(request: &Request) -> io::Result<()> {
         let file_path = Path::new(file.trim());
         path(file_path)?;
         if normalize(file_path) != file_path
-            || !request.files.contains(&file_path.to_owned())
+            || !request.files
+                .iter()
+                .any(|candidate| candidate == file_path)
             || custom.source_hash.trim().is_empty()
             || custom.dependencies.len() > MAX_FILES
             || custom.lookups.len() > MAX_FILES

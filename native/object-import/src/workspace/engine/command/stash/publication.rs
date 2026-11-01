@@ -49,12 +49,12 @@ fn batch(
     input: &Finalize,
     snapshots: &snapshots::State,
 ) -> io::Result<(Vec<Value>, Vec<Value>, Vec<Value>)> {
-    let mut objects = Vec::new();
-    let mut rows = Vec::new();
-    let mut versions = Vec::new();
-    let mut hashes = HashSet::new();
-    let mut identities = HashSet::new();
-    let bit_version = input.bit_version.trim();
+    let count = retained.components.len();
+    let mut objects = Vec::with_capacity(count);
+    let mut rows = Vec::with_capacity(count);
+    let mut versions = Vec::with_capacity(count);
+    let mut hashes = HashSet::with_capacity(count);
+    let mut identities = HashSet::with_capacity(count);
     for (component, allocation) in retained.components.iter().zip(&input.versions) {
         let hash =
             crate::validate::hexadecimal(&crate::merge_history::hash(allocation.hash.trim())?);
@@ -66,8 +66,13 @@ fn batch(
         {
             return Err(invalid("stash allocation identity"));
         }
-        let version =
-            version::prepare(component, allocation, bit_version, snapshots, &mut objects)?;
+        let version = version::prepare(
+            component,
+            allocation,
+            input.bit_version.trim(),
+            snapshots,
+            &mut objects,
+        )?;
         let mut id = component.id.clone();
         id.as_object_mut()
             .ok_or_else(|| invalid("stash component ID"))?

@@ -73,14 +73,10 @@ fn add_manual(issues: &mut Vec<Value>, missing: &Value) -> io::Result<()> {
     let mut seen = HashSet::new();
     let values: Vec<_> = rows(missing)?
         .iter()
-        .filter_map(|value| {
-            value
-                .as_str()
-                .map(str::trim)
-                .filter(|name| !name.is_empty())
-                .map(|name| json!(name))
-        })
-        .filter(|value| seen.insert(value.to_string()))
+        .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|name| !name.is_empty() && seen.insert(*name))
+        .map(|name| json!(name))
         .collect();
     if values.is_empty() {
         return Ok(());

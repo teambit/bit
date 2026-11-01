@@ -22,10 +22,10 @@ pub(super) fn version(
             .map(str::trim)
             .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("stash dependency identity"))?;
-        if identity.contains('@') {
-            entry["identity"] = Value::String(identity.to_owned());
-        } else {
+        if !identity.contains('@') {
             entry["identity"] = Value::String(format!("{identity}@"));
+        } else if entry["identity"].as_str() != Some(identity) {
+            entry["identity"] = Value::String(identity.to_owned());
         }
     }
     let mut version = projection::version(stored, current, files, &receipt)?;

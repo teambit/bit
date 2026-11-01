@@ -27,10 +27,12 @@ fn tag_history(
     material: &Material,
     repository: &mut Repository,
 ) -> io::Result<Option<Value>> {
-    if material.version_state.tagged_version
-        .as_deref()
-        .map(str::trim)
-        .is_none_or(str::is_empty)
+    let head = material.version_state.current_head.trim();
+    if head.is_empty()
+        || material.version_state.tagged_version
+            .as_deref()
+            .map(str::trim)
+            .is_none_or(str::is_empty)
     {
         return Ok(None);
     }
@@ -50,10 +52,6 @@ fn tag_history(
         || history["name"].as_str().map(str::trim) != Some(name)
     {
         return Err(invalid("tag history identity mismatch"));
-    }
-    let head = material.version_state.current_head.trim();
-    if head.is_empty() {
-        return Ok(None);
     }
     crate::merge_history::hash(head)?;
     if !super::super::history::populate(root, &mut history, head, repository)? {

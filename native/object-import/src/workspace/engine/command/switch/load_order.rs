@@ -33,11 +33,13 @@ pub(super) fn status_load_order(
         .iter()
         .map(String::as_str)
         .collect::<HashSet<_>>();
-    let mut ordered = tracked
-        .iter()
-        .filter(|id| !lane_ids.contains(id.as_str()))
-        .cloned()
-        .collect::<Vec<_>>();
+    let mut ordered = Vec::with_capacity(tracked.len());
+    ordered.extend(
+        tracked
+            .iter()
+            .filter(|id| !lane_ids.contains(id.as_str()))
+            .cloned(),
+    );
     ordered.extend(
         lane.iter()
             .filter(|entry| tracked_ids.contains(entry.identity.trim()))

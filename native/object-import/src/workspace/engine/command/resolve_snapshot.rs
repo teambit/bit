@@ -10,6 +10,10 @@ mod lane;
 mod object;
 mod reconciliation;
 mod references;
+#[cfg(test)]
+mod tag_tests;
+#[cfg(test)]
+mod tests;
 use super::{invalid, merge::snapshot, repository::Repository};
 use crate::workspace::{engine::dependency_graph::proof, snapshots};
 use serde_json::Value;
@@ -91,7 +95,7 @@ impl Snapshot {
         &self,
         root: &Path,
     ) -> io::Result<HashMap<std::path::PathBuf, Vec<u8>>> {
-        let mut files = HashMap::new();
+        let mut files = HashMap::with_capacity(self.staged_objects().len());
         for object in self.staged_objects() {
             let hash = object["hash"]
                 .as_str()
@@ -146,7 +150,7 @@ pub(super) fn prepare(
     let hashes = allocations(materials, receipt)?;
     let versions_by_id = publication_versions(materials, &hashes, lane)?;
     let mut objects = Vec::new();
-    let mut versions = Vec::new();
+    let mut versions = Vec::with_capacity(materials.len());
     let mut proofs = Vec::new();
     let mut receipt = receipt.clone();
     build::artifacts(&mut receipt, &mut objects, &mut proofs)?;
@@ -227,8 +231,8 @@ fn allocations<'a>(
         return Err(invalid("resolve allocation count"));
     }
     validate_scalars(receipt)?;
-    let mut hashes = HashMap::new();
-    let mut unique_hashes = HashSet::new();
+    let mut hashes = HashMap::with_capacity(materials.len());
+    let mut unique_hashes = HashSet::with_capacity(materials.len());
     for (material, row) in materials.iter().zip(rows) {
         if row["identity"].as_str().map(str::trim) != Some(material.identity.trim()) {
             return Err(invalid("resolve allocation identity"));
@@ -266,9 +270,3 @@ fn validate_scalars(receipt: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;
-
-#[cfg(test)]
-mod tag_tests;

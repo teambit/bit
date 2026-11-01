@@ -16,7 +16,7 @@ pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
             .filter(|value| crate::plus_version::is_plus(value))
         {
             let resolved = resolve(request, trimmed)?;
-            Value::String(crate::plus_version::resolve(placeholder, resolved.as_str(), "*"))
+            Value::String(crate::plus_version::resolve(placeholder, Some(&resolved), "*"))
         } else {
             value.clone()
         };
@@ -37,7 +37,7 @@ fn remove_existing(request: &Request, output: &mut Output) {
         }
     }
 }
-fn resolve(request: &Request, name: &str) -> io::Result<Value> {
+fn resolve(request: &Request, name: &str) -> io::Result<String> {
     let name = name.trim();
     if let Some(value) = request.resolved
         .get(name)
@@ -45,12 +45,12 @@ fn resolve(request: &Request, name: &str) -> io::Result<Value> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        return Ok(Value::String(value.to_owned()));
+        return Ok(value.to_owned());
     }
     if let Some(value) = version(&request.environment.workspace.dependencies, name)
         .or_else(|| version(&request.environment.workspace.peer_dependencies, name))
     {
-        return Ok(Value::String(value));
+        return Ok(value);
     }
     if let Some(entry) = request.environment.model_components
         .iter()
@@ -58,11 +58,9 @@ fn resolve(request: &Request, name: &str) -> io::Result<Value> {
     {
         let value = extract_model_component_version(&entry.identity)
             .ok_or_else(|| invalid("dependency policy model version unavailable"))?;
-        return Ok(Value::String(value.to_owned()));
+        return Ok(value.to_owned());
     }
-    Ok(Value::String(
-        version(&request.environment.model_packages, name).unwrap_or_else(|| "*".to_owned()),
-    ))
+    Ok(version(&request.environment.model_packages, name).unwrap_or_else(|| "*".to_owned()))
 }
 
 fn extract_model_component_version(identity: &str) -> Option<&str> {
@@ -94,10 +92,7 @@ fn preferred(request: &Request, name: &str) -> io::Result<String> {
     let workspace = version(&request.environment.workspace.dependencies, name)
         .or_else(|| version(&request.environment.workspace.peer_dependencies, name));
     let Some(workspace) = workspace.filter(|version| !version.is_empty()) else {
-        return Ok(resolve(request, name)?
-            .as_str()
-            .unwrap_or("*")
-            .to_owned());
+        return resolve(request, name);
     };
     let Ok(range) = node_semver::Range::parse(&workspace) else { return Ok(workspace) };
     if let Some(installed) = request.resolved

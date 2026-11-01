@@ -1,4 +1,7 @@
 //! Ordinary snapshot selection uses the retained current Source/metadata comparison.
+#[cfg(test)]
+mod tests;
+
 use super::{
     super::{capture, invalid, repository},
     Options, Retained, selection,
@@ -114,7 +117,7 @@ fn filter_pattern(
 }
 
 fn pattern_set<'a>(known: &[String], pattern: &'a [String]) -> io::Result<HashSet<&'a String>> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(pattern.len());
     for identity in pattern {
         if identity.trim().is_empty() || !seen.insert(identity) || !known.contains(identity) {
             return Err(invalid("snap pattern identity"));
@@ -322,9 +325,6 @@ pub(super) fn new_material(
         participation,
     })
 }
-
-#[cfg(test)]
-mod tests;
 
 pub(super) fn local_only(retained: &Retained, identity: &str) -> bool {
     let identity = identity.trim();

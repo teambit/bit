@@ -125,7 +125,6 @@ fn promote(output: &mut Output, components: &[Vec<usize>; 3], packages: &[Map<St
                     .as_deref()
                     .map(str::trim)
                     .filter(|name| !name.is_empty())
-                    .map(str::to_owned)
             })
             .collect();
         output.state.components[field].extend(&components[field]);
@@ -150,7 +149,6 @@ fn promote(output: &mut Output, components: &[Vec<usize>; 3], packages: &[Map<St
                 .as_deref()
                 .map(str::trim)
                 .filter(|name| !name.is_empty())
-                .map(str::to_owned)
         })
         .collect();
     for map in &mut output.state.packages {

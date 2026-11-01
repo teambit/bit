@@ -28,8 +28,9 @@ pub(in crate::workspace::engine) fn apply(
 }
 
 fn update(retained: &mut Retained, input: &Overrides) -> io::Result<HashMap<String, String>> {
-    let mut replacements = HashMap::new();
-    let mut seen = std::collections::HashSet::new();
+    let count = input.versions.len();
+    let mut replacements = HashMap::with_capacity(count);
+    let mut seen = std::collections::HashSet::with_capacity(count);
     for (identity, version) in &input.versions {
         let identity = identity.trim();
         let version = version.trim();

@@ -34,15 +34,18 @@ pub(super) fn tag_data(file: Option<&Value>, identity: &str) -> io::Result<Value
 }
 
 pub(super) fn semver(file: Option<&Value>, base: &Value) -> io::Result<Value> {
-    let mut output = base
-        .as_object()
-        .ok_or_else(|| invalid("tag semantic grammar"))?
-        .clone();
-    if let Some(values) = file.and_then(|file| file["semver"].as_object()) {
-        if values.len() > 4096 {
-            return Err(invalid("tag versions file semver limit"));
-        }
-        output.extend(values.clone());
+    let base = base.as_object().ok_or_else(|| invalid("tag semantic grammar"))?;
+    let values = file.and_then(|file| file["semver"].as_object());
+    if values.is_some_and(|values| values.len() > 4096) {
+        return Err(invalid("tag versions file semver limit"));
+    }
+    let mut output = base.clone();
+    if let Some(values) = values {
+        output.extend(
+            values
+                .iter()
+                .map(|(key, val)| (key.clone(), val.clone())),
+        );
     }
     Ok(Value::Object(output))
 }

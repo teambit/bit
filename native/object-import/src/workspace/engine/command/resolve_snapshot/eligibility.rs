@@ -13,7 +13,7 @@ pub(in crate::workspace::engine::command) fn preflight(
     if materials.is_empty() || materials.len() > 4096 {
         return Err(invalid("resolve material count"));
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(materials.len());
     let mut bytes = 0usize;
     for material in materials {
         let identity = material.identity.trim();

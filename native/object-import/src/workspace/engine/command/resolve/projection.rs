@@ -196,19 +196,20 @@ fn package_dependencies(
 }
 
 fn component_dependencies(version: &mut Value, state: &Value) -> io::Result<()> {
+    let entries = state["entries"].as_array();
+    let empty = HashSet::new();
     for (index, field) in ["dependencies", "devDependencies", "peerDependencies"].iter().enumerate()
     {
         let indices = state["components"][index]
             .as_array()
             .ok_or_else(|| invalid("resolve component dependency state"))?;
-        let mut values = Vec::new();
+        let mut values = Vec::with_capacity(indices.len());
         for index in indices {
             let index = index.as_u64().ok_or_else(|| invalid("resolve dependency index"))? as usize;
-            let entry = state["entries"]
-                .as_array()
+            let entry = entries
                 .and_then(|rows| rows.get(index))
                 .ok_or_else(|| invalid("resolve dependency entry"))?;
-            values.push(policy::dependencies::component(entry, &HashSet::new())?);
+            values.push(policy::dependencies::component(entry, &empty)?);
         }
         version[*field] = json!(values);
     }
@@ -219,6 +220,9 @@ pub(super) fn bind_new_dependencies(
     components: &mut [Component],
     identities: &HashSet<String>,
 ) -> io::Result<()> {
+    if identities.is_empty() {
+        return Ok(());
+    }
     for component in components {
         let entries = component.dependency_state["entries"]
             .as_array_mut()
