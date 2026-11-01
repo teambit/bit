@@ -50,10 +50,15 @@ impl Scan<'_> {
         let identity = text(
             target
                 .get("identity")
+                .filter(|val| !val.is_null())
                 .or_else(|| target.get("id")),
         )?
         .trim();
-        let is_root = matches!(directory.trim().trim_start_matches("./"), "" | ".");
+        let normalized_dir = directory
+            .trim()
+            .trim_start_matches("./")
+            .trim_end_matches('/');
+        let is_root = normalized_dir.is_empty() || normalized_dir == ".";
         let mut dependencies = if is_root
             || captured.cache.no_fs_cache
             || captured.cache.reset

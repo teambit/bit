@@ -200,6 +200,7 @@ fn row_identity(row: &Value) -> io::Result<&str> {
     } else {
         text(
             row.get("identity")
+                .filter(|val| !val.is_null())
                 .or_else(|| row.get("id")),
         )?
         .trim()

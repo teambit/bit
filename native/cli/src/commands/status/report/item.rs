@@ -171,7 +171,7 @@ pub(super) fn issue_data(issue: &Value, chalk: Chalk) -> String {
                 .into_iter()
                 .flatten()
                 .map(|file| {
-                    let path = file["relativePath"].as_str().unwrap_or_default();
+                    let path = file["relativePath"].as_str().map_or("", str::trim);
                     if file["existing"] == true { chalk.yellow(path) } else { path.to_owned() }
                 })
                 .collect::<Vec<_>>()

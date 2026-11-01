@@ -24,17 +24,16 @@ pub(super) fn list_or_text(value: &Value) -> io::Result<String> {
 
 fn item_text(value: &Value) -> io::Result<&str> {
     if let Some(object) = value.as_object()
-        && let Some(found) = object
-            .get("message")
-            .or_else(|| object.get("id"))
-            .or_else(|| object.get("name"))
-            .or_else(|| object.get("componentId"))
-            .or_else(|| object.get("relativePath"))
-            .or_else(|| object.get("filePath"))
-            .or_else(|| object.get("path"))
-            .and_then(Value::as_str)
-            .map(str::trim)
-            .filter(|found| !found.is_empty())
+        && let Some(found) =
+            ["message", "id", "name", "componentId", "relativePath", "filePath", "path"]
+                .into_iter()
+                .find_map(|key| {
+                    object
+                        .get(key)
+                        .and_then(Value::as_str)
+                        .map(str::trim)
+                        .filter(|val| !val.is_empty())
+                })
     {
         return Ok(found);
     }

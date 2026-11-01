@@ -353,9 +353,10 @@ fn needs_facts(component: &WorkspaceComponent, core: &[String], aspects: &[Strin
 }
 
 fn selected(component: &WorkspaceComponent, targets: &[Value]) -> bool {
+    let bare = component.id.to_string_without_version();
     targets
         .iter()
-        .any(|target| target["identity"] == component.id.to_string_without_version())
+        .any(|target| target["identity"].as_str().map(str::trim) == Some(bare.as_str()))
 }
 
 fn core_ids() -> io::Result<Vec<String>> {

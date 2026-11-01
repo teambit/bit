@@ -10,15 +10,13 @@ pub(in crate::commands) fn run(
     home: &Path,
     startup: &mut crate::commands::status::autosync::Startup,
 ) -> io::Result<()> {
-    if root.as_os_str().is_empty()
-        || home.as_os_str().is_empty()
-        || root
-            .to_str()
-            .is_some_and(|path| path.trim().is_empty())
-        || home
-            .to_str()
-            .is_some_and(|path| path.trim().is_empty())
-    {
+    let is_blank = |path: &Path| {
+        path.as_os_str().is_empty()
+            || path
+                .to_str()
+                .is_some_and(|text| text.trim().is_empty())
+    };
+    if is_blank(root) || is_blank(home) {
         return Err(io::Error::other("quick status root or home path is empty"));
     }
     let workspace = bit_object_import::effective_workspace_configuration(root, home)?;

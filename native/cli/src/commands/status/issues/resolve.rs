@@ -46,7 +46,9 @@ fn ordinary_model(
         .and_then(|targets| {
             targets
                 .iter()
-                .find(|target| target["identity"] == identity.as_str())
+                .find(|target| {
+                    target["identity"].as_str().map(str::trim) == Some(identity.as_str())
+                })
         });
     let mut expected: Vec<&Value> = Vec::new();
     for hash in [&model["head"], lane.map_or(&Value::Null, |lane| &lane["currentHead"])] {
@@ -55,7 +57,7 @@ fn ordinary_model(
         }
     }
     let heads = row["heads"].as_array();
-    if row["identity"] != identity.as_str()
+    if row["identity"].as_str().map(str::trim) != Some(identity.as_str())
         || heads.is_none_or(|heads| heads.len() != expected.len())
     {
         return false;

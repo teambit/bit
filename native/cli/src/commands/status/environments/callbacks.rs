@@ -227,9 +227,9 @@ fn current_version(context: &Value, model: &Value, identity: &str) -> io::Result
 }
 
 pub(in crate::commands::status) fn apply(capture: &mut Capture, row: &Value) -> io::Result<()> {
-    let identity = text(row.get("identity"))?;
+    let identity = text(row.get("identity"))?.trim();
     for target in capture.captured.iter_mut().chain(&mut capture.comparisons) {
-        if target["identity"] == identity {
+        if target["identity"].as_str().map(str::trim) == Some(identity) {
             target["current"] = row["current"].clone();
             target["files"] = row["files"].clone();
             target["sourceOverlayRoot"] = row["sourceOverlayRoot"].clone();
@@ -241,7 +241,13 @@ pub(in crate::commands::status) fn apply(capture: &mut Capture, row: &Value) -> 
     }
     let component = capture.components
         .iter_mut()
-        .find(|component| component.identity.split('@').next() == Some(identity))
+        .find(|component| {
+            component.identity
+                .split('@')
+                .next()
+                .map(str::trim)
+                == Some(identity)
+        })
         .ok_or_else(|| decline("callback component identity"))?;
     dependencies(component, row)?;
     let issues = array(row.get("issues"), "callback issues")?;

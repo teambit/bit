@@ -36,11 +36,11 @@ pub(super) fn sort_rows(root: &Path, result: &mut Value) -> io::Result<()> {
 
 fn order(root: &Path, ids: &[String], host: &mut Option<Host>) -> io::Result<Vec<usize>> {
     let mut order = (0..ids.len()).collect::<Vec<_>>();
-    if collate::root_locale() && ids.iter().all(|id| collate::supported(id)) {
-        order.sort_by(|&left, &right| collate::compare(&ids[left], &ids[right]));
+    if ids.len() < 2 {
         return Ok(order);
     }
-    if ids.len() < 2 {
+    if collate::root_locale() && ids.iter().all(|id| collate::supported(id)) {
+        order.sort_by(|&left, &right| collate::compare(&ids[left], &ids[right]));
         return Ok(order);
     }
     if host.is_none() {

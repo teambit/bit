@@ -80,12 +80,7 @@ your workspace.jsonc has this component-id set in the "teambit.workspace/variant
 }
 
 fn is_unknown_harmony_aspect(aspect_key: &str, core: &[String]) -> bool {
-    let trimmed = aspect_key.trim();
-    let bare = trimmed
-        .split('@')
-        .next()
-        .unwrap_or(trimmed)
-        .trim();
+    let bare = bit_install::config::aspect_id_without_version(aspect_key.trim());
     bare.starts_with("teambit.harmony/")
         && !core
             .iter()

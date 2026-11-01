@@ -121,10 +121,9 @@ fn non_empty_str(value: Option<&Value>) -> Option<&str> {
 
 /// `identity.split('@')[0]`.
 pub fn without_version(identity: &str) -> &str {
+    let identity = identity.trim();
     identity
-        .trim()
-        .split('@')
-        .next()
-        .unwrap_or_default()
-        .trim()
+        .split_once('@')
+        .filter(|(base, _)| !base.trim().is_empty())
+        .map_or(identity, |(base, _)| base.trim())
 }

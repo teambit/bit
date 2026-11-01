@@ -74,6 +74,7 @@ impl Node {
         env::var_os("PATH")
             .and_then(|path| {
                 env::split_paths(&path)
+                    .filter(|dir| !dir.as_os_str().is_empty())
                     .find_map(|dir| {
                         names
                             .iter()

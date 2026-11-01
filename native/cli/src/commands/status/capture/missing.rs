@@ -63,7 +63,11 @@ pub(super) fn status_invalid(
     directory: &str,
     captured: &mut Capture,
 ) -> io::Result<bool> {
-    if directory == "." || !missing(&root.join(directory))? {
+    let normalized = directory
+        .trim()
+        .trim_start_matches("./")
+        .trim_end_matches('/');
+    if normalized.is_empty() || normalized == "." || !missing(&root.join(directory))? {
         return Ok(false);
     }
     record_status_invalid(target, component_not_found(directory), captured)?;

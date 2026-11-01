@@ -93,11 +93,18 @@ pub fn workspace_issues(capture: &Capture) -> io::Result<Vec<String>> {
             let result = host.call("statusWorkspaceIssues", &serde_json::json!({}));
             capture.cache.retain_callback_stdout(&host.take_stdout());
             let raw: Vec<String> = serde_json::from_value(result?).map_err(io::Error::other)?;
-            Ok(raw
-                .into_iter()
-                .map(|issue| issue.trim().to_owned())
-                .filter(|issue| !issue.is_empty())
-                .collect())
+            let mut issues = Vec::with_capacity(raw.len());
+            for issue in raw {
+                let trimmed = issue.trim();
+                if !trimmed.is_empty()
+                    && !issues
+                        .iter()
+                        .any(|existing| existing == trimmed)
+                {
+                    issues.push(trimmed.to_owned());
+                }
+            }
+            Ok(issues)
         }
         None => Ok(Vec::new()),
     }

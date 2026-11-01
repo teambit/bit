@@ -22,6 +22,9 @@ impl Status<'_> {
             let id = text(self.result.get("forkedLaneId"))?.trim();
             id.split_once('/').map_or(id, |(_, name)| name.trim())
         };
+        if name.is_empty() {
+            return Err(crate::commands::status::js::decline("status report forked lane name"));
+        }
         self.updates("updatesFromForked", name)
     }
 

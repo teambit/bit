@@ -91,7 +91,11 @@ fn deprecation_field(key: &str, value: &Value) -> bool {
 }
 
 fn replacement_id(value: &Value) -> bool {
-    if value.is_null() || value == "" {
+    if value.is_null()
+        || value
+            .as_str()
+            .is_some_and(|text| text.trim().is_empty())
+    {
         return true;
     }
     value

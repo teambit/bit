@@ -65,19 +65,16 @@ fn compiler_error(value: &serde_json::Value) -> io::Result<Option<String>> {
         return Ok((!trimmed.is_empty()).then(|| trimmed.to_owned()));
     }
     if let Some(object) = value.as_object() {
-        let field = |key: &str| {
-            object
-                .get(key)
-                .and_then(serde_json::Value::as_str)
-                .map(str::trim)
-                .filter(|text| !text.is_empty())
-        };
-        if let Some(message) =
-            field("message").or_else(|| field("error")).or_else(|| field("stack"))
-        {
-            return Ok(Some(message.to_owned()));
-        }
-        return Ok(None);
+        let message = ["message", "error", "stack"]
+            .into_iter()
+            .find_map(|key| {
+                object
+                    .get(key)
+                    .and_then(serde_json::Value::as_str)
+                    .map(str::trim)
+                    .filter(|text| !text.is_empty())
+            });
+        return Ok(message.map(str::to_owned));
     }
     Err(io::Error::other("switch compiler receipt"))
 }

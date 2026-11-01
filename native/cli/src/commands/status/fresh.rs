@@ -172,6 +172,7 @@ impl Detection<'_> {
         let dir = text(
             target
                 .get("directory")
+                .filter(|val| !val.is_null())
                 .or_else(|| target.get("rootDir")),
         )?
         .trim();

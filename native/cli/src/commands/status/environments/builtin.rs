@@ -112,7 +112,11 @@ impl Environments {
 }
 
 fn validate_service_root(root: &Path) -> io::Result<()> {
-    if root.as_os_str().is_empty() {
+    if root.as_os_str().is_empty()
+        || root
+            .to_str()
+            .is_some_and(|path| path.trim().is_empty())
+    {
         return Err(io::Error::other("component service workspace root is empty"));
     }
     Ok(())

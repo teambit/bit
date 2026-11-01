@@ -20,7 +20,7 @@ pub fn commit(
         let validated: Value = engine.request(
             &json!({"kind": "statusHistoryValidate", "root": root, "plans": plans}),
         )?;
-        if validated.get("fresh") != Some(&Value::Bool(true)) {
+        if validated["fresh"] != true {
             return Err(decline("status history changed"));
         }
     }
@@ -35,9 +35,7 @@ pub fn commit(
     let committed: Value =
         engine.request(&json!({"kind": "statusHistoryCommit", "root": root, "plans": plans}))?;
     let written = committed.get("written").and_then(Value::as_u64);
-    if committed.get("ok") == Some(&Value::Bool(false))
-        || written.is_none_or(|written| written > plans.len() as u64)
-    {
+    if committed["ok"] == false || written.is_none_or(|written| written > plans.len() as u64) {
         return Err(decline("status history commit receipt"));
     }
     Ok(())

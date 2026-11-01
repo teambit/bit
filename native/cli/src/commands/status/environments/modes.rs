@@ -87,6 +87,7 @@ pub(in crate::commands::status) fn dev_files(
     let identity = text(
         target
             .get("identity")
+            .filter(|val| !val.is_null())
             .or_else(|| target.get("id")),
     )?
     .trim();

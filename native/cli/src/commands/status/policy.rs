@@ -85,6 +85,7 @@ impl Policy {
             .map(str::trim)
             .map(|id| {
                 id.rfind('@')
+                    .filter(|&sep| sep > 0)
                     .map_or(id, |sep| id[..sep].trim())
             })
             .filter(|id| !id.is_empty())

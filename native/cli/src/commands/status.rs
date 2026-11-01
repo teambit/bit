@@ -352,19 +352,12 @@ fn result_targets(
 
 /// Every version string the semver grammar must describe.
 fn semver_values(context: &Value, targets: &[Value]) -> io::Result<Vec<String>> {
-    let mut values: Vec<String> = Vec::new();
+    let mut values = Vec::new();
     for target in targets {
         values.push(text(target.get("version"))?.to_string());
-    }
-    for target in targets {
         for dependency in array(target.get("dependencies"), "dependencies")? {
-            let dependency = text(Some(dependency))?;
-            values.push(
-                dependency
-                    .rsplit_once('@')
-                    .map_or("", |(_, ver)| ver)
-                    .to_string(),
-            );
+            let ver = text(Some(dependency))?.rsplit_once('@').map_or("", |(_, ver)| ver);
+            values.push(ver.to_string());
         }
     }
     for model in array(context.get("models"), "models")? {
@@ -389,10 +382,7 @@ fn model_versions(model: &Value, values: &mut Vec<String>) -> io::Result<()> {
 
 /// `value ?? ''` for a string field.
 fn nullish_text(value: Option<&Value>) -> io::Result<String> {
-    match js::nullish(value) {
-        None => Ok(String::new()),
-        Some(value) => text(Some(value)).map(str::to_string),
-    }
+    js::nullish(value).map_or_else(|| Ok(String::new()), |val| text(Some(val)).map(str::to_string))
 }
 
 /// Consumer.onDestroy removes temporary versioning output after a completed read.

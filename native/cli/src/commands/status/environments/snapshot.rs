@@ -56,6 +56,7 @@ fn source_callbacks(
     let raw_dir = text(
         target
             .get("directory")
+            .filter(|val| !val.is_null())
             .or_else(|| target.get("rootDir")),
     )?
     .trim();
@@ -68,31 +69,38 @@ fn source_callbacks(
     if !location.try_exists()? {
         return Ok(false);
     }
-    let excludes = if directory == "." {
-        array(context.get("targets"), "snapshot inventory targets")?
-            .iter()
-            .filter_map(|row| {
-                row["directory"]
-                    .as_str()
-                    .or_else(|| row["rootDir"].as_str())
-            })
-            .map(|dir| {
-                dir.trim()
-                    .trim_start_matches("./")
-                    .trim_end_matches('/')
-            })
-            .filter(|dir| !dir.is_empty() && *dir != ".")
-            .map(|dir| root.join(dir))
-            .collect::<Vec<_>>()
-    } else {
-        Vec::new()
-    };
+    let excludes = root_excludes(root, context, directory)?;
     let manifest = inventory.scan(
         engine,
         json!({"kind":"inventoryBegin","root":location,"workspace":root,"excludeDirs":excludes}),
         "inventoryFinish",
     )?;
     Ok(array(manifest.get("files"), "snapshot source names")?.iter().any(is_callback_source_file))
+}
+
+fn root_excludes(
+    root: &Path,
+    context: &Value,
+    directory: &str,
+) -> io::Result<Vec<std::path::PathBuf>> {
+    if directory != "." {
+        return Ok(Vec::new());
+    }
+    Ok(array(context.get("targets"), "snapshot inventory targets")?
+        .iter()
+        .filter_map(|row| {
+            row["directory"]
+                .as_str()
+                .or_else(|| row["rootDir"].as_str())
+        })
+        .map(|dir| {
+            dir.trim()
+                .trim_start_matches("./")
+                .trim_end_matches('/')
+        })
+        .filter(|dir| !dir.is_empty() && *dir != ".")
+        .map(|dir| root.join(dir))
+        .collect())
 }
 
 fn is_callback_source_file(file: &Value) -> bool {

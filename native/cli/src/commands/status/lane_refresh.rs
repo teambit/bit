@@ -94,15 +94,16 @@ pub(super) fn prepare(
         "duringMerge":result["componentsDuringMergeState"],
     }))?;
     array(updates.get("pendingUpdatesFromMain"), "pending main updates")?;
-    let count = prepared["refreshCount"]
-        .as_u64()
-        .and_then(|count| usize::try_from(count).ok())
-        .ok_or_else(|| decline("status main refresh count"))?;
-    let objects = prepared["refreshObjects"]
-        .as_u64()
-        .and_then(|count| usize::try_from(count).ok())
-        .ok_or_else(|| decline("status main refresh objects"))?;
+    let count = parse_refresh_metric(&prepared, "refreshCount", "status main refresh count")?;
+    let objects = parse_refresh_metric(&prepared, "refreshObjects", "status main refresh objects")?;
     Ok(Some((token.clone(), updates, count, objects)))
+}
+
+fn parse_refresh_metric(prepared: &Value, key: &str, label: &str) -> io::Result<usize> {
+    prepared[key]
+        .as_u64()
+        .and_then(|count| usize::try_from(count).ok())
+        .ok_or_else(|| decline(label))
 }
 
 fn main_targets(context: &Value) -> io::Result<Vec<Value>> {

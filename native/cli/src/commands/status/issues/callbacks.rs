@@ -48,6 +48,9 @@ pub(super) fn merge(
 }
 
 fn validate_callback_object(object: &Value) -> io::Result<&str> {
+    if !object.is_object() {
+        return Err(decline("Harmony callback issue object"));
+    }
     let kind = text(object.get("type"))?.trim();
     if kind.is_empty() {
         return Err(decline("Harmony callback issue type"));
@@ -56,7 +59,7 @@ fn validate_callback_object(object: &Value) -> io::Result<&str> {
         .get("dataAsString")
         .and_then(Value::as_str)
         .is_some_and(|data| !data.contains('\u{1b}'));
-    if !object.is_object() || !valid_data {
+    if !valid_data {
         return Err(decline("Harmony callback issue object"));
     }
     Ok(kind)

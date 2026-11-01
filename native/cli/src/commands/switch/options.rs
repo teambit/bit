@@ -136,7 +136,10 @@ fn set_inline_bool(slot: &mut bool, val: &str, key: &'static str) -> Option<&'st
     Some(set(slot, enabled, key))
 }
 fn set_inline_str(slot: &mut Option<String>, val: &str, key: &'static str) -> Option<&'static str> {
-    let val = val.trim();
+    let val = val
+        .trim()
+        .trim_matches(['"', '\''])
+        .trim();
     if val.is_empty() || val.starts_with('-') {
         return None;
     }

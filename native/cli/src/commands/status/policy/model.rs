@@ -55,13 +55,25 @@ pub(super) fn stored_version<'c>(
         return Ok(projected);
     }
     let reference = resolve_tag_reference(model, tagged.unwrap_or_default());
+    let ref_str = reference
+        .as_ref()
+        .and_then(Value::as_str)
+        .map(str::trim);
     let versions = array(context.get("versions"), "versions")?;
     let version = versions
         .iter()
         .find(|row| {
             reference
                 .as_ref()
-                .is_some_and(|reference| row.get(0) == Some(reference))
+                .is_some_and(|expected| {
+                    row.get(0) == Some(expected)
+                        || (ref_str.is_some()
+                            && row
+                                .get(0)
+                                .and_then(Value::as_str)
+                                .map(str::trim)
+                                == ref_str)
+                })
         })
         .and_then(|row| nullish(row.get(1)));
     version.map(Some).ok_or_else(|| decline("status version absent"))

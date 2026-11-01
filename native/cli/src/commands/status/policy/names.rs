@@ -177,5 +177,5 @@ fn strip_latest_or_head(text: &str) -> &str {
     let text = text.trim();
     text.strip_suffix("@latest")
         .or_else(|| text.strip_suffix("@head"))
-        .unwrap_or(text)
+        .map_or(text, str::trim)
 }

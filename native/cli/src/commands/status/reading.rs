@@ -108,6 +108,7 @@ fn during_merge(context: &Value) -> io::Result<Vec<String>> {
         .map(|row| {
             let (scope, name) = crate::commands::version_history::build::row_scope_and_name(row)
                 .ok_or_else(|| decline("status unmerged identity"))?;
+            let (scope, name) = (scope.trim(), name.trim());
             Ok(if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") })
         })
         .collect()

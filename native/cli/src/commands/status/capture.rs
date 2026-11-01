@@ -363,7 +363,7 @@ impl Scan<'_> {
         let manifest = self.inventory.scan(self.engine, begin, "inventoryFinish")?;
         array(manifest.get("files"), "inventory files")?
             .iter()
-            .map(|file| text(file.get("relativePath")).map(str::to_string))
+            .map(|file| text(file.get("relativePath")).map(|path| path.trim().to_string()))
             .collect()
     }
 }

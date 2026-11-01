@@ -55,9 +55,9 @@ fn projected_extensions(policy: &Policy, output: &Value) -> io::Result<Value> {
     let mut extensions = policy.extensions.clone();
     let mut selected = ids.iter();
     for extension in &mut extensions {
-        if extension.get("extensionId").is_some()
-            || extension.get("legacyId").is_some()
-            || extension.get("id").is_some()
+        if ["extensionId", "legacyId", "id"]
+            .into_iter()
+            .any(|key| extension.get(key).is_some())
         {
             let id = selected.next().ok_or_else(|| decline("status extension versions"))?;
             extension["extensionId"] = super::projection::extension_id(text(Some(id))?)?;

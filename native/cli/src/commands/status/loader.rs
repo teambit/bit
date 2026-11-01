@@ -25,17 +25,12 @@ pub(super) fn render(
     if progress.main_count > 0 {
         let reason = "main components of the current lane to check for updates";
         output.status(&format!("importing {} components {reason}", progress.main_count));
-        if progress.main_objects > 0 {
-            output.status(&format!(
-                "successfully imported {} objects {reason}",
-                progress.main_objects,
-            ));
+        let (imported, unit) = if progress.main_objects > 0 {
+            (progress.main_objects, "objects")
         } else {
-            output.status(&format!(
-                "successfully imported {} components {reason}",
-                progress.main_count,
-            ));
-        }
+            (progress.main_count, "components")
+        };
+        output.status(&format!("successfully imported {imported} {unit} {reason}"));
     }
     if progress.forked_count > 0 {
         let reason = forked_lane_reason(progress.forked_id.as_deref());

@@ -70,6 +70,14 @@ fn is_valid_policy_version_entry(value: &Value) -> bool {
     valid_preserve
         && value
             .as_str()
-            .or_else(|| value.get("version").and_then(Value::as_str))
-            .is_some_and(|ver| !ver.trim().is_empty())
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+            .or_else(|| {
+                value
+                    .get("version")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|ver| !ver.is_empty())
+            })
+            .is_some()
 }

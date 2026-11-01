@@ -205,7 +205,13 @@ fn should_record_snapshot(
 }
 
 fn validate_context_paths(root: &Path, home: &Path) -> io::Result<()> {
-    if root.as_os_str().is_empty() || home.as_os_str().is_empty() {
+    let is_blank = |path: &Path| {
+        path.as_os_str().is_empty()
+            || path
+                .to_str()
+                .is_some_and(|text| text.trim().is_empty())
+    };
+    if is_blank(root) || is_blank(home) {
         return Err(io::Error::other("environment context root or home path is empty"));
     }
     Ok(())

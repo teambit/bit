@@ -14,7 +14,13 @@ pub(in crate::commands::status) fn context(root: &Path, context: &Value) -> io::
     let rows = array(Some(&input.unmerged), "unmerged configuration")?;
     let mut output = context.clone();
     for target in array(context.get("targets"), "pending targets")? {
-        let identity = text(target.get("identity"))?.trim();
+        let identity = text(
+            target
+                .get("identity")
+                .filter(|val| !val.is_null())
+                .or_else(|| target.get("id")),
+        )?
+        .trim();
         if !identity.is_empty()
             && let Some(config) = configuration(&input.merge, rows, identity)?
         {

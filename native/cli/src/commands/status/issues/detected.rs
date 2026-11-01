@@ -225,7 +225,7 @@ fn untracked(data: &Value) -> io::Result<String> {
             let space = if value["nested"] == true { "            " } else { SPACE };
             let files = array(value.get("untrackedFiles"), "untracked files")?
                 .iter()
-                .map(|file| text(file.get("relativePath")))
+                .map(|file| text(file.get("relativePath")).map(str::trim))
                 .collect::<io::Result<Vec<_>>>()?;
             Ok(format!("{space}{file} -> {}", files.join(", ")))
         })

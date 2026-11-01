@@ -168,11 +168,17 @@ impl Checks<'_> {
         let identity = without_version(&component.identity);
         let target = self.targets
             .iter()
-            .find(|row| row.get("identity").and_then(Value::as_str) == Some(identity))
+            .find(|row| {
+                row.get("identity")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    == Some(identity)
+            })
             .ok_or_else(|| decline("status issue target missing"))?;
         let dir = text(
             target
                 .get("directory")
+                .filter(|val| !val.is_null())
                 .or_else(|| target.get("rootDir")),
         )?
         .trim()

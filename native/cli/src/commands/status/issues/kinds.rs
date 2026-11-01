@@ -215,17 +215,18 @@ fn missing_packages_to_string(data: &Value) -> io::Result<String> {
     let rows = array(Some(data), "missing packages")?
         .iter()
         .map(|row| {
-            let file = text(
-                row.get("filePath")
-                    .or_else(|| row.get("file"))
-                    .or_else(|| row.get("path")),
-            )?
-            .trim();
-            if file.is_empty() {
-                return Err(decline("missing packages file path"));
-            }
+            let file = ["filePath", "file", "path"]
+                .into_iter()
+                .find_map(|key| {
+                    row.get(key)
+                        .and_then(Value::as_str)
+                        .map(str::trim)
+                        .filter(|val| !val.is_empty())
+                })
+                .ok_or_else(|| decline("missing packages file path"))?;
             let packages = row
                 .get("missingPackages")
+                .filter(|val| !val.is_null())
                 .or_else(|| row.get("packages"))
                 .ok_or_else(|| decline("missing packages"))?;
             Ok(format!("{SPACE}{file} -> {}", list_or_text(packages)?))

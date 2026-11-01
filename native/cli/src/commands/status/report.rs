@@ -65,6 +65,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Flags> {
 }
 
 fn apply_report_flag<'a>(flags: &mut Flags, seen: &mut Vec<&'a str>, arg: &'a str) -> Option<()> {
+    let arg = arg.trim();
     let (raw_flag, val) = match arg.split_once('=') {
         Some((key, "true")) if key.starts_with("--") => (key, true),
         Some((key, "false")) if key.starts_with("--") => (key, false),

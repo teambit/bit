@@ -21,21 +21,9 @@ pub fn snapshot<'v>(values: impl IntoIterator<Item = &'v str>) -> Option<Value> 
 
 fn snapshot_entry(text: &str) -> Value {
     let Some(version) = npm::parse(text.trim()) else { return json!({}) };
-    let prerelease: Vec<Value> = version.prerelease
-        .iter()
-        .map(|id| match id {
-            Identifier::Numeric(number) => json!(number),
-            Identifier::Alphanumeric(text) => json!(text),
-        })
-        .collect();
     json!({
         "canonicalText": version.version,
-        "version": {
-            "major": version.major,
-            "minor": version.minor,
-            "patch": version.patch,
-            "prerelease": prerelease,
-        },
+        "version": version_parts(&version),
     })
 }
 

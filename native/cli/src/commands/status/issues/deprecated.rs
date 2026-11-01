@@ -74,15 +74,11 @@ fn head_deprecation<'c>(
     let Some(version) = version else {
         return Ok(None);
     };
-    let extension = version[1]["extensions"]
+    Ok(version[1]["extensions"]
         .as_array()
         .into_iter()
         .flatten()
-        .find(|extension| crate::commands::update_cmd::matches_aspect(extension, DEPRECATION));
-    let Some(extension) = extension else {
-        return Ok(None);
-    };
-    Ok(Some(extension))
+        .find(|extension| crate::commands::update_cmd::matches_aspect(extension, DEPRECATION)))
 }
 
 fn range_matches(model: &Value, full_id: &str, config: &Value) -> io::Result<bool> {

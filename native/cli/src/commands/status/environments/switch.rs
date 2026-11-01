@@ -10,10 +10,12 @@ impl Environments {
         capture: &Capture,
         order: &[String],
     ) -> io::Result<Option<callbacks::SwitchStage>> {
-        if !self.checkout || self.host.is_none() || order.is_empty() {
+        let Some(host) = self.host
+            .as_ref()
+            .filter(|_| self.checkout && !order.is_empty())
+        else {
             return Ok(None);
-        }
-        let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;
+        };
         callbacks::switch_begin(host, context, capture, order)
             .map_err(|error| self.callback_failure(capture, error))
     }

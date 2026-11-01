@@ -35,6 +35,7 @@ pub(super) fn record_remote(
         let identity = text(
             target
                 .get("identity")
+                .filter(|val| !val.is_null())
                 .or_else(|| target.get("id")),
         )?
         .trim();

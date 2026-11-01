@@ -90,5 +90,6 @@ pub(super) fn base_identity(identity: &str) -> &str {
     let identity = identity.trim();
     identity
         .rfind('@')
+        .filter(|&separator| separator > 0)
         .map_or(identity, |separator| identity[..separator].trim())
 }

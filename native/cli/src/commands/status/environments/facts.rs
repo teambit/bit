@@ -89,14 +89,8 @@ fn validate_selected_env(env_id: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn selected_env(
-    host: &Host,
-    reader: &EnvJsoncReader<'_>,
-    component: &WorkspaceComponent,
-) -> io::Result<(String, Value)> {
-    let envs =
-        host.call("environmentIds", &json!({"ids":component.config.keys().collect::<Vec<_>>()}))?;
-    let explicit = component.config
+fn explicit_env(component: &WorkspaceComponent) -> Option<&str> {
+    component.config
         .get("teambit.envs/envs")
         .or_else(|| {
             component.config
@@ -109,25 +103,40 @@ fn selected_env(
         })
         .and_then(|config| config["env"].as_str())
         .map(str::trim)
-        .filter(|env| !env.is_empty());
+        .filter(|env| !env.is_empty())
+}
+
+fn selected_env(
+    host: &Host,
+    reader: &EnvJsoncReader<'_>,
+    component: &WorkspaceComponent,
+) -> io::Result<(String, Value)> {
+    let envs =
+        host.call("environmentIds", &json!({"ids":component.config.keys().collect::<Vec<_>>()}))?;
+    let explicit = explicit_env(component);
     let selected = explicit
         .map_or_else(
             || {
                 envs.get(0)
                     .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|env| !env.is_empty())
                     .or_else(|| non_loaded_workspace_env(reader, component))
                     .unwrap_or(&component.env_id)
             },
             |env| {
                 component.config
                     .keys()
+                    .map(String::as_str)
+                    .map(str::trim)
                     .find(|id| {
                         bit_install::policy::split_version(id).0
                             == bit_install::policy::split_version(env).0
                     })
-                    .map_or(env, String::as_str)
+                    .unwrap_or(env)
             },
         )
+        .trim()
         .to_owned();
     Ok((selected, if explicit.is_some() { json!([]) } else { envs }))
 }

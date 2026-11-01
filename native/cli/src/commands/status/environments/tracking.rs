@@ -93,16 +93,7 @@ impl Environments {
         bitmap: &Value,
         components: &[Value],
     ) -> io::Result<String> {
-        if root.as_os_str().is_empty()
-            || root
-                .to_str()
-                .is_some_and(|path| path.trim().is_empty())
-        {
-            return Err(io::Error::other("tracking workspace root is empty"));
-        }
-        let host = self.host(root)?;
-        host.call("trackingProjectBitmap", &json!({"bitmap":bitmap,"components":components}))?;
-        Ok(host.take_stdout())
+        self.project_tracking_with(root, &json!({"bitmap":bitmap,"components":components}))
     }
 
     /// Keep loaded identity classes while projecting later writes from the same command.
@@ -112,6 +103,13 @@ impl Environments {
         bitmap: &Value,
         components: &[Value],
     ) -> io::Result<String> {
+        self.project_tracking_with(
+            root,
+            &json!({"bitmap":bitmap,"components":components,"retainLoaded":true}),
+        )
+    }
+
+    fn project_tracking_with(&mut self, root: &Path, payload: &Value) -> io::Result<String> {
         if root.as_os_str().is_empty()
             || root
                 .to_str()
@@ -120,10 +118,7 @@ impl Environments {
             return Err(io::Error::other("tracking workspace root is empty"));
         }
         let host = self.host(root)?;
-        host.call(
-            "trackingProjectBitmap",
-            &json!({"bitmap":bitmap,"components":components,"retainLoaded":true}),
-        )?;
+        host.call("trackingProjectBitmap", payload)?;
         Ok(host.take_stdout())
     }
 

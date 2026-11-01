@@ -155,13 +155,11 @@ fn scope_counts<'i>(ids: &[&'i str]) -> io::Result<Vec<(&'i str, usize)>> {
 }
 
 fn history_identity(row: &Value) -> Option<&str> {
-    row["identity"]
-        .as_str()
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .or_else(|| {
-            row["id"]
-                .as_str()
+    ["identity", "id"]
+        .into_iter()
+        .find_map(|key| {
+            row.get(key)
+                .and_then(Value::as_str)
                 .map(str::trim)
                 .filter(|value| !value.is_empty())
         })

@@ -114,7 +114,13 @@ fn add_variants(
         .iter()
         .map(|(pattern, value)| Ok((pattern.trim().to_owned(), object(value)?.clone())))
         .collect::<io::Result<Vec<_>>>()?;
-    let directory = text(target.get("directory"))?.trim();
+    let directory = text(
+        target
+            .get("directory")
+            .filter(|val| !val.is_null())
+            .or_else(|| target.get("rootDir")),
+    )?
+    .trim();
     let matched = by_root_dir_and_name(&variants, directory, name)?;
     let lists = matched.extensions
         .iter()

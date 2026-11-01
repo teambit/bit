@@ -21,7 +21,10 @@ pub fn root_locale() -> bool {
         .find_map(|name| {
             let raw = env::var_os(name)?;
             let text = raw.to_string_lossy();
-            let trimmed = text.trim();
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
             (!trimmed.is_empty()).then(|| trimmed.to_owned())
         })
         .unwrap_or_default();

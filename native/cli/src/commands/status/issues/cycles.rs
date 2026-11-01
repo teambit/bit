@@ -14,22 +14,23 @@ pub(super) fn filter_graph_for_cycles(
 ) -> Vec<Component> {
     let workspace_ids: HashSet<&str> = components
         .iter()
-        .map(|component| component.identity.as_str())
+        .map(|component| component.identity.trim())
         .collect();
     let unresolved: HashSet<&str> = components
         .iter()
         .filter(|component| has_unresolved_deps(root, component))
-        .map(|component| component.identity.as_str())
+        .map(|component| component.identity.trim())
         .collect();
     graph
         .iter()
         .map(|component| {
-            if workspace_ids.contains(component.identity.as_str()) {
+            if workspace_ids.contains(component.identity.trim()) {
                 return component.clone();
             }
             let mut ext = component.clone();
             ext.dependencies.retain(|dep| {
-                !workspace_ids.contains(dep.as_str()) || unresolved.contains(dep.as_str())
+                let dep = dep.trim();
+                !workspace_ids.contains(dep) || unresolved.contains(dep)
             });
             ext
         })
@@ -37,10 +38,11 @@ pub(super) fn filter_graph_for_cycles(
 }
 
 fn has_unresolved_deps(root: &Path, component: &Component) -> bool {
-    if !component.package_name.is_empty()
+    let package_name = component.package_name.trim();
+    if !package_name.is_empty()
         && !root
             .join("node_modules")
-            .join(&component.package_name)
+            .join(package_name)
             .exists()
     {
         return true;

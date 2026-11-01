@@ -188,10 +188,15 @@ fn entry(name: &str, value: Option<&Value>, field: usize, force: bool) -> io::Re
     let value = value.ok_or_else(|| decline("status missing policy version"))?;
     let version = value
         .as_str()
-        .or_else(|| value.get("version").and_then(Value::as_str));
-    let version = version
         .map(str::trim)
         .filter(|version| !version.is_empty())
+        .or_else(|| {
+            value
+                .get("version")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|version| !version.is_empty())
+        })
         .ok_or_else(|| decline("status invalid policy version"))?;
     Ok(Entry { name: name.to_string(), version: version.to_string(), field, force })
 }

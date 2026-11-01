@@ -101,7 +101,13 @@ fn append_issue(dependencies: &mut Value, kind: &str, data: &Value) -> io::Resul
 }
 
 fn validated_identity(target: &Value) -> io::Result<&str> {
-    let identity = text(target.get("identity"))?.trim();
+    let identity = text(
+        target
+            .get("identity")
+            .filter(|val| !val.is_null())
+            .or_else(|| target.get("id")),
+    )?
+    .trim();
     if identity.is_empty() {
         return Err(decline("environment target identity is empty"));
     }
