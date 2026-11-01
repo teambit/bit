@@ -156,21 +156,21 @@ fn collect_component_packages(
     let mut packages: Vec<PackageInfo> = Vec::new();
     for (entry, component) in ctx.ws.entries.iter().zip(&ctx.ws.components) {
         let config = load_dep_resolver_config(&ctx.root, bitmap, entry)?;
-        let (deps, _) = ctx.collect_component_deps(
-            entry,
-            component,
-            config
-                .as_ref()
-                .and_then(|value| value.get("policy")),
-        );
+        let policy = config
+            .as_ref()
+            .and_then(|value| value.get("policy"));
+        let (deps, _) = ctx.collect_component_deps(entry, component, policy);
         for dep in deps {
-            let explicit = explicit_policy(config.as_ref(), &dep);
-            let origin = VersionOrigin {
-                version: dep.version.clone(),
-                component_id: component.id.to_string_without_version(),
-                explicit,
-            };
-            add_dependency(&mut packages, dep, origin);
+            let explicit = explicit_policy(policy, &dep);
+            add_dependency(
+                &mut packages,
+                dep.clone(),
+                VersionOrigin {
+                    version: dep.version,
+                    component_id: component.id.to_string_without_version(),
+                    explicit,
+                },
+            );
         }
     }
     for package in &mut packages {
@@ -179,15 +179,14 @@ fn collect_component_packages(
     Ok(packages)
 }
 
-fn explicit_policy(config: Option<&serde_json::Value>, dep: &ResolvedDep) -> bool {
+fn explicit_policy(policy: Option<&serde_json::Value>, dep: &ResolvedDep) -> bool {
     let field = match dep.lifecycle {
         "peer" => "peerDependencies",
         "dev" => "devDependencies",
         _ => "dependencies",
     };
-    let Some(value) = config
-        .and_then(|cfg| cfg.get("policy"))
-        .and_then(|policy| policy.get(field))
+    let Some(value) = policy
+        .and_then(|pol| pol.get(field))
         .and_then(|map| map.get(&dep.package_name))
     else {
         return false;

@@ -77,18 +77,24 @@ pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), St
             r#"error: "{scope}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]"#,
         ));
     }
+    let namespace = options.namespace
+        .as_deref()
+        .map(|ns| ns.trim().trim_matches('/'))
+        .filter(|ns| !ns.is_empty());
+    let template = options.template_name.trim();
     for raw_name in &options.component_names {
         let (_parsed_scope, parsed_name) = parse_scope_from_component_id_str(raw_name.trim());
         let parsed_name = parsed_name.trim().trim_matches('/');
-        let full_name = match options.namespace
-            .as_deref()
-            .map(|ns| ns.trim().trim_matches('/'))
-            .filter(|ns| !ns.is_empty())
-        {
-            Some(ns) => format!("{ns}/{parsed_name}"),
-            None => parsed_name.to_owned(),
+        let matches_template = match namespace {
+            Some(ns) => {
+                template
+                    .strip_prefix(ns)
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(parsed_name)
+            }
+            None => parsed_name == template,
         };
-        if full_name == options.template_name.trim() {
+        if matches_template {
             let pascal = pascal_case(&options.template_name);
             return Err(format!(
                 "unable to create a component with the same name as the template \"{}\", please use a different name.\nthe reason is that after refactoring, the code will have this invalid class: \"class {pascal} extends {pascal} {{}}\"",
@@ -100,7 +106,7 @@ pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), St
 }
 
 fn pascal_case(input: &str) -> String {
-    let mut out = String::new();
+    let mut out = String::with_capacity(input.len());
     let mut capitalize_next = true;
     for ch in input.chars() {
         if !ch.is_ascii_alphanumeric() {
@@ -177,23 +183,12 @@ fn take_value(val: &str) -> Option<String> {
 }
 
 fn has_inline_create_value(token: &str) -> bool {
-    [
-        "--namespace=",
-        "-n=",
-        "--aspect=",
-        "-a=",
-        "--template=",
-        "-t=",
-        "--path=",
-        "-p=",
-        "--env=",
-        "-e=",
-    ]
-    .iter()
-    .any(|prefix| {
-        token
-            .strip_prefix(prefix)
-            .map(str::trim)
-            .is_some_and(|val| !val.is_empty() && !val.starts_with('-'))
-    })
+    ["--aspect=", "-a=", "--template=", "-t=", "--path=", "-p=", "--env=", "-e="]
+        .iter()
+        .any(|prefix| {
+            token
+                .strip_prefix(prefix)
+                .map(str::trim)
+                .is_some_and(|val| !val.is_empty() && !val.starts_with('-'))
+        })
 }

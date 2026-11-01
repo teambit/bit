@@ -109,32 +109,18 @@ fn apply_merge_value_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> 
 }
 
 fn apply_merge_equals_arg(arg: &str, idx: usize, opts: &mut MergeOptions) -> Option<usize> {
-    if let Some(val) = arg
-        .strip_prefix("--auto-merge-resolve=")
-        .or_else(|| arg.strip_prefix("-r="))
-    {
-        opts.auto_merge_resolve = Some(non_flag_val(val)?);
-    } else if let Some(val) = arg
-        .strip_prefix("--message=")
-        .or_else(|| arg.strip_prefix("-m="))
-    {
-        opts.message = Some(non_flag_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--commit-message=") {
-        opts.commit_message = Some(non_flag_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--branch=") {
-        opts.branch = Some(non_flag_val(val)?);
-    } else if let Some(val) = arg
-        .strip_prefix("--increment=")
-        .or_else(|| arg.strip_prefix("-l="))
-    {
-        opts.bump.increment = Some(non_flag_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--increment-by=") {
-        opts.bump.increment_by = Some(non_flag_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--versions-file=") {
-        opts.bump.versions_file = Some(non_flag_val(val)?);
-    } else {
-        let val = arg.strip_prefix("--prerelease-id=")?;
-        opts.bump.prerelease_id = Some(non_flag_val(val)?);
+    let (flag, val) = arg.split_once('=')?;
+    let val = non_flag_val(val)?;
+    match flag {
+        "--auto-merge-resolve" | "-r" => opts.auto_merge_resolve = Some(val),
+        "--message" | "-m" => opts.message = Some(val),
+        "--commit-message" => opts.commit_message = Some(val),
+        "--branch" => opts.branch = Some(val),
+        "--increment" | "-l" => opts.bump.increment = Some(val),
+        "--increment-by" => opts.bump.increment_by = Some(val),
+        "--versions-file" => opts.bump.versions_file = Some(val),
+        "--prerelease-id" => opts.bump.prerelease_id = Some(val),
+        _ => return None,
     }
     Some(idx + 1)
 }

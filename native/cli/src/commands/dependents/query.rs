@@ -265,7 +265,7 @@ fn load_workspace_comp_version(scope_dir: &Path, comp: &WorkspaceComponent) -> O
 }
 
 fn read_comp_version(scope_dir: &Path, comp_val: &Value, ver: &str) -> Option<Value> {
-    let ver_hash = resolve_ver_hash(comp_val, ver)?;
+    let ver_hash = crate::commands::graph_cmd::builder::resolve_ver_hash(comp_val, ver)?;
     let (v_kind, ver_val) = bit_object_import::read_scope_object(scope_dir, &ver_hash).ok()??;
     (v_kind == "Version").then_some(ver_val)
 }
@@ -291,7 +291,10 @@ fn add_scanned_ws_edges(
 }
 
 fn matches_pkg_spec(raw_spec: &str, pkg: &str) -> bool {
-    !pkg.is_empty() && (raw_spec == pkg || raw_spec.starts_with(&format!("{pkg}/")))
+    !pkg.is_empty()
+        && raw_spec
+            .strip_prefix(pkg)
+            .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
 }
 
 fn match_ws_target(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<String> {
@@ -299,14 +302,13 @@ fn match_ws_target(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<St
         if other.id.name == self_name {
             continue;
         }
+        if matches_pkg_spec(raw_spec, other.package_name.trim()) {
+            return Some(selection::entry_full_id(entry));
+        }
         let scope = other.id.effective_scope().unwrap_or_default();
         let pkg_slash = format!("@{scope}/{}", other.id.name);
         let pkg_dot = format!("@{scope}/{}", other.id.name.replace('/', "."));
-        let pkg_name = other.package_name.trim();
-        if matches_pkg_spec(raw_spec, pkg_name)
-            || matches_pkg_spec(raw_spec, &pkg_slash)
-            || matches_pkg_spec(raw_spec, &pkg_dot)
-        {
+        if matches_pkg_spec(raw_spec, &pkg_slash) || matches_pkg_spec(raw_spec, &pkg_dot) {
             return Some(selection::entry_full_id(entry));
         }
     }
@@ -355,10 +357,6 @@ fn collect_all_versions(comp_val: &Value) -> Vec<(String, String)> {
         }
     }
     versions
-}
-
-fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
-    crate::commands::graph_cmd::builder::resolve_ver_hash(comp_val, ver)
 }
 
 pub(super) fn add_version_edges(graph: &mut DepGraph, node_id: &str, ver_val: &Value) {

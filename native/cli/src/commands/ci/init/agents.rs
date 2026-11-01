@@ -1,5 +1,5 @@
 //! `scaffoldAgentsMd`: retain user edits and only fill the unresolved repository placeholder.
-use std::{io, path::Path};
+use std::{io, path::Path, sync::OnceLock};
 const START: &str = "<!-- bit-ci-sync:start";
 const END: &str = "<!-- bit-ci-sync:end -->";
 pub(super) const UNKNOWN: &str = "<org>/<this-repo>";
@@ -10,14 +10,19 @@ pub(super) fn render(scope: &str, repo: &str, branch: &str) -> String {
     let quoted = super::shell_word(branch);
     let values =
         [("scope", scope), ("repo", repo), ("branch", branch), ("branch-sh", quoted.as_str())];
-    let mut out = String::new();
+    let mut out = String::with_capacity(raw.len());
     let mut rest = raw.as_str();
     while let Some(start) = rest.find("{{") {
         out.push_str(&rest[..start]);
         let token = &rest[start..];
         if let Some((key, value)) = values
             .iter()
-            .find(|(key, _)| token.starts_with(&format!("{{{{{key}}}}}")))
+            .find(|(key, _)| {
+                token[2..]
+                    .strip_prefix(*key)
+                    .unwrap_or("")
+                    .starts_with("}}")
+            })
         {
             out.push_str(value);
             rest = &token[key.len() + 4..];
@@ -77,8 +82,15 @@ fn fill_repo(content: &str, repo: &str) -> String {
 }
 
 fn starts_block(line: &str) -> bool {
-    regress::Regex::new(r"^\s*(#{1,6}(\s|$)|---|```|~~~|<!--|\||>|[-*+](\s|$)|\d+[.)](\s|$))")
-        .ok()
+    static BLOCK_RE: OnceLock<Option<regress::Regex>> = OnceLock::new();
+    BLOCK_RE
+        .get_or_init(|| {
+            regress::Regex::new(
+                r"^\s*(#{1,6}(\s|$)|---|```|~~~|<!--|\||>|[-*+](\s|$)|\d+[.)](\s|$))",
+            )
+            .ok()
+        })
+        .as_ref()
         .is_some_and(|regex| regex.find(line).is_some())
 }
 
@@ -98,9 +110,13 @@ fn insertion_point(lines: &[&str]) -> usize {
     title_end(lines, at)
 }
 fn title_end(lines: &[&str], at: usize) -> usize {
+    static TITLE_RE: OnceLock<Option<regress::Regex>> = OnceLock::new();
     let mut next = at;
     skip_empty(lines, &mut next);
-    let Some(title) = regress::Regex::new(r"^ {0,3}#(\s|$)").ok() else {
+    let Some(title) = TITLE_RE
+        .get_or_init(|| regress::Regex::new(r"^ {0,3}#(\s|$)").ok())
+        .as_ref()
+    else {
         return at;
     };
     if lines

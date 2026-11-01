@@ -239,10 +239,7 @@ pub(in crate::commands) fn resolve_component_entry(
     let exact: Vec<&Value> = active
         .iter()
         .copied()
-        .filter(|row| {
-            let (scope, name) = index_row_scope_and_name(row);
-            if scope.is_empty() { name == bare_id } else { format!("{scope}/{name}") == bare_id }
-        })
+        .filter(|row| matches_exact_index_row(row, bare_id))
         .collect();
     let row = if let [exact_row] = exact.as_slice() {
         *exact_row
@@ -263,6 +260,18 @@ pub(in crate::commands) fn resolve_component_entry(
         name.to_owned(),
         row["hash"].as_str()?.to_owned(),
     ))
+}
+
+fn matches_exact_index_row(row: &Value, bare_id: &str) -> bool {
+    let (scope, name) = index_row_scope_and_name(row);
+    if scope.is_empty() {
+        name == bare_id
+    } else {
+        bare_id
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            == Some(name)
+    }
 }
 
 fn index_row_scope_and_name(row: &Value) -> (&str, &str) {

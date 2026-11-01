@@ -173,7 +173,7 @@ fn execute_workspace(
         }
         let receipts = prepared.commit(context)?;
         Ok(workspace_command::results::Report {
-            data: receipt_report(&receipts, lanes, args),
+            data: receipt_report(&receipts, lanes, Chalk::detect(args)),
             code: 0,
             details: None,
         })
@@ -186,22 +186,19 @@ fn execute_bare(
     prepared: remote::Prepared,
 ) -> io::Result<Outcome> {
     let lanes = prepared.lanes;
-    let output = workspace_command::loader_output(Chalk::detect(args), false);
+    let chalk = Chalk::detect(args);
+    let output = workspace_command::loader_output(chalk, false);
     let command = if lanes { "remove" } else { "delete" };
     output.restart(&format!(r#"running command "{command}"..."#));
     let receipts = prepared.commit(context);
     output.stop();
-    let report = receipt_report(&receipts?, lanes, args);
+    let report = receipt_report(&receipts?, lanes, chalk);
     println!("{report}");
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-fn receipt_report(receipts: &[Value], lanes: bool, args: &[OsString]) -> String {
-    if lanes {
-        report::lanes(receipts, Chalk::detect(args))
-    } else {
-        report::components(receipts, Chalk::detect(args))
-    }
+fn receipt_report(receipts: &[Value], lanes: bool, chalk: Chalk) -> String {
+    if lanes { report::lanes(receipts, chalk) } else { report::components(receipts, chalk) }
 }
 
 #[derive(Default)]

@@ -20,10 +20,10 @@ pub(super) fn parse<'a>(args: &[&'a str], undo: bool) -> Option<Options<'a>> {
 
 fn consume_trailing_pattern<'a>(rest: &[&'a str], pattern: &mut Option<&'a str>) -> Option<()> {
     for &arg in rest {
-        if pattern.is_some() {
-            return None;
-        }
-        *pattern = Some(valid_val(arg)?);
+        pattern
+            .replace(valid_val(arg)?)
+            .is_none()
+            .then_some(())?;
     }
     Some(())
 }

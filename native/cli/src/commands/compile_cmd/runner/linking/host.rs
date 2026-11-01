@@ -41,11 +41,11 @@ impl Host for Builtin {
 fn is_supported_builtin_env(env_id: &str) -> bool {
     let trimmed = env_id.trim();
     !trimmed.is_empty()
-        && !trimmed
+        && trimmed
             .split_once('@')
-            .is_some_and(|(_, ver)| {
+            .is_none_or(|(_, ver)| {
                 let ver = ver.trim();
-                ver.is_empty() || ver.contains('@') || ver.chars().any(char::is_whitespace)
+                !ver.is_empty() && !ver.contains('@') && !ver.chars().any(char::is_whitespace)
             })
         && matches!(
             bit_install::config::aspect_id_without_version(trimmed).trim().trim_end_matches('/'),

@@ -50,12 +50,12 @@ pub(super) fn try_run(
         plan.run(root, options, output).map_err(|error| format_compile_error(&error, args))?;
         report::create(&plan.compiled, options, args, started.elapsed())
     };
-    let outcome = if options.json {
+    if options.json {
         workspace_command::execute_json(root, args, "compile", work)
     } else {
         workspace_command::execute_then(root, args, "compile", work)
-    }?;
-    Ok(Some(outcome))
+    }
+    .map(Some)
 }
 
 fn format_compile_error(error: &io::Error, args: &[OsString]) -> io::Error {

@@ -87,7 +87,6 @@ impl Links {
 }
 
 fn matches_component_identity(identity: &str, component: &WorkspaceComponent) -> bool {
-    let target = component.id.to_string_without_version();
     let trimmed = identity.trim();
     let bare = trimmed
         .rsplit_once('@')
@@ -96,5 +95,8 @@ fn matches_component_identity(identity: &str, component: &WorkspaceComponent) ->
     if bare.is_empty() || bare.contains('@') {
         return false;
     }
-    bare == target.trim() || (!bare.contains('/') && bare == component.id.name.trim())
+    if !bare.contains('/') && bare == component.id.name.trim() {
+        return true;
+    }
+    bare == component.id.to_string_without_version().trim()
 }

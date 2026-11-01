@@ -27,7 +27,7 @@ impl Policy {
         let before = fs::read(root.join("workspace.jsonc"))?;
         let mut document =
             Document::parse(std::str::from_utf8(&before).map_err(io::Error::other)?)?;
-        let mut items = Vec::new();
+        let mut items = Vec::with_capacity(pins.len());
         for pin in pins {
             let package_name = pin.package_name.trim();
             if package_name.is_empty() {

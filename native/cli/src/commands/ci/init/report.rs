@@ -173,20 +173,21 @@ pub(super) fn step(
     body: Vec<String>,
     chalk: Chalk,
 ) -> String {
-    let mut lines = vec![format!(
+    let mut lines = Vec::with_capacity(body.len() + 1);
+    lines.push(format!(
         "{} {}",
         chalk.bold_white(&format!("{number}. {}", title.trim())),
         chalk.dim(&format!("({})", who.trim())),
-    )];
+    ));
     lines.extend(
         body.into_iter()
             .map(|line| format!("   {line}")),
     );
     lines.join("\n")
 }
-fn paths(values: &[String]) -> String {
+fn paths<'a>(values: impl IntoIterator<Item = &'a String>) -> String {
     values
-        .iter()
+        .into_iter()
         .map(|value| shell_word(value))
         .collect::<Vec<_>>()
         .join(" ")
@@ -220,12 +221,9 @@ fn staging(report: &Report, chalk: Chalk) -> Vec<String> {
 }
 pub(super) fn commit(report: &Report, chalk: Chalk) -> Vec<String> {
     let mut lines = staging(report, chalk);
-    let targets: Vec<_> = report.changes.stage
-        .iter()
-        .chain(&report.changes.ignored)
-        .cloned()
-        .collect();
-    if report.changes.commits && targets.is_empty() {
+    let has_targets =
+        !report.changes.stage.is_empty() || !report.changes.ignored.is_empty();
+    if report.changes.commits && !has_targets {
         lines.push(chalk.dim("nothing to commit: these files are already committed"));
     } else {
         let message = format!(
@@ -233,8 +231,9 @@ pub(super) fn commit(report: &Report, chalk: Chalk) -> Vec<String> {
             shell_word(&format!("Mirror {}", report.target.scope.trim())),
         );
         if report.changes.commits {
+            let joined = paths(report.changes.stage.iter().chain(&report.changes.ignored));
             lines.push(chalk.cyan(&format!(r"{message} -- \")));
-            lines.push(chalk.cyan(&format!("  {}", paths(&targets))));
+            lines.push(chalk.cyan(&format!("  {joined}")));
         } else {
             lines.push(chalk.cyan(&message));
         }

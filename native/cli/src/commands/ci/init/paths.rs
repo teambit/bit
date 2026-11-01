@@ -36,14 +36,13 @@ fn resolve_link(path: &Path) -> io::Result<Option<PathBuf>> {
                 return Err(io::Error::other("empty symbolic link target"));
             }
             let parent = current.parent().unwrap_or_else(|| Path::new(""));
-            let target = parent.join(link);
-            return Ok(Some(normalize(&target.join(parts.as_path()))));
+            return Ok(Some(normalize(&parent.join(link).join(parts.as_path()))));
         }
     }
     Ok(None)
 }
 fn normalize(path: &Path) -> PathBuf {
-    let mut result = PathBuf::new();
+    let mut result = PathBuf::with_capacity(path.as_os_str().len());
     for part in path.components() {
         match part {
             Component::ParentDir => {

@@ -314,7 +314,7 @@ pub(in crate::commands) fn emit_scope_not_found(
             .all(|dir| !dir.join(".git").exists())
     {
         let chalk = Chalk::detect(args);
-        let msg = format!("error: scope not found at {}", chalk.bold(&cwd.display().to_string()));
+        let msg = format!("error: scope not found at {}", chalk.bold(&cwd.to_string_lossy()));
         return execute_failure_scope(&cwd, args, command, quiet, "", io::Error::other(msg));
     }
     Ok(Outcome::Declined(format!("{command} requires a scope")))
@@ -329,7 +329,7 @@ pub(in crate::commands) fn sha1_hex(input: &str) -> String {
 }
 
 pub(in crate::commands) fn format_json_4(val: &Value) -> io::Result<String> {
-    let mut buf = Vec::new();
+    let mut buf = Vec::with_capacity(256);
     let mut ser =
         serde_json::Serializer::with_formatter(&mut buf, PrettyFormatter::with_indent(b"    "));
     val.serialize(&mut ser).map_err(io::Error::other)?;

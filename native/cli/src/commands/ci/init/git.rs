@@ -59,7 +59,7 @@ fn detected_branch(root: &Path) -> Option<String> {
         .find(|name| {
             branches
                 .lines()
-                .any(|line| super::trim(line) == format!("origin/{name}"))
+                .any(|line| super::trim(line).strip_prefix("origin/") == Some(*name))
         })
         .map(str::to_owned)
 }
@@ -112,7 +112,7 @@ pub(super) fn relative(from: &Path, to: &Path) -> PathBuf {
     let shared = from
         .iter()
         .zip(&target)
-        .take_while(|(a, b)| same_component(**a, **b))
+        .take_while(|(left, right)| same_component(**left, **right))
         .count();
     if shared == 0 {
         return to.to_path_buf();

@@ -72,10 +72,9 @@ fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io:
     let version = row["version"].as_str().map_or("", str::trim);
     let scope = row_scope_or_default(row, fallback_scope);
     let id = format!(
-        "{}{}{name}{}",
-        scope,
+        "{scope}{}{name}{}{version}",
         if scope.is_empty() { "" } else { "/" },
-        if version.is_empty() { String::new() } else { format!("@{version}") },
+        if version.is_empty() { "" } else { "@" },
     );
     io::Error::other(format!(
         "error: main file {} was removed from {}.\nplease use \"bit remove\" to delete the component or \"bit add\" with \"--main\" and \"--id\" flags to add a new mainFile",

@@ -61,19 +61,24 @@ pub(super) fn publish(files: &[Emitted], batch_size: usize) -> io::Result<()> {
     for batch in files.chunks(batch_size) {
         let opened = open_batch(batch)?;
         for (file, mut opened) in batch.iter().zip(opened) {
-            let normalized = file.content.replace("\r\n", "\n").replace('\r', "\n");
-            let content = if cfg!(windows) { normalized.replace('\n', "\r\n") } else { normalized };
-            opened
-                .write_all(content.as_bytes())
+            write_emitted_content(&mut opened, &file.content)
                 .map_err(|error| failure(error, "write", &file.path))?;
         }
     }
     Ok(())
 }
+fn write_emitted_content(opened: &mut fs::File, content: &str) -> io::Result<()> {
+    if !cfg!(windows) && !content.contains('\r') {
+        return opened.write_all(content.as_bytes());
+    }
+    let normalized = content.replace("\r\n", "\n").replace('\r', "\n");
+    let owned = if cfg!(windows) { normalized.replace('\n', "\r\n") } else { normalized };
+    opened.write_all(owned.as_bytes())
+}
 // DataToPersist opens the pending batch concurrently. Even a failed first open can
 // leave a later output truncated; do not complete its write after reporting that failure.
 fn open_batch(files: &[Emitted]) -> io::Result<Vec<fs::File>> {
-    let mut opened = Vec::new();
+    let mut opened = Vec::with_capacity(files.len());
     let mut error = None;
     for file in files {
         match open_file(file) {

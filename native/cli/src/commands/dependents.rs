@@ -185,7 +185,11 @@ fn find_fallback_bitmap_entry<'a>(
             entry.owns_its_dir()
                 && if has_version {
                     let ver = entry.id.version.as_deref().unwrap_or_default();
-                    !ver.is_empty() && format!("{}@{ver}", entry.id.name) == raw_id
+                    !ver.is_empty()
+                        && raw_id
+                            .strip_prefix(entry.id.name.as_str())
+                            .and_then(|rest| rest.strip_prefix('@'))
+                            == Some(ver)
                 } else {
                     entry.id.name == without_version
                 }

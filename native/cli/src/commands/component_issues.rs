@@ -16,6 +16,8 @@ use std::{
 pub const COMMAND: Command = Command { name: "component-issues", aliases: &[], run };
 
 const ISSUES_ASPECT_ID: &str = "teambit.component/issues";
+const DIVIDER_LINE: &str =
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 
 struct IssueDefinition {
     name: &'static str,
@@ -282,7 +284,7 @@ fn report(chalk: Chalk) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    let divider = chalk.yellow(&"━".repeat(80));
+    let divider = chalk.yellow(DIVIDER_LINE);
     let config_snippet = chalk.cyan(&format!(
         "\"{ISSUES_ASPECT_ID}\": {{\n     \"ignoreIssues\": [\"IssueName1\", \"IssueName2\"]\n   }}",
     ));

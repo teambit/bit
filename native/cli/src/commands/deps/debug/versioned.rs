@@ -9,10 +9,7 @@ use bit_install::{
     workspace::{BitmapEntry, ModelData},
 };
 use serde_json::{Value, json};
-use std::{
-    collections::{HashMap, HashSet},
-    path::Path,
-};
+use std::{collections::HashMap, path::Path};
 
 pub(super) fn plan(
     root: &Path,
@@ -128,17 +125,13 @@ fn merge_ignored(
     regular: &HashMap<String, (&'static str, String)>,
     plus: &HashMap<String, &'static str>,
 ) -> Result<(), Failure> {
-    let mut seen = bitmap.ignored_names
-        .iter()
-        .cloned()
-        .collect::<HashSet<_>>();
     for name in bitmap.ignored_names.iter().chain(&saved_names) {
         if regular.contains_key(name) || plus.contains_key(name) {
             return Err(overlapping_policy());
         }
     }
     for name in saved_names {
-        if seen.insert(name.clone()) {
+        if !bitmap.ignored_names.contains(&name) {
             bitmap.ignored_names.push(name);
         }
     }

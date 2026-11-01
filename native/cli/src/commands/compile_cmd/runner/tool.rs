@@ -25,7 +25,7 @@ pub(super) fn compile(files: &[Value]) -> io::Result<Vec<Value>> {
         .spawn()?;
     write_compiler_request(&mut child, &request)?;
     let output = child.wait_with_output()?;
-    if !output.status.success() || !String::from_utf8_lossy(&output.stderr).trim().is_empty() {
+    if !output.status.success() || !output.stderr.trim_ascii().is_empty() {
         return Err(io::Error::other("compiler tool rejected source"));
     }
     let rows: Vec<Value> = serde_json::from_slice(&output.stdout)?;

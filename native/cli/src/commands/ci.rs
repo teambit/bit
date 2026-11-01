@@ -96,16 +96,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             }
             run_merge(&root, args, opts)
         }
-        Subcommand::Sync(opts) => run_sync(&root, args, opts),
+        Subcommand::Sync(opts) => run_sync(&root, args, &subcommand, opts),
         _ => Ok(Outcome::Declined("ci subcommand execution delegated".into())),
     }
 }
 
-fn run_sync(root: &Path, args: &[OsString], options: &SyncOptions) -> io::Result<Outcome> {
+fn run_sync(
+    root: &Path,
+    args: &[OsString],
+    subcommand: &Subcommand,
+    options: &SyncOptions,
+) -> io::Result<Outcome> {
     match validate_sync_options(options) {
-        Err(message) => {
-            emit_subcommand_error(root, args, &Subcommand::Sync(options.clone()), &message)
-        }
+        Err(message) => emit_subcommand_error(root, args, subcommand, &message),
         Ok(()) if options.init => init::run(root, args),
         Ok(()) => Ok(Outcome::Declined("ci sync execution delegated".into())),
     }

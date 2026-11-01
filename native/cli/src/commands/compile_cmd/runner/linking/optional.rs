@@ -22,8 +22,9 @@ pub(super) fn apply(
         let list = dependencies
             .get_mut(&identity)
             .ok_or_else(|| io::Error::other("compiler dependency list"))?;
+        let has_optional = entries.iter().any(|entry| entry.optional);
         for package in &mut list.packages {
-            package.optional = optional(&entries, &package.name);
+            package.optional = has_optional && optional(&entries, &package.name);
         }
         let state = loaded
             .dependency_state(&identity)
@@ -103,18 +104,17 @@ fn split_component_identity(entry: &Value) -> io::Result<(&str, &str)> {
         .map(str::trim)
         .filter(|val| !val.is_empty())
         .ok_or_else(|| io::Error::other("compiler dependency identity"))?;
-    match raw
+    if let Some((base, ver)) = raw
         .rsplit_once('@')
         .filter(|(base, ver)| {
             !base.trim().is_empty() && !base.contains('@') && !ver.trim().is_empty()
-        }) {
-        Some((base, ver)) => Ok((base.trim(), ver.trim())),
-        None => Ok((
-            raw.trim_end_matches('@').trim(),
-            entry["version"]
-                .as_str()
-                .map(str::trim)
-                .ok_or_else(|| io::Error::other("compiler dependency version"))?,
-        )),
+        })
+    {
+        return Ok((base.trim(), ver.trim()));
     }
+    let version = entry["version"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| io::Error::other("compiler dependency version"))?;
+    Ok((raw.trim_end_matches('@').trim(), version))
 }

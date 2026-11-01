@@ -23,12 +23,7 @@ impl Prepared {
         let facts = None;
         let plan = Batch::prepare(root, ids, &options.scope, lane, options.update_main, facts)
             .map_err(|error| io::Error::other(error.to_string()))?;
-        let pins = plan
-            .plans()
-            .iter()
-            .filter_map(|plan| plan.pin())
-            .collect::<Vec<_>>();
-        let policy = policy::Policy::prepare_many(root, &pins).ok().flatten();
+        let policy = prepare_policy(root, &plan);
         Ok(Self { plan, policy })
     }
     pub(super) fn with_rows(
@@ -45,12 +40,7 @@ impl Prepared {
             Batch::prepare(root, ids, &options.scope, lane, options.update_main, Some(&facts))
                 .map_err(|error| io::Error::other(error.to_string()))?;
         plan.packages(&selection::facts(rows))?;
-        let pins = plan
-            .plans()
-            .iter()
-            .filter_map(|plan| plan.pin())
-            .collect::<Vec<_>>();
-        let policy = policy::Policy::prepare_many(root, &pins).ok().flatten();
+        let policy = prepare_policy(root, &plan);
         Ok(Self { plan, policy })
     }
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
@@ -59,6 +49,14 @@ impl Prepared {
         }
         Ok(())
     }
+}
+fn prepare_policy(root: &Path, plan: &Batch) -> Option<policy::Policy> {
+    let pins = plan
+        .plans()
+        .iter()
+        .filter_map(|item| item.pin())
+        .collect::<Vec<_>>();
+    policy::Policy::prepare_many(root, &pins).ok().flatten()
 }
 fn validate(bitmap: &serde_json::Value, ids: &[String], options: &Options<'_>) -> io::Result<()> {
     let lane = bit_workspace_config::truthy(&bitmap["_bit_lane"]);

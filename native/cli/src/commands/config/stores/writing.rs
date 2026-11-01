@@ -45,7 +45,7 @@ fn scope(store: &Store) -> io::Result<Value> {
         .cloned()
         .ok_or_else(|| io::Error::other("invalid scope config"))?;
     source.insert("config".to_owned(), Value::Object(store.values.clone()));
-    let mut result = Map::new();
+    let mut result = Map::with_capacity(source.len());
     for key in
         ["name", "remotes", "resolverPath", "license", "groupName", "version", "lanes", "config"]
     {

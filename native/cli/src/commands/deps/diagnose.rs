@@ -72,8 +72,9 @@ fn inspect<'a>(root: &Path, package: &'a str) -> Result<PackageReport<'a>, Failu
         .into_iter()
         .filter_map(|entry| entry.strip_prefix(&prefix).map(parse_copy))
         .collect::<Vec<_>>();
-    pnpm_dirs.sort_by(|a, b| {
-        compare_versions(&a.version, &b.version).then_with(|| a.peer_suffix.cmp(&b.peer_suffix))
+    pnpm_dirs.sort_by(|left, right| {
+        compare_versions(&left.version, &right.version)
+            .then_with(|| left.peer_suffix.cmp(&right.peer_suffix))
     });
     Ok(PackageReport { package_name: package, pnpm_dirs })
 }
@@ -194,7 +195,7 @@ pub(super) fn table(rows: &[Vec<String>]) -> String {
                 .unwrap_or_default()
         })
         .collect::<Vec<_>>();
-    let mut lines = Vec::new();
+    let mut lines = Vec::with_capacity(rows.len());
     for row in rows {
         let mut line = String::from("  ");
         for (index, cell) in row.iter().enumerate() {
@@ -208,7 +209,7 @@ pub(super) fn table(rows: &[Vec<String>]) -> String {
 
 pub(super) fn locale_number(value: usize) -> String {
     let digits = value.to_string();
-    let mut result = String::new();
+    let mut result = String::with_capacity(digits.len() + digits.len() / 3);
     for (index, digit) in digits.chars().enumerate() {
         if index > 0 && (digits.len() - index).is_multiple_of(3) {
             result.push(',');

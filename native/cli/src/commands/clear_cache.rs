@@ -119,25 +119,23 @@ fn apply_token(tokens: &[&str], index: &mut usize, remote: &mut Option<String>) 
 }
 
 fn clear_caches(cwd: &Path, workspace_root: Option<&Path>) -> Vec<&'static str> {
-    let mut cleared = Vec::new();
     if let Some(root) = workspace_root {
         let scope = workspace::scope_path(root);
-        if scope.is_dir() {
-            let _ = fs::remove_dir_all(scope.join("cache").join("components"));
-            cleared.push("components cache on the filesystem");
-            let _ = fs::remove_file(scope.join("index.json"));
-            cleared.push("scope-index file");
+        if !scope.is_dir() {
+            return Vec::new();
         }
-        return cleared;
+        let _ = fs::remove_dir_all(scope.join("cache").join("components"));
+        let _ = fs::remove_file(scope.join("index.json"));
+        return vec!["components cache on the filesystem", "scope-index file"];
     }
     if let Some(scope) = cwd
         .ancestors()
         .find(|path| path.join("scope.json").is_file())
     {
         let _ = fs::remove_file(scope.join("index.json"));
-        cleared.push("scope-index file");
+        return vec!["scope-index file"];
     }
-    cleared
+    Vec::new()
 }
 
 fn format_report(cleared: &[&str], chalk: Chalk) -> String {

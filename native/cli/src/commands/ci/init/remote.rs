@@ -39,7 +39,7 @@ pub(super) fn repository(remote: &str) -> Option<Repository> {
     }
     let escaped = host
         .chars()
-        .fold(String::new(), |mut out, ch| {
+        .fold(String::with_capacity(host.len() + 4), |mut out, ch| {
             if r".*+?^${}()|[]\".contains(ch) {
                 out.push('\\');
             }
@@ -109,7 +109,7 @@ pub(super) fn redacted(remote: &str) -> String {
 pub(super) fn inert(value: &str) -> String {
     value
         .chars()
-        .fold(String::new(), |mut out, ch| {
+        .fold(String::with_capacity(value.len()), |mut out, ch| {
             if ch <= '\u{1f}' || ('\u{7f}'..='\u{9f}').contains(&ch) {
                 use std::fmt::Write;
                 let _ = write!(out, r"\x{:02x}", u32::from(ch));
@@ -158,18 +158,18 @@ fn refuse(why: &str) -> String {
 fn api_override(server: &Url, raw: &str) -> Result<String, String> {
     let raw = super::trim(raw);
     let server_host = server.host_str().unwrap_or("github.com");
+    let api_host = format!("api.{server_host}");
     let Some(api) = Url::parse(raw)
         .ok()
         .filter(|api| {
             api.host_str()
                 .is_some_and(|host| {
-                    host.eq_ignore_ascii_case(server_host)
-                        || host.eq_ignore_ascii_case(&format!("api.{server_host}"))
+                    host.eq_ignore_ascii_case(server_host) || host.eq_ignore_ascii_case(&api_host)
                 })
         })
     else {
         return Err(refuse(&format!(
-            r#"GITHUB_API_URL "{raw}" is not on {server_host} or api.{server_host}"#,
+            r#"GITHUB_API_URL "{raw}" is not on {server_host} or {api_host}"#,
         )));
     };
     let secure = server.scheme() == "https";

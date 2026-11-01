@@ -41,7 +41,11 @@ fn read(path: &Path) -> io::Result<Value> {
     }
 }
 pub(super) fn outputs(compiled: &[Compiled]) -> io::Result<()> {
-    let mut paths = HashSet::new();
+    let total_files = compiled
+        .iter()
+        .map(|row| row.files.len())
+        .sum();
+    let mut paths = HashSet::with_capacity(total_files);
     for row in compiled {
         if row.identity.trim().is_empty() {
             return Err(io::Error::other("compiler empty component identity"));

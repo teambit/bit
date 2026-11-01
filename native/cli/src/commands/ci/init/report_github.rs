@@ -51,11 +51,14 @@ fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<Str
         chalk.dim("optional: a GitHub token, so the pushes the sync makes start your other workflows (CI checks)"),
     ]
 }
-fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
-    let scope = match input.target.scope.trim() {
+fn scope_or_placeholder(input: &Report) -> &str {
+    match input.target.scope.trim() {
         "" => "<scope>",
         trimmed => trimmed,
-    };
+    }
+}
+fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
+    let scope = scope_or_placeholder(input);
     report::step(
         3,
         "Make Bit -> Git instant",
@@ -77,10 +80,7 @@ fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> Stri
     )
 }
 fn enterprise_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
-    let scope = match input.target.scope.trim() {
-        "" => "<scope>",
-        trimmed => trimmed,
-    };
+    let scope = scope_or_placeholder(input);
     let api = remote::api(repository.host.trim());
     let base = api
         .as_deref()

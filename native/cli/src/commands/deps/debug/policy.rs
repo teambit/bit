@@ -86,23 +86,22 @@ fn append_manual_field(
         .map(|(name, _)| name.trim().to_owned())
         .collect::<Vec<_>>();
     manual.ignored_names.extend(ignored);
-    manual.ignored_env_dependencies.extend(
-        NODE_DEV
-            .iter()
-            .filter(|(name, _)| {
-                field == "devDependencies"
-                    && values
-                        .as_object()
-                        .is_some_and(|entries| {
-                            entries
-                                .iter()
-                                .any(|(key, val)| {
-                                    key.trim() == *name && val.as_str().map(str::trim) == Some("-")
-                                })
+    if field == "devDependencies"
+        && let Some(entries) = values.as_object()
+    {
+        manual.ignored_env_dependencies.extend(
+            NODE_DEV
+                .iter()
+                .filter(|(name, _)| {
+                    entries
+                        .iter()
+                        .any(|(key, val)| {
+                            key.trim() == *name && val.as_str().map(str::trim) == Some("-")
                         })
-            })
-            .map(|(name, _)| (*name).to_owned()),
-    );
+                })
+                .map(|(name, _)| (*name).to_owned()),
+        );
+    }
     let plus = unresolved_plus(values);
     match field {
         "dependencies" => manual.unresolved_runtime_plus.extend(plus),

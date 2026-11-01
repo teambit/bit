@@ -144,13 +144,13 @@ fn find_component<'a>(
     if !matches.is_empty() {
         return Err(Failure::Declined("component ambiguous".into()));
     }
-    if !bare.contains('/') && !exists_in_scope_index(root, bare) {
+    if !exists_in_scope_index(root, bare) {
+        if bare.contains('/') {
+            return Ok(None);
+        }
         return Err(Failure::User(format!(
             r#"Failed parsing the string "{query}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
         )));
-    }
-    if bare.contains('/') && !exists_in_scope_index(root, bare) {
-        return Ok(None);
     }
     Err(Failure::Declined("scope-only component blame delegated".into()))
 }

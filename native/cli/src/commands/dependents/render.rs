@@ -22,7 +22,7 @@ pub(super) struct DepGraph {
 impl DepGraph {
     pub(super) fn add_node(&mut self, id: &str) {
         let id = id.trim();
-        if !id.is_empty() {
+        if !id.is_empty() && !self.nodes.contains(id) {
             self.nodes.insert(id.to_owned());
         }
     }
@@ -32,18 +32,17 @@ impl DepGraph {
         if src.is_empty() || dst.is_empty() || src == dst {
             return;
         }
-        let (src, dst) = (src.to_owned(), dst.to_owned());
-        self.nodes.insert(src.clone());
-        self.nodes.insert(dst.clone());
+        self.add_node(src);
+        self.add_node(dst);
         if let Some(existing) = self.edges
             .iter_mut()
-            .find(|(edge_src, edge_dst, _)| *edge_src == src && *edge_dst == dst)
+            .find(|(edge_src, edge_dst, _)| edge_src == src && edge_dst == dst)
         {
             if existing.2 != "prod" {
                 existing.2 = dep_type;
             }
         } else {
-            self.edges.push((src, dst, dep_type));
+            self.edges.push((src.to_owned(), dst.to_owned(), dep_type));
         }
     }
 

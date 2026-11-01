@@ -97,8 +97,13 @@ pub(super) fn errors(row: &Compiled, output: &bit_install::output::Output) {
     let errors = row.errors
         .iter()
         .map(|error| {
-            let normalized = error.message.replace("\r\n", "\n").replace('\r', "\n");
-            let msg = normalized.trim();
+            let normalized;
+            let msg = if error.message.contains('\r') {
+                normalized = error.message.replace("\r\n", "\n").replace('\r', "\n");
+                normalized.trim()
+            } else {
+                error.message.trim()
+            };
             if msg.is_empty() {
                 format!("{}\nError", error.path.display())
             } else {

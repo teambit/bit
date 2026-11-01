@@ -32,16 +32,18 @@ fn component(receipt: &Value, format: &Formatter) -> String {
 fn dependents(receipt: &Value, format: &Formatter) -> String {
     let Some(rows) = receipt["dependentBits"].as_object() else { return String::new() };
     rows.iter()
-        .filter(|(_, dependencies)| !list(dependencies).is_empty())
-        .map(|(id, dependencies)| dependent_row(id, dependencies, format))
+        .filter_map(|(id, dependencies)| {
+            let deps = list(dependencies);
+            (!deps.is_empty()).then(|| dependent_row(id, &deps, format))
+        })
         .collect::<Vec<_>>()
         .join("\n\n")
 }
 
-fn dependent_row(id: &str, dependencies: &Value, format: &Formatter) -> String {
+fn dependent_row(id: &str, dependencies: &[String], format: &Formatter) -> String {
     let id = strip_latest_or_head(id);
     let symbol = format.error_symbol();
-    let body = list(dependencies)
+    let body = dependencies
         .iter()
         .map(|dependency| Formatter::item_with(strip_latest_or_head(dependency), &symbol))
         .collect::<Vec<_>>()

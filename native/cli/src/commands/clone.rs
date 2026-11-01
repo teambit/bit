@@ -209,7 +209,7 @@ fn resolve_clone_path(cwd: &Path, dir: &str) -> PathBuf {
 }
 
 fn normalize_lexical(path: &Path) -> PathBuf {
-    let mut out = PathBuf::new();
+    let mut out = PathBuf::with_capacity(path.as_os_str().len());
     for comp in path.components() {
         match comp {
             std::path::Component::CurDir => {}

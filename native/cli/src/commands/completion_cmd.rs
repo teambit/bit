@@ -108,20 +108,16 @@ pub(super) fn valid_options(args: &[&str]) -> bool {
 }
 
 pub(super) fn is_zsh_shell() -> bool {
-    env::var("SHELL")
-        .ok()
-        .is_some_and(|val| {
-            val.trim()
-                .to_ascii_lowercase()
-                .contains("zsh")
+    ["SHELL", "ZSH_NAME"]
+        .into_iter()
+        .any(|key| {
+            env::var(key)
+                .is_ok_and(|val| {
+                    val.trim()
+                        .to_ascii_lowercase()
+                        .contains("zsh")
+                })
         })
-        || env::var("ZSH_NAME")
-            .ok()
-            .is_some_and(|val| {
-                val.trim()
-                    .to_ascii_lowercase()
-                    .contains("zsh")
-            })
 }
 
 pub(super) const fn render_completion_script(zsh: bool) -> &'static str {

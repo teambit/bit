@@ -123,11 +123,7 @@ fn valid_docs_options(rest: &[&str]) -> bool {
 fn docs_option_len(rest: &[&str]) -> Option<usize> {
     match rest {
         ["--"] => Some(1),
-        ["--skill" | "-s", value, ..]
-            if !value.trim().is_empty() && !value.trim().starts_with('-') =>
-        {
-            Some(2)
-        }
+        ["--skill" | "-s", value, ..] if is_non_flag_value(value) => Some(2),
         [
             "-d" | "-d=true" | "-d=false" | "-dm" | "-md" | "--docs" | "--docs=true"
             | "--docs=false" | "-m" | "-m=true" | "-m=false" | "--metadata" | "--metadata=true"
@@ -143,16 +139,20 @@ fn docs_option_len(rest: &[&str]) -> Option<usize> {
             Some(1)
         }
         [arg, ..]
-            if let Some(val) = arg
+            if arg
                 .strip_prefix("--skill=")
                 .or_else(|| arg.strip_prefix("-s="))
-                && !val.trim().is_empty()
-                && !val.trim().starts_with('-') =>
+                .is_some_and(is_non_flag_value) =>
         {
             Some(1)
         }
         _ => None,
     }
+}
+
+fn is_non_flag_value(val: &str) -> bool {
+    let trimmed = val.trim();
+    !trimmed.is_empty() && !trimmed.starts_with('-')
 }
 
 pub(super) fn render_docs_frontmatter(version: &str) -> String {

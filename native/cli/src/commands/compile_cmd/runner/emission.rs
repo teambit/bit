@@ -15,11 +15,12 @@ pub(super) fn prepare(
     let files: Vec<_> = components
         .iter()
         .flat_map(|component| {
+            let directory = json!(root.join(&component.directory));
             component.files
                 .iter()
-                .map(|file| {
+                .map(move |file| {
                     let mut file = file.clone();
-                    file["directory"] = json!(root.join(&component.directory));
+                    file["directory"] = directory.clone();
                     file
                 })
         })
@@ -29,7 +30,7 @@ pub(super) fn prepare(
         return Err(io::Error::other("compiler result count mismatch"));
     }
     let mut offset = 0;
-    let mut compiled = Vec::new();
+    let mut compiled = Vec::with_capacity(components.len());
     for ((component, identity), directories) in components
         .iter()
         .zip(identities)
@@ -102,28 +103,12 @@ fn append(
 ) -> io::Result<()> {
     let files =
         row["files"].as_array().ok_or_else(|| io::Error::other("compiler emitted files"))?;
-    for directory in directories {
-        for file in files {
-            let relative = file["outputPath"]
-                .as_str()
-                .or_else(|| file["relativePath"].as_str())
-                .or_else(|| file["path"].as_str())
-                .map(|val| val.trim().trim_start_matches("./"))
-                .filter(|value| !value.is_empty())
-                .ok_or_else(|| io::Error::other("compiler output path"))?;
-            if relative.contains('\\')
-                || relative.chars().any(char::is_control)
-                || Path::new(relative)
-                    .components()
-                    .any(|part| !matches!(part, std::path::Component::Normal(_)))
-            {
-                return Err(io::Error::other("compiler output relative path"));
-            }
-            let content = file["outputText"]
-                .as_str()
-                .or_else(|| file["content"].as_str())
-                .or_else(|| file["contents"].as_str())
-                .ok_or_else(|| io::Error::other("compiler emitted content"))?;
+    if directories.is_empty() {
+        return Ok(());
+    }
+    for file in files {
+        let (relative, content) = parse_emitted_file(file)?;
+        for directory in directories {
             compiled.files.push(Emitted {
                 path: directory
                     .join(relative)
@@ -134,4 +119,28 @@ fn append(
         }
     }
     Ok(())
+}
+
+fn parse_emitted_file(file: &Value) -> io::Result<(&str, &str)> {
+    let relative = file["outputPath"]
+        .as_str()
+        .or_else(|| file["relativePath"].as_str())
+        .or_else(|| file["path"].as_str())
+        .map(|val| val.trim().trim_start_matches("./"))
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| io::Error::other("compiler output path"))?;
+    if relative.contains('\\')
+        || relative.chars().any(char::is_control)
+        || Path::new(relative)
+            .components()
+            .any(|part| !matches!(part, std::path::Component::Normal(_)))
+    {
+        return Err(io::Error::other("compiler output relative path"));
+    }
+    let content = file["outputText"]
+        .as_str()
+        .or_else(|| file["content"].as_str())
+        .or_else(|| file["contents"].as_str())
+        .ok_or_else(|| io::Error::other("compiler emitted content"))?;
+    Ok((relative, content))
 }

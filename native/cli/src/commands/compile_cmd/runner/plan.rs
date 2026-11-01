@@ -103,7 +103,7 @@ fn validated_batch_size(root: &Path) -> io::Result<usize> {
 }
 
 fn selection(options: &Options) -> Selection {
-    let mut exact = Vec::new();
+    let mut exact = Vec::with_capacity(options.components.len());
     for component in options.components
         .iter()
         .map(|component| component.trim())

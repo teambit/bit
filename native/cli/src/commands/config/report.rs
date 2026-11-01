@@ -84,19 +84,21 @@ fn list(stores: &Stores, options: &Options, chalk: Chalk) -> io::Result<String> 
     if !options.detailed {
         return formatted(&combined, options.json);
     }
-    let mut detailed = Map::new();
-    let mut parts = Vec::new();
+    if options.json {
+        let mut detailed = Map::with_capacity(stores.entries.len() + 1);
+        for store in &stores.entries {
+            detailed.insert(store.origin.to_owned(), Value::Object(store.values.clone()));
+        }
+        detailed.insert("combined".to_owned(), Value::Object(combined));
+        return Ok(serde_json::to_string_pretty(&detailed)?);
+    }
+    let mut parts = Vec::with_capacity(stores.entries.len() + 1);
     for store in &stores.entries {
-        detailed.insert(store.origin.to_owned(), Value::Object(store.values.clone()));
         parts.push(format!(
             "{}\n{}",
             chalk.bold(&store.origin.to_uppercase()),
             formatted(&store.values, false)?,
         ));
-    }
-    if options.json {
-        detailed.insert("combined".to_owned(), Value::Object(combined));
-        return Ok(serde_json::to_string_pretty(&detailed)?);
     }
     parts.push(format!("{}\n{}", chalk.bold("ALL COMBINED"), formatted(&combined, false)?));
     Ok(parts.join("\n\n"))

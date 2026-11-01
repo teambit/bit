@@ -50,13 +50,14 @@ fn collect_parse_error_inputs(
     directory: &str,
     files: &[String],
 ) -> io::Result<Vec<Value>> {
+    let base_dir = root.join(directory);
     let mut inputs = Vec::new();
     for file in files
         .iter()
         .map(|file| file.trim())
         .filter(|file| !file.is_empty())
     {
-        let path = root.join(directory).join(file);
+        let path = base_dir.join(file);
         let source = fs::read_to_string(&path)?;
         let scanned = bit_dependency_scanner::scan_source(
             path.to_string_lossy().into_owned(),
@@ -109,7 +110,7 @@ fn errors(inputs: &[Value]) -> io::Result<Vec<Value>> {
         return Err(error);
     }
     let output = child.wait_with_output()?;
-    if !output.status.success() || !String::from_utf8_lossy(&output.stderr).trim().is_empty() {
+    if !output.status.success() || !output.stderr.trim_ascii().is_empty() {
         return Err(io::Error::other("compiler parser diagnostic tool"));
     }
     let errors: Vec<Value> = serde_json::from_slice(&output.stdout)?;

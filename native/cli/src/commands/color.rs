@@ -140,13 +140,15 @@ fn encase_line_breaks(text: &str, close: &str, open: &str) -> String {
 
 /// `has-flag`: `--<flag>` among the arguments, before any `--`.
 fn has_flag(args: &[OsString], flag: &str) -> bool {
-    let wanted = format!("--{flag}");
-    let tail = args.get(1..).unwrap_or(&[]);
-    let position = tail
+    args.get(1..)
+        .unwrap_or(&[])
         .iter()
-        .position(|arg| *arg == *wanted);
-    let terminator = tail.iter().position(|arg| arg == "--");
-    position.is_some_and(|position| terminator.is_none_or(|terminator| position < terminator))
+        .take_while(|arg| *arg != "--")
+        .any(|arg| {
+            arg.to_str()
+                .and_then(|s| s.strip_prefix("--"))
+                == Some(flag)
+        })
 }
 
 /// The forced level from flags and `FORCE_COLOR`.
@@ -178,14 +180,14 @@ fn forced(args: &[OsString]) -> Option<u32> {
 /// `parseInt(text, 10)` for a level: leading digits, `NaN` (here `None`) otherwise.
 fn parse_int(text: &str) -> Option<u32> {
     let trimmed = text.trim_start();
-    let digits: String = trimmed
-        .chars()
-        .take_while(char::is_ascii_digit)
-        .collect();
-    if digits.is_empty() {
+    let digit_len = trimmed
+        .bytes()
+        .take_while(u8::is_ascii_digit)
+        .count();
+    if digit_len == 0 {
         return None;
     }
-    Some(digits.parse().unwrap_or(u32::MAX))
+    Some(trimmed[..digit_len].parse().unwrap_or(u32::MAX))
 }
 
 /// `supportsColor(true, isTTY)`: 0 means no colors.
@@ -194,7 +196,9 @@ fn level(args: &[OsString], tty: bool) -> u32 {
     if forced == Some(0) {
         return 0;
     }
-    if ["color=16m", "color=full", "color=truecolor", "color=256"].iter().any(|f| has_flag(args, f))
+    if ["color=16m", "color=full", "color=truecolor", "color=256"]
+        .iter()
+        .any(|flag| has_flag(args, flag))
     {
         return 2;
     }
@@ -257,21 +261,22 @@ fn basic_term(term: &str) -> bool {
 fn teamcity_supports_color(version: &str) -> bool {
     let version = version.trim();
     let digits = version
-        .chars()
-        .take_while(char::is_ascii_digit)
+        .bytes()
+        .take_while(u8::is_ascii_digit)
         .count();
     if digits >= 2 {
         return version[digits..].starts_with('.');
     }
     let Some(rest) = version.strip_prefix("9.") else { return false };
-    let minor: String = rest
-        .chars()
-        .take_while(char::is_ascii_digit)
-        .collect();
-    rest[minor.len()..].starts_with('.')
+    let minor_len = rest
+        .bytes()
+        .take_while(u8::is_ascii_digit)
+        .count();
+    let minor = &rest[..minor_len];
+    rest[minor_len..].starts_with('.')
         && minor
             .trim_start_matches('0')
-            .chars()
+            .bytes()
             .next()
-            .is_some_and(|character| character != '0')
+            .is_some_and(|byte| byte != b'0')
 }

@@ -235,13 +235,10 @@ fn render_debug(root: &Path, (runtime, dev, peer): (Deps, Deps, Deps)) -> Result
         .chain(dev)
         .chain(peer)
         .collect::<Vec<_>>();
+    let node_modules = root.join("node_modules");
     if all
         .iter()
-        .any(|(name, _)| {
-            root.join("node_modules")
-                .join(name)
-                .exists()
-        })
+        .any(|(name, _)| node_modules.join(name).exists())
     {
         return Err(Failure::Declined("installed env deps debug delegated".into()));
     }
@@ -310,16 +307,11 @@ fn manual_groups(manual: &ManualPolicy) -> ManualGroups<'_> {
 }
 
 fn validate_manual_rows(root: &Path, all: &[&SourcedDep<'_>]) -> Result<(), Failure> {
-    let mut seen = HashSet::new();
+    let node_modules = root.join("node_modules");
+    let mut seen = HashSet::with_capacity(all.len());
     if all
         .iter()
-        .any(|(name, _, _)| {
-            !seen.insert(*name)
-                || root
-                    .join("node_modules")
-                    .join(name)
-                    .exists()
-        })
+        .any(|(name, _, _)| !seen.insert(*name) || node_modules.join(name).exists())
     {
         return Err(Failure::Declined("installed or duplicate debug dependency delegated".into()));
     }

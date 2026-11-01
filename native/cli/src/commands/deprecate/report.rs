@@ -34,27 +34,21 @@ fn sections(
             "{} component(s) have been {verb} successfully",
             changed.len(),
         )),
-        format.section(
-            verb,
-            "",
-            &changed
-                .iter()
-                .map(|id| id.trim())
-                .filter(|id| !id.is_empty())
-                .map(|id| format.item(id))
-                .collect::<Vec<_>>(),
-        ),
+        format.section(verb, "", &format_items(changed, format)),
         format.section(
             if undo { "not deprecated" } else { "already deprecated" },
             "no changes were made to these",
-            &unchanged
-                .iter()
-                .map(|id| id.trim())
-                .filter(|id| !id.is_empty())
-                .map(|id| format.item(id))
-                .collect::<Vec<_>>(),
+            &format_items(unchanged, format),
         ),
     ])
+}
+
+fn format_items(ids: &[String], format: &Formatter) -> Vec<String> {
+    ids.iter()
+        .map(|id| id.trim())
+        .filter(|id| !id.is_empty())
+        .map(|id| format.item(id))
+        .collect()
 }
 
 fn range_report(

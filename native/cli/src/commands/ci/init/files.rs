@@ -11,7 +11,7 @@ pub(super) fn workflows(
     branch: &str,
     workspace_dir: &str,
 ) -> io::Result<Vec<File>> {
-    let mut files = Vec::new();
+    let mut files = Vec::with_capacity(2);
     for (relative, raw, marker) in [
         (
             ".github/workflows/bit-sync.yml",

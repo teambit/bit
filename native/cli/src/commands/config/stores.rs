@@ -28,11 +28,12 @@ pub(super) struct Stores {
 impl Stores {
     pub(super) fn load() -> io::Result<Self> {
         let cwd = env::current_dir()?;
-        let mut entries = vec![Store::load(
+        let mut entries = Vec::with_capacity(3);
+        entries.push(Store::load(
             "global",
             bit_workspace_config::global_config_dir().join("config.json"),
             None,
-        )?];
+        )?);
         let workspace = workspace_root(&cwd);
         let scope = workspace
             .as_deref()
@@ -57,7 +58,8 @@ impl Stores {
     pub(super) fn history_scope(&self) -> Option<&Path> {
         self.entries
             .iter()
-            .find(|store| store.origin == "workspace")?;
+            .any(|store| store.origin == "workspace")
+            .then_some(())?;
         self.entries
             .iter()
             .find(|store| store.origin == "scope")?

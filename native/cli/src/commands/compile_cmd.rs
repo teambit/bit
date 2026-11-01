@@ -166,7 +166,9 @@ fn exists_in_bitmap_or_index(bare: &str, bitmap: &Bitmap, index_rows: &[Value]) 
                         row["id"]["name"].as_str().map(str::trim),
                     ) {
                         (Some(scope), Some(name)) if !scope.is_empty() && !name.is_empty() => {
-                            format!("{scope}/{name}") == bare
+                            bare.strip_prefix(scope)
+                                .and_then(|rest| rest.strip_prefix('/'))
+                                == Some(name)
                         }
                         _ => false,
                     })

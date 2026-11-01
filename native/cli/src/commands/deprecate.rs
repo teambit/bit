@@ -44,22 +44,22 @@ fn run_workspace(
     options: &options::Options<'_>,
     undo: bool,
 ) -> io::Result<Outcome> {
-    if let Err(error) =
-        Plan::prepare(root, options.pattern, options.replacement, options.range, undo)
+    let plan = match Plan::prepare(root, options.pattern, options.replacement, options.range, undo)
     {
-        if error.kind() != io::ErrorKind::InvalidInput || is_ci_active() {
-            return Ok(Outcome::Declined(format!("deprecation: {error}")));
+        Ok(plan) => plan,
+        Err(error) => {
+            if error.kind() != io::ErrorKind::InvalidInput || is_ci_active() {
+                return Ok(Outcome::Declined(format!("deprecation: {error}")));
+            }
+            return workspace_command::execute_then(root, args, command_name(undo), |_output| {
+                Err(error)
+            });
         }
-        return workspace_command::execute_then(root, args, command_name(undo), |_output| {
-            Err(error)
-        });
-    }
+    };
     let mut linker = add::ProjectedLinker::prepare(root)?;
     print!("{}", linker.take_stdout());
-    let prepared = Plan::prepare(root, options.pattern, options.replacement, options.range, undo);
     let formatter = Formatter::new(Chalk::detect(args));
     workspace_command::execute_then(root, args, command_name(undo), |_output| {
-        let plan = prepared?;
         let report = Report {
             data: report::render(&plan, options, undo, &formatter),
             code: 0,

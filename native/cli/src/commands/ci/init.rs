@@ -146,20 +146,22 @@ impl Plan {
     }
     fn changes(&self, files: Vec<report::File>, config_added: bool) -> report::Changes {
         let commits = git::commits(&self.cwd);
+        let scaffold = self.scaffold_root();
+        let is_git = self.repository_root.is_some();
         let handled = [
-            self.scaffold_root().join(".github/workflows/bit-sync.yml"),
-            self.scaffold_root().join(".github/workflows/bit-release.yml"),
+            scaffold.join(".github/workflows/bit-sync.yml"),
+            scaffold.join(".github/workflows/bit-release.yml"),
             self.root.join("workspace.jsonc"),
             self.root.join("AGENTS.md"),
         ];
-        let (stage, ignored) = if self.repository_root.is_some() {
+        let (stage, ignored) = if is_git {
             git::staging(&self.cwd, &self.cwd, &handled, commits)
         } else {
             (Vec::new(), Vec::new())
         };
         report::Changes {
             commits,
-            git: self.repository_root.is_some(),
+            git: is_git,
             files,
             config: git::display(&self.cwd, &self.root.join("workspace.jsonc")),
             config_added,

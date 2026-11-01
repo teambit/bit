@@ -40,15 +40,17 @@ impl WorkspaceSnapshot {
         if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
             return;
         }
-        let scope_dir = bit_object_import::scope_path(root);
         if let Some(bytes) = &self.bitmap {
             let _ = fs::write(root.join(".bitmap"), bytes);
         }
-        if let Some(bytes) = &self.scope_json {
-            let _ = fs::write(scope_dir.join("scope.json"), bytes);
-        }
-        if let Some(bytes) = &self.index_json {
-            let _ = fs::write(scope_dir.join("index.json"), bytes);
+        if self.scope_json.is_some() || self.index_json.is_some() {
+            let scope_dir = bit_object_import::scope_path(root);
+            if let Some(bytes) = &self.scope_json {
+                let _ = fs::write(scope_dir.join("scope.json"), bytes);
+            }
+            if let Some(bytes) = &self.index_json {
+                let _ = fs::write(scope_dir.join("index.json"), bytes);
+            }
         }
     }
 }
@@ -226,16 +228,14 @@ fn resolve_lane_name(
 }
 
 fn sanitize_lane_name(raw: &str) -> String {
-    raw.trim()
+    raw.trim_matches(|ch: char| !ch.is_ascii_alphanumeric())
         .chars()
         .map(
             |ch| {
                 if ch.is_ascii_alphanumeric() || ch == '-' { ch.to_ascii_lowercase() } else { '-' }
             },
         )
-        .collect::<String>()
-        .trim_matches('-')
-        .to_string()
+        .collect()
 }
 
 fn current_bitmap_lane(root: &Path) -> Option<String> {

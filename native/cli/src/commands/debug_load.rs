@@ -83,8 +83,10 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             arg if is_ignored_debug_load_flag(arg) => {}
             "-j" | "-j=true" | "-rj" | "-jr" | "--json" | "--json=true" => json = true,
             "-j=false" | "--json=false" => json = false,
-            val if !val.trim().starts_with('-') && !val.trim().is_empty() && id.is_none() => {
-                id = Some(val.trim().to_owned());
+            val if id.is_none() => {
+                let trimmed = val.trim();
+                (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+                id = Some(trimmed.to_owned());
             }
             _ => return None,
         }

@@ -61,15 +61,17 @@ fn execute(
     let written = stores.write();
     output.stop();
     if let Err(error) = written {
-        writeln!(io::stderr(), "{}", chalk.red(&error.to_string()))?;
-        io::stderr().flush()?;
+        let mut stderr = io::stderr().lock();
+        writeln!(stderr, "{}", chalk.red(&error.to_string()))?;
+        stderr.flush()?;
         return Ok(ExitCode::FAILURE);
     }
+    let mut stdout = io::stdout().lock();
     if options.json {
-        write!(io::stdout(), "{text}")?;
+        write!(stdout, "{text}")?;
     } else {
-        writeln!(io::stdout(), "{text}")?;
+        writeln!(stdout, "{text}")?;
     }
-    io::stdout().flush()?;
+    stdout.flush()?;
     Ok(ExitCode::SUCCESS)
 }

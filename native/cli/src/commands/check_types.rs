@@ -82,14 +82,16 @@ fn emit_empty_check_types(
     args: &[OsString],
     options: &Options,
 ) -> io::Result<Outcome> {
-    let formatter = Formatter::new(Chalk::detect(args));
     let all = options.all;
-    let json = options.json;
+    let data = if options.json {
+        "[]".to_owned()
+    } else {
+        Formatter::new(Chalk::detect(args)).hint(EMPTY_CHECK_TYPES_HINT)
+    };
     workspace_command::execute_without_loader(root, args, "check-types", move |output| {
         if all {
             output.warning("--all is deprecated, use --unmodified instead");
         }
-        let data = if json { "[]".to_owned() } else { formatter.hint(EMPTY_CHECK_TYPES_HINT) };
         Ok(Report { data, code: 0, details: None })
     })
 }

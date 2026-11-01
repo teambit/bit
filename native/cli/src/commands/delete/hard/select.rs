@@ -31,17 +31,7 @@ pub(super) fn components(context: &Context, pattern: &str) -> io::Result<Vec<Str
     let remote = runtime.block_on(context.remotes.resolve(scope, &context.network))?;
     let mut ids: Vec<String> = inventory(context, &runtime, remote, name)?
         .into_iter()
-        .filter_map(|id| {
-            let (found_scope, found_name) = id.trim().split_once('/')?;
-            let found_scope = found_scope.trim();
-            let found_name = found_name
-                .split_once('@')
-                .map_or(found_name, |(base, _)| base)
-                .trim();
-            (found_scope == scope && wildcard(name, found_name)).then(|| {
-                format!("{found_scope}/{found_name}")
-            })
-        })
+        .filter_map(|id| match_wildcard_inventory_id(id, scope, name))
         .collect();
     ids.sort();
     ids.dedup();
@@ -49,6 +39,23 @@ pub(super) fn components(context: &Context, pattern: &str) -> io::Result<Vec<Str
         return Err(invalid("no matching components for wildcard"));
     }
     Ok(ids)
+}
+
+fn match_wildcard_inventory_id(id: String, scope: &str, name: &str) -> Option<String> {
+    let (found_scope, found_name) = id.trim().split_once('/')?;
+    let found_scope = found_scope.trim();
+    let found_name = found_name
+        .split_once('@')
+        .map_or(found_name, |(base, _)| base)
+        .trim();
+    if found_scope != scope || !wildcard(name, found_name) {
+        return None;
+    }
+    if id.len() == found_scope.len() + 1 + found_name.len() {
+        Some(id)
+    } else {
+        Some(format!("{found_scope}/{found_name}"))
+    }
 }
 
 fn literal(pattern: &str) -> io::Result<Vec<String>> {

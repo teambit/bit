@@ -101,7 +101,7 @@ fn direct(
     lanes: bool,
     force: bool,
 ) -> io::Result<Vec<Group>> {
-    let mut groups = Vec::new();
+    let mut groups = Vec::with_capacity(grouped.len());
     for (scope, ids) in grouped {
         let remote = context.remotes
             .configured(&scope)?

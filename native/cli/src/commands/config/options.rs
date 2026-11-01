@@ -16,25 +16,12 @@ impl Options {
             .skip(1)
             .map(|arg| arg.to_str())
             .collect::<Option<Vec<_>>>()?;
-        values.retain(|arg| {
-            !matches!(
-                arg.trim(),
-                "--no-color"
-                    | "--no-colors"
-                    | "--no-color=true"
-                    | "--no-color=false"
-                    | "--color"
-                    | "--colors"
-                    | "--color=true"
-                    | "--color=false"
-                    | "--color=always"
-                    | "--color=never",
-            )
-        });
+        values.retain(|arg| !is_color_flag(arg.trim()));
         let command = if values
             .first()
             .is_some_and(|arg| {
-                !arg.trim().is_empty() && !arg.trim().starts_with('-') && arg.trim() != "--"
+                let trimmed = arg.trim();
+                !trimmed.is_empty() && !trimmed.starts_with('-') && trimmed != "--"
             }) {
             values.remove(0).trim().to_owned()
         } else {
@@ -58,14 +45,33 @@ impl Options {
         iterator: impl Iterator<Item = &'a str>,
     ) -> Option<()> {
         for rest in iterator {
-            if rest.trim().is_empty() || rest.trim().starts_with('-') {
+            let trimmed = rest.trim();
+            if trimmed.is_empty() || trimmed.starts_with('-') {
                 return None;
             }
             self.values.push(rest.to_owned());
         }
         Some(())
     }
+}
 
+fn is_color_flag(arg: &str) -> bool {
+    matches!(
+        arg,
+        "--no-color"
+            | "--no-colors"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--colors"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    )
+}
+
+impl Options {
     fn argument<'a>(
         &mut self,
         arg: &'a str,

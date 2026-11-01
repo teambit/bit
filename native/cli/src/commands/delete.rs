@@ -146,8 +146,9 @@ fn execute(
         && matches!(options.scope, bit_object_import::component_delete::Scope::Entire);
     let loaded_ids = if graph { selection::all(&bitmap) } else { ids.clone() };
     let loadable = selection::loadable(root, &bitmap, &loaded_ids)?;
+    let chalk = Chalk::detect(args);
     output.status(&format!("loading {} component(s)", ids.len()));
-    loading::validate(root, &bitmap, &ids, Chalk::detect(args))?;
+    loading::validate(root, &bitmap, &ids, chalk)?;
     let rows = if loadable.is_empty() {
         Vec::new()
     } else {
@@ -166,7 +167,7 @@ fn execute(
     let file_id = workspace_command::file_id();
     linker.validate_captures()?;
     prepared.plan.commit(&file_id)?;
-    let format = Formatter::new(Chalk::detect(args));
+    let format = Formatter::new(chalk);
     if let Some(policy) = &prepared.policy {
         policy.commit(root, &file_id)?;
         output.console(&policy.report(&format));

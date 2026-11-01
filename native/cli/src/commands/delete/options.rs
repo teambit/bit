@@ -63,18 +63,11 @@ fn apply_inline_or_pattern<'a>(
     modifier: &mut Option<(&'a str, &'a str)>,
     pattern: &mut Option<&'a str>,
 ) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--range=").map(str::trim) {
-        (!val.is_empty()
-            && !val.starts_with('-')
-            && modifier.is_none_or(|(flag, _)| flag == "--range"))
-        .then_some(())?;
-        *modifier = Some(("--range", val));
-    } else if let Some(val) = arg.strip_prefix("--snaps=").map(str::trim) {
-        (!val.is_empty()
-            && !val.starts_with('-')
-            && modifier.is_none_or(|(flag, _)| flag == "--snaps"))
-        .then_some(())?;
-        *modifier = Some(("--snaps", val));
+    if let Some((flag @ ("--range" | "--snaps"), raw)) = arg.split_once('=') {
+        let val = raw.trim();
+        (!val.is_empty() && !val.starts_with('-') && modifier.is_none_or(|(prev, _)| prev == flag))
+            .then_some(())?;
+        *modifier = Some((flag, val));
     } else if !arg.starts_with('-') && !arg.trim().is_empty() && pattern.is_none() {
         *pattern = Some(arg.trim());
     } else {
