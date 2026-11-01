@@ -49,10 +49,10 @@ pub(super) fn retain(startup: &mut Startup, error: &io::Error) {
         .get_ref()
         .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>())
     {
-        if !error.startup.is_empty() && !startup.stdout.ends_with(&error.startup) {
+        if !error.startup.trim().is_empty() && !startup.stdout.ends_with(&error.startup) {
             startup.stdout.push_str(&error.startup);
         }
-        if !error.output.is_empty() && !startup.build_stdout.ends_with(&error.output) {
+        if !error.output.trim().is_empty() && !startup.build_stdout.ends_with(&error.output) {
             startup.build_stdout.push_str(&error.output);
         }
     }

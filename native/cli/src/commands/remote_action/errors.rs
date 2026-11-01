@@ -49,7 +49,13 @@ fn conflict_report(conflicts: &[Value], chalk: Chalk, output: &mut Vec<String>) 
                 .as_array()
                 .map_or(&[][..], Vec::as_slice)
                 .iter()
-                .map(|value| value.as_str().unwrap_or("undefined"))
+                .map(|value| {
+                    value
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|ver| !ver.is_empty())
+                        .unwrap_or("undefined")
+                })
                 .collect::<Vec<_>>()
                 .join(", ");
             format!("{} (version(s): {versions})", id(value, chalk))

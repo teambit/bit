@@ -325,7 +325,10 @@ fn execute(
             output.failure(&format!("installation failed with the following error: {error}"));
         }
         host.call("installCanonicalFinalize", &json!({}))?;
-        print!("{}", host.take_stdout());
+        let stdout = host.take_stdout();
+        if !stdout.is_empty() {
+            print!("{stdout}");
+        }
         if let Err(error) = installed
             && prepared.kind != Kind::Component
         {
@@ -343,7 +346,10 @@ fn install_retained(
 ) -> io::Result<(io::Result<()>, Arc<crate::host::Host>)> {
     let mut environment = capture::take_callback_environment(&mut prepared.capture)
         .ok_or_else(|| io::Error::other("recovery installation provider session"))?;
-    print!("{}", ProjectedLinker::project_installation_workspace(root, &mut environment)?);
+    let projected = ProjectedLinker::project_installation_workspace(root, &mut environment)?;
+    if !projected.is_empty() {
+        print!("{projected}");
+    }
     let host = environment
         .into_tracking_host()
         .ok_or_else(|| io::Error::other("recovery installation Host"))?;
@@ -355,10 +361,7 @@ fn install_retained(
     Ok((installed, host))
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "Recovery capture forwards engine, token, context, and environments"
-)]
+#[expect(clippy::too_many_arguments, reason = "Forwards engine, token, context, and environments")]
 fn capture_recovery_targets(
     engine: &mut Engine,
     root: &Path,
@@ -370,25 +373,17 @@ fn capture_recovery_targets(
     startup: &mut Startup,
     environments: environments::Environments,
 ) -> io::Result<Capture> {
-    let captured = capture::capture_with(
-        engine,
-        root,
-        home,
-        context,
-        targets,
-        capture::CaptureOptions {
-            environments: Some(environments),
-            incomplete_reset: options.kind == Kind::Component,
-            ..Default::default()
-        },
-    );
-    match captured {
+    let opts = capture::CaptureOptions {
+        environments: Some(environments),
+        incomplete_reset: options.kind == Kind::Component,
+        ..Default::default()
+    };
+    match capture::capture_with(engine, root, home, context, targets, opts) {
         Ok(capture) => Ok(capture),
         Err(error) if context["recoveryRestoredFileId"].is_string() => {
             failure::retain(startup, &error);
             let applied: Value = engine.request(&json!({
-                "kind":"commandRecoveryApply",
-                "token":token,
+                "kind":"commandRecoveryApply","token":token,
                 "fileId":context["recoveryRestoredFileId"],
                 "checkoutError":{"message":error.to_string()},
             }))?;

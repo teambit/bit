@@ -171,7 +171,11 @@ pub(super) fn prepare_request(root: &Path, home: &Path, options: &Options) -> io
         "options":{"silent":options.kind==Kind::Lane,"verbose":options.verbose,
             "skipDependencyInstallation":true,"callbackLifecycle":true},
     });
-    if let Some(pattern) = &options.pattern {
+    if let Some(pattern) = options.pattern
+        .as_deref()
+        .map(str::trim)
+        .filter(|pattern| !pattern.is_empty())
+    {
         request["options"]["pattern"] = json!(pattern);
     }
     Ok(request)

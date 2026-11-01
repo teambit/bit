@@ -150,8 +150,9 @@ fn row(cells: &[String], widths: &[usize], colors: bool, head: bool) -> String {
         .iter()
         .enumerate()
         .map(|(index, cell)| {
+            let width = widths.get(index).copied().unwrap_or(0);
             cell.split('\n')
-                .map(|line| pad(line, widths[index]))
+                .map(|line| pad(line, width))
                 .collect()
         })
         .collect();
@@ -169,7 +170,7 @@ fn row(cells: &[String], widths: &[usize], colors: bool, head: bool) -> String {
                 .map(|(index, lines)| match lines.get(line) {
                     Some(text) if head => style(colors, CYAN, text),
                     Some(text) => text.clone(),
-                    None => pad("", widths[index]),
+                    None => pad("", widths.get(index).copied().unwrap_or(0)),
                 })
                 .collect();
             format!("{}{}{}", border("│"), cells.join(&border("│")), border("│"))

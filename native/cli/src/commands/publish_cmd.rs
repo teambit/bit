@@ -50,8 +50,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let ci_enabled = env::var_os("CI")
         .is_some_and(|val| {
             let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !trimmed.is_empty()
+                && !matches!(trimmed.to_ascii_lowercase().as_str(), "0" | "false" | "no" | "off")
         });
     if ci_enabled {
         return Ok(Outcome::Declined("CI publish delegated".into()));

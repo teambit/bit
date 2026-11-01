@@ -19,7 +19,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut seen: Vec<&str> = Vec::new();
     let mut index = 0;
     while index < args.len() {
-        if args[index] == "--" {
+        if args[index].trim() == "--" {
             for &rest in &args[index + 1..] {
                 let trimmed = rest.trim();
                 (!trimmed.is_empty()
@@ -76,7 +76,7 @@ impl Options {
             self.remote = Some(raw.to_string());
             return Some(1);
         }
-        let flag = long_flag(raw.split_once('=').map_or(raw, |(key, _)| key));
+        let flag = long_flag(raw.split_once('=').map_or(raw, |(key, _)| key.trim()));
         if seen.contains(&flag) {
             return None;
         }

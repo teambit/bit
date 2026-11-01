@@ -140,7 +140,7 @@ fn format_rules_success(
     chalk: Chalk,
 ) -> String {
     let scope = if opts.is_global { "global" } else { "workspace" };
-    if opts.editor.eq_ignore_ascii_case("claude-code") {
+    if opts.editor.trim().eq_ignore_ascii_case("claude-code") {
         let file_path = if opts.is_global { "~/.claude/bit.md" } else { ".claude/bit.md" };
         let at_syntax = if opts.is_global { "@~/.claude/bit.md" } else { "@.claude/bit.md" };
         let text = format!(

@@ -263,11 +263,13 @@ fn build_mcp_server_args(opts: &SetupOptions) -> Vec<String> {
     if opts.consumer_project {
         args.push("--consumer-project".into());
     }
-    if let Some(additional) = &opts.include_additional
-        && !additional.is_empty()
+    if let Some(additional) = opts.include_additional
+        .as_deref()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
     {
         args.push("--include-additional".into());
-        args.push(additional.clone());
+        args.push(additional.to_owned());
     }
     args
 }
@@ -346,22 +348,19 @@ fn write_json_object(path: &Path, val: &Value) -> Result<(), String> {
 
 fn vscode_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
     if !is_global {
-        return Ok(cwd.join(".vscode").join("settings.json"));
+        return Ok(cwd.join(".vscode/settings.json"));
     }
     let home = workspace_command::home();
     let base = if cfg!(windows) {
-        home.join("AppData").join("Roaming")
+        home.join("AppData/Roaming")
     } else if cfg!(target_os = "macos") {
-        home.join("Library").join("Application Support")
+        home.join("Library/Application Support")
     } else if cfg!(target_os = "linux") {
         home.join(".config")
     } else {
         return Err(format!("Unsupported platform: {}", env::consts::OS));
     };
-    Ok(base
-        .join("Code")
-        .join("User")
-        .join("settings.json"))
+    Ok(base.join("Code/User/settings.json"))
 }
 
 fn roo_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
@@ -370,7 +369,7 @@ fn roo_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
             "Roo Code global configuration is not supported as it uses VS Code internal storage that cannot be accessed. Please use workspace-specific configuration instead.".into(),
         );
     }
-    Ok(cwd.join(".roo").join("mcp.json"))
+    Ok(cwd.join(".roo/mcp.json"))
 }
 
 fn claude_code_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
@@ -379,15 +378,11 @@ fn claude_code_settings_path(is_global: bool, cwd: &Path) -> Result<PathBuf, Str
     }
     let home = workspace_command::home();
     let dir = if cfg!(windows) {
-        home.join("AppData")
-            .join("Roaming")
-            .join("Claude")
+        home.join("AppData/Roaming/Claude")
     } else if cfg!(target_os = "macos") {
-        home.join("Library")
-            .join("Application Support")
-            .join("Claude")
+        home.join("Library/Application Support/Claude")
     } else if cfg!(target_os = "linux") {
-        home.join(".config").join("claude")
+        home.join(".config/claude")
     } else {
         return Err(format!("Unsupported platform: {}", env::consts::OS));
     };

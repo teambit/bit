@@ -27,18 +27,27 @@ pub(super) fn list(
     session: &mut Session,
 ) -> io::Result<Vec<Row>> {
     let mut query = request(root, "list")?;
-    let scope = options.remote.as_ref().ok_or_else(|| decline("remote list scope"))?;
-    session.resolve(std::slice::from_ref(scope))?;
-    query["scope"] = json!(options.remote);
+    let scope = options.remote
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| decline("remote list scope"))?;
+    session.resolve(std::slice::from_ref(&scope))?;
+    query["scope"] = json!(scope);
     query["namespaces"] = json!(
         options.namespace
-            .as_ref()
-            .map(|text| { if text.contains('*') { text.clone() } else { format!("{text}/**") } })
+            .as_deref()
+            .map(str::trim)
+            .filter(|text| !text.is_empty())
+            .map(|text| {
+                if text.contains('*') { text.to_owned() } else { format!("{text}/**") }
+            })
     );
     query["includeDeleted"] = json!(options.include_deleted);
     query["hosts"] = json!(session.overrides());
     let result: Value = Engine::new()?.request(&query)?;
-    if result["oldServerWarning"] == true {
+    if result["oldServerWarning"].as_bool() == Some(true) {
         session.add_warning("error: the remote does not support the include-deleted flag yet, falling back to listing without deleted components");
     }
     result["components"]
@@ -56,6 +65,7 @@ fn parse_row_id(value: &Value) -> io::Result<(String, Option<String>)> {
         .ok_or_else(|| decline("remote list component id"))?;
     let (identity, version) = id
         .rsplit_once('@')
+        .filter(|(bare, _)| !bare.trim().is_empty())
         .map_or((id, None), |(id, version)| (id.trim(), Some(version.trim().to_string())));
     let Some((scope, name)) = identity
         .split_once('/')

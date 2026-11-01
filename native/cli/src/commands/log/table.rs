@@ -64,22 +64,27 @@ pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &
             .max()
             .unwrap_or(0);
         for line in 0..height {
-            let mut output = String::new();
-            for (index, cell) in cells.iter().enumerate() {
-                let value = cell
-                    .get(line)
-                    .copied()
-                    .unwrap_or_default();
-                let width = widths.get(index).copied().unwrap_or(0);
-                output.push_str(value);
-                output.push_str(&" ".repeat(width.saturating_sub(UnicodeWidthStr::width(value))));
-                output.push_str(separator);
-            }
-            output.truncate(output.len().saturating_sub(separator.len()));
-            lines.push(output);
+            lines.push(format_row_line(&cells, &widths, line, separator));
         }
     }
     lines.join("\n")
+}
+
+fn format_row_line(cells: &[Vec<&str>], widths: &[usize], line: usize, separator: &str) -> String {
+    let mut output = String::new();
+    for (index, cell) in cells.iter().enumerate() {
+        if index > 0 {
+            output.push_str(separator);
+        }
+        let value = cell
+            .get(line)
+            .copied()
+            .unwrap_or_default();
+        let width = widths.get(index).copied().unwrap_or(0);
+        output.push_str(value);
+        output.push_str(&" ".repeat(width.saturating_sub(UnicodeWidthStr::width(value))));
+    }
+    output
 }
 
 fn column_widths(rows: &[Vec<&str>]) -> Vec<usize> {

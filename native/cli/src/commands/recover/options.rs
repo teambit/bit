@@ -25,6 +25,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--skip-write-config-files=false" => options.skip_config = false,
             value
                 if !value.is_empty()
+                    && value.len() <= 1024
                     && !value.starts_with('-')
                     && !value.contains(char::is_whitespace)
                     && options.pattern.is_empty() =>
@@ -44,6 +45,7 @@ fn consume_trailing_pattern<'a>(
     for rest in iter {
         let trimmed = rest.trim();
         if trimmed.is_empty()
+            || trimmed.len() > 1024
             || trimmed.starts_with('-')
             || trimmed.contains(char::is_whitespace)
             || !pattern.is_empty()

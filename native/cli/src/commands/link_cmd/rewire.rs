@@ -52,6 +52,10 @@ fn rewire_component(
 ) -> io::Result<Vec<String>> {
     let mut changed_files = Vec::new();
     for rel_file in &component.files {
+        let rel_file = rel_file.trim();
+        if rel_file.is_empty() {
+            continue;
+        }
         let file_path = component.dir.join(rel_file);
         let Some(content) = read_rewirable_file(&file_path)? else {
             continue;
@@ -120,8 +124,8 @@ fn rewire_specifier(
         return current.to_owned();
     }
     let old_name = name_without_internal_path(specifier, owner, &resolved);
-    let new_name =
-        if is_style { format!("~{}", owner.package_name) } else { owner.package_name.clone() };
+    let pkg = owner.package_name.trim();
+    let new_name = if is_style { format!("~{pkg}") } else { pkg.to_owned() };
     replace_package_name(current, &old_name, &new_name)
 }
 
@@ -141,7 +145,7 @@ fn name_without_internal_path(
     owner: &WorkspaceComponent,
     resolved_file: &Path,
 ) -> String {
-    let main_file = normalize_path(&owner.dir.join(&owner.main_file));
+    let main_file = normalize_path(&owner.dir.join(owner.main_file.trim()));
     if resolved_file == main_file {
         return import_source.to_owned();
     }

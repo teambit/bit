@@ -35,8 +35,11 @@ fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|value| {
             let text = value.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
         })
 }
 
@@ -55,7 +58,10 @@ fn run_workspace(
     let chalk = Chalk::detect(args);
     let format = Formatter::new(chalk);
     let mut linker = add::ProjectedLinker::prepare(root)?;
-    print!("{}", linker.take_stdout());
+    let startup_stdout = linker.take_stdout();
+    if !startup_stdout.is_empty() {
+        print!("{startup_stdout}");
+    }
     let prepared = Plan::prepare(root, cwd, from, to);
     workspace_command::execute_then(root, args, "move", |output| {
         let plan = prepared?;
@@ -65,7 +71,10 @@ fn run_workspace(
         if !identities.is_empty() {
             output.status(&format!("loading {} component(s)", identities.len()));
             linker.link(root, plan.bitmap(), &identities, false, chalk)?;
-            print!("{}", linker.take_stdout());
+            let link_stdout = linker.take_stdout();
+            if !link_stdout.is_empty() {
+                print!("{link_stdout}");
+            }
         }
         plan.commit(&workspace_command::file_id())?;
         Ok(report)

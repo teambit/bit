@@ -78,8 +78,11 @@ fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
             let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
         })
 }
 
@@ -104,13 +107,15 @@ fn parse_subcommand(args: &[OsString]) -> Option<Subcommand> {
     match filtered.as_slice() {
         ["list"] => Some(Subcommand::List),
         ["set", pattern] if is_supported_pattern(pattern) => {
-            Some(Subcommand::Set((*pattern).to_owned()))
+            Some(Subcommand::Set(pattern.trim().to_owned()))
         }
         ["unset", pattern] if is_supported_pattern(pattern) => {
-            Some(Subcommand::Unset((*pattern).to_owned()))
+            Some(Subcommand::Unset(pattern.trim().to_owned()))
         }
-        [sub] if !sub.starts_with('-') && !matches!(*sub, "set" | "unset" | "list") => {
-            Some(Subcommand::Unrecognized((*sub).to_owned()))
+        [sub]
+            if !sub.trim().starts_with('-') && !matches!(sub.trim(), "set" | "unset" | "list") =>
+        {
+            Some(Subcommand::Unrecognized(sub.trim().to_owned()))
         }
         _ => None,
     }

@@ -35,16 +35,17 @@ pub(super) fn link_to_target(
 ) -> io::Result<Vec<LinkToDirResult>> {
     let mut results = Vec::new();
     for &component in selected {
-        if component.root_dir == "." {
+        let pkg_name = component.package_name.trim();
+        if component.root_dir == "." || pkg_name.is_empty() {
             continue;
         }
-        let from = root.join("node_modules").join(&component.package_name);
-        let to = target_dir.join("node_modules").join(&component.package_name);
+        let from = root.join("node_modules").join(pkg_name);
+        let to = target_dir.join("node_modules").join(pkg_name);
         create_dir_symlink(&from, &to)?;
         results.push(LinkToDirResult {
             component_id: format_component_id(&component.id),
             links_detail: LinkDetail {
-                package_name: component.package_name.clone(),
+                package_name: pkg_name.to_owned(),
                 from: from.to_string_lossy().into_owned(),
                 to: to.to_string_lossy().into_owned(),
             },

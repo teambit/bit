@@ -23,7 +23,7 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
     let mut positionals = 0usize;
     let mut index = 0;
     while index < args.len() {
-        let arg = alias(args[index]);
+        let arg = alias(args[index].trim());
         index += 1;
         if arg == "--" {
             positionals += count_trailing_positionals(&args[index..])?;
@@ -46,6 +46,7 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
             continue;
         }
         if !arg.starts_with('-') {
+            (!arg.is_empty()).then_some(())?;
             positionals += 1;
             continue;
         }
@@ -56,7 +57,10 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
 
 fn count_trailing_positionals(tail: &[&str]) -> Option<usize> {
     tail.iter()
-        .all(|rest| !rest.is_empty() && !rest.starts_with('-'))
+        .all(|rest| {
+            let trimmed = rest.trim();
+            !trimmed.is_empty() && !trimmed.starts_with('-')
+        })
         .then_some(tail.len())
 }
 
@@ -99,7 +103,8 @@ fn apply_validate_flag<'a>(
 ) -> Option<usize> {
     const EXTRA_BOOL: [&str; 4] = ["--ours", "--theirs", "--abort", "--resolve"];
     if let Some((raw_flag, val)) = arg.split_once('=') {
-        let flag = alias(raw_flag);
+        let flag = alias(raw_flag.trim());
+        let val = val.trim();
         if EXTRA_BOOL.contains(&flag) {
             let bool_val = match val {
                 "true" => true,
@@ -124,7 +129,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     let mut positionals: Vec<&str> = Vec::new();
     let mut index = 0;
     while index < args.len() {
-        let arg = alias(args[index]);
+        let arg = alias(args[index].trim());
         index += 1;
         if arg == "--" {
             consume_trailing_positionals(&args[index..], &mut positionals)?;

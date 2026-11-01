@@ -41,7 +41,10 @@ pub(super) fn execute(
     if !probes.is_empty() {
         plan.resolve_remote(&recover_probe(root, &probes)?)?;
     }
-    print!("{}", linker.take_stdout());
+    let stdout = linker.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
     import(root, args, options, linker, output, &mut plan)?;
     plan.commit(&workspace_command::file_id())?;
     report(options, &plan, args)

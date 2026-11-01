@@ -221,11 +221,11 @@ fn summarize(root: &Path, home: &Path) -> io::Result<Option<Summary>> {
 
 /// `validSummary`.
 fn valid(summary: &Summary, count: usize) -> bool {
-    let ids_valid = |ids: &Vec<String>| {
+    let ids_valid = |ids: &[String]| {
         ids.len() <= count
             && ids
                 .iter()
-                .all(|id| !id.is_empty() && id.len() <= 2049)
+                .all(|id| !id.trim().is_empty() && id.len() <= 2049)
     };
     ids_valid(&summary.modified)
         && ids_valid(&summary.new_comps)

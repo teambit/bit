@@ -75,7 +75,10 @@ fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
         io::ErrorKind::AlreadyExists => ("EEXIST", "file already exists"),
         _ => return error,
     };
-    let operation = operation.trim();
+    let operation = match operation.trim() {
+        "" => "unlink",
+        trimmed => trimmed,
+    };
     io::Error::new(error.kind(), format!("{code}: {message}, {operation} '{}'", path.display()))
 }
 

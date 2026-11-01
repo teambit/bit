@@ -86,7 +86,8 @@ pub(in crate::commands) fn consume_trailing_internalize<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut Option<String>,
 ) -> Option<()> {
-    for val in iter {
+    for raw_val in iter {
+        let val = raw_val.trim();
         (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
             .then_some(())?;
     }
@@ -98,6 +99,8 @@ pub(super) fn read_model_object(
     scope: &str,
     name: &str,
 ) -> Result<Value, Failure> {
+    let scope = scope.trim();
+    let name = name.trim();
     objects
         .read(&sha1_hex(&format!("{scope}/{name}")))
         .and_then(|opt| match opt {
@@ -115,6 +118,7 @@ pub(super) fn load_version_extensions(
 ) -> Result<Vec<Value>, Failure> {
     let Some(ver) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
     else {
         return Ok(Vec::new());
@@ -131,6 +135,8 @@ pub(super) fn load_version_extensions(
                 .or_else(|| model["orphanedVersions"][ver].as_str())
         };
         resolved
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
             .map(str::to_owned)
             .ok_or_else(|| Failure::Declined("missing version in model on eject-conf".into()))?
     };

@@ -172,9 +172,15 @@ fn install_retained(root: &Path, planned: &mut Planned, mut info: HostInfo) -> i
     let mut environment = planned
         .take_environment()
         .ok_or_else(|| io::Error::other("merge installation provider session"))?;
-    print!("{}", ProjectedLinker::project_installation_workspace(root, &mut environment)?);
+    let projected = ProjectedLinker::project_installation_workspace(root, &mut environment)?;
+    if !projected.is_empty() {
+        print!("{projected}");
+    }
     let component_ids = planned.merge_cache_ids()?;
-    print!("{}", environment.merge_load_apps(root, &component_ids)?);
+    let apps = environment.merge_load_apps(root, &component_ids)?;
+    if !apps.is_empty() {
+        print!("{apps}");
+    }
     let host = Arc::new(
         environment
             .into_tracking_host()

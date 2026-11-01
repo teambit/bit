@@ -74,7 +74,7 @@ pub(super) fn conflicted(result: &Value, lane: bool) -> io::Result<Vec<String>> 
         .as_array()
         .into_iter()
         .flatten()
-        .filter(|row| row["hasConflicts"] == true)
+        .filter(|row| row["hasConflicts"].as_bool() == Some(true))
         .map(|row| {
             let id = text(
                 row.get("compIdStr")

@@ -213,6 +213,8 @@ fn resolve_scope_version(comp_val: &Value, explicit_ver: Option<&str>) -> Option
             .get(req)
             .and_then(Value::as_str)
             .or_else(|| comp_val["orphanedVersions"].get(req).and_then(Value::as_str))
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
         {
             return Some((req.to_owned(), hash.to_owned()));
         }
@@ -221,7 +223,10 @@ fn resolve_scope_version(comp_val: &Value, explicit_ver: Option<&str>) -> Option
         }
         return None;
     }
-    let head = comp_val["head"].as_str()?;
+    let head = comp_val["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())?;
     let tag = crate::commands::show_cmd::remote_show::find_tag_for_hash(comp_val, head)
         .unwrap_or_else(|| head.to_owned());
     Some((tag, head.to_owned()))
@@ -233,8 +238,14 @@ fn load_version_files(scope_dir: &Path, ver_val: &Value) -> Vec<(String, Vec<u8>
         .map(|arr| {
             arr.iter()
                 .filter_map(|item| {
-                    let rel = item["relativePath"].as_str()?;
-                    let hash = item["file"].as_str()?;
+                    let rel = item["relativePath"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|rel| !rel.is_empty())?;
+                    let hash = item["file"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|hash| !hash.is_empty())?;
                     let (_, bytes) =
                         bit_object_import::read_raw_scope_object(scope_dir, hash).ok()??;
                     Some((rel.to_owned(), bytes))

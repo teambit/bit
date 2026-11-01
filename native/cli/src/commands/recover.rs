@@ -32,7 +32,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     } else {
         ProjectedLinker::prepare(&root)?
     };
-    print!("{}", linker.take_stdout());
+    let stdout = linker.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
     workspace_command::execute_then(&root, args, "recover", |output| {
         execution::execute(&root, args, &options, &mut linker, output)
     })

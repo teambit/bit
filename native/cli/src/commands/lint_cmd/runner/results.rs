@@ -48,14 +48,21 @@ pub(super) fn component(id: &Value, tool: &Value) -> io::Result<Value> {
 }
 
 fn file(raw: &Value) -> Value {
+    let file_path = raw["filePath"]
+        .as_str()
+        .map_or_else(|| raw["filePath"].clone(), |path| json!(path.trim()));
+    let messages = raw["messages"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
     json!({
-        "filePath": raw["filePath"],
+        "filePath": file_path,
         "errorCount": raw["errorCount"].as_u64().unwrap_or(0),
         "fatalErrorCount": raw["fatalErrorCount"].as_u64().unwrap_or(0),
         "fixableErrorCount": raw["fixableErrorCount"].as_u64().unwrap_or(0),
         "fixableWarningCount": raw["fixableWarningCount"].as_u64().unwrap_or(0),
         "warningCount": raw["warningCount"].as_u64().unwrap_or(0),
-        "messages": raw["messages"],
+        "messages": messages,
         "raw": raw,
     })
 }

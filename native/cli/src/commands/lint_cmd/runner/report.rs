@@ -35,13 +35,13 @@ fn text(result: &Value, progress: &Progress, chalk: Chalk, elapsed: u64) -> io::
     ))];
     let dirty: Vec<_> = rows
         .iter()
-        .filter(|row| row["isClean"] == false)
+        .filter(|row| row["isClean"].as_bool() == Some(false))
         .map(|row| component(row, &formatter))
         .collect::<io::Result<_>>()?;
     sections.push(dirty.join("\n"));
     let clean = rows
         .iter()
-        .filter(|row| row["isClean"] == true)
+        .filter(|row| row["isClean"].as_bool() == Some(true))
         .count();
     if clean > 0 {
         sections.push(formatter.success_summary(&format!(
@@ -57,6 +57,7 @@ fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
     let (scope, name) = if let Some(raw) = id.as_str() {
         let raw = raw.trim();
         raw.rsplit_once('@')
+            .filter(|(bare, _)| !bare.trim().is_empty())
             .map_or(raw, |(bare, _)| bare.trim())
             .split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))

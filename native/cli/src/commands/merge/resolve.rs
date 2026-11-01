@@ -39,7 +39,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     let mut flags: Vec<&str> = Vec::new();
     let mut index = 0;
     while index < args.len() {
-        let raw = args[index];
+        let raw = args[index].trim();
         index += 1;
         if raw == "--" {
             consume_trailing_resolve(&args[index..], &mut options)?;
@@ -69,8 +69,9 @@ pub fn parse(args: &[&str]) -> Option<Options> {
 
 fn consume_trailing_resolve(tail: &[&str], options: &mut Options) -> Option<()> {
     for &rest in tail {
-        (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
-        options.positional(rest)?;
+        let trimmed = rest.trim();
+        (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+        options.positional(trimmed)?;
     }
     Some(())
 }
@@ -84,7 +85,7 @@ fn apply_resolve_flag<'a>(
     next: Option<&str>,
 ) -> Option<usize> {
     if let Some((key, val)) = raw.split_once('=') {
-        let canonical = resolve_alias(key);
+        let canonical = resolve_alias(key.trim());
         if flags.contains(&canonical) {
             return None;
         }

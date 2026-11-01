@@ -48,10 +48,10 @@ fn prompt(preview: &Value, chalk: Chalk) -> io::Result<String> {
         .into_iter()
         .find_map(|item| item.strip_prefix("deleted components directories:"))
         .map(str::trim)
-        .filter(|dirs| !dirs.is_empty());
-    let directories = directories.map_or_else(String::new, |dirs| {
-        format!("\nThe following directories introduced by the merge will be deleted: {dirs}")
-    });
+        .filter(|dirs| !dirs.is_empty())
+        .map_or_else(String::new, |dirs| {
+            format!("\nThe following directories introduced by the merge will be deleted: {dirs}")
+        });
     Ok(format!(
         "Code changes that were done since the last lane-merge will be lost.{directories}\nThe .bitmap and workspace.jsonc files will be restored to the state before the merge.\nThis action is irreversible.\n{}",
         chalk.bold("Do you want to continue? [yes(y)/no(n)]"),

@@ -62,16 +62,16 @@ fn object(
     output.push_str(FUNCTION);
     string("[CIRCULAR:2]", output);
     output.push(',');
-    let mut keys: Vec<_> = values.keys().collect();
-    keys.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
-    for key in keys {
+    let mut entries: Vec<_> = values.iter().collect();
+    entries.sort_by(|(left, _), (right, _)| left.encode_utf16().cmp(right.encode_utf16()));
+    for (key, val) in entries {
         let trimmed = key.trim();
         if trimmed != key || matches!(trimmed, "" | "prototype" | "__proto__" | "constructor") {
             return Err(super::invalid("linter configuration prototype"));
         }
         string(key, output);
         output.push(':');
-        encode(&values[key], output, false)?;
+        encode(val, output, false)?;
         output.push(',');
     }
     Ok(())

@@ -8,6 +8,7 @@ pub(in crate::commands) fn start(
     skip: bool,
 ) -> io::Result<Option<Installer>> {
     if skip
+        || root.as_os_str().is_empty()
         || !root.is_dir()
         || !argv
             .iter()

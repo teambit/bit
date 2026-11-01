@@ -117,16 +117,7 @@ fn request(component: &Component, config: &Config, options: &Options) -> io::Res
     let extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".md", ".mdx"];
     let files: Vec<_> = component.files
         .iter()
-        .filter(|file| {
-            file["filePath"]
-                .as_str()
-                .is_some_and(|path| {
-                    extensions
-                        .iter()
-                        .any(|extension| path.ends_with(extension))
-                })
-        })
-        .map(|file| file["absolutePath"].clone())
+        .filter_map(|file| select_lint_file(file, &extensions))
         .collect();
     if files.is_empty() {
         return Err(invalid("linter empty file selection"));
@@ -147,6 +138,21 @@ fn request(component: &Component, config: &Config, options: &Options) -> io::Res
     }
     Ok(json!({"files":files,"options":{"overrideConfig":defaults,"extensions":extensions,
         "useEslintrc":false,"fix":options.fix,"fixTypes":fixes}}))
+}
+
+fn select_lint_file(file: &Value, extensions: &[&str]) -> Option<Value> {
+    let rel_path = file["filePath"].as_str()?.trim();
+    if !extensions
+        .iter()
+        .any(|extension| rel_path.ends_with(extension))
+    {
+        return None;
+    }
+    file["absolutePath"]
+        .as_str()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map(|path| Value::String(path.to_owned()))
 }
 
 fn write(tool: &Value) -> io::Result<Option<Value>> {
@@ -180,7 +186,8 @@ fn validate_sources(files: &[Value]) -> io::Result<()> {
     for file in files {
         let path = file["absolutePath"]
             .as_str()
-            .filter(|path| !path.trim().is_empty())
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
             .ok_or_else(|| invalid("linter file path"))?;
         if fs::read_to_string(path)? != file["source"].as_str().unwrap_or_default() {
             return Err(invalid("linter source changed"));

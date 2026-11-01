@@ -65,8 +65,10 @@ pub(in crate::commands) fn read(root: &Path) -> io::Result<Bitmap> {
 fn lane_id(lane: &Value) -> io::Result<Value> {
     let id = &lane["id"];
     let (scope, name) = if let Some(raw) = id.as_str() {
+        let raw = raw.trim();
         raw.rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
+            .filter(|(bare, _)| !bare.trim().is_empty())
+            .map_or(raw, |(bare, _)| bare.trim())
             .split_once('/')
             .unwrap_or_default()
     } else {
@@ -109,9 +111,13 @@ fn entry_scope<'a>(key_id: &'a str, name: &str, value: &'a Value) -> io::Result<
 }
 
 fn split_key_version(key: &str) -> (&str, Option<&str>) {
-    match key.trim().rsplit_once('@') {
+    let trimmed = key.trim();
+    match trimmed
+        .rsplit_once('@')
+        .filter(|(bare, _)| !bare.trim().is_empty())
+    {
         Some((bare, ver)) => (bare.trim(), Some(ver.trim()).filter(|ver| !ver.is_empty())),
-        None => (key.trim(), None),
+        None => (trimmed, None),
     }
 }
 
@@ -141,7 +147,7 @@ fn entry(key: &str, value: &Value) -> io::Result<Entry> {
             &value["config"],
             "teambit.component/remove",
         )
-        .is_some_and(|(_, rem)| rem["removed"] == true),
-        available: value["isAvailableOnCurrentLane"] != false,
+        .is_some_and(|(_, rem)| rem["removed"].as_bool() == Some(true)),
+        available: value["isAvailableOnCurrentLane"].as_bool() != Some(false),
     })
 }

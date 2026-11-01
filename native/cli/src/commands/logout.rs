@@ -51,7 +51,13 @@ fn valid_args(args: &[OsString]) -> bool {
             return false;
         };
         if str_arg == "--" {
-            return idx + 1 == rest.len();
+            return rest[idx + 1..]
+                .iter()
+                .all(|tail| {
+                    tail.to_str()
+                        .map(str::trim)
+                        .is_some_and(str::is_empty)
+                });
         }
         if !matches!(
             str_arg,

@@ -16,7 +16,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
-        if arg == "--" {
+        if arg.trim() == "--" {
             consume_trailing_id(iter, &mut options.id)?;
             break;
         }

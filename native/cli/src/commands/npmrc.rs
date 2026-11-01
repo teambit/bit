@@ -48,8 +48,8 @@ fn unknown_subcommand_message(subcommand: &str, chalk: Chalk) -> String {
 
 fn parse_subcommand(args: &[OsString]) -> Option<String> {
     let tokens = args
+        .get(1..)?
         .iter()
-        .skip(1)
         .map(|arg| arg.to_str().map(str::trim))
         .collect::<Option<Vec<_>>>()?;
     let filtered = super::scope_set::collect_non_flag_tokens(&tokens)?;

@@ -59,10 +59,10 @@ pub(super) fn action(scope: &Path, name: &str, payload: &Value) -> io::Result<Va
 fn pending_path(scope: &Path, value: Option<&Value>) -> io::Result<PathBuf> {
     let valid = value
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|id| {
-            let trimmed = id.trim();
-            !trimmed.is_empty()
-                && !matches!(trimmed, "." | "..")
+            !id.is_empty()
+                && !matches!(*id, "." | "..")
                 && id.encode_utf16().count() <= 4096
                 && !id
                     .chars()

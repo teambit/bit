@@ -13,7 +13,10 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     let started = Instant::now();
     let mut plan = match plan::Plan::prepare(root, args, options) {
         Ok(plan) => plan,
-        Err(error) => return Ok(Outcome::Declined(format!("linter preparation: {error}"))),
+        Err(error) => {
+            let reason = error.to_string();
+            return Ok(Outcome::Declined(format!("linter preparation: {}", reason.trim())));
+        }
     };
     let work = |output: &bit_install::output::Output| {
         let result = plan.run(root, output, options.fix)?;

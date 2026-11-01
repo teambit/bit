@@ -36,7 +36,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        if env::var_os("CI")
+            .is_some_and(|val| {
+                !matches!(
+                    val.to_string_lossy()
+                        .trim()
+                        .trim_matches(['"', '\''])
+                        .trim()
+                        .to_ascii_lowercase()
+                        .as_str(),
+                    "" | "0" | "false" | "no" | "off",
+                )
+            })
+        {
             return Ok(Outcome::Declined("CI link delegated".into()));
         }
         return workspace_command::execute_without_loader_scope(&cwd, args, "link", |_| {
@@ -52,7 +64,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
+    while let Some(raw_arg) = iter.next() {
+        let arg = raw_arg.trim();
         if arg == "--" {
             for item in iter {
                 let item = item.trim();

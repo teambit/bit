@@ -47,7 +47,9 @@ fn continue_snapshot(
         &options.workflow,
         environment,
     );
-    io::stdout().write_all(startup.stdout.as_bytes())?;
+    if !startup.stdout.is_empty() {
+        io::stdout().write_all(startup.stdout.as_bytes())?;
+    }
     let mut resolved = match resolved {
         Ok(resolved) => resolved,
         Err(error) => {
@@ -76,7 +78,10 @@ fn snap_results(resolved: &Planned) -> io::Result<Value> {
             .iter()
             .map(|row| {
                 let raw = text(row.get("id"))?.trim();
-                let identity = raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim());
+                let identity = raw
+                    .rsplit_once('@')
+                    .filter(|(bare, _)| !bare.trim().is_empty())
+                    .map_or(raw, |(bare, _)| bare.trim());
                 if identity.is_empty() {
                     return Err(io::Error::other("merge resolved identity empty"));
                 }

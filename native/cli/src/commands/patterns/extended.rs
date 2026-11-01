@@ -26,6 +26,9 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
             Ok((negated, ranges::expand(pattern)?))
         })
         .collect::<io::Result<Vec<_>>>()?;
+    if compiled.is_empty() || identities.is_empty() {
+        return Ok(Vec::new());
+    }
     Ok(identities
         .iter()
         .copied()

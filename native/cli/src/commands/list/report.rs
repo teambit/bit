@@ -162,11 +162,14 @@ fn colored_version(row: &Row, outdated: bool, remote: bool, chalk: Chalk) -> Str
     let local = local_version(row);
     let latest = remote_version(row);
     let text = if remote { latest } else { local };
+    if !outdated {
+        return text.to_string();
+    }
     let comparison = row.remote_version
         .as_deref()
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .and_then(|latest| node_semver::npm::compare(local, latest, false));
     let color = if remote { std::cmp::Ordering::Greater } else { std::cmp::Ordering::Less };
-    if outdated && comparison == Some(color) { chalk.red(text) } else { text.to_string() }
+    if comparison == Some(color) { chalk.red(text) } else { text.to_string() }
 }

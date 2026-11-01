@@ -182,6 +182,7 @@ fn collect_matching_components<'a>(
 }
 
 fn matches_component(entry: &BitmapEntry, comp: &WorkspaceComponent, selector: &str) -> bool {
+    let selector = selector.trim();
     if matches_exact_identity(entry, comp, selector) {
         return true;
     }
@@ -190,21 +191,21 @@ fn matches_component(entry: &BitmapEntry, comp: &WorkspaceComponent, selector: &
         .strip_prefix("./")
         .unwrap_or(&normalized)
         .trim_end_matches('/');
-    let root_dir = entry.root_dir.trim_end_matches('/');
+    let root_dir = entry.root_dir.trim().trim_end_matches('/');
     if !root_dir.is_empty() && root_dir == dir {
         return true;
     }
     let bare_id = entry.id.to_string_without_version();
     let patterns = [selector.to_owned()];
-    match_patterns(&bare_id, &patterns) || match_patterns(&entry.id.name, &patterns)
+    match_patterns(&bare_id, &patterns) || match_patterns(entry.id.name.trim(), &patterns)
 }
 
 fn matches_exact_identity(entry: &BitmapEntry, comp: &WorkspaceComponent, selector: &str) -> bool {
     entry.id.to_string_without_version() == selector
         || format_component_id(&entry.id) == selector
-        || entry.id.name == selector
-        || entry.key == selector
-        || comp.package_name == selector
+        || entry.id.name.trim() == selector
+        || entry.key.trim() == selector
+        || comp.package_name.trim() == selector
 }
 
 fn link_workspace_components(

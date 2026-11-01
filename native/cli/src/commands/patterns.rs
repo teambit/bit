@@ -50,8 +50,12 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
             Ok((negated, glob))
         })
         .collect::<io::Result<Vec<_>>>()?;
+    if globs.is_empty() || identities.is_empty() {
+        return Ok(Vec::new());
+    }
     Ok(identities
         .iter()
+        .copied()
         .filter(|identity| {
             globs
                 .iter()
@@ -60,7 +64,6 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
                     |kept, (negated, glob)| if matches(identity, glob) { !negated } else { kept },
                 )
         })
-        .copied()
         .collect())
 }
 

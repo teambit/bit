@@ -118,6 +118,18 @@ fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Ou
     }
 }
 
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+        })
+}
+
 fn run_dependency_name(
     root: &Path,
     args: &[OsString],
@@ -131,20 +143,10 @@ fn run_dependency_name(
             }
             Ok(Report { data: prepared.report, code: 0, details: None })
         }),
+        Err(Failure::User(_)) if ci_enabled() => {
+            Ok(Outcome::Declined("CI refactor error stack".to_owned()))
+        }
         Err(Failure::User(message)) => {
-            if env::var_os("CI")
-                .is_some_and(|val| {
-                    let text = val.to_string_lossy();
-                    !matches!(
-                        text.trim()
-                            .to_ascii_lowercase()
-                            .as_str(),
-                        "" | "0" | "false",
-                    )
-                })
-            {
-                return Ok(Outcome::Declined("CI refactor error stack".to_owned()));
-            }
             super::lint_cmd::emit_pattern_error(root, args, "dependency-name", false, message)
         }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("refactor: {reason}"))),
@@ -157,17 +159,7 @@ fn run_dependency_name_non_workspace(
     old: &str,
     new: &str,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI")
-        .is_some_and(|val| {
-            let text = val.to_string_lossy();
-            !matches!(
-                text.trim()
-                    .to_ascii_lowercase()
-                    .as_str(),
-                "" | "0" | "false",
-            )
-        })
-    {
+    if ci_enabled() {
         return Ok(Outcome::Declined("CI non-workspace refactor delegated".to_owned()));
     }
     let Some(sr) = scope_root::discover().ok().flatten() else {
@@ -184,8 +176,14 @@ fn run_dependency_name_non_workspace(
 }
 
 fn emit_scope_error(cwd: &Path, args: &[OsString], msg: &str) -> io::Result<Outcome> {
-    let err = io::Error::other(msg.to_owned());
-    workspace_command::execute_failure_scope(cwd, args, "dependency-name", false, "", err)
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        "dependency-name",
+        false,
+        "",
+        io::Error::other(msg.to_owned()),
+    )
 }
 
 fn prepare_bare_scope_dependency_name(

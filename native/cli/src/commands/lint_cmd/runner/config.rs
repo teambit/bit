@@ -67,7 +67,7 @@ fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<V
         for directory in directories {
             let normalized = directory.trim().replace('\\', "/");
             let directory = normalized.trim_matches('/');
-            if !directory.is_empty() {
+            if !directory.is_empty() && directory != "." {
                 expanded.push(json!(format!("../../{directory}/{value}")));
             }
         }

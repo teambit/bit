@@ -52,8 +52,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         let ci = env::var_os("CI")
             .is_some_and(|val| {
                 let text = val.to_string_lossy();
-                let trimmed = text.trim();
-                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+                let trimmed = text
+                    .trim()
+                    .trim_matches(['"', '\''])
+                    .trim();
+                !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
             });
         if ci {
             return Ok(Outcome::Declined("not inside a workspace".into()));
@@ -78,14 +81,16 @@ fn execute_log(
     let chalk = Chalk::detect(args);
     let logs = match if options.remote {
         read_remote(root, options)
-    } else {
-        match read(root.unwrap(), options, chalk) {
+    } else if let Some(root) = root {
+        match read(root, options, chalk) {
             Ok(Ok(logs)) => Ok(logs),
             Ok(Err(err)) => {
-                return emit_pattern_error(root.unwrap(), args, "log", options.json, err);
+                return emit_pattern_error(root, args, "log", options.json, err);
             }
             Err(error) => Err(error),
         }
+    } else {
+        Err(decline("not inside a workspace"))
     } {
         Ok(logs) => logs,
         Err(error) => return Ok(Outcome::Declined(format!("log: {error}"))),

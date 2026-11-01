@@ -129,7 +129,7 @@ impl Merge<'_> {
     fn skipped_detailed(&self) -> String {
         let items: Vec<String> = self
             .other_skipped()
-            .iter()
+            .into_iter()
             .map(|(id, message)| {
                 let bold_id = self.chalk().bold(&id.display());
                 let trimmed = message.trim();

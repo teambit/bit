@@ -193,11 +193,12 @@ fn validate_versions(rows: &[Row]) -> io::Result<()> {
 /// `lane` lists the current lane's components.
 fn listed(row: &Row, bitmap: &[bitmap::Entry], lane: &[String], options: &Options) -> bool {
     let in_scope = options.scope
-        .as_ref()
+        .as_deref()
+        .map(str::trim)
         .is_none_or(|scope| {
             row.identity
                 .split_once('/')
-                .is_some_and(|(own, _)| own == scope)
+                .is_some_and(|(own, _)| own.trim() == scope)
         });
     let on_lane = || {
         bitmap

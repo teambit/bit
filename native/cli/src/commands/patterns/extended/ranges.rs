@@ -101,7 +101,8 @@ impl Sequence {
         }
         let direction = if self.end < self.start { -1 } else { 1 };
         let mut value = i128::from(self.start);
-        let mut output = Vec::new();
+        let count = usize::try_from(distance / step + 1).unwrap_or(LIMIT);
+        let mut output = Vec::with_capacity(count);
         while if direction > 0 {
             value <= i128::from(self.end)
         } else {

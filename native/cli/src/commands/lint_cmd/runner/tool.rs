@@ -26,7 +26,7 @@ impl Session {
         let mut session = Self::spawn(colors)?;
         session.input.write_all(&bytes)?;
         session.input.flush()?;
-        if session.read()?["ready"] != true || !session.stderr()?.is_empty() {
+        if session.read()?["ready"].as_bool() != Some(true) || !session.stderr()?.is_empty() {
             return Err(invalid("linter external tool preparation"));
         }
         Ok(session)

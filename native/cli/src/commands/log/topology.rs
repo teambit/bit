@@ -122,6 +122,21 @@ fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
     (name == target || full == target).then_some(full)
 }
 
+fn is_ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            !matches!(
+                val.to_string_lossy()
+                    .trim()
+                    .trim_matches(['"', '\''])
+                    .trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false" | "no" | "off",
+            )
+        })
+}
+
 fn diagnose_missing_local_target(
     root: &Path,
     raw_id: &str,
@@ -130,7 +145,7 @@ fn diagnose_missing_local_target(
 ) -> io::Result<LocalTarget> {
     let scope_dir = workspace::scope_path(root);
     if raw_id.starts_with('@')
-        || env::var_os("CI").is_some_and(|val| !val.is_empty())
+        || is_ci_active()
         || (!scope_dir.join("index.json").is_file() && scope_dir.join("objects").is_dir())
     {
         return Err(decline("log missing target delegated"));
