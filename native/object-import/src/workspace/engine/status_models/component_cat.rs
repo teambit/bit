@@ -44,6 +44,7 @@ pub(in crate::workspace::engine) fn read(
     Ok((count, json!({"version":request.version.trim(),"files":files})))
 }
 
+#[inline]
 fn reference(model: &Value, version: &str) -> io::Result<String> {
     let version = version.trim();
     if matches!(version, "" | "latest" | "head") {
@@ -67,6 +68,7 @@ fn reference(model: &Value, version: &str) -> io::Result<String> {
     Ok(crate::validate::hexadecimal(&merge_history::hash(reference)?))
 }
 
+#[inline]
 fn files(directory: &std::path::Path, version: &Value) -> io::Result<Vec<Value>> {
     let rows = version["files"].as_array().ok_or_else(|| invalid("cat Version files"))?;
     if rows.len() > 4096 {

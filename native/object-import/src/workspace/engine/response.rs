@@ -36,6 +36,7 @@ pub(super) fn with_progress(error: io::Error, progress: serde_json::Value) -> io
     })
 }
 
+#[inline]
 pub(super) fn failure_data(error: &io::Error) -> Option<serde_json::Value> {
     let canonical = error.get_ref()?.downcast_ref::<CanonicalError>()?;
     canonical.progress
@@ -43,6 +44,7 @@ pub(super) fn failure_data(error: &io::Error) -> Option<serde_json::Value> {
         .map(|progress| serde_json::json!({"progress":progress}))
 }
 
+#[inline]
 pub(super) fn is_canonical(error: &io::Error) -> bool {
     error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<CanonicalError>)
 }

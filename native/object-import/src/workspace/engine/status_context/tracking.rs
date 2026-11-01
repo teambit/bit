@@ -94,6 +94,7 @@ fn component(root: &Path, mut target: Value, budget: &Budget) -> io::Result<Valu
     Ok(target)
 }
 
+#[inline]
 fn parse_component_id<'a>(id: &'a Value, default_scope: &'a str) -> (&'a str, &'a str) {
     if let Some(raw) = id.as_str() {
         let trimmed = raw.trim();
@@ -111,6 +112,7 @@ fn parse_component_id<'a>(id: &'a Value, default_scope: &'a str) -> (&'a str, &'
     }
 }
 
+#[inline]
 fn non_empty_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
     value[key]
         .as_str()
@@ -156,6 +158,7 @@ fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
     )
 }
 
+#[inline]
 fn valid_config_keys(value: &Value) -> bool {
     value
         .as_object()

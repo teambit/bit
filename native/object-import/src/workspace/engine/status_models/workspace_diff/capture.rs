@@ -38,6 +38,7 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
     group_target_files(request, captured)
 }
 
+#[inline]
 fn group_target_files(request: &Request, captured: Vec<File>) -> io::Result<Vec<Vec<File>>> {
     let mut captured = captured.into_iter();
     let grouped = request.targets
@@ -61,6 +62,7 @@ fn group_target_files(request: &Request, captured: Vec<File>) -> io::Result<Vec<
     Ok(grouped)
 }
 
+#[inline]
 fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<File> {
     let original = bytes.len();
     let bytes =

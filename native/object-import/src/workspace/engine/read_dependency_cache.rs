@@ -19,10 +19,12 @@ pub(super) struct Freshness {
     files: Vec<PathBuf>,
     timestamp: f64,
 }
+#[inline]
 pub(super) fn read(request: &Read) -> io::Result<(usize, Value)> {
     let cache = read_cache(&request.cache, &request.key)?;
     Ok((1, json!({"cache":cache})))
 }
+#[inline]
 pub(super) fn freshness(
     request: &Freshness,
     pool: &rayon::ThreadPool,
@@ -58,6 +60,7 @@ pub fn cache_stale(
     freshness::stale(root, files, timestamp, pool)
 }
 
+#[inline]
 fn valid_timestamp(timestamp: f64) -> bool {
     timestamp.is_finite()
         && timestamp >= 0.0

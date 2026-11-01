@@ -24,6 +24,7 @@ pub(super) fn dispatch(
     }
 }
 
+#[inline]
 fn dispatch_resolve(
     request: Request,
     snapshots: &mut snapshots::State,

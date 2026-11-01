@@ -103,6 +103,7 @@ pub(in crate::workspace::engine) fn compare(
         "modelHash":result["leftHash"],"currentHash":result["rightHash"]}))
 }
 
+#[inline]
 pub(super) fn model_id(model: &Value) -> String {
     let scope = model["scope"]
         .as_str()
@@ -115,6 +116,7 @@ pub(super) fn model_id(model: &Value) -> String {
     if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 
+#[inline]
 pub(super) fn lookup_model<'a>(
     models: &HashMap<String, &'a Value>,
     identity: &str,
@@ -130,6 +132,7 @@ pub(super) fn lookup_model<'a>(
         .copied()
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn model_matches_identity(model: &Value, identity: &str) -> bool {
     let identity = identity.trim();
     let current = model_id(model);
@@ -186,6 +189,7 @@ fn code_modified(current: &Value, model: &Value) -> io::Result<bool> {
             .any(|file| !file_matches_model(file, &model_files)))
 }
 
+#[inline]
 fn file_matches_model(file: &Value, model_files: &HashMap<&str, Option<&str>>) -> bool {
     let Some(path) = file["relativePath"]
         .as_str()

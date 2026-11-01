@@ -40,6 +40,7 @@ pub(super) fn read(
 }
 
 type Sources = (Vec<String>, HashMap<String, Vec<u8>>);
+#[inline]
 fn current_sources(current: Vec<File>) -> io::Result<Sources> {
     let mut order = Vec::with_capacity(current.len());
     let mut sources = HashMap::with_capacity(current.len());
@@ -57,6 +58,7 @@ fn current_sources(current: Vec<File>) -> io::Result<Sources> {
     }
     Ok((order, sources))
 }
+#[inline]
 fn model_files(model: Option<&Value>) -> io::Result<&[Value]> {
     let files = match model {
         Some(model) => model["files"]
@@ -107,6 +109,7 @@ fn model_sources(
         .collect()
 }
 
+#[inline]
 fn retain(file: Value, output: &Budget) -> io::Result<Value> {
     let patch = file["rawDiff"].as_str().ok_or_else(|| invalid("workspace diff patch"))?;
     output.reserve(patch.len())?;

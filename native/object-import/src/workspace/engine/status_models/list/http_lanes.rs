@@ -97,6 +97,7 @@ pub(super) fn configured_remote(
     Remote::from_host(host)
 }
 
+#[inline]
 pub(super) fn scope_directory(root: &Path, bare: bool) -> PathBuf {
     if bare { root.to_owned() } else { crate::scope_path(root) }
 }
@@ -115,6 +116,7 @@ pub(super) fn validate_bare_scope(root: &Path) -> io::Result<String> {
     Ok(name.to_owned())
 }
 
+#[inline]
 pub(super) fn read_local_bare_index(root: &Path) -> io::Result<Value> {
     match read_bare_index(root) {
         Ok(index) => Ok(index),
@@ -152,6 +154,7 @@ pub(super) fn remote_for_lane(
     Remote::from_host(&host)
 }
 
+#[inline]
 fn read_bare_index(root: &Path) -> io::Result<Value> {
     let index = read_json_file(&root.join("index.json"))?;
     if !index.is_array() && (!index["lanes"].is_array() || !index["components"].is_array()) {
@@ -160,10 +163,12 @@ fn read_bare_index(root: &Path) -> io::Result<Value> {
     Ok(index)
 }
 
+#[inline]
 pub(super) fn read_json_file(path: &Path) -> io::Result<Value> {
     crate::parse_jsonc(&Budget::new(4 * 1024 * 1024).read(File::open(path)?)?)
 }
 
+#[inline]
 fn validate_bit_version(bit_version: &str) -> io::Result<()> {
     let trimmed = bit_version.trim();
     if trimmed.is_empty() || trimmed.len() > 128 || trimmed.chars().any(char::is_control) {

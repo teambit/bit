@@ -49,6 +49,7 @@ pub(super) fn owned_command(
         request => owned_status_command(request, snapshots, pool),
     }
 }
+#[inline]
 fn owned_status_command(
     request: Request,
     snapshots: &mut snapshots::State,
@@ -70,6 +71,7 @@ fn owned_status_command(
     }
 }
 
+#[inline]
 fn validate_read_set(proofs: &[dependency_graph::proof::Proof]) -> io::Result<(usize, Value)> {
     let mut bytes = 0_usize;
     for proof in proofs {

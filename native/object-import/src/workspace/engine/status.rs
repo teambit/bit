@@ -11,6 +11,7 @@ pub(super) struct File {
 }
 
 /// Preserve first-match path lookup and target order, including duplicate paths.
+#[inline]
 pub(super) fn compare(target: &[File], current: &[File]) -> io::Result<(usize, Value)> {
     super::count(target.len())?;
     super::count(current.len())?;

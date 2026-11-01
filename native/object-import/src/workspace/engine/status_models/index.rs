@@ -20,6 +20,7 @@ struct Id {
 }
 /// The scope's component index. A scope that never stored a component has
 /// none, which `ComponentsIndex` reads as empty.
+#[inline]
 pub(super) fn read(root: &Path) -> io::Result<Vec<Item>> {
     read_at(&crate::scope_path(root))
 }
@@ -39,6 +40,7 @@ pub(super) fn read_at(scope: &Path) -> io::Result<Vec<Item>> {
     parse_items(rows)
 }
 
+#[inline]
 fn parse_items(rows: &[Value]) -> io::Result<Vec<Item>> {
     let mut seen = HashSet::with_capacity(rows.len());
     let mut items = Vec::with_capacity(rows.len());

@@ -65,14 +65,17 @@ pub(super) struct Snapshot {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pending_history: Vec<Value>,
 }
+#[inline]
 pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     let snapshot = load(request, pool, true)?;
     Ok((snapshot.models.len(), serde_json::to_value(snapshot).map_err(io::Error::other)?))
 }
+#[inline]
 fn load(request: &Request, pool: &rayon::ThreadPool, stored_hashes: bool) -> io::Result<Snapshot> {
     load_overlay(request, pool, stored_hashes, None)
 }
 
+#[inline]
 pub(super) fn read_overlay(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -123,6 +126,7 @@ fn load_overlay(
         pending_history,
     })
 }
+#[inline]
 fn current_lane(request: &Request, reader: &Reader<'_>) -> io::Result<Option<lane::Lane>> {
     request.current_lane_id
         .as_deref()
@@ -182,6 +186,7 @@ fn relevant_models(request: &Request, models: &[Value], lane: Option<&lane::Lane
         .collect()
 }
 
+#[inline]
 fn locally_changed(model: &Value) -> bool {
     model["state"]["versions"]
         .as_object()
@@ -247,6 +252,7 @@ fn replace_models(models: &mut Vec<Value>, overlay: Option<&crate::command_impor
         }
     }
 }
+#[inline]
 fn stored_semantics(
     versions: &[(String, Value)],
     pool: &rayon::ThreadPool,

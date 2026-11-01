@@ -29,6 +29,7 @@ pub(super) fn read(root: &Path, models: &[Value]) -> io::Result<HashMap<String, 
     }
     Ok(refs)
 }
+#[inline]
 fn rows(remotes_dir: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Value>> {
     if scope.is_empty()
         || matches!(scope, "." | "..")
@@ -51,6 +52,7 @@ fn rows(remotes_dir: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Valu
     Ok(rows)
 }
 
+#[inline]
 fn insert(refs: &mut HashMap<String, String>, row: &Value, file_scope: &str) -> io::Result<()> {
     let (scope, name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)

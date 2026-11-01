@@ -32,6 +32,7 @@ struct Response<'a> {
     binary_bytes: usize,
     data: Data<'a>,
 }
+#[inline]
 fn record(file: &Path, raw: Vec<u8>) -> Record {
     let (metadata, body) = read::canonical(file, raw);
     Record { metadata, offset: 0, bytes: body.len(), body, read_token: None }
@@ -77,6 +78,7 @@ fn prepare(
     }
     Ok(output)
 }
+#[inline]
 fn retain(files: &mut [Record], snapshots: Option<&mut crate::workspace::snapshots::State>) {
     let Some(snapshots) = snapshots else {
         return;

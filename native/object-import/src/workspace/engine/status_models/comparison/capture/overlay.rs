@@ -9,6 +9,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+#[inline]
 pub(super) fn validate(target: &Target) -> io::Result<()> {
     if !target.source_overlays.is_empty() && target.source_overlay_root.is_none() {
         return Err(invalid("source overlay root missing"));

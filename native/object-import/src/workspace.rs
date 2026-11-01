@@ -41,7 +41,7 @@ pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Resu
     let files = request(reader)?;
     let mut response =
         Response { version: 1, id, completed: 0, skipped: Vec::new(), failed: false };
-    let mut directories = HashSet::new();
+    let mut directories = HashSet::with_capacity(files.len());
     for (index, file) in files.iter().enumerate() {
         if let Ok(skipped) = materialize(file, &mut directories) {
             response.completed += 1;
@@ -111,6 +111,7 @@ fn filename(reader: &mut impl Read) -> io::Result<PathBuf> {
     Ok(path)
 }
 
+#[inline]
 fn materialize(file: &File, directories: &mut HashSet<PathBuf>) -> io::Result<bool> {
     // existsSync follows links and treats inaccessible/missing targets as absent.
     if !file.overwrite && file.path.exists() {
@@ -137,6 +138,7 @@ fn materialize(file: &File, directories: &mut HashSet<PathBuf>) -> io::Result<bo
     Ok(false)
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

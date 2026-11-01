@@ -112,6 +112,7 @@ fn row(
     }))
 }
 
+#[inline]
 fn validate_file(file: &str) -> io::Result<()> {
     let path = Path::new(file);
     if file.trim().is_empty()
@@ -126,6 +127,7 @@ fn validate_file(file: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn version(
     reader: &mut read_version::Reader<'_>,
     cache: &mut HashMap<String, Value>,

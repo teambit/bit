@@ -76,9 +76,11 @@ fn load_package(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<
     }
     node_candidate(&target, directory_only, typed, false, budget)
 }
+#[inline]
 fn is_directory_only(specifier: &str) -> bool {
     specifier.ends_with('/') || matches!(specifier.rsplit('/').next(), Some("." | ".."))
 }
+#[inline]
 fn entry(package: &Value, typed: bool) -> Option<&str> {
     let fields: &[&str] = if typed { &["typings", "types", "main"] } else { &["main"] };
     fields
@@ -102,6 +104,7 @@ fn package_file(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<
     }
     replace_extension(file, typed, budget)
 }
+#[inline]
 fn load_file(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<PathBuf>> {
     if let Some(found) = replace_extension(file, typed, budget)? {
         return Ok(Some(found));
@@ -135,6 +138,7 @@ fn replace_extension(file: &Path, typed: bool, budget: &Budget) -> io::Result<Op
     };
     append(&stem, extensions, budget)
 }
+#[inline]
 fn append(file: &Path, extensions: &[&str], budget: &Budget) -> io::Result<Option<PathBuf>> {
     for extension in extensions {
         let mut candidate = file.as_os_str().to_owned();

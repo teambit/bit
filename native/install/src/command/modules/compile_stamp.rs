@@ -1,9 +1,4 @@
 //! Skipping the JavaScript `afterInstall` step when a repeat install changed nothing.
-//!
-//! After a compilation without errors and a complete config write, a stamp records a
-//! fingerprint of the inputs (`bit` version, `workspace.jsonc`, `.bitmap`,
-//! `pnpm-lock.yaml`, and component files) and a snapshot of the dist and config outputs.
-//! Workspaces with external `link:`/`file:` dependencies are never skipped.
 
 #[cfg(test)]
 mod tests;
@@ -51,6 +46,7 @@ enum Output {
 }
 
 impl Output {
+    #[inline]
     fn path(&self) -> &Path {
         match self {
             Self::Missing { path } | Self::Link { path, .. } | Self::File { path, .. } => path,
@@ -74,17 +70,12 @@ pub(super) struct Inputs<'a> {
 }
 
 /// `<scope>/cache/native-install/after-install.json`.
+#[inline]
 pub(super) fn path(scope_path: &Path) -> PathBuf {
     scope_path.join("cache/native-install/after-install.json")
 }
 
-/// The files to restore when the stamp at `stamp` matches the current inputs and every
-/// output is intact or restorable; `None` when the step has to run.
-///
-/// The install engine re-syncs the injected copies of workspace packages
-/// (`node_modules/.pnpm/<pkg>@file+<dir>`) from the component directory, which drops
-/// their dist. Compiling writes the same bytes there again, so such a file is copied
-/// back from an intact output with the same content, the package's own dist.
+/// Files to restore when the stamp matches current inputs and outputs are intact/restorable.
 pub(super) fn check(stamp: &Path, inputs: &Inputs<'_>) -> io::Result<Option<Vec<Restore>>> {
     let Some(stored) = read(stamp) else { return Ok(None) };
     if stored.version != VERSION || stored.inputs != fingerprint(inputs)? {
@@ -192,6 +183,7 @@ pub(super) fn write(stamp: &Path, inputs: &Inputs<'_>, paths: Vec<PathBuf>) -> i
 }
 
 /// Forget the last compilation; a missing stamp is fine.
+#[inline]
 pub(super) fn remove(stamp: &Path) {
     let _ = fs::remove_file(stamp);
 }
@@ -244,7 +236,7 @@ pub(super) fn has_external_links(
 
 /// `path.resolve` without touching the filesystem: `.` and `..` segments are folded.
 fn normalize(path: &Path) -> PathBuf {
-    let mut normalized = PathBuf::new();
+    let mut normalized = PathBuf::with_capacity(path.as_os_str().len());
     for component in path.components() {
         match component {
             std::path::Component::CurDir => {}
@@ -324,11 +316,13 @@ fn list_dir(dir: &Path, with_content: bool, outputs: &mut Vec<Output>) -> io::Re
     Ok(())
 }
 
+#[inline]
 fn file_sha256(path: &Path) -> io::Result<String> {
     Ok(hex(&Sha256::digest(fs::read(path)?)))
 }
 
 /// Nanoseconds since the epoch; `u64` lasts until 2554.
+#[inline]
 fn modified_nanos(meta: &fs::Metadata) -> io::Result<u64> {
     let since_epoch = meta
         .modified()?
@@ -383,10 +377,12 @@ fn hash_entry(hasher: &mut Sha256, path: &Path, meta: &fs::Metadata) -> io::Resu
 }
 
 /// Length-prefixed, so adjacent values cannot run together.
+#[inline]
 fn hash_str(hasher: &mut Sha256, value: &str) {
     hash_bytes(hasher, value.as_bytes());
 }
 
+#[inline]
 fn hash_bytes(hasher: &mut Sha256, value: &[u8]) {
     hasher.update((value.len() as u64).to_le_bytes());
     hasher.update(value);

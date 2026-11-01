@@ -105,6 +105,7 @@ impl Matcher {
         self.changes.push((path.to_owned(), keep));
         keep
     }
+    #[inline]
     fn test(&self, path: &str) -> bool {
         let mut ignored = false;
         for (regex, negative) in self.rules.iter() {
@@ -115,6 +116,7 @@ impl Matcher {
         !ignored
     }
 }
+#[inline]
 fn compile_rule(rule: &Rule) -> io::Result<(Regex, bool)> {
     if !rule.source.is_ascii() || rule.source.contains(r"\u") || rule.source.contains(r"\x") {
         return Err(invalid("inventory requires ASCII ignore expressions"));
@@ -144,6 +146,7 @@ fn validate_cache(cache: &[(String, bool)]) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn inherited(path: &str) -> bool {
     matches!(
         path,

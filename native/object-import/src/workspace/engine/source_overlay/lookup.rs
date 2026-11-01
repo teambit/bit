@@ -46,6 +46,7 @@ impl SourceOverlay {
         }
         Ok(Found::Disk(path.to_path_buf()))
     }
+    #[inline]
     fn has_active_descendant(&self, path: &Path) -> bool {
         self.data.entries
             .range::<Path, _>((std::ops::Bound::Included(path), std::ops::Bound::Unbounded))
@@ -102,6 +103,7 @@ impl SourceOverlay {
         }
     }
 }
+#[inline]
 fn disk_metadata(path: &Path) -> io::Result<Option<fs::Metadata>> {
     match fs::metadata(path) {
         Ok(metadata) => Ok(Some(metadata)),

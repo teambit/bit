@@ -43,6 +43,7 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
     }
     Ok(references)
 }
+#[inline]
 pub(in crate::workspace::engine) fn reference(model: &Value, version: &str) -> io::Result<String> {
     let version = version.trim();
     if matches!(version, "" | "latest" | "head") {
@@ -104,6 +105,7 @@ fn read_single(
     Ok(Some((reference.clone(), value)))
 }
 
+#[inline]
 fn verify_required_sources(reader: &Reader<'_>, value: &Value) -> io::Result<()> {
     let Some(files) = value["files"].as_array() else { return Ok(()) };
     for file in files {
@@ -117,6 +119,7 @@ fn verify_required_sources(reader: &Reader<'_>, value: &Value) -> io::Result<()>
     Ok(())
 }
 
+#[inline]
 pub(super) fn include_heads(models: &[Value], references: &mut Vec<String>) -> io::Result<()> {
     let mut seen: HashSet<_> = references.iter().cloned().collect();
     for model in models {
@@ -137,6 +140,7 @@ pub(super) fn include_heads(models: &[Value], references: &mut Vec<String>) -> i
     Ok(())
 }
 
+#[inline]
 pub(super) fn include_lane_heads(
     heads: &std::collections::HashMap<String, String>,
     references: &mut Vec<String>,

@@ -55,6 +55,7 @@ fn collect_sources(request: &Request) -> io::Result<(Vec<PathBuf>, HashSet<PathB
     Ok((paths, bitmaps))
 }
 
+#[inline]
 fn append_target_sources(
     root: &Path,
     target: &Target,
@@ -85,6 +86,7 @@ fn build_target_files(
             .collect(),
     )
 }
+#[inline]
 fn capture(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<read::Metadata> {
     let original = bytes.len();
     let bytes =
@@ -134,6 +136,7 @@ pub(in crate::workspace::engine) fn validate(target: &Target) -> io::Result<()> 
             .ok_or_else(|| invalid("status comparison main file"))?,
     )
 }
+#[inline]
 fn relative(value: &str) -> io::Result<()> {
     if value.is_empty()
         || value.trim() != value
@@ -151,6 +154,7 @@ fn relative(value: &str) -> io::Result<()> {
 }
 
 /// Read mutated callback contents from Rust-owned temporary files, retaining logical inventory paths.
+#[inline]
 pub(in crate::workspace::engine) fn source_path(
     root: &Path,
     target: &Target,

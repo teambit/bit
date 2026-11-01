@@ -1,6 +1,4 @@
-//! `_getComponentsManifestsAndRootPolicy`: env policies, the workspace policy with
-//! the configured aspects and generator envs, the components' dependencies and
-//! the manifests of one engine run.
+//! `_getComponentsManifestsAndRootPolicy`: policies, dependencies, and manifests.
 
 pub(super) use initial::calculate_linked;
 
@@ -42,8 +40,8 @@ pub struct Calculated {
 }
 
 impl Calculated {
-    /// `getOldNonLoadedEnvs`: envs whose policy only `getDependencies()` knows and
-    /// that could not be loaded.
+    /// `getOldNonLoadedEnvs`: envs without manifest that failed to load.
+    #[inline]
     pub fn non_loaded_envs(&self) -> Vec<String> {
         self.env_policies
             .iter()
@@ -138,8 +136,7 @@ pub async fn package_json_dependencies(
     Ok(result)
 }
 
-/// `linkDepsResolvedFromEnv` (off with root components), and the external env packages
-/// the links resolve from, which the manifests reuse.
+/// `linkDepsResolvedFromEnv` and the external env packages reused by manifests.
 fn with_env_links(
     session: &Session<'_>,
     loaded: &Loaded,
@@ -279,6 +276,7 @@ fn stored_package_name(
     Ok(pkg.trim().to_string())
 }
 
+#[inline]
 fn in_workspace(loaded: &Loaded, id: &ComponentId) -> bool {
     let wanted = id.to_string_without_version();
     loaded.workspace.components
@@ -305,7 +303,7 @@ fn dependency_options(
     loaded: &Loaded,
     components: &[WorkspaceComponent],
 ) -> io::Result<DependencyOptions> {
-    let mut merge_config = IndexMap::new();
+    let mut merge_config = IndexMap::with_capacity(components.len());
     for component in components {
         let id = component.id.to_string_without_version();
         if let Some(entry) = loaded.workspace.merge_config.component(&id)? {

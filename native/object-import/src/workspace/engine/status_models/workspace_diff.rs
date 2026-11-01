@@ -21,6 +21,7 @@ pub(in crate::workspace::engine) struct Request {
     modified_only: bool,
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -60,6 +61,7 @@ struct Budgets {
     packed: Budget,
     output: Budget,
 }
+#[inline]
 fn source_budgets(captured: &[Vec<capture::File>]) -> io::Result<Budgets> {
     let used = captured
         .iter()
@@ -76,6 +78,7 @@ fn source_budgets(captured: &[Vec<capture::File>]) -> io::Result<Budgets> {
     Ok(Budgets { raw, packed, output: Budget::new(super::super::MAX_OUTPUT) })
 }
 
+#[inline]
 fn index_versions(versions: &[(String, Value)]) -> HashMap<&str, &Value> {
     versions
         .iter()
@@ -83,6 +86,7 @@ fn index_versions(versions: &[(String, Value)]) -> HashMap<&str, &Value> {
         .collect()
 }
 
+#[inline]
 fn model_request(request: &Request) -> super::Request {
     super::Request {
         current_lane_id: None,
@@ -101,6 +105,7 @@ fn model_request(request: &Request) -> super::Request {
     }
 }
 
+#[inline]
 fn index_models(models: &[Value]) -> HashMap<String, &Value> {
     models
         .iter()
@@ -108,6 +113,7 @@ fn index_models(models: &[Value]) -> HashMap<String, &Value> {
         .collect()
 }
 
+#[inline]
 fn selected<'a>(
     target: &comparison::Target,
     models: &HashMap<String, &Value>,

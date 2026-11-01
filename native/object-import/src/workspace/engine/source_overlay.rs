@@ -37,6 +37,7 @@ pub(super) struct Metadata {
     kind: u8,
 }
 impl Metadata {
+    #[inline]
     pub(super) fn disk(value: &fs::Metadata) -> Self {
         Self {
             length: value.len(),
@@ -49,12 +50,15 @@ impl Metadata {
             },
         }
     }
+    #[inline]
     pub(super) fn is_file(self) -> bool {
         self.kind == 1
     }
+    #[inline]
     pub(super) fn is_dir(self) -> bool {
         self.kind == 2
     }
+    #[inline]
     pub(super) fn len(self) -> u64 {
         self.length
     }
@@ -79,6 +83,7 @@ impl SourceOverlay {
             }),
         })
     }
+    #[inline]
     pub(super) fn insert_source(
         &mut self,
         destination: &Path,
@@ -86,6 +91,7 @@ impl SourceOverlay {
     ) -> io::Result<()> {
         self.insert(destination, Entry::Source(source::Spool::parse(descriptor)?))
     }
+    #[inline]
     pub(super) fn remove(&mut self, destination: &Path) -> io::Result<()> {
         self.insert(destination, Entry::Removed)
     }

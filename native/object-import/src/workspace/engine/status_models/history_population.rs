@@ -103,6 +103,7 @@ fn populate(
     }
     Ok(())
 }
+#[inline]
 fn observe_added(
     reader: &Reader<'_>,
     row: &Value,
@@ -116,6 +117,7 @@ fn observe_added(
         .ok_or_else(|| invalid("history hash"))?;
     observe(reader, hash, &value, proofs)
 }
+#[inline]
 fn record(row: &Value) -> Value {
     let mut result = json!({"hash":row["hash"],"parents":row["parents"]});
     for key in ["unrelated", "squashed"] {
@@ -128,6 +130,7 @@ fn record(row: &Value) -> Value {
     }
     result
 }
+#[inline]
 fn observe(
     reader: &Reader<'_>,
     hash: &str,
@@ -171,6 +174,7 @@ fn observe_model(
     Ok(())
 }
 
+#[inline]
 fn object_path(directory: &std::path::Path, hash: &str) -> std::path::PathBuf {
     directory
         .join(&hash[..2])

@@ -25,6 +25,7 @@ pub(super) fn stale(
             .try_reduce(|| false, |left, right| Ok(left || right))
     })
 }
+#[inline]
 fn newer(path: &Path, timestamp: f64) -> io::Result<bool> {
     let metadata = match fs::metadata(path) {
         Ok(value) => value,
@@ -38,6 +39,7 @@ fn newer(path: &Path, timestamp: f64) -> io::Result<bool> {
     };
     Ok(!milliseconds.is_finite() || milliseconds > timestamp)
 }
+#[inline]
 #[expect(clippy::suboptimal_flops, reason = "match Node Stats' unfused timestamp arithmetic")]
 fn milliseconds(time: Duration) -> f64 {
     time.as_secs() as f64 * 1000.0 + f64::from(time.subsec_nanos()) / 1_000_000.0

@@ -7,11 +7,13 @@ use std::{io, path::Path};
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
 /// Effective aspect settings using the released global/workspace precedence.
+#[inline]
 pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
     let workspace = config::document(&root.join("workspace.jsonc"))?;
     effective_value(workspace, home)
 }
 
+#[inline]
 fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
     let id = id.trim();
     let map = doc.as_object()?;
@@ -23,6 +25,7 @@ fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
         .or_else(|| find_versioned_aspect(map, id))
 }
 
+#[inline]
 fn find_versioned_aspect<'a>(
     map: &'a serde_json::Map<String, Value>,
     id: &str,
@@ -58,6 +61,7 @@ pub(crate) fn effective_value(workspace: Value, home: &Path) -> io::Result<Value
     Ok(global)
 }
 
+#[inline]
 fn merge(base: Option<&Value>, override_value: Option<&Value>) -> io::Result<Value> {
     let mut result = serde_json::Map::new();
     for value in [base, override_value]

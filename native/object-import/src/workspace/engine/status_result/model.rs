@@ -34,6 +34,7 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
     }
     Ok(())
 }
+#[inline]
 fn append_staged(
     output: &mut Value,
     model: &Value,
@@ -49,6 +50,7 @@ fn append_staged(
     }
     Ok(())
 }
+#[inline]
 fn is_staged(model: &Value, tracked: bool, hidden: bool, source: &[Value]) -> bool {
     if tracked || hidden { !source.is_empty() } else { local(model) }
 }
@@ -92,6 +94,7 @@ fn tracked(
     Ok(())
 }
 
+#[inline]
 fn local(model: &Value) -> bool {
     model["state"]["versions"]
         .as_object()
@@ -159,6 +162,7 @@ fn outdated(
     }
     Ok(())
 }
+#[inline]
 fn greater(model: &Value, latest: &str, current: &str, semver: &Value) -> io::Result<bool> {
     let left = semver.get(latest).ok_or_else(|| invalid("status missing semver grammar"))?;
     let right = semver.get(current).ok_or_else(|| invalid("status missing semver grammar"))?;
@@ -185,6 +189,7 @@ fn latest_tag<'a>(model: &'a Value, semver: &Value) -> io::Result<Option<&'a str
     }
     Ok(latest)
 }
+#[inline]
 fn reference(model: &Value, version: &str) -> io::Result<String> {
     for field in ["orphanedVersions", "versions"] {
         if let Some(value) = model[field].get(version) {
@@ -196,6 +201,7 @@ fn reference(model: &Value, version: &str) -> io::Result<String> {
     }
     Ok(version.to_owned())
 }
+#[inline]
 fn label(model: &Value, hash: &str) -> io::Result<String> {
     for field in ["versions", "orphanedVersions"] {
         if let Some(versions) = model[field].as_object()
@@ -209,6 +215,7 @@ fn label(model: &Value, hash: &str) -> io::Result<String> {
     }
     Ok(hash.to_owned())
 }
+#[inline]
 fn tags<'a>(model: &'a Value, field: &str) -> io::Result<&'a Map<String, Value>> {
     static EMPTY: std::sync::LazyLock<Map<String, Value>> = std::sync::LazyLock::new(Map::new);
     match model.get(field) {
@@ -216,12 +223,14 @@ fn tags<'a>(model: &'a Value, field: &str) -> io::Result<&'a Map<String, Value>>
         Some(value) => value.as_object().ok_or_else(|| invalid("status model tags")),
     }
 }
+#[inline]
 fn refs<'a>(distance: &'a Value, field: &str) -> io::Result<&'a [Value]> {
     distance[field]
         .as_array()
         .map(Vec::as_slice)
         .ok_or_else(|| invalid("status distance refs"))
 }
+#[inline]
 fn unique_refs(versions: &Map<String, Value>) -> io::Result<()> {
     let mut refs = HashSet::with_capacity(versions.len());
     for value in versions.values() {
@@ -235,6 +244,7 @@ fn unique_refs(versions: &Map<String, Value>) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 pub(super) fn identity(model: &Value, request: &Request) -> io::Result<String> {
     model["name"].as_str().ok_or_else(|| invalid("status name"))?;
     let resolved = super::super::status_models::comparison::resolved_model_id(

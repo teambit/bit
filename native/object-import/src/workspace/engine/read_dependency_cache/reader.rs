@@ -66,12 +66,14 @@ fn content(cache: &Path, integrity: &str) -> io::Result<Option<String>> {
     String::from_utf8(body).map(Some).map_err(|_| invalid("dependency cache body UTF-8"))
 }
 
+#[inline]
 fn segmented(mut path: PathBuf, hash: &str) -> PathBuf {
     path.push(&hash[..2]);
     path.push(&hash[2..4]);
     path.push(&hash[4..]);
     path
 }
+#[inline]
 fn falsy(value: &Value) -> bool {
     matches!(value, Value::Null | Value::Bool(false))
         || value.as_str() == Some("")

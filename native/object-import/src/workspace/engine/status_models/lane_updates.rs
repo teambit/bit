@@ -147,6 +147,7 @@ fn forked_target(
     Ok(diverge.map(|diverge| json!({"id":identity,"divergeData":diverge})))
 }
 
+#[inline]
 fn model_index(models: &[Value]) -> io::Result<HashMap<String, &Value>> {
     models
         .iter()
@@ -194,6 +195,7 @@ fn pending_target(
     Ok(diverge.map(|diverge| json!({"id":identity,"divergeData":diverge})))
 }
 
+#[inline]
 fn diverge_data(distance: &Value) -> io::Result<Option<Value>> {
     if distance["noCommon"] == true {
         return Err(invalid("status main update has no common snap"));
@@ -212,6 +214,7 @@ fn diverge_data(distance: &Value) -> io::Result<Option<Value>> {
     Ok(Some(diverge))
 }
 
+#[inline]
 fn hashes(value: &Value) -> io::Result<Vec<Value>> {
     value
         .as_array()

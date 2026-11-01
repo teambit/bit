@@ -21,12 +21,14 @@ struct Plan {
     history: Value,
     read_set: Vec<proof::Proof>,
 }
+#[inline]
 pub(super) fn identity(component: &str) -> String {
     let mut hasher = Sha1::new();
     hasher.update(component.trim().as_bytes());
     hasher.update(b":VersionHistory");
     crate::validate::hexadecimal(&hasher.finalize())
 }
+#[inline]
 pub(super) fn validate(request: &Request) -> io::Result<(usize, Value)> {
     prepare(request)?;
     Ok((request.plans.len(), json!({"fresh":true})))
@@ -68,6 +70,7 @@ fn prepare(request: &Request) -> io::Result<Vec<(String, Vec<u8>)>> {
     }
     Ok(objects)
 }
+#[inline]
 pub(super) fn serialized_plan(value: &Value) -> io::Result<(String, Vec<u8>)> {
     let plan = serde_json::from_value(value.clone()).map_err(io::Error::other)?;
     serialize(&plan)

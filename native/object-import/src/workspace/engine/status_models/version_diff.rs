@@ -30,6 +30,7 @@ pub(in crate::workspace::engine) struct Request {
     no_parent: bool,
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &ThreadPool,
@@ -89,6 +90,7 @@ fn load_pair(
     Ok((from, (*to).clone()))
 }
 
+#[inline]
 fn target_versions(request: &Request) -> Vec<Target> {
     let identity = request.identity.trim();
     let from_version = request.from_version.trim();
@@ -132,6 +134,7 @@ fn compare_files(
         .collect()
 }
 
+#[inline]
 fn join_sources(left: Vec<(String, Vec<u8>)>, right: Vec<(String, Vec<u8>)>) -> Vec<diff::Frozen> {
     let right_order: Vec<String> = right
         .iter()

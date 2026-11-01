@@ -56,6 +56,7 @@ impl Control {
             }
         }
     }
+    #[inline]
     fn removed(&self, row: &Value) -> bool {
         if let Some(tag) = row["tag"]
             .as_str()
@@ -96,6 +97,7 @@ pub(super) fn staged(rows: &mut [Value], config: &Value) {
     }
 }
 
+#[inline]
 fn deprecation(range: &Value, parsed: Option<&Range>, tag: &str) -> Value {
     if range.is_null()
         || range.as_bool() == Some(false)

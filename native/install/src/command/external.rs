@@ -112,6 +112,7 @@ pub async fn switch(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn gray(output: &crate::output::Output, text: &str) -> String {
     output.paint(Style::Gray, text)
 }
@@ -130,6 +131,7 @@ fn disable(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
     )
 }
 
+#[inline]
 fn disable_in_config(document: &mut Document) {
     if document
         .get(&[DEPENDENCY_RESOLVER_ASPECT])
@@ -147,6 +149,7 @@ fn disable_in_config(document: &mut Document) {
 }
 
 /// `removePostInstallScript`: only Bit's own postinstall script goes.
+#[inline]
 fn remove_postinstall_script(root: &Path) -> io::Result<()> {
     let path = root.join("package.json");
     let Ok(text) = fs::read_to_string(&path) else { return Ok(()) };

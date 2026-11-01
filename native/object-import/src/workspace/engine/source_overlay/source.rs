@@ -57,6 +57,7 @@ impl Spool {
         }
         Ok(bytes)
     }
+    #[inline]
     pub(super) fn len(&self) -> u64 {
         self.size
     }

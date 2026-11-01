@@ -21,6 +21,7 @@ pub(in crate::workspace::engine) struct Request {
     target_version: String,
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &ThreadPool,
@@ -124,6 +125,7 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
     Ok(tags)
 }
 
+#[inline]
 fn first_parent(version: &Value) -> io::Result<Option<String>> {
     let Some(parents) = version
         .get("parents")
@@ -144,6 +146,7 @@ fn first_parent(version: &Value) -> io::Result<Option<String>> {
         .transpose()
 }
 
+#[inline]
 fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
     fn entries(version: &Value) -> io::Result<Vec<(&str, [u8; 20])>> {
         let files = version["files"].as_array().ok_or_else(|| invalid("version parent files"))?;
@@ -172,6 +175,7 @@ fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
     Ok(entries(left)? == entries(right)?)
 }
 
+#[inline]
 fn read_version(
     reader: &mut crate::read_version::Reader<'_>,
     overlay: Option<&crate::command_import::Overlay>,

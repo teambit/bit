@@ -1,5 +1,4 @@
-//! `scopeList`: what `ComponentsList.listAll` reads of each model in the
-//! scope index, `isDeprecated` and `isLaneReadmeOf` from its head Version.
+//! `scopeList`: `ComponentsList.listAll` projection for each indexed model.
 
 pub(in crate::workspace::engine) mod http_lanes;
 #[cfg(test)]
@@ -52,12 +51,8 @@ pub(in crate::workspace::engine) fn read(
         index::read(&request.root)?
     };
     let directory = scope_directory(&request.root, request.bare_scope).join("objects");
-    let reader = Reader {
-        directory: &directory,
-        overlay: None,
-        raw: Budget::new(256 * 1024 * 1024),
-        packed: Budget::new(256 * 1024 * 1024),
-    };
+    let budget = || Budget::new(256 * 1024 * 1024);
+    let reader = Reader { directory: &directory, overlay: None, raw: budget(), packed: budget() };
     let lane_heads = match &request.lane {
         Some(lane) => lane_heads(&request.root, request.bare_scope, &reader, lane)?,
         None => HashMap::new(),
@@ -83,22 +78,19 @@ fn lookup_lane_head<'a>(lane_heads: &'a HashMap<String, String>, model: &Value) 
     if !scope.is_empty() {
         return lane_heads
             .get(&format!("{scope}/{name}"))
-            .map(String::as_str)
-            .map(str::trim);
+            .map(String::as_str);
     }
+    let found = lane_heads
+        .iter()
+        .find_map(|(key, val)| {
+            key.strip_suffix(name)
+                .is_some_and(|prefix| prefix.ends_with('/'))
+                .then_some(val)
+        });
     lane_heads
         .get(name)
-        .or_else(|| {
-            lane_heads
-                .iter()
-                .find_map(|(key, val)| {
-                    key.strip_suffix(name)
-                        .is_some_and(|prefix| prefix.ends_with('/'))
-                        .then_some(val)
-                })
-        })
+        .or(found)
         .map(String::as_str)
-        .map(str::trim)
 }
 
 #[derive(Deserialize)]
@@ -117,8 +109,7 @@ pub(in crate::workspace::engine) struct Lanes {
     remote_host: Option<String>,
 }
 
-/// `laneList`: each lane of the index (`listLanes`), in its order, with the
-/// hash it is indexed by and its Lane object.
+/// `laneList`: each indexed lane with its hash and Lane object.
 pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize, Value)> {
     super::super::path(&request.root)?;
     if request.bare_scope {
@@ -139,12 +130,8 @@ pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize,
             || scope_directory(&request.root, request.bare_scope).join("objects"),
             |path| path.join("objects"),
         );
-    let reader = Reader {
-        directory: &directory,
-        overlay: None,
-        raw: Budget::new(32 * 1024 * 1024),
-        packed: Budget::new(32 * 1024 * 1024),
-    };
+    let budget = || Budget::new(32 * 1024 * 1024);
+    let reader = Reader { directory: &directory, overlay: None, raw: budget(), packed: budget() };
     let lanes = lane_entries(&reader, &index, request.merge_data)?;
     Ok((lanes.len(), json!({ "lanes": lanes })))
 }
@@ -205,8 +192,7 @@ fn find_indexed_component<'a>(indexed: &'a [Value], component: &Value) -> Option
         })
 }
 
-/// `Lane.isFullyMerged`: every visible lane head is in its component's
-/// main-head ancestry. Hidden update-dependents do not participate.
+/// `Lane.isFullyMerged`: every visible lane head is in main-head ancestry.
 fn fully_merged(reader: &Reader<'_>, index: &Value, lane: &Value) -> io::Result<bool> {
     let components =
         lane["components"].as_array().ok_or_else(|| invalid("list lane components"))?;
@@ -237,7 +223,7 @@ fn head_contains(reader: &Reader<'_>, main_head: &str, lane_head: &str) -> io::R
     let lane_head = crate::validate::hexadecimal(&crate::merge_history::hash(lane_head.trim())?);
     let main_head = crate::validate::hexadecimal(&crate::merge_history::hash(main_head.trim())?);
     let mut pending = vec![main_head];
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(16);
     while let Some(hash) = pending.pop() {
         if hash == lane_head {
             return Ok(true);
@@ -316,7 +302,7 @@ pub(super) fn parse_lane_heads(
         let scope = scope.unwrap_or(lane_scope);
         let head = component["head"].as_str().ok_or_else(|| invalid("list lane component"))?;
         crate::merge_history::hash(head)?;
-        heads.insert(format!("{scope}/{name}"), head.to_owned());
+        heads.insert(format!("{scope}/{name}"), head.trim().to_owned());
     }
     Ok(heads)
 }
@@ -352,11 +338,8 @@ fn row(reader: &Reader<'_>, model: &Value, lane: Option<&str>) -> io::Result<Val
 
 fn head_version(reader: &Reader<'_>, head: &str) -> io::Result<Option<Value>> {
     let head = crate::validate::hexadecimal(&crate::merge_history::hash(head.trim())?);
-    if !reader.directory
-        .join(&head[..2])
-        .join(&head[2..])
-        .is_file()
-    {
+    let shard = reader.directory.join(&head[..2]);
+    if !shard.join(&head[2..]).is_file() {
         return Ok(None);
     }
     reader.read(&head, "Version").map(Some)
@@ -372,6 +355,7 @@ fn core_config<'v>(version: &'v Value, id: &str) -> Option<&'v Value> {
         .map(|extension| &extension["config"])
 }
 
+#[inline]
 fn deprecated(version: &Value) -> bool {
     core_config(version, "teambit.component/deprecation")
         .is_some_and(|config| truthy(&config["deprecate"]))

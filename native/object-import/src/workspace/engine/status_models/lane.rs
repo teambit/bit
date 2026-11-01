@@ -75,7 +75,7 @@ fn update_dependents(lane: &Value) -> io::Result<Vec<(String, String)>> {
     if rows.len() > 4096 {
         return Err(invalid("status lane update-dependent count"));
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(rows.len());
     rows.iter()
         .map(|row| {
             let row = row
@@ -99,6 +99,7 @@ fn update_dependents(lane: &Value) -> io::Result<Vec<(String, String)>> {
         .collect()
 }
 
+#[inline]
 fn forked_from(lane: &Value) -> io::Result<Option<String>> {
     let Some(value) = lane
         .get("forkedFrom")
@@ -119,6 +120,7 @@ fn forked_from(lane: &Value) -> io::Result<Option<String>> {
     Ok(Some(id))
 }
 
+#[inline]
 fn parse_id(id: &str) -> io::Result<(&str, &str)> {
     let (scope, name) = id.split_once('/').ok_or_else(|| invalid("status lane id"))?;
     if [scope, name]

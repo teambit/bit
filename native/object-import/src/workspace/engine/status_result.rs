@@ -120,6 +120,7 @@ fn empty(lane: &str) -> Value {
     }
     output
 }
+#[inline]
 fn push(output: &mut Value, field: &str, value: Value) {
     output[field]
         .as_array_mut()
@@ -186,6 +187,7 @@ fn models(request: &Request) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn valid_lane_id(lane_id: &str) -> bool {
     lane_id
         .split_once('/')
@@ -196,6 +198,7 @@ fn valid_lane_id(lane_id: &str) -> bool {
         })
 }
 
+#[inline]
 fn grammar(request: &Request, target: &Target) -> io::Result<()> {
     let versions = std::iter::once(target.version.as_str())
         .chain(

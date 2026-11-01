@@ -87,6 +87,7 @@ fn defaults(output: &mut Value) {
     }
 }
 
+#[inline]
 fn identity(value: &Value) -> io::Result<Value> {
     let scope = value["scope"].as_str().ok_or_else(|| invalid("Harmony dependency scope"))?;
     let name = value["name"].as_str().ok_or_else(|| invalid("Harmony dependency name"))?;
@@ -97,6 +98,7 @@ fn identity(value: &Value) -> io::Result<Value> {
     build_identity(scope, name, version)
 }
 
+#[inline]
 fn build_identity(scope: &str, name: &str, version: Option<&str>) -> io::Result<Value> {
     let scope = scope.trim();
     let name = name.trim();
@@ -119,6 +121,7 @@ fn build_identity(scope: &str, name: &str, version: Option<&str>) -> io::Result<
     Ok(output)
 }
 
+#[inline]
 fn flattened_identity(value: &Value) -> io::Result<Value> {
     let Some(text) = value.as_str().map(str::trim) else {
         return identity(value);

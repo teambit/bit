@@ -117,6 +117,7 @@ fn configuration(config: &Value, recovery: bool) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn bare_aspect_id(name: &str) -> &str {
     let name = name.trim();
     match name.split_once('@') {
@@ -174,6 +175,7 @@ fn issue_configuration(value: &Value) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn valid_issue_name(entry: &Value) -> bool {
     entry
         .as_str()
@@ -181,6 +183,7 @@ fn valid_issue_name(entry: &Value) -> bool {
         .is_some_and(|name| !name.is_empty() && !name.chars().any(char::is_control))
 }
 
+#[inline]
 fn empty_core(bare: &str, value: &Value) -> bool {
     matches!(
         bare,
@@ -196,6 +199,7 @@ fn empty_core(bare: &str, value: &Value) -> bool {
     ) && value.as_object().is_some_and(serde_json::Map::is_empty)
 }
 
+#[inline]
 pub(super) fn scope(scope: &Value) -> io::Result<()> {
     scope.as_object().ok_or_else(|| invalid("status context scope"))?;
     if scope["name"]

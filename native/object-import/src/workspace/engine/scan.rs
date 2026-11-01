@@ -83,12 +83,14 @@ impl Scan<'_> {
         }
         self.file(file, name)
     }
+    #[inline]
     fn excluded(&self, file: &Path, name: &str) -> bool {
         matches!(name, ".git" | ".bit.map.json")
             || self.excluded
                 .iter()
                 .any(|directory| file.starts_with(directory))
     }
+    #[inline]
     fn directory(&mut self, file: PathBuf, name: &str) -> io::Result<()> {
         if matches!(name, "node_modules" | ".bit" | ".bitTmp") {
             return Ok(());
@@ -104,6 +106,7 @@ impl Scan<'_> {
         self.directories.push(file);
         Ok(())
     }
+    #[inline]
     fn file(&mut self, file: PathBuf, name: &str) -> io::Result<()> {
         if ignore_bitmap(&file, self.root, name, self.workspace_root) {
             return Ok(());
@@ -121,6 +124,7 @@ impl Scan<'_> {
         count(self.paths.len())
     }
 }
+#[inline]
 fn ignore_bitmap(file: &Path, root: &Path, name: &str, workspace_root: bool) -> bool {
     name == ".bitmap" && (workspace_root != (file.parent() == Some(root)))
 }

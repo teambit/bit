@@ -137,6 +137,7 @@ fn read_model(
     Ok(None)
 }
 
+#[inline]
 fn model_matches_name(model: &Value, name: &str) -> bool {
     let model_scope = model["scope"].as_str().map_or("", str::trim);
     let model_name = model["name"].as_str().map_or("", str::trim);
@@ -167,6 +168,7 @@ fn indexed_model_hash(root: &std::path::Path, name: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
+#[inline]
 fn model_head(repository: &mut Repository, model: &Value) -> io::Result<Option<(String, Value)>> {
     let Some(head) = model["head"]
         .as_str()
@@ -178,6 +180,7 @@ fn model_head(repository: &mut Repository, model: &Value) -> io::Result<Option<(
     Ok(optional(repository, head, "Version")?.map(|version| (head.to_owned(), version)))
 }
 
+#[inline]
 fn optional(repository: &mut Repository, reference: &str, kind: &str) -> io::Result<Option<Value>> {
     match repository.read(reference, kind) {
         Ok(value) => Ok(Some(value)),
@@ -331,6 +334,7 @@ fn identity(value: &Value) -> io::Result<String> {
     validate_identity(&format!("{scope}/{name}@{version}"))
 }
 
+#[inline]
 fn validate_identity(text: &str) -> io::Result<String> {
     let (name, version) = text.rsplit_once('@').ok_or_else(|| invalid("status edge identity"))?;
     if name.split_once('/').is_none() || version.is_empty() || text.chars().any(char::is_whitespace)

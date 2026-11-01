@@ -221,6 +221,7 @@ pub(in crate::workspace::engine) fn read_file_remote(
         .collect()
 }
 
+#[inline]
 fn read_remote_component(
     path: &Path,
     reader: &Reader<'_>,
@@ -272,6 +273,7 @@ fn file_remote_row(row: &Value) -> io::Result<Value> {
     Ok(Value::Object(log))
 }
 
+#[inline]
 fn file_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
     let millis = |row: &Value| {
         row["log"]["date"]

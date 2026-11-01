@@ -69,6 +69,7 @@ const SUPPORTED_PM_CHANGES: &[&str] = &[
     "throttleProgress",
 ];
 
+#[inline]
 fn validate_changes(values: &Value) -> io::Result<()> {
     if values.is_null() {
         return Ok(());
@@ -86,6 +87,7 @@ fn validate_changes(values: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn non_empty_dir(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
@@ -120,6 +122,7 @@ fn cleanup(root: &Path, receipt: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn layout(values: &Value, settings: &mut EngineSettings) -> io::Result<()> {
     assign(values, "nodeLinker", &mut settings.layout.node_linker)?;
     assign(values, "rootComponents", &mut settings.layout.root_components)?;
@@ -131,6 +134,7 @@ fn layout(values: &Value, settings: &mut EngineSettings) -> io::Result<()> {
     assign(values, "cacheRootDir", &mut settings.store.cache_dir)
 }
 
+#[inline]
 fn resolution(values: &Value, settings: &mut EngineSettings) -> io::Result<()> {
     assign(values, "autoInstallPeers", &mut settings.resolution.auto_install_peers)?;
     assign(values, "dedupePeers", &mut settings.resolution.dedupe_peers)?;
@@ -145,6 +149,7 @@ fn resolution(values: &Value, settings: &mut EngineSettings) -> io::Result<()> {
     assign(values, "peerDependencyRules", &mut settings.policy.peer_dependency_rules)
 }
 
+#[inline]
 fn assign<Setting: DeserializeOwned>(
     values: &Value,
     key: &str,

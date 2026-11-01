@@ -93,9 +93,11 @@ pub(super) struct Budget {
     overlay: Option<SourceOverlay>,
 }
 impl Budget {
+    #[inline]
     pub(super) fn new() -> Self {
         Self::capture(false)
     }
+    #[inline]
     pub(super) fn capture(enabled: bool) -> Self {
         Self {
             operations: AtomicUsize::new(0),
@@ -261,6 +263,7 @@ fn home_lookup(
     Ok(None)
 }
 
+#[inline]
 fn package_candidate(file: &Path, budget: &Budget) -> io::Result<Option<PathBuf>> {
     if let Some(parent) = file.parent()
         && budget.metadata(parent)?.is_some_and(super::source_overlay::Metadata::is_dir)
@@ -282,6 +285,7 @@ pub(super) fn normalize(file: &Path) -> PathBuf {
     }
     output
 }
+#[inline]
 fn candidate(file: &Path, budget: &Budget, depth: usize) -> io::Result<Option<PathBuf>> {
     if let Some(found) = load_file(file, budget)? {
         return Ok(Some(found));
@@ -321,6 +325,7 @@ fn load_file(file: &Path, budget: &Budget) -> io::Result<Option<PathBuf>> {
     }
     Ok(None)
 }
+#[inline]
 pub(super) fn regular_file(file: &Path, budget: &Budget) -> io::Result<bool> {
     match budget.metadata(file)? {
         Some(metadata) if metadata.is_file() => Ok(true),

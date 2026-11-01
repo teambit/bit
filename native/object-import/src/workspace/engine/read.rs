@@ -25,9 +25,11 @@ pub(super) struct Metadata {
     pub(super) raw_bytes: usize,
 }
 
+#[inline]
 pub(super) fn read(files: &[PathBuf], pool: &ThreadPool) -> io::Result<Vec<FileRecord>> {
     read_with(files, pool, record)
 }
+#[inline]
 pub(super) fn read_with<Record: Send>(
     files: &[PathBuf],
     pool: &ThreadPool,
@@ -84,10 +86,12 @@ fn parallel<Record: Send>(
 
 // Reserve the complete raw allocation before reading. Large files can use the
 // shared budget without being constrained to a fraction of a 64-file batch.
+#[inline]
 fn reserved(file: &Path, remaining: &Budget) -> io::Result<Vec<u8>> {
     validate_regular_file(file)?;
     remaining.read(File::open(file)?)
 }
+#[inline]
 fn validate_regular_file(file: &Path) -> io::Result<()> {
     path(file)?;
     if !fs::symlink_metadata(file)?.is_file() {
@@ -95,6 +99,7 @@ fn validate_regular_file(file: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn record(file: &Path, raw: Vec<u8>) -> FileRecord {
     let (metadata, contents) = canonical(file, raw);
     FileRecord { metadata, contents: crate::validate::hexadecimal(&contents) }
@@ -131,6 +136,7 @@ pub(super) fn raw(file: &Path, maximum: usize) -> io::Result<Vec<u8>> {
     }
     Ok(bytes)
 }
+#[inline]
 pub(super) fn strip_bom(mut bytes: Vec<u8>) -> Vec<u8> {
     if bytes.starts_with(b"\xef\xbb\xbf") {
         bytes.drain(..3);

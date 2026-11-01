@@ -296,6 +296,7 @@ fn owned(
         request => command_request::dispatch(request, snapshots, pool),
     }
 }
+#[inline]
 fn failure(id: u32) -> Response {
     Response {
         version: 1,

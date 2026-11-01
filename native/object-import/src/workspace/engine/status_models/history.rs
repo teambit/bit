@@ -71,6 +71,7 @@ fn compare(
     distances(reader, model, &identity, [source, head, remote], stage)
 }
 
+#[inline]
 fn model_identity(model: &Value, targets: &HashMap<&str, &str>) -> io::Result<String> {
     model["name"].as_str().ok_or_else(|| invalid("status model name"))?;
     let identity = super::comparison::resolved_model_id(model, targets.keys().copied());
@@ -156,6 +157,7 @@ fn keep_lane_ref(reader: &Reader<'_>, entry: &Value, lane_head: &str) -> io::Res
     Ok(has_lane_origin(&version) || is_locally_mutated(&version))
 }
 
+#[inline]
 fn has_lane_origin(version: &Value) -> bool {
     version["origin"]["lane"]["scope"]
         .as_str()
@@ -167,6 +169,7 @@ fn has_lane_origin(version: &Value) -> bool {
             .is_some_and(|name| !name.is_empty())
 }
 
+#[inline]
 fn is_locally_mutated(version: &Value) -> bool {
     version
         .get("squashed")
@@ -261,6 +264,7 @@ fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Resu
         .collect()
 }
 
+#[inline]
 fn read_remote_ref(
     remotes_dir: &Path,
     scope: &str,

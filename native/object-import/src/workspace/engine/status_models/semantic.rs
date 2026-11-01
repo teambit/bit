@@ -3,6 +3,7 @@ use crate::js_json::Value as Js;
 use serde_json::{Map, Value, json};
 use std::io;
 
+#[inline]
 pub(super) fn hash(model: &Value) -> io::Result<String> {
     Ok(crate::snapshot_projection::semantic(&project(model)?)?.hash)
 }
@@ -76,6 +77,7 @@ fn fields(model: &Value) -> io::Result<Map<String, Value>> {
     }
     Ok(fields)
 }
+#[inline]
 fn falsy(value: &Value) -> bool {
     match value {
         Value::Null => true,
@@ -141,6 +143,7 @@ fn identity(value: &Value) -> io::Result<Value> {
     Ok(Value::Object(object))
 }
 
+#[inline]
 fn normalize_object_version(object: &mut serde_json::Map<String, Value>, inline_ver: Option<&str>) {
     if !object.contains_key("version")
         && let Some(ver) = inline_ver.or_else(|| {
@@ -162,6 +165,7 @@ fn normalize_object_version(object: &mut serde_json::Map<String, Value>, inline_
     }
 }
 
+#[inline]
 fn identity_from_str(text: &str) -> io::Result<Value> {
     let text = text.trim();
     let (bare, ver) = text

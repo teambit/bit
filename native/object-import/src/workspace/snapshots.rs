@@ -32,11 +32,13 @@ pub(crate) struct Observation {
     pub(crate) contents: Arc<[u8]>,
 }
 
+#[inline]
 fn valid_hash(hash: &str) -> bool {
     !hash.is_empty() && !hash.chars().any(char::is_control)
 }
 
 impl State {
+    #[inline]
     pub(crate) fn retain(&mut self, snapshot: Observation) -> Option<u64> {
         let content_len = snapshot.contents.len();
         if content_len > MAX_BYTES
@@ -61,6 +63,7 @@ impl State {
         Some(self.next)
     }
 
+    #[inline]
     pub(crate) fn get(&self, token: u64, path: &Path, raw_hash: &str) -> Option<&Observation> {
         let raw_hash = raw_hash.trim();
         if token == 0 || path.as_os_str().is_empty() || raw_hash.is_empty() {

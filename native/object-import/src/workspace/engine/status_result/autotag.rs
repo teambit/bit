@@ -37,6 +37,7 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
     )?;
     selected(&reply, &ordered)
 }
+#[inline]
 fn selected(reply: &Value, ordered: &[&Target]) -> io::Result<Value> {
     let results = reply["results"].as_array().ok_or_else(|| invalid("status autotag result"))?;
     let mut seen = std::collections::HashSet::with_capacity(results.len());
@@ -52,6 +53,7 @@ fn selected(reply: &Value, ordered: &[&Target]) -> io::Result<Value> {
     }
     Ok(Value::Array(result))
 }
+#[inline]
 fn row(target: &Target) -> io::Result<Value> {
     let dependencies: Vec<_> = target.dependencies
         .iter()
@@ -64,6 +66,7 @@ fn row(target: &Target) -> io::Result<Value> {
         .collect::<io::Result<_>>()?;
     Ok(json!({"id":id(&target.identity, &target.version)?,"dependencies":dependencies}))
 }
+#[inline]
 fn id(identity: &str, version: &str) -> io::Result<Value> {
     let identity = identity.trim();
     let version = version.trim();

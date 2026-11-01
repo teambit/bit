@@ -109,6 +109,7 @@ fn unavailable_on_main(
         .collect())
 }
 
+#[inline]
 pub(super) fn metadata(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Value> {
     let settings = config::configuration_value(
         &request.root,
@@ -118,6 +119,7 @@ pub(super) fn metadata(request: &Request, pool: &rayon::ThreadPool) -> io::Resul
     let targets = config::context_targets(&request.root, &settings)?;
     metadata_with_targets(request, pool, &settings, targets)
 }
+#[inline]
 pub(super) fn metadata_with_targets(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -126,6 +128,7 @@ pub(super) fn metadata_with_targets(
 ) -> io::Result<Value> {
     metadata_projected(request, pool, settings, targets, false)
 }
+#[inline]
 pub(super) fn metadata_for_recovery(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -256,6 +259,7 @@ fn lane_id(bitmap: &Value, scope: &Value) -> io::Result<Value> {
     Ok(json!(format!("{lane_scope}/{name}")))
 }
 
+#[inline]
 fn default_history() -> bool {
     true
 }
