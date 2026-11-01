@@ -159,6 +159,7 @@ fn prune_hidden(value: &mut Value, incoming_entries: &[Entry]) -> bool {
     }
     changed
 }
+#[inline]
 fn set_hidden(value: &mut Value, rows: Vec<Value>) {
     if rows.is_empty() {
         if let Some(object) = value.as_object_mut() {
@@ -168,11 +169,13 @@ fn set_hidden(value: &mut Value, rows: Vec<Value>) {
         value["updateDependents"] = Value::Array(rows);
     }
 }
+#[inline]
 fn same_entries(left: &Value, right: &Value) -> io::Result<bool> {
     Ok(left["scope"] == right["scope"]
         && left["name"] == right["name"]
         && normalized_entries(left)? == normalized_entries(right)?)
 }
+#[inline]
 fn normalized_entries(value: &Value) -> io::Result<Vec<(String, String, bool, bool)>> {
     let mut rows = entries(value)?
         .into_iter()
@@ -184,6 +187,7 @@ fn normalized_entries(value: &Value) -> io::Result<Vec<(String, String, bool, bo
     rows.sort();
     Ok(rows)
 }
+#[inline]
 fn deleted(value: &Value, identity: &str) -> bool {
     let Some((scope, name)) = identity.split_once('/') else { return false };
     value["components"]
@@ -199,6 +203,7 @@ fn deleted(value: &Value, identity: &str) -> bool {
         })
 }
 
+#[inline]
 fn index(plan: &mut PreparedImport, lane: &Record) -> io::Result<()> {
     plan.writes.index_changed |= index_entry(&mut plan.writes.index, lane)?;
     Ok(())
@@ -324,6 +329,7 @@ fn extend_local_history(
     Ok(())
 }
 
+#[inline]
 fn should_replace(plan: &mut PreparedImport, merged: &Value, entry: &Entry) -> io::Result<bool> {
     let previous = entries(merged)?
         .into_iter()

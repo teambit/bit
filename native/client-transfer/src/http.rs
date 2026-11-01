@@ -123,6 +123,7 @@ impl Retry {
 }
 
 /// The client every HTTP remote request goes through.
+#[derive(Debug, Clone)]
 pub struct Network {
     client: Client,
     delete_client: Client,
@@ -226,6 +227,7 @@ impl Network {
     }
 
     /// `Http.getHeaders()`.
+    #[inline]
     fn headers(&self, request: RequestBuilder, verb: &str) -> io::Result<RequestBuilder> {
         let request = request
             .header("x-verb", verb)

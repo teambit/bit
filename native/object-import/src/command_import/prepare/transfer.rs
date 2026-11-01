@@ -4,6 +4,7 @@ use super::{
 };
 use serde_json::{Value, json};
 use std::{io, path::Path};
+#[inline]
 pub(super) fn receive(
     plan: &mut PreparedImport,
     directory: &Path,
@@ -16,6 +17,7 @@ pub(super) fn receive(
 }
 
 /// Lane transfers retain history but only their origin scope can refresh the main head.
+#[inline]
 pub(super) fn receive_lane(
     plan: &mut PreparedImport,
     directory: &Path,
@@ -38,6 +40,7 @@ pub(super) fn receive_lane(
 /// `receive` of a model that arrived from `directory` as a cached dependency
 /// of a component of another scope (`mergeOne` with `isIncomingFromOrigin`
 /// false): no remote head is recorded for it.
+#[inline]
 pub(super) fn receive_dependency(
     plan: &mut PreparedImport,
     directory: &Path,
@@ -97,6 +100,7 @@ fn receive_from(
 
 /// `ObjectFetcher` always rewrites each merged Component using the canonical serializer.
 /// Equal heads can avoid fetching Sources, but do not make the mutable model immutable.
+#[inline]
 pub(super) fn merge_model(
     plan: &mut PreparedImport,
     target: &Target,
@@ -149,6 +153,7 @@ fn receive_history(
     plan.overlay.objects.insert(hash, object);
     Ok(())
 }
+#[inline]
 pub(super) fn receive_sources(
     plan: &mut PreparedImport,
     directory: &Path,
@@ -235,6 +240,7 @@ pub(super) fn record_remote_head(
     }
     Ok(())
 }
+#[inline]
 fn ensure_remote_refs(plan: &mut PreparedImport, scope: &str) -> io::Result<()> {
     if !plan.overlay.remote_refs.contains_key(scope) {
         let path = plan.environment.local_directory
@@ -250,6 +256,7 @@ fn ensure_remote_refs(plan: &mut PreparedImport, scope: &str) -> io::Result<()> 
     }
     Ok(())
 }
+#[inline]
 pub(super) fn date(version: &Value) -> io::Result<&str> {
     version["modified"]
         .as_array()
@@ -300,6 +307,7 @@ pub(super) fn update_index(
 /// Cache-enabled importWithoutDeps may ask the origin for an unbuilt local snap
 /// that was never exported. The origin omits that component from its stream;
 /// preserve the retained local Version and do not merge remote model metadata.
+#[inline]
 pub(super) fn receive_cached(
     plan: &mut PreparedImport,
     directory: &Path,

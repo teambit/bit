@@ -262,6 +262,7 @@ pub(super) fn dependency_target(value: &Value) -> io::Result<Target> {
         .ok_or_else(|| invalid("import dependency version"))?;
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
 }
+#[inline]
 fn dependency_target_str(text: &str) -> io::Result<Target> {
     let (identity, version) = text
         .trim()
@@ -275,6 +276,7 @@ fn dependency_target_str(text: &str) -> io::Result<Target> {
         version: version.trim().to_owned(),
     })
 }
+#[inline]
 pub(super) fn only_unbuilt_requests(
     plan: &mut PreparedImport,
     targets: &[&Target],
@@ -288,12 +290,14 @@ pub(super) fn only_unbuilt_requests(
     }
     Ok(true)
 }
+#[inline]
 fn loaded(plan: &mut PreparedImport, target: &Target) -> io::Result<Option<(String, Value)>> {
     let local = plan.environment.local_directory.clone();
     let Some(model) = read_model(plan, &local, target)? else { return Ok(None) };
     let Ok(hash) = version_ref(&model, &target.version) else { return Ok(None) };
     Ok(read_version(plan, &hash)?.map(|version| (hash, version)))
 }
+#[inline]
 fn available(target: &Target, hash: &str, version: &Value, scope: &str, staged: &str) -> bool {
     let hash = hash.trim();
     target.scope.as_deref().map(str::trim) == Some(scope.trim())

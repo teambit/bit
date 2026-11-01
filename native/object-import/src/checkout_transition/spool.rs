@@ -4,6 +4,7 @@ use std::{
     io::{self, BufWriter, Write},
     path::Path,
 };
+#[inline]
 pub(super) fn assign(bodies: &mut [Body], directory: &Path, token: &str, first: usize) {
     if bodies.is_empty() {
         return;
@@ -20,6 +21,7 @@ pub(super) fn assign(bodies: &mut [Body], directory: &Path, token: &str, first: 
         offset = offset.saturating_add(body.contents.len());
     }
 }
+#[inline]
 pub(super) fn write(bodies: &[Body]) -> io::Result<()> {
     let Some(first) = bodies.first() else {
         return Ok(());

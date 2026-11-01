@@ -51,12 +51,14 @@ pub(super) fn rows(
     }
     Ok(output)
 }
+#[inline]
 fn retain(row: &mut Value, bodies: &mut Vec<plan::Body>, offset: usize) -> io::Result<()> {
     for (field, output) in [("output", "outputPlanIndex"), ("conflict", "conflictPlanIndex")] {
         retain_field(row, bodies, field, output, offset)?;
     }
     Ok(())
 }
+#[inline]
 fn retain_field(
     row: &mut Value,
     bodies: &mut Vec<plan::Body>,
@@ -79,6 +81,7 @@ fn retain_field(
     Ok(())
 }
 
+#[inline]
 fn required_base(
     request: &wire::Prepare,
     base: &wire::Version,
@@ -109,6 +112,7 @@ fn required_base(
     needed
 }
 
+#[inline]
 fn same_hash(left: &str, right: &str) -> bool {
     left.trim().eq_ignore_ascii_case(right.trim())
 }

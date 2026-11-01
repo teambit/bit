@@ -128,6 +128,7 @@ pub fn read_from(reader: impl Read, max_bytes: usize) -> io::Result<Vec<ObjectIt
     Ok(items)
 }
 
+#[inline]
 fn read_entry<Reader: Read>(
     entry: &mut ::tar::Entry<Reader>,
     max_bytes: usize,

@@ -83,6 +83,7 @@ impl Resolver {
     }
 
     /// `resolverFunction(scopeName, thisScope.name, token)`.
+    #[inline]
     pub async fn resolve(&self, scope: &str) -> io::Result<String> {
         let scope = scope.trim();
         if scope.is_empty() || scope.chars().any(char::is_control) {
@@ -93,6 +94,7 @@ impl Resolver {
         tokio::task::spawn_blocking(move || resolver.run(&scope)).await.map_err(io::Error::other)?
     }
 
+    #[inline]
     fn run(&self, scope: &str) -> io::Result<String> {
         let node = if self.node
             .to_string_lossy()

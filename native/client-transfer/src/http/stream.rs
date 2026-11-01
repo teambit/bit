@@ -53,6 +53,7 @@ async fn feed(
     }
     Ok(())
 }
+#[derive(Debug)]
 struct Chunks {
     receiver: mpsc::Receiver<Vec<u8>>,
     current: io::Cursor<Vec<u8>>,

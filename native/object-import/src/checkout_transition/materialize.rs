@@ -29,6 +29,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     }
     Ok(json!({"completed":completed,"skipped":skipped,"failed":completed!=request.files.len()}))
 }
+#[inline]
 fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec<u8>>> {
     if request.files.len() > 4096 {
         return Err(invalid("checkout materialize file limit"));
@@ -59,6 +60,7 @@ fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec
     }
     Ok(contents)
 }
+#[inline]
 fn write(
     file: &wire::Destination,
     body: &[u8],

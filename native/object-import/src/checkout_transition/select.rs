@@ -10,13 +10,13 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     records: HashMap<String, Record>,
     sequence: u64,
     bytes: usize,
 }
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Stage {
     Unmerged,
     ResolveTarget,
@@ -27,7 +27,7 @@ enum Stage {
     TargetRemoved,
     Terminal,
 }
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
     revision: u32,
     component: Component,
@@ -107,6 +107,7 @@ impl State {
     }
 }
 impl Stage {
+    #[inline]
     fn name(self) -> &'static str {
         match self {
             Self::Unmerged => "unmerged",
@@ -120,11 +121,13 @@ impl Stage {
         }
     }
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 
 impl Record {
+    #[inline]
     fn initial(&mut self, has_model: bool, main_missing: bool) -> Value {
         if !has_model {
             self.failure(
@@ -142,6 +145,7 @@ impl Record {
             self.observe(Stage::Unmerged)
         }
     }
+    #[inline]
     fn bytes(&self) -> usize {
         self.component.id.len()
             + self.component.id_without_version.len()
@@ -277,6 +281,7 @@ impl Record {
         }
         self.after_merge_pending()
     }
+    #[inline]
     fn already_current(&self) -> bool {
         self.options.version
             .as_deref()
@@ -286,12 +291,14 @@ impl Record {
             || (self.options.version_per_id.is_some()
                 && self.current.value.as_deref() == Some(&self.target))
     }
+    #[inline]
     fn merge_pending(&mut self, pending: bool) -> io::Result<Value> {
         if pending {
             return Ok(self.failure(r#"component is merge-pending and cannot be checked out, run "bit status" for more info"#.into(),false,None));
         }
         Ok(self.after_merge_pending())
     }
+    #[inline]
     fn after_merge_pending(&mut self) -> Value {
         if self.current.value
             .as_ref()
@@ -336,11 +343,12 @@ impl Record {
         Ok(json!({"kind":"target","version":self.target,"merge":merge}))
     }
 }
+#[inline]
 fn boolean(value: &Value) -> io::Result<bool> {
     value.as_bool().ok_or_else(|| invalid("checkout observation expected boolean"))
 }
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct CurrentState {
     value: Option<String>,
     has_bitmap: bool,

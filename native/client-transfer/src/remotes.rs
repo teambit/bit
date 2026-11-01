@@ -59,6 +59,7 @@ impl Remote {
 }
 
 /// The remotes a workspace scope knows: `scope.json` remotes over the global remotes.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Remotes {
     hosts: IndexMap<String, String>,
     symphony: String,
@@ -83,6 +84,7 @@ impl Remotes {
             .transpose()
     }
 
+    #[inline]
     pub fn load(
         scope_json: &Value,
         global_config_dir: &Path,
@@ -183,6 +185,7 @@ pub fn not_found_or_denied(scope: &str) -> io::Error {
     )
 }
 
+#[inline]
 pub fn global_remotes(dir: &Path) -> io::Result<IndexMap<String, String>> {
     let bytes = match fs::read(dir.join(GLOBAL_REMOTES)) {
         Ok(bytes) => bytes,
@@ -203,6 +206,7 @@ pub fn global_remotes(dir: &Path) -> io::Result<IndexMap<String, String>> {
 }
 
 /// `getSymphonyUrl()`.
+#[inline]
 #[must_use]
 pub fn symphony_url(global: &GlobalConfig) -> String {
     let global = crate::config::effective(global.clone(), &Value::Null, &Value::Null);

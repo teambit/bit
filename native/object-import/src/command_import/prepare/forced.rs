@@ -52,11 +52,13 @@ fn collect_forced_dependencies(
     Ok(dependencies)
 }
 
+#[inline]
 fn has_matching_phase_id(ids: &[String], identities: &HashSet<String>) -> bool {
     ids.iter()
         .any(|id| identities.contains(without_version(id)))
 }
 
+#[inline]
 fn without_version(id: &str) -> &str {
     let id = id.trim();
     id.rsplit_once('@').map_or(id, |(identity, _)| identity.trim())

@@ -40,6 +40,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+#[inline]
 fn action_error(code: Option<u64>, error: &Value, url: &str, message: String) -> io::Error {
     match code {
         Some(127..=130) => remote_error(code, error, url, message),
@@ -86,10 +87,11 @@ pub fn action_conflict(error: &io::Error) -> Option<&Value> {
         .map(|error| &error.0)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct ActionConflict(Value);
 
 impl std::fmt::Display for ActionConflict {
+    #[inline]
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(non_empty_str(&self.0["message"]).unwrap_or("remote merge conflict"))
     }
@@ -103,10 +105,11 @@ pub fn is_action_not_found(error: &io::Error) -> bool {
     error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<ActionNotFound>)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct ActionNotFound(String);
 
 impl std::fmt::Display for ActionNotFound {
+    #[inline]
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             formatter,
@@ -146,6 +149,7 @@ pub(super) async fn throw_for_status(response: Response) -> io::Result<Response>
     Err(remote_error(error_code(error), error, &url, message))
 }
 
+#[inline]
 pub(super) fn remote_error(
     code: Option<u64>,
     error: &Value,
@@ -176,9 +180,10 @@ pub(super) fn remote_error(
 }
 
 /// A remote explicitly reported that the requested lane does not exist.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LaneNotFound(String);
 impl std::fmt::Display for LaneNotFound {
+    #[inline]
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(&self.0)
     }

@@ -2,6 +2,7 @@
 use super::{PreparedImport, Target, VirtualRemote};
 use std::{io, path::Path};
 
+#[inline]
 pub(crate) fn prepare_inbound_with_virtual(
     root: &Path,
     global_remotes_file: &Path,
@@ -19,6 +20,7 @@ pub(crate) fn prepare_inbound_with_virtual(
     )
 }
 
+#[inline]
 pub(crate) fn prepare_graph_inbound_with_virtual(
     root: &Path,
     global_remotes_file: &Path,
@@ -90,6 +92,7 @@ impl PreparedImport {
     }
 }
 
+#[inline]
 fn scoped_targets(targets: &[Target]) -> Vec<&Target> {
     targets
         .iter()

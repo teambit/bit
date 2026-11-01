@@ -7,6 +7,7 @@ use std::{fs, io, time::Duration};
 /// `Http.getNetworkConfig()` socket settings: `network.fetch_timeout` (default
 /// 60000 ms, the whole request), `network.local_address` and
 /// `network.max_sockets` (default 15, the agent's per-host socket pool).
+#[inline]
 pub(super) fn sockets(
     builder: reqwest::ClientBuilder,
     global: &GlobalConfig,
@@ -33,6 +34,7 @@ pub(super) fn sockets(
 }
 
 /// `Http.getProxyConfig()`: `proxy`, `https_proxy` (falls back to `proxy`), `proxy.no_proxy`.
+#[inline]
 pub(super) fn proxy(
     builder: reqwest::ClientBuilder,
     global: &GlobalConfig,
@@ -52,6 +54,7 @@ pub(super) fn proxy(
 }
 
 /// `strictSSL`, `ca` and `cafile` from `network.*` with the legacy `proxy.*` fallbacks.
+#[inline]
 pub(super) fn tls(
     builder: reqwest::ClientBuilder,
     global: &GlobalConfig,

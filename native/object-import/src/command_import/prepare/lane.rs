@@ -6,6 +6,7 @@ use crate::command_import::lane::{Id, Record, entries};
 use std::{collections::HashSet, io, path::Path};
 
 impl PreparedImport {
+    #[inline]
     pub(crate) fn prepare_lane_objects(
         &mut self,
         scope: &str,
@@ -194,6 +195,7 @@ fn receive_counted(
 }
 
 /// Whether the local scope has the target's Version.
+#[inline]
 fn local_version(plan: &mut PreparedImport, target: &Target) -> io::Result<bool> {
     let local = plan.environment.local_directory.clone();
     let model = read_model(plan, &local, target)?;
@@ -263,6 +265,7 @@ fn referenced_sources(version: &serde_json::Value) -> io::Result<Vec<String>> {
     Ok(references)
 }
 
+#[inline]
 fn missing_objects(plan: &mut PreparedImport, hashes: &[String]) -> io::Result<Vec<String>> {
     let mut missing = Vec::new();
     let mut seen = HashSet::with_capacity(hashes.len());
@@ -321,6 +324,7 @@ pub(super) fn remote_lane_hash(
         .ok_or_else(|| invalid("lane remote hash"))
 }
 
+#[inline]
 fn lane_rows(index: &serde_json::Value) -> io::Result<&[serde_json::Value]> {
     if index.is_array() {
         Ok(&[])
@@ -334,6 +338,7 @@ fn lane_rows(index: &serde_json::Value) -> io::Result<&[serde_json::Value]> {
     }
 }
 
+#[inline]
 fn referenced_candidates(
     heads: &[(String, serde_json::Value)],
     checked: &mut HashSet<String>,

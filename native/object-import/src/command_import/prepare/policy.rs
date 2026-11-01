@@ -4,6 +4,7 @@ use serde_json::Value;
 use std::io;
 
 impl PreparedImport {
+    #[inline]
     pub(crate) fn policy_version(&mut self, target: &Target) -> io::Result<Value> {
         let local = self.environment.local_directory.clone();
         let model =

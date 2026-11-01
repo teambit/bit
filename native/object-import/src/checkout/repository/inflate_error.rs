@@ -3,21 +3,26 @@ use std::{fmt, io};
 #[derive(Debug)]
 struct Failure(flate2::DecompressError);
 impl fmt::Display for Failure {
+    #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("checkout invalid compressed object")
     }
 }
 impl std::error::Error for Failure {
+    #[inline]
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         Some(&self.0)
     }
 }
+#[inline]
 pub(super) fn retain(error: flate2::DecompressError) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, Failure(error))
 }
+#[inline]
 const fn is_trim_char(ch: char) -> bool {
     ch.is_whitespace() || ch.is_control()
 }
+#[inline]
 pub(crate) fn message(error: &io::Error) -> Option<&str> {
     error
         .get_ref()?

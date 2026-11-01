@@ -683,8 +683,7 @@ fn socket_settings_come_from_the_network_config() {
     let invalid: GlobalConfig =
         std::iter::once(("network.local_address".to_string(), json!("not-an-ip"))).collect();
     let error = Network::new(&invalid, "1.0.0", None, None)
-        .err()
-        .expect("an invalid local address is rejected");
+        .expect_err("an invalid local address is rejected");
     assert_eq!(error.to_string(), "invalid network.local_address: not-an-ip");
 }
 

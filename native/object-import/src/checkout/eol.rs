@@ -3,6 +3,7 @@ mod tests;
 
 /// Mirror isbinaryfile 4.0.6's 512-byte classifier, including BOM early returns
 /// and the deliberately limited two/three-byte UTF-8 detection.
+#[inline]
 pub(crate) fn binary(bytes: &[u8]) -> bool {
     if bytes.is_empty() || text_bom(bytes) {
         return false;
@@ -13,6 +14,7 @@ pub(crate) fn binary(bytes: &[u8]) -> bool {
     suspicious_prefix(&bytes[..bytes.len().min(512)])
 }
 
+#[inline]
 fn suspicious_prefix(bytes: &[u8]) -> bool {
     let total = bytes.len();
     let mut suspicious = 0_usize;
@@ -35,10 +37,12 @@ fn suspicious_prefix(bytes: &[u8]) -> bool {
     suspicious.saturating_mul(100) > total.saturating_mul(10)
 }
 
+#[inline]
 fn ordinary(byte: u8) -> bool {
     matches!(byte, 7..=14 | 32..=127)
 }
 
+#[inline]
 fn utf8_sequence(bytes: &[u8], index: &mut usize) -> bool {
     let byte = bytes[*index];
     if (194..224).contains(&byte) && *index + 1 < bytes.len() {
@@ -55,6 +59,7 @@ fn utf8_sequence(bytes: &[u8], index: &mut usize) -> bool {
     false
 }
 
+#[inline]
 fn text_bom(bytes: &[u8]) -> bool {
     [
         b"\xef\xbb\xbf".as_slice(),
@@ -67,14 +72,17 @@ fn text_bom(bytes: &[u8]) -> bool {
     .iter()
     .any(|bom| bytes.starts_with(bom))
 }
+#[inline]
 fn continuation(byte: u8) -> bool {
     (128..192).contains(&byte)
 }
 
+#[inline]
 pub(crate) fn auto(bytes: Vec<u8>) -> Vec<u8> {
     normalize(bytes, cfg!(windows))
 }
 
+#[inline]
 pub(crate) fn normalize(bytes: Vec<u8>, windows: bool) -> Vec<u8> {
     if bytes.is_empty()
         || (!bytes.contains(&b'\r') && (!windows || !bytes.contains(&b'\n')))
@@ -87,6 +95,7 @@ pub(crate) fn normalize(bytes: Vec<u8>, windows: bool) -> Vec<u8> {
     if output == text { bytes } else { output.into_bytes() }
 }
 
+#[inline]
 fn replace_newlines(text: &str, windows: bool) -> String {
     let newline = if windows { "\r\n" } else { "\n" };
     let mut output = String::with_capacity(text.len());

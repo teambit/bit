@@ -7,11 +7,12 @@ use std::{
     io::{self, Write},
     path::PathBuf,
 };
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     pub(super) plans: HashMap<String, Plan>,
     sequence: u64,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Plan {
     pub(super) bodies: Vec<Body>,
     pub(super) target: Vec<wire::Manifest>,
@@ -22,6 +23,7 @@ pub(super) struct Plan {
     pub(super) statuses: Vec<Value>,
     pub(super) other: Option<Vec<wire::Manifest>>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Current {
     pub(super) relative_path: String,
     pub(super) path: PathBuf,
@@ -30,6 +32,7 @@ pub(super) struct Current {
     pub(super) shares_buffer: bool,
     pub(super) raw_hash: String,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Body {
     pub(super) offset: Option<usize>,
     pub(super) contents: Vec<u8>,
@@ -37,10 +40,12 @@ pub(super) struct Body {
     pub(super) hash: String,
 }
 impl Body {
+    #[inline]
     pub(super) fn new(contents: Vec<u8>) -> Self {
         let hash = crate::validate::hexadecimal(&Sha1::digest(&contents));
         Self { contents, path: PathBuf::new(), hash, offset: None }
     }
+    #[inline]
     pub(super) fn manifest(&self, index: usize) -> Value {
         let mut row = json!({"planIndex":index,"spoolPath":self.path,"spoolHash":self.hash,"bytes":self.contents.len()});
         if let Some(offset) = self.offset {
@@ -48,6 +53,7 @@ impl Body {
         }
         row
     }
+    #[inline]
     pub(super) fn spool(&self) -> io::Result<()> {
         OpenOptions::new()
             .write(true)
@@ -57,6 +63,7 @@ impl Body {
     }
 }
 impl Plan {
+    #[inline]
     pub(super) fn bytes(&self) -> usize {
         self.bodies
             .iter()
@@ -80,6 +87,7 @@ impl Plan {
     }
 }
 impl State {
+    #[inline]
     pub(super) fn retained_totals(&self) -> (usize, usize) {
         self.plans
             .values()
@@ -129,13 +137,16 @@ impl State {
     }
 }
 
+#[inline]
 fn serialized_len(value: &Value) -> io::Result<usize> {
     struct ByteCount(usize);
     impl std::io::Write for ByteCount {
+        #[inline]
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             self.0 = self.0.saturating_add(buf.len());
             Ok(buf.len())
         }
+        #[inline]
         fn flush(&mut self) -> io::Result<()> {
             Ok(())
         }

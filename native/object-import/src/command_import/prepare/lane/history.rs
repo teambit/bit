@@ -36,6 +36,7 @@ impl PreparedImport {
         self.merge_remote_history(&directory, &hash)?;
         self.validate()
     }
+    #[inline]
     fn merge_remote_history(&mut self, directory: &std::path::Path, hash: &str) -> io::Result<()> {
         let history_hash = crate::lane_history::hash(hash);
         let Some(incoming) = self.capture.object(directory, &history_hash, "LaneHistory")? else {
@@ -66,6 +67,7 @@ impl PreparedImport {
     }
 }
 
+#[inline]
 fn merge_history(
     existing: Option<Value>,
     mut incoming: Value,

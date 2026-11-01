@@ -7,6 +7,7 @@ use super::{invalid, plan, wire};
 use serde_json::{Value, json};
 use std::{collections::HashMap, fs, io};
 
+#[inline]
 pub(super) fn prepare(
     input: &Value,
     state: &mut plan::State,
@@ -61,10 +62,12 @@ pub(super) fn prepare_with_overlay(
     };
     state.retain(plan, input, &request.snapshot_directory)
 }
+#[inline]
 fn has_conflicts(rows: &[Value]) -> bool {
     rows.iter()
         .any(|row| row.get("conflictPlanIndex").is_some() || row["isBinaryConflict"] == true)
 }
+#[inline]
 fn parse_request(input: &Value) -> io::Result<wire::Prepare> {
     let request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
     validate(&request)?;
@@ -92,6 +95,7 @@ fn validate(request: &wire::Prepare) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn invalid_manifest_files(files: &[wire::Manifest]) -> bool {
     files.len() > 4096
         || files

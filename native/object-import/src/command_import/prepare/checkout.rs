@@ -125,6 +125,7 @@ impl PreparedImport {
     }
 }
 
+#[inline]
 fn lane_targets(value: &serde_json::Value) -> io::Result<Vec<Target>> {
     entries(value)?
         .into_iter()
@@ -141,6 +142,7 @@ fn lane_targets(value: &serde_json::Value) -> io::Result<Vec<Target>> {
         .collect()
 }
 
+#[inline]
 fn seeds(remote: &[Target], bitmap: &[Target]) -> Vec<Target> {
     let mut targets = Vec::with_capacity(remote.len() + bitmap.len());
     targets.extend_from_slice(remote);

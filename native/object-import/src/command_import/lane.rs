@@ -20,20 +20,21 @@ pub(crate) struct Id {
     pub(crate) scope: String,
     pub(crate) name: String,
 }
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Record {
     pub(crate) hash: String,
     pub(crate) value: Value,
     pub(crate) is_new: bool,
 }
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Entry {
     pub(crate) identity: String,
     pub(crate) head: String,
     pub(crate) hidden: bool,
 }
 impl Id {
+    #[inline]
     pub(crate) fn validate(&self) -> io::Result<()> {
         for part in [&self.scope, &self.name] {
             if part.is_empty()
@@ -48,31 +49,37 @@ impl Id {
         }
         Ok(())
     }
+    #[inline]
     pub(crate) fn is_main(&self) -> bool {
         self.name.trim() == "main"
     }
 }
 
 impl PreparedImport {
+    #[inline]
     pub(crate) fn switch_existing_versions(&mut self) {
         self.cache.switch_existing_versions = true;
     }
     /// Publish the remote lane's refs without adding its Lane object to the
     /// local index. Public workspace fetch keeps only these refs.
+    #[inline]
     pub(crate) fn retain_remote_lane_refs(&mut self, record: &Record) -> io::Result<()> {
         merge::remote_refs(self, record)
     }
 
     /// Lane import retains the fetched Lane in the local index as well as its refs.
+    #[inline]
     pub(crate) fn publish_imported_lane(&mut self, id: &Id, incoming: &Record) -> io::Result<()> {
         let old = self.load_lane(id)?;
         merge::merge(self, old.as_ref(), incoming)?;
         Ok(())
     }
 
+    #[inline]
     pub(crate) fn fetched_lane(&self) -> Option<&Record> {
         self.cache.fetched_lane.as_ref()
     }
+    #[inline]
     pub(crate) fn lane_import_histories(&self) -> &[Value] {
         &self.writes.lane_histories
     }
@@ -100,6 +107,7 @@ impl PreparedImport {
         self.writes.lane_histories.clear();
         Ok(())
     }
+    #[inline]
     pub(crate) fn resolve_other_lane(
         &mut self,
         id: &Id,
@@ -206,6 +214,7 @@ impl PreparedImport {
             .join("scope.json");
         self.capture.json(&path)?.ok_or_else(|| invalid("command lane scope missing"))
     }
+    #[inline]
     pub(crate) fn resolve_lane(&mut self, name: &str) -> io::Result<Id> {
         let scope = self.lane_scope()?;
         resolved(name, &scope, &self.writes.index)
@@ -297,6 +306,7 @@ fn resolve_local(name: &str, scope: &Value, index: &Value) -> io::Result<Id> {
     };
     Ok(matched.clone())
 }
+#[inline]
 fn index_rows(index: &Value) -> io::Result<&[Value]> {
     if index.is_array() || index.get("lanes").is_none_or(Value::is_null) {
         return Ok(&[][..]);
@@ -344,9 +354,11 @@ pub(crate) fn entries(value: &Value) -> io::Result<Vec<Entry>> {
     }
     Ok(result)
 }
+#[inline]
 pub(crate) fn component_identity(value: &Value) -> io::Result<String> {
     component_identity_with_scope(value, None)
 }
+#[inline]
 pub(crate) fn validate_value(id: &Id, value: &Value) -> io::Result<()> {
     if value["scope"].as_str().map(str::trim) != Some(id.scope.as_str())
         || value["name"].as_str().map(str::trim) != Some(id.name.as_str())
@@ -356,6 +368,7 @@ pub(crate) fn validate_value(id: &Id, value: &Value) -> io::Result<()> {
     entries(value)?;
     Ok(())
 }
+#[inline]
 fn text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
     value[key]
         .as_str()

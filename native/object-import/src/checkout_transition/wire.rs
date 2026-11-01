@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Prepare {
     #[serde(default)]
@@ -12,7 +12,7 @@ pub(super) struct Prepare {
     pub(super) base: Option<Version>,
     pub(super) labels: Option<Labels>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Version {
     pub(super) hash: String,
@@ -20,7 +20,7 @@ pub(super) struct Version {
     #[serde(rename = "proofFiles")]
     pub(super) proof_files: Option<Vec<Manifest>>,
 }
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Manifest {
     pub(super) hash: String,
@@ -30,7 +30,7 @@ pub(super) struct Manifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) test: Option<bool>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Current {
     pub(super) read_token: Option<u64>,
@@ -43,13 +43,13 @@ pub(super) struct Current {
     #[serde(default)]
     pub(super) bitmap: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Labels {
     pub(super) current: String,
     pub(super) other: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Apply {
     #[serde(deserialize_with = "deserialize_token")]
@@ -60,14 +60,14 @@ pub(super) struct Apply {
     pub(super) tracked: bool,
     pub(super) workspace_root: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Materialize {
     #[serde(deserialize_with = "deserialize_token")]
     pub(super) token: String,
     pub(super) files: Vec<Destination>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Destination {
     pub(super) plan_index: usize,
@@ -75,17 +75,19 @@ pub(super) struct Destination {
     pub(super) overwrite: bool,
     pub(super) eol: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Token {
     #[serde(deserialize_with = "deserialize_token")]
     pub(super) token: String,
 }
 
+#[inline]
 const fn is_token_trim_char(ch: char) -> bool {
     ch.is_whitespace() || ch == '\0'
 }
 
+#[inline]
 fn deserialize_token<'de, Deser>(deserializer: Deser) -> Result<String, Deser::Error>
 where
     Deser: serde::Deserializer<'de>,

@@ -5,7 +5,7 @@ mod tests;
 use super::{invalid, plan, wire};
 use serde_json::{Value, json};
 use std::io;
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct File {
     pub(super) kind: &'static str,
     pub(super) index: usize,
@@ -39,6 +39,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     }
     Ok(output)
 }
+#[inline]
 fn strategy_eq(strategy: Option<&str>, expected: &str) -> bool {
     strategy.is_some_and(|strat| strat.eq_ignore_ascii_case(expected))
 }
@@ -70,6 +71,7 @@ fn initial(
     insert_statuses(&mut status, removal_rows, "checkout removal path")?;
     Ok((files, status, removal))
 }
+#[inline]
 fn insert_statuses(
     status: &mut serde_json::Map<String, Value>,
     rows: &[Value],
@@ -88,6 +90,7 @@ fn insert_statuses(
     }
     Ok(())
 }
+#[inline]
 pub(super) fn path<'a>(plan: &'a plan::Plan, row: &Value) -> io::Result<&'a str> {
     if let Some(index) = row["current"].as_u64() {
         return plan.current
@@ -104,9 +107,11 @@ pub(super) fn path<'a>(plan: &'a plan::Plan, row: &Value) -> io::Result<&'a str>
         .map(|file| file.relative_path.as_str())
         .ok_or_else(|| invalid("checkout other merge index"))
 }
+#[inline]
 pub(super) fn error_path(path: &str) -> String {
     error_path_for_platform(path, cfg!(windows))
 }
+#[inline]
 fn error_path_for_platform(path: &str, windows: bool) -> String {
     if windows { path.replace('/', r"\") } else { path.to_owned() }
 }

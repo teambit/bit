@@ -11,7 +11,7 @@ use super::MAX_BYTES;
 /// One helper owns one bounded set of verified Source snapshots. Keys and empty
 /// sources count toward separate metadata/entry limits too, preventing unbounded
 /// metadata-only growth without shrinking the 32 MiB raw Source budget.
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     sources: HashMap<(PathBuf, [u8; 20]), Vec<u8>>,
     bytes: usize,
@@ -20,17 +20,20 @@ pub(crate) struct State {
 const MAX_KEY_BYTES: usize = 4 * 1024 * 1024;
 const MAX_ENTRIES: usize = 4096;
 
+#[inline]
 fn canonical_dir(directory: &Path) -> PathBuf {
     directory.components().collect()
 }
 
 impl State {
+    #[inline]
     pub(crate) fn get(&self, directory: &Path, hash: [u8; 20]) -> Option<&Vec<u8>> {
         if self.sources.is_empty() {
             return None;
         }
         self.sources.get(&(canonical_dir(directory), hash))
     }
+    #[inline]
     pub(crate) fn insert(&mut self, directory: &Path, hash: [u8; 20], body: Vec<u8>) {
         let dir = canonical_dir(directory);
         let weight = body.len();

@@ -19,7 +19,7 @@ use std::{
 pub(super) const MAX_BYTES: usize = 1024 * 1024 * 1024;
 const MAX_RECORDS: usize = 131_072;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Object {
     pub(super) kind: String,
     pub(super) bytes: Vec<u8>,
@@ -27,7 +27,7 @@ pub(super) struct Object {
     pub(super) source: Option<Vec<u8>>,
     pub(super) inflated_size: usize,
 }
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Capture {
     proofs: HashMap<PathBuf, Option<[u8; 32]>>,
     virtual_files: HashMap<PathBuf, Vec<u8>>,
@@ -36,6 +36,7 @@ pub(super) struct Capture {
     raw_bytes: usize,
 }
 impl Capture {
+    #[inline]
     pub(super) fn accept_known(&mut self, path: &Path, bytes: &[u8]) {
         if let Some(proof) = self.proofs.get_mut(path) {
             *proof = Some(Sha256::digest(bytes).into());
@@ -43,6 +44,7 @@ impl Capture {
         }
     }
 
+    #[inline]
     pub(super) fn virtual_file(&mut self, path: PathBuf, bytes: Vec<u8>) -> io::Result<()> {
         if self.virtual_files.len() >= MAX_RECORDS
             || bytes.len() > MAX_BYTES.saturating_sub(self.virtual_bytes)
@@ -92,6 +94,7 @@ impl Capture {
         }
         Ok(bytes)
     }
+    #[inline]
     pub(super) fn json(&mut self, path: &Path) -> io::Result<Option<Value>> {
         self.read(path)?
             .map(|bytes| crate::parse_jsonc(&bytes).map_err(io::Error::other))
@@ -178,6 +181,7 @@ impl Capture {
         }
         Ok(result)
     }
+    #[inline]
     fn virtual_source(&mut self, directory: &Path, hash: &str) -> io::Result<(String, Object)> {
         self.object(directory, hash, "Source")?
             .map(|record| (hash.to_owned(), record))
@@ -229,11 +233,13 @@ impl Capture {
         Ok(())
     }
 }
+#[inline]
 fn object_path(directory: &Path, hash: &str) -> PathBuf {
     directory
         .join(&hash[..2])
         .join(&hash[2..])
 }
+#[inline]
 fn read(path: &Path, maximum: usize) -> io::Result<Option<Vec<u8>>> {
     if fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink()) {
         return Err(invalid("import symbolic-link metadata requires canonical path handling"));

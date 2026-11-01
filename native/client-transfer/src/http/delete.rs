@@ -152,6 +152,7 @@ impl Network {
     }
 }
 
+#[inline]
 fn final_hub_line(bytes: &[u8]) -> io::Result<Value> {
     let mut last = Value::Null;
     let mut count = 0;
@@ -191,6 +192,7 @@ fn validate_removed(result: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn status_error(bytes: &[u8], url: &str, status: reqwest::StatusCode) -> io::Error {
     let parsed: Value = serde_json::from_slice(bytes).unwrap_or(Value::Null);
     let error = if parsed["error"].is_object() { &parsed["error"] } else { &parsed };

@@ -18,7 +18,7 @@ use verification::plain_tag;
 const MAX_JSON: usize = 4 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     objects_directory: PathBuf,
@@ -28,7 +28,7 @@ struct Request {
     current: Vec<Current>,
     expected_files: Vec<ManifestFile>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Current {
     relative_path: String,
@@ -36,7 +36,7 @@ struct Current {
     path: PathBuf,
     protected: bool,
 }
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ManifestFile {
     hash: String,
@@ -46,7 +46,7 @@ struct ManifestFile {
     #[serde(skip_serializing_if = "Option::is_none")]
     test: Option<bool>,
 }
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Plan {
     version_hash: String,
@@ -54,13 +54,13 @@ struct Plan {
     statuses: Vec<FileStatus>,
     removals: Vec<PathBuf>,
 }
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct FileStatus {
     relative_path: String,
     status: &'static str,
 }
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,
     id: u32,
@@ -108,6 +108,7 @@ pub(crate) fn serve(
     writer.flush()
 }
 
+#[inline]
 fn parse_request(bytes: &[u8]) -> io::Result<Request> {
     let value: Value =
         serde_json::from_slice(bytes).map_err(|_| invalid("checkout plan invalid JSON"))?;
@@ -149,6 +150,7 @@ fn build(request: &Request, state: &mut cache::State) -> io::Result<Plan> {
     Ok(compare(request, version_hash, files))
 }
 
+#[inline]
 fn same_manifest(stored: &[ManifestFile], live: &[ManifestFile]) -> bool {
     if stored.len() != live.len() {
         return false;
@@ -209,6 +211,7 @@ fn validate_files(files: &[ManifestFile]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn hash(value: &str) -> io::Result<[u8; 20]> {
     let value = value.trim();
     if value.len() != 40
@@ -226,6 +229,7 @@ fn hash(value: &str) -> io::Result<[u8; 20]> {
     Ok(hash)
 }
 
+#[inline]
 fn absolute_path(path: &Path) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("checkout plan path is not UTF-8"))?;
     if !path.is_absolute() || name.contains('\0') || name.len() > MAX_PATH {
@@ -234,6 +238,7 @@ fn absolute_path(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(crate) fn relative_path(path: &str) -> io::Result<()> {
     if path.is_empty() || path.len() > MAX_PATH || path.contains(['\0', '\\', ':']) {
         return Err(invalid("checkout plan invalid relative path"));
@@ -325,6 +330,7 @@ fn manifest(version: &Value) -> io::Result<Vec<ManifestFile>> {
     Ok(files)
 }
 
+#[inline]
 fn optional_metadata(file: &Value) -> io::Result<()> {
     if file
         .get("name")

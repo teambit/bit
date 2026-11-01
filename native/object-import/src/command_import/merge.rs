@@ -48,6 +48,7 @@ pub(super) fn model_from(
     }
     canonical(existing)
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct MergePlan {
     plan: Value,
     tags: [Vec<[String; 2]>; 3],
@@ -163,6 +164,7 @@ fn canonical(mut value: Value) -> io::Result<Value> {
     }
     Ok(Value::Object(result))
 }
+#[inline]
 fn parsed_model(value: &Value) -> io::Result<Value> {
     let mut result = value.clone();
     let schema_missing = result["schema"].is_null()
@@ -182,6 +184,7 @@ fn parsed_model(value: &Value) -> io::Result<Value> {
     Ok(result)
 }
 
+#[inline]
 fn validate_model(value: &Value) -> io::Result<()> {
     let has_name = value["name"]
         .as_str()
@@ -205,6 +208,7 @@ fn validate_model(value: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn entries(value: &Value) -> io::Result<Vec<[String; 2]>> {
     if value.is_null() {
         return Ok(Vec::new());
@@ -223,6 +227,7 @@ fn entries(value: &Value) -> io::Result<Vec<[String; 2]>> {
         })
         .collect()
 }
+#[inline]
 fn array(value: &Value) -> io::Result<Vec<String>> {
     if value.is_null() {
         return Ok(Vec::new());

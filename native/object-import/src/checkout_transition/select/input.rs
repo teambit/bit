@@ -2,14 +2,14 @@ use super::invalid;
 use serde::Deserialize;
 use serde_json::Value;
 use std::io;
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Begin {
     pub(super) component: Component,
     pub(super) model: Option<Model>,
     pub(super) options: Options,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Component {
     pub(super) id: String,
@@ -20,12 +20,12 @@ pub(super) struct Component {
     pub(super) current_exists: bool,
     pub(super) is_removed: bool,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Model {
     pub(super) has_main_head: bool,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Options {
     #[serde(flatten)]
@@ -34,7 +34,7 @@ pub(super) struct Options {
     pub(super) version: Option<String>,
     pub(super) version_per_id: Option<Value>,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Flags {
     pub(super) reset: bool,
@@ -47,7 +47,7 @@ pub(super) struct Flags {
     pub(super) load_stash: bool,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Receipt {
     pub(super) token: String,
@@ -55,24 +55,25 @@ pub(super) struct Receipt {
     pub(super) observation: String,
     pub(super) value: Value,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct CurrentObservation {
     pub(super) value: Option<String>,
     pub(super) has_bitmap: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct ModifiedObservation {
     pub(super) modified: bool,
     pub(super) is_removed: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct RemovedObservation {
     pub(super) removed: bool,
     pub(super) has_bitmap: bool,
 }
+#[inline]
 pub(super) fn validate(request: &Begin) -> io::Result<()> {
     if invalid_id(&request.component.id)
         || invalid_id(&request.component.id_without_version)
@@ -98,6 +99,7 @@ pub(super) fn validate(request: &Begin) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn invalid_version(version: Option<&str>) -> bool {
     version.is_some_and(|value| {
         value.len() > 32768
@@ -106,6 +108,7 @@ fn invalid_version(version: Option<&str>) -> bool {
     })
 }
 
+#[inline]
 fn invalid_id(value: &str) -> bool {
     value.len() > 32768 || value.trim().is_empty() || value.chars().any(char::is_control)
 }

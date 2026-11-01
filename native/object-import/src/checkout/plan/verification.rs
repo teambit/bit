@@ -3,6 +3,7 @@ use super::{
 };
 use serde_json::Value;
 use std::{io, path::Path};
+#[inline]
 pub(crate) fn verify_manifest(
     directory: &Path,
     expected_hash: &str,
@@ -12,6 +13,7 @@ pub(crate) fn verify_manifest(
     let version = metadata(directory, hash(expected_hash.trim())?, "Version", compressed)?;
     verify_manifest_value(&version, expected)
 }
+#[inline]
 pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Result<()> {
     let Some(items) = expected.as_array() else {
         return Err(invalid("checkout invalid expected manifest"));
@@ -29,6 +31,7 @@ pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Re
     Ok(())
 }
 
+#[inline]
 pub(super) fn plain_tag(tag: &str) -> bool {
     let tag = tag.trim();
     if tag.is_empty() || tag.len() > 256 {
@@ -50,6 +53,7 @@ pub(super) fn plain_tag(tag: &str) -> bool {
         && build.is_none_or(|value| identifiers(value, false))
 }
 
+#[inline]
 fn numeric_segment(value: &str) -> bool {
     !value.is_empty()
         && (value.len() == 1 || !value.starts_with('0'))
@@ -59,10 +63,12 @@ fn numeric_segment(value: &str) -> bool {
             .is_ok_and(|number| number <= 9_007_199_254_740_991)
 }
 
+#[inline]
 fn identifiers(value: &str, numeric_strict: bool) -> bool {
     value.split('.').all(|segment| valid_identifier_segment(segment, numeric_strict))
 }
 
+#[inline]
 fn valid_identifier_segment(segment: &str, numeric_strict: bool) -> bool {
     !segment.is_empty()
         && segment

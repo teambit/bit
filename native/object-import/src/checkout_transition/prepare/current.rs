@@ -10,6 +10,7 @@ use std::{
     fs,
     io::{self, Read},
 };
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Loaded {
     pub(super) raw: Vec<u8>,
     pub(super) normalized: Vec<u8>,
@@ -71,6 +72,7 @@ fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
     canonical(file, raw)
 }
 
+#[inline]
 fn read_shared(file: &wire::Current, budget: &Budget) -> io::Result<(Loaded, usize)> {
     let raw_hash = file.raw_hash.trim();
     crate::merge_history::hash(raw_hash)?;
@@ -83,6 +85,7 @@ fn read_shared(file: &wire::Current, budget: &Budget) -> io::Result<(Loaded, usi
     canonical(file, raw).map(|loaded| (loaded, length))
 }
 
+#[inline]
 fn canonical(file: &wire::Current, mut raw: Vec<u8>) -> io::Result<Loaded> {
     if raw.starts_with(b"\xef\xbb\xbf") {
         raw.drain(..3);
@@ -96,10 +99,12 @@ fn canonical(file: &wire::Current, mut raw: Vec<u8>) -> io::Result<Loaded> {
     let normalized = crate::checkout::eol::normalize(raw.clone(), false);
     Ok(Loaded { raw, normalized })
 }
+#[inline]
 fn digest(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }
 
+#[inline]
 fn read_source(
     file: &wire::Current,
     directory: &std::path::Path,
@@ -117,6 +122,7 @@ fn read_source(
     Ok(Loaded { raw, normalized })
 }
 
+#[inline]
 fn validate<'a>(
     file: &'a wire::Current,
     seen: &mut HashSet<&'a str>,

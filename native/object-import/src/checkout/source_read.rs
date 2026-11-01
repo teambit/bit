@@ -5,12 +5,13 @@ use rayon::{ThreadPool, prelude::*};
 use serde::Serialize;
 use std::io::{self, Read, Write};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
     body: Vec<u8>,
     compressed: usize,
     inflated: usize,
 }
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Output {
     #[serde(flatten)]
@@ -18,6 +19,7 @@ struct Output {
     binary_bytes: usize,
     data: Vec<Option<[usize; 4]>>,
 }
+#[inline]
 fn read(
     request: &Request,
     input: &super::Input,
@@ -61,6 +63,7 @@ fn records(
             .collect()
     })
 }
+#[inline]
 fn serial_records(request: &Request, state: &cache::State) -> io::Result<Vec<Option<Record>>> {
     let mut raw = 0_usize;
     let mut compressed = 0_usize;
@@ -76,6 +79,7 @@ fn serial_records(request: &Request, state: &cache::State) -> io::Result<Vec<Opt
         })
         .collect()
 }
+#[inline]
 fn response(request: &Request, records: &[Option<Record>]) -> Output {
     let mut binary_bytes = 0_usize;
     let data = records
@@ -125,6 +129,7 @@ fn prepare(request: &Request, state: &mut cache::State, pool: &ThreadPool) -> io
     Ok(output)
 }
 
+#[inline]
 fn load_records(
     request: &Request,
     state: &cache::State,

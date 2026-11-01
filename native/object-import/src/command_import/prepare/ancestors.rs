@@ -4,6 +4,7 @@ use crate::command_import::lane::Id;
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
+#[inline]
 pub(super) fn collect(
     plan: &mut PreparedImport,
     directory: &Path,
@@ -45,6 +46,7 @@ fn collect_target(
     Ok(())
 }
 
+#[inline]
 fn append_parents(version: &Value, pending: &mut Vec<String>) -> io::Result<()> {
     let Some(parents) = version
         .get("parents")
@@ -62,6 +64,7 @@ fn append_parents(version: &Value, pending: &mut Vec<String>) -> io::Result<()> 
     Ok(())
 }
 
+#[inline]
 fn ref_str(value: &Value) -> Option<&str> {
     value
         .as_str()

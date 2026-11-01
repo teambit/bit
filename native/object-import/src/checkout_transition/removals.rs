@@ -2,7 +2,7 @@ use super::{invalid, plan};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     token: String,
@@ -34,6 +34,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     Ok(json!({"statuses":statuses,"removals":removals}))
 }
 
+#[inline]
 fn normalize_rel(path: &str) -> String {
     let trimmed = path.trim();
     let replaced = if trimmed.contains('\\') {

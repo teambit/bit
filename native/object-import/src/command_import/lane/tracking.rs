@@ -7,18 +7,21 @@ use super::{Entry, Id, PreparedImport, Record, invalid, text};
 use serde_json::{Value, json};
 use std::{fs, io, path::PathBuf};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SwitchTracking {
     path: PathBuf,
     before: Vec<u8>,
     after: Vec<u8>,
 }
 impl SwitchTracking {
+    #[inline]
     pub(crate) fn validate(&self) -> io::Result<()> {
         if read(&self.path)? != self.before {
             return Err(invalid("switch tracking configuration changed"));
         }
         Ok(())
     }
+    #[inline]
     pub(crate) fn commit(&self) -> io::Result<Value> {
         self.validate()?;
         super::super::publish::write_file(&self.path, &self.after)?;
@@ -102,6 +105,7 @@ use --skip-fetch to skip this step."#,
         Ok(())
     }
 }
+#[inline]
 fn read(path: &std::path::Path) -> io::Result<Vec<u8>> {
     let metadata = fs::symlink_metadata(path)?;
     if !metadata.is_file() || metadata.file_type().is_symlink() {
@@ -134,6 +138,7 @@ fn append(scope: &mut Value, id: &Id, alias: &str) -> io::Result<bool> {
     Ok(true)
 }
 
+#[inline]
 pub(crate) fn parse_lane_id(value: &Value) -> io::Result<Id> {
     if let Some(raw) = value.as_str() {
         let raw = raw.trim();
@@ -144,6 +149,7 @@ pub(crate) fn parse_lane_id(value: &Value) -> io::Result<Id> {
     Ok(Id { scope: text(value, "scope")?.trim().into(), name: text(value, "name")?.trim().into() })
 }
 
+#[inline]
 pub(crate) fn lane_index_id(row: &Value) -> io::Result<Id> {
     parse_lane_id(&row["id"])
 }
@@ -174,6 +180,7 @@ pub(super) fn hidden_entry(row: &Value, default_scope: Option<&str>) -> io::Resu
     Ok(Entry { identity, head: head.to_owned(), hidden: true })
 }
 
+#[inline]
 pub(super) fn component_identity_with_scope(
     value: &Value,
     default_scope: Option<&str>,
@@ -182,6 +189,7 @@ pub(super) fn component_identity_with_scope(
     validate_component_identity(scope, name)
 }
 
+#[inline]
 fn validate_component_identity(scope: &str, name: &str) -> io::Result<String> {
     if scope.is_empty()
         || scope.len() > 1024
@@ -200,6 +208,7 @@ fn validate_component_identity(scope: &str, name: &str) -> io::Result<String> {
     Ok(format!("{scope}/{name}"))
 }
 
+#[inline]
 fn split_raw_component<'a>(
     raw: &'a str,
     default_scope: Option<&'a str>,
@@ -216,6 +225,7 @@ fn split_raw_component<'a>(
     }
 }
 
+#[inline]
 fn split_component_scope_and_name<'a>(
     value: &'a Value,
     default_scope: Option<&'a str>,
@@ -235,6 +245,7 @@ fn split_component_scope_and_name<'a>(
     Ok((scope, text(value, "name")?.trim()))
 }
 
+#[inline]
 fn valid_lane_component_name(name: &str) -> bool {
     !name.is_empty()
         && name.len() <= 4096

@@ -12,6 +12,7 @@ use std::{io, time::Duration};
 const MAX_LINE: usize = 4 * 1024 * 1024;
 const MAX_RESPONSE: usize = 32 * 1024 * 1024;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HubReply {
     pub data: Value,
     /// Empty messages restart the caller's current loader text, as `loader.start(undefined)` does.
@@ -102,6 +103,7 @@ async fn read(
     Ok((status, end))
 }
 
+#[inline]
 fn accept_chunk(
     mut chunk: &[u8],
     pending: &mut Vec<u8>,
@@ -142,6 +144,7 @@ fn observed_line(
     Ok(())
 }
 
+#[inline]
 fn line(bytes: &[u8], end: &mut Value, messages: &mut Vec<String>) -> io::Result<()> {
     let bytes = bytes.strip_suffix(b"\r").unwrap_or(bytes);
     if bytes.is_empty() {

@@ -5,7 +5,7 @@ use super::{invalid, plan, prepare, wire};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::PathBuf};
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     token: String,
@@ -53,12 +53,14 @@ pub(super) fn apply_with_overlay(
     Ok(manifest(plan, token, request.known_bodies))
 }
 
+#[inline]
 fn manifest(plan: &plan::Plan, token: &str, known: Option<usize>) -> Value {
     known.map_or_else(|| plan.manifest(token), |known| {
         json!({"knownBodies":known,"bodyCount":plan.bodies.len(),"bodies":plan.bodies.iter().enumerate().skip(known).map(|(index, body)|body.manifest(index)).collect::<Vec<_>>()})
     })
 }
 
+#[inline]
 fn retained_indices(plan: &plan::Plan) -> HashMap<&str, usize> {
     let mut indices = HashMap::with_capacity(plan.bodies.len());
     for (index, body) in plan.bodies.iter().enumerate() {
@@ -135,6 +137,7 @@ fn load(
         overlay,
     )
 }
+#[inline]
 fn check_budget(body_count: usize, retained: usize, added: &[plan::Body]) -> io::Result<()> {
     let added_bytes = added
         .iter()

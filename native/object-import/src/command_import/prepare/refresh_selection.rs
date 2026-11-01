@@ -46,6 +46,7 @@ pub(super) fn refresh_all<'a>(
     Ok(available)
 }
 
+#[inline]
 fn target_scope(target: &Target) -> io::Result<&str> {
     target.scope
         .as_deref()
@@ -53,6 +54,7 @@ fn target_scope(target: &Target) -> io::Result<&str> {
         .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("import scope"))
 }
+#[inline]
 fn record_main_refresh(
     plan: &mut PreparedImport,
     directory: &Path,
@@ -65,6 +67,7 @@ fn record_main_refresh(
     Ok(())
 }
 
+#[inline]
 fn record_request(plan: &mut PreparedImport, target: &Target, scope: &str) -> io::Result<()> {
     let progress = plan.progress.last_mut().ok_or_else(|| invalid("import refresh progress"))?;
     progress.ids.push(identity(target)?);
@@ -72,6 +75,7 @@ fn record_request(plan: &mut PreparedImport, target: &Target, scope: &str) -> io
     Ok(())
 }
 
+#[inline]
 fn refresh_with_history(
     plan: &mut PreparedImport,
     target: &Target,
@@ -130,6 +134,7 @@ fn refresh(
     Ok(true)
 }
 
+#[inline]
 fn remote_main_refs_path(local: &Path, scope: &str) -> io::Result<std::path::PathBuf> {
     Ok(local
         .parent()
@@ -157,6 +162,7 @@ fn update_main_ref(
     Ok(())
 }
 
+#[inline]
 fn ref_row_matches(row: &Value, scope: &str, name: &str) -> bool {
     let (scope, name) = (scope.trim(), name.trim());
     if let Some(raw) = row["id"].as_str().map(str::trim) {

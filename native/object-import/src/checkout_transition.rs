@@ -12,7 +12,7 @@ mod wire;
 
 use serde_json::{Value, json};
 use std::io;
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     select: select::State,
     plans: plan::State,
@@ -38,6 +38,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         _ => Err(invalid("unsupported checkout transition operation")),
     }
 }
+#[inline]
 pub(crate) fn prepare_with_workspace(
     input: &Value,
     state: &mut State,
@@ -45,6 +46,7 @@ pub(crate) fn prepare_with_workspace(
 ) -> io::Result<Value> {
     prepare::prepare(input, &mut state.plans, Some(snapshots))
 }
+#[inline]
 pub(crate) fn prepare_with_overlay(
     input: &Value,
     state: &mut State,
@@ -53,6 +55,7 @@ pub(crate) fn prepare_with_overlay(
 ) -> io::Result<Value> {
     prepare::prepare_with_overlay(input, &mut state.plans, snapshots, Some(overlay))
 }
+#[inline]
 fn decision(input: &Value) -> io::Result<Value> {
     let current =
         input["currentExists"].as_bool().ok_or_else(|| invalid("checkout current flag"))?;
@@ -71,6 +74,7 @@ fn decision(input: &Value) -> io::Result<Value> {
     Ok(json!({"keepOurs":current && (force || (conflicts && ours))}))
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
@@ -108,6 +112,7 @@ pub(crate) fn order(
     if indexed { Ok(json!({"rowIndices":order})) } else { Ok(json!({"mergeRows":plan.merge_rows})) }
 }
 
+#[inline]
 pub(crate) fn retarget_with_overlay(
     input: Value,
     state: &mut State,

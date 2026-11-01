@@ -44,6 +44,7 @@ impl PreparedImport {
         }
         self.validate()
     }
+    #[inline]
     fn external_targets(&self, targets: &[Target]) -> Vec<Target> {
         targets
             .iter()
@@ -78,9 +79,11 @@ impl PreparedImport {
         Ok(remotes)
     }
     /// Checkout's cache=true importWithoutDeps stage, after status selection.
+    #[inline]
     pub(crate) fn prepare_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, None)
     }
+    #[inline]
     pub(crate) fn prepare_switch_versions(
         &mut self,
         targets: &[Target],
@@ -123,21 +126,25 @@ impl PreparedImport {
         }
         Ok(())
     }
+    #[inline]
     pub(crate) fn prepare_merge_gap(&mut self, targets: &[Target]) -> io::Result<()> {
         let reason = self.cache.lane_reason
             .clone()
             .unwrap_or_else(|| "for getting the common-snap between main and main".into());
         self.prepare_versions_with_reason(targets, Some(&reason))
     }
+    #[inline]
     pub(crate) fn prepare_lane_pattern_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, Some("import all history of given patterns components to check whether they have dependencies on the lane"))
     }
+    #[inline]
     pub(crate) fn prepare_scope_additions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(
             targets,
             Some("to import new components from the defaultScope"),
         )
     }
+    #[inline]
     pub(super) fn prepare_versions_with_reason(
         &mut self,
         targets: &[Target],

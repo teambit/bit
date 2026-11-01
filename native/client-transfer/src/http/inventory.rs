@@ -7,9 +7,10 @@ use crate::invalid;
 use serde_json::{Map, Value, json};
 use std::io;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct OldServerFallbackError(String);
 impl std::fmt::Display for OldServerFallbackError {
+    #[inline]
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(formatter)
     }
@@ -177,6 +178,7 @@ fn graphql_error(response: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn inventory_rows(response: &Value, include_deleted: bool) -> io::Result<Vec<Value>> {
     let components = response["data"]["scope"]["components"]
         .as_array()

@@ -35,6 +35,7 @@ pub(super) fn apply(
     }
     Ok(None)
 }
+#[inline]
 fn effect(
     kind: &str,
     plan: &plan::Plan,
@@ -161,6 +162,7 @@ fn update(
     Ok(None)
 }
 
+#[inline]
 fn add_source(plan: &plan::Plan, row: &Value) -> io::Result<Option<(&'static str, usize, usize)>> {
     let source = if let Some(index) = row["current"].as_u64() {
         let index = index as usize;

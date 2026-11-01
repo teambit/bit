@@ -25,6 +25,7 @@ const MAX_FILES: u32 = 64;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_PATH: usize = 32_768;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Input {
     hash: [u8; 20],
     destination: PathBuf,
@@ -32,6 +33,7 @@ struct Input {
     prefer_cached: bool,
 }
 impl Input {
+    #[inline]
     fn cached<'a>(
         &self,
         request: &Request,
@@ -43,12 +45,13 @@ impl Input {
             .flatten()
     }
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Request {
     id: u32,
     directory: PathBuf,
     files: Vec<Input>,
 }
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,
     id: u32,
@@ -115,6 +118,7 @@ fn request(reader: &mut impl Read, maximum_files: u32) -> io::Result<Request> {
     Ok(Request { id, directory, files })
 }
 
+#[inline]
 pub(crate) fn path(reader: &mut impl Read) -> io::Result<PathBuf> {
     let length = protocol::word(reader)? as usize;
     if !(1..=MAX_PATH).contains(&length) {
@@ -161,6 +165,7 @@ fn sequential_preflight(
     Ok(files)
 }
 
+#[inline]
 fn load_source_body(
     request: &Request,
     input: &Input,
@@ -182,6 +187,7 @@ fn load_source_body(
     Ok(body)
 }
 
+#[inline]
 fn materialize(
     path: &std::path::Path,
     contents: &[u8],
@@ -205,6 +211,7 @@ fn materialize(
     output.write_all(contents)
 }
 
+#[inline]
 pub(crate) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

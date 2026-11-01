@@ -14,9 +14,9 @@ use std::{
 };
 use tokio::sync::Notify;
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Cancellation(Arc<State>);
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct State {
     cancelled: AtomicBool,
     changed: Notify,
@@ -24,8 +24,10 @@ struct State {
 thread_local! {
     static CURRENT: RefCell<Option<Cancellation>> = const { RefCell::new(None) };
 }
+#[derive(Debug)]
 struct Restore(Option<Cancellation>);
 impl Drop for Restore {
+    #[inline]
     fn drop(&mut self) {
         CURRENT.with(|current| current.replace(self.0.take()));
     }

@@ -7,6 +7,7 @@ use rayon::prelude::*;
 use std::{io, path::Path};
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 type Source = ([u8; 20], repository::SourceRecord);
+#[inline]
 pub(in crate::checkout_transition) fn load_with_overlay(
     directory: &Path,
     version: &wire::Version,
@@ -69,6 +70,7 @@ fn parallel(
     }
     Ok(files)
 }
+#[inline]
 fn read_batch(
     directory: &Path,
     batch: &[wire::Manifest],
@@ -92,6 +94,7 @@ fn read_batch(
         })
         .collect()
 }
+#[inline]
 fn serial_batch(
     directory: &Path,
     batch: &[wire::Manifest],
@@ -142,6 +145,7 @@ pub(super) fn selected(
         .collect())
 }
 
+#[inline]
 pub(in crate::checkout_transition) fn verify(
     directory: &Path,
     version: &wire::Version,

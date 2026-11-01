@@ -78,6 +78,7 @@ pub(super) fn files(
         .collect()
 }
 
+#[inline]
 pub(in crate::checkout_transition::prepare) fn body(
     directory: &Path,
     hash: &str,
@@ -105,6 +106,7 @@ pub(in crate::checkout_transition::prepare) fn body(
     Ok(bytes)
 }
 
+#[inline]
 fn charge(overlay: &Overlay, hash: &str, compressed: &mut usize) -> io::Result<()> {
     let bytes =
         overlay.compressed(hash).ok_or_else(|| invalid("checkout overlay compressed object"))?;

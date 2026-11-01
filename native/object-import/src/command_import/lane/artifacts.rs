@@ -33,6 +33,7 @@ impl PreparedImport {
         )
     }
 }
+#[inline]
 fn lane_field(lane: &Value, key: &str, msg: &'static str) -> io::Result<String> {
     lane[key]
         .as_str()
@@ -41,6 +42,7 @@ fn lane_field(lane: &Value, key: &str, msg: &'static str) -> io::Result<String> 
         .map(str::to_owned)
         .ok_or_else(|| invalid(msg))
 }
+#[inline]
 fn artifact_refs(version: &Value) -> io::Result<Vec<String>> {
     let Some(extensions) = version
         .get("extensions")
@@ -69,6 +71,7 @@ fn artifact_refs(version: &Value) -> io::Result<Vec<String>> {
     collect_builder_references(artifacts)
 }
 
+#[inline]
 fn collect_builder_references(artifacts: &Value) -> io::Result<Vec<String>> {
     let mut references = Vec::new();
     for artifact in artifacts.as_array().ok_or_else(|| invalid("lane builder artifacts"))? {

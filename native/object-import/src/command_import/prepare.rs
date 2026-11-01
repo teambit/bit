@@ -24,6 +24,7 @@ use std::{
     path::Path,
 };
 use transfer::receive;
+#[inline]
 pub(crate) fn prepare(
     root: &Path,
     global_remotes_file: &Path,
@@ -32,12 +33,14 @@ pub(crate) fn prepare(
     prepare_with_virtual(root, global_remotes_file, targets, &[])
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct VirtualRemote {
     pub(crate) scope: String,
     pub(crate) path: std::path::PathBuf,
     pub(crate) objects: Vec<(String, Vec<u8>)>,
 }
 
+#[inline]
 pub(crate) fn prepare_with_virtual(
     root: &Path,
     global_remotes_file: &Path,
@@ -54,6 +57,7 @@ pub(crate) fn prepare_with_virtual(
 }
 
 /// `status --lanes` ignores a component that has never been exported to main.
+#[inline]
 pub(crate) fn prepare_status_with_virtual(
     root: &Path,
     global_remotes_file: &Path,
@@ -69,7 +73,7 @@ pub(crate) fn prepare_status_with_virtual(
     )
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Mode {
     ignore_missing: bool,
     all_history: bool,
@@ -157,6 +161,7 @@ fn prepare_dependencies(
     }
     Ok(())
 }
+#[inline]
 fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
     empty_at(&crate::scope_path(root), allow_lane)
 }
@@ -199,6 +204,7 @@ fn empty_at(directory: &Path, allow_lane: bool) -> io::Result<(PreparedImport, V
 }
 /// Main merge only consults persisted remote heads. Its later common-snap fetch
 /// must share an import owner without executing checkout's current-head refresh.
+#[inline]
 pub(crate) fn prepare_cached(
     root: &Path,
     global_remotes_file: &Path,
@@ -207,9 +213,11 @@ pub(crate) fn prepare_cached(
     configure_cached(&mut plan, root, global_remotes_file)?;
     Ok(plan)
 }
+#[inline]
 pub(crate) fn prepare_lane(root: &Path, global_remotes_file: &Path) -> io::Result<PreparedImport> {
     prepare_lane_at(&crate::scope_path(root), global_remotes_file)
 }
+#[inline]
 pub(crate) fn prepare_lane_at(
     directory: &Path,
     global_remotes_file: &Path,
@@ -233,6 +241,7 @@ pub(crate) fn prepare_lane_with_virtual(
     plan.validate()?;
     Ok(plan)
 }
+#[inline]
 fn configure_cached(
     plan: &mut PreparedImport,
     root: &Path,
@@ -265,6 +274,7 @@ fn configure_cached_at(
     plan.validate()?;
     Ok(())
 }
+#[inline]
 fn identity(target: &Target) -> io::Result<String> {
     let scope = target.scope
         .as_deref()
@@ -312,6 +322,7 @@ fn read_model(
     }
     Ok(value)
 }
+#[inline]
 fn version_ref(model: &Value, version: &str) -> io::Result<String> {
     let version = version.trim();
     if crate::merge_history::hash(version).is_ok() {
@@ -333,6 +344,7 @@ fn version_ref(model: &Value, version: &str) -> io::Result<String> {
         .map(str::to_owned)
         .ok_or_else(|| invalid("import model version absent"))
 }
+#[inline]
 fn read_version(plan: &mut PreparedImport, hash: &str) -> io::Result<Option<Value>> {
     if let Some(value) = plan.overlay.read(hash, "Version")? {
         return Ok(Some(value.clone()));

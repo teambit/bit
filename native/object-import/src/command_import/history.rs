@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
+#[inline]
 pub(super) fn identity(component: &str) -> String {
     let mut hasher = Sha1::new();
     hasher.update(component.trim().as_bytes());
@@ -51,6 +52,7 @@ pub(super) fn populate(
     Ok((hash, history, true))
 }
 
+#[inline]
 fn model_scope_and_name(model: &Value) -> io::Result<(&str, &str)> {
     if let Some((scope, name)) = model["id"]
         .as_str()
@@ -97,6 +99,7 @@ fn append(
     }
     Ok(())
 }
+#[inline]
 fn verify_ancestor(
     capture: &mut Capture,
     directory: &Path,

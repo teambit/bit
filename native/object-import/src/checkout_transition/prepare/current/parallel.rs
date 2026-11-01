@@ -8,6 +8,7 @@ use std::io;
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
+#[inline]
 pub(super) fn load(files: &[wire::Current], total: &mut usize) -> io::Result<Vec<Loaded>> {
     if files.is_empty() {
         return Ok(Vec::new());
@@ -28,6 +29,7 @@ pub(super) fn load(files: &[wire::Current], total: &mut usize) -> io::Result<Vec
 }
 
 // Changed files retry without publishing any partially prepared plan.
+#[inline]
 fn serial(files: &[wire::Current], mut total: usize) -> io::Result<Vec<(Loaded, usize)>> {
     files
         .iter()

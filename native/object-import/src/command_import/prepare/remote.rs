@@ -1,9 +1,11 @@
 use super::{PreparedImport, invalid, object_hash};
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
+#[inline]
 pub(super) fn settings(value: &Value) -> io::Result<()> {
     settings_for_lane(value, false)
 }
+#[inline]
 pub(in crate::command_import) fn settings_for_lane(
     value: &Value,
     allow_lane: bool,
@@ -27,6 +29,7 @@ pub(in crate::command_import) fn settings_for_lane(
     Ok(())
 }
 
+#[inline]
 fn is_non_main_lane(current: &Value) -> bool {
     if current.is_null() {
         return false;
@@ -121,6 +124,7 @@ pub(super) fn raw_remote(
     Ok(directory.join("objects"))
 }
 
+#[inline]
 fn validate_virtual(
     plan: &mut PreparedImport,
     directory: &std::path::Path,
@@ -135,6 +139,7 @@ fn validate_virtual(
     Ok(())
 }
 
+#[inline]
 fn validate_config(plan: &mut PreparedImport, directory: &std::path::Path) -> io::Result<()> {
     // A remote aspect runtime could alter fetch behavior; only plain scopes are owned.
     let config = plan.capture.json(&directory.join("scope.jsonc"))?;

@@ -15,6 +15,7 @@ use sha1::{Digest, Sha1};
 use super::{MAX_BYTES, invalid};
 use crate::read_budget::Budget;
 
+#[inline]
 pub(crate) fn source(
     directory: &Path,
     hash: [u8; 20],
@@ -24,12 +25,13 @@ pub(crate) fn source(
     Ok(source_record(directory, hash, maximum, compressed_total)?.body)
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SourceRecord {
     pub(crate) body: Vec<u8>,
     pub(crate) compressed: Vec<u8>,
     pub(crate) inflated_size: usize,
 }
+#[inline]
 pub(crate) fn source_record(
     directory: &Path,
     hash: [u8; 20],
@@ -42,6 +44,7 @@ pub(crate) fn source_record(
 }
 
 /// Worker reads return verified bytes without touching the caller's ordered receipt trace.
+#[inline]
 pub(crate) fn read_source_record(
     directory: &Path,
     hash: [u8; 20],
@@ -54,6 +57,7 @@ pub(crate) fn read_source_record(
 }
 
 /// Independent worker reads share complete request budgets, not fixed file-size shares.
+#[inline]
 pub(crate) fn read_source_shared(
     directory: &Path,
     hash: [u8; 20],
@@ -66,6 +70,7 @@ pub(crate) fn read_source_shared(
     source_contents(compressed, object, hash, MAX_BYTES)
 }
 
+#[inline]
 fn source_contents(
     compressed: Vec<u8>,
     mut object: Vec<u8>,
@@ -86,6 +91,7 @@ fn source_contents(
     object.drain(..header_len);
     Ok(SourceRecord { body: object, compressed, inflated_size })
 }
+#[inline]
 pub(crate) fn read(
     directory: &Path,
     hash: [u8; 20],
@@ -97,6 +103,7 @@ pub(crate) fn read(
 }
 
 /// Read mutable repository models in parallel under one request-wide allowance.
+#[inline]
 pub(crate) fn read_shared(
     directory: &Path,
     hash: [u8; 20],
@@ -107,6 +114,7 @@ pub(crate) fn read_shared(
     inflate_with(&compressed, MAX_BYTES + 256, Some(raw))
 }
 
+#[inline]
 fn object_path(directory: &Path, hash: [u8; 20]) -> std::path::PathBuf {
     let identity = crate::validate::hexadecimal(&hash);
     directory
@@ -114,6 +122,7 @@ fn object_path(directory: &Path, hash: [u8; 20]) -> std::path::PathBuf {
         .join(&identity[2..])
 }
 
+#[inline]
 fn packed(directory: &Path, hash: [u8; 20], compressed_total: &mut usize) -> io::Result<Vec<u8>> {
     let file = File::open(object_path(directory, hash))?;
     let metadata = file.metadata()?;
@@ -140,9 +149,11 @@ thread_local! {
         chunk: vec![0; 64 * 1024].into_boxed_slice(),
     });
 }
+#[inline]
 pub(crate) fn inflate(compressed: &[u8], maximum: usize) -> io::Result<Vec<u8>> {
     inflate_with(compressed, maximum, None)
 }
+#[inline]
 fn inflate_with(compressed: &[u8], maximum: usize, budget: Option<&Budget>) -> io::Result<Vec<u8>> {
     INFLATION.with(|inflation| {
         let Inflation { decoder, chunk } = &mut *inflation.borrow_mut();
@@ -184,6 +195,7 @@ fn inflate_using(
     Ok(output)
 }
 
+#[inline]
 fn reserve_inflated(
     budget: Option<&Budget>,
     header: &mut Option<usize>,
@@ -207,6 +219,7 @@ fn reserve_inflated(
     Ok(())
 }
 
+#[inline]
 pub(crate) fn split<'a>(
     object: &'a [u8],
     hash: [u8; 20],

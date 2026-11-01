@@ -23,6 +23,7 @@ impl PreparedImport {
         let directory = remote(self, &remotes, scope)?;
         self.capture.object(&directory, hash, "Lane")
     }
+    #[inline]
     pub(crate) fn fetch_lane_contents_at_hash(
         &mut self,
         id: &Id,
@@ -30,6 +31,7 @@ impl PreparedImport {
     ) -> io::Result<Record> {
         self.fetch_lane_with_policy(id, supplied_hash, false, false)
     }
+    #[inline]
     pub(crate) fn fetch_lane_workspace_at_hash(
         &mut self,
         id: &Id,
@@ -38,6 +40,7 @@ impl PreparedImport {
     ) -> io::Result<Record> {
         self.fetch_lane_with_policy(id, supplied_hash, false, delta)
     }
+    #[inline]
     pub(crate) fn fetch_lane_components_at_hash(
         &mut self,
         id: &Id,
@@ -91,6 +94,7 @@ impl PreparedImport {
     }
 }
 
+#[inline]
 fn lane_hash(
     plan: &mut PreparedImport,
     directory: &std::path::Path,

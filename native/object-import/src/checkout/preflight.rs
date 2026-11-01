@@ -3,6 +3,7 @@ use crate::read_budget::Budget;
 use rayon::{ThreadPool, prelude::*};
 use std::io;
 
+#[inline]
 pub(super) fn load(
     request: &Request,
     state: &mut cache::State,
@@ -58,6 +59,7 @@ fn parallel(
     }
     Ok(files)
 }
+#[inline]
 fn read(
     request: &Request,
     input: &Input,

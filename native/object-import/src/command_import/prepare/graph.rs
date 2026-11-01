@@ -3,6 +3,7 @@ use super::{PreparedImport, Target, VirtualRemote, read_model, read_version, ver
 use std::{io, path::Path};
 
 impl PreparedImport {
+    #[inline]
     pub(super) fn prime_versionless_graph_ids(&mut self, targets: &[&Target]) -> io::Result<()> {
         for target in targets {
             let version = target.version.trim();
@@ -13,6 +14,7 @@ impl PreparedImport {
         }
         Ok(())
     }
+    #[inline]
     pub(crate) fn missing_graph_versions(&mut self, targets: &[Target]) -> io::Result<Vec<Target>> {
         if targets.is_empty() {
             return Ok(Vec::new());
