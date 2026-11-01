@@ -45,6 +45,7 @@ pub(in crate::workspace::engine::command) fn remote(
     }
     Ok(None)
 }
+#[inline]
 pub(in crate::workspace::engine::command) fn local<'a>(
     context: &'a Value,
     identity: &str,

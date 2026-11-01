@@ -61,6 +61,7 @@ impl Prepared {
         self.publish_bitmap()
     }
 
+    #[inline]
     fn check_bitmap(&self, stage: &str) -> io::Result<()> {
         let path = self.root.join(".bitmap");
         if !fs::symlink_metadata(&path)?.is_file() || fs::read(&path)? != self.bitmap_before {

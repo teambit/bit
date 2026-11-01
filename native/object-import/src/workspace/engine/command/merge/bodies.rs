@@ -13,6 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::workspace::engine::command) struct VersionSide<'a> {
     pub(in crate::workspace::engine::command) hash: &'a str,
     pub(in crate::workspace::engine::command) value: &'a Value,

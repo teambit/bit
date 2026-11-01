@@ -43,6 +43,7 @@ pub(in crate::workspace::engine::command) fn attach(
     Ok(())
 }
 
+#[inline]
 fn take_captured(
     captured: &mut [Option<capture::Captured>],
     identity: &str,

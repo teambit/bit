@@ -6,6 +6,7 @@ use super::{
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(in crate::workspace::engine::command) fn select_targets(
     request: &Prepare,
     context: &Value,

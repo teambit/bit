@@ -174,6 +174,7 @@ fn new_row(entry: &Value, scope: &str, name: &str, input: &Input<'_>) -> Value {
     row
 }
 
+#[inline]
 fn merge_config(row: &mut Value, entry: &Value) -> io::Result<()> {
     if let Some(config) = entry.get("config").and_then(Value::as_object) {
         let target = row

@@ -42,6 +42,7 @@ pub(in crate::workspace::engine::command) fn import(
     record.context["historyCheckoutImport"]["completed"] = json!(true);
     Ok(())
 }
+#[inline]
 pub(in crate::workspace::engine::command) fn failure(
     error: io::Error,
     record: &Record,

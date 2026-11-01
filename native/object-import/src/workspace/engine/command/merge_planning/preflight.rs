@@ -54,6 +54,7 @@ pub(super) fn validate(
     validate_finalization(record, prepared, &versions)
 }
 
+#[inline]
 fn validate_dependents(record: &Record, identities: &HashSet<&str>) -> io::Result<()> {
     for row in
         record.context["versions"].as_array().ok_or_else(|| invalid("command merge versions"))?

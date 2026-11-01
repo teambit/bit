@@ -62,6 +62,7 @@ fn parse_package_identity(identity: &str) -> io::Result<(&str, &str)> {
         .ok_or_else(|| invalid("tag package identity"))
 }
 
+#[inline]
 fn insert_dependency_fields(fields: &mut Map<String, Value>, version: &Value) {
     for (target, source) in [
         ("dependencies", "packageDependencies"),

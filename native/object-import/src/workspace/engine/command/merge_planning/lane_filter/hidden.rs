@@ -43,6 +43,7 @@ fn package_name(dependency: &mut Value, resolver: Option<&[Value]>) {
     }
 }
 
+#[inline]
 fn same_component_id(left: &Value, right: &Value) -> bool {
     left == right
         || component_id_key(left).is_some_and(|left_key| Some(left_key) == component_id_key(right))

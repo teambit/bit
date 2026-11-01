@@ -122,6 +122,7 @@ fn history_log(receipt: &Value, message: &str) -> io::Result<serde_json::Map<Str
     Ok(log)
 }
 
+#[inline]
 fn component_id(entry: &Value) -> io::Result<String> {
     let (scope, name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(entry)

@@ -72,6 +72,7 @@ impl super::Prepared {
     pub(in super::super) fn requires_dependencies(&self) -> bool {
         self.write_deps.is_some()
     }
+    #[inline]
     pub(in super::super) fn dependency_target(&self) -> io::Result<&str> {
         self.write_deps
             .as_deref()

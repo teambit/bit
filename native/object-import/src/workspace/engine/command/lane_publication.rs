@@ -131,6 +131,7 @@ impl Prepared {
             non_empty_str(&self.context["otherId"]["name"], "command other name")?,
         ))
     }
+    #[inline]
     pub(super) fn rebased(&self) -> Vec<(String, String, Value)> {
         self.squashes
             .iter()

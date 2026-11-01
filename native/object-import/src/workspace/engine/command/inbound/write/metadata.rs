@@ -27,6 +27,7 @@ pub(super) fn bitmap_metadata(rows: &mut Map<String, Value>) -> io::Result<(Valu
 }
 
 /// The live `BitMap` keeps existing positions and appends new `ComponentMap` rows before disk sorting.
+#[inline]
 pub(super) fn component_order(
     root: &std::path::Path,
     rows: &Map<String, Value>,

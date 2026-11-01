@@ -69,6 +69,7 @@ fn preserve_owner(path: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     Ok(())
 }
 
+#[derive(Debug)]
 struct Temporary(PathBuf);
 impl Drop for Temporary {
     fn drop(&mut self) {

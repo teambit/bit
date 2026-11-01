@@ -170,6 +170,7 @@ pub(super) fn validate_additions(
     Ok(())
 }
 
+#[inline]
 fn is_added_directory(context: &Value, scope: &[Value], stash: &[Value], relative: &str) -> bool {
     context["lane"]["addedTargets"]
         .as_array()

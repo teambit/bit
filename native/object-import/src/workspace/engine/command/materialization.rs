@@ -216,6 +216,7 @@ fn destinations(applied: &Value, directory: &Path) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+#[inline]
 fn statuses(applied: &Value) -> io::Result<serde_json::Map<String, Value>> {
     let statuses =
         applied["filesStatus"].as_array().ok_or_else(|| invalid("command file statuses"))?;

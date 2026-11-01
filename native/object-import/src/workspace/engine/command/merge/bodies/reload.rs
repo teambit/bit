@@ -1,3 +1,4 @@
+//! Retain unmodified current workspace files alongside merged output files.
 #[cfg(test)]
 mod tests;
 

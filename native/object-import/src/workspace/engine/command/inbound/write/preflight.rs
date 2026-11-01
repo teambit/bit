@@ -86,6 +86,7 @@ fn existing_target(
     check_sources(root, row, &version)
 }
 
+#[inline]
 fn find_existing_model(root: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
     for hash in
         super::super::details::candidate_component_hashes(&crate::scope_path(root), scope, name)

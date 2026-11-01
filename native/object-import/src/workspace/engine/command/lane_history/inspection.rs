@@ -24,7 +24,7 @@ pub(in crate::workspace::engine) struct Prepare {
     transport: inbound::Transport,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Apply {
     token: String,

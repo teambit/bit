@@ -1,3 +1,4 @@
+//! Finalize lane histories and referenced objects for a prepared lane command.
 use super::{LaneFinalize, State, invalid, proof, scratch};
 use serde_json::{Value, json};
 use std::io;

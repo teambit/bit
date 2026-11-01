@@ -6,6 +6,7 @@ use super::super::{invalid, merge::snapshot, repository::Repository};
 use serde_json::{Value, json};
 use std::io;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Prepared {
     identity: String,
     hash: String,

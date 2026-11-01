@@ -1,3 +1,4 @@
+//! Resolve unrelated component histories during lane merge planning.
 use super::{Record, Selected, history, invalid};
 use serde_json::{Value, json};
 use std::io;

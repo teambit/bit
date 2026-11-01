@@ -57,6 +57,7 @@ pub(super) fn nested_directories(root: &Path) -> io::Result<Vec<String>> {
     Ok(nested)
 }
 
+#[inline]
 pub(super) fn filter(manifest: &mut Value, nested: &[String]) -> io::Result<()> {
     manifest["proofFiles"] = manifest["files"].clone();
     let files =

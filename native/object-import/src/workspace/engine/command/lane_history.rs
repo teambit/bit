@@ -33,7 +33,7 @@ struct Flags {
     revert: bool,
     restore_deleted: bool,
 }
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Phase {
     pub(super) versions: Vec<(String, String)>,
     pub(super) revert: bool,

@@ -16,6 +16,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::workspace::engine::command) struct Input<'a> {
     pub identity: &'a str,
     pub directory: &'a str,

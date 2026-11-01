@@ -169,6 +169,7 @@ pub(super) fn selected(
         })
         .collect()
 }
+#[inline]
 fn clear_visibility(row: &mut Value) -> io::Result<()> {
     let object = row.as_object_mut().ok_or_else(|| invalid("command lane bitmap component"))?;
     for flag in ["isAvailableOnCurrentLane", "onLanesOnly"] {

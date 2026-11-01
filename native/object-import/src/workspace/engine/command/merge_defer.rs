@@ -4,7 +4,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
     token: String,

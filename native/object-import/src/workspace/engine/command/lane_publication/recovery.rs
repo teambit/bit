@@ -96,6 +96,7 @@ impl Recovery {
         }
         Ok(())
     }
+    #[inline]
     fn copy(&mut self, source: &Path, destination: &str, bytes: Vec<u8>) -> io::Result<()> {
         self.permissions.push((
             source.to_owned(),

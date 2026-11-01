@@ -189,6 +189,7 @@ fn retain_parents(root: &Path, path: &Path, observed: &mut Observed) -> io::Resu
 }
 
 impl super::Prepared {
+    #[inline]
     pub(in super::super) fn directory_warnings(&self) -> &[String] {
         &self.changes.relocation.warnings
     }

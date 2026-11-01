@@ -1,3 +1,4 @@
+//! Plan fast-forward materializations and model updates during a merge command.
 #[cfg(test)]
 mod tests;
 

@@ -116,6 +116,7 @@ fn validate_extensions(current: &Value, target: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn extension_matches(row: &Value, exp: &Value) -> bool {
     let Some(obj) = exp.as_object() else { return false };
     if obj.len() != 2 || !obj.contains_key("name") || !obj.contains_key("config") {

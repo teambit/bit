@@ -13,6 +13,7 @@ struct Inputs<'a> {
     statuses: &'a [Value],
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Filtered {
     pub(super) indices: Vec<usize>,
     pub(super) excluded: Vec<Value>,

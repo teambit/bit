@@ -1,3 +1,4 @@
+//! Partition lane-history components into existing and restored-deleted checkout phases.
 use super::{Phase, invalid, proof};
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};

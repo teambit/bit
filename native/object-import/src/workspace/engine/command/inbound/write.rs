@@ -39,7 +39,7 @@ pub(super) struct Prepared {
     policy_input: Option<Value>,
     write_deps: Option<String>,
 }
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Options<'a> {
     pub(super) override_existing: bool,
     pub(super) path: Option<&'a str>,

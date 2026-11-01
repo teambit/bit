@@ -181,6 +181,7 @@ fn validate_overlap<'a>(addition: &Value, rows: impl Iterator<Item = &'a Value>)
     Ok(())
 }
 
+#[inline]
 fn split_scope_id(scope_id: &str) -> io::Result<(&str, &str)> {
     let mut parts = scope_id.split('.');
     match (parts.next(), parts.next()) {

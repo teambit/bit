@@ -82,6 +82,7 @@ pub(super) fn bitmap_key(
     Ok(target_key)
 }
 
+#[inline]
 pub(super) fn existing_mut<'a>(
     rows: &'a mut Map<String, Value>,
     target: &Target,

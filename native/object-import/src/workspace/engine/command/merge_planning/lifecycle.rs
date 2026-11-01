@@ -1,6 +1,6 @@
+//! Lifecycle transitions for prepared merge plans, snapshots, and publications.
 #[cfg(test)]
 mod tests;
-
 use super::{super::bitmap, Finalized, Prepared, Record, invalid, merge, proof};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};

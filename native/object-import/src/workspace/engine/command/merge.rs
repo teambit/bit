@@ -1,3 +1,4 @@
+//! Coordinate native merge status selection, body preparation, and materialization.
 pub(super) mod finalization;
 pub(super) mod snapshot;
 

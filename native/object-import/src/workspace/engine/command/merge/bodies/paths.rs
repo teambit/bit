@@ -7,6 +7,7 @@ use std::{
     path::{Component, Path},
 };
 
+#[inline]
 pub(super) fn validate(root: &Path, path: &Path) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(io::Error::other)?;
     canonical_relative(relative)?;

@@ -91,7 +91,7 @@ struct Selected {
     distance: Value,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Action {
     Unchanged,
     Merge,

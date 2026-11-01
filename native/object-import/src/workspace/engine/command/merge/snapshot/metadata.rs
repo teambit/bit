@@ -72,7 +72,7 @@ fn base_version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result
     version["modified"] = json!([]);
     Ok(version)
 }
-
+#[inline]
 fn build_status(version: &Value) -> &'static str {
     if version["extensions"]
         .as_array()

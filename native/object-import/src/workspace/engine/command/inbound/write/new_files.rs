@@ -2,6 +2,7 @@
 use super::{Planning, Replacement, WorkspaceFiles, existing, invalid, safe_destination};
 use std::{fs, io, path::PathBuf};
 
+#[inline]
 pub(super) fn prepare(
     context: &Planning<'_>,
     files: Vec<(PathBuf, Vec<u8>)>,

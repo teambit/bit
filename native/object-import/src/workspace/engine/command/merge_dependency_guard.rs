@@ -54,6 +54,7 @@ pub(super) fn verify(
     proof::verify(&proofs)?;
     Ok(proofs)
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Grammar<'a> {
     builtins: HashSet<&'a str>,
     detectors: HashSet<&'a str>,

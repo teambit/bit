@@ -71,6 +71,7 @@ impl Prepared {
         Ok(())
     }
 
+    #[inline]
     fn manifest_index(&self, identity: &str) -> io::Result<usize> {
         self.writes
             .iter()
