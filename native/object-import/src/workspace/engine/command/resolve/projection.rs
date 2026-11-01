@@ -1,3 +1,5 @@
+//! Component aspect, dependency, and package metadata projection for `snap` and `tag`.
+
 use super::super::{invalid, policy};
 use serde::Deserialize;
 use serde_json::{Value, json};

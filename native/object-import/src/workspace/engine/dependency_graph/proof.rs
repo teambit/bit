@@ -1,3 +1,5 @@
+//! Cryptographic content, range, and metadata proofs for workspace dependency reads.
+
 use super::invalid;
 use crate::workspace::engine::path;
 use rayon::prelude::*;

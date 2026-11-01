@@ -1,4 +1,5 @@
 //! Component status populates existing history before deciding what to stash.
+
 #[cfg(test)]
 mod tests;
 use super::{Retained, invalid};

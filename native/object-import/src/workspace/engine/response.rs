@@ -1,4 +1,5 @@
 //! Bounded JSON response buffer for the workspace protocol.
+
 #[cfg(test)]
 mod tests;
 use super::{MAX_OUTPUT, invalid};

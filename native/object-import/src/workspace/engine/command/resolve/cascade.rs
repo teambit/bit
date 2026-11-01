@@ -1,3 +1,5 @@
+//! Dependent auto-tag cascade computation for workspace `snap` and `tag` commands.
+
 #[cfg(test)]
 mod tests;
 

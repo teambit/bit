@@ -9,6 +9,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::PathBuf};
 
+/// Tracked callback-owned source paths and their pre-callback proofs.
 #[derive(Default)]
 pub(super) struct Callbacks {
     pub paths: HashSet<PathBuf>,

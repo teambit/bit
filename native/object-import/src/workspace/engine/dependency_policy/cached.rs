@@ -1,3 +1,5 @@
+//! Pre-policy dependency cache loading and policy application.
+
 mod detected;
 mod issues;
 

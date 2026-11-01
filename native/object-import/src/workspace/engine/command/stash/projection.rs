@@ -1,4 +1,5 @@
 //! Unversioned workspace IDs reach the detached graph's canonical rejection.
+
 use super::{
     super::resolve::projection::{self, Component},
     invalid,

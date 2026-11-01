@@ -1,3 +1,5 @@
+//! Tagged, auto-tagged, and warning report assembly for workspace `tag` commands.
+
 use super::{Material, Retained, invalid};
 use serde_json::{Value, json};
 use std::{cmp::Ordering, io};

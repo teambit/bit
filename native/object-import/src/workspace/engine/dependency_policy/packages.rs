@@ -1,3 +1,5 @@
+//! Package and component dependency preparation under model-peer and workspace policies.
+
 use super::{
     Plan, Request,
     wire::{Policy, version},

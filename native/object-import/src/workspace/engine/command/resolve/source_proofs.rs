@@ -1,3 +1,5 @@
+//! Retained file proof and owned path collection for captured snapshot sources.
+
 #[cfg(test)]
 mod tests;
 

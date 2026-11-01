@@ -1,3 +1,5 @@
+//! Private temporary scratch directory allocation and cleanup for command staging.
+
 use std::{
     fs, io,
     path::PathBuf,

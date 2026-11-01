@@ -1,3 +1,5 @@
+//! Merge parent, squash, and unrelated-history reconciliation for resolved `Version` objects.
+
 use super::{Material, invalid};
 use serde_json::{Value, json};
 use std::io;

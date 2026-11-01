@@ -1,3 +1,5 @@
+//! Single-file AST dependency extraction and module specifier resolution under byte budgets.
+
 use super::{
     super::{
         invalid,

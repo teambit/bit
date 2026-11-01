@@ -1,7 +1,7 @@
+//! Builder pipeline metadata and artifact object synthesis for resolved snapshots.
+
 #[cfg(test)]
 mod tests;
-
-// Builder metadata is projected into fixed native Version identities; artifact bytes stay native.
 
 use super::{invalid, proof};
 use serde::Deserialize;

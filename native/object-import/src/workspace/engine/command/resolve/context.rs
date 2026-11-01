@@ -1,3 +1,5 @@
+//! Workspace status context, lane validation, and proof capture for `snap` and `tag`.
+
 #[cfg(test)]
 mod tests;
 use super::{

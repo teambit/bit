@@ -15,7 +15,6 @@ pub(super) struct State {
     pub(super) untracked: Map<String, Value>,
     pub(super) authored: Map<String, Value>,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Owner {
     pub(super) directory: PathBuf,

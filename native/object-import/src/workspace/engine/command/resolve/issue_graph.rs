@@ -1,3 +1,5 @@
+//! Circular dependency and workspace version mismatch issue graph capture for `snap` and `tag`.
+
 #[cfg(test)]
 mod tests;
 

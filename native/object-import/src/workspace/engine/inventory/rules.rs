@@ -1,3 +1,5 @@
+//! Compiled `node-ignore` regular-expression rule matching with parent directory caching.
+
 use super::super::invalid;
 use rayon::{ThreadPool, prelude::*};
 use regress::Regex;

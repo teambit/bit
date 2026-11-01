@@ -1,4 +1,5 @@
 //! Filter the published switch pool after fetching and before native materialization.
+
 #[cfg(test)]
 mod tests;
 

@@ -1,3 +1,5 @@
+//! Relative `TypeScript` 5.9 `Node10` module path lookup with extension substitution.
+
 use super::{
     invalid,
     resolve_dependencies::{Budget, normalize, regular_file},

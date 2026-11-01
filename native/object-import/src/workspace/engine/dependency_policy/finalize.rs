@@ -1,3 +1,5 @@
+//! Dependency policy finalization with environment and manual policy rules.
+
 pub(in crate::workspace::engine) use wire::Request;
 
 mod environment;

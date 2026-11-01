@@ -1,3 +1,5 @@
+//! Dependency graph projection into component, package, and issue records.
+
 mod component;
 mod output;
 mod peer;

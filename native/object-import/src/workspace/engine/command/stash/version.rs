@@ -1,3 +1,5 @@
+//! Detached `Version` and `Source` object synthesis for `stash save`.
+
 #[cfg(test)]
 mod tests;
 

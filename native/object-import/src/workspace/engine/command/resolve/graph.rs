@@ -1,3 +1,5 @@
+//! Flattened dependency graph and edge projection for `snap` and `tag` materials.
+
 mod saved;
 #[cfg(test)]
 mod tests;

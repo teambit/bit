@@ -1,4 +1,5 @@
 //! Precedence-ordered version and range selection for a single dependency entry.
+
 use super::{
     Request, invalid,
     wire::{snap, unversioned, version},

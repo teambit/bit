@@ -1,4 +1,5 @@
 //! Component and extension version selection across bitmap, lane, policy, and model sources.
+
 pub(in crate::workspace::engine) use wire::Request;
 
 mod index;

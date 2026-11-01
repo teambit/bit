@@ -1,3 +1,5 @@
+//! Bounded Git diff execution over source objects and workspace snapshots.
+
 #[cfg(test)]
 mod tests;
 mod workers;

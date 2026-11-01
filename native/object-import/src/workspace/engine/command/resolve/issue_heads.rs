@@ -1,3 +1,5 @@
+//! Model and lane head `Version` capture for component issue inspection callbacks.
+
 #[cfg(test)]
 mod tests;
 

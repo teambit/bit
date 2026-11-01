@@ -1,3 +1,5 @@
+//! Retained workspace `snap` and `tag` command resolution, cascade, and publication.
+
 pub(super) mod projection;
 pub(super) mod source_proofs;
 pub(in crate::workspace::engine) use publication::{

@@ -1,4 +1,4 @@
-//! The dependency loader's package.json bit.peer component policy.
+//! The dependency loader's `package.json` `bit.peer` component policy.
 
 use super::Package;
 use serde_json::{Value, json};

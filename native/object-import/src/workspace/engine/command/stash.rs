@@ -1,4 +1,5 @@
 //! Detached stash objects never publish component heads or workspace state.
+
 mod graph;
 mod history;
 mod planning;

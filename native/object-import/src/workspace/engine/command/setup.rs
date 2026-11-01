@@ -1,3 +1,5 @@
+//! Workspace command transaction setup, control proof capture, and target discovery.
+
 #[cfg(test)]
 mod tests;
 use super::{

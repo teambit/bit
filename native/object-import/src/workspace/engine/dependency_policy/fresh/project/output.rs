@@ -1,4 +1,5 @@
 //! Fresh dependency detection output assembly and issue serialization.
+
 use super::Projection;
 use serde_json::{Map, Value, json};
 use std::io;

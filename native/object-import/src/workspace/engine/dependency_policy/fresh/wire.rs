@@ -1,3 +1,5 @@
+//! Wire payloads for fresh dependency detection and completion requests.
+
 use crate::workspace::engine::dependency_graph::proof::Proof;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};

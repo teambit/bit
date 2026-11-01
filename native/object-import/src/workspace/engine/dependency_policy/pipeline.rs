@@ -1,3 +1,5 @@
+//! End-to-end dependency policy pipeline combining initial precedence, disk packages, finalization, and version selection.
+
 use super::{Request as Initial, finalize, invalid, packages_on_disk, versions};
 use crate::workspace::engine::source_overlay::SourceOverlay;
 use serde::Deserialize;

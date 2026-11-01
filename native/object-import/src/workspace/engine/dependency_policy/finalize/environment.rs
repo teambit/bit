@@ -1,3 +1,5 @@
+//! Environment dependency policy application and plus-version resolution.
+
 use super::{Output, Request};
 use crate::workspace::engine::{dependency_policy::wire::version, invalid};
 use serde_json::Value;

@@ -1,3 +1,5 @@
+//! Parallel source dependency graph scanning, proof capture, and deterministic replay.
+
 pub(super) mod proof;
 mod replay;
 mod scan;

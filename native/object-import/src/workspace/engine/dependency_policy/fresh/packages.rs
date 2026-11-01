@@ -1,3 +1,5 @@
+//! `node_modules` package manifest reading and main entrypoint checks for fresh detection.
+
 use super::{invalid, proof};
 use crate::workspace::engine::source_overlay::SourceOverlay;
 use serde_json::Value;

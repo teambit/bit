@@ -1,3 +1,5 @@
+//! Saved `flattenedEdges` and `flattenedEdgesRef` capture from prior `Version` objects.
+
 use super::{Material, Repository, invalid, key};
 use serde_json::Value;
 use std::{collections::HashMap, io};

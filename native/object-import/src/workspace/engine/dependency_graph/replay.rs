@@ -1,3 +1,5 @@
+//! Deterministic visitation order and diagnostic aggregation for scanned dependency graphs.
+
 use super::{super::resolve_dependencies::Budget, PathMap, Request, Row, invalid};
 use serde_json::{Map, Value, json};
 use std::{collections::HashMap, io};

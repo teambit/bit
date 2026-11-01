@@ -1,3 +1,5 @@
+//! Bounded parallel and serial workspace file reading with BOM stripping and hash computation.
+
 use super::{MAX_RAW, count, hash, invalid, path};
 use crate::read_budget::Budget;
 use rayon::{ThreadPool, prelude::*};

@@ -1,3 +1,5 @@
+//! Wire payloads and validation for initial dependency policy planning.
+
 use super::{invalid, io};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};

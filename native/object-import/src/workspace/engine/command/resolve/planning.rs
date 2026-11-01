@@ -1,3 +1,4 @@
+//! Snapshot/tag planning, material order, and workspace load progress accounting.
 use super::{
     super::{
         capture, invalid, repository,
@@ -221,7 +222,6 @@ fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
             loads.pop();
         }
         let persist = retained.tag.as_ref().is_some_and(|tag| tag.persist);
-        // Tag loads the pending workspace set even with --unmerged; snap skips it.
         if !persist && !options.unmodified && (!options.unmerged || retained.tag.is_some()) {
             loads.insert(0, count);
         }

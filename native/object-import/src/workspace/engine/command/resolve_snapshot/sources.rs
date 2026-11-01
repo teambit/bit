@@ -1,3 +1,5 @@
+//! `Source` object capture, hashing, and UTF-16 path ordering for resolved snapshots.
+
 use super::{Material, invalid};
 use crate::workspace::snapshots;
 use serde_json::{Value, json};

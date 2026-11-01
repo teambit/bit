@@ -1,3 +1,5 @@
+//! Wire request, state, and output payloads for dependency policy finalization.
+
 use super::super::wire::{Entry, Policy};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};

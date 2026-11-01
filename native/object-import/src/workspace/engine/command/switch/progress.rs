@@ -1,4 +1,5 @@
 //! Checkout imports each selected status, including already cached or unchanged IDs.
+
 use super::invalid;
 use serde_json::{Value, json};
 use std::{io, path::Path};

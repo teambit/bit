@@ -1,3 +1,5 @@
+//! Two-phase component and workspace file inventory scanning and ignore filtering.
+
 pub(super) mod patterns;
 mod rules;
 #[cfg(test)]

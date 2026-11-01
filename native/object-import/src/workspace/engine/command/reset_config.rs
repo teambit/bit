@@ -1,4 +1,5 @@
-//! Reset's existing component.json writer. Bitmap overrides are cleared separately.
+//! Reset's existing `component.json` writer; `.bitmap` overrides are cleared separately.
+
 #[cfg(target_os = "linux")]
 mod attributes;
 mod checkout;

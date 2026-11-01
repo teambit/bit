@@ -10,6 +10,7 @@ use std::io;
 const ASPECT: &str = "teambit.workspace/workspace-root";
 const AUTO: &str = "snapshotAutoAddedWorkspaceRoot";
 
+/// Appends the workspace-root component to the selected snap set when members change.
 pub(super) fn include(
     retained: &mut Retained,
     captured: &[capture::Captured],

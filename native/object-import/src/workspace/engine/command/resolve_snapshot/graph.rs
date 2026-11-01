@@ -1,3 +1,5 @@
+//! Flattened dependency edge rewriting and storage for resolved `Version` objects.
+
 use super::{Material, invalid, references::rewrite_batch_refs};
 use crate::workspace::engine::dependency_graph::proof;
 use serde_json::{Value, json};

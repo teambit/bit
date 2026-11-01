@@ -1,4 +1,5 @@
 //! Binary framing and snapshot token retention for raw workspace file reads.
+
 use super::{MAX_OUTPUT, Output, failure, invalid, read};
 use rayon::ThreadPool;
 use serde::Serialize;

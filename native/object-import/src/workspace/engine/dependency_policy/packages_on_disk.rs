@@ -1,3 +1,5 @@
+//! Parallel `node_modules` package resolution for dependency policy evaluation.
+
 mod metadata;
 
 use super::invalid;

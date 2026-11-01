@@ -1,3 +1,5 @@
+//! Pre-tag `VersionHistory` staging for resolved snapshot batches.
+
 #[cfg(test)]
 mod tests;
 

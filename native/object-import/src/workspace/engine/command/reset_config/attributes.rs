@@ -1,3 +1,5 @@
+//! Linux extended attribute and `SELinux` context equivalence checks for `component.json` writes.
+
 use super::invalid;
 use std::{
     fs, io,

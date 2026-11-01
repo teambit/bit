@@ -1,3 +1,5 @@
+//! Cached dependency issue extraction and post-policy missing-package updates.
+
 use super::invalid;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};

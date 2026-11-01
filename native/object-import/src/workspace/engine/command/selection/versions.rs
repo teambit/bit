@@ -1,3 +1,5 @@
+//! Target version resolution (`head`, `latest`, `reset`, `main`, or explicit ref/tag) for checkout.
+
 use super::{Options, Repository, Selection, invalid};
 use serde_json::{Value, json};
 use std::{cmp::Ordering, collections::HashSet, io};

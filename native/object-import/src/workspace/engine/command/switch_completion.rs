@@ -1,4 +1,5 @@
 //! Keep the old lane active through `ComponentWriter` installation and compilation.
+
 #[cfg(test)]
 mod tests;
 use super::{Record, State, bitmap, input::Operation, invalid};

@@ -1,4 +1,5 @@
 //! `BitId.serialize` followed by `ComponentID.toObject` preserves legacy default-scope order.
+
 #[cfg(test)]
 mod tests;
 

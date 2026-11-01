@@ -1,3 +1,5 @@
+//! `Lane` and `LaneHistory` object synthesis for resolved lane snapshots.
+
 use super::{super::repository::Repository, Material, invalid, snapshot};
 use serde_json::{Value, json};
 use std::io;

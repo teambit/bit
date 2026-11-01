@@ -1,3 +1,5 @@
+//! Modified component capture, selection, and detached object planning for `stash save`.
+
 use super::{Component, Plan, Retained, graph, invalid};
 use crate::workspace::{
     engine::{

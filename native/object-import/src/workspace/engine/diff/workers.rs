@@ -1,4 +1,5 @@
 //! Bounded parallel worker execution and index-ordered assembly for file diffs.
+
 use super::{FileDiff, Prepared, one};
 use rayon::prelude::*;
 use std::{

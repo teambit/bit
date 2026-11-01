@@ -1,4 +1,5 @@
 //! Stash dependency IDs are the pre-allocation IDs, never pending snap markers.
+
 #[cfg(test)]
 mod tests;
 

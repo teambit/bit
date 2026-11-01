@@ -1,3 +1,5 @@
+//! Bounded `CommonJS` and `TypeScript` module dependency path resolution.
+
 use super::{
     dependency_graph::proof,
     invalid, path,

@@ -1,4 +1,5 @@
 //! `ComponentWriter`'s existing config file replacement, excluding local component/variant overrides.
+
 use super::{Record, invalid};
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};

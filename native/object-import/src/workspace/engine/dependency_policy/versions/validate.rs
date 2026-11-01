@@ -1,4 +1,5 @@
 //! Input bounds and identity validation for version selection requests.
+
 use super::{Request, invalid};
 use crate::workspace::engine::dependency_policy::wire::name;
 use std::io;

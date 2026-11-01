@@ -1,3 +1,5 @@
+//! Co-snapped dependency hash and version rewriting across resolved `Version` objects.
+
 use super::invalid;
 use serde_json::{Map, Value, json};
 use std::{

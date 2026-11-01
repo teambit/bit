@@ -1,3 +1,5 @@
+//! `.gitignore` and `.bitignore` file discovery and pattern parsing for workspace inventory.
+
 use super::{Matcher, invalid};
 use rayon::{ThreadPool, prelude::*};
 use serde::Serialize;

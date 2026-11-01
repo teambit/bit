@@ -1,3 +1,5 @@
+//! Fresh dependency detection validation and component version selection.
+
 mod relative;
 
 use super::{invalid, wire::Complete};

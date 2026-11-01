@@ -1,3 +1,5 @@
+//! Ancestor directory metadata proof capture for `component.json` reset destinations.
+
 use super::{invalid, proof};
 use std::{fs, io, path::Path};
 

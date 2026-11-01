@@ -1,3 +1,5 @@
+//! Checkout version selection and transition state driver for workspace commands.
+
 pub(super) mod versions;
 
 #[cfg(test)]

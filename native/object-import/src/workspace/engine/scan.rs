@@ -1,3 +1,5 @@
+//! Bounded workspace directory and file traversal excluding ignored system directories.
+
 use super::{MAX_RAW, count, invalid, path};
 use std::{
     fs, io,

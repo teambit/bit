@@ -1,3 +1,5 @@
+//! Fresh source dependency detection and policy application.
+
 pub(in crate::workspace::engine) use wire::{Complete, Detect};
 
 mod complete;

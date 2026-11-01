@@ -1,4 +1,5 @@
-//! Pending merge and configuration cleanup after native Version publication.
+//! Pending merge and configuration cleanup after native `Version` publication.
+
 use super::{HashSet, Path, PathBuf, Value, fs, io, proof};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

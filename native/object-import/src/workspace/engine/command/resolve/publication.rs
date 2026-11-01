@@ -1,3 +1,5 @@
+//! Finalization and local publication of `snap` and `tag` transactions.
+
 pub(super) mod builder;
 pub(super) mod packages;
 

@@ -1,3 +1,5 @@
+//! `cacache` dependency cache entry reading and mtime freshness validation.
+
 mod freshness;
 mod reader;
 

@@ -1,4 +1,5 @@
 //! Filesystem publication for an ordinary merge-resolution snapshot.
+
 mod controls;
 use super::{bitmap, invalid, merge::finalization, resolve_snapshot};
 use crate::workspace::engine::dependency_graph::proof;

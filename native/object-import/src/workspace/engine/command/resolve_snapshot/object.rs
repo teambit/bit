@@ -1,3 +1,5 @@
+//! Per-component `Version` object assembly and source binding for resolved snapshots.
+
 use super::{Material, graph, invalid, reconciliation, references, snapshot, sources};
 use crate::workspace::{engine::dependency_graph::proof, snapshots};
 use serde_json::{Value, json};
