@@ -40,12 +40,21 @@ fn add(
     if let Some(value) = package_version(request, name, value) {
         output.added(field, format!("{name}@{value}"));
         additions.packages[field].insert(name.to_owned(), Value::String(value));
-        if !request.resolved.contains_key(name) {
+        if !request.resolved.contains_key(name)
+            && !output.missing
+                .iter()
+                .any(|item| item == name)
+        {
             output.missing.push(name.to_owned());
         }
         return;
     }
-    output.missing.push(name.to_owned());
+    if !output.missing
+        .iter()
+        .any(|item| item == name)
+    {
+        output.missing.push(name.to_owned());
+    }
     if output.state.packages
         .iter()
         .any(|map| version(map, name).is_some())

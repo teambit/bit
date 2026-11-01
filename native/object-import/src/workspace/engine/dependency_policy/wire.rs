@@ -77,7 +77,11 @@ impl Request {
         let ignored = self.ignored[field]
             .iter()
             .any(|entry| entry.trim() == trimmed);
-        if ignored {
+        if ignored
+            && !removed[field]
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
             removed[field].push(trimmed.to_owned());
         }
         ignored

@@ -47,6 +47,9 @@ pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result
 
     if let Some(home) = &request.home {
         path(home)?;
+        if normalize(home) != *home {
+            return Err(invalid("dependency resolution normalized path"));
+        }
     }
     if request.dependencies.len() > 4096 {
         return Err(invalid("dependency resolution count limit"));
@@ -56,9 +59,7 @@ pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result
     let resolved = pool.install(|| {
         request.dependencies
             .par_iter()
-            .map(|dependency| {
-                resolve_one(dependency, parent, request.home.as_deref(), &budget, mode)
-            })
+            .map(|dep| resolve_one(dep, parent, request.home.as_deref(), &budget, mode))
             .collect::<io::Result<Vec<_>>>()
     })?;
     Ok((resolved.len(), json!({"resolved":resolved})))
@@ -149,17 +150,11 @@ impl Budget {
         Ok(Some(bytes))
     }
     pub(super) fn proofs(&self) -> io::Result<Vec<proof::Proof>> {
-        self.proofs
-            .as_ref()
-            .map_or_else(
-                || Ok(Vec::new()),
-                |proofs| {
-                    proofs
-                        .lock()
-                        .map(|proofs| proof::unique(proofs.clone()))
-                        .map_err(|_| invalid("dependency proof lock"))
-                },
-            )
+        let Some(proofs) = &self.proofs else { return Ok(Vec::new()) };
+        proofs
+            .lock()
+            .map(|list| proof::unique(list.clone()))
+            .map_err(|_| invalid("dependency proof lock"))
     }
     fn record(&self, value: proof::Proof) -> io::Result<()> {
         if let Some(proofs) = &self.proofs {

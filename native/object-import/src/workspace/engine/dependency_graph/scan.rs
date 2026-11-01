@@ -225,7 +225,12 @@ fn package_name(specifier: &str) -> io::Result<String> {
     } else {
         parts[0].trim().to_owned()
     };
-    if name.is_empty() || name.contains('\\') {
+    if name.is_empty()
+        || name.contains('\\')
+        || parts
+            .iter()
+            .any(|part| matches!(part.trim(), "." | ".."))
+    {
         return Err(invalid("dependency package name"));
     }
     Ok(name)

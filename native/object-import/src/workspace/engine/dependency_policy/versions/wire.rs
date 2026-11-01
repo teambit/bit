@@ -42,6 +42,7 @@ pub(super) fn unversioned(value: &str) -> &str {
     let trimmed = value.trim();
     trimmed
         .rsplit_once('@')
+        .filter(|(_, ver)| !ver.contains('/'))
         .map(|(identity, _)| identity.trim())
         .filter(|identity| !identity.is_empty())
         .unwrap_or(trimmed)
@@ -50,7 +51,7 @@ pub(super) fn version(value: &str) -> &str {
     let trimmed = value.trim();
     trimmed
         .rsplit_once('@')
-        .filter(|(identity, _)| !identity.trim().is_empty())
+        .filter(|(identity, ver)| !identity.trim().is_empty() && !ver.contains('/'))
         .map(|(_, version)| version.trim())
         .filter(|version| !version.is_empty())
         .unwrap_or("latest")

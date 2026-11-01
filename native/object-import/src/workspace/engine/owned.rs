@@ -71,6 +71,12 @@ fn owned_status_command(
 }
 
 fn validate_read_set(proofs: &[dependency_graph::proof::Proof]) -> io::Result<(usize, Value)> {
+    if proofs
+        .iter()
+        .any(|proof| proof.path.as_os_str().is_empty())
+    {
+        return Err(super::invalid("read set proof path"));
+    }
     let bytes = proofs
         .iter()
         .map(|proof| proof.path.as_os_str().len())

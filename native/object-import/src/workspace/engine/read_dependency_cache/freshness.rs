@@ -113,10 +113,10 @@ impl Directories {
             return Ok(());
         }
         let path = entry.path();
-        self.bytes += path.as_os_str().len();
-        if self.bytes > 8 * 1024 * 1024 {
-            return Err(invalid("dependency cache directory bytes"));
-        }
+        self.bytes = self.bytes
+            .checked_add(path.as_os_str().len())
+            .filter(|bytes| *bytes <= 8 * 1024 * 1024)
+            .ok_or_else(|| invalid("dependency cache directory bytes"))?;
         self.paths.push(path.clone());
         self.pending.push(path);
         Ok(())

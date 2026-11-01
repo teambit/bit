@@ -18,7 +18,7 @@ impl SourceOverlay {
         proofs: &mut Vec<proof::Proof>,
         depth: usize,
     ) -> io::Result<Found<'a>> {
-        if depth > 32 {
+        if depth > 32 || proofs.len() > 16384 {
             return Err(invalid("overlay link depth"));
         }
         if !self.data.sealed {
@@ -38,16 +38,18 @@ impl SourceOverlay {
         {
             return Ok(Found::Missing);
         }
-        if self.data.entries
-            .iter()
-            .any(|(name, entry)| name.starts_with(path) && !matches!(entry, Entry::Removed))
-        {
+        if self.has_active_descendant(path) {
             return Ok(Found::Directory);
         }
         if let Some(mapped) = self.alias(path, proofs)? {
             return self.lookup(&mapped, proofs, depth + 1);
         }
         Ok(Found::Disk(path.to_path_buf()))
+    }
+    fn has_active_descendant(&self, path: &Path) -> bool {
+        self.data.entries
+            .iter()
+            .any(|(name, entry)| name.starts_with(path) && !matches!(entry, Entry::Removed))
     }
     fn alias(&self, path: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<Option<PathBuf>> {
         for ancestor in path.ancestors() {

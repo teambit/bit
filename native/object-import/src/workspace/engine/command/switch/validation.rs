@@ -122,11 +122,11 @@ fn is_version_removed(
     imported: &command_import::PreparedImport,
     hash: &str,
 ) -> io::Result<bool> {
-    let hash = hash.trim();
-    let value = if let Some(value) = imported.overlay.read(hash, "Version")? {
+    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(hash)?);
+    let value = if let Some(value) = imported.overlay.read(&hash, "Version")? {
         Some(value.clone())
     } else {
-        crate::read_scope_object(scope, hash)?
+        crate::read_scope_object(scope, &hash)?
             .and_then(|(kind, value)| (kind == "Version").then_some(value))
     };
     value.map_or(Ok(false), |version| super::super::selection::removed(&version))

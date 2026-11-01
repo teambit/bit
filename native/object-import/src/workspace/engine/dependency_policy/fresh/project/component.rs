@@ -21,12 +21,17 @@ impl Projection<'_> {
             return Ok(());
         }
         if let Some(path) = self.reader.check_main(package, edge)? {
-            self.metadata.issues.non_main
+            let paths = self.metadata.issues.non_main
                 .entry(origin.to_owned())
                 .or_insert_with(|| json!([]))
                 .as_array_mut()
-                .ok_or_else(|| invalid("non-main issue paths"))?
-                .push(json!(path));
+                .ok_or_else(|| invalid("non-main issue paths"))?;
+            if !paths
+                .iter()
+                .any(|existing| existing.as_str() == Some(path.as_str()))
+            {
+                paths.push(json!(path));
+            }
         }
         let base = identity(id)?;
         let already = |entries: &[Value]| {

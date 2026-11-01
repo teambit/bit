@@ -15,7 +15,9 @@ pub(super) fn range(package: &Package) -> Option<Value> {
         return Some(
             range
                 .as_str()
-                .map_or_else(|| range.clone(), |text| json!(text.trim())),
+                .map(str::trim)
+                .filter(|text| !text.is_empty())
+                .map_or_else(|| json!("*"), |text| json!(text)),
         );
     };
     let concrete = package.concrete

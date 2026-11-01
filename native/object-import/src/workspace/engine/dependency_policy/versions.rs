@@ -20,10 +20,11 @@ pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usiz
     let extensions = request.extensions
         .iter()
         .map(|identity| {
-            Ok(select::select(&index, identity, 1, None)?
+            let trimmed = identity.trim();
+            Ok(select::select(&index, trimmed, 1, None)?
                 .map_or_else(
-                    || identity.clone(),
-                    |(version, _, _)| wire::identity(identity, &version),
+                    || trimmed.to_owned(),
+                    |(version, _, _)| wire::identity(trimmed, &version),
                 ))
         })
         .collect::<io::Result<Vec<_>>>()?;

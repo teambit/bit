@@ -105,14 +105,21 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>
     let cache =
         result["cache"].as_object().ok_or_else(|| invalid("status dependency cache shape"))?;
     let mut files = request.files.clone();
-    files.push(request.component_root.join("component.json"));
-    let input = serde_json::from_value(json!({"root":request.component_root,"files":files,
-        "timestamp":cache["timestamp"]}))
+    let component_json = request.component_root.join("component.json");
+    if !files.contains(&component_json) {
+        files.push(component_json);
+    }
+    let input = serde_json::from_value(
+        json!({"root":request.component_root,"files":files,"timestamp":cache["timestamp"]}),
+    )
     .map_err(io::Error::other)?;
-    let (_, freshness) = read_dependency_cache::freshness(&input, pool)?;
-    if freshness["stale"] != false {
+    if read_dependency_cache::freshness(&input, pool)?.1["stale"] != false {
         return Ok(None);
     }
+    parse_cached_data(cache).map(Some)
+}
+
+fn parse_cached_data(cache: &serde_json::Map<String, Value>) -> io::Result<Value> {
     let data = cache
         .get("data")
         .and_then(Value::as_str)
@@ -120,10 +127,10 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>
         .filter(|data| !data.is_empty() && data.len() <= 16 * 1024 * 1024)
         .ok_or_else(|| invalid("status dependency cache data"))?;
     let parsed: Value = serde_json::from_str(data).map_err(io::Error::other)?;
-    if !parsed.is_object() {
-        return Err(invalid("status dependency cache data"));
-    }
-    Ok(Some(parsed))
+    parsed
+        .is_object()
+        .then_some(parsed)
+        .ok_or_else(|| invalid("status dependency cache data"))
 }
 
 fn validate(request: &Request) -> io::Result<()> {

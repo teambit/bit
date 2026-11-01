@@ -102,7 +102,10 @@ impl Projection<'_> {
         if error.is_null() {
             return Ok(());
         }
-        let message = error["message"].as_str().ok_or_else(|| invalid("parser error message"))?;
+        let message = error["message"]
+            .as_str()
+            .filter(|msg| !msg.trim().is_empty())
+            .ok_or_else(|| invalid("parser error message"))?;
         let location = match (error["lineNumber"].as_u64(), error["column"].as_u64()) {
             (Some(line), Some(column)) if line > 0 && column > 0 => {
                 format!(" (line: {line}, column: {column})")

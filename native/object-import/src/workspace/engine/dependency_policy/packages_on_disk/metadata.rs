@@ -49,7 +49,7 @@ fn identity(value: &Value) -> io::Result<String> {
         let (scope, name) = bare
             .split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))
-            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .filter(|(scope, name)| !scope.is_empty() && !scope.contains('/') && !name.is_empty())
             .ok_or_else(|| invalid("package component scope"))?;
         return Ok(match version.filter(|ver| concrete_version(ver)) {
             Some(ver) => format!("{scope}/{name}@{ver}"),
@@ -64,7 +64,7 @@ fn identity(value: &Value) -> io::Result<String> {
     let scope = value["scope"]
         .as_str()
         .map(str::trim)
-        .filter(|value| !value.is_empty())
+        .filter(|value| !value.is_empty() && !value.contains('/'))
         .ok_or_else(|| invalid("package component scope"))?;
     let version = optional_string(value.get("version"))?;
     Ok(match version.filter(|version| concrete_version(version)) {

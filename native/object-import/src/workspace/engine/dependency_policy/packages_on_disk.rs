@@ -66,7 +66,7 @@ fn resolve(
         return Ok(None);
     };
     let dependent = dependent
-        .get_or_init(|| dependent_manifest(&request.component_root, budget))
+        .get_or_init(|| dependent_manifest(&request.component_root, &request.root, budget))
         .as_ref()
         .map_err(|error| io::Error::new(error.kind(), error.to_string()))?;
     let package = budget.package(&directory.join("package.json"))?;
@@ -119,10 +119,13 @@ fn package_part(part: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte))
 }
 
-fn dependent_manifest(directory: &Path, budget: &Budget) -> io::Result<Option<Value>> {
+fn dependent_manifest(directory: &Path, root: &Path, budget: &Budget) -> io::Result<Option<Value>> {
     for ancestor in directory.ancestors() {
         if let Some(value) = budget.package(&ancestor.join("package.json"))? {
             return Ok(Some(value));
+        }
+        if ancestor == root {
+            break;
         }
     }
     Ok(None)

@@ -131,6 +131,9 @@ fn validate(request: &Detect) -> io::Result<()> {
 }
 
 fn validate_dev_files(files: &[String]) -> io::Result<()> {
+    if files.len() > 4096 {
+        return Err(invalid("fresh dependency dev file"));
+    }
     for file in files {
         let trimmed = file.trim();
         if trimmed.is_empty()

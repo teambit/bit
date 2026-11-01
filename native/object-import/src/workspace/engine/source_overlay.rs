@@ -92,6 +92,7 @@ impl SourceOverlay {
     fn destination(&self, destination: &Path) -> io::Result<()> {
         path(destination)?;
         if destination == self.data.root
+            || destination.file_name().is_none()
             || !destination.starts_with(&self.data.root)
             || normalize(destination) != destination
         {

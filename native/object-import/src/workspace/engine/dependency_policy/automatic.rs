@@ -64,7 +64,9 @@ fn assign(plan: &mut Plan, field: usize, name: &str, value: &Value, existing: &[
         && let Some(index) = existing[0].or(existing[1])
     {
         plan.ranges[index] = Some(range.clone());
-        plan.components[2].push(index);
+        if !plan.components[2].contains(&index) {
+            plan.components[2].push(index);
+        }
     } else {
         plan.packages[field].insert(name.to_owned(), value.clone());
     }

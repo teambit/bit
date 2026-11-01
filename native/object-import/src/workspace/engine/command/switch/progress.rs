@@ -15,7 +15,10 @@ pub(in crate::workspace::engine::command) fn import_count(
         .as_array()
         .ok_or_else(|| invalid("switch addition count"))?
         .len();
-    Ok(targets.len() + additions)
+    targets
+        .len()
+        .checked_add(additions)
+        .ok_or_else(|| invalid("switch addition count"))
 }
 
 pub(in crate::workspace::engine::command) fn receipt(count: usize) -> Value {

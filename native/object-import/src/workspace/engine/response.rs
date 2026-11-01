@@ -21,8 +21,9 @@ pub(super) fn canonical(mut message: String) -> io::Error {
     while message.ends_with(char::is_whitespace) {
         message.pop();
     }
-    while message.starts_with(char::is_whitespace) {
-        message.remove(0);
+    let start = message.len() - message.trim_start().len();
+    if start > 0 {
+        message.drain(..start);
     }
     io::Error::other(CanonicalError { message, progress: None })
 }

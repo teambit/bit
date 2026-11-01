@@ -5,7 +5,11 @@ use std::io;
 pub(super) fn validate(kind: &str, data: &str) -> io::Result<()> {
     let fields: serde_json::Map<String, Value> =
         serde_json::from_str(data).map_err(io::Error::other)?;
-    if fields.len() > 4096 {
+    if fields.len() > 4096
+        || fields
+            .keys()
+            .any(|key| key.trim().is_empty())
+    {
         return Err(invalid("relative issue field budget"));
     }
     for value in fields.values() {

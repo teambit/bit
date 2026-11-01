@@ -51,8 +51,9 @@ pub fn cache_stale(
     path(root)?;
     if files.len() > 65536
         || !timestamp.is_finite()
+        || timestamp < 0.0
         || timestamp.fract() != 0.0
-        || timestamp.abs() > 9_007_199_254_740_991.0
+        || timestamp > 9_007_199_254_740_991.0
     {
         return Err(invalid("dependency cache freshness limits"));
     }

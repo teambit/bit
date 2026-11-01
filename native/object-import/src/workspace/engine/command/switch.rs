@@ -222,8 +222,8 @@ fn validate_lane(
     if !id.is_main() && lane.is_none() {
         return Err(invalid("switch local lane absent"));
     }
-    if lane.is_some_and(|record| {
-        record.value["updateDependents"]
+    if lane.is_some_and(|rec| {
+        rec.value["updateDependents"]
             .as_array()
             .is_some_and(|rows| !rows.is_empty())
     }) {
@@ -272,7 +272,7 @@ fn validate_membership(
     let current_heads = entries(selection.current_lane.as_ref())?;
     let tracked = targets
         .iter()
-        .filter_map(|target| target["identity"].as_str())
+        .filter_map(|target| target["identity"].as_str().map(str::trim))
         .collect::<HashSet<_>>();
     for entry in lane_heads.iter().chain(&current_heads) {
         if entry.hidden {
@@ -280,16 +280,17 @@ fn validate_membership(
         }
     }
     for entry in &current_heads {
+        let id = entry.identity.trim();
         if selection.chosen.is_none()
-            && !tracked.contains(entry.identity.as_str())
-            && !selection.lane_only.contains(&entry.identity)
+            && !tracked.contains(id)
+            && !selection.lane_only.contains(id)
         {
             return Err(invalid("switch current lane component absent from bitmap"));
         }
     }
     Ok(lane_heads
         .into_iter()
-        .map(|entry| (entry.identity, entry.head))
+        .map(|entry| (entry.identity.trim().to_owned(), entry.head.trim().to_owned()))
         .collect())
 }
 

@@ -73,7 +73,7 @@ fn identity(value: &Value) -> io::Result<String> {
         let (scope, name) = bare
             .split_once('/')
             .map(|(sc, nm)| (sc.trim(), nm.trim()))
-            .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
+            .filter(|(sc, nm)| !sc.is_empty() && !sc.contains('/') && !nm.is_empty())
             .ok_or_else(|| invalid("status cached dependency scope"))?;
         return Ok(match ver.filter(|ver| concrete_version(ver)) {
             Some(ver) => format!("{scope}/{name}@{ver}"),
@@ -88,7 +88,7 @@ fn identity(value: &Value) -> io::Result<String> {
     let scope = value["scope"]
         .as_str()
         .map(str::trim)
-        .filter(|text| !text.is_empty())
+        .filter(|text| !text.is_empty() && !text.contains('/'))
         .ok_or_else(|| invalid("status cached dependency scope"))?;
     let mut identity = format!("{scope}/{name}");
     if let Some(version) = value

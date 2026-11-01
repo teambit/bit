@@ -43,15 +43,20 @@ pub(super) fn dispatch(
     }
 }
 
-fn import_token(token: Option<&str>) -> Option<&str> {
-    token
+fn import_token(token: Option<&str>) -> io::Result<Option<&str>> {
+    let Some(candidate) = token
         .map(str::trim)
-        .filter(|candidate| {
-            !candidate.is_empty()
-                && candidate.len() <= 256
-                && !candidate.chars().any(char::is_control)
-                && !candidate.contains(['/', '\\'])
-        })
+        .filter(|candidate| !candidate.is_empty())
+    else {
+        return Ok(None);
+    };
+    if candidate.len() > 256
+        || candidate.chars().any(char::is_control)
+        || candidate.contains(['/', '\\'])
+    {
+        return Err(super::invalid("command import token"));
+    }
+    Ok(Some(candidate))
 }
 
 fn overlay_reads(
@@ -65,7 +70,7 @@ fn overlay_reads(
             pool,
             command::inbound::overlay(
                 &snapshots.command,
-                import_token(input.import_token.as_deref()),
+                import_token(input.import_token.as_deref())?,
             )?,
         ),
         Request::VersionDiff(input) => super::status_models::version_diff::read_overlay(
@@ -73,7 +78,7 @@ fn overlay_reads(
             pool,
             command::inbound::overlay(
                 &snapshots.command,
-                import_token(input.import_token.as_deref()),
+                import_token(input.import_token.as_deref())?,
             )?,
         ),
         Request::VersionParentChain(input) => super::status_models::parent_diff::read_overlay(
@@ -81,7 +86,7 @@ fn overlay_reads(
             pool,
             command::inbound::overlay(
                 &snapshots.command,
-                import_token(input.import_token.as_deref()),
+                import_token(input.import_token.as_deref())?,
             )?,
         ),
         Request::StatusLaneUpdates(input) => {

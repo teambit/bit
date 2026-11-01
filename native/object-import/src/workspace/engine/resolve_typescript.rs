@@ -68,6 +68,9 @@ fn load_package(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<
         return Err(invalid("TypeScript package entry spelling"));
     }
     let target = normalize(&file.join(main));
+    if !target.starts_with(file) {
+        return Err(invalid("TypeScript package entry spelling"));
+    }
     let directory_only = main.ends_with('/') || matches!(main.rsplit('/').next(), Some("." | ".."));
     if !directory_only && let Some(found) = package_file(&target, typed, budget)? {
         return Ok(Some(found));

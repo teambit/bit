@@ -88,7 +88,11 @@ fn read(path: &Path, missing: bool) -> io::Result<Vec<String>> {
     if bytes.len() > 65536 || bytes.len() as u64 != metadata.len() || bytes.contains(&0) {
         return Err(invalid("inventory ignore file limit"));
     }
-    Ok(parse(&String::from_utf8_lossy(&bytes)))
+    let patterns = parse(&String::from_utf8_lossy(&bytes));
+    if patterns.len() > 4096 {
+        return Err(invalid("inventory ignore file limit"));
+    }
+    Ok(patterns)
 }
 fn open_ignore_file(path: &Path, missing: bool) -> io::Result<Option<fs::File>> {
     match fs::symlink_metadata(path) {

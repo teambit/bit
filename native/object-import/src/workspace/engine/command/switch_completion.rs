@@ -88,6 +88,14 @@ pub(in crate::workspace::engine) fn complete(
     {
         return Err(invalid("switch completion token"));
     }
+    let retained = state.record
+        .as_ref()
+        .and_then(|record| record.planned.as_ref())
+        .and_then(|plan| plan.switch_completion.as_ref())
+        .ok_or_else(|| invalid("switch completion plan absent"))?;
+    if !retained.applied {
+        return Err(invalid("switch checkout not published"));
+    }
     let record = state.record.take().ok_or_else(|| invalid("switch completion owner absent"))?;
     let retained = record.planned
         .as_ref()

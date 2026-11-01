@@ -126,7 +126,10 @@ fn validate_cache(cache: &[(String, bool)]) -> io::Result<()> {
     if cache
         .iter()
         .any(|(path, _)| {
-            !path.is_ascii() || path.contains('\\') || path.chars().any(char::is_control)
+            !path.is_ascii()
+                || path.starts_with('/')
+                || path.contains('\\')
+                || path.chars().any(char::is_control)
         })
         || cache
             .iter()

@@ -82,6 +82,9 @@ fn retain(files: &mut [Record], snapshots: Option<&mut crate::workspace::snapsho
         return;
     };
     for file in files {
+        if file.metadata.path.as_os_str().is_empty() {
+            continue;
+        }
         file.read_token = snapshots.retain(crate::workspace::snapshots::Observation {
             path: file.metadata.path.clone(),
             raw_hash: file.metadata.hash.clone(),

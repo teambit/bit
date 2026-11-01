@@ -137,6 +137,9 @@ pub(super) fn finish(
     state: &mut State,
     pool: &ThreadPool,
 ) -> io::Result<(usize, Value)> {
+    if input.ignored_root.len() > 4096 {
+        return Err(invalid("inventory ignore policy limit"));
+    }
     let mut plan =
         state.plans.remove(&input.token).ok_or_else(|| invalid("stale inventory token"))?;
     let mut combined = Matcher::new(input.combined)?;

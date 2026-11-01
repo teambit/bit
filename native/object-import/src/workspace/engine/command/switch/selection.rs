@@ -69,6 +69,7 @@ fn filter(pattern: &str, entries: &[Entry]) -> io::Result<Vec<String>> {
         let (exclude, pattern) = pattern
             .strip_prefix('!')
             .map_or((false, pattern), |rest| (true, rest.trim()));
+        let pattern = pattern.trim_start_matches('/').trim();
         if !pattern.is_empty() {
             update_selection(&mut selected, entries, pattern, exclude);
         }

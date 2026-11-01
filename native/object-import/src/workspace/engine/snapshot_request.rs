@@ -46,7 +46,7 @@ fn dispatch_resolve(
             command::resolve::validate_snapshot(&input, state)
         }
         Request::CommandSnapshotRefresh(input) => {
-            command::resolve::refresh_snapshot(input, snapshots, pool)
+            pool.install(|| command::resolve::refresh_snapshot(input, snapshots, pool))
         }
         Request::CommandTagVersionOverrides(input) => {
             command::resolve::override_versions(&input, state)

@@ -39,11 +39,16 @@ fn ignored(request: &Request, plan: &mut Plan) {
     }
     for (index, issue) in request.missing.iter().enumerate() {
         plan.missing[index].retain(|name| {
-            !request.ignore(usize::from(issue.is_dev_file), name, &mut plan.removed)
+            let trimmed = name.trim();
+            !trimmed.is_empty()
+                && !request.ignore(usize::from(issue.is_dev_file), trimmed, &mut plan.removed)
         });
     }
     for field in 0..2 {
-        plan.packages[field].retain(|name, _| !request.ignore(field, name, &mut plan.removed));
+        plan.packages[field].retain(|name, _| {
+            let trimmed = name.trim();
+            !trimmed.is_empty() && !request.ignore(field, trimmed, &mut plan.removed)
+        });
     }
     let regular: Vec<_> = plan.packages[0]
         .keys()

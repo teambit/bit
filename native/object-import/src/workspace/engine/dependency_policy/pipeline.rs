@@ -73,9 +73,13 @@ fn finish_request(request: &Request, initial: &Value) -> io::Result<Value> {
     if fields.contains_key("state") || fields.contains_key("resolved") {
         return Err(invalid("dependency pipeline owns intermediate state"));
     }
+    let ranges = initial["ranges"]
+        .as_array()
+        .filter(|ranges| ranges.len() == request.initial.entries.len())
+        .ok_or_else(|| invalid("dependency pipeline ranges"))?;
     let mut entries = request.initial.entries.clone();
     for (index, entry) in entries.iter_mut().enumerate() {
-        entry.version_range = initial["ranges"][index]
+        entry.version_range = ranges[index]
             .as_str()
             .map(str::trim)
             .filter(|range| !range.is_empty())

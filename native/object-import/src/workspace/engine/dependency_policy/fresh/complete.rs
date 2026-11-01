@@ -114,6 +114,9 @@ fn validate_file_issue(data: &str) -> io::Result<()> {
     Ok(())
 }
 fn apply_versions(detected: &mut Value, request: &Complete) -> io::Result<()> {
+    if request.capture.component_versions.len() > 4096 {
+        return Err(invalid("fresh component version receipt"));
+    }
     for version in &request.capture.component_versions {
         let field = ["dependencies", "devDependencies", "peerDependencies"]
             .get(version.field)

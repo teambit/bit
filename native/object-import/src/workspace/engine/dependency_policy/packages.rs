@@ -54,21 +54,28 @@ fn apply_package_policy(policy: &Policy, plan: &mut Plan, field: usize, name: &s
 fn components(request: &Request, plan: &mut Plan) {
     for field in 0..2 {
         let mut retained = Vec::new();
-        for index in &std::mem::take(&mut plan.components[field]) {
-            let name = effective_package_name(request.entries[*index].package_name.as_deref());
-            if let Some(value) = version(&request.policies.workspace_policy.peer_dependencies, name)
-            {
-                plan.ranges[*index] = Some(value);
-                plan.components[2].push(*index);
-                continue;
+        for index in std::mem::take(&mut plan.components[field]) {
+            if apply_component_policy(request, plan, index) {
+                retained.push(index);
             }
-            if let Some(value) = version(&request.policies.workspace_policy.dependencies, name) {
-                plan.ranges[*index] = Some(value);
-            }
-            retained.push(*index);
         }
         plan.components[field] = retained;
     }
+}
+
+fn apply_component_policy(request: &Request, plan: &mut Plan, index: usize) -> bool {
+    let name = effective_package_name(request.entries[index].package_name.as_deref());
+    if let Some(value) = version(&request.policies.workspace_policy.peer_dependencies, name) {
+        plan.ranges[index] = Some(value);
+        if !plan.components[2].contains(&index) {
+            plan.components[2].push(index);
+        }
+        return false;
+    }
+    if let Some(value) = version(&request.policies.workspace_policy.dependencies, name) {
+        plan.ranges[index] = Some(value);
+    }
+    true
 }
 
 fn effective_package_name(name: Option<&str>) -> &str {

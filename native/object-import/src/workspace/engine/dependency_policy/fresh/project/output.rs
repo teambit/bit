@@ -38,6 +38,9 @@ impl Projection<'_> {
             }
         }
         if !self.metadata.issues.missing_packages.is_empty() {
+            if self.metadata.issues.missing_packages.len() > 4096 {
+                return Err(super::invalid("fresh detection missing packages"));
+            }
             issues.push(json!({"type":"MissingPackagesDependenciesOnFs",
                 "data":serde_json::to_string(&self.metadata.issues.missing_packages).map_err(io::Error::other)?}));
         }
@@ -45,5 +48,8 @@ impl Projection<'_> {
     }
 }
 fn serialized_issue(kind: &str, data: &Map<String, Value>) -> io::Result<Value> {
+    if data.len() > 4096 {
+        return Err(super::invalid("fresh detection issue data"));
+    }
     Ok(json!({"type":kind,"data":serde_json::to_string(&data).map_err(io::Error::other)?}))
 }

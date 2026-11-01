@@ -22,6 +22,9 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     }
     if let Some(home) = &request.home {
         path(home)?;
+        if normalize(home) != *home {
+            return Err(invalid("dependency graph normalized path"));
+        }
     }
     for file in &request.files {
         path(file)?;

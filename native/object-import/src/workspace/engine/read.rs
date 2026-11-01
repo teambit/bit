@@ -59,7 +59,10 @@ pub(super) fn read_with_budget<Record: Send>(
         .iter()
         .map(|file| {
             let bytes = raw(file, maximum.saturating_sub(total))?;
-            total = total.saturating_add(bytes.len());
+            total = total
+                .checked_add(bytes.len())
+                .filter(|sum| *sum <= maximum)
+                .ok_or_else(|| invalid("workspace raw bytes limit"))?;
             Ok(record(file, bytes))
         })
         .collect()

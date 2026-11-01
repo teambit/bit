@@ -51,13 +51,13 @@ pub(super) fn status_load_order(
 
 pub(super) fn order_targets(context: &mut Value, order: &[String]) -> io::Result<()> {
     let targets = context["targets"].as_array_mut().ok_or_else(|| invalid("switch targets"))?;
-    let mut by_id = targets
-        .drain(..)
-        .map(|target| {
-            let id = target_identity(&target).ok_or_else(|| invalid("switch identity"))?.to_owned();
-            Ok((id, target))
-        })
-        .collect::<io::Result<HashMap<_, _>>>()?;
+    let mut by_id = HashMap::with_capacity(targets.len());
+    for target in targets.drain(..) {
+        let id = target_identity(&target).ok_or_else(|| invalid("switch identity"))?.to_owned();
+        if by_id.insert(id, target).is_some() {
+            return Err(invalid("switch duplicate target identity"));
+        }
+    }
     let ordered = order
         .iter()
         .map(|id| {

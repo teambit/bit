@@ -189,12 +189,19 @@ impl Capture {
 }
 fn retain(scanned: Vec<Row>, rows: &mut HashMap<String, Row>, pending: &mut Vec<PathBuf>) {
     for row in scanned {
+        let file = row.path_map.file.trim();
+        if file.is_empty() {
+            continue;
+        }
         for dependency in &row.path_map.dependencies {
             let resolved_dep = dependency.resolved_dep.trim();
-            if !resolved_dep.is_empty() && !resolved_dep.contains("node_modules") {
+            if !resolved_dep.is_empty()
+                && resolved_dep != file
+                && !resolved_dep.contains("node_modules")
+            {
                 pending.push(PathBuf::from(resolved_dep));
             }
         }
-        rows.insert(row.path_map.file.trim().to_owned(), row);
+        rows.insert(file.to_owned(), row);
     }
 }

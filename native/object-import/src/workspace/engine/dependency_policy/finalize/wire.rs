@@ -47,16 +47,22 @@ pub(super) struct Output {
 }
 impl Output {
     pub(super) fn new(request: &Request) -> Self {
+        let mut env_own = Vec::new();
+        for key in request.environment.policy.keys().map(|key| key.trim()) {
+            if !key.is_empty()
+                && !env_own
+                    .iter()
+                    .any(|existing| existing == key)
+            {
+                env_own.push(key.to_owned());
+            }
+        }
         Self {
             state: request.state.clone(),
             added: std::array::from_fn(|_| Vec::new()),
             missing: Vec::new(),
             ignored_self: Vec::new(),
-            env_own: request.environment.policy
-                .keys()
-                .map(|key| key.trim().to_owned())
-                .filter(|key| !key.is_empty())
-                .collect(),
+            env_own,
         }
     }
     pub(super) fn added(&mut self, field: usize, value: String) {

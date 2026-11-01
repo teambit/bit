@@ -90,6 +90,7 @@ pub(super) fn automatic(request: &Request, output: &mut Output) -> io::Result<()
     Ok(())
 }
 fn preferred(request: &Request, name: &str) -> io::Result<String> {
+    let name = name.trim();
     let workspace = version(&request.environment.workspace.dependencies, name)
         .or_else(|| version(&request.environment.workspace.peer_dependencies, name));
     let Some(workspace) = workspace.filter(|version| !version.is_empty()) else {

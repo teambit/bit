@@ -74,15 +74,16 @@ fn identity(value: &str) -> bool {
     {
         return false;
     }
-    match trimmed.split_once('@') {
+    match trimmed.rsplit_once('@') {
         None => !trimmed.starts_with('/') && !trimmed.ends_with('/'),
         Some((base, version)) => {
             let base = base.trim();
             !base.is_empty()
                 && !base.starts_with('/')
                 && !base.ends_with('/')
+                && !base.contains('@')
                 && !version.trim().is_empty()
-                && !version.contains('@')
+                && !version.contains('/')
         }
     }
 }

@@ -41,10 +41,20 @@ pub(in super::super) fn append_skipped(
             .map(str::trim)
             .filter(|head| !head.is_empty())
         {
-            failed.push(json!({"id":format!("{identity}@{head}"),
-                "unchangedMessage":format!("component {identity} is already at version {head}"),
-                "unchangedLegitimately":true}));
+            push_skipped(failed, identity, head);
         }
     }
     Ok(())
+}
+
+fn push_skipped(failed: &mut Vec<Value>, identity: &str, head: &str) {
+    let id = format!("{identity}@{head}");
+    if !failed
+        .iter()
+        .any(|row| row["id"].as_str() == Some(id.as_str()))
+    {
+        failed.push(json!({"id":id,
+            "unchangedMessage":format!("component {identity} is already at version {head}"),
+            "unchangedLegitimately":true}));
+    }
 }

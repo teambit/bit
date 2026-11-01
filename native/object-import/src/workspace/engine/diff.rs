@@ -107,6 +107,7 @@ pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<V
     if git.is_empty() || git.len() > 32768 || git.contains('\0') {
         return Err(invalid("workspace invalid Git executable"));
     }
+    let mut total = 0_usize;
     let mut prepared = Vec::with_capacity(files.len());
     for (relative_path, left, right) in files {
         if relative_path.trim().is_empty()
@@ -115,13 +116,14 @@ pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<V
         {
             return Err(invalid("workspace invalid relative path"));
         }
-        let same = equivalent(left.as_deref(), right.as_deref());
-        prepared.push(Prepared {
-            relative_path,
-            left: left.unwrap_or_default(),
-            right: right.unwrap_or_default(),
-            same,
-        });
+        let left = left.unwrap_or_default();
+        let right = right.unwrap_or_default();
+        total = total.saturating_add(left.len()).saturating_add(right.len());
+        if total > MAX_RAW {
+            return Err(invalid("workspace raw bytes limit"));
+        }
+        let same = equivalent(Some(left.as_slice()), Some(right.as_slice()));
+        prepared.push(Prepared { relative_path, left, right, same });
     }
     if prepared.is_empty() {
         return Ok(Vec::new());

@@ -49,7 +49,11 @@ fn first(ids: &[String]) -> HashMap<&str, &str> {
     for id in ids {
         let base = unversioned(id);
         let ver = version(id).trim();
-        if !base.is_empty() && !ver.is_empty() {
+        if !base.is_empty()
+            && !ver.is_empty()
+            && !ver.eq_ignore_ascii_case("latest")
+            && !ver.eq_ignore_ascii_case("head")
+        {
             index.entry(base).or_insert(ver);
         }
     }

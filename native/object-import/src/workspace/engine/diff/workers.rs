@@ -17,7 +17,10 @@ pub(super) fn execute(
         return Ok(Vec::new());
     }
     let next = AtomicUsize::new(0);
-    let workers = rayon::current_num_threads().min(4);
+    let workers = rayon::current_num_threads()
+        .min(4)
+        .min(files.len())
+        .max(1);
     let batches: Vec<_> = (0..workers)
         .into_par_iter()
         .map(|_| worker_batch(files, directory, git, color, output, &next))

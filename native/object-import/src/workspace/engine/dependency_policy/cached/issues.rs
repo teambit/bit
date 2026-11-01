@@ -50,8 +50,11 @@ pub(super) fn apply(issues: &Value, output: &Value) -> io::Result<Value> {
         )
         .map_err(io::Error::other)?;
         let mut updated = Vec::new();
+        let detected_missing = rows(&output["detectedMissing"])?;
         for (index, row) in rows(&data)?.iter().enumerate() {
-            let packages = &output["detectedMissing"][index];
+            let packages = detected_missing
+                .get(index)
+                .ok_or_else(|| invalid("status cached missing issue"))?;
             if !rows(packages)?.is_empty() {
                 let mut row = row.clone();
                 row["missingPackages"] = packages.clone();

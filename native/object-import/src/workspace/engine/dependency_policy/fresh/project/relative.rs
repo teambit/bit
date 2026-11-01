@@ -102,7 +102,7 @@ fn owner(request: &Detect, key: &str, row: &Value) -> io::Result<Option<Owner>> 
     let Some(directory) = row["rootDir"]
         .as_str()
         .map(str::trim)
-        .filter(|dir| !dir.is_empty())
+        .filter(|dir| !dir.is_empty() && !Path::new(dir).is_absolute())
     else {
         return Ok(None);
     };
@@ -113,7 +113,7 @@ fn owner(request: &Detect, key: &str, row: &Value) -> io::Result<Option<Owner>> 
     let (scope, name) = base
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
-        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .filter(|(scope, name)| !scope.is_empty() && !scope.contains('/') && !name.is_empty())
         .ok_or_else(|| invalid("relative owner identity"))?;
     let version = version.filter(|ver| !ver.is_empty());
     let mut id = json!({"scope":scope,"name":name});

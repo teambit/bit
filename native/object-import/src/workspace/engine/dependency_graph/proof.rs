@@ -95,7 +95,9 @@ fn verify_one(proof: &Proof) -> io::Result<usize> {
     let expected_hash = proof.hash.as_deref().map(str::trim);
     if !match (actual_hash.as_deref(), expected_hash) {
         (None, None) => true,
-        (Some(actual), Some(expected)) => actual.eq_ignore_ascii_case(expected),
+        (Some(actual), Some(expected)) => {
+            !expected.is_empty() && actual.eq_ignore_ascii_case(expected)
+        }
         _ => false,
     } {
         return Err(invalid("dependency capture changed"));

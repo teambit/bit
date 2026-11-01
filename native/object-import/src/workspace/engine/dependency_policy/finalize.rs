@@ -76,11 +76,13 @@ fn validate_state(request: &Request) -> io::Result<()> {
         return Err(invalid("dependency finalization component limit"));
     }
     if request.self_identity.trim().is_empty()
+        || request.self_identity.chars().any(char::is_control)
         || state.entries
             .iter()
             .chain(&request.environment.model_components)
             .any(|entry| {
                 entry.identity.trim().is_empty()
+                    || entry.identity.chars().any(char::is_control)
                     || entry.package_name
                         .as_deref()
                         .is_some_and(|name| !super::wire::name(name))

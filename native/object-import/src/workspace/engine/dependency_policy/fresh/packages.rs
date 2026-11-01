@@ -145,14 +145,14 @@ fn directory(resolved: &str) -> io::Result<PathBuf> {
     let mut parts = rest.split('/');
     let first = parts
         .next()
-        .filter(|part| !part.is_empty())
+        .filter(|part| !part.is_empty() && !matches!(*part, "." | ".."))
         .ok_or_else(|| invalid("fresh package spelling"))?;
     let name = if first.starts_with('@') {
         format!(
             "{first}/{}",
             parts
                 .next()
-                .filter(|part| !part.is_empty())
+                .filter(|part| !part.is_empty() && !matches!(*part, "." | ".."))
                 .ok_or_else(|| invalid("fresh scoped package"))?,
         )
     } else {

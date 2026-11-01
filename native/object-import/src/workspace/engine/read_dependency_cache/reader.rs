@@ -89,7 +89,9 @@ fn latest(text: &str, key: &str) -> io::Result<Option<Value>> {
         let Some(body) = pieces.next() else { continue };
         if pieces.next().is_some()
             || body.is_empty()
-            || format!("{:x}", Sha1::digest(body.as_bytes())) != checksum
+            || checksum.len() != 40
+            || !checksum.bytes().all(|byte| byte.is_ascii_hexdigit())
+            || !format!("{:x}", Sha1::digest(body.as_bytes())).eq_ignore_ascii_case(checksum)
         {
             continue;
         }

@@ -94,8 +94,11 @@ impl Scan<'_> {
             return Ok(());
         }
         path(&file)?;
-        self.queued_bytes += file.as_os_str().len();
-        if self.queued_bytes > MAX_RAW || self.directories.len() >= 65536 {
+        self.queued_bytes = self.queued_bytes
+            .checked_add(file.as_os_str().len())
+            .filter(|bytes| *bytes <= MAX_RAW)
+            .ok_or_else(|| invalid("workspace scan queued path bytes limit"))?;
+        if self.directories.len() >= 65536 {
             return Err(invalid("workspace scan queued path bytes limit"));
         }
         self.directories.push(file);
@@ -110,10 +113,10 @@ impl Scan<'_> {
             .to_str()
             .ok_or_else(|| invalid("workspace non-UTF8 path"))?
             .to_owned();
-        self.bytes += name.len();
-        if self.bytes > MAX_RAW {
-            return Err(invalid("workspace scan path bytes limit"));
-        }
+        self.bytes = self.bytes
+            .checked_add(name.len())
+            .filter(|bytes| *bytes <= MAX_RAW)
+            .ok_or_else(|| invalid("workspace scan path bytes limit"))?;
         self.paths.push(name);
         count(self.paths.len())
     }

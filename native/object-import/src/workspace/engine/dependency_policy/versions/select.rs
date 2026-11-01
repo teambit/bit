@@ -82,14 +82,19 @@ fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<C
     {
         return Ok(Some((version, None)));
     }
-    if request.policy.automatic
-        .iter()
-        .any(|map| {
-            map.get(name)
-                .is_some_and(|value| !value.trim().is_empty())
-        })
+    if !ver.eq_ignore_ascii_case("latest")
+        && !ver.eq_ignore_ascii_case("head")
+        && request.policy.automatic
+            .iter()
+            .any(|map| {
+                map.get(name)
+                    .is_some_and(|value| {
+                        let trimmed = value.trim();
+                        !trimmed.is_empty() && trimmed != "-"
+                    })
+            })
     {
-        return Ok(Some((version(identity).to_owned(), None)));
+        return Ok(Some((ver.to_owned(), None)));
     }
     Ok(None)
 }

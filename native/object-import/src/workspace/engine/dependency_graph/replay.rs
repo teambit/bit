@@ -110,19 +110,18 @@ impl Replay {
         let mut dependencies = Vec::new();
         for dep in &row.path_map.dependencies {
             let resolved = dep.resolved_dep.trim();
-            if resolved.is_empty() {
+            if resolved.is_empty()
+                || resolved == file
+                || (resolved.contains("node_modules") && !include_npm)
+            {
                 continue;
             }
-            if resolved.contains("node_modules") {
-                if include_npm {
-                    self.npm
-                        .entry(file.to_owned())
-                        .or_default()
-                        .push(resolved.to_owned());
-                }
+            let target = if resolved.contains("node_modules") {
+                self.npm.entry(file.to_owned()).or_default()
             } else {
-                dependencies.push(resolved.to_owned());
-            }
+                &mut dependencies
+            };
+            push_unique(target, resolved);
         }
         let value = serde_json::to_value(&row.path_map).map_err(io::Error::other)?;
         self.record(file, value.clone(), true)?;
@@ -192,5 +191,14 @@ impl Diagnostics {
         if let Some(value) = cached.get("missingPackages") {
             self.missing_packages.insert(file.to_owned(), value.clone());
         }
+    }
+}
+
+fn push_unique(target: &mut Vec<String>, resolved: &str) {
+    if !target
+        .iter()
+        .any(|existing| existing == resolved)
+    {
+        target.push(resolved.to_owned());
     }
 }
