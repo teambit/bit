@@ -1,4 +1,4 @@
-//! Unit tests for HTTP action requests and responses.
+//! Unit tests for HTTP action requests and responses in `bit-client-transfer`.
 
 use super::{GlobalConfig, Network};
 use serde_json::{Value, json};

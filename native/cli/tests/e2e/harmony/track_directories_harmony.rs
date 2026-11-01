@@ -1,4 +1,4 @@
-//! `e2e/harmony/track-directories-harmony.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/track-directories-harmony.e2e.ts`.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

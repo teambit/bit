@@ -1,4 +1,4 @@
-//! Cases from:
+//! End-to-end tests for:
 //! - `e2e/harmony/corrupted-objects.e2e.ts`
 //! - `e2e/harmony/load-bit.e2e.ts`
 //! - `e2e/harmony/node-linker.e2e.ts`

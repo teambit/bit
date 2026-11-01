@@ -1,3 +1,4 @@
+//! Stash aliases, messages, explicit IDs, and merge strategies parity tests.
 use super::support::{command, compare_stashes, workspace, write_both};
 use std::fs;
 #[test]

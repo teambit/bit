@@ -1,4 +1,4 @@
-//! `e2e/harmony/snap.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/snap.e2e.ts`.
 
 mod merge;
 

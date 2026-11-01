@@ -1,3 +1,5 @@
+//! End-to-end tests for Harmony UI (`bit start`) and file watching (`bit watch`).
+
 use crate::helper::Helper;
 use serde_json::json;
 

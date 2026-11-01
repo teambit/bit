@@ -1,4 +1,5 @@
-//! Snapshot range validation matches the released guard and its feature opt-in.
+//! Snapshot range validation matches the released guard and its feature
+//! opt-in.
 use super::{version, workspace};
 use crate::helper::{Helper, config};
 use std::ffi::OsStr;

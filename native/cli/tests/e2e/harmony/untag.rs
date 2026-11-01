@@ -1,4 +1,4 @@
-//! `e2e/harmony/untag-harmony.e2e.ts`: published `resetAll()` behavior.
+//! End-to-end tests for `e2e/harmony/untag-harmony.e2e.ts`: published `resetAll()` behavior.
 
 use crate::helper::{Helper, parse};
 use serde_json::Value;

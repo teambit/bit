@@ -1,3 +1,5 @@
+//! Scope rename refactoring across mixed exported, new, and aspect components.
+
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},
     helper::{config, remote},

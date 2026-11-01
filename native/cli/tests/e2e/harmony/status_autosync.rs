@@ -1,4 +1,5 @@
-//! Native independent startup bitmap synchronization and sentinel parity.
+//! Native independent startup bitmap synchronization and sentinel parity
+//! tests.
 
 use crate::helper::{
     FOO_FIXTURE, Helper,

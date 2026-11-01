@@ -1,4 +1,4 @@
-//! `e2e/harmony/status-harmony.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/status-harmony.e2e.ts`.
 
 use crate::{
     helper::{FOO_FIXTURE, Helper, len, parse, strip_ansi},

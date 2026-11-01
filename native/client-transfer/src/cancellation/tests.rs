@@ -1,4 +1,5 @@
-//! Unit tests for cancellation tokens and construction scopes.
+//! Unit tests for cancellation tokens and construction scopes in
+//! `bit-client-transfer`.
 
 use super::Cancellation;
 use std::{future, io};

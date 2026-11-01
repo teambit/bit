@@ -3,7 +3,7 @@
 //! asserting once the command runs natively. Such cases live in `known_failures` modules
 //! (`cargo test --features e2e --test e2e known_failures -- --list` lists them).
 
-/// Why a ported case stopped: its command ran on the Node.js CLI.
+/// Why a ported case stopped: its command delegated to the Node.js CLI.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KnownFailure {
     pub reason: String,

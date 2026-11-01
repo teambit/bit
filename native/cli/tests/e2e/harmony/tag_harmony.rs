@@ -1,3 +1,5 @@
+//! End-to-end tests for `e2e/harmony/tag-harmony.e2e.ts`.
+
 #[path = "tag_harmony/extra.rs"]
 mod extra;
 

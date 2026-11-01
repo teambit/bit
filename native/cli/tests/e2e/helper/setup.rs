@@ -8,7 +8,7 @@ use std::{
     sync::OnceLock,
 };
 
-/// The Node.js CLI the cases run against, from `bvm install <bit-version>`.
+/// The Node.js CLI version the cases run against, from `bvm install <bit-version>`.
 const BIT_VERSION: &str = include_str!("../bit-version");
 
 /// The settings the e2e CI job writes with `bit config set` before the suites run.

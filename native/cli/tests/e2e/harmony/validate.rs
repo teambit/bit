@@ -1,3 +1,5 @@
+//! End-to-end tests for `e2e/harmony/validate.e2e.ts`.
+
 use crate::helper::Helper;
 
 #[test]

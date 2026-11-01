@@ -1,4 +1,5 @@
-//! Component policy parity with `VariantPolicy` and legacy dependency overrides.
+//! Component policy parity with `VariantPolicy` and legacy dependency
+//! overrides.
 
 use crate::helper::{FOO_FIXTURE, Helper, config::set_workspace_key, parse};
 use serde_json::{Value, json};

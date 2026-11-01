@@ -1,4 +1,4 @@
-//! `Helper` of `@teambit/legacy.e2e-helper`, for the native CLI: each case gets its own
+//! [`Helper`] of `@teambit/legacy.e2e-helper`, for the native CLI: each case gets its own
 //! directory holding the local workspace and the remote scopes, and runs `bit` from
 //! `native/` with the Node.js CLI behind it.
 

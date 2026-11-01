@@ -1,4 +1,5 @@
-//! Actual builder artifacts and failure publication boundaries.
+//! Actual builder artifacts and failure publication boundaries during snapshot
+//! creation.
 use super::workspace;
 use crate::helper::{Helper, config, parse};
 use std::ffi::OsStr;

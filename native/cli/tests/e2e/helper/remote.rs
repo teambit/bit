@@ -1,4 +1,5 @@
-//! Remote fixtures remain independent of the pinned Windows pending-object glob bug.
+//! Remote fixtures remain independent of the pinned Windows pending-object glob
+//! bug.
 use super::{Helper, config, setup};
 use serde_json::Value;
 use std::{collections::HashSet, ffi::OsStr, path::Path, process::Command};

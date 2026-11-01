@@ -1,4 +1,5 @@
-//! Scope-wide operations compare complete same-path state and retained mutation prefixes.
+//! Scope-wide operations compare complete same-path state and retained mutation
+//! prefixes.
 mod callbacks;
 mod fixture;
 mod installation;

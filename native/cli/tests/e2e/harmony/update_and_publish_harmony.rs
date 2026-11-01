@@ -1,4 +1,4 @@
-//! `e2e/harmony/update-cmd.e2e.ts` and `e2e/harmony/publish.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/update-cmd.e2e.ts` and `e2e/harmony/publish.e2e.ts`.
 
 use crate::helper::{Helper, config};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Status command options and workspace configuration precedence.
+//! Status command options and workspace configuration precedence parity tests.
 
 use crate::helper::{Helper, parse};
 use std::{ffi::OsStr, fs};

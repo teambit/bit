@@ -1,4 +1,5 @@
-//! Relative cross-component and nested untracked dependency detection parity.
+//! Relative cross-component and nested untracked dependency detection parity
+//! tests.
 
 use crate::helper::Helper;
 use std::{ffi::OsStr, fmt::Write as _};

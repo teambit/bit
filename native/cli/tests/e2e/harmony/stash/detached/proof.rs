@@ -1,4 +1,5 @@
-//! Exercise the retained stash protocol between capture and its first persistent phase.
+//! Exercises the retained stash protocol between capture and its first
+//! persistent phase.
 use super::{controls, workspace};
 use crate::helper::setup;
 use bit_object_import::WorkspaceSession;

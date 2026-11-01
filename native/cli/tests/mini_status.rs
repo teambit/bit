@@ -8,7 +8,7 @@ use std::{
 };
 use tempfile::TempDir;
 
-/// Echoes its arguments, so a delegated run is recognizable.
+/// Echoes its command-line arguments so a delegated run is recognizable.
 const STUB: &str = "process.stdout.write(JSON.stringify(process.argv.slice(2)));";
 
 struct Workspace {

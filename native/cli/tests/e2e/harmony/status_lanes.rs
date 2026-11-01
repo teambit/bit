@@ -1,4 +1,5 @@
-//! Lane-only bitmap visibility in complete `bit status` commands.
+//! Lane-only bitmap visibility in complete `bit status` commands across
+//! workspaces.
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use flate2::read::ZlibDecoder;

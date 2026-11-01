@@ -1,3 +1,5 @@
+//! Shared workspace fixtures and stash comparison helpers for stash tests.
+
 use crate::helper::{Helper, config};
 use serde_json::Value;
 use std::{collections::BTreeMap, ffi::OsStr, fs, io::Read, path::Path};

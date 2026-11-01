@@ -1,4 +1,5 @@
-//! Published stash save/list/load state and detached repository-object parity.
+//! Published stash save/list/load state and detached repository-object
+//! parity.
 mod checkout_edges;
 mod cleanup;
 mod detached;

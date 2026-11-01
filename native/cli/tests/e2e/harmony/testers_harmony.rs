@@ -1,4 +1,4 @@
-//! Cases from:
+//! End-to-end tests for:
 //! - `e2e/harmony/jest.e2e.ts`
 //! - `e2e/harmony/mocha-tester.e2e.ts`
 //! - `e2e/harmony/mocha-tester-spec-files.e2e.ts`

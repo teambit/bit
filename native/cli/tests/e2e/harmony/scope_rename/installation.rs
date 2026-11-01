@@ -1,3 +1,4 @@
+//! Scope rename real package installation and compilation parity tests.
 mod startup_progress;
 
 use crate::{

@@ -1,4 +1,4 @@
-//! `e2e/harmony/use.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/use.e2e.ts`.
 
 use crate::helper::Helper;
 use std::fs;

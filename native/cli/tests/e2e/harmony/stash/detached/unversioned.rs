@@ -1,4 +1,5 @@
-//! A new aspect dependency reaches the published graph error before detached persistence.
+//! A new aspect dependency reaches the published graph error before detached
+//! persistence.
 use super::{compare_command, controls, workspace};
 use crate::helper::{Helper, config};
 use serde_json::json;

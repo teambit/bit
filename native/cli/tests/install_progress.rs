@@ -1,4 +1,5 @@
-//! The scope-install oracle masks only an exact optional startup timer sample.
+//! The scope-install oracle masks only an exact optional startup timer
+//! sample.
 #[path = "e2e/harmony/scope_rename/installation/startup_progress.rs"]
 mod startup_progress;
 
