@@ -70,7 +70,7 @@ pub(super) fn prepare(
 // `ComponentMap.toPlainObject()` reconstructs every imported row, including authored rows.
 fn reorder_bitmap(bitmap: &mut Value) -> io::Result<()> {
     let old = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap row"))?;
-    let mut reordered = Map::new();
+    let mut reordered = Map::with_capacity(old.len());
     let keys = "name scope version files defaultScope mainFile rootDir wrapDir exported onLanesOnly isAvailableOnCurrentLane nextVersion localOnly config";
     for key in keys.split_whitespace() {
         if let Some(value) = old.get(key) {

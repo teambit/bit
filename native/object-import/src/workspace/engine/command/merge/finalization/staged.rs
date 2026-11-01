@@ -17,16 +17,14 @@ pub(super) fn prepare(
             .split('\n')
             .map(str::trim)
             .filter(|line| !line.is_empty())
-            .map(str::to_owned)
             .collect::<Vec<_>>(),
-        None => Vec::new(),
+        None => Vec::with_capacity(inputs.len()),
     };
     hashes.extend(
         inputs
             .iter()
             .map(|input| input.hash.trim())
-            .filter(|hash| !hash.is_empty())
-            .map(str::to_owned),
+            .filter(|hash| !hash.is_empty()),
     );
     output.writes.push((staged, hashes.join("\n").into_bytes()));
     if inputs
@@ -221,6 +219,7 @@ fn map_field(entry: &Value, field: &str) -> Option<Value> {
     Some(value)
 }
 
+#[inline]
 fn clean_config(value: &mut Value) {
     let Some(config) = value.as_object_mut() else { return };
     for aspect in config.values_mut().filter_map(Value::as_object_mut) {

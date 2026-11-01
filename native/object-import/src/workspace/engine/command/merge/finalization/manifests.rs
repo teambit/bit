@@ -138,6 +138,7 @@ fn normalize(mut manifest: Value, original: &Value) -> io::Result<Value> {
     Ok(manifest)
 }
 
+#[inline]
 fn platform_types(manifest: &mut Value, original: &Value, windows: bool) {
     if !windows {
         return;
@@ -176,6 +177,7 @@ fn aspect_exports(manifest: &mut Value) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,

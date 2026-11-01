@@ -25,6 +25,7 @@ pub(super) fn validate(root: &Path, path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn canonical_relative(path: &Path) -> io::Result<()> {
     let raw = path.to_str().ok_or_else(|| invalid("merge nonUTF8 path"))?;
     if raw.trim().is_empty()

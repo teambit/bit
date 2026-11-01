@@ -65,6 +65,7 @@ pub(in crate::workspace::engine::command) fn targets(
     config::context_bitmap_targets(&Value::Object(visible), settings)
 }
 
+#[inline]
 fn is_metadata_bitmap_key(key: &str) -> bool {
     key.starts_with('$') || key == "version"
 }
@@ -209,6 +210,7 @@ fn selected_entry(
         "visible":visible,"currentSource":current.map_or_else(|| if main.is_some() {"main"} else {"none"}, |row| if row.hidden {"hidden"} else {"visible"})}),
     )
 }
+#[inline]
 fn history_head<'a>(
     current: Option<&'a Entry>,
     main: Option<&'a str>,
@@ -217,6 +219,7 @@ fn history_head<'a>(
     if on_lane { current.map(|row| row.head.as_str()) } else { main }
 }
 
+#[inline]
 pub(super) fn effective_scope(row: &Value) -> Option<&str> {
     row["scope"]
         .as_str()

@@ -189,8 +189,8 @@ fn read_merged(row: &Value, budget: &AtomicUsize) -> io::Result<Source> {
     Ok(Source { proof: None, bytes })
 }
 fn spool_proofs(files: &[Value]) -> io::Result<Vec<proof::Proof>> {
-    let mut seen = HashSet::new();
-    let mut proofs = Vec::new();
+    let mut seen = HashSet::with_capacity(files.len());
+    let mut proofs = Vec::with_capacity(files.len());
     for row in files {
         let path = row["source"]["spoolPath"]
             .as_str()
@@ -221,7 +221,8 @@ fn compare(
     old: Option<&Source>,
     new: Option<&Source>,
 ) -> io::Result<Vec<proof::Proof>> {
-    let path = input.root.join(input.directory).join(name);
+    let component_dir = input.root.join(input.directory);
+    let path = component_dir.join(name);
     let mut proofs = old
         .into_iter()
         .chain(new)
@@ -244,7 +245,7 @@ fn compare(
     }
     // Config and package classification are control inputs even for dependency-free additions.
     for name in ["package.json", "component.json"] {
-        proof::read(&input.root.join(input.directory).join(name), &mut proofs)?;
+        proof::read(&component_dir.join(name), &mut proofs)?;
     }
     Ok(proofs)
 }

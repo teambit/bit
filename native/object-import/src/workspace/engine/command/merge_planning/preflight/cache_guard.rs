@@ -7,7 +7,7 @@ use crate::workspace::engine::{
     invalid,
     status_models::harmony,
 };
-use serde_json::{Value, json};
+use serde_json::Value;
 use std::{collections::BTreeSet, io};
 
 pub(super) fn verify(
@@ -55,9 +55,7 @@ pub(super) fn metadata(current: &Value, files: &[String], target: &Value) -> io:
             &current[field],
         )?;
     }
-    if current["extensions"] != extensions(&target)? {
-        return Err(invalid("command fast-forward dependency cache extensions changed"));
-    }
+    validate_extensions(&current["extensions"], &target)?;
     let incoming = incoming_files(&target)?;
     let existing = files
         .iter()
@@ -86,28 +84,47 @@ fn incoming_files(target: &Value) -> io::Result<BTreeSet<&str>> {
     Ok(set)
 }
 
-fn extensions(target: &Value) -> io::Result<Value> {
+fn validate_extensions(current: &Value, target: &Value) -> io::Result<()> {
     let rows = target["extensions"]
         .as_array()
         .ok_or_else(|| invalid("command fast-forward extensions"))?;
-    let rows = rows
-        .iter()
-        .map(|row| {
-            let non_node_env =
-                crate::workspace::engine::client_status::config::is_extension_aspect(
-                    row,
-                    "teambit.envs/envs",
-                ) && row["data"]["id"]
-                    .as_str()
-                    .map(str::trim)
-                    .and_then(|id| id.split('@').next())
-                    .map(str::trim)
-                    != Some("teambit.harmony/node");
-            if row.get("extensionId").is_some() || row.get("legacyId").is_some() || non_node_env {
-                return Err(invalid("command fast-forward dependency cache environment"));
-            }
-            Ok(json!({"name":row["name"],"config":row.get("config").cloned().unwrap_or_else(|| json!({}))}))
-        })
-        .collect::<io::Result<Vec<_>>>()?;
-    Ok(Value::Array(rows))
+    for row in rows {
+        let non_node_env = crate::workspace::engine::client_status::config::is_extension_aspect(
+            row,
+            "teambit.envs/envs",
+        ) && row["data"]["id"]
+            .as_str()
+            .map(str::trim)
+            .and_then(|id| id.split('@').next())
+            .map(str::trim)
+            != Some("teambit.harmony/node");
+        if row.get("extensionId").is_some() || row.get("legacyId").is_some() || non_node_env {
+            return Err(invalid("command fast-forward dependency cache environment"));
+        }
+    }
+    let Some(expected) = current.as_array() else {
+        return Err(invalid("command fast-forward dependency cache extensions changed"));
+    };
+    let matches = rows.len() == expected.len()
+        && rows
+            .iter()
+            .zip(expected)
+            .all(|(row, exp)| extension_matches(row, exp));
+    if !matches {
+        return Err(invalid("command fast-forward dependency cache extensions changed"));
+    }
+    Ok(())
+}
+
+fn extension_matches(row: &Value, exp: &Value) -> bool {
+    let Some(obj) = exp.as_object() else { return false };
+    if obj.len() != 2 || !obj.contains_key("name") || !obj.contains_key("config") {
+        return false;
+    }
+    let row_cfg = row.get("config");
+    let exp_cfg = obj.get("config");
+    row["name"] == exp["name"]
+        && (row_cfg == exp_cfg
+            || (row_cfg.is_none()
+                && exp_cfg.and_then(Value::as_object).is_some_and(serde_json::Map::is_empty)))
 }

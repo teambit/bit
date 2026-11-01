@@ -97,6 +97,7 @@ fn find_existing_model(root: &Path, scope: &str, name: &str) -> io::Result<Optio
     Ok(None)
 }
 
+#[inline]
 fn has_local_versions(model: &Value) -> bool {
     model["state"]["versions"]
         .as_object()
@@ -107,6 +108,7 @@ fn has_local_versions(model: &Value) -> bool {
         })
 }
 
+#[inline]
 fn requested_version<'a>(key: &'a str, row: &'a Value) -> io::Result<&'a str> {
     row["version"]
         .as_str()

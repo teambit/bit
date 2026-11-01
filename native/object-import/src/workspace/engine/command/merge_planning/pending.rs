@@ -23,17 +23,20 @@ pub(super) fn entry(
     unmerged
 }
 
+#[inline]
 fn lane_id(model: &Value, lane: Option<&Value>) -> Value {
     lane.and_then(|value| other_lane(&value["otherId"]))
         .unwrap_or_else(|| json!({"scope": model_field(model, "scope"), "name": "main"}))
 }
 
+#[inline]
 fn model_field(model: &Value, key: &str) -> Value {
     model[key]
         .as_str()
         .map_or_else(|| model[key].clone(), |text| json!(text.trim()))
 }
 
+#[inline]
 fn other_lane(other: &Value) -> Option<Value> {
     if let Some(raw) = other.as_str().map(str::trim) {
         let (scope, name) = raw.split_once('/')?;

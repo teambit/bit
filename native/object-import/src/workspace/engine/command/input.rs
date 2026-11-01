@@ -80,6 +80,7 @@ pub(super) struct LaneFlags {
 }
 impl std::ops::Deref for LaneOptions {
     type Target = LaneFlags;
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.flags
     }
@@ -99,6 +100,7 @@ pub(super) struct Flags {
 }
 impl std::ops::Deref for Options {
     type Target = Flags;
+    #[inline]
     fn deref(&self) -> &Flags {
         &self.flags
     }

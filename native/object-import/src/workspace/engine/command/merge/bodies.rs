@@ -320,18 +320,24 @@ pub(in crate::workspace::engine::command) fn equivalent_dependencies(
     if rows.len() != reference.len() {
         return Err(invalid("merge dependency metadata count"));
     }
-    if rows == reference {
-        return Ok(());
-    }
-    let mut normalized = rows.clone();
-    for (row, expected) in normalized.iter_mut().zip(reference) {
-        if row.get("packageName").is_none()
-            && let Some(name) = expected.get("packageName")
-        {
-            row["packageName"] = name.clone();
-        }
-    }
-    (normalized == *reference)
+    let matches = rows
+        .iter()
+        .zip(reference)
+        .all(|(row, expected)| {
+            row == expected
+                || (row.get("packageName").is_none()
+                    && row
+                        .as_object()
+                        .zip(expected.as_object())
+                        .is_some_and(|(row_obj, exp_obj)| {
+                            exp_obj.contains_key("packageName")
+                                && row_obj.len() + 1 == exp_obj.len()
+                                && row_obj
+                                    .iter()
+                                    .all(|(k, v)| exp_obj.get(k) == Some(v))
+                        }))
+        });
+    matches
         .then_some(())
         .ok_or_else(|| invalid("merge dependency metadata differs"))
 }

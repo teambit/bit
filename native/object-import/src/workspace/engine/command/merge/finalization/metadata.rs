@@ -57,6 +57,7 @@ fn allocate(path: &Path) -> io::Result<(Temporary, File)> {
     Err(io::Error::other("package temporary allocation limit"))
 }
 
+#[inline]
 fn preserve_owner(path: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     #[cfg(unix)]
     {

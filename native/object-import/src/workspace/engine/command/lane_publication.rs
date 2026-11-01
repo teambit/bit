@@ -279,10 +279,12 @@ impl Prepared {
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn commit_recovery(&self) -> io::Result<()> {
         self.recovery.commit()
     }
 }
+#[inline]
 fn non_empty_str<'a>(value: &'a Value, err: &'static str) -> io::Result<&'a str> {
     value
         .as_str()

@@ -21,6 +21,7 @@ impl Prepared {
             destinations: Destinations { request: json!({"files":[]}), removals: Vec::new() },
         }
     }
+    #[inline]
     pub(in crate::workspace::engine::command) fn unrelated_relation(&self) -> Option<&Value> {
         match &self.conflict {
             Conflict::Unrelated(relation) => Some(relation),
@@ -29,6 +30,7 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn version_name(current: &Captured, output: &Value) -> String {
     Some(current.target.version.trim())
         .filter(|ver| !ver.is_empty())

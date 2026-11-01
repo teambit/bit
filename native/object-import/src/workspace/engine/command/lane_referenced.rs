@@ -14,8 +14,7 @@ pub(super) fn prepare(record: &mut Record, plan: &planning::Planned) -> io::Resu
         .or_else(|| lane["otherId"]["scope"].as_str())
         .map(str::trim)
         .filter(|scope| !scope.is_empty())
-        .ok_or_else(|| invalid("lane referenced scope"))?
-        .to_owned();
+        .ok_or_else(|| invalid("lane referenced scope"))?;
     let merge = plan.merge.as_ref().ok_or_else(|| invalid("lane referenced merge"))?;
     let rebased = merge.rebased();
     let projection = Projection {
@@ -40,7 +39,7 @@ pub(super) fn prepare(record: &mut Record, plan: &planning::Planned) -> io::Resu
             heads.push((identity.to_owned(), value));
         }
     }
-    record.repository.prepare_lane_referenced(&scope, &heads)
+    record.repository.prepare_lane_referenced(scope, &heads)
 }
 struct Projection<'a> {
     plan: &'a planning::Planned,

@@ -5,14 +5,17 @@ use super::{super::bitmap, Finalized, Prepared, Record, invalid, merge, proof};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 impl Prepared {
+    #[inline]
     pub(in crate::workspace::engine::command) fn snapshot_versions(&self) -> &[Value] {
         self.finalized
             .as_ref()
             .map_or(&[], |finalized| finalized.snapshot.versions.as_slice())
     }
+    #[inline]
     pub(in crate::workspace::engine::command) fn lane_receipt(&self) -> Option<Value> {
         self.publication.lane.as_ref().map(super::super::lane_publication::Prepared::receipt)
     }
+    #[inline]
     pub(in crate::workspace::engine::command) fn rebased(&self) -> Vec<(String, String, Value)> {
         self.publication.lane
             .as_ref()
@@ -65,6 +68,7 @@ impl Prepared {
             .map(|row| row.identity)
             .collect())
     }
+    #[inline]
     pub(in crate::workspace::engine::command) fn cancel_snap(&mut self) {
         self.pending.clear();
     }
@@ -109,6 +113,7 @@ impl Prepared {
             })
             .collect()
     }
+    #[inline]
     fn is_removed(&self, output: &Value) -> bool {
         output["id"]
             .as_str()
@@ -371,6 +376,7 @@ fn policy_material(
         .ok_or_else(|| invalid("command policy material absent"))
 }
 
+#[inline]
 fn non_empty<'a>(value: &'a Value, error: &'static str) -> io::Result<&'a str> {
     value
         .as_str()

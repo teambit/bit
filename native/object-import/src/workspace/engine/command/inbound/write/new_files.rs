@@ -14,6 +14,7 @@ pub(super) fn prepare(
     Ok(())
 }
 
+#[inline]
 fn prepare_one(
     context: &Planning<'_>,
     path: PathBuf,

@@ -30,14 +30,17 @@ pub(super) fn prepare(input: &Input<'_>, license: Option<&str>) -> io::Result<Op
 }
 
 impl Prepared {
+    #[inline]
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
         validate_destination(&self.path, root)
     }
+    #[inline]
     pub(super) fn commit(&self) -> io::Result<()> {
         crate::merge_state::write::commit(&self.path, &self.contents)
     }
 }
 
+#[inline]
 fn validate_destination(path: &Path, root: &Path) -> io::Result<()> {
     validate_path(path, root)?;
     match fs::symlink_metadata(path) {

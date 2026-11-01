@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[inline]
 pub(super) fn files(
     input: &BodyInput<'_>,
     plan: &Value,

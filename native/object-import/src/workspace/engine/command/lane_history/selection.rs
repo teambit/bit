@@ -78,7 +78,7 @@ pub(super) fn accept_bitmap(proofs: &mut [proof::Proof], receipt: &Value) -> io:
     if !retained.is_content() || retained.hash.as_deref().map(str::trim) != before.as_deref() {
         return Err(invalid("history bitmap preimage changed"));
     }
-    let mut written = Vec::new();
+    let mut written = Vec::with_capacity(1);
     proof::read(&retained.path, &mut written)?;
     let first = written
         .into_iter()
@@ -114,6 +114,7 @@ fn target(row: &Value) -> io::Result<(String, String)> {
     Ok((format!("{scope}/{name}"), version.to_owned()))
 }
 
+#[inline]
 fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
     let key = key.trim();
     !key.is_empty()

@@ -81,6 +81,7 @@ fn select(
     output["committed"] = json!(committed);
     Ok((count, output))
 }
+#[inline]
 fn read(root: &std::path::Path, hash: &str) -> io::Result<Value> {
     match crate::lane_history::read(root, hash.trim()) {
         Ok(history) => Ok(history),
@@ -112,6 +113,7 @@ fn refresh(
     imported.commit_retained().map_err(owned)?;
     Ok(true)
 }
+#[inline]
 fn owned(error: io::Error) -> io::Error {
     if response::is_canonical(&error) {
         error

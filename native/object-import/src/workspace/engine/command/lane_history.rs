@@ -111,6 +111,7 @@ pub(super) fn extend_proofs(
     Ok(())
 }
 
+#[inline]
 pub(super) fn phase(options: &input::Options) -> Option<&Phase> {
     options.scope.lane_history.as_ref()?.resolved.as_ref()
 }

@@ -74,11 +74,13 @@ fn selected(
     Ok(selected)
 }
 
+#[inline]
 fn bare_id(raw: &str) -> &str {
     let raw = raw.trim();
     raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim())
 }
 
+#[inline]
 fn row_bare_id(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()

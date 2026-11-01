@@ -80,6 +80,7 @@ pub(super) fn package_name(version: &Value) -> io::Result<&str> {
     }
     Ok(name)
 }
+#[inline]
 fn package_id_matches(component_id: &Value, identity: &str, scope: &str, component: &str) -> bool {
     if let Some(raw) = component_id.as_str().map(str::trim) {
         raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim()) == identity.trim()
@@ -312,6 +313,7 @@ fn roots_path(root: &Path, snapshot: bool, output: &mut Prepared) -> io::Result<
     Ok(root.join(base).join(".bit_roots"))
 }
 
+#[inline]
 fn windows_source_link(
     root: &Path,
     source_root: &Path,
@@ -385,6 +387,7 @@ fn update_manifest_versions(
     Ok(())
 }
 
+#[inline]
 pub(super) fn tracked_manifest(version: &Value) -> bool {
     version["files"]
         .as_array()

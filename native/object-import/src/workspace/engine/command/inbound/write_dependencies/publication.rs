@@ -49,9 +49,9 @@ fn package(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> 
     let object = value.as_object_mut().ok_or_else(|| invalid("inbound package object"))?;
     let entry = object
         .entry("dependencies")
-        .or_insert_with(|| Value::Object(Map::new()));
+        .or_insert_with(|| Value::Object(Map::with_capacity(dependencies.len())));
     if entry.is_null() {
-        *entry = Value::Object(Map::new());
+        *entry = Value::Object(Map::with_capacity(dependencies.len()));
     }
     let policy = entry.as_object_mut().ok_or_else(|| invalid("inbound package dependencies"))?;
     for (name, range) in dependencies {

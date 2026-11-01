@@ -184,6 +184,7 @@ fn is_added_directory(context: &Value, scope: &[Value], stash: &[Value], relativ
             .any(|candidate| candidate["rootDir"].as_str().map(str::trim) == Some(relative))
 }
 
+#[inline]
 fn directory_metadata(path: &std::path::Path) -> io::Result<Option<std::fs::Metadata>> {
     match std::fs::symlink_metadata(path) {
         Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {

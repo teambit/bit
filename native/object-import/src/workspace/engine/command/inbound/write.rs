@@ -332,6 +332,7 @@ fn target_files(
     }
     let mut files = Vec::with_capacity(rows.len());
     let mut seen = HashSet::with_capacity(rows.len());
+    let target_dir = root.join(directory);
     for file in rows {
         let relative = file["relativePath"]
             .as_str()
@@ -348,10 +349,7 @@ fn target_files(
         crate::merge_history::hash(hash)?;
         let source =
             import.overlay.source(hash).ok_or_else(|| invalid("inbound imported Source"))?;
-        files.push((
-            root.join(directory).join(relative),
-            crate::checkout::eol::auto(source.to_vec()),
-        ));
+        files.push((target_dir.join(relative), crate::checkout::eol::auto(source.to_vec())));
     }
     if !seen.contains(main.trim()) {
         return Err(invalid("inbound main file missing"));

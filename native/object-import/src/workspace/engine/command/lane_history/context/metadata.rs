@@ -36,12 +36,14 @@ pub(super) fn read(
     status_context::metadata_with_targets(&input, pool, settings, targets)
 }
 
+#[inline]
 fn bare_identity(raw: &str) -> Option<&str> {
     let raw = raw.trim();
     let base = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
     (!base.is_empty()).then_some(base)
 }
 
+#[inline]
 fn row_bare_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -67,6 +69,7 @@ fn all_targets(bitmap: &Value, settings: &Value) -> io::Result<Vec<Value>> {
     config::context_bitmap_targets(&Value::Object(bitmap), settings)
 }
 
+#[inline]
 fn is_metadata_bitmap_key(key: &str) -> bool {
     key.starts_with('$') || key == "version"
 }

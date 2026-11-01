@@ -50,6 +50,7 @@ pub(super) fn update(
     Ok(())
 }
 
+#[inline]
 fn parse_scoped_identity<'a>(
     identity: &'a str,
     err_msg: &'static str,
@@ -134,6 +135,7 @@ fn component_id(entry: &Value) -> io::Result<String> {
     Ok(format!("{scope}/{name}@{head}"))
 }
 
+#[inline]
 pub(super) fn serializable(hash: &str, lane: &Value, history: &Value) -> io::Result<Vec<Value>> {
     Ok(vec![
         snapshot::object("Lane", Some(hash), lane.clone())?,

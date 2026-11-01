@@ -41,6 +41,7 @@ pub(super) fn receipt(
 }
 
 impl super::Prepared {
+    #[inline]
     pub(in super::super) fn policy_input(&self) -> Option<&Value> {
         self.policy_input.as_ref()
     }
@@ -60,12 +61,14 @@ impl super::Prepared {
         Ok(())
     }
 
+    #[inline]
     pub(in super::super) fn conflicts(&self, id: &str) -> Option<&[String]> {
         self.changes.conflicts.get(id.trim()).map(Vec::as_slice)
     }
 }
 
 impl super::Prepared {
+    #[inline]
     pub(in super::super) fn requires_dependencies(&self) -> bool {
         self.write_deps.is_some()
     }
@@ -76,6 +79,7 @@ impl super::Prepared {
             .filter(|target| !target.is_empty())
             .ok_or_else(|| invalid("inbound dependency target absent"))
     }
+    #[inline]
     pub(in super::super) fn root(&self) -> &Path {
         &self.root
     }
@@ -158,12 +162,14 @@ impl super::Prepared {
 }
 
 impl super::Prepared {
+    #[inline]
     pub(in super::super) fn history_file_id(&self) -> &str {
         &self.history.file_id
     }
 }
 
 impl super::Prepared {
+    #[inline]
     pub(in super::super) fn component_order(&self) -> &[String] {
         &self.changes.component_order
     }

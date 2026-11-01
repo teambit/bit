@@ -50,7 +50,8 @@ pub(in crate::workspace::engine::command) fn select_targets(
     Ok(selected)
 }
 
-fn target_identity(target: &Value) -> Option<String> {
+#[inline]
+fn target_identity(target: &Value) -> Option<std::borrow::Cow<'_, str>> {
     if let Some(identity) = ["identity", "id"]
         .into_iter()
         .find_map(|field| {
@@ -62,7 +63,7 @@ fn target_identity(target: &Value) -> Option<String> {
     {
         let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
         if !bare.is_empty() {
-            return Some(bare.to_owned());
+            return Some(std::borrow::Cow::Borrowed(bare));
         }
     }
     let object = target["id"].as_object()?;
@@ -77,7 +78,7 @@ fn target_identity(target: &Value) -> Option<String> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        Some(scope) => Some(format!("{scope}/{name}")),
-        None => Some(name.to_owned()),
+        Some(scope) => Some(std::borrow::Cow::Owned(format!("{scope}/{name}"))),
+        None => Some(std::borrow::Cow::Borrowed(name)),
     }
 }

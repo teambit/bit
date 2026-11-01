@@ -36,6 +36,7 @@ pub(super) fn prepare(
     persist_models(planned, prepared, models)
 }
 
+#[inline]
 fn validate_target(
     record: &Record,
     planned: &planning::Planned,
@@ -53,6 +54,7 @@ fn validate_target(
     Ok(())
 }
 
+#[inline]
 fn persist_models(
     planned: &mut planning::Planned,
     prepared: &mut Prepared,

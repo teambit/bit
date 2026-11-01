@@ -71,7 +71,7 @@ pub(in crate::workspace::engine::command) fn local<'a>(
 fn matches_row_identity(id_value: &Value, identity: &str) -> bool {
     let identity = identity.trim();
     let identity = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
-    if crate::command_import::lane::component_identity(id_value).ok().as_deref() == Some(identity) {
+    if crate::command_import::lane::component_identity(id_value).is_ok_and(|id| id == identity) {
         return true;
     }
     let Some((scope, name)) = identity
@@ -94,6 +94,7 @@ fn matches_row_identity(id_value: &Value, identity: &str) -> bool {
         && (row_scope == scope || row_scope.is_empty())
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn source<'a>(
     options: &super::super::input::Options,
     context: &'a Value,

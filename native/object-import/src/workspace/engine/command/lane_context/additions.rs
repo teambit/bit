@@ -37,7 +37,7 @@ pub(in crate::workspace::engine::command) fn prepare_switch(
     selected: &[Value],
 ) -> io::Result<Vec<Value>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("switch destination bitmap"))?;
-    let mut additions = Vec::new();
+    let mut additions = Vec::with_capacity(selected.len());
     for target in selected {
         let mut addition = prepare_one(imported, rows, settings, target)?;
         relocate_nested(&mut addition, &rows.values().chain(additions.iter()))?;
@@ -94,11 +94,13 @@ pub(in crate::workspace::engine::command) fn targets(
     }).collect()
 }
 
+#[inline]
 fn bare_target_identity(target: &Value) -> Option<&str> {
     trimmed_str(&target["identity"])
         .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
 }
 
+#[inline]
 fn trimmed_str(value: &Value) -> Option<&str> {
     value
         .as_str()

@@ -9,6 +9,7 @@ use std::{io, path::Path};
 
 const ASPECT: &str = "teambit.workspace/workspace-root";
 
+#[inline]
 pub(super) fn validate_version(version: &Value) -> io::Result<()> {
     let root = version["extensions"]
         .as_array()
@@ -29,7 +30,7 @@ pub(super) fn validate_version(version: &Value) -> io::Result<()> {
 pub(super) fn nested_directories(root: &Path) -> io::Result<Vec<String>> {
     let bitmap = config::document(&root.join(".bitmap"))?;
     let rows = bitmap.as_object().ok_or_else(|| invalid("command root bitmap"))?;
-    let mut nested = Vec::new();
+    let mut nested = Vec::with_capacity(rows.len());
     for (key, row) in rows {
         let key = key.trim();
         if key.is_empty()

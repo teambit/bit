@@ -64,6 +64,7 @@ fn heads(record: &mut Record, identity: &str, model: &Value) -> io::Result<(Stri
     Ok((remote, current_head))
 }
 
+#[inline]
 pub(super) fn options(
     record: &Record,
     captured: &capture::Captured,
@@ -113,6 +114,7 @@ pub(super) fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::
     }
     Ok(())
 }
+#[inline]
 pub(super) fn refresh_model(selected: &mut Selected, model: Value) -> io::Result<()> {
     let new_head = model["head"].as_str().map(str::trim);
     let old_head = selected.model["head"].as_str().map(str::trim);

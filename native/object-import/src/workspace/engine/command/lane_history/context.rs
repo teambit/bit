@@ -44,13 +44,14 @@ fn attach_versions(phase: &super::Phase, context: &mut Value) -> io::Result<()> 
                     .filter(|raw| !raw.is_empty())
             })
             .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
-            .filter(|id| !id.is_empty());
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("history target membership"))?;
         let (_, version) = phase.versions
             .iter()
             .find(|(id, _)| {
                 let id = id.trim();
                 let id = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
-                !id.is_empty() && row_id == Some(id)
+                id == row_id
             })
             .ok_or_else(|| invalid("history target membership"))?;
         let version = version.trim();

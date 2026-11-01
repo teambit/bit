@@ -67,6 +67,7 @@ pub(super) fn prepare(
     )?;
     finish_with_license(input, &plan, &applied, repository)
 }
+#[inline]
 fn finish_with_license(
     input: &Input<'_>,
     plan: &Value,
@@ -139,6 +140,7 @@ fn retained_files(plan: &Value, applied: &Value) -> io::Result<Vec<Value>> {
         })
         .collect()
 }
+#[inline]
 pub(super) fn remove(plan: &Prepared) -> io::Result<()> {
     for path in &plan.writes.removals {
         match fs::remove_file(path) {

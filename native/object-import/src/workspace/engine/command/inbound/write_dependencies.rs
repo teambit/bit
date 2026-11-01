@@ -53,6 +53,7 @@ pub(in crate::workspace::engine) fn complete(
     Ok((targets.len(), result))
 }
 
+#[inline]
 fn imported_targets(receipt: &Value) -> io::Result<Vec<super::Target>> {
     receipt["importedIds"]
         .as_array()

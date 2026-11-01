@@ -260,6 +260,7 @@ fn on_lane(
                 .any(|row| row.as_str().map(str::trim) == Some(version))
         }))
 }
+#[inline]
 fn lane_entry<'a>(context: &'a Value, scope: &str, name: &str) -> Option<&'a Value> {
     context["lane"]["other"]["value"]["components"]
         .as_array()?
@@ -270,6 +271,7 @@ fn lane_entry<'a>(context: &'a Value, scope: &str, name: &str) -> Option<&'a Val
             )
         })
 }
+#[inline]
 fn text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
     value[key]
         .as_str()

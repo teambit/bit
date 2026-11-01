@@ -78,6 +78,7 @@ impl Attributes {
         Ok(())
     }
 }
+#[inline]
 fn validate_metadata(before: &fs::Metadata, after: &fs::Metadata) -> io::Result<()> {
     // Reads can legitimately update atime; it is restored/copied, not a mutation token.
     if before.permissions() != after.permissions() || before.modified()? != after.modified()? {

@@ -137,6 +137,7 @@ pub(super) fn divergent(
     Ok(())
 }
 
+#[inline]
 fn sorted_files(files: &[Value]) -> Vec<String> {
     let mut paths = files
         .iter()

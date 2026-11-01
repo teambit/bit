@@ -24,8 +24,12 @@ impl Recovery {
         if directory.is_symlink() {
             return Err(invalid("last merged symbolic link"));
         }
-        let mut output =
-            Self { directory, files: Vec::new(), proofs: Vec::new(), permissions: Vec::new() };
+        let mut output = Self {
+            directory,
+            files: Vec::with_capacity(4),
+            proofs: Vec::with_capacity(4),
+            permissions: Vec::with_capacity(4),
+        };
         for (source, destination) in [(".bitmap", "bitmap"), ("workspace.jsonc", "workspace.jsonc")]
         {
             let path = root.join(source);
@@ -143,6 +147,7 @@ impl Recovery {
         Ok(())
     }
 }
+#[inline]
 fn text(value: &Value) -> io::Result<&str> {
     value
         .as_str()

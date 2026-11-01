@@ -7,9 +7,10 @@ use serde_json::{Map, Value, json};
 use std::{cmp::Ordering, collections::HashSet, io};
 
 pub(super) fn prepare(facts: &Value) -> io::Result<Map<String, Value>> {
-    let mut rows = Vec::new();
-    let mut root_names = HashSet::new();
-    for entry in array(&facts["rootPolicy"]["entries"])? {
+    let root_entries = array(&facts["rootPolicy"]["entries"])?;
+    let mut rows = Vec::with_capacity(root_entries.len());
+    let mut root_names = HashSet::with_capacity(root_entries.len());
+    for entry in root_entries {
         if let Some(name) = entry["dependencyId"].as_str().map(str::trim) {
             root_names.insert(name);
         }
@@ -162,10 +163,15 @@ fn push(rows: &mut Vec<Value>, row: Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn array_index(name: &str) -> Option<u32> {
     let name = name.trim();
-    let index = name.parse::<u32>().ok()?;
-    (index != u32::MAX && index.to_string() == name).then_some(index)
+    if name != "0" && (name.starts_with('0') || !name.bytes().all(|byte| byte.is_ascii_digit())) {
+        return None;
+    }
+    name.parse::<u32>()
+        .ok()
+        .filter(|&index| index != u32::MAX)
 }
 
 fn policy_entries(entries: &Map<String, Value>, rows: &mut Vec<Value>) -> io::Result<()> {

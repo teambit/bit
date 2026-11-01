@@ -84,10 +84,11 @@ pub(super) fn prepare_into(
     rows: &Map<String, Value>,
     retained: &mut Retained,
 ) -> io::Result<()> {
-    let mut taken: HashSet<String> = rows
-        .values()
-        .filter_map(|row| trimmed_str(&row["rootDir"]).map(str::to_owned))
-        .collect();
+    let mut taken = HashSet::with_capacity(rows.len() + directories.len());
+    taken.extend(
+        rows.values()
+            .filter_map(|row| trimmed_str(&row["rootDir"]).map(str::to_owned)),
+    );
     taken.extend(directories.iter().cloned());
     for directory in directories {
         if directory == "." {
@@ -116,6 +117,7 @@ pub(super) fn prepare_into(
     Ok(())
 }
 
+#[inline]
 fn trimmed_str(value: &Value) -> Option<&str> {
     value
         .as_str()

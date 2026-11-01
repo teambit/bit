@@ -42,6 +42,7 @@ pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) ->
     Ok(Value::Object(fields))
 }
 
+#[inline]
 fn package_versions<'a>(input: &'a Input<'_>) -> (String, &'a str) {
     let hash = input.hash.trim();
     let semantic = input.semantic_version
@@ -51,6 +52,7 @@ fn package_versions<'a>(input: &'a Input<'_>) -> (String, &'a str) {
     (version, semantic.unwrap_or(hash))
 }
 
+#[inline]
 fn parse_package_identity(identity: &str) -> io::Result<(&str, &str)> {
     let identity = identity.trim();
     let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
@@ -70,6 +72,7 @@ fn insert_dependency_fields(fields: &mut Map<String, Value>, version: &Value) {
     }
 }
 
+#[inline]
 fn matches_aspect(row: &Value, id: &str) -> bool {
     crate::workspace::engine::client_status::config::is_extension_aspect(row, id)
 }
@@ -94,6 +97,7 @@ fn peer_bit_metadata(version: &Value) -> Option<Value> {
     Some(Value::Object(bit))
 }
 
+#[inline]
 fn truthy(value: Option<&Value>) -> bool {
     match value {
         None | Some(Value::Null) => false,

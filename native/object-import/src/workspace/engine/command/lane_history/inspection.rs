@@ -173,13 +173,13 @@ pub(in crate::workspace::engine) fn apply(
     request: &Apply,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
-    let mut retained =
-        state.histories.inspection.take().ok_or_else(|| invalid("lane history owner absent"))?;
+    let retained =
+        state.histories.inspection.as_ref().ok_or_else(|| invalid("lane history owner absent"))?;
     let token = request.token.trim();
     if token.is_empty() || retained.token.trim() != token {
-        state.histories.inspection = Some(retained);
         return Err(invalid("lane history owner changed"));
     }
+    let mut retained = state.histories.inspection.take().expect("checked above");
     retained.import.commit_retained()?;
     Ok((1, json!({"applied":true})))
 }

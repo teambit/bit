@@ -10,6 +10,7 @@ pub(in crate::workspace::engine) struct Request {
     token: String,
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn run(
     input: &Request,
     state: &mut State,

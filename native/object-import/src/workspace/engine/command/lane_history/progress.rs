@@ -64,6 +64,7 @@ pub(in crate::workspace::engine::command) fn failure(
     response::with_progress(error, progress)
 }
 
+#[inline]
 fn discard_incomplete(progress: &mut Value, context: &Value) {
     if context["historyCheckoutImport"]["completed"] != false {
         return;

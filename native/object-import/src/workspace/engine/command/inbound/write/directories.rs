@@ -85,12 +85,8 @@ fn relocate(
 /// The directories that more than one target has, each once.
 fn duplicates(directories: &[String]) -> Vec<String> {
     let mut duplicates: Vec<String> = Vec::new();
-    for directory in directories {
-        let count = directories
-            .iter()
-            .filter(|other| *other == directory)
-            .count();
-        if count > 1 && !duplicates.contains(directory) {
+    for (index, directory) in directories.iter().enumerate() {
+        if !duplicates.contains(directory) && directories[index + 1..].contains(directory) {
             duplicates.push(directory.clone());
         }
     }
@@ -155,6 +151,7 @@ pub(super) fn fix_dirs_if_nested(directories: &mut [String], existing: &[String]
     }
 }
 
+#[inline]
 fn is_nested_in(child: &str, parent: &str) -> bool {
     child
         .strip_prefix(parent)

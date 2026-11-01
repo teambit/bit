@@ -68,11 +68,11 @@ fn prepare_with(
         return Err(invalid("merge finalization component budget"));
     }
     let mut prepared = Prepared {
-        proofs: Vec::new(),
-        writes: Vec::new(),
-        links: Vec::new(),
+        proofs: Vec::with_capacity(inputs.len().saturating_mul(4) + 3),
+        writes: Vec::with_capacity(inputs.len() + 3),
+        links: Vec::with_capacity(inputs.len()),
         copies: Vec::new(),
-        package_creates: Vec::new(),
+        package_creates: Vec::with_capacity(inputs.len()),
     };
     staged::prepare(root, inputs, snapshot, &mut prepared)?;
     for input in inputs
@@ -316,6 +316,7 @@ impl Prepared {
         Ok(())
     }
 }
+#[inline]
 fn has_license(value: &Value) -> bool {
     match value {
         Value::String(text) => !text.trim().is_empty(),
@@ -324,9 +325,11 @@ fn has_license(value: &Value) -> bool {
         _ => false,
     }
 }
+#[inline]
 fn json(bytes: &[u8]) -> io::Result<Value> {
     crate::parse_jsonc(bytes)
 }
+#[inline]
 fn pretty(value: &Value, newline: bool) -> io::Result<Vec<u8>> {
     let mut bytes = serde_json::to_vec_pretty(value).map_err(io::Error::other)?;
     if newline {

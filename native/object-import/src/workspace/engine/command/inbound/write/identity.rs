@@ -15,6 +15,7 @@ pub(super) fn matches_target(key: &str, row: &Value, target: &Target) -> bool {
     row_name.trim() == target.name.trim() && row_effective_scope(row_scope, row) == target_scope
 }
 
+#[inline]
 fn row_effective_scope<'a>(row_scope: Option<&'a str>, row: &'a Value) -> Option<&'a str> {
     row_scope
         .map(str::trim)
@@ -39,6 +40,7 @@ pub(super) fn has_unscoped_entry(rows: &Map<String, Value>, name: &str) -> bool 
         })
 }
 
+#[inline]
 fn is_component_bitmap_entry(key: &str, row: &Value) -> bool {
     !key.starts_with('$') && !matches!(key, "_bit_lane" | "version") && row.is_object()
 }

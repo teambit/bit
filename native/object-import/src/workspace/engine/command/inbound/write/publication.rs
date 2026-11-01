@@ -200,8 +200,11 @@ impl History {
         self.append_metadata()
     }
     fn first_metadata(&self) -> Vec<u8> {
-        let mut expected = self.metadata_before.clone().unwrap_or_default();
-        expected.extend_from_slice(self.file_id.trim().as_bytes());
+        let before = self.metadata_before.as_deref().unwrap_or_default();
+        let file_id = self.file_id.trim().as_bytes();
+        let mut expected = Vec::with_capacity(before.len() + file_id.len() + 8);
+        expected.extend_from_slice(before);
+        expected.extend_from_slice(file_id);
         expected.extend_from_slice(b" import\n");
         expected
     }

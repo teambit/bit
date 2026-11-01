@@ -40,6 +40,7 @@ pub(super) fn run(
     }));
     Ok((count, output))
 }
+#[inline]
 fn proofs(input: &Prepare, lane_hash: &str) -> io::Result<Vec<proof::Proof>> {
     let lane_hash = lane_hash.trim();
     let mut proofs = Vec::with_capacity(3);

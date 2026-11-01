@@ -69,7 +69,7 @@ fn update_failed(
             .as_array_mut()
             .ok_or_else(|| invalid("lane failed statuses"))?,
     );
-    let mut failed = Vec::new();
+    let mut failed = Vec::with_capacity(filtered.indices.len());
     for index in &filtered.indices {
         let id = format!(
             "{}@{}",
@@ -105,6 +105,8 @@ fn reorder(
         .into_iter()
         .map(Some)
         .collect::<Vec<_>>();
+    selected.reserve(indices.len());
+    planned.captured.reserve(indices.len());
     for index in indices {
         selected.push(rows[index].take().ok_or_else(|| invalid("lane duplicate selection index"))?);
         planned.captured.push(
@@ -298,6 +300,7 @@ fn gap_versions(row: &Selected, include_history: bool) -> io::Result<Vec<String>
     Ok(versions)
 }
 
+#[inline]
 pub(super) fn scope_only(record: &Record, current: &super::capture::Captured) -> bool {
     let identity = current.target.identity.trim();
     current.hidden
