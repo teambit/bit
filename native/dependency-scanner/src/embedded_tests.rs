@@ -1,4 +1,4 @@
-//! Unit tests for embedded dependency scanner request bounds in
+//! Unit tests for embedded dependency scanner request bounds ([`scan_request`], [`limits`]) in
 //! `bit-dependency-scanner`.
 
 use crate::{limits, scan_request};

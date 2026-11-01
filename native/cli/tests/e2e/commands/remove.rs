@@ -1,4 +1,4 @@
-//! Local and remote `bit remove` parity against the pinned Node.js CLI.
+//! End-to-end local and remote `bit remove` parity tests against the pinned Node.js CLI.
 
 mod completion;
 mod selectors;

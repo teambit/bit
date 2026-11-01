@@ -1,4 +1,4 @@
-//! Released `ShowCmd` (`bit show`) argument handling tests before component loading.
+//! End-to-end `ShowCmd` (`bit show`) argument handling tests before component loading.
 
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};

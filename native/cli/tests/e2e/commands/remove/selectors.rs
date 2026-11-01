@@ -1,4 +1,4 @@
-//! Workspace state filters (`$new`, `$modified`, `$env`) retain loader phases and cached classes through removal.
+//! End-to-end tests verifying workspace state filters (`$new`, `$modified`, `$env`) retain loader phases and cached classes through removal.
 
 use crate::commands::move_paths::support::{self, bitmap, setup, successful};
 use std::fs;

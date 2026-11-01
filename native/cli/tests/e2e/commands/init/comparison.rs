@@ -1,4 +1,4 @@
-//! Only fresh local scope identifiers and wall-clock backup filenames differ during `bit init`.
+//! Directory and history comparison helpers ([`tree`], [`wait_past_setup_history`]) for `bit init` end-to-end tests.
 
 mod history;
 

@@ -1,4 +1,4 @@
-//! A real mutual-TLS server requires the same configured certificate and key
+//! Unit tests verifying a mutual-TLS server requires the same configured certificate and key on [`Network`] that
 //! Node forwards. Renew the 824-day leaf fixtures before 2029-01-18; macOS
 //! permits at most 825 days.
 

@@ -1,4 +1,4 @@
-//! Unit tests for non-replayed HTTP object uploads in `bit-client-transfer`.
+//! Unit tests for non-replayed HTTP object uploads on [`Network`] in `bit-client-transfer`.
 
 use super::{GlobalConfig, Network};
 use serde_json::json;

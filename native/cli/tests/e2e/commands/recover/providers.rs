@@ -1,4 +1,4 @@
-//! Recovery must classify the provider's authoritative `.bitmap` and retain its source effects.
+//! End-to-end tests ensuring recovery classifies the provider's authoritative `.bitmap` and retains its source effects.
 
 use crate::{
     commands::move_paths::support::{bitmap, setup, successful, workspace},

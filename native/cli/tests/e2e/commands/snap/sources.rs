@@ -1,4 +1,4 @@
-//! Snapshot source manifests use the published linker's `package.json` exclusion rule under `trackAllFiles`.
+//! End-to-end tests verifying snapshot source manifests use the linker's `package.json` exclusion rule under `trackAllFiles`.
 
 use crate::helper::{Helper, config};
 use std::{

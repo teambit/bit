@@ -1,4 +1,4 @@
-//! Qualify the upstream `version-history` deduplication against the older pinned and current releases.
+//! Qualify ([`compare_hidden_lane`]) the upstream `version-history` deduplication against the older pinned and current releases.
 
 use crate::{
     commands::move_paths::support::tree,

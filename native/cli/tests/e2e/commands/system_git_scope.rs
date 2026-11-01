@@ -1,4 +1,4 @@
-//! Native end-to-end coverage for `details`, `globals`, `system`, `version`, `version-history`, `git`, and `scope trust`.
+//! End-to-end parity coverage for `details`, `globals`, `system`, `version`, `version-history`, `git`, and `scope trust`.
 
 mod remote_history;
 mod upstream_history;

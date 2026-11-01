@@ -1,4 +1,4 @@
-//! `bit tag --soft` followed by `bit tag --persist=skip-build` on a real workspace and `.bitmap`.
+//! End-to-end tests for `bit tag --soft` followed by `bit tag --persist=skip-build` ([`compare_command`]) on a workspace and `.bitmap`.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::{ffi::OsStr, path::Path};

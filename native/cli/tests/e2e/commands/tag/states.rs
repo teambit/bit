@@ -1,4 +1,4 @@
-//! Unrelated `.bitmap` states (`local-only`) do not prevent versioning other components.
+//! End-to-end tests verifying unrelated `.bitmap` states (`local-only`) do not prevent versioning other components.
 
 use super::soft::{bitmap, compare_command};
 use crate::helper::Helper;

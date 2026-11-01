@@ -1,4 +1,4 @@
-//! Released-oracle comparison for transferring staged main snaps to a new lane (`bit lane create`).
+//! End-to-end released-oracle comparison for transferring staged main snaps to a new lane (`bit lane create`).
 
 use super::{object, state};
 use crate::{

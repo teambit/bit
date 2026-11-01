@@ -1,4 +1,4 @@
-//! Unit tests for bounded tar object stream decoding in `bit-client-transfer`.
+//! Unit tests for bounded tar object stream decoding ([`read`], [`read_bounded`]) in `bit-client-transfer`.
 
 use super::{read, read_bounded};
 use std::io::{self, Read};

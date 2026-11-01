@@ -1,4 +1,4 @@
-//! Remote recovery keeps its exact published `import` + `recover` `.bitmap` transition contract.
+//! Replay helper ([`compare`]) verifying remote recovery keeps its published `import` + `recover` `.bitmap` transition contract.
 
 use crate::{
     commands::add::support::history_oracle,

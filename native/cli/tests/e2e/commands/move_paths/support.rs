@@ -1,4 +1,4 @@
-//! Shared identity-operation oracle: same-path replay plus an untouched real remote scope.
+//! Shared identity-operation oracle ([`compare`], [`workspace`], [`setup`]): same-path replay plus an untouched remote scope.
 
 use crate::{
     commands::add::support,

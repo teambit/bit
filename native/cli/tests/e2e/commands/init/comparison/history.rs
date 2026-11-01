@@ -1,4 +1,4 @@
-//! Map only validated clock IDs; metadata order preserves every `.bitmap` and config snapshot and collision group.
+//! Map only validated clock IDs ([`Histories`]); metadata order preserves every `.bitmap` and config snapshot and collision group.
 
 mod clock;
 mod tests;

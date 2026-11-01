@@ -1,4 +1,4 @@
-//! Port of `e2e/commands/remote.e2e.ts` for native `bit remote` add, del, and list parity.
+//! End-to-end port of `e2e/commands/remote.e2e.ts` for native `bit remote` add, del, and list parity.
 
 use crate::helper::{Helper, Run, setup};
 use std::{

@@ -1,4 +1,4 @@
-//! Shared remote scope fixture and comparison helpers for bare-scope command tests.
+//! Shared remote scope [`fixture`] and comparison helpers ([`compare`], [`compare_with_snapshot`]) for bare-scope command tests.
 
 use crate::{
     commands::move_paths::support::{self, tree},

@@ -1,4 +1,4 @@
-//! Unit tests for `GraphQL` component and lane listing over HTTP in
+//! Unit tests for `GraphQL` component and lane listing ([`Network`], [`Listed`]) over HTTP in
 //! `bit-client-transfer`.
 
 use super::{Listed, Network};
