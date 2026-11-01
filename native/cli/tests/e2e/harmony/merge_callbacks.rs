@@ -1,4 +1,5 @@
-//! One retained published provider session spans native merge, pre-snap and builder phases.
+//! One retained published provider session spans native merge, pre-snap, and builder phases.
+
 mod artifacts;
 mod fixture;
 mod original;

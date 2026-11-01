@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/rename-lane.e2e.ts`.
+//! Port of `e2e/harmony/lanes/rename-lane.e2e.ts` for `bit lane rename` parity.
 
 use crate::helper::{Helper, config};
 

@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts`.
+//! Port of `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts` for unrelated component histories during lane merge.
 
 use crate::helper::{Helper, parse};
 

@@ -1,5 +1,5 @@
 //! The released scope cascade predates identity matching for older snapshots.
-//! Compare carried metadata with its fast-forward result, then assert every upstream cascade change.
+//! Compares carried metadata with its fast-forward result, then asserts every upstream cascade change.
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};
 use std::path::Path;

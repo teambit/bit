@@ -1,4 +1,4 @@
-//! The no-fs-cache feature detects dependencies afresh without touching the
+//! The `no-fs-cache` feature detects dependencies afresh without touching the
 //! dependency cache, across read and write commands.
 
 use crate::helper::{FOO_FIXTURE, Helper, Run, parse};

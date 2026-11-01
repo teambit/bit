@@ -1,3 +1,5 @@
+//! Shared workspace and provider fixtures for `bit merge` and `bit lane merge` callback tests.
+
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs, path::Path};
 pub(super) fn node(helper: &Helper, command: &str) {

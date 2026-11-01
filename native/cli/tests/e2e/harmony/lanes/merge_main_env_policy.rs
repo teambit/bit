@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/merge-main-env-policy.e2e.ts`.
+//! Port of `e2e/harmony/lanes/merge-main-env-policy.e2e.ts` for custom env policy during `lane merge main`.
 
 use crate::helper::{Helper, parse};
 

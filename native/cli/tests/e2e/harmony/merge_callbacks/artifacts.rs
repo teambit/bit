@@ -1,4 +1,5 @@
 //! Compare artifact payloads while excluding timestamps and allocation-derived archive digests.
+
 use super::fixture;
 use flate2::read::{GzDecoder, ZlibDecoder};
 use serde_json::{Value, json};

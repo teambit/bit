@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts`.
+//! Port of `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts` for resetting hidden lane dependents.
 
 use crate::helper::{Helper, parse};
 

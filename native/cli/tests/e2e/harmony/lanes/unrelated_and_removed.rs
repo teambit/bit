@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/unrelated-and-removed.e2e.ts`.
+//! Port of `e2e/harmony/lanes/unrelated-and-removed.e2e.ts` for merging unrelated and removed lane components.
 
 use crate::helper::{Helper, parse};
 use std::fs;

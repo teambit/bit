@@ -1,4 +1,4 @@
-//! History views keep published BFS lane marking, range overlays and formatting.
+//! History views keep published BFS lane marking, range overlays, and formatting.
 use super::node;
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};

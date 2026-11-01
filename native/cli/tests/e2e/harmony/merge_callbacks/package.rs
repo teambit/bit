@@ -1,4 +1,5 @@
-//! Linking fails after object persistence and pending-state cleanup, before the final bitmap write.
+//! Linking fails after object persistence and pending-state cleanup, before the final `.bitmap` write.
+
 use super::fixture;
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs, path::Path};

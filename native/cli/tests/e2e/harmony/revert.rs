@@ -1,4 +1,4 @@
-//! `e2e/harmony/revert.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/revert.e2e.ts`.
 
 use crate::{
     harmony::lane_adoption::output::durations,

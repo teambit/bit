@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/skip-publish-unpublished-dep.e2e.ts`.
+//! Port of `e2e/harmony/lanes/skip-publish-unpublished-dep.e2e.ts` for snapping with unpublished dependencies.
 
 use crate::helper::Helper;
 

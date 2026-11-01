@@ -1,4 +1,5 @@
-//! Real environment hooks separate the published second-resolution mutation backups.
+//! Real environment hooks separate the published second-resolution mutation
+//! backups.
 use crate::{
     commands::move_paths::support::setup,
     helper::{Helper, config},

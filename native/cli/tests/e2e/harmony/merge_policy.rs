@@ -1,4 +1,5 @@
-//! `MergeStatusProvider` removal policy and hidden lane publication match Bit 2.2.94.
+//! `MergeStatusProvider` removal policy and hidden lane publication match Bit
+//! 2.2.94.
 mod cascade;
 mod hidden_pending;
 

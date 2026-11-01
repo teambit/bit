@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/switch-lanes.e2e.ts`.
+//! Port of `e2e/harmony/lanes/switch-lanes.e2e.ts` for `bit switch` parity.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse, strip_ansi};
 use std::fs;

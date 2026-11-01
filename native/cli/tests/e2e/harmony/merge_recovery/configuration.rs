@@ -1,4 +1,5 @@
-//! Resolved per-component merge configuration participates in the native continuation.
+//! Resolved per-component merge configuration participates in the native
+//! continuation.
 use super::{compare, pending};
 use crate::helper::config;
 use std::fs;

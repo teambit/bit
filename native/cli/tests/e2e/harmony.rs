@@ -1,4 +1,4 @@
-//! `e2e/harmony/`.
+//! End-to-end tests for `e2e/harmony/`.
 mod add;
 mod bit_ignore;
 mod delete;

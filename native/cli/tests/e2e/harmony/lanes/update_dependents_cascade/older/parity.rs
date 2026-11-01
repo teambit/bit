@@ -1,4 +1,5 @@
 //! Compare the shared direct-cascade path with the released CLI, including stored metadata.
+
 use super::fixture;
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! `e2e/harmony/no-files.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/no-files.e2e.ts`.
 
 use crate::helper::{Helper, parse};
 

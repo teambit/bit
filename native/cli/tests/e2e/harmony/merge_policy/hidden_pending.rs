@@ -1,4 +1,5 @@
-//! Upstream hidden cascades also follow visible merge snapshots.
+//! Upstream hidden cascades also follow visible merge snapshots across
+//! merge policy scenarios.
 mod cascade;
 use crate::helper::{Helper, config, parse};
 use std::{ffi::OsStr, fs, path::Path};

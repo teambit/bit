@@ -1,4 +1,5 @@
-//! `e2e/harmony/lanes/update-dependents-cascade-import.e2e.ts`.
+//! Port of `e2e/harmony/lanes/update-dependents-cascade-import.e2e.ts` for hidden dependent imports.
+
 mod merge;
 mod objects;
 

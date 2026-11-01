@@ -1,3 +1,5 @@
+//! Exported component rename provenance, deprecation, and refactoring contracts.
+
 use crate::{
     commands::move_paths::support::{self, aspect, bitmap, compare, json, successful},
     helper::{Helper, config, remote},

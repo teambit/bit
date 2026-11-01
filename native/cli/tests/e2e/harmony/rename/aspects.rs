@@ -1,3 +1,5 @@
+//! Aspect-specific rename behavior across workspace and exported components.
+
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},
     helper::{Helper, remote},

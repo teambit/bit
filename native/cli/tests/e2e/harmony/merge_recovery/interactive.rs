@@ -1,4 +1,5 @@
-//! Declining confirmation leaves the native workspace untouched; acceptance restores it once.
+//! Declining confirmation leaves the native workspace untouched; acceptance
+//! restores it once.
 use crate::helper::{self, Run};
 use std::{io::Write, path::Path, process::Stdio};
 

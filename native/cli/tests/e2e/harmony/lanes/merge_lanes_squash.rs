@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/merge-lanes-squash.e2e.ts`.
+//! Port of `e2e/harmony/lanes/merge-lanes-squash.e2e.ts` for `--squash` lane merge parity.
 
 use crate::helper::{Helper, parse};
 

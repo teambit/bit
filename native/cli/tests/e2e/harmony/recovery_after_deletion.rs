@@ -1,4 +1,4 @@
-//! `e2e/harmony/recovery-after-deletion.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/recovery-after-deletion.e2e.ts`.
 
 use crate::helper::{Helper, setup};
 use flate2::{Compression, read::ZlibDecoder, write::ZlibEncoder};

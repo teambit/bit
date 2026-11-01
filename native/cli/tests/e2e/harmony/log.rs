@@ -1,4 +1,4 @@
-//! `e2e/harmony/log.e2e.ts`.
+//! Port of `e2e/harmony/log.e2e.ts` for the global `--log` flag.
 
 use crate::helper::Helper;
 

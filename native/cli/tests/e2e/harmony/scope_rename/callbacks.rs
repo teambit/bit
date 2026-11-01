@@ -1,3 +1,5 @@
+//! Scope rename lifecycle callback invocation and workspace config updates.
+
 use crate::{
     commands::move_paths::support::{self, bitmap, compare, setup, successful},
     helper::{Helper, config, remote},

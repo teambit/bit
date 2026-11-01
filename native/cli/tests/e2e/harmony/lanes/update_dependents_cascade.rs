@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/update-dependents-cascade.e2e.ts`.
+//! Port of `e2e/harmony/lanes/update-dependents-cascade.e2e.ts` for hidden dependent cascade on snap.
 
 mod older;
 

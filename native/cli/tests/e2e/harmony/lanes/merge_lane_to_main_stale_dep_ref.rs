@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/merge-lane-to-main-stale-dep-ref.e2e.ts`.
+//! Port of `e2e/harmony/lanes/merge-lane-to-main-stale-dep-ref.e2e.ts` for cross-scope dependency refs on lane merge.
 
 use crate::helper::Helper;
 

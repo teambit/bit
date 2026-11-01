@@ -1,3 +1,5 @@
+//! Lane-scoped component rename and merge propagation contracts.
+
 use crate::{
     commands::move_paths::support::{self, aspect, json, setup, successful},
     helper::{Helper, config, remote},

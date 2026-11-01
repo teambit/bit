@@ -1,4 +1,5 @@
-//! Published continuation and abort run configured callbacks around native retained merge state.
+//! Published continuation and abort run configured callbacks around native
+//! retained merge state.
 mod configuration;
 mod interactive;
 use crate::helper::{Helper, config};

@@ -1,4 +1,5 @@
-//! Published source-class callbacks mutate memory, not the original filesystem.
+//! Published source-class callbacks mutate memory, not the original
+//! filesystem.
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},
     helper::{Helper, config, remote},

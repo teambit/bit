@@ -1,4 +1,5 @@
 //! Cache hits are compared at the same absolute workspace path, preserving file timestamps.
+
 use super::{compare_results, fixture};
 use crate::helper::{Helper, setup};
 use std::{ffi::OsStr, fs, path::Path};

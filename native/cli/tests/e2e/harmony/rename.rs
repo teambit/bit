@@ -1,4 +1,5 @@
-//! Rename's original new/exported identity, source transformation and lane contracts.
+//! Rename's original new/exported identity, source transformation, and lane
+//! contracts.
 mod aspects;
 mod cleanup;
 mod exported;

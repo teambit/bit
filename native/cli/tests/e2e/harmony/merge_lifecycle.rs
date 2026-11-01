@@ -1,4 +1,5 @@
-//! Complete automatic merge lifecycle agrees with the released CLI on fresh repositories.
+//! Complete automatic merge lifecycle agrees with the released CLI on fresh
+//! repositories.
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 

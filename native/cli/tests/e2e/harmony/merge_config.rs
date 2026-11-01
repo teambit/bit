@@ -1,4 +1,4 @@
-//! `e2e/harmony/merge-config.e2e.ts`.
+//! Port of `e2e/harmony/merge-config.e2e.ts` for aspect configuration merge conflicts and resolution.
 
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};

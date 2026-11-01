@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/refactor.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/refactor.e2e.ts`.
 
 use crate::helper::{Helper, remote};
 use std::fs;

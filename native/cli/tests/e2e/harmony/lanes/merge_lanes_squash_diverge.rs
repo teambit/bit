@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/merge-lanes-squash-diverge.e2e.ts`.
+//! Port of `e2e/harmony/lanes/merge-lanes-squash-diverge.e2e.ts` for diverged lane squash merge.
 
 use crate::helper::{Helper, parse};
 

@@ -1,4 +1,5 @@
-//! Reset component patterns publish a single coherent selected batch.
+//! Reset component patterns publish a single coherent selected batch across
+//! reset selection scenarios.
 use crate::helper::{Helper, config};
 use std::ffi::OsStr;
 

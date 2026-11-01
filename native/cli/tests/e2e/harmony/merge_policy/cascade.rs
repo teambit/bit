@@ -1,4 +1,5 @@
-//! Related merged components are resolved together by the retained snapshot lifecycle.
+//! Related merged components are resolved together by the retained snapshot
+//! lifecycle.
 use crate::helper::{Helper, config, parse};
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
