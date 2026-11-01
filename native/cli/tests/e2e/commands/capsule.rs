@@ -1,4 +1,4 @@
-//! End-to-end tests for the native `bit capsule` command family.
+//! End-to-end tests for the native `bit capsule` list, create, and delete command family.
 
 use crate::{
     helper::{Helper, parse},

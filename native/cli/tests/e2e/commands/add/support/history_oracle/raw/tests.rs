@@ -67,6 +67,12 @@ fn padded_clock_ids_are_rejected() {
 }
 
 #[test]
+fn canonical_unpadded_clock_id_parses_to_local_timestamp() {
+    let parsed = parse("2026-10-18-12-0-0");
+    assert!(parsed.and_utc().timestamp() > 0);
+}
+
+#[test]
 #[should_panic(expected = "raw backups differ")]
 fn an_unreferenced_extra_snapshot_is_rejected() {
     let (start, end) = interval();

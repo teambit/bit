@@ -1,4 +1,4 @@
-//! An older tagged dependency is retained through its alias, never through a different scope's name.
+//! An older tagged dependency is retained through its legacy alias, never through a different scope's name.
 
 use super::{fixture, objects, orphan};
 use crate::{commands::move_paths::support, helper::Helper};

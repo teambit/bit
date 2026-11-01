@@ -1,4 +1,4 @@
-//! Decode bounded object failures for diagnostics without changing compared bytes.
+//! Decode bounded zlib-compressed object failures for diagnostics without changing compared bytes.
 
 use std::io::Read;
 

@@ -1,4 +1,4 @@
-//! Remote scope fixture seeding for `bit diff` end-to-end tests.
+//! Remote scope fixture publishing and seeding for `bit diff` end-to-end tests.
 
 use super::{Helper, remote_parity_with, remote_versions};
 

@@ -31,6 +31,7 @@ fn private_host_script_is_retained_until_the_session_ends_including_callback_fai
                 .trim(),
         );
         assert_eq!(script.extension().unwrap(), "cjs");
+        assert!(!SCRIPT.is_empty());
         if response.contains("error") {
             assert_eq!(result.unwrap_err().to_string(), "callback rejected");
             assert!(!script.exists());

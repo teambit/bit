@@ -22,6 +22,7 @@ fn only_explicit_fork_and_recovery_operations_use_the_launch_gate() {
 #[test]
 fn launch_window_is_inclusive_at_start_and_exclusive_at_end() {
     assert_eq!(delay(START), 0);
+    assert_eq!(delay(START + 1), 0);
     assert_eq!(delay(END - 1), 0);
     assert_eq!(delay(START - 1), 1);
     assert_eq!(delay(END), SECOND - END + START);

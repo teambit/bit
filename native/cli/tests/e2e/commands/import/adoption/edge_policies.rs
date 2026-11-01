@@ -1,4 +1,4 @@
-//! Empty policies and explicit lifecycle policy ranges retain the published write-deps rules.
+//! Empty policies and explicit lifecycle policy ranges retain the published `--write-deps` rules.
 
 use super::{command, file};
 use crate::{

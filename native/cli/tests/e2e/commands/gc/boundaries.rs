@@ -1,4 +1,4 @@
-//! Unsupported version metadata is delegated while the original object store remains intact.
+//! Unsupported version or log metadata is delegated while the original object store remains intact.
 
 use super::{fixture, objects, orphan, tree};
 use crate::helper::Helper;

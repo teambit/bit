@@ -1,4 +1,4 @@
-//! Complete independently qualified diagnostics, with exact comparison as the default.
+//! Complete independently qualified stream diagnostics, with exact byte comparison as the default.
 
 #[cfg(test)]
 mod tests;

@@ -7,6 +7,7 @@ use tempfile::TempDir;
 #[test]
 fn iso_matches_javascript() {
     assert_eq!(iso(0), "1970-01-01T00:00:00.000Z");
+    assert_eq!(iso(999), "1970-01-01T00:00:00.999Z");
     // new Date(1792000000123).toISOString()
     assert_eq!(iso(1_792_000_000_123), "2026-10-14T17:46:40.123Z");
     // new Date(951782400000).toISOString(): a leap day

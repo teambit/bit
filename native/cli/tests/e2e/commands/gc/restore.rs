@@ -1,4 +1,4 @@
-//! Recovery compares existing object bytes and permissions, not only restored object counts.
+//! Recovery (`bit gc --restore` / `--restore-overwrite`) compares existing object bytes and permissions, not only restored object counts.
 
 mod cleanup;
 mod conflicts;

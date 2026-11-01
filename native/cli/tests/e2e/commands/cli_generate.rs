@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit cli generate --docs` option parity.
+//! End-to-end tests for `bit cli generate --docs` metadata and skill option parity.
 
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::ffi::OsStr;

@@ -1,4 +1,4 @@
-//! Port of `e2e/commands/export.e2e.ts` for native `bit export` parity.
+//! Port of `e2e/commands/export.e2e.ts` for native `bit export` main, lane, and head-only parity.
 
 #[cfg(unix)]
 mod shared;

@@ -15,6 +15,7 @@ fn only_the_two_complete_independent_stream_errors_are_accepted() {
             assert_errors(actual, expected, &variants);
         }
     }
+    assert_ne!(variants[0], variants[1]);
 }
 
 #[test]

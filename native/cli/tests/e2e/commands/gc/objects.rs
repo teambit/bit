@@ -1,4 +1,4 @@
-//! Start from real exported metadata, then add isolated graph branches for the collector oracle.
+//! Start from real exported metadata, then add isolated graph branches for the `bit gc` collector oracle.
 
 use crate::helper::Helper;
 use flate2::{Compression, write::ZlibEncoder};

@@ -1,4 +1,4 @@
-//! Local `bit delete` parity against the pinned Node.js CLI.
+//! Local and remote `bit delete` parity against the pinned Node.js CLI.
 
 mod completion;
 mod hard;

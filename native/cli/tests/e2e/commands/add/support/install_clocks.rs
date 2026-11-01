@@ -1,4 +1,4 @@
-//! Opt-in exact-token projection for pnpm's independently generated installation clocks.
+//! Opt-in exact-token projection for pnpm's independently generated installation clocks (`prunedAt`).
 
 use serde_json::Value;
 use std::collections::BTreeMap;

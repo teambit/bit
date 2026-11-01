@@ -1,4 +1,4 @@
-//! Exact command bytes and filesystem state replayed at the same absolute workspace path.
+//! Exact command bytes, scope objects, and filesystem state replayed at the same absolute workspace path.
 
 pub(crate) mod history_oracle;
 

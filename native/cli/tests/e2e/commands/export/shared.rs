@@ -1,4 +1,4 @@
-//! Public export into an actual Unix shared-group file scope.
+//! Public export into an actual Unix shared-group (`group-shares`) file scope.
 
 use crate::helper::{Helper, parse};
 use serde_json::Value;

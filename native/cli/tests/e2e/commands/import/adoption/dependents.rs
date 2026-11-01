@@ -1,4 +1,4 @@
-//! Dependent-path import and `--dependents-via` graph traversal tests.
+//! Dependent-path import (`--dependents`) and `--dependents-via` graph traversal tests.
 
 use super::command;
 use crate::{

@@ -1,4 +1,4 @@
-//! Remaining workspace `bit diff` selection and presentation parity.
+//! Remaining workspace and remote `bit diff` selection and presentation parity.
 
 pub(crate) mod http;
 mod remote_fixture;

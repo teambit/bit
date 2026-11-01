@@ -1,4 +1,4 @@
-//! Consumer destruction runs after successful links, including no-added results and `.bitTmp` cleanup.
+//! Consumer destruction runs after successful links, including no-added results, `.bitTmp` cleanup, and best-effort `.bitmap` history.
 use super::support::{compare, workspace};
 use std::fs;
 

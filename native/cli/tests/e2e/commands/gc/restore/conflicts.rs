@@ -1,4 +1,4 @@
-//! Copy errors retain the reverse-sorted prefix and roll the backup back for another attempt.
+//! Copy errors retain the reverse-sorted prefix and roll the `deleted-objects` backup back for another attempt.
 
 use super::super::{compare, fixture, objects, orphan, tree};
 use crate::helper::{Helper, Run};

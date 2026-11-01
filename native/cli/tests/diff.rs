@@ -1,5 +1,5 @@
 //! `bit diff` inputs the native command leaves to the Node.js CLI, each for
-//! its traced reason (including unresolved patterns and missing host package).
+//! its traced reason (including unresolved patterns, workspace checks, and missing host package).
 
 use std::{
     fs,

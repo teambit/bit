@@ -36,6 +36,7 @@ const cases = [
   ['/workspace/comp1', '/workspace\\comp1', false],
   ['/workspace/comp1', 'workspace/comp1', false],
   [undefined, '/workspace/comp1', false],
+  ['/workspace/comp1', undefined, false],
 ];
 for (const [actual, requested, expected] of cases) {
   assert.strictEqual(installationDirectoryEquals(actual, requested, path.posix), expected,

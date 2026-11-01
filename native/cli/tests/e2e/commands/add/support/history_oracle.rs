@@ -1,4 +1,4 @@
-//! An exact caller-declared sequence of published writes retains its full raw history proof.
+//! An exact caller-declared sequence of published writes retains its full raw history proof and clock window.
 
 mod raw;
 

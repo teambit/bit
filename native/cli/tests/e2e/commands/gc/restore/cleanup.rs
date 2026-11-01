@@ -1,4 +1,4 @@
-//! Only the validated recovery timestamp and process ID differ between these invocations.
+//! Only the validated recovery timestamp and process ID differ between `bit gc --restore` invocations.
 
 use super::super::{compare, fixture, objects, orphan, tree};
 use crate::helper::{Helper, Run};

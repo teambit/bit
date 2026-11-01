@@ -1,4 +1,4 @@
-//! Released `CatCmd` source, config, and historical-version presentation tests.
+//! Released `CatCmd` (`bit cat-component` / `bit cat-object`) source, config, and historical-version presentation tests.
 
 use crate::helper::{Helper, config, parse, setup};
 use serde_json::json;

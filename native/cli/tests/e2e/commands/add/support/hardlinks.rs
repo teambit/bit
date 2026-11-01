@@ -1,4 +1,4 @@
-//! Replay original regular-file alias topology before running the second implementation.
+//! Replay original regular-file hardlink alias topology before running the second implementation.
 
 use std::{
     collections::BTreeMap,

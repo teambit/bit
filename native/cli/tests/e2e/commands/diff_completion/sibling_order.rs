@@ -1,4 +1,4 @@
-//! Normalize only independently completed directory batches and their exact Files summary order.
+//! Normalize only independently completed sibling directory batches and their exact Files summary order.
 //! Root placement, ancestor order, paths, statuses, and every diff byte remain checked.
 
 use serde_json::Value;

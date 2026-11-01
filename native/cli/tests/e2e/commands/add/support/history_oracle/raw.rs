@@ -1,4 +1,4 @@
-//! Raw workspace-config history snapshot reader and parser for replay comparison.
+//! Raw workspace-config and `.bitmap` history snapshot reader and parser for replay comparison.
 
 #[cfg(test)]
 mod tests;

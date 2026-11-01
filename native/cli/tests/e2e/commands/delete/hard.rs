@@ -1,4 +1,4 @@
-//! Released Node hard-delete state and output are compared on independent remote copies.
+//! Released Node hard-delete (`--hard`) state and output are compared on independent remote copies.
 
 use super::Helper;
 use crate::{commands::move_paths::support::tree, helper::config};

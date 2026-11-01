@@ -1,4 +1,4 @@
-//! Formatting checks compare the released command, full caches, and the untouched remote.
+//! Native `bit format` checks compare the released command, full caches, and the untouched remote.
 
 use super::move_paths::support;
 #[test]
