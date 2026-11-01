@@ -1,5 +1,5 @@
 //! Detached stash metadata and bytes remain independent of model/head
-//! publication.
+//! publication across modified dependencies and unexported components.
 mod history;
 mod proof;
 mod unversioned;

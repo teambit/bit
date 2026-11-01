@@ -1,5 +1,5 @@
 //! Root providers run before report-level stash errors, exactly once per
-//! invocation.
+//! invocation, preserving side effects and `VersionHistory` objects.
 use super::support::{command, compare_stashes};
 use crate::helper::{Helper, config};
 use serde_json::json;

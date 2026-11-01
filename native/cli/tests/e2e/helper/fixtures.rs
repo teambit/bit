@@ -1,4 +1,4 @@
-//! `e2e-fixtures-helper.ts` and the command shortcuts the ported cases use for setup.
+//! `e2e-fixtures-helper.ts` and the command shortcuts ported E2E cases use for workspace setup.
 //! Setup runs on either CLI: only the command a case checks must run natively.
 
 use super::{Helper, Run, config, issue_types, parse, strip_ansi};

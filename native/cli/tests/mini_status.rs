@@ -1,5 +1,5 @@
 //! Native `bit mini-status --json` on a workspace the Rust status engine owns,
-//! and its declines to the Node.js CLI.
+//! and its declines to the Node.js CLI when unsupported flags or configs are present.
 
 use std::{
     fs,

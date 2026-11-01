@@ -1,4 +1,4 @@
-//! Unit tests for `bit export` transfer preparation, receipt validation, and report formatting.
+//! Unit tests for `bit export` transfer preparation ([`prepared`]), receipt validation ([`published`]), and report formatting ([`format_with`]).
 
 use super::{format_with, prepared, published};
 use crate::commands::color::Chalk;

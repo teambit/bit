@@ -1,4 +1,4 @@
-//! Unit tests for layered transport configuration precedence in
+//! Unit tests for layered transport configuration precedence ([`GlobalConfig`] and [`layers`]) in
 //! `bit-client-transfer`.
 
 use super::{GlobalConfig, layers};

@@ -1,4 +1,4 @@
-//! Unit tests for `bit diff` field-name prettification and component ID comparison.
+//! Unit tests for `bit diff` field-name prettification ([`prettify`]) and component [`Id`] comparison.
 
 use super::prettify;
 use crate::commands::ids::Id;

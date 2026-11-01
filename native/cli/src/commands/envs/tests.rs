@@ -1,4 +1,4 @@
-//! Unit tests for `bit envs` subcommand parsing, inspection, and config updates.
+//! Unit tests for `bit envs` [`Subcommand`] parsing ([`parse_subcommand`]), inspection, and config updates.
 
 use super::{
     Subcommand,

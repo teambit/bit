@@ -1,4 +1,4 @@
-//! A recording HTTP action endpoint for released and native protocol
+//! A recording HTTP action endpoint ([`Server`] and [`Request`]) for released and native protocol
 //! comparisons.
 use serde_json::Value;
 use std::{

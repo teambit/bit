@@ -1,4 +1,4 @@
-//! Unit tests for read-set proof validation in [`Engine`].
+//! Unit tests for read-set proof validation and [`MAX_PROOFS`] frame batching in [`Engine`].
 
 use super::{Engine, MAX_PROOFS};
 use serde_json::json;

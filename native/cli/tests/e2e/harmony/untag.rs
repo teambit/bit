@@ -1,4 +1,5 @@
 //! End-to-end tests for `e2e/harmony/untag-harmony.e2e.ts`: published `resetAll()` behavior.
+//! Verifies workspace and `.bit` state parity when resetting local tags and snaps.
 
 use crate::helper::{Helper, parse};
 use serde_json::Value;

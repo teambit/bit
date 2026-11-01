@@ -1,4 +1,4 @@
-//! Unit tests for `bit doctor --archive` output filenames and path exclusion rules.
+//! Unit tests for `bit doctor --archive` output filenames ([`filename`]) and path exclusion rules ([`excluded`]).
 
 use super::{excluded, filename};
 use crate::commands::doctor::options::Options;

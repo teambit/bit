@@ -1,4 +1,5 @@
 //! End-to-end tests for `e2e/harmony/validate.e2e.ts`.
+//! Covers type checking, linting, testing, `--skip-tasks`, and `--continue-on-error` validation.
 
 use crate::helper::Helper;
 

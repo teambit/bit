@@ -1,5 +1,5 @@
 //! Stashing new components runs the complete local-removal lifecycle across
-//! workspace manifests and staged config.
+//! workspace manifests (`package.json`) and staged config.
 use super::support::{command, compare_stashes, workspace, write_both};
 use crate::helper::{Helper, config};
 use serde_json::json;

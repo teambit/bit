@@ -1,4 +1,5 @@
 //! Stash aliases, messages, explicit IDs, and merge strategies parity tests.
+//! Covers `stash s`, `stash pop`, `--force-ours`, `--force-theirs`, and `-r`.
 use super::support::{command, compare_stashes, workspace, write_both};
 use std::fs;
 #[test]

@@ -1,5 +1,5 @@
 //! Restores remote children without deleting a running scope server's current
-//! directory.
+//! directory before test replay.
 use super::{Path, fs, io, remove};
 
 /// Keep a server's current directory while removing every persisted child before replay.

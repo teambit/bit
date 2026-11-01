@@ -1,5 +1,5 @@
 //! Restored fixtures must not retain outputs when a command leaves read-only
-//! directories.
+//! directories on disk.
 pub(super) mod remote;
 
 use std::{fs, io, path::Path};

@@ -1,5 +1,5 @@
 //! Environment policies, dev-file callbacks, and diagnostics retain Node
-//! parity.
+//! parity across `status` and `show` commands.
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use serde_json::{Value, json};

@@ -1,4 +1,5 @@
 //! `bit status` inputs the native command leaves to the Node.js CLI.
+//! Verifies pre-effect declines for unsupported workspaces, flags, and configurations.
 
 use std::{
     fs,

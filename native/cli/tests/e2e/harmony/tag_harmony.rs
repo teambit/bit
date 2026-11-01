@@ -1,4 +1,5 @@
 //! End-to-end tests for `e2e/harmony/tag-harmony.e2e.ts`.
+//! Covers `bit tag` creation, auto-tag cascades, `--soft` / `--persist`, and schema `2.0.0`.
 
 #[path = "tag_harmony/extra.rs"]
 mod extra;

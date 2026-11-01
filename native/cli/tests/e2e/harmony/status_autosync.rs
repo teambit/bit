@@ -1,5 +1,5 @@
 //! Native independent startup bitmap synchronization and sentinel parity
-//! tests.
+//! tests for `autoSync` workspace startup hooks.
 
 use crate::helper::{
     FOO_FIXTURE, Helper,

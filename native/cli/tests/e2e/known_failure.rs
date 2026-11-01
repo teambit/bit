@@ -1,5 +1,5 @@
 //! Ported cases whose subject the native CLI does not run yet: `pnpm_testing_utils`'s
-//! `known_failure`. A case reaching an unported command returns early, so it starts
+//! `known_failure` ([`KnownFailure`] and [`KnownResult`]). A case reaching an unported command returns early, so it starts
 //! asserting once the command runs natively. Such cases live in `known_failures` modules
 //! (`cargo test --features e2e --test e2e known_failures -- --list` lists them).
 

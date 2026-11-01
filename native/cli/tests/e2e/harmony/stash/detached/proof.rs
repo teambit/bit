@@ -1,5 +1,5 @@
 //! Exercises the retained stash protocol between capture and its first
-//! persistent phase.
+//! persistent phase (`commandStashPrepare` token verification).
 use super::{controls, workspace};
 use crate::helper::setup;
 use bit_object_import::WorkspaceSession;

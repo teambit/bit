@@ -1,4 +1,4 @@
-//! Unit tests for cancellation tokens and construction scopes in
+//! Unit tests for [`Cancellation`] tokens and construction scopes in
 //! `bit-client-transfer`.
 
 use super::Cancellation;
