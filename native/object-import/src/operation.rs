@@ -238,6 +238,9 @@ impl<'a> IndexState<'a> {
 pub(crate) fn project_index(value: Value) -> io::Result<Value> {
     let plan: IndexPlan =
         serde_json::from_value(value).map_err(|_| invalid("invalid index projection"))?;
+    if plan.components.len() > 65_536 || plan.lanes.len() > 4096 || plan.objects.len() > 65_536 {
+        return Err(invalid("unsupported index projection"));
+    }
     let result = index(&plan.components, &plan.lanes, &plan.objects);
     if result.is_null() {
         return Err(invalid("unsupported index projection"));

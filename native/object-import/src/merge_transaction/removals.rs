@@ -6,11 +6,15 @@ fn relative_path(file: &Value) -> io::Result<&str> {
         .or_else(|| file["relativePath"].as_str())
         .or_else(|| file["path"].as_str())
         .map(str::trim)
-        .filter(|value| !value.is_empty() && !value.contains('\0'))
+        .filter(|value| !value.is_empty() && value.len() <= 32768 && !value.contains('\0'))
         .ok_or_else(|| invalid("merge current relative path"))
 }
 fn removed_entry(file: &Value, path: &str) -> Value {
-    if file["path"].is_null() { Value::String(path.to_owned()) } else { file["path"].clone() }
+    file["path"]
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map_or_else(|| Value::String(path.to_owned()), |value| Value::String(value.to_owned()))
 }
 pub(super) fn apply(input: &Value, current: &[Value]) -> io::Result<Value> {
     let mut statuses = input["filesStatus"]

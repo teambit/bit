@@ -1,10 +1,9 @@
 //! The frames a workspace session serves (`WorkspaceSession::request`):
 //! each request names its handler with four magic bytes.
 
-use std::io::{self, Read, Write};
-
 use rayon::ThreadPool;
 use serde::Serialize;
+use std::io::{self, Read, Write};
 
 pub(crate) const MAX_BATCH_BYTES: usize = 128 * 1024 * 1024;
 
@@ -15,7 +14,11 @@ pub(crate) fn word(reader: &mut impl Read) -> io::Result<u32> {
 }
 
 pub(crate) fn respond(writer: &mut impl Write, response: &impl Serialize) -> io::Result<()> {
-    serde_json::to_writer(&mut *writer, response)?;
+    let bytes = serde_json::to_vec(response).map_err(io::Error::other)?;
+    if bytes.len() > MAX_BATCH_BYTES {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "response exceeds frame limit"));
+    }
+    writer.write_all(&bytes)?;
     writer.write_all(b"\n")?;
     writer.flush()
 }

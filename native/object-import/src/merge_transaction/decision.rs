@@ -7,6 +7,9 @@ pub(super) fn apply(input: &Value) -> io::Result<Value> {
     let conflicts = boolean(input, "conflicts")?;
     let strategy = parse_strategy(input.get("strategy"))?;
     let unrelated = parse_strategy(input.get("resolvedUnrelated"))?;
+    if unrelated == Some("manual") {
+        return Err(invalid("unsupported merge strategy"));
+    }
     let mut output = json!({"action":"load","load":if !has_merge || strategy==Some("theirs"){"remote"}else{"current"},"keepLocalVersion":has_merge && strategy==Some("theirs"),"pending":has_merge,"manualPaths":has_merge && conflicts && strategy==Some("manual")});
     early_action(has_merge, conflicts, strategy, unrelated, &mut output);
     output["shouldSquash"] = json!(boolean(input, "shouldSquash")? && has_merge);

@@ -2,38 +2,56 @@ use super::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io};
 pub(super) fn permutation(input: &Value, groups: &[Value], count: usize) -> io::Result<Vec<usize>> {
+    if count > 4096 {
+        return Err(invalid("merge order range"));
+    }
     let observed = input["groups"].as_array().ok_or_else(|| invalid("merge order groups"))?;
     if observed.len() != groups.len() {
         return Err(invalid("merge order group count"));
     }
     let mut permutation = (0..count).collect::<Vec<_>>();
+    let mut assigned = HashSet::with_capacity(count);
     for (actual, expected) in observed.iter().zip(groups) {
-        let expected_stage = expected["stage"].as_str().map(str::trim);
-        if actual["stage"].as_str().map(str::trim) != expected_stage {
-            return Err(invalid("merge order stage"));
-        }
-        let rows = indices(&expected["loads"], true)?;
-        let selected = indices(&actual["order"], false)?;
-        let source = rows
-            .iter()
-            .copied()
-            .collect::<HashSet<_>>();
-        let selected_set = selected
-            .iter()
-            .copied()
-            .collect::<HashSet<_>>();
-        if rows.len() != selected.len()
-            || source != selected_set
-            || selected_set.len() != selected.len()
-            || (expected_stage == Some("modified") && rows != selected)
-        {
-            return Err(invalid("merge invalid completion permutation"));
-        }
-        for (destination, source) in rows.into_iter().zip(selected) {
-            *permutation.get_mut(destination).ok_or_else(|| invalid("merge order range"))? = source;
-        }
+        apply_stage(actual, expected, &mut permutation, &mut assigned)?;
     }
     Ok(permutation)
+}
+
+fn apply_stage(
+    actual: &Value,
+    expected: &Value,
+    permutation: &mut [usize],
+    assigned: &mut HashSet<usize>,
+) -> io::Result<()> {
+    let expected_stage = expected["stage"].as_str().map(str::trim);
+    if actual["stage"].as_str().map(str::trim) != expected_stage {
+        return Err(invalid("merge order stage"));
+    }
+    let rows = indices(&expected["loads"], true)?;
+    let selected = indices(&actual["order"], false)?;
+    let source = rows
+        .iter()
+        .copied()
+        .collect::<HashSet<_>>();
+    let selected_set = selected
+        .iter()
+        .copied()
+        .collect::<HashSet<_>>();
+    if rows.len() != selected.len()
+        || source.len() != rows.len()
+        || source != selected_set
+        || selected_set.len() != selected.len()
+        || (expected_stage == Some("modified") && rows != selected)
+    {
+        return Err(invalid("merge invalid completion permutation"));
+    }
+    for (destination, source) in rows.into_iter().zip(selected) {
+        if !assigned.insert(destination) {
+            return Err(invalid("merge invalid completion permutation"));
+        }
+        *permutation.get_mut(destination).ok_or_else(|| invalid("merge order range"))? = source;
+    }
+    Ok(())
 }
 
 fn indices(value: &Value, loads: bool) -> io::Result<Vec<usize>> {

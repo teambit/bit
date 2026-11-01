@@ -63,6 +63,9 @@ fn add_component(
         if !seen.insert(version_hash.clone()) {
             continue;
         }
+        if seen.len() > 4096 {
+            return Err(invalid("component version graph budget"));
+        }
         let version = match readset.read(&version_hash, "Version") {
             Ok(value) => value,
             Err(error) if error.kind() == io::ErrorKind::NotFound => continue,

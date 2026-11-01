@@ -5,6 +5,9 @@ use std::{io, path::Path};
 pub(super) fn read(directory: &Path, references: &[String]) -> io::Result<Value> {
     crate::merge_history::path(directory)?;
     references_valid(references)?;
+    if references.is_empty() {
+        return Ok(json!({"messages":[]}));
+    }
     let mut reader = crate::read_version::Reader::new(directory)?;
     let mut messages = Vec::with_capacity(references.len());
     for reference in references {

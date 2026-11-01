@@ -18,7 +18,7 @@ pub fn usages(
             environment_usages(&mut usages, field, entries);
         }
     }
-    let mut unique = Vec::new();
+    let mut unique = Vec::with_capacity(usages.len());
     for usage in usages {
         if !unique.contains(&usage) {
             unique.push(usage);

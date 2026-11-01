@@ -257,7 +257,9 @@ fn aliases(input: &Value, entry: &Value) -> io::Result<()> {
             .and_then(|index| usize::try_from(index).ok())
             .filter(|index| *index < parents.len())
             .ok_or_else(|| invalid("reset parent alias index"))?;
-        if !seen.insert(index) || parents[index].as_str() != optional(input, "common")? {
+        if !seen.insert(index)
+            || parents[index].as_str().map(str::trim) != optional(input, "common")?
+        {
             return Err(invalid("reset common alias identity"));
         }
     }

@@ -31,26 +31,11 @@ pub(super) fn results(input: &Value) -> io::Result<Value> {
 fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
     let target = value.get("id").unwrap_or(value);
     if let Some(raw) = target.as_str() {
-        let raw = raw.trim();
-        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
-        let (scope, name) = match bare.split_once('/') {
-            Some((scope, name)) => {
-                (Some(scope.trim()).filter(|scope| !scope.is_empty()), name.trim())
-            }
-            None => (None, bare),
-        };
-        if name.is_empty()
-            || name.len() > 4096
-            || name.contains('\0')
-            || scope.is_some_and(|scope| scope.contains('\0'))
-        {
-            return Err(invalid("merge identity name"));
-        }
-        return Ok((scope, name));
+        return parse_string_identity(raw);
     }
     let scope = match target.get("scope") {
         None | Some(Value::Null) => None,
-        Some(Value::String(scope)) if !scope.contains('\0') => {
+        Some(Value::String(scope)) if scope.trim().len() <= 4096 && !scope.contains('\0') => {
             Some(scope.trim()).filter(|scope| !scope.is_empty())
         }
         _ => return Err(invalid("merge identity scope")),
@@ -62,12 +47,28 @@ fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
         .ok_or_else(|| invalid("merge identity name"))?;
     Ok((scope, name))
 }
+fn parse_string_identity(raw: &str) -> io::Result<(Option<&str>, &str)> {
+    let raw = raw.trim();
+    let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
+    let (scope, name) = match bare.split_once('/') {
+        Some((scope, name)) => (Some(scope.trim()).filter(|scope| !scope.is_empty()), name.trim()),
+        None => (None, bare),
+    };
+    if name.is_empty()
+        || name.len() > 4096
+        || name.contains('\0')
+        || scope.is_some_and(|scope| scope.len() > 4096 || scope.contains('\0'))
+    {
+        return Err(invalid("merge identity name"));
+    }
+    Ok((scope, name))
+}
 
 fn visible(input: &Value) -> io::Result<Vec<usize>> {
     let hidden = array(input, "hidden")?
         .iter()
         .map(identity)
-        .collect::<io::Result<Vec<_>>>()?;
+        .collect::<io::Result<std::collections::HashSet<_>>>()?;
     let mut selected = Vec::new();
     for (index, row) in array(input, "results")?.iter().enumerate() {
         if !hidden.contains(&identity(row)?) {

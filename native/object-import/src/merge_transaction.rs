@@ -47,7 +47,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
             let token = input["token"]
                 .as_str()
                 .map(str::trim)
-                .filter(|val| !val.is_empty())
+                .filter(|val| !val.is_empty() && val.len() <= 256 && !val.contains('\0'))
                 .ok_or_else(|| invalid("merge finish token"))?;
             let tokens = state.journal.finish(token)?;
             state.status.finish(&tokens);

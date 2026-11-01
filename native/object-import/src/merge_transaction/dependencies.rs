@@ -30,7 +30,13 @@ fn string_identity(raw: &str) -> io::Result<(Option<&str>, &str)> {
     let raw = raw.trim();
     let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
     let (scope, name) = match bare.split_once('/') {
-        Some((scope, name)) => (Some(scope.trim()).filter(|scope| !scope.is_empty()), name.trim()),
+        Some((scope, name)) => {
+            let scope = scope.trim();
+            if scope.is_empty() {
+                return Err(invalid("merge dependency scope"));
+            }
+            (Some(scope), name.trim())
+        }
         None => (None, bare),
     };
     if name.is_empty()

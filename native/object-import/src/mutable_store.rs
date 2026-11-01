@@ -1,10 +1,8 @@
 //! Writing serialized objects into the object store.
 
-use std::io::{self, Write};
-
-use flate2::{Compression, write::ZlibEncoder};
-
 use crate::store::Store;
+use flate2::{Compression, write::ZlibEncoder};
+use std::io::{self, Write};
 
 pub(crate) fn persist_serialized(
     store: &Store,
@@ -33,6 +31,8 @@ fn check_header(hash: &str, serialized: &[u8], models: bool) -> io::Result<()> {
     }
     let header = std::str::from_utf8(&serialized[..end])
         .map_err(|_| invalid("invalid mutable header text"))?;
+    let body = std::str::from_utf8(&serialized[end + 1..])
+        .map_err(|_| invalid("invalid mutable body text"))?;
     let mut parts = header.split(' ');
     let kind = parts.next();
     if !(matches!(kind, Some("Version" | "VersionHistory" | "LaneHistory"))
@@ -43,7 +43,7 @@ fn check_header(hash: &str, serialized: &[u8], models: bool) -> io::Result<()> {
         || parts
             .next()
             .and_then(|size| size.parse::<usize>().ok())
-            .is_none_or(|size| size > 32 * 1024 * 1024)
+            .is_none_or(|size| size > 32 * 1024 * 1024 || size != body.encode_utf16().count())
         || parts.next().is_some()
     {
         return Err(invalid("unsupported mutable identity or type"));

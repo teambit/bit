@@ -60,7 +60,8 @@ fn normalize_path(path: &str) -> String {
     while let Some(stripped) = current.strip_prefix("./") {
         current = stripped;
     }
-    if current.starts_with('/')
+    if current == "__proto__"
+        || current.starts_with('/')
         || current
             .split('/')
             .any(|part| matches!(part, "" | "." | ".."))

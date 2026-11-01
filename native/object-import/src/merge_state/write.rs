@@ -18,10 +18,7 @@ pub(crate) fn commit_metadata(
     metadata: Option<&fs::Metadata>,
     restore: bool,
 ) -> io::Result<()> {
-    let name = path.to_str().ok_or_else(|| invalid("non-UTF8 merge state path"))?;
-    if !path.is_absolute() || name.len() > 32768 || name.contains('\0') {
-        return Err(invalid("invalid merge state path"));
-    }
+    validate_path(path)?;
     let existing = match fs::symlink_metadata(path) {
         Ok(metadata) => Some(metadata),
         Err(error) if error.kind() == io::ErrorKind::NotFound => None,
@@ -41,6 +38,19 @@ pub(crate) fn commit_metadata(
     }
     Ok(())
 }
+fn validate_path(path: &Path) -> io::Result<()> {
+    let name = path.to_str().ok_or_else(|| invalid("non-UTF8 merge state path"))?;
+    if !path.is_absolute()
+        || name.len() > 32768
+        || name.contains('\0')
+        || path
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+    {
+        return Err(invalid("invalid merge state path"));
+    }
+    Ok(())
+}
 fn apply_metadata(file: &fs::File, metadata: &fs::Metadata) -> io::Result<()> {
     file.set_times(
         fs::FileTimes::new()
@@ -52,10 +62,7 @@ fn apply_metadata(file: &fs::File, metadata: &fs::Metadata) -> io::Result<()> {
 /// Check the same held-file identity rules as `commit` before a larger plan
 /// starts publishing unrelated files. Opening here never truncates the file.
 pub(crate) fn validate_existing(path: &Path) -> io::Result<()> {
-    let name = path.to_str().ok_or_else(|| invalid("non-UTF8 merge state path"))?;
-    if !path.is_absolute() || name.len() > 32768 || name.contains('\0') {
-        return Err(invalid("invalid merge state path"));
-    }
+    validate_path(path)?;
     let metadata = fs::symlink_metadata(path)?;
     if metadata.file_type().is_symlink() || !metadata.is_file() {
         return Err(invalid("unsupported merge state file"));

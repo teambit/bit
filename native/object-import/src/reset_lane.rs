@@ -136,7 +136,7 @@ impl Plan {
             .trim()
             .split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))
-            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty() && !name.contains(".."))
+            .filter(|(scope, name)| valid_identity_parts(scope, name))
             .ok_or_else(|| invalid("lane reset identity"))?;
         let identity = format!("{scope}/{name}");
         let mut bitmap = BitmapState::load(root, scope, name)?;
@@ -287,6 +287,15 @@ fn object_path(objects: &Path, hash: &str) -> PathBuf {
 
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
+}
+
+fn valid_identity_parts(scope: &str, name: &str) -> bool {
+    !scope.is_empty()
+        && !name.is_empty()
+        && !scope.contains('/')
+        && ![scope, name]
+            .iter()
+            .any(|part| part.contains("..") || part.contains(['\\', '\0']))
 }
 
 fn prepare_selection(

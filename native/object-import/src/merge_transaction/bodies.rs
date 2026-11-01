@@ -45,6 +45,8 @@ impl State {
         owners.verify(&owner, index)?;
         let directory = PathBuf::from(text(&input, "snapshotDirectory")?);
         let objects = PathBuf::from(text(&input, "objectsDirectory")?);
+        crate::merge_history::path(&directory)?;
+        crate::merge_history::path(&objects)?;
         translate_current(&mut input, &directory)?;
         let mut response = prepare_response(&input, &mut self.checkout, snapshots, overlay)?;
         let token = text(&response, "token")?.to_owned();

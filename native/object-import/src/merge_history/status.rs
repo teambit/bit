@@ -31,15 +31,13 @@ pub(crate) fn distance(
         }
     }
     match (source.as_deref(), target.as_deref()) {
-        (Some(source), Some(target)) if source != target => {
-            graph::diverge(&versions, source, target, false)
-        }
+        (Some(source), Some(target)) => graph::diverge(&versions, source, target, false),
         (Some(source), None) => Ok(
             json!({"sourceOnly":graph::subset(&versions, source, &[]),"targetOnly":[],"noCommon":false}),
         ),
         (None, Some(target)) => Ok(
             json!({"sourceOnly":[],"targetOnly":graph::subset(&versions, target, &[]),"noCommon":false}),
         ),
-        _ => Ok(json!({"sourceOnly":[],"targetOnly":[],"noCommon":false})),
+        (None, None) => Ok(json!({"sourceOnly":[],"targetOnly":[],"noCommon":false})),
     }
 }

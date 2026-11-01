@@ -16,6 +16,7 @@ pub fn read_object_directory(
     directory: &Path,
     identity: &str,
 ) -> io::Result<Option<(String, Value)>> {
+    merge_history::path(directory)?;
     let hash = merge_history::hash(identity.trim())?;
     let raw = match repository::read(directory, hash, 32 * 1024 * 1024, &mut 0) {
         Ok(raw) => raw,
@@ -67,6 +68,9 @@ pub fn read_raw_scope_object(
         .split(' ')
         .map(str::to_owned)
         .collect::<Vec<_>>();
+    if headers.len() != 3 {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid object header"));
+    }
     let kind = headers
         .first()
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid object header"))?;

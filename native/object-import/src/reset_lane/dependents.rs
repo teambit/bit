@@ -80,26 +80,39 @@ fn references(
             .ok_or_else(|| invalid("lane dependent model hash"))?;
         let model = proofs::object(objects, hash, "Component", reads)?;
         let identity = dependent_identity(&model, row)?;
-        let mut versions = model["versions"]
-            .as_object()
-            .cloned()
-            .unwrap_or_default();
-        if let Some(orphaned) = model["orphanedVersions"].as_object() {
-            versions.extend(orphaned.clone());
-        }
-        for (label, hash) in versions {
-            if refs.len() >= 32768 {
-                return Err(invalid("lane dependent reference limit"));
-            }
-            let hash = hash
-                .as_str()
-                .map(str::trim)
-                .ok_or_else(|| invalid("lane dependent version reference"))?;
-            crate::merge_history::hash(hash)?;
-            refs.push((hash.to_owned(), format!("{identity}@{}", label.trim())));
-        }
+        collect_model_references(&model, &identity, &mut refs)?;
     }
     Ok(refs)
+}
+
+fn collect_model_references(
+    model: &Value,
+    identity: &str,
+    refs: &mut Vec<(String, String)>,
+) -> io::Result<()> {
+    let mut versions = model["versions"]
+        .as_object()
+        .cloned()
+        .unwrap_or_default();
+    if let Some(orphaned) = model["orphanedVersions"].as_object() {
+        versions.extend(orphaned.clone());
+    }
+    for (label, hash) in versions {
+        if refs.len() >= 32768 {
+            return Err(invalid("lane dependent reference limit"));
+        }
+        let label = label.trim();
+        if label.is_empty() {
+            return Err(invalid("lane dependent version label"));
+        }
+        let hash = hash
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("lane dependent version reference"))?;
+        crate::merge_history::hash(hash)?;
+        refs.push((hash.to_owned(), format!("{identity}@{label}")));
+    }
+    Ok(())
 }
 
 fn dependent_identity(model: &Value, row: &Value) -> io::Result<String> {

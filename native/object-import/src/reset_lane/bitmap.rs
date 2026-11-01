@@ -55,11 +55,10 @@ pub(crate) fn row_identity<'a>(key: &'a str, row: &'a Value) -> (Option<&'a str>
 
 pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io::Result<()> {
     let key = key.trim();
-    if key.is_empty()
+    if key.starts_with('$')
+        || key.contains('\0')
         || rows.contains_key(key)
-        || key.starts_with('$')
-        || key == "_bit_lane"
-        || key == "version"
+        || matches!(key, "" | "_bit_lane" | "version" | "__proto__" | "constructor" | "prototype")
     {
         return Err(invalid("lane reset restored bitmap key"));
     }

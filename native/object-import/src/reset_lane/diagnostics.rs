@@ -141,6 +141,7 @@ fn validate(writes: &[Write]) -> io::Result<()> {
 
 fn current_bytes(path: &Path) -> io::Result<Vec<u8>> {
     match fs::read(path) {
+        Ok(bytes) if bytes.len() > 32 * 1024 * 1024 => Err(invalid("lane reset population budget")),
         Ok(bytes) => Ok(bytes),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(error) => Err(error),

@@ -9,6 +9,8 @@ use std::{
 
 // Open the reparse point itself rather than following a substituted symlink or junction.
 const OPEN_REPARSE_POINT: u32 = 0x0020_0000;
+const DIRECTORY_ATTRIBUTE: u64 = 0x0010;
+const DEVICE_ATTRIBUTE: u64 = 0x0040;
 const REPARSE_POINT: u64 = 0x0400;
 
 pub(super) fn open(path: &Path) -> io::Result<fs::File> {
@@ -39,8 +41,9 @@ fn same_file_identity(
 }
 
 fn validate(info: &winapi_util::file::Information) -> io::Result<()> {
-    if info.number_of_links() != 1
-        || info.file_attributes() & (REPARSE_POINT | 0x0010 | 0x0040) != 0
+    if info.is_dir()
+        || info.number_of_links() != 1
+        || info.file_attributes() & (REPARSE_POINT | DIRECTORY_ATTRIBUTE | DEVICE_ATTRIBUTE) != 0
     {
         return Err(invalid("unsupported merge state file"));
     }

@@ -140,17 +140,17 @@ fn contains_head(readset: &mut Readset, main: Option<&str>, head: &str) -> io::R
         if !visited.insert(current.to_ascii_lowercase()) {
             continue;
         }
+        if visited.len() > 4096 {
+            return Err(invalid("remote lane version graph budget"));
+        }
         let version = readset.read(&current, "Version")?;
-        pending.extend(
-            version["parents"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .filter_map(Value::as_str)
-                .map(str::trim)
-                .filter(|parent| !parent.is_empty())
-                .map(str::to_owned),
-        );
+        for parent in version["parents"]
+            .as_array()
+            .into_iter()
+            .flatten()
+        {
+            pending.push(hash(parent)?.to_owned());
+        }
     }
     Ok(false)
 }

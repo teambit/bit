@@ -63,10 +63,23 @@ pub(crate) fn removed_lane_row(
         staged["componentMapObject"].as_object().ok_or_else(|| invalid("reset removed map"))?;
     let main_file = non_empty(map.get("mainFile"), "reset removed main file")?;
     let root_dir = non_empty(map.get("rootDir"), "reset removed root dir")?;
+    validate_relative_path(main_file, "reset removed main file")?;
+    validate_relative_path(root_dir, "reset removed root dir")?;
     let version = non_empty(staged["id"].get("version"), "reset removed version")?;
     Ok(Some(serde_json::json!({
         "name":name,"scope":scope,"version":version,"mainFile":main_file,"rootDir":root_dir,
     })))
+}
+
+fn validate_relative_path(path: &str, message: &str) -> io::Result<()> {
+    if path.contains('\0')
+        || path
+            .split(['/', '\\'])
+            .any(|part| matches!(part, "" | "." | ".."))
+    {
+        return Err(invalid(message));
+    }
+    Ok(())
 }
 
 fn find_removed_staged<'a>(rows: &'a [Value], scope: &str, name: &str) -> Option<&'a Value> {

@@ -30,10 +30,13 @@ pub(super) fn policy(input: &Policy) -> io::Result<Value> {
     let Some(parents) = &input.current_parents else {
         return Ok(json!({"action":"requireVersion"}));
     };
-    if input.target_only.len() == 1 && input.common.is_some() && parents.len() == 1 {
+    let has_common = input.common
+        .as_deref()
+        .is_some_and(|val| !val.trim().is_empty());
+    if input.target_only.len() == 1 && has_common && parents.len() == 1 {
         return Ok(json!({"action":"skip"}));
     }
-    if input.common.is_none() && !input.current_lane_default && !input.model.main_model_known {
+    if !has_common && !input.current_lane_default && !input.model.main_model_known {
         return Ok(json!({"action":"requireMainModel"}));
     }
     rewrite(input, parents)
@@ -47,10 +50,18 @@ fn eligible(input: &Policy) -> bool {
 }
 fn rewrite(input: &Policy, previous: &[String]) -> io::Result<Value> {
     let legacy = input.model.is_legacy.ok_or_else(|| invalid("missing Version schema policy"))?;
-    let (choice, parent) = if let Some(common) = &input.common {
+    let common = input.common
+        .as_deref()
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
+    let main_head = input.model.main_head
+        .as_deref()
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
+    let (choice, parent) = if let Some(common) = common {
         ("common", Some(common))
-    } else if !input.current_lane_default && input.model.main_head.is_some() {
-        ("main", input.model.main_head.as_ref())
+    } else if !input.current_lane_default && main_head.is_some() {
+        ("main", main_head)
     } else {
         ("none", None)
     };
@@ -60,7 +71,7 @@ fn rewrite(input: &Policy, previous: &[String]) -> io::Result<Value> {
         .collect();
     let parents = match parent {
         Some(_) if legacy => previous_parents.clone(),
-        Some(parent) => vec![parent.trim().to_owned()],
+        Some(parent) => vec![parent.to_owned()],
         None => Vec::new(),
     };
     Ok(
@@ -74,8 +85,13 @@ fn validate(input: &Policy) -> io::Result<()> {
     if let Some(parents) = &input.current_parents {
         references_valid(parents)?;
     }
-    for reference in [&input.common, &input.model.main_head].into_iter().flatten() {
-        hash(reference.trim())?;
+    for reference in [&input.common, &input.model.main_head]
+        .into_iter()
+        .flatten()
+        .map(|val| val.trim())
+        .filter(|val| !val.is_empty())
+    {
+        hash(reference)?;
     }
     Ok(())
 }

@@ -227,7 +227,7 @@ impl State {
         let token = token.trim();
         self.live(token)?;
         let mut removed = vec![token.to_owned()];
-        loop {
+        for _ in 0..4096 {
             let children: Vec<String> = self.records
                 .iter()
                 .filter(|(key, record)| {

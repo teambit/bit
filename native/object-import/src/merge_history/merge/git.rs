@@ -52,7 +52,9 @@ fn execute(
 ) -> io::Result<(std::process::ExitStatus, Vec<u8>, Vec<u8>)> {
     if labels
         .iter()
-        .any(|label| label.trim().is_empty() || label.len() > 32768 || label.contains('\0'))
+        .any(|label| {
+            label.trim().is_empty() || label.len() > 32768 || label.contains(['\0', '\r', '\n'])
+        })
     {
         return Err(invalid("merge label/path limit"));
     }

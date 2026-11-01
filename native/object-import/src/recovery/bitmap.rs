@@ -140,9 +140,12 @@ fn directory(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 32768
         && !value.contains('\0')
+        && !value
+            .split(['/', '\\'])
+            .any(|part| matches!(part, "" | "." | ".."))
         && !matches!(
             value,
-            "." | "__proto__"
+            "__proto__"
                 | "constructor"
                 | "prototype"
                 | "toString"

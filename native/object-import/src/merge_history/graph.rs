@@ -29,19 +29,28 @@ pub(super) struct Load {
 }
 pub(super) fn validate(versions: &[Version]) -> io::Result<()> {
     count(versions.len())?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(versions.len());
     let mut edges = 0;
     for version in versions {
-        hash(&version.hash)?;
-        if !seen.insert(&version.hash) {
+        let current = version.hash.trim();
+        hash(current)?;
+        if !seen.insert(current) {
             return Err(invalid("history duplicate record"));
         }
-        for parent in edges_of(version, true) {
-            hash(&parent)?;
-            edges += 1;
-            if edges > super::MAX_FILES * 16 {
-                return Err(invalid("history edge limit"));
-            }
+        validate_version_edges(version, current, &mut edges)?;
+    }
+    Ok(())
+}
+fn validate_version_edges(version: &Version, current: &str, edges: &mut usize) -> io::Result<()> {
+    for parent in edges_of(version, true) {
+        let parent = parent.trim();
+        hash(parent)?;
+        if parent == current {
+            return Err(invalid("history self parent"));
+        }
+        *edges += 1;
+        if *edges > super::MAX_FILES * 16 {
+            return Err(invalid("history edge limit"));
         }
     }
     Ok(())

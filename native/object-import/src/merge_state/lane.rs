@@ -49,7 +49,9 @@ pub(super) fn plan(input: &Plan) -> io::Result<Value> {
         && let Some(parent) = input.parent
             .as_deref()
             .map(str::trim)
-            .filter(|parent| !parent.eq_ignore_ascii_case(input.version.trim()))
+            .filter(|parent| {
+                !parent.is_empty() && !parent.eq_ignore_ascii_case(input.version.trim())
+            })
     {
         output["parent"] = json!(parent);
     }
@@ -61,8 +63,10 @@ fn validate(input: &Plan) -> io::Result<()> {
     for reference in [&input.parent, &input.lane.existing_visible_head, &input.lane.model_head]
         .into_iter()
         .flatten()
+        .map(|val| val.trim())
+        .filter(|val| !val.is_empty())
     {
-        hash(reference.trim())?;
+        hash(reference)?;
     }
     if input.options.detach_head && input.options.override_head {
         return Err(invalid("conflicting lane head options"));

@@ -66,6 +66,9 @@ impl Readset {
             }
             return Ok(());
         }
+        if self.entries.len() >= 32768 {
+            return Err(invalid("remote object readset budget"));
+        }
         self.bytes = self.bytes
             .checked_add(bytes.as_ref().map_or(0, Vec::len))
             .ok_or_else(|| invalid("remote object readset budget"))?;

@@ -56,14 +56,15 @@ impl<'a> Reader<'a> {
         self.raw += object.len();
         self.records += 1;
         let (size, body) = repository::split(&object, hash, "Version")?;
+        let body_text = std::str::from_utf8(body).map_err(io::Error::other)?;
         if size
             .parse::<usize>()
             .ok()
-            .is_none_or(|len| len > MAX_BYTES)
+            .is_none_or(|len| len == 0 || len > MAX_BYTES)
         {
             return Err(invalid("invalid Version header size"));
         }
-        let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
+        let value: Value = serde_json::from_str(body_text).map_err(io::Error::other)?;
         if self.query || self.history_artifacts {
             crate::history_query::validate_version(&value)?;
         } else {
@@ -71,11 +72,8 @@ impl<'a> Reader<'a> {
         }
         parents(&value)?;
         if self.query {
-            self.metadata = Some((
-                String::from_utf8(body.to_vec()).map_err(io::Error::other)?,
-                object.len(),
-                self.compressed.saturating_sub(before),
-            ));
+            self.metadata =
+                Some((body_text.to_owned(), object.len(), self.compressed.saturating_sub(before)));
         }
         Ok(value)
     }

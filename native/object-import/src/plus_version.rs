@@ -1,5 +1,8 @@
 //! Published dependency-resolver plus-version placeholders.
 
+#[cfg(test)]
+mod tests;
+
 /// `isPlusVersion`: exact, caret and tilde placeholders follow the resolved dependency.
 #[must_use]
 pub fn is_plus(version: &str) -> bool {
@@ -19,16 +22,15 @@ pub fn resolve(version: &str, resolved: Option<&str>, fallback: &str) -> String 
     else {
         return fallback.to_owned();
     };
-    if !resolved
-        .trim_start_matches(['v', 'V'])
-        .starts_with("0.0.0-")
+    let prefix = trimmed_version.strip_prefix('+').unwrap_or_default();
+    if !prefix.is_empty()
+        && !resolved
+            .trim_start_matches(['v', 'V'])
+            .starts_with("0.0.0-")
         && node_semver::npm::valid(resolved).is_some()
     {
-        format!("{}{resolved}", trimmed_version.strip_prefix('+').unwrap_or_default())
+        format!("{prefix}{resolved}")
     } else {
         resolved.to_owned()
     }
 }
-
-#[cfg(test)]
-mod tests;

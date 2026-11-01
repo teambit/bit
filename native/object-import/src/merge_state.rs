@@ -141,14 +141,15 @@ pub(crate) fn serve(
         &request,
         Ok(Request::InspectionDiff(_)
             | Request::HistoryQueryBlame(_)
-            | Request::HistoryQueryDiff(_)),
+            | Request::HistoryQueryDiff(_)
+            | Request::TransferArchive(_)
+            | Request::SnapshotSerialize(_)),
     ) {
         32 * 1024 * 1024
     } else {
         MAX_JSON
     };
-    let result = request.and_then(|request| execution::run(request, state, &bytes, pool));
-    let response = match result {
+    let response = match request.and_then(|req| execution::run(req, state, &bytes, pool)) {
         Ok(data) => {
             json!({"version":1,"id":id,"completed":1,"skipped":[],"failed":false,"data":data})
         }

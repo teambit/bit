@@ -18,6 +18,7 @@ const MAX_FILES: usize = 4096;
 
 /// Read a bounded Version ancestry graph for native repository planning.
 pub(crate) fn read_graph(objects: &Path, heads: &[String]) -> io::Result<Value> {
+    count(heads.len())?;
     let request = serde_json::from_value(serde_json::json!({
         "objectsDirectory":objects,"heads":heads,"cached":[],"overlay":[],
     }))
@@ -121,6 +122,9 @@ fn count(count: usize) -> io::Result<()> {
 }
 pub(crate) fn path(path: &Path) -> io::Result<()> {
     if !path.is_absolute()
+        || path
+            .components()
+            .any(|comp| matches!(comp, std::path::Component::ParentDir))
         || path
             .to_str()
             .is_none_or(|name| name.len() > 32768 || name.contains('\0'))

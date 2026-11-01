@@ -81,13 +81,13 @@ impl Cursor {
             "divergence" => self.divergence(value),
             "unrelated" => self.unrelated(value),
             "unrelatedFailure" => {
-                self.unchanged(
-                    value["message"]
-                        .as_str()
-                        .ok_or_else(|| invalid("merge unrelated message"))?
-                        .to_owned(),
-                    false,
-                );
+                let message = value["message"]
+                    .as_str()
+                    .filter(|msg| {
+                        !msg.trim().is_empty() && msg.len() <= 32768 && !msg.contains('\0')
+                    })
+                    .ok_or_else(|| invalid("merge unrelated message"))?;
+                self.unchanged(message.to_owned(), false);
                 Ok(())
             }
             _ => Err(invalid("merge status observation")),

@@ -74,7 +74,11 @@ impl Operation {
         match self {
             Self::Copy { source, destination } => {
                 path(source)?;
-                path(destination)
+                path(destination)?;
+                if source == destination {
+                    return Err(invalid("copy source and destination are identical"));
+                }
+                Ok(())
             }
             Self::Remove { path: filename } | Self::EnsureDir { path: filename } => path(filename),
         }

@@ -13,9 +13,8 @@ pub(crate) fn file(source: &Path, destination: &Path) -> io::Result<()> {
     Ok(())
 }
 pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
-    if !source.is_absolute() || !destination.is_absolute() {
-        return Err(invalid("recovery copy path must be absolute"));
-    }
+    super::path(source)?;
+    super::path(destination)?;
     let source_metadata = regular(source)?;
     let existing = match fs::symlink_metadata(destination) {
         Ok(_) => Some(regular(destination)?),

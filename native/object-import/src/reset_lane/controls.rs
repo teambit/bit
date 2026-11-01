@@ -30,7 +30,9 @@ pub(crate) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Cont
     if count == rows.len() {
         return Ok(Vec::new());
     }
-    Ok(vec![Control { path, before, after: serde_json::to_vec_pretty(&value)? }])
+    let mut after = serde_json::to_vec_pretty(&value)?;
+    after.push(b'\n');
+    Ok(vec![Control { path, before, after }])
 }
 
 fn matches_identity(row: &Value, identities: &[String]) -> bool {

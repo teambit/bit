@@ -353,6 +353,9 @@ fn unmerged(scope: &Path, removed: &[String]) -> io::Result<Option<(Vec<u8>, Vec
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
     };
+    if before.len() > 16 * 1024 * 1024 {
+        return Err(invalid("remote unmerged budget"));
+    }
     let mut value = crate::recovery::jsonc::parse(&before)?;
     let rows = value.as_array_mut().ok_or_else(|| invalid("remote unmerged records"))?;
     let count = rows.len();
@@ -367,7 +370,9 @@ fn unmerged(scope: &Path, removed: &[String]) -> io::Result<Option<(Vec<u8>, Vec
     if count == rows.len() {
         return Ok(None);
     }
-    Ok(Some((before, serde_json::to_vec_pretty(&value)?)))
+    let mut after = serde_json::to_vec_pretty(&value)?;
+    after.push(b'\n');
+    Ok(Some((before, after)))
 }
 fn matches_unmerged_row(row: &Value, target: &str) -> bool {
     let target = target.trim();

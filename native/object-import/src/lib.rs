@@ -89,6 +89,14 @@ pub fn render_workspace_bitmap(value: &serde_json::Value) -> std::io::Result<Vec
                             .is_none_or(|text| text.trim().is_empty())
                     })
                 || rows
+                    .get("version")
+                    .is_some_and(|ver| {
+                        !ver.is_null()
+                            && ver
+                                .as_str()
+                                .is_none_or(|text| text.trim().is_empty())
+                    })
+                || rows
                     .get("_bit_lane")
                     .is_some_and(|lane| !lane.is_null() && !lane.is_object())
         })

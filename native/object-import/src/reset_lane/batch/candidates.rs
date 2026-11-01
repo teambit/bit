@@ -183,6 +183,9 @@ fn identity(id: &Value) -> io::Result<String> {
 
 fn context(root: &Path) -> io::Result<BitmapState> {
     let before = fs::read(root.join(".bitmap"))?;
+    if before.len() > 4 * 1024 * 1024 {
+        return Err(invalid("lane candidate bitmap budget"));
+    }
     let document = crate::recovery::jsonc::parse(&before)?;
     let lane = &document["_bit_lane"];
     let (scope_opt, name) =

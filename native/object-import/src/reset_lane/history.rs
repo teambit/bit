@@ -73,7 +73,11 @@ fn append_missing_ancestors(
 
 fn parent_entry(hash: &str, version: &Value, parents: &[Value]) -> Value {
     let mut entry = json!({"hash":hash,"parents":parents});
-    if let Some(unrelated) = version["unrelated"]["head"].as_str() {
+    if let Some(unrelated) = version["unrelated"]["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
         entry["unrelated"] = json!(unrelated);
     }
     if let Some(squashed) = version["squashed"]["previousParents"].as_array() {

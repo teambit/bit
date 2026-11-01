@@ -34,10 +34,14 @@ pub(super) fn project(
 ) -> io::Result<()> {
     let identity = format!("{scope}/{name}");
     let rows = lane["components"].as_array_mut().ok_or_else(|| invalid("lane reset components"))?;
-    if let Some(position) = rows
+    let mut positions = rows
         .iter()
-        .position(|row| matches_component_row(&row["id"], scope, name))
-    {
+        .enumerate()
+        .filter_map(|(index, row)| matches_component_row(&row["id"], scope, name).then_some(index));
+    if let Some(position) = positions.next() {
+        if positions.next().is_some() {
+            return Err(invalid("lane reset duplicate component"));
+        }
         if selection.keep_lane {
             rows[position]["head"] =
                 Value::String(selection.next.clone().ok_or_else(|| invalid("lane reset next"))?);
@@ -57,15 +61,20 @@ fn matches_component_row(id: &Value, scope: &str, name: &str) -> bool {
 fn project_hidden(lane: &mut Value, identity: &str, selection: &Selection) -> io::Result<()> {
     let rows =
         lane["updateDependents"].as_array_mut().ok_or_else(|| invalid("lane reset hidden rows"))?;
-    let position = rows
+    let mut positions = rows
         .iter()
-        .position(|row| {
+        .enumerate()
+        .filter_map(|(index, row)| {
             row.as_str()
                 .map(str::trim)
                 .and_then(|row| row.rsplit_once('@'))
                 .is_some_and(|(id, _)| id.trim() == identity)
-        })
-        .ok_or_else(|| invalid("lane reset hidden absent"))?;
+                .then_some(index)
+        });
+    let position = positions.next().ok_or_else(|| invalid("lane reset hidden absent"))?;
+    if positions.next().is_some() {
+        return Err(invalid("lane reset duplicate hidden identity"));
+    }
     if selection.keep_lane {
         rows[position] = Value::String(format!(
             "{identity}@{}",

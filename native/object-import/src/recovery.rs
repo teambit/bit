@@ -27,7 +27,9 @@ pub(crate) fn path(path: &Path) -> io::Result<()> {
     if !path.is_absolute()
         || path
             .components()
-            .any(|comp| matches!(comp, std::path::Component::ParentDir))
+            .any(|comp| {
+                matches!(comp, std::path::Component::ParentDir | std::path::Component::CurDir)
+            })
         || path
             .to_str()
             .is_none_or(|name| name.trim().is_empty() || name.len() > 32768 || name.contains('\0'))

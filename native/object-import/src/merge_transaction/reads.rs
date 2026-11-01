@@ -63,24 +63,34 @@ pub(crate) fn source_parts(
         let Some(trace) = active.as_mut() else {
             return Ok(());
         };
-        trace.source_reads = trace.source_reads.saturating_add(1);
-        trace.source_bytes = trace.source_bytes.saturating_add(body.len());
-        let hash = crate::validate::hexadecimal(&hash);
-        if !trace.records.contains_key(&hash) {
-            trace.compressed = trace.compressed.saturating_add(compressed_size);
-            trace.retained_bytes = trace.retained_bytes.saturating_add(body.len());
-            if inflated_size < body.len()
-                || trace.compressed > 32 * 1024 * 1024
-                || trace.retained_bytes > 32 * 1024 * 1024
-                || trace.records.len() >= 4096
-            {
-                return Err(invalid("merge Source receipt budget"));
-            }
-            trace.records.insert(
-                hash,
-                Receipt { body: body.to_vec(), compressed_size, inflated_size },
-            );
-        }
-        Ok(())
+        record_source_trace(trace, hash, body, compressed_size, inflated_size)
     })
+}
+fn record_source_trace(
+    trace: &mut Trace,
+    hash: [u8; 20],
+    body: &[u8],
+    compressed_size: usize,
+    inflated_size: usize,
+) -> io::Result<()> {
+    trace.source_reads = trace.source_reads.saturating_add(1);
+    trace.source_bytes = trace.source_bytes.saturating_add(body.len());
+    let hash = crate::validate::hexadecimal(&hash);
+    if let Some(existing) = trace.records.get(&hash) {
+        if existing.body != body {
+            return Err(invalid("merge Source receipt mismatch"));
+        }
+        return Ok(());
+    }
+    trace.compressed = trace.compressed.saturating_add(compressed_size);
+    trace.retained_bytes = trace.retained_bytes.saturating_add(body.len());
+    if inflated_size < body.len()
+        || trace.compressed > 32 * 1024 * 1024
+        || trace.retained_bytes > 32 * 1024 * 1024
+        || trace.records.len() >= 4096
+    {
+        return Err(invalid("merge Source receipt budget"));
+    }
+    trace.records.insert(hash, Receipt { body: body.to_vec(), compressed_size, inflated_size });
+    Ok(())
 }

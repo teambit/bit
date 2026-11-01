@@ -36,9 +36,11 @@ fn validate_files(value: &Value) -> io::Result<()> {
         if !file.is_object()
             || file
                 .get("relativePath")
-                .is_some_and(|path| {
-                    path.as_str()
-                        .is_none_or(|text| text.trim().is_empty())
+                .is_some_and(|val| {
+                    !val.is_null()
+                        && val
+                            .as_str()
+                            .is_none_or(|text| text.trim().is_empty())
                 })
         {
             return Err(invalid("history invalid Version file"));

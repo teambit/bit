@@ -37,8 +37,10 @@ impl Capsules {
                 .create_new(true)
                 .write(true)
                 .open(&path)?;
-            file.write_all(&record.body)?;
-            file.flush()?;
+            if let Err(error) = file.write_all(&record.body).and_then(|()| file.flush()) {
+                let _ = std::fs::remove_file(&path);
+                return Err(error);
+            }
             (path, None)
         };
         self.sources.push(json!({"hash":hash,"privatePath":path,"compressedSize":record.compressed_size,"inflatedSize":record.inflated_size,"encoding":"raw","bodySize":record.body.len()}));
