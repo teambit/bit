@@ -1,4 +1,5 @@
-//! Unit tests for pruning unreferenced virtual-store packages under `node_modules/.pnpm`.
+//! Unit tests for pruning unreferenced virtual-store packages under
+//! `node_modules/.pnpm` in `bit-install`.
 
 use super::prune_modules;
 use std::{collections::HashSet, fs, path::Path};

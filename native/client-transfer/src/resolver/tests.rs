@@ -1,4 +1,4 @@
-//! Unit tests for custom scope resolver execution.
+//! Unit tests for custom scope resolver execution in `bit-client-transfer`.
 
 use super::Resolver;
 use crate::GlobalConfig;

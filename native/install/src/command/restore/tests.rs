@@ -1,4 +1,5 @@
-//! Unit tests for lockfile-only dependency graph restoration and peer suffix parsing.
+//! Unit tests for lockfile-only dependency graph restoration and peer suffix
+//! parsing in `bit-install`.
 
 use super::{
     explicit,

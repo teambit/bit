@@ -1,4 +1,5 @@
-//! Unit tests for comment-preserving `workspace.jsonc` edits and backup history.
+//! Unit tests for comment-preserving `workspace.jsonc` edits and backup
+//! history in `bit-install`.
 
 use super::edit;
 use serde_json::json;

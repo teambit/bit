@@ -1,4 +1,5 @@
-//! Unit tests for the `bit:` custom attribute block in `pnpm-lock.yaml`.
+//! Unit tests for the `bit:` custom attribute block in `pnpm-lock.yaml` in
+//! `bit-install`.
 
 use super::{merge, read, remove_for_update, restore_after_failure, write};
 use pretty_assertions::assert_eq;

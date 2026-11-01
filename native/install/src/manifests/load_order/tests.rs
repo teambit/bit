@@ -1,4 +1,5 @@
-//! Unit tests for component load group ordering (`buildLoadGroups`).
+//! Unit tests for component load group ordering (`buildLoadGroups`) in
+//! `bit-install`.
 
 use super::load_order;
 use crate::manifests::tests::component;

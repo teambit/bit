@@ -1,4 +1,5 @@
-//! Unit tests for proxy, CA certificate, and retry network settings.
+//! Unit tests for proxy, CA certificate, and retry network settings in
+//! `bit-install`.
 
 use super::{NetworkSettings, ProxySettings, RetrySettings, network, proxy, read_ca_file};
 use crate::{config::DependencyResolverConfig, model::GlobalConfig};

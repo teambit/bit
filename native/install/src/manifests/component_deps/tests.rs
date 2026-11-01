@@ -1,4 +1,5 @@
-//! Unit tests for `WorkspaceManifestFactory.buildComponentDependenciesMap`.
+//! Unit tests for `WorkspaceManifestFactory.buildComponentDependenciesMap` in
+//! `bit-install`.
 
 use super::{Dep, dependency_list, missing, to_deps_object, update_version};
 use crate::{

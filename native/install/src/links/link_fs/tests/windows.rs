@@ -1,5 +1,5 @@
 //! Windows linking: symlinks where permitted, otherwise hard links for files and junctions
-//! for directories, as `createLinkOrSymlink` and `symlink-dir` do on Windows.
+//! for directories, as `createLinkOrSymlink` and `symlink-dir` do on Windows in `bit-install`.
 
 use super::super::{
     LinkKind, create_link_or_symlink, hard_link_directory, remove_path, symlink_dir,

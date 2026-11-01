@@ -1,5 +1,6 @@
-//! A real mutual-TLS server requires the same configured certificate and key Node forwards.
-//! Renew the 824-day leaf fixtures before 2029-01-18; macOS permits at most 825 days.
+//! A real mutual-TLS server requires the same configured certificate and key
+//! Node forwards. Renew the 824-day leaf fixtures before 2029-01-18; macOS
+//! permits at most 825 days.
 
 use super::{GlobalConfig, Network};
 use serde_json::json;

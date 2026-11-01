@@ -1,4 +1,5 @@
-//! Unit tests for `semver-range-intersect` 0.3.1 compatibility against golden fixtures.
+//! Unit tests for `semver-range-intersect` 0.3.1 compatibility against golden
+//! fixtures in `bit-install`.
 
 use super::intersect;
 use crate::manifests::semver::tests::golden;

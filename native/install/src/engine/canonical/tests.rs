@@ -1,4 +1,5 @@
-//! Unit tests for canonical package manager engine request validation.
+//! Unit tests for canonical package manager engine request validation in
+//! `bit-install`.
 
 use super::{
     CanonicalInstall,

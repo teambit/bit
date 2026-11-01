@@ -1,4 +1,5 @@
-//! End-to-end engine installs of local projects without network registry access.
+//! End-to-end engine installs of local projects without network registry access
+//! in `bit-install`.
 
 use super::install;
 use crate::{

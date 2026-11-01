@@ -1,4 +1,5 @@
-//! Unit tests for dependency cache invalidation based on workspace modification times.
+//! Unit tests for dependency cache invalidation based on workspace modification
+//! times in `bit-install`.
 
 use super::{deps_dir, invalidate, needs_invalidation};
 use crate::dependencies::cache::put;

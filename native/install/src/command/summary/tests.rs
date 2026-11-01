@@ -1,4 +1,5 @@
-//! Unit tests for install summary formatting and elapsed duration rendering.
+//! Unit tests for install summary formatting and elapsed duration rendering in
+//! `bit-install`.
 
 use super::{format, seconds};
 use crate::output::Output;

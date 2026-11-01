@@ -1,4 +1,5 @@
-//! Unit tests for external package manager `package.json` and `workspace.jsonc` updates.
+//! Unit tests for external package manager `package.json` and `workspace.jsonc`
+//! updates in `bit-install`.
 
 use super::{disable_in_config, remove_postinstall_script, write_package_json_dependencies};
 use crate::{jsonc::Document, model::DependencyMap};

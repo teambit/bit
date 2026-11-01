@@ -1,4 +1,5 @@
-//! Unit tests for `resolveFromEnv` dependency linking from environment packages.
+//! Unit tests for `resolveFromEnv` dependency linking from environment packages
+//! in `bit-install`.
 
 use super::{EnvLinks, resolved_from_env_links};
 use crate::{

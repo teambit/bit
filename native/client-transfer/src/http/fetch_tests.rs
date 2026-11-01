@@ -1,4 +1,4 @@
-//! Unit tests for HTTP object archive fetching.
+//! Unit tests for HTTP object archive fetching in `bit-client-transfer`.
 
 use super::{GlobalConfig, Network};
 use crate::{Cancellation, fetch::FetchOptions};

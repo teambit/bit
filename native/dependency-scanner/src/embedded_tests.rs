@@ -1,4 +1,5 @@
-//! Unit tests for embedded dependency scanner request bounds.
+//! Unit tests for embedded dependency scanner request bounds in
+//! `bit-dependency-scanner`.
 
 use crate::{limits, scan_request};
 use rayon::ThreadPoolBuilder;

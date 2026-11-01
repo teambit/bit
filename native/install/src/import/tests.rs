@@ -1,3 +1,6 @@
+//! Unit tests for scope object importing, merging, and remote fetching in
+//! `bit-install`.
+
 use super::{
     bitmap::{self, Id, LaneId},
     component::{keep_existing_version, merge_component, merge_version_history},

@@ -1,4 +1,5 @@
-//! Unit tests for `VersionHistory` completeness checks and `graphCompleteRefs` updates.
+//! Unit tests for `VersionHistory` completeness checks and `graphCompleteRefs`
+//! updates in `bit-install`.
 
 use super::{Completeness, check, incomplete};
 use crate::{

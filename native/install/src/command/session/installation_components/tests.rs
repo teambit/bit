@@ -1,4 +1,5 @@
-//! Unit tests for host component ordering and directory validation.
+//! Unit tests for host component ordering and directory validation in
+//! `bit-install`.
 
 use super::ordered;
 use crate::model::WorkspaceComponent;

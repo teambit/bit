@@ -1,4 +1,5 @@
-//! Unit tests for `workspace.jsonc`, `scope.json`, and global configuration loading.
+//! Unit tests for `workspace.jsonc`, `scope.json`, and global configuration
+//! loading in `bit-install`.
 
 use super::{
     DependencyResolverConfig, EffectiveConfig, MergeConfig, ScopeJson, WorkspaceConfig,

@@ -1,4 +1,5 @@
-//! Unit tests for cross-platform file and directory linking primitives.
+//! Unit tests for cross-platform file and directory linking primitives in
+//! `bit-install`.
 
 #[cfg(unix)]
 mod unix;

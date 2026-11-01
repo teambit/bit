@@ -1,4 +1,5 @@
-//! Unit tests for pnpm configuration overlay options and queries.
+//! Unit tests for pnpm configuration overlay options and queries in
+//! `bit-install`.
 
 use super::{CallOverlay, Query, install_config, query_config};
 use crate::{

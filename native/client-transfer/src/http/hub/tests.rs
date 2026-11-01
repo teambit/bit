@@ -1,4 +1,4 @@
-//! Unit tests for hub streaming JSON-line replies.
+//! Unit tests for hub streaming JSON-line replies in `bit-client-transfer`.
 
 use super::{HubReply, StatusCode, finish, line};
 use serde_json::{Value, json};

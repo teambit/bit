@@ -1,4 +1,5 @@
-//! Unit tests for package name extraction, validation, and save prefixes.
+//! Unit tests for package name extraction, validation, and save prefixes in
+//! `bit-install`.
 
 use super::{extract_package_name, is_valid_package_name, version_with_save_prefix};
 

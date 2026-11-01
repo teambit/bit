@@ -1,4 +1,5 @@
-//! Unit tests for empty documentation proof detection.
+//! Unit tests for empty documentation proof detection in
+//! `bit-dependency-scanner`.
 
 use super::proves_empty_docs;
 

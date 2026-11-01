@@ -1,4 +1,5 @@
-//! Unit tests for vendored trusted build scripts and `allowScripts` policy overrides.
+//! Unit tests for vendored trusted build scripts and `allowScripts` policy
+//! overrides in `bit-install`.
 
 use super::{allowed_scripts, resolve, trusted_package_names};
 use crate::config::DependencyResolverConfig;

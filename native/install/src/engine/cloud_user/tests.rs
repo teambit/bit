@@ -1,4 +1,5 @@
-//! Unit tests for Bit Cloud GraphQL `me.username` lookup and fallback.
+//! Unit tests for Bit Cloud `GraphQL` `me.username` lookup and fallback in
+//! `bit-install`.
 
 use super::{LOOKUP_TIMEOUT, cloud_username};
 use crate::model::GlobalConfig;

@@ -1,4 +1,5 @@
-//! Unit tests for registry URL and authentication header resolution.
+//! Unit tests for registry URL and authentication header resolution in
+//! `bit-install`.
 
 use super::{Registries, Registry, bit_cloud_registry, resolve};
 use crate::{config::DependencyResolverConfig, model::GlobalConfig};

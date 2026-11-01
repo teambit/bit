@@ -1,4 +1,5 @@
-//! Unit tests for npm package name and version specifier splitting.
+//! Unit tests for npm package name and version specifier splitting in
+//! `bit-install`.
 
 use super::parse_package_name;
 use pretty_assertions::assert_eq;

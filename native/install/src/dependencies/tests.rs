@@ -1,3 +1,6 @@
+//! Unit tests for dependency detection, resolution, and dev-file classification
+//! in `bit-install`.
+
 use super::{
     DEFAULT_DEV_PATTERNS, DependencyOptions, DevPatternConfig, Subject, Workspace, cache, compute,
     data::Detected,

@@ -1,4 +1,5 @@
-//! Cases of `hoist-dependencies.spec.ts`, plus the deduplication entry points.
+//! Cases of `hoist-dependencies.spec.ts`, plus the deduplication entry points
+//! in `bit-install`.
 
 use super::{Deduped, IndexEntry, Item, dedupe, exclude_workspace, hoist::hoist, policy_manifest};
 use crate::{

@@ -1,4 +1,5 @@
-//! Unit tests for workspace component `package.json` synthesis and transformers.
+//! Unit tests for workspace component `package.json` synthesis and transformers
+//! in `bit-install`.
 
 use super::{PackageJsonContext, finish, snap_to_semver, transformed};
 use crate::model::{

@@ -1,4 +1,5 @@
-//! Unit tests for core aspect detection order across source and compiled files.
+//! Unit tests for core aspect detection order across source and compiled files
+//! in `bit-install`.
 
 use super::{Resolver, Subject, Workspace, detect};
 use crate::{

@@ -1,4 +1,5 @@
-//! Unit tests for root `link:` dependencies and core aspect store linking.
+//! Unit tests for root `link:` dependencies and core aspect store linking in
+//! `bit-install`.
 
 use super::{
     LinkOptions, link_core_aspects_to_hoisted_store, linked_root_deps,

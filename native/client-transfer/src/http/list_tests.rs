@@ -1,4 +1,5 @@
-//! Unit tests for GraphQL component and lane listing over HTTP.
+//! Unit tests for `GraphQL` component and lane listing over HTTP in
+//! `bit-client-transfer`.
 
 use super::{Listed, Network};
 use crate::GlobalConfig;

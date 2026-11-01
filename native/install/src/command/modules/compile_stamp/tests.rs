@@ -1,4 +1,4 @@
-//! Unit tests for compile stamp persistence and restoration.
+//! Unit tests for compile stamp persistence and restoration in `bit-install`.
 
 use super::{Inputs, Restore, check, has_external_links, path, remove, restore, write};
 use crate::model::{ComponentId, Project, WorkspaceComponent};

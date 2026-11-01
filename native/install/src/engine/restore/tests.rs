@@ -1,4 +1,5 @@
-//! Unit tests for converting stored dependency graphs into `pnpm-lock.yaml` structures.
+//! Unit tests for converting stored dependency graphs into `pnpm-lock.yaml`
+//! structures in `bit-install`.
 
 use super::{
     convert::{Graph, importer_id, to_lockfile},
