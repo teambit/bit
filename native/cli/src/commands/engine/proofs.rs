@@ -18,7 +18,7 @@ impl Engine {
         if proofs.is_empty() {
             return Ok(());
         }
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::with_capacity(proofs.len());
         let unique = proofs
             .iter()
             .filter(|proof| !proof.is_null() && seen.insert(*proof))
@@ -52,21 +52,20 @@ impl Engine {
 }
 
 fn frames(proofs: &[&Value]) -> io::Result<Vec<Range<usize>>> {
-    let overhead =
-        serde_json::to_vec(&json!({"kind":"dependencyFreshValidate","readSet":[]}))?.len();
+    const OVERHEAD: usize = r#"{"kind":"dependencyFreshValidate","readSet":[]}"#.len();
     let mut output = Vec::new();
     let mut start = 0;
-    let mut bytes = overhead;
+    let mut bytes = OVERHEAD;
     for (index, proof) in proofs.iter().enumerate() {
         let length = serde_json::to_vec(proof)?.len();
-        if length > MAX_REQUEST.saturating_sub(overhead) {
+        if length > MAX_REQUEST.saturating_sub(OVERHEAD) {
             return Err(io::Error::other("status input limit"));
         }
         if index - start == MAX_PROOFS || bytes + length + usize::from(index > start) > MAX_REQUEST
         {
             output.push(start..index);
             start = index;
-            bytes = overhead;
+            bytes = OVERHEAD;
         }
         bytes += length + usize::from(index > start);
     }

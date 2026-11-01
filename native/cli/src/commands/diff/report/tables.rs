@@ -13,6 +13,9 @@ pub(super) fn format(row: &mut Value) -> io::Result<()> {
     let Some(fields) = row.get_mut("fieldsDiff").and_then(Value::as_array_mut) else {
         return Ok(());
     };
+    let args = std::env::args_os().collect::<Vec<_>>();
+    let colors = table::colors(&args);
+    let chalk = Chalk::detect(&args);
     for field in fields {
         let name = text(
             field
@@ -20,33 +23,31 @@ pub(super) fn format(row: &mut Value) -> io::Result<()> {
                 .or_else(|| field.get("name")),
         )?
         .trim();
-        if ![
-            "packageDependencies",
-            "devPackageDependencies",
-            "peerPackageDependencies",
-            "dependencies",
-            "devDependencies",
-            "peerDependencies",
-            "extensionDependencies",
-        ]
-        .contains(&name)
-        {
+        if !matches!(
+            name,
+            "packageDependencies"
+                | "devPackageDependencies"
+                | "peerPackageDependencies"
+                | "dependencies"
+                | "devDependencies"
+                | "peerDependencies"
+                | "extensionDependencies",
+        ) {
             continue;
         }
-        field["diffOutput"] = Value::String(render(name, text(field.get("diffOutput"))?)?);
+        field["diffOutput"] =
+            Value::String(render(name, text(field.get("diffOutput"))?, colors, chalk)?);
     }
     Ok(())
 }
 
-fn render(name: &str, diff: &str) -> io::Result<String> {
+fn render(name: &str, diff: &str, colors: bool, chalk: Chalk) -> io::Result<String> {
     let plain = table::strip_sgr(diff);
     let mut lines = plain.trim_start_matches('\n').lines();
     let left = label(lines.next(), &format!("--- {name} "), " original")?;
     let right = label(lines.next(), &format!("+++ {name} "), " modified")?;
     let rows = changes(lines.collect::<Vec<_>>().as_slice())?;
-    let args = std::env::args_os().collect::<Vec<_>>();
-    let colors = table::colors(&args);
-    let title = Chalk::detect(&args).bold(name);
+    let title = chalk.bold(name);
     Ok(format!("\n{title}\n{}", table::render(&["name", "diff", left, right], &rows, colors)))
 }
 

@@ -111,17 +111,17 @@ impl Engine {
 }
 
 fn response_error(input: &Value, response: &Response) -> io::Error {
+    let error_text = response.error
+        .as_deref()
+        .or_else(|| response.data.get("error").and_then(Value::as_str))
+        .or_else(|| response.failed.as_ref().and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty());
     if response.canonical_error == Some(true)
-        && let Some(message) = response.error
-            .as_deref()
-            .or_else(|| response.data.get("error").and_then(Value::as_str))
-            .or_else(|| response.failed.as_ref().and_then(Value::as_str))
-            .map(str::trim)
-            .filter(|msg| !msg.is_empty())
-            .map(str::to_owned)
+        && let Some(message) = error_text
     {
         return io::Error::other(CanonicalError {
-            message,
+            message: message.to_owned(),
             progress: response.data.get("progress").cloned(),
         });
     }
@@ -131,13 +131,7 @@ fn response_error(input: &Value, response: &Response) -> io::Error {
         .map(str::trim)
         .filter(|kind| !kind.is_empty())
         .unwrap_or("request");
-    let reason = response.error
-        .as_deref()
-        .or_else(|| response.data.get("error").and_then(Value::as_str))
-        .or_else(|| response.failed.as_ref().and_then(Value::as_str))
-        .map(str::trim)
-        .filter(|error| !error.is_empty())
-        .map_or_else(String::new, |error| format!(": {error}"));
+    let reason = error_text.map_or_else(String::new, |error| format!(": {error}"));
     io::Error::other(format!("the engine declined {kind}{reason}"))
 }
 

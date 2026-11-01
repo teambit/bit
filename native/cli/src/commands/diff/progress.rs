@@ -84,6 +84,7 @@ fn foreign_tagged_target(root: &Path, result: &Value) -> bool {
     else {
         return false;
     };
+    let scope_prefix = format!("{scope}/");
     result
         .as_array()
         .is_some_and(|rows| {
@@ -98,7 +99,7 @@ fn foreign_tagged_target(root: &Path, result: &Value) -> bool {
                         .and_then(|id| id.rsplit_once('@'))
                         .map(|(_, version)| version.trim())
                         .unwrap_or_default();
-                    !(identity.starts_with(&format!("{scope}/"))
+                    !(identity.starts_with(&scope_prefix)
                         || version.len() == 40
                             && version.bytes().all(|byte| byte.is_ascii_hexdigit()))
                 })

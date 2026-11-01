@@ -35,13 +35,9 @@ pub(super) struct Options {
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
-            !matches!(
-                val.to_string_lossy()
-                    .trim()
-                    .to_ascii_lowercase()
-                    .as_str(),
-                "" | "0" | "false",
-            )
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
         })
 }
 

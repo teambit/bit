@@ -108,20 +108,15 @@ fn environments(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> {
             .collect::<Vec<_>>()
             .join("\n"),
     );
-    let mut paths = Vec::new();
+    let mut paths: Vec<&str> = Vec::with_capacity(broken.len());
     for row in &broken {
-        if !paths.contains(&row["pathToDelete"]) {
-            paths.push(row["pathToDelete"].clone());
+        if let Some(path) = row["pathToDelete"].as_str()
+            && !paths.contains(&path)
+        {
+            paths.push(path);
         }
     }
-    let treatment = format!(
-        "please delete the following paths:\n{}",
-        paths
-            .iter()
-            .filter_map(Value::as_str)
-            .collect::<Vec<_>>()
-            .join("\n"),
-    );
+    let treatment = format!("please delete the following paths:\n{}", paths.join("\n"));
     Ok(diagnosis.result(
         json!({"valid":broken.is_empty(),"data":{"brokenSymlinks":broken}}),
         &symptoms,
@@ -129,6 +124,7 @@ fn environments(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> {
     ))
 }
 fn visit(directory: &Path, broken: &mut Vec<Value>) -> io::Result<()> {
+    const MARKER: &str = if cfg!(windows) { r"node_modules\@bit" } else { "node_modules/@bit" };
     if !directory.is_dir() {
         return Ok(());
     }
@@ -141,14 +137,9 @@ fn visit(directory: &Path, broken: &mut Vec<Value>) -> io::Result<()> {
         } else if file_type.is_symlink()
             && !path.exists()
             && let Ok(link) = fs::read_link(&path)
+            && let Some((prefix, _)) = path.to_string_lossy().split_once(MARKER)
         {
-            let marker = Path::new("node_modules").join("@bit");
-            if let Some((prefix, _)) = path
-                .to_string_lossy()
-                .split_once(marker.to_string_lossy().as_ref())
-            {
-                broken.push(json!({"symlinkPath":path,"brokePath":link,"pathToDelete":prefix.trim_end_matches(['/', '\\'])}));
-            }
+            broken.push(json!({"symlinkPath":path,"brokePath":link,"pathToDelete":prefix.trim_end_matches(['/', '\\'])}));
         }
     }
     Ok(())

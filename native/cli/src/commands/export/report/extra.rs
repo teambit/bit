@@ -27,9 +27,10 @@ pub(super) fn missing(receipt: &Value, format: &Formatter) -> String {
     if missing.is_empty() {
         return String::new();
     }
+    let warn = format.warn_symbol();
     let items = missing
         .iter()
-        .map(|id| Formatter::item_with(id, &format.warn_symbol()))
+        .map(|id| Formatter::item_with(id, &warn))
         .collect::<Vec<_>>();
     let section =
         format.section("components not exported (no remote scope configured)", "", &items);

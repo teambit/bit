@@ -23,7 +23,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let chalk = Chalk::detect(args);
     let dir = cache::cache_root().join("last-command-details");
     let text = render_details(&dir, chalk)?;
-    writeln!(io::stdout(), "{text}")?;
+    let mut stdout = io::stdout().lock();
+    writeln!(stdout, "{text}")?;
+    stdout.flush()?;
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 

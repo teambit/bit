@@ -24,12 +24,9 @@ pub(super) fn importer_tree_node(
 }
 
 fn importer_dep_field(importer: &ProjectSnapshot, alias: &str) -> Option<&'static str> {
-    let alias = alias.trim();
+    let pkg_name = pnpm_lockfile::PkgName::parse(alias.trim()).ok()?;
     let has = |group: Option<&pnpm_lockfile::ResolvedDependencyMap>| {
-        group.is_some_and(|deps| {
-            deps.keys()
-                .any(|key| key.to_string() == alias)
-        })
+        group.is_some_and(|deps| deps.contains_key(&pkg_name))
     };
     if has(importer.dev_dependencies.as_ref()) {
         Some("devDependencies")

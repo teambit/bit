@@ -230,17 +230,18 @@ impl State<'_> {
             .as_array()?
             .iter()
             .find(|model| {
-                format!(
-                    "{}/{}",
-                    model["scope"]
-                        .as_str()
-                        .map(str::trim)
-                        .unwrap_or_default(),
-                    model["name"]
-                        .as_str()
-                        .map(str::trim)
-                        .unwrap_or_default(),
-                ) == target_id
+                let scope = model["scope"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default();
+                let name = model["name"]
+                    .as_str()
+                    .map(str::trim)
+                    .unwrap_or_default();
+                target_id
+                    .strip_prefix(scope)
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(name)
             })
     }
 
@@ -285,7 +286,11 @@ impl State<'_> {
             .flatten()
             .any(|row| {
                 crate::commands::version_history::build::row_scope_and_name(row)
-                    .is_some_and(|(scope, name)| format!("{scope}/{name}") == id)
+                    .is_some_and(|(scope, name)| {
+                        id.strip_prefix(scope)
+                            .and_then(|rest| rest.strip_prefix('/'))
+                            == Some(name)
+                    })
             });
         !merging
             && model["head"].is_string()

@@ -39,14 +39,7 @@ pub(super) fn results(
                     text(&metadata["category"]).into(),
                     text(&metadata["name"]).into(),
                     text(&metadata["description"]).into(),
-                    if row["bareResult"]["valid"] == true
-                        || row["bareResult"]["pass"] == true
-                        || row["bareResult"]["passed"] == true
-                    {
-                        chalk.green("passed")
-                    } else {
-                        chalk.red("failed")
-                    },
+                    if is_passed(row) { chalk.green("passed") } else { chalk.red("failed") },
                 ]
             }),
     );
@@ -56,6 +49,10 @@ pub(super) fn results(
         .filter(|path| !path.is_empty())
         .map_or_else(String::new, |path| format!("File written to {path}"));
     format!("{}\n\n{}\n{full}\n{written}", metadata(meta), table(&rows))
+}
+fn is_passed(row: &Value) -> bool {
+    let bare = &row["bareResult"];
+    bare["valid"] == true || bare["pass"] == true || bare["passed"] == true
 }
 fn text(value: &Value) -> &str {
     value
@@ -85,8 +82,7 @@ fn errors(results: &[Value], chalk: Chalk) -> String {
     let sections = results
         .iter()
         .map(|row| {
-            let bare = &row["bareResult"];
-            if bare["valid"] == true || bare["pass"] == true || bare["passed"] == true {
+            if is_passed(row) {
                 String::new()
             } else {
                 format!(
@@ -155,7 +151,10 @@ fn line(row: &[String], widths: &[usize]) -> String {
 }
 
 pub(super) fn strip(text: &str) -> String {
-    let mut output = String::new();
+    if !text.contains("\u{1b}[") {
+        return text.to_owned();
+    }
+    let mut output = String::with_capacity(text.len());
     let mut rest = text;
     while let Some(start) = rest.find("\u{1b}[") {
         output.push_str(&rest[..start]);

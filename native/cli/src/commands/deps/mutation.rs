@@ -259,7 +259,7 @@ fn set_policy_field(spec: &SetSpec<'_>) -> &'static str {
 }
 
 fn build_added_packages(spec: &SetSpec<'_>) -> Result<Value, Failure> {
-    let mut pkg_map = Map::new();
+    let mut pkg_map = Map::with_capacity(spec.packages.len());
     for (name, ver) in spec.packages {
         let (name, ver) = (name.trim(), ver.trim());
         if name.is_empty() || ver.is_empty() {
@@ -298,7 +298,7 @@ pub(super) fn prepare_list_action(
 }
 
 pub(super) fn format_json_indent_4(val: &Value) -> io::Result<String> {
-    let mut buf = Vec::new();
+    let mut buf = Vec::with_capacity(256);
     let mut ser =
         serde_json::Serializer::with_formatter(&mut buf, PrettyFormatter::with_indent(b"    "));
     val.serialize(&mut ser).map_err(io::Error::other)?;

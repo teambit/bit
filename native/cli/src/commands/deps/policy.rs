@@ -27,15 +27,19 @@ impl WorkspaceDepsContext {
             return;
         };
         self.apply_policy_object(&ext["config"]["policy"], identity, deps);
-        if let Some(arr) = ext["data"]["policy"].as_array() {
-            for item in arr {
-                self.apply_model_policy_item(item, identity, deps);
-            }
+        for item in ext["data"]["policy"]
+            .as_array()
+            .into_iter()
+            .flatten()
+        {
+            self.apply_model_policy_item(item, identity, deps);
         }
-        if let Some(arr) = ext["data"]["dependencies"].as_array() {
-            for item in arr {
-                apply_model_dep_item(item, identity, deps);
-            }
+        for item in ext["data"]["dependencies"]
+            .as_array()
+            .into_iter()
+            .flatten()
+        {
+            apply_model_dep_item(item, identity, deps);
         }
     }
 

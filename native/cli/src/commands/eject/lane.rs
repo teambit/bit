@@ -79,7 +79,7 @@ pub(in crate::commands) fn eject_from_lane(
     workspace_command::execute_then(root, args, "eject", |_| {
         let bitmap_before = fs::read(root.join(".bitmap"))?;
         let mut bitmap = parse_jsonc(&bitmap_before)?;
-        let mut ejected = Vec::new();
+        let mut ejected = Vec::with_capacity(ids.len());
         for id in ids {
             let main_version = resolve_main_version(models, id)?;
             if eject_one_lane_component(root, &mut bitmap, id, &main_version)? {
@@ -105,12 +105,16 @@ fn resolve_main_version(models: &[Value], id: &str) -> io::Result<String> {
         .iter()
         .find(|model| {
             let name = model["name"].as_str().map_or("", str::trim);
-            let model_id = model["scope"]
+            if name == identity {
+                return true;
+            }
+            model["scope"]
                 .as_str()
                 .map(str::trim)
                 .filter(|scope| !scope.is_empty())
-                .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
-            model_id == identity || name == identity
+                .and_then(|scope| identity.strip_prefix(scope))
+                .and_then(|rest| rest.strip_prefix('/'))
+                == Some(name)
         })
         .ok_or_else(|| {
             io::Error::other(format!(r#"unable to eject "{id}" as it has no main version"#))

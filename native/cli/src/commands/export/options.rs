@@ -132,17 +132,17 @@ fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
 }
 
 fn set_combined_short(options: &mut Options, arg: &str) -> bool {
-    let arg = arg.trim();
-    if !arg.starts_with('-')
-        || arg.starts_with("--")
-        || arg.len() <= 2
-        || !arg[1..]
+    let Some(short) = arg.trim().strip_prefix('-') else {
+        return false;
+    };
+    if short.len() <= 1
+        || !short
             .bytes()
             .all(|byte| matches!(byte, b'e' | b'a' | b'j'))
     {
         return false;
     }
-    for byte in arg[1..].bytes() {
+    for byte in short.bytes() {
         let slot = match byte {
             b'e' => &mut options.lifecycle.eject,
             b'a' => &mut options.all,

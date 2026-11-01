@@ -41,13 +41,13 @@ pub(super) fn prepare_write(
     target: WriteTarget,
 ) -> Result<(PathBuf, WriteTarget, Map<String, Value>), Failure> {
     let ctx = WorkspaceDepsContext::load(root)?;
-    let mut rows = Vec::new();
     let root_policy = policy::workspace_policy(
         &ctx.ws_config.dependency_resolver,
         ctx.ws.root_package_json.as_ref(),
         None,
     );
-    let mut root_names = HashSet::new();
+    let mut rows = Vec::with_capacity(root_policy.len());
+    let mut root_names = HashSet::with_capacity(root_policy.len());
     for entry in root_policy {
         let (name, range) = (entry.name.trim(), entry.version.trim());
         if !name.is_empty() && !range.is_empty() && range != "-" {

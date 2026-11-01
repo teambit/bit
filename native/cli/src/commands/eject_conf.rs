@@ -252,15 +252,16 @@ fn render_ejected_file(
     }
     let comp_json =
         json!({ "componentId": comp_id, "propagate": opts.propagate, "extensions": extensions });
-    let json_str =
-        serde_json::to_string_pretty(&comp_json).map_err(|err| Failure::Declined(err.to_string()))?;
+    let mut bytes =
+        serde_json::to_vec_pretty(&comp_json).map_err(|err| Failure::Declined(err.to_string()))?;
+    bytes.push(b'\n');
     Ok(EjectedFile {
         abs_path: abs_path.to_path_buf(),
         rel_path: Path::new(entry.root_dir.trim())
             .join("component.json")
             .to_string_lossy()
             .into_owned(),
-        bytes: format!("{json_str}\n").into_bytes(),
+        bytes,
     })
 }
 

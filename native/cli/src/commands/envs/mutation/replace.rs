@@ -125,8 +125,8 @@ fn resolve_old_env_bare(bitmap: &Bitmap, old_env: &str) -> String {
             let entry_dir = entry.root_dir.trim().trim_end_matches('/');
             entry.owns_its_dir()
                 && ((!entry_dir.is_empty() && entry_dir == normalized)
-                    || entry.id.to_string_without_version() == bare
-                    || entry.id.name == bare)
+                    || entry.id.name == bare
+                    || entry.id.to_string_without_version() == bare)
         })
     {
         return entry.id.to_string_without_version();
@@ -206,8 +206,8 @@ pub(super) fn resolve_verified_env(
         .find(|entry| {
             entry.owns_its_dir()
                 && ((!entry.root_dir.is_empty() && entry.root_dir == normalized)
-                    || entry.id.to_string_without_version() == bare_env
-                    || entry.id.name == bare_env)
+                    || entry.id.name == bare_env
+                    || entry.id.to_string_without_version() == bare_env)
         })
     else {
         return Err(Failure::Declined(format!("non-core non-workspace env {raw_env}")));

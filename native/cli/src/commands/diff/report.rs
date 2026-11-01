@@ -80,7 +80,11 @@ fn matches_file(path: &str, filter: &str) -> bool {
     let path = path.strip_prefix("./").unwrap_or(&path);
     let filter = filter.trim().replace('\\', "/");
     let filter = filter.strip_prefix("./").unwrap_or(&filter);
-    !filter.is_empty() && (path == filter || path.ends_with(&format!("/{filter}")))
+    !filter.is_empty()
+        && (path == filter
+            || path
+                .strip_suffix(filter)
+                .is_some_and(|prefix| prefix.ends_with('/')))
 }
 
 fn counts(diff: &str) -> (usize, usize) {
@@ -176,7 +180,7 @@ fn summary(row: &Value, title: &str, stat: bool) -> io::Result<String> {
     } else {
         0
     };
-    let mut lines = Vec::new();
+    let mut lines = Vec::with_capacity(files.len() + fields.len());
     for file in files {
         let status = match text(file.get("status"))?.trim() {
             "MODIFIED" => "M",

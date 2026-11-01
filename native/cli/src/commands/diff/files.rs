@@ -51,9 +51,9 @@ fn replace_first(text: &str, regex: &Regex, replacement: &str) -> String {
     let (before, matched, after) = (&text[..range.start], &text[range.clone()], &text[range.end..]);
     let mut expanded = String::with_capacity(replacement.len());
     let mut chars = replacement.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c != '$' {
-            expanded.push(c);
+    while let Some(ch) = chars.next() {
+        if ch != '$' {
+            expanded.push(ch);
             continue;
         }
         match chars.peek() {
@@ -88,16 +88,19 @@ pub fn diff_texts(left: &str, right: &str) -> io::Result<String> {
         .arg(&a)
         .arg(&b)
         .output()?;
-    let stdout = String::from_utf8(output.stdout).map_err(io::Error::other)?;
+    let mut stdout = String::from_utf8(output.stdout).map_err(io::Error::other)?;
     // execa rejects on a non-zero exit; `diffFiles` keeps the output of one that has it.
     if !output.status.success() && (output.status.code().is_none() || stdout.is_empty()) {
         return Err(io::Error::other("git diff failed"));
     }
     // `strip-final-newline`: one `\n`, and a `\r` before it.
-    let text = stdout
-        .strip_suffix('\n')
-        .map_or(stdout.as_str(), |text| text.strip_suffix('\r').unwrap_or(text));
-    Ok(text.to_string())
+    if stdout.ends_with('\n') {
+        stdout.pop();
+        if stdout.ends_with('\r') {
+            stdout.pop();
+        }
+    }
+    Ok(stdout)
 }
 
 struct TempDir(PathBuf);

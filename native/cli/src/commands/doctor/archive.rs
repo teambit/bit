@@ -41,8 +41,11 @@ pub(super) fn save(
     }
     append_results(&mut builder, results, meta)?;
     debug_log(&mut builder)?;
-    if !options.archive && context.root.join(".bitmap").is_file() {
-        append(&mut builder, ".bitmap", &fs::read(context.root.join(".bitmap"))?)?;
+    if !options.archive {
+        let bitmap_path = context.root.join(".bitmap");
+        if bitmap_path.is_file() {
+            append(&mut builder, ".bitmap", &fs::read(bitmap_path)?)?;
+        }
     }
     builder.finish()?;
     Ok(Some(filename.to_string_lossy().into_owned()))
@@ -80,19 +83,19 @@ fn walk(
         let mut entries = fs::read_dir(root.join(directory))?.collect::<io::Result<Vec<_>>>()?;
         entries.sort_by_key(fs::DirEntry::file_name);
         for entry in entries {
-            let relative = entry
-                .path()
+            let path = entry.path();
+            let relative = path
                 .strip_prefix(root)
                 .map_err(io::Error::other)?
                 .to_path_buf();
-            if excluded_entry(&entry.path(), &relative, output, options) {
+            if excluded_entry(&path, &relative, output, options) {
                 continue;
             }
             if entry.file_type()?.is_dir() {
-                builder.append_dir(&relative, entry.path())?;
+                builder.append_dir(&relative, &path)?;
                 queue.push_back(relative);
             } else {
-                builder.append_path_with_name(entry.path(), relative)?;
+                builder.append_path_with_name(&path, relative)?;
             }
         }
     }

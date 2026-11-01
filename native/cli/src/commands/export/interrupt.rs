@@ -45,13 +45,9 @@ impl Guard {
             Chalk::detect(&env::args_os().collect::<Vec<_>>()).enabled(),
             Ordering::Release,
         );
-        match platform::install() {
-            Ok(previous) => Ok(Self(previous)),
-            Err(error) => {
-                ACTIVE.store(false, Ordering::Release);
-                Err(error)
-            }
-        }
+        platform::install()
+            .inspect_err(|_| ACTIVE.store(false, Ordering::Release))
+            .map(Self)
     }
 }
 impl Drop for Guard {

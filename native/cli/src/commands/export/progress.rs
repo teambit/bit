@@ -39,7 +39,7 @@ impl Exported {
         }
         if !self.output.observed {
             if self.output.central_hub {
-                for message in self.output.messages.clone() {
+                for message in std::mem::take(&mut self.output.messages) {
                     self.hub_message(&message, output);
                 }
             } else {
@@ -96,9 +96,12 @@ impl Exported {
     }
 
     fn hub_message(&mut self, message: &str, output: &Output) {
-        let previous = self.output.last_hub_message.take().unwrap_or_else(|| self.hub_initial());
         let trimmed = message.trim();
-        let resolved = if trimmed.is_empty() { previous } else { trimmed.to_owned() };
+        let resolved = if trimmed.is_empty() {
+            self.output.last_hub_message.take().unwrap_or_else(|| self.hub_initial())
+        } else {
+            trimmed.to_owned()
+        };
         output.restart(&resolved);
         self.output.last_hub_message = Some(resolved);
     }

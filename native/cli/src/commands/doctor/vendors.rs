@@ -11,8 +11,9 @@ pub(super) fn version(command: &str, argument: &str, clean_stderr: bool) -> Opti
     {
         return None;
     }
-    let text = String::from_utf8_lossy(strip_final_newline(&output.stdout)).trim().to_owned();
-    (!text.is_empty()).then_some(text)
+    let raw = String::from_utf8_lossy(strip_final_newline(&output.stdout));
+    let trimmed = raw.trim();
+    (!trimmed.is_empty()).then(|| trimmed.to_owned())
 }
 fn strip_final_newline(mut bytes: &[u8]) -> &[u8] {
     while let Some(stripped) = bytes

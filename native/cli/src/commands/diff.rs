@@ -280,14 +280,16 @@ fn comparison(
 ) -> io::Result<Value> {
     if let Some(to_version) = to_version {
         let from_version = from_version.ok_or_else(|| decline("diff target version absent"))?;
+        let token = import_token(capture);
+        let git_executable = git::executable(root)?;
         let comparisons = selected
             .iter()
             .map(|target| {
                 let identity = text(target.get("identity"))?;
                 engine.request::<Value>(&json!({
                     "kind":"versionDiff","root":root,"identity":identity,
-                    "fromVersion":from_version,"toVersion":to_version,"importToken":import_token(capture),
-                    "gitExecutable":git::executable(root)?,"color":true,
+                    "fromVersion":from_version,"toVersion":to_version,"importToken":token,
+                    "gitExecutable":&git_executable,"color":true,
                 }))
             })
             .collect::<io::Result<Vec<_>>>()?;

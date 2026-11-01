@@ -150,7 +150,7 @@ pub(super) fn set_env_in_bitmap_row(
 
 fn prepare_unset(mut ctx: BitmapContext, pattern: &str) -> Result<Prepared, Failure> {
     let matched = selection::resolve_pattern_entries(&ctx.root, &ctx.bitmap, pattern, ctx.chalk)?;
-    let mut ids = Vec::new();
+    let mut ids = Vec::with_capacity(matched.len());
     let mut bitmap_changed = false;
     let mut comp_json_edits = Vec::new();
     for entry in matched {
@@ -231,18 +231,13 @@ fn remove_env_from_map_with_fallback(
         .trim();
     let mut any_removed = map.remove(&curr_env).is_some() | map.remove(bare_env).is_some();
     let prefix = format!("{bare_env}@");
-    let versioned_keys = map
-        .keys()
-        .filter(|key| {
-            key.starts_with(&prefix)
-                || key.as_str() == "teambit.envs/envs"
-                || key.starts_with("teambit.envs/envs@")
-        })
-        .cloned()
-        .collect::<Vec<_>>();
-    for key in versioned_keys {
-        any_removed |= map.remove(&key).is_some();
-    }
+    map.retain(|key, _| {
+        let remove = key.starts_with(&prefix)
+            || key.as_str() == "teambit.envs/envs"
+            || key.starts_with("teambit.envs/envs@");
+        any_removed |= remove;
+        !remove
+    });
     any_removed
 }
 

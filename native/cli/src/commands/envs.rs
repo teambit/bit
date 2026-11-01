@@ -242,15 +242,18 @@ fn parse_update(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     match tokens.as_slice() {
         [] => Some(Subcommand::Update { env_id: None, pattern: None }),
-        [env_id] if is_valid_update_env_id(env_id) => {
-            Some(Subcommand::Update { env_id: Some(env_id.trim().to_owned()), pattern: None })
+        [env_id] => {
+            let env_id = env_id.trim();
+            is_valid_update_env_id(env_id)
+                .then(|| Subcommand::Update { env_id: Some(env_id.to_owned()), pattern: None })
         }
-        [env_id, pattern]
-            if is_valid_update_env_id(env_id) && is_supported_pattern(pattern.trim()) =>
-        {
-            Some(Subcommand::Update {
-                env_id: Some(env_id.trim().to_owned()),
-                pattern: Some(pattern.trim().to_owned()),
+        [env_id, pattern] => {
+            let (env_id, pattern) = (env_id.trim(), pattern.trim());
+            (is_valid_update_env_id(env_id) && is_supported_pattern(pattern)).then(|| {
+                Subcommand::Update {
+                    env_id: Some(env_id.to_owned()),
+                    pattern: Some(pattern.to_owned()),
+                }
             })
         }
         _ => None,

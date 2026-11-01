@@ -44,7 +44,7 @@ pub(super) fn package_dependencies(
     if left.is_empty() && right.is_empty() {
         return Ok(None);
     }
-    let mut changes = Vec::new();
+    let mut changes = Vec::with_capacity(left.len() + right.len());
     for name in left.keys() {
         let (ours, theirs) = (pkg_version(left, name)?, pkg_version(right, name)?);
         if ours.is_none() || ours == theirs {

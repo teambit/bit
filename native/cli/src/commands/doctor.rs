@@ -36,7 +36,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if options.validate().is_err() && in_ci {
         return Ok(Outcome::Declined("CI doctor option validation error stack".into()));
     }
-    if in_ci && colored_unknown(&options, Chalk::detect(args)) {
+    let chalk = Chalk::detect(args);
+    if in_ci && colored_unknown(&options, chalk) {
         return Ok(Outcome::Declined("published colored diagnosis error stack".into()));
     }
     let context = match prepare_context(&options) {
@@ -49,7 +50,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let work = |output: &bit_install::output::Output| {
-        produce(&options, context.as_ref(), remote.as_ref(), Chalk::detect(args), output)
+        produce(&options, context.as_ref(), remote.as_ref(), chalk, output)
     };
     execute_doctor(&cwd, args, options.json, work)
 }
@@ -154,7 +155,7 @@ fn examine(
             .ok_or_else(|| io::Error::other(format!("error: diagnosis {trimmed} not found")))?;
         return Ok(vec![checks::examine(diagnosis, context)?]);
     }
-    let mut results = Vec::new();
+    let mut results = Vec::with_capacity(catalog::DIAGNOSES.len());
     for (diagnosis, result) in catalog::DIAGNOSES
         .iter()
         .zip(examine_all(context))

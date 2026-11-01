@@ -200,10 +200,10 @@ fn workspace_env_has_version(bitmap: &Bitmap, bare: &str) -> bool {
         .iter()
         .any(|entry| {
             entry.owns_its_dir()
-                && entry.id.to_string_without_version() == bare
                 && entry.id.version
                     .as_deref()
                     .is_some_and(|ver| !ver.trim().is_empty())
+                && entry.id.to_string_without_version() == bare
         })
 }
 

@@ -31,11 +31,7 @@ pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
         }
         Some(_) => return Err(io::Error::other("invalid rootComponentsDir")),
     };
-    let cloud_domain = staged["cloudDomain"]
-        .as_str()
-        .map(str::trim)
-        .filter(|domain| !domain.is_empty())
-        .unwrap_or("bit.cloud");
+    let cloud_domain = cloud_domain(staged);
     for plan in plans {
         let manifest = (!plan.component.has_package_json).then(|| {
             prepared_package_manifest(
@@ -58,11 +54,7 @@ pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
 
 /// Check all captured configuration and manifest inputs before communication starts.
 pub(super) fn validate(prepared: &Value) -> io::Result<()> {
-    let cloud_domain = prepared["cloudDomain"]
-        .as_str()
-        .map(str::trim)
-        .filter(|domain| !domain.is_empty())
-        .unwrap_or("bit.cloud");
+    let cloud_domain = cloud_domain(prepared);
     for plan in plans(prepared)? {
         let _ = prepared_package_manifest(
             &plan.component,
@@ -73,6 +65,14 @@ pub(super) fn validate(prepared: &Value) -> io::Result<()> {
         );
     }
     Ok(())
+}
+
+fn cloud_domain(value: &Value) -> &str {
+    value["cloudDomain"]
+        .as_str()
+        .map(str::trim)
+        .filter(|domain| !domain.is_empty())
+        .unwrap_or("bit.cloud")
 }
 
 fn plans(receipt: &Value) -> io::Result<Vec<Plan>> {

@@ -102,21 +102,21 @@ fn enumerate(
 /// byte order, as libuv's `scandir` sorts them. A file's position is its
 /// directory's depth, then its directory's path, then its name.
 pub(super) fn walk_order(left: &str, right: &str) -> std::cmp::Ordering {
-    let split = |path: &str| -> (Vec<String>, String) {
-        let mut parts: Vec<String> = path
-            .trim()
-            .split(['/', '\\'])
-            .filter(|segment| !segment.is_empty() && *segment != ".")
-            .map(str::to_string)
-            .collect();
-        let name = parts.pop().unwrap_or_default();
-        (parts, name)
-    };
-    let (left_dirs, left_name) = split(left);
-    let (right_dirs, right_name) = split(right);
+    let (left_dirs, left_name) = split_walk_segments(left);
+    let (right_dirs, right_name) = split_walk_segments(right);
     left_dirs
         .len()
         .cmp(&right_dirs.len())
         .then_with(|| left_dirs.cmp(&right_dirs))
-        .then_with(|| left_name.cmp(&right_name))
+        .then_with(|| left_name.cmp(right_name))
+}
+
+fn split_walk_segments(path: &str) -> (Vec<&str>, &str) {
+    let mut parts: Vec<&str> = path
+        .trim()
+        .split(['/', '\\'])
+        .filter(|segment| !segment.is_empty() && *segment != ".")
+        .collect();
+    let name = parts.pop().unwrap_or_default();
+    (parts, name)
 }

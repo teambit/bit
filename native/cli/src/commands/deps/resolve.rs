@@ -64,15 +64,11 @@ impl Identity<'_> {
 pub(super) fn split_pkg_to_name_and_ver(raw: &str) -> (&str, Option<&str>) {
     let raw = raw.trim();
     if let Some(rest) = raw.strip_prefix('@') {
-        match rest.find('@') {
-            Some(idx) => (&raw[..=idx], Some(&raw[idx + 2..])),
-            None => (raw, None),
-        }
+        rest.find('@')
+            .map_or((raw, None), |idx| (&raw[..=idx], Some(&raw[idx + 2..])))
     } else {
-        match raw.split_once('@') {
-            Some((name, ver)) => (name, Some(ver)),
-            None => (raw, None),
-        }
+        raw.split_once('@')
+            .map_or((raw, None), |(name, ver)| (name, Some(ver)))
     }
 }
 

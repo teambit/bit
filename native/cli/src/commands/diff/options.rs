@@ -145,16 +145,18 @@ fn set_boolean(options: &mut Options, flag: &str) -> bool {
 }
 
 fn set_combined_short(options: &mut Options, flag: &str) -> bool {
-    if !flag.starts_with('-')
-        || flag.starts_with("--")
-        || flag.len() <= 2
-        || !flag[1..]
+    let Some(rest) = flag.strip_prefix('-') else {
+        return false;
+    };
+    if rest.starts_with('-')
+        || rest.len() <= 1
+        || !rest
             .bytes()
             .all(|byte| matches!(byte, b'j' | b'v' | b't' | b'p'))
     {
         return false;
     }
-    for byte in flag[1..].bytes() {
+    for byte in rest.bytes() {
         match byte {
             b'j' => options.output.json = true,
             b'v' => options.output.verbose = true,

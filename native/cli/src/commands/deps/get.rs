@@ -210,10 +210,11 @@ fn render_get_result(
         if rows.iter().any(|row| row.depth >= 64) {
             return Err(Failure::Declined("deps get tree depth exceeds native bound".into()));
         }
-        let mut seen = HashSet::from([id_with_ver.to_owned()]);
+        let mut seen = HashSet::with_capacity(rows.len() + 1);
+        seen.insert(id_with_ver);
         if rows
             .iter()
-            .any(|row| !seen.insert(row.id.clone()))
+            .any(|row| !seen.insert(row.id.as_str()))
         {
             return Err(Failure::Declined("deps get tree with shared or cyclic components".into()));
         }
@@ -237,12 +238,13 @@ fn assemble_dep_tree(id: &str, rows: &[DepInfoRow]) -> TreeNode {
 }
 
 fn render_dep_info_table(root_id: &str, rows: Vec<DepInfoRow>, chalk: Chalk) -> String {
-    let mut table_rows = vec![vec![
+    let mut table_rows = Vec::with_capacity(rows.len() + 1);
+    table_rows.push(vec![
         chalk.cyan("Dependency ID"),
         chalk.cyan("Depth"),
         chalk.cyan("Immediate Dependent"),
         chalk.cyan("Dependency type"),
-    ]];
+    ]);
     table_rows.extend(
         rows.into_iter()
             .map(|row| {

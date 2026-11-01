@@ -296,13 +296,11 @@ pub(in crate::commands) fn parse_why(args: &[&str]) -> Option<Subcommand> {
         .copied()
         .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
-    let (dep_name, depth) = parse_usage_args(&filtered)?;
-    Some(Subcommand::Why { dep_name, depth })
+    parse_usage_args(&filtered).map(|(dep_name, depth)| Subcommand::Why { dep_name, depth })
 }
 
 fn parse_usage(rest: &[&str]) -> Option<Subcommand> {
-    let (dep_name, depth) = parse_usage_args(rest)?;
-    Some(Subcommand::Usage { dep_name, depth })
+    parse_usage_args(rest).map(|(dep_name, depth)| Subcommand::Usage { dep_name, depth })
 }
 
 fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {

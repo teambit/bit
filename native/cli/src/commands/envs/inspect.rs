@@ -72,10 +72,10 @@ pub(super) fn format_envs_list(
         return rendered_table;
     }
     let formatter = Formatter::new(chalk);
-    let mut unique_envs = Vec::new();
+    let mut unique_envs: Vec<&str> = Vec::new();
     for (_, env_id) in pairs {
-        if !unique_envs.contains(env_id) {
-            unique_envs.push(env_id.clone());
+        if !unique_envs.contains(&env_id.as_str()) {
+            unique_envs.push(env_id.as_str());
         }
     }
     let env_items = unique_envs
@@ -280,7 +280,7 @@ pub(super) fn run_bare_scope_get(
 
 fn collect_bare_scope_envs(scope_dir: &Path) -> Option<Vec<(String, String)>> {
     let rows = load_bare_scope_index(scope_dir)?;
-    let mut pairs = Vec::new();
+    let mut pairs = Vec::with_capacity(rows.len());
     for row in &rows {
         if row["isSymlink"] == true {
             continue;

@@ -47,17 +47,15 @@ pub(super) fn run_report(
 }
 
 fn target_version(target: &Value) -> Option<&str> {
-    for key in ["version", "head"] {
-        if let Some(val) = target
-            .get(key)
-            .and_then(Value::as_str)
-            .map(str::trim)
-            .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"))
-        {
-            return Some(val);
-        }
-    }
-    None
+    ["version", "head"]
+        .into_iter()
+        .find_map(|key| {
+            target
+                .get(key)
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"))
+        })
 }
 
 /// One `DiffJson` row.

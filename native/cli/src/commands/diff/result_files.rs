@@ -17,8 +17,9 @@ pub(super) fn files_diff(
     } else {
         (left_version.to_string(), right_version.to_string())
     };
-    let mut output = Vec::new();
-    for file in array(row.get("files"), "diff files")? {
+    let files = array(row.get("files"), "diff files")?;
+    let mut output = Vec::with_capacity(files.len());
+    for file in files {
         if let Some(diff) = one_file_diff(file, &labels)? {
             output.push(diff);
         }

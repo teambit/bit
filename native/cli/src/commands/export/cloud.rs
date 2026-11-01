@@ -24,11 +24,11 @@ pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Re
         .get("lane")
         .filter(|lane| !lane.is_null())
         .and_then(|lane| exported_lane(lane).or_else(|| lane.is_object().then(|| lane.clone())))
-    {
-        last["lane"] = lane;
-    } else if let Some(lane) = receipt["exportedLanes"]
-        .as_array()
-        .and_then(|lanes| lanes.iter().find_map(exported_lane))
+        .or_else(|| {
+            receipt["exportedLanes"]
+                .as_array()
+                .and_then(|lanes| lanes.iter().find_map(exported_lane))
+        })
     {
         last["lane"] = lane;
     }

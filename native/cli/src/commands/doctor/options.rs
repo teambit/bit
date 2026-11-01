@@ -148,7 +148,8 @@ impl Options {
                 *cursor += 1;
                 let Some(val) = args
                     .get(*cursor)
-                    .map(|val| val.trim())
+                    .copied()
+                    .map(str::trim)
                     .filter(|val| !val.is_empty() && !val.starts_with('-'))
                 else {
                     return false;
@@ -156,11 +157,8 @@ impl Options {
                 self.remote = Some(val.into());
                 true
             }
-            name if !name.trim().starts_with('-')
-                && !name.trim().is_empty()
-                && self.name.is_none() =>
-            {
-                self.name = Some(name.trim().into());
+            name if !name.starts_with('-') && !name.is_empty() && self.name.is_none() => {
+                self.name = Some(name.into());
                 true
             }
             _ => false,
@@ -200,7 +198,8 @@ impl Options {
 fn optional_path(args: &[&str], cursor: &mut usize) -> PathBuf {
     if let Some(path) = args
         .get(*cursor + 1)
-        .map(|arg| arg.trim())
+        .copied()
+        .map(str::trim)
         .filter(|arg| !arg.is_empty() && !arg.starts_with('-'))
     {
         *cursor += 1;

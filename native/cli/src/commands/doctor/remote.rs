@@ -86,6 +86,13 @@ fn global(context: &Context) -> GlobalConfig {
         .collect();
     bit_client_transfer::config::effective(global, &Value::Null, &Value::Null)
 }
+fn requested_name(options: &Options) -> Option<&str> {
+    options.name
+        .as_deref()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+}
+
 fn preflight(context: &Context, options: &Options, path: &Path) -> io::Result<()> {
     let probe = Context {
         root: context.root.clone(),
@@ -94,12 +101,7 @@ fn preflight(context: &Context, options: &Options, path: &Path) -> io::Result<()
         cli: context.cli.clone(),
         timestamp: context.timestamp,
     };
-    if options.name
-        .as_deref()
-        .map(str::trim)
-        .filter(|name| !name.is_empty())
-        .is_none_or(|name| name == "validate scope objects")
-    {
+    if requested_name(options).is_none_or(|name| name == "validate scope objects") {
         store::preflight(&probe, Some("validate scope objects"))?;
     }
     Ok(())
@@ -122,10 +124,7 @@ pub(super) fn examine(
     options: &Options,
     plan: &Plan,
 ) -> io::Result<(Vec<Value>, Value)> {
-    let requested = options.name
-        .as_deref()
-        .map(str::trim)
-        .filter(|name| !name.is_empty());
+    let requested = requested_name(options);
     match &plan.remote {
         Remote::Http(url) => {
             let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
@@ -148,10 +147,7 @@ pub(super) fn examine(
 }
 
 fn file(context: &Context, options: &Options, path: &Path) -> io::Result<(Vec<Value>, Value)> {
-    let requested = options.name
-        .as_deref()
-        .map(str::trim)
-        .filter(|name| !name.is_empty());
+    let requested = requested_name(options);
     let diagnoses: Vec<_> = catalog::DIAGNOSES
         .iter()
         .filter(|diagnosis| requested.is_none_or(|name| name == diagnosis.name))
@@ -162,7 +158,7 @@ fn file(context: &Context, options: &Options, path: &Path) -> io::Result<(Vec<Va
             requested.unwrap_or_default(),
         )));
     }
-    let mut results = Vec::new();
+    let mut results = Vec::with_capacity(diagnoses.len());
     for diagnosis in diagnoses {
         let result = if diagnosis.name == "validate scope objects" {
             store::heads(diagnosis, Some(path))

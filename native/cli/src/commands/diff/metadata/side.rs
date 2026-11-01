@@ -49,7 +49,7 @@ impl Component<'_> {
         let ids = [
             ids_of(value.get("dependencies"))?,
             ids_of(value.get("devDependencies"))?,
-            ids_of(Some(&Value::Array(peer_dependencies.to_vec())))?,
+            ids_from_slice(peer_dependencies)?,
             extension_ids(&extensions)?,
         ];
         let peers = Id::unique(
@@ -195,8 +195,11 @@ fn file_list(files: &[Value], tests: bool) -> io::Result<Value> {
 
 /// `ComponentIdList` of stored rows (`{ id: {...} }`) or id strings.
 fn ids_of(rows: Option<&Value>) -> io::Result<Vec<Id>> {
-    array(rows, "dependency ids")?
-        .iter()
+    ids_from_slice(array(rows, "dependency ids")?)
+}
+
+fn ids_from_slice(rows: &[Value]) -> io::Result<Vec<Id>> {
+    rows.iter()
         .map(|row| match row {
             Value::String(id) => Id::parse(id),
             _ => Id::from_object(row.get("id").ok_or_else(|| decline("dependency id"))?),

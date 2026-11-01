@@ -170,11 +170,11 @@ pub(super) fn model<'c>(context: &'c Value, target: &Value) -> Option<&'c Value>
         .get("models")?
         .as_array()?
         .iter()
-        .find(|entry| model_identity(entry) == identity)
+        .find(|entry| matches_model_identity(entry, identity))
 }
 
-/// Format `"<scope>/<name>"` for a model JSON object.
-fn model_identity(entry: &Value) -> String {
+/// Compare `"<scope>/<name>"` for a model JSON object against `identity` without heap allocation.
+fn matches_model_identity(entry: &Value, identity: &str) -> bool {
     let scope = entry
         .get("scope")
         .and_then(Value::as_str)
@@ -187,5 +187,8 @@ fn model_identity(entry: &Value) -> String {
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .unwrap_or("undefined");
-    format!("{scope}/{name}")
+    identity
+        .strip_prefix(scope)
+        .and_then(|rest| rest.strip_prefix('/'))
+        == Some(name)
 }

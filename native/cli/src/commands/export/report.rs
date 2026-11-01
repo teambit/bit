@@ -195,8 +195,9 @@ fn scoped_ids(value: &Value, field: &str) -> io::Result<()> {
 /// The exported components, unique and without versions, and each remote id
 /// a version of one of them.
 fn remote_ids(value: &Value) -> io::Result<()> {
-    let mut components = HashSet::new();
-    for id in array(value.get("componentsIds"), "components")? {
+    let comp_ids = array(value.get("componentsIds"), "components")?;
+    let mut components = HashSet::with_capacity(comp_ids.len());
+    for id in comp_ids {
         let id = text(Some(id))?;
         if id.contains('@') || !components.insert(id) {
             return Err(decline("native outbound component identity"));
@@ -225,9 +226,10 @@ pub(super) fn format_with(receipt: &Value, chalk: Chalk, verbose: bool) -> Strin
     }
     let format = Formatter::new(chalk);
     let export_sections = export_sections(receipt, &components, lane, &format, chalk, verbose);
+    let warn = format.warn_symbol();
     let removed: Vec<String> = removed
         .iter()
-        .map(|id| Formatter::item_with(id, &format.warn_symbol()))
+        .map(|id| Formatter::item_with(id, &warn))
         .collect();
     let removed_title = if lane.is_some() {
         "components removed on the remote lane"

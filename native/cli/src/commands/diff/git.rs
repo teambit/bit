@@ -26,14 +26,11 @@ pub(in crate::commands) fn executable(root: &Path) -> io::Result<String> {
 }
 
 fn normalize_git_executable(configured: Option<String>) -> String {
-    configured
-        .map(|path| path.trim().to_string())
-        .filter(|path| !path.is_empty() && !path.starts_with('-'))
-        .or_else(|| {
-            std::env::var("BIT_CONFIG_GIT_PATH")
-                .ok()
-                .map(|path| path.trim().to_string())
-                .filter(|path| !path.is_empty() && !path.starts_with('-'))
-        })
+    let sanitize = |raw: Option<String>| {
+        raw.map(|path| path.trim().to_string())
+            .filter(|path| !path.is_empty() && !path.starts_with('-'))
+    };
+    sanitize(configured)
+        .or_else(|| sanitize(std::env::var("BIT_CONFIG_GIT_PATH").ok()))
         .unwrap_or_else(|| "git".to_string())
 }

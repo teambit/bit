@@ -187,23 +187,38 @@ fn references(scope: &Path) -> io::Result<Vec<String>> {
     }
     for prefix in fs::read_dir(directory)? {
         let prefix = prefix?;
+        let prefix_name = prefix.file_name();
+        let Some(prefix_str) = prefix_name
+            .to_str()
+            .filter(|name| name.len() == 2 && name.bytes().all(|byte| byte.is_ascii_hexdigit()))
+        else {
+            continue;
+        };
         if !prefix.file_type()?.is_dir() {
             continue;
         }
-        for entry in fs::read_dir(prefix.path())? {
-            let entry = entry?;
-            let hash = format!(
-                "{}{}",
-                prefix.file_name().to_string_lossy(),
-                entry.file_name().to_string_lossy(),
-            );
-            if is_reference(&hash) {
-                references.push(hash);
-            }
-        }
+        collect_shard_references(&prefix.path(), prefix_str, &mut references)?;
     }
     references.sort_by(|left, right| right.cmp(left));
     Ok(references)
+}
+
+fn collect_shard_references(
+    shard: &Path,
+    prefix_str: &str,
+    references: &mut Vec<String>,
+) -> io::Result<()> {
+    for entry in fs::read_dir(shard)? {
+        let entry = entry?;
+        let entry_name = entry.file_name();
+        if let Some(leaf) = entry_name
+            .to_str()
+            .filter(|name| name.len() == 38 && name.bytes().all(|byte| byte.is_ascii_hexdigit()))
+        {
+            references.push(format!("{prefix_str}{leaf}"));
+        }
+    }
+    Ok(())
 }
 
 /// Scope index repair and malformed objects are left to the canonical loader before output.
@@ -244,8 +259,4 @@ pub(super) fn preflight(context: &super::context::Context, name: Option<&str>) -
         }
     }
     Ok(())
-}
-
-fn is_reference(hash: &str) -> bool {
-    hash.len() == 40 && hash.bytes().all(|byte| byte.is_ascii_hexdigit())
 }

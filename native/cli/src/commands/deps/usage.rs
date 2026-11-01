@@ -274,11 +274,8 @@ fn build_matched_tree(
     let display_name = resolve_display_name(root, &name);
     let mut walk_state = (HashSet::from([node_id.clone()]), HashSet::new());
     let children = walk_reverse(env, node_id, &mut walk_state, (0, query.1, query.2));
-    Some(MatchedTree {
-        display_name: display_name.clone(),
-        version: version.clone(),
-        node: TreeNode { label: query.2.bold(&format_name_ver(&display_name, &version)), children },
-    })
+    let label = query.2.bold(&format_name_ver(&display_name, &version));
+    Some(MatchedTree { display_name, version, node: TreeNode { label, children } })
 }
 
 fn package_matches_query(

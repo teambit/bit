@@ -216,10 +216,14 @@ fn complete_export(
     let finished = lifecycle
         .finish(&receipt, options.lifecycle.eject, options.lifecycle.open_browser && !options.json)
         .map_err(|error| error.to_string())?;
-    if let Some(metadata) = finished.as_object() {
-        for (key, value) in metadata {
-            receipt[key] = value.clone();
-        }
+    if let Some(metadata) = finished.as_object()
+        && let Some(receipt_obj) = receipt.as_object_mut()
+    {
+        receipt_obj.extend(
+            metadata
+                .iter()
+                .map(|(key, value)| (key.clone(), value.clone())),
+        );
     }
     Ok(receipt)
 }
@@ -379,7 +383,8 @@ fn validation_failure(error: &str, scopes: &[String]) -> Option<String> {
 fn client_id() -> io::Result<String> {
     let mut bytes = [0_u8; 8];
     getrandom::fill(&mut bytes).map_err(|error| io::Error::other(error.to_string()))?;
-    let mut id = format!("{}-", now_ms());
+    let mut id = String::with_capacity(32);
+    let _ = write!(id, "{}-", now_ms());
     for byte in bytes {
         let _ = write!(id, "{byte:02x}");
     }

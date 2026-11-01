@@ -36,7 +36,7 @@ pub(super) fn prepare(
         return Ok(None);
     }
     let exported = progress::exported_ids(root);
-    let mut ids = Vec::new();
+    let mut ids = Vec::with_capacity(selected.len() * 2);
     for target in selected {
         let raw_id = text(
             target

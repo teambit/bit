@@ -44,11 +44,8 @@ impl Context {
             bit_object_import::parse_jsonc(&fs::read(bit_dir.join("package.json"))?)
                 .map_err(io::Error::other)?;
         let node = std::process::Command::new(&self.cli.node).arg("--version").output()?;
-        let node_version = if node.status.success() {
-            String::from_utf8_lossy(&node.stdout).trim().to_owned()
-        } else {
-            String::new()
-        };
+        let node_stdout = String::from_utf8_lossy(&node.stdout);
+        let node_version = if node.status.success() { node_stdout.trim() } else { "" };
         let platform = match env::consts::OS {
             "windows" => "win32",
             other => other,

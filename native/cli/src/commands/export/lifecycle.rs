@@ -142,9 +142,8 @@ impl Drop for Protection<'_> {
 }
 
 fn root_aspects(context: &Value) -> io::Result<bool> {
-    let core: Vec<String> = serde_json::from_str(include_str!(
-        "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-    ))?;
+    let core: std::collections::HashSet<String> =
+        serde_json::from_str(crate::commands::aspect::CORE_ASPECT_IDS)?;
     Ok(context["workspace"]
         .as_object()
         .is_some_and(|config| {
@@ -156,7 +155,7 @@ fn root_aspects(context: &Value) -> io::Result<bool> {
                 .any(|(id, _)| {
                     let bare = bit_install::config::aspect_id_without_version(id.trim());
                     bare.contains('/')
-                        && !core.iter().any(|item| item == bare)
+                        && !core.contains(bare)
                         && !bit_install::policy::is_core_env(bare)
                 })
         }))

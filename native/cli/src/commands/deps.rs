@@ -162,19 +162,17 @@ fn run_in_workspace(
     subcommand: &Subcommand,
     chalk: Chalk,
 ) -> io::Result<Outcome> {
-    if let Subcommand::Circular { json, include_deps } = subcommand {
-        return run_circular(root, args, chalk, *json, *include_deps);
+    match subcommand {
+        Subcommand::Circular { json, include_deps } => {
+            run_circular(root, args, chalk, *json, *include_deps)
+        }
+        Subcommand::DiagnosePackage { package } => {
+            diagnose::run_package(root, args, package, chalk)
+        }
+        Subcommand::Blame { component, dep } => blame::run(root, args, component, dep, chalk),
+        Subcommand::Diagnose { origins } => diagnose::report::run(root, args, chalk, *origins),
+        _ => run_prepared(root, args, subcommand, chalk),
     }
-    if let Subcommand::DiagnosePackage { package } = subcommand {
-        return diagnose::run_package(root, args, package, chalk);
-    }
-    if let Subcommand::Blame { component, dep } = subcommand {
-        return blame::run(root, args, component, dep, chalk);
-    }
-    if let Subcommand::Diagnose { origins } = subcommand {
-        return diagnose::report::run(root, args, chalk, *origins);
-    }
-    run_prepared(root, args, subcommand, chalk)
 }
 
 fn run_why(args: &[OsString]) -> io::Result<Outcome> {

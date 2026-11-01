@@ -134,18 +134,22 @@ fn print_value(value: &Value) -> io::Result<String> {
 
 /// `prettifyFieldName`: `mainFile` becomes `Main File`.
 fn prettify(field: &str) -> String {
-    let mut chars = field.trim().chars();
-    let first: String = chars
-        .next()
-        .map(|character| character.to_uppercase().collect())
-        .unwrap_or_default();
-    let spaced: String = format!("{first}{}", chars.as_str())
-        .chars()
-        .flat_map(|character| {
-            if character.is_ascii_uppercase() { vec![' ', character] } else { vec![character] }
-        })
-        .collect();
-    spaced.trim().to_string()
+    let trimmed = field.trim();
+    let mut chars = trimmed.chars();
+    let Some(first) = chars.next() else {
+        return String::new();
+    };
+    let mut out = String::with_capacity(trimmed.len() + 4);
+    for character in first.to_uppercase() {
+        out.push(character);
+    }
+    for character in chars {
+        if character.is_ascii_uppercase() {
+            out.push(' ');
+        }
+        out.push(character);
+    }
+    out.trim().to_string()
 }
 
 /// `getExtensionsConfigOutput`: a git diff of each changed configuration.
