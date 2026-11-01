@@ -1,3 +1,5 @@
+//! Unit tests for workspace filesystem action batch execution.
+
 use super::serve;
 use crate::workspace::tests::Directory;
 use serde_json::Value;

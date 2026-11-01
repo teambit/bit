@@ -1,3 +1,5 @@
+//! Unit tests for remote file inventory metadata and latest tag selection.
+
 use super::{file_component, latest_from_model};
 use serde_json::json;
 

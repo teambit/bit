@@ -1,3 +1,5 @@
+//! Unit tests for retaining surviving current sources during merge reload.
+
 use super::retain;
 use serde_json::json;
 use std::path::Path;

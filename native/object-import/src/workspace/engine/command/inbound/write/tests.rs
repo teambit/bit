@@ -1,3 +1,5 @@
+//! Unit tests for inbound workspace file writing, `.bitmap` keys, and rollback.
+
 use super::{History, Prepared, Replacement, Target, WorkspaceFiles, bitmap_key, safe_destination};
 use serde_json::json;
 use std::{

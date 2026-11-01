@@ -1,3 +1,5 @@
+//! Unit tests for cached graph import and versionless root progress accounting.
+
 use super::{Fixture, prepare, prepare_cached};
 
 #[test]

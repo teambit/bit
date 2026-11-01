@@ -1,7 +1,10 @@
+//! Unit tests for inbound command publication protocol and retained state.
+
 use super::{Apply, Prepare, Retained, State, apply};
 use serde_json::json;
 use std::{fs, path::PathBuf};
 
+#[derive(Debug)]
 struct PublicationFixture {
     _directory: tempfile::TempDir,
     root: PathBuf,

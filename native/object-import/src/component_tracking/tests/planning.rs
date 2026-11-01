@@ -1,3 +1,5 @@
+//! Unit tests for component tracking plan preparation, namespaces, and validation.
+
 use super::{Plan, facts, fixture, options, source};
 #[test]
 fn tracking_is_read_only_until_commit() {

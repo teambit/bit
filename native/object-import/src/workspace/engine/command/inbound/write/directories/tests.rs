@@ -1,3 +1,5 @@
+//! Unit tests for default component directory template resolution.
+
 use super::default_directory;
 use std::fs;
 

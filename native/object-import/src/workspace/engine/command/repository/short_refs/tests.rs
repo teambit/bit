@@ -1,3 +1,5 @@
+//! Unit tests for short object hash prefix matching and separator behavior.
+
 use super::{matching_for_separator, unique};
 use crate::workspace::engine::command::scratch::Directory;
 use std::fs;

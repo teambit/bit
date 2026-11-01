@@ -1,3 +1,5 @@
+//! Unit tests for `.bitmap` override clearing, history snapshots, and updates.
+
 use super::{Prepared, Update, prepare_after, prepare_bytes, validate_history_file_id};
 use serde_json::{Value, json};
 use std::{

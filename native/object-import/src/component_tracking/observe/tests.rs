@@ -1,3 +1,5 @@
+//! Unit tests for preimage and directory inventory observation during component tracking.
+
 use super::Observed;
 use crate::component_tracking::tests::fixture;
 use std::fs;

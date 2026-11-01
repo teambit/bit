@@ -1,3 +1,5 @@
+//! Unit tests for transfer descriptor preparation and source body streaming.
+
 use std::{
     fs,
     io::Write,

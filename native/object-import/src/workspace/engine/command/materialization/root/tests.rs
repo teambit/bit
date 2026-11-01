@@ -1,3 +1,5 @@
+//! Unit tests for workspace root component file manifest filtering and validation.
+
 use super::{ASPECT, filter, validate_version};
 use serde_json::json;
 

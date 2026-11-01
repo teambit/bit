@@ -1,3 +1,5 @@
+//! Unit tests for lane merge recovery backup preparation and validation.
+
 use super::Recovery;
 use serde_json::{Value, json};
 use std::{
@@ -6,6 +8,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+#[derive(Debug)]
 struct Workspace(PathBuf);
 impl Workspace {
     fn new() -> Self {

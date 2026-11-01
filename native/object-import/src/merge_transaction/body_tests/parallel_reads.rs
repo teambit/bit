@@ -1,3 +1,5 @@
+//! Unit tests for parallel source body reads and deterministic spooling in merge prepare.
+
 use super::{Fixture, State};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};

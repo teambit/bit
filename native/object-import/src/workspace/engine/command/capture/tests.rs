@@ -1,7 +1,10 @@
+//! Unit tests for private workspace source capture and wire budget bounds.
+
 use super::{all, all_for_checkout, read, snapshots};
 use serde_json::json;
 use std::{fs, path::PathBuf};
 
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

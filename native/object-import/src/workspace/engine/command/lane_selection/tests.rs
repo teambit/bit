@@ -1,3 +1,5 @@
+//! Unit tests for lane pattern index mapping and squash version selection.
+
 use super::{indices_for_ids, json, versions_to_check};
 
 #[test]

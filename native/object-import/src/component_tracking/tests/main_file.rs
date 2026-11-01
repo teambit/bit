@@ -1,3 +1,5 @@
+//! Unit tests for component main file selection and extension precedence.
+
 use super::{
     super::main_file::{choose, resolve},
     fixture, source,

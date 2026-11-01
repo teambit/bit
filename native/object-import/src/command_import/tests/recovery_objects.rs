@@ -1,3 +1,5 @@
+//! Unit tests for accepting verified recovery objects during pending imports.
+
 use super::{Fixture, object_hash, publish};
 use std::fs;
 

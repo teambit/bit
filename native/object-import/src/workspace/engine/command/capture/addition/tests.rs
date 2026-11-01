@@ -1,3 +1,5 @@
+//! Unit tests for incoming added component capture validation.
+
 use super::{capture, json};
 #[test]
 fn incoming_capture_never_invents_current_contents_or_version() {

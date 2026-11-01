@@ -1,3 +1,5 @@
+//! Unit tests for authored `.bitmap` row property serialization order.
+
 use super::reorder_bitmap;
 use serde_json::Value;
 

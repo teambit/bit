@@ -1,3 +1,5 @@
+//! Unit tests for inbound dependent path selection and `--through` filtering.
+
 use super::select;
 use crate::command_import::Target;
 use std::collections::HashMap;

@@ -1,3 +1,5 @@
+//! Unit tests for unlinking before replacing generated `package.json` manifests.
+
 use super::replace;
 use crate::workspace::engine::command::scratch;
 use std::fs;

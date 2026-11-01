@@ -1,7 +1,10 @@
+//! Unit tests for checkout workspace dependency policy update publication.
+
 use super::Prepared;
 use serde_json::json;
 use std::{fs, path::PathBuf};
 
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

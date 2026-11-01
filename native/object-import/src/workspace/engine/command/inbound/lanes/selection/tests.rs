@@ -1,3 +1,5 @@
+//! Unit tests for platform separator behavior in implicit tracked lane selection.
+
 use super::tracked_for_separator;
 use std::{
     fs,
@@ -7,6 +9,7 @@ use std::{
 
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
+#[derive(Debug)]
 struct Scratch(PathBuf);
 impl Scratch {
     fn new() -> Self {

@@ -1,3 +1,5 @@
+//! Unit tests for workspace root component tracking intent and main file selection.
+
 use super::{Plan, facts, fixture, options, source};
 use crate::component_tracking::{Options, identity, main_file};
 use serde_json::json;

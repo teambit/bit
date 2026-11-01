@@ -1,3 +1,5 @@
+//! Unit tests for lane-aware `.bitmap` updates and header ordering.
+
 use super::{Update, prepare_bytes};
 use serde_json::{Value, json};
 use std::path::Path;

@@ -1,3 +1,5 @@
+//! Unit tests for command materialization retained files and Harmony manifests.
+
 use super::{Captured, Input, Repository, checkout_transition, prepare, snapshots};
 use serde_json::json;
 use std::path::Path;

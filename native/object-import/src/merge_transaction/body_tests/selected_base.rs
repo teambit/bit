@@ -1,3 +1,5 @@
+//! Unit tests for lazy base source reading during merge body preparation.
+
 use super::{Fixture, State, apply};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};

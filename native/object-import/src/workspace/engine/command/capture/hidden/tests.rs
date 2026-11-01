@@ -1,7 +1,10 @@
+//! Unit tests for parallel hidden lane component source capture from the object store.
+
 use super::{Repository, from_model, json, snapshots};
 use flate2::{Compression, write::ZlibEncoder};
 use std::{fs, io::Write, path::PathBuf};
 
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Drop for Fixture {
     fn drop(&mut self) {

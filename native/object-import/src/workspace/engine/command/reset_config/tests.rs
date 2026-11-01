@@ -1,3 +1,5 @@
+//! Unit tests for `component.json` reset configuration projection and validation.
+
 use super::{Prepared, document, proof, validate_destination};
 use serde_json::json;
 use std::{
@@ -6,6 +8,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

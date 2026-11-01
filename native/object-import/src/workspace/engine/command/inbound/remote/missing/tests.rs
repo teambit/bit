@@ -1,3 +1,5 @@
+//! Unit tests for missing version and dependency graph request discovery.
+
 use super::requests;
 use crate::validate::hexadecimal;
 use bit_client_transfer::tar::ObjectItem;

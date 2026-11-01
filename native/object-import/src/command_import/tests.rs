@@ -1,3 +1,5 @@
+//! Unit tests for command-driven remote object import planning and publication.
+
 mod canonical_model;
 mod graph;
 mod recovery_objects;
@@ -15,6 +17,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Fixture {
     root: PathBuf,
     remote: PathBuf,
@@ -22,12 +25,9 @@ struct Fixture {
 }
 impl Fixture {
     fn new() -> Self {
+        let serial = NEXT.fetch_add(1, Ordering::Relaxed);
         let base = std::env::temp_dir()
-            .join(format!(
-                "bit-command-import-{}-{}",
-                std::process::id(),
-                NEXT.fetch_add(1, Ordering::Relaxed),
-            ));
+            .join(format!("bit-command-import-{}-{serial}", std::process::id()));
         let root = base.join("workspace");
         let remote = base.join("remote");
         let global = base.join("global-remotes.json");

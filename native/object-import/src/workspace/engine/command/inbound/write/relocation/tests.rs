@@ -1,3 +1,5 @@
+//! Unit tests for inbound component destination collision avoidance and relocation.
+
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 

@@ -1,3 +1,5 @@
+//! Unit tests for canonical model stream normalization during lane main refresh.
+
 use super::{Fixture, object_hash, prepare_cached, publish};
 use flate2::{Compression, write::ZlibEncoder};
 use std::{fs, io::Write};

@@ -1,3 +1,5 @@
+//! Unit tests for cold client status preparation, scanning, and completion.
+
 use super::{Finish, Prepare, Scan, State, complete, finish, prepare, scan};
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
@@ -10,6 +12,7 @@ use std::{
 };
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

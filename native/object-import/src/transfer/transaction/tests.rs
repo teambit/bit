@@ -1,3 +1,5 @@
+//! Unit tests for multi-scope transfer transaction directives and cleanup.
+
 use crate::transfer::{State, apply};
 use serde_json::{Value, json};
 

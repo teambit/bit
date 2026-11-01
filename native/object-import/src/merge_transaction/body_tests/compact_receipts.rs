@@ -1,3 +1,5 @@
+//! Unit tests for compact merge body responses and `knownBodies` prefix checks.
+
 use super::{Fixture, State, apply};
 use serde_json::json;
 

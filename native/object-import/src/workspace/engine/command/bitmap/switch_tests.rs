@@ -1,3 +1,5 @@
+//! Unit tests for `.bitmap` lane-only flag transitions during lane switch.
+
 use super::Prepared;
 use serde_json::json;
 

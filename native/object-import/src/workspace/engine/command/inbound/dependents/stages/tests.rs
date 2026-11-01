@@ -1,3 +1,5 @@
+//! Unit tests for inbound dependent stage current dependency extraction.
+
 use super::current_dependencies;
 use serde_json::json;
 

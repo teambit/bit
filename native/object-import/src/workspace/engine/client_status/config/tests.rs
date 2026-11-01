@@ -1,3 +1,5 @@
+//! Unit tests for workspace configuration extension and ignored-issue validation.
+
 use super::{extensions, ignored_issues};
 use serde_json::json;
 
