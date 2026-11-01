@@ -1,4 +1,4 @@
-//! Unit tests for pending merge [`lane_id`] scope resolution.
+//! Unit tests for pending merge [`lane_id`] scope resolution in `bit-object-import`.
 
 use super::lane_id;
 use serde_json::json;

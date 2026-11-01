@@ -1,4 +1,4 @@
-//! Unit tests for parallel merge snapshot source [`capture`], [`rekey`], and [`Budget`] enforcement.
+//! Unit tests for parallel merge snapshot source [`capture`], [`digest`], [`rekey`], and [`Budget`] enforcement.
 
 use super::{super::PENDING_GRAPH_VERSION, Budget, capture, digest, rekey};
 use rayon::ThreadPoolBuilder;

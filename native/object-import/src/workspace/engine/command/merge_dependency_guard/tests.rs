@@ -1,4 +1,4 @@
-//! Unit tests for merge dependency import [`compare`] verification and stale capture [`proof`] rejection.
+//! Unit tests for merge dependency import [`compare`] verification, [`Source`], and stale capture [`proof`] rejection.
 
 use super::{Budget, Comparison, Source, compare, proof};
 use std::{

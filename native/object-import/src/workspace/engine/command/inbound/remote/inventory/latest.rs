@@ -1,4 +1,4 @@
-//! Ordered latest-version groups for remote inventory queries; all launched groups finish before reporting an error.
+//! Ordered latest-version groups ([`Request`], [`file_latest`], [`remote_for`]) for remote inventory queries.
 use super::{Request, file_latest, identity, invalid, remote_for};
 use bit_client_transfer::{
     GlobalConfig, fetch,

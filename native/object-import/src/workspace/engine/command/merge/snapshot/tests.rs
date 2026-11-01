@@ -1,4 +1,4 @@
-//! Unit tests for merge snapshot [`metadata`] schema projection, squash lanes, and models.
+//! Unit tests for merge snapshot [`metadata`] schema projection, squash lanes, and models in `bit-object-import`.
 
 use super::metadata;
 use crate::js_json::Value as Js;

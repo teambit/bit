@@ -1,4 +1,4 @@
-//! Unit tests for separating [`automatic`] and [`normalized`] forced merge dependency policies.
+//! Unit tests for separating [`automatic`], [`normalized`], and [`projection`] forced merge dependency policies.
 
 use super::{automatic, normalized, projection};
 use serde_json::json;

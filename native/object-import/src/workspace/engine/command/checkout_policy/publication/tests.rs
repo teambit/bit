@@ -1,4 +1,4 @@
-//! Unit tests for checkout [`Prepared`] workspace dependency policy update publication and `JSONC` rendering.
+//! Unit tests for checkout [`Prepared`] workspace dependency policy update publication and `JSONC` rendering in `bit-object-import`.
 
 use super::Prepared;
 use serde_json::json;

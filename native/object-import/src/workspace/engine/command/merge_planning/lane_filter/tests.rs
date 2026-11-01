@@ -1,4 +1,4 @@
-//! Unit tests for hidden lane component metadata projection and package hydration via [`prepare_hidden_metadata`].
+//! Unit tests for hidden lane component metadata projection and package hydration via [`prepare_hidden_metadata`] in `bit-object-import`.
 
 use super::prepare_hidden_metadata;
 use crate::workspace::engine::{command::capture::Captured, status_models::comparison::Target};

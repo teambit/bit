@@ -1,4 +1,4 @@
-//! Unit tests for inbound dependent stage [`current_dependencies`] extraction.
+//! Unit tests for inbound dependent stage [`current_dependencies`] extraction in `bit-object-import`.
 
 use super::current_dependencies;
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Unit tests for inbound dependent path [`select`] traversal and `--through` filtering.
+//! Unit tests for inbound dependent path [`select`] traversal, [`Target`] matching, and `--through` filtering.
 
 use super::select;
 use crate::command_import::Target;

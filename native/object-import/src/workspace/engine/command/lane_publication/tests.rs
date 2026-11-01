@@ -1,4 +1,4 @@
-//! Unit tests for lane [`objects`] head updates and lane history bucket separation.
+//! Unit tests for lane [`objects`] head updates and lane history bucket separation in `bit-object-import`.
 
 use super::objects;
 use serde_json::json;

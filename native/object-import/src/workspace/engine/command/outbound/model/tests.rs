@@ -1,4 +1,4 @@
-//! Unit tests for outbound staged model identity ([`requested`]) and version selection ([`staged_versions`]).
+//! Unit tests for outbound staged model identity ([`requested`]) and version selection ([`staged_versions`]) in `bit-object-import`.
 
 use super::{requested, selection::staged as staged_versions};
 use serde_json::{Value, json};

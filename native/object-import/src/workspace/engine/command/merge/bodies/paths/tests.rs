@@ -1,4 +1,4 @@
-//! Unit tests for merge destination path [`validate`] and [`canonical_relative`] checks.
+//! Unit tests for merge destination path [`validate`] and [`canonical_relative`] checks in `bit-object-import`.
 
 use super::{canonical_relative, validate};
 use crate::workspace::engine::command::scratch::Directory;

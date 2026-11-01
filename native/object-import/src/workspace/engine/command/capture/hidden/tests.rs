@@ -1,4 +1,4 @@
-//! Unit tests for parallel hidden lane component source capture from [`Repository`] via [`from_model`].
+//! Unit tests for parallel hidden lane component source capture from [`Repository`] via [`from_model`] in `bit-object-import`.
 
 use super::{Repository, from_model, json, snapshots};
 use flate2::{Compression, write::ZlibEncoder};

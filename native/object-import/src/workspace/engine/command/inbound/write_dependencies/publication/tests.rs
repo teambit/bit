@@ -1,4 +1,4 @@
-//! Unit tests for `--write-deps` [`workspace`] policy `JSONC` serialization and preimages.
+//! Unit tests for `--write-deps` [`workspace`] policy `JSONC` serialization and preimages in `bit-object-import`.
 
 use super::workspace;
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Unit tests for incoming added component [`capture`] validation.
+//! Unit tests for incoming added component [`capture`] validation in `bit-object-import`.
 
 use super::{capture, json};
 #[test]

@@ -1,4 +1,4 @@
-//! Unit tests for default component directory template resolution via [`default_directory`].
+//! Unit tests for default component directory template resolution via [`default_directory`] in `bit-object-import`.
 
 use super::default_directory;
 use std::fs;

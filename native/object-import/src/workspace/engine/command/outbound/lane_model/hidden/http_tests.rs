@@ -1,4 +1,4 @@
-//! Unit tests for HTTP fetching ([`fetch_http`]) of hidden lane model update-dependent objects.
+//! Unit tests for HTTP fetching ([`fetch_http`], [`model`]) of hidden lane model update-dependent objects.
 
 use super::{fetch_http, model};
 use bit_client_transfer::{

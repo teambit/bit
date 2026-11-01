@@ -1,4 +1,4 @@
-//! Unit tests for inbound command publication protocol ([`Prepare`], [`Apply`]) and [`Retained`] state.
+//! Unit tests for inbound command publication protocol ([`Prepare`], [`Apply`], [`apply`]) and [`Retained`] [`State`].
 
 use super::{Apply, Prepare, Retained, State, apply};
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Unit tests for the persistent Node [`FileBridge`] remote action bridge process.
+//! Unit tests for the persistent Node [`FileBridge`] remote action bridge process in `bit-object-import`.
 
 use super::FileBridge;
 use serde_json::json;

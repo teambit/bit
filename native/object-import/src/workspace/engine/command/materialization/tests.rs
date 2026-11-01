@@ -1,4 +1,4 @@
-//! Unit tests for command materialization ([`prepare`]), retained files, and Harmony manifests.
+//! Unit tests for command materialization ([`Input`], [`prepare`]), [`Captured`] retained files, and Harmony manifests.
 
 use super::{Captured, Input, Repository, checkout_transition, prepare, snapshots};
 use serde_json::json;

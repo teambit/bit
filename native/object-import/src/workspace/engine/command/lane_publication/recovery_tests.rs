@@ -1,4 +1,4 @@
-//! Unit tests for lane merge [`Recovery`] backup preparation, validation, and commit.
+//! Unit tests for lane merge [`Recovery`] backup preparation, validation, and commit in `bit-object-import`.
 
 use super::Recovery;
 use serde_json::{Value, json};

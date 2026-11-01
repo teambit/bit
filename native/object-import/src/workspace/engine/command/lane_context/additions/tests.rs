@@ -1,4 +1,4 @@
-//! Unit tests for lane addition destination [`directory`] placeholders and prospective metadata.
+//! Unit tests for lane addition destination [`directory`] placeholders and prospective metadata in `bit-object-import`.
 
 use super::{directory, json};
 

@@ -1,4 +1,4 @@
-//! Unit tests for merge finalization `node_modules` links and manifest planning via [`prepare`].
+//! Unit tests for merge finalization [`Input`] `node_modules` links and manifest planning via [`prepare`].
 
 use super::{Input, prepare};
 use crate::workspace::engine::command::scratch::Directory;

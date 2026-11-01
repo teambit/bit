@@ -1,4 +1,4 @@
-//! Unit tests for inbound component destination collision avoidance, relocation, and retained directory validation.
+//! Unit tests for inbound component destination collision avoidance, relocation, and retained directory validation in `bit-object-import`.
 
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};

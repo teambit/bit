@@ -1,4 +1,4 @@
-//! Unit tests for missing version and dependency graph request discovery via [`requests`].
+//! Unit tests for missing version and dependency graph [`ObjectItem`] request discovery via [`requests`].
 
 use super::requests;
 use crate::validate::hexadecimal;

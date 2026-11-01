@@ -1,4 +1,4 @@
-//! Unit tests for reconciling outbound lane `updateDependents` entries via [`merge`].
+//! Unit tests for reconciling outbound lane `updateDependents` entries via [`merge`] and [`model`].
 
 use super::{merge, model};
 use serde_json::json;

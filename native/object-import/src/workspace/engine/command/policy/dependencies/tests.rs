@@ -1,4 +1,4 @@
-//! Unit tests for snap dependency issue filtering and issue receipt formatting via [`capture_issues`].
+//! Unit tests for snap dependency [`Baseline`] and [`Row`] issue filtering via [`capture_issues`].
 
 use super::{
     super::{Baseline, Row},

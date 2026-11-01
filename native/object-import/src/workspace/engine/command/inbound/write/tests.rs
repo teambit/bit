@@ -1,4 +1,4 @@
-//! Unit tests for inbound [`Prepared`] workspace file writing, [`bitmap_key`] allocation, and [`History`] rollback.
+//! Unit tests for inbound [`Prepared`] workspace file writing, [`bitmap_key`], [`safe_destination`], and [`History`] rollback.
 
 use super::{History, Prepared, Replacement, Target, WorkspaceFiles, bitmap_key, safe_destination};
 use serde_json::json;

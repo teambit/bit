@@ -1,4 +1,4 @@
-//! Unit tests for outbound [`Prepared`] export prefilter stale discovery rejection.
+//! Unit tests for outbound [`Prepared`] and [`HistoryBytes`] export prefilter stale discovery rejection.
 
 use super::{HistoryBytes, Prepared};
 use std::{

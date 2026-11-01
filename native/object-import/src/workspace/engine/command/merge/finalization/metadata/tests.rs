@@ -1,4 +1,4 @@
-//! Unit tests for unlinking before replacing generated `package.json` manifests via [`replace`].
+//! Unit tests for unlinking before replacing generated `package.json` manifests via [`replace`] in `bit-object-import`.
 
 use super::replace;
 use crate::workspace::engine::command::scratch;

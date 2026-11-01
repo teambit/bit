@@ -1,4 +1,4 @@
-//! Unit tests for per-scope remote ref preparation ([`prepare_refs`]) and host validation ([`validate_selected`]).
+//! Unit tests for per-scope remote ref preparation ([`prepare_refs`]) and [`Selected`] host validation ([`validate_selected`]).
 
 use super::{Selected, prepare_refs, validate_selected};
 use crate::workspace::engine::command::outbound::model::{HistoryBytes, ModelBytes};

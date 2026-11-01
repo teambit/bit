@@ -1,4 +1,4 @@
-//! Unit tests for platform separator behavior in implicit tracked lane selection via [`tracked_for_separator`].
+//! Unit tests for platform separator behavior in implicit tracked lane selection via [`tracked_for_separator`] in `bit-object-import`.
 
 use super::tracked_for_separator;
 use std::{

@@ -1,4 +1,4 @@
-//! Unit tests for retaining surviving current sources via [`retain`] during merge reload.
+//! Unit tests for retaining surviving current sources via [`retain`] during merge reload in `bit-object-import`.
 
 use super::retain;
 use serde_json::json;
