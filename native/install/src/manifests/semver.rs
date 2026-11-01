@@ -20,7 +20,7 @@ mod re;
 mod version;
 
 /// The `semver` major whose behavior to reproduce.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum Flavor {
     V6,
     V7,

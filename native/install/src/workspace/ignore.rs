@@ -1,7 +1,7 @@
 //! node-ignore 3.3.10, the `.gitignore` matcher Bit lists component files with.
 //! Patterns compile to the same JavaScript regular expressions (through the
 //! ECMAScript-compatible `regress` engine), so matching agrees with Bit,
-//! including where node-ignore differs from git.
+//! including where `node-ignore` differs from Git.
 
 #[cfg(test)]
 mod tests;

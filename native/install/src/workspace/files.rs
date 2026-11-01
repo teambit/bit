@@ -1,6 +1,6 @@
 //! A component's files (`getFilesByDir`): every file under its root dir, minus
 //! Bit's scan exclusions, the workspace ignore rules, the generated files Bit
-//! owns and the component's own ignore file. The workspace-root component
+//! owns, and the component's own ignore file. The workspace-root component
 //! (`.`) also honors nested ignore files and leaves nested components out.
 
 use super::{bitmap::WORKSPACE_ROOT_DIR, ignore::Ignore};

@@ -14,7 +14,7 @@ use crate::{
 use serde_json::Value;
 use std::io;
 
-/// One registration: the registering aspect id and its `VariantPolicyConfigObject`.
+/// One registration: the registering aspect ID and its `VariantPolicyConfigObject`.
 pub type Registration = (String, Value);
 
 /// The aspects Bit treats as core besides the manifest's core aspects.

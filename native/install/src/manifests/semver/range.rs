@@ -11,7 +11,7 @@ use indexmap::IndexMap;
 use std::io;
 
 /// A parsed range: OR-ed sets of AND-ed comparators.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Range {
     pub(crate) set: Vec<Vec<Comparator>>,
 }

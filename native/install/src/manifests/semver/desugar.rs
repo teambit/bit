@@ -24,6 +24,7 @@ fn next(id: Option<&str>) -> u64 {
 }
 
 /// `^…` and `~…` share the `[M, m, p, pr]` capture layout.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Parts<'a> {
     major: &'a str,
     minor: Option<&'a str>,

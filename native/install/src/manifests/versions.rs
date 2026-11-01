@@ -1,4 +1,4 @@
-//! Version helpers shared by the manifest stages.
+//! Version helpers shared by the manifest calculation stages.
 
 use super::semver::valid_range;
 use crate::model::{Lifecycle, PolicyEntry};

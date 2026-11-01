@@ -10,7 +10,7 @@ use super::scope_model::ScopeObjects;
 use crate::model::WorkspaceComponent;
 use std::io;
 
-/// The env ids whose components are aspects: `core` plus the envs of
+/// The env IDs whose components are aspects: `core` plus the envs of
 /// components whose stored descriptor says `aspect`.
 pub fn aspect_env_ids(
     components: &[WorkspaceComponent],

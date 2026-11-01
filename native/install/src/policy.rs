@@ -1,4 +1,4 @@
-//! Workspace, variant and env dependency policies.
+//! Workspace, variant, and env dependency policies.
 
 pub mod entries;
 pub mod env;

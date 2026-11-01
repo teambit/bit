@@ -8,7 +8,7 @@ use super::{
 use std::{cmp::Ordering, io};
 
 /// One `<op><version>` comparator. `semver` is `None` for `ANY` (an empty comparator).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Comparator {
     pub(crate) operator: String,
     pub(crate) semver: Option<SemVer>,

@@ -1,4 +1,4 @@
-//! The package names of external envs: envs that are neither core envs nor
+//! Package names of external envs: envs that are neither core envs nor
 //! workspace components, as `getPackageName` names the env component.
 
 #[cfg(test)]

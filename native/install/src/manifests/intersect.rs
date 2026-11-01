@@ -11,7 +11,7 @@ use single::{Single, create_single, normalize};
 use std::io;
 
 /// A union of single ranges (`MultiRange`); empty is the library's invalid range.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Multi(Vec<Single>);
 
 impl Multi {

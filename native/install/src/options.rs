@@ -1,6 +1,6 @@
 //! `bit install` argv parsing, matching Bit's yargs configuration
 //! (`cli-parser.ts`: `boolean-negation: false`, camel-case expansion) for the
-//! flags `install.cmd.tsx` declares.
+//! CLI flags `install.cmd.tsx` declares.
 
 #[cfg(test)]
 mod tests;

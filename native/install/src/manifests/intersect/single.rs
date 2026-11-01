@@ -1,4 +1,4 @@
-//! `SingleVer` / `SingleRange` of `semver-range-intersect`.
+//! `SingleVer` and `SingleRange` representations for `semver-range-intersect`.
 
 use super::{
     super::semver::{Comparator, SemVer},

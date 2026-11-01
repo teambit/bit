@@ -14,7 +14,7 @@ pub type DependencyMap = IndexMap<String, String>;
 
 /// A component id as Bit prints it: `scope/name@version`. `scope` is `None` for
 /// a new component that has only a `defaultScope`.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct ComponentId {
     pub scope: Option<String>,
     pub default_scope: Option<String>,

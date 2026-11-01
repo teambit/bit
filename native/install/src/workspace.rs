@@ -1,4 +1,4 @@
-//! Workspace components from `.bitmap`, `component.json` and variants.
+//! Workspace components from `.bitmap`, `component.json`, and variants.
 //!
 //! [`Workspace::load`] reads every `.bitmap` entry and computes what Bit's
 //! component loader would for install: the files under the root dir (with

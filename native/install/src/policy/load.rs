@@ -52,7 +52,7 @@ pub fn split_version(id: &str) -> (&str, Option<&str>) {
     }
 }
 
-/// The policy of every env used by `components`, keyed by the env id as written
+/// The policy of every env used by `components`, keyed by the env ID as written
 /// in [`WorkspaceComponent::env_id`].
 pub async fn load_env_policies(
     root: &Path,

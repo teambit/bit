@@ -17,7 +17,7 @@ const REMOVE_ASPECT: &str = "teambit.component/remove";
 pub const WORKSPACE_ROOT_DIR: &str = ".";
 
 /// The lane the workspace is on (`_bit_lane`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct LaneInfo {
     pub scope: String,
     pub name: String,

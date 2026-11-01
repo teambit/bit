@@ -1,5 +1,5 @@
 //! Policy entries from config objects (`WorkspacePolicyFactory`, `VariantPolicy.fromConfigObject`)
-//! and the shared `mergePolices` rule.
+//! and the shared `mergePolices` deduplication rule.
 
 use crate::model::{Lifecycle, Manifest, PolicyEntry};
 use serde_json::{Map, Value};

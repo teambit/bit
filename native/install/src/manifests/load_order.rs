@@ -1,5 +1,5 @@
 //! `buildLoadGroups`: the order `workspace.list` returns the components in. The
-//! manifests keep it (`componentsManifestsMap`), and the env peers resolve their
+//! manifests preserve it (`componentsManifestsMap`), and the env peers resolve their
 //! conflicts in it: the version an env lists last wins.
 
 #[cfg(test)]

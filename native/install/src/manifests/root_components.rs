@@ -1,5 +1,7 @@
 //! Root components: one `.bit_roots/<id>` project per env and app
 //! (`_getRootManifests`).
+//!
+//! Assembles isolated root component manifests and their forced env dependencies.
 
 use super::{
     ManifestInput,

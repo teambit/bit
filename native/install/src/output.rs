@@ -18,7 +18,7 @@ const FRAMES: [&str; 10] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "�
 const FRAME_INTERVAL: Duration = Duration::from_millis(80);
 
 /// ANSI styles used by Bit's install output.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Style {
     Green,
     Yellow,

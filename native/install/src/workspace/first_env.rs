@@ -15,6 +15,7 @@ use crate::{
 use std::io;
 
 /// Set the env of components whose env comes from an env aspect configured on them.
+#[inline]
 pub fn resolve(
     components: &mut [WorkspaceComponent],
     objects: &ScopeObjects,

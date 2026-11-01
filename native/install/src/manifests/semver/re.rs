@@ -7,7 +7,7 @@ use regress::{Match, Regex};
 use std::sync::OnceLock;
 
 /// The compiled expressions, indexed by [`Token`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(super) enum Token {
     Full,
     Xrange,

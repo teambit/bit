@@ -6,6 +6,7 @@ use serde_json::{Map, Value, json};
 use std::io;
 
 /// Options of `entriesFromKey` in `env-policy.ts`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct KeyOptions {
     version_key: &'static str,
     lifecycle: Lifecycle,

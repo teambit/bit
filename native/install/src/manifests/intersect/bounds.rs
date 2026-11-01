@@ -1,4 +1,6 @@
 //! Comparator helpers of `semver-range-intersect` (`utils.js`).
+//!
+//! Normalizes prerelease stripping and equality checks across comparators.
 
 use super::super::semver::{Comparator, SemVer};
 use std::{cmp::Ordering, io};

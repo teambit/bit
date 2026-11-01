@@ -1,4 +1,4 @@
-//! The legacy overrides views of a merged component policy
+//! Legacy overrides views of a merged component policy
 //! (`toLegacyAutoDetectOverrides`, `toLegacyDepsOverrides`).
 
 use crate::model::{Lifecycle, PolicyEntry};

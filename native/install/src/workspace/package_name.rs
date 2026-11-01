@@ -1,4 +1,4 @@
-//! `componentIdToPackageName`.
+//! Component ID to package name resolution (`componentIdToPackageName`).
 
 use crate::model::ComponentId;
 use serde_json::{Map, Value};

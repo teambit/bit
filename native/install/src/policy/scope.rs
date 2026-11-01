@@ -1,4 +1,4 @@
-//! Read-only access to the workspace scope objects: component models, `Version`s
+//! Read-only access to the workspace scope objects: component models, `Version`s,
 //! and their `Source` files. Objects are loose zlib files whose inflated contents
 //! are `<type> <hash> <size>\0<body>`.
 

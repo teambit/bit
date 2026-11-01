@@ -46,7 +46,7 @@ pub struct ManifestInput<'a> {
     pub root: &'a Path,
     /// Workspace components, without the component at the workspace root (`rootDir: "."`).
     pub components: &'a [WorkspaceComponent],
-    /// Per component, keyed by the component id without version.
+    /// Per component, keyed by the component ID without version.
     pub dependencies: &'a IndexMap<String, ComponentDependencies>,
     pub policies: Policies<'a>,
     pub config: &'a DependencyResolverConfig,
