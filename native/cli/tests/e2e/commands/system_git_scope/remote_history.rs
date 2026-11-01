@@ -1,4 +1,4 @@
-//! Compare remote `version-history` action requests and reports against the released CLI.
+//! Compare remote `bit version-history` action requests and reports against the released CLI.
 use crate::helper::{Helper, action_server::Server};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};

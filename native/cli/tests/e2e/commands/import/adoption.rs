@@ -1,4 +1,4 @@
-//! Strict whole-command parity for workspace adoption and dependent-path imports.
+//! Strict whole-command parity for workspace adoption, `--write-deps`, and dependent-path imports.
 
 mod callbacks;
 mod combined;

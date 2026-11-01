@@ -1,4 +1,4 @@
-//! End-to-end command parity suites (`e2e/commands/`).
+//! End-to-end command parity suites (`e2e/commands/`) for native CLI commands.
 
 pub(crate) mod add;
 pub(crate) mod diff_completion;

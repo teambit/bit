@@ -1,4 +1,4 @@
-//! Port of `e2e/commands/pattern.e2e.ts` for native `bit pattern` parity.
+//! Port of `e2e/commands/pattern.e2e.ts` for native `bit pattern` glob, state, and JSON parity.
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use serde_json::json;

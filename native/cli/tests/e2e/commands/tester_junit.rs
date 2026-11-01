@@ -1,4 +1,4 @@
-//! Released `JUnit` files preserve test details and observable writes.
+//! Released `JUnit` (`--junit`) files preserve test details, timestamps, and observable writes.
 
 use super::{add::support, move_paths, tester::timings};
 use crate::helper::{Helper, Run};

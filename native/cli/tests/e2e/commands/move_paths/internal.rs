@@ -1,4 +1,4 @@
-//! Internal path relocation uses the component's complete retained ignore policy.
+//! Internal path relocation (`bit move`) uses the component's complete retained ignore policy.
 
 use super::support::{bitmap, compare, setup, workspace};
 use std::fs;

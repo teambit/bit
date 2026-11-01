@@ -1,4 +1,4 @@
-//! The released `fetch --from-original-scopes` flag is accepted but ignored:
+//! The released `bit fetch --from-original-scopes` flag is accepted but ignored:
 //! `FetchCmd` declares the plural option yet reads the singular `fromOriginalScope`.
 
 use super::{

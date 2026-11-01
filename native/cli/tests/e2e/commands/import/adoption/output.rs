@@ -1,4 +1,4 @@
-//! Only the released import completion line's validated duration token varies.
+//! Only the released `bit import` completion line's validated duration token varies.
 
 pub(super) fn durations(text: &str) -> String {
     text.split_inclusive('\n')

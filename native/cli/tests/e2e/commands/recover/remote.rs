@@ -1,4 +1,4 @@
-//! `Scope.get` imports missing models before the separate nonpersisting remote peek.
+//! `Scope.get` imports missing models before the separate nonpersisting remote peek during `bit recover`.
 
 pub(super) mod history;
 

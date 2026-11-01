@@ -1,4 +1,4 @@
-//! Export recovery protocol, failures, and reports against the released CLI.
+//! `bit resume-export` recovery protocol, failures, and reports against the released CLI.
 
 mod file;
 

@@ -1,4 +1,4 @@
-//! Published application registration participates in snapshot metadata.
+//! Published application registration (`.node-app.js`) participates in snapshot metadata.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;

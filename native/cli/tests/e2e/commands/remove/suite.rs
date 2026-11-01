@@ -1,4 +1,4 @@
-//! Port of `e2e/commands/remove.e2e.ts` for native `bit remove` parity.
+//! Port of `e2e/commands/remove.e2e.ts` for native `bit remove` local and remote parity.
 
 use crate::helper::{Helper, remote};
 use std::fs;

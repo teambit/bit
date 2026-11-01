@@ -138,6 +138,7 @@ fn malformed_clock_ids_are_rejected() {
         "2026-1-2-3-60-5",
         "2026-1-2-3-4-60",
         "2026-1-2-3-4",
+        "",
     ] {
         assert!(std::panic::catch_unwind(|| super::validate_id(id)).is_err(), "accepted {id}");
     }

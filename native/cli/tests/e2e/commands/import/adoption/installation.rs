@@ -1,4 +1,4 @@
-//! Real default installation; the published JSON mode suppresses pnpm's timed reporter.
+//! Real default installation during `bit import`; the published JSON mode suppresses pnpm's timed reporter.
 
 use super::{file, untrack};
 use crate::{

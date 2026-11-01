@@ -1,4 +1,4 @@
-//! Ordinary recovery uses one final bitmap publication after all selected actions.
+//! Ordinary `bit recover` uses one final `.bitmap` publication after all selected actions.
 
 use crate::commands::move_paths::support::{bitmap, setup, successful, workspace};
 use std::fs;

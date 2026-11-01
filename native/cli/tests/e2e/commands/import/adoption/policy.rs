@@ -1,4 +1,4 @@
-//! Dependency policy update tests for workspace adoption and `bit import --write-deps`.
+//! Dependency policy update tests for workspace adoption and `bit import --write-deps` manifests.
 
 use super::command;
 use crate::{

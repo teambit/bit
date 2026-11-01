@@ -1,4 +1,4 @@
-//! Pending merge configuration is captured by ordinary snapshot publication.
+//! Pending merge configuration (`unmerged.json`) is captured by ordinary `bit snap --unmerged` publication.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;

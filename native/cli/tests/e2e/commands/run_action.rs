@@ -1,4 +1,4 @@
-//! Compare `bit run-action <action-name> <remote> <options>` against the released CLI.
+//! Compare `bit run-action <action-name> <remote> <options>` against the released Node.js CLI.
 
 use crate::helper::{Helper, action_server::Server};
 use serde_json::{Value, json};

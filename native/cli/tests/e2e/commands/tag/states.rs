@@ -1,4 +1,4 @@
-//! Unrelated bitmap states do not prevent versioning other components.
+//! Unrelated `.bitmap` states (`local-only`) do not prevent versioning other components.
 
 use super::soft::{bitmap, compare_command};
 use crate::helper::Helper;

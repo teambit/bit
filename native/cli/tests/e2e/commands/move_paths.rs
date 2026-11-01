@@ -1,4 +1,4 @@
-//! Original move-directory, imported-directory, and manually moved source contracts.
+//! Original `bit move` directory, imported-directory, and manually moved source contracts.
 
 pub(crate) mod support;
 

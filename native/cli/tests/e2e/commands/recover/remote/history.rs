@@ -1,4 +1,4 @@
-//! Recovery keeps its exact published import/recover transition contract.
+//! Remote recovery keeps its exact published `import` + `recover` `.bitmap` transition contract.
 
 use crate::{
     commands::add::support::history_oracle,

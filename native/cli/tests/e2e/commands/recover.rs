@@ -1,4 +1,4 @@
-//! Local `bit recover -x` parity against the pinned Node.js CLI.
+//! Local and remote `bit recover -x` parity against the pinned Node.js CLI.
 
 mod batch;
 mod providers;

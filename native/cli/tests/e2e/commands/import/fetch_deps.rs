@@ -1,4 +1,4 @@
-//! `--fetch-deps` bypasses a saved dependency graph without adding dependencies to the bitmap.
+//! `bit import --fetch-deps` bypasses a saved dependency graph without adding dependencies to `.bitmap`.
 
 use crate::helper::{Helper, config::read_jsonc};
 use std::ffi::OsStr;

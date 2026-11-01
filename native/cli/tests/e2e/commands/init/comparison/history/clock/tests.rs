@@ -20,4 +20,5 @@ fn numeric_dates_preserve_month_and_year_carry() {
 #[test]
 fn no_history_requires_no_wait() {
     assert!(past(None, date("2026-10-18-12-0-0")));
+    assert!(past(Some(date("2026-10-18-12-0-0")), date("2026-10-18-12-0-2")));
 }

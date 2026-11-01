@@ -1,4 +1,4 @@
-//! File pending-object recovery against restored scopes and the released CLI.
+//! File pending-object recovery (`bit resume-export`) against restored scopes and the released CLI.
 
 mod order;
 use crate::helper::{Helper, Run};

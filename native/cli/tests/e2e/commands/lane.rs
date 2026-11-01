@@ -1,4 +1,4 @@
-//! Client-side lane creation from a clean main workspace.
+//! Client-side lane creation, import, switch, and list parity from a clean or staged workspace.
 
 mod staged;
 use crate::helper::{Helper, config, parse, remote, setup};

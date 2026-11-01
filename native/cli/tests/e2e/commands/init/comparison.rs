@@ -1,4 +1,4 @@
-//! Only fresh local scope identifiers and wall-clock backup filenames differ.
+//! Only fresh local scope identifiers and wall-clock backup filenames differ during `bit init`.
 
 mod history;
 

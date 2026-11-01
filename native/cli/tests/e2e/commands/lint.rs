@@ -1,4 +1,4 @@
-//! Native linter orchestration compares released diagnostics and complete workspace/cache state.
+//! Native `bit lint` orchestration compares released diagnostics and complete workspace/cache state.
 
 use super::move_paths::support;
 

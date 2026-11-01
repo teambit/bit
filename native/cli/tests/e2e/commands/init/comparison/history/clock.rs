@@ -1,4 +1,4 @@
-//! Age real setup backup IDs before replay; init creates one backup per history store.
+//! Age real setup backup IDs before replay; `bit init` creates one backup per history store.
 
 mod tests;
 use super::{Histories, validate_id};
