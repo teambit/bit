@@ -260,13 +260,10 @@ impl Prepared {
         if plan.get("token").and_then(Value::as_str) != Some(&token) {
             return Err(decline("recovery plan token"));
         }
-        let result = plan
-            .get("result")
-            .ok_or_else(|| decline("recovery result"))?
-            .clone();
-        format_result(&result, kind, Chalk::detect(&[]))?;
+        let result = plan.get("result").ok_or_else(|| decline("recovery result"))?;
+        format_result(result, kind, Chalk::detect(&[]))?;
         let progress = Progress::parse(plan.get("progress"))?;
-        let ids = install_ids(&result, kind)?;
+        let ids = install_ids(result, kind)?;
         Ok(Self { engine, token, context, capture, progress, ids, kind })
     }
 
@@ -289,7 +286,7 @@ impl Prepared {
             read_set =
                 array(restored.get("dependencyReadSet"), "restored dependency read set")?.to_vec();
         }
-        let applied: Value = self.engine.request(&json!({
+        let mut applied: Value = self.engine.request(&json!({
             "kind":"commandRecoveryApply","token":self.token,"fileId":file_id,
             "dependencyReadSet":read_set,
         }))?;
@@ -297,8 +294,8 @@ impl Prepared {
             .then_some(())
             .ok_or_else(|| io::Error::other("recovery apply receipt"))?;
         applied
-            .get("result")
-            .cloned()
+            .get_mut("result")
+            .map(Value::take)
             .ok_or_else(|| io::Error::other("recovery apply result"))
     }
 }

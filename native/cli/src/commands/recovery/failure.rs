@@ -10,15 +10,13 @@ pub(super) fn preflight(request: &Value) -> io::Result<()> {
     match result {
         Ok(prepared) => {
             let token = super::text(prepared.get("token"))?.trim();
-            let has_context = prepared.get("context").is_some_and(Value::is_object);
+            if token.is_empty() || !prepared.get("context").is_some_and(Value::is_object) {
+                return Err(decline("recovery missing component root"));
+            }
             let capture_targets =
                 array(prepared.get("captureTargets"), "recovery capture targets")?;
             let targets = array(prepared.get("targets"), "recovery targets")?;
-            if token.is_empty()
-                || !has_context
-                || capture_targets.len() != targets.len()
-                || capture_targets.len() > 4096
-            {
+            if capture_targets.len() != targets.len() || capture_targets.len() > 4096 {
                 return Err(decline("recovery missing component root"));
             }
             Ok(())

@@ -2,7 +2,7 @@ use bit_object_import::component_rename::Options;
 
 pub(super) fn parse(argv: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    let mut positions = Vec::new();
+    let mut positions = Vec::with_capacity(2);
     let mut arguments = argv.iter().copied();
     while let Some(raw_argument) = arguments.next() {
         let argument = raw_argument.trim();
@@ -68,7 +68,7 @@ fn apply_inline_or_positional(
         .or_else(|| argument.strip_prefix("-p="))
     {
         options.path = Some(take_val(val)?);
-    } else if !argument.trim().starts_with('-') {
+    } else if !argument.starts_with('-') {
         positions.push(take_val(argument)?);
     } else {
         return None;

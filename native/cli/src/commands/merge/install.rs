@@ -9,10 +9,10 @@ pub(in crate::commands) fn start(
 ) -> io::Result<Option<Installer>> {
     if skip
         || root.as_os_str().is_empty()
-        || !root.is_dir()
-        || !argv
+        || argv
             .iter()
-            .any(|arg| !arg.trim().is_empty())
+            .all(|arg| arg.trim().is_empty())
+        || !root.is_dir()
     {
         Ok(None)
     } else {

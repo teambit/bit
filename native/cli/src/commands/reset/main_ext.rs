@@ -273,16 +273,17 @@ fn detached_current_snap(model: &Value, local: &[String]) -> io::Result<String> 
 
 /// Load the detached `Version` object and resolve its parent list and `.bitmap` version label.
 fn detached_parent_info(scope: &Path, model: &Value, current: &str) -> io::Result<(Value, String)> {
-    let (_, version) =
+    let (_, mut version) =
         read_scope_object(scope, current)?.ok_or_else(|| invalid("detached version absent"))?;
-    let parents = version["parents"].as_array().ok_or_else(|| invalid("detached parents"))?;
+    let parents_val = version["parents"].take();
+    let parents = parents_val.as_array().ok_or_else(|| invalid("detached parents"))?;
     let [parent] = parents.as_slice() else {
         return Err(invalid("detached parent count"));
     };
     let parent_hash = parent.as_str().ok_or_else(|| invalid("detached parent hash"))?;
     let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, parent_hash)
         .unwrap_or_else(|| parent_hash.to_owned());
-    Ok((version["parents"].clone(), label))
+    Ok((parents_val, label))
 }
 
 /// Extract keys marked `local: true` in `state.versions`.

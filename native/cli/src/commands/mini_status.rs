@@ -41,10 +41,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     let mut json = false;
-    let rest = args.get(1..)?;
-    for (idx, arg) in rest.iter().enumerate() {
+    let mut iter = args.get(1..)?.iter();
+    while let Some(arg) = iter.next() {
         match arg.to_str()?.trim() {
-            "--" => return (idx + 1 == rest.len()).then_some(json),
+            "--" => return iter.next().is_none().then_some(json),
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"

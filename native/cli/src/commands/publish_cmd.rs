@@ -55,7 +55,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 .trim_matches(['"', '\''])
                 .trim();
             !trimmed.is_empty()
-                && !matches!(trimmed.to_ascii_lowercase().as_str(), "0" | "false" | "no" | "off")
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         });
     if ci_enabled {
         return Ok(Outcome::Declined("CI publish delegated".into()));

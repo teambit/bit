@@ -44,7 +44,7 @@ pub fn format(result: &Value, mode: Mode, chalk: Chalk) -> io::Result<Report> {
     };
     let others = report.other_skipped();
     let hidden = !others.is_empty() && !mode.verbose;
-    let detailed = report.join(&report.skipped_detailed());
+    let detailed = report.join(&report.skipped_detailed(&others));
     if !hidden {
         return Ok(Report { data: detailed, code: 0, details: None });
     }
@@ -126,10 +126,9 @@ impl Merge<'_> {
     }
 
     /// `getFailureOutputDetailed`.
-    fn skipped_detailed(&self) -> String {
-        let items: Vec<String> = self
-            .other_skipped()
-            .into_iter()
+    fn skipped_detailed(&self, others: &[&(crate::commands::ids::Id, String)]) -> String {
+        let items: Vec<String> = others
+            .iter()
             .map(|(id, message)| {
                 let bold_id = self.chalk().bold(&id.display());
                 let trimmed = message.trim();

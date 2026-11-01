@@ -60,22 +60,26 @@ fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
     let summary = lane_restored_summary(items, &Formatter::new(chalk))?;
     let checkout = lane_checkout_report(map, chalk)?;
     let error = lane_checkout_error(map, chalk)?;
+    let details =
+        checkout.details.map(|details| Formatter::join(&[details, summary.clone(), error.clone()]));
     Ok(Report {
-        data: Formatter::join(&[checkout.data, summary.clone(), error.clone()]),
+        data: Formatter::join(&[checkout.data, summary, error]),
         code: checkout.code,
-        details: checkout.details.map(|details| Formatter::join(&[details, summary, error])),
+        details,
     })
 }
 
 fn lane_restored_summary(items: &[Value], format: &Formatter) -> io::Result<String> {
     let restored = items
         .iter()
-        .map(|item| text(Some(item)).map(str::trim))
-        .collect::<io::Result<Vec<_>>>()?
-        .into_iter()
-        .filter(|item| !item.is_empty())
-        .map(|item| format.item(item))
-        .collect::<Vec<_>>();
+        .filter_map(|item| match text(Some(item)) {
+            Ok(raw) => {
+                let trimmed = raw.trim();
+                (!trimmed.is_empty()).then(|| Ok(format.item(trimmed)))
+            }
+            Err(err) => Some(Err(err)),
+        })
+        .collect::<io::Result<Vec<_>>>()?;
     if restored.is_empty() {
         return Ok(String::new());
     }

@@ -40,7 +40,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn unknown_subcommand_message(subcommand: &str, chalk: Chalk) -> String {
-    let subcommand = subcommand.trim();
     chalk.red(&format!(
         r#""{subcommand}" is not a subcommand of "npmrc", please run "bit npmrc --help" to list the subcommands"#,
     ))
@@ -50,12 +49,13 @@ fn parse_subcommand(args: &[OsString]) -> Option<String> {
     let tokens = args
         .get(1..)?
         .iter()
-        .map(|arg| arg.to_str().map(str::trim))
+        .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?;
     let filtered = super::scope_set::collect_non_flag_tokens(&tokens)?;
     let [subcommand] = filtered.as_slice() else {
         return None;
     };
-    let trimmed = subcommand.trim();
-    (!trimmed.is_empty() && !trimmed.contains(char::is_whitespace)).then(|| trimmed.to_owned())
+    (!subcommand.is_empty() && !subcommand.contains(char::is_whitespace)).then(|| {
+        (*subcommand).to_owned()
+    })
 }

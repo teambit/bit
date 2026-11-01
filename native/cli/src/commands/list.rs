@@ -240,21 +240,25 @@ fn models(root: &Path, lane: Option<&Value>) -> io::Result<(Vec<Model>, Vec<Stri
 
 /// `ComponentIdList.uniqFromArray`: the bitmap's ids first, then the
 /// models', each with whether it has its own scope.
-fn all_ids(bitmap: &[bitmap::Entry], models: &[Model], local_scope: bool) -> Vec<(String, bool)> {
+fn all_ids<'a>(
+    bitmap: &'a [bitmap::Entry],
+    models: &'a [Model],
+    local_scope: bool,
+) -> Vec<(&'a str, bool)> {
     let workspace = bitmap
         .iter()
         .filter(|_| !local_scope)
-        .map(|entry| (&entry.identity, entry.has_scope));
+        .map(|entry| (entry.identity.as_str(), entry.has_scope));
     let scope = models
         .iter()
-        .map(|model| (&model.identity, true));
-    let mut ids: Vec<(String, bool)> = Vec::new();
+        .map(|model| (model.identity.as_str(), true));
+    let mut ids: Vec<(&'a str, bool)> = Vec::with_capacity(bitmap.len() + models.len());
     for (identity, has_scope) in workspace.chain(scope) {
         if !ids
             .iter()
-            .any(|(seen, _)| seen == identity)
+            .any(|(seen, _)| *seen == identity)
         {
-            ids.push((identity.clone(), has_scope));
+            ids.push((identity, has_scope));
         }
     }
     ids
@@ -270,7 +274,7 @@ fn wildcard_name(identity: &str, has_scope: bool) -> &str {
 }
 
 /// The `ListScopeResult` of an id.
-fn row(identity: String, bitmap: &[bitmap::Entry], models: &[Model]) -> Row {
+fn row(identity: &str, bitmap: &[bitmap::Entry], models: &[Model]) -> Row {
     let model = models
         .iter()
         .find(|model| model.identity == identity);
@@ -288,7 +292,7 @@ fn row(identity: String, bitmap: &[bitmap::Entry], models: &[Model]) -> Row {
         removed: None,
         remote_version: None,
         lane_readme_of: model.map_or_else(Vec::new, |model| model.lane_readme_of.clone()),
-        identity,
+        identity: identity.to_owned(),
     }
 }
 
@@ -388,6 +392,6 @@ const fn line_terminator(character: char) -> bool {
     matches!(character, '\n' | '\r' | '\u{2028}' | '\u{2029}')
 }
 
-fn decline(reason: &str) -> io::Error {
-    io::Error::other(reason.to_string())
+fn decline(reason: &'static str) -> io::Error {
+    io::Error::other(reason)
 }

@@ -176,14 +176,8 @@ fn run_dependency_name_non_workspace(
 }
 
 fn emit_scope_error(cwd: &Path, args: &[OsString], msg: &str) -> io::Result<Outcome> {
-    workspace_command::execute_failure_scope(
-        cwd,
-        args,
-        "dependency-name",
-        false,
-        "",
-        io::Error::other(msg.to_owned()),
-    )
+    let err = io::Error::other(msg.to_owned());
+    workspace_command::execute_failure_scope(cwd, args, "dependency-name", false, "", err)
 }
 
 fn prepare_bare_scope_dependency_name(
@@ -327,8 +321,7 @@ fn extract_version_package_name(ver_val: &Value) -> Option<String> {
 
 fn is_valid_scoped_package_name(name: &str) -> bool {
     let name = name.trim();
-    name.starts_with('@')
-        && name.len() <= 214
+    name.len() <= 214
         && !name.contains('\\')
         && !name.contains("..")
         && name
@@ -337,17 +330,16 @@ fn is_valid_scoped_package_name(name: &str) -> bool {
             .is_some_and(|(scope, pkg)| !scope.is_empty() && !pkg.is_empty())
 }
 
-fn load_scope_index_components(scope_dir: &Path) -> Option<Vec<Value>> {
-    let bytes = fs::read(scope_dir.join("index.json")).ok()?;
-    let index = bit_object_import::parse_jsonc(&bytes).ok()?;
+fn scope_has_components(scope_dir: &Path) -> bool {
+    let Ok(bytes) = fs::read(scope_dir.join("index.json")) else {
+        return false;
+    };
+    let Ok(index) = bit_object_import::parse_jsonc(&bytes) else {
+        return false;
+    };
     index["components"]
         .as_array()
         .or_else(|| index.as_array())
-        .cloned()
-}
-
-fn scope_has_components(scope_dir: &Path) -> bool {
-    load_scope_index_components(scope_dir)
         .is_some_and(|comps| {
             comps
                 .iter()
@@ -373,6 +365,9 @@ fn refactor_component(
             continue;
         }
         let content = String::from_utf8_lossy(&bytes);
+        if !content.contains(old_pkg) {
+            continue;
+        }
         let updated = replace_package_name(&content, old_pkg, new_pkg)?;
         if updated != content {
             writes.push((path, updated.into_bytes()));

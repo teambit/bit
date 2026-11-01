@@ -56,7 +56,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                     .trim()
                     .trim_matches(['"', '\''])
                     .trim();
-                !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+                !trimmed.is_empty()
+                    && !trimmed.eq_ignore_ascii_case("0")
+                    && !trimmed.eq_ignore_ascii_case("false")
+                    && !trimmed.eq_ignore_ascii_case("no")
+                    && !trimmed.eq_ignore_ascii_case("off")
             });
         if ci {
             return Ok(Outcome::Declined("not inside a workspace".into()));
@@ -111,7 +115,7 @@ fn emit(
     if options.json {
         let history = root.map(|root| History::start(root, args));
         let mut stdout = io::stdout().lock();
-        stdout.write_all(serde_json::to_string_pretty(&output)?.as_bytes())?;
+        serde_json::to_writer_pretty(&mut stdout, output)?;
         stdout.flush()?;
         if let Some(history) = history {
             history.end(true);
@@ -182,7 +186,7 @@ fn read(
 
 pub(super) fn normalize(row: &Value) -> io::Result<Value> {
     let raw = row["log"].as_object().ok_or_else(|| decline("component log metadata"))?;
-    let mut normalized = Map::new();
+    let mut normalized = Map::with_capacity(raw.len() + 7);
     for (key, value) in raw {
         if key != "date" {
             normalized.insert(key.clone(), value.clone());

@@ -15,8 +15,9 @@ pub(super) struct Options<'a> {
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
-        if arg.trim() == "--" {
+    while let Some(raw_arg) = iter.next() {
+        let arg = raw_arg.trim();
+        if arg == "--" {
             consume_trailing_id(iter, &mut options.id)?;
             break;
         }
@@ -39,8 +40,7 @@ fn consume_trailing_id<'a>(
     Some(())
 }
 
-fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
-    let trimmed = arg.trim();
+fn apply_log_arg<'a>(options: &mut Options<'a>, trimmed: &'a str) -> Option<()> {
     if matches!(
         trimmed,
         "--no-color"
@@ -83,8 +83,7 @@ fn parse_log_flag_value(arg: &str) -> Option<(&str, bool)> {
         Some((flag, raw)) if flag.starts_with("--") => {
             match raw
                 .trim()
-                .trim_matches('"')
-                .trim_matches('\'')
+                .trim_matches(['"', '\''])
                 .trim()
             {
                 "true" => Some((flag, true)),

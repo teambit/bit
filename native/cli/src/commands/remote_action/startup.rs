@@ -74,9 +74,12 @@ fn scope_supported(scope: &Path) -> io::Result<bool> {
     let core: Vec<String> = serde_json::from_str(include_str!(
         "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
     ))?;
+    if !config_supported(&raw, &core) {
+        return Ok(false);
+    }
     let global =
         bit_workspace_config::read_global_config(&bit_workspace_config::global_config_dir())?;
-    Ok([&raw, &global].into_iter().all(|config| config_supported(config, &core)))
+    Ok(config_supported(&global, &core))
 }
 
 fn config_supported(config: &Value, core: &[String]) -> bool {

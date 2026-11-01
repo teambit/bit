@@ -204,10 +204,9 @@ fn load_scope_json(
     }
     let value: Value = bit_workspace_config::parse_jsonc(&fs::read(&scope_json_path)?)
         .map_err(|error| Failure::Declined(error.to_string()))?;
-    let object = value
-        .as_object()
-        .cloned()
-        .ok_or_else(|| Failure::Declined("scope.json is not an object".to_owned()))?;
+    let Value::Object(object) = value else {
+        return Err(Failure::Declined("scope.json is not an object".to_owned()));
+    };
     if object
         .keys()
         .any(|key| !SCOPE_KEYS.contains(&key.as_str()))
@@ -289,8 +288,7 @@ pub(super) fn resolve_path(cwd: &Path, raw: &str) -> PathBuf {
     } else {
         PathBuf::from(raw)
     };
-    let joined = if expanded.is_absolute() { expanded } else { cwd.join(expanded) };
-    normalize_path(&joined)
+    normalize_path(&cwd.join(expanded))
 }
 
 fn normalize_path(path: &Path) -> PathBuf {

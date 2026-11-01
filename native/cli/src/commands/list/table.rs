@@ -99,14 +99,10 @@ fn sgr_length(text: &str) -> Option<usize> {
 
 /// `Table.toString()` with `head` and `rows`.
 pub(crate) fn render(head: &[&str], rows: &[Vec<String>], colors: bool) -> String {
-    let head: Vec<String> = head
-        .iter()
-        .map(|cell| (*cell).to_string())
-        .collect();
-    let widths = widths(&head, rows);
+    let widths = widths(head, rows);
     let mut output = line(&widths, ['┌', '┐', '┬'], colors);
     output.push('\n');
-    output.push_str(&row(&head, &widths, colors, true));
+    output.push_str(&row(head, &widths, colors, true));
     output.push('\n');
     for cells in rows {
         output.push_str(&line(&widths, ['├', '┤', '┼'], colors));
@@ -119,7 +115,7 @@ pub(crate) fn render(head: &[&str], rows: &[Vec<String>], colors: bool) -> Strin
 }
 
 /// Each column's width: its longest cell and the padding.
-fn widths(head: &[String], rows: &[Vec<String>]) -> Vec<usize> {
+fn widths(head: &[&str], rows: &[Vec<String>]) -> Vec<usize> {
     let mut widths: Vec<usize> = head
         .iter()
         .map(|cell| strlen(cell) + 2)
@@ -145,13 +141,14 @@ fn line(widths: &[usize], [left, right, middle]: [char; 3], colors: bool) -> Str
 }
 
 /// `generateRow`: each cell's lines padded, side by side.
-fn row(cells: &[String], widths: &[usize], colors: bool, head: bool) -> String {
+fn row(cells: &[impl AsRef<str>], widths: &[usize], colors: bool, head: bool) -> String {
     let contents: Vec<Vec<String>> = cells
         .iter()
         .enumerate()
         .map(|(index, cell)| {
             let width = widths.get(index).copied().unwrap_or(0);
-            cell.split('\n')
+            cell.as_ref()
+                .split('\n')
                 .map(|line| pad(line, width))
                 .collect()
         })
@@ -161,7 +158,7 @@ fn row(cells: &[String], widths: &[usize], colors: bool, head: bool) -> String {
         .map(Vec::len)
         .max()
         .unwrap_or(0);
-    let border = |character: &str| style(colors, GREY, character);
+    let sep = style(colors, GREY, "│");
     (0..height)
         .map(|line| {
             let cells: Vec<String> = contents
@@ -173,7 +170,7 @@ fn row(cells: &[String], widths: &[usize], colors: bool, head: bool) -> String {
                     None => pad("", widths.get(index).copied().unwrap_or(0)),
                 })
                 .collect();
-            format!("{}{}{}", border("│"), cells.join(&border("│")), border("│"))
+            format!("{sep}{}{sep}", cells.join(&sep))
         })
         .collect::<Vec<_>>()
         .join("\n")

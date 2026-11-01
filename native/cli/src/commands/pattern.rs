@@ -310,21 +310,21 @@ fn parse_remote_component_ids(result: &Value) -> Result<Vec<String>, Failure> {
 }
 
 fn filter_pool_by_pattern(pool_ids: &[String], pattern: &str) -> Result<Vec<String>, Failure> {
-    let mut entries = Vec::<(String, String)>::new();
+    let mut entries = Vec::<(&str, &String)>::with_capacity(pool_ids.len());
     for id in pool_ids {
         let identity = id.rsplit_once('@').map_or(id.as_str(), |(identity, _)| identity);
         if let Some((_, full)) = entries
             .iter_mut()
-            .find(|(seen, _)| seen == identity)
+            .find(|(seen, _)| *seen == identity)
         {
-            full.clone_from(id);
+            *full = id;
         } else {
-            entries.push((identity.to_owned(), id.clone()));
+            entries.push((identity, id));
         }
     }
     let identities = entries
         .iter()
-        .map(|(identity, _)| identity.as_str())
+        .map(|(identity, _)| *identity)
         .collect::<Vec<_>>();
     let matched = patterns::extended::matching(&identities, &patterns::split(pattern))?;
     Ok(matched
@@ -332,7 +332,7 @@ fn filter_pool_by_pattern(pool_ids: &[String], pattern: &str) -> Result<Vec<Stri
         .filter_map(|identity| {
             entries
                 .iter()
-                .find_map(|(seen, full)| (seen == identity).then(|| full.clone()))
+                .find_map(|(seen, full)| (*seen == identity).then(|| (*full).clone()))
         })
         .collect())
 }

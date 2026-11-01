@@ -43,21 +43,20 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn valid_args(args: &[OsString]) -> bool {
-    let Some(rest) = args.get(1..) else {
+    if args.is_empty() {
         return false;
-    };
-    for (idx, arg) in rest.iter().enumerate() {
+    }
+    let mut iter = args.iter().skip(1);
+    while let Some(arg) = iter.next() {
         let Some(str_arg) = arg.to_str().map(str::trim) else {
             return false;
         };
         if str_arg == "--" {
-            return rest[idx + 1..]
-                .iter()
-                .all(|tail| {
-                    tail.to_str()
-                        .map(str::trim)
-                        .is_some_and(str::is_empty)
-                });
+            return iter.all(|tail| {
+                tail.to_str()
+                    .map(str::trim)
+                    .is_some_and(str::is_empty)
+            });
         }
         if !matches!(
             str_arg,

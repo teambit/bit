@@ -71,7 +71,7 @@ pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &
 }
 
 fn format_row_line(cells: &[Vec<&str>], widths: &[usize], line: usize, separator: &str) -> String {
-    let mut output = String::new();
+    let mut output = String::with_capacity(widths.iter().sum::<usize>() + cells.len());
     for (index, cell) in cells.iter().enumerate() {
         if index > 0 {
             output.push_str(separator);
@@ -82,7 +82,8 @@ fn format_row_line(cells: &[Vec<&str>], widths: &[usize], line: usize, separator
             .unwrap_or_default();
         let width = widths.get(index).copied().unwrap_or(0);
         output.push_str(value);
-        output.push_str(&" ".repeat(width.saturating_sub(UnicodeWidthStr::width(value))));
+        let padding = width.saturating_sub(UnicodeWidthStr::width(value));
+        output.extend(std::iter::repeat_n(' ', padding));
     }
     output
 }

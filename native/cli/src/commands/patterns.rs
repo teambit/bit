@@ -47,7 +47,7 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
                 .strip_prefix('!')
                 .map_or((false, pattern), |glob| (true, glob.trim()));
             supported(glob)?;
-            Ok((negated, glob))
+            Ok((negated, glob.split('/').collect::<Vec<_>>()))
         })
         .collect::<io::Result<Vec<_>>>()?;
     if globs.is_empty() || identities.is_empty() {
@@ -57,11 +57,14 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
         .iter()
         .copied()
         .filter(|identity| {
+            let path: Vec<&str> = identity.trim().split('/').collect();
             globs
                 .iter()
                 .fold(
                     false,
-                    |kept, (negated, glob)| if matches(identity, glob) { !negated } else { kept },
+                    |kept, (negated, glob)| {
+                        if match_segments(&path, glob) { !negated } else { kept }
+                    },
                 )
         })
         .collect())
@@ -80,12 +83,6 @@ fn supported(glob: &str) -> io::Result<()> {
 
 /// `minimatch(path, glob)`: segment by segment, `**` spanning any number of
 /// segments, neither matching a dot segment.
-fn matches(path: &str, glob: &str) -> bool {
-    let path: Vec<&str> = path.trim().split('/').collect();
-    let glob: Vec<&str> = glob.split('/').collect();
-    match_segments(&path, &glob)
-}
-
 fn match_segments(path: &[&str], glob: &[&str]) -> bool {
     let Some((first, rest)) = glob.split_first() else { return path.is_empty() };
     if *first == "**" {

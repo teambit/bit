@@ -136,17 +136,24 @@ impl Reader {
         let options: Options =
             serde_json::from_value(self.context["options"].clone()).map_err(io::Error::other)?;
         let inventory = Inventory::new(&options)?;
-        let manifest = inventory.scan(&mut self.engine, json!({"kind":"inventoryBegin","root":root.join(directory),"workspace":root,"excludeDirs":[]}), "inventoryFinish")?;
+        let comp_dir = root.join(directory);
+        let manifest = inventory.scan(
+            &mut self.engine,
+            json!({"kind":"inventoryBegin","root":comp_dir,"workspace":root,"excludeDirs":[]}),
+            "inventoryFinish",
+        )?;
         let files = manifest["files"]
             .as_array()
             .ok_or_else(|| io::Error::other("removal source inventory"))?;
-        let mut paths = Vec::new();
+        let mut paths = Vec::with_capacity(files.len());
+        self.files.reserve(files.len());
         for file in files {
             let relative = file["relativePath"]
                 .as_str()
                 .ok_or_else(|| io::Error::other("removal source path"))?;
-            let path = root.join(directory).join(relative);
-            self.files.push((path.clone(), fs::read(path)?));
+            let path = comp_dir.join(relative);
+            let bytes = fs::read(&path)?;
+            self.files.push((path, bytes));
             paths.push(relative.to_owned());
         }
         Ok(paths)
@@ -174,12 +181,11 @@ fn eligible(root: &Path, row: &Value) -> bool {
     else {
         return false;
     };
-    row["config"].as_object().is_none_or(serde_json::Map::is_empty)
-        && root.join(directory).is_dir()
-        && !root
-            .join(directory)
-            .join("component.json")
-            .exists()
+    if !row["config"].as_object().is_none_or(serde_json::Map::is_empty) {
+        return false;
+    }
+    let comp_dir = root.join(directory);
+    comp_dir.is_dir() && !comp_dir.join("component.json").exists()
 }
 fn pending(context: &Value, identity: &str) -> bool {
     let identity = identity.trim();

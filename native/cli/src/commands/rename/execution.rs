@@ -108,11 +108,10 @@ pub(in crate::commands) fn hydrate(
     options: &Options,
     linker: &mut ProjectedLinker,
 ) -> io::Result<()> {
-    let ids = vec![prepared.plan.identity.source.clone()];
     let captured = linker.capture(
         root,
         &bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?,
-        &ids,
+        std::slice::from_ref(&prepared.plan.identity.source),
     )?;
     print!("{}", linker.take_stdout());
     let source = captured
@@ -185,12 +184,13 @@ fn target_load(
         return Ok(());
     }
     prepared.plan.publish_configuration(&workspace_command::file_id())?;
-    let identities = vec![prepared.plan.identity.target.clone()];
-    let captured = linker.capture_cached(root, prepared.plan.added_bitmap(), &identities)?;
+    let target_id = &prepared.plan.identity.target;
+    let captured =
+        linker.capture_cached(root, prepared.plan.added_bitmap(), std::slice::from_ref(target_id))?;
     print!("{}", linker.take_stdout());
     if let Some(target) = captured
         .iter()
-        .find(|row| row["identity"] == identities[0])
+        .find(|row| row["identity"] == *target_id)
     {
         let source = prepared.facts["sourcePackage"]
             .as_str()
@@ -237,10 +237,13 @@ fn exported_refactor(
 ) -> io::Result<()> {
     // RenamingMain reloads after adding/removing identities, before target get/list.
     prepared.plan.publish_configuration(&workspace_command::file_id())?;
-    let target = vec![prepared.plan.identity.target.clone()];
     linker.forget_loaded();
     // Workspace.get(target) is singular; only getMany/list starts a loading summary.
-    linker.capture(root, &prepared.plan.published_bitmap()?, &target)?;
+    linker.capture(
+        root,
+        &prepared.plan.published_bitmap()?,
+        std::slice::from_ref(&prepared.plan.identity.target),
+    )?;
     flush_stdout(linker);
     refactor_load(root, prepared, linker, output)?;
     prepared.plan.apply_files()?;

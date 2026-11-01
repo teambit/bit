@@ -23,13 +23,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
                 options.skip_config = true;
             }
             "--skip-write-config-files=false" => options.skip_config = false,
-            value
-                if !value.is_empty()
-                    && value.len() <= 1024
-                    && !value.starts_with('-')
-                    && !value.contains(char::is_whitespace)
-                    && options.pattern.is_empty() =>
-            {
+            value if is_valid_pattern_token(value) && options.pattern.is_empty() => {
                 options.pattern = value;
             }
             _ => return None,
@@ -44,15 +38,17 @@ fn consume_trailing_pattern<'a>(
 ) -> Option<()> {
     for rest in iter {
         let trimmed = rest.trim();
-        if trimmed.is_empty()
-            || trimmed.len() > 1024
-            || trimmed.starts_with('-')
-            || trimmed.contains(char::is_whitespace)
-            || !pattern.is_empty()
-        {
+        if !is_valid_pattern_token(trimmed) || !pattern.is_empty() {
             return None;
         }
         *pattern = trimmed;
     }
     Some(())
+}
+
+fn is_valid_pattern_token(token: &str) -> bool {
+    !token.is_empty()
+        && token.len() <= 1024
+        && !token.starts_with('-')
+        && !token.contains(char::is_whitespace)
 }

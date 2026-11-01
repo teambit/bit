@@ -29,16 +29,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--force=false" => options.force = false,
             "-t" | "--track" | "--track=true" => options.track = true,
             "--track=false" => options.track = false,
-            value
-                if !value.starts_with('-')
-                    && value.len() <= 4096
-                    && !value.contains('\0')
-                    && !value
-                        .trim_start_matches('!')
-                        .trim()
-                        .is_empty()
-                    && pattern.is_none() =>
-            {
+            value if pattern.is_none() && is_valid_pattern(value) => {
                 pattern = Some(value);
             }
             value => apply_short_bundle(value, &mut silent, &mut options)?,
@@ -46,6 +37,16 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     }
     options.pattern = pattern?;
     silent.then_some(options)
+}
+
+fn is_valid_pattern(value: &str) -> bool {
+    !value.starts_with('-')
+        && value.len() <= 4096
+        && !value.contains('\0')
+        && !value
+            .trim_start_matches('!')
+            .trim()
+            .is_empty()
 }
 
 fn apply_short_bundle(arg: &str, silent: &mut bool, options: &mut Options<'_>) -> Option<()> {

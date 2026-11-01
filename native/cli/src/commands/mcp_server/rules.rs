@@ -207,10 +207,8 @@ fn cursor_prompts_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
 }
 
 fn roo_prompts_path(is_global: bool, cwd: &Path) -> PathBuf {
-    let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
-    base.join(".roo")
-        .join("rules")
-        .join("bit.instructions.md")
+    let rel = Path::new(".roo").join("rules").join("bit.instructions.md");
+    if is_global { workspace_command::home().join(rel) } else { cwd.join(rel) }
 }
 
 pub(super) fn cline_prompts_path(is_global: bool, cwd: &Path) -> Result<PathBuf, String> {
@@ -236,16 +234,16 @@ pub(super) fn cline_prompts_path(is_global: bool, cwd: &Path) -> Result<PathBuf,
 }
 
 fn claude_code_prompts_path(is_global: bool, cwd: &Path) -> PathBuf {
-    let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
-    base.join(".claude").join("bit.md")
+    let rel = Path::new(".claude").join("bit.md");
+    if is_global { workspace_command::home().join(rel) } else { cwd.join(rel) }
 }
 
 pub(super) fn cursor_settings_path(is_global: bool, cwd: &Path) -> PathBuf {
-    let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
-    base.join(".cursor").join("mcp.json")
+    let rel = Path::new(".cursor").join("mcp.json");
+    if is_global { workspace_command::home().join(rel) } else { cwd.join(rel) }
 }
 
 pub(super) fn windsurf_settings_path(is_global: bool, cwd: &Path) -> PathBuf {
-    let base = if is_global { workspace_command::home() } else { cwd.to_path_buf() };
-    base.join(".windsurf").join("mcp.json")
+    let rel = Path::new(".windsurf").join("mcp.json");
+    if is_global { workspace_command::home().join(rel) } else { cwd.join(rel) }
 }

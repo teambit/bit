@@ -77,9 +77,10 @@ fn report(options: &Options<'_>, plan: &Batch, args: &[OsString]) -> io::Result<
     let items = plan
         .recovered_ids()
         .into_iter()
-        .map(|id| id.trim().to_owned())
-        .filter(|id| !id.is_empty())
-        .map(|id| format.item(&id))
+        .filter_map(|id| {
+            let trimmed = id.trim();
+            (!trimmed.is_empty()).then(|| format.item(trimmed))
+        })
         .collect::<Vec<_>>();
     if items.is_empty() {
         return Err(io::Error::other(format!(

@@ -68,7 +68,7 @@ pub(in crate::commands) fn run(
     let mut startup = Startup::default();
     let request = Request {
         operation: "merge",
-        options: options.request.clone(),
+        options: std::mem::take(&mut options.request),
         to: None,
         verify_fresh: true,
     };

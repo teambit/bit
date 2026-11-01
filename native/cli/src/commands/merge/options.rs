@@ -285,22 +285,25 @@ fn pattern_char(character: char) -> bool {
 impl Options {
     /// The `options` of `commandPrepare`: `JSON.stringify` drops the absent ones.
     pub fn request(&self) -> Value {
-        let mut options = json!({});
-        if let Some(pattern) = &self.pattern {
-            options["pattern"] = json!(pattern);
+        let mut options = json!({
+            "all": false,
+            "forceOurs": false,
+            "forceTheirs": false,
+            "noSnap": self.no_snap,
+            "verbose": self.verbose,
+            "skipDependencyInstallation": true,
+        });
+        if let Some(map) = options.as_object_mut() {
+            if let Some(pattern) = &self.pattern {
+                map.insert("pattern".to_owned(), json!(pattern));
+            }
+            if let Some(strategy) = &self.strategy {
+                map.insert("strategy".to_owned(), json!(strategy));
+            }
+            if let Some(message) = &self.message {
+                map.insert("message".to_owned(), json!(message));
+            }
         }
-        options["all"] = json!(false);
-        if let Some(strategy) = &self.strategy {
-            options["strategy"] = json!(strategy);
-        }
-        options["forceOurs"] = json!(false);
-        options["forceTheirs"] = json!(false);
-        options["noSnap"] = json!(self.no_snap);
-        if let Some(message) = &self.message {
-            options["message"] = json!(message);
-        }
-        options["verbose"] = json!(self.verbose);
-        options["skipDependencyInstallation"] = json!(true);
         options
     }
 }

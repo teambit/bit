@@ -123,7 +123,8 @@ fn row_identity(key: &str, row: &Value) -> Option<String> {
         .or(key_scope)?;
     let name = explicit_name.unwrap_or_else(|| {
         key_id
-            .strip_prefix(&format!("{scope}/"))
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
             .unwrap_or(key_id)
             .trim()
     });

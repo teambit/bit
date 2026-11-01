@@ -286,9 +286,8 @@ fn resolve_tar_destination(
         .map(str::trim)
         .filter(|dir| !dir.is_empty())
         .unwrap_or(".");
-    let out_base =
-        if Path::new(dir_str).is_absolute() { PathBuf::from(dir_str) } else { cwd.join(dir_str) };
-    (tar_name.clone(), out_base.join(tar_name))
+    let tar_path = cwd.join(dir_str).join(&tar_name);
+    (tar_name, tar_path)
 }
 
 fn write_tarball_and_build_result(
@@ -301,14 +300,12 @@ fn write_tarball_and_build_result(
     let mut warnings = Vec::new();
     let mut errors = Vec::new();
     if tar_path.exists() {
+        let display = tar_path.display();
         if override_existing {
-            warnings.push(format!(r#""{}" already exists, override it"#, tar_path.display()));
+            warnings.push(format!(r#""{display}" already exists, override it"#));
             let _ = fs::remove_file(tar_path);
         } else {
-            errors.push(format!(
-                r#""{}" already exists, use --override flag to override"#,
-                tar_path.display(),
-            ));
+            errors.push(format!(r#""{display}" already exists, use --override flag to override"#));
         }
     }
     let mut metadata = json!({

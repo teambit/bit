@@ -79,13 +79,6 @@ fn try_run_workspace_generate(
     if ws_config.workspace.bitmap_auto_sync == Some(true) {
         return Ok(None);
     }
-    let Ok(bitmap_bytes) = fs::read(root.join(".bitmap")) else {
-        return Ok(None);
-    };
-    let Ok(bitmap_val) = parse_jsonc(&bitmap_bytes) else {
-        return Ok(None);
-    };
-    let count = active_component_count(&bitmap_val);
     if let Some(pat) = options.pattern.as_deref() {
         let Ok(bitmap) = Bitmap::load(root, ws_config.workspace.default_scope.as_deref()) else {
             return Ok(None);
@@ -101,7 +94,13 @@ fn try_run_workspace_generate(
         }
         return Ok(None);
     }
-    if count == 0 {
+    let Ok(bitmap_bytes) = fs::read(root.join(".bitmap")) else {
+        return Ok(None);
+    };
+    let Ok(bitmap_val) = parse_jsonc(&bitmap_bytes) else {
+        return Ok(None);
+    };
+    if active_component_count(&bitmap_val) == 0 {
         let chalk = Chalk::detect(args);
         let data = chalk.green("previews generated successfully in:\n");
         let outcome = workspace_command::execute_then(root, args, "generate-preview", |_| {

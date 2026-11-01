@@ -24,6 +24,12 @@ pub(super) fn transform(
     if inputs.is_empty() {
         return Ok(());
     }
+    let (Some(source_name), Some(target_name)) = (
+        short_component_name(&plan.identity.source_name),
+        short_component_name(&plan.identity.target_name),
+    ) else {
+        return Err(io::Error::other("rename AST component name is empty"));
+    };
     let path = std::env::temp_dir()
         .join(format!(
             "bit-rename-ast-{}-{}",
@@ -32,18 +38,12 @@ pub(super) fn transform(
         ));
     fs::create_dir_all(&path)?;
     let spool = Spool(path);
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(inputs.len());
     for (index, (path, bytes)) in inputs.iter().enumerate() {
         let stored = spool.0.join(index.to_string());
         fs::write(&stored, bytes)?;
         rows.push(json!({"spool":stored,"filename":path}));
     }
-    let (Some(source_name), Some(target_name)) = (
-        short_component_name(&plan.identity.source_name),
-        short_component_name(&plan.identity.target_name),
-    ) else {
-        return Err(io::Error::other("rename AST component name is empty"));
-    };
     let result = linker.call(
         root,
         "renameAst",

@@ -33,10 +33,11 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
         .iter()
         .copied()
         .filter(|id| {
+            let trimmed_id = id.trim();
             compiled
                 .iter()
                 .fold(false, |selected, (negated, patterns)| {
-                    if patterns.iter().any(|pattern| matches(id, pattern)) {
+                    if patterns.iter().any(|pattern| matches(trimmed_id, pattern)) {
                         !negated
                     } else {
                         selected
@@ -57,6 +58,6 @@ fn matches(identity: &str, pattern: &str) -> bool {
     if positive.is_empty() || positive.starts_with('#') {
         return false;
     }
-    let matched = glob::matches(positive, identity.trim());
+    let matched = glob::matches(positive, identity);
     matched != negated
 }

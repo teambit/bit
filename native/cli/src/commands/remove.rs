@@ -97,7 +97,7 @@ fn metadata(
     ids: Vec<String>,
     reader: Option<&load_free::Reader>,
 ) -> (Vec<serde_json::Value>, Vec<String>) {
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(ids.len());
     let mut pending = Vec::new();
     for id in ids {
         if let Some(row) = reader.and_then(|reader| reader.metadata(&id)) {
@@ -132,7 +132,7 @@ fn status_consumers(
     if force {
         return Ok(Vec::new());
     }
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(selected.len());
     let mut pending = Vec::new();
     for id in selected {
         if let Some(modified) = reader

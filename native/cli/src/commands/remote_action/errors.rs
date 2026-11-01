@@ -12,7 +12,7 @@ pub(super) fn format(error: io::Error) -> io::Error {
     let updates = value["idsNeedUpdate"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(3);
     deleted_report(conflicts, updates, chalk, &mut output);
     conflict_report(conflicts, chalk, &mut output);
     update_report(updates, chalk, &mut output);
@@ -111,16 +111,15 @@ fn id(value: &Value, chalk: Chalk) -> String {
         .map(str::trim)
         .filter(|name| !name.is_empty())
     {
-        let formatted = match value["id"]["scope"]
+        return match value["id"]["scope"]
             .as_str()
             .or_else(|| value["id"]["_legacy"]["scope"].as_str())
             .map(str::trim)
             .filter(|scope| !scope.is_empty())
         {
-            Some(scope) => format!("{scope}/{name}"),
-            None => name.to_owned(),
+            Some(scope) => chalk.bold(&format!("{scope}/{name}")),
+            None => chalk.bold(name),
         };
-        return chalk.bold(&formatted);
     }
     chalk.bold("undefined")
 }

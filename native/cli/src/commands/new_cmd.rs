@@ -41,7 +41,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         });
     if ci_enabled {
         return Ok(Outcome::Declined("CI new error stack".into()));
@@ -72,9 +76,7 @@ pub(super) fn validate_options(cwd: &Path, options: &Options) -> Result<(), Stri
             "Error: unable to generate a new workspace inside of an existing workspace".to_owned()
         );
     }
-    let target_dir =
-        if options.current_dir { cwd.to_path_buf() } else { cwd.join(&options.workspace_name) };
-    if !options.current_dir && target_dir.exists() {
+    if !options.current_dir && cwd.join(&options.workspace_name).exists() {
         return Err(format!(
             r#"unable to create a workspace at "{}", this path already exists"#,
             options.workspace_name,

@@ -284,20 +284,8 @@ fn stdio_entry(args: &[String]) -> Value {
 
 fn write_vscode_global(path: &Path, server_args: &[String]) -> Result<(), String> {
     let mut settings = read_json_object(path)?;
-    if !settings.get("mcp").is_some_and(Value::is_object) {
-        settings.insert("mcp".into(), json!({}));
-    }
-    let mcp_obj = settings
-        .get_mut("mcp")
-        .and_then(Value::as_object_mut)
-        .ok_or_else(|| "Invalid mcp object".to_owned())?;
-    if !mcp_obj.get("servers").is_some_and(Value::is_object) {
-        mcp_obj.insert("servers".into(), json!({}));
-    }
-    let servers_obj = mcp_obj
-        .get_mut("servers")
-        .and_then(Value::as_object_mut)
-        .ok_or_else(|| "Invalid servers object".to_owned())?;
+    let mcp_obj = ensure_json_object(&mut settings, "mcp")?;
+    let servers_obj = ensure_json_object(mcp_obj, "servers")?;
     servers_obj.insert("bit-cli".into(), stdio_entry(server_args));
     write_json_object(path, &Value::Object(settings))
 }
@@ -309,15 +297,21 @@ fn write_server_entry(
     entry: Value,
 ) -> Result<(), String> {
     let mut cfg = read_json_object(path)?;
-    if !cfg.get(servers_key).is_some_and(Value::is_object) {
-        cfg.insert(servers_key.into(), json!({}));
-    }
-    let servers_obj = cfg
-        .get_mut(servers_key)
-        .and_then(Value::as_object_mut)
-        .ok_or_else(|| format!("Invalid {servers_key} object"))?;
+    let servers_obj = ensure_json_object(&mut cfg, servers_key)?;
     servers_obj.insert(name.into(), entry);
     write_json_object(path, &Value::Object(cfg))
+}
+
+fn ensure_json_object<'a>(
+    map: &'a mut Map<String, Value>,
+    key: &str,
+) -> Result<&'a mut Map<String, Value>, String> {
+    if !map.get(key).is_some_and(Value::is_object) {
+        map.insert(key.into(), json!({}));
+    }
+    map.get_mut(key)
+        .and_then(Value::as_object_mut)
+        .ok_or_else(|| format!("Invalid {key} object"))
 }
 
 fn read_json_object(path: &Path) -> Result<Map<String, Value>, String> {
@@ -342,7 +336,7 @@ fn write_json_object(path: &Path, val: &Value) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|err| err.to_string())?;
     }
-    let serialized = serde_json::to_string_pretty(val).map_err(|err| err.to_string())?;
+    let serialized = serde_json::to_vec_pretty(val).map_err(|err| err.to_string())?;
     fs::write(path, serialized).map_err(|err| err.to_string())
 }
 

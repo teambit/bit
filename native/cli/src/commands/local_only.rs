@@ -82,7 +82,11 @@ fn ci_enabled() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
 }
 
@@ -158,9 +162,8 @@ fn workspace_default_scope(workspace: &Value) -> Result<String, Failure> {
     let key = rows
         .keys()
         .find(|key| key.split('@').next() == Some("teambit.workspace/workspace"))
-        .cloned()
-        .unwrap_or_else(|| "teambit.workspace/workspace".to_owned());
-    let ws = &workspace[&key];
+        .map_or("teambit.workspace/workspace", String::as_str);
+    let ws = &workspace[key];
     if ws["bitmapAutoSync"] == true {
         return Err(Failure::Declined("bitmapAutoSync enabled".to_owned()));
     }

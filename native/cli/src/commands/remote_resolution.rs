@@ -90,6 +90,9 @@ impl Session {
                 Err(error) => Some(Err(error)),
             })
             .collect::<io::Result<Vec<_>>>()?;
+        if pending.is_empty() {
+            return Ok(());
+        }
         let ci_enabled = env::var_os("CI")
             .is_some_and(|val| {
                 let text = val.to_string_lossy();
@@ -97,9 +100,13 @@ impl Session {
                     .trim()
                     .trim_matches(['"', '\''])
                     .trim();
-                !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+                !trimmed.is_empty()
+                    && !trimmed.eq_ignore_ascii_case("0")
+                    && !trimmed.eq_ignore_ascii_case("false")
+                    && !trimmed.eq_ignore_ascii_case("no")
+                    && !trimmed.eq_ignore_ascii_case("off")
             });
-        if !pending.is_empty() && ci_enabled {
+        if ci_enabled {
             return Err(io::Error::other(CiResolverDecline));
         }
         for scope in pending {
@@ -165,10 +172,10 @@ impl Session {
             let Target::Entry(cli) = discovery::find()? else {
                 return Err(io::Error::other("the published resolver host is unavailable"));
             };
-            let root = self.root
-                .clone()
-                .or_else(|| self.bare_scope_root.clone())
-                .unwrap_or(env::current_dir()?);
+            let root = match self.root.clone().or_else(|| self.bare_scope_root.clone()) {
+                Some(root) => root,
+                None => env::current_dir()?,
+            };
             self.host = Some(Host::new(cli, root, Chalk::detect(&self.args).enabled()));
         }
         Ok(self.host.as_ref().unwrap())

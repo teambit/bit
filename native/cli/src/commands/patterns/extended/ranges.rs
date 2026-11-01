@@ -45,7 +45,11 @@ fn sequence(pattern: &str) -> io::Result<Option<(usize, usize, Sequence)>> {
         else {
             continue;
         };
-        let values: Vec<_> = pattern[open + 1..close].split("..").collect();
+        let inner = &pattern[open + 1..close];
+        if !inner.contains("..") {
+            continue;
+        }
+        let values: Vec<_> = inner.split("..").collect();
         if let Some(range) = Sequence::parse(&values)? {
             return Ok(Some((open, close, range)));
         }

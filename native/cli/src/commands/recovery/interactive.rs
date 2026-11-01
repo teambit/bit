@@ -40,18 +40,22 @@ pub(super) fn run(
 }
 
 fn prompt(preview: &Value, chalk: Chalk) -> io::Result<String> {
-    let items = array(preview.get("restoredItems"), "recovery restoration items")?
-        .iter()
-        .map(|item| super::text(Some(item)).map(str::trim))
-        .collect::<io::Result<Vec<_>>>()?;
-    let directories = items
-        .into_iter()
-        .find_map(|item| item.strip_prefix("deleted components directories:"))
-        .map(str::trim)
-        .filter(|dirs| !dirs.is_empty())
-        .map_or_else(String::new, |dirs| {
-            format!("\nThe following directories introduced by the merge will be deleted: {dirs}")
-        });
+    let items = array(preview.get("restoredItems"), "recovery restoration items")?;
+    let mut deleted_dirs = None;
+    for item in items {
+        let trimmed = super::text(Some(item))?.trim();
+        if deleted_dirs.is_none()
+            && let Some(dirs) = trimmed
+                .strip_prefix("deleted components directories:")
+                .map(str::trim)
+                .filter(|dirs| !dirs.is_empty())
+        {
+            deleted_dirs = Some(dirs);
+        }
+    }
+    let directories = deleted_dirs.map_or_else(String::new, |dirs| {
+        format!("\nThe following directories introduced by the merge will be deleted: {dirs}")
+    });
     Ok(format!(
         "Code changes that were done since the last lane-merge will be lost.{directories}\nThe .bitmap and workspace.jsonc files will be restored to the state before the merge.\nThis action is irreversible.\n{}",
         chalk.bold("Do you want to continue? [yes(y)/no(n)]"),

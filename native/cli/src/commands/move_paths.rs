@@ -39,7 +39,11 @@ fn ci_enabled() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
 }
 
@@ -50,7 +54,8 @@ fn run_workspace(
     from: &str,
     to: &str,
 ) -> io::Result<Outcome> {
-    if let Err(error) = Plan::prepare(root, cwd, from, to)
+    let prepared = Plan::prepare(root, cwd, from, to);
+    if let Err(error) = &prepared
         && (error.kind() != io::ErrorKind::InvalidInput || ci_enabled())
     {
         return Ok(Outcome::Declined(format!("move: {error}")));
@@ -62,7 +67,6 @@ fn run_workspace(
     if !startup_stdout.is_empty() {
         print!("{startup_stdout}");
     }
-    let prepared = Plan::prepare(root, cwd, from, to);
     workspace_command::execute_then(root, args, "move", |output| {
         let plan = prepared?;
         let report = Report { data: report(&plan, &format)?, code: 0, details: None };

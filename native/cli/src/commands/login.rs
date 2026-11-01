@@ -38,7 +38,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         });
     if options.default_cloud_domain && options.cloud_domain.is_some() && !ci_enabled {
         return emit_conflicting_domain_error(args, options.json);
@@ -155,8 +159,7 @@ fn apply_inline_login_arg(arg: &str, options: &mut Options) -> Option<()> {
 fn take_val(val: &str) -> Option<String> {
     let trimmed = val
         .trim()
-        .trim_matches('"')
-        .trim_matches('\'')
+        .trim_matches(['"', '\''])
         .trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }

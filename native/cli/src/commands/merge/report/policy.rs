@@ -32,7 +32,11 @@ pub(super) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<String> 
 
 fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::Result<String> {
     let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(String::new()) };
-    let rows = object(value)?
+    let map = object(value)?;
+    if map.is_empty() {
+        return Ok(String::new());
+    }
+    let rows = map
         .iter()
         .map(|(name, value)| {
             let name = name.trim();
@@ -41,9 +45,6 @@ fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::R
             Ok(format!("  {name}: {value}"))
         })
         .collect::<io::Result<Vec<_>>>()?;
-    if rows.is_empty() {
-        return Ok(String::new());
-    }
     let title = if updates {
         "workspace.jsonc has been updated with the following dependencies"
     } else {

@@ -118,22 +118,24 @@ fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
     if name.is_empty() {
         return None;
     }
-    let full = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
-    (name == target || full == target).then_some(full)
+    let matched =
+        name == target || (!scope.is_empty() && target.split_once('/') == Some((scope, name)));
+    matched.then(|| if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") })
 }
 
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
-            !matches!(
-                val.to_string_lossy()
-                    .trim()
-                    .trim_matches(['"', '\''])
-                    .trim()
-                    .to_ascii_lowercase()
-                    .as_str(),
-                "" | "0" | "false" | "no" | "off",
-            )
+            let text = val.to_string_lossy();
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+                && !trimmed.eq_ignore_ascii_case("off")
         })
 }
 

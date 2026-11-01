@@ -270,16 +270,17 @@ fn format(result: &Value, chalk: Chalk) -> io::Result<Report> {
         return Err(decline("native resolve report"));
     }
     let format = Formatter::new(chalk);
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(rows.len());
     let items = rows
         .iter()
         .map(|row| {
             let row = object(row)?;
             let identity = Id::parse(text(row.get("id"))?)?.without_version();
-            if row.keys().any(|key| key != "id") || !seen.insert(identity.clone()) {
+            let item = format.item(&identity);
+            if row.keys().any(|key| key != "id") || !seen.insert(identity) {
                 return Err(decline("native resolve component"));
             }
-            Ok(format.item(&identity))
+            Ok(item)
         })
         .collect::<io::Result<Vec<_>>>()?;
     Ok(Report { data: format.section("resolved components", "", &items), code: 0, details: None })

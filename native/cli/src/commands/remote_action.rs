@@ -105,8 +105,8 @@ pub(super) fn prepare(
         return Ok(None);
     };
     Ok(Some(Plan {
-        root: workspace.clone().unwrap_or(scope),
         workspace: workspace.is_some(),
+        root: workspace.unwrap_or(scope),
         target,
         concurrency: bit_client_transfer::fetch::concurrency(&global),
     }))
