@@ -1,3 +1,5 @@
+//! Unit tests for pnpm configuration overlay options and queries.
+
 use super::{CallOverlay, Query, install_config, query_config};
 use crate::{
     config::DependencyResolverConfig,

@@ -1,3 +1,5 @@
+//! Unit tests for progress reporter throttle interval parsing.
+
 use super::throttle;
 use serde_json::json;
 use std::time::Duration;

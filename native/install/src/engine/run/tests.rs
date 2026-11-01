@@ -1,4 +1,4 @@
-//! End-to-end engine installs of local projects; no registry access.
+//! End-to-end engine installs of local projects without network registry access.
 
 use super::install;
 use crate::{

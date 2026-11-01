@@ -1,3 +1,5 @@
+//! Unit tests for `workspace.jsonc` dependency policy editing and sorting.
+
 use super::{admits, config_entries, to_config_object, update_config_policy};
 use crate::{jsonc::Document, options::ExistingEntries};
 use serde_json::json;

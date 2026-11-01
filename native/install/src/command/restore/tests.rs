@@ -1,3 +1,5 @@
+//! Unit tests for lockfile-only dependency graph restoration and peer suffix parsing.
+
 use super::{
     explicit,
     graph::merge,

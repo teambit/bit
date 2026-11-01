@@ -1,3 +1,5 @@
+//! Unit tests for host component ordering and directory validation.
+
 use super::ordered;
 use crate::model::WorkspaceComponent;
 use serde_json::json;

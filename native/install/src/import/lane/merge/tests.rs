@@ -1,3 +1,5 @@
+//! Unit tests for remote lane merging and `LaneHistory` recording during import.
+
 use super::merge_and_save;
 use crate::import::{
     bitmap::LaneId,

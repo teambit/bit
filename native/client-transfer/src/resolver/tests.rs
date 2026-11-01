@@ -1,3 +1,5 @@
+//! Unit tests for custom scope resolver execution.
+
 use super::Resolver;
 use crate::GlobalConfig;
 use serde_json::json;

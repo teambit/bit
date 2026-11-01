@@ -1,3 +1,5 @@
+//! Unit tests for missing peer dependency range intersections.
+
 use super::{intersections, safe_intersect};
 use pnpm_resolving_deps_resolver::{MissingPeer, PeerDependencyIssues};
 use pretty_assertions::assert_eq;

@@ -1,3 +1,5 @@
+//! Unit tests for HTTP object archive fetching.
+
 use super::{GlobalConfig, Network};
 use crate::{Cancellation, fetch::FetchOptions};
 use std::{

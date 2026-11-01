@@ -1,3 +1,5 @@
+//! Unit tests for Bit Cloud GraphQL `me.username` lookup and fallback.
+
 use super::{LOOKUP_TIMEOUT, cloud_username};
 use crate::model::GlobalConfig;
 use serde_json::json;

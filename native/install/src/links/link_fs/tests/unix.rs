@@ -1,4 +1,4 @@
-//! Unix linking: absolute symlinks for component files, hard links for files and symlinks
+//! Unix linking: absolute symlinks for component files, hard links for files, and symlinks
 //! (`junction` on unix) for directories.
 
 use super::super::{LinkKind, create_link_or_symlink, hard_link_directory};

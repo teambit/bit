@@ -1,4 +1,5 @@
 //! Ordered tracking publication barriers independent of filesystem completion races in the CLI.
+
 use super::{ComponentLinkOptions, FakeHost, component, write_sources};
 use crate::{links::link_tracking_components, model::WorkspaceComponent};
 use indexmap::IndexMap;

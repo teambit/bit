@@ -1,3 +1,5 @@
+//! Unit tests for proxy, CA certificate, and retry network settings.
+
 use super::{NetworkSettings, ProxySettings, RetrySettings, network, proxy, read_ca_file};
 use crate::{config::DependencyResolverConfig, model::GlobalConfig};
 use pnpm_network::NoProxySetting;

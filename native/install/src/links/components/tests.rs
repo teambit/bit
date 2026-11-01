@@ -1,3 +1,5 @@
+//! Unit tests for workspace component `node_modules` linking and `package.json` generation.
+
 mod tracking;
 
 use super::{ComponentLinkOptions, link_components};

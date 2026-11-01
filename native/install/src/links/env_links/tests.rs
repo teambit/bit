@@ -1,3 +1,5 @@
+//! Unit tests for `resolveFromEnv` dependency linking from environment packages.
+
 use super::{EnvLinks, resolved_from_env_links};
 use crate::{
     host::{CoreAspect, HostInfo},

@@ -1,3 +1,5 @@
+//! Unit tests for `workspace.jsonc`, `scope.json`, and global configuration loading.
+
 use super::{
     DependencyResolverConfig, EffectiveConfig, MergeConfig, ScopeJson, WorkspaceConfig,
     aspect_id_without_version, keys, load_global_config, scope_path,

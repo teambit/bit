@@ -1,3 +1,5 @@
+//! Unit tests for empty documentation proof detection.
+
 use super::proves_empty_docs;
 
 #[test]

@@ -1,3 +1,5 @@
+//! Unit tests for `node-ignore` 3.3.10 pattern compilation and caching.
+
 use crate::{Compiler, Ignore, Rule, UnsupportedPattern};
 use pretty_assertions::assert_eq;
 

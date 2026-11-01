@@ -1,3 +1,5 @@
+//! Unit tests for non-replayed HTTP object uploads.
+
 use super::{GlobalConfig, Network};
 use serde_json::json;
 use std::{

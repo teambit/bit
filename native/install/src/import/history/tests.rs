@@ -1,3 +1,5 @@
+//! Unit tests for `VersionHistory` completeness checks and `graphCompleteRefs` updates.
+
 use super::{Completeness, check, incomplete};
 use crate::{
     import::{

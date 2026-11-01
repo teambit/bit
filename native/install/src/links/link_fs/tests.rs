@@ -1,3 +1,5 @@
+//! Unit tests for cross-platform file and directory linking primitives.
+
 #[cfg(unix)]
 mod unix;
 

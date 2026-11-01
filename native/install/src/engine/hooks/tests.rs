@@ -1,3 +1,5 @@
+//! Unit tests for `BitHooks` `readPackage` manifest transformations.
+
 use super::{BitHooks, normalize};
 use pnpm_hooks::{HookContext, PnpmfileHooks};
 use pretty_assertions::assert_eq;

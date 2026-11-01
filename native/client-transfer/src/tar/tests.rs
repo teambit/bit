@@ -1,3 +1,5 @@
+//! Unit tests for bounded tar object stream decoding.
+
 use super::{read, read_bounded};
 use std::io::{self, Read};
 fn archive(entries: &[(&str, &[u8])]) -> Vec<u8> {

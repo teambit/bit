@@ -1,3 +1,5 @@
+//! Unit tests for registry URL and authentication header resolution.
+
 use super::{Registries, Registry, bit_cloud_registry, resolve};
 use crate::{config::DependencyResolverConfig, model::GlobalConfig};
 use indexmap::IndexMap;

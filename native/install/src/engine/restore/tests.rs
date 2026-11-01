@@ -1,3 +1,5 @@
+//! Unit tests for converting stored dependency graphs into `pnpm-lock.yaml` structures.
+
 use super::{
     convert::{Graph, importer_id, to_lockfile},
     dep_path::parse,

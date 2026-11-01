@@ -1,3 +1,5 @@
+//! Unit tests for pruning unreferenced virtual-store packages under `node_modules/.pnpm`.
+
 use super::prune_modules;
 use std::{collections::HashSet, fs, path::Path};
 

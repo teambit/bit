@@ -1,3 +1,5 @@
+//! Unit tests for the `bit:` custom attribute block in `pnpm-lock.yaml`.
+
 use super::{merge, read, remove_for_update, restore_after_failure, write};
 use pretty_assertions::assert_eq;
 use serde_json::{Map, Value, json};

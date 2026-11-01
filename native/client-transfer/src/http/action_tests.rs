@@ -1,3 +1,5 @@
+//! Unit tests for HTTP action requests and responses.
+
 use super::{GlobalConfig, Network};
 use serde_json::{Value, json};
 use std::{

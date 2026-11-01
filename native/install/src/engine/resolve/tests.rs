@@ -1,3 +1,5 @@
+//! Unit tests for npm package name and version specifier splitting.
+
 use super::parse_package_name;
 use pretty_assertions::assert_eq;
 

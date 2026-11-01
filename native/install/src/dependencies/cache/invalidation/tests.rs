@@ -1,3 +1,5 @@
+//! Unit tests for dependency cache invalidation based on workspace modification times.
+
 use super::{deps_dir, invalidate, needs_invalidation};
 use crate::dependencies::cache::put;
 use pretty_assertions::assert_eq;

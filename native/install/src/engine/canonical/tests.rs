@@ -1,3 +1,5 @@
+//! Unit tests for canonical package manager engine request validation.
+
 use super::{
     CanonicalInstall,
     environment::{Captured, CapturedHost},

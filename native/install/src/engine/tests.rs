@@ -1,3 +1,5 @@
+//! Unit tests for `EngineError` formatting and engine constants.
+
 use super::{EngineError, READ_PACKAGE_HOOKS_CHECKSUM, VIRTUAL_STORE_DIR_MAX_LENGTH};
 use pretty_assertions::assert_eq;
 

@@ -1,3 +1,5 @@
+//! Unit tests for core aspect detection order across source and compiled files.
+
 use super::{Resolver, Subject, Workspace, detect};
 use crate::{
     dependencies::{DependencyOptions, component_model::ComponentModel},

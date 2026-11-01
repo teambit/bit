@@ -1,3 +1,5 @@
+//! Unit tests for HTTP status error mapping and exception messages.
+
 use super::{GlobalConfig, Network};
 use std::{
     io::{Read, Write},

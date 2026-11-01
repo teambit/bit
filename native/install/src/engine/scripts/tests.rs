@@ -1,3 +1,5 @@
+//! Unit tests for vendored trusted build scripts and `allowScripts` policy overrides.
+
 use super::{allowed_scripts, resolve, trusted_package_names};
 use crate::config::DependencyResolverConfig;
 use indexmap::IndexMap;

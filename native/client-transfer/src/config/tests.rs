@@ -1,3 +1,5 @@
+//! Unit tests for layered transport configuration precedence.
+
 use super::{GlobalConfig, layers};
 use serde_json::json;
 

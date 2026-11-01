@@ -1,3 +1,5 @@
+//! Unit tests for cancellation tokens and construction scopes.
+
 use super::Cancellation;
 use std::{future, io};
 #[test]

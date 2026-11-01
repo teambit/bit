@@ -1,3 +1,5 @@
+//! Unit tests for hub streaming JSON-line replies.
+
 use super::{HubReply, StatusCode, finish, line};
 use serde_json::{Value, json};
 

@@ -1,3 +1,5 @@
+//! Unit tests for compile stamp persistence and restoration.
+
 use super::{Inputs, Restore, check, has_external_links, path, remove, restore, write};
 use crate::model::{ComponentId, Project, WorkspaceComponent};
 use serde_json::{Map, json};

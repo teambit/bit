@@ -1,3 +1,5 @@
+//! Unit tests for comment-preserving `workspace.jsonc` edits and backup history.
+
 use super::edit;
 use serde_json::json;
 use std::fs;

@@ -1,3 +1,5 @@
+//! Unit tests for package name extraction, validation, and save prefixes.
+
 use super::{extract_package_name, is_valid_package_name, version_with_save_prefix};
 
 #[test]

@@ -1,3 +1,5 @@
+//! Unit tests for HTTP scope inventory listing and legacy fallback.
+
 use super::{Network, list_variables};
 use crate::GlobalConfig;
 use serde_json::json;

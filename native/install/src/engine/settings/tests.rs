@@ -1,3 +1,5 @@
+//! Unit tests for hoist patterns, global virtual store flags, and peer dependency rules.
+
 use super::{
     EnvVars, enable_global_virtual_store, hoist_pattern, package_extensions, peer_dependency_rules,
     settings,

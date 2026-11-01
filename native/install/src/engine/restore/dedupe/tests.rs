@@ -1,3 +1,5 @@
+//! Unit tests for lockfile snapshot deduplication against root policy versions.
+
 use super::dedupe;
 use serde_json::{Value, json};
 use std::process::Command;

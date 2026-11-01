@@ -1,3 +1,5 @@
+//! Unit tests for embedded dependency scanner request bounds.
+
 use crate::{limits, scan_request};
 use rayon::ThreadPoolBuilder;
 use serde_json::json;

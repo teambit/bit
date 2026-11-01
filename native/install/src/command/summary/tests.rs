@@ -1,3 +1,5 @@
+//! Unit tests for install summary formatting and elapsed duration rendering.
+
 use super::{format, seconds};
 use crate::output::Output;
 use std::{sync::Arc, time::Duration};

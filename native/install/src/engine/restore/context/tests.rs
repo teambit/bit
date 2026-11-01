@@ -1,3 +1,5 @@
+//! Unit tests for lockfile restoration context and `pnpmfileChecksum` overrides.
+
 use super::{graph, merge};
 use serde_json::{Value, json};
 

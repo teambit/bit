@@ -1,3 +1,5 @@
+//! Unit tests for GraphQL component and lane listing over HTTP.
+
 use super::{Listed, Network};
 use crate::GlobalConfig;
 use std::{

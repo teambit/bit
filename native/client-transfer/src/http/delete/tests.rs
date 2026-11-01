@@ -1,3 +1,5 @@
+//! Unit tests for HTTP remote deletion requests and retry behavior.
+
 use super::super::Network;
 use crate::{Cancellation, GlobalConfig};
 use serde_json::{Value, json};
