@@ -8,10 +8,10 @@ pub(super) fn note(file: &str) -> &'static str {
         .rsplit(['/', '\\'])
         .next()
         .unwrap_or_default();
-    let extension = std::path::Path::new(file_name)
-        .extension()
-        .and_then(std::ffi::OsStr::to_str)
-        .map_or("", |ext| ext.trim().trim_start_matches('.'));
+    let extension = file_name
+        .rsplit_once('.')
+        .filter(|(stem, _)| !stem.is_empty())
+        .map_or("", |(_, ext)| ext.trim().trim_start_matches('.'));
     if !extension.is_empty()
         && EXTENSIONS
             .lines()

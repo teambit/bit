@@ -51,7 +51,7 @@ fn write_package_json_dependencies(root: &Path, dependencies: &DependencyMap) ->
     };
     let field = object.entry("dependencies").or_insert(Value::Null);
     if field.is_null() {
-        *field = Value::Object(Map::new());
+        *field = Value::Object(Map::with_capacity(dependencies.len()));
     }
     let Some(field) = field.as_object_mut() else {
         return Err(io::Error::other(r#"package.json "dependencies" must be an object"#));

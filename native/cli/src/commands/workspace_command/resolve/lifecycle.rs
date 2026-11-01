@@ -63,32 +63,31 @@ pub(super) fn issue_progress(
     startup: &mut Startup,
     resolving: bool,
 ) -> io::Result<()> {
-    let mut prefix = plan["progress"].clone();
-    let loads = array(prefix.get("loads"), "snapshot issue progress")?;
+    let loads = array(plan["progress"].get("loads"), "snapshot issue progress")?;
     if loads.is_empty() {
         return Ok(());
     }
     let split = if resolving { 2.min(loads.len()) } else { loads.len().saturating_sub(1) };
     let (before, after) = loads.split_at(split);
+    let mut prefix = plan["progress"].clone();
     let mut tail = prefix.clone();
     tail["loads"] = json!(after);
     tail["imports"] = json!([]);
     tail["snapFailed"] = json!(true);
     tail["versionNotice"] = json!("");
-    prefix["loads"] = json!(before);
     prefix["snapFailed"] = json!(true);
     prefix["versionNotice"] = json!("");
-    load_events(prefix, capture, startup)?;
+    load_events(prefix, before, capture, startup)?;
     startup.snapshot_tail = Some(tail);
     Ok(())
 }
 
 fn load_events(
     mut progress: Value,
+    loads: &[Value],
     capture: &capture::Capture,
     startup: &mut Startup,
 ) -> io::Result<()> {
-    let loads = array(progress.get("loads"), "snapshot callback progress")?.to_vec();
     let outputs = capture.environment_facts["snapshotLoadOutput"].as_array();
     let environment_loads =
         capture.environment_facts["snapshotEnvironmentLoads"].as_array().map_or(0, Vec::len);

@@ -47,11 +47,15 @@ pub fn proves_empty_docs(source: &[u8], relative_path: &str) -> bool {
 }
 
 fn source_type(path: &str) -> Option<SourceType> {
-    let path = path.trim();
-    if path.is_empty() {
+    let file_name = path
+        .trim()
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or("");
+    if file_name.is_empty() {
         return None;
     }
-    let lower = path.replace('\\', "/").to_ascii_lowercase();
+    let lower = file_name.to_ascii_lowercase();
     if lower.ends_with(".js.snap") {
         return Some(SourceType::cjs());
     }

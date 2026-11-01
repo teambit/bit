@@ -137,15 +137,14 @@ fn check_config_file(
         if name_str != target_file || !writer_matches(writer_id, writers) {
             continue;
         }
-        let Ok(content) = fs::read_to_string(path) else {
-            continue;
-        };
-        if content.contains(marker)
+        if let Ok(content) = fs::read_to_string(path)
+            && content.contains(marker)
             && let Ok(rel) = path.strip_prefix(root)
         {
             let rel_str = rel.to_string_lossy().replace('\\', "/");
             found_by_writer[idx].push(rel_str);
         }
+        return;
     }
 }
 
@@ -181,14 +180,13 @@ pub(in crate::commands) fn collect_standard_env_ids(ws: &Workspace) -> Option<Ve
 pub(in crate::commands::ws_config) fn collect_active_component_dirs(ws: &Workspace) -> Vec<String> {
     ws.active()
         .filter_map(|(_, comp)| {
-            let dir = comp.root_dir
-                .replace('\\', "/")
+            let normalized = comp.root_dir.replace('\\', "/");
+            let dir = normalized
                 .trim()
                 .trim_start_matches("./")
                 .trim_matches('/')
-                .trim()
-                .to_owned();
-            (!dir.is_empty()).then_some(dir)
+                .trim();
+            (!dir.is_empty()).then(|| dir.to_owned())
         })
         .collect()
 }

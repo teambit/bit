@@ -283,7 +283,7 @@ fn in_workspace(loaded: &Loaded, id: &ComponentId) -> bool {
     let wanted = id.to_string_without_version();
     loaded.workspace.components
         .iter()
-        .any(|comp| comp.id.to_string_without_version() == wanted)
+        .any(|comp| comp.id.name == id.name && comp.id.to_string_without_version() == wanted)
 }
 
 /// `scope/name` (the scope may contain dots, the name slashes).

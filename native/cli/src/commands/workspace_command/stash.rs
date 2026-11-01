@@ -132,9 +132,9 @@ impl Captured {
         let home = home();
         let (_, environments) =
             environments::read_snapshot_context(&mut engine, root, &home, false, startup)?;
-        let prepared:Value=engine.request(&json!({"kind":"commandStashPrepare","root":root,"home":home,"globalRemotesFile":crate::commands::status::cache::cache_root().join("config/global-remotes.json")}))?;
+        let mut prepared: Value = engine.request(&json!({"kind":"commandStashPrepare","root":root,"home":home,"globalRemotesFile":crate::commands::status::cache::cache_root().join("config/global-remotes.json")}))?;
         let token = text(prepared.get("token"))?.trim().to_owned();
-        let context = prepared["context"].clone();
+        let context = prepared["context"].take();
         let targets = array(context.get("targets"), "stash targets")?;
         startup.build_progress = Some(json!({"stash":{"loaded":targets.len(),"importing":false}}));
         let capture = capture::capture_with(

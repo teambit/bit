@@ -92,9 +92,7 @@ pub(super) fn validate_preparation(prepared: &Value, kind: Kind) -> io::Result<(
     {
         return Err(decline("resolve preparation receipt"));
     }
-    let same = serde_json::to_string(&prepared["context"]["targets"]).ok()
-        == serde_json::to_string(&prepared["targets"]).ok();
-    if !same {
+    if prepared["context"]["targets"] != prepared["targets"] {
         return Err(decline("resolve workspace capture receipt"));
     }
     let known: HashSet<&str> = targets
@@ -153,15 +151,17 @@ pub(super) struct Versions {
 impl Versions {
     fn add(&mut self, version: &str) {
         let version = version.trim();
-        if !version.is_empty() && self.seen.insert(version.to_string()) {
-            self.list.push(version.to_string());
+        if !version.is_empty() && !self.seen.contains(version) {
+            let owned = version.to_owned();
+            self.seen.insert(owned.clone());
+            self.list.push(owned);
         }
     }
 
     /// `visit(value)`: `version` and the version of a versioned `identity`,
     /// in every nested object and array.
     pub(super) fn visit(&mut self, value: &Value) {
-        let children: Vec<&Value> = match value {
+        match value {
             Value::Object(map) => {
                 if let Some(version) = map.get("version").and_then(Value::as_str) {
                     self.add(version);
@@ -173,13 +173,13 @@ impl Versions {
                 {
                     self.add(version);
                 }
-                map.values().collect()
+                map.values()
+                    .for_each(|child| self.visit(child));
             }
-            Value::Array(items) => items.iter().collect(),
-            _ => return,
-        };
-        for child in children {
-            self.visit(child);
+            Value::Array(items) => items
+                .iter()
+                .for_each(|child| self.visit(child)),
+            _ => {}
         }
     }
 }

@@ -75,7 +75,7 @@ impl Ignore {
 
     /// `add(other)`: another instance's rules, appended.
     pub fn add_ignore(&mut self, other: &Self) -> &mut Self {
-        self.rules.extend(other.rules.iter().cloned());
+        self.rules.extend_from_slice(&other.rules);
         self
     }
 

@@ -167,12 +167,10 @@ impl<'a> Visit<'a> for Scanner {
             if ts {
                 dep.is_type_import = Some(node.import_kind == ImportOrExportKind::Type);
             }
-            dep.import_specifiers.extend(
-                node.specifiers
-                    .iter()
-                    .flatten()
-                    .map(import_specifier),
-            );
+            if let Some(specs) = &node.specifiers {
+                dep.import_specifiers.reserve(specs.len());
+                dep.import_specifiers.extend(specs.iter().map(import_specifier));
+            }
         }
         walk::walk_import_declaration(self, node);
     }
@@ -185,6 +183,7 @@ impl<'a> Visit<'a> for Scanner {
             if ts {
                 dep.is_type_import = Some(node.export_kind == ImportOrExportKind::Type);
             } else {
+                dep.import_specifiers.reserve(node.specifiers.len());
                 for spec in &node.specifiers {
                     dep.import_specifiers.push(Specifier {
                         is_default: spec.local.name() == "default",

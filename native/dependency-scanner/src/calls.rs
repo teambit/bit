@@ -37,20 +37,20 @@ pub(crate) fn nonstring_literal(argument: Option<&Argument<'_>>) -> bool {
 }
 pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
     let callee = node.callee.without_parentheses();
-    (ts || !in_optional_chain(node))
-        && match callee {
-            Expression::Identifier(id) => id.name == "require",
-            Expression::StaticMemberExpression(member) => {
-                member.property.name == "resolve" && is_resolve_receiver(&member.object)
-            }
-            Expression::ComputedMemberExpression(member) => {
-                matches!(
-                    member.expression.without_parentheses(),
-                    Expression::Identifier(id) if id.name == "resolve",
-                ) && is_resolve_receiver(&member.object)
-            }
-            _ => false,
+    let matched = match callee {
+        Expression::Identifier(id) => id.name == "require",
+        Expression::StaticMemberExpression(member) => {
+            member.property.name == "resolve" && is_resolve_receiver(&member.object)
         }
+        Expression::ComputedMemberExpression(member) => {
+            matches!(
+                member.expression.without_parentheses(),
+                Expression::Identifier(id) if id.name == "resolve",
+            ) && is_resolve_receiver(&member.object)
+        }
+        _ => false,
+    };
+    matched && (ts || !in_optional_chain(node))
 }
 
 fn is_resolve_receiver(object: &Expression<'_>) -> bool {

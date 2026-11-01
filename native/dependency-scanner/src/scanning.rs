@@ -99,30 +99,36 @@ fn scanner_for_source(
     ts: bool,
     source_comments: &[oxc_ast::ast::Comment],
 ) -> Scanner {
-    let line_starts = if ts { line_starts(source) } else { vec![] };
-    let comments: Vec<_> = source_comments
-        .iter()
-        .filter(|_| ts)
-        .map(|comment| {
-            (
-                line(&line_starts, comment.span.start),
+    let comment_has = |needle: &str| {
+        source_comments
+            .iter()
+            .any(|comment| {
                 comment
                     .content_span()
                     .source_text(source)
-                    .to_owned(),
-            )
-        })
-        .collect();
-    Scanner {
-        line_starts,
-        ts,
-        no_check: comments
+                    .contains(needle)
+            })
+    };
+    let no_check = ts && comment_has("@bit-no-check");
+    let has_ignore = ts && !no_check && comment_has("@bit-ignore");
+    let line_starts = if has_ignore { line_starts(source) } else { vec![] };
+    let comments = if has_ignore {
+        source_comments
             .iter()
-            .any(|(_, comment)| comment.contains("@bit-no-check")),
-        comments,
-        deps: IndexMap::new(),
-        unsupported: false,
-    }
+            .map(|comment| {
+                (
+                    line(&line_starts, comment.span.start),
+                    comment
+                        .content_span()
+                        .source_text(source)
+                        .to_owned(),
+                )
+            })
+            .collect()
+    } else {
+        vec![]
+    };
+    Scanner { line_starts, ts, no_check, comments, deps: IndexMap::new(), unsupported: false }
 }
 fn normalized_kind(file: &File) -> String {
     file.kind

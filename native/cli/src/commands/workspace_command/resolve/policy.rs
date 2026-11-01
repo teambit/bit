@@ -18,7 +18,7 @@ pub struct Policy {
 /// Consume policy flags while retaining all command grammar arguments in order.
 pub fn parse<'a>(args: &[&'a str], tag: bool) -> Option<(Policy, Vec<&'a str>)> {
     let mut policy = Policy::default();
-    let mut remaining = Vec::new();
+    let mut remaining = Vec::with_capacity(args.len());
     let mut seen = HashSet::new();
     let mut index = 0;
     while index < args.len() {

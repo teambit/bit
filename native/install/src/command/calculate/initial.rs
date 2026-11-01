@@ -16,7 +16,7 @@ pub(in crate::command) async fn calculate_linked(
 ) -> io::Result<Calculated> {
     if [&session.root, &loaded.workspace.scope_path]
         .into_iter()
-        .any(|path| path.to_string_lossy().trim().is_empty())
+        .any(|path| path.as_os_str().is_empty() || path.to_string_lossy().trim().is_empty())
     {
         return Err(io::Error::other("workspace or scope path is empty"));
     }

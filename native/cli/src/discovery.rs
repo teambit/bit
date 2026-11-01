@@ -219,9 +219,10 @@ fn newest_bvm_node(bvm: &Path) -> Option<PathBuf> {
     versions
         .filter_map(Result::ok)
         .filter_map(|entry| {
-            let name = entry.file_name().to_str()?.to_string();
+            let file_name = entry.file_name();
+            let name = file_name.to_str()?;
             let node = node_in(&entry.path())?;
-            Some((version_key(&name), node))
+            Some((version_key(name), node))
         })
         .max_by(|left, right| left.0.cmp(&right.0))
         .map(|(_, node)| node)

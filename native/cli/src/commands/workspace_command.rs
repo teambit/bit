@@ -80,18 +80,18 @@ impl Planned {
         let targets = self.context["lane"]["targets"]
             .as_array()
             .map_or(&[][..], Vec::as_slice);
-        let mut ids = Vec::new();
-        let mut push_unique = |candidate: String| {
-            if !ids.contains(&candidate) {
-                ids.push(candidate);
-            }
-        };
+        let mut ids = Vec::with_capacity(rows.len());
         for row in rows {
             let current = text(row.get("id"))?.trim();
             if current.is_empty() {
                 continue;
             }
-            push_unique(current.to_owned());
+            if !ids
+                .iter()
+                .any(|existing| existing == current)
+            {
+                ids.push(current.to_owned());
+            }
             let identity = bit_install::config::aspect_id_without_version(current).trim();
             let incoming = targets
                 .iter()
@@ -99,7 +99,10 @@ impl Planned {
                 .and_then(|target| target["head"].as_str().map(str::trim))
                 .filter(|head| !head.is_empty());
             if let Some(head) = incoming {
-                push_unique(format!("{identity}@{head}"));
+                let candidate = format!("{identity}@{head}");
+                if !ids.contains(&candidate) {
+                    ids.push(candidate);
+                }
             }
         }
         Ok(ids)

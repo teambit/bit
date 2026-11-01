@@ -205,8 +205,9 @@ impl Session {
         frame.push(b'\n');
         stdin.write_all(&frame)?;
         stdin.flush()?;
+        let mut line = String::new();
         loop {
-            let mut line = String::new();
+            line.clear();
             if self.stdout.read_line(&mut line)? == 0 {
                 return Err(io::Error::other(format!(
                     "the JavaScript host exited during {method}",

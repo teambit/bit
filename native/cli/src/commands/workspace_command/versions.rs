@@ -217,7 +217,7 @@ impl Versioned<'_> {
             let name = id.without_version();
             let overlap = self.selected
                 .iter()
-                .find(|comp| comp.without_version() == name);
+                .find(|comp| comp.same_without_version(id));
             if overlap.is_some_and(|comp| !added.contains(&name) || comp.display() != id.display())
             {
                 return Err(decline("native snap overlapping automatic identity"));

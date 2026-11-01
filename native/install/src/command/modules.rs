@@ -212,8 +212,9 @@ fn prepare_directories(loaded: &Loaded, calculated: &Calculated) -> io::Result<(
     let base = loaded.config.root_components_path(&loaded.workspace.root);
     if let Ok(entries) = fs::read_dir(&base) {
         for entry in entries.flatten() {
-            if !root_dirs.contains(&entry.path()) {
-                remove_path(&entry.path())?;
+            let path = entry.path();
+            if !root_dirs.contains(&path) {
+                remove_path(&path)?;
             }
         }
     }

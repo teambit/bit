@@ -120,9 +120,12 @@ fn record_unpublished_dep(
     else {
         return;
     };
-    let id = dep_id.to_string_without_version();
     let lower_version = version.to_ascii_lowercase();
-    if local.contains(&id) || !lower_message.contains(&lower_version) {
+    if !lower_message.contains(&lower_version) {
+        return;
+    }
+    let id = dep_id.to_string_without_version();
+    if local.contains(&id) {
         return;
     }
     let entry = found

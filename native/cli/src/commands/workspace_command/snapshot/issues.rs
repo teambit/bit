@@ -63,7 +63,7 @@ fn entry_matches_id(entry_id: &Value, id: &str) -> bool {
     }
     let scope = entry_id["scope"].as_str().map_or("", str::trim);
     let name = entry_id["name"].as_str().map_or("", str::trim);
-    if scope.is_empty() { name == target } else { format!("{scope}/{name}") == target }
+    if scope.is_empty() { name == target } else { target.split_once('/') == Some((scope, name)) }
 }
 
 /// The tag-blocking issues: their type and their data as JSON.

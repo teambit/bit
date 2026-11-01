@@ -33,6 +33,9 @@ impl Proof {
 }
 impl<'a> Visit<'a> for Proof {
     fn visit_statement(&mut self, node: &Statement<'a>) {
+        if !self.accepted {
+            return;
+        }
         if matches!(
             node,
             Statement::TSExportAssignment(_)
@@ -62,6 +65,9 @@ impl<'a> Visit<'a> for Proof {
         }
     }
     fn visit_variable_declarator(&mut self, node: &VariableDeclarator<'a>) {
+        if !self.accepted {
+            return;
+        }
         if !matches!(node.id, BindingPattern::BindingIdentifier(_)) {
             self.accepted = false;
             return;

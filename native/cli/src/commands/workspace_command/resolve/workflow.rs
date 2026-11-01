@@ -30,7 +30,7 @@ struct Pipeline {
 /// Remove tooling flags before the command's version/selection grammar is parsed.
 pub fn parse<'a>(args: &[&'a str], kind: Kind) -> Option<(Workflow, Vec<&'a str>)> {
     let mut workflow = Workflow::default();
-    let mut remaining = Vec::new();
+    let mut remaining = Vec::with_capacity(args.len());
     let mut seen = HashSet::new();
     let mut index = 0;
     while index < args.len() {
@@ -198,17 +198,14 @@ impl Workflow {
     pub fn parameters(&self, kind: Kind) -> Value {
         let mut params = json!({
             "build": self.build,
-            "editor": self.editor.as_deref().unwrap_or_default(),
             "skipTests": self.pipeline.skip_tests,
             "disableTagAndSnapPipelines": self.pipeline.disable,
             "ignoreBuildErrors": self.pipeline.ignore_errors,
             "exitOnFirstFailedTask": self.pipeline.fail_fast,
             "loose": self.pipeline.loose,
         });
-        if kind == Kind::Resolve
-            && let Some(object) = params.as_object_mut()
-        {
-            object.remove("editor");
+        if kind != Kind::Resolve {
+            params["editor"] = json!(self.editor.as_deref().unwrap_or_default());
         }
         if let Some(tasks) = &self.pipeline.skip_tasks {
             params["skipTasks"] = json!(tasks);

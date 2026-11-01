@@ -270,7 +270,7 @@ impl<'r> Session<'r> {
         plan_request: &Value,
         patterns: &[String],
     ) -> io::Result<Option<Value>> {
-        let mut context = self.context.clone();
+        let mut context = std::borrow::Cow::Borrowed(&self.context);
         if patterns.iter().any(|pattern| crate::commands::diff::selection::stateful(pattern)) {
             let mut request = plan_request.clone();
             request["kind"] = json!("commandTagCandidates");
@@ -278,7 +278,7 @@ impl<'r> Session<'r> {
             let candidates: Value = self.engine.request(&request)?;
             check_token(&candidates, &self.token)?;
             let ids = array(candidates.get("candidateIds"), "tag candidates")?;
-            context["targets"]
+            context.to_mut()["targets"]
                 .as_array_mut()
                 .ok_or_else(|| decline("tag targets"))?
                 .retain(|target| {

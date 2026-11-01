@@ -34,8 +34,9 @@ fn valid_switch_receipt(receipt: &Value, flag_key: &str, expected_token: &str) -
             || flag_val
                 .as_str()
                 .is_some_and(|val| val.trim().eq_ignore_ascii_case("true")));
+    if !flag_ok {
+        return false;
+    }
     let expected = expected_token.trim();
-    let token_ok =
-        !expected.is_empty() && receipt["token"].as_str().map(str::trim) == Some(expected);
-    flag_ok && token_ok
+    !expected.is_empty() && receipt["token"].as_str().map(str::trim) == Some(expected)
 }

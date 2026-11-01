@@ -316,8 +316,8 @@ pub fn listed(format: &Formatter, label: &str, ids: &[Id]) -> String {
 pub fn join_lines(parts: &[String]) -> String {
     parts
         .iter()
+        .map(String::as_str)
         .filter(|part| !part.trim().is_empty())
-        .cloned()
         .collect::<Vec<_>>()
         .join("\n")
 }

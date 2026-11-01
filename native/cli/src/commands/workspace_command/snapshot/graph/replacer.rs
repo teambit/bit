@@ -35,9 +35,9 @@ impl Replacer {
     /// `componentIdByPkgName`, in insertion order: the snapped components,
     /// then the others.
     pub fn new(components: &[WorkspaceComponent<'_>]) -> io::Result<Self> {
-        let mut replacements = HashMap::new();
-        let mut ids = HashMap::new();
-        let mut escaped = Vec::new();
+        let mut replacements = HashMap::with_capacity(components.len());
+        let mut ids = HashMap::with_capacity(components.len());
+        let mut escaped = Vec::with_capacity(components.len());
         for component in components {
             let package_name = component.package_name.trim();
             if package_name.is_empty() {
@@ -74,7 +74,7 @@ impl Replacer {
         else {
             return text.to_string();
         };
-        let mut output = String::new();
+        let mut output = String::with_capacity(text.len());
         let mut last = 0;
         for found in pattern.find_iter(text) {
             let Some(name) = found.group(1) else { continue };

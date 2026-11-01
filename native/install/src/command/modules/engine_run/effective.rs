@@ -101,9 +101,9 @@ fn cleanup(root: &Path, receipt: &Value) -> io::Result<()> {
         .filter(|entries| entries.len() <= 8192)
         .ok_or_else(|| io::Error::other("subscriber component directory receipt"))?;
     for entry in entries {
-        let directory = [entry, &entry["directory"], &entry["rootDir"]]
-            .into_iter()
-            .find_map(non_empty_dir)
+        let directory = non_empty_dir(entry)
+            .or_else(|| non_empty_dir(&entry["directory"]))
+            .or_else(|| non_empty_dir(&entry["rootDir"]))
             .map(Path::new)
             .filter(|directory| {
                 directory.is_absolute()

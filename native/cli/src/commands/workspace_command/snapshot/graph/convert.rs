@@ -199,7 +199,7 @@ fn edges(lockfile: &Value, mut direct: Vec<Value>, replacer: &Replacer) -> Vec<V
 fn edge(dep_path: &str, snapshot: &Value, replacer: &Replacer) -> Option<Value> {
     let neighbours = snapshot_neighbours(snapshot, replacer);
     let id = replacer.replace(dep_path);
-    let pkg_id = pnpm_deps_path::remove_suffix(&id).to_string();
+    let pkg_id = pnpm_deps_path::remove_suffix(&id);
     if neighbours.is_empty() && pkg_id == id {
         return None;
     }

@@ -77,7 +77,7 @@ pub async fn link_components(
 }
 
 fn unique_component_ids(components: &[WorkspaceComponent]) -> Vec<String> {
-    let mut ids = Vec::new();
+    let mut ids = Vec::with_capacity(components.len());
     for id in components.iter().map(super::super::session::installation_components::identity) {
         let trimmed = id.trim();
         if !trimmed.is_empty()

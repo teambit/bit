@@ -232,8 +232,8 @@ fn write_prettier_configs(
 }
 
 fn build_tsconfig(comp_dirs: &[String], include_root_dir: bool) -> io::Result<String> {
-    let mut exclude = Vec::new();
-    let mut include = Vec::new();
+    let mut exclude = Vec::with_capacity(comp_dirs.len() * 7);
+    let mut include = Vec::with_capacity(comp_dirs.len() * 2 + 1);
     for dir in comp_dirs {
         for suffix in
             ["artifacts", "public", "dist", "node_modules", "package.json", "**/*.cjs", "./dist"]
@@ -347,15 +347,14 @@ fn is_user_authored(file_path: &Path, marker: &str) -> bool {
 }
 
 fn relative_to_cache(rel_dir: &str, target_name: &str) -> String {
-    let normalized = rel_dir.replace('\\', "/");
-    let depth = normalized
+    let depth = rel_dir
         .trim()
-        .split('/')
+        .split(['/', '\\'])
         .filter(|seg| !seg.is_empty() && *seg != ".")
         .count();
     if depth == 0 {
         format!("./node_modules/.cache/{target_name}")
     } else {
-        format!("./{}/node_modules/.cache/{target_name}", vec![".."; depth].join("/"))
+        format!("./{}node_modules/.cache/{target_name}", "../".repeat(depth))
     }
 }

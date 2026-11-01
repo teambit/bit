@@ -187,10 +187,9 @@ impl SnapError {
             return message.clone();
         }
         let chalk = format.chalk;
-        let title = chalk.yellow(&format!(
-            "\n       {}: \n",
-            r#"missing packages that were manually set  (run "bit install")"#,
-        ));
+        let title = chalk.yellow(
+            "\n       missing packages that were manually set  (run \"bit install\"): \n",
+        );
         let components: Vec<String> = self.components
             .iter()
             .map(|(id, issues)| {

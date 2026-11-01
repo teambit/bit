@@ -55,5 +55,11 @@ impl Cache {
 fn clean_field(field: Option<String>) -> Option<String> {
     let val = field?;
     let trimmed = val.trim();
-    (!trimmed.is_empty()).then(|| trimmed.to_owned())
+    if trimmed.is_empty() {
+        None
+    } else if trimmed.len() == val.len() {
+        Some(val)
+    } else {
+        Some(trimmed.to_owned())
+    }
 }

@@ -240,8 +240,11 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
 }
 
 pub(super) fn parse_unrecognized<'a>(args: &[&'a str]) -> Option<&'a str> {
-    let filtered = strip_no_color(args);
-    let [sub] = filtered.as_slice() else { return None };
+    let mut filtered = args
+        .iter()
+        .copied()
+        .filter(|&arg| !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false"));
+    let (Some(sub), None) = (filtered.next(), filtered.next()) else { return None };
     let sub = sub.trim();
     (!sub.is_empty() && !sub.starts_with('-') && !matches!(sub, "write" | "clean" | "list"))
         .then_some(sub)

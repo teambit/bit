@@ -29,10 +29,14 @@ impl<'ast> Visit<'ast> for Classifier {
             | AstKind::ExportAllDeclaration(_)
             // Babel's `Import` callee makes module-definition classify dynamic imports as ES6.
             | AstKind::ImportExpression(_) => Classification::Supported,
-            AstKind::CallExpression(call) if crate::calls::in_optional_chain(call) => {
-                Classification::None
+            AstKind::CallExpression(call) => {
+                let class = classify_call(&call.callee, &call.arguments);
+                if class != Classification::None && crate::calls::in_optional_chain(call) {
+                    Classification::None
+                } else {
+                    class
+                }
             }
-            AstKind::CallExpression(call) => classify_call(&call.callee, &call.arguments),
             AstKind::AssignmentExpression(assignment) => {
                 if crate::exports::is_exports(&assignment.left) {
                     Classification::Supported

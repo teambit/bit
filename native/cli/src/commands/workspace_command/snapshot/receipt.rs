@@ -62,7 +62,7 @@ pub fn snapshot(root: &Path, snapped: &Snapped<'_>, lane_log: bool) -> io::Resul
         "bitVersion": bit_version()?,
     });
     if lane_log {
-        receipt["laneLog"] = user.log();
+        receipt["laneLog"] = receipt["log"].clone();
     }
     Ok(receipt)
 }

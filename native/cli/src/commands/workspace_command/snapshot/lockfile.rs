@@ -53,9 +53,9 @@ pub(in crate::commands::workspace_command) fn graphs(
     hashes: &[String],
     capture: &Capture,
 ) -> io::Result<Vec<Option<String>>> {
-    let mut visible = Vec::new();
-    let mut versions = Vec::new();
-    let mut positions = Vec::new();
+    let mut visible = Vec::with_capacity(needs_snap.len());
+    let mut versions = Vec::with_capacity(needs_snap.len());
+    let mut positions = Vec::with_capacity(needs_snap.len());
     for (index, (identity, hash)) in needs_snap
         .iter()
         .zip(hashes)

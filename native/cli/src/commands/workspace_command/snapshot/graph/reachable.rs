@@ -127,9 +127,10 @@ fn visit(
 ) {
     let mut stack = vec![root];
     while let Some(id) = stack.pop() {
-        if !visited.insert(id.clone()) {
+        if visited.contains(&id) {
             continue;
         }
+        visited.insert(id.clone());
         let package = pnpm_deps_path::remove_suffix(&id);
         if let Some(value) = lockfile["packages"].get(package) {
             packages.entry(package.to_owned()).or_insert_with(|| value.clone());

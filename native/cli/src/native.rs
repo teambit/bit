@@ -63,16 +63,6 @@ pub fn run(args: &[OsString]) -> io::Result<Option<ExitCode>> {
 /// `BIT_NATIVE_TRACE`, which already prints the reason, nor for `--help`, nor
 /// with `BIT_NATIVE_QUIET=1`.
 fn warn_fallback(name: &str, reason: &str, args: &[OsString]) {
-    let quiet = env::var_os("BIT_NATIVE_QUIET")
-        .is_some_and(|value| {
-            let text = value.to_string_lossy();
-            !matches!(
-                text.trim()
-                    .to_ascii_lowercase()
-                    .as_str(),
-                "" | "0" | "false" | "off" | "no",
-            )
-        });
     let has_flag = |flags: &[&str]| {
         args.iter()
             .skip(1)
@@ -81,7 +71,20 @@ fn warn_fallback(name: &str, reason: &str, args: &[OsString]) {
                     .is_some_and(|raw| flags.contains(&raw.trim()))
             })
     };
-    if quiet || has_flag(&["--help", "-h"]) || trace::enabled() {
+    if trace::enabled() || has_flag(&["--help", "-h"]) {
+        return;
+    }
+    let quiet = env::var_os("BIT_NATIVE_QUIET")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && trimmed != "0"
+                && !["false", "off", "no"]
+                    .iter()
+                    .any(|word| trimmed.eq_ignore_ascii_case(word))
+        });
+    if quiet {
         return;
     }
     let message = fallback_message(name, reason);

@@ -129,7 +129,7 @@ fn sort_outputs<'a>(
     outputs: &'a [Output],
     current: &HashMap<PathBuf, Output>,
 ) -> io::Result<Option<Sorted<'a>>> {
-    let mut sorted = Sorted { intact: HashMap::new(), damaged: Vec::new() };
+    let mut sorted = Sorted { intact: HashMap::with_capacity(outputs.len()), damaged: Vec::new() };
     for output in outputs {
         match output {
             Output::File { path, size, modified, sha256 } => {

@@ -15,7 +15,11 @@ impl CallbackError {
                 if startup.is_empty() {
                     startup = inner.startup;
                 }
-                output.push_str(&inner.output);
+                if output.is_empty() {
+                    output = inner.output;
+                } else {
+                    output.push_str(&inner.output);
+                }
                 inner.cause
             }
             Err(cause) => cause,

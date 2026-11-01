@@ -66,7 +66,8 @@ pub fn path_with(dir: &Path, path: Option<OsString>) -> OsString {
     {
         return path;
     }
-    let mut joined = dir.as_os_str().to_os_string();
+    let mut joined = OsString::with_capacity(dir.as_os_str().len() + 1 + path.len());
+    joined.push(dir.as_os_str());
     joined.push(if cfg!(windows) { ";" } else { ":" });
     joined.push(path);
     joined

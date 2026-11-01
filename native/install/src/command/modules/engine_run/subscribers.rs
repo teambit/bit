@@ -58,7 +58,7 @@ fn package_options(
     calculated: &Calculated,
 ) -> io::Result<Value> {
     let config = &loaded.config.dependency_resolver;
-    let raw = serde_json::to_value(config).map_err(io::Error::other)?;
+    let mut raw = serde_json::to_value(config).map_err(io::Error::other)?;
     let mut options = json!({
         "copyPeerToRuntimeOnComponents":session.options.copy_peer_to_runtime_on_components,
         "copyPeerToRuntimeOnRoot":session.options.copy_peer_to_runtime_on_root.unwrap_or(true),
@@ -69,7 +69,7 @@ fn package_options(
         "failOnDependenciesGraphError":session.options.restore,
         "overrides":calculated.outcome.plan.overrides,
     });
-    copy_config(&raw, &mut options);
+    copy_config(&mut raw, &mut options);
     if let Some(throttle) = &session.options.throttle_progress {
         options["throttleProgress"] = throttle.clone();
     }
@@ -79,7 +79,7 @@ fn package_options(
     Ok(options)
 }
 
-fn copy_config(raw: &Value, options: &mut Value) {
+fn copy_config(raw: &mut Value, options: &mut Value) {
     for key in [
         "autoInstallPeers",
         "dedupePeers",
@@ -90,8 +90,9 @@ fn copy_config(raw: &Value, options: &mut Value) {
         "hoistInjectedDependencies",
         "packageImportMethod",
     ] {
-        if !raw[key].is_null() {
-            options[key] = raw[key].clone();
+        let value = raw[key].take();
+        if !value.is_null() {
+            options[key] = value;
         }
     }
 }

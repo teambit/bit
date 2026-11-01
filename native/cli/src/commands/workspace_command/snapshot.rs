@@ -253,7 +253,7 @@ fn cache_versions(value: Option<&Value>, targets: &[Value]) -> io::Result<HashMa
     if updates.len() > targets.len() {
         return Err(decline("command cache version receipt"));
     }
-    let mut versions = HashMap::new();
+    let mut versions = HashMap::with_capacity(updates.len());
     for update in updates {
         let identity = text(update.get("identity"))?.trim();
         let version = text(update.get("version"))?.trim();
@@ -267,8 +267,11 @@ fn cache_versions(value: Option<&Value>, targets: &[Value]) -> io::Result<HashMa
                     == Some(identity)
             });
         let hash = version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit());
-        let valid = hash || node_semver::npm::valid(version).is_some();
-        if !known || versions.contains_key(identity) || version.len() > 256 || !valid {
+        if version.len() > 256
+            || versions.contains_key(identity)
+            || !known
+            || !(hash || node_semver::npm::valid(version).is_some())
+        {
             return Err(decline("command cache version receipt"));
         }
         versions.insert(identity.to_string(), version.to_string());

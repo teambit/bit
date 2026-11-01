@@ -270,7 +270,14 @@ fn snapshot_siblings(
     visited: &mut HashSet<String>,
 ) -> Vec<String> {
     ids.into_iter()
-        .filter(|id| visited.insert(id.clone()) && snapshots.get(id).is_some())
+        .filter(|id| {
+            if !visited.contains(id) && snapshots.get(id).is_some() {
+                visited.insert(id.clone());
+                true
+            } else {
+                false
+            }
+        })
         .collect()
 }
 

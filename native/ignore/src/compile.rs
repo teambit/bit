@@ -81,9 +81,14 @@ impl Compiler {
         let (negative, pattern) = origin
             .strip_prefix('!')
             .map_or((false, origin), |rest| (true, rest));
-        let pattern = js_replace(pattern, &self.leading_escaped_exclamation, false, |_| "!".into());
-        let pattern = js_replace(&pattern, &self.leading_escaped_hash, false, |_| "#".into());
-        let source = self.make_regex(&pattern, negative)?;
+        let source = if pattern.starts_with('\\') {
+            let pattern =
+                js_replace(pattern, &self.leading_escaped_exclamation, false, |_| "!".into());
+            let pattern = js_replace(&pattern, &self.leading_escaped_hash, false, |_| "#".into());
+            self.make_regex(&pattern, negative)?
+        } else {
+            self.make_regex(pattern, negative)?
+        };
         Ok(Some(Rule { source, negative }))
     }
 

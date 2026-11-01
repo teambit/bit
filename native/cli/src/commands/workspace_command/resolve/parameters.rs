@@ -130,13 +130,13 @@ pub(super) fn stage_soft_history(
     home: &Path,
     context: &mut Value,
 ) -> io::Result<()> {
-    let status: Value =
+    let mut status: Value =
         engine.request(&json!({"kind":"statusContext","root":root,"home":home,"history":true}))?;
     if !status["models"].is_array() || status["models"] != context["models"] {
         return Err(decline("soft tag history models changed"));
     }
-    context["pendingHistory"] =
-        json!(array(status.get("pendingHistory"), "soft tag pending history")?);
+    let _ = array(status.get("pendingHistory"), "soft tag pending history")?;
+    context["pendingHistory"] = status["pendingHistory"].take();
     Ok(())
 }
 

@@ -265,18 +265,14 @@ pub(super) fn strip_dry_run_contents(write_results: &mut WriteResults) {
 }
 
 pub(super) fn summarize_writers(writers_result: Vec<OneConfigWriterIdResult>) -> WriteResults {
-    let total_real: usize = writers_result
-        .iter()
-        .map(|wr| wr.total_real_config_files)
-        .sum();
-    let total_extending: usize = writers_result
-        .iter()
-        .map(|wr| wr.total_extending_config_files)
-        .sum();
-    let skipped_paths = writers_result
-        .iter()
-        .flat_map(|wr| wr.skipped_paths.iter().cloned())
-        .collect();
+    let mut total_real = 0;
+    let mut total_extending = 0;
+    let mut skipped_paths = Vec::new();
+    for wr in &writers_result {
+        total_real += wr.total_real_config_files;
+        total_extending += wr.total_extending_config_files;
+        skipped_paths.extend_from_slice(&wr.skipped_paths);
+    }
     WriteResults {
         writers_result,
         total_written_files: total_real + total_extending,

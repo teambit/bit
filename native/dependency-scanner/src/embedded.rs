@@ -29,6 +29,18 @@ pub(crate) fn process(input: &str, pool: &ThreadPool) -> Result<Value, serde_jso
     Ok(json!({"version":1,"id":request.id,"files":files}))
 }
 
+struct ByteCount(usize);
+
+impl std::io::Write for ByteCount {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.0 += buf.len();
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 fn bounded(
     file: &File,
     unsupported: bool,
@@ -38,8 +50,9 @@ fn bounded(
         return Ok(None);
     }
     let outcome = scan(file, unsupported);
-    let bytes = serde_json::to_vec(&outcome)?.len();
-    if !reserve(remaining, bytes) {
+    let mut counter = ByteCount(0);
+    serde_json::to_writer(&mut counter, &outcome)?;
+    if !reserve(remaining, counter.0) {
         return Ok(None);
     }
     Ok(Some(serde_json::to_value(outcome)?))

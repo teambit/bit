@@ -23,7 +23,7 @@ pub(crate) fn read_source(path: &Path) -> io::Result<String> {
     }
     let capacity = size
         .and_then(|len| usize::try_from(len).ok())
-        .unwrap_or(0);
+        .map_or(0, |len| len.saturating_add(1));
     let mut bytes = Vec::with_capacity(capacity);
     file.take((SOURCE_BYTES + 1) as u64)
         .read_to_end(&mut bytes)?;

@@ -26,14 +26,16 @@ fn main() -> ExitCode {
     match run(&args) {
         Ok(code) => code,
         Err(error) => {
+            use std::io::Write as _;
             let text = error.to_string();
             let detail = text.trim();
+            let mut stderr = std::io::stderr().lock();
             if detail.is_empty() {
-                eprintln!("bit: {}", error.kind());
+                let _ = writeln!(stderr, "bit: {}", error.kind());
             } else {
-                eprintln!("bit: {detail}");
+                let _ = writeln!(stderr, "bit: {detail}");
             }
-            let _ = std::io::Write::flush(&mut std::io::stderr());
+            let _ = stderr.flush();
             ExitCode::FAILURE
         }
     }

@@ -50,15 +50,16 @@ pub fn js_replace(
     if text.is_empty() {
         return String::new();
     }
-    let length = utf16_len(text);
+    let mut length = None;
     let mut output = String::with_capacity(text.len());
     let mut copied = 0;
     let mut start = 0;
     while start <= text.len() {
         let Some(found) = regex.find_from(text, start).next() else { break };
         let range = found.range();
+        let len = *length.get_or_insert_with(|| utf16_len(text));
         output.push_str(&text[copied..range.start]);
-        output.push_str(&replacement(&arguments(text, &found, length)));
+        output.push_str(&replacement(&arguments(text, &found, len)));
         copied = range.end;
         if !global {
             break;

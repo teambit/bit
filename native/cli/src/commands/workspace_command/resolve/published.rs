@@ -156,23 +156,23 @@ fn explicit(session: &Session<'_>, identity: &str, selections: Option<&Value>) -
 }
 
 fn registry(config: &Value) -> Option<String> {
-    let args = config["packageManagerPublishArgs"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_str)
-        .collect::<Vec<_>>()
-        .join(" ");
-    if let Some((_, registry)) = args
-        .split_once("--registry ")
-        .or_else(|| args.split_once("--registry="))
-    {
-        return registry
-            .split_whitespace()
-            .next()
-            .map(str::trim)
-            .filter(|url| !url.is_empty())
-            .map(str::to_string);
+    if let Some(raw_args) = config["packageManagerPublishArgs"].as_array() {
+        let args = raw_args
+            .iter()
+            .filter_map(Value::as_str)
+            .collect::<Vec<_>>()
+            .join(" ");
+        if let Some((_, registry)) = args
+            .split_once("--registry ")
+            .or_else(|| args.split_once("--registry="))
+        {
+            return registry
+                .split_whitespace()
+                .next()
+                .map(str::trim)
+                .filter(|url| !url.is_empty())
+                .map(str::to_string);
+        }
     }
     config["packageJson"]["publishConfig"]["registry"]
         .as_str()

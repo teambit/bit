@@ -9,10 +9,13 @@ const BLOCKLIST: [&str; 2] = ["node_modules", "favicon.ico"];
 #[must_use]
 pub fn extract_package_name(argument: &str) -> String {
     let argument = argument.trim();
-    let lower = argument.to_ascii_lowercase();
     if ALLOWED_PREFIXES
         .iter()
-        .any(|prefix| lower.starts_with(prefix))
+        .any(|prefix| {
+            argument
+                .get(..prefix.len())
+                .is_some_and(|head| head.eq_ignore_ascii_case(prefix))
+        })
     {
         return argument.to_string();
     }

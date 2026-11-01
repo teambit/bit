@@ -125,10 +125,15 @@ fn literal_match<'i>(identities: &[&'i str], pattern: &str) -> io::Result<&'i st
     if !literal {
         return Err(decline("tag pattern outside the native grammar"));
     }
-    let suffix = format!("/{pattern}");
     let mut matches = identities
         .iter()
-        .filter(|id| id.trim() == pattern || id.trim().ends_with(&suffix));
+        .filter(|id| {
+            let trimmed = id.trim();
+            trimmed == pattern
+                || trimmed
+                    .strip_suffix(pattern)
+                    .is_some_and(|prefix| prefix.ends_with('/'))
+        });
     match (matches.next(), matches.next()) {
         (Some(identity), None) => Ok(identity.trim()),
         _ => Err(decline("tag unresolved literal identity")),
@@ -165,7 +170,7 @@ pub fn planned_versions(result: &Value, identities: &[String]) -> io::Result<Vec
         .iter()
         .map(|row| &row["id"]);
     let ids = array(result.get("taggedComponents"), "tagged components")?.iter().chain(automatic);
-    let mut versions = HashMap::new();
+    let mut versions = HashMap::with_capacity(identities.len());
     for id in ids {
         let (identity, version) = text(Some(id))?
             .trim()
