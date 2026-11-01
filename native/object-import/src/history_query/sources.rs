@@ -22,9 +22,9 @@ impl Cache {
         digest: [u8; 20],
         canonical: &str,
         compressed: &mut usize,
-    ) -> io::Result<(crate::checkout::repository::SourceRecord, bool)> {
-        if let Some(record) = self.records.get(canonical) {
-            return Ok((record.clone(), false));
+    ) -> io::Result<(&crate::checkout::repository::SourceRecord, bool)> {
+        if self.records.contains_key(canonical) {
+            return Ok((&self.records[canonical], false));
         }
         if self.records.len() >= 4096 {
             return Err(invalid("history Source record limit"));
@@ -44,8 +44,7 @@ impl Cache {
             .filter(|bytes| *bytes <= self.limit)
             .ok_or_else(|| invalid("history Source owner limit"))?;
         self.bytes = next_bytes;
-        self.records.insert(canonical.to_owned(), record.clone());
-        Ok((record, true))
+        Ok((self.records.entry(canonical.to_owned()).or_insert(record), true))
     }
 }
 pub(super) struct Sources<'a> {
@@ -100,32 +99,17 @@ impl Sources<'_> {
         }
         let (record, fresh) =
             self.cache.read(&self.directory, digest, &canonical, &mut self.compressed)?;
+        let body = record.body.clone();
         if fresh {
             self.raw = self.raw
-                .checked_add(record.body.len())
+                .checked_add(body.len())
                 .ok_or_else(|| invalid("history Source owner limit"))?;
         }
         let index = self.descriptors.len();
-        self.descriptors.push(self.snapshot(&canonical, &record)?);
+        self.descriptors.push(snapshot(self.snapshot_directory.as_deref(), &canonical, record)?);
         self.loads.push(index);
-        self.values.insert(canonical, Stored { body: record.body.clone(), index, fresh });
-        Ok(record.body)
-    }
-    fn snapshot(
-        &self,
-        hash: &str,
-        record: &crate::checkout::repository::SourceRecord,
-    ) -> io::Result<Value> {
-        let mut descriptor = json!({"hash":hash,"compressedSize":record.compressed.len(),"inflatedSize":record.inflated_size});
-        if let Some(directory) = &self.snapshot_directory {
-            let (path, mut file) = create_snapshot_file(directory, hash)?;
-            if let Err(error) = file.write_all(&record.compressed).and_then(|()| file.flush()) {
-                let _ = fs::remove_file(&path);
-                return Err(error);
-            }
-            descriptor["privatePath"] = json!(path);
-        }
-        Ok(descriptor)
+        self.values.insert(canonical, Stored { body: body.clone(), index, fresh });
+        Ok(body)
     }
     pub(super) fn text(&mut self, hash: &str) -> io::Result<String> {
         Ok(String::from_utf8_lossy(&self.read(hash)?).into_owned())
@@ -145,6 +129,23 @@ impl Sources<'_> {
             0,
         );
     }
+}
+
+fn snapshot(
+    snapshot_directory: Option<&std::path::Path>,
+    hash: &str,
+    record: &crate::checkout::repository::SourceRecord,
+) -> io::Result<Value> {
+    let mut descriptor = json!({"hash":hash,"compressedSize":record.compressed.len(),"inflatedSize":record.inflated_size});
+    if let Some(directory) = snapshot_directory {
+        let (path, mut file) = create_snapshot_file(directory, hash)?;
+        if let Err(error) = file.write_all(&record.compressed).and_then(|()| file.flush()) {
+            let _ = fs::remove_file(&path);
+            return Err(error);
+        }
+        descriptor["privatePath"] = json!(path);
+    }
+    Ok(descriptor)
 }
 fn create_snapshot_file(
     directory: &std::path::Path,

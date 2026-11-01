@@ -214,8 +214,10 @@ impl Trace<'_> {
         reader: &mut crate::read_version::Reader<'_>,
     ) -> io::Result<Option<Value>> {
         let Some(parent) = row.get("parentOf") else { return Ok(Some(row.clone())) };
-        let lower = hash.trim().to_ascii_lowercase();
-        if exit && (self.existing.contains(&lower) || self.added.contains_key(hash)) {
+        if exit
+            && (self.added.contains_key(hash)
+                || self.existing.contains(&hash.trim().to_ascii_lowercase()))
+        {
             return Ok(None);
         }
         self.count += 1;

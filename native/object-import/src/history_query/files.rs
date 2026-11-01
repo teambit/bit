@@ -79,18 +79,22 @@ fn version<'a>(rows: &'a [Value], hash: &str) -> io::Result<&'a Value> {
         })
         .ok_or_else(|| invalid("history file missing Version"))
 }
+fn clean_path(path: &str) -> std::borrow::Cow<'_, str> {
+    let mut trimmed = path.trim();
+    while let Some(rest) = trimmed
+        .strip_prefix("./")
+        .or_else(|| trimmed.strip_prefix(r".\"))
+    {
+        trimmed = rest;
+    }
+    if trimmed.contains('\\') {
+        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(trimmed)
+    }
+}
 fn file_hash(version: &Value, relative: &str) -> io::Result<Option<String>> {
-    let clean = |path: &str| {
-        let mut trimmed = path.trim();
-        while let Some(rest) = trimmed
-            .strip_prefix("./")
-            .or_else(|| trimmed.strip_prefix(r".\"))
-        {
-            trimmed = rest;
-        }
-        trimmed.replace('\\', "/")
-    };
-    let normalized = clean(relative);
+    let normalized = clean_path(relative);
     let files = version
         .get("files")
         .and_then(Value::as_array)
@@ -102,7 +106,7 @@ fn file_hash(version: &Value, relative: &str) -> io::Result<Option<String>> {
             file.get("relativePath")
                 .or_else(|| file.get("path"))
                 .and_then(Value::as_str)
-                .is_some_and(|cand| clean(cand) == normalized)
+                .is_some_and(|cand| clean_path(cand) == normalized)
         })
     else {
         return Ok(None);

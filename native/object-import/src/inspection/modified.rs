@@ -17,11 +17,10 @@ pub(crate) fn modified(
         files: paths
             .iter()
             .map(|relative_path| {
-                let relative_path = relative_path.trim().to_string();
-                let path = root.join(&relative_path);
+                let trimmed = relative_path.trim();
                 wire::Input {
-                    relative_path,
-                    path,
+                    path: root.join(trimmed),
+                    relative_path: trimmed.to_owned(),
                     raw_hash: None,
                     read_token: None,
                     snapshot_hash: None,

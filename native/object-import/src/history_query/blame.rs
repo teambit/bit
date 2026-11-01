@@ -113,7 +113,7 @@ fn assign(
             .unwrap_or(&part.value)
             .split('\n');
         if part.kind == 2 {
-            collect_removed(&mut removed, lines, line);
+            collect_removed(&mut removed, patch.pending, lines, line);
             continue;
         }
         for _ in lines {
@@ -128,11 +128,15 @@ fn assign(
 }
 fn collect_removed<'a>(
     removed: &mut HashMap<usize, &'a str>,
+    pending: &std::collections::HashSet<usize>,
     lines: impl Iterator<Item = &'a str>,
     start: usize,
 ) {
     for (index, text) in lines.enumerate() {
-        removed.insert(start.saturating_add(index), text);
+        let target = start.saturating_add(index);
+        if pending.contains(&target) {
+            removed.insert(target, text);
+        }
     }
 }
 fn previous_lines(rows: &mut [Value], added: Vec<usize>, removed: &HashMap<usize, &str>) {

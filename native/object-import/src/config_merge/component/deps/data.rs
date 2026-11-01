@@ -6,7 +6,7 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     for (index, side) in ["current", "other", "base"].iter().enumerate() {
         log_side_data(state, index, side);
     }
-    let mut ids = Vec::new();
+    let mut ids = Vec::with_capacity(state.data[0].len() + state.data[1].len());
     for dep in state.data[0]
         .iter()
         .chain(state.data[1].iter())
@@ -169,15 +169,9 @@ fn compatible(state: &State<'_, '_>, current: &Value, other: &Value) -> io::Resu
         .map(str::trim)
         .filter(|ver| !ver.is_empty())
         .ok_or_else(|| super::super::super::invalid("other version"))?;
-    Ok(super::super::super::semver::satisfies(
-        &state.engine.input["semver"],
-        current_version,
-        other_policy,
-    )? || super::super::super::semver::satisfies(
-        &state.engine.input["semver"],
-        other_version,
-        current_policy,
-    )?)
+    let semver = &state.engine.input["semver"];
+    Ok(super::super::super::semver::satisfies(semver, current_version, other_policy)?
+        || super::super::super::semver::satisfies(semver, other_version, current_policy)?)
 }
 
 fn is_local(state: &State<'_, '_>, id: &str, current: &Value, other: &Value) -> io::Result<bool> {

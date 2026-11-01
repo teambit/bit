@@ -221,9 +221,10 @@ fn dependencies(engine: &Engine<'_>, side: &str) -> io::Result<Vec<Value>> {
     if entries.len() > 4096 {
         return Err(invalid("dependency budget"));
     }
+    let policies = &extension["data"]["policy"];
     let mut result = Vec::with_capacity(entries.len());
     for entry in entries {
-        let dep = normalize_dependency(entry, &extension["data"]["policy"])?;
+        let dep = normalize_dependency(entry, policies)?;
         result.push(dep);
     }
     Ok(result)
@@ -276,7 +277,7 @@ fn policy(input: &Value) -> io::Result<Vec<Value>> {
             continue;
         }
         let entries = policy_entries(&input[field])?;
-        for entry in entries {
+        for entry in entries.iter() {
             let name = entry["name"]
                 .as_str()
                 .map(str::trim)
@@ -302,16 +303,17 @@ fn policy(input: &Value) -> io::Result<Vec<Value>> {
     Ok(result)
 }
 
-fn policy_entries(input: &Value) -> io::Result<Vec<Value>> {
-    let entries = if let Some(entries) = input.as_array() {
-        entries.clone()
+fn policy_entries(input: &Value) -> io::Result<std::borrow::Cow<'_, [Value]>> {
+    if let Some(entries) = input.as_array() {
+        Ok(std::borrow::Cow::Borrowed(entries.as_slice()))
     } else if let Some(entries) = input.as_object() {
-        entries
-            .iter()
-            .map(|(name, value)| json!({"name":name,"version":value,"force":true}))
-            .collect()
+        Ok(std::borrow::Cow::Owned(
+            entries
+                .iter()
+                .map(|(name, value)| json!({"name":name,"version":value,"force":true}))
+                .collect(),
+        ))
     } else {
-        return Err(invalid("config policy"));
-    };
-    Ok(entries)
+        Err(invalid("config policy"))
+    }
 }

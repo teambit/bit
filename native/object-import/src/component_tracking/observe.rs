@@ -71,16 +71,18 @@ impl Observed {
             .take_while(|parent| parent.starts_with(root))
         {
             let real = ancestor(parent)?;
-            if self.ancestors
-                .get(parent)
-                .is_some_and(|original| original != &real)
-            {
-                return Err(unsupported("tracking ancestor changed during planning"));
+            match self.ancestors.get(parent) {
+                Some(original) if original != &real => {
+                    return Err(unsupported("tracking ancestor changed during planning"));
+                }
+                Some(_) => {}
+                None if self.ancestors.len() >= 65536 => {
+                    return Err(unsupported("tracking ancestor limit"));
+                }
+                None => {
+                    self.ancestors.insert(parent.to_owned(), real);
+                }
             }
-            if !self.ancestors.contains_key(parent) && self.ancestors.len() >= 65536 {
-                return Err(unsupported("tracking ancestor limit"));
-            }
-            self.ancestors.entry(parent.to_owned()).or_insert(real);
         }
         Ok(())
     }

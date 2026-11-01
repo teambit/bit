@@ -41,7 +41,7 @@ thread_local! {
 pub struct Binding(Option<Handler>);
 impl Drop for Binding {
     fn drop(&mut self) {
-        CURRENT.with(|current| current.replace(self.0.take()));
+        CURRENT.with_borrow_mut(|current| *current = self.0.take());
     }
 }
 
@@ -59,5 +59,5 @@ pub fn scope<Output>(handler: Option<Handler>, work: impl FnOnce() -> Output) ->
 
 /// Bind an adapter on the dispatch thread until the returned guard is dropped.
 pub fn bind(handler: Option<Handler>) -> Binding {
-    Binding(CURRENT.with(|current| current.replace(handler)))
+    Binding(CURRENT.with_borrow_mut(|current| std::mem::replace(current, handler)))
 }

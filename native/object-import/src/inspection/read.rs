@@ -119,8 +119,8 @@ fn capture_loaded(
     if used > maximum {
         return Err(invalid("inspection normalized byte budget"));
     }
-    let snapshot_hash = if changed { hash(&contents) } else { raw_hash.clone() };
     verify_expected(file.raw_hash.as_deref(), &raw_hash)?;
+    let snapshot_hash = if changed { hash(&contents) } else { raw_hash.clone() };
     verify_expected(file.snapshot_hash.as_deref(), &snapshot_hash)?;
     let linux_hash = linux_hash(&contents, &snapshot_hash);
     Ok((

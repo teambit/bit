@@ -40,10 +40,17 @@ fn identifier(left: &Value, right: &Value) -> io::Result<Ordering> {
 }
 pub(super) fn satisfies(input: &Value, version: &str, range: &str) -> io::Result<bool> {
     let (version, range) = (version.trim(), range.trim());
-    let Some(candidate) = input[version].get("version") else {
+    let Some(candidate) = input
+        .get(version)
+        .and_then(|entry| entry.get("version"))
+    else {
         return Ok(false);
     };
-    let Some(sets) = input[range].get("range").and_then(Value::as_array) else {
+    let Some(sets) = input
+        .get(range)
+        .and_then(|entry| entry.get("range"))
+        .and_then(Value::as_array)
+    else {
         return Ok(false);
     };
     if sets.len() > 4096 {

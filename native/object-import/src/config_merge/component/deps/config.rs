@@ -19,7 +19,7 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     if state.same(2, 0) {
         return other_changed(state);
     }
-    let mut names = Vec::new();
+    let mut names = Vec::with_capacity(state.policies[0].len() + state.policies[1].len());
     for dep in state.policies[0]
         .iter()
         .chain(state.policies[1].iter())
@@ -42,7 +42,8 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     Ok(())
 }
 fn other_changed(state: &mut State<'_, '_>) -> io::Result<()> {
-    for dep in state.policies[1].clone() {
+    for index in 0..state.policies[1].len() {
+        let dep = state.policies[1][index].clone();
         state.add_policy(&dep)?;
     }
     for dep in &state.policies[0] {

@@ -48,7 +48,9 @@ fn existing_root(candidate: &Candidate, existing: Option<&Value>) -> io::Result<
         .map(str::trim)
         .filter(|dir| !dir.is_empty())
         && root != candidate.directory
-        && !root.starts_with(&format!("{}/", candidate.directory))
+        && !root
+            .strip_prefix(&candidate.directory)
+            .is_some_and(|rest| rest.starts_with('/'))
     {
         return Err(error(format!(
             "unable to add individual files outside the root dir ({root}) of {}/{}.\nyou can add the directory these files are located at and it'll change the root dir of the component accordingly",

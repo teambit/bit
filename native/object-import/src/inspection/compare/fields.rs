@@ -41,11 +41,14 @@ pub(super) fn set(value: &mut Js, key: &str, new: Js) -> io::Result<()> {
     Ok(())
 }
 pub(super) fn text(value: &Js) -> io::Result<Vec<u16>> {
+    text_slice(value).map(<[u16]>::to_vec)
+}
+pub(super) fn text_slice(value: &Js) -> io::Result<&[u16]> {
     if let Js::String(text) = value {
         if text.len() > 32768 {
             return Err(invalid("inspection string budget"));
         }
-        Ok(text.clone())
+        Ok(text)
     } else {
         Err(invalid("inspection expected string"))
     }
@@ -54,7 +57,7 @@ pub(super) fn array(value: &Js) -> io::Result<&[Js]> {
     if let Js::Array(rows) = value { Ok(rows) } else { Err(invalid("inspection expected array")) }
 }
 pub(super) fn id(value: &Js, version: bool) -> io::Result<Vec<u16>> {
-    let name = text(get(value, "name"))?;
+    let name = text_slice(get(value, "name"))?;
     if name.is_empty() {
         return Err(invalid("inspection empty component name"));
     }
@@ -62,16 +65,16 @@ pub(super) fn id(value: &Js, version: bool) -> io::Result<Vec<u16>> {
     if let Js::String(scope) = get(value, "scope")
         && !scope.is_empty()
     {
-        out.extend(scope);
+        out.extend_from_slice(scope);
         out.push(u16::from(b'/'));
     }
-    out.extend(name);
+    out.extend_from_slice(name);
     if version
         && let Js::String(version) = get(value, "version")
         && !version.is_empty()
     {
         out.push(u16::from(b'@'));
-        out.extend(version);
+        out.extend_from_slice(version);
     }
     Ok(out)
 }
@@ -94,10 +97,10 @@ pub(super) fn align(left: &Js, right: &mut Js) -> io::Result<Value> {
     let metadata = align_files(left, right)?;
     Ok(json!({"dependencyVersions":versions,"fileMetadata":metadata}))
 }
-fn file_positions(model: &[Js]) -> HashMap<Vec<u16>, usize> {
+fn file_positions(model: &[Js]) -> HashMap<&[u16], usize> {
     let mut positions = HashMap::with_capacity(model.len());
     for (index, row) in model.iter().enumerate() {
-        if let Ok(path) = text(get(row, "relativePath")) {
+        if let Ok(path) = text_slice(get(row, "relativePath")) {
             positions.entry(path).or_insert(index);
         }
     }
@@ -113,8 +116,8 @@ fn align_files(left: &Js, right: &mut Js) -> io::Result<Vec<Value>> {
     let mut metadata = Vec::new();
     let positions = file_positions(model);
     for (index, row) in current.iter_mut().enumerate() {
-        let path = text(get(row, "relativePath"))?;
-        if let Some(&model_index) = positions.get(&path) {
+        let path = text_slice(get(row, "relativePath"))?;
+        if let Some(&model_index) = positions.get(path) {
             let other = &model[model_index];
             for field in ["name", "test"] {
                 set(row, field, get(other, field).clone())?;

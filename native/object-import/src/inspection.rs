@@ -76,8 +76,10 @@ pub(crate) fn begin(
     digest.update(revision.to_be_bytes());
     serde_json::to_writer(&mut digest, input).map_err(io::Error::other)?;
     let token = crate::validate::hexadecimal(&digest.finalize());
-    for (index, file) in files.iter_mut().enumerate() {
-        file.snapshot_path = file.snapshot_path.join(format!("{token}-{index}.snapshot"));
+    if !request.memory_only && !request.owned_memory {
+        for (index, file) in files.iter_mut().enumerate() {
+            file.snapshot_path = file.snapshot_path.join(format!("{token}-{index}.snapshot"));
+        }
     }
     let output = manifest(&token, &files, &request);
     if serde_json::to_vec(&output).map_err(io::Error::other)?.len() > 4 * 1024 * 1024 {

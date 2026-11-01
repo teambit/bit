@@ -83,6 +83,7 @@ fn contains_root_main_file(row: &Value, directory: &str) -> bool {
                 main.replace('\\', "/")
                     .trim_start_matches("./")
                     .to_lowercase()
-                    .starts_with(&format!("{dir}/"))
+                    .strip_prefix(&dir)
+                    .is_some_and(|rest| rest.starts_with('/'))
             })
 }

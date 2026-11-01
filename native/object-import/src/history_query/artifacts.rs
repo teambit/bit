@@ -54,7 +54,7 @@ fn validate_file(file: &Value) -> io::Result<()> {
     let trimmed = path.trim();
     if trimmed.is_empty()
         || path.len() > 32768
-        || path.contains('\0')
+        || path.as_bytes().contains(&0)
         || std::path::Path::new(trimmed)
             .components()
             .any(|part| {
@@ -70,7 +70,7 @@ fn validate_file(file: &Value) -> io::Result<()> {
             .is_some_and(|value| {
                 value
                     .as_str()
-                    .is_none_or(|url| url.len() > 32768 || url.contains('\0'))
+                    .is_none_or(|url| url.len() > 32768 || url.as_bytes().contains(&0))
             })
     {
         return Err(invalid("history query artifact metadata"));

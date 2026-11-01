@@ -127,18 +127,19 @@ fn values(runs: Vec<Run>, old: &[&str], new: &[&str]) -> Vec<Part> {
     let mut right = 0;
     runs.into_iter()
         .map(|run| {
-            let value = if run.kind == 2 {
-                let text = old[left..left + run.count].concat();
+            let slice = if run.kind == 2 {
+                let slice = &old[left..left + run.count];
                 left += run.count;
-                text
+                slice
             } else {
-                let text = new[right..right + run.count].concat();
+                let slice = &new[right..right + run.count];
                 right += run.count;
                 if run.kind == 0 {
                     left += run.count;
                 }
-                text
+                slice
             };
+            let value = if let [single] = slice { (*single).to_owned() } else { slice.concat() };
             Part { kind: run.kind, value }
         })
         .collect()

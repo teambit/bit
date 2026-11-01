@@ -95,9 +95,10 @@ fn drain(
         if walk.checkpoint.is_some() {
             break;
         }
-        if request.stops.contains(&parent) || !walk.seen.insert(parent.clone()) {
+        if request.stops.contains(&parent) || walk.seen.contains(&parent) {
             continue;
         }
+        walk.seen.insert(parent.clone());
         if walk.seen.len() > 4096 {
             return Err(invalid("history query record limit"));
         }
@@ -183,7 +184,7 @@ fn load(
     if from.is_some() && object.is_some() && request.fields.main_head.as_deref() == Some(hash) {
         walk.found_main = true;
     }
-    let mut row = row(object.as_ref(), walk, hash, from, tag.as_deref(), overlay);
+    let mut row = row(object.as_ref(), walk, hash, from, tag, overlay);
     if let Some(object) = object {
         loaded(walk, &mut row, &object, hash, overlay.is_none().then_some(&*reader))?;
     } else {
@@ -281,12 +282,12 @@ fn loaded(
     }
     Ok(())
 }
-fn tag(request: &Request, cached: &mut Option<String>, hash: &str) -> Option<String> {
+fn tag<'a>(request: &'a Request, cached: &mut Option<String>, hash: &str) -> Option<&'a str> {
     let (label, normal) = request.index.get(hash)?;
     if normal {
         *cached = Some(label.to_owned());
     }
-    Some(label.to_owned())
+    Some(label)
 }
 
 fn missing(request: &Request, walk: &mut Walk, row: &mut Value, from: Option<&str>, tagged: bool) {

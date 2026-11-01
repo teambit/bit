@@ -52,15 +52,15 @@ fn removed(entry: &Map<String, Value>) -> bool {
             })
 }
 fn scope(entry: &mut Map<String, Value>) {
-    if entry.contains_key("scope") || entry.contains_key("defaultScope") {
+    let default_scope = entry.shift_remove("defaultScope");
+    if entry.contains_key("scope") || default_scope.is_some() {
         let scope = entry
             .get("scope")
             .filter(|value| truthy(value))
-            .or_else(|| entry.get("defaultScope").filter(|value| truthy(value)))
             .cloned()
+            .or_else(|| default_scope.filter(truthy))
             .unwrap_or_else(|| Value::String(String::new()));
         entry.insert("scope".into(), scope);
-        entry.shift_remove("defaultScope");
     }
 }
 fn truthy(value: &Value) -> bool {

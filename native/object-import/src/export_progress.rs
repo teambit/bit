@@ -46,25 +46,16 @@ pub(crate) fn with_sender<Output>(
 pub fn emit(event: Event) -> bool {
     let event = match event {
         Event::Transfer { scope, objects } => {
-            let scope = scope.trim();
-            if scope.is_empty() {
-                return false;
-            }
-            Event::Transfer { scope: scope.to_owned(), objects }
+            let Some(scope) = non_empty_trimmed(scope) else { return false };
+            Event::Transfer { scope, objects }
         }
         Event::Persist { scope } => {
-            let scope = scope.trim();
-            if scope.is_empty() {
-                return false;
-            }
-            Event::Persist { scope: scope.to_owned() }
+            let Some(scope) = non_empty_trimmed(scope) else { return false };
+            Event::Persist { scope }
         }
         Event::HubMessage(message) => {
-            let message = message.trim();
-            if message.is_empty() {
-                return false;
-            }
-            Event::HubMessage(message.to_owned())
+            let Some(message) = non_empty_trimmed(message) else { return false };
+            Event::HubMessage(message)
         }
         other => other,
     };
@@ -73,4 +64,15 @@ pub fn emit(event: Event) -> bool {
             .as_ref()
             .is_some_and(|sender| sender.send(event).is_ok())
     })
+}
+
+fn non_empty_trimmed(text: String) -> Option<String> {
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        None
+    } else if trimmed.len() == text.len() {
+        Some(text)
+    } else {
+        Some(trimmed.to_owned())
+    }
 }

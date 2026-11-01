@@ -61,10 +61,12 @@ pub(super) fn diff(mut request: Request, cache: &mut Cache) -> io::Result<Value>
     Ok(result)
 }
 fn linux_hash(bytes: &[u8]) -> String {
-    crate::validate::hexadecimal(&Sha1::digest(crate::checkout::eol::normalize(
-        bytes.to_vec(),
-        false,
-    )))
+    let digest = if bytes.contains(&b'\r') {
+        Sha1::digest(crate::checkout::eol::normalize(bytes.to_vec(), false))
+    } else {
+        Sha1::digest(bytes)
+    };
+    crate::validate::hexadecimal(&digest)
 }
 fn finish(request: Request, left: Option<Vec<u8>>, right: Option<Vec<u8>>) -> io::Result<Value> {
     let left_hash = left.as_deref().map(linux_hash);

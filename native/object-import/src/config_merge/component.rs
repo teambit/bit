@@ -34,7 +34,9 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
     )
 }
 fn current(engine: &mut Engine<'_>) -> io::Result<()> {
-    for (index, entry) in array(engine.input, "current")?.iter().enumerate() {
+    let entries = array(engine.input, "current")?;
+    engine.handled.reserve(entries.len());
+    for (index, entry) in entries.iter().enumerate() {
         let id = entry["stringId"]
             .as_str()
             .map(str::trim)

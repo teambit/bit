@@ -19,7 +19,7 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
             .rsplit_once('@')
             .map_or(id, |(prefix, _)| prefix)
             .trim();
-        if ["teambit.dependencies/dependency-resolver", "teambit.pipelines/builder"].contains(&bare)
+        if matches!(bare, "teambit.dependencies/dependency-resolver" | "teambit.pipelines/builder")
         {
             continue;
         }
@@ -91,7 +91,9 @@ fn reason(
 }
 
 fn equal(left: &serde_json::Value, right: &serde_json::Value) -> bool {
-    left["data"] == right["data"] && undefined_keys(left) == undefined_keys(right)
+    left["data"] == right["data"]
+        && (left["dataUndefinedKeys"] == right["dataUndefinedKeys"]
+            || undefined_keys(left) == undefined_keys(right))
 }
 
 fn undefined_keys(entry: &serde_json::Value) -> std::collections::BTreeSet<&str> {

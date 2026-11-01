@@ -61,7 +61,7 @@ fn semver_entry(input: &Value) -> io::Result<()> {
 fn semver_comparator(input: &Value) -> io::Result<()> {
     fields(input, &["operator", "version"])?;
     let operator = text(input, "operator")?.trim();
-    if !["", "=", ">", ">=", "<", "<="].contains(&operator) {
+    if !matches!(operator, "" | "=" | ">" | ">=" | "<" | "<=") {
         return Err(invalid("semver operator"));
     }
     if let Some(version) = input
@@ -178,6 +178,7 @@ fn undefined_keys(entry: &Value) -> io::Result<()> {
         .as_array()
         .filter(|keys| keys.len() <= 4096)
         .ok_or_else(|| invalid("undefined data keys"))?;
+    let data = &entry["data"];
     let mut seen = std::collections::HashSet::with_capacity(keys.len());
     for key in keys {
         let key = key
@@ -185,7 +186,7 @@ fn undefined_keys(entry: &Value) -> io::Result<()> {
             .map(str::trim)
             .filter(|key| !key.is_empty() && key.len() <= 4096)
             .ok_or_else(|| invalid("undefined data key"))?;
-        if entry["data"].get(key).is_some() || !seen.insert(key) {
+        if data.get(key).is_some() || !seen.insert(key) {
             return Err(invalid("overlapping undefined data key"));
         }
     }

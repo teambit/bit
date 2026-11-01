@@ -142,9 +142,11 @@ fn apply(
     options: &Options,
     facts: &Value,
 ) -> io::Result<()> {
-    let existing = rows::find(&plan.bitmap, &candidate.name, Some(&candidate.scope))?.cloned();
-    out_of_sync(plan, &candidate, existing.as_ref(), facts)?;
-    let existing = rows::find(&plan.bitmap, &candidate.name, Some(&candidate.scope))?.cloned();
+    let mut existing = rows::find(&plan.bitmap, &candidate.name, Some(&candidate.scope))?.cloned();
+    if existing.is_none() {
+        out_of_sync(plan, &candidate, None, facts)?;
+        existing = rows::find(&plan.bitmap, &candidate.name, Some(&candidate.scope))?.cloned();
+    }
     usage::filter(plan, &mut candidate, existing.as_ref())?;
     let version = existing
         .as_ref()
@@ -243,7 +245,8 @@ fn existing_main(existing: Option<&Value>, directory: &str, files: &[String]) ->
     } else {
         format!(
             "{}/{}",
-            root.strip_prefix(&format!("{directory}/"))
+            root.strip_prefix(directory)
+                .and_then(|rest| rest.strip_prefix('/'))
                 .unwrap_or(root),
             main,
         )

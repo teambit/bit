@@ -44,7 +44,7 @@ fn fields(input: &[Value]) -> io::Result<()> {
         let name = text(field, "field")?.trim();
         if name.is_empty()
             || names.contains(&name)
-            || ["__proto__", "constructor", "prototype"].contains(&name)
+            || matches!(name, "__proto__" | "constructor" | "prototype")
         {
             return Err(invalid("scope policy field"));
         }
@@ -88,7 +88,7 @@ fn one(merged: &Value, scope: Option<&Value>) -> io::Result<Value> {
         let force = entry["force"].as_bool().unwrap_or(true);
         append.push(json!({"name":entry_name,"version":entry_version,"force":force}));
     }
-    let mut retain = Vec::new();
+    let mut retain = Vec::with_capacity(originals.len() + append.len());
     for (index, entry) in originals.iter().enumerate() {
         if entry["version"].as_str().map(str::trim) != Some("-") {
             retain.push(json!({"original":index}));

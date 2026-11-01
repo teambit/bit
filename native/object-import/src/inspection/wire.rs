@@ -38,7 +38,7 @@ pub(super) struct Model {
     pub(super) relative_path: String,
     pub(super) hash: String,
     #[serde(rename = "name")]
-    pub(super) _name: Option<String>,
+    pub(super) _name: Option<Box<str>>,
     #[serde(rename = "test")]
     pub(super) _test: Option<bool>,
 }

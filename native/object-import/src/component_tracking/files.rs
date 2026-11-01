@@ -27,10 +27,10 @@ pub(super) fn read(
     batch: &[String],
     facts: &Value,
 ) -> io::Result<Vec<String>> {
-    plan.observed.read(&plan.root.join(directory).join("component.json"))?;
-    plan.observed.read(&plan.root.join(directory).join("package.json"))?;
-    let excluded = excluded(plan, directory, batch);
     let absolute = plan.root.join(directory);
+    plan.observed.read(&absolute.join("component.json"))?;
+    plan.observed.read(&absolute.join("package.json"))?;
+    let excluded = excluded(plan, directory, batch);
     let scanned = inventory::tracking_scan(&absolute, &excluded, directory == ".")?;
     let mut paths = scanned
         .iter()
@@ -71,11 +71,7 @@ fn filtered(
     let patterns = patterns(plan, settings, track_all)?;
     let mut paths = inventory::tracking_filter(paths, &patterns)?;
     if !track_all {
-        paths.retain(|path| {
-            !ROOT_ONLY
-                .iter()
-                .any(|name| path == &join(directory, name))
-        });
+        paths.retain(|path| !is_root_only(directory, path));
     }
     paths = own(plan, &paths)?;
     let mut kept = Vec::new();
@@ -86,6 +82,16 @@ fn filtered(
         kept.push(path);
     }
     Ok(kept)
+}
+
+fn is_root_only(directory: &str, path: &str) -> bool {
+    let rel = if directory == "." {
+        Some(path)
+    } else {
+        path.strip_prefix(directory)
+            .and_then(|rest| rest.strip_prefix('/'))
+    };
+    rel.is_some_and(|rel| ROOT_ONLY.contains(&rel))
 }
 
 fn patterns(plan: &mut Plan, settings: &Value, track_all: bool) -> io::Result<Vec<String>> {
@@ -149,8 +155,9 @@ fn ignore_directories(paths: &[String]) -> Vec<String> {
 }
 
 fn observe_ignore(plan: &mut Plan, directory: &str) -> io::Result<()> {
-    plan.observed.read(&plan.root.join(directory).join(".bitignore"))?;
-    plan.observed.read(&plan.root.join(directory).join(".gitignore"))?;
+    let dir = plan.root.join(directory);
+    plan.observed.read(&dir.join(".bitignore"))?;
+    plan.observed.read(&dir.join(".gitignore"))?;
     Ok(())
 }
 fn generated(
@@ -213,9 +220,6 @@ fn retained_directories(plan: &mut Plan, directory: &str, files: &[String]) -> i
         plan.observed.directory(&parent)?;
     }
     Ok(())
-}
-fn join(directory: &str, name: &str) -> String {
-    if directory == "." { name.into() } else { format!("{directory}/{name}") }
 }
 
 fn order(files: &mut [String]) {

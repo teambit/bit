@@ -45,19 +45,10 @@ fn observed<'a>(
         return Err(invalid("inspection unsupported path"));
     }
     let token = file.read_token.ok_or_else(|| invalid("inspection retained token"))?;
-    let expected = file.raw_hash
-        .as_deref()
-        .map(str::trim)
-        .filter(|hash| !hash.is_empty())
-        .ok_or_else(|| invalid("inspection retained raw hash"))?;
-    crate::merge_history::hash(expected)?;
+    let expected = verified_hash(file.raw_hash.as_deref(), "inspection retained raw hash")?;
     let state = snapshots.ok_or_else(|| invalid("inspection retained workspace observation"))?;
-    let snapshot_hash = file.snapshot_hash
-        .as_deref()
-        .map(str::trim)
-        .filter(|hash| !hash.is_empty())
-        .ok_or_else(|| invalid("inspection retained workspace observation"))?;
-    crate::merge_history::hash(snapshot_hash)?;
+    let snapshot_hash =
+        verified_hash(file.snapshot_hash.as_deref(), "inspection retained workspace observation")?;
     state
         .get(token, &file.path, expected)
         .filter(|snapshot| {
@@ -65,4 +56,13 @@ fn observed<'a>(
                 && snapshot_hash.eq_ignore_ascii_case(snapshot.snapshot_hash.trim())
         })
         .ok_or_else(|| invalid("inspection retained workspace observation"))
+}
+
+fn verified_hash<'a>(value: Option<&'a str>, message: &'static str) -> io::Result<&'a str> {
+    let trimmed = value
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid(message))?;
+    crate::merge_history::hash(trimmed)?;
+    Ok(trimmed)
 }

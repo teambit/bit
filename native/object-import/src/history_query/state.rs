@@ -31,6 +31,9 @@ impl State {
         self.insert(populate::begin(input)?, directory)
     }
     fn insert(&mut self, mut plan: Value, directory: PathBuf) -> io::Result<Value> {
+        if self.plans.len() >= 4096 {
+            return Err(invalid("history query owner limit"));
+        }
         let sequence =
             self.sequence.checked_add(1).ok_or_else(|| invalid("history query token overflow"))?;
         let token = crate::validate::hexadecimal(&Sha1::digest(sequence.to_be_bytes()));
@@ -40,8 +43,7 @@ impl State {
             .values()
             .map(|plan| plan.sources.bytes)
             .fold(0_usize, usize::saturating_add);
-        if self.plans.len() >= 4096
-            || bytes > 4 * 1024 * 1024 - 200
+        if bytes > 4 * 1024 * 1024 - 200
             || self.bytes.saturating_add(bytes).saturating_add(source_bytes) > 32 * 1024 * 1024
         {
             return Err(invalid("history query owner limit"));
@@ -66,10 +68,9 @@ impl State {
     }
     fn sources(&mut self, token: &str, directory: &std::path::Path) -> io::Result<&mut Cache> {
         let token = token.trim();
-        let used: usize = self.plans
-            .iter()
-            .filter(|(key, _)| key.as_str() != token)
-            .map(|(_, plan)| plan.sources.bytes)
+        let total_used: usize = self.plans
+            .values()
+            .map(|plan| plan.sources.bytes)
             .fold(0_usize, usize::saturating_add);
         let plan = self.plans.get_mut(token).ok_or_else(|| invalid("stale history query"))?;
         let directory =
@@ -77,6 +78,7 @@ impl State {
         if plan.directory != directory {
             return Err(invalid("history query directory mismatch"));
         }
+        let used = total_used.saturating_sub(plan.sources.bytes);
         plan.sources.limit =
             (32_usize * 1024 * 1024).saturating_sub(self.bytes).saturating_sub(used);
         Ok(&mut plan.sources)

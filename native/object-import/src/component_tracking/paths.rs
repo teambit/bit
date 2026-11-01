@@ -141,11 +141,14 @@ fn glob_entry(
     if metadata.file_type().is_symlink() {
         return Err(unsupported("tracking glob symlinks"));
     }
-    if bit_workspace_config::glob::matches(pattern, &relative(root, &path)?) {
-        matches.push(path.clone());
-    }
+    let matched = bit_workspace_config::glob::matches(pattern, &relative(root, &path)?);
     if metadata.is_dir() {
+        if matched {
+            matches.push(path.clone());
+        }
         directories.push(path);
+    } else if matched {
+        matches.push(path);
     }
     Ok(())
 }

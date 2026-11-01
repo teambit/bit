@@ -5,7 +5,7 @@ mod data;
 mod model;
 
 use super::Engine;
-use serde_json::{Value, json};
+use serde_json::Value;
 use std::io;
 
 pub(super) fn merge(
@@ -41,13 +41,13 @@ pub(super) fn merge(
     Ok(())
 }
 fn append(policy: &mut Value, field: &str, row: Value) {
-    if let Some(map) = policy.as_object_mut()
-        && let Some(rows) = map
-            .entry(field)
-            .or_insert_with(|| json!([]))
-            .as_array_mut()
-    {
+    let Some(map) = policy.as_object_mut() else {
+        return;
+    };
+    if let Some(rows) = map.get_mut(field).and_then(Value::as_array_mut) {
         rows.push(row);
+    } else {
+        map.insert(field.to_owned(), Value::Array(vec![row]));
     }
 }
 fn field(lifecycle: &str) -> io::Result<&'static str> {

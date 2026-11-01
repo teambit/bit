@@ -62,7 +62,7 @@ struct Tag {
 pub(super) fn select(input: Value) -> io::Result<Value> {
     let request: Select = serde_json::from_value(input).map_err(io::Error::other)?;
     validate(&request)?;
-    let mut selected = Vec::new();
+    let mut selected = Vec::with_capacity(request.source_only.len());
     for (index, hash) in request.source_only.iter().enumerate() {
         if eligible(&request, hash)? {
             selected.push(index);

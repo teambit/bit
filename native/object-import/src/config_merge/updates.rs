@@ -199,12 +199,11 @@ impl Plan {
             return;
         }
         let field = if peer { "peerDependencies" } else { "dependencies" };
-        if let Some(rows) = self.conflicts
-            .entry(field)
-            .or_insert_with(|| json!([]))
-            .as_array_mut()
-        {
-            rows.push(json!({"name":name,"version":format!("CONFLICT::{workspace}::{component}")}));
+        let entry = json!({"name":name,"version":format!("CONFLICT::{workspace}::{component}")});
+        if let Some(rows) = self.conflicts.get_mut(field).and_then(Value::as_array_mut) {
+            rows.push(entry);
+        } else {
+            self.conflicts.insert(field.to_owned(), Value::Array(vec![entry]));
         }
         self.logs.push(format!("{name} - conflict. ours: {workspace}, theirs: {component}"));
     }
@@ -233,8 +232,8 @@ impl Plan {
             let warning = format!(
                 r#"failed to add the range "{prefix}" to {component}, the result is not a valid range"#,
             );
-            self.warnings.push(warning.clone());
             self.skip(name, &warning);
+            self.warnings.push(warning);
             return Ok(());
         }
         self.logs.push(format!(

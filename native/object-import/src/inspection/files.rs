@@ -1,22 +1,17 @@
 use super::{invalid, read, wire};
 use serde_json::{Value, json};
-use std::{
-    collections::{HashMap, HashSet},
-    io,
-};
+use std::{collections::HashMap, io};
 pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: wire::Files = serde_json::from_value(input).map_err(io::Error::other)?;
     if request.token.trim().is_empty() {
         return Err(invalid("stale inspection token"));
     }
     let files = plans.get(request.token.trim()).ok_or_else(|| invalid("stale inspection token"))?;
-    let models = validated_models(&request.model_files)?;
+    let mut models = validated_models(&request.model_files)?;
     let mut statuses = Vec::with_capacity(files.len() + request.model_files.len());
-    let mut current = HashSet::with_capacity(files.len());
     let mut any_changed = files.len() != request.model_files.len();
     for file in files.iter() {
-        current.insert(&file.relative_path);
-        let status = match models.get(&file.relative_path) {
+        let status = match models.remove(&file.relative_path) {
             None => "new",
             Some(model) if model.normalized_hash().eq_ignore_ascii_case(file.linux_hash.trim()) => {
                 "unchanged"
@@ -27,7 +22,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
         statuses.push(json!({"relativePath":file.relative_path,"status":status}));
     }
     for model in &request.model_files {
-        if !current.contains(&model.relative_path) {
+        if models.contains_key(&model.relative_path) {
             any_changed = true;
             statuses.push(json!({"relativePath":model.relative_path,"status":"deleted"}));
         }

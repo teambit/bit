@@ -32,7 +32,7 @@ pub(super) fn show(input: Value) -> io::Result<Value> {
         return Err(invalid("history graph record limit"));
     }
     let hashes = hashes(&request.versions)?;
-    let mut nodes: Vec<Node> = Vec::new();
+    let mut nodes: Vec<Node> = Vec::with_capacity(hashes.len());
     for (index, hash) in hashes.iter().enumerate() {
         let id = identifier(hash, request.short_hash);
         if let Some(node) = nodes
@@ -80,14 +80,9 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
     Ok(hashes)
 }
 fn identifier(hash: &str, short: bool) -> String {
-    let hash = hash.trim().to_ascii_lowercase();
-    if short {
-        hash.get(..9)
-            .unwrap_or(&hash)
-            .to_owned()
-    } else {
-        hash
-    }
+    let trimmed = hash.trim();
+    let slice = if short { trimmed.get(..9).unwrap_or(trimmed) } else { trimmed };
+    slice.to_ascii_lowercase()
 }
 fn edges(request: &Request) -> io::Result<Vec<Edge>> {
     let mut edges: Vec<Edge> = Vec::new();

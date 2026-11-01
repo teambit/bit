@@ -63,7 +63,12 @@ fn inferred(directory: &str, files: &[String]) -> Option<String> {
         })
 }
 fn find(name: &str, directory: &str, files: &[String]) -> Option<String> {
-    let normalized = name.trim().replace('\\', "/");
+    let trimmed = name.trim();
+    let normalized = if trimmed.contains('\\') {
+        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(trimmed)
+    };
     let name = normalized.trim_start_matches("./");
     if name.is_empty() {
         return None;
@@ -118,14 +123,22 @@ pub(super) fn resolve(
         }
         if metadata.is_file() {
             let relative = paths::relative(root, &absolute)?;
-            let folded = relative.to_lowercase();
-            let found = files
-                .iter()
-                .find(|file| file.to_lowercase() == folded);
-            return Ok(Some(found.cloned().unwrap_or(relative)));
+            return Ok(Some(find_case_insensitive(files, &relative).cloned().unwrap_or(relative)));
         }
     }
     Ok(Some(main))
+}
+fn find_case_insensitive<'a>(files: &'a [String], relative: &str) -> Option<&'a String> {
+    if relative.is_ascii() {
+        files
+            .iter()
+            .find(|file| file.eq_ignore_ascii_case(relative))
+    } else {
+        let folded = relative.to_lowercase();
+        files
+            .iter()
+            .find(|file| file.to_lowercase() == folded)
+    }
 }
 fn resolve_dsl(main: &str, files: &[String]) -> io::Result<String> {
     let mut main = main.to_owned();

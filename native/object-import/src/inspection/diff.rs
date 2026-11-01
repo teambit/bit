@@ -21,8 +21,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let current =
         plans.get(request.token.trim()).ok_or_else(|| invalid("stale inspection token"))?;
-    let mut seen = HashSet::with_capacity(request.model_files.len());
-    validate_request(&request, &mut seen)?;
+    validate_request(&request)?;
     let total = current
         .iter()
         .map(|file| file.contents.len())
@@ -31,18 +30,21 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
         .checked_sub(total)
         .ok_or_else(|| invalid("inspection diff path/budget"))?;
     let bodies = read::load(&request.objects_directory, &request.model_files, remaining)?;
-    let by_path: HashMap<_, _> = current
+    let mut by_path: HashMap<_, _> = current
         .iter()
         .map(|file| (&file.relative_path, file))
         .collect();
     let mut files = Vec::with_capacity(request.model_files.len() + current.len());
     for (model, body) in request.model_files.into_iter().zip(bodies) {
-        let right = by_path.get(&model.relative_path).map(|file| file.contents.clone());
+        let right =
+            by_path.remove(&model.relative_path).map(|file| file.contents.clone());
         files.push((model.relative_path, Some(body), right));
     }
-    for file in current.iter() {
-        if !seen.contains(&file.relative_path) {
-            files.push((file.relative_path.clone(), None, Some(file.contents.clone())));
+    if !by_path.is_empty() {
+        for file in current.iter() {
+            if by_path.contains_key(&file.relative_path) {
+                files.push((file.relative_path.clone(), None, Some(file.contents.clone())));
+            }
         }
     }
     Ok(
@@ -50,7 +52,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     )
 }
 
-fn validate_request(request: &Request, seen: &mut HashSet<String>) -> io::Result<()> {
+fn validate_request(request: &Request) -> io::Result<()> {
     let git_executable = request.git_executable.trim();
     if !request.objects_directory.is_absolute()
         || request.model_files.len() > super::MAX_FILES
@@ -61,13 +63,14 @@ fn validate_request(request: &Request, seen: &mut HashSet<String>) -> io::Result
         return Err(invalid("inspection diff path/budget"));
     }
     crate::merge_history::path(&request.objects_directory)?;
+    let mut seen = HashSet::with_capacity(request.model_files.len());
     for model in &request.model_files {
         if model.relative_path.trim() != model.relative_path {
             return Err(invalid("inspection unsafe relative path"));
         }
         super::read::relative(&model.relative_path)?;
         crate::merge_history::hash(model.normalized_hash())?;
-        if !seen.insert(model.relative_path.clone()) {
+        if !seen.insert(model.relative_path.as_str()) {
             return Err(invalid("duplicate inspection diff model path"));
         }
     }

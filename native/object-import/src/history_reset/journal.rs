@@ -100,36 +100,37 @@ impl State {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
         super::text(&request.token)?;
         super::text(&request.phase)?;
-        let token = request.token.trim().to_owned();
-        let mut record = self.records
-            .get(&token)
-            .cloned()
-            .ok_or_else(|| invalid("stale reset owner"))?;
-        if record.revision != request.revision
-            || record.phases.get(record.cursor).copied() != Some(request.phase.trim())
+        let token = request.token.trim();
+        let (parent_token, completed) = {
+            let record = self.records.get_mut(token).ok_or_else(|| invalid("stale reset owner"))?;
+            if record.revision != request.revision
+                || record.phases.get(record.cursor).copied() != Some(request.phase.trim())
+            {
+                return Err(invalid("stale reset receipt"));
+            }
+            if record.remaining != 0 {
+                return Err(invalid("incomplete reset children"));
+            }
+            (record.parent.clone(), record.cursor + 1 == record.phases.len())
+        };
+        if completed
+            && let Some(parent_token) = &parent_token
+            && self.records
+                .get(parent_token)
+                .is_none_or(|parent| parent.remaining == 0)
         {
-            return Err(invalid("stale reset receipt"));
+            return Err(invalid("stale reset parent"));
         }
-        if record.remaining != 0 {
-            return Err(invalid("incomplete reset children"));
-        }
+        let record = self.records.get_mut(token).ok_or_else(|| invalid("stale reset owner"))?;
         record.advance(request.next_count)?;
-        self.complete_child(&record)?;
-        let output = record.output(&token);
-        self.records.insert(token, record);
+        let output = record.output(token);
+        if completed
+            && let Some(parent_token) = &parent_token
+            && let Some(parent) = self.records.get_mut(parent_token)
+        {
+            parent.remaining -= 1;
+        }
         Ok(output)
-    }
-    fn complete_child(&mut self, record: &Record) -> io::Result<()> {
-        if record.cursor != record.phases.len() {
-            return Ok(());
-        }
-        if let Some(token) = &record.parent {
-            let parent =
-                self.records.get_mut(token).ok_or_else(|| invalid("stale reset parent"))?;
-            parent.remaining =
-                parent.remaining.checked_sub(1).ok_or_else(|| invalid("reset child completion"))?;
-        }
-        Ok(())
     }
     pub(super) fn fork(&mut self, input: Value) -> io::Result<Value> {
         let request: Fork = serde_json::from_value(input).map_err(io::Error::other)?;

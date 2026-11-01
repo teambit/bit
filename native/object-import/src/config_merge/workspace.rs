@@ -242,7 +242,11 @@ fn sort_versions(versions: &mut Groups) {
         version
             .parse::<u32>()
             .ok()
-            .filter(|number| *number != u32::MAX && number.to_string() == *version)
+            .filter(|number| {
+                *number != u32::MAX
+                    && !version.starts_with('+')
+                    && (version == "0" || !version.starts_with('0'))
+            })
             .map_or((1, 0), |number| (0, number))
     });
 }

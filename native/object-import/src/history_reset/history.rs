@@ -27,20 +27,25 @@ fn history_entries(fields: &js_json::Value) -> io::Result<Vec<(Vec<u16>, js_json
         return Err(invalid("lane history map"));
     };
     bound(entries.len())?;
-    if entries
-        .iter()
-        .any(|(key, _)| {
-            key.is_empty()
-                || key.len() > 32768
-                || key.iter().all(|&unit| unit <= 0x20)
-                || key
-                    .iter()
-                    .any(|&unit| unit <= 0x1f || unit == 0x7f)
-        })
-    {
+    if entries.iter().any(|(key, _)| invalid_key(key)) {
         return Err(invalid("lane history key"));
     }
     Ok(entries)
+}
+fn invalid_key(key: &[u16]) -> bool {
+    if key.is_empty() || key.len() > 32768 {
+        return true;
+    }
+    let mut all_whitespace = true;
+    for &unit in key {
+        if unit <= 0x1f || unit == 0x7f {
+            return true;
+        }
+        if unit > 0x20 {
+            all_whitespace = false;
+        }
+    }
+    all_whitespace
 }
 pub(super) fn prune(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;

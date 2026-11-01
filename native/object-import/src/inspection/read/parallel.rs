@@ -10,17 +10,17 @@ pub(super) fn capture(
 ) -> io::Result<Vec<File>> {
     let maximum = maximum.min(super::super::MAX_BYTES);
     let budget = Budget::new(maximum);
-    let result = request.files
+    request.files
         .par_iter()
         .map(|file| capture_shared(file, request, &budget, snapshots))
-        .collect::<io::Result<Vec<_>>>();
-    result.or_else(|error| {
-        if error.kind() == io::ErrorKind::InvalidData {
-            smaller(&request.files, request, maximum, snapshots)
-        } else {
-            Err(error)
-        }
-    })
+        .collect::<io::Result<Vec<_>>>()
+        .or_else(|error| {
+            if error.kind() == io::ErrorKind::InvalidData {
+                smaller(&request.files, request, maximum, snapshots)
+            } else {
+                Err(error)
+            }
+        })
 }
 
 // Skewed file sizes retry serially before any spool or public plan is published.

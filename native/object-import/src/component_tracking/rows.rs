@@ -61,12 +61,17 @@ fn matches(row: &Value, key: &str, name: &str, selected_scope: Option<&str>) -> 
     };
     let key_trimmed = key.trim();
     let key_id = key_trimmed.rsplit_once('@').map_or(key_trimmed, |(bare, _)| bare.trim());
-    let full = scope(row).map(|scope| format!("{scope}/{actual_name}"));
-    (name == actual_name || name == key_trimmed || name == key_id || full.as_deref() == Some(name))
+    let row_scope = scope(row);
+    let matches_full = row_scope.is_some_and(|sc| {
+        name.strip_prefix(sc)
+            .and_then(|rest| rest.strip_prefix('/'))
+            == Some(actual_name)
+    });
+    (name == actual_name || name == key_trimmed || name == key_id || matches_full)
         && selected_scope
             .map(str::trim)
             .filter(|selected| !selected.is_empty())
-            .is_none_or(|selected| scope(row) == Some(selected))
+            .is_none_or(|selected| row_scope == Some(selected))
 }
 
 pub(super) fn publish(bitmap: &mut Value, row: Value) -> io::Result<()> {

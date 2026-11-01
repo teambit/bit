@@ -53,11 +53,13 @@ fn preserve(merged: &mut Value, entry: &Value) {
     if !super::super::truthy(&entry["isSpecific"]) {
         return;
     }
-    let source = merged
-        .get("value")
-        .filter(|val| !val.is_null())
-        .unwrap_or_else(|| &entry["config"]);
-    if let Some(fields) = source.as_object() {
+    if let Some(fields) = merged.get_mut("value").and_then(Value::as_object_mut) {
+        fields.insert("__specific".into(), json!(true));
+        return;
+    }
+    if merged.get("value").is_none_or(Value::is_null)
+        && let Some(fields) = entry["config"].as_object()
+    {
         let mut fields = fields.clone();
         fields.insert("__specific".into(), json!(true));
         *merged = json!({"value":Value::Object(fields)});

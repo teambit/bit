@@ -11,6 +11,9 @@ pub(super) fn remaining(state: &mut State, incoming: usize) -> io::Result<usize>
         return Err(invalid("inspection retained file/byte limit"));
     }
     state.retained.retain(|files| files.strong_count() != 0);
+    if state.retained.len() >= MAX_FILES {
+        return Err(invalid("inspection retained file/byte limit"));
+    }
     let mut count = incoming;
     let mut bytes = 0_usize;
     for files in state.retained.iter().filter_map(std::sync::Weak::upgrade) {
@@ -21,7 +24,7 @@ pub(super) fn remaining(state: &mut State, incoming: usize) -> io::Result<usize>
             .fold(0_usize, usize::saturating_add);
         bytes = bytes.saturating_add(file_bytes);
     }
-    if state.retained.len() >= MAX_FILES || count > MAX_FILES || bytes > MAX_BYTES {
+    if count > MAX_FILES || bytes > MAX_BYTES {
         return Err(invalid("inspection retained file/byte limit"));
     }
     Ok(MAX_BYTES.saturating_sub(bytes))

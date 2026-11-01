@@ -148,10 +148,11 @@ fn replace(contents: &mut String, entry: &Value) -> io::Result<()> {
         .filter(|val| !val.is_empty())
         .ok_or_else(|| invalid("config conflict other"))?;
     let original = format!(r#""{name}": "{current}""#);
-    let Some((before, after)) = contents.split_once(&original) else {
+    let Some(pos) = contents.find(&original) else {
         return Err(invalid("config dependency substring missing"));
     };
-    *contents = format!(r#"{before}"{name}": "{other}"{after}"#);
+    let start = pos + name.len() + 4;
+    contents.replace_range(start..start + current.len(), other);
     if contents.len() > MAX_BYTES {
         return Err(invalid("config replacement budget"));
     }

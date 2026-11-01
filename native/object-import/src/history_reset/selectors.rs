@@ -77,8 +77,8 @@ pub(super) fn soft(input: Value) -> io::Result<Value> {
     {
         return Err(invalid("soft reset aliases"));
     }
-    let mut cleared = HashSet::new();
-    let mut selected = Vec::new();
+    let mut cleared = HashSet::with_capacity(request.versions.len());
+    let mut selected = Vec::with_capacity(request.versions.len());
     for (index, version) in request.versions.iter().enumerate() {
         let alias = request.aliases
             .as_ref()

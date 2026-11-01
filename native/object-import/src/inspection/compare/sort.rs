@@ -18,17 +18,11 @@ pub(super) fn rows(
         .map(|(index, row)| Ok((key(row)?, index, row.clone())))
         .collect::<io::Result<Vec<_>>>()?;
     order.sort_by(|left, right| left.0.cmp(&right.0));
-    let indices = order.iter().map(|row| row.1).collect();
-    fields::set(
-        value,
-        field,
-        Js::Array(
-            order
-                .into_iter()
-                .map(|row| row.2)
-                .collect(),
-        ),
-    )?;
+    let (indices, sorted): (Vec<_>, Vec<_>) = order
+        .into_iter()
+        .map(|(_, index, row)| (index, row))
+        .unzip();
+    fields::set(value, field, Js::Array(sorted))?;
     Ok(indices)
 }
 pub(super) fn all(value: &mut Js) -> io::Result<Value> {
@@ -88,7 +82,7 @@ fn keys(value: &mut Js) -> io::Result<Vec<Vec<u16>>> {
         .collect())
 }
 fn maps(value: &mut Js) -> io::Result<Value> {
-    let mut output = serde_json::Map::new();
+    let mut output = serde_json::Map::with_capacity(3);
     for field in ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"] {
         let mut map = fields::get(value, field).clone();
         let order = keys(&mut map)?;

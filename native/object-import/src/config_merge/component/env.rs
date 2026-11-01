@@ -114,7 +114,8 @@ fn monotonic(engine: &mut Engine<'_>) -> io::Result<bool> {
     {
         return Ok(false);
     }
-    if env_string(base) == env_string(current) || env_string(base) == env_string(other) {
+    let base_env = env_string(base);
+    if base_env == env_string(current) || base_env == env_string(other) {
         return Ok(false);
     }
     if semver::greater(semver, other_version, current_version)? {

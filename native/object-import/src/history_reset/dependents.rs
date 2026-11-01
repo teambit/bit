@@ -76,7 +76,7 @@ fn output_budget(queries: &[String], incoming: &HashMap<&str, Vec<&str>>) -> io:
 }
 
 fn incoming(rows: &[Row]) -> io::Result<HashMap<&str, Vec<&str>>> {
-    let mut incoming: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut incoming: HashMap<&str, Vec<&str>> = HashMap::with_capacity(rows.len());
     let mut edges = 0;
     for row in rows {
         text(&row.id)?;

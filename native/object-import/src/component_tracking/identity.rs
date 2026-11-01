@@ -96,17 +96,18 @@ pub(super) fn scope(
     {
         return Ok(scope.into());
     }
-    let variants = variant_scope(&facts["workspace"], directory, name)?;
+    let workspace = &facts["workspace"];
+    let variants = variant_scope(workspace, directory, name)?;
     if variants
         .as_deref()
         .is_none_or(|scope| scope.trim().is_empty())
-        && vendor(&facts["workspace"], directory)
+        && vendor(workspace, directory)
     {
         return Err(unsupported("tracking unscoped vendor component requires canonical loading"));
     }
     let scope = variants
         .as_deref()
-        .or_else(|| workspace_aspect(&facts["workspace"])["defaultScope"].as_str())
+        .or_else(|| workspace_aspect(workspace)["defaultScope"].as_str())
         .or_else(|| facts["defaultScope"].as_str())
         .map_or("", str::trim);
     if scope.is_empty() {
@@ -164,7 +165,7 @@ pub(super) fn vendor(workspace: &Value, directory: &str) -> bool {
 }
 
 fn variant_scope(workspace: &Value, directory: &str, name: &str) -> io::Result<Option<String>> {
-    let config = workspace
+    let Some(rows) = workspace
         .as_object()
         .and_then(|rows| {
             rows.iter()
@@ -176,19 +177,19 @@ fn variant_scope(workspace: &Value, directory: &str, name: &str) -> io::Result<O
                         == Some("teambit.workspace/variants")
                 })
         })
-        .map(|(_, value)| value);
-    let variants = config
-        .and_then(Value::as_object)
-        .map(|rows| {
-            rows.iter()
-                .filter_map(|(pattern, value)| {
-                    value
-                        .as_object()
-                        .map(|value| (pattern.clone(), value.clone()))
-                })
-                .collect::<Vec<_>>()
+        .and_then(|(_, value)| value.as_object())
+        .filter(|rows| !rows.is_empty())
+    else {
+        return Ok(None);
+    };
+    let variants = rows
+        .iter()
+        .filter_map(|(pattern, value)| {
+            value
+                .as_object()
+                .map(|value| (pattern.clone(), value.clone()))
         })
-        .unwrap_or_default();
+        .collect::<Vec<_>>();
     Ok(bit_workspace_config::variants::by_root_dir_and_name(&variants, directory, name)?
         .default_scope)
 }

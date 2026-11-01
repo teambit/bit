@@ -19,16 +19,11 @@ struct Request {
 }
 pub(super) fn plan(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
-    let left = request.left;
-    let right = request.right;
-    let mode = request.mode.trim();
-    if mode == "sourceCode" {
-        return source_code(left, right);
+    match request.mode.trim() {
+        "sourceCode" => source_code(request.left, request.right),
+        "modified" => modified(request.left, request.right, request.workspace_root),
+        _ => Err(invalid("unknown inspection compare mode")),
     }
-    if mode != "modified" {
-        return Err(invalid("unknown inspection compare mode"));
-    }
-    modified(left, right, request.workspace_root)
 }
 
 pub(crate) fn modified(mut left: Js, mut right: Js, workspace_root: bool) -> io::Result<Value> {
@@ -66,6 +61,9 @@ fn assignments(rows: Vec<(usize, Js)>, mutations: &Value) -> io::Result<Value> {
     let order = mutations["extensionOrder"]
         .as_array()
         .ok_or_else(|| invalid("inspection extension permutation"))?;
+    if rows.is_empty() {
+        return Ok(Value::Array(Vec::new()));
+    }
     if rows.len() > order.len() {
         return Err(invalid("inspection extension permutation"));
     }

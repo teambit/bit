@@ -43,7 +43,12 @@ fn bound(count: usize) -> io::Result<()> {
     Ok(())
 }
 fn text(value: &str) -> io::Result<()> {
-    if value.len() > 32768 || value.trim().is_empty() || value.chars().any(char::is_control) {
+    let has_control = if value.is_ascii() {
+        value.bytes().any(|byte| byte.is_ascii_control())
+    } else {
+        value.chars().any(char::is_control)
+    };
+    if value.len() > 32768 || value.trim().is_empty() || has_control {
         return Err(invalid("history reset text"));
     }
     Ok(())

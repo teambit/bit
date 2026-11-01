@@ -135,16 +135,24 @@ impl<'a> Engine<'a> {
     }
     pub(super) fn local(&self, id: &str, version: Option<&str>) -> io::Result<bool> {
         let id = id.trim();
+        if array(self.input, "workspaceIds")?
+            .iter()
+            .any(|entry| entry["base"].as_str().map(str::trim) == Some(id))
+        {
+            return Ok(true);
+        }
         let version = version
             .map(str::trim)
             .filter(|val| !val.is_empty())
             .unwrap_or("undefined");
-        let target = format!("{id}@{version}");
-        Ok(array(self.input, "workspaceIds")?
+        Ok(array(self.input, "otherLaneIds")?
             .iter()
-            .any(|entry| entry["base"].as_str().map(str::trim) == Some(id))
-            || array(self.input, "otherLaneIds")?
-                .iter()
-                .any(|entry| entry.as_str().map(str::trim) == Some(target.as_str())))
+            .any(|entry| {
+                entry
+                    .as_str()
+                    .and_then(|raw| raw.trim().strip_prefix(id))
+                    .and_then(|rest| rest.strip_prefix('@'))
+                    == Some(version)
+            }))
     }
 }

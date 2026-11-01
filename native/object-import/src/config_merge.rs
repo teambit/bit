@@ -77,7 +77,7 @@ pub(crate) fn conflict_commit(input: &Value, state: &mut Option<Conflict>) -> io
     conflict::commit(input, state)
 }
 pub(crate) fn render_workspace_conflict(contents: &str, conflicts: &Value) -> io::Result<String> {
-    if contents.len() > 32 * 1024 * 1024 || contents.contains('\0') {
+    if contents.len() > 32 * 1024 * 1024 || contents.as_bytes().contains(&0) {
         return Err(invalid("conflict workspace contents"));
     }
     validate::fields(conflicts, &["dependencies", "devDependencies", "peerDependencies"])?;
@@ -86,7 +86,7 @@ pub(crate) fn render_workspace_conflict(contents: &str, conflicts: &Value) -> io
 fn text<'a>(input: &'a Value, field: &str) -> io::Result<&'a str> {
     input[field]
         .as_str()
-        .filter(|value| value.len() <= 4096 && !value.contains('\0'))
+        .filter(|value| value.len() <= 4096 && !value.as_bytes().contains(&0))
         .ok_or_else(|| invalid("config text"))
 }
 fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {

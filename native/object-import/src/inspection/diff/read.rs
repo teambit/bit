@@ -34,11 +34,8 @@ pub(super) fn load(
     } else {
         serial(directory, models, budget)?
     };
-    for (model, record) in models.iter().zip(records) {
-        crate::merge_transaction::reads::source(
-            crate::merge_history::hash(model.normalized_hash())?,
-            &record,
-        )?;
+    for (digest, record) in records {
+        crate::merge_transaction::reads::source(digest, &record)?;
         output.push(record.body);
     }
     Ok(output)
@@ -47,18 +44,20 @@ fn parallel(
     directory: &Path,
     files: &[wire::Model],
     budget: (usize, usize),
-) -> io::Result<Vec<SourceRecord>> {
+) -> io::Result<Vec<([u8; 20], SourceRecord)>> {
     let raw = Budget::new(budget.0);
     let compressed = Budget::new(budget.1);
     files
         .par_iter()
         .map(|model| {
-            crate::checkout::repository::read_source_shared(
+            let digest = crate::merge_history::hash(model.normalized_hash())?;
+            let record = crate::checkout::repository::read_source_shared(
                 directory,
-                crate::merge_history::hash(model.normalized_hash())?,
+                digest,
                 &raw,
                 &compressed,
-            )
+            )?;
+            Ok((digest, record))
         })
         .collect()
 }
@@ -66,20 +65,16 @@ fn serial(
     directory: &Path,
     files: &[wire::Model],
     budget: (usize, usize),
-) -> io::Result<Vec<SourceRecord>> {
+) -> io::Result<Vec<([u8; 20], SourceRecord)>> {
     let mut remaining = budget.0;
     let mut compressed = super::super::MAX_BYTES.saturating_sub(budget.1);
     files
         .iter()
         .map(|model| {
-            let record = read_source_record(
-                directory,
-                crate::merge_history::hash(model.normalized_hash())?,
-                remaining,
-                &mut compressed,
-            )?;
+            let digest = crate::merge_history::hash(model.normalized_hash())?;
+            let record = read_source_record(directory, digest, remaining, &mut compressed)?;
             remaining = remaining.saturating_sub(record.body.len());
-            Ok(record)
+            Ok((digest, record))
         })
         .collect()
 }

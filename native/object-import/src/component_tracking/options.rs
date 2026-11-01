@@ -31,12 +31,13 @@ impl Options {
         let tracks_root = directories
             .iter()
             .any(|directory| directory == ".");
-        if tracks_root && !self.workspace_root && !existing_root(bitmap) {
-            return Err(error(
-                "unable to track the workspace root without the --root flag.\nit makes the workspace itself a component - it owns every file no other component claims, .bitmap included, and every other component becomes a member of it.\nif that is what you want, run \"bit add . --root\". to track a component, pass its directory, e.g. \"bit add my-component\"",
-            ));
-        }
-        if !tracks_root && self.workspace_root {
+        if tracks_root {
+            if !self.workspace_root && !existing_root(bitmap) {
+                return Err(error(
+                    "unable to track the workspace root without the --root flag.\nit makes the workspace itself a component - it owns every file no other component claims, .bitmap included, and every other component becomes a member of it.\nif that is what you want, run \"bit add . --root\". to track a component, pass its directory, e.g. \"bit add my-component\"",
+                ));
+            }
+        } else if self.workspace_root {
             return Err(error(
                 "the --root flag tracks the workspace root, but none of the given paths is the workspace root.\nrun \"bit add . --root\" from the workspace root, or drop the flag to track the given paths as ordinary components",
             ));
