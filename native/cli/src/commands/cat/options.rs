@@ -63,10 +63,13 @@ fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
         }
         None => (arg.trim(), true),
     };
+    if !val && !arg.starts_with("--") {
+        return false;
+    }
     match flag {
-        "--config" | "-c" if val || arg.starts_with("--") => options.config = val,
-        "--all" | "-a" if val || arg.starts_with("--") => options.all = val,
-        "--json" | "-j" if val || arg.starts_with("--") => options.json = val,
+        "--config" | "-c" => options.config = val,
+        "--all" | "-a" => options.all = val,
+        "--json" | "-j" => options.json = val,
         _ => return false,
     }
     true

@@ -268,12 +268,9 @@ fn is_aspect_minus_in_comp_json(root: &Path, entry: &BitmapEntry, bare_aspect: &
         .and_then(|parsed| {
             let map = parsed["extensions"].as_object()?;
             let key = find_matching_aspect_key(map, bare_aspect)?;
-            map.get(&key)?
-                .as_str()
-                .map(|val| val.trim().to_owned())
+            Some(map.get(&key)?.as_str()?.trim() == "-")
         })
-        .as_deref()
-        == Some("-")
+        == Some(true)
 }
 
 fn find_aspect_in_bitmap(

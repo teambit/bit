@@ -176,22 +176,26 @@ fn apply_inline_or_pattern(
     task: &mut Option<String>,
     files_and_out: (&mut Option<String>, &mut Option<String>),
 ) -> Option<()> {
+    if !arg.starts_with('-') {
+        if pattern.is_some() {
+            return None;
+        }
+        *pattern = Some(take_val(arg)?);
+        return Some(());
+    }
     let (files, out_dir) = files_and_out;
-    if let Some(val) = arg.strip_prefix("--aspect=").filter(|_| aspect.is_none()) {
-        *aspect = Some(take_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--task=").filter(|_| task.is_none()) {
-        *task = Some(take_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--files=").filter(|_| files.is_none()) {
-        *files = Some(take_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--out-dir=").filter(|_| out_dir.is_none()) {
-        *out_dir = Some(take_val(val)?);
-    } else if pattern.is_none()
-        && let Some(val) = take_val(arg)
-    {
-        *pattern = Some(val);
-    } else {
+    let (flag, val) = arg.split_once('=')?;
+    let slot = match flag {
+        "--aspect" => aspect,
+        "--task" => task,
+        "--files" => files,
+        "--out-dir" => out_dir,
+        _ => return None,
+    };
+    if slot.is_some() {
         return None;
     }
+    *slot = Some(take_val(val)?);
     Some(())
 }
 

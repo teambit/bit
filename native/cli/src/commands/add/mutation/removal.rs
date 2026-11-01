@@ -51,16 +51,14 @@ impl ProjectedLinker {
 }
 
 fn normalize_ids(ids: &[String]) -> Vec<String> {
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(ids.len());
     ids.iter()
         .map(|id| {
             let trimmed = id.trim();
-            trimmed
-                .rsplit_once('@')
-                .map_or(trimmed, |(base, _)| base.trim())
-                .to_owned()
+            trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
         })
-        .filter(|id| !id.is_empty() && seen.insert(id.clone()))
+        .filter(|id| !id.is_empty() && seen.insert(*id))
+        .map(str::to_owned)
         .collect()
 }
 

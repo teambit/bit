@@ -16,10 +16,10 @@ pub(super) fn render(value: &Value, options: &Options<'_>) -> io::Result<String>
     if options.json {
         return json_report(value, files, selected, show_files, show_config);
     }
-    let mut sections = Vec::new();
+    let mut sections = Vec::with_capacity(2);
     if show_files {
-        let files = selected.map_or_else(|| files.clone(), |file| vec![file]);
-        sections.push(text_files(&files, options.file.is_some())?);
+        let slice = selected.as_ref().map_or(files.as_slice(), std::slice::from_ref);
+        sections.push(text_files(slice, options.file.is_some())?);
     }
     if show_config {
         sections.push(text_config(&value["config"])?);

@@ -24,19 +24,12 @@ pub(super) fn compare(
     ids: &[String],
 ) -> io::Result<(Value, Vec<Value>)> {
     let (_, projection) = load::projected(root, bitmap, ids)?;
+    let known: std::collections::HashSet<&str> = ids.iter().map(|id| id.trim()).collect();
     let targets = projection.workspace.components
         .iter()
-        .filter(|component| {
-            let comp_id = component.id.to_string_without_version();
-            ids.iter()
-                .any(|id| id.trim() == comp_id)
-        })
-        .map(|component| target(context, component))
+        .filter(|component| known.contains(component.id.to_string_without_version().as_str()))
+        .filter_map(|component| target(context, component).transpose())
         .collect::<io::Result<Vec<_>>>()?;
-    let targets = targets
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>();
     let before = source_proofs(root, &targets)?;
     let result = engine.request(&json!({"kind":"statusCompare","root":root,"targets":targets}))?;
     if source_proofs(root, &targets)? != before {
@@ -84,7 +77,13 @@ fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Val
                 .as_str()
                 .map(str::trim)
                 .unwrap_or_default();
-            if scope.is_empty() { name == id } else { format!("{scope}/{name}") == id }
+            if scope.is_empty() {
+                name == id
+            } else {
+                id.strip_prefix(scope)
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(name)
+            }
         })
         .ok_or_else(|| io::Error::other("code predicate model"))?;
     let hash = if version.is_empty() || matches!(version, "latest" | "head") {

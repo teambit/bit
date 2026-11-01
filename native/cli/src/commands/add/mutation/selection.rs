@@ -26,17 +26,16 @@ pub(super) fn prepare(
         .collect::<std::collections::HashSet<_>>();
     let selected = workspace.components
         .iter()
-        .filter(|component| {
+        .filter_map(|component| {
             let id = component.id.to_string_without_version();
-            expected.contains(id.trim())
-        })
-        .map(|component| {
-            json!({
-                "identity": component.id.to_string_without_version(),
-                "rootDir": component.root_dir,
-                "mainFile": component.main_file,
-                "files": component.files,
-                "loadVersion": component.id.version.as_deref().map(str::trim).filter(|version| !version.is_empty()).unwrap_or("latest"),
+            expected.contains(id.trim()).then(|| {
+                json!({
+                    "identity": id,
+                    "rootDir": component.root_dir,
+                    "mainFile": component.main_file,
+                    "files": component.files,
+                    "loadVersion": component.id.version.as_deref().map(str::trim).filter(|version| !version.is_empty()).unwrap_or("latest"),
+                })
             })
         })
         .collect::<Vec<_>>();
@@ -50,6 +49,20 @@ pub(super) fn components(
     projection: &Projection,
     identities: &[String],
 ) -> Vec<WorkspaceComponent> {
+    let by_id: std::collections::HashMap<String, &WorkspaceComponent> = projection
+        .workspace
+        .components
+        .iter()
+        .map(|component| {
+            (
+                component.id
+                    .to_string_without_version()
+                    .trim()
+                    .to_owned(),
+                component,
+            )
+        })
+        .collect();
     identities
         .iter()
         .map(|identity| {
@@ -57,12 +70,7 @@ pub(super) fn components(
             trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
         })
         .filter(|identity| !identity.is_empty())
-        .filter_map(|identity| {
-            projection.workspace.components
-                .iter()
-                .find(|component| component.id.to_string_without_version().trim() == identity)
-                .cloned()
-        })
+        .filter_map(|identity| by_id.get(identity).copied().cloned())
         .collect()
 }
 

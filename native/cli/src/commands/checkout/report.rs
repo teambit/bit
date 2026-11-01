@@ -52,6 +52,12 @@ pub(in crate::commands) fn format_title(
     Ok(Report { data, code: 0, details: Some(details) })
 }
 
+fn non_empty_trimmed(version: Option<&str>) -> Option<&str> {
+    version
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+}
+
 fn deprecated_all(options: &Options, report: String) -> String {
     let target = options.to.trim();
     if options.all && matches!(target, "head" | "latest") {
@@ -131,27 +137,11 @@ impl Checkout<'_> {
             return self.format.success_summary(&title);
         }
         let version = if self.to("head") || self.to("latest") {
-            id.version
-                .as_deref()
-                .map(str::trim)
-                .filter(|ver| !ver.is_empty())
-                .or_else(|| {
-                    self.results.version
-                        .as_deref()
-                        .map(str::trim)
-                        .filter(|ver| !ver.is_empty())
-                })
+            non_empty_trimmed(id.version.as_deref())
+                .or_else(|| non_empty_trimmed(self.results.version.as_deref()))
         } else {
-            self.results.version
-                .as_deref()
-                .map(str::trim)
-                .filter(|ver| !ver.is_empty())
-                .or_else(|| {
-                    id.version
-                        .as_deref()
-                        .map(str::trim)
-                        .filter(|ver| !ver.is_empty())
-                })
+            non_empty_trimmed(self.results.version.as_deref())
+                .or_else(|| non_empty_trimmed(id.version.as_deref()))
         }
         .unwrap_or("undefined");
         let title = format!(
@@ -181,11 +171,7 @@ impl Checkout<'_> {
         } else if self.to("main") {
             "their main version".to_string()
         } else {
-            let version = self.results.version
-                .as_deref()
-                .map(str::trim)
-                .filter(|ver| !ver.is_empty())
-                .unwrap_or("undefined");
+            let version = non_empty_trimmed(self.results.version.as_deref()).unwrap_or("undefined");
             format!("version {}", self.chalk().bold(version))
         };
         let title = format!(

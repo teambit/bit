@@ -36,8 +36,8 @@ fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String
             formatter.chalk.bold(&id),
         ));
     }
-    let mut lines =
-        vec![formatter.title(&format!("tracking component {}", formatter.chalk.bold(&id)))];
+    let mut lines = Vec::with_capacity(files.len() + 1);
+    lines.push(formatter.title(&format!("tracking component {}", formatter.chalk.bold(&id))));
     for file in files {
         let file = file
             .as_str()

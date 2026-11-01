@@ -106,20 +106,11 @@ impl ProjectedLinker {
         root: &Path,
         ids: &[String],
     ) -> io::Result<()> {
-        let identities = ids
-            .iter()
-            .map(|id| strip_version(id.trim()))
-            .filter(|id| !id.is_empty())
-            .collect::<Vec<_>>();
-        let (_, projection) = super::load::projected(
-            root,
-            &bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?,
-            &identities,
-        )?;
+        let components = Self::import_documentation_components(root, ids)?;
         let environment = self.environment
             .as_mut()
             .ok_or_else(|| io::Error::other("import documentation session"))?;
-        super::super::docs::load(root, environment, &projection.loading_components())
+        super::super::docs::load(root, environment, &components)
     }
 
     pub(in crate::commands) fn import_documentation_components(

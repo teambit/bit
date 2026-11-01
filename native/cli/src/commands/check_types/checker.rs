@@ -15,7 +15,7 @@ use bit_install::{
     workspace::{Bitmap, BitmapEntry, Workspace},
 };
 use serde_json::json;
-use std::{ffi::OsString, fs, io, path::Path};
+use std::{collections::HashSet, ffi::OsString, fs, io, path::Path};
 
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
@@ -36,31 +36,26 @@ pub(super) fn try_run(
     let Some((ws, bitmap)) = load_workspace(root) else {
         return Ok(None);
     };
-    let matched =
-        match match_components(root, &ws, &bitmap, options.pattern.as_deref(), Chalk::detect(args))
-        {
-            Ok(list) => list,
-            Err(Failure::User(message)) => {
-                return emit_pattern_error(root, args, options, message).map(Some);
-            }
-            Err(Failure::Declined(_)) => return Ok(None),
-        };
+    let chalk = Chalk::detect(args);
+    let matched = match match_components(root, &ws, &bitmap, options.pattern.as_deref(), chalk) {
+        Ok(list) => list,
+        Err(Failure::User(message)) => {
+            return emit_pattern_error(root, args, options, message).map(Some);
+        }
+        Err(Failure::Declined(_)) => return Ok(None),
+    };
     if matched.is_empty() {
         return emit_empty_check_types(root, args, options).map(Some);
     }
     let diags = collect_diagnostics(&matched)?;
-    let comp_count = matched.len();
-    let formatter = Formatter::new(Chalk::detect(args));
-    let all = options.all;
-    let json_flag = options.json;
-    let outcome =
-        workspace_command::execute_without_loader(root, args, "check-types", move |out| {
-            if all {
-                out.warning("--all is deprecated, use --unmodified instead");
-            }
-            Ok(build_report(&formatter, comp_count, &diags, json_flag))
-        })?;
-    Ok(Some(outcome))
+    let (all, json_flag) = (options.all, options.json);
+    workspace_command::execute_without_loader(root, args, "check-types", move |out| {
+        if all {
+            out.warning("--all is deprecated, use --unmodified instead");
+        }
+        Ok(build_report(&Formatter::new(chalk), matched.len(), &diags, json_flag))
+    })
+    .map(Some)
 }
 
 fn emit_pattern_error(
@@ -100,15 +95,18 @@ fn match_components<'a>(
         return Ok(ws.active().collect());
     };
     let entries = resolve_pattern_entries(root, bitmap, raw, chalk)?;
+    let matched_ids: HashSet<String> = entries
+        .into_iter()
+        .map(|entry| {
+            entry.id
+                .to_string_without_version()
+                .trim()
+                .to_owned()
+        })
+        .collect();
     Ok(ws
         .active()
-        .filter(|(cand, _)| {
-            let bare = cand.id.to_string_without_version();
-            let bare = bare.trim();
-            entries
-                .iter()
-                .any(|entry| entry.id.to_string_without_version().trim() == bare)
-        })
+        .filter(|(cand, _)| matched_ids.contains(cand.id.to_string_without_version().trim()))
         .collect())
 }
 

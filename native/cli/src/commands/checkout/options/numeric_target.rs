@@ -119,9 +119,7 @@ fn valid_tag(to: &str) -> bool {
     if prerelease.is_some_and(|prerelease| !identifier(prerelease)) {
         return false;
     }
-    let parts: Vec<&str> = core.split('.').collect();
-    parts.len() == 3
-        && parts
-            .iter()
-            .all(|part| !part.is_empty() && part.bytes().all(|b| b.is_ascii_digit()))
+    let mut parts = core.split('.');
+    parts.clone().count() == 3
+        && parts.all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
 }

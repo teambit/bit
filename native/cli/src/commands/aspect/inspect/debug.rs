@@ -92,8 +92,8 @@ fn merge_debug_origins(
     raw_origins: Vec<RawOrigin>,
 ) -> (Vec<DebugOrigin>, Vec<AspectEntry>) {
     let self_id = entry.id.to_string_without_version();
-    let mut before_merge = Vec::new();
-    let mut lists = Vec::new();
+    let mut before_merge = Vec::with_capacity(raw_origins.len());
+    let mut lists = Vec::with_capacity(raw_origins.len());
     let mut removed = Vec::new();
     let mut env_found = false;
     for raw in raw_origins {
@@ -206,7 +206,7 @@ fn drop_origin_envs(mut entries: Vec<AspectEntry>, env: Option<&str>) -> Vec<Asp
 }
 
 fn build_debug_json(report: &DebugReport) -> Value {
-    let mut map = Map::new();
+    let mut map = Map::with_capacity(report.before.len() + 2);
     for item in &report.before {
         let mut obj = Map::new();
         obj.insert("extensions".into(), build_get_json(&item.extensions, None));

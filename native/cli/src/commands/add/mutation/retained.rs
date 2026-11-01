@@ -82,11 +82,11 @@ impl Retained {
         self.read_set.extend(proofs);
     }
     pub(super) fn status(&mut self, compared: &Value, ids: &[String]) {
+        let comparisons = compared["comparisons"].as_array();
         for id in ids {
             let id = id.trim();
             let Some(row) = self.rows.get_mut(id) else { continue };
-            row["modified"] = compared["comparisons"]
-                .as_array()
+            row["modified"] = comparisons
                 .and_then(|rows| {
                     rows.iter()
                         .find(|row| row_id(row) == Some(id))

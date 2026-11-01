@@ -96,10 +96,12 @@ pub(super) fn refresh(path: &Path) -> io::Result<Value> {
 }
 
 fn bounded_proof(path: &Path, file: fs::File) -> io::Result<Value> {
-    if !file.metadata()?.is_file() {
+    let metadata = file.metadata()?;
+    if !metadata.is_file() {
         return Err(io::Error::other("identity control file shape"));
     }
-    let mut bytes = Vec::new();
+    let capacity = usize::try_from(metadata.len().min(MAX_CONTROL)).unwrap_or(0);
+    let mut bytes = Vec::with_capacity(capacity);
     file.take(MAX_CONTROL + 1)
         .read_to_end(&mut bytes)?;
     if bytes.len() as u64 > MAX_CONTROL {

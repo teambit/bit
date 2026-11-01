@@ -6,14 +6,9 @@ use std::{io, path::Path};
 
 impl ProjectedLinker {
     pub(in crate::commands) fn fork_bitmap_preimage(&self, root: &Path) -> io::Result<Value> {
-        if !root.is_absolute()
-            || root.as_os_str().is_empty()
-            || root.to_string_lossy().trim().is_empty()
-        {
-            return Err(io::Error::other("fork bitmap workspace root is empty"));
-        }
+        let path = bitmap_path(root)?;
         self.retained.validate()?;
-        controls::refresh(&bitmap_path(root))
+        controls::refresh(&path)
     }
 
     pub(in crate::commands) fn fork_bitmap_committed(
@@ -22,13 +17,7 @@ impl ProjectedLinker {
         before: &Value,
         bitmap: &Value,
     ) -> io::Result<()> {
-        if !root.is_absolute()
-            || root.as_os_str().is_empty()
-            || root.to_string_lossy().trim().is_empty()
-        {
-            return Err(io::Error::other("fork bitmap workspace root is empty"));
-        }
-        let path = bitmap_path(root);
+        let path = bitmap_path(root)?;
         if before["path"]
             .as_str()
             .map(str::trim)
@@ -49,6 +38,12 @@ impl ProjectedLinker {
     }
 }
 
-fn bitmap_path(root: &Path) -> std::path::PathBuf {
-    root.join(".bitmap")
+fn bitmap_path(root: &Path) -> io::Result<std::path::PathBuf> {
+    if !root.is_absolute()
+        || root.as_os_str().is_empty()
+        || root.to_string_lossy().trim().is_empty()
+    {
+        return Err(io::Error::other("fork bitmap workspace root is empty"));
+    }
+    Ok(root.join(".bitmap"))
 }

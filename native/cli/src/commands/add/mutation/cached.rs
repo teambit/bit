@@ -103,6 +103,19 @@ fn refreshed(
     mut rows: Vec<Value>,
     components: &[bit_install::model::WorkspaceComponent],
 ) -> io::Result<Vec<Value>> {
+    let by_id: std::collections::HashMap<String, &bit_install::model::WorkspaceComponent> =
+        components
+            .iter()
+            .map(|component| {
+                (
+                    component.id
+                        .to_string_without_version()
+                        .trim()
+                        .to_owned(),
+                    component,
+                )
+            })
+            .collect();
     for row in &mut rows {
         let identity = row["identity"]
             .as_str()
@@ -116,9 +129,8 @@ fn refreshed(
             })
             .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
             .filter(|id| !id.is_empty());
-        let component = components
-            .iter()
-            .find(|component| Some(component.id.to_string_without_version().trim()) == identity)
+        let component = identity
+            .and_then(|id| by_id.get(id).copied())
             .ok_or_else(|| io::Error::other("retained identity projection missing"))?;
         row["directory"] = json!(component.root_dir.trim());
         row["files"] = json!(component.files);

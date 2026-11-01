@@ -93,11 +93,12 @@ impl ProjectedLinker {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
-        if grammar::loads(entered) {
+        let loads = grammar::loads(entered);
+        if loads {
             self.load_criterion(request, &ids)?;
         }
         let compared = self.compare_criterion(request, entered, &ids)?;
-        let rows = if grammar::loads(entered) { self.retained.rows(&ids)? } else { Vec::new() };
+        let rows = if loads { self.retained.rows(&ids)? } else { Vec::new() };
         selection::criterion(
             request.context,
             targets,

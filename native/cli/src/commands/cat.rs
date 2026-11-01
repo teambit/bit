@@ -344,16 +344,16 @@ fn cat_metadata(
     if !supported {
         return Err(Failure::Declined(decline("published CatCmd metadata unavailable")));
     }
-    let metadata: Value = host
+    let mut metadata: Value = host
         .call("catMetadata", &json!({"id":id}))
         .map_err(|error| Failure::Committed(error, host.take_stdout()))?;
-    value["id"] = metadata["id"].clone();
-    value["version"] = metadata["version"].clone();
-    value["config"] = metadata["config"].clone();
+    value["id"] = metadata["id"].take();
+    value["version"] = metadata["version"].take();
+    value["config"] = metadata["config"].take();
     if let Some(entry) = current {
         let refreshed = workspace_files(root, entry)
             .map_err(|error| Failure::Committed(error, host.take_stdout()))?;
-        if value["files"] != json!(refreshed.files) {
+        if value["files"].as_array() != Some(&refreshed.files) {
             return Err(Failure::Committed(
                 io::Error::other("cat workspace sources changed during metadata capture"),
                 host.take_stdout(),

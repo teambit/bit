@@ -296,12 +296,11 @@ fn extract_boxed_name(raw: &Value) -> Option<String> {
 }
 
 fn build_symlink_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
-    let name = extract_boxed_name(raw)?;
+    let id = extract_boxed_name(raw)?;
     let real_scope = raw["realScope"]
         .as_str()
         .map(str::trim)
         .filter(|text| !text.is_empty())?;
-    let id = name.clone();
     let hash = sha1_hex(&id);
     let json_obj = opts.json.then(|| {
         let mut map = Map::new();
@@ -313,7 +312,7 @@ fn build_symlink_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
         {
             map.insert("scope".into(), Value::String(scope.to_owned()));
         }
-        map.insert("name".into(), Value::String(name));
+        map.insert("name".into(), Value::String(id.clone()));
         map.insert("realScope".into(), Value::String(real_scope.to_owned()));
         if opts.json_extra {
             map.insert("hash".into(), Value::String(hash.clone()));

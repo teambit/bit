@@ -11,8 +11,9 @@ impl ProjectedLinker {
         args: &[OsString],
     ) -> io::Result<Self> {
         if !root.is_absolute()
-            || root.as_os_str().is_empty()
-            || root.to_string_lossy().trim().is_empty()
+            || root
+                .to_str()
+                .map_or(root.as_os_str().is_empty(), |text| text.trim().is_empty())
         {
             return Err(io::Error::other("identity installation workspace root is empty"));
         }

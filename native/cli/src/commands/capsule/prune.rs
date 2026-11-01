@@ -256,11 +256,8 @@ fn select_aspect_children(path: &Path, with_sizes: bool, cutoff: f64, removed: &
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
         .filter(|entry| {
-            entry.file_name() != "node_modules"
-                && !entry
-                    .file_name()
-                    .to_string_lossy()
-                    .starts_with('.')
+            let name = entry.file_name();
+            name != "node_modules" && !name.to_string_lossy().starts_with('.')
         })
         .map(|entry| entry.path())
         .collect::<Vec<_>>();
@@ -280,13 +277,13 @@ fn select_dated_children(path: &Path, with_sizes: bool, removed: &mut Vec<Remove
     let mut children = entries
         .filter_map(Result::ok)
         .filter(|entry| {
-            entry.file_type().is_ok_and(|kind| kind.is_dir())
-                && entry.file_name() != "node_modules"
-                && !entry
-                    .file_name()
-                    .to_string_lossy()
-                    .starts_with('.')
-                && entry.file_name() != today.as_str()
+            if !entry.file_type().is_ok_and(|kind| kind.is_dir()) {
+                return false;
+            }
+            let name = entry.file_name();
+            name != "node_modules"
+                && !name.to_string_lossy().starts_with('.')
+                && name != today.as_str()
         })
         .map(|entry| entry.path())
         .collect::<Vec<_>>();

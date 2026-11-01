@@ -107,14 +107,14 @@ fn controls(root: &Path, targets: &mut [Value], added: &[Value]) -> io::Result<O
             .as_str()
             .map(str::trim)
             .filter(|dir| !dir.is_empty())
-            .ok_or_else(|| io::Error::other("tracking target directory"))?
-            .to_owned();
-        let config = optional_json(&root.join(&directory).join("component.json"))?;
+            .ok_or_else(|| io::Error::other("tracking target directory"))?;
+        let component_dir = root.join(directory);
+        let config = optional_json(&component_dir.join("component.json"))?;
         if malformed_selected(&config, target, added) {
             error = Some("Cannot read properties of undefined (reading 'scope')".to_owned());
         }
         target["config"] = component_config(config);
-        target["packageJson"] = optional_json(&root.join(&directory).join("package.json"))?;
+        target["packageJson"] = optional_json(&component_dir.join("package.json"))?;
     }
     Ok(error)
 }
@@ -155,15 +155,17 @@ fn components(workspace: &Workspace, added: &[Value]) -> Vec<Value> {
     }).collect()
 }
 fn tracking_version(row: &mut Value, added: &[Value]) {
-    let Some(row_id) = row_identity(row).map(str::to_owned) else {
+    let Some(load_version) = row_identity(row)
+        .and_then(|row_id| {
+            added
+                .iter()
+                .find(|added| row_identity(added) == Some(row_id))
+                .map(|added| added["loadVersion"].clone())
+        })
+    else {
         return;
     };
-    if let Some(added) = added
-        .iter()
-        .find(|added| row_identity(added) == Some(row_id.as_str()))
-    {
-        row["trackingVersion"] = added["loadVersion"].clone();
-    }
+    row["trackingVersion"] = load_version;
 }
 fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]

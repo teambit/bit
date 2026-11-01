@@ -99,13 +99,14 @@ fn run_workspace(
         Err(error) => return Ok(Outcome::Declined(format!("tracking: {error}"))),
     };
     workspace_command::checkout_lifecycle::before(&startup)?;
+    let chalk = Chalk::detect(args);
     let execute = |output: &bit_install::output::Output| {
         let component_count = prepared.plan.components().len();
         if component_count > 0 {
             output.status(&format!("loading {component_count} component(s)"));
         }
         workspace_command::checkout_lifecycle::loaded(&startup);
-        execution::run(root, prepared, options.json, Chalk::detect(args), output)
+        execution::run(root, prepared, options.json, chalk, output)
     };
     if options.json {
         workspace_command::execute_json(root, args, "add", execute)

@@ -3,7 +3,7 @@
 use super::is_json_flag;
 
 pub(super) fn error(args: &[&str], list: bool) -> Option<String> {
-    let mut unknown = Vec::new();
+    let mut unknown = Vec::with_capacity(3);
     for flag in args {
         for name in unknown_names(flag, list)? {
             if !unknown.contains(name) {

@@ -16,7 +16,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     while let Some(arg) = args.next() {
         if *arg == "--" {
             for item in args {
-                (!item.trim().is_empty() && !item.starts_with('-')).then_some(())?;
+                is_valid_value(item).then_some(())?;
                 options.tracking.paths.push((*item).to_owned());
             }
             break;
@@ -44,7 +44,7 @@ fn apply_arg(
         "--root=false" => options.tracking.workspace_root = false,
         "-j" | "--json" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
-        path if !path.starts_with('-') && !path.trim().is_empty() => {
+        path if is_valid_value(path) => {
             options.tracking.paths.push(path.to_owned());
         }
         _ => return None,
@@ -75,7 +75,7 @@ fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>
         .strip_prefix("--override=")
         .or_else(|| arg.strip_prefix("-o="))
     {
-        if options.tracking.override_files || val.trim().is_empty() || val.starts_with('-') {
+        if options.tracking.override_files || !is_valid_value(val) {
             return Some(None);
         }
         options.tracking.override_files = true;
@@ -83,7 +83,7 @@ fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>
     }
     let (flag, inline) = arg.split_once('=')?;
     let slot = string_option(options, flag)?;
-    if slot.is_some() || inline.trim().is_empty() || inline.starts_with('-') {
+    if slot.is_some() || !is_valid_value(inline) {
         return Some(None);
     }
     *slot = Some(inline.to_owned());
@@ -102,6 +102,9 @@ fn string_option<'a>(options: &'a mut Options, arg: &str) -> Option<&'a mut Opti
 fn value(args: &mut std::slice::Iter<'_, &str>) -> Option<String> {
     args.next()
         .copied()
-        .filter(|arg| !arg.trim().is_empty() && !arg.starts_with('-'))
+        .filter(|arg| is_valid_value(arg))
         .map(str::to_owned)
+}
+fn is_valid_value(val: &str) -> bool {
+    !val.trim().is_empty() && !val.starts_with('-')
 }

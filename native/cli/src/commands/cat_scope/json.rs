@@ -107,27 +107,23 @@ fn map_ref_dict(val: Option<&Value>) -> Option<Value> {
 }
 
 fn build_detached_heads(val: Option<&Value>) -> Option<Value> {
-    let mut map = Map::new();
-    let heads = match val.and_then(|inner| inner["heads"].as_array()) {
-        Some(arr) => arr
-            .iter()
-            .map(|item| Some(json!({"hash": non_empty_str(item)?})))
-            .collect::<Option<Vec<_>>>()?,
-        None => Vec::new(),
-    };
-    let deleted = match val.and_then(|inner| inner["deleted"].as_array()) {
-        Some(arr) => arr
-            .iter()
-            .map(|item| Some(json!({"hash": non_empty_str(item)?})))
-            .collect::<Option<Vec<_>>>()?,
-        None => Vec::new(),
-    };
-    map.insert("heads".into(), Value::Array(heads));
+    let mut map = Map::with_capacity(3);
+    map.insert("heads".into(), Value::Array(map_hash_list(val, "heads")?));
     if let Some(curr) = val.and_then(|inner| non_empty_str(&inner["current"])) {
         map.insert("current".into(), json!({"hash": curr}));
     }
-    map.insert("deleted".into(), Value::Array(deleted));
+    map.insert("deleted".into(), Value::Array(map_hash_list(val, "deleted")?));
     Some(Value::Object(map))
+}
+
+fn map_hash_list(val: Option<&Value>, key: &str) -> Option<Vec<Value>> {
+    match val.and_then(|inner| inner[key].as_array()) {
+        Some(arr) => arr
+            .iter()
+            .map(|item| Some(json!({"hash": non_empty_str(item)?})))
+            .collect(),
+        None => Some(Vec::new()),
+    }
 }
 
 pub(super) fn build_lane_json_obj(

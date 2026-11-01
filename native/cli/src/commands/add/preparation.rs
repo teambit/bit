@@ -137,8 +137,7 @@ fn load(
     {
         return Ok(None);
     }
-    let selected = projection.loading_components();
-    docs::load(root, &mut environments, &selected)?;
+    docs::load(root, &mut environments, &projection.loading_components())?;
     let capture = capture::capture_with(
         engine,
         root,

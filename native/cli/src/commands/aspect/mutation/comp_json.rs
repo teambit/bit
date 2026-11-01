@@ -13,14 +13,7 @@ pub(super) fn set_in_comp_json(
 ) -> Result<CompJsonEdit, Failure> {
     let content = fs::read_to_string(&path)?;
     let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
-    let root_obj = parsed
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("component.json root object".into()))?;
-    let ext_obj = root_obj
-        .entry("extensions")
-        .or_insert_with(|| json!({}))
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))?;
+    let ext_obj = comp_json_extensions_mut(&mut parsed)?;
     if let Some(found_key) = find_matching_aspect_key(ext_obj, bare_aspect) {
         let new_cfg = match (merge, ext_obj.get(&found_key)) {
             (true, Some(existing)) if existing.is_object() && config.is_object() => {
@@ -47,13 +40,7 @@ pub(super) fn apply_set_to_entry(
     merge: bool,
 ) -> Result<bool, Failure> {
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let row_obj =
-        row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
-    let cfg_val = row_obj
-        .entry("config")
-        .or_insert_with(|| json!({}));
-    let cfg_obj =
-        cfg_val.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
+    let cfg_obj = bitmap_row_config_mut(row)?;
     let target_key = find_matching_aspect_key(cfg_obj, bare_aspect)
         .unwrap_or_else(|| resolved_aspect_id.to_owned());
     let current = cfg_obj.get(&target_key);
@@ -79,14 +66,7 @@ pub(super) fn unset_in_comp_json(
 ) -> Result<CompJsonEdit, Failure> {
     let content = fs::read_to_string(&path)?;
     let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
-    let root_obj = parsed
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("component.json root object".into()))?;
-    let ext_obj = root_obj
-        .entry("extensions")
-        .or_insert_with(|| json!({}))
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))?;
+    let ext_obj = comp_json_extensions_mut(&mut parsed)?;
     if let Some(found_key) = find_matching_aspect_key(ext_obj, bare_aspect) {
         if ext_obj
             .get(&found_key)
@@ -113,14 +93,7 @@ pub(in crate::commands) fn update_in_comp_json(
     validate_aspect_target(target_aspect_id)?;
     let content = fs::read_to_string(&path)?;
     let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
-    let root_obj = parsed
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("component.json root object".into()))?;
-    let ext_obj = root_obj
-        .entry("extensions")
-        .or_insert_with(|| json!({}))
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))?;
+    let ext_obj = comp_json_extensions_mut(&mut parsed)?;
     if let Some(old_key) = find_matching_aspect_key(ext_obj, bare_aspect) {
         ext_obj.remove(&old_key);
     }
@@ -138,13 +111,7 @@ pub(in crate::commands) fn update_in_bitmap_row(
 ) -> Result<(), Failure> {
     validate_aspect_target(target_aspect_id)?;
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let row_obj =
-        row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
-    let cfg = row_obj
-        .entry("config")
-        .or_insert_with(|| json!({}));
-    let cfg_obj =
-        cfg.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
+    let cfg_obj = bitmap_row_config_mut(row)?;
     if let Some(old_key) = find_matching_aspect_key(cfg_obj, bare_aspect) {
         cfg_obj.remove(&old_key);
     }
@@ -162,15 +129,30 @@ pub(super) fn unset_in_bitmap_row(
     if remove_bitmap_config_key(row, bare_aspect)? {
         return Ok(());
     }
-    let row_obj =
-        row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
-    let cfg = row_obj
-        .entry("config")
-        .or_insert_with(|| json!({}));
-    let cfg_obj =
-        cfg.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
+    let cfg_obj = bitmap_row_config_mut(row)?;
     cfg_obj.insert(exist_aspect_id.to_owned(), json!("-"));
     Ok(())
+}
+
+fn comp_json_extensions_mut(
+    parsed: &mut Value,
+) -> Result<&mut serde_json::Map<String, Value>, Failure> {
+    parsed
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json root object".into()))?
+        .entry("extensions")
+        .or_insert_with(|| json!({}))
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))
+}
+
+fn bitmap_row_config_mut(row: &mut Value) -> Result<&mut serde_json::Map<String, Value>, Failure> {
+    row.as_object_mut()
+        .ok_or_else(|| Failure::Declined("bitmap row object".into()))?
+        .entry("config")
+        .or_insert_with(|| json!({}))
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("bitmap config object".into()))
 }
 
 fn remove_bitmap_config_key(row: &mut Value, bare_aspect: &str) -> Result<bool, Failure> {

@@ -307,20 +307,20 @@ pub(super) fn parse_builder_artifacts(ver_val: &Value) -> Vec<ArtifactItem> {
     else {
         return Vec::new();
     };
-    let raw_artifacts = builder_ext["data"]["artifacts"]
+    let Some(items) = builder_ext["data"]["artifacts"]
         .as_array()
-        .or_else(|| builder_ext["artifacts"].as_array());
-    let Some(items) = raw_artifacts else {
+        .or_else(|| builder_ext["artifacts"].as_array())
+    else {
         return Vec::new();
     };
-    let fallback_artifacts = builder_ext["artifacts"].as_array();
+    let fallback_artifacts = builder_ext["artifacts"].as_array().map(Vec::as_slice);
     items
         .iter()
         .map(|art| parse_single_artifact(art, fallback_artifacts))
         .collect()
 }
 
-fn parse_single_artifact(art: &Value, fallback_artifacts: Option<&Vec<Value>>) -> ArtifactItem {
+fn parse_single_artifact(art: &Value, fallback_artifacts: Option<&[Value]>) -> ArtifactItem {
     let artifact_name = art["name"]
         .as_str()
         .map(str::trim)

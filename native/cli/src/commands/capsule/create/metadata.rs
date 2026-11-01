@@ -61,14 +61,12 @@ fn has_valid_origin_marker(marker: &Path) -> bool {
         .ok()
         .and_then(|bytes| bit_object_import::parse_jsonc(&bytes).ok())
         .is_some_and(|val| {
-            val["originPath"]
-                .as_str()
-                .is_some_and(|origin| !origin.trim().is_empty())
-                && val["createdAt"]
-                    .as_str()
-                    .is_some_and(|created| !created.trim().is_empty())
-                && val["kind"]
-                    .as_str()
-                    .is_some_and(|kind| !kind.trim().is_empty())
+            ["originPath", "createdAt", "kind"]
+                .into_iter()
+                .all(|key| {
+                    val[key]
+                        .as_str()
+                        .is_some_and(|text| !text.trim().is_empty())
+                })
         })
 }

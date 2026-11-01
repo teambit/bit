@@ -90,13 +90,14 @@ fn run_in_workspace(
     if let Some(target) = &options.list_tasks {
         return runner::run_list_tasks(root, args, target);
     }
+    let chalk = Chalk::detect(args);
     if is_empty_build_workspace(root, options).unwrap_or(false) {
-        let formatter = Formatter::new(Chalk::detect(args));
+        let formatter = Formatter::new(chalk);
         return workspace_command::execute_without_loader(root, args, "build", move |_| {
             Ok(Report { data: formatter.hint(EMPTY_BUILD_HINT), code: 0, details: None })
         });
     }
-    if let Some(err) = validate_build_pattern(root, options, Chalk::detect(args)) {
+    if let Some(err) = validate_build_pattern(root, options, chalk) {
         return workspace_command::execute_then(root, args, "build", move |_| {
             Err(io::Error::other(err))
         });
@@ -135,21 +136,8 @@ pub(super) fn flag_error(capsules: &CapsuleFlags) -> Option<&'static str> {
 }
 
 pub(in crate::commands) fn is_bitmap_auto_sync(ws_config: &serde_json::Value) -> bool {
-    ws_config
-        .as_object()
-        .and_then(|obj| {
-            obj.get("teambit.workspace/workspace")
-                .or_else(|| {
-                    obj.iter()
-                        .find_map(|(key, val)| {
-                            let key = key.trim();
-                            (key == "teambit.workspace/workspace"
-                                || key.starts_with("teambit.workspace/workspace@"))
-                            .then_some(val)
-                        })
-                })
-        })
-        .is_some_and(|ws| ws["bitmapAutoSync"] == true)
+    super::update_cmd::aspect_entry(ws_config, "teambit.workspace/workspace")
+        .is_some_and(|(_, ws)| ws["bitmapAutoSync"] == true)
 }
 
 pub(super) fn is_empty_build_workspace(root: &Path, options: &Options) -> io::Result<bool> {

@@ -75,15 +75,16 @@ fn apply_create_bool(arg: &str, create: &mut CreateArgs) -> bool {
 }
 
 fn parse_bool_flag(arg: &str) -> Option<(&str, bool)> {
-    match arg.split_once('=') {
-        Some((flag, raw)) if raw.trim().eq_ignore_ascii_case("true") || raw.trim() == "1" => {
-            Some((flag.trim(), true))
-        }
-        Some((flag, raw)) if raw.trim().eq_ignore_ascii_case("false") || raw.trim() == "0" => {
-            Some((flag.trim(), false))
-        }
-        None => Some((arg.trim(), true)),
-        _ => None,
+    let Some((flag, raw)) = arg.split_once('=') else {
+        return Some((arg.trim(), true));
+    };
+    let raw = raw.trim();
+    if raw.eq_ignore_ascii_case("true") || raw == "1" {
+        Some((flag.trim(), true))
+    } else if raw.eq_ignore_ascii_case("false") || raw == "0" {
+        Some((flag.trim(), false))
+    } else {
+        None
     }
 }
 

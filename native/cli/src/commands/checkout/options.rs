@@ -321,11 +321,7 @@ fn strategy(flags: &Map<String, Value>) -> Option<Option<&str>> {
     if resolve.is_some_and(|strategy| !matches!(strategy, "ours" | "theirs" | "manual")) {
         return None;
     }
-    let strategy = if manual { Some("manual") } else { resolve };
-    if strategy.is_some_and(|strategy| !matches!(strategy, "ours" | "theirs" | "manual")) {
-        return None;
-    }
-    Some(strategy)
+    Some(if manual { Some("manual") } else { resolve })
 }
 
 /// Component pattern syntax is evaluated against the authoritative workspace pool.

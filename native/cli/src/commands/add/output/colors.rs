@@ -29,19 +29,14 @@ pub(super) fn native_io(error: io::Error, chalk: Chalk) -> io::Error {
     io::Error::new(error.kind(), Colored { message: chalk.red(&message), source: error })
 }
 fn has_colored_or_callback(error: &io::Error) -> bool {
-    let mut current: Option<&(dyn Error + 'static)> = error
-        .get_ref()
-        .map(|inner| inner as &(dyn Error + 'static));
-    for _ in 0..32 {
-        let Some(inner) = current else {
-            return false;
-        };
-        if inner.is::<crate::host::callback_error::CallbackError>() || inner.is::<Colored>() {
-            return true;
-        }
-        current = inner.source();
-    }
-    false
+    std::iter::successors(
+        error
+            .get_ref()
+            .map(|inner| inner as &(dyn Error + 'static)),
+        |inner| (*inner).source(),
+    )
+    .take(32)
+    .any(|inner| inner.is::<crate::host::callback_error::CallbackError>() || inner.is::<Colored>())
 }
 fn filesystem_message(message: &str) -> bool {
     let trimmed = message.trim_start();

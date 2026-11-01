@@ -81,12 +81,13 @@ pub(super) fn error(root: &Path, components: &[WorkspaceComponent], error: io::E
     if !mkdir_not_directory(&error) {
         return error;
     }
+    let node_modules = root.join("node_modules");
     let directory = components
         .iter()
         .find_map(|component| {
             let package: std::path::PathBuf =
                 Path::new(&component.package_name).components().collect();
-            let path = root.join("node_modules").join(package);
+            let path = node_modules.join(package);
             let blocker = path
                 .ancestors()
                 .find(|ancestor| {

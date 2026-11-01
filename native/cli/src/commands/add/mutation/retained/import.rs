@@ -55,7 +55,7 @@ impl Retained {
         Ok(())
     }
     fn import_replacements(&self, writes: &[Value]) -> io::Result<Vec<(Value, Value)>> {
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::with_capacity(writes.len());
         let mut replacements = Vec::new();
         for write in writes {
             let (before, after) = receipt(write)?;
@@ -75,9 +75,10 @@ impl Retained {
         Ok(replacements)
     }
     fn matching_content(&self, before: &Value) -> io::Result<bool> {
+        let expected_path = content_path(before)?;
         let mut matched = false;
         for proof in self.read_set.iter().chain(self.controls.values()) {
-            if !content(proof) || content_path(proof)? != content_path(before)? {
+            if !content(proof) || content_path(proof)? != expected_path {
                 continue;
             }
             if proof["hash"] != before["hash"] {

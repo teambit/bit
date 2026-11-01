@@ -74,18 +74,13 @@ impl BitmapContext {
 pub(in crate::commands) fn workspace_default_scope(workspace: &Value) -> Result<String, Failure> {
     let rows =
         workspace.as_object().ok_or_else(|| Failure::Declined("workspace.jsonc object".into()))?;
-    let key = rows
-        .keys()
-        .find(|key| {
-            key.trim()
-                .split('@')
-                .next()
-                .map(str::trim)
-                == Some("teambit.workspace/workspace")
+    let ws = rows
+        .iter()
+        .find(|(key, _)| {
+            bit_install::config::aspect_id_without_version(key.trim())
+                == "teambit.workspace/workspace"
         })
-        .cloned()
-        .unwrap_or_else(|| "teambit.workspace/workspace".into());
-    let ws = &workspace[&key];
+        .map_or(&Value::Null, |(_, val)| val);
     if ws["bitmapAutoSync"] == true {
         return Err(Failure::Declined("bitmapAutoSync enabled".into()));
     }

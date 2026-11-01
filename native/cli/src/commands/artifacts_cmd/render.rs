@@ -2,10 +2,7 @@
 
 use super::extractor::{ArtifactFile, ArtifactItem, ComponentArtifacts};
 use crate::commands::{scope_set::Failure, workspace_command::format::Formatter};
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-};
+use std::{env, fs, path::Path};
 
 pub(super) fn save_artifacts_to_dir(
     scope_dir: &Path,
@@ -16,11 +13,11 @@ pub(super) fn save_artifacts_to_dir(
     if trimmed_dir.is_empty() {
         return Err(Failure::Declined("empty artifacts output directory".into()));
     }
-    let cwd = env::current_dir().map_err(|err| Failure::Declined(err.to_string()))?;
-    let base_dir = if Path::new(trimmed_dir).is_absolute() {
-        PathBuf::from(trimmed_dir)
+    let out_path = Path::new(trimmed_dir);
+    let base_dir = if out_path.is_absolute() {
+        out_path.to_path_buf()
     } else {
-        cwd.join(trimmed_dir)
+        env::current_dir().map_err(|err| Failure::Declined(err.to_string()))?.join(out_path)
     };
     let mut total_saved = 0usize;
     for comp in results {

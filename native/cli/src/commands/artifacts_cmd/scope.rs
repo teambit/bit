@@ -41,7 +41,10 @@ fn resolve_bare_literal_target(
     }
     let Some((Some(scope), comp_name, _)) = resolve_component_entry(scope_dir, bare_id) else {
         if !bare_id.starts_with('@')
-            && (!bare_id.contains('/') || bare_id.starts_with(&format!("{scope_name}/")))
+            && (!bare_id.contains('/')
+                || bare_id
+                    .strip_prefix(scope_name)
+                    .is_some_and(|rest| rest.starts_with('/')))
         {
             return Err(Failure::User(format!(r#"unable to find "{pattern}" in the scope"#)));
         }

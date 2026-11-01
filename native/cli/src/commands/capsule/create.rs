@@ -102,8 +102,8 @@ fn emit_create_json(
 
 fn format_create_report(capsules: &[CreatedCapsule], chalk: Chalk) -> String {
     let formatter = Formatter::new(chalk);
-    let mut lines =
-        vec![formatter.success_summary(&format!("{} capsule(s) were created", capsules.len()))];
+    let mut lines = Vec::with_capacity(capsules.len() + 1);
+    lines.push(formatter.success_summary(&format!("{} capsule(s) were created", capsules.len())));
     for cap in capsules {
         lines.push(formatter.item(&format!("{} - {}", chalk.bold(&cap.id), cap.path)));
     }
@@ -245,12 +245,13 @@ fn outgoing_edges(from_idx: usize, source_blob: &str, active: &[&BitmapEntry]) -
 }
 
 fn references_component(source_blob: &str, comp_name: &str) -> bool {
-    ['/', '.']
-        .into_iter()
-        .any(|prefix| {
-            ['\'', '"']
-                .into_iter()
-                .any(|quote| source_blob.contains(&format!("{prefix}{comp_name}{quote}")))
+    let bytes = source_blob.as_bytes();
+    source_blob
+        .match_indices(comp_name)
+        .any(|(pos, _)| {
+            pos > 0
+                && matches!(bytes[pos - 1], b'/' | b'.')
+                && matches!(bytes.get(pos + comp_name.len()), Some(b'\'' | b'"'))
         })
 }
 

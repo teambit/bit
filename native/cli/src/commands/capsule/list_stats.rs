@@ -35,19 +35,17 @@ pub(super) fn collect(cwd: &Path, with_sizes: bool) -> io::Result<Vec<RootEntry>
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
         Err(error) => return Err(error),
     };
-    let mut paths = entries
-        .collect::<io::Result<Vec<_>>>()?
-        .into_iter()
-        .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
-        .filter(|entry| {
-            entry.file_name() != "node_modules"
-                && !entry
-                    .file_name()
-                    .to_string_lossy()
-                    .starts_with('.')
-        })
-        .map(|entry| entry.path())
-        .collect::<Vec<_>>();
+    let mut paths = Vec::new();
+    for entry in entries {
+        let entry = entry?;
+        if !entry.file_type().is_ok_and(|kind| kind.is_dir()) {
+            continue;
+        }
+        let name = entry.file_name();
+        if name != "node_modules" && !name.to_string_lossy().starts_with('.') {
+            paths.push(entry.path());
+        }
+    }
     paths.sort();
     Ok(paths
         .iter()
@@ -231,8 +229,9 @@ pub(in crate::commands::capsule) fn read_combined_config(
 ) -> io::Result<Map<String, Value>> {
     let global = read_global_config(&global_config_dir())?;
     let scope_dir = if root.bare { root.path.clone() } else { workspace::scope_path(&root.path) };
-    let scope_layer = if scope_dir.join("scope.json").is_file() {
-        parse_jsonc(&fs::read(scope_dir.join("scope.json"))?)?
+    let scope_json = scope_dir.join("scope.json");
+    let scope_layer = if scope_json.is_file() {
+        parse_jsonc(&fs::read(scope_json)?)?
             .get("config")
             .cloned()
             .unwrap_or(Value::Null)

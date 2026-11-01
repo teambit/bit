@@ -30,13 +30,14 @@ pub(super) fn run_list_tasks(root: &Path, args: &[OsString], target: &str) -> io
     let formatter = Formatter::new(Chalk::detect(args));
     let trimmed = target.trim();
     let comp_id = if trimmed.is_empty() { "workspace" } else { trimmed };
-    let mut lines = vec![
+    let mut lines = Vec::with_capacity(9 + BUILD_TASKS.len() + 2 * DEPLOY_TASKS.len());
+    lines.extend([
         formatter.title("Task List"),
         format!("id:    {comp_id}"),
         "envId: teambit.harmony/node".to_owned(),
         String::new(),
         formatter.title("BuildPipeline (Build Pipeline Tasks)"),
-    ];
+    ]);
     for task in BUILD_TASKS {
         lines.push(formatter.item(task));
     }
@@ -174,15 +175,17 @@ fn materialize_all_capsules(
     let capsules_root = Path::new(&ws_capsules_dir);
     ensure_writable_recursive(capsules_root);
     fs::create_dir_all(capsules_root)?;
+    let variants = crate::commands::update_cmd::aspect_entry(ws_val, "teambit.workspace/variants")
+        .and_then(|(_, val)| val.as_object());
     for entry in active {
-        materialize_entry_capsules(root, ws_val, capsules_root, default_scope, entry)?;
+        materialize_entry_capsules(root, variants, capsules_root, default_scope, entry)?;
     }
     Ok(())
 }
 
 fn materialize_entry_capsules(
     ws_root: &Path,
-    ws_val: &Value,
+    variants: Option<&serde_json::Map<String, Value>>,
     capsules_root: &Path,
     default_scope: &str,
     entry: &BitmapEntry,
@@ -193,7 +196,7 @@ fn materialize_entry_capsules(
         .filter(|scope_str| !scope_str.is_empty())
         .unwrap_or_else(|| default_scope.trim());
     let base_dir_name = format!("{scope}_{}", entry.id.name.trim().replace('/', "_"));
-    let uses_babel = variant_uses_babel(ws_val, entry.root_dir.trim(), entry.id.name.trim());
+    let uses_babel = variant_uses_babel(variants, entry.root_dir.trim(), entry.id.name.trim());
     populate_single_capsule(
         ws_root,
         &capsules_root.join(&base_dir_name),
@@ -212,11 +215,12 @@ fn materialize_entry_capsules(
     Ok(())
 }
 
-fn variant_uses_babel(ws_val: &Value, root_dir: &str, comp_name: &str) -> bool {
-    let Some(variants) =
-        crate::commands::update_cmd::aspect_entry(ws_val, "teambit.workspace/variants")
-            .and_then(|(_, val)| val.as_object())
-    else {
+fn variant_uses_babel(
+    variants: Option<&serde_json::Map<String, Value>>,
+    root_dir: &str,
+    comp_name: &str,
+) -> bool {
+    let Some(variants) = variants else {
         return false;
     };
     for (pattern, cfg) in variants {

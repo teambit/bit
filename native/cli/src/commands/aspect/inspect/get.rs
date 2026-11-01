@@ -109,16 +109,16 @@ pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -
     let scope_dir = crate::workspace::scope_path(root);
     let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
-    let matches = rows
+    let mut matches = rows
         .iter()
         .filter(|row| {
             row["isSymlink"] != true
                 && crate::commands::scope_set::selection::row_has_name(row, bare)
-        })
-        .collect::<Vec<_>>();
-    let [row] = matches.as_slice() else {
+        });
+    let row = matches.next()?;
+    if matches.next().is_some() {
         return None;
-    };
+    }
     let scope = row_scope(row, &scope_dir)?;
     Some(format!("{scope}/{bare}"))
 }
@@ -219,7 +219,7 @@ pub(super) fn build_get_json(entries: &[AspectEntry], aspect_filter: Option<&str
                 })
             });
     }
-    let mut map = Map::new();
+    let mut map = Map::with_capacity(entries.len());
     for item in entries {
         map.insert(
             item.id.clone(),

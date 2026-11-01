@@ -133,10 +133,10 @@ pub(super) fn run_missing_app(args: &[OsString], component_count: usize) -> io::
 
 fn run_outside_workspace(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     match &argv[1..] {
-        ["list", "-j" | "--json"] => {
+        ["list", "-j" | "--json"] | ["list", "-j" | "--json", "true"] => {
             io::stdout().lock().write_all(b"[]")?;
         }
-        ["list", "-j" | "--json", "true"] => {
+        ["list", flag] if inline_json_value(flag) == Some("true") => {
             io::stdout().lock().write_all(b"[]")?;
         }
         ["list", "-j" | "--json", "false"] => {
@@ -145,13 +145,9 @@ fn run_outside_workspace(args: &[OsString], argv: &[&str]) -> io::Result<Outcome
             writeln!(io::stdout().lock(), "{}", chalk.yellow("no apps found"))?;
         }
         ["list", flag] if inline_json_value(flag).is_some() => {
-            if inline_json_value(flag) == Some("true") {
-                io::stdout().lock().write_all(b"[]")?;
-            } else {
-                let chalk = Chalk::detect(args);
-                writeln!(io::stdout().lock(), r#"- running command "list"..."#)?;
-                writeln!(io::stdout().lock(), "{}", chalk.yellow("no apps found"))?;
-            }
+            let chalk = Chalk::detect(args);
+            writeln!(io::stdout().lock(), r#"- running command "list"..."#)?;
+            writeln!(io::stdout().lock(), "{}", chalk.yellow("no apps found"))?;
         }
         [] | ["list"] => {
             let chalk = Chalk::detect(args);

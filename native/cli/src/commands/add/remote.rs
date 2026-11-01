@@ -69,6 +69,17 @@ fn non_empty_str(value: &Value) -> Option<&str> {
 }
 
 fn candidates(added: &[Value], projection: &Projection) -> Vec<Value> {
+    let unscoped: std::collections::HashSet<String> = projection.workspace
+        .components
+        .iter()
+        .filter(|component| component.id.scope.is_none())
+        .map(|component| {
+            component.id
+                .to_string_without_version()
+                .trim()
+                .to_owned()
+        })
+        .collect();
     let mut seen = std::collections::HashSet::new();
     added
         .iter()
@@ -79,14 +90,9 @@ fn candidates(added: &[Value], projection: &Projection) -> Vec<Value> {
                 .map(str::trim)
                 .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
                 .filter(|id| !id.is_empty())?;
-            (projection.workspace.components
-                .iter()
-                .any(|component| {
-                    component.id.scope.is_none()
-                        && identity == component.id.to_string_without_version().trim()
-                })
-                && seen.insert(identity.to_owned()))
-            .then(|| Value::String(identity.to_owned()))
+            (unscoped.contains(identity) && seen.insert(identity)).then(|| {
+                Value::String(identity.to_owned())
+            })
         })
         .collect()
 }

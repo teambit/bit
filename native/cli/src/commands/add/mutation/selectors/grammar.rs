@@ -53,11 +53,10 @@ pub(super) fn ordinary(targets: &[Value], parts: &[String]) -> io::Result<Vec<Va
         .filter(|part| !part.starts_with('$') && !part.contains(" AND "))
         .cloned()
         .collect::<Vec<_>>();
-    let ids = identities(targets);
-    let ids = ids
+    let ids: Vec<&str> = targets
         .iter()
-        .map(String::as_str)
-        .collect::<Vec<_>>();
+        .filter_map(row_identity)
+        .collect();
     let matched = patterns::extended::matching(&ids, &parts)?;
     Ok(matched
         .iter()

@@ -139,15 +139,8 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
     };
     let model_package_json =
         if entry.id.version.is_some() { model_package_json(ws_root, entry)? } else { None };
-    let bitmap_package_json = config
-        .and_then(|cfg| {
-            cfg.iter()
-                .find_map(|(key, val)| {
-                    let key = key.trim();
-                    (key == "teambit.pkg/pkg" || key.starts_with("teambit.pkg/pkg@")).then_some(val)
-                })
-        })
-        .and_then(|pkg| pkg.get("packageJson"));
+    let bitmap_package_json =
+        find_bitmap_aspect(config, "teambit.pkg/pkg").and_then(|pkg| pkg.get("packageJson"));
     let Some(overrides) =
         additional_package_metadata(bitmap_package_json.or(model_package_json.as_ref()))
     else {
@@ -267,19 +260,24 @@ fn take_nonempty_string(metadata: &mut Map<String, Value>, key: &str) -> Option<
     }
 }
 
-fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<String>> {
-    let bitmap_env = entry.config
-        .as_ref()
-        .and_then(|config| {
-            config
-                .iter()
-                .find_map(|(key, val)| {
-                    let key = key.trim();
-                    (key == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")).then_some(
-                        val,
-                    )
-                })
+fn find_bitmap_aspect<'a>(
+    config: Option<&'a Map<String, Value>>,
+    aspect: &str,
+) -> Option<&'a Value> {
+    config?
+        .iter()
+        .find_map(|(key, val)| {
+            let key = key.trim();
+            (key == aspect
+                || key
+                    .strip_prefix(aspect)
+                    .is_some_and(|rest| rest.starts_with('@')))
+            .then_some(val)
         })
+}
+
+fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<String>> {
+    let bitmap_env = find_bitmap_aspect(entry.config.as_ref(), "teambit.envs/envs")
         .and_then(|env| env["env"].as_str())
         .map(str::trim)
         .filter(|env| !env.is_empty());

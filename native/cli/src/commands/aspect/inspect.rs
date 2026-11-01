@@ -89,7 +89,7 @@ pub(super) fn run_list(
 }
 
 fn build_list_json(items: Vec<(String, Vec<AspectSourceItem>)>) -> Value {
-    let mut map = Map::new();
+    let mut map = Map::with_capacity(items.len());
     for (comp_id, sources) in items {
         let arr = sources
             .into_iter()
@@ -339,7 +339,7 @@ pub(super) fn resolve_aspect_id(aspect: &mut AspectEntry, ws_ids: &[ComponentId]
     if aspect.core {
         return;
     }
-    let without = aspect_id_without_version(&aspect.id).to_owned();
+    let without = aspect_id_without_version(&aspect.id);
     let Some(found) = ws_ids
         .iter()
         .find(|id| id.to_string_without_version() == without || id.name == without)
@@ -347,7 +347,7 @@ pub(super) fn resolve_aspect_id(aspect: &mut AspectEntry, ws_ids: &[ComponentId]
         return;
     };
     let given = aspect.id
-        .strip_prefix(&without)
+        .strip_prefix(without)
         .and_then(|rest| rest.strip_prefix('@'))
         .map(str::trim)
         .filter(|ver| !ver.is_empty());
@@ -356,7 +356,10 @@ pub(super) fn resolve_aspect_id(aspect: &mut AspectEntry, ws_ids: &[ComponentId]
             .map(str::trim)
             .filter(|ver| !ver.is_empty());
     let base = found.to_string_without_version();
-    aspect.id = version.map_or_else(|| base.clone(), |ver| format!("{base}@{ver}"));
+    aspect.id = match version {
+        Some(ver) => format!("{base}@{ver}"),
+        None => base,
+    };
 }
 
 pub(super) fn render_list_table(

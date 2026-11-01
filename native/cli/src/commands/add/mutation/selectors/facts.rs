@@ -66,6 +66,7 @@ pub(super) fn history(
     context: &Value,
     ids: &[String],
 ) -> io::Result<()> {
+    let known: std::collections::HashSet<&str> = ids.iter().map(|id| id.trim()).collect();
     let targets = context["targets"]
         .as_array()
         .into_iter()
@@ -74,10 +75,7 @@ pub(super) fn history(
             row["identity"]
                 .as_str()
                 .map(str::trim)
-                .is_some_and(|id| {
-                    ids.iter()
-                        .any(|known| known.trim() == id)
-                })
+                .is_some_and(|id| known.contains(id))
         })
         .map(|row| json!({"identity":row["identity"],"version":row["version"]}))
         .collect::<Vec<_>>();

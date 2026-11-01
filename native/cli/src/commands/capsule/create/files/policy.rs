@@ -98,7 +98,10 @@ pub(super) fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>)
             .iter()
             .any(|(key, value)| {
                 let trimmed = key.trim();
-                (trimmed == *target || trimmed.starts_with(&format!("{target}@")))
+                (trimmed == *target
+                    || trimmed
+                        .strip_prefix(*target)
+                        .is_some_and(|rest| rest.starts_with('@')))
                     && value
                         .as_object()
                         .is_none_or(|env| !env.is_empty())

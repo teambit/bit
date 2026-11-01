@@ -105,13 +105,11 @@ fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<
 fn installation_session(
     installer: Option<Installer>,
 ) -> io::Result<(Option<Environments>, Option<HostInfo>)> {
-    match installer {
-        Some(installer) => {
-            let (environment, info) = installer.into_parts()?;
-            Ok((Some(environment), Some(info)))
-        }
-        None => Ok((None, None)),
-    }
+    let Some(installer) = installer else {
+        return Ok((None, None));
+    };
+    let (environment, info) = installer.into_parts()?;
+    Ok((Some(environment), Some(info)))
 }
 
 struct PreparedCheckout {

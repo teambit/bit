@@ -28,10 +28,7 @@ pub(in crate::commands) struct ProjectedLinker {
 impl ProjectedLinker {
     /// Load extensions while their original workspace paths still exist.
     pub(in crate::commands) fn prepare(root: &Path) -> io::Result<Self> {
-        if !root.is_absolute()
-            || root.as_os_str().is_empty()
-            || root.to_string_lossy().trim().is_empty()
-        {
+        if !root.is_absolute() || !has_root_text(root) {
             return Err(io::Error::other("identity workspace root is empty"));
         }
         let mut linker = Self {
@@ -60,7 +57,7 @@ impl ProjectedLinker {
         bitmap: &Value,
         identities: &[String],
     ) -> io::Result<Vec<Value>> {
-        if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
+        if !has_root_text(root) {
             return self.finish(Err(io::Error::other("identity workspace root is empty")));
         }
         let result =
@@ -100,10 +97,7 @@ impl ProjectedLinker {
         params: &Value,
     ) -> io::Result<Value> {
         let method = method.trim();
-        if root.as_os_str().is_empty()
-            || root.to_string_lossy().trim().is_empty()
-            || method.is_empty()
-        {
+        if !has_root_text(root) || method.is_empty() {
             return Err(io::Error::other("identity provider method is empty"));
         }
         let result = self.environment
@@ -168,4 +162,9 @@ impl ProjectedLinker {
         self.environment = Some(Environments::from_host(host).for_checkout());
         Ok(())
     }
+}
+
+fn has_root_text(root: &Path) -> bool {
+    root.to_str()
+        .map_or(!root.as_os_str().is_empty(), |text| !text.trim().is_empty())
 }

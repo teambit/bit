@@ -183,32 +183,28 @@ fn run_list_core(args: &[OsString], json_flag: bool) -> io::Result<Outcome> {
         }
         return Ok(Outcome::Exit(ExitCode::SUCCESS));
     }
-    let data = ids.join("\n");
-    let report = Report { data, code: 0, details: None };
-    match root_opt {
-        Some(root) if !root.bare => {
-            workspace_command::execute_then(&root.path, args, "list-core", |_| Ok(report))
-        }
-        Some(root) => workspace_command::execute_with_scope(&root.path, args, "list-core", &report),
-        None => {
-            let mut stdout = io::stdout().lock();
-            writeln!(stdout, "{}", report.data)?;
-            stdout.flush()?;
-            Ok(Outcome::Exit(ExitCode::SUCCESS))
-        }
-    }
+    emit_root_or_stdout(root_opt, args, "list-core", ids.join("\n"))
 }
 
 fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Outcome> {
     let data = chalk.red(&format!(
         r#""{sub}" is not a subcommand of "aspect", please run "bit aspect --help" to list the subcommands"#,
     ));
+    emit_root_or_stdout(scope_root::discover().ok().flatten(), args, "aspect", data)
+}
+
+fn emit_root_or_stdout(
+    root_opt: Option<scope_root::ScopeRoot>,
+    args: &[OsString],
+    label: &str,
+    data: String,
+) -> io::Result<Outcome> {
     let report = Report { data, code: 0, details: None };
-    match scope_root::discover().ok().flatten() {
+    match root_opt {
         Some(root) if !root.bare => {
-            workspace_command::execute_then(&root.path, args, "aspect", |_| Ok(report))
+            workspace_command::execute_then(&root.path, args, label, |_| Ok(report))
         }
-        Some(root) => workspace_command::execute_with_scope(&root.path, args, "aspect", &report),
+        Some(root) => workspace_command::execute_with_scope(&root.path, args, label, &report),
         None => {
             let mut stdout = io::stdout().lock();
             writeln!(stdout, "{}", report.data)?;

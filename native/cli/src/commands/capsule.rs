@@ -307,15 +307,14 @@ pub(super) fn compute_capsules_root_dirs(
     root: &ScopeRoot,
 ) -> io::Result<CapsuleRootDirs> {
     let capsules_base = resolve_capsules_dir(cwd)?;
+    let base_path = Path::new(&capsules_base);
     let combined = read_combined_config(root)?;
     let scope_dir = if root.bare { root.path.clone() } else { workspace::scope_path(&root.path) };
     let is_global_scope = scope_dir == cache_root().join("scope");
     let workspace = (!root.bare).then(|| {
         let sub = lookup_config_str(&combined, BUILD_BASE_KEY)
-            .map(|val| val.trim().to_owned())
-            .filter(|val| !val.is_empty())
             .unwrap_or_else(|| object_hash_short(&root.path.to_string_lossy()));
-        Path::new(&capsules_base)
+        base_path
             .join(sub)
             .to_string_lossy()
             .into_owned()
@@ -323,15 +322,13 @@ pub(super) fn compute_capsules_root_dirs(
     let aspect_key =
         if is_global_scope { GLOBAL_SCOPE_ASPECTS_BASE_KEY } else { SCOPE_ASPECTS_BASE_KEY };
     let aspect_sub = lookup_config_str(&combined, aspect_key)
-        .map(|val| val.trim().to_owned())
-        .filter(|val| !val.is_empty())
         .unwrap_or_else(|| object_hash_short(&format!("{}-aspects", scope_dir.display())));
-    let scope_aspects = Path::new(&capsules_base)
+    let scope_aspects = base_path
         .join(aspect_sub)
         .to_string_lossy()
         .into_owned();
     let scope = root.bare.then(|| {
-        Path::new(&capsules_base)
+        base_path
             .join(object_hash_short(&cwd.to_string_lossy()))
             .to_string_lossy()
             .into_owned()

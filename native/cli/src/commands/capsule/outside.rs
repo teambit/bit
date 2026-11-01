@@ -92,26 +92,28 @@ fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
         return true;
     }
     match argv {
-        ["capsule", "create"] => args.ids.is_empty(),
-        ["capsule", "create", "--json" | "-j" | "--seeders-only" | "-s" | "--use-hash"] => {
+        ["capsule", "create"]
+        | [
+            "capsule",
+            "create",
+            "--json" | "-j" | "--seeders-only" | "-s" | "--always-new" | "-a" | "--use-hash",
+        ]
+        | ["capsule", "create", "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
             args.ids.is_empty()
         }
-        ["capsule", "create", "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
-            args.ids.is_empty()
-        }
-        ["capsule", "create", "--always-new" | "-a"] => args.ids.is_empty(),
-        ["capsule", "create", _] => args.ids.len() == 1,
-        [
+        ["capsule", "create", _]
+        | [
             "capsule",
             "create",
             _,
             "--json" | "-j" | "--seeders-only" | "-s" | "--always-new" | "-a" | "--use-hash",
-        ] => args.ids.len() == 1,
-        ["capsule", "create", _, "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
+        ]
+        | ["capsule", "create", _, "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
             args.ids.len() == 1
         }
-        ["capsule", "create", _, _] => args.ids.len() == 2,
-        ["capsule", "create", _, _, "--json" | "-j"] => args.ids.len() == 2,
+        ["capsule", "create", _, _] | ["capsule", "create", _, _, "--json" | "-j"] => {
+            args.ids.len() == 2
+        }
         _ => false,
     }
 }

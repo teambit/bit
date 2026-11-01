@@ -77,11 +77,10 @@ fn update_pair(value: &Value) -> io::Result<(&str, &str)> {
         )?;
         (before.trim(), after.trim())
     } else {
-        let row = array(Some(value), "checkout workspace dependency update")?;
-        if row.len() != 2 {
+        let [first, second] = array(Some(value), "checkout workspace dependency update")? else {
             return Err(decline("checkout workspace dependency versions"));
-        }
-        (text(Some(&row[0]))?.trim(), text(Some(&row[1]))?.trim())
+        };
+        (text(Some(first))?.trim(), text(Some(second))?.trim())
     };
     if before.is_empty() || after.is_empty() {
         return Err(decline("checkout workspace dependency versions"));
