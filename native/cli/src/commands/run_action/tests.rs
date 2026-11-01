@@ -1,3 +1,5 @@
+//! Unit tests for `bit run-action` JSON payload parsing and command-runner result formatting.
+
 use super::{Options, parse_options, report};
 use serde_json::json;
 

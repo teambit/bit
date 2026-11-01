@@ -1,3 +1,5 @@
+//! Unit tests for `bit doctor` table rendering and ANSI escape stripping.
+
 use super::{list, table};
 use crate::commands::color::Chalk;
 #[test]

@@ -1,3 +1,5 @@
+//! Unit tests for `bit local-only` subcommand parsing.
+
 use super::{Subcommand, parse_subcommand};
 use std::ffi::OsString;
 

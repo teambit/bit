@@ -1,3 +1,5 @@
+//! Unit tests for `bit publish` option parsing and unexported/untagged component checks.
+
 use super::{
     Options, collect_unexported_ids, collect_untagged_ids, is_empty_workspace, parse_options,
 };

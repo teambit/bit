@@ -1,3 +1,5 @@
+//! Unit tests for `bit export` transfer preparation, receipt validation, and report formatting.
+
 use super::{format_with, prepared, published};
 use crate::commands::color::Chalk;
 use serde_json::json;

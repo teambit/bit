@@ -1,3 +1,5 @@
+//! Unit tests for `bit new` argument parsing and workspace creation validation.
+
 use super::{Options, parse_options, validate_options};
 use std::fs;
 use tempfile::tempdir;

@@ -1,3 +1,5 @@
+//! Unit tests for `bit globals` flag parsing and text/JSON directory reporting.
+
 use super::{Chalk, known_global_dirs, parse_json_flag, render_json, render_report};
 use std::{ffi::OsString, path::Path};
 

@@ -1,3 +1,5 @@
+//! Unit tests for `bit eject-conf` option parsing and `component.json` generation.
+
 use super::{Chalk, Options, parse_options, prepare};
 use bit_install::workspace::sha1_hex;
 use flate2::{Compression, write::ZlibEncoder};

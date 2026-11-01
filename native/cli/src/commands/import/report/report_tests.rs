@@ -1,3 +1,5 @@
+//! Unit tests for `bit import` and `bit fetch` receipt validation and summary formatting.
+
 use super::validate;
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::json;

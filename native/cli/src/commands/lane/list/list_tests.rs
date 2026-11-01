@@ -1,3 +1,5 @@
+//! Unit tests for `bit lane list` and `bit lane show` model parsing and output formatting.
+
 use super::{LaneData, Tracking, lane, report};
 use crate::commands::{color::Chalk, lane::show::show_report};
 use serde_json::json;

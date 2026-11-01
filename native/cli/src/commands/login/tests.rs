@@ -1,3 +1,5 @@
+//! Unit tests for `bit login` option parsing.
+
 use super::{Options, parse_options};
 
 #[test]

@@ -1,3 +1,5 @@
+//! Unit tests for `bit merge` option parsing and unsupported-flag rejection.
+
 use super::parse;
 
 #[test]

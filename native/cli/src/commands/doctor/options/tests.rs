@@ -1,3 +1,5 @@
+//! Unit tests for `bit doctor` option parsing and flag compatibility validation.
+
 use super::Options;
 #[test]
 fn list_precedes_archive_validation() {

@@ -1,3 +1,5 @@
+//! Unit tests for `bit diff` option parsing and mutually exclusive flag validation.
+
 use super::{output_error, parse};
 
 #[test]

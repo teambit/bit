@@ -1,3 +1,5 @@
+//! Unit tests for `bit insights` option parsing, duplicate-dependency detection, and cycle finding.
+
 use super::{Options, find_cycles, parse_options, render};
 use crate::commands::graph_cmd::model::CompGraph;
 use serde_json::json;

@@ -1,3 +1,5 @@
+//! Unit tests for `bit merge --abort` and `bit lane merge-abort` option parsing and report formatting.
+
 use super::{Kind, parse_component, parse_lane, report::format_component};
 use crate::commands::color::Chalk;
 use serde_json::json;

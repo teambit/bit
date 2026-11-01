@@ -1,3 +1,5 @@
+//! Unit tests for `bit deps` subcommand parsing and dependency policy mutations.
+
 use super::{Subcommand, parse_subcommand, parse_why, prepare, write::WriteTarget};
 use crate::commands::{color::Chalk, set_peer::DEP_RESOLVER_ID};
 use serde_json::{Value, json};

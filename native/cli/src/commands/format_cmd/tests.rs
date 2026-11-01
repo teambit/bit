@@ -1,3 +1,5 @@
+//! Unit tests for `bit format` option parsing and workspace host validation.
+
 use super::{Options, is_missing_host, parse_options, validate_lint_pattern};
 use crate::commands::color::Chalk;
 use std::fs;

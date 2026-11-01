@@ -1,3 +1,5 @@
+//! Unit tests for read-set proof validation in [`Engine`].
+
 use super::{Engine, MAX_PROOFS};
 use serde_json::json;
 use std::fs;

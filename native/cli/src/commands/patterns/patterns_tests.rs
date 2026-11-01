@@ -1,3 +1,5 @@
+//! Unit tests for component glob matching, comma-separated pattern lists, and negations.
+
 use super::{matching, split};
 
 const IDS: [&str; 5] =

@@ -1,3 +1,5 @@
+//! Unit tests for `bit graph` option parsing and dependency cycle filtering.
+
 use super::{
     Options, fast_graph_error,
     model::{CompGraph, GraphEdge},

@@ -1,3 +1,5 @@
+//! Unit tests for `bit diff` field-name prettification and component ID comparison.
+
 use super::prettify;
 use crate::commands::ids::Id;
 

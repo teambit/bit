@@ -1,3 +1,5 @@
+//! Unit tests for `bit envs` subcommand parsing, inspection, and config updates.
+
 use super::{
     Subcommand,
     inspect::{format_envs_list, render_env_get},

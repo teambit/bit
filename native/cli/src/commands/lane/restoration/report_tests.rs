@@ -1,3 +1,5 @@
+//! Unit tests for lane restoration partition merging and file-status JSON projection.
+
 use super::{merge, project};
 use crate::commands::color::Chalk;
 use serde_json::json;

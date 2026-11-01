@@ -1,3 +1,5 @@
+//! Unit tests for `bit fork` local and remote component membership classification.
+
 use super::classify;
 use serde_json::json;
 #[test]

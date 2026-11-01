@@ -1,3 +1,5 @@
+//! Unit tests for `bit import` and `bit fetch` option parsing and semantic flag validation.
+
 use super::parse;
 
 #[test]

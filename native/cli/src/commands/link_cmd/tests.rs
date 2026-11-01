@@ -1,3 +1,5 @@
+//! Unit tests for `bit link` option parsing, package-name rewiring, and summary formatting.
+
 use super::{
     Options,
     format::{BoundLink, ComponentLinkItem, LinkSummary, render_json, render_report},

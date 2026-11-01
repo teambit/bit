@@ -1,3 +1,5 @@
+//! Unit tests for `bit merge --resolve` option parsing and resolved-component report formatting.
+
 use super::{format, parse};
 use crate::commands::color::Chalk;
 use serde_json::json;

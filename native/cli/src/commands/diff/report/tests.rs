@@ -1,3 +1,5 @@
+//! Unit tests for `bit diff` file filtering and `--stat` summary formatting.
+
 use super::{filtered, format};
 use crate::commands::{color::Chalk, diff::options::parse};
 use serde_json::json;

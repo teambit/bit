@@ -1,3 +1,5 @@
+//! Unit tests for `bit internalize` option parsing and `component.json` inspection.
+
 use super::{Options, is_entry_internal, parse_options};
 use bit_install::workspace::Bitmap;
 use std::fs;

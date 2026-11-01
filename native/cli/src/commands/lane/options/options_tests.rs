@@ -1,3 +1,5 @@
+//! Unit tests for `bit lane merge` option parsing and request payload construction.
+
 use super::parse;
 use serde_json::json;
 

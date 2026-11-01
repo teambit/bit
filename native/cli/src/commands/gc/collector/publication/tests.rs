@@ -1,4 +1,5 @@
-//! Repository deletion leaves the parent untouched when the object disappeared before unlink.
+//! Repository deletion leaves the parent untouched when the object disappeared before unlink, and
+//! mixed-type reports decline before stray cleanup.
 use super::super::{super::format::GcResult, Plan};
 use std::fs;
 

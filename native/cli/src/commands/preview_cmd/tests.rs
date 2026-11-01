@@ -1,3 +1,5 @@
+//! Unit tests for `bit preview` generate and serve option parsing.
+
 use super::{GenerateOptions, ServeOptions, parse_generate_options, parse_serve_options};
 
 #[test]

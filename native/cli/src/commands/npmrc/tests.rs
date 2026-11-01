@@ -1,3 +1,5 @@
+//! Unit tests for `bit npmrc` subcommand parsing.
+
 use super::parse_subcommand;
 use std::ffi::OsString;
 

@@ -1,3 +1,5 @@
+//! Unit tests for `bit doctor --archive` output filenames and path exclusion rules.
+
 use super::{excluded, filename};
 use crate::commands::doctor::options::Options;
 use std::path::Path;

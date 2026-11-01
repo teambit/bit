@@ -1,3 +1,5 @@
+//! Unit tests for `bit remote` subcommand parsing and URL validation.
+
 use super::options::{Action, Options};
 use std::ffi::OsString;
 

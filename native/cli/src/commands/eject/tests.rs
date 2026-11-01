@@ -1,3 +1,5 @@
+//! Unit tests for `bit eject` option parsing and active-lane rejection.
+
 use super::{Options, parse_options, validate_workspace};
 use std::fs;
 

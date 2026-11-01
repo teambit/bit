@@ -1,3 +1,5 @@
+//! Unit tests for `bit doctor` scope object decompression and missing-head integrity checks.
+
 use super::{heads, object};
 use crate::commands::doctor::catalog::DIAGNOSES;
 use flate2::{Compression, write::ZlibEncoder};

@@ -1,3 +1,5 @@
+//! Unit tests for `bit logout` argument validation and global credential cleanup.
+
 use super::{clear_auth_config, valid_args};
 use serde_json::json;
 use std::{ffi::OsString, fs};

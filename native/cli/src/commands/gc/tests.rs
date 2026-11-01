@@ -1,3 +1,5 @@
+//! Unit tests for scope garbage collection option parsing, reachability analysis, and backup restoration.
+
 use super::{
     Options,
     collector::prepare_with_workspace_ids,

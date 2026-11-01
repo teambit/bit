@@ -1,3 +1,5 @@
+//! Oracle tests comparing component pattern matching against released `multimatch` / `minimatch`.
+
 use super::{matching, split};
 
 const IDS: [&str; 10] = [

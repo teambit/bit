@@ -1,3 +1,5 @@
+//! Unit tests for POSIX path joining and ignore-pattern rebasing.
+
 use super::{join_linux, pattern};
 
 /// Outputs of `pathJoinLinux` and `rebaseIgnorePattern` from bit 2.2.94.

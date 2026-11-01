@@ -1,3 +1,5 @@
+//! Unit tests for `bit blame` path key normalization, option parsing, and target classification.
+
 use super::{Target, classify_target, parse_args, published_source_key};
 use std::fs;
 use tempfile::tempdir;

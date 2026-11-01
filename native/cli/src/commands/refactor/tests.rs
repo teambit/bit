@@ -1,3 +1,5 @@
+//! Unit tests for `bit refactor` subcommand parsing and package-name import rewriting.
+
 use super::{
     Action, Failure, extract_version_package_name, parse_options,
     prepare_bare_scope_dependency_name, replace_package_name,

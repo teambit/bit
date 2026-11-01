@@ -1,3 +1,5 @@
+//! Unit tests for extended component pattern matching, sequence braces, and extglobs.
+
 fn matching<'a>(ids: &[&'a str], pattern: &str) -> Vec<&'a str> {
     super::matching(ids, &crate::commands::patterns::split(pattern)).unwrap()
 }
