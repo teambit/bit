@@ -1,6 +1,8 @@
 //! Registries: the pnpm config cascade's registries (`get-registries.ts`,
 //! `PnpmPackageManager.getRegistries`) with Bit's cloud registry layered on
 //! top (`DependencyResolverMain.getRegistries`) and nerf-darted auth headers.
+//!
+//! Normalizes registry URLs, bearer tokens, basic auth credentials, and `@bit` scope fallbacks.
 
 #[cfg(test)]
 mod tests;

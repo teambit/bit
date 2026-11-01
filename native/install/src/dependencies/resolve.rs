@@ -1,10 +1,11 @@
 //! Resolution of one import specifier, as the dependency tree builder and
 //! `resolvePackageData` classify it: a file, a package, a component package or missing.
 //!
-//! Relative imports follow Bit's `filing-cabinet` lookups: TypeScript origins try
-//! TypeScript's module resolution first (`.ts`, `.tsx`, `.d.ts`, a `.js` import
+//! Relative imports follow Bit's `filing-cabinet` lookups: `TypeScript` origins try
+//! `TypeScript`'s module resolution first (`.ts`, `.tsx`, `.d.ts`, a `.js` import
 //! naming a `.ts` file, directory `index` files), then the `CommonJS` lookup;
 //! other origins use the `CommonJS` lookup, `resolve.sync` with Bit's extension list.
+//! Maps resolved paths back to workspace components, core aspects, or `node_modules` packages.
 
 mod manifests;
 

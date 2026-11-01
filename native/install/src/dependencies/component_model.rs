@@ -1,6 +1,7 @@
 //! The component's `Version` object in the scope (`componentFromModel`).
 //!
 //! Exposes stored package dependencies, component dependencies, and serialized extension data.
+//! Provides fallback version ranges when dependencies are missing from the local file system.
 
 use super::data::{LegacyDependency, legacy_dependencies, string_map};
 use crate::policy::{DEPENDENCY_RESOLVER, overrides::FieldMaps};

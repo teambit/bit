@@ -1,5 +1,7 @@
 //! Supply pnpm's synchronous configuration reader with the retained Host's
 //! environment without changing this process's environment for other threads.
+//!
+//! Stores thread-local environment variable and working directory snapshots for `pnpm_config`.
 
 use pnpm_config::{EnvVar, EnvVarOs, GetCurrentDir, GetHomeDir, Host, LinkProbe};
 use serde_json::Value;

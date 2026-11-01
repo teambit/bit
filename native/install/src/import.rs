@@ -2,6 +2,8 @@
 //! (`objectsOnly`, so no workspace file is written). On `main` it imports the
 //! objects of every exported `.bitmap` id (`importAccordingToBitMap`); on a
 //! remote lane it first fetches the lane object (`importObjectsOnLane`).
+//!
+//! Coordinates HTTP/file remote transports, lane merges, and scope object persistence.
 
 pub(crate) mod remotes {
     pub use bit_client_transfer::remotes::*;

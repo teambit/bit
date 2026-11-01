@@ -1,4 +1,6 @@
 //! Nearest package manifests, shared read caching, and core-aspect metadata.
+//!
+//! Walks ancestor `node_modules` directories to locate `package.json` manifests and extract `bit` metadata.
 use super::{
     super::data::id_from_object, BIT_ASPECT, ComponentId, Resolved, ResolvedComponent, Resolver,
 };

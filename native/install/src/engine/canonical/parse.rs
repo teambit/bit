@@ -1,4 +1,6 @@
 //! Bounded pre-effect validation of the actual published `lynx.install` inputs.
+//!
+//! Parses and validates workspace paths, project manifests, network maps, and install options.
 
 use super::environment::Captured;
 use crate::model::Project;

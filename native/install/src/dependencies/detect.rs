@@ -1,4 +1,5 @@
 //! `AutoDetectDeps`: the dependency data of a component's files before overrides.
+//! Classifies per-file imports into packages, workspace components, relative files, and missing issues.
 
 mod core;
 #[cfg(test)]

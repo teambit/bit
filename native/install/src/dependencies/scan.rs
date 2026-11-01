@@ -1,6 +1,6 @@
 //! Import specifiers of one component file (JS/TS, style sheets, and MDX).
 //!
-//! JavaScript and TypeScript go through the Oxc dependency scanner. Files it
+//! `JavaScript` and `TypeScript` go through the Oxc dependency scanner. Files it
 //! reports as `unsupported` (decorators, AMD, exotic syntax) fall back to a lexical
 //! scan of `import`/`export ... from`/`require(...)`. Style sheets yield their
 //! `@import`/`@use`/`@forward` targets; a `~` prefix marks a package and anything

@@ -5,6 +5,7 @@
 //! renderer and the stats accumulator live in process-global slots installed
 //! for the duration of one engine call. Engine calls are serialized
 //! (`run::engine_call_lock`), so one slot is enough.
+//! Formats progress throttling, diff summaries, and ignored-build instructions.
 
 mod options;
 use crate::host::HostInfo;

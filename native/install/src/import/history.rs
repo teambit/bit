@@ -2,6 +2,8 @@
 //! a component whose local `VersionHistory` is not complete since the requested
 //! version is fetched again, and complete histories record that fact in
 //! `graphCompleteRefs`.
+//!
+//! Traverses parent pointers in `VersionHistory` objects and persists updated `graphCompleteRefs`.
 
 #[cfg(test)]
 mod tests;

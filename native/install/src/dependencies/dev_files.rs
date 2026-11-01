@@ -6,6 +6,7 @@
 //! `getCompositionsDevPatterns()` add), then the env's own patterns, which replace
 //! an aspect's entry of the same name: `env.jsonc` `patterns` for a non-core env, else
 //! the env's `getDevPatterns()`. A dev file is one matching any aspect's patterns.
+//! Evaluates merged glob patterns against every relative path in a workspace component.
 
 use super::glob;
 use crate::{

@@ -1,6 +1,8 @@
 //! `sources.mergeLane(lane, isImport = true)` followed by `lanes.saveLane`
 //! (`ImportComponents.mergeAndSaveLaneObject`): fold the fetched lane into the
 //! local lane object of the same ID, keeping local entries that diverged.
+//!
+//! Checks component ancestry graphs before advancing or preserving local lane component heads.
 
 #[cfg(test)]
 mod tests;

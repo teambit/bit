@@ -1,4 +1,6 @@
 //! Native `bit install` implementation. See `docs/rust/native-install.md`.
+//!
+//! Integrates workspace config loading, dependency detection, manifest generation, and the pnpm engine.
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 

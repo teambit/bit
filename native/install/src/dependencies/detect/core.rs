@@ -1,4 +1,6 @@
 //! Core aspects retain dependency-tree grouping and per-origin uniqueness.
+//!
+//! Orders resolved core aspect imports by component flag and UTF-16 relative path.
 use super::{Resolver, io};
 use crate::model::WorkspaceComponent;
 use std::path::{Path, PathBuf};

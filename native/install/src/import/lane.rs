@@ -1,5 +1,7 @@
 //! The workspace's current remote lane (`workspace.getCurrentRemoteLane()` and
 //! `ScopeComponentsImporter.importLanes`), and its merge into the local lane.
+//!
+//! Fetches remote lane objects, extracts visible component heads, and updates local lane state.
 
 pub(crate) mod object;
 

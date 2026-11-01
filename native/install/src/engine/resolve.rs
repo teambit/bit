@@ -1,5 +1,7 @@
 //! Resolve a package spec to a concrete version for `bit install <pkg>`
 //! (`resolveRemoteVersion` in `lynx.ts`).
+//!
+//! Uses `pnpm`'s standalone resolver chain to resolve registry ranges, git URLs, and local paths.
 
 #[cfg(test)]
 mod tests;

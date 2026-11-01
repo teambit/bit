@@ -1,4 +1,6 @@
 //! Preserve only the resolution settings shared by the dependency graphs contributing packages.
+//!
+//! Reconciles `pnpmfileChecksum`, `settings`, and `overrides` across existing and restored lockfiles.
 #[cfg(test)]
 mod oracle;
 #[cfg(test)]

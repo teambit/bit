@@ -3,7 +3,7 @@
 //! (`registerDetector`, `DetectorHook`). Precinct asks them before its built-in
 //! detectives, so a file one of them supports is detected by it alone.
 //!
-//! They are JavaScript, so the host runs them. It is asked only for a component
+//! They are `JavaScript`, so the host runs them. It is asked only for a component
 //! that can have one: no core env implements `getDepDetectors()`, and the
 //! detectors Bit's core aspects register (`env.jsonc`, MDX) are replicated natively,
 //! so a component of a core env is asked about only when the workspace configures

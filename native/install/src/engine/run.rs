@@ -1,6 +1,8 @@
 //! One engine install (`lynx.install`): the `bit:` lockfile block and the
 //! `--update` lockfile handling around [`engine_call`], which runs `pacquet`'s
 //! `Install` on a dedicated thread.
+//!
+//! Guards virtual-store layout transitions and serializes process-wide engine invocations.
 
 mod engine_call;
 #[cfg(test)]

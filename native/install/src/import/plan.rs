@@ -4,6 +4,8 @@
 //! (`importMany` and `findMissingExternalsRecursively`), retried from their
 //! own scopes when the lane lacks them, then the flattened dependencies of
 //! versions that have no dependency graph.
+//!
+//! Iteratively discovers missing external dependencies across multi-round remote fetches.
 
 use super::{
     bitmap::Id,

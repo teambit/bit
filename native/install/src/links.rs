@@ -8,6 +8,7 @@
 //! `node_modules/<package>` directory with symlinks to its source files and a generated
 //! `package.json`. [`sync_core_aspect_links_for_envs`] ports the bootstrap bridge a workspace
 //! authoring the core aspects needs.
+//! Exposes component package copies, prepared manifests, and environment link resolvers.
 
 pub use components::{
     ComponentLinkOptions, ComponentLinks, FileLink, LinkResult, component_package_copies,

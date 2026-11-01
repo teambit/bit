@@ -1,4 +1,6 @@
 //! `DependenciesData.serialize()`: the JSON Bit stores in its component dependency cache.
+//!
+//! Serializes detected package maps, component dependencies, issues, and core aspects in canonical key order.
 
 use super::super::data::{Detected, LegacyDependency};
 use serde_json::{Map, Value, json};

@@ -1,4 +1,6 @@
 //! The component ids an import needs, from `.bitmap`.
+//!
+//! Parses exported component IDs and active lane headers from the workspace `.bitmap` file.
 
 use super::objects::invalid;
 use serde_json::Value;

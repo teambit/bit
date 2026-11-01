@@ -1,6 +1,8 @@
 //! Merging fetched Component, Version, and `VersionHistory` objects into local ones
 //! (`MultipleComponentMerger`, `ModelComponentMerger` for imports,
 //! `ObjectsWritable.mergeVersionObject`/`mergeVersionHistory`).
+//!
+//! Applies import merge plans, detects tag conflicts, and reconciles `VersionHistory` graphs.
 
 use super::objects::invalid;
 use serde_json::{Map, Value, json};

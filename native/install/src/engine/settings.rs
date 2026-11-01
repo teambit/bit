@@ -1,4 +1,6 @@
 //! Resolve [`EngineSettings`] once per command from workspace, global, and `.npmrc` settings.
+//!
+//! Combines `workspace.jsonc` `dependency-resolver` options, `.npmrc` files, and `BIT_*` environment variables.
 
 #[cfg(test)]
 mod tests;

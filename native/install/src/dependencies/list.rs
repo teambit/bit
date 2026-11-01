@@ -1,6 +1,7 @@
 //! `extractDepsFromLegacy`: the `dependency-resolver` dependency list of a component.
 //!
 //! Combines component dependencies, configured extensions, packages, and model fallbacks.
+//! Assigns lifecycle categories and `@types/*` companion packages for `TypeScript` dependencies.
 
 use super::{
     Subject, Workspace,

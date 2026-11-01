@@ -3,6 +3,7 @@
 //!
 //! A `dry_run` fresh resolve that writes nothing and collects the peer issues,
 //! like `@pnpm/napi`'s `getPeerDependencyIssues` on a 32 MiB stack thread.
+//! Returns intersected version ranges for missing root peer dependencies.
 
 #[cfg(test)]
 mod tests;

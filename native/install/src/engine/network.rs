@@ -2,6 +2,8 @@
 //! `getNetworkConfig`, which layer the `dependency-resolver` config, the pnpm
 //! config cascade and Bit's global config (`Http.getProxyConfig` /
 //! `Http.getNetworkConfig`) for outgoing registry requests.
+//!
+//! Resolves retry policies, timeouts, concurrency limits, and custom CA/client TLS certificates.
 
 #[cfg(test)]
 mod tests;

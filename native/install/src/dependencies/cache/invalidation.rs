@@ -1,9 +1,10 @@
 //! `dependencyCacheNeedsInvalidation`: the whole dependency cache is dropped when a
 //! workspace-level file changed after its oldest entry was written. The component
-//! loader of the TypeScript CLI runs it before loading components
+//! loader of the `TypeScript` CLI runs it before loading components
 //! (`ComponentLoader.invalidateDependenciesCache`); native status and install do too.
 //!
 //! Compares workspace control file modification times against `cacache` index timestamps.
+//! Inspects `workspace.jsonc`, `.bitmap`, `package.json`, and lockfiles for newer mtimes.
 
 #[cfg(test)]
 mod tests;

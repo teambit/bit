@@ -2,8 +2,8 @@
 //! implemented natively.
 //!
 //! The hooks are recorded in the lockfile as `pnpmfileChecksum: bit-1`, exactly
-//! like the TypeScript integration (`readPackageHookChecksum` wraps its
-//! JavaScript hook in `@pnpm/napi`'s `ChecksummedHooks`), so both produce and
+//! like the `TypeScript` integration (`readPackageHookChecksum` wraps its
+//! `JavaScript` hook in `@pnpm/napi`'s `ChecksummedHooks`), so both produce and
 //! reuse the same lockfiles.
 
 #[cfg(test)]
