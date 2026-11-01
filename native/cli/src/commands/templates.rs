@@ -29,7 +29,7 @@ pub const COMMAND: Command = Command { name: "templates", aliases: &[], run };
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub show_all: bool,
     pub aspect: Option<String>,
@@ -130,6 +130,7 @@ pub(super) fn can_use_builtin_workspace_templates(
         .all(|(_, comp)| CORE_ENVS.contains(&aspect_id_without_version(&comp.env_id)))
 }
 
+#[inline]
 fn has_custom_generator_config(ws_val: &Value) -> bool {
     let Some((_, gen_cfg)) = super::update_cmd::aspect_entry(ws_val, "teambit.generator/generator")
     else {
@@ -147,12 +148,14 @@ fn has_custom_generator_config(ws_val: &Value) -> bool {
     has_envs || has_aspects
 }
 
+#[inline]
 fn is_core_aspect(id: &str) -> bool {
     CORE_ASPECT_IDS
         .split('"')
         .any(|core| core == id)
 }
 
+#[inline]
 fn has_non_core_workspace_aspect(ws_val: &Value) -> bool {
     let Some(obj) = ws_val.as_object() else {
         return true;
@@ -161,8 +164,10 @@ fn has_non_core_workspace_aspect(ws_val: &Value) -> bool {
         .any(|key| key != "$schema" && !is_core_aspect(aspect_id_without_version(key)))
 }
 
+#[must_use]
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut options = Options { show_all: false, aspect: None, json: false };
+    let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(token) = iter.next() {
         if token == "--" {

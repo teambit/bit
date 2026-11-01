@@ -38,6 +38,7 @@ impl Refreshes {
         Ok(Self { main, forked })
     }
 
+    #[inline]
     pub(super) fn attach(&self, result: &mut Value, context: &Value) {
         if let Some(forked) = forked_lane_id(context) {
             result["forkedLaneId"] = Value::String(forked);
@@ -50,6 +51,7 @@ impl Refreshes {
         }
     }
 
+    #[inline]
     pub(super) fn progress(&self, context: &Value) -> super::loader::Progress {
         super::loader::Progress {
             main_count: self.main.as_ref().map_or(0, |(_, _, count, _)| *count),
@@ -60,6 +62,7 @@ impl Refreshes {
         }
     }
 
+    #[inline]
     pub(super) fn apply(&mut self, engine: &mut Engine) -> io::Result<()> {
         if let Some((token, _, _, _)) = &self.main {
             super::super::import::apply_status_refresh(engine, token)?;
@@ -99,6 +102,7 @@ pub(super) fn prepare(
     Ok(Some((token.clone(), updates, count, objects)))
 }
 
+#[inline]
 fn parse_refresh_metric(prepared: &Value, key: &str, label: &str) -> io::Result<usize> {
     prepared[key]
         .as_u64()
@@ -166,6 +170,7 @@ pub(super) fn prepare_forked(
     Ok((engine, token.clone(), updates, count))
 }
 
+#[inline]
 fn forked_lane_id(context: &Value) -> Option<String> {
     if let Some(id) = context["forkedFrom"]
         .as_str()

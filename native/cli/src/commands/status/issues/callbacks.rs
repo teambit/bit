@@ -52,6 +52,7 @@ pub(super) fn merge(
     Ok(())
 }
 
+#[inline]
 fn validate_callback_object(object: &Value) -> io::Result<&str> {
     if !object.is_object() {
         return Err(decline("Harmony callback issue object"));

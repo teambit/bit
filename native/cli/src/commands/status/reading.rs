@@ -16,6 +16,7 @@ pub(super) enum ReadFailure {
 }
 
 impl From<io::Error> for ReadFailure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error)
     }
@@ -166,6 +167,7 @@ fn external_component(row: &Value) -> io::Result<Component> {
     })
 }
 
+#[inline]
 fn validate_graph(engine: &mut Engine, proofs: &[Value]) -> io::Result<()> {
     if proofs.is_empty() {
         return Ok(());
@@ -201,6 +203,7 @@ fn attach_removed(
     Ok(())
 }
 
+#[inline]
 fn callback_progress(
     mut progress: loader::Progress,
     capture: &capture::Capture,
@@ -211,6 +214,7 @@ fn callback_progress(
     progress
 }
 
+#[inline]
 fn captured_issues(
     engine: &mut Engine,
     root: &Path,

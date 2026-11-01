@@ -49,6 +49,7 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
     Ok(Report { data, code: 0, details })
 }
 
+#[inline]
 fn success_section(results: &Results, options: &Options, formatter: &Formatter) -> String {
     let lane_name = options.lane.trim();
     let lane_success = formatter.success_summary(&format!(
@@ -67,6 +68,7 @@ fn success_section(results: &Results, options: &Options, formatter: &Formatter) 
     }
 }
 
+#[inline]
 fn format_skipped(
     skipped: &[(crate::commands::ids::Id, String)],
     formatter: &Formatter,

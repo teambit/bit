@@ -20,6 +20,7 @@ const REMOTELY_REMOVED: &str = r#"(use "bit remove" to remove them from the work
 
 impl<'r> Status<'r> {
     /// The sections of `joinSections`, in order.
+    #[inline]
     pub(super) fn sections(&self) -> io::Result<Vec<String>> {
         let mut sections = self.version_sections()?;
         sections.extend(self.workspace_sections()?);
@@ -57,6 +58,7 @@ impl<'r> Status<'r> {
         ])
     }
 
+    #[inline]
     fn pending_update_dependents(&self) -> io::Result<Vec<String>> {
         Ok(super::ids(self.result, "pendingUpdateDependents")?
             .iter()
@@ -109,6 +111,7 @@ impl<'r> Status<'r> {
         ])
     }
 
+    #[inline]
     fn soft_tagged_items(&self) -> io::Result<Vec<String>> {
         self.soft_tagged
             .iter()
@@ -140,6 +143,7 @@ impl<'r> Status<'r> {
         Ok(items)
     }
 
+    #[inline]
     fn listed(
         &self,
         field: &str,
@@ -151,6 +155,7 @@ impl<'r> Status<'r> {
             .collect()
     }
 
+    #[inline]
     fn new_components(&self) -> io::Result<Vec<String>> {
         let formatted: Vec<String> = ids(self.result, "newComponents")?
             .iter()
@@ -213,6 +218,7 @@ impl<'r> Status<'r> {
             .collect()
     }
 
+    #[inline]
     fn with_issues_items(&self) -> Vec<String> {
         let mut items: Vec<String> = self.with_issues
             .iter()
@@ -224,6 +230,7 @@ impl<'r> Status<'r> {
     }
 }
 
+#[inline]
 fn utf16_order(left: &str, right: &str) -> Ordering {
     left.encode_utf16().cmp(right.encode_utf16())
 }

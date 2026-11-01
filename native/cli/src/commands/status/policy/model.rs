@@ -117,6 +117,7 @@ fn validate_unscoped_model(target: &Value, model: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn is_hash(text: &str) -> bool {
     let trimmed = text.trim();
     trimmed.len() == 40 && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
@@ -143,6 +144,7 @@ pub(super) fn validate_harmony_version(version: Option<&Value>) -> io::Result<()
     Ok(())
 }
 
+#[inline]
 fn is_valid_harmony_dep_id(dependency: &Value) -> bool {
     let id = dependency.get("id").unwrap_or(dependency);
     if let Some(raw) = id.as_str() {
@@ -156,6 +158,7 @@ fn is_valid_harmony_dep_id(dependency: &Value) -> bool {
         && non_empty_part(id, dependency, "name").is_some()
 }
 
+#[inline]
 fn non_empty_part<'a>(id: &'a Value, dependency: &'a Value, key: &str) -> Option<&'a str> {
     id.get(key)
         .and_then(Value::as_str)
@@ -171,6 +174,7 @@ fn non_empty_part<'a>(id: &'a Value, dependency: &'a Value, key: &str) -> Option
 }
 
 /// `[...(version?.dependencies ?? []), ...(version?.devDependencies ?? [])]`.
+#[inline]
 pub(super) fn dependencies(version: Option<&Value>) -> io::Result<Vec<&Value>> {
     let field = |name| array(version.and_then(|stored| stored.get(name)), name);
     Ok(field("dependencies")?

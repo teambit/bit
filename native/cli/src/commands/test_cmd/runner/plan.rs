@@ -101,6 +101,7 @@ impl Plan {
         let report = self.format_report(root, &result, identity, terminated, text)?;
         Ok(Execution { report, terminated, empty: false })
     }
+    #[inline]
     fn progress(&self, output: &bit_install::output::Output, text: bool) {
         if text && self.settings.files.is_empty() {
             for count in &self.loaded.progress.loads {
@@ -110,6 +111,7 @@ impl Plan {
             }
         }
     }
+    #[inline]
     fn report_service_error(
         &self,
         output: &bit_install::output::Output,
@@ -198,6 +200,7 @@ impl Plan {
         }
     }
 }
+#[inline]
 fn validate_sources(files: &[serde_json::Value]) -> io::Result<()> {
     for file in files {
         let path = file["absolutePath"]
@@ -212,6 +215,7 @@ fn validate_sources(files: &[serde_json::Value]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn prepare_coverage(
     root: &Path,
     components: &[Component],
@@ -257,6 +261,7 @@ fn validate_streaming(streamed: bool, loaded: &Loaded) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn validate_environment(
     components: &[Component],
     settings: &Settings,

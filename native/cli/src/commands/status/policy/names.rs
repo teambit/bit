@@ -3,6 +3,7 @@
 use super::{Map, Value, component, decline, io, nullish, text};
 
 /// `@<owner>` of `owner.scope/name`.
+#[inline]
 pub(super) fn default_prefix(identity: &str) -> String {
     let owner = identity
         .trim()
@@ -50,6 +51,7 @@ pub(super) fn package_name(identity: &str, stored_prefix: Option<&str>) -> Strin
     format!("{prefix}/{trimmed}")
 }
 
+#[inline]
 pub(super) fn names(
     identity: &str,
     model: Option<&Value>,
@@ -110,6 +112,7 @@ pub(super) fn extension_identity(id: &Value) -> String {
     }
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -145,6 +148,7 @@ pub(super) fn identity(value: Option<&Value>) -> io::Result<String> {
     Err(decline("status dependency scope"))
 }
 
+#[inline]
 fn identity_from_str(text: &str) -> io::Result<String> {
     let stripped = strip_latest_or_head(text);
     if stripped.is_empty() {
@@ -174,6 +178,7 @@ fn resolve_dep_version_suffix(
     Ok(if version.is_empty() { String::new() } else { format!("@{version}") })
 }
 
+#[inline]
 fn strip_latest_or_head(text: &str) -> &str {
     let text = text.trim();
     text.strip_suffix("@latest")

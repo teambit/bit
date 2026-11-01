@@ -61,7 +61,7 @@ fn owner(root: &Path, bitmap: &Bitmap, path: &Path) -> io::Result<String> {
 }
 
 pub(super) fn tests(component: &Component, patterns: &[String]) -> io::Result<Vec<PathBuf>> {
-    let mut paths = Vec::new();
+    let mut paths = Vec::with_capacity(component.files.len());
     for file in &component.files {
         let relative = file["filePath"]
             .as_str()
@@ -80,12 +80,14 @@ pub(super) fn tests(component: &Component, patterns: &[String]) -> io::Result<Ve
     Ok(paths)
 }
 
+#[inline]
 fn any_existing_file(values: &[String]) -> bool {
     values
         .iter()
         .any(|value| Path::new(value.trim()).is_file())
 }
 
+#[inline]
 fn all_existing_files(values: &[String]) -> bool {
     values
         .iter()

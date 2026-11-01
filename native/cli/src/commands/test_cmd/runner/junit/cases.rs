@@ -42,6 +42,7 @@ impl Case {
         output.push_str("    </testcase>\n");
     }
 }
+#[inline]
 fn message(output: &mut String, kind: &str, message: Option<&str>) {
     let Some(message) = message else {
         return;
@@ -87,6 +88,7 @@ pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
     Ok(cases)
 }
 
+#[inline]
 fn test_case(file_name: &str, test: &Value) -> io::Result<Case> {
     Ok(Case {
         file: file_name.to_owned(),
@@ -108,6 +110,7 @@ fn test_case(file_name: &str, test: &Value) -> io::Result<Case> {
         skipped: matches!(test["status"].as_str().map(str::trim), Some("pending" | "skipped")),
     })
 }
+#[inline]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
@@ -133,6 +136,7 @@ fn source_rows<'a>(component: &Value, raw: &'a Value) -> &'a Value {
         .unwrap_or_else(|| &raw["results"]["testResults"])
 }
 
+#[inline]
 fn file_error(rows: &Value, index: usize) -> io::Result<String> {
     let row = rows.get(index).ok_or_else(|| io::Error::other("JUnit source file"))?;
     Ok(row["executionErrorMessage"]

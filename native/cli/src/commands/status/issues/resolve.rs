@@ -11,6 +11,7 @@ use std::collections::{HashMap, HashSet};
 /// `ordinaryResolveIssueHeads(context, receipt)`: one row per model with
 /// its head (and its lane head), none deprecated or removed. A `null`
 /// version is an absent object, which counts as ordinary.
+#[must_use]
 pub fn ordinary_heads_for(context: &Value, receipt: &Value, graph: Option<&[Component]>) -> bool {
     let referenced = graph.map(|components| {
         components
@@ -50,7 +51,7 @@ fn ordinary_model(
                     target["identity"].as_str().map(str::trim) == Some(identity.as_str())
                 })
         });
-    let mut expected: Vec<&Value> = Vec::new();
+    let mut expected: Vec<&Value> = Vec::with_capacity(2);
     for hash in [&model["head"], lane.map_or(&Value::Null, |lane| &lane["currentHead"])] {
         if !hash.is_null() && !expected.contains(&hash) {
             expected.push(hash);
@@ -144,6 +145,7 @@ fn ordinary_head(head: &Value, expected: &Value, check_issues: bool) -> bool {
 /// `resolveExternalIssueVertices(components, receipt)`: every dependency
 /// outside the workspace reachable through the engine's external rows,
 /// with no row left over; `None` when the receipt does not prove that.
+#[must_use]
 pub fn external_vertices(
     components: &[Component],
     receipt: Option<&Value>,
@@ -229,21 +231,25 @@ fn external_row(row: &Value, workspace: &HashSet<&str>) -> Option<Component> {
     })
 }
 
+#[inline]
 fn component_identity(value: &str) -> bool {
     versioned(value) || (!value.contains('@') && scoped_name(value))
 }
 
 /// `/^[^@\s]+\/[^@\s]+@[^@\s]+$/`.
+#[inline]
 fn versioned(value: &str) -> bool {
     let Some((id, version)) = value.split_once('@') else { return false };
     scoped_name(id) && plain_part(version)
 }
 
+#[inline]
 fn scoped_name(id: &str) -> bool {
     let Some((scope, name)) = id.split_once('/') else { return false };
     plain_part(scope) && plain_part(name)
 }
 
+#[inline]
 fn plain_part(part: &str) -> bool {
     !part.is_empty() && !part.contains('@') && !part.chars().any(char::is_whitespace)
 }

@@ -30,7 +30,7 @@ const STRINGS: [&str; 7] = [
     "--versions-file",
 ];
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Options {
     pub message: Option<String>,
     pub unmodified: bool,
@@ -42,13 +42,13 @@ pub struct Options {
     pub mode: Mode,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TagSelection {
     pub patterns: Vec<String>,
     pub versions_file: Option<String>,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum Mode {
     #[default]
     Ordinary,
@@ -58,7 +58,7 @@ pub enum Mode {
 
 /// How the versions are bumped: `validateOptions`' release types,
 /// `--increment-by` and `--ver`.
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Release {
     /// `releaseType`.
     pub level: String,
@@ -77,6 +77,8 @@ struct Flags {
 }
 
 /// `args` starts after the command name.
+#[must_use]
+#[inline]
 pub fn parse(args: &[&str]) -> Option<Options> {
     let flags = read(args)?;
     validate(&flags)
@@ -270,6 +272,7 @@ fn option_value(argument: &str, next: Option<&str>) -> Option<(Value, bool)> {
     None
 }
 
+#[inline]
 fn alias(argument: &str) -> &str {
     match argument.trim() {
         "-m" => "--message",
@@ -282,6 +285,7 @@ fn alias(argument: &str) -> &str {
 }
 
 /// A bounded workspace pattern, including state predicates.
+#[inline]
 fn pattern(text: &str) -> Option<&str> {
     let text = text.trim();
     let valid = !text.is_empty() && text.len() <= 4096 && !text.contains('\0');
@@ -315,10 +319,12 @@ fn validate(flags: &Flags) -> Option<Options> {
 }
 
 impl Flags {
+    #[inline]
     fn string(&self, name: &str) -> Option<&str> {
         self.values.get(name).and_then(Value::as_str)
     }
 
+    #[inline]
     fn flag(&self, name: &str) -> bool {
         self.values.get(name) == Some(&Value::Bool(true))
     }

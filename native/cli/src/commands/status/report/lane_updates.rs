@@ -7,6 +7,7 @@ use std::io;
 pub(super) const UPDATES_FROM_MAIN: &str = r#"(use "bit lane merge main" to merge the changes)"#;
 
 impl Status<'_> {
+    #[inline]
     pub(super) fn updates_from_main(&self) -> io::Result<Vec<String>> {
         self.updates("pendingUpdatesFromMain", "main")
     }
@@ -56,6 +57,7 @@ impl Status<'_> {
             .collect()
     }
 
+    #[inline]
     pub(super) fn unavailable_on_main(&self) -> io::Result<Vec<String>> {
         Ok(ids(self.result, "unavailableOnMain")?
             .iter()

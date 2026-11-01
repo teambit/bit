@@ -23,6 +23,7 @@ pub(super) enum Issue {
 }
 
 impl Issue {
+    #[inline]
     pub(super) fn parse(name: &str) -> io::Result<Self> {
         Ok(match name.trim() {
             "UntrackedDependencies" => Self::Untracked,
@@ -40,6 +41,7 @@ impl Issue {
         })
     }
 
+    #[inline]
     pub(super) const fn class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {
             Self::Untracked
@@ -51,6 +53,7 @@ impl Issue {
         }
     }
 
+    #[inline]
     const fn source_class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {
             Self::Untracked => (
@@ -87,6 +90,7 @@ impl Issue {
         }
     }
 
+    #[inline]
     const fn runtime_class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {
             Self::SelfReference => (
@@ -151,6 +155,7 @@ impl Issue {
         Ok(data)
     }
 
+    #[inline]
     pub(super) fn data_to_string(self, data: &Value) -> io::Result<String> {
         match self {
             Self::Untracked => untracked(data),
@@ -247,6 +252,7 @@ fn load_failures(data: &Value) -> io::Result<String> {
         .map(|rows| rows.join("\n"))
 }
 
+#[inline]
 fn component_id(original: &Value) -> io::Result<Value> {
     let mut id = json!({"_legacy":legacy(original)?});
     if let Some(scope) = original.get("_scope") {

@@ -29,6 +29,7 @@ const CORES: [&str; 13] = [
 ];
 
 /// Core/custom aspect configurations after the shared native origin merge.
+#[inline]
 pub fn status_extensions(target: &Value) -> io::Result<Vec<Value>> {
     array(target.get("projectedExtensions"), "projected extensions")?
         .iter()
@@ -36,6 +37,7 @@ pub fn status_extensions(target: &Value) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+#[inline]
 fn projected_extension(extension: &Value) -> io::Result<Value> {
     if nullish(extension.get("extensionId")).is_some()
         || nullish(extension.get("legacyId")).is_some()
@@ -69,6 +71,7 @@ fn model_extension(extension: &Value, name: &str) -> io::Result<Value> {
     Ok(json!({ "name": bare, "config": config }))
 }
 
+#[inline]
 fn validate_config(name: &str, config: &Map<String, Value>) -> io::Result<()> {
     let valid = match name {
         DEPRECATION => config.iter().all(|(key, value)| deprecation_field(key, value)),
@@ -78,6 +81,7 @@ fn validate_config(name: &str, config: &Map<String, Value>) -> io::Result<()> {
     if valid { Ok(()) } else { Err(decline("status unsupported core extension configuration")) }
 }
 
+#[inline]
 fn deprecation_field(key: &str, value: &Value) -> bool {
     match key {
         "__specific" => true,
@@ -128,6 +132,7 @@ fn validate_removal_config(config: &Map<String, Value>) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn valid_snap_list(value: &Value) -> bool {
     value
         .as_array()
@@ -141,6 +146,7 @@ fn valid_snap_list(value: &Value) -> bool {
         })
 }
 
+#[inline]
 fn core_aspect(name: &str) -> bool {
     include_str!("../../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json")
         .split('"')

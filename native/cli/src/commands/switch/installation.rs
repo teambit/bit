@@ -33,7 +33,7 @@ pub(super) fn run(
         .ok_or_else(|| io::Error::other("switch installation Host"))?;
     let host = Arc::new(host);
     info.file_id = workspace_command::file_id();
-    let mut reports = Vec::new();
+    let mut reports = Vec::with_capacity(2);
     let installed = Installer::from_host(Arc::clone(&host), info)
         .with_initialized_cache(planned.has_captured_components())
         .install(root, false, ids);
@@ -79,6 +79,7 @@ fn compiler_error(value: &serde_json::Value) -> io::Result<Option<String>> {
     Err(io::Error::other("switch compiler receipt"))
 }
 
+#[inline]
 fn compilation_error(chalk: Chalk, message: &str) -> String {
     let formatter = Formatter::new(chalk);
     format!(

@@ -87,6 +87,7 @@ impl Settings {
         Ok(())
     }
 
+    #[inline]
     fn apply_bool_flag(&mut self, token: &str) -> bool {
         match token {
             "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
@@ -131,6 +132,7 @@ impl Settings {
         Ok(())
     }
 
+    #[inline]
     fn apply_short_flags(&mut self, flags: &str) -> io::Result<()> {
         if flags.len() < 2
             || flags.starts_with('-')
@@ -147,6 +149,7 @@ impl Settings {
     }
 }
 
+#[inline]
 fn validate_inline_scope(scope_val: &str) -> io::Result<()> {
     let trimmed = scope_val.trim();
     if trimmed.is_empty() || trimmed.starts_with('-') {
@@ -155,6 +158,7 @@ fn validate_inline_scope(scope_val: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn non_empty_inline(value: &str, label: &str) -> io::Result<String> {
     let trimmed = value.trim();
     if trimmed.is_empty() {
@@ -163,6 +167,7 @@ fn non_empty_inline(value: &str, label: &str) -> io::Result<String> {
     Ok(trimmed.to_owned())
 }
 
+#[inline]
 fn non_empty_arg<'a>(
     arguments: &mut impl Iterator<Item = &'a OsString>,
     label: &str,

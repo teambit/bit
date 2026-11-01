@@ -259,6 +259,8 @@ pub(super) const COMPONENT_TEMPLATES: &[TemplateDescriptor] = &[
     },
 ];
 
+#[must_use]
+#[inline]
 pub(super) fn select_templates(
     inside_workspace: bool,
     show_all: bool,
@@ -295,12 +297,9 @@ pub(super) fn format_templates_report(
         .map(|(aspect_id, items)| format_aspect_group(aspect_id, items, chalk))
         .collect::<Vec<_>>()
         .join("\n");
-    let learn_more = format!(
-        "\n{}",
-        formatter.hint(
-            "find and add templates in https://bit.dev/reference/generator/use-component-generator"
-        ),
-    );
+    let hint =
+        "find and add templates in https://bit.dev/reference/generator/use-component-generator";
+    let learn_more = format!("\n{}", formatter.hint(hint));
     format!("{title}{output}{learn_more}")
 }
 
@@ -344,6 +343,7 @@ fn format_aspect_group(aspect_id: &str, items: &[TemplateDescriptor], chalk: Cha
     format!("{header}\n{names}\n")
 }
 
+#[inline]
 pub(super) fn friendly_aspect_name(aspect_id: &str) -> String {
     let aspect_id = aspect_id.trim();
     let aspect_id = aspect_id.rsplit_once('@').map_or(aspect_id, |(bare, _)| bare.trim());
@@ -365,13 +365,11 @@ pub(super) fn friendly_aspect_name(aspect_id: &str) -> String {
         .join(" ")
 }
 
+#[inline]
 fn capitalize_word(word: &str) -> String {
     let mut chars = word.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |first| {
-            format!("{}{}", first.to_ascii_uppercase(), chars.as_str())
-        })
+    let Some(first) = chars.next() else { return String::new() };
+    format!("{}{}", first.to_ascii_uppercase(), chars.as_str())
 }
 
 fn unique_envs_by_frequency(items: &[TemplateDescriptor]) -> Vec<&'static str> {

@@ -5,6 +5,7 @@ use std::{ffi::OsString, fmt::Write};
 
 struct Summary<'a>(&'a Value);
 impl Summary<'_> {
+    #[inline]
     fn number(&self, key: &str) -> u64 {
         self.0["totals"][key].as_u64().unwrap_or(0)
     }
@@ -24,7 +25,7 @@ impl Summary<'_> {
             })
     }
     fn suffix(&self) -> String {
-        let mut parts = Vec::new();
+        let mut parts = Vec::with_capacity(2);
         let without = self.number("withoutTests");
         let affected = self.number("affectedByEnvError");
         if without > 0 {
@@ -35,10 +36,12 @@ impl Summary<'_> {
         }
         if parts.is_empty() { String::new() } else { format!(", {}", parts.join(", ")) }
     }
+    #[inline]
     fn pending(&self) -> String {
         let pending = self.number("testsPending");
         if pending > 0 { format!(", {pending} pending") } else { String::new() }
     }
+    #[inline]
     fn passed(&self, components: u64) -> String {
         let passed = self.number("testsPassed");
         let total = passed + self.number("testsFailed") + self.number("testsPending");
@@ -77,6 +80,7 @@ impl Summary<'_> {
         let targeted = if attempted > 0 { attempted } else { self.number("totalComponents") };
         format!("tester errors encountered ({targeted} components targeted{})", self.suffix())
     }
+    #[inline]
     fn has_errors(&self, failed: usize, errors: usize) -> bool {
         self.number("testsFailed") > 0
             || failed + errors > 0
@@ -112,6 +116,7 @@ impl Summary<'_> {
         }
         (passed, false, false)
     }
+    #[inline]
     fn headline(&self, code: i32) -> (String, bool, bool) {
         let (failed, errors) = self.counts();
         if self.has_errors(failed, errors) {
@@ -136,7 +141,7 @@ pub(super) fn format_report(
     if bool_flag(&flags, "--summary", "--summary=true", "--summary=false") {
         return summary;
     }
-    let mut sections = Vec::new();
+    let mut sections = Vec::with_capacity(3);
     result_sections(value, chalk, &mut sections);
     no_tests_section(
         value,
@@ -148,6 +153,7 @@ pub(super) fn format_report(
     format!("\n{}", sections.join("\n\n"))
 }
 
+#[inline]
 fn bool_flag(flags: &[&OsString], bare: &str, truthy: &str, falsy: &str) -> bool {
     flags
         .iter()
@@ -250,6 +256,7 @@ fn component_line(row: &Value, chalk: Chalk) -> String {
         format!("   {} {text}", chalk.green(if cfg!(windows) { "✓" } else { "✔" }))
     }
 }
+#[inline]
 fn format_summary(value: &Value, code: i32, elapsed_ms: u128, chalk: Chalk) -> String {
     let (message, warning, hint) = Summary(value).headline(code);
     let line = if hint {

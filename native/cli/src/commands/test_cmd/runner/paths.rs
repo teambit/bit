@@ -1,6 +1,7 @@
 //! Lexically normalize absolute filesystem paths without following symlinks.
 use std::path::{Path, PathBuf};
 
+#[inline]
 pub(super) fn normalized(path: &Path) -> PathBuf {
     let path = path.to_str().map_or(path, |text| Path::new(text.trim()));
     if path.as_os_str().is_empty() {

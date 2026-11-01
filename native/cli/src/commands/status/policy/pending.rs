@@ -83,6 +83,7 @@ fn configuration(merge: &MergeConfig, rows: &[Value], identity: &str) -> io::Res
     }))
 }
 
+#[inline]
 fn optional(path: &Path) -> io::Result<Option<String>> {
     let metadata = match fs::symlink_metadata(path) {
         Ok(metadata) => metadata,
@@ -95,6 +96,7 @@ fn optional(path: &Path) -> io::Result<Option<String>> {
     fs::read_to_string(path).map(Some)
 }
 
+#[inline]
 fn unmerged_config<'r>(rows: &'r [Value], identity: &str) -> Option<&'r Value> {
     let identity = identity.trim();
     rows.iter()
@@ -106,6 +108,7 @@ fn unmerged_config<'r>(rows: &'r [Value], identity: &str) -> Option<&'r Value> {
         .filter(|config| !config.is_null())
 }
 
+#[inline]
 fn combine(mut target: Value, incoming: Option<&Value>) -> Value {
     let Some(incoming) = incoming else { return target };
     merge(&mut target, incoming);

@@ -24,12 +24,14 @@ pub(super) fn render(data: &str, raw: &Value) -> io::Result<String> {
     result.push_str("</testsuites>");
     Ok(result)
 }
+#[inline]
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
 
+#[inline]
 fn component_identity(id: &Value) -> Option<String> {
     if let Some(raw) = non_empty_str(id) {
         return Some(raw.to_owned());
@@ -98,6 +100,7 @@ pub(super) fn write(path: &std::path::Path, data: &str, raw: &Value) -> io::Resu
     }
     std::fs::write(path, xml).map_err(|error| write_failure(error, path, cfg!(windows)))
 }
+#[inline]
 fn write_failure(error: io::Error, path: &std::path::Path, windows: bool) -> io::Error {
     use crate::commands::workspace_command::filesystem_error;
     if windows && error.kind() == io::ErrorKind::PermissionDenied && path.is_dir() {

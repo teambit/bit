@@ -141,6 +141,7 @@ fn component_detail_data(
     let data: Value = serde_json::from_str(&report.data)?;
     Ok(data[0]["data"]["components"].get(0).cloned())
 }
+#[inline]
 fn validate_rows(root: &Path, components: &[Component], rows: &[Value]) -> io::Result<()> {
     if rows
         .iter()
@@ -194,6 +195,7 @@ pub(super) fn report_summary(
     output.data = serde_json::to_string_pretty(&aggregate)?;
     Ok(output)
 }
+#[inline]
 fn belongs(root: &Path, component: &Component, row: &Value) -> bool {
     let non_empty = |key: &str| {
         row[key]

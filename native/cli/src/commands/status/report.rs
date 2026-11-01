@@ -29,7 +29,7 @@ const TITLE_ONLY: [&str; 5] = [
 ];
 const AUTO_TAG: &str = "(these will be auto-tagged when their modified dependencies are tagged)";
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Flags {
     pub lanes: bool,
     pub verbose: bool,
@@ -42,7 +42,7 @@ pub(super) struct Flags {
 
 pub(super) fn parse(args: &[&str]) -> Option<Flags> {
     let mut flags = Flags::default();
-    let mut seen: Vec<&str> = Vec::new();
+    let mut seen: Vec<&str> = Vec::with_capacity(args.len());
     for (idx, &arg) in args.iter().enumerate() {
         if arg == "--" {
             return (idx + 1 == args.len()).then_some(flags);
@@ -108,6 +108,7 @@ struct WithIssues<'r> {
 }
 
 impl WithIssues<'_> {
+    #[inline]
     fn tag_blocker(&self) -> bool {
         self.issues
             .iter()
@@ -240,6 +241,7 @@ fn lane_supported(result: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn ids<'r>(result: &'r Value, field: &str) -> io::Result<Vec<&'r str>> {
     array(result.get(field), field)?
         .iter()
@@ -284,6 +286,7 @@ fn model_heads<'r>(
 }
 
 impl<'r> Status<'r> {
+    #[inline]
     fn lane(&self) -> io::Result<Option<&'r str>> {
         let lane = text(self.result.get("currentLaneId"))?.trim();
         Ok((!lane.is_empty() && lane != "main" && !lane.ends_with("/main")).then_some(lane))
@@ -328,6 +331,7 @@ impl<'r> Status<'r> {
         Ok(status)
     }
 
+    #[inline]
     fn version(&self, identity: &str) -> io::Result<Option<&'r str>> {
         self.models.versions
             .get(identity)
@@ -335,12 +339,14 @@ impl<'r> Status<'r> {
             .ok_or_else(|| decline("status report target"))
     }
 
+    #[inline]
     fn issues_of(&self, identity: &str, version: Option<&str>) -> Option<&WithIssues<'r>> {
         self.with_issues
             .iter()
             .find(|row| row.identity == identity && row.version == version)
     }
 
+    #[inline]
     fn printed_issues(&self) -> usize {
         self.with_issues
             .iter()
@@ -348,6 +354,7 @@ impl<'r> Status<'r> {
             .count()
     }
 
+    #[inline]
     fn code(&self) -> i32 {
         let blockers = self.with_issues.iter().any(WithIssues::tag_blocker);
         i32::from(

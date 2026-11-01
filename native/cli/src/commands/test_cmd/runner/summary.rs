@@ -29,6 +29,7 @@ fn project(data: &Value, identity: &str, environment: &str, message: Option<&str
         "componentsAffectedByEnvError":affected,"envErrors":errors})
 }
 
+#[inline]
 fn env_errors(environment_error: bool, environment: &str, message: Option<&str>) -> Vec<Value> {
     if !environment_error {
         return Vec::new();
@@ -67,12 +68,14 @@ fn component(component: &Value) -> Option<Value> {
         "pending":pending,"hasError":has_error}))
 }
 
+#[inline]
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
 
+#[inline]
 fn component_identity(id: &Value) -> Option<String> {
     if let Some(raw) = non_empty_str(id) {
         let bare = bit_install::config::aspect_id_without_version(raw).trim();
@@ -85,6 +88,7 @@ fn component_identity(id: &Value) -> Option<String> {
     Some(format!("{scope}/{name}"))
 }
 
+#[inline]
 fn sum_triple(rows: &[Value], fields: [&str; 3]) -> (u64, u64, u64) {
     rows.iter()
         .fold((0, 0, 0), |(first, second, third), row| {
@@ -96,6 +100,7 @@ fn sum_triple(rows: &[Value], fields: [&str; 3]) -> (u64, u64, u64) {
         })
 }
 
+#[inline]
 pub(super) fn render(
     data: &str,
     identity: &str,

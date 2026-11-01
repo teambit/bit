@@ -7,6 +7,7 @@ use bit_install::{
 };
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn request(
     root: &Path,
     selected: &Component,
@@ -53,6 +54,7 @@ pub(super) fn request_with_empty(
     Ok((json!({"root":root,"config":config,"options":options}), has_tests))
 }
 
+#[inline]
 fn test_match(
     component_dir: &Path,
     patterns: &[String],
@@ -76,6 +78,7 @@ fn test_match(
         )
     }
 }
+#[inline]
 fn tool_options(config: &mut Value, dev_files: Vec<String>, settings: &Settings) -> Value {
     let mut options = json!({});
     if settings.update_snapshot {
@@ -85,7 +88,8 @@ fn tool_options(config: &mut Value, dev_files: Vec<String>, settings: &Settings)
         options["coverage"] = json!(true);
         options["collectCoverage"] = json!(true);
         options["coverageReporters"] = json!(["text", "json-summary"]);
-        let mut ignored = vec!["/node_modules/".to_owned()];
+        let mut ignored = Vec::with_capacity(dev_files.len() + 2);
+        ignored.push("/node_modules/".to_owned());
         ignored.extend(dev_files);
         ignored.push("/^.*/.*.bit-app..*$/".to_owned());
         config["coveragePathIgnorePatterns"] = json!(ignored);
@@ -119,6 +123,7 @@ fn patterns(root: &Path, selected: &Component) -> io::Result<Patterns> {
     })
 }
 
+#[inline]
 fn absolute_pattern(directory: &Path, pattern: &str) -> String {
     let pattern = pattern.trim();
     let (prefix, relative) = pattern

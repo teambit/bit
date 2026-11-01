@@ -33,6 +33,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_options(args, &argv, &options, false)
 }
 
+#[inline]
 pub(super) fn lane_import(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = options::parse_import(&argv[2..]) else {
         return Ok(Outcome::Declined("outside the native lane import grammar".into()));
@@ -127,6 +128,7 @@ fn preflight_switch_error(
     Some(workspace_command::execute_then(root, args, cmd, |_| Err(err)))
 }
 
+#[inline]
 fn installation_session(
     installer: Option<Installer>,
 ) -> io::Result<(Option<super::status::environments::Environments>, Option<bit_install::HostInfo>)>
@@ -140,6 +142,7 @@ fn installation_session(
     }
 }
 
+#[inline]
 fn execute(
     root: &Path,
     args: &[OsString],
@@ -161,12 +164,7 @@ fn install_and_report(
     mut prepared: PreparedSwitch,
     installation: Option<bit_install::HostInfo>,
 ) -> io::Result<Report> {
-    render_progress(
-        output,
-        &prepared.imports,
-        prepared.checkout_import.as_ref(),
-        &prepared.startup,
-    );
+    render_progress(output, &prepared);
     let applied = workspace_command::switch::apply(&mut prepared.planned, root)?;
     if !prepared.install_ids.is_empty()
         && prepared.planned.plan["result"]["leftUnresolvedConflicts"] != true
@@ -191,22 +189,17 @@ fn install_and_report(
     Ok(prepared.report)
 }
 
-fn render_progress(
-    output: &Output,
-    imports: &[RemoteImport],
-    checkout: Option<&RemoteImport>,
-    startup: &super::status::autosync::Startup,
-) {
+fn render_progress(output: &Output, prepared: &PreparedSwitch) {
     output.status("switching lanes");
-    let prepared = prepared_import_count(startup);
-    for import in imports
+    let count = prepared_import_count(&prepared.startup);
+    for import in prepared.imports
         .iter()
-        .take(prepared)
+        .take(count)
         .filter(|import| import.requested > 0)
     {
         import.render(output);
     }
-    if let Some(warning) = startup.build_progress
+    if let Some(warning) = prepared.startup.build_progress
         .as_ref()
         .and_then(|progress| progress["switchRemoteWarning"].as_str())
         .map(str::trim)
@@ -214,19 +207,20 @@ fn render_progress(
     {
         output.warning(warning);
     }
-    workspace_command::checkout_lifecycle::loaded(startup);
-    for import in imports
+    workspace_command::checkout_lifecycle::loaded(&prepared.startup);
+    for import in prepared.imports
         .iter()
-        .skip(prepared)
+        .skip(count)
         .filter(|import| import.requested > 0)
     {
         import.render(output);
     }
-    if let Some(checkout) = checkout {
+    if let Some(checkout) = &prepared.checkout_import {
         checkout.render(output);
     }
 }
 
+#[inline]
 fn prepared_import_count(startup: &super::status::autosync::Startup) -> usize {
     startup.build_progress
         .as_ref()

@@ -5,6 +5,7 @@ use serde_json::Value;
 use std::io;
 
 /// `array.join(', ')` of strings.
+#[inline]
 pub(super) fn join(data: &Value) -> io::Result<String> {
     let items = array(Some(data), "issue data")?;
     if items.is_empty() {
@@ -18,6 +19,7 @@ pub(super) fn join(data: &Value) -> io::Result<String> {
 }
 
 /// `componentIssueToString`: arrays joined, strings as they are.
+#[inline]
 pub(super) fn list_or_text(value: &Value) -> io::Result<String> {
     match value {
         Value::Array(_) => join(value),
@@ -25,6 +27,7 @@ pub(super) fn list_or_text(value: &Value) -> io::Result<String> {
     }
 }
 
+#[inline]
 fn item_text(value: &Value) -> io::Result<&str> {
     if let Some(object) = value.as_object()
         && let Some(found) =

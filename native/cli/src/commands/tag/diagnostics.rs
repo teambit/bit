@@ -54,12 +54,8 @@ pub(super) fn diagnose(
 
 fn main_file_removed(root: &Path, chalk: Chalk) -> io::Result<Option<io::Error>> {
     let raw = fs::read(root.join(".bitmap"))?;
-    let Ok(bitmap) = bit_object_import::parse_jsonc(&raw) else {
-        return Ok(None);
-    };
-    let Some(entries) = bitmap.as_object() else {
-        return Ok(None);
-    };
+    let Ok(bitmap) = bit_object_import::parse_jsonc(&raw) else { return Ok(None) };
+    let Some(entries) = bitmap.as_object() else { return Ok(None) };
     let default_scope = workspace_default_scope(root);
     for (key, value) in entries {
         if !entry_missing_main(root, &bitmap, key, value)? {
@@ -70,6 +66,7 @@ fn main_file_removed(root: &Path, chalk: Chalk) -> io::Result<Option<io::Error>>
     Ok(None)
 }
 
+#[inline]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
@@ -86,9 +83,7 @@ fn entry_missing_main(root: &Path, bitmap: &Value, key: &str, value: &Value) -> 
     {
         return Ok(false);
     }
-    let Some(root_dir) = non_empty(&value["rootDir"]) else {
-        return Ok(false);
-    };
+    let Some(root_dir) = non_empty(&value["rootDir"]) else { return Ok(false) };
     let main_file = value["mainFile"].as_str().map_or("", str::trim);
     let main_missing = main_file.is_empty()
         || !root
@@ -140,12 +135,14 @@ fn format_main_removed(
     ))
 }
 
+#[inline]
 fn workspace_default_scope(root: &Path) -> Option<String> {
     let raw = fs::read(root.join("workspace.jsonc")).ok()?;
     let config = bit_object_import::parse_jsonc(&raw).ok()?;
     crate::commands::aspect::workspace_default_scope(&config).ok()
 }
 
+#[inline]
 fn existing_version_error(context: &Value, options: &Options) -> Option<io::Error> {
     let targets = context["targets"].as_array()?;
     let models = context["models"].as_array()?;
@@ -201,6 +198,7 @@ fn requested_exact_version<'a>(
     options.release.exact_version.as_deref()
 }
 
+#[inline]
 fn matches_patterns(identity: &str, name: &str, patterns: &[String]) -> bool {
     if patterns.is_empty() {
         return true;
@@ -213,6 +211,7 @@ fn matches_patterns(identity: &str, name: &str, patterns: &[String]) -> bool {
         })
 }
 
+#[inline]
 fn matches_single_pattern(identity: &str, name: &str, pattern: &str) -> bool {
     let trimmed = pattern.trim();
     trimmed == "*"

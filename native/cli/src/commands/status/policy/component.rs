@@ -17,6 +17,7 @@ pub(super) struct Policy {
     pub(super) env_own: Map<String, Value>,
 }
 
+#[inline]
 pub(super) fn matches_aspect(entry: &Value, id: &str) -> bool {
     crate::commands::update_cmd::matches_aspect(entry, id)
 }
@@ -69,6 +70,7 @@ impl Policy {
         Self { manual, automatic, env_own }
     }
 
+    #[inline]
     pub(super) fn overrides(&self) -> Value {
         let mut value = Map::new();
         for (field, map) in FIELDS.iter().zip(&self.manual) {
@@ -80,6 +82,7 @@ impl Policy {
     }
 }
 
+#[inline]
 pub(super) fn automatic(raw: &Value) -> io::Result<Fields> {
     let mut fields = Fields::default();
     for entry in variant(raw, None)? {
@@ -90,6 +93,7 @@ pub(super) fn automatic(raw: &Value) -> io::Result<Fields> {
     Ok(fields)
 }
 
+#[inline]
 fn default_environment() -> Value {
     let dev: Map<String, Value> = NODE_DEV_DEPENDENCIES
         .iter()
@@ -201,17 +205,20 @@ fn entry(name: &str, value: Option<&Value>, field: usize, force: bool) -> io::Re
     Ok(Entry { name: name.to_string(), version: version.to_string(), field, force })
 }
 
+#[inline]
 fn merge(mut entries: Vec<Entry>) -> Vec<Entry> {
     entries.reverse();
     unique(entries)
 }
 
+#[inline]
 fn unique(mut entries: Vec<Entry>) -> Vec<Entry> {
     let mut seen = HashSet::with_capacity(entries.len());
     entries.retain(|entry| seen.insert((entry.name.clone(), entry.field)));
     entries
 }
 
+#[inline]
 fn manifest(entries: &[Entry]) -> Map<String, Value> {
     entries
         .iter()

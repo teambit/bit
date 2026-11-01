@@ -27,6 +27,7 @@ pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> 
     }
     Ok(())
 }
+#[inline]
 fn validate_sources(directory: &Path, component: &Component) -> io::Result<()> {
     for file in &component.files {
         let path = file["absolutePath"]
@@ -42,6 +43,7 @@ fn validate_sources(directory: &Path, component: &Component) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn check(root: &Path, path: &Path) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(|_| invalid("tester source root"))?;
     let mut current = root.to_path_buf();
@@ -68,6 +70,7 @@ fn reject_symlinks(directory: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn has_glob_metacharacters(directory: &Path) -> bool {
     directory
         .to_string_lossy()
@@ -75,6 +78,7 @@ fn has_glob_metacharacters(directory: &Path) -> bool {
         .any(|character| "*?[]{}()!".contains(character))
 }
 
+#[inline]
 fn overlaps(left: &Path, right: &Path) -> bool {
     left.starts_with(right) || right.starts_with(left)
 }

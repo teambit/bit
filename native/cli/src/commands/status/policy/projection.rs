@@ -39,6 +39,7 @@ pub(super) fn extensions(
         .collect()
 }
 
+#[inline]
 fn core_aspects() -> io::Result<&'static [String]> {
     static CORE: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
     if let Some(core) = CORE.get() {
@@ -164,6 +165,7 @@ fn component_id(target: &Value) -> io::Result<ComponentId> {
     })
 }
 
+#[inline]
 fn row(entry: aspects::AspectEntry) -> io::Result<Value> {
     if entry.core {
         let bare = bit_install::config::aspect_id_without_version(&entry.id);
@@ -179,6 +181,7 @@ fn row(entry: aspects::AspectEntry) -> io::Result<Value> {
     Ok(Value::Object(row))
 }
 
+#[inline]
 pub(super) fn extension_id(id: &str) -> io::Result<Value> {
     let id = id.trim();
     let (identity, version) = id

@@ -3,16 +3,22 @@
 use serde_json::{Map, Value};
 use std::io;
 
+#[must_use]
+#[inline]
 pub fn decline(reason: impl Into<String>) -> io::Error {
     io::Error::other(reason.into())
 }
 
 /// `value ?? fallback` sees `null` and `undefined` alike.
+#[must_use]
+#[inline]
 pub fn nullish(value: Option<&Value>) -> Option<&Value> {
     value.filter(|value| !value.is_null())
 }
 
 /// JavaScript truthiness.
+#[must_use]
+#[inline]
 pub fn truthy(value: Option<&Value>) -> bool {
     match value {
         None | Some(Value::Null) => false,
@@ -28,12 +34,14 @@ pub fn truthy(value: Option<&Value>) -> bool {
 /// An array index key, which JavaScript objects order before every other
 /// key. Values keyed that way would serialize in a different order than
 /// they were inserted, so they decline.
+#[inline]
 fn index_like(key: &str) -> bool {
     key == "0"
         || (!key.starts_with('0') && !key.is_empty() && key.bytes().all(|b| b.is_ascii_digit()))
 }
 
 /// An object whose keys keep their insertion order in JavaScript too.
+#[inline]
 pub fn object(value: &Value) -> io::Result<&Map<String, Value>> {
     let map = value.as_object().ok_or_else(|| decline("status expected an object"))?;
     if map.keys().any(|key| index_like(key)) {
@@ -57,6 +65,7 @@ pub fn string_map(value: Option<&Value>) -> io::Result<Map<String, Value>> {
 }
 
 /// `Object.assign(target, source)`: existing keys keep their position.
+#[inline]
 pub fn assign(target: &mut Map<String, Value>, source: &Map<String, Value>) {
     for (key, value) in source {
         target.insert(key.clone(), value.clone());
@@ -64,6 +73,7 @@ pub fn assign(target: &mut Map<String, Value>, source: &Map<String, Value>) {
 }
 
 /// `value ?? []` for an array field; anything else declines.
+#[inline]
 pub fn array<'v>(value: Option<&'v Value>, what: &str) -> io::Result<&'v [Value]> {
     match nullish(value) {
         None => Ok(&[]),
@@ -73,6 +83,7 @@ pub fn array<'v>(value: Option<&'v Value>, what: &str) -> io::Result<&'v [Value]
 }
 
 /// `String(value)` for the strings and absent values identities hold.
+#[inline]
 pub fn text(value: Option<&Value>) -> io::Result<&str> {
     match value {
         Some(Value::String(text)) => Ok(text),
@@ -111,6 +122,7 @@ fn base_target_identity(target: &Value) -> io::Result<String> {
     }
 }
 
+#[inline]
 fn non_empty_str(value: Option<&Value>) -> Option<&str> {
     value
         .and_then(Value::as_str)
@@ -119,6 +131,8 @@ fn non_empty_str(value: Option<&Value>) -> Option<&str> {
 }
 
 /// `identity.split('@')[0]`.
+#[must_use]
+#[inline]
 pub fn without_version(identity: &str) -> &str {
     let identity = identity.trim();
     identity

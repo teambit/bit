@@ -19,6 +19,7 @@ pub fn snapshot<'v>(values: impl IntoIterator<Item = &'v str>) -> Option<Value> 
     Some(Value::Object(result))
 }
 
+#[inline]
 fn snapshot_entry(text: &str) -> Value {
     let Some(version) = npm::parse(text.trim()) else { return json!({}) };
     json!({
@@ -29,6 +30,7 @@ fn snapshot_entry(text: &str) -> Value {
 
 /// `dependencyGrammar(values)`: `valid`, `validRange` and `coerce` of every
 /// string anywhere in `values`.
+#[must_use]
 pub fn dependency(values: &Value) -> Value {
     let mut strings = Vec::new();
     visit(values, &mut strings);
@@ -52,6 +54,7 @@ pub fn dependency(values: &Value) -> Value {
     Value::Object(result)
 }
 
+#[inline]
 fn visit<'v>(value: &'v Value, strings: &mut Vec<&'v str>) {
     match value {
         Value::String(text) => strings.push(text),
@@ -64,6 +67,7 @@ fn visit<'v>(value: &'v Value, strings: &mut Vec<&'v str>) {
 /// `normalizeSemverInputs` of `@teambit/config-merger` over every string in
 /// `values`: the parsed version, the comparator sets and the minimum of
 /// each. `None` for values outside the ported grammar.
+#[must_use]
 pub fn config_inputs(values: &Value) -> Option<Value> {
     let mut strings = Vec::new();
     visit(values, &mut strings);
@@ -94,6 +98,7 @@ pub fn config_inputs(values: &Value) -> Option<Value> {
 }
 
 /// One comparator set: each comparator's operator and version parts.
+#[inline]
 fn comparator_set(set: &[npm::Comparator]) -> Value {
     let comparators = set
         .iter()
@@ -107,6 +112,7 @@ fn comparator_set(set: &[npm::Comparator]) -> Value {
     Value::Array(comparators.collect())
 }
 
+#[inline]
 fn config_input(text: &str) -> Option<Value> {
     let text = text.trim();
     let mut input = Map::new();
@@ -129,6 +135,7 @@ fn config_input(text: &str) -> Option<Value> {
 }
 
 /// `{ major, minor, patch, prerelease }` of a parsed version.
+#[inline]
 fn version_parts(version: &npm::Version) -> Value {
     let prerelease: Vec<Value> = version.prerelease
         .iter()

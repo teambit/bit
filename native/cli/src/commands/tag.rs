@@ -67,6 +67,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_workspace(&root, args, &options, &workflow, &policy)
 }
 
+#[inline]
 fn is_ci() -> bool {
     super::scope_rename::ci_active()
 }
@@ -109,6 +110,7 @@ fn emit_validate_error(args: &[OsString], warn: bool, err_msg: &str) -> io::Resu
     })
 }
 
+#[inline]
 fn editor_conflict(
     options: &Options,
     workflow: &resolve::workflow::Workflow,
@@ -268,6 +270,7 @@ fn plan_tag(
     Ok((planned, report, progress))
 }
 
+#[inline]
 fn render_progress(output: &Output, progress: Option<&Progress>, mode: &Mode, events: bool) {
     if let Some(progress) = progress {
         if events {
@@ -283,6 +286,7 @@ fn render_progress(output: &Output, progress: Option<&Progress>, mode: &Mode, ev
 }
 
 /// What `bit tag` prints before the progress lines.
+#[inline]
 fn warnings(output: &Output, without_message: bool, soft: bool) {
     if without_message {
         output.warning(MESSAGE_WARNING);
@@ -312,6 +316,8 @@ fn failure(
 
 impl Options {
     /// `options` of `commandTagPrepare`, as `JSON.stringify` writes them.
+    #[must_use]
+    #[inline]
     pub fn request(&self) -> Value {
         let mut options = json!({});
         if let Some(message) = &self.message {
@@ -324,6 +330,8 @@ impl Options {
     }
 
     /// `tagOptions` of `commandTagPrepare`.
+    #[must_use]
+    #[inline]
     pub fn tag_options(&self) -> Value {
         let release = &self.release;
         let mut options =
@@ -350,6 +358,8 @@ impl Options {
     }
 
     /// Return the first `<pattern>@<version>` suffix that is not a valid semver string.
+    #[must_use]
+    #[inline]
     pub fn invalid_pattern_version(&self) -> Option<&str> {
         for pattern in &self.selection.patterns {
             if let Some((base, ver)) = pattern.rsplit_once('@') {

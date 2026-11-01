@@ -29,7 +29,7 @@ const ISSUES: &str = "teambit.component/issues";
 const SPACE: &str = "          ";
 
 /// One captured component: its full identity and its detection results.
-#[derive(Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Component {
     /// Per-component `IssuesMain` settings from the fully merged aspect config.
     pub ignored: Vec<String>,
@@ -40,6 +40,7 @@ pub struct Component {
 }
 
 /// Validate a public component-issue class name against the released native catalog.
+#[inline]
 pub(in crate::commands) fn validate_name(name: &str) -> io::Result<()> {
     Issue::parse(name).map(|_| ())
 }
@@ -261,6 +262,7 @@ fn ignored(context: &Value) -> io::Result<HashSet<&str>> {
 }
 
 /// Model head metadata was captured and verified by the Rust repository reader.
+#[inline]
 pub(super) fn ordinary_model_heads(context: &Value) -> io::Result<bool> {
     array(context.get("models"), "models")?;
     array(context.get("versions"), "versions")?;
@@ -309,6 +311,7 @@ fn runtime_module_path(
 }
 
 /// `fs.promises.access`: missing paths are `false`, other errors decline.
+#[inline]
 fn exists(path: &Path) -> io::Result<bool> {
     match path.metadata() {
         Ok(_) => Ok(true),
@@ -345,6 +348,7 @@ fn deserialize(value: &Value, ignored: &HashSet<&str>) -> io::Result<Vec<(Issue,
 }
 
 /// `issues.getOrCreate(Class).data = data`.
+#[inline]
 fn set(issues: &mut Vec<(Issue, Value)>, kind: Issue, data: Value) {
     match issues
         .iter_mut()

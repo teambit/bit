@@ -60,6 +60,7 @@ fn order(root: &Path, ids: &[String], host: &mut Option<Host>) -> io::Result<Vec
     permutation(&result, ids.len())
 }
 
+#[inline]
 fn permutation(result: &Value, count: usize) -> io::Result<Vec<usize>> {
     let result = result.as_array().ok_or_else(|| decline("locale presentation order"))?;
     let order = result
@@ -84,6 +85,7 @@ fn permutation(result: &Value, count: usize) -> io::Result<Vec<usize>> {
     Ok(order)
 }
 
+#[inline]
 fn sort_id(row: &Value) -> io::Result<String> {
     if let Value::String(id) = row {
         let trimmed = id.trim();

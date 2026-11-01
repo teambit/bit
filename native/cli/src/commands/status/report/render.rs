@@ -33,6 +33,7 @@ impl Status<'_> {
     }
 
     /// `getWorkspaceIssuesOutput()`.
+    #[inline]
     pub(super) fn workspace_issues(&self) -> io::Result<String> {
         let issues: Vec<&str> = ids(self.result, "workspaceIssues")?
             .into_iter()
@@ -46,6 +47,7 @@ impl Status<'_> {
     }
 
     /// The report without collapsed sections.
+    #[inline]
     pub(super) fn joined(
         &self,
         sections: &[String],
@@ -124,6 +126,7 @@ impl Status<'_> {
     }
 
     /// The clean workspace message.
+    #[inline]
     pub(super) fn clean(&self) -> String {
         let chalk = self.format.chalk;
         let symbol = chalk.green(if cfg!(windows) { "\u{2713}" } else { "\u{2714}" });
@@ -156,6 +159,7 @@ fn scope_counts<'i>(ids: &[&'i str]) -> io::Result<Vec<(&'i str, usize)>> {
     Ok(counts)
 }
 
+#[inline]
 fn history_identity(row: &Value) -> Option<&str> {
     ["identity", "id"]
         .into_iter()

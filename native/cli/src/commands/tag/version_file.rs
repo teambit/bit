@@ -63,6 +63,7 @@ fn parse(content: &str) -> io::Result<Value> {
     Ok(json!({"entries":entries,"default":default}))
 }
 
+#[inline]
 pub(super) fn entered_versions(data: &Value) -> Vec<String> {
     data["entries"]
         .as_array()

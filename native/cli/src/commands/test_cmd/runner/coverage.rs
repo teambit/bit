@@ -8,6 +8,7 @@ use std::{
 
 const METRICS: [&str; 4] = ["lines", "functions", "statements", "branches"];
 
+#[inline]
 fn read(root: &Path, directory: &str, main: &str) -> io::Result<Value> {
     let component =
         Coverage { directory: directory.trim().to_owned(), main: main.trim().to_owned() };
@@ -92,6 +93,7 @@ fn totals(files: &[Value]) -> Option<Value> {
     Some(totals)
 }
 
+#[inline]
 pub(super) fn empty() -> Value {
     json!({"files":[],"total":totals(&[]).unwrap_or_default()})
 }
@@ -133,6 +135,7 @@ impl Coverage {
             .ok_or_else(|| io::Error::other("tester coverage component"))?;
         Ok(Self { directory: directory.to_owned(), main: entry.main_file.trim().to_owned() })
     }
+    #[inline]
     pub(super) fn collect(&self, root: &Path, result: &mut Value) {
         if result.get("results").is_none() {
             return;
@@ -142,6 +145,7 @@ impl Coverage {
             Err(error) => record_coverage_error(result, &error),
         }
     }
+    #[inline]
     pub(super) fn collect_many(components: &[Self], root: &Path, result: &mut Value) {
         if result.get("results").is_none() {
             return;
@@ -153,6 +157,7 @@ impl Coverage {
     }
 }
 
+#[inline]
 fn record_coverage_error(result: &mut Value, error: &io::Error) {
     use crate::commands::workspace_command::filesystem_error;
     result["errorMessage"] = json!(filesystem_error::description(error));
@@ -162,6 +167,7 @@ fn record_coverage_error(result: &mut Value, error: &io::Error) {
     }
 }
 
+#[inline]
 fn metrics_data(metrics: &Value) -> Option<Value> {
     let mut data = json!({});
     for metric in METRICS {

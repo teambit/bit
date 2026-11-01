@@ -37,6 +37,7 @@ pub(super) fn filter_graph_for_cycles(
         .collect()
 }
 
+#[inline]
 fn has_unresolved_deps(root: &Path, component: &Component) -> bool {
     let package_name = component.package_name.trim();
     if !package_name.is_empty()
@@ -68,6 +69,7 @@ fn has_unresolved_deps(root: &Path, component: &Component) -> bool {
 
 /// Components in a dependency cycle, self-dependencies included: the
 /// members of strongly connected components larger than one node.
+#[must_use]
 pub fn cyclic(components: &[Component]) -> HashSet<&str> {
     let mut index: HashMap<&str, usize> = HashMap::with_capacity(components.len() * 2);
     for (position, component) in components.iter().enumerate() {
@@ -111,6 +113,7 @@ pub fn cyclic(components: &[Component]) -> HashSet<&str> {
         .collect()
 }
 
+#[inline]
 fn strip_version(id: &str) -> &str {
     match id.rfind('@') {
         Some(index) if index > 0 && !id[index + 1..].contains('/') => id[..index].trim(),
@@ -129,6 +132,7 @@ struct Tarjan<'e> {
 }
 
 impl<'e> Tarjan<'e> {
+    #[inline]
     fn new(edges: &'e [Vec<usize>]) -> Self {
         let size = edges.len();
         Self {
@@ -162,6 +166,7 @@ impl<'e> Tarjan<'e> {
 
     /// The edge `node -> next`: descend into an unvisited node, or lower
     /// `node`'s link through one still on the stack.
+    #[inline]
     fn follow(&mut self, node: usize, next: usize, work: &mut Vec<(usize, usize)>) {
         match self.index[next] {
             None => {
@@ -174,6 +179,7 @@ impl<'e> Tarjan<'e> {
     }
 
     /// All of `node`'s edges are done: pass its link up, close its component.
+    #[inline]
     fn finish(&mut self, node: usize, parent: Option<usize>) {
         if let Some(parent) = parent {
             self.low[parent] = self.low[parent].min(self.low[node]);
@@ -183,6 +189,7 @@ impl<'e> Tarjan<'e> {
         }
     }
 
+    #[inline]
     fn open(&mut self, node: usize) {
         self.index[node] = Some(self.next);
         self.low[node] = self.next;
@@ -191,6 +198,7 @@ impl<'e> Tarjan<'e> {
         self.on_stack[node] = true;
     }
 
+    #[inline]
     fn close(&mut self, root: usize) {
         let mut component = Vec::new();
         while let Some(node) = self.stack.pop() {

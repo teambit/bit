@@ -48,6 +48,7 @@ impl Assets {
     }
 }
 
+#[inline]
 fn build_payloads(package: &Path) -> io::Result<[(&'static str, String); 7]> {
     let prefix = format!(
         "const installation = require('node:module').createRequire({});\n",
@@ -56,6 +57,7 @@ fn build_payloads(package: &Path) -> io::Result<[(&'static str, String); 7]> {
     Ok(FILES.map(|(name, source)| (name.trim(), format!("{prefix}{source}"))))
 }
 
+#[inline]
 fn payload_hash(payloads: &[(&str, String)]) -> String {
     let mut hash = Sha1::new();
     for (name, source) in payloads {
@@ -66,6 +68,7 @@ fn payload_hash(payloads: &[(&str, String)]) -> String {
     }
     format!("{:x}", hash.finalize())
 }
+#[inline]
 fn validate(root: &Path, files: &[(&str, String)]) -> io::Result<()> {
     if !fs::symlink_metadata(root)?.file_type().is_dir() {
         return Err(io::Error::other("tester assets directory"));

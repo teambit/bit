@@ -23,15 +23,19 @@ pub struct Adoption {
     pub get_all: bool,
 }
 
+#[must_use]
+#[inline]
 pub fn parse(args: &[&str]) -> Option<Options> {
     parse_mode(args, false)
 }
+#[must_use]
+#[inline]
 pub(in crate::commands) fn parse_import(args: &[&str]) -> Option<Options> {
     parse_mode(args, true)
 }
 fn parse_mode(args: &[&str], import: bool) -> Option<Options> {
     let mut options = Options::default();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(args.len());
     let mut values = args.iter().copied();
     while let Some(value) = values.next() {
         if value == "--" {
@@ -60,6 +64,7 @@ fn parse_mode(args: &[&str], import: bool) -> Option<Options> {
     }
     (!options.lane.is_empty()).then_some(options)
 }
+#[inline]
 fn consume_trailing_lanes<'a>(
     values: impl Iterator<Item = &'a str>,
     options: &mut Options,
@@ -69,6 +74,7 @@ fn consume_trailing_lanes<'a>(
     }
     Some(())
 }
+#[inline]
 fn lane(options: &mut Options, value: &str) -> Option<()> {
     let value = value.trim();
     if !options.lane.is_empty() || !valid_lane(value) {
@@ -127,6 +133,7 @@ fn switch_inline_flag(options: &mut Options, name: &str, val: &str) -> Option<&'
         _ => None,
     }
 }
+#[inline]
 fn set_inline_bool(slot: &mut bool, val: &str, key: &'static str) -> Option<&'static str> {
     let enabled = match val {
         "true" => true,
@@ -135,6 +142,7 @@ fn set_inline_bool(slot: &mut bool, val: &str, key: &'static str) -> Option<&'st
     };
     Some(set(slot, enabled, key))
 }
+#[inline]
 fn set_inline_str(slot: &mut Option<String>, val: &str, key: &'static str) -> Option<&'static str> {
     let val = val
         .trim()
@@ -162,10 +170,12 @@ fn switch_flag<'a>(
         _ => return None,
     })
 }
+#[inline]
 fn set(slot: &mut bool, val: bool, key: &'static str) -> &'static str {
     *slot = val;
     key
 }
+#[inline]
 fn take<'a>(
     slot: &mut Option<String>,
     values: &mut impl Iterator<Item = &'a str>,
@@ -178,6 +188,7 @@ fn take<'a>(
     *slot = Some(value.to_owned());
     Some(key)
 }
+#[inline]
 fn valid_lane(lane: &str) -> bool {
     !lane.is_empty()
         && lane.len() <= 256
@@ -187,10 +198,13 @@ fn valid_lane(lane: &str) -> bool {
             .split('/')
             .all(|part| !part.is_empty() && part.bytes().all(lane_char))
 }
+#[inline]
 fn lane_char(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'$' | b'!')
 }
 impl Options {
+    #[must_use]
+    #[inline]
     pub fn request(&self) -> Value {
         json!({
             "lane": {"name":self.lane,"skipFetch":self.skip_fetch,
@@ -202,6 +216,7 @@ impl Options {
             "forceOurs":self.force_ours,"forceTheirs":self.force_theirs,
         })
     }
+    #[inline]
     pub(in crate::commands) fn preflight_error(&self, lane_import: bool) -> Option<&'static str> {
         if lane_import && self.force_ours && self.force_theirs {
             return Some("please use either --force-ours or --force-theirs, not both");
@@ -212,6 +227,7 @@ impl Options {
             && !(lane_import && (self.force_ours || self.force_theirs));
         invalid_strategy.then_some("merge must be one of the following: ours, theirs, manual")
     }
+    #[inline]
     pub(super) fn warnings(&self) -> Vec<String> {
         [(self.adoption.get_all, "get-all"), (self.adoption.head, "head")]
             .into_iter()

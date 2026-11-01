@@ -18,6 +18,7 @@ enum Inner {
     Stream(stream::Stream),
 }
 impl Session {
+    #[inline]
     pub(super) fn prepare(
         request: &Value,
         colors: bool,
@@ -31,6 +32,7 @@ impl Session {
         };
         Ok(Self { inner })
     }
+    #[inline]
     pub(super) fn run(&mut self) -> io::Result<Value> {
         match &mut self.inner {
             Inner::Quiet(session) => session.run(),
@@ -129,6 +131,7 @@ impl Quiet {
         serde_json::from_slice(&bytes).map(Some).map_err(io::Error::other)
     }
 
+    #[inline]
     fn has_stderr(&self) -> io::Result<bool> {
         Ok(self.errors.metadata()?.len() != 0)
     }
@@ -141,6 +144,7 @@ impl Drop for Quiet {
     }
 }
 
+#[inline]
 pub(super) fn is_blank_path(path: &std::path::Path) -> bool {
     path.as_os_str().is_empty()
         || path

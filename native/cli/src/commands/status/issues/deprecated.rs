@@ -8,6 +8,7 @@ use std::io;
 const DEPRECATION: &str = "teambit.component/deprecation";
 
 impl Checks<'_> {
+    #[inline]
     pub(super) fn deprecated_dependencies(&self, component: &Component) -> io::Result<Vec<String>> {
         if deprecated(self.context, &component.identity)? {
             return Ok(Vec::new());
@@ -57,6 +58,7 @@ fn deprecated(context: &Value, full_id: &str) -> io::Result<bool> {
     range_matches(model, full_id, &extension["config"])
 }
 
+#[inline]
 fn head_deprecation<'c>(
     context: &'c Value,
     model: &'c Value,

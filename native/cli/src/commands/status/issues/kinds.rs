@@ -28,6 +28,7 @@ pub(super) enum Issue {
 }
 
 impl Issue {
+    #[inline]
     pub(super) fn parse(name: &str) -> io::Result<Self> {
         let name = name.trim();
         Ok(match name {
@@ -50,6 +51,7 @@ impl Issue {
     }
 
     /// `type`, `description`, `solution` and `isTagBlocker` of the issue class.
+    #[inline]
     pub(super) const fn class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {
             Self::MissingPackages => (
@@ -75,6 +77,7 @@ impl Issue {
         }
     }
 
+    #[inline]
     const fn legacy_class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {
             Self::MissingManual => (
@@ -115,6 +118,7 @@ impl Issue {
         }
     }
 
+    #[inline]
     const fn deprecated_class() -> (&'static str, &'static str, &'static str, bool) {
         (
             "DeprecatedDependencies",
@@ -124,6 +128,7 @@ impl Issue {
         )
     }
 
+    #[inline]
     const fn pinned_class() -> (&'static str, &'static str, &'static str, bool) {
         (
             "PinnedDependencies",
@@ -133,6 +138,7 @@ impl Issue {
         )
     }
 
+    #[inline]
     const fn environment_class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {
             Self::NonLoadedEnv => {
@@ -155,6 +161,7 @@ impl Issue {
     }
 
     /// `issue.toObject()` plus `dataAsString`.
+    #[inline]
     pub(super) fn to_object(self, data: &Value) -> io::Result<Value> {
         let (kind, description, solution, blocker) = self.class();
         let text = self.data_to_string(data)?;
@@ -200,6 +207,7 @@ impl Issue {
     }
 }
 
+#[inline]
 fn format_file_map(files: &serde_json::Map<String, Value>) -> io::Result<String> {
     files
         .iter()

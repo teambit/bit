@@ -6,12 +6,14 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 
 impl Status<'_> {
+    #[inline]
     pub(super) fn during_merge_items(&self) -> std::io::Result<Vec<String>> {
         Ok(super::ids(self.result, "componentsDuringMergeState")?
             .iter()
             .map(|identity| self.item((identity, None), false, None, true))
             .collect())
     }
+    #[inline]
     pub(super) fn item_with_message(
         &self,
         id: &str,
@@ -25,6 +27,7 @@ impl Status<'_> {
     }
     /// `format(id, showIssues, undefined, localVersions, true, defaultSym)`:
     /// no status message and nothing soft-tagged. `warn` is the default symbol.
+    #[inline]
     pub(super) fn item(
         &self,
         id: (&str, Option<&str>),
@@ -35,6 +38,7 @@ impl Status<'_> {
         self.item_with_soft_tag(id, show_issues, local, warn, true)
     }
 
+    #[inline]
     pub(super) fn item_without_soft_tag(&self, id: (&str, Option<&str>)) -> String {
         self.item_with_soft_tag(id, false, None, false, false)
     }
@@ -69,6 +73,7 @@ impl Status<'_> {
         format!("{formatted} ... {label}{}", self.issues_text(with_issues.issues))
     }
 
+    #[inline]
     fn issue_label(&self, with_issues: &WithIssues<'_>, soft_tagged: bool) -> String {
         let label = if with_issues.tag_blocker() { FAILURE } else { WARNINGS };
         let label = if soft_tagged { format!("{label} (soft-tagged)") } else { label.to_string() };
@@ -80,6 +85,7 @@ impl Status<'_> {
     }
 
     /// `getSymbol()`: the issues' symbol, or the default one.
+    #[inline]
     fn symbol(&self, with_issues: Option<&WithIssues<'_>>, warn: bool) -> String {
         match with_issues {
             Some(row) if row.tag_blocker() => self.format.error_symbol(),
@@ -116,6 +122,7 @@ impl Status<'_> {
     }
 
     /// `formatIssues(issues)`: each issue's `outputForCLI`.
+    #[inline]
     pub(super) fn issues_text(&self, issues: &[Value]) -> String {
         let chalk = self.format.chalk;
         format!("       {}\n", issue_output(issues, chalk))
@@ -123,12 +130,14 @@ impl Status<'_> {
 }
 
 /// `isHash`: 40 hexadecimal characters.
+#[inline]
 fn is_hash(version: &str) -> bool {
     let trimmed = version.trim();
     trimmed.len() == 40 && trimmed.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 /// `ExternalEnvWithoutVersion.formatSolution` overrides the static solution.
+#[inline]
 fn solution(issue: &Value) -> String {
     if issue["type"] == "ExternalEnvWithoutVersion" {
         return format!(
@@ -144,6 +153,7 @@ fn solution(issue: &Value) -> String {
         .map_or_else(String::new, |solution| format!(" ({solution})"))
 }
 
+#[inline]
 fn display_id(value: &Value) -> String {
     if let Some(raw) = value.as_str() {
         return raw.trim().to_owned();

@@ -70,6 +70,7 @@ fn projected_extensions(policy: &Policy, output: &Value) -> io::Result<Value> {
 }
 
 /// Peer component metadata for the published `ConsumerComponent` adapter.
+#[inline]
 pub fn peer_metadata(state: &Value) -> io::Result<Value> {
     let entries = array(state.get("entries"), "peer dependency entries")?;
     let lifecycles = array(state.get("components"), "dependency lifecycles")?;
@@ -99,6 +100,7 @@ fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value
     rows.collect::<io::Result<Vec<_>>>().map(Value::Array)
 }
 
+#[inline]
 fn non_empty_truthy(val: &Value) -> bool {
     truthy(Some(val))
         && val
@@ -107,6 +109,7 @@ fn non_empty_truthy(val: &Value) -> bool {
 }
 
 /// `identityObject(value)`: `{ scope, name, version? }`.
+#[inline]
 fn identity_object(value: &str) -> io::Result<Value> {
     let value = value.trim();
     let (name, version) = value

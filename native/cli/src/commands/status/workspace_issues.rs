@@ -43,6 +43,7 @@ pub(super) fn config_error(root: &Path) -> Option<String> {
     invalid_top_level_key(obj).or_else(|| unknown_variant_harmony_aspect(obj))
 }
 
+#[inline]
 fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String> {
     let key = obj
         .keys()
@@ -58,6 +59,7 @@ fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String>
     Some(format!(r#"unable to parse the component-id "{key}" from the workspace.jsonc file"#))
 }
 
+#[inline]
 fn unknown_variant_harmony_aspect(obj: &serde_json::Map<String, Value>) -> Option<String> {
     let variants = obj
         .iter()
@@ -75,6 +77,7 @@ your workspace.jsonc has this component-id set in the "teambit.workspace/variant
     ))
 }
 
+#[inline]
 fn is_unknown_harmony_aspect(aspect_key: &str) -> bool {
     let bare = bit_install::config::aspect_id_without_version(aspect_key.trim());
     bare.starts_with("teambit.harmony/")
@@ -84,6 +87,7 @@ fn is_unknown_harmony_aspect(aspect_key: &str) -> bool {
             .any(|core_id| core_id == bare)
 }
 
+#[inline]
 fn is_variants_aspect_key(key: &str) -> bool {
     let trimmed = key.trim();
     trimmed == "teambit.workspace/variants" || trimmed.starts_with("teambit.workspace/variants@")

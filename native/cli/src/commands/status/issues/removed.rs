@@ -5,6 +5,7 @@ use serde_json::Value;
 use std::{collections::HashSet, io};
 
 impl Checks<'_> {
+    #[inline]
     pub(super) fn removed_dependencies(
         &self,
         component: &Component,
@@ -25,6 +26,7 @@ impl Checks<'_> {
     }
 }
 
+#[inline]
 fn missing_packages(rows: &[Value]) -> HashSet<&str> {
     rows.iter()
         .flat_map(|row| {

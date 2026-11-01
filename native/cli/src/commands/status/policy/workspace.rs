@@ -55,6 +55,7 @@ fn root_policy(policy: &Value) -> io::Result<[Map<String, Value>; 2]> {
     }))
 }
 
+#[inline]
 fn configured_policy(context: &Value) -> io::Result<Option<&Value>> {
     let resolver = nullish(
         crate::commands::update_cmd::aspect_entry(&context["workspace"], RESOLVER)
@@ -67,6 +68,7 @@ fn configured_policy(context: &Value) -> io::Result<Option<&Value>> {
     Ok(Some(policy))
 }
 
+#[inline]
 fn is_valid_policy_version_entry(value: &Value) -> bool {
     let valid_preserve = value
         .get("preserve")

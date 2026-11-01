@@ -24,7 +24,7 @@ pub const COMMAND: Command = Command { name: "test", aliases: &["at"], run };
 
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub user_pattern: Vec<String>,
     pub all: bool,
@@ -134,6 +134,7 @@ fn validate_test_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option
     }
 }
 
+#[inline]
 fn effective_pattern(options: &Options) -> Option<String> {
     let scope = (!options.json)
         .then_some(options.scope.as_deref())
@@ -210,8 +211,9 @@ fn file_belongs_to_any_component(
         })
 }
 
+#[inline]
 fn empty_test_stdout(options: &Options, chalk: Chalk) -> String {
-    let mut lines = Vec::new();
+    let mut lines = Vec::with_capacity(3);
     if options.scope.is_some() {
         lines.push(chalk.yellow(
             r#"warning: "--scope" flag is deprecated, please use "<scope>/*" pattern instead"#,
@@ -234,7 +236,7 @@ otherwise, only new and modified components will be tested"#,
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut options = Options { user_pattern: Vec::new(), all: false, scope: None, json: false };
+    let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(token) = iter.next() {
         if token == "--" {
@@ -315,6 +317,7 @@ fn apply_inline_test_token(token: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn apply_combined_short(token: &str, options: &mut Options) -> bool {
     let Some(flags) = token.strip_prefix('-') else {
         return false;
@@ -337,6 +340,7 @@ fn apply_combined_short(token: &str, options: &mut Options) -> bool {
     true
 }
 
+#[inline]
 fn take_test_val(val: &str) -> Option<String> {
     let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())

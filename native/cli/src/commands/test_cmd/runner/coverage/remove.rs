@@ -21,6 +21,7 @@ pub(super) fn directory(path: &Path) -> io::Result<()> {
     ignore_not_found(fs::remove_dir(path), "rmdir", path)
 }
 
+#[inline]
 fn ignore_not_found(result: io::Result<()>, op: &'static str, path: &Path) -> io::Result<()> {
     match result {
         Ok(()) => Ok(()),
@@ -29,6 +30,7 @@ fn ignore_not_found(result: io::Result<()>, op: &'static str, path: &Path) -> io
     }
 }
 
+#[inline]
 fn remove_directory_entries(path: &Path) -> io::Result<()> {
     for entry in fs::read_dir(path).map_err(|error| failure(error, "scandir", path))? {
         let entry = entry.map_err(|error| failure(error, "scandir", path))?;

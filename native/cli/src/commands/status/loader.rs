@@ -3,7 +3,7 @@
 use bit_install::output::Output;
 use std::io;
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Progress {
     pub(super) startup_stdout: String,
     pub(super) load_stdout: String,
@@ -40,6 +40,7 @@ pub(super) fn render(
     Ok(())
 }
 
+#[inline]
 fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progress) {
     let mut printed_load_stdout = false;
     if loaded > 0 {
@@ -59,6 +60,7 @@ fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progres
     }
 }
 
+#[inline]
 fn forked_lane_reason(forked_id: Option<&str>) -> String {
     let mut parts = forked_id
         .into_iter()

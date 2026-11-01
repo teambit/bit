@@ -53,6 +53,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         workspace_command::execute_then_scope(root, args, "test", work)
     }
 }
+#[inline]
 pub(super) fn warnings(output: &bit_install::output::Output, options: &Options) {
     if options.json {
         return;
@@ -97,12 +98,14 @@ fn format_execution(
     }
     Ok(report)
 }
+#[inline]
 fn empty_test_message(chalk: crate::commands::color::Chalk) -> String {
     chalk.dim(
         "no components found to test.\nuse \"--unmodified\" flag to test all components or specify the ids to test.\notherwise, only new and modified components will be tested",
     )
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
 }

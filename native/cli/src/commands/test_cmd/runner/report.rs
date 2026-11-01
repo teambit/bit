@@ -74,6 +74,7 @@ fn file(row: &Value) -> io::Result<Value> {
     }
     Ok(result)
 }
+#[inline]
 fn test(row: &Value) -> Value {
     let mut value = json!({"ancestor":row["ancestorTitles"],"name":row["title"],"status":row["status"],"duration":row["duration"]});
     let message = row["formattedError"]
@@ -114,6 +115,7 @@ fn error(row: &Value) -> Option<Value> {
     }
     Some(value)
 }
+#[inline]
 fn environment_error(error: &Value, code: &Value) -> io::Result<Report> {
     Ok(Report {
         data: serde_json::to_string_pretty(&json!([{"data":{},"error":error}]))?,
@@ -127,6 +129,7 @@ fn environment_error(error: &Value, code: &Value) -> io::Result<Report> {
         details: None,
     })
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
 }

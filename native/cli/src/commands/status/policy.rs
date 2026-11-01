@@ -137,6 +137,7 @@ fn format_pinned_entry(
     Ok(Some(format!("{package}@{version}")))
 }
 
+#[inline]
 pub fn status_policy(context: &Value, target: &Value) -> io::Result<Policy> {
     projected_policy(context, target, None)
 }
@@ -216,6 +217,7 @@ pub(in crate::commands) fn environment_target(
     Ok(effective)
 }
 
+#[inline]
 fn model_packages(version: Option<&Value>) -> io::Result<[Map<String, Value>; 3]> {
     let field = |name: &str| string_map(version.and_then(|stored| stored.get(name)));
     Ok([field(PACKAGE_FIELDS[0])?, field(PACKAGE_FIELDS[1])?, field(PACKAGE_FIELDS[2])?])
@@ -251,6 +253,7 @@ impl Sources<'_> {
         Ok(input)
     }
 
+    #[inline]
     fn field(&self, name: &str) -> io::Result<Map<String, Value>> {
         string_map(self.version.and_then(|stored| stored.get(name)))
     }
@@ -344,6 +347,7 @@ fn model_components(version: Option<&Value>) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+#[inline]
 fn model_dependencies(version: Option<&Value>) -> io::Result<Vec<String>> {
     dependencies(version)?
         .into_iter()
@@ -351,6 +355,7 @@ fn model_dependencies(version: Option<&Value>) -> io::Result<Vec<String>> {
         .collect()
 }
 
+#[inline]
 fn bitmap_identities(context: &Value) -> io::Result<Vec<String>> {
     array(context.get("targets"), "targets")?
         .iter()
@@ -358,6 +363,7 @@ fn bitmap_identities(context: &Value) -> io::Result<Vec<String>> {
         .collect()
 }
 
+#[inline]
 pub(in crate::commands) fn export_package_config(
     context: &Value,
     target: &Value,

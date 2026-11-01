@@ -50,6 +50,7 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
     if sub == "log" { Some(Parsed::Log) } else { Some(Parsed::Unrecognized(sub.to_owned())) }
 }
 
+#[inline]
 fn start_history(args: &[OsString]) -> Option<History> {
     env::current_dir()
         .ok()
@@ -96,6 +97,7 @@ fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Ou
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn format_unrecognized(sub: &str, chalk: Chalk) -> String {
     let sub = sub.trim();
     chalk.red(&format!(

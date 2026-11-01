@@ -1,5 +1,6 @@
 use std::sync::LazyLock;
 
+#[inline]
 pub(super) fn attribute(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for character in value.chars().filter(|character| is_allowed_xml_char(*character)) {
@@ -16,6 +17,7 @@ pub(super) fn attribute(value: &str) -> String {
     }
     out
 }
+#[inline]
 pub(super) fn strip_ansi(value: &str) -> std::borrow::Cow<'_, str> {
     if !value.contains(['\x1b', '\u{9b}']) {
         return std::borrow::Cow::Borrowed(value);
@@ -31,6 +33,7 @@ pub(super) fn strip_ansi(value: &str) -> std::borrow::Cow<'_, str> {
     ANSI.replace_all(value, "")
 }
 
+#[inline]
 const fn is_allowed_xml_char(character: char) -> bool {
     matches!(character, '\t' | '\n' | '\r')
         || (character >= ' '
