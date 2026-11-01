@@ -110,3 +110,9 @@ fn checkout_and_revert_coerce_only_the_target_before_version_validation() {
         assert_eq!(parse_revert(&["scope/component", raw, "-x"]).unwrap().to, expected);
     }
 }
+
+#[test]
+fn empty_args_decline_for_both_checkout_and_revert() {
+    assert!(parse(&[]).is_none());
+    assert!(parse_revert(&[]).is_none());
+}

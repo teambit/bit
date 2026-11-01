@@ -64,3 +64,9 @@ fn computes_transitive_dependents_and_formats_report() {
     let empty = render_dependents_report("my-scope/comp3@0.0.1", "my-scope/comp3", &[], &[], chalk);
     assert!(empty.contains("no dependents found for my-scope/comp3@0.0.1"));
 }
+
+#[test]
+fn empty_dependency_graph_returns_no_dependents_for_any_id() {
+    let graph = DepGraph::default();
+    assert!(graph.dependents_of("my-scope/comp1@0.0.1").is_empty());
+}

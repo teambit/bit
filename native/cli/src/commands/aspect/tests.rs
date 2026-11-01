@@ -220,3 +220,8 @@ fn unsets_variant_inherited_aspect_and_parses_get_debug() {
         bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap")).unwrap()).unwrap();
     assert_eq!(bitmap["comp1"]["config"]["teambit.pkg/pkg"], json!("-"));
 }
+
+#[test]
+fn empty_args_returns_none_for_aspect_subcommand() {
+    assert_eq!(parse_subcommand(&[]), None);
+}

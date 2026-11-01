@@ -28,3 +28,9 @@ fn lists_all_25_component_issues_in_order() {
     assert!(text.contains("IGNORING ISSUES (Emergency Use Only)"));
     assert!(text.contains(r#""teambit.component/issues""#));
 }
+
+#[test]
+fn parses_explicit_json_boolean_assignment_for_component_issues() {
+    assert_eq!(parse(&["--json=true"]), Some(true));
+    assert_eq!(parse(&["--json=false"]), Some(false));
+}

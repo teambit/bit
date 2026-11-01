@@ -82,3 +82,10 @@ fn relative_paths_preserve_alias_distinctions_but_ignore_windows_case() {
     );
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn real_returns_nonexistent_path_unchanged() {
+    let directory = tempfile::tempdir().unwrap();
+    let missing = directory.path().join("does-not-exist");
+    assert_eq!(super::real(&missing).unwrap(), missing);
+}

@@ -1,4 +1,4 @@
-//! Unit tests for `check-types` option parsing and TypeScript type checking.
+//! Unit tests for `check-types` option parsing and `TypeScript` type checking.
 
 use super::{Options, checker::check_ts_content, is_empty_workspace, parse_options};
 use std::fs;
@@ -37,4 +37,9 @@ fn checks_ts_content_for_type_mismatches() {
     assert!(check_ts_content(good).is_empty());
     let permissive = "export function greet(name) {\n  return 'hello ' + name;\n}\n";
     assert!(check_ts_content(permissive).is_empty());
+}
+
+#[test]
+fn unknown_check_types_option_returns_none() {
+    assert_eq!(parse_options(&["--unknown-flag"]), None);
 }

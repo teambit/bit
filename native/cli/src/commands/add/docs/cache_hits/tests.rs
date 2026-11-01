@@ -103,3 +103,14 @@ fn disabled_cache_proven_source_never_reads_or_creates_cache_files() {
     assert_eq!(plan.proven.len(), 1);
     assert!(!cache.exists());
 }
+
+#[test]
+fn empty_component_list_produces_empty_docs_cache_plan() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let observed = observe(root, &[]).unwrap();
+    let plan = prepare(root, &root.join("docs"), &[], &observed, true);
+    assert!(plan.hits.is_empty());
+    assert!(plan.proven.is_empty());
+    assert!(plan.misses.is_empty());
+}

@@ -83,3 +83,11 @@ fn mixed_file_sizes_keep_successful_reads_on_the_worker_pool() {
         assert!(worker.is_some(), "an oversized batch share must not serialize the whole read");
     }
 }
+
+#[test]
+fn empty_file_batch_returns_empty_files_array_with_zero_completed() {
+    let output = response(&json!({"kind":"read", "files":[]}));
+    assert_eq!(output["failed"], false);
+    assert_eq!(output["completed"], 0);
+    assert_eq!(output["data"]["files"], json!([]));
+}

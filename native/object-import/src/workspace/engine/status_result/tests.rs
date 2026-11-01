@@ -125,3 +125,15 @@ fn pending_import_is_partitioned_from_other_invalid_components_in_input_order() 
     assert_eq!(output["autoTagPendingComponents"], json!([]));
     assert_eq!(output["modifiedComponents"], json!([]));
 }
+
+#[test]
+fn empty_targets_produce_clean_empty_status_sections() {
+    let mut input = fixture();
+    input["targets"] = json!([]);
+    input["models"] = json!([]);
+    input["histories"] = json!([]);
+    let output = result(input);
+    assert_eq!(output["modifiedComponents"], json!([]));
+    assert_eq!(output["stagedComponents"], json!([]));
+    assert_eq!(output["invalidComponents"], json!([]));
+}

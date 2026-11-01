@@ -23,3 +23,11 @@ fn expands_dollar_patterns() {
         "--- --- a/x\n|$|$1||+++ +++ b/x\n|$|$1|--- --- a/x\n|$|$1||| (L)\n+++ b/x\n (R)\n (L)\n+++ b/x\n",
     );
 }
+
+#[test]
+fn preserves_multiple_hunks_after_rewriting_file_headers() {
+    let diff = "diff --git a/f.js b/f.js\n--- a/f.js\n+++ b/f.js\n@@ -1 +1 @@\n-old1\n+new1\n@@ -10 +10 @@\n-old2\n+new2";
+    let formatted = format(diff, "0.0.1", "0.0.2", "src/f.js");
+    assert!(formatted.starts_with("--- src/f.js (0.0.1)\n+++ src/f.js (0.0.2)\n"));
+    assert!(formatted.contains("@@ -10 +10 @@\n-old2\n+new2"));
+}

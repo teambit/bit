@@ -25,3 +25,10 @@ fn env_uses_only_the_first_parameter_and_invalid_state_errors_are_canonical() {
         "byMultiParamState expect the state to be one of the following: ['env'], got other",
     );
 }
+
+#[test]
+fn valid_single_and_env_state_selectors_pass_validation() {
+    for selector in ["$new", "$modified", "$deprecated", "$env:scope/env"] {
+        assert!(validate(selector).is_ok(), "{selector}");
+    }
+}

@@ -131,3 +131,11 @@ fn bitmap_overlay_normalizes_by_logical_path() {
     request.targets[0].source_overlays.insert(".bitmap".into(), fixture.0.join("spooled"));
     assert_eq!(capture::all(&request, &pool).unwrap(), expected);
 }
+
+#[test]
+fn target_without_source_overlays_passes_overlay_validation() {
+    let fixture = Fixture::new();
+    let mut target = fixture.target();
+    target.source_overlays.clear();
+    capture::validate(&target).unwrap();
+}

@@ -162,3 +162,11 @@ fn malformed_acknowledgments_cannot_advance_a_valid_content_proof() {
         .unwrap();
     assert_eq!(retained.read_set, vec![before]);
 }
+
+#[test]
+fn import_version_none_removes_cached_component_row() {
+    let mut retained = Retained::default();
+    retained.rows.insert("acme/comp".into(), json!({"identity":"acme/comp","version":"0.0.1"}));
+    retained.import_version("acme/comp", None);
+    assert!(!retained.rows.contains_key("acme/comp"));
+}

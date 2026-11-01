@@ -25,3 +25,10 @@ fn leading_zero_unsafe_and_non_numeric_targets_keep_their_spelling() {
         assert_eq!(normalize(raw), raw, "{raw}");
     }
 }
+
+#[test]
+fn empty_and_plain_integer_targets_normalize_cleanly() {
+    assert_eq!(normalize(""), "");
+    assert_eq!(normalize("0"), "0");
+    assert_eq!(normalize("42"), "42");
+}

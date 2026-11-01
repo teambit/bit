@@ -72,3 +72,9 @@ fn clears_bare_scope_index_only() {
     assert_eq!(cleared, vec!["scope-index file"]);
     assert!(!scope.join("index.json").exists());
 }
+
+#[test]
+fn empty_cleared_list_formats_empty_report() {
+    let report = format_report(&[], Chalk::new(false));
+    assert!(report.is_empty());
+}

@@ -92,3 +92,10 @@ fn diagnoses_missing_lane_and_component_lookup_errors() {
         Some(r#"error: component "my-scope/ghost" was not found"#.into()),
     );
 }
+
+#[test]
+fn empty_debug_cat_args_return_none() {
+    assert_eq!(parse_object_options(&[]), None);
+    assert_eq!(parse_id_json_options(&[]), None);
+    assert_eq!(parse_single_id(&[]), None);
+}

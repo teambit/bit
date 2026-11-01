@@ -38,3 +38,9 @@ fn parse_lane_heads_supports_string_and_object_component_ids() {
     assert_eq!(heads.get("other.scope/ui/card"), Some(&hash_b));
     assert_eq!(heads.len(), 2);
 }
+
+#[test]
+fn empty_lane_components_array_produces_empty_head_map() {
+    let heads = parse_lane_heads(&json!({"components": []}), "lane.scope").unwrap();
+    assert!(heads.is_empty());
+}

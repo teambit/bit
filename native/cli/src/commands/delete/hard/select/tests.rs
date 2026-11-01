@@ -9,3 +9,9 @@ fn wildcard_matches_nested_namespaces_without_matching_other_prefixes() {
     assert!(!wildcard("ui/*", "other/button"));
     assert!(!wildcard("ui/button", "ui/buttons"));
 }
+
+#[test]
+fn exact_component_id_matches_itself_in_wildcard_helper() {
+    assert!(wildcard("ui/button", "ui/button"));
+    assert!(wildcard("**", "any/nested/component"));
+}

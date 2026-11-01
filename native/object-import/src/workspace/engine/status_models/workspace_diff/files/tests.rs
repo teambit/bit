@@ -37,3 +37,17 @@ fn patch_limit_is_shared_across_components_and_allows_empty_batches() {
     assert!(read(&request, vec![], None, &budgets, None).is_ok());
     assert!(read(&request, vec![source()], None, &budgets, None).is_err());
 }
+
+#[test]
+fn empty_file_batch_with_zero_output_budget_succeeds_without_git() {
+    let request = Request {
+        root: PathBuf::from("/"),
+        import_token: None,
+        targets: Vec::new(),
+        git_executable: "missing-git".into(),
+        color: false,
+        modified_only: true,
+    };
+    let budgets = Budgets { raw: Budget::new(0), packed: Budget::new(0), output: Budget::new(0) };
+    assert!(read(&request, Vec::new(), None, &budgets, None).unwrap().is_empty());
+}

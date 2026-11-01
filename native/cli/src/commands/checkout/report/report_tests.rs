@@ -111,3 +111,15 @@ fn reports_new_lane_components_separately_from_changed_components() {
     assert!(report.data.contains("new components on lane (not added) (1)\n  omit --workspace-only flag to add them\n   › scope/alpha@1234567890123456789012345678901234567890"));
     assert!(report.data.contains("New on lane (not added): 1"));
 }
+
+#[test]
+fn verbose_flag_keeps_skipped_components_in_main_output() {
+    let options = parse(&["reset", "-x", "--all", "--verbose"]).unwrap();
+    let result = json!({
+        "components": [],
+        "failedComponents": [{ "id": "my.scope/one", "unchangedMessage": "is up to date", "unchangedLegitimately": true }],
+    });
+    let report = format(&result, &options, Chalk::new(false)).unwrap();
+    assert!(report.details.is_none());
+    assert!(report.data.contains("checkout skipped (1)"));
+}

@@ -29,3 +29,13 @@ fn a_conflicting_bitmap_receipt_rejects_the_whole_advance() {
     assert!(retained.advance_bitmap(&before, &after).is_err());
     assert_eq!(retained.read_set, original);
 }
+
+#[test]
+fn advance_bitmap_updates_controls_even_when_read_set_is_empty() {
+    let before = json!({"path":"/workspace/.bitmap","hash":"before"});
+    let after = json!({"path":"/workspace/.bitmap","hash":"after"});
+    let mut retained = Retained::default();
+    retained.controls.insert("/workspace/.bitmap".into(), before.clone());
+    retained.advance_bitmap(&before, &after).unwrap();
+    assert_eq!(retained.controls["/workspace/.bitmap"], after);
+}

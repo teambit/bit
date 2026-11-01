@@ -17,3 +17,11 @@ fn context_includes_dependency_heads_once_and_rejects_invalid_heads() {
     assert!(include_heads(&[json!({"head":"bad"})], &mut Vec::new()).is_err());
     assert!(include_heads(&[json!({"deprecated":true})], &mut Vec::new()).is_ok());
 }
+
+#[test]
+fn empty_model_slice_leaves_existing_references_unchanged() {
+    let existing = "a".repeat(40);
+    let mut references = vec![existing.clone()];
+    include_heads(&[], &mut references).unwrap();
+    assert_eq!(references, vec![existing]);
+}

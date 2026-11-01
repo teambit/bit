@@ -117,3 +117,8 @@ fn extracts_filters_and_renders_builder_artifacts() {
     assert!(report.contains("TSCompiler (dist)"));
     assert!(report.contains("dist/index.js"));
 }
+
+#[test]
+fn parse_builder_artifacts_returns_empty_vec_when_builder_extension_is_absent() {
+    assert!(parse_builder_artifacts(&json!({"extensions": []})).is_empty());
+}

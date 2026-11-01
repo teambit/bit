@@ -80,3 +80,8 @@ fn builds_lane_json_entry_with_extra_fields() {
     assert_eq!(obj["components"][0]["id"]["_legacy"]["name"], "comp1");
     assert_eq!(obj["components"][0]["head"]["hash"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 }
+
+#[test]
+fn unknown_cat_scope_flag_returns_none() {
+    assert_eq!(parse_options(&["--unknown-flag"]), None);
+}

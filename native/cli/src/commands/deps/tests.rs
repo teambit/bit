@@ -257,3 +257,8 @@ fn sets_removes_gets_and_writes_dependencies() {
             .expect("parse pkg.json");
     assert_eq!(pkg_json["dependencies"]["lodash"], "3.3.1");
 }
+
+#[test]
+fn empty_deps_args_return_none() {
+    assert_eq!(parse_subcommand(&[]), None);
+}

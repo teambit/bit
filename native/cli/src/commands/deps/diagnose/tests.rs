@@ -22,3 +22,10 @@ fn groups_copies_by_version() {
     let rendered = render(&report, Chalk::new(false));
     assert!(rendered.contains("foo@1.0.0 — 2 copies"));
 }
+
+#[test]
+fn plain_version_without_peer_suffix_parses_with_none_suffix() {
+    let copy = parse_copy("2.4.0");
+    assert_eq!(copy.version, "2.4.0");
+    assert_eq!(copy.peer_suffix, None);
+}

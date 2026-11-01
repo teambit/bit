@@ -60,3 +60,12 @@ fn discovers_app_components_in_workspace() {
         Some(vec![("my-scope/comp1".into(), "sample-app".into())]),
     );
 }
+
+#[test]
+fn extract_app_name_handles_double_quotes_and_returns_none_when_absent() {
+    assert_eq!(
+        extract_app_name(r#"export default { name: "double-quoted-app" };"#),
+        Some("double-quoted-app".into()),
+    );
+    assert_eq!(extract_app_name("export const value = 1;"), None);
+}

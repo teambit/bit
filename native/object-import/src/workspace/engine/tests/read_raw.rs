@@ -90,3 +90,12 @@ fn binary_read_failures_emit_no_payload_or_completed_prefix() {
         assert!(bytes.is_empty());
     }
 }
+
+#[test]
+fn empty_binary_read_batch_emits_zero_bytes_and_empty_files_list() {
+    let (header, bytes) = raw(&json!({"kind":"read", "files":[], "binary":true}));
+    assert_eq!(header["failed"], false);
+    assert_eq!(header["completed"], 0);
+    assert_eq!(header["binaryBytes"], 0);
+    assert!(bytes.is_empty());
+}

@@ -119,3 +119,9 @@ fn invalid_bits_duplicate_keys_and_deep_metadata_decline() {
     }
     assert!(stringify(&deep, false).is_err());
 }
+
+#[test]
+fn top_level_undefined_stringifies_to_none_while_null_stringifies_to_literal() {
+    assert_eq!(stringify(&Value::Undefined, false).unwrap(), None);
+    assert_eq!(stringify(&Value::Null, false).unwrap().as_deref(), Some(b"null".as_slice()));
+}

@@ -89,3 +89,20 @@ fn validates_non_empty_dir_and_unscoped_lane() {
     .unwrap();
     assert!(invalid_name.contains("component names can only contain"), "{invalid_name}");
 }
+
+#[test]
+fn valid_scoped_clone_options_into_new_directory_pass_validation() {
+    let temp = tempfile::tempdir().unwrap();
+    let result = validate_outside_workspace(
+        temp.path(),
+        &Options {
+            id: "my-scope/ws".into(),
+            dir: Some("empty-target".into()),
+            lane: Some("my-scope/dev".into()),
+            remote: None,
+            skip_dependency_installation: true,
+        },
+    )
+    .unwrap();
+    assert!(result.is_none());
+}

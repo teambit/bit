@@ -35,3 +35,8 @@ fn renders_missing_and_persisted_command_details() {
         "details from \"bit tag\"  2026-10-20T12:00:00.000Z\n\ncomp1@0.0.1\ncomp2@0.0.1\n\n(these are details from the last command that provided them)",
     );
 }
+
+#[test]
+fn empty_args_slice_is_rejected_by_valid_args() {
+    assert!(!valid_args(&[]));
+}

@@ -60,3 +60,9 @@ fn detects_empty_build_workspace() {
     let list_opts = Options { list_tasks: Some("comp1".into()), ..Options::default() };
     assert!(!is_empty_build_workspace(temp.path(), &list_opts).unwrap());
 }
+
+#[test]
+fn reuse_capsules_allows_rewrite_and_reinstall_flags() {
+    let opts = parse_options(&["--reuse-capsules", "--rewrite", "--reinstall"]).unwrap();
+    assert_eq!(flag_error(&opts.capsules), None);
+}

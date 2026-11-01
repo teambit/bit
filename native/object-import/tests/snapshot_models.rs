@@ -53,3 +53,16 @@ process.stdout.write(JSON.stringify(rows));
         assert_eq!(hash, row["hash"].as_str().unwrap());
     }
 }
+
+#[test]
+fn component_and_history_identities_are_deterministic_from_scope_and_name() {
+    let fields = js_json::Value::Object(vec![
+        ("name".encode_utf16().collect(), js_json::Value::text("widget")),
+        ("scope".encode_utf16().collect(), js_json::Value::text("demo.scope")),
+    ]);
+    let comp = snapshot_projection::identity("Component", &fields, None).unwrap();
+    let hist = snapshot_projection::identity("VersionHistory", &fields, None).unwrap();
+    assert_eq!(comp.len(), 40);
+    assert_eq!(hist.len(), 40);
+    assert_ne!(comp, hist);
+}

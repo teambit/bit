@@ -101,3 +101,10 @@ fn rejects_what_json_parse_rejects() {
         assert!(parse(input).is_err(), "{input:?} should not parse");
     }
 }
+
+#[test]
+fn removing_nonexistent_top_level_key_returns_false_and_preserves_document() {
+    let mut document = Document::parse("{\n  \"a\": 1\n}").unwrap();
+    assert!(!document.remove(&["missing"]));
+    assert_eq!(document.value(), json!({ "a": 1 }));
+}

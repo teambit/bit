@@ -53,3 +53,8 @@ fn validates_compile_selectors_for_unscoped_and_invalid_ids() {
     let valid_missing = Options { components: vec!["my-scope/comp1".into()], ..Options::default() };
     assert_eq!(validate_compile_selectors(dir.path(), &valid_missing), None);
 }
+
+#[test]
+fn unknown_compile_flag_returns_none() {
+    assert_eq!(parse_options(&["--unknown-flag"]), None);
+}

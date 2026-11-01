@@ -18,3 +18,10 @@ fn validates_completion_options_and_renders_scripts() {
     assert!(zsh.contains("compdef _bit_yargs_completions bit"));
     assert!(zsh.ends_with("###-end-bit-completions-###\n"));
 }
+
+#[test]
+fn valid_options_accepts_explicit_no_color_boolean_values() {
+    assert!(valid_options(&["--no-color=true"]));
+    assert!(valid_options(&["--no-color=false"]));
+    assert!(!valid_options(&["positional"]));
+}

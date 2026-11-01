@@ -77,3 +77,9 @@ fn validate_accepts_scoped_string_dependency_ids_and_rejects_unscoped() {
     });
     assert!(validate(&unscoped).is_err());
 }
+
+#[test]
+fn non_object_version_value_is_rejected_by_validate_and_project() {
+    assert!(validate(&json!("not-an-object")).is_err());
+    assert!(project(&json!("not-an-object")).is_err());
+}

@@ -71,3 +71,10 @@ fn identities_preserve_preallocated_version_and_lane_hashes() {
     let scope = snapshot_projection::identity("Component", &fields, None).unwrap();
     assert_ne!(scope, snapshot_projection::identity("VersionHistory", &fields, None).unwrap());
 }
+
+#[test]
+fn unknown_object_kind_declines_snapshot_projection_and_identity() {
+    let fields = Value::Object(vec![]);
+    assert!(snapshot_projection::serialize("UnknownKind", &fields, false).is_err());
+    assert!(snapshot_projection::identity("UnknownKind", &fields, None).is_err());
+}

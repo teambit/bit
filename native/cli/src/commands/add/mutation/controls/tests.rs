@@ -35,3 +35,13 @@ fn a_control_symlink_cannot_replace_a_regular_preimage() {
     std::os::unix::fs::symlink(&target, &path).unwrap();
     assert!(refresh(&path).is_err());
 }
+
+#[test]
+fn empty_control_file_hashes_consistently_with_scope_read_proof() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("empty.json");
+    fs::write(&path, b"").unwrap();
+    let proof = refresh(&path).unwrap();
+    assert!(proof["hash"].is_string());
+    assert_eq!(proof, bit_install::policy::scope::read_proof(&path).unwrap());
+}

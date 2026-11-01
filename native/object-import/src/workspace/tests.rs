@@ -160,3 +160,14 @@ fn rejects_excessive_counts_paths_and_payloads_before_allocating_or_writing() {
     assert!(serve(&mut Cursor::new(bytes), &mut Vec::new()).is_err());
     assert!(!file.exists());
 }
+
+#[test]
+fn overwrites_existing_file_when_overwrite_flag_is_true() {
+    let directory = Directory::new();
+    let file = directory.0.join("file");
+    fs::write(&file, b"before").unwrap();
+    let result = response(request(&[(&file, true, b"after")]));
+    assert_eq!(result["completed"], 1);
+    assert_eq!(result["failed"], false);
+    assert_eq!(fs::read(file).unwrap(), b"after");
+}

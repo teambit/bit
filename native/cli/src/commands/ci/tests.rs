@@ -73,3 +73,8 @@ fn parses_ci_subcommands_and_validates_sync_flags() {
     .expect_err("lane with main should fail");
     assert!(err_multi.contains(r#"a lane argument ("feat") cannot be combined with --main"#));
 }
+
+#[test]
+fn valid_default_sync_options_pass_validation() {
+    assert!(validate_sync_options(&SyncOptions::default()).is_ok());
+}

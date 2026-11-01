@@ -29,3 +29,11 @@ fn chains_and_nests_like_chalk() {
         "\u{1b}[36m\u{1b}[32mok\u{1b}[39m\u{1b}[36m x\u{1b}[39m",
     );
 }
+
+#[test]
+fn disabled_chalk_returns_inputs_verbatim_across_all_helpers() {
+    let chalk = Chalk::new(false);
+    assert_eq!(chalk.yellow("warn"), "warn");
+    assert_eq!(chalk.cyan("info"), "info");
+    assert_eq!(chalk.bold_white("title"), "title");
+}

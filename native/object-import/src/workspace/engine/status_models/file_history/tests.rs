@@ -20,3 +20,11 @@ fn duplicate_version_file_paths_decline() {
     ]});
     assert!(file_hash(&version, "src/index.ts").is_err());
 }
+
+#[test]
+fn missing_file_in_version_returns_none_while_unique_match_returns_hash() {
+    let hash = "a".repeat(40);
+    let version = json!({"files":[{"relativePath":"src/index.ts","file":hash}]});
+    assert_eq!(file_hash(&version, "src/index.ts").unwrap().as_deref(), Some(hash.as_str()));
+    assert_eq!(file_hash(&version, "src/other.ts").unwrap(), None);
+}

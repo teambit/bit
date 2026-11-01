@@ -22,3 +22,8 @@ fn package_segments_use_platform_separators() {
     assert_eq!(path, Path::new("@scope").join("second"));
     assert_eq!(path.to_str().unwrap(), &format!("@scope{}second", std::path::MAIN_SEPARATOR));
 }
+
+#[test]
+fn permission_denied_error_does_not_qualify_for_mkdir_not_directory_translation() {
+    assert!(!mkdir_not_directory(&io::Error::from(io::ErrorKind::PermissionDenied)));
+}

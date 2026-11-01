@@ -96,3 +96,11 @@ fn callback_filesystem_messages_keep_the_callback_error_type() {
     assert_eq!(callback.output, "loaded");
     assert_eq!(colored.to_string(), message);
 }
+
+#[test]
+fn uncolored_chalk_leaves_warning_text_without_ansi_escapes() {
+    let chalk = Chalk::new(false);
+    let message = "warning: no files to add, the following files were ignored: a.js";
+    let colored = error(io::Error::new(io::ErrorKind::InvalidInput, message), chalk);
+    assert_eq!(colored.to_string(), message);
+}

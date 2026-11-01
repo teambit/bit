@@ -87,3 +87,8 @@ fn parses_capsule_subcommands() {
 fn matches_object_hash_short_sha1() {
     assert_eq!(object_hash_short("/tmp/test-ws"), "4d90daa1e");
 }
+
+#[test]
+fn unrecognized_capsule_subcommand_returns_none() {
+    assert_eq!(parse_subcommand(&["unknown-subcommand"]), None);
+}

@@ -18,3 +18,9 @@ fn detects_newlines_like_detect_newline() {
     assert_eq!(detect_newline("{\r\n}\r\n"), Some("\r\n"));
     assert_eq!(detect_newline("{\r\n}\n\n"), Some("\n"));
 }
+
+#[test]
+fn empty_input_has_empty_indent_and_no_newline() {
+    assert_eq!(detect_indent(""), "");
+    assert_eq!(detect_newline(""), None);
+}

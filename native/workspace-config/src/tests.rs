@@ -32,3 +32,9 @@ fn scope_json_rendering_has_four_space_indentation_without_a_final_newline() {
         b"{\n    \"name\": \"local.scope\",\n    \"lanes\": {\n        \"current\": \"main\"\n    }\n}",
     );
 }
+
+#[test]
+fn merge_layers_returns_empty_map_when_all_layers_are_empty_objects() {
+    let empty = json!({});
+    assert!(merge_layers(&empty, &empty, &empty).is_empty());
+}

@@ -73,3 +73,9 @@ fn head_ranges_and_snap_removals_apply_to_history_and_staged_undeprecation() {
     );
     assert_eq!(rows[2]["deleted"], true);
 }
+
+#[test]
+fn empty_model_versions_produce_empty_tag_map() {
+    let mapped = tags(&json!({})).unwrap();
+    assert!(mapped.is_empty());
+}

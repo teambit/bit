@@ -57,3 +57,11 @@ fn token_exhaustion_declines_without_reusing_an_observation_identity() {
     assert_eq!(state.retain(snapshot(0)), None);
     assert_eq!(state.records.len(), 1);
 }
+
+#[test]
+fn oversized_single_snapshot_beyond_byte_limit_is_rejected() {
+    let mut state = State::default();
+    assert_eq!(state.retain(snapshot(MAX_BYTES + 1)), None);
+    assert!(state.records.is_empty());
+    assert_eq!(state.bytes, 0);
+}

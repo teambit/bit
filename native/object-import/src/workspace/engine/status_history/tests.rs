@@ -75,3 +75,11 @@ fn commit_uses_canonical_utf16_header_and_preserves_history_fields() {
     assert!(header.ends_with(&format!(" {}", expected.encode_utf16().count())));
     assert_eq!(body, expected);
 }
+
+#[test]
+fn empty_plan_batch_validates_and_commits_zero_histories() {
+    let fixture = Fixture::new();
+    let request = fixture.request(&[]);
+    validate(&request).unwrap();
+    assert_eq!(commit(&request).unwrap().1["written"], 0);
+}

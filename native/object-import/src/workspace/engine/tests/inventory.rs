@@ -100,3 +100,9 @@ fn pending_inventory_count_is_bounded_and_cancellation_frees_capacity() {
     assert_eq!(request(&json!({"kind":"inventoryCancel","token":1}), &mut owner)["failed"], false);
     assert_eq!(begin(&directory, &mut owner)["failed"], false);
 }
+
+#[test]
+fn cancelling_unknown_inventory_token_reports_failure() {
+    let mut owner = State::default();
+    assert_eq!(request(&json!({"kind":"inventoryCancel","token":999}), &mut owner)["failed"], true);
+}

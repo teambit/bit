@@ -369,3 +369,13 @@ fn diff_respects_requested_git_color_and_keeps_final_newline_for_node_formatter(
     assert!(raw.contains("\u{1b}["));
     assert!(raw.ends_with('\n'));
 }
+
+#[test]
+fn empty_diff_batch_succeeds_without_invoking_git() {
+    let result = response(
+        &json!({"kind":"diff","files":[],"gitExecutable":"missing-git-never-needed","color":false}),
+    );
+    assert_eq!(result["failed"], false);
+    assert_eq!(result["completed"], 0);
+    assert_eq!(result["data"]["files"], json!([]));
+}

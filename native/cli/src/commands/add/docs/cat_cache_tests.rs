@@ -91,3 +91,12 @@ fn published_parser_receipt_keeps_cache_writes_host_owned() {
         .is_none(),
     );
 }
+
+#[test]
+fn test_files_are_excluded_from_cat_docs_cache_misses() {
+    let root = tempfile::tempdir().unwrap();
+    fs::write(root.path().join("file.spec.js"), "/** @public */\nmodule.exports=2;\n").unwrap();
+    let component = json!({"directory":".","files":[{"relativePath":"file.spec.js","test":true}]});
+    let plan = cat_prepare(root.path(), component).unwrap();
+    assert!(plan.misses().is_empty());
+}

@@ -1,5 +1,5 @@
 //! Differential qualification of published dependency placeholder resolution.
-//! Verifies `is_plus` and `resolve` against `@teambit/dependency-resolver`.
+//! Verifies [`is_plus`] and [`resolve`] against `@teambit/dependency-resolver`.
 use bit_object_import::plus_version::{is_plus, resolve};
 use std::process::Command;
 
@@ -73,4 +73,14 @@ process.stdout.write(JSON.stringify(rows));
         );
         assert_eq!(serde_json::json!(actual), row["result"], "{row}");
     }
+}
+
+#[test]
+fn direct_plus_version_unit_checks_cover_prefixes_and_fallbacks() {
+    assert!(is_plus("+"));
+    assert!(is_plus("+^"));
+    assert!(is_plus("+~"));
+    assert!(!is_plus("^1.0.0"));
+    assert_eq!(resolve("+^", Some("1.2.3"), "*"), "^1.2.3");
+    assert_eq!(resolve("+", None, "*"), "*");
 }

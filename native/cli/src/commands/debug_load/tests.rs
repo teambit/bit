@@ -51,3 +51,19 @@ fn detects_unknown_workspace_component() {
     let err = check_missing_workspace_component(temp.path(), "no/such-component").unwrap().unwrap();
     assert!(err.contains(r#"unable to find "no/such-component" in the workspace"#), "{err}");
 }
+
+#[test]
+fn scoped_matching_workspace_component_passes_missing_check() {
+    let temp = tempfile::tempdir().unwrap();
+    fs::write(
+        temp.path().join("workspace.jsonc"),
+        r#"{ "teambit.workspace/workspace": { "defaultScope": "my-scope" } }"#,
+    )
+    .unwrap();
+    fs::write(
+        temp.path().join(".bitmap"),
+        r#"{ "comp1": { "scope": "", "version": "", "mainFile": "index.js", "rootDir": "comp1" } }"#,
+    )
+    .unwrap();
+    assert_eq!(check_missing_workspace_component(temp.path(), "my-scope/comp1"), Ok(None));
+}
