@@ -29,14 +29,23 @@ pub(super) fn extensions(
         .iter()
         .map(component_id)
         .collect::<io::Result<Vec<_>>>()?;
-    let core: Vec<String> = serde_json::from_str(CORES).map_err(io::Error::other)?;
+    let core = core_aspects()?;
     let mut merger = Merger::new(Resolver { component: &id, workspace: &workspace });
-    populate(&mut merger, &core, context, target, version, &id.name)?;
+    populate(&mut merger, core, context, target, version, &id.name)?;
     merger
         .finish()
         .into_iter()
         .map(row)
         .collect()
+}
+
+fn core_aspects() -> io::Result<&'static [String]> {
+    static CORE: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+    if let Some(core) = CORE.get() {
+        return Ok(core);
+    }
+    let parsed: Vec<String> = serde_json::from_str(CORES).map_err(io::Error::other)?;
+    Ok(CORE.get_or_init(|| parsed))
 }
 
 fn populate(

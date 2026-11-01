@@ -41,12 +41,13 @@ pub(super) fn package_name(identity: &str, stored_prefix: Option<&str>) -> Strin
             str::to_string,
         );
     let name = identity.replace('/', ".");
-    let owner = format!("{}.", prefix.replacen('@', "", 1));
-    let name = match name.strip_prefix(&owner) {
-        Some(rest) if prefix != "@bit" => rest.to_string(),
-        _ => name,
-    };
-    format!("{prefix}/{name}")
+    let owner = prefix.strip_prefix('@').unwrap_or(&prefix);
+    let trimmed = name
+        .strip_prefix(owner)
+        .and_then(|rest| rest.strip_prefix('.'))
+        .filter(|_| prefix != "@bit")
+        .unwrap_or(&name);
+    format!("{prefix}/{trimmed}")
 }
 
 pub(super) fn names(

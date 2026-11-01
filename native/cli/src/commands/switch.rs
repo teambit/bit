@@ -68,7 +68,8 @@ fn run_workspace(
     options: &options::Options,
     lane_import: bool,
 ) -> io::Result<Outcome> {
-    let installer = match start_installer(root, argv, options.skip_install) {
+    let installer = match (!options.skip_install).then(|| Installer::start(root, argv)).transpose()
+    {
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("switch installation: {error}"))),
     };
@@ -124,10 +125,6 @@ fn preflight_switch_error(
         return Some(workspace_command::execute_json(root, args, cmd, |_| Err(err)));
     }
     Some(workspace_command::execute_then(root, args, cmd, |_| Err(err)))
-}
-
-fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
-    if skip { Ok(None) } else { Installer::start(root, argv).map(Some) }
 }
 
 fn installation_session(
@@ -282,13 +279,15 @@ fn writer_ids(plan: &Value) -> io::Result<Vec<String>> {
     if rows.len() > 8192 {
         return Err(decline("switch writer identity count"));
     }
-    Ok(rows
-        .iter()
-        .map(|id| text(Some(id)).map(|val| val.trim().to_owned()))
-        .collect::<io::Result<Vec<_>>>()?
-        .into_iter()
-        .filter(|val| !val.is_empty())
-        .collect())
+    rows.iter()
+        .filter_map(|id| match text(Some(id)) {
+            Ok(val) => {
+                let trimmed = val.trim();
+                (!trimmed.is_empty()).then(|| Ok(trimmed.to_owned()))
+            }
+            Err(error) => Some(Err(error)),
+        })
+        .collect()
 }
 
 struct RemoteImport {

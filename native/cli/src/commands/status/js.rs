@@ -82,25 +82,24 @@ pub fn text(value: Option<&Value>) -> io::Result<&str> {
 
 /// `target.identity + (target.version ? '@' + target.version : '')`.
 pub fn full_identity(target: &Value) -> io::Result<String> {
-    let identity = base_target_identity(target)?;
+    let identity =
+        match non_empty_str(target.get("identity")).or_else(|| non_empty_str(target.get("id"))) {
+            Some(identity) => std::borrow::Cow::Borrowed(identity),
+            None => std::borrow::Cow::Owned(base_target_identity(target)?),
+        };
     if identity.contains('@') {
-        return Ok(identity);
+        return Ok(identity.into_owned());
     }
     match non_empty_str(target.get("version"))
         .or_else(|| non_empty_str(target.get("head")))
         .or_else(|| non_empty_str(target["id"].get("version")))
     {
         Some(version) => Ok(format!("{identity}@{version}")),
-        None => Ok(identity),
+        None => Ok(identity.into_owned()),
     }
 }
 
 fn base_target_identity(target: &Value) -> io::Result<String> {
-    if let Some(identity) =
-        non_empty_str(target.get("identity")).or_else(|| non_empty_str(target.get("id")))
-    {
-        return Ok(identity.to_owned());
-    }
     let object = target["id"].as_object().ok_or_else(|| decline("status expected a string"))?;
     let name = text(object.get("name"))?.trim();
     if name.is_empty() {

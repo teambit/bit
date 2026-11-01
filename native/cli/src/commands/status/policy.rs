@@ -52,16 +52,19 @@ impl Policy {
         let config = self.extensions
             .iter()
             .find(|entry| component::matches_aspect(entry, "teambit.component/issues"));
-        Ok(array(
+        array(
             config.and_then(|entry| entry["config"].get("ignoreIssues")),
             "component ignoreIssues",
         )?
         .iter()
-        .map(|value| text(Some(value)).map(|item| item.trim().to_string()))
-        .collect::<io::Result<Vec<_>>>()?
-        .into_iter()
-        .filter(|item| !item.is_empty())
-        .collect())
+        .filter_map(|value| match text(Some(value)) {
+            Ok(item) => {
+                let trimmed = item.trim();
+                (!trimmed.is_empty()).then(|| Ok(trimmed.to_string()))
+            }
+            Err(error) => Some(Err(error)),
+        })
+        .collect()
     }
 
     pub fn issues(&self, dependencies: &Value) -> io::Result<Value> {
@@ -151,9 +154,9 @@ pub fn projected_policy(
     let version =
         stored_version(context, target, model, projected.filter(|version| !version.is_null()))?;
     validate_harmony_version(version)?;
-    let mut effective = target.clone();
-    effective["projectedExtensions"] = json!(projection::extensions(context, target, version)?);
-    let extensions = extensions::status_extensions(&effective)?;
+    let projected_extensions =
+        json!({ "projectedExtensions": projection::extensions(context, target, version)? });
+    let extensions = extensions::status_extensions(&projected_extensions)?;
     let merged = component::Policy::read(context, target, &extensions)?;
     let overrides = merged.overrides();
     let workspace = workspace(context)?;

@@ -367,10 +367,11 @@ pub(super) fn friendly_aspect_name(aspect_id: &str) -> String {
 
 fn capitalize_word(word: &str) -> String {
     let mut chars = word.chars();
-    let Some(first) = chars.next() else {
-        return String::new();
-    };
-    format!("{}{}", first.to_ascii_uppercase(), chars.as_str())
+    chars
+        .next()
+        .map_or_else(String::new, |first| {
+            format!("{}{}", first.to_ascii_uppercase(), chars.as_str())
+        })
 }
 
 fn unique_envs_by_frequency(items: &[TemplateDescriptor]) -> Vec<&'static str> {

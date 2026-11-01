@@ -12,7 +12,12 @@ pub(super) fn merge(
     raw: &Value,
     ignored: &HashSet<&str>,
 ) -> io::Result<()> {
-    let Some(raw) = raw.as_array() else { return Ok(()) };
+    let Some(raw) = raw
+        .as_array()
+        .filter(|arr| !arr.is_empty())
+    else {
+        return Ok(());
+    };
     let mut insertion = raw
         .iter()
         .filter_map(|row| {

@@ -22,12 +22,12 @@ impl Case {
         if let Some(duration) = self.duration.filter(|duration| *duration != 0) {
             let seconds = duration / 1000;
             let fraction = duration % 1000;
-            let time = if fraction == 0 {
-                seconds.to_string()
+            if fraction == 0 {
+                write!(output, r#" time="{seconds}""#).unwrap();
             } else {
-                format!("{seconds}.{fraction:03}").trim_end_matches('0').to_owned()
-            };
-            write!(output, r#" time="{time}""#).unwrap();
+                let frac = format!("{fraction:03}");
+                write!(output, r#" time="{seconds}.{}""#, frac.trim_end_matches('0')).unwrap();
+            }
         }
         if self.failure.is_none() && self.error.is_none() && !self.skipped {
             output.push_str("/>\n");

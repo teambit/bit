@@ -162,10 +162,7 @@ pub(super) fn prepare_forked(
         "targets":targets,"duringMerge":result["componentsDuringMergeState"],
     }))?;
     array(updates.get("updatesFromForked"), "forked lane updates")?;
-    let count = prepared["refreshCount"]
-        .as_u64()
-        .and_then(|count| usize::try_from(count).ok())
-        .ok_or_else(|| decline("status forked refresh count"))?;
+    let count = parse_refresh_metric(&prepared, "refreshCount", "status forked refresh count")?;
     Ok((engine, token.clone(), updates, count))
 }
 

@@ -21,6 +21,12 @@ pub(super) fn sort_rows(root: &Path, result: &mut Value) -> io::Result<()> {
         let Some(rows) = rows.as_array_mut() else {
             continue;
         };
+        if rows.len() < 2 {
+            if let Some(first) = rows.first() {
+                sort_id(first)?;
+            }
+            continue;
+        }
         let ids = rows
             .iter()
             .map(sort_id)

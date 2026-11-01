@@ -95,7 +95,7 @@ fn optional(path: &Path) -> io::Result<Option<String>> {
     fs::read_to_string(path).map(Some)
 }
 
-fn unmerged_config(rows: &[Value], identity: &str) -> Option<Value> {
+fn unmerged_config<'r>(rows: &'r [Value], identity: &str) -> Option<&'r Value> {
     let identity = identity.trim();
     rows.iter()
         .find(|row| {
@@ -104,12 +104,11 @@ fn unmerged_config(rows: &[Value], identity: &str) -> Option<Value> {
         })
         .and_then(|row| row.get("mergedConfig"))
         .filter(|config| !config.is_null())
-        .cloned()
 }
 
-fn combine(mut target: Value, incoming: Option<Value>) -> Value {
+fn combine(mut target: Value, incoming: Option<&Value>) -> Value {
     let Some(incoming) = incoming else { return target };
-    merge(&mut target, &incoming);
+    merge(&mut target, incoming);
     target
 }
 

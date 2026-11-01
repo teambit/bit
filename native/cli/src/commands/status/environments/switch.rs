@@ -20,17 +20,18 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
+    fn switch_host(&self) -> io::Result<&Host> {
+        self.host.as_ref().ok_or_else(|| decline("switch callback host"))
+    }
+
     pub(in crate::commands::status) fn switch_one(
         &self,
         context: &Value,
         capture: &Capture,
         identity: &str,
     ) -> io::Result<Value> {
-        let identity = identity.trim();
-        if identity.is_empty() {
-            return Err(decline("switch callback identity"));
-        }
-        let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;
+        let identity = validated_switch_id(identity)?;
+        let host = self.switch_host()?;
         callbacks::switch_one(host, context, capture, identity)
             .map_err(|error| self.callback_failure(capture, error))
     }
@@ -41,11 +42,8 @@ impl Environments {
         capture: &Capture,
         identity: &str,
     ) -> io::Result<()> {
-        let identity = identity.trim();
-        if identity.is_empty() {
-            return Err(decline("switch callback identity"));
-        }
-        let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;
+        let identity = validated_switch_id(identity)?;
+        let host = self.switch_host()?;
         callbacks::switch_stage_row(host, context, capture, identity)
             .map_err(|error| self.callback_failure(capture, error))
     }
@@ -54,7 +52,7 @@ impl Environments {
         &self,
         capture: &Capture,
     ) -> io::Result<Value> {
-        let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;
+        let host = self.switch_host()?;
         callbacks::switch_resume(host, capture)
             .map_err(|error| self.callback_failure(capture, error))
     }
@@ -65,10 +63,7 @@ impl Environments {
         result: &Value,
         identity: &str,
     ) -> io::Result<()> {
-        let identity = identity.trim();
-        if identity.is_empty() {
-            return Err(decline("switch callback identity"));
-        }
+        let identity = validated_switch_id(identity)?;
         callbacks::switch_accept(capture, result, identity)
             .map_err(|error| self.callback_failure(capture, error))
     }
@@ -78,7 +73,7 @@ impl Environments {
         capture: &mut Capture,
         stage: callbacks::SwitchStage,
     ) -> io::Result<()> {
-        let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;
+        let host = self.switch_host()?;
         callbacks::switch_finish(host, capture, stage)
             .map_err(|error| self.callback_failure(capture, error))?;
         capture.cache.retain_callback_host(self.host.take());
@@ -112,4 +107,12 @@ impl Environments {
             format!("{}{}", callback_load_stdout(capture), output),
         )
     }
+}
+
+fn validated_switch_id(identity: &str) -> io::Result<&str> {
+    let identity = identity.trim();
+    if identity.is_empty() {
+        return Err(decline("switch callback identity"));
+    }
+    Ok(identity)
 }

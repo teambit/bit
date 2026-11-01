@@ -187,13 +187,12 @@ fn external_rows(receipt: &Value, workspace: &HashSet<&str>) -> Option<HashMap<S
     {
         return None;
     }
-    let mut external = HashMap::new();
+    let mut external = HashMap::with_capacity(rows.len());
     for row in rows {
         let component = external_row(row, workspace)?;
-        if external.contains_key(&component.identity) {
+        if external.insert(component.identity.clone(), component).is_some() {
             return None;
         }
-        external.insert(component.identity.clone(), component);
     }
     Some(external)
 }
@@ -231,15 +230,20 @@ fn external_row(row: &Value, workspace: &HashSet<&str>) -> Option<Component> {
 }
 
 fn component_identity(value: &str) -> bool {
-    versioned(value) || (!value.contains('@') && versioned(&format!("{value}@latest")))
+    versioned(value) || (!value.contains('@') && scoped_name(value))
 }
 
 /// `/^[^@\s]+\/[^@\s]+@[^@\s]+$/`.
 fn versioned(value: &str) -> bool {
-    let plain = |part: &str| {
-        !part.is_empty() && !part.contains('@') && !part.chars().any(char::is_whitespace)
-    };
     let Some((id, version)) = value.split_once('@') else { return false };
+    scoped_name(id) && plain_part(version)
+}
+
+fn scoped_name(id: &str) -> bool {
     let Some((scope, name)) = id.split_once('/') else { return false };
-    plain(scope) && plain(name) && plain(version)
+    plain_part(scope) && plain_part(name)
+}
+
+fn plain_part(part: &str) -> bool {
+    !part.is_empty() && !part.contains('@') && !part.chars().any(char::is_whitespace)
 }

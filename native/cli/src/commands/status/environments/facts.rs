@@ -171,6 +171,12 @@ fn non_loaded_workspace_env<'a>(
 }
 
 fn registered(component: &WorkspaceComponent, registrations: &Value) -> Vec<Value> {
+    let Some(entries) = registrations
+        .as_array()
+        .filter(|arr| !arr.is_empty())
+    else {
+        return Vec::new();
+    };
     component.config
         .iter()
         .filter(|(_, val)| val.as_str() != Some("-") && **val != Value::Bool(false))
@@ -180,8 +186,7 @@ fn registered(component: &WorkspaceComponent, registrations: &Value) -> Vec<Valu
                 return None;
             }
             let bare_id = bit_install::policy::split_version(id).0;
-            registrations
-                .as_array()?
+            entries
                 .iter()
                 .find(|entry| {
                     entry[0]
@@ -209,14 +214,11 @@ fn own_policy(
     {
         return Ok(json!({}));
     }
-    let policy = if let Some(manifest) = reader.resolved(&component.id.to_string_without_version())?
-    {
+    let env_id = component.id.to_string_without_version();
+    let policy = if let Some(manifest) = reader.resolved(&env_id)? {
         bit_install::policy::env::from_config(&manifest["policy"], false)?
     } else {
-        let raw = host.call(
-            "registeredEnvPolicy",
-            &json!({"envId":component.id.to_string_without_version(),"aspectIds":aspects}),
-        )?;
+        let raw = host.call("registeredEnvPolicy", &json!({"envId":env_id,"aspectIds":aspects}))?;
         bit_install::policy::env::from_config(&raw, true)?
     };
     let dependencies = policy.self_policy

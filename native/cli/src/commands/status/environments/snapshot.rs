@@ -16,10 +16,14 @@ pub(super) fn configured(engine: &mut Engine, root: &Path, context: &Value) -> i
     {
         return Ok(true);
     }
+    let targets = array(context.get("targets"), "snapshot callback targets")?;
+    if targets.is_empty() {
+        return Ok(false);
+    }
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
-    for target in array(context.get("targets"), "snapshot callback targets")? {
+    for target in targets {
         let component = component(root, context, target)?;
         if component.config
             .iter()

@@ -41,9 +41,7 @@ fn read_many(root: &Path, components: &[Coverage]) -> io::Result<Vec<Value>> {
                 .unwrap_or_else(empty)
         })
         .collect();
-    if path.exists() {
-        remove::directory(&root.join("coverage"))?;
-    }
+    remove::directory(&root.join("coverage"))?;
     Ok(reports)
 }
 
@@ -77,14 +75,16 @@ fn project(raw: &Value, directory: &Path, main: &str) -> Option<Value> {
 fn totals(files: &[Value]) -> Option<Value> {
     let mut totals = json!({});
     for metric in METRICS {
-        let sum = |key: &str| {
-            files
-                .iter()
-                .try_fold(0u64, |sum, file| sum.checked_add(file["data"][metric][key].as_u64()?))
-        };
-        let total = sum("total")?;
-        let covered = sum("covered")?;
-        let skipped = sum("skipped")?;
+        let (total, covered, skipped) = files
+            .iter()
+            .try_fold((0u64, 0u64, 0u64), |(tot, cov, skp), file| {
+                let row = &file["data"][metric];
+                Some((
+                    tot.checked_add(row["total"].as_u64()?)?,
+                    cov.checked_add(row["covered"].as_u64()?)?,
+                    skp.checked_add(row["skipped"].as_u64()?)?,
+                ))
+            })?;
         let pct =
             if total == 0 { 0 } else { (covered as f64 / total as f64 * 100.0).round() as u64 };
         totals[metric] = json!({"total":total,"covered":covered,"skipped":skipped,"pct":pct});

@@ -48,15 +48,12 @@ impl Assets {
     }
 }
 
-fn build_payloads(package: &Path) -> io::Result<Vec<(&'static str, String)>> {
+fn build_payloads(package: &Path) -> io::Result<[(&'static str, String); 7]> {
     let prefix = format!(
         "const installation = require('node:module').createRequire({});\n",
         serde_json::to_string(package)?,
     );
-    Ok(FILES
-        .iter()
-        .map(|(name, source)| (name.trim(), format!("{prefix}{source}")))
-        .collect())
+    Ok(FILES.map(|(name, source)| (name.trim(), format!("{prefix}{source}"))))
 }
 
 fn payload_hash(payloads: &[(&str, String)]) -> String {

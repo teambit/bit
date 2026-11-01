@@ -119,9 +119,9 @@ fn validate_options_error(flags: &Flags) -> Option<String> {
                 .to_owned(),
         );
     }
-    let named_count = ["major", "minor", "patch"]
+    let named_count = ["--major", "--minor", "--patch"]
         .into_iter()
-        .filter(|level| flags.flag(&format!("--{level}")))
+        .filter(|flag_name| flags.flag(flag_name))
         .count()
         + usize::from(pre_release.is_some());
     if named_count > 1 {
@@ -352,9 +352,9 @@ fn levels(flags: &Flags) -> Option<(String, Option<String>, Option<String>)> {
     let increment = flags.string("--increment");
     let auto_tag = flags.string("--auto-tag-increment");
     let pre_release = flags.values.get("--pre-release");
-    let named = ["major", "minor", "patch"]
+    let named = [("--major", "major"), ("--minor", "minor"), ("--patch", "patch")]
         .into_iter()
-        .find(|level| flags.flag(&format!("--{level}")));
+        .find_map(|(flag_name, level)| flags.flag(flag_name).then_some(level));
     let release_type = increment
         .or(named)
         .or_else(|| pre_release.map(|_| "prerelease"))

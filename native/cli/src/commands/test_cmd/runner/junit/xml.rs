@@ -16,9 +16,9 @@ pub(super) fn attribute(value: &str) -> String {
     }
     out
 }
-pub(super) fn strip_ansi(value: &str) -> String {
+pub(super) fn strip_ansi(value: &str) -> std::borrow::Cow<'_, str> {
     if !value.contains(['\x1b', '\u{9b}']) {
-        return value.to_owned();
+        return std::borrow::Cow::Borrowed(value);
     }
     static ANSI: LazyLock<regex::Regex> = LazyLock::new(|| {
         regex::Regex::new(concat!(
@@ -28,7 +28,7 @@ pub(super) fn strip_ansi(value: &str) -> String {
         ))
         .unwrap()
     });
-    ANSI.replace_all(value, "").into_owned()
+    ANSI.replace_all(value, "")
 }
 
 const fn is_allowed_xml_char(character: char) -> bool {

@@ -20,7 +20,7 @@ pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Select
         return Err(invalid("tester mixed file selection"));
     }
     let cwd = env::current_dir()?;
-    let mut paths = Vec::new();
+    let mut paths = Vec::with_capacity(values.len());
     for value in values {
         let normalized = paths::normalized(&cwd.join(value.trim()));
         if !paths.contains(&normalized) {
@@ -33,7 +33,7 @@ pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Select
         .map(|scope| scope.trim().to_owned())
         .filter(|scope| !scope.is_empty());
     let bitmap = Bitmap::load(root, default_scope.as_deref())?;
-    let mut identities = Vec::new();
+    let mut identities = Vec::with_capacity(paths.len());
     for path in &paths {
         let identity = owner(root, &bitmap, path)?;
         if !identities.contains(&identity) {

@@ -225,10 +225,11 @@ impl Options {
         self.adoption.pattern
             .as_ref()
             .is_none_or(|pattern| {
+                if pattern.contains(['$', '&']) || pattern.contains(" AND ") {
+                    return false;
+                }
                 let parts = crate::commands::patterns::split(pattern);
                 !parts.is_empty()
-                    && !pattern.contains(['$', '&'])
-                    && !pattern.contains(" AND ")
                     && parts
                         .iter()
                         .all(|part| {

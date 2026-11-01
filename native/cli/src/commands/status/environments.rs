@@ -210,6 +210,7 @@ impl Environments {
             .as_array()
             .cloned()
             .unwrap_or_default();
+        proofs.reserve(components.len() * 2);
         proofs.extend(local_proofs(&components)?);
         for component in &selected_components {
             if needs_facts(component, &core, &aspects) {
@@ -347,8 +348,8 @@ fn needs_facts(component: &WorkspaceComponent, core: &[String], aspects: &[Strin
             .keys()
             .any(|id| {
                 let bare = bit_install::policy::split_version(id).0;
-                !(core.contains(id) || core.iter().any(|item| item == bare))
-                    || bit_install::policy::is_core_env(id) && bare != "teambit.harmony/node"
+                (bit_install::policy::is_core_env(id) && bare != "teambit.harmony/node")
+                    || !(core.contains(id) || core.iter().any(|item| item == bare))
             })
 }
 

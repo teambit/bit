@@ -70,11 +70,9 @@ pub fn collect_resolved(
     let Some(external) = resolve::external_vertices(components, issue_graph) else {
         return Ok(None);
     };
-    let graph: Vec<Component> = components
-        .iter()
-        .cloned()
-        .chain(external)
-        .collect();
+    let mut graph = Vec::with_capacity(components.len() + external.len());
+    graph.extend_from_slice(components);
+    graph.extend(external);
     if !resolve::ordinary_heads_for(context, heads, Some(&graph)) {
         return Ok(None);
     }

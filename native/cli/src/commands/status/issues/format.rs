@@ -7,6 +7,9 @@ use std::io;
 /// `array.join(', ')` of strings.
 pub(super) fn join(data: &Value) -> io::Result<String> {
     let items = array(Some(data), "issue data")?;
+    if items.is_empty() {
+        return Ok(String::new());
+    }
     let items = items
         .iter()
         .map(item_text)

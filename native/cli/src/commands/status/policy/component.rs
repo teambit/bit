@@ -58,7 +58,7 @@ impl Policy {
     fn project(entries: Vec<Entry>, env_own: Map<String, Value>) -> Self {
         let mut manual = Fields::default();
         let mut automatic = Fields::default();
-        let mut used = HashSet::new();
+        let mut used = HashSet::with_capacity(entries.len());
         for entry in entries {
             if !entry.force {
                 automatic[entry.field].insert(entry.name, json!(entry.version));
@@ -207,7 +207,7 @@ fn merge(mut entries: Vec<Entry>) -> Vec<Entry> {
 }
 
 fn unique(mut entries: Vec<Entry>) -> Vec<Entry> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(entries.len());
     entries.retain(|entry| seen.insert((entry.name.clone(), entry.field)));
     entries
 }

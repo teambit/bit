@@ -59,16 +59,13 @@ fn model_extension(extension: &Value, name: &str) -> io::Result<Value> {
     {
         return Err(decline("status configured model extension"));
     }
-    let stored_config = nullish(extension.get("config"));
-    let mut config = match stored_config {
-        None => Map::new(),
-        Some(config) => object(config)?.clone(),
+    let config = match nullish(extension.get("config")) {
+        None => json!({}),
+        Some(config) => {
+            validate_config(bare, object(config)?)?;
+            config.clone()
+        }
     };
-    config.remove("__specific");
-    validate_config(bare, &config)?;
-    let config = stored_config
-        .cloned()
-        .unwrap_or_else(|| json!({}));
     Ok(json!({ "name": bare, "config": config }))
 }
 
@@ -83,6 +80,7 @@ fn validate_config(name: &str, config: &Map<String, Value>) -> io::Result<()> {
 
 fn deprecation_field(key: &str, value: &Value) -> bool {
     match key {
+        "__specific" => true,
         "deprecate" => value.is_boolean(),
         "range" => value.is_string() || value.is_null(),
         "newId" => replacement_id(value),
@@ -116,6 +114,7 @@ fn validate_removal_config(config: &Map<String, Value>) -> io::Result<()> {
     if !config
         .iter()
         .all(|(key, value)| match key.as_str() {
+            "__specific" => true,
             "removed" | "removeOnMain" => value.is_boolean(),
             "range" => value
                 .as_str()

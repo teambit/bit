@@ -113,19 +113,14 @@ pub(super) fn can_use_builtin_workspace_templates(
     if has_custom_generator_config(&ws_val) {
         return false;
     }
-    let Ok(core_ids) = serde_json::from_str::<Vec<String>>(CORE_ASPECT_IDS) else {
-        return false;
-    };
     if let Some(aspect) = aspect_filter
         .map(str::trim)
         .filter(|id| !id.is_empty())
-        && !core_ids
-            .iter()
-            .any(|core| core == aspect)
+        && !is_core_aspect(aspect)
     {
         return false;
     }
-    if has_non_core_workspace_aspect(&ws_val, &core_ids) {
+    if has_non_core_workspace_aspect(&ws_val) {
         return false;
     }
     let Ok((_, ws)) = resolve_workspace_components(root) else {
@@ -152,18 +147,18 @@ fn has_custom_generator_config(ws_val: &Value) -> bool {
     has_envs || has_aspects
 }
 
-fn has_non_core_workspace_aspect(ws_val: &Value, core_ids: &[String]) -> bool {
+fn is_core_aspect(id: &str) -> bool {
+    CORE_ASPECT_IDS
+        .split('"')
+        .any(|core| core == id)
+}
+
+fn has_non_core_workspace_aspect(ws_val: &Value) -> bool {
     let Some(obj) = ws_val.as_object() else {
         return true;
     };
     obj.keys()
-        .any(|key| {
-            if key == "$schema" {
-                return false;
-            }
-            let bare = aspect_id_without_version(key);
-            !core_ids.iter().any(|core| core == bare)
-        })
+        .any(|key| key != "$schema" && !is_core_aspect(aspect_id_without_version(key)))
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

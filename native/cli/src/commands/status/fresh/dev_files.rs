@@ -70,17 +70,20 @@ fn matches(file: &str, regexes: &[Regex]) -> bool {
     if file.is_empty() {
         return false;
     }
-    let normalized = if cfg!(windows) { file.replace('\\', "/") } else { file.to_string() };
-    let mut segments: Vec<&str> = normalized.split('/').collect();
-    // `matchOne` accepts one trailing empty segment once the pattern is consumed.
-    if segments.len() > 1 && segments.last() == Some(&"") {
-        segments.pop();
-    }
-    let name = segments.pop().unwrap_or_default();
-    if segments
-        .iter()
-        .any(|dir| matches!(dir.trim(), "." | "..") || dir.trim().starts_with('.'))
-    {
+    let normalized = if cfg!(windows) && file.contains('\\') {
+        std::borrow::Cow::Owned(file.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(file)
+    };
+    let path = normalized.strip_suffix('/').unwrap_or(&normalized);
+    let (dirs, name) = match path.rsplit_once('/') {
+        Some((dirs, name)) => (Some(dirs), name),
+        None => (None, path),
+    };
+    if dirs.is_some_and(|dirs| {
+        dirs.split('/')
+            .any(|dir| matches!(dir.trim(), "." | "..") || dir.trim().starts_with('.'))
+    }) {
         return false;
     }
     regexes

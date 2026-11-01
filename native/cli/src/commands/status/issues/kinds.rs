@@ -187,11 +187,7 @@ impl Issue {
             Self::MissingPackages => missing_packages_to_string(data),
             Self::MissingDependencies | Self::ImportFromDirectory => {
                 let files = data.as_object().ok_or_else(|| decline("status issue file data"))?;
-                files
-                    .iter()
-                    .map(|(file, items)| Ok(format!("{SPACE}{file} -> {}", list_or_text(items)?)))
-                    .collect::<io::Result<Vec<_>>>()
-                    .map(|rows| rows.join("\n"))
+                format_file_map(files)
             }
             // `Object.keys(true)` is empty.
             Self::MissingLinks | Self::MissingDists | Self::Circular => match data {
@@ -204,13 +200,17 @@ impl Issue {
     }
 }
 
+fn format_file_map(files: &serde_json::Map<String, Value>) -> io::Result<String> {
+    files
+        .iter()
+        .map(|(file, items)| Ok(format!("{SPACE}{file} -> {}", list_or_text(items)?)))
+        .collect::<io::Result<Vec<_>>>()
+        .map(|rows| rows.join("\n"))
+}
+
 fn missing_packages_to_string(data: &Value) -> io::Result<String> {
     if let Some(files) = data.as_object() {
-        return files
-            .iter()
-            .map(|(file, packages)| Ok(format!("{SPACE}{file} -> {}", list_or_text(packages)?)))
-            .collect::<io::Result<Vec<_>>>()
-            .map(|rows| rows.join("\n"));
+        return format_file_map(files);
     }
     let rows = array(Some(data), "missing packages")?
         .iter()

@@ -29,27 +29,24 @@ impl Status<'_> {
     }
 
     fn updates(&self, field: &str, from: &str) -> io::Result<Vec<String>> {
-        array(self.result.get(field), field)?
-            .iter()
+        let rows = array(self.result.get(field), field)?;
+        let forked = if field == "updatesFromForked" {
+            &[][..]
+        } else {
+            array(self.result.get("updatesFromForked"), "forked updates")?
+        };
+        rows.iter()
             .map(|row| {
                 let id = row_id(row)?;
                 let target = array(row["divergeData"].get("snapsOnTargetOnly"), "target snaps")?;
                 let mut message = format!("{from} is ahead by {} snaps", target.len());
                 if self.flags.verbose
-                    && !array(row["divergeData"].get("snapsOnSourceOnly"), "lane snaps")?.is_empty()
-                    && let Some(common) = row["divergeData"]
-                        .get("commonSnapBeforeDiverge")
-                        .and_then(|value| value.get("hash").or(Some(value)))
-                        .and_then(serde_json::Value::as_str)
-                        .map(str::trim)
-                        .filter(|hash| !hash.is_empty())
+                    && let Some(common) = diverge_hash(&row["divergeData"])?
                 {
-                    let short: String = common.chars().take(9).collect();
                     message.push_str(" (diverged since ");
-                    message.push_str(&short);
+                    message.push_str(common);
                     message.push(')');
                 }
-                let forked = array(self.result.get("updatesFromForked"), "forked updates")?;
                 let warn = field == "updatesFromForked"
                     || forked
                         .iter()
@@ -65,6 +62,26 @@ impl Status<'_> {
             .map(|identity| self.item((identity, None), false, None, true))
             .collect())
     }
+}
+
+fn diverge_hash(diverge_data: &serde_json::Value) -> io::Result<Option<&str>> {
+    if array(diverge_data.get("snapsOnSourceOnly"), "lane snaps")?.is_empty() {
+        return Ok(None);
+    }
+    let Some(common) = diverge_data
+        .get("commonSnapBeforeDiverge")
+        .and_then(|value| value.get("hash").or(Some(value)))
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+    else {
+        return Ok(None);
+    };
+    let end = common
+        .char_indices()
+        .nth(9)
+        .map_or(common.len(), |(idx, _)| idx);
+    Ok(Some(&common[..end]))
 }
 
 fn row_id(row: &serde_json::Value) -> io::Result<String> {

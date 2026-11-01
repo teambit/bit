@@ -64,28 +64,24 @@ fn unknown_variant_harmony_aspect(obj: &serde_json::Map<String, Value>) -> Optio
         .find(|(key, _)| is_variants_aspect_key(key))?
         .1
         .as_object()?;
-    let core: Vec<String> = serde_json::from_str(include_str!(
-        "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-    ))
-    .unwrap_or_default();
     let aspect_key = variants
         .values()
         .filter_map(Value::as_object)
         .flat_map(serde_json::Map::keys)
-        .find(|aspect_key| is_unknown_harmony_aspect(aspect_key, &core))?;
+        .find(|aspect_key| is_unknown_harmony_aspect(aspect_key))?;
     Some(format!(
         r#"error: component "{aspect_key}" was not found.
 your workspace.jsonc has this component-id set in the "teambit.workspace/variants" section"#,
     ))
 }
 
-fn is_unknown_harmony_aspect(aspect_key: &str, core: &[String]) -> bool {
+fn is_unknown_harmony_aspect(aspect_key: &str) -> bool {
     let bare = bit_install::config::aspect_id_without_version(aspect_key.trim());
     bare.starts_with("teambit.harmony/")
-        && !core
-            .iter()
-            .any(|core_id| core_id == bare)
         && !matches!(bare, "teambit.harmony/bit-custom-aspect" | "teambit.harmony/harmony")
+        && !include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json")
+            .split('"')
+            .any(|core_id| core_id == bare)
 }
 
 fn is_variants_aspect_key(key: &str) -> bool {

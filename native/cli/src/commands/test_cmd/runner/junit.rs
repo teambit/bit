@@ -55,18 +55,15 @@ fn suite(output: &mut String, component: &Value, raw: &Value) -> io::Result<()> 
             .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
         write!(output, r#" timestamp="{start}""#).unwrap();
     }
-    let failures = cases
+    let (failures, errors, skipped) = cases
         .iter()
-        .filter(|case| case.failure.is_some())
-        .count();
-    let errors = cases
-        .iter()
-        .filter(|case| case.error.is_some())
-        .count();
-    let skipped = cases
-        .iter()
-        .filter(|case| case.skipped)
-        .count();
+        .fold((0usize, 0usize, 0usize), |(fail, err, skip), case| {
+            (
+                fail + usize::from(case.failure.is_some()),
+                err + usize::from(case.error.is_some()),
+                skip + usize::from(case.skipped),
+            )
+        });
     writeln!(
         output,
         r#" tests="{}" failures="{failures}" errors="{errors}" skipped="{skipped}">"#,

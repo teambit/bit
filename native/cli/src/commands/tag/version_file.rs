@@ -55,12 +55,7 @@ fn parse(content: &str) -> io::Result<Value> {
             default = Some(version);
             continue;
         }
-        if identity.is_empty()
-            || identity.chars().any(char::is_whitespace)
-            || identity
-                .split('/')
-                .any(|part| part.trim().is_empty())
-        {
+        if identity.chars().any(char::is_whitespace) || identity.split('/').any(str::is_empty) {
             return Err(decline("versions file line format"));
         }
         entries.push(json!({"identity":identity,"version":version}));

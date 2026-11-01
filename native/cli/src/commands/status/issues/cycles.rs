@@ -136,9 +136,9 @@ impl<'e> Tarjan<'e> {
             index: vec![None; size],
             low: vec![0; size],
             on_stack: vec![false; size],
-            stack: Vec::new(),
+            stack: Vec::with_capacity(size),
             next: 0,
-            components: Vec::new(),
+            components: Vec::with_capacity(size),
         }
     }
 

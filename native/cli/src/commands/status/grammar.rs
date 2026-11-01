@@ -68,7 +68,7 @@ pub fn config_inputs(values: &Value) -> Option<Value> {
     let mut strings = Vec::new();
     visit(values, &mut strings);
     let mut seen = std::collections::HashSet::with_capacity(strings.len());
-    let mut unique: Vec<&str> = Vec::new();
+    let mut unique: Vec<&str> = Vec::with_capacity(strings.len());
     for text in strings {
         if seen.insert(text) {
             unique.push(text);

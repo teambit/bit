@@ -48,9 +48,10 @@ impl Environments {
         if method.is_empty() {
             return Err(io::Error::other("identity callback method is empty"));
         }
-        let result = self.host(root)?.call(method, params);
+        let host = self.host(root)?;
+        let result = host.call(method, params);
         match result {
-            Ok(value) => Ok((value, self.host(root)?.take_stdout())),
+            Ok(value) => Ok((value, host.take_stdout())),
             Err(error) => Err(self.failure(error)),
         }
     }

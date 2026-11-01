@@ -17,7 +17,10 @@ pub(super) fn read(context: &Value) -> io::Result<Workspace> {
     let package_json = nullish(context.get("packageJson"));
     let field = |name: &str| string_map(package_json.and_then(|json| json.get(name)));
     let package_json = [field(FIELDS[0])?, field(FIELDS[1])?, field(FIELDS[2])?];
-    let root = root_policy(&policy)?;
+    let root = match policy {
+        Some(policy) => root_policy(policy)?,
+        None => [Map::new(), Map::new()],
+    };
     let mut dependencies = root[0].clone();
     assign(&mut dependencies, &package_json[1]);
     assign(&mut dependencies, &package_json[0]);
@@ -52,15 +55,16 @@ fn root_policy(policy: &Value) -> io::Result<[Map<String, Value>; 2]> {
     }))
 }
 
-fn configured_policy(context: &Value) -> io::Result<Value> {
+fn configured_policy(context: &Value) -> io::Result<Option<&Value>> {
     let resolver = nullish(
         crate::commands::update_cmd::aspect_entry(&context["workspace"], RESOLVER)
             .map(|(_, val)| val),
     );
-    let policy = nullish(resolver.and_then(|r| r.get("policy")));
-    let empty = Value::Object(Map::new());
-    let policy = object(policy.unwrap_or(&empty))?;
-    Ok(Value::Object(policy.clone()))
+    let Some(policy) = nullish(resolver.and_then(|res| res.get("policy"))) else {
+        return Ok(None);
+    };
+    object(policy)?;
+    Ok(Some(policy))
 }
 
 fn is_valid_policy_version_entry(value: &Value) -> bool {

@@ -175,17 +175,13 @@ impl<'r> Status<'r> {
                         .or_else(|| super::super::js::nullish(row.get("identity"))),
                 )?
                 .trim();
-                Ok((id, self.version(id)?.unwrap_or_default(), row))
+                let current = self.version(id)?.unwrap_or_default();
+                Ok((id, current, format!("{id}@{current}"), row))
             })
             .collect::<io::Result<Vec<_>>>()?;
-        rows.sort_by(|left, right| {
-            super::super::collate::compare(
-                &format!("{}@{}", left.0, left.1),
-                &format!("{}@{}", right.0, right.1),
-            )
-        });
+        rows.sort_by(|left, right| super::super::collate::compare(&left.2, &right.2));
         rows.iter()
-            .map(|(identity, current, row)| {
+            .map(|(identity, current, _, row)| {
                 let head = text(row.get("headVersion"))?.trim();
                 let latest = row["latestVersion"]
                     .as_str()

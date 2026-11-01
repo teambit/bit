@@ -163,14 +163,14 @@ fn target_existing_version_error(
         return None;
     }
     let exact = requested_exact_version(target, identity, name, options)?;
+    let (id_scope, id_name) = identity
+        .split_once('/')
+        .unwrap_or(("", identity));
     let model = models
         .iter()
         .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().map_or("", str::trim),
-                model["name"].as_str().map_or("", str::trim),
-            ) == identity
+            model["scope"].as_str().map_or("", str::trim) == id_scope
+                && model["name"].as_str().map_or("", str::trim) == id_name
         })?;
     (model["versions"].get(exact).is_some() || model["orphanedVersions"].get(exact).is_some()).then(
         || io::Error::other(format!("error: version {exact} already exists for {identity}")),
@@ -219,7 +219,9 @@ fn matches_single_pattern(identity: &str, name: &str, pattern: &str) -> bool {
         || trimmed == "**"
         || trimmed == identity
         || trimmed == name
-        || identity.ends_with(&format!("/{trimmed}"))
+        || identity
+            .strip_suffix(trimmed)
+            .is_some_and(|prefix| prefix.ends_with('/'))
 }
 
 fn dependency_or_issue_error(

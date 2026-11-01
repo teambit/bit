@@ -98,21 +98,21 @@ impl Status<'_> {
         if self.flags.verbose {
             return format!(" - versions: {}", versions.join(", "));
         }
-        let (snaps, tags): (Vec<&String>, Vec<&String>) =
-            versions.iter().partition(|version| is_hash(version));
-        let mut parts = Vec::new();
-        if !tags.is_empty() {
-            let tags: Vec<&str> = tags
-                .iter()
-                .map(|tag| tag.as_str())
-                .collect();
-            parts.push(format!("versions: {}", tags.join(", ")));
+        let mut tags = Vec::with_capacity(versions.len());
+        let mut snaps = 0usize;
+        for version in versions {
+            if is_hash(version) {
+                snaps += 1;
+            } else {
+                tags.push(version.as_str());
+            }
         }
-        if !snaps.is_empty() {
-            parts.push(format!("{} snap(s)", snaps.len()));
+        match (tags.is_empty(), snaps) {
+            (true, 0) => String::new(),
+            (false, 0) => format!(" - versions: {}", tags.join(", ")),
+            (true, count) => format!(" - {count} snap(s)"),
+            (false, count) => format!(" - versions: {}, {count} snap(s)", tags.join(", ")),
         }
-        let joined = parts.join(", ");
-        format!(" - {joined}")
     }
 
     /// `formatIssues(issues)`: each issue's `outputForCLI`.

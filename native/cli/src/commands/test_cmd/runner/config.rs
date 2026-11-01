@@ -25,7 +25,8 @@ pub(super) fn request_with_empty(
 ) -> io::Result<(Value, bool)> {
     let patterns = patterns(root, selected)?;
     let tests = files::tests(selected, &patterns.tests)?;
-    let directory = super::paths::normalized(&root.join(selected.directory.trim()));
+    let component_dir = root.join(selected.directory.trim());
+    let directory = super::paths::normalized(&component_dir);
     let requested: Vec<_> = settings.files
         .iter()
         .filter(|file| file.starts_with(&directory))
@@ -42,11 +43,28 @@ pub(super) fn request_with_empty(
     let mut config: Value = serde_json::from_str(include_str!("config.json"))?;
     config["rootDir"] = json!(root);
     config["roots"] = json!([root]);
-    config["testMatch"] = if settings.files.is_empty() {
+    config["testMatch"] =
+        test_match(&component_dir, &patterns.tests, &tests, &requested, settings.files.is_empty());
+    if bit_install::config::aspect_id_without_version(environment.trim()) == "teambit.react/react" {
+        config["testEnvironment"] = json!("$jsdom");
+        config["setupFiles"] = json!(["$polyfill"]);
+    }
+    let options = tool_options(&mut config, patterns.dev_files, settings);
+    Ok((json!({"root":root,"config":config,"options":options}), has_tests))
+}
+
+fn test_match(
+    component_dir: &Path,
+    patterns: &[String],
+    tests: &[std::path::PathBuf],
+    requested: &[std::path::PathBuf],
+    all_files: bool,
+) -> Value {
+    if all_files {
         json!(
-            patterns.tests
+            patterns
                 .iter()
-                .map(|pattern| absolute_pattern(&root.join(selected.directory.trim()), pattern))
+                .map(|pattern| absolute_pattern(component_dir, pattern))
                 .collect::<Vec<_>>()
         )
     } else {
@@ -56,13 +74,7 @@ pub(super) fn request_with_empty(
                 .filter(|file| requested.contains(file))
                 .collect::<Vec<_>>()
         )
-    };
-    if bit_install::config::aspect_id_without_version(environment.trim()) == "teambit.react/react" {
-        config["testEnvironment"] = json!("$jsdom");
-        config["setupFiles"] = json!(["$polyfill"]);
     }
-    let options = tool_options(&mut config, patterns.dev_files, settings);
-    Ok((json!({"root":root,"config":config,"options":options}), has_tests))
 }
 fn tool_options(config: &mut Value, dev_files: Vec<String>, settings: &Settings) -> Value {
     let mut options = json!({});

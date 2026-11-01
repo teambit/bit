@@ -129,24 +129,7 @@ fn status_issues(
     let response: Value = engine.request(&json!({"kind":"statusGraph","root":root,"versions":context["versions"],"components":components.iter().map(|component|json!({"identity":component.identity,"dependencies":component.dependencies})).collect::<Vec<_>>()}))?;
     let mut graph = components.to_vec();
     for row in array(response.get("external"), "external status graph")? {
-        let identity = text(row.get("identity"))?.trim().to_owned();
-        if identity.is_empty() {
-            return Err(decline("external status graph identity"));
-        }
-        let dependencies = array(row.get("dependencies"), "external dependencies")?
-            .iter()
-            .map(|id| text(Some(id)).map(|val| val.trim().to_owned()))
-            .collect::<io::Result<Vec<_>>>()?
-            .into_iter()
-            .filter(|val| !val.is_empty())
-            .collect();
-        graph.push(Component {
-            ignored: Vec::new(),
-            identity,
-            package_name: String::new(),
-            dependencies,
-            issues: Value::Null,
-        });
+        graph.push(external_component(row)?);
     }
     let mut issue_context = context.clone();
     issue_context["models"]
@@ -160,6 +143,27 @@ fn status_issues(
     let issues = issues::collect_graph(root, &issue_context, components, &graph)?
         .ok_or_else(|| decline("status issue graph is incomplete"))?;
     Ok((issues, array(response.get("readSet"), "status graph proofs")?.to_vec()))
+}
+
+fn external_component(row: &Value) -> io::Result<Component> {
+    let identity = text(row.get("identity"))?.trim().to_owned();
+    if identity.is_empty() {
+        return Err(decline("external status graph identity"));
+    }
+    let mut dependencies = Vec::new();
+    for id in array(row.get("dependencies"), "external dependencies")? {
+        let trimmed = text(Some(id))?.trim();
+        if !trimmed.is_empty() {
+            dependencies.push(trimmed.to_owned());
+        }
+    }
+    Ok(Component {
+        ignored: Vec::new(),
+        identity,
+        package_name: String::new(),
+        dependencies,
+        issues: Value::Null,
+    })
 }
 
 fn validate_graph(engine: &mut Engine, proofs: &[Value]) -> io::Result<()> {
@@ -179,6 +183,10 @@ fn attach_removed(
     capture: &capture::Capture,
     context: &Value,
 ) -> io::Result<()> {
+    if capture.remotely_removed.is_empty() {
+        result["remotelySoftRemoved"] = json!([]);
+        return Ok(());
+    }
     let during = during_merge(context)?;
     result["remotelySoftRemoved"] = json!(
         capture.remotely_removed

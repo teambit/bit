@@ -86,22 +86,24 @@ fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value
                 .and_then(|index| usize::try_from(index).ok())
                 .and_then(|index| entries.get(index));
             let entry = entry.ok_or_else(|| decline("status dependency entry"))?;
-            let mut row = Map::new();
+            let mut row = Map::with_capacity(4);
             row.insert("id".into(), identity_object(text(entry.get("identity"))?)?);
             row.insert("relativePaths".into(), json!([]));
             for field in ["packageName", "versionRange"] {
-                let value = entry.get(field);
-                if truthy(value)
-                    && value
-                        .and_then(Value::as_str)
-                        .is_none_or(|val| !val.trim().is_empty())
-                {
-                    row.insert(field.into(), entry[field].clone());
+                if let Some(value) = entry.get(field).filter(|val| non_empty_truthy(val)) {
+                    row.insert(field.into(), value.clone());
                 }
             }
             Ok(Value::Object(row))
         });
     rows.collect::<io::Result<Vec<_>>>().map(Value::Array)
+}
+
+fn non_empty_truthy(val: &Value) -> bool {
+    truthy(Some(val))
+        && val
+            .as_str()
+            .is_none_or(|text| !text.trim().is_empty())
 }
 
 /// `identityObject(value)`: `{ scope, name, version? }`.
@@ -117,7 +119,7 @@ fn identity_object(value: &str) -> io::Result<Value> {
         .map(|(scope, comp)| (scope.trim(), comp.trim()))
         .filter(|(scope, comp)| !scope.is_empty() && !comp.is_empty())
         .ok_or_else(|| decline("status unscoped dependency"))?;
-    let mut id = Map::new();
+    let mut id = Map::with_capacity(3);
     id.insert("scope".into(), json!(scope));
     id.insert("name".into(), json!(comp_name));
     if let Some(version) = version {

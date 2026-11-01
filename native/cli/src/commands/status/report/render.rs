@@ -107,11 +107,13 @@ impl Status<'_> {
     pub(super) fn collapsed(&self, ids: &[&str], title: &str, desc: &str) -> io::Result<String> {
         let chalk = self.format.chalk;
         let counts = scope_counts(ids)?;
-        let mut shown: Vec<String> = counts
-            .iter()
-            .take(4)
-            .map(|(scope, count)| format!("{scope} ({count})"))
-            .collect();
+        let mut shown = Vec::with_capacity(counts.len().min(5));
+        shown.extend(
+            counts
+                .iter()
+                .take(4)
+                .map(|(scope, count)| format!("{scope} ({count})")),
+        );
         if counts.len() > 4 {
             shown.push(format!("+ {} more scopes", counts.len() - 4));
         }
@@ -132,7 +134,7 @@ impl Status<'_> {
 /// `countBy(ids, (id) => id.scope)`, the largest counts first. A scope of
 /// digits only, which `Object.entries` would put first, declines.
 fn scope_counts<'i>(ids: &[&'i str]) -> io::Result<Vec<(&'i str, usize)>> {
-    let mut counts: Vec<(&str, usize)> = Vec::new();
+    let mut counts: Vec<(&str, usize)> = Vec::with_capacity(ids.len());
     for identity in ids {
         let trimmed = identity.trim();
         let scope = trimmed.split_once('/').map_or(trimmed, |(scope, _)| scope.trim());

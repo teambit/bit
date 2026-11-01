@@ -121,7 +121,7 @@ fn resolve_package(from: &Path, name: &str) -> Option<PathBuf> {
 }
 
 fn builtin_names(modules: &[String]) -> Vec<String> {
-    let mut names: Vec<String> = Vec::new();
+    let mut names: Vec<String> = Vec::with_capacity(modules.len() * 2);
     for raw_module in modules {
         let module = raw_module.trim();
         if !module.is_empty() {
@@ -136,15 +136,16 @@ fn push_module_forms(names: &mut Vec<String>, module: &str) {
     if bare.is_empty() {
         return;
     }
-    let forms = if module.starts_with("node:") {
-        vec![format!("node:{bare}")]
-    } else {
-        vec![bare.to_owned(), format!("node:{bare}")]
-    };
-    for form in forms {
-        if !names.contains(&form) {
-            names.push(form);
-        }
+    if !module.starts_with("node:")
+        && !names
+            .iter()
+            .any(|existing| existing == bare)
+    {
+        names.push(bare.to_owned());
+    }
+    let prefixed = format!("node:{bare}");
+    if !names.contains(&prefixed) {
+        names.push(prefixed);
     }
 }
 

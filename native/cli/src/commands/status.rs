@@ -46,28 +46,23 @@ enum Mode {
     Quick(bool),
 }
 
-fn mode(args: &[OsString]) -> Option<Mode> {
+fn mode(args: &[OsString]) -> Option<(Mode, bool)> {
     let arguments = workspace_command::utf8_args(args)?;
-    let (filtered, _) = strip_log_flags(&arguments[1..]);
+    let (filtered, logged) = strip_log_flags(&arguments[1..]);
     let filtered = filtered
         .strip_suffix(&["--"])
         .unwrap_or(&filtered);
     if filtered.contains(&"--") {
         return None;
     }
-    let json = filtered
+    let (json, quick) = filtered
         .iter()
-        .fold(false, |acc, &arg| match arg {
-            "--json" | "-j" | "--json=true" | "-j=true" => true,
-            "--json=false" | "--no-json" | "-j=false" => false,
-            _ => acc,
-        });
-    let quick = filtered
-        .iter()
-        .fold(false, |acc, &arg| match arg {
-            "--quick" | "--quick=true" => true,
-            "--quick=false" | "--no-quick" => false,
-            _ => acc,
+        .fold((false, false), |(json, quick), &arg| match arg {
+            "--json" | "-j" | "--json=true" | "-j=true" => (true, quick),
+            "--json=false" | "--no-json" | "-j=false" => (false, quick),
+            "--quick" | "--quick=true" => (json, true),
+            "--quick=false" | "--no-quick" => (json, false),
+            _ => (json, quick),
         });
     let report_args: Vec<_> = filtered
         .iter()
@@ -75,13 +70,14 @@ fn mode(args: &[OsString]) -> Option<Mode> {
         .filter(|arg| !is_mode_flag(arg))
         .collect();
     let flags = report::parse(&report_args)?;
-    Some(if quick {
+    let selected = if quick {
         Mode::Quick(json)
     } else if json {
         Mode::Json(flags)
     } else {
         Mode::Report(flags)
-    })
+    };
+    Some((selected, logged))
 }
 
 fn is_mode_flag(arg: &str) -> bool {
@@ -161,7 +157,7 @@ fn push_status_arg<'a>(out: &mut Vec<&'a str>, arg: &'a str) {
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    let Some(mode) = mode(args) else {
+    let Some((mode, logged)) = mode(args) else {
         return Ok(Outcome::Declined("flags outside the native `status` grammar".to_string()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
@@ -172,7 +168,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(err_msg))
         });
     }
-    if workspace_command::utf8_args(args).is_some_and(|argv| strip_log_flags(&argv[1..]).1) {
+    if logged {
         writeln!(io::stdout(), r#"[*] started a new command: "status" with the following args:"#)?;
     }
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();

@@ -78,7 +78,12 @@ impl Pending {
 
     /// The same entry under another identity.
     pub fn renamed(&self, identity: String) -> Self {
-        Self { identity, ..self.clone() }
+        Self {
+            cacheable: self.cacheable,
+            identity,
+            raw_data: self.raw_data.clone(),
+            read_set: self.read_set.clone(),
+        }
     }
 
     /// `<id>@<version>`.
@@ -142,14 +147,21 @@ pub fn dependency_grammar() -> io::Result<Value> {
 
 /// `getCoreAspectPackageName`: `teambit.x/a/b` is `@teambit/a.b`.
 fn core_package_name(id: &str) -> String {
-    let name: Vec<&str> = id
+    let mut pkg = String::from("@teambit/");
+    for (idx, part) in id
         .trim()
         .split('/')
         .skip(1)
         .map(str::trim)
         .filter(|part| !part.is_empty())
-        .collect();
-    format!("@teambit/{}", name.join("."))
+        .enumerate()
+    {
+        if idx > 0 {
+            pkg.push('.');
+        }
+        pkg.push_str(part);
+    }
+    pkg
 }
 
 /// What one fresh detection needs beyond the target and its files.

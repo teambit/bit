@@ -20,6 +20,9 @@ pub(in crate::commands) fn run(
         return Err(io::Error::other("quick status root or home path is empty"));
     }
     let workspace = bit_object_import::effective_workspace_configuration(root, home)?;
+    if workspace.as_object().is_none_or(serde_json::Map::is_empty) {
+        return Ok(());
+    }
     let core = core_aspect_ids()?;
     let aspects = root_aspects(&json!({"workspace":workspace}), &core);
     if aspects.is_empty() {

@@ -92,12 +92,13 @@ pub(in crate::commands::status) fn dev_files(
     )?
     .trim();
     let facts = &context["environmentFacts"][identity];
-    comp.env_id = facts["envId"]
+    if let Some(env_id) = facts["envId"]
         .as_str()
         .map(str::trim)
         .filter(|env_id| !env_id.is_empty())
-        .unwrap_or(&comp.env_id)
-        .to_owned();
+    {
+        env_id.clone_into(&mut comp.env_id);
+    }
     let hooks = &facts["devPatterns"];
     let list = |key: &str| {
         hooks

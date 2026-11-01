@@ -86,6 +86,7 @@ fn range_matches(model: &Value, full_id: &str, config: &Value) -> io::Result<boo
         .as_str()
         .map(str::trim)
         .filter(|val| !val.is_empty())
+        .and_then(|val| Range::parse(val).ok())
     else {
         return Ok(false);
     };
@@ -114,6 +115,5 @@ fn range_matches(model: &Value, full_id: &str, config: &Value) -> io::Result<boo
     let Some(tag) = tag else {
         return Ok(false);
     };
-    Ok(Range::parse(range)
-        .is_ok_and(|range| Version::parse(tag).is_ok_and(|version| version.satisfies(&range))))
+    Ok(Version::parse(tag).is_ok_and(|version| version.satisfies(&range)))
 }

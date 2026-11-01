@@ -60,17 +60,18 @@ fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progres
 }
 
 fn forked_lane_reason(forked_id: Option<&str>) -> String {
-    let normalized = forked_id
-        .map(|id| {
-            id.split('/')
-                .map(str::trim)
-                .filter(|part| !part.is_empty())
-                .collect::<Vec<_>>()
-                .join("/")
-        })
-        .filter(|id| !id.is_empty());
-    match normalized {
-        Some(id) => format!("for fetching lane {id}"),
-        None => "for fetching lane".to_owned(),
+    let mut parts = forked_id
+        .into_iter()
+        .flat_map(|id| id.split('/'))
+        .map(str::trim)
+        .filter(|part| !part.is_empty());
+    let Some(first) = parts.next() else {
+        return "for fetching lane".to_owned();
+    };
+    let mut reason = format!("for fetching lane {first}");
+    for part in parts {
+        reason.push('/');
+        reason.push_str(part);
     }
+    reason
 }

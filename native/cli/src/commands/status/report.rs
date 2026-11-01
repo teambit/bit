@@ -195,12 +195,20 @@ fn render_data(
     if auto_tag.is_empty() && update_dependents.is_empty() {
         return Ok(status.joined(sections, warnings, troubleshooting, workspace_issues));
     }
-    let auto_summary = status.collapsed(&auto_tag, "components pending auto-tag", AUTO_TAG)?;
-    let dependent_summary = status.collapsed(
-        &update_dependents,
-        "pending update-dependents",
-        "(impacted dependents that will be pushed on next export — from local cascade or 'Snap updates')",
-    )?;
+    let auto_summary = if auto_tag.is_empty() {
+        String::new()
+    } else {
+        status.collapsed(&auto_tag, "components pending auto-tag", AUTO_TAG)?
+    };
+    let dependent_summary = if update_dependents.is_empty() {
+        String::new()
+    } else {
+        status.collapsed(
+            &update_dependents,
+            "pending update-dependents",
+            "(impacted dependents that will be pushed on next export — from local cascade or 'Snap updates')",
+        )?
+    };
     Ok(status.rendered(
         sections,
         &auto_summary,
@@ -243,8 +251,9 @@ fn model_heads<'r>(
     context: &'r Value,
     versions: &HashMap<&'r str, Option<&'r str>>,
 ) -> io::Result<HashMap<String, &'r str>> {
-    let mut heads = HashMap::new();
-    for model in array(context.get("models"), "models")? {
+    let models = array(context.get("models"), "models")?;
+    let mut heads = HashMap::with_capacity(models.len() + versions.len());
+    for model in models {
         if let (Some(scope), Some(name), Some(head)) = (
             model["scope"]
                 .as_str()
@@ -286,8 +295,9 @@ impl<'r> Status<'r> {
         flags: &'r Flags,
         chalk: Chalk,
     ) -> io::Result<Self> {
-        let mut versions = HashMap::new();
-        for target in array(context.get("targets"), "targets")? {
+        let targets = array(context.get("targets"), "targets")?;
+        let mut versions = HashMap::with_capacity(targets.len());
+        for target in targets {
             let version = text(target.get("version"))?.trim();
             versions.insert(
                 text(target.get("identity"))?.trim(),
@@ -295,11 +305,12 @@ impl<'r> Status<'r> {
             );
         }
         let heads = model_heads(context, &versions)?;
+        let issue_rows = array(result.get("componentsWithIssues"), "issues")?;
         let mut status = Self {
             result,
             format: Formatter::new(chalk),
             flags,
-            with_issues: Vec::new(),
+            with_issues: Vec::with_capacity(issue_rows.len()),
             soft_tagged: ids(result, "softTaggedComponents")?,
             models: ModelFacts {
                 versions,
@@ -308,7 +319,7 @@ impl<'r> Status<'r> {
             },
             troubleshooting: std::cell::Cell::new(false),
         };
-        for row in array(result.get("componentsWithIssues"), "issues")? {
+        for row in issue_rows {
             let identity = text(row.get("id"))?.trim();
             let version = status.version(identity)?;
             let issues = array(row.get("issues"), "issues")?;

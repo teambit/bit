@@ -33,26 +33,29 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
         .filter(|warning| !warning.is_empty())
         .map_or_else(String::new, |warning| chalk.yellow(&format!("Warning: {warning}")));
     let skipped_minimal = !results.skipped.is_empty() && !options.verbose;
-    let data = build(&results, options, &formatter, &branch_warning, skipped_minimal);
-    let details =
-        skipped_minimal.then(|| build(&results, options, &formatter, &branch_warning, false));
+    let success = success_section(&results, options, &formatter);
+    let data = Formatter::join(&[
+        format_skipped(&results.skipped, &formatter, skipped_minimal),
+        success.clone(),
+        branch_warning.clone(),
+    ]);
+    let details = skipped_minimal.then(|| {
+        Formatter::join(&[
+            format_skipped(&results.skipped, &formatter, false),
+            success,
+            branch_warning,
+        ])
+    });
     Ok(Report { data, code: 0, details })
 }
 
-fn build(
-    results: &Results,
-    options: &Options,
-    formatter: &Formatter,
-    branch_warning: &str,
-    minimal: bool,
-) -> String {
-    let failure = format_skipped(&results.skipped, formatter, minimal);
+fn success_section(results: &Results, options: &Options, formatter: &Formatter) -> String {
     let lane_name = options.lane.trim();
     let lane_success = formatter.success_summary(&format!(
         r#"successfully set "{}" as the active lane"#,
         formatter.chalk.bold(lane_name),
     ));
-    let success = if results.components.is_empty() {
+    if results.components.is_empty() {
         format!("No components have been changed.\n{lane_success}")
     } else {
         let head = if options.skip_fetch { "local head" } else { "head" };
@@ -61,8 +64,7 @@ fn build(
             results.components.len(),
         ));
         join_lines(&[title, results.apply_version_report(formatter, true, false), lane_success])
-    };
-    Formatter::join(&[failure, success, branch_warning.to_owned()])
+    }
 }
 
 fn format_skipped(

@@ -50,6 +50,13 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
     if sub == "log" { Some(Parsed::Log) } else { Some(Parsed::Unrecognized(sub.to_owned())) }
 }
 
+fn start_history(args: &[OsString]) -> Option<History> {
+    env::current_dir()
+        .ok()
+        .and_then(|cwd| workspace::root(&cwd))
+        .map(|root| History::start(&root, args))
+}
+
 fn run_log(args: &[OsString]) -> io::Result<Outcome> {
     let log_path = cache_root().join("logs").join("debug.log");
     let content = match fs::read_to_string(&log_path) {
@@ -58,11 +65,7 @@ fn run_log(args: &[OsString]) -> io::Result<Outcome> {
             if super::scope_rename::ci_active() {
                 return Ok(Outcome::Declined("debug.log is missing or unreadable".to_owned()));
             }
-            let history = env::current_dir()
-                .ok()
-                .and_then(|cwd| workspace::root(&cwd))
-                .map(|root| History::start(&root, args));
-            if let Some(history) = history {
+            if let Some(history) = start_history(args) {
                 history.end(false);
             }
             let report = workspace_command::filesystem_error::report(
@@ -73,10 +76,7 @@ fn run_log(args: &[OsString]) -> io::Result<Outcome> {
             return Ok(Outcome::Exit(ExitCode::FAILURE));
         }
     };
-    let history = env::current_dir()
-        .ok()
-        .and_then(|cwd| workspace::root(&cwd))
-        .map(|root| History::start(&root, args));
+    let history = start_history(args);
     writeln!(io::stdout(), "{content}")?;
     if let Some(history) = history {
         history.end(true);
@@ -85,10 +85,7 @@ fn run_log(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Outcome> {
-    let history = env::current_dir()
-        .ok()
-        .and_then(|cwd| workspace::root(&cwd))
-        .map(|root| History::start(&root, args));
+    let history = start_history(args);
     let output = workspace_command::loader_output(chalk, false);
     output.restart(r#"running command "system"..."#);
     output.stop();

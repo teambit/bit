@@ -165,11 +165,10 @@ impl Issue {
 
     fn file_value(self, value: &Value) -> io::Result<String> {
         match self {
-            Self::Relative => Ok(array(Some(value), "relative issues")?
-                .iter()
-                .map(|_| "[object Object]")
-                .collect::<Vec<_>>()
-                .join(", ")),
+            Self::Relative => {
+                let count = array(Some(value), "relative issues")?.len();
+                Ok(vec!["[object Object]"; count].join(", "))
+            }
             Self::RelativeAuthored => array(Some(value), "relative authored issues")?
                 .iter()
                 .map(|entry| {
