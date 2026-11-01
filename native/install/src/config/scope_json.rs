@@ -1,3 +1,5 @@
+//! `<scope>/scope.json` model and loader for local scope settings and lane tracking.
+
 pub use bit_workspace_config::scope_path;
 
 use indexmap::IndexMap;
@@ -6,7 +8,7 @@ use serde_json::Value;
 use std::{fs, io, path::Path};
 
 /// A lane tracked against a remote lane (`scope.json` `lanes.tracking`).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrackLane {
     pub local_lane: String,

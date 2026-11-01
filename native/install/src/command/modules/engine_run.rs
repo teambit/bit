@@ -1,5 +1,5 @@
 //! One engine run with the progress lines `DependencyInstaller.installComponents`
-//! prints, and the `enrichUnpublishedSnapDepError` error rewrite.
+//! prints, and the `enrichUnpublishedSnapDepError` error rewrite for unpublished snaps.
 mod effective;
 mod subscribers;
 

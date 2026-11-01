@@ -1,4 +1,4 @@
-//! `_checkPattern`, `_createRule` and `make_regex` of node-ignore 3.3.10.
+//! `_checkPattern`, `_createRule` and `make_regex` of `node-ignore` 3.3.10.
 //! Every replacement step keeps the original JavaScript regular expression
 //! and is run with `regress`, so its matching is JavaScript's.
 

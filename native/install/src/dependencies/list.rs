@@ -1,4 +1,6 @@
 //! `extractDepsFromLegacy`: the `dependency-resolver` dependency list of a component.
+//!
+//! Combines component dependencies, configured extensions, packages, and model fallbacks.
 
 use super::{
     Subject, Workspace,

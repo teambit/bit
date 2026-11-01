@@ -1,5 +1,5 @@
 //! `package-name-utils.ts`: `extractPackageName` and `isValidPackageName`
-//! (`validate-npm-package-name`'s `validForOldPackages`).
+//! (`validate-npm-package-name`'s `validForOldPackages` check).
 
 const ALLOWED_PREFIXES: [&str; 8] =
     ["https://", "http://", "git:", "git+ssh://", "git+https://", "file:", "link:", "workspace:"];

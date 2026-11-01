@@ -16,7 +16,7 @@ thread_local! {
     static CAPTURED: RefCell<Option<Captured>> = const { RefCell::new(None) };
 }
 
-#[derive(Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Captured {
     pub(super) vars: BTreeMap<String, String>,
     cwd: PathBuf,

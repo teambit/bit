@@ -1,3 +1,5 @@
+//! Global configuration keys (`@teambit/legacy.constants`) and layered [`EffectiveConfig`].
+
 /// `bit config` keys read during install (`@teambit/legacy.constants`).
 pub mod keys {
     pub const CLOUD_DOMAIN: &str = "cloud_domain";

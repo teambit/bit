@@ -1,5 +1,5 @@
 //! `bit install <packages>`: argument validation (`install.cmd.tsx`), version
-//! resolution with the save prefix (`_addPackages`, `getVersionWithSavePrefix`)
+//! resolution with the save prefix (`_addPackages`, `getVersionWithSavePrefix`),
 //! and the `workspace.jsonc` policy update (`addToRootPolicy`, `updateConfigPolicy`).
 
 pub(super) mod policy_edit;

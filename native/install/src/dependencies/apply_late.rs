@@ -1,5 +1,5 @@
 //! `ApplyOverrides.populateDependencies` from the auto-detect overrides on: env
-//! peers of an env component, manually added dependencies and the final
+//! peers of an env component, manually added dependencies, and the final
 //! component/package de-duplication.
 
 use super::{

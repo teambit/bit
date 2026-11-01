@@ -30,6 +30,7 @@ pub fn normalize_peer_provider_versions(graph: &mut Value) {
     graph["edges"] = Value::Array(by_id.into_values().collect());
 }
 
+#[derive(Debug, Clone)]
 struct Rewriter<'a> {
     versions: &'a Versions,
     packages: &'a Map<String, Value>,

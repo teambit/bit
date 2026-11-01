@@ -1,7 +1,7 @@
 //! Dev files of a component (`DevFilesMain.computeDevPatterns` + `computeDevFiles`).
 //!
 //! The patterns are composed per aspect id: the component's `teambit.component/dev-files`
-//! config, the tester, docs and compositions registrations (their workspace config,
+//! config, the tester, docs, and compositions registrations (their workspace config,
 //! plus what the env's `getTestsDevPatterns()`/`getDocsDevPatterns()`/
 //! `getCompositionsDevPatterns()` add), then the env's own patterns, which replace
 //! an aspect's entry of the same name: `env.jsonc` `patterns` for a non-core env, else

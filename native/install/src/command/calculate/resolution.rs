@@ -1,4 +1,6 @@
 //! Native dependency facts before linking and after the actual manifest class load.
+//!
+//! Resolves environment policies, workspace policy entries, and per-component dependencies.
 use super::{dependency_options, workspace_aspects, workspace_policy};
 use crate::{
     command::session::{Loaded, Session},

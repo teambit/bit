@@ -2,6 +2,8 @@
 //! workspace-level file changed after its oldest entry was written. The component
 //! loader of the TypeScript CLI runs it before loading components
 //! (`ComponentLoader.invalidateDependenciesCache`); native status and install do too.
+//!
+//! Compares workspace control file modification times against `cacache` index timestamps.
 
 #[cfg(test)]
 mod tests;

@@ -1,3 +1,5 @@
+//! Work-stealing batch execution and output byte bounding for embedded scanner requests.
+
 use crate::{File, Request, invalid_request, limits, scan};
 use rayon::{ThreadPool, prelude::*};
 use serde_json::{Value, json};

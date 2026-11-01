@@ -19,7 +19,7 @@ use indexmap::IndexMap;
 use std::{io, path::Path};
 
 /// One file's classified imports (a `DependenciesTree` entry).
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 struct FileTree {
     packages: IndexMap<String, String>,
     components: Vec<ResolvedComponent>,

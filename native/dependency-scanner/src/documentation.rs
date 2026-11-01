@@ -1,4 +1,4 @@
-//! Sufficient AST proof for the pinned React/JSDoc parser's empty result.
+//! Sufficient AST proof for the pinned React/`JSDoc` parser's empty result.
 #[cfg(test)]
 mod tests;
 mod unexported;

@@ -1,3 +1,5 @@
+//! `workspace.jsonc` parser and typed aspect configuration extractors.
+
 pub(super) use bit_workspace_config::config_string;
 
 use super::DependencyResolverConfig;

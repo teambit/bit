@@ -1,4 +1,4 @@
-//! Validate actual class-directory metadata against the native eligible inventory.
+//! Validate actual class-directory metadata against the native eligible component inventory.
 #[cfg(test)]
 mod tests;
 

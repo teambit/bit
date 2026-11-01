@@ -1,3 +1,5 @@
+//! Request, source byte, and batch file size limits for the dependency scanner.
+
 use std::{
     fs::File,
     io::{self, Read},

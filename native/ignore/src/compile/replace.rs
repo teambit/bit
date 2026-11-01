@@ -1,4 +1,4 @@
-//! node-ignore's replacer tables and `String.prototype.replace` with a
+//! `node-ignore`'s replacer tables and `String.prototype.replace` with a
 //! function replacement.
 
 use regress::{Match, Regex};

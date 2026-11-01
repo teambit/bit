@@ -1,5 +1,7 @@
 //! What one `bit install` invocation works with: the process facts, and the
 //! workspace state loaded from disk (reloaded after every config edit).
+//!
+//! Tracks workspace root discovery, core aspect IDs, and Bit Cloud username caching.
 
 pub(super) mod installation_components;
 

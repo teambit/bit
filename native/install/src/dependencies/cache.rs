@@ -5,6 +5,7 @@
 //! The cache is a `cacache` 20 store: an entry is appended to the index bucket
 //! `index-v5/<sha256(key)>` as `\n<sha1(json)>\t<json>`, and the content lives at
 //! `content-v2/sha512/<hex digest>`.
+//! Honors the `no-fs-cache` flag in `BIT_FEATURES`.
 
 pub mod invalidation;
 

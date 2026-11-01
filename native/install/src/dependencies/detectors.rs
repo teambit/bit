@@ -5,7 +5,7 @@
 //!
 //! They are JavaScript, so the host runs them. It is asked only for a component
 //! that can have one: no core env implements `getDepDetectors()`, and the
-//! detectors Bit's core aspects register (env.jsonc, MDX) are replicated natively,
+//! detectors Bit's core aspects register (`env.jsonc`, MDX) are replicated natively,
 //! so a component of a core env is asked about only when the workspace configures
 //! a non-core aspect, at its root or on the component (either may register a
 //! detector). An env the host reports without detectors is not asked about again.

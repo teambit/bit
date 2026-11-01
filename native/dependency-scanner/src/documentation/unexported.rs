@@ -1,4 +1,4 @@
-//! A valid `CommonJS` source without exports cannot yield exported React component docs.
+//! A valid `CommonJS` or TypeScript source without exports cannot yield exported React docs.
 use oxc_ast::ast::{
     BindingPattern, ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration,
     Expression, IdentifierReference, JSXElement, JSXFragment, Program, Statement, TSType,

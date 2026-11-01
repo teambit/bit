@@ -1,4 +1,6 @@
 //! `formatOutput` and `getAnotherInstallRequiredOutput` of `install.cmd.tsx`.
+//!
+//! Renders the final completion line and any legacy environment policy warnings.
 
 #[cfg(test)]
 mod tests;

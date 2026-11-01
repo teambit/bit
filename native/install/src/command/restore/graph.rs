@@ -1,5 +1,7 @@
 //! `DependenciesGraph.merge` (`scopes/scope/objects/models/dependencies-graph.ts`)
 //! on the serialized graph: `{ schemaVersion, packages, edges, pnpmfileChecksum }`.
+//!
+//! Merges direct root edges, package entries, and non-root dependency edges.
 
 use super::peers::{
     normalize_peer_provider_versions, split_peer_ids, version_of, without_peer_suffix,

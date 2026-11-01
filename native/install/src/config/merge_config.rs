@@ -1,3 +1,5 @@
+//! Parsing and resolution of `merge-conflict` and `<scope>/unmerged.json` config overrides.
+
 use super::{DEPENDENCY_RESOLVER_ASPECT, ENVS_ASPECT};
 use indexmap::IndexMap;
 use serde_json::{Map, Value};

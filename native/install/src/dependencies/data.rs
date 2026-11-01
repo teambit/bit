@@ -14,7 +14,7 @@ pub struct LegacyDependency {
 }
 
 /// One `MissingPackagesDependenciesOnFs` issue entry.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct MissingFile {
     pub file: String,
     pub packages: Vec<String>,

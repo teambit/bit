@@ -1,3 +1,5 @@
+//! Module format classification (`Supported`, `Fallback`, or `None`) for JavaScript ASTs.
+
 use oxc_ast::{
     AstKind,
     ast::{Argument, Expression, Program},

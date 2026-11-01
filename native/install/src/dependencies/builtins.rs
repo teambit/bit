@@ -1,5 +1,5 @@
 //! Node.js built-in modules (`require('module').builtinModules`), which are never
-//! package dependencies.
+//! external package dependencies.
 
 const BUILTINS: [&str; 45] = [
     "assert",

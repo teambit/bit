@@ -1,4 +1,4 @@
-//! Global bit config, `workspace.jsonc` aspects, `dependency-resolver` settings and `scope.json`.
+//! Global bit config, `workspace.jsonc` aspects, `dependency-resolver` settings, and `scope.json`.
 
 pub use global::{EffectiveConfig, keys, load_global_config};
 pub(crate) use merge_config::truthy;

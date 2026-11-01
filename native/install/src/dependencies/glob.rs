@@ -1,4 +1,4 @@
-//! Shared minimatch pattern matcher.
+//! Shared `minimatch` pattern matcher for component dev-file classification.
 
 #[inline]
 #[must_use]

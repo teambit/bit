@@ -11,6 +11,7 @@ use crate::{
 };
 
 /// The overrides views version resolution consults.
+#[derive(Debug, Clone)]
 pub struct VersionInputs<'a> {
     /// Forced policy entries (`getDependenciesToAddManually`, `-` excluded by the caller).
     pub deps: &'a FieldMaps,

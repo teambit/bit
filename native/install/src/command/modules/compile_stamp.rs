@@ -24,7 +24,7 @@ const VERSION: u32 = 1;
 const DEPENDENCY_FIELDS: [&str; 4] =
     ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Stamp {
     version: u32,

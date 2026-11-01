@@ -1,4 +1,4 @@
-//! Import specifiers of one component file.
+//! Import specifiers of one component file (JS/TS, style sheets, and MDX).
 //!
 //! JavaScript and TypeScript go through the Oxc dependency scanner. Files it
 //! reports as `unsupported` (decorators, AMD, exotic syntax) fall back to a lexical

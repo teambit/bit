@@ -1,4 +1,6 @@
 //! The initial codemod link precedes policy aggregation and manifest component loads.
+//!
+//! Used when `linkCoreAspects` runs before calculating component manifests.
 use super::{Calculated, calculate, resolve};
 use crate::{
     command::session::{Loaded, Session},

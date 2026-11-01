@@ -1,4 +1,4 @@
-//! Nearest package manifests, shared read caching and core-aspect metadata.
+//! Nearest package manifests, shared read caching, and core-aspect metadata.
 use super::{
     super::data::id_from_object, BIT_ASPECT, ComponentId, Resolved, ResolvedComponent, Resolver,
 };

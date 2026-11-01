@@ -58,7 +58,7 @@ pub enum Resolved {
     CoreAspect(String),
     /// A plain package and its concrete version.
     Package { name: String, version: String },
-    /// A component package.
+    /// A component package found in `node_modules`.
     Component(ResolvedComponent),
     /// A package that is not installed.
     Missing(String),

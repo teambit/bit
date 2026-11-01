@@ -1,4 +1,4 @@
-//! `addToRootPolicy` + `updateConfigPolicy` + `persistConfig('install')`.
+//! `addToRootPolicy` + `updateConfigPolicy` + `persistConfig('install')` for `workspace.jsonc`.
 
 #[cfg(test)]
 mod tests;

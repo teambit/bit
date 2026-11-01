@@ -1,4 +1,4 @@
-//! The links around the engine run: `calculateLinkedDeps`, `linkCodemods` and
+//! The links around the engine run: `calculateLinkedDeps`, `linkCodemods`, and
 //! `syncCoreAspectLinksForEnvs`.
 
 use super::super::session::{Loaded, Session};

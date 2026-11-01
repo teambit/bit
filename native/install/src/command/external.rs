@@ -1,5 +1,5 @@
 //! External package manager mode: `handleExternalPackageManagerPrompt`,
-//! `disableExternalPackageManagerMode` and `writeDependenciesToPackageJson` of
+//! `disableExternalPackageManagerMode`, and `writeDependenciesToPackageJson` of
 //! `install.main.runtime.ts`.
 
 #[cfg(test)]

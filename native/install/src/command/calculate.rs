@@ -28,7 +28,7 @@ use std::io;
 /// `getWorkspaceManifest`'s status line around the manifest creation.
 const DEDUPING: &str = "deduping dependencies for installation";
 
-/// One calculation of what to install.
+/// One calculation of what to install in the workspace.
 pub struct Calculated {
     pub components: Vec<WorkspaceComponent>,
     pub engine_components: Vec<WorkspaceComponent>,

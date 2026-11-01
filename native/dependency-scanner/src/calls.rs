@@ -1,3 +1,5 @@
+//! Call-expression classification for `require`, `require.resolve`, and optional chains.
+
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 /// Babel types every call after the first `?.` of a chain as `OptionalCallExpression`, which
 /// neither the JS detective nor module-definition matches; `typescript-estree` keeps

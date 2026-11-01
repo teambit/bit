@@ -1,4 +1,4 @@
-//! Consume pre-install mutations after manifest calculation, before the package engine.
+//! Consume pre-install subscriber mutations after manifest calculation, before the package engine.
 use super::{Calculated, Loaded};
 use crate::{
     engine::{EngineInstallOptions, EngineSettings},

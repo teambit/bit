@@ -22,6 +22,7 @@ use std::{collections::HashSet, fs, io, path::Path, time::Instant};
 const MAX_CYCLES: usize = 5;
 
 /// What the installation did, for the summary.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Installed {
     pub components: usize,
     pub old_non_loaded_envs: Vec<String>,

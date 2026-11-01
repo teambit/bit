@@ -1,6 +1,8 @@
 //! Edits of `workspace.jsonc` the way `WorkspaceConfig.write` makes them: the
 //! comment-preserving document is rewritten whole, after a backup into
 //! `<scope>/workspace-config-history`.
+//!
+//! Normalizes output line endings to match `AbstractVinyl`'s platform `eol.auto`.
 
 #[cfg(test)]
 mod tests;

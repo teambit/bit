@@ -1,6 +1,6 @@
 //! `ApplyOverrides.populateDependencies`, up to the auto-detect overrides:
 //! ignored dependencies, dev/runtime de-duplication, model peers, the root
-//! `package.json`, the workspace policy and `@teambit/legacy` as a peer.
+//! `package.json`, the workspace policy, and `@teambit/legacy` as a peer.
 
 use super::{Workspace, component_model::ComponentModel, data::Detected};
 use crate::{

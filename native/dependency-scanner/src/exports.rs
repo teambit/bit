@@ -1,3 +1,5 @@
+//! `CommonJS` `exports` and `module.exports` assignment target detection.
+
 use oxc_ast::ast::{AssignmentTarget, Expression};
 
 // Match ast-module-types' Babel shapes, including computed identifier properties.

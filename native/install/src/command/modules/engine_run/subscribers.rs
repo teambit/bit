@@ -1,4 +1,4 @@
-//! Exact native inputs for the retained package-manager subscriber receiver.
+//! Exact native inputs for the retained package-manager pre/post subscriber receiver.
 use super::{Calculated, Loaded, Session};
 use serde_json::{Value, json};
 use std::io;

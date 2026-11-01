@@ -13,6 +13,7 @@ pub(super) struct Request<'a> {
     pub(super) environment: Captured,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Paths {
     pub(super) root: PathBuf,
     pub(super) store: PathBuf,
@@ -20,6 +21,7 @@ pub(super) struct Paths {
     pub(super) bit: PathBuf,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Network<'a> {
     pub(super) registry_map: &'a Map<String, Value>,
     pub(super) auth_headers: &'a Map<String, Value>,

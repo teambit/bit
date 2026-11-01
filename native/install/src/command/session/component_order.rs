@@ -1,4 +1,4 @@
-//! Preserve the parent operation's live bitmap order across native install reloads.
+//! Preserve the parent operation's live `.bitmap` order across native install reloads.
 use crate::workspace::Workspace;
 use std::{collections::HashMap, io};
 

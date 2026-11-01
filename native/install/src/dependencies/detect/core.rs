@@ -3,6 +3,7 @@ use super::{Resolver, io};
 use crate::model::WorkspaceComponent;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Import {
     component: bool,
     path: String,
