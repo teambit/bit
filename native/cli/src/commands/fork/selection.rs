@@ -1,3 +1,5 @@
+//! Component pattern matching ([`membership`], [`remotes`], [`Options`]) for `bit fork`.
+
 mod membership;
 mod remotes;
 use super::{inventory, options::Options};

@@ -1,3 +1,5 @@
+//! Remote wildcard pattern resolution ([`Options`], [`Engine`], [`matched`]) for `bit fork`.
+
 use super::{invalid, matched};
 use crate::commands::{
     engine::Engine, fork::options::Options, patterns, status::cache::cache_root,

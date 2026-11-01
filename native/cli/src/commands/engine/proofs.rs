@@ -1,4 +1,4 @@
-//! Deduplicate identical read receipts and validate bounded protocol frames before publication.
+//! Deduplicate identical [`Engine`] read receipts and validate bounded [`MAX_REQUEST`] protocol frames before publication.
 #[cfg(test)]
 mod tests;
 

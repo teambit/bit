@@ -1,3 +1,5 @@
+//! Source import [`Refactor`] and `.bitmap` projection ([`Plan`], [`ProjectedLinker`]) during `bit fork`.
+
 use super::{Results, bitmap};
 use crate::commands::{
     add::ProjectedLinker,

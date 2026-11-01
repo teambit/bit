@@ -1,4 +1,6 @@
 //! Rebuild the missing scope index at startup, before collection or restoration.
+//!
+//! [`prepare`] inspects existing index bytes and serializes [`Object`] metadata when missing.
 use super::repository::{Object, text};
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, fs, io, path::Path};

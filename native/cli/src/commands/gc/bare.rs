@@ -1,4 +1,4 @@
-//! Bare-scope collection preserves full history; it never uses the workspace cache root set.
+//! Bare-scope collection ([`files`], [`graph`], [`index`]) preserves full history; it never uses the workspace cache root set.
 pub(super) mod files;
 
 mod cross_device;

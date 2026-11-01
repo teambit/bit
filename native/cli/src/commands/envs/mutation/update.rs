@@ -1,3 +1,5 @@
+//! Environment version update planning ([`EnvUpdatePlan`], [`prepare_update`]) for `bit envs update`.
+
 use super::{BitmapContext, CORE_ENVS, CompJsonEdit, Prepared};
 use crate::commands::{
     aspect::{

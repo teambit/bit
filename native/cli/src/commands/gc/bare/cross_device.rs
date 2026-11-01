@@ -1,4 +1,4 @@
-//! `fs-extra.move` copies across devices, preserving link text before removing the source.
+//! `fs-extra.move` ([`copy_remove`]) copies across devices, preserving link text before removing the source.
 use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};
 

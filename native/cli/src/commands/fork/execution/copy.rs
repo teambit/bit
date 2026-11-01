@@ -1,3 +1,5 @@
+//! Local and remote component file copying ([`Plan`]) and [`transform`] dispatch during `bit fork`.
+
 use super::transform;
 use crate::commands::{
     add::ProjectedLinker, color::Chalk, fork::options::Options, workspace_command,

@@ -1,4 +1,6 @@
 //! Output formatting and result payloads for `bit gc`.
+//!
+//! Defines [`GcRunFlags`] and related summary models rendered via [`Formatter`] and [`Chalk`].
 
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde::Serialize;

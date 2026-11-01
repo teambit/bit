@@ -1,3 +1,5 @@
+//! Environment assignment mutations (`set`, `unset`, [`replace`], [`update`]) across `.bitmap` and `component.json`.
+
 mod replace;
 mod update;
 

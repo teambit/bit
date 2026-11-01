@@ -1,4 +1,4 @@
-//! The `BWS1` request frames of `bit-object-import`'s workspace session: one
+//! The `BWS1` request frames ([`Engine`], [`WorkspaceSession`]) of `bit-object-import`'s workspace session: one
 //! JSON request per frame, answered with a versioned JSON response.
 
 mod proofs;

@@ -1,3 +1,5 @@
+//! Output formatting ([`Report`], [`Formatter`], [`Options`]) for `bit fork`.
+
 use super::options::Options;
 use crate::commands::{
     color::Chalk,

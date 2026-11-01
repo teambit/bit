@@ -1,4 +1,4 @@
-//! Native export retains transfer ownership through remote persistence and local callbacks.
+//! Native `bit export` retains transfer ownership through remote persistence and local callbacks.
 
 mod cloud;
 #[cfg(test)]

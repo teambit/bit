@@ -1,4 +1,6 @@
 //! Version reachability graph and dependency expansion for `bit gc`.
+//!
+//! Builds the reachability closure from [`ScopeInventory`] and [`models`] helpers.
 
 pub(super) mod models;
 

@@ -1,4 +1,4 @@
-//! Native `bit envs <list|get|set|unset|replace|update>` (`bit env ...`) (`scopes/envs/envs/envs.cmd.ts`).
+//! Native `bit envs <list|get|set|unset|replace|update>` (`bit env ...`) (`scopes/envs/envs/envs.cmd.ts`, [`inspect`], [`mutation`]).
 
 mod inspect;
 mod mutation;

@@ -1,4 +1,4 @@
-//! Native, validated file history shared by `log-file` and `blame`.
+//! Native, validated file history shared by [`LOG_FILE`] (`log-file`) and [`BLAME`] (`blame`).
 
 mod blame;
 mod log_file;

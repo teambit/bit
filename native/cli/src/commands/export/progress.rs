@@ -1,4 +1,4 @@
-//! Published export phase events are rendered before the corresponding remote effects.
+//! Published export phase [`Event`]s ([`Exported`], [`Output`]) are rendered before the corresponding remote effects.
 use super::Exported;
 use bit_install::output::Output;
 use bit_object_import::export_progress::Event;

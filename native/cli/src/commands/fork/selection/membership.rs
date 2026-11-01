@@ -1,4 +1,4 @@
-//! `ForkByPattern` classifies the complete match list by membership, preserving duplicate matches.
+//! `ForkByPattern` classifies the complete match list by membership ([`bare`]), preserving duplicate matches.
 #[cfg(test)]
 mod tests;
 

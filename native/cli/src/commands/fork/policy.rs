@@ -1,3 +1,5 @@
+//! Workspace `workspace.jsonc` [`Document`] variant and policy updates on [`ProjectedLinker`] during `bit fork`.
+
 use crate::commands::{add::ProjectedLinker, workspace_command};
 use bit_workspace_config::jsonc::Document;
 use serde_json::{Value, json};

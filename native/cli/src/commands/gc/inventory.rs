@@ -1,4 +1,6 @@
 //! Scope object, remote-ref, stash, and stray-file inventory for `bit gc`.
+//!
+//! Collects staged snaps, stashed hashes, and unmerged roots into a write-free scope inventory.
 
 use super::graph::{
     comp_value_key,

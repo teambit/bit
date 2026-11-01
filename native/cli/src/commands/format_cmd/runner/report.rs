@@ -1,3 +1,5 @@
+//! Text and JSON report formatting ([`Formatter`], [`Chalk`]) for `bit format`.
+
 use super::{Value, invalid};
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use std::io;

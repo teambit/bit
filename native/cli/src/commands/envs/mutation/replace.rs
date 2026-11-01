@@ -1,3 +1,5 @@
+//! Environment replacement planning ([`prepare_replace`], [`resolve_verified_env`]) for `bit envs replace`.
+
 use super::{
     BitmapContext, CORE_ENVS, EnvBatch, Prepared, set_env_in_bitmap_row, set_env_in_comp_json,
 };

@@ -1,3 +1,5 @@
+//! CLI option parsing ([`Options`], [`Flags`], [`Target`]) for `bit fork`.
+
 #[derive(Default, Clone)]
 pub(super) struct Flags {
     pub refactor: bool,

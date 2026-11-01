@@ -1,4 +1,4 @@
-//! The engine's outbound receipts and
+//! The engine's outbound receipts ([`extra`]) and
 //! `ExportCmd.report` for the exports that run natively: components and lanes,
 //! without ejecting or ripple jobs.
 

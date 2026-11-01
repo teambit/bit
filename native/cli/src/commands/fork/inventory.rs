@@ -1,3 +1,5 @@
+//! Workspace `.bitmap` and directory inventory [`read`] via [`Engine`] and [`Workspace`] for `bit fork`.
+
 use crate::commands::{engine::Engine, workspace_command};
 use bit_install::{config::WorkspaceConfig, workspace::Workspace};
 use serde_json::{Value, json};

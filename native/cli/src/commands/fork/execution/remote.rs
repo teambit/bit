@@ -1,3 +1,5 @@
+//! Remote component fetching ([`RemoteCapture`]) and [`copy`] materialization during `bit fork`.
+
 use super::{Results, copy, source_facts};
 use crate::commands::{
     add::ProjectedLinker, color::Chalk, fork::options::Options, workspace_command,

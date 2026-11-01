@@ -1,4 +1,6 @@
 //! Read the bare collector's live and trashed objects before publishing any effects.
+//!
+//! Decodes [`Object`] entries into a [`BTreeMap`] and hashes payloads with [`Sha1`].
 use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::BTreeMap, fs, io, path::Path};

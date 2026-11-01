@@ -1,4 +1,4 @@
-//! Published export wildcard selection filters pending IDs before transferring objects.
+//! Published export wildcard selection ([`Options`], [`Engine`]) filters pending IDs before transferring objects.
 use super::{Options, options};
 use crate::commands::engine::Engine;
 use serde_json::{Value, json};
