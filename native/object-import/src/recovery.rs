@@ -1,3 +1,5 @@
+//! Crash-recovery `.bitmap`, file-copy, and component-reset planning primitives.
+
 pub(crate) mod jsonc;
 
 pub(crate) use copy::{file as copy_file, validate as validate_copy};

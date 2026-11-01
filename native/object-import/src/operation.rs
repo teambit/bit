@@ -1,4 +1,4 @@
-//! Bounded import plans use caller-owned canonical values; no object/cache state survives a frame.
+//! Bounded import merge plans over caller-owned canonical `Component`, `Version`, and `VersionHistory` values.
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{

@@ -1,3 +1,5 @@
+//! Three-way file merge classification and `git merge-file` invocation across `current`, `base`, and `other`.
+
 pub(crate) mod git;
 
 pub(crate) use verified::verified;

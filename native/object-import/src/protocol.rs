@@ -1,5 +1,4 @@
-//! The frames a workspace session serves (`WorkspaceSession::request`):
-//! each request names its handler with four magic bytes.
+//! Four-byte magic-header frame routing (`WorkspaceSession::request`) for workspace session extensions.
 
 use rayon::ThreadPool;
 use serde::Serialize;

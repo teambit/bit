@@ -1,3 +1,5 @@
+//! Session-scoped merge, checkout, snapshot, inspection, and transfer request dispatcher.
+
 pub(crate) mod write;
 
 pub(crate) use state::State;

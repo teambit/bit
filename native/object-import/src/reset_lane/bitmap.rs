@@ -1,4 +1,4 @@
-//! Insert a staged soft-deleted component at `BitMap`'s component-key position.
+//! Insert a staged soft-deleted component at `BitMap` component-key position.
 
 use super::invalid;
 use serde_json::{Map, Value};

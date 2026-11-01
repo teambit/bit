@@ -1,3 +1,5 @@
+//! Unmerged component record reconciliation (`unmerged.json`) for snap/tag parent and unrelated links.
+
 use super::{hash, invalid};
 use serde::Deserialize;
 use serde_json::{Value, json};

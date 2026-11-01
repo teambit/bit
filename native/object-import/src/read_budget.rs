@@ -1,3 +1,5 @@
+//! Atomic shared byte-budget reservation for bounded parallel regular-file reads.
+
 use std::{
     fs::File,
     io::{self, Read},

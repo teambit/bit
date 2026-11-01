@@ -1,4 +1,5 @@
 //! Keep an original handle open while checking Windows file identity before truncation.
+
 use super::invalid;
 use std::{
     fs::{self, OpenOptions},

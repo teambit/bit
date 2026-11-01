@@ -1,7 +1,7 @@
 //! File-scope side of the published remote hard-delete operations.
 //!
-//! The legacy repository removes Component and tagged Version refs only. Source,
-//! `VersionHistory`, orphaned Version and Lane references intentionally survive.
+//! The legacy repository removes `Component` and tagged `Version` refs only. `Source`,
+//! `VersionHistory`, orphaned `Version`, and `Lane` references intentionally survive.
 
 mod graph;
 mod lane;

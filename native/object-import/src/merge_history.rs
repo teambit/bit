@@ -1,3 +1,5 @@
+//! `Version` ancestry graph loading, divergence computation, and three-way file merge planning.
+
 pub(crate) mod merge;
 pub(crate) mod metadata;
 pub(crate) mod status;

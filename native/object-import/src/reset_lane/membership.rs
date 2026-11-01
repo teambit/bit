@@ -1,4 +1,4 @@
-//! Visible and hidden lane membership share selection but not workspace bitmap writes.
+//! Visible and hidden lane membership projection sharing selection without workspace `.bitmap` writes.
 use super::{Selection, invalid};
 use serde_json::Value;
 use std::io;

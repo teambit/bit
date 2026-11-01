@@ -1,3 +1,5 @@
+//! Pre-verified three-way file merge execution using retained `Source` and workspace bytes.
+
 use super::{MAX_RAW, Prepared, Request, count, execute, hash, invalid, path, text};
 use serde_json::Value;
 use std::{collections::HashSet, io};

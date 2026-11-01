@@ -1,3 +1,5 @@
+//! Stage-grouped component completion permutation validation (`mergePlanOrder`).
+
 use super::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io};

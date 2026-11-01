@@ -1,4 +1,4 @@
-//! Repository reset removes only selected unmerged entries; workspace Sources stay untouched.
+//! Repository reset pruning of selected `unmerged.json` entries while leaving workspace `Source` files untouched.
 use super::invalid;
 use serde_json::Value;
 use std::{

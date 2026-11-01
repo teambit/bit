@@ -1,3 +1,5 @@
+//! Native repository object import, checkout, merge, history, and workspace command engine.
+
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 

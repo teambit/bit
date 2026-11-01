@@ -1,4 +1,5 @@
 //! Inspect Windows link identity without following reparse points before copying.
+
 use std::{fs::OpenOptions, io, os::windows::fs::OpenOptionsExt, path::Path};
 
 const DEVICE: u64 = 0x0040;

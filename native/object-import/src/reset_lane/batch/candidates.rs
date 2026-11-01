@@ -1,4 +1,4 @@
-//! Discover staged models in scope-index order before selectors or replacement planning.
+//! Discover staged `Component` models in scope-index order before selector or replacement planning.
 #[cfg(test)]
 mod tests;
 use super::super::{

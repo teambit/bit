@@ -1,4 +1,4 @@
-//! Writing serialized objects into the object store.
+//! Header validation and zlib compression for writing mutable serialized objects into the store.
 
 use crate::store::Store;
 use flate2::{Compression, write::ZlibEncoder};

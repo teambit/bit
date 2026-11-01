@@ -1,3 +1,5 @@
+//! Token-guarded step-by-step filesystem recovery operation queue (`Copy`, `Remove`, `EnsureDir`).
+
 #[cfg(test)]
 #[path = "operations_tests.rs"]
 mod tests;

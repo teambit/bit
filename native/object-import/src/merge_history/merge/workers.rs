@@ -1,3 +1,5 @@
+//! Serial and `Rayon`-parallel file merge classification across current component files.
+
 use super::{Execution, classify};
 use rayon::prelude::*;
 use serde_json::Value;

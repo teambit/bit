@@ -1,3 +1,5 @@
+//! Bounded `Version` object reader with optional raw-JSON and size metadata capture.
+
 use crate::{checkout::repository, merge_history};
 use serde_json::Value;
 use std::{io, path::Path};

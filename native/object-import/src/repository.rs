@@ -1,4 +1,4 @@
-//! Bounded repository metadata reads shared by VCS operations and diagnostics.
+//! Bounded repository object metadata reads shared by VCS operations and diagnostics.
 use crate::{checkout::repository, merge_history};
 use serde_json::Value;
 use std::{io, path::Path};

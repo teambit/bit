@@ -1,3 +1,5 @@
+//! Ordered `Version` log message extraction for squashed lane merges.
+
 use super::squash::references_valid;
 use serde_json::{Value, json};
 use std::{io, path::Path};

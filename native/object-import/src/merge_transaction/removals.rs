@@ -1,3 +1,5 @@
+//! Tracked file removal filtering and `.bitmap` preservation during merge materialization.
+
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};
 use std::io;

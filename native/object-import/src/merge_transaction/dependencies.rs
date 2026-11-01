@@ -1,3 +1,5 @@
+//! Merged component dependency version alignment and workspace availability filtering.
+
 use super::invalid;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};

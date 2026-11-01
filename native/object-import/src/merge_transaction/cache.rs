@@ -1,3 +1,5 @@
+//! Deduplicated `Source` body capsule spooling and reference indexing for merge transactions.
+
 use super::{invalid, reads::Trace};
 use serde_json::{Value, json};
 use std::{

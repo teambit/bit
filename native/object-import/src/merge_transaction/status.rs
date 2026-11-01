@@ -1,3 +1,5 @@
+//! Per-component merge status state machine (`mergeStatusBegin` / `mergeStatusReceipt`).
+
 use super::{decision::boolean, invalid, journal};
 use serde::Deserialize;
 use serde_json::{Value, json};

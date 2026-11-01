@@ -1,3 +1,5 @@
+//! Conservative `Version` object schema validation for native history and merge eligibility.
+
 // Conservative eligibility covers parseable Version records; unsupported model constructors replay in Node.
 use super::{count, hash, invalid};
 use serde_json::Value;

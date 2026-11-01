@@ -1,3 +1,5 @@
+//! Read-only `Version` ancestry divergence calculation for `bit status` ahead/behind counts.
+
 use super::{graph, hash, invalid};
 use serde_json::{Value, json};
 use std::io;

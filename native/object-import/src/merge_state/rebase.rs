@@ -1,3 +1,5 @@
+//! `VersionHistory` rebase intersection index calculation between existing and incoming versions.
+
 use super::{hash, squash::references_valid};
 use serde::Deserialize;
 use serde_json::{Value, json};

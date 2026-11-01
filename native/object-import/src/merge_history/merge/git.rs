@@ -1,3 +1,5 @@
+//! Bounded `git merge-file` subprocess execution for three-way text file merges.
+
 #[cfg(test)]
 mod tests;
 

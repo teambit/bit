@@ -1,3 +1,5 @@
+//! Phase-ordered execution journal and receipt verification for merge transactions.
+
 use super::invalid;
 use serde::Deserialize;
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Proves that every object used for a delete decision still has its source bytes.
+//! Prove that every object used for a remote delete decision still matches its preimage bytes.
 
 #[cfg(test)]
 mod tests;

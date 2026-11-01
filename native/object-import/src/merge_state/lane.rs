@@ -1,3 +1,5 @@
+//! `Lane` head, visibility, and parent mutation planning during snap/tag/merge operations.
+
 use super::{hash, invalid};
 use serde::Deserialize;
 use serde_json::{Value, json};

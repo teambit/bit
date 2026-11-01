@@ -1,3 +1,5 @@
+//! Bounded zlib stream inflation for repository object metadata headers and bodies.
+
 #[cfg(test)]
 mod tests;
 

@@ -1,4 +1,4 @@
-//! Reset graph-selected local lane snapshots without changing workspace sources.
+//! Reset graph-selected local lane snapshots without changing workspace source files.
 
 pub(crate) mod bitmap;
 pub(crate) mod controls;

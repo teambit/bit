@@ -1,3 +1,5 @@
+//! `Rayon` thread-pool installation routing for parallel-eligible session requests.
+
 use super::{Request, State, apply};
 use serde_json::Value;
 use std::io;

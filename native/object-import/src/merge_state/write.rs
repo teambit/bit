@@ -1,3 +1,5 @@
+//! Safe regular-file truncation, write, and metadata restoration for merge state files.
+
 #[cfg(windows)]
 mod windows;
 use super::invalid;

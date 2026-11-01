@@ -1,3 +1,5 @@
+//! Merge file-body preparation, checkout transition binding, and materialization execution.
+
 #[cfg(test)]
 mod tests;
 use super::{cache, invalid, journal, reads};

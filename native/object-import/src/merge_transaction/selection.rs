@@ -1,3 +1,5 @@
+//! Merge status outcome partitioning (`failed`, `remove`, `succeeded`, `visible`).
+
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};
 use std::io;

@@ -1,3 +1,5 @@
+//! Thread-local `Source` object read tracing and byte-budget accounting for merge transactions.
+
 use super::invalid;
 use crate::checkout::repository::SourceRecord;
 use serde_json::{Value, json};

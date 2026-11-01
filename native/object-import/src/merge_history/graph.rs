@@ -1,3 +1,5 @@
+//! `Version` ancestry graph validation, subset extraction, and common-ancestor divergence analysis.
+
 use super::{count, hash, invalid, path};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};

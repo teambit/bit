@@ -1,4 +1,4 @@
-//! The all-version reverse dependency graph used by `Scope.getDependentsBitIds`.
+//! All-version reverse dependency graph used by `Scope.getDependentsBitIds`.
 
 use super::{hash, invalid, readset::Readset};
 use indexmap::{IndexMap, IndexSet};

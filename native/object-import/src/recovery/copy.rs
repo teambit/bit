@@ -1,3 +1,5 @@
+//! Validated regular-file copy with symlink, hard-link, and ancestor-directory guards.
+
 #[cfg(windows)]
 mod windows;
 

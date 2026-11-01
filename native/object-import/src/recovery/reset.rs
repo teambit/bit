@@ -1,3 +1,5 @@
+//! `Component` head, lane-head, tag, and detached-head reset planning (`historyResetComponentPlan`).
+
 #[cfg(test)]
 #[path = "reset_tests.rs"]
 mod tests;

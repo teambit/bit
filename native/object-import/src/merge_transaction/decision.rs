@@ -1,3 +1,5 @@
+//! Per-component merge strategy, head-update, and squash decision evaluation (`mergeApplyDecision`).
+
 use super::invalid;
 use serde_json::{Value, json};
 use std::io;

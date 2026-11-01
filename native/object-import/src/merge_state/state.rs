@@ -1,3 +1,5 @@
+//! Session-wide `merge_state` container and `unmerged.json` record state machine.
+
 use super::{hash, invalid};
 use serde::Deserialize;
 use serde_json::{Value, json};

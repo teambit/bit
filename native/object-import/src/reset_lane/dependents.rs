@@ -1,4 +1,4 @@
-//! Published `loadAllVersions` uses tagged/orphaned Versions and flattened dependency edges.
+//! Published `loadAllVersions` dependent validation across tagged/orphaned `Version` objects and flattened edges.
 use super::{diagnostics, invalid, proofs};
 use serde_json::Value;
 use std::{io, path::Path};

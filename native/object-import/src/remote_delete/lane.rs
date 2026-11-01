@@ -1,4 +1,4 @@
-//! Bare-scope `Lanes.removeLanes`: trash Lane objects and unindex them.
+//! Bare-scope `Lanes.removeLanes`: move `Lane` objects to trash and unindex them.
 
 use super::{
     Basis, Plan, ScopeGuard, Selection, hash, invalid, object_path, read_index, readset::Readset,
