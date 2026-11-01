@@ -6,7 +6,7 @@ use std::{io, path::Path};
 pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
     let bitmap = config::document(&root.join(".bitmap"))?;
     let rows = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap"))?;
-    let mut targets = Vec::new();
+    let mut targets = Vec::with_capacity(rows.len());
     for (key, row) in rows {
         if key.starts_with('$')
             || matches!(key.as_str(), "_bit_lane" | "version")
@@ -58,8 +58,12 @@ pub(super) fn requested_target(id: &str) -> io::Result<Target> {
 }
 
 fn valid_target_parts(scope: &str, name: &str, raw_version: &str) -> bool {
-    let valid_segment =
-        |part: &str| !part.is_empty() && !part.contains("..") && !part.contains('\\');
+    let valid_segment = |part: &str| {
+        !part.is_empty()
+            && !part.contains("..")
+            && !part.contains('\\')
+            && !part.chars().any(char::is_control)
+    };
     valid_segment(scope)
         && scope.len() <= 512
         && valid_segment(name)
@@ -69,9 +73,7 @@ fn valid_target_parts(scope: &str, name: &str, raw_version: &str) -> bool {
         && !name.ends_with('/')
         && !raw_version.is_empty()
         && raw_version.len() <= 256
-        && ![scope, name, raw_version]
-            .into_iter()
-            .any(|part| part.chars().any(char::is_control))
+        && !raw_version.chars().any(char::is_control)
 }
 
 fn normalize_target_version(raw_version: &str) -> &str {

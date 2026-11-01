@@ -132,7 +132,7 @@ fn check_sources(root: &Path, row: &Value, version: &Value) -> io::Result<()> {
         .ok_or_else(|| invalid("inbound existing files"))?;
     let mut compressed = 0;
     let mut bytes = 0_usize;
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(files.len());
     for file in files {
         let relative = file["relativePath"]
             .as_str()

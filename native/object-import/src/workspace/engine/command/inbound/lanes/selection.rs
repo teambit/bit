@@ -8,7 +8,7 @@ pub(super) fn ids(input: &Prepare) -> io::Result<Vec<String>> {
     if input.ids.is_empty() {
         return tracked(&input.root);
     }
-    let scope = config::document(&crate::scope_path(&input.root).join("scope.json"))?;
+    let mut scope_doc = None;
     input.ids
         .iter()
         .map(String::as_str)
@@ -23,25 +23,37 @@ pub(super) fn ids(input: &Prepare) -> io::Result<Vec<String>> {
                 }
                 return Ok(format!("{scope}/{lane}"));
             }
-            let row = scope["lanes"]["tracking"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .find(|row| row["localLane"].as_str().map(str::trim) == Some(id))
-                .ok_or_else(|| invalid("inbound lane alias not tracked"))?;
-            let remote_scope = row["remoteScope"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())
-                .ok_or_else(|| invalid("inbound lane alias scope"))?;
-            let remote_lane = row["remoteLane"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())
-                .ok_or_else(|| invalid("inbound lane alias name"))?;
-            Ok(format!("{remote_scope}/{remote_lane}"))
+            resolve_alias(&input.root, &mut scope_doc, id)
         })
         .collect()
+}
+
+fn resolve_alias(
+    root: &Path,
+    scope_doc: &mut Option<serde_json::Value>,
+    id: &str,
+) -> io::Result<String> {
+    let scope = match scope_doc {
+        Some(doc) => doc,
+        None => scope_doc.insert(config::document(&crate::scope_path(root).join("scope.json"))?),
+    };
+    let row = scope["lanes"]["tracking"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|row| row["localLane"].as_str().map(str::trim) == Some(id))
+        .ok_or_else(|| invalid("inbound lane alias not tracked"))?;
+    let remote_scope = row["remoteScope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("inbound lane alias scope"))?;
+    let remote_lane = row["remoteLane"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("inbound lane alias name"))?;
+    Ok(format!("{remote_scope}/{remote_lane}"))
 }
 
 fn tracked(root: &Path) -> io::Result<Vec<String>> {

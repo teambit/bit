@@ -31,10 +31,11 @@ pub(super) fn has_unscoped_entry(rows: &Map<String, Value>, name: &str) -> bool 
     let name = name.trim();
     rows.iter()
         .any(|(key, row)| {
+            if !is_component_bitmap_entry(key, row) {
+                return false;
+            }
             let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
-            is_component_bitmap_entry(key, row)
-                && row_name.trim() == name
-                && row_scope.map_or("", str::trim).is_empty()
+            row_name.trim() == name && row_scope.map_or("", str::trim).is_empty()
         })
 }
 
@@ -57,7 +58,7 @@ pub(super) fn bitmap_key(
     {
         return Ok(name.to_owned());
     }
-    let previous = std::mem::take(rows);
+    let previous = std::mem::replace(rows, Map::with_capacity(rows.len() + 1));
     for (key, row) in previous {
         let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(&key, &row);
         let is_same_name = is_component_bitmap_entry(&key, &row) && row_name.trim() == name;

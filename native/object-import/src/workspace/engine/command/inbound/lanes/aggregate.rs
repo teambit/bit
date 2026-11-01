@@ -3,7 +3,10 @@ use super::{
     Prepare, Retained, State, Target, command_import, invalid, merge_remote, receipt, select,
 };
 use serde_json::{Value, json};
-use std::{collections::HashMap, io};
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+};
 
 pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, Value)> {
     let mut selection = select(input, None)?;
@@ -64,7 +67,7 @@ fn group(
     )
 }
 
-fn snapshot(import: &command_import::PreparedImport) -> HashMap<String, Vec<String>> {
+fn snapshot(import: &command_import::PreparedImport) -> HashMap<String, HashSet<String>> {
     import.overlay
         .models()
         .into_iter()
@@ -79,14 +82,14 @@ fn snapshot(import: &command_import::PreparedImport) -> HashMap<String, Vec<Stri
                 .into_iter()
                 .chain(model["orphanedVersions"].as_object())
                 .flat_map(serde_json::Map::keys)
-                .cloned()
+                .map(|key| key.trim().to_owned())
                 .collect();
             (id, versions)
         })
         .collect()
 }
 
-fn adjust(receipt: &mut Value, before: &HashMap<String, Vec<String>>) -> io::Result<()> {
+fn adjust(receipt: &mut Value, before: &HashMap<String, HashSet<String>>) -> io::Result<()> {
     for row in
         receipt["importDetails"].as_array_mut().ok_or_else(|| invalid("inbound group details"))?
     {
@@ -106,9 +109,7 @@ fn adjust(receipt: &mut Value, before: &HashMap<String, Vec<String>>) -> io::Res
             else {
                 return false;
             };
-            !previous
-                .iter()
-                .any(|old| old.trim() == ver)
+            !previous.contains(ver)
         });
         let empty = versions.is_empty();
         row["status"] = json!(if empty {

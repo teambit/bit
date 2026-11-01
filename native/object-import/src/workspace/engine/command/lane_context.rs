@@ -180,9 +180,7 @@ fn is_added_directory(context: &Value, scope: &[Value], stash: &[Value], relativ
         })
         || scope
             .iter()
-            .any(|candidate| candidate["rootDir"].as_str().map(str::trim) == Some(relative))
-        || stash
-            .iter()
+            .chain(stash)
             .any(|candidate| candidate["rootDir"].as_str().map(str::trim) == Some(relative))
 }
 

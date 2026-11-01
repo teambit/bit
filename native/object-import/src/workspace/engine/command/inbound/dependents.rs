@@ -3,6 +3,8 @@ pub(in crate::workspace::engine) use stages::{Complete, complete};
 pub(super) use stages::{Pending, begin, needed};
 
 mod stages;
+#[cfg(test)]
+mod tests;
 mod traversal;
 
 use super::{Prepare, Target, dependencies, invalid};
@@ -29,9 +31,10 @@ fn select(
         .collect::<Vec<_>>();
     let paths = paths(adjacency, sources, &ends, &through)?;
     let mut unique = Vec::new();
+    let mut seen_unique = HashSet::new();
     for path in paths {
         for id in path {
-            if !unique.contains(&id) {
+            if seen_unique.insert(id.clone()) {
                 unique.push(id);
             }
         }
@@ -136,9 +139,6 @@ fn bare(id: &str) -> &str {
         .filter(|base| !base.is_empty())
         .unwrap_or(id)
 }
-
-#[cfg(test)]
-mod tests;
 
 fn eligible_path(path: &[String], via: &[String]) -> bool {
     path.len() >= 3

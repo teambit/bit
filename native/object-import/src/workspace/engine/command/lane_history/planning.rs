@@ -13,7 +13,8 @@ pub(in crate::workspace::engine::command) fn attach(
         .into_iter()
         .map(Some)
         .collect::<Vec<_>>();
-    let mut targets = Vec::new();
+    plan.captured.reserve(phase.versions.len());
+    let mut targets = Vec::with_capacity(phase.versions.len());
     for (identity, version) in &phase.versions {
         let identity = bare_id(identity);
         let version = version.trim();
@@ -88,11 +89,12 @@ fn destination<'a>(context: &'a Value, identity: &str) -> io::Result<&'a Value> 
         .ok_or_else(|| invalid("history addition destinations"))?
         .iter()
         .find(|row| {
-            format!(
-                "{}/{}",
-                row["scope"].as_str().map_or("", str::trim),
-                row["name"].as_str().map_or("", str::trim),
-            ) == identity
+            let scope = row["scope"].as_str().map_or("", str::trim);
+            let name = row["name"].as_str().map_or("", str::trim);
+            identity
+                .strip_prefix(scope)
+                .and_then(|rest| rest.strip_prefix('/'))
+                == Some(name)
         })
         .ok_or_else(|| invalid("history addition absent"))?;
     Ok(destination)

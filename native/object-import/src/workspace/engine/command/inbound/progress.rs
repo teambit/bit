@@ -23,14 +23,7 @@ pub(super) fn rows(
     if !depth && !head_dependencies {
         return progress;
     }
-    let latest_roots = roots
-        .iter()
-        .filter(|root| {
-            let ver = root.version.trim();
-            ver.is_empty() || ver.eq_ignore_ascii_case("latest") || ver.eq_ignore_ascii_case("head")
-        })
-        .count()
-        * usize::from(depth);
+    let latest_roots = latest_root_count(roots, depth);
     let object_phase = depth && (head_dependencies || latest_roots > 0);
     let scopes = roots
         .iter()
@@ -46,6 +39,19 @@ pub(super) fn rows(
         adjust(row, roots, latest_roots, object_phase, head_dependencies, scopes);
     }
     progress
+}
+
+fn latest_root_count(roots: &[Target], depth: bool) -> usize {
+    if !depth {
+        return 0;
+    }
+    roots
+        .iter()
+        .filter(|root| {
+            let ver = root.version.trim();
+            ver.is_empty() || ver.eq_ignore_ascii_case("latest") || ver.eq_ignore_ascii_case("head")
+        })
+        .count()
 }
 
 fn adjust(

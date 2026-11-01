@@ -9,7 +9,7 @@ use crate::{checkout::repository, merge_history, validate::hexadecimal};
 use bit_client_transfer::tar::ObjectItem;
 use serde_json::Value;
 use sha1::Digest;
-use std::{collections::HashMap, path::Path};
+use std::{borrow::Cow, collections::HashMap, path::Path};
 
 /// The objects one request returned, then the workspace's own.
 struct Objects<'a> {
@@ -48,18 +48,20 @@ impl Objects<'_> {
             .any(|dependency| !self.built(dependency))
     }
 
-    fn flattened_dependencies(&self, version: &Value) -> Option<Vec<Value>> {
+    fn flattened_dependencies<'b>(&self, version: &'b Value) -> Option<Cow<'b, [Value]>> {
         if let Some(rows) = version["flattenedDependencies"].as_array()
             && (!rows.is_empty() || !version["flattenedDependenciesRef"].is_string())
         {
-            return Some(rows.clone());
+            return Some(Cow::Borrowed(rows.as_slice()));
         }
         if let Some(hash) = version["flattenedDependenciesRef"].as_str() {
             let body = self.body(hash, "Source")?;
-            let parsed = crate::parse_jsonc(&body).ok()?;
-            return parsed.as_array().cloned();
+            let Value::Array(rows) = crate::parse_jsonc(&body).ok()? else {
+                return None;
+            };
+            return Some(Cow::Owned(rows));
         }
-        version["flattenedDependencies"].as_array().cloned()
+        version["flattenedDependencies"].as_array().map(|rows| Cow::Borrowed(rows.as_slice()))
     }
 
     /// `sources.getMany(flattenedDependencies, reFetchUnBuiltVersion)`: the dependency's

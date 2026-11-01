@@ -15,11 +15,12 @@ pub(super) async fn main(
 ) -> io::Result<Vec<Listed>> {
     match remote {
         Remote::Http(url) => {
+            let scope = scope.trim();
             let rows = network.list(url, Some(namespaces)).await?;
             if rows.len() > 16384
                 || rows
                     .iter()
-                    .any(|row| row.scope.trim() != scope.trim() || row.name.trim().is_empty())
+                    .any(|row| row.scope.trim() != scope || row.name.trim().is_empty())
             {
                 return Err(super::invalid("inbound HTTP list result"));
             }

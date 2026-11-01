@@ -31,11 +31,12 @@ pub(in crate::workspace::engine) fn finalize(
         return Err(invalid("auto-sync inbound token"));
     }
     let mut repository = Repository::new(&input.root, None);
-    let mut updates = Vec::new();
+    let overlay_models = retained.import.overlay.models();
+    let mut updates = Vec::with_capacity(input.ids.len());
     for id in &input.ids {
-        let model = match retained.import.overlay
-            .models()
-            .into_iter()
+        let model = match overlay_models
+            .iter()
+            .copied()
             .find(|model| model_matches_id(model, id))
         {
             Some(model) => model.clone(),

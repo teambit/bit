@@ -150,18 +150,24 @@ fn valid_write_mode(input: &Prepare) -> bool {
 fn is_unscoped_match(key: &str, row: &Value, raw_id: &str) -> bool {
     let key = key.trim();
     let raw_id = raw_id.trim();
-    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
+    if key.starts_with('$')
+        || matches!(key, "_bit_lane" | "version")
+        || !row.is_object()
+        || row["scope"]
+            .as_str()
+            .is_some_and(|scope| !scope.trim().is_empty())
+    {
         return false;
     }
-    let has_scope = row["scope"]
-        .as_str()
-        .is_some_and(|scope| !scope.trim().is_empty());
     let name_part = raw_id.split_once('/').map_or(raw_id, |(_, name)| name.trim());
     let row_name = crate::reset_lane::bitmap::row_identity(key, row).1;
-    !has_scope && (key == raw_id || row_name == raw_id || row_name == name_part)
+    key == raw_id || row_name == raw_id || row_name == name_part
 }
 
 fn has_local_unscoped_conflict(input: &Prepare) -> io::Result<bool> {
+    if input.ids.is_empty() {
+        return Ok(false);
+    }
     let Ok(bitmap) = super::config::document(&input.root.join(".bitmap")) else {
         return Ok(false);
     };

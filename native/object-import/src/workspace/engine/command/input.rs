@@ -37,21 +37,17 @@ pub(super) struct Options {
     #[serde(flatten)]
     flags: Flags,
 }
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
 pub(super) struct ScopeOptions {
-    #[serde(default)]
     pub(super) include_new_from_scope: bool,
-    #[serde(default)]
     pub(super) scope_candidates: Vec<String>,
     pub(super) lane_history: Option<super::lane_history::Options>,
 }
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct StashOptions {
-    #[serde(default)]
     pub(super) versions: Vec<StashVersion>,
-    #[serde(default)]
     pub(super) bitmap_entries: Vec<serde_json::Value>,
     pub(super) reset_ids: Option<Vec<String>>,
 }
@@ -70,23 +66,16 @@ pub(super) struct LaneOptions {
     #[serde(flatten)]
     pub(super) flags: LaneFlags,
 }
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct LaneFlags {
     pub(super) resolve_unrelated: Option<String>,
-    #[serde(default)]
     pub(super) no_auto_snap: bool,
-    #[serde(default)]
     pub(super) no_squash: bool,
-    #[serde(default)]
     pub(super) squash: bool,
-    #[serde(default)]
     pub(super) skip_fetch: bool,
-    #[serde(default)]
     pub(super) include_deps: bool,
-    #[serde(default)]
     pub(super) workspace_only: bool,
-    #[serde(default)]
     pub(super) exclude_non_lane_comps: bool,
 }
 impl std::ops::Deref for LaneOptions {
@@ -95,24 +84,17 @@ impl std::ops::Deref for LaneOptions {
         &self.flags
     }
 }
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
 pub(super) struct Flags {
-    #[serde(default)]
     pub(super) all: bool,
-    #[serde(default)]
     pub(super) force_ours: bool,
-    #[serde(default)]
     pub(super) force_theirs: bool,
-    #[serde(default)]
     pub(super) no_snap: bool,
-    #[serde(default)]
     pub(super) revert: bool,
-    #[serde(default)]
     pub(super) workspace_only: bool,
-    #[serde(default, rename = "verbose")]
+    #[serde(rename = "verbose")]
     _verbose: bool,
-    #[serde(default)]
     pub(super) skip_dependency_installation: bool,
 }
 impl std::ops::Deref for Options {

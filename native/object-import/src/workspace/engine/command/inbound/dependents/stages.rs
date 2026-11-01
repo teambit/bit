@@ -72,7 +72,7 @@ pub(in crate::workspace::engine) fn complete(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let mut retained = state.inbound.take().ok_or_else(|| invalid("inbound graph owner absent"))?;
-    let token = request.token.trim().to_owned();
+    let token = request.token.trim();
     if token.is_empty() || retained.token != token {
         return Err(invalid("inbound graph token"));
     }
@@ -84,8 +84,14 @@ pub(in crate::workspace::engine) fn complete(
     fetch.options.dependencies.import_head_dependencies = false;
     fetch.options.dependencies.dependencies_depth = None;
     let (_, imported) = super::super::prepare_targets(&fetch, &targets)?;
-    let mut result =
-        super::super::finish(&pending.input, &pending.roots, &targets, imported, state, token)?;
+    let mut result = super::super::finish(
+        &pending.input,
+        &pending.roots,
+        &targets,
+        imported,
+        state,
+        retained.token,
+    )?;
     let retained =
         state.inbound.as_mut().ok_or_else(|| invalid("inbound graph retained absent"))?;
     retained.proofs = request.graph.read_set;
@@ -96,10 +102,10 @@ pub(in crate::workspace::engine) fn complete(
 }
 
 fn overlay(rows: &[Value], graph: &mut HashMap<String, Vec<Target>>) -> io::Result<Vec<String>> {
-    let mut sources = Vec::new();
     if rows.len() > 4096 {
         return Err(invalid("inbound graph workspace limit"));
     }
+    let mut sources = Vec::with_capacity(rows.len());
     for row in rows {
         let identity = row["componentIdentity"]
             .as_str()
@@ -238,11 +244,7 @@ fn append_peer_dependencies(row: &Value, dependencies: &mut Vec<Target>) -> io::
             return Err(invalid("inbound resolved graph dependencies"));
         }
         let id = id.as_str().ok_or_else(|| invalid("inbound peer graph identity"))?;
-        let mut target = super::super::requested_target(id)?;
-        if !id.contains('@') {
-            target.version.clear();
-        }
-        dependencies.push(target);
+        dependencies.push(inline_target(id)?);
     }
     Ok(())
 }

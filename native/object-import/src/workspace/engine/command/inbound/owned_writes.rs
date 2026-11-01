@@ -7,16 +7,19 @@ pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
     if receipts.len() > 16384 {
         return Err(invalid("inbound owned publication count"));
     }
-    let mut positions = HashMap::<String, usize>::new();
-    let mut result: Vec<Value> = Vec::new();
+    let mut positions = HashMap::<String, usize>::with_capacity(receipts.len());
+    let mut result: Vec<Value> = Vec::with_capacity(receipts.len());
     for mut receipt in receipts {
-        let (path, before, after) = normalize_receipt(&mut receipt)?;
+        let (path, before, after) = normalize_receipt(&receipt)?;
         if let Some(&index) = positions.get(&path) {
             if result[index]["afterHash"] != before {
                 return Err(invalid("inbound owned publication preimages disagree"));
             }
             result[index]["afterHash"] = after;
         } else {
+            receipt["path"] = Value::String(path.clone());
+            receipt["beforeHash"] = before;
+            receipt["afterHash"] = after;
             positions.insert(path, result.len());
             result.push(receipt);
         }
@@ -24,7 +27,7 @@ pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
     Ok(result)
 }
 
-fn normalize_receipt(receipt: &mut Value) -> io::Result<(String, Value, Value)> {
+fn normalize_receipt(receipt: &Value) -> io::Result<(String, Value, Value)> {
     let path = receipt["path"]
         .as_str()
         .or_else(|| receipt["filePath"].as_str())
@@ -38,9 +41,6 @@ fn normalize_receipt(receipt: &mut Value) -> io::Result<(String, Value, Value)> 
     if !(before.is_null() || before.is_string()) || !(after.is_null() || after.is_string()) {
         return Err(invalid("inbound owned publication digest"));
     }
-    receipt["path"] = Value::String(path.clone());
-    receipt["beforeHash"] = before.clone();
-    receipt["afterHash"] = after.clone();
     Ok((path, before, after))
 }
 

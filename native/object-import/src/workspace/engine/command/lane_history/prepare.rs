@@ -48,10 +48,11 @@ fn select(
 ) -> io::Result<(usize, Value)> {
     let history = read(&input.root, lane_hash)?;
     let history_id = input.id.trim();
-    let item = history["history"]
+    let entries = &history["history"];
+    let item = entries
         .get(history_id)
         .or_else(|| {
-            history["history"]
+            entries
                 .as_object()
                 .and_then(|map| {
                     map.iter()

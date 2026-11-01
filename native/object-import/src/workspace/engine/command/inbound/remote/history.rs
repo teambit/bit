@@ -52,7 +52,8 @@ pub(in crate::workspace::engine::command) fn history_remote_at(
         )
         .await?;
         let (hash, _) = remote_lane(id, &items)?;
-        let (mut rows, _) = collect((Vec::new(), 0), root, id.scope.clone(), Some(items))?;
+        let (mut rows, _) =
+            collect((Vec::with_capacity(1), 0), root, id.scope.clone(), Some(items))?;
         let mut row = rows.pop().ok_or_else(|| invalid("lane history remote"))?;
         if bare {
             row.path = root.join(".rust-inbound-virtual").join(&id.scope);

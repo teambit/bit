@@ -252,7 +252,11 @@ fn bitmap_has(bitmap: &Value, identity: &str) -> bool {
                 return false;
             };
             let name = name.trim();
-            !name.is_empty() && format!("{scope}/{name}") == identity
+            !name.is_empty()
+                && identity
+                    .strip_prefix(scope)
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(name)
         })
 }
 
@@ -264,7 +268,7 @@ fn main_targets(
     exclude_non_lane: bool,
 ) -> io::Result<Vec<Entry>> {
     let ids = main_identities(bitmap, visible, current, exclude_non_lane)?;
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(ids.len());
     for (identity, hidden) in ids {
         let model =
             imported.lane_model(&identity)?.ok_or_else(|| invalid("command main model absent"))?;

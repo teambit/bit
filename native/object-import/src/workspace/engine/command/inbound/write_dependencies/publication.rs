@@ -47,13 +47,13 @@ pub(super) fn write(
 fn package(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> {
     let mut value: Value = crate::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?;
     let object = value.as_object_mut().ok_or_else(|| invalid("inbound package object"))?;
-    if object.get("dependencies").is_none_or(Value::is_null) {
-        object.insert("dependencies".into(), Value::Object(Map::new()));
+    let entry = object
+        .entry("dependencies")
+        .or_insert_with(|| Value::Object(Map::new()));
+    if entry.is_null() {
+        *entry = Value::Object(Map::new());
     }
-    let policy = object
-        .get_mut("dependencies")
-        .and_then(Value::as_object_mut)
-        .ok_or_else(|| invalid("inbound package dependencies"))?;
+    let policy = entry.as_object_mut().ok_or_else(|| invalid("inbound package dependencies"))?;
     for (name, range) in dependencies {
         policy.insert(name.trim().to_owned(), range.clone());
     }
@@ -105,8 +105,9 @@ fn backup(root: &Path, path: &Path, before: &[u8], file_id: &str) -> io::Result<
     let file_id = file_id.trim();
     crate::workspace::engine::command::bitmap::validate_history_file_id(file_id)?;
     let directory = crate::scope_path(root).join("workspace-config-history");
-    fs::create_dir_all(directory.join("files"))?;
-    let snapshot = directory.join("files").join(file_id);
+    let files_dir = directory.join("files");
+    fs::create_dir_all(&files_dir)?;
+    let snapshot = files_dir.join(file_id);
     fs::copy(path, &snapshot)?;
     if read(&snapshot)?.as_deref() != Some(before) {
         return Err(invalid("inbound workspace configuration backup changed"));

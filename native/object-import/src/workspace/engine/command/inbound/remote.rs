@@ -173,36 +173,23 @@ pub(super) fn active_lane(root: &Path) -> io::Result<Option<lane::Id>> {
     else {
         return Ok(None);
     };
-    let (scope, name) = file_list::row_id_parts(row)
-        .map_or_else(
-            || {
-                (
-                    row["scope"]
-                        .as_str()
-                        .unwrap_or_default()
-                        .trim()
-                        .to_owned(),
-                    row["name"]
-                        .as_str()
-                        .unwrap_or_default()
-                        .trim()
-                        .to_owned(),
-                )
-            },
-            |(scope, name)| {
-                (
-                    scope
-                        .unwrap_or_default()
-                        .trim()
-                        .to_owned(),
-                    name.trim().to_owned(),
-                )
-            },
-        );
+    let (scope, name) = match file_list::row_id_parts(row) {
+        Some((scope, name)) => (scope.unwrap_or_default().trim(), name.trim()),
+        None => (
+            row["scope"]
+                .as_str()
+                .unwrap_or_default()
+                .trim(),
+            row["name"]
+                .as_str()
+                .unwrap_or_default()
+                .trim(),
+        ),
+    };
     if name.is_empty() || name == "main" {
         return Ok(None);
     }
-    let id = lane::Id { scope, name };
+    let id = lane::Id { scope: scope.to_owned(), name: name.to_owned() };
     id.validate()?;
     Ok(Some(id))
 }
@@ -377,7 +364,7 @@ fn collect(
     items: Option<Vec<ObjectItem>>,
 ) -> io::Result<(Vec<VirtualRemote>, usize)> {
     let Some(items) = items else { return Ok((retained, total)) };
-    let mut objects = HashMap::<String, Vec<u8>>::new();
+    let mut objects = HashMap::<String, Vec<u8>>::with_capacity(items.len());
     for item in items {
         total = total
             .checked_add(item.compressed.len())

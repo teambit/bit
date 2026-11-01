@@ -147,16 +147,15 @@ fn is_ancestor_version(input: &Input<'_>, start: &str, target: &str) -> io::Resu
     Ok(false)
 }
 fn version_parents(input: &Input<'_>, hash: &str) -> io::Result<Vec<String>> {
-    let version = if let Some(ver) = details::local_object(input.root, hash, "Version")? {
-        Some(ver)
-    } else {
-        input.imported.overlay.read(hash, "Version")?.cloned()
+    let local = details::local_object(input.root, hash, "Version")?;
+    let version = match &local {
+        Some(ver) => Some(ver),
+        None => input.imported.overlay.read(hash, "Version")?,
     };
-    let Some(parents) = version.and_then(|ver| ver["parents"].as_array().cloned()) else {
-        return Ok(Vec::new());
-    };
-    Ok(parents
-        .iter()
+    Ok(version
+        .and_then(|ver| ver["parents"].as_array())
+        .into_iter()
+        .flatten()
         .filter_map(trimmed_str)
         .map(String::from)
         .collect())
@@ -358,7 +357,7 @@ fn files(version: &Value) -> io::Result<HashMap<String, String>> {
     if rows.is_empty() || rows.len() > 4096 {
         return Err(invalid("inbound existing file count"));
     }
-    let mut files = HashMap::new();
+    let mut files = HashMap::with_capacity(rows.len());
     for row in rows {
         let relative = row["relativePath"]
             .as_str()

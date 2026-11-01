@@ -8,16 +8,16 @@ use std::{cmp::Ordering, collections::HashSet, io};
 
 pub(super) fn prepare(facts: &Value) -> io::Result<Map<String, Value>> {
     let mut rows = Vec::new();
+    let mut root_names = HashSet::new();
     for entry in array(&facts["rootPolicy"]["entries"])? {
+        if let Some(name) = entry["dependencyId"].as_str().map(str::trim) {
+            root_names.insert(name);
+        }
         push(
             &mut rows,
             json!({"name":entry["dependencyId"],"range":entry["value"]["version"],"root":true}),
         )?;
     }
-    let root_names = rows
-        .iter()
-        .map(|row| row["name"].clone())
-        .collect::<Vec<_>>();
     let variants = facts["variantPoliciesByPatterns"]
         .as_object()
         .ok_or_else(|| invalid("inbound variant policies"))?;
@@ -42,7 +42,11 @@ fn policy_rows(policy: &Value, rows: &mut Vec<Value>) -> io::Result<()> {
     Ok(())
 }
 
-fn component_rows(facts: &Value, root_names: &[Value], rows: &mut Vec<Value>) -> io::Result<()> {
+fn component_rows(
+    facts: &Value,
+    root_names: &HashSet<&str>,
+    rows: &mut Vec<Value>,
+) -> io::Result<()> {
     let components = array(&facts["components"])?;
     let local = components
         .iter()
@@ -72,9 +76,7 @@ fn component_rows(facts: &Value, root_names: &[Value], rows: &mut Vec<Value>) ->
             if dependency["isExtension"] == true
                 || dependency["lifecycleType"].as_str().map(str::trim) == Some("peer")
                 || local.contains(name)
-                || root_names
-                    .iter()
-                    .any(|value| value.as_str().map(str::trim) == Some(name))
+                || root_names.contains(name)
                 || npm::valid_range(version).is_none()
             {
                 continue;

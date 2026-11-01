@@ -137,15 +137,16 @@ fn valid_scope(scope: &str) -> bool {
 
 fn connection(input: &Request) -> io::Result<(Remotes, Network, GlobalConfig)> {
     if let Some(root) = &input.root {
-        let home = input.home
-            .clone()
-            .unwrap_or_else(|| {
-                PathBuf::from(
-                    env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
-                        .unwrap_or_default(),
-                )
-            });
-        let (remotes, network, global, _) = connection::with_home(root, &input.transport, &home)?;
+        let fallback;
+        let home = if let Some(home) = &input.home {
+            home.as_path()
+        } else {
+            fallback = PathBuf::from(
+                env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
+            );
+            fallback.as_path()
+        };
+        let (remotes, network, global, _) = connection::with_home(root, &input.transport, home)?;
         return Ok((remotes, network, global));
     }
     let global = connection::global_config(&input.transport)?;
@@ -335,21 +336,17 @@ fn latest_from_model(model: &Value) -> io::Result<String> {
         .map(str::trim)
         .ok_or_else(|| invalid("remote file model head"))?;
     crate::merge_history::hash(head)?;
-    for field in ["versions", "orphanedVersions"] {
-        if let Some(versions) = model[field].as_object()
-            && let Some((tag, _)) = versions
-                .iter()
-                .rev()
-                .find(|(_, value)| {
-                    value
-                        .as_str()
-                        .is_some_and(|val| val.trim().eq_ignore_ascii_case(head))
-                })
-        {
-            return Ok(tag.trim().to_owned());
-        }
-    }
-    Ok(head.to_owned())
+    Ok(model["versions"]
+        .as_object()
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(|versions| versions.iter().rev())
+        .find(|(_, value)| {
+            value
+                .as_str()
+                .is_some_and(|val| val.trim().eq_ignore_ascii_case(head))
+        })
+        .map_or_else(|| head.to_owned(), |(tag, _)| tag.trim().to_owned()))
 }
 
 fn lane_readme(version: &Value) -> io::Result<Vec<String>> {

@@ -14,9 +14,9 @@ pub(super) fn phases(
         return Err(invalid("history component budget"));
     }
     let membership = membership(bitmap, settings)?;
-    let mut existing = Vec::new();
+    let mut existing = Vec::with_capacity(rows.len());
     let mut deleted = Vec::new();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(rows.len());
     for row in rows {
         let (identity, version) = target(row)?;
         if !seen.insert(identity.clone()) {
@@ -104,13 +104,14 @@ fn target(row: &Value) -> io::Result<(String, String)> {
     let identity = identity.trim();
     let version = version.trim();
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("history scoped ID"))?;
+    let (scope, name) = (scope.trim(), name.trim());
     crate::command_import::lane::component_identity(
-        &serde_json::json!({"scope":scope.trim(),"name":name.trim()}),
+        &serde_json::json!({"scope":scope,"name":name}),
     )?;
     if version.is_empty() || version.chars().any(char::is_control) {
         return Err(invalid("history empty version"));
     }
-    Ok((format!("{}/{}", scope.trim(), name.trim()), version.to_owned()))
+    Ok((format!("{scope}/{name}"), version.to_owned()))
 }
 
 fn is_component_bitmap_row(key: &str, row: &Value) -> bool {

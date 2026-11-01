@@ -29,8 +29,8 @@ impl Prepared {
             existing::check(&self.root, &replacement.path, &replacement.before)?;
         }
         let created_dirs = self.missing_directories()?;
-        let mut written = Vec::new();
-        let mut replaced = Vec::new();
+        let mut written = Vec::with_capacity(self.changes.additions.len());
+        let mut replaced = Vec::with_capacity(self.changes.replacements.len());
         let mut history_published = false;
         let result = (|| {
             self.publish_files(&mut written)?;
@@ -201,7 +201,8 @@ impl History {
     }
     fn first_metadata(&self) -> Vec<u8> {
         let mut expected = self.metadata_before.clone().unwrap_or_default();
-        expected.extend_from_slice(format!("{} import\n", self.file_id.trim()).as_bytes());
+        expected.extend_from_slice(self.file_id.trim().as_bytes());
+        expected.extend_from_slice(b" import\n");
         expected
     }
     fn append_metadata(&self) -> io::Result<()> {

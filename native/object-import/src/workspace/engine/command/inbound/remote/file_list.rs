@@ -66,7 +66,10 @@ pub(super) fn matcher(scope: &str, namespaces: &str) -> io::Result<Regex> {
     {
         return Err(invalid("inbound file pattern"));
     }
-    let full = if namespaces.starts_with(&format!("{scope}/")) {
+    let full = if namespaces
+        .strip_prefix(scope)
+        .is_some_and(|rest| rest.starts_with('/'))
+    {
         namespaces.to_owned()
     } else {
         format!("{scope}/{namespaces}")
@@ -94,14 +97,14 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
             .as_array()
             .map_or(&[][..], Vec::as_slice)
     };
-    let matching = rows
-        .iter()
-        .filter(|row| row_lane_matches(row, &id.scope, &id.name))
-        .collect::<Vec<_>>();
-    if matching.len() != 1 {
+    let mut matching = rows.iter().filter(|row| row_lane_matches(row, &id.scope, &id.name));
+    let Some(first) = matching.next() else {
+        return Err(invalid("inbound file lane identity"));
+    };
+    if matching.next().is_some() {
         return Err(invalid("inbound file lane identity"));
     }
-    matching[0]["hash"]
+    first["hash"]
         .as_str()
         .map(str::trim)
         .filter(|hash| !hash.is_empty())

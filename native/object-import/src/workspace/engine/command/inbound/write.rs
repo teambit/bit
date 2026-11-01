@@ -138,19 +138,16 @@ fn prepare_targets(
         relocation::prepare_into(root, &mut directories, rows, &mut changes.relocation)?;
     }
     let mut directories = directories.into_iter();
-    let mut written = HashSet::new();
+    let mut written = HashSet::with_capacity(targets.len());
     for target in targets {
         plan_target(&context, target, &mut directories, rows, &mut changes, &mut written)?;
     }
-    let added: usize = changes.additions
+    let total = changes.additions
         .iter()
         .map(|(_, bytes)| bytes.len())
-        .sum();
-    let replaced: usize = changes.replacements
-        .iter()
-        .map(|item| item.after.len())
-        .sum();
-    if added.saturating_add(replaced) > MAX_WRITTEN_BYTES {
+        .chain(changes.replacements.iter().map(|item| item.after.len()))
+        .fold(0usize, usize::saturating_add);
+    if total > MAX_WRITTEN_BYTES {
         return Err(invalid("inbound workspace materialization bytes"));
     }
     changes.component_order = metadata::component_order(root, rows)?;
@@ -211,11 +208,6 @@ fn plan_target(
         return Err(invalid("inbound workspace destination occupied"));
     }
     if let Some(row) = existing {
-        let resolution = existing::Resolution {
-            override_existing: context.override_existing,
-            merge_strategy: context.merge_strategy,
-            track_only: context.track_only,
-        };
         let input = existing::Input {
             root: context.root,
             directory: &directory,
@@ -223,7 +215,11 @@ fn plan_target(
             imported: context.imported,
             row: &row,
             lane: context.lane,
-            resolution,
+            resolution: existing::Resolution {
+                override_existing: context.override_existing,
+                merge_strategy: context.merge_strategy,
+                track_only: context.track_only,
+            },
         };
         existing::prepare(&input, rows, changes)
     } else {
@@ -335,7 +331,7 @@ fn target_files(
         return Err(invalid("inbound workspace files"));
     }
     let mut files = Vec::with_capacity(rows.len());
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(rows.len());
     for file in rows {
         let relative = file["relativePath"]
             .as_str()

@@ -4,7 +4,7 @@ use crate::workspace::engine::{
     command::{input::Prepare, lane_history::Phase},
 };
 use serde_json::Value;
-use std::io;
+use std::{collections::HashMap, io};
 pub(super) fn read(
     request: &Prepare,
     pool: &rayon::ThreadPool,
@@ -13,12 +13,18 @@ pub(super) fn read(
     phase: &Phase,
 ) -> io::Result<Value> {
     let all = all_targets(bitmap, settings)?;
+    let mut by_id = HashMap::with_capacity(all.len());
+    for row in &all {
+        if let Some(id) = row_bare_identity(row) {
+            by_id.entry(id).or_insert(row);
+        }
+    }
     let targets = phase.versions
         .iter()
         .filter_map(|(id, _)| {
-            let id = bare_identity(id)?;
-            all.iter()
-                .find(|row| row_bare_identity(row) == Some(id))
+            by_id
+                .get(bare_identity(id)?)
+                .copied()
                 .cloned()
         })
         .collect();

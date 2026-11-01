@@ -42,7 +42,7 @@ pub(super) fn run(
 }
 fn proofs(input: &Prepare, lane_hash: &str) -> io::Result<Vec<proof::Proof>> {
     let lane_hash = lane_hash.trim();
-    let mut proofs = Vec::new();
+    let mut proofs = Vec::with_capacity(3);
     proof::read(&input.root.join(".bitmap"), &mut proofs)?;
     let directory = crate::scope_path(&input.root).join("objects");
     for hash in [lane_hash, &crate::lane_history::hash(lane_hash)] {

@@ -72,8 +72,9 @@ pub(in crate::workspace::engine) fn prepare(
     state.sequence =
         state.sequence.checked_add(1).ok_or_else(|| invalid("lane history sequence limit"))?;
     let token = format!("lane-history-inspection-{}", state.sequence);
-    state.histories.inspection = Some(Box::new(Retained { token: token.clone(), import }));
-    Ok((1, json!({"token":token,"history":history,"needsApply":true})))
+    let output = json!({"token":&token,"history":history,"needsApply":true});
+    state.histories.inspection = Some(Box::new(Retained { token, import }));
+    Ok((1, output))
 }
 
 fn refresh(

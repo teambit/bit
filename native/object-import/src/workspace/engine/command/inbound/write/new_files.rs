@@ -7,6 +7,7 @@ pub(super) fn prepare(
     files: Vec<(PathBuf, Vec<u8>)>,
     changes: &mut WorkspaceFiles,
 ) -> io::Result<()> {
+    changes.additions.reserve(files.len());
     for (path, after) in files {
         prepare_one(context, path, after, changes)?;
     }

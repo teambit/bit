@@ -28,9 +28,10 @@ impl Recovery {
             Self { directory, files: Vec::new(), proofs: Vec::new(), permissions: Vec::new() };
         for (source, destination) in [(".bitmap", "bitmap"), ("workspace.jsonc", "workspace.jsonc")]
         {
-            let bytes = proof::read(&root.join(source), &mut output.proofs)?
+            let path = root.join(source);
+            let bytes = proof::read(&path, &mut output.proofs)?
                 .ok_or_else(|| invalid("lane recovery metadata absent"))?;
-            output.copy(&root.join(source), destination, bytes)?;
+            output.copy(&path, destination, bytes)?;
         }
         let staged_snaps = scope.join("staged-snaps");
         if let Some(bytes) = proof::read(&staged_snaps, &mut output.proofs)? {
@@ -51,6 +52,7 @@ impl Recovery {
         if models.len() > 4096 {
             return Err(invalid("lane recovery component budget"));
         }
+        self.files.reserve(models.len());
         for (index, model) in models.iter().enumerate() {
             let (_, bytes) = encode_model(model)?;
             self.files.push((format!("main-components/{index}"), bytes));

@@ -107,9 +107,14 @@ fn owner_directory(target: &Target, directory: &str, all: &[String]) -> Option<S
         .next()
         .map(str::trim)
         .filter(|owner| !owner.is_empty())?;
+    if directory
+        .strip_prefix(owner)
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+    {
+        return None;
+    }
     let owned = format!("{owner}/{directory}");
-    let has_owner_prefix = directory == owner || directory.starts_with(&format!("{owner}/"));
-    (!has_owner_prefix && !all.contains(&owned)).then_some(owned)
+    (!all.contains(&owned)).then_some(owned)
 }
 
 /// `fixDirsIfNested`: a directory that would contain another component's
@@ -119,9 +124,8 @@ pub(super) fn fix_dirs_if_nested(directories: &mut [String], existing: &[String]
     let all = directories.to_vec();
     let parents: Vec<usize> = (0..directories.len())
         .filter(|&index| {
-            let prefix = format!("{}/", directories[index]);
             all.iter()
-                .any(|other| other.starts_with(&prefix))
+                .any(|other| is_nested_in(other, &directories[index]))
         })
         .collect();
     let mut paths: Vec<String> = existing.to_vec();
@@ -136,25 +140,25 @@ pub(super) fn fix_dirs_if_nested(directories: &mut [String], existing: &[String]
         }
     }
     for directory in directories.iter_mut() {
-        let prefix = format!("{directory}/");
-        if existing
-            .iter()
-            .any(|other| other.starts_with(&prefix))
+        if existing.iter().any(|other| is_nested_in(other, directory))
             && !existing.contains(directory)
         {
             *directory = increment_path(directory, &paths);
         }
     }
     for directory in directories.iter_mut() {
-        let Some(parent) = existing
-            .iter()
-            .find(|other| directory.starts_with(&format!("{other}/")))
-        else {
+        let Some(parent) = existing.iter().find(|other| is_nested_in(directory, other)) else {
             continue;
         };
         let renamed = increment_path(parent, &paths);
         *directory = directory.replacen(parent.as_str(), &renamed, 1);
     }
+}
+
+fn is_nested_in(child: &str, parent: &str) -> bool {
+    child
+        .strip_prefix(parent)
+        .is_some_and(|rest| rest.starts_with('/'))
 }
 
 fn directory(template: &str, scope: &str, name: &str) -> io::Result<String> {

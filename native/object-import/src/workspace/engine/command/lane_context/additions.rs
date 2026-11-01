@@ -57,15 +57,18 @@ fn relocate_nested<'a>(
     rows: &(impl Iterator<Item = &'a Value> + Clone),
 ) -> io::Result<()> {
     let directory = trimmed_str(&addition["rootDir"]).ok_or_else(|| invalid("switch destination"))?;
-    let parent = (*rows)
+    let Some((parent, suffix)) = (*rows)
         .clone()
         .filter_map(|row| trimmed_str(&row["rootDir"]))
-        .find(|root| directory.starts_with(&format!("{root}/")));
-    let Some(parent) = parent else { return Ok(()) };
-    let suffix = directory
-        .strip_prefix(parent)
-        .ok_or_else(|| invalid("switch destination prefix"))?
-        .to_owned();
+        .find_map(|root| {
+            directory
+                .strip_prefix(root)
+                .filter(|rest| rest.starts_with('/'))
+                .map(|rest| (root, rest.to_owned()))
+        })
+    else {
+        return Ok(());
+    };
     for index in 1..=4096 {
         let candidate = format!("{parent}_{index}{suffix}");
         crate::checkout::plan::relative_path(&candidate)?;
@@ -163,8 +166,12 @@ fn validate_overlap<'a>(addition: &Value, rows: impl Iterator<Item = &'a Value>)
         }
         if let Some(other) = trimmed_str(&row["rootDir"])
             && (directory == other
-                || directory.starts_with(&format!("{other}/"))
-                || other.starts_with(&format!("{directory}/")))
+                || directory
+                    .strip_prefix(other)
+                    .is_some_and(|rest| rest.starts_with('/'))
+                || other
+                    .strip_prefix(directory)
+                    .is_some_and(|rest| rest.starts_with('/')))
         {
             return Err(invalid("lane destination requires canonical collision resolution"));
         }

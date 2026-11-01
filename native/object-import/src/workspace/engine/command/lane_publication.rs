@@ -100,8 +100,13 @@ impl Prepared {
                 .ok_or_else(|| invalid("command lane hash"))?;
             let (other_scope, other_name) = self.other_lane_id()?;
             let message = format!(r#"merge from "{other_scope}/{other_name}""#);
-            self.history =
-                objects::history(&self.current, hash, self.history.clone(), receipt, &message)?;
+            self.history = objects::history(
+                &self.current,
+                hash,
+                std::mem::take(&mut self.history),
+                receipt,
+                &message,
+            )?;
             rewritten.extend(objects::serializable(hash, &self.current, &self.history)?);
         } else if receipt.get("historyKey").is_some() || receipt.get("log").is_some() {
             return Err(invalid("main merge lane receipt"));
@@ -154,15 +159,14 @@ impl Prepared {
     fn import_histories(&mut self, receipt: &Value) -> io::Result<Vec<(String, Value)>> {
         let plans = self.context["importHistoryPlans"]
             .as_array()
-            .cloned()
-            .unwrap_or_default();
+            .map_or(&[][..], Vec::as_slice);
         let receipts = receipt["importHistories"]
             .as_array()
             .ok_or_else(|| invalid("lane import history receipts"))?;
         if plans.len() != receipts.len() {
             return Err(invalid("lane import history count"));
         }
-        let mut output = Vec::new();
+        let mut output = Vec::with_capacity(plans.len());
         for (plan, receipt) in plans.iter().zip(receipts) {
             let lane = &plan["lane"];
             let hash = non_empty_str(&lane["hash"], "import lane hash")?;
@@ -200,7 +204,13 @@ impl Prepared {
         let log = json!({"historyKey":receipt["batchId"],"log":receipt["laneLog"]});
         let message =
             if message.is_empty() { "snap".to_owned() } else { format!("snap ({message})") };
-        self.history = objects::history(&self.current, hash, self.history.clone(), &log, &message)?;
+        self.history = objects::history(
+            &self.current,
+            hash,
+            std::mem::take(&mut self.history),
+            &log,
+            &message,
+        )?;
         let lane_staging = staging.join("lane-snapshot");
         fs::create_dir(&lane_staging)?;
         self.second = Some(snapshot::prepare_objects(

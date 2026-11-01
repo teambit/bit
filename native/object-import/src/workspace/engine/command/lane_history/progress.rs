@@ -18,21 +18,21 @@ pub(in crate::workspace::engine::command) fn import(
         .map(|target| {
             let name = target.name.trim();
             let name = name.rsplit_once('@').map_or(name, |(base, _)| base.trim());
-            let identity = target.scope
+            let version = target.version.trim();
+            match target.scope
                 .as_deref()
                 .map(str::trim)
                 .filter(|scope| !scope.is_empty())
-                .map_or_else(
-                    || name.to_owned(),
-                    |scope| {
-                        let bare = name
-                            .strip_prefix(scope)
-                            .and_then(|rest| rest.strip_prefix('/'))
-                            .map_or(name, str::trim);
-                        format!("{scope}/{bare}")
-                    },
-                );
-            format!("{identity}@{}", target.version.trim())
+            {
+                Some(scope) => {
+                    let bare = name
+                        .strip_prefix(scope)
+                        .and_then(|rest| rest.strip_prefix('/'))
+                        .map_or(name, str::trim);
+                    format!("{scope}/{bare}@{version}")
+                }
+                None => format!("{name}@{version}"),
+            }
         })
         .collect::<Vec<_>>();
     record.context["historyCheckoutImport"] = json!({"requested":targets.len(),"ids":ids,"performed":!targets.is_empty(),"completed":false});

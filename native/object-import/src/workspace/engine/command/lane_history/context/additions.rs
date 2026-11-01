@@ -1,8 +1,13 @@
 use super::{command_import, invalid, phase};
+use crate::workspace::engine::command::{
+    input::Prepare,
+    lane_context::{additions, visibility},
+    lane_history::Phase,
+};
 use serde_json::{Value, json};
 use std::io;
 pub(super) fn attach_missing(
-    request: &crate::workspace::engine::command::input::Prepare,
+    request: &Prepare,
     bitmap: &Value,
     settings: &Value,
     context: &mut Value,
@@ -10,16 +15,9 @@ pub(super) fn attach_missing(
 ) -> io::Result<()> {
     let phase = phase(&request.options).ok_or_else(|| invalid("history phase"))?;
     let selected = selected(phase, context, imported)?;
-    let bitmap = crate::workspace::engine::command::lane_context::visibility::identity_bitmap(
-        bitmap, settings,
-    )?;
-    let mut additions = crate::workspace::engine::command::lane_context::additions::prepare_switch(
-        imported,
-        &request.root,
-        &bitmap,
-        settings,
-        &selected,
-    )?;
+    let bitmap = visibility::identity_bitmap(bitmap, settings)?;
+    let mut additions =
+        additions::prepare_switch(imported, &request.root, &bitmap, settings, &selected)?;
     for row in &mut additions {
         let scope = row["scope"]
             .as_str()
@@ -31,29 +29,31 @@ pub(super) fn attach_missing(
             .map(str::trim)
             .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("lane addition name"))?;
-        let id = format!("{scope}/{name}");
         let version = phase.versions
             .iter()
-            .find(|(identity, _)| bare_id(identity) == id)
+            .find(|(identity, _)| {
+                bare_id(identity)
+                    .strip_prefix(scope)
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(name)
+            })
             .map(|(_, version)| version.trim())
             .filter(|version| !version.is_empty())
             .ok_or_else(|| invalid("lane addition version entry"))?;
         row["version"] = json!(version);
     }
-    context["scopeAddedTargets"] = json!(
-        crate::workspace::engine::command::lane_context::additions::targets(&additions, &selected)
-    );
+    context["scopeAddedTargets"] = json!(additions::targets(&additions, &selected));
     context["scopeAdditions"] = json!(additions);
     Ok(())
 }
 
 fn selected(
-    phase: &crate::workspace::engine::command::lane_history::Phase,
+    phase: &Phase,
     context: &Value,
     imported: &mut command_import::PreparedImport,
 ) -> io::Result<Vec<Value>> {
     let existing = context["targets"].as_array().ok_or_else(|| invalid("history targets"))?;
-    let mut selected = Vec::new();
+    let mut selected = Vec::with_capacity(phase.versions.len());
     for (id, version) in &phase.versions {
         let id = bare_id(id);
         if existing

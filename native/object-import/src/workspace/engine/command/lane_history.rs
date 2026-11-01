@@ -27,12 +27,10 @@ pub(in crate::workspace::engine) struct Prepare {
     #[serde(flatten)]
     transport: super::inbound::Transport,
 }
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
 struct Flags {
-    #[serde(default)]
     revert: bool,
-    #[serde(default)]
     restore_deleted: bool,
 }
 #[derive(Clone)]
@@ -142,18 +140,14 @@ pub(super) fn applied(
 
 impl Phase {
     fn receipt(&self, index: usize) -> Value {
-        let ids = self.versions
+        let (ids, version_per_id): (Vec<_>, Vec<_>) = self.versions
             .iter()
-            .map(|(id, _)| {
+            .map(|(id, version)| {
                 let id = id.trim();
-                id.rsplit_once('@').map_or(id, |(base, _)| base.trim())
+                let bare = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
+                (bare, format!("{bare}@{}", version.trim()))
             })
-            .collect::<Vec<_>>();
-        let version_per_id = self.versions
-            .iter()
-            .zip(&ids)
-            .map(|((_, version), id)| format!("{id}@{}", version.trim()))
-            .collect::<Vec<_>>();
+            .unzip();
         json!({"phase":index,"ids":ids,"versionPerId":version_per_id,"revert":self.revert})
     }
 }

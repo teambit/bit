@@ -13,8 +13,8 @@ pub(super) fn update(
     let head = head.trim();
     crate::merge_history::hash(head)?;
     let (scope, name) = parse_scoped_identity(identity, "lane component identity")?;
-    let normalized = format!("{scope}/{name}");
     if hidden {
+        let normalized = format!("{scope}/{name}");
         if lane.get("updateDependents").is_none_or(Value::is_null) {
             lane["updateDependents"] = json!([]);
         }

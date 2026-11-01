@@ -32,8 +32,8 @@ pub(super) fn expand(
 }
 
 fn heads(dependencies: Vec<Target>) -> io::Result<Vec<Target>> {
-    let mut seen = HashSet::new();
-    let mut heads = Vec::new();
+    let mut seen = HashSet::with_capacity(dependencies.len());
+    let mut heads = Vec::with_capacity(dependencies.len());
     for mut target in dependencies {
         target.version = "latest".into();
         if seen.insert(identity(&target)?) {
@@ -71,12 +71,12 @@ fn all(input: &Prepare, roots: &[Target], imported: &PreparedImport) -> io::Resu
         let dev_deps = version["flattenedDevDependencies"]
             .as_array()
             .filter(|rows| rows.len() <= 16384);
-        result.extend(
-            deps.iter()
-                .chain(dev_deps.into_iter().flatten())
-                .map(target)
-                .collect::<io::Result<Vec<_>>>()?,
-        );
+        for row in deps
+            .iter()
+            .chain(dev_deps.into_iter().flatten())
+        {
+            result.push(target(row)?);
+        }
         if result.len() > 16384 {
             return Err(invalid("inbound dependency graph limit"));
         }
@@ -286,8 +286,8 @@ pub(super) fn versioned(target: &Target) -> io::Result<String> {
 }
 
 fn newest(dependencies: Vec<Target>) -> io::Result<Vec<Target>> {
-    let mut positions = HashMap::<String, usize>::new();
-    let mut selected: Vec<Target> = Vec::new();
+    let mut positions = HashMap::<String, usize>::with_capacity(dependencies.len());
+    let mut selected: Vec<Target> = Vec::with_capacity(dependencies.len());
     for dependency in dependencies {
         let id = identity(&dependency)?;
         if let Some(&position) = positions.get(&id) {

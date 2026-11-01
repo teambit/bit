@@ -13,7 +13,7 @@ pub(super) struct Queue {
 }
 impl Queue {
     pub(super) fn from_sources(sources: &[String]) -> io::Result<Self> {
-        let mut queue = Self::default();
+        let mut queue = Self { paths: VecDeque::with_capacity(sources.len()), nodes: 0, bytes: 0 };
         for id in sources {
             queue.push(&[], id)?;
         }
@@ -39,7 +39,8 @@ impl Queue {
         }
         self.nodes = nodes;
         self.bytes = bytes;
-        let mut next = path.to_vec();
+        let mut next = Vec::with_capacity(path.len() + 1);
+        next.extend_from_slice(path);
         next.push(id.to_owned());
         self.paths.push_back(next);
         Ok(())

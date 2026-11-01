@@ -1,7 +1,10 @@
 //! No-ID imports retain both lane heads and distinct tracked versions without workspace writes.
 use super::{Prepare, Target, invalid, lane, lanes, remote};
 use crate::command_import::{self, PreparedImport, VirtualRemote};
-use std::{collections::HashMap, io};
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+};
 
 pub(super) fn prepare(
     input: &Prepare,
@@ -43,11 +46,7 @@ fn capture_remotes(
     let mut remotes = HashMap::new();
     let hash = if let Some((incoming, hash)) = incoming {
         let entries = remote::lane_entries(&incoming, &hash, id)?;
-        let main = roots
-            .iter()
-            .filter(|target| !matches_any_entry(target, &entries))
-            .cloned()
-            .collect::<Vec<_>>();
+        let main = unmatched_roots(roots, &entries);
         lanes::merge_remote(&mut remotes, incoming)?;
         for remote in remote::objects(input, &main)? {
             lanes::merge_remote(&mut remotes, remote)?;
@@ -60,23 +59,30 @@ fn capture_remotes(
     Ok((remotes.into_values().collect(), hash))
 }
 
-fn matches_any_entry(target: &Target, entries: &[lane::Entry]) -> bool {
-    let name = target.name.trim();
-    let scope = target.scope
-        .as_deref()
-        .map(str::trim)
-        .filter(|scope| !scope.is_empty());
-    entries
+fn unmatched_roots(roots: &[Target], entries: &[lane::Entry]) -> Vec<Target> {
+    let entry_set: HashSet<_> = entries.iter().map(entry_key).collect();
+    roots
         .iter()
-        .any(|entry| {
-            let raw = entry.identity.trim();
-            let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
-            match (bare.split_once('/'), scope) {
-                (Some((entry_scope, entry_name)), Some(scope)) => {
-                    entry_scope.trim() == scope && entry_name.trim() == name
-                }
-                (None, None) => bare == name,
-                _ => false,
-            }
-        })
+        .filter(|target| !entry_set.contains(&target_key(target)))
+        .cloned()
+        .collect()
+}
+
+fn entry_key(entry: &lane::Entry) -> (Option<&str>, &str) {
+    let raw = entry.identity.trim();
+    let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
+    match bare.split_once('/') {
+        Some((scope, name)) => (Some(scope.trim()), name.trim()),
+        None => (None, bare),
+    }
+}
+
+fn target_key(target: &Target) -> (Option<&str>, &str) {
+    (
+        target.scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty()),
+        target.name.trim(),
+    )
 }

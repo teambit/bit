@@ -14,9 +14,10 @@ pub(super) fn run(input: &LaneFinalize, state: &mut State) -> io::Result<(usize,
     let directory = scratch::Directory::create()?;
     let histories = merge.finalize_lane(&directory.0, &input.lane_receipt)?;
     record.repository.complete_lane_histories(histories)?;
+    let needs_referenced = merge.needs_snap().is_none();
     prepared.plan.history.rebase(&merge.rebased())?;
     prepared.plan.directories.push(directory);
-    if needs_lane_referenced(&prepared.plan) {
+    if needs_referenced {
         super::lane_referenced::prepare(&mut record, &prepared.plan)?;
     }
     record.repository.validate()?;
@@ -25,10 +26,4 @@ pub(super) fn run(input: &LaneFinalize, state: &mut State) -> io::Result<(usize,
     record.planned = Some(prepared);
     state.record = Some(record);
     Ok((1, output))
-}
-
-fn needs_lane_referenced(plan: &super::planning::Planned) -> bool {
-    plan.merge
-        .as_ref()
-        .is_some_and(|merge| merge.needs_snap().is_none())
 }

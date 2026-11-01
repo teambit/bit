@@ -139,12 +139,12 @@ fn complete_receipt(
     workspace: Option<&write::Prepared>,
     receipt: &mut Value,
 ) -> io::Result<()> {
-    if let Some(workspace) = &workspace {
+    if let Some(workspace) = workspace {
         receipt["directoryWarnings"] = json!(workspace.directory_warnings());
         receipt["workspaceComponentOrder"] = json!(workspace.component_order());
-    }
-    if let Some(policy) = workspace.and_then(write::Prepared::policy_input) {
-        receipt["checkoutPolicyPreparation"] = policy.clone();
+        if let Some(policy) = workspace.policy_input() {
+            receipt["checkoutPolicyPreparation"] = policy.clone();
+        }
     }
     if let Some(lane) = remote::active_lane(&input.root)? {
         receipt["currentLane"] = json!(format!("{}/{}", lane.scope, lane.name));

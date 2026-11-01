@@ -54,13 +54,13 @@ pub(super) fn bare(
     directory: &Path,
     transport: &Transport,
 ) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
-    if !fs::symlink_metadata(directory.join("scope.json"))?.is_file()
+    let scope_file = directory.join("scope.json");
+    if !fs::symlink_metadata(&scope_file)?.is_file()
         || !fs::symlink_metadata(directory.join("objects"))?.is_dir()
     {
         return Err(invalid("bare inbound objects"));
     }
-    let scope: Value =
-        crate::parse_jsonc(&fs::read(directory.join("scope.json"))?).map_err(io::Error::other)?;
+    let scope: Value = crate::parse_jsonc(&fs::read(scope_file)?).map_err(io::Error::other)?;
     let local = scope["name"]
         .as_str()
         .map(str::trim)

@@ -52,26 +52,11 @@ pub(super) fn remote_lane(
 ) -> io::Result<(String, Vec<lane::Entry>)> {
     let mut selected = None;
     for item in items {
-        let raw = crate::checkout::repository::inflate(&item.compressed, 32 * 1024 * 1024)?;
-        if !raw.starts_with(b"Lane ") {
+        let Some(entries) = parse_lane_object(id, &item.hash, &item.compressed)? else {
             continue;
-        }
-        let (_, body) = crate::checkout::repository::split(
-            &raw,
-            crate::merge_history::hash(&item.hash)?,
-            "Lane",
-        )?;
-        let value = crate::parse_jsonc(body)?;
-        if value["scope"].as_str().map(str::trim) != Some(id.scope.trim())
-            || value["name"].as_str().map(str::trim) != Some(id.name.trim())
-            || selected.is_some()
-        {
+        };
+        if selected.is_some() {
             return Err(invalid("inbound HTTP Lane identity"));
-        }
-        lane::validate_value(id, &value)?;
-        let entries = lane::entries(&value)?;
-        if entries.len() > 4096 {
-            return Err(invalid("inbound HTTP Lane component limit"));
         }
         selected = Some((item.hash.trim().to_owned(), entries));
     }
@@ -86,8 +71,32 @@ pub(in crate::workspace::engine::command) fn lane_entries(
     let compressed = remote.objects
         .iter()
         .find(|(item_hash, _)| item_hash.trim().eq_ignore_ascii_case(hash.trim()))
-        .map(|(_, bytes)| bytes.clone())
+        .map(|(_, bytes)| bytes.as_slice())
         .ok_or_else(|| invalid("inbound HTTP Lane capture"))?;
-    let item = ObjectItem { hash: hash.trim().to_owned(), compressed, scope: None };
-    remote_lane(id, &[item]).map(|(_, entries)| entries)
+    parse_lane_object(id, hash, compressed)?.ok_or_else(|| invalid("inbound HTTP Lane missing"))
+}
+
+fn parse_lane_object(
+    id: &lane::Id,
+    hash: &str,
+    compressed: &[u8],
+) -> io::Result<Option<Vec<lane::Entry>>> {
+    let raw = crate::checkout::repository::inflate(compressed, 32 * 1024 * 1024)?;
+    if !raw.starts_with(b"Lane ") {
+        return Ok(None);
+    }
+    let (_, body) =
+        crate::checkout::repository::split(&raw, crate::merge_history::hash(hash)?, "Lane")?;
+    let value = crate::parse_jsonc(body)?;
+    if value["scope"].as_str().map(str::trim) != Some(id.scope.trim())
+        || value["name"].as_str().map(str::trim) != Some(id.name.trim())
+    {
+        return Err(invalid("inbound HTTP Lane identity"));
+    }
+    lane::validate_value(id, &value)?;
+    let entries = lane::entries(&value)?;
+    if entries.len() > 4096 {
+        return Err(invalid("inbound HTTP Lane component limit"));
+    }
+    Ok(Some(entries))
 }

@@ -7,16 +7,12 @@ use serde_json::{Map, Value};
 use std::io;
 
 pub(super) fn bitmap_metadata(rows: &mut Map<String, Value>) -> io::Result<(Value, Option<Value>)> {
-    if rows
-        .get("$schema-version")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        != Some("17.0.0")
-    {
+    let Some(schema) = rows.shift_remove("$schema-version") else {
+        return Err(invalid("inbound workspace bitmap lifecycle"));
+    };
+    if schema.as_str().map(str::trim) != Some("17.0.0") {
         return Err(invalid("inbound workspace bitmap lifecycle"));
     }
-    let schema =
-        rows.shift_remove("$schema-version").ok_or_else(|| invalid("inbound bitmap schema"))?;
     let lane = rows.shift_remove("_bit_lane");
     if rows.len() > 4096 {
         return Err(invalid("inbound workspace bitmap lifecycle"));

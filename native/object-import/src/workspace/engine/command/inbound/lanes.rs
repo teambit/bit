@@ -2,6 +2,8 @@
 
 mod aggregate;
 mod selection;
+#[cfg(test)]
+mod tests;
 
 use super::{Prepare, Retained, State, Target, identity, invalid, receipt, remote};
 use crate::command_import::{self, VirtualRemote, lane};
@@ -157,33 +159,45 @@ fn receive_lanes(
     import: &mut command_import::PreparedImport,
 ) -> io::Result<(Vec<Target>, Vec<usize>)> {
     let mut targets = Vec::new();
-    let mut groups = Vec::new();
+    let mut groups = Vec::with_capacity(lanes.len());
+    let bitmap_targets = (input.operation == "fetch" && !lanes.is_empty())
+        .then(|| super::bitmap_targets(&input.root))
+        .transpose()?;
     for (id, hash) in lanes {
         let start = import.progress.len();
-        let lane_targets = if input.operation == "fetch" {
-            import.prepare_fetch_lane(
-                &input.root,
-                id,
-                hash.as_deref(),
-                &super::bitmap_targets(&input.root)?,
-                input.options.all_history,
-                false,
-            )?
-        } else {
-            let targets =
-                fetch_lane_targets(import, id, hash.as_deref(), input.operation == "laneImport")?;
-            if input.options.all_history {
-                import.collect_lane_history(id, &targets)?;
-            }
-            if input.operation != "laneImport" {
-                append_lane_dependency_progress(&input.root, import, &targets)?;
-            }
-            targets
-        };
+        let lane_targets =
+            receive_one_lane(input, id, hash.as_deref(), bitmap_targets.as_deref(), import)?;
         groups.push(import.progress.len() - start);
         targets.extend(lane_targets);
     }
     Ok((targets, groups))
+}
+
+fn receive_one_lane(
+    input: &Prepare,
+    id: &lane::Id,
+    hash: Option<&str>,
+    bitmap_targets: Option<&[Target]>,
+    import: &mut command_import::PreparedImport,
+) -> io::Result<Vec<Target>> {
+    if let Some(bitmap_targets) = bitmap_targets {
+        return import.prepare_fetch_lane(
+            &input.root,
+            id,
+            hash,
+            bitmap_targets,
+            input.options.all_history,
+            false,
+        );
+    }
+    let targets = fetch_lane_targets(import, id, hash, input.operation == "laneImport")?;
+    if input.options.all_history {
+        import.collect_lane_history(id, &targets)?;
+    }
+    if input.operation != "laneImport" {
+        append_lane_dependency_progress(&input.root, import, &targets)?;
+    }
+    Ok(targets)
 }
 
 fn fetch_lane_targets(
@@ -261,9 +275,6 @@ fn append_lane_dependency_progress(
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;
 
 fn decorate_receipt(input: &Prepare, lanes: usize, groups: &[usize], receipt: &mut Value) {
     receipt["laneFetch"] = json!(true);

@@ -8,10 +8,11 @@ pub(super) fn prepare(root: &Path, file_id: Option<&str>) -> io::Result<History>
         .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("inbound bitmap history id"))?;
     super::super::super::bitmap::validate_history_file_id(file_id)?;
-    let backup = crate::scope_path(root)
+    let scope_dir = crate::scope_path(root);
+    let backup = scope_dir
         .join("bitmap-history")
         .join(format!(".bitmap-{file_id}"));
-    let metadata = crate::scope_path(root).join("bitmap-history-metadata.txt");
+    let metadata = scope_dir.join("bitmap-history-metadata.txt");
     let attributes = Attributes::prepare(root, &backup)?;
     let backup_before = match fs::symlink_metadata(&backup) {
         Ok(_) => {

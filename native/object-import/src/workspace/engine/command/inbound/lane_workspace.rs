@@ -84,7 +84,7 @@ fn choose(input: &Prepare, roots: &[Target], entries: Vec<lane::Entry>) -> io::R
 }
 
 fn visible_entries(entries: Vec<lane::Entry>) -> io::Result<HashMap<String, String>> {
-    let mut visible = HashMap::new();
+    let mut visible = HashMap::with_capacity(entries.len());
     for entry in entries.into_iter().filter(|entry| !entry.hidden) {
         let raw = entry.identity.trim();
         let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
@@ -131,7 +131,7 @@ fn select(
     visible: &HashMap<String, String>,
     bitmap: &serde_json::Value,
 ) -> io::Result<(Vec<Target>, Vec<String>, usize)> {
-    let mut selected = Vec::new();
+    let mut selected = Vec::with_capacity(roots.len());
     let mut main_targets = Vec::new();
     let mut main = Vec::new();
     let mut changed = 0;

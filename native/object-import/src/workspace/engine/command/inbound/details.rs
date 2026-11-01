@@ -3,7 +3,7 @@ use super::{Target, invalid, write};
 use crate::{command_import, workspace::engine::client_status::config::is_extension_aspect};
 use serde_json::{Value, json};
 use sha1::Digest;
-use std::{borrow::Cow, io, path::Path};
+use std::{borrow::Cow, collections::HashSet, io, path::Path};
 
 /// The remote model when transferred, or the validated local model when the
 /// remote reports this component is already up to date.
@@ -199,17 +199,7 @@ fn deprecated(
     else {
         return Ok(false);
     };
-    let local;
-    let version = match imported.overlay.read(head, "Version")? {
-        Some(version) => version,
-        None => match local_object(root, head, "Version")? {
-            Some(version) => {
-                local = version;
-                &local
-            }
-            None => return Ok(false),
-        },
-    };
+    let Some(version) = head_version(root, head, imported)? else { return Ok(false) };
     let aspect = version["extensions"]
         .as_array()
         .into_iter()
@@ -302,9 +292,9 @@ fn indexed_component_hashes(scope_dir: &Path, scope: &str, name: &str) -> Vec<St
         .collect()
 }
 
-fn previous_versions(root: &Path, scope: &str, name: &str) -> io::Result<Vec<String>> {
+fn previous_versions(root: &Path, scope: &str, name: &str) -> io::Result<HashSet<String>> {
     let Some(model) = local_component_model(root, scope, name)? else {
-        return Ok(Vec::new());
+        return Ok(HashSet::new());
     };
     Ok(model["versions"]
         .as_object()

@@ -40,7 +40,10 @@ impl Retained {
         else {
             return Ok(directory);
         };
-        if directory.starts_with(&format!("{owner}/")) {
+        if directory
+            .strip_prefix(owner)
+            .is_some_and(|rest| rest.starts_with('/'))
+        {
             return Ok(directory);
         }
         let candidate = format!("{owner}/{directory}");
@@ -52,7 +55,7 @@ impl Retained {
         let used_scope = trimmed_str(&row["scope"])
             .ok_or_else(|| super::invalid("inbound owner collision with unscoped component"))?;
         let version =
-            trimmed_str(&row["version"]).map_or(String::new(), |version| format!("@{version}"));
+            trimmed_str(&row["version"]).map_or_else(String::new, |version| format!("@{version}"));
         let (_, used_name) = crate::reset_lane::bitmap::row_identity(key, row);
         self.warnings.push(format!(
             r#""{directory}" is already used by {}/{}{version}, importing {scope}/{} into "{candidate}" instead"#,
@@ -66,8 +69,12 @@ fn has_nested_tracked(rows: &Map<String, Value>, candidate: &str) -> bool {
     rows.values()
         .filter_map(|row| trimmed_str(&row["rootDir"]))
         .any(|tracked| {
-            tracked.starts_with(&format!("{candidate}/"))
-                || candidate.starts_with(&format!("{tracked}/"))
+            tracked
+                .strip_prefix(candidate)
+                .is_some_and(|rest| rest.starts_with('/'))
+                || candidate
+                    .strip_prefix(tracked)
+                    .is_some_and(|rest| rest.starts_with('/'))
         })
 }
 

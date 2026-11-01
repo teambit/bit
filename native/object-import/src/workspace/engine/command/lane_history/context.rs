@@ -27,12 +27,11 @@ pub(in crate::workspace::engine::command) fn prepare(
     let current = imported.load_lane(&id)?.ok_or_else(|| invalid("history current lane absent"))?;
     context["lane"] = json!({"currentId":id,"current":current});
     super::super::prepare::extend_models(request, pool, &mut context, Some(&imported))?;
-    attach_versions(request, &mut context)?;
+    attach_versions(phase, &mut context)?;
     imported.validate()?;
     Ok((context, Some(imported)))
 }
-fn attach_versions(request: &super::super::input::Prepare, context: &mut Value) -> io::Result<()> {
-    let phase = phase(&request.options).ok_or_else(|| invalid("history phase"))?;
+fn attach_versions(phase: &super::Phase, context: &mut Value) -> io::Result<()> {
     for row in context["targets"].as_array_mut().ok_or_else(|| invalid("history targets"))? {
         let row_id = row["identity"]
             .as_str()

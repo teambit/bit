@@ -42,16 +42,15 @@ pub(in crate::workspace::engine) fn complete(
     let targets = imported_targets(&retained.receipt)?;
     workspace.refresh_policy(&targets, &mut retained.import)?;
     retained.receipt["requiresWriteDependencies"] = json!(false);
-    if let Some(input) = workspace.policy_input() {
+    let result = if let Some(input) = workspace.policy_input() {
         retained.receipt["checkoutPolicyPreparation"] = input.clone();
+        retained.receipt.clone()
     } else {
-        retained.receipt["completed"] = json!(true);
-    }
-    let (count, result) = (targets.len(), retained.receipt.clone());
-    if result["completed"] == true {
-        state.inbound = None;
-    }
-    Ok((count, result))
+        let mut done = state.inbound.take().expect("checked above").receipt;
+        done["completed"] = json!(true);
+        done
+    };
+    Ok((targets.len(), result))
 }
 
 fn imported_targets(receipt: &Value) -> io::Result<Vec<super::Target>> {

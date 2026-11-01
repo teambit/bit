@@ -30,7 +30,7 @@ pub(super) async fn versions(
 }
 
 fn results(finished: Vec<io::Result<(usize, Vec<String>)>>) -> io::Result<Vec<Value>> {
-    let mut groups = Vec::new();
+    let mut groups = Vec::with_capacity(finished.len());
     let mut first_error = None;
     for result in finished {
         match result {

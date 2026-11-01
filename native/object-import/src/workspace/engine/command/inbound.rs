@@ -225,9 +225,8 @@ fn receipt(
 }
 /// Each pattern with the components its remote lists, in the remote's order.
 pub(in crate::workspace::engine) fn list(input: &List) -> io::Result<(usize, Value)> {
-    for path in [&input.root, &input.transport.global_config_dir] {
-        super::super::path(path)?;
-    }
+    super::super::path(&input.root)?;
+    super::super::path(&input.transport.global_config_dir)?;
     if !input.transport.node_executable.is_absolute()
         || input.transport.bit_version.trim().is_empty()
         || input.patterns.is_empty()
@@ -264,21 +263,19 @@ pub(in crate::workspace::engine) fn apply(
     if retained.pending.is_some() {
         return Err(invalid("inbound dependent graph incomplete"));
     }
-    let deferred = retained.workspace.as_ref().is_some_and(write::Prepared::requires_dependencies);
-    let writes = commit_inbound(&mut retained, input.omit_owned_write_receipts)?;
-    let mut receipt = retained.receipt.clone();
+    let mut receipt = std::mem::take(&mut retained.receipt);
     receipt["applied"] = json!(true);
-    if let Some(writes) = writes {
+    if let Some(writes) = commit_inbound(&mut retained, input.omit_owned_write_receipts)? {
         receipt["ownedWorkspaceWrites"] = json!(owned_writes::combine(writes)?);
     }
     if let Some(workspace) = &retained.workspace {
         receipt["bitmapProof"] = workspace.published_bitmap_proof()?;
-    }
-    if deferred {
-        receipt["requiresWriteDependencies"] = json!(true);
-        retained.applied = true;
-        retained.receipt = receipt.clone();
-        state.inbound = Some(retained);
+        if workspace.requires_dependencies() {
+            receipt["requiresWriteDependencies"] = json!(true);
+            retained.applied = true;
+            retained.receipt = receipt.clone();
+            state.inbound = Some(retained);
+        }
     }
     let count = receipt["importedIds"].as_array().map_or(0, Vec::len);
     Ok((count, receipt))

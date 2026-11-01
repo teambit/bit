@@ -27,7 +27,7 @@ pub(super) fn receipt(
     {
         return Ok(None);
     }
-    let mut versions = Vec::new();
+    let mut versions = Vec::with_capacity(targets.len());
     for target in targets {
         versions.push(imported.policy_version(target)?);
     }
@@ -117,7 +117,8 @@ impl super::Prepared {
 
 impl super::Prepared {
     pub(in super::super) fn published_write_receipts(&self) -> io::Result<Vec<Value>> {
-        let mut writes = Vec::new();
+        let mut writes =
+            Vec::with_capacity(self.changes.additions.len() + self.changes.replacements.len() + 1);
         for (path, after) in &self.changes.additions {
             Self::write_receipt(&mut writes, path, None, after)?;
         }
