@@ -237,16 +237,20 @@ fn deduped(
     })
 }
 
-fn projects(manifests: IndexMap<PathBuf, Manifest>, root: &Path) -> Vec<Project> {
-    let (roots, others): (Vec<_>, Vec<_>) = manifests
-        .into_iter()
-        .filter(|(dir, _)| !dir.as_os_str().is_empty())
-        .partition(|(dir, _)| dir.as_path() == root);
-    roots
-        .into_iter()
-        .chain(others)
-        .map(|(dir, manifest)| Project { dir, manifest })
-        .collect()
+fn projects(mut manifests: IndexMap<PathBuf, Manifest>, root: &Path) -> Vec<Project> {
+    let mut result = Vec::with_capacity(manifests.len());
+    if !root.as_os_str().is_empty()
+        && let Some(manifest) = manifests.shift_remove(root)
+    {
+        result.push(Project { dir: root.to_path_buf(), manifest });
+    }
+    result.extend(
+        manifests
+            .into_iter()
+            .filter(|(dir, _)| !dir.as_os_str().is_empty())
+            .map(|(dir, manifest)| Project { dir, manifest }),
+    );
+    result
 }
 
 /// The deduped dependencies of the components and the root.

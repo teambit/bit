@@ -56,7 +56,7 @@ pub fn component_policy(
             )
         })
         .unwrap_or_default();
-    let own = own_env_policy.map(|policy| policy.self_policy.clone()).unwrap_or_default();
+    let own = own_env_policy.map_or_else(Vec::new, |policy| policy.self_policy.clone());
     let slots = slots::component_slots(component, registry);
     merge(vec![env_policy.component.clone(), own, slots, config])
 }
@@ -79,6 +79,9 @@ pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String,
 }
 
 fn component_resolver_config(component: &WorkspaceComponent) -> Option<&Value> {
+    if component.config.is_empty() {
+        return None;
+    }
     component.config
         .get(DEPENDENCY_RESOLVER)
         .or_else(|| {

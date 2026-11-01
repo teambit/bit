@@ -68,7 +68,11 @@ fn rename_error(from: &Path, to: &Path, error: io::Error) -> io::Error {
 fn compact_json(text: &str) -> Option<String> {
     let trimmed = text.trim();
     (!trimmed.is_empty())
-        .then(|| crate::jsonc::parse(trimmed).ok())
+        .then(|| {
+            serde_json::from_str::<serde_json::Value>(trimmed)
+                .ok()
+                .or_else(|| crate::jsonc::parse(trimmed).ok())
+        })
         .flatten()
         .and_then(|value| serde_json::to_string(&value).ok())
 }

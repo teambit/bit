@@ -69,10 +69,10 @@ impl HostInfo {
     #[must_use]
     pub fn bearer_token(&self) -> Option<&str> {
         let mut token = self.token.as_deref()?.trim();
-        while let Some(rest) = token
-            .get(6..)
-            .filter(|rest| {
-                token[..6].eq_ignore_ascii_case("bearer") && rest.starts_with(char::is_whitespace)
+        while let Some((_, rest)) = token
+            .split_at_checked(6)
+            .filter(|(prefix, rest)| {
+                prefix.eq_ignore_ascii_case("bearer") && rest.starts_with(char::is_whitespace)
             })
         {
             token = rest.trim_start();

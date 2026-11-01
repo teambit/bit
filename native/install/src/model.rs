@@ -41,7 +41,13 @@ impl ComponentId {
             return String::new();
         }
         match self.effective_scope() {
-            Some(scope) => format!("{scope}/{name}"),
+            Some(scope) => {
+                let mut id = String::with_capacity(scope.len() + 1 + name.len());
+                id.push_str(scope);
+                id.push('/');
+                id.push_str(name);
+                id
+            }
             None => name.to_owned(),
         }
     }

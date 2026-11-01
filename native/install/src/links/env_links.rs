@@ -41,15 +41,19 @@ pub fn resolved_from_env_links(
 ) -> EnvLinks {
     let mut result = EnvLinks::default();
     for component in components {
-        let Some(data) = dependencies.get(&component.id.to_string_without_version()) else {
+        let Some(data) = dependencies
+            .get(&component.id.to_string_without_version())
+            .filter(|data| data.policy.iter().any(|entry| entry.resolve_from_env))
+        else {
             continue;
         };
         let env_dir = env_dir(root, info, components, env_packages, &component.env_id);
-        for entry in data.policy.iter().filter(|entry| entry.resolve_from_env) {
-            let name = entry.name.trim();
-            if name.is_empty() {
-                continue;
-            }
+        for name in data.policy
+            .iter()
+            .filter(|entry| entry.resolve_from_env)
+            .map(|entry| entry.name.trim())
+            .filter(|name| !name.is_empty())
+        {
             match resolve_module_dir(&env_dir, name) {
                 Some(from) => {
                     result.links.insert(name.to_owned(), link_value(&from));

@@ -79,7 +79,7 @@ fn component_json(dir: &Path) -> io::Result<Option<ComponentJson>> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
     };
-    let value = jsonc::parse(&text)?;
+    let value = serde_json::from_str::<Value>(&text).or_else(|_| jsonc::parse(&text))?;
     Ok(Some(ComponentJson {
         extensions: value
             .get("extensions")
@@ -92,7 +92,7 @@ fn component_json(dir: &Path) -> io::Result<Option<ComponentJson>> {
 
 fn json_file(path: &Path) -> io::Result<Option<Manifest>> {
     match fs::read_to_string(path) {
-        Ok(text) => match jsonc::parse(&text) {
+        Ok(text) => match serde_json::from_str::<Value>(&text).or_else(|_| jsonc::parse(&text)) {
             Ok(Value::Object(manifest)) => Ok(Some(manifest)),
             Ok(_) => Ok(None),
             Err(error) => Err(io::Error::new(

@@ -196,7 +196,7 @@ fn dependency_version(dependent: Option<&Value>, id: &str) -> Option<String> {
 fn read_dir(dir: &Path) -> io::Result<Option<Value>> {
     for name in ["env.jsonc", "env.json"] {
         match fs::read(dir.join(name)) {
-            Ok(bytes) => return parse(&bytes, &dir.display().to_string()).map(Some),
+            Ok(bytes) => return parse(&bytes, dir.display()).map(Some),
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error),
         }
@@ -204,7 +204,7 @@ fn read_dir(dir: &Path) -> io::Result<Option<Value>> {
     Ok(None)
 }
 
-fn parse(bytes: &[u8], location: &str) -> io::Result<Value> {
+fn parse(bytes: &[u8], location: impl std::fmt::Display) -> io::Result<Value> {
     bit_object_import::parse_jsonc(bytes).map_err(|error| {
         io::Error::new(
             io::ErrorKind::InvalidData,

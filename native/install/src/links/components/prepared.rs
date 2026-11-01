@@ -41,7 +41,7 @@ pub fn link_prepared_component(
     let package = root
         .join("node_modules")
         .join(Path::new(pkg_name).components().collect::<std::path::PathBuf>());
-    let (links, existing) = plan_file_links(root, component, &package);
+    let (mut links, existing) = plan_file_links(root, component, &package);
     if is_symlink(&package) {
         remove_path(&package)?;
     }
@@ -55,10 +55,8 @@ pub fn link_prepared_component(
     if let Some(directory) = root_components_dir {
         link_packages_to_root_components(directory, root, &[pkg_name])?;
     }
-    Ok(ComponentLinks {
-        id: component.id.to_string_without_version(),
-        links: [links, existing].concat(),
-    })
+    links.extend(existing);
+    Ok(ComponentLinks { id: component.id.to_string_without_version(), links })
 }
 
 fn source_links(

@@ -74,8 +74,11 @@ impl RemoteLane {
     #[must_use]
     pub fn contains(&self, id: &Id) -> bool {
         let (scope, name) = (id.scope.trim(), id.name.trim());
-        self.ids_with_update_dependents()
-            .iter()
+        ["components", "updateDependents"]
+            .into_iter()
+            .filter_map(|field| self.object[field].as_array())
+            .flatten()
+            .filter_map(super::fs_remote::dependency_id)
             .any(|lane_id| lane_id.scope.trim() == scope && lane_id.name.trim() == name)
     }
 }

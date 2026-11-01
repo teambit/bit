@@ -29,7 +29,10 @@ pub fn external_env_packages(
             || packages.contains_key(env)
             || components
                 .iter()
-                .any(|candidate| candidate.id.to_string_without_version().trim() == env)
+                .any(|candidate| {
+                    let name = candidate.id.name.trim().trim_matches('/');
+                    env.ends_with(name) && candidate.id.to_string_without_version() == env
+                })
         {
             continue;
         }

@@ -31,9 +31,10 @@ pub fn auto_detect(policy: &[PolicyEntry]) -> FieldMaps {
         let name = entry.name.trim();
         let version = entry.version.trim();
         if !name.is_empty() && !version.is_empty() {
-            result[field_index(entry.lifecycle)]
-                .entry(name.to_owned())
-                .or_insert_with(|| version.to_owned());
+            let map = &mut result[field_index(entry.lifecycle)];
+            if !map.contains_key(name) {
+                map.insert(name.to_owned(), version.to_owned());
+            }
         }
     }
     result
@@ -50,14 +51,13 @@ pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {
         if name.is_empty() || version.is_empty() || (used.contains(name) && version != REMOVE) {
             continue;
         }
-        result[field_index(entry.lifecycle)]
-            .entry(name.to_owned())
-            .or_insert_with(|| {
-                if version != REMOVE {
-                    used.insert(name);
-                }
-                version.to_owned()
-            });
+        let map = &mut result[field_index(entry.lifecycle)];
+        if !map.contains_key(name) {
+            if version != REMOVE {
+                used.insert(name);
+            }
+            map.insert(name.to_owned(), version.to_owned());
+        }
     }
     result
 }

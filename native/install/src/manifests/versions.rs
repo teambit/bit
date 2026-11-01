@@ -32,12 +32,14 @@ fn trailing_version() -> &'static Regex {
 /// `workspace:`, `npm:` or `+`.
 pub(super) fn is_range(version: &str, origin: &str) -> io::Result<bool> {
     let trimmed = version.trim();
+    if trimmed.starts_with("workspace:")
+        || trimmed.starts_with("npm:")
+        || bit_object_import::plus_version::is_plus(trimmed)
+    {
+        return Ok(false);
+    }
     let Some(valid) = valid_range(trimmed) else {
-        let allowed = is_hash(trimmed)
-            || trimmed.starts_with("workspace:")
-            || trimmed.starts_with("npm:")
-            || bit_object_import::plus_version::is_plus(trimmed);
-        if allowed {
+        if is_hash(trimmed) {
             return Ok(false);
         }
         return Err(io::Error::new(

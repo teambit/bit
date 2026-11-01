@@ -83,7 +83,7 @@ fn root_manifest(projects: &[Project], root: &Path) -> io::Result<PackageManifes
     let normalized_root = normalize(root);
     let project = projects
         .iter()
-        .find(|project| normalize(&project.dir) == normalized_root)
+        .find(|project| project.dir == root || normalize(&project.dir) == normalized_root)
         .ok_or_else(|| {
             io::Error::other(format!("the install plan has no project for {}", root.display()))
         })?;

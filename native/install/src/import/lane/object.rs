@@ -171,11 +171,11 @@ impl LaneObject {
 
     /// `Lane.removeComponent`.
     pub fn remove_component(&mut self, scope: &str, name: &str) {
-        if self.component(scope, name).is_none() {
-            return;
-        }
+        let before = self.components.len();
         self.components.retain(|component| !component.same_id(scope, name));
-        self.changed = true;
+        if self.components.len() != before {
+            self.changed = true;
+        }
     }
 
     /// `Lane.getUpdateDependentAsLaneComponent`: the hidden entry as a lane component.
@@ -197,16 +197,15 @@ impl LaneObject {
     /// `Lane.removeComponentFromUpdateDependentsIfExist`.
     pub fn remove_update_dependent(&mut self, scope: &str, name: &str) {
         let (scope, name) = (scope.trim(), name.trim());
-        if self.update_dependent(scope, name).is_none() {
-            return;
-        }
-        if let Some(dependents) = &mut self.update_dependents {
-            dependents.retain(|id| !(id.scope.trim() == scope && id.name.trim() == name));
+        let Some(dependents) = &mut self.update_dependents else { return };
+        let before = dependents.len();
+        dependents.retain(|id| !(id.scope.trim() == scope && id.name.trim() == name));
+        if dependents.len() != before {
             if dependents.is_empty() {
                 self.update_dependents = None;
             }
+            self.changed = true;
         }
-        self.changed = true;
     }
 
     /// `Lane.addComponentToUpdateDependents`.
@@ -238,23 +237,24 @@ impl LaneObject {
     /// `Lane.isEqual`: same id and the same visible entries, ignoring order.
     #[must_use]
     pub fn is_equal(&self, other: &Self) -> bool {
-        if self.id() != other.id() {
+        if self.components.len() != other.components.len() || self.id() != other.id() {
             return false;
         }
-        let normalize = |lane: &Self| {
-            let mut entries: Vec<(String, String, bool)> = lane.components
+        fn normalize(lane: &LaneObject) -> Vec<(&str, &str, &str, bool)> {
+            let mut entries: Vec<(&str, &str, &str, bool)> = lane.components
                 .iter()
                 .map(|entry| {
                     (
-                        format!("{}/{}", entry.scope, entry.name),
-                        entry.head.clone(),
+                        entry.scope.as_str(),
+                        entry.name.as_str(),
+                        entry.head.as_str(),
                         entry.is_deleted,
                     )
                 })
                 .collect();
-            entries.sort();
+            entries.sort_unstable();
             entries
-        };
+        }
         normalize(self) == normalize(other)
     }
 }

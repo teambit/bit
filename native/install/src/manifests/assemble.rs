@@ -105,8 +105,10 @@ pub(super) fn root_manifest(
     manifest
 }
 
-fn direct_dependency_names(manifests: &IndexMap<PathBuf, Manifest>) -> Vec<String> {
-    let mut names = Vec::new();
+fn direct_dependency_names(
+    manifests: &IndexMap<PathBuf, Manifest>,
+) -> std::collections::HashSet<String> {
+    let mut names = std::collections::HashSet::new();
     for manifest in manifests.values() {
         for key in ["dependencies", "devDependencies"] {
             names.extend(manifest_field(manifest, key).into_keys());
@@ -150,7 +152,7 @@ pub(super) fn merge_linked_root(
             .get("name")
             .and_then(Value::as_str)
             .map(str::trim)
-            .filter(|name| !name.is_empty() && direct.iter().any(|dep| dep == name))
+            .filter(|name| !name.is_empty() && direct.contains(*name))
         {
             linked.shift_remove(name);
         }

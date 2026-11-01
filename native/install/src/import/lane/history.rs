@@ -129,6 +129,13 @@ fn new_history_key() -> String {
         });
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    let hex = format!("{:032x}", u128::from_be_bytes(bytes));
-    format!("{}-{}-{}-{}-{}", &hex[..8], &hex[8..12], &hex[12..16], &hex[16..20], &hex[20..])
+    let raw = u128::from_be_bytes(bytes);
+    format!(
+        "{:08x}-{:04x}-{:04x}-{:04x}-{:012x}",
+        (raw >> 96) as u32,
+        ((raw >> 80) & 0xffff) as u16,
+        ((raw >> 64) & 0xffff) as u16,
+        ((raw >> 48) & 0xffff) as u16,
+        raw & 0xffff_ffff_ffff,
+    )
 }

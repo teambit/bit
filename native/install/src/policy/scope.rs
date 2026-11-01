@@ -104,7 +104,8 @@ impl Scope {
         if header.split(' ').next() != Some(kind) {
             return Ok(None);
         }
-        Ok(Some(inflated[split + 1..].to_vec()))
+        inflated.drain(..=split);
+        Ok(Some(inflated))
     }
 
     /// The JSON body of an object of the given type.

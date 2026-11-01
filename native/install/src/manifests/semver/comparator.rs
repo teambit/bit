@@ -41,7 +41,13 @@ impl Comparator {
         let operator = if semver.is_some() { operator.trim() } else { "" };
         let value = semver
             .as_ref()
-            .map_or_else(String::new, |semver| format!("{operator}{}", semver.format()));
+            .map_or_else(String::new, |semver| {
+                if operator.is_empty() {
+                    semver.format()
+                } else {
+                    format!("{operator}{}", semver.format())
+                }
+            });
         Comparator { operator: operator.to_string(), semver, value }
     }
 

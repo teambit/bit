@@ -150,10 +150,10 @@ pub fn parse(argv: &[String]) -> io::Result<Parsed> {
             continue;
         }
         let (name, inline) = split_flag(arg);
-        if matches!(name.as_str(), "help" | "h") {
+        if matches!(name, "help" | "h") {
             return Ok(Parsed::Help);
         }
-        let flag = flag(&name)?;
+        let flag = flag(name)?;
         let value = flag_value(flag.arity, inline, &mut args);
         apply(&mut options, &mut scripts, flag.key, value)?;
     }
@@ -306,11 +306,11 @@ impl Scripts {
     }
 }
 
-fn split_flag(arg: &str) -> (String, Option<String>) {
+fn split_flag(arg: &str) -> (&str, Option<String>) {
     let name = arg.trim_start_matches('-');
     match name.split_once('=') {
-        Some((name, value)) => (name.to_string(), Some(value.to_string())),
-        None => (name.to_string(), None),
+        Some((name, value)) => (name, Some(value.to_string())),
+        None => (name, None),
     }
 }
 

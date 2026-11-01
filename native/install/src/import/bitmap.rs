@@ -24,16 +24,14 @@ impl Id {
     /// `scope/name@version`, as the fetch protocol expects.
     #[must_use]
     pub fn to_request(&self) -> String {
-        let mut request = self.without_version();
-        if let Some(version) = self.version
+        match self.version
             .as_deref()
             .map(str::trim)
             .filter(|ver| !ver.is_empty())
         {
-            request.push('@');
-            request.push_str(version);
+            Some(version) => format!("{}/{}@{version}", self.scope.trim(), self.name.trim()),
+            None => self.without_version(),
         }
-        request
     }
 
     #[must_use]
@@ -102,7 +100,11 @@ pub fn read(root: &Path) -> io::Result<Bitmap> {
     };
     let document = bit_object_import::parse_jsonc(&bytes)?;
     let entries = document.as_object().ok_or_else(|| invalid("invalid .bitmap"))?;
-    let mut bitmap = Bitmap { lane: entries.get(LANE_KEY).and_then(lane), ..Bitmap::default() };
+    let mut bitmap = Bitmap {
+        ids: Vec::with_capacity(entries.len()),
+        current_lane_ids: Vec::with_capacity(entries.len()),
+        lane: entries.get(LANE_KEY).and_then(lane),
+    };
     for (key, entry) in entries {
         if key.starts_with('$') || key == LANE_KEY || key == "version" {
             continue;

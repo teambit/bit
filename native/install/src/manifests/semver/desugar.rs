@@ -112,13 +112,12 @@ fn xrange_with_operator(operator: &str, groups: &[Option<&str>], suffix: &str) -
         "<=" => ("<", true),
         operator => (operator, false),
     };
-    let (major, minor) = match (bump, x_minor) {
-        (false, _) => (major.to_string(), minor.to_string()),
-        (true, true) => (next(Some(major)).to_string(), minor.to_string()),
-        (true, false) => (major.to_string(), next(Some(minor)).to_string()),
-    };
     let pre = if operator == "<" { suffix } else { "" };
-    format!("{operator}{major}.{minor}.0{pre}")
+    match (bump, x_minor) {
+        (false, _) => format!("{operator}{major}.{minor}.0{pre}"),
+        (true, true) => format!("{operator}{}.{minor}.0{pre}", next(Some(major))),
+        (true, false) => format!("{operator}{major}.{}.0{pre}", next(Some(minor))),
+    }
 }
 
 /// `1.x` / `1.2.x` without an operator.

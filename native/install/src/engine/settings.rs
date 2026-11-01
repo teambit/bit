@@ -209,7 +209,7 @@ fn public_hoist_pattern(shamefully_hoist: bool) -> Vec<String> {
     };
     patterns
         .iter()
-        .map(ToString::to_string)
+        .map(|pattern| (*pattern).to_owned())
         .collect()
 }
 
@@ -224,20 +224,22 @@ fn package_extensions(
         return from_config.cloned();
     }
     let react = json!({ "dependencies": { "@teambit/react": "^1.0.0" } });
-    let mut extensions: IndexMap<String, Value> = [
-        ("@teambit/node.envs.node-babel-mocha@<3", react.clone()),
-        ("@teambit/node.envs.node-typescript-mocha@<3", react.clone()),
-        ("@teambit/react.internal.base-react-env@1", react.clone()),
-        ("@teambit/rspack.envs.react-env@<2", react.clone()),
-        ("@teambit/react.react-env@1", react),
-        (
-            "@teambit/cloud.envs.cloud-react@0",
-            json!({ "dependencies": { "@teambit/rspack.envs.react-env": "^1.0.0" } }),
-        ),
-    ]
-    .into_iter()
-    .map(|(selector, extension)| (selector.to_string(), extension))
-    .collect();
+    let mut extensions = IndexMap::with_capacity(6 + from_config.map_or(0, IndexMap::len));
+    extensions.extend(
+        [
+            ("@teambit/node.envs.node-babel-mocha@<3", react.clone()),
+            ("@teambit/node.envs.node-typescript-mocha@<3", react.clone()),
+            ("@teambit/react.internal.base-react-env@1", react.clone()),
+            ("@teambit/rspack.envs.react-env@<2", react.clone()),
+            ("@teambit/react.react-env@1", react),
+            (
+                "@teambit/cloud.envs.cloud-react@0",
+                json!({ "dependencies": { "@teambit/rspack.envs.react-env": "^1.0.0" } }),
+            ),
+        ]
+        .into_iter()
+        .map(|(selector, extension)| (selector.to_owned(), extension)),
+    );
     extensions.extend(
         from_config
             .into_iter()

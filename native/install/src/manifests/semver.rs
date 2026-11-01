@@ -39,8 +39,11 @@ impl Flavor {
 /// `semver.validRange(range)` of semver 7.
 pub(crate) fn valid_range(range: &str) -> Option<String> {
     let range = Range::parse(range.trim(), Flavor::V7).ok()?;
-    let formatted = range.format();
-    Some(if formatted.is_empty() { "*".to_string() } else { formatted })
+    let mut formatted = range.format();
+    if formatted.is_empty() {
+        formatted.push('*');
+    }
+    Some(formatted)
 }
 
 /// `semver.satisfies(version, range)` of semver 7.

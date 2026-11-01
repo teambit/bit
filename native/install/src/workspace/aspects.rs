@@ -168,16 +168,16 @@ impl Resolver<'_> {
         if entry.core {
             return;
         }
-        let trimmed_id = entry.id.trim().to_owned();
-        let without = aspect_id_without_version(&trimmed_id).to_owned();
+        let trimmed_id = entry.id.trim();
+        let without = aspect_id_without_version(trimmed_id);
         let Some(found) = self.workspace
             .iter()
-            .find(|id| id.to_string_without_version() == without || id.name.trim() == without)
+            .find(|id| id.name.trim() == without || id.to_string_without_version() == without)
         else {
             return;
         };
         let given = trimmed_id
-            .strip_prefix(&without)
+            .strip_prefix(without)
             .and_then(|rest| rest.strip_prefix('@'))
             .map(str::trim)
             .filter(|ver| !ver.is_empty());
@@ -187,7 +187,10 @@ impl Resolver<'_> {
             given.or(found.version.as_deref())
         };
         let base = found.to_string_without_version();
-        entry.id = version.map_or_else(|| base.clone(), |version| format!("{base}@{version}"));
+        entry.id = match version {
+            Some(version) => format!("{base}@{version}"),
+            None => base,
+        };
     }
 }
 

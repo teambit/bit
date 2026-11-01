@@ -54,15 +54,15 @@ pub fn candidates(
     objects: &ScopeObjects,
 ) -> io::Result<Vec<String>> {
     let mut ids: Vec<String> = Vec::new();
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     for component in components {
         for id in component.config.keys() {
             let trimmed = id.trim();
             if !trimmed.is_empty()
-                && !ids
-                    .iter()
-                    .any(|existing| existing == trimmed)
+                && !seen.contains(trimmed)
                 && may_register(trimmed, component, components, core_aspects, objects)?
             {
+                seen.insert(trimmed);
                 ids.push(trimmed.to_owned());
             }
         }

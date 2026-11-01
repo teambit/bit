@@ -312,9 +312,9 @@ fn group_by_scope(ids: &[Id]) -> IndexMap<String, Vec<String>> {
 /// `getIdsMsg()`: `N components`, or `N components, M versions` when some
 /// component is requested at more than one version.
 fn ids_message(ids: &[Id]) -> String {
-    let unique: HashSet<String> = ids
+    let unique: HashSet<(&str, &str)> = ids
         .iter()
-        .map(Id::without_version)
+        .map(|id| (id.scope.trim(), id.name.trim()))
         .collect();
     if unique.len() == ids.len() {
         return format!("{} components", ids.len());

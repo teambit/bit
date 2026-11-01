@@ -182,12 +182,12 @@ pub(super) fn bound(
     let mut valid = comparators
         .iter()
         .filter(|comp| operators.contains(&comp.operator.trim()) || comp.semver.is_none());
+    let Some(first) = valid.next() else { return Comparator::parse("") };
     let opposite_versions: Vec<String> = comparators
         .iter()
         .filter(|comp| comp.operator.trim() == opposite_inclusive(end))
         .map(version_text)
         .collect();
-    let Some(first) = valid.next() else { return Comparator::parse("") };
     let reducer = Reducer { end, single_range, opposite_versions: &opposite_versions };
     let mut result = first.clone();
     for next in valid {

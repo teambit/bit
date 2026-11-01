@@ -142,7 +142,7 @@ fn write_components(
     received: &Received,
 ) -> io::Result<IndexMap<String, Vec<RemoteRef>>> {
     let mut heads: IndexMap<String, Vec<RemoteRef>> = IndexMap::new();
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(received.len());
     for (hash, per_remote) in received {
         let existing = repo.read_json(hash)?;
         let (merged, remote_head) = merge_received(existing.as_ref(), per_remote)?;
@@ -152,17 +152,13 @@ fn write_components(
             repo.write_raw(hash, &compress_json("Component", hash, &merged)?)?;
         }
         if !scope.is_empty() && !name.is_empty() {
-            rows.push(IndexRow::Component {
-                scope: scope.clone(),
-                name: name.clone(),
-                hash: hash.clone(),
-            });
             if let Some(head) = remote_head {
                 heads
                     .entry(scope.clone())
                     .or_default()
-                    .push(RemoteRef { scope, name, head });
+                    .push(RemoteRef { scope: scope.clone(), name: name.clone(), head });
             }
+            rows.push(IndexRow::Component { scope, name, hash: hash.clone() });
         }
     }
     repo.index_add(&rows)?;

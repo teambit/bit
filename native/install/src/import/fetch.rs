@@ -38,7 +38,7 @@ impl Fetcher<'_> {
             .buffered(self.concurrency.max(1))
             .collect()
             .await;
-        let mut results = PerRemote::new();
+        let mut results = PerRemote::with_capacity(fetched.len());
         let mut failed = Vec::new();
         for (scope, result) in fetched {
             match result {

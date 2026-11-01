@@ -20,12 +20,13 @@ pub(super) fn load_order(components: &[WorkspaceComponent]) -> Vec<&WorkspaceCom
         .iter()
         .partition(|component| is_core_env(&component.id.to_string_without_version()));
     let extensions = extension_ids(&others);
-    let (envs, configured) = split_envs(components, &extensions);
+    let envs_of_components = envs_of(components);
+    let (envs, configured) = split_envs(&envs_of_components, &extensions);
     let (extended, rest): (Vec<_>, Vec<_>) = others
         .into_iter()
         .partition(|component| configured.contains(full_id(component).as_str()));
     let mut order = core;
-    order.extend(env_components(components, &envs));
+    order.extend(env_components(components, &envs, &envs_of_components));
     order.extend(extended);
     order.extend(rest);
     first_places(order)
@@ -35,8 +36,9 @@ pub(super) fn load_order(components: &[WorkspaceComponent]) -> Vec<&WorkspaceCom
 fn env_components<'c>(
     components: &'c [WorkspaceComponent],
     envs: &[&str],
+    envs_of_components: &HashSet<&str>,
 ) -> Vec<&'c WorkspaceComponent> {
-    env_layers(components, envs, &envs_of(components))
+    env_layers(components, envs, envs_of_components)
         .into_iter()
         .flatten()
         .filter_map(|id| by_id(components, id))
@@ -61,10 +63,9 @@ fn envs_of(components: &[WorkspaceComponent]) -> HashSet<&str> {
 
 /// The extensions that are envs of components, in order, and the other extensions.
 fn split_envs<'a>(
-    components: &[WorkspaceComponent],
+    envs_of_components: &HashSet<&str>,
     extensions: &'a [String],
 ) -> (Vec<&'a str>, HashSet<&'a str>) {
-    let envs_of_components = envs_of(components);
     let (envs, configured): (Vec<&str>, Vec<&str>) = extensions
         .iter()
         .map(String::as_str)
@@ -98,14 +99,11 @@ fn env_layers<'a>(
 /// The configured extensions of `components`, versioned, in order of first appearance.
 fn extension_ids(components: &[&WorkspaceComponent]) -> Vec<String> {
     let mut ids: Vec<String> = Vec::new();
+    let mut seen: HashSet<&str> = HashSet::new();
     for component in components {
         for id in component.config.keys() {
             let trimmed = id.trim();
-            if !trimmed.is_empty()
-                && !ids
-                    .iter()
-                    .any(|existing| existing == trimmed)
-            {
+            if !trimmed.is_empty() && seen.insert(trimmed) {
                 ids.push(trimmed.to_owned());
             }
         }

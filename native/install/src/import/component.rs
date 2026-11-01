@@ -305,6 +305,16 @@ pub fn merge_version_history(existing: &Value, incoming: &Value) -> Value {
         .as_array()
         .cloned()
         .unwrap_or_default();
+    let mut seen_hashes: std::collections::HashSet<String> = merged
+        .iter()
+        .filter_map(|other| {
+            other["hash"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+                .map(str::to_owned)
+        })
+        .collect();
     for version in existing["versions"]
         .as_array()
         .into_iter()
@@ -314,11 +324,10 @@ pub fn merge_version_history(existing: &Value, incoming: &Value) -> Value {
             .as_str()
             .map(str::trim)
             .filter(|hash| !hash.is_empty());
-        let already_present = hash.is_some_and(|hash| {
-            merged
-                .iter()
-                .any(|other| other["hash"].as_str().map(str::trim) == Some(hash))
-        }) || merged.contains(version);
+        let already_present = match hash {
+            Some(hash) => !seen_hashes.insert(hash.to_owned()),
+            None => merged.contains(version),
+        };
         if !already_present {
             merged.push(version.clone());
         }

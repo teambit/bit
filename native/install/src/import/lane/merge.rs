@@ -144,22 +144,21 @@ fn add_to_bucket(existing: &mut LaneObject, component: &LaneComponent, hidden: b
 /// Hidden entries the origin dropped are pruned, matched by id (a local
 /// pending cascade with a newer hash survives).
 fn reconcile_hidden(existing: &mut LaneObject, incoming: &LaneObject) {
-    let Some(current) = &existing.update_dependents else { return };
+    let Some(current) = &mut existing.update_dependents else { return };
     if current.is_empty() {
         return;
     }
-    let incoming_ids: HashSet<String> = incoming.update_dependents
+    let incoming_ids: HashSet<(&str, &str)> = incoming.update_dependents
         .iter()
         .flatten()
-        .map(Id::without_version)
+        .map(|id| (id.scope.trim(), id.name.trim()))
         .collect();
-    let kept: Vec<Id> = current
-        .iter()
-        .filter(|id| incoming_ids.contains(&id.without_version()))
-        .cloned()
-        .collect();
-    if kept.len() != current.len() {
-        existing.update_dependents = (!kept.is_empty()).then_some(kept);
+    let before = current.len();
+    current.retain(|id| incoming_ids.contains(&(id.scope.trim(), id.name.trim())));
+    if current.len() != before {
+        if current.is_empty() {
+            existing.update_dependents = None;
+        }
         existing.changed = true;
     }
 }

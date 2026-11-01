@@ -30,12 +30,13 @@ pub(super) fn assert_safe_transition(
     // Real paths on both sides: a workspace reached through a symlink must not
     // read its project-local store as global.
     let workspace = realpath(root);
-    let store = realpath(&workspace.join("node_modules").join(virtual_store_dir));
+    let node_modules = workspace.join("node_modules");
+    let store = realpath(&node_modules.join(virtual_store_dir));
     let current_is_global = !store.starts_with(&workspace);
     if current_is_global == enable_global_virtual_store {
         return Ok(());
     }
-    if !realpath(bit_dir).starts_with(workspace.join("node_modules")) {
+    if !realpath(bit_dir).starts_with(&node_modules) {
         return Ok(());
     }
     Err(io::Error::other(transition_message(root, enable_global_virtual_store)))
@@ -44,13 +45,15 @@ pub(super) fn assert_safe_transition(
 /// `parseRecordedVirtualStoreDir`: JSON `.modules.yaml`, or the block-YAML an
 /// older pnpm wrote.
 pub(super) fn recorded_virtual_store_dir(modules_manifest: &str) -> Option<String> {
-    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(modules_manifest) {
+    if modules_manifest.trim_start().starts_with('{')
+        && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(modules_manifest)
+    {
         return parsed
             .get("virtualStoreDir")
             .and_then(serde_json::Value::as_str)
             .map(str::trim)
             .filter(|dir| !dir.is_empty())
-            .map(str::to_string);
+            .map(str::to_owned);
     }
     modules_manifest.lines().find_map(yaml_virtual_store_dir)
 }

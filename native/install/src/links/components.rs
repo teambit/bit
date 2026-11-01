@@ -204,7 +204,9 @@ async fn link_component(
         link_injected_package_json(root, component, &package_dir, injected)?;
     }
     let id = component.id.to_string_without_version();
-    Ok((ComponentLinks { id, links: [new_links, existing].concat() }, changed))
+    let mut links = new_links;
+    links.extend(existing);
+    Ok((ComponentLinks { id, links }, changed))
 }
 
 /// `symlinkComponentDir`: one link per `.bitmap` file; existing symlinks are kept.
@@ -213,9 +215,10 @@ fn plan_file_links(
     component: &WorkspaceComponent,
     package_dir: &Path,
 ) -> (Vec<FileLink>, Vec<FileLink>) {
+    let component_dir = root.join(&component.root_dir);
     let (mut new_links, mut existing) = (Vec::new(), Vec::new());
     for file in &component.files {
-        let from = root.join(&component.root_dir).join(file);
+        let from = component_dir.join(file);
         let to = package_dir.join(file);
         if is_symlink(&to) {
             existing.push(FileLink { from, to, existed_before: true });

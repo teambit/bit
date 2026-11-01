@@ -139,13 +139,12 @@ fn connect(
 /// update-dependents) and the current-lane `.bitmap` ids the lane lacks.
 fn ids_to_import(bitmap: &Bitmap, lane: Option<&RemoteLane>) -> Vec<Id> {
     let Some(lane) = lane else {
-        let mut unique = Vec::with_capacity(bitmap.ids.len());
-        for id in &bitmap.ids {
-            if !unique.contains(id) {
-                unique.push(id.clone());
-            }
-        }
-        return unique;
+        let mut seen = std::collections::HashSet::with_capacity(bitmap.ids.len());
+        return bitmap.ids
+            .iter()
+            .filter(|id| seen.insert(*id))
+            .cloned()
+            .collect();
     };
     let mut ids = lane.ids_with_update_dependents();
     for id in &bitmap.current_lane_ids {
@@ -162,7 +161,8 @@ fn ids_to_import(bitmap: &Bitmap, lane: Option<&RemoteLane>) -> Vec<Id> {
 
 fn read_scope_json(scope_dir: &Path) -> io::Result<Value> {
     match fs::read(scope_dir.join("scope.json")) {
-        Ok(bytes) => bit_object_import::parse_jsonc(&bytes)
+        Ok(bytes) => serde_json::from_slice(&bytes)
+            .or_else(|_| bit_object_import::parse_jsonc(&bytes))
             .map_err(|_| objects::invalid("invalid scope.json")),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Value::Null),
         Err(error) => Err(error),

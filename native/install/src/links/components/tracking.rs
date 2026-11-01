@@ -14,10 +14,10 @@ pub(super) async fn prepare(
     envs: &IndexMap<String, EnvProps>,
     tracking: bool,
 ) -> io::Result<IndexMap<String, Manifest>> {
-    let mut manifests = IndexMap::new();
     if !tracking {
-        return Ok(manifests);
+        return Ok(IndexMap::new());
     }
+    let mut manifests = IndexMap::with_capacity(components.len());
     for component in components {
         if component.has_package_json {
             continue;
@@ -37,14 +37,14 @@ pub(super) fn persist(
     manifests: &IndexMap<String, Manifest>,
 ) -> io::Result<bool> {
     let mut changed = false;
+    let node_modules = root.join("node_modules");
     for component in components {
         let pkg_name = component.package_name.trim();
         if pkg_name.is_empty() {
             continue;
         }
-        let package = root
-            .join("node_modules")
-            .join(Path::new(pkg_name).components().collect::<std::path::PathBuf>());
+        let package =
+            node_modules.join(Path::new(pkg_name).components().collect::<std::path::PathBuf>());
         if is_symlink(&package) {
             remove_path(&package)?;
         }

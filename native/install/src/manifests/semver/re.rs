@@ -153,9 +153,13 @@ pub(super) fn split_whitespace(text: &str) -> Vec<&str> {
 
 /// `text.trim().split(/\s+/).join(' ')`.
 pub(super) fn collapse_whitespace(text: &str) -> String {
-    let trimmed = text.trim_matches(|ch: char| ch.is_whitespace() || ch == '\u{feff}');
+    let is_space = |ch: char| ch.is_whitespace() || ch == '\u{feff}';
+    let trimmed = text.trim_matches(is_space);
     if trimmed.is_empty() {
         return String::new();
+    }
+    if !trimmed.contains(is_space) {
+        return trimmed.to_owned();
     }
     split_whitespace(trimmed).join(" ")
 }

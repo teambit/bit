@@ -108,7 +108,11 @@ impl DepsObject {
 pub(super) fn truthy(map: &DependencyMap, name: &str) -> bool {
     let trimmed = name.trim();
     map.get(name)
-        .or_else(|| map.get(trimmed))
+        .or_else(|| {
+            (trimmed != name)
+                .then(|| map.get(trimmed))
+                .flatten()
+        })
         .or_else(|| {
             map.iter()
                 .find_map(|(key, val)| (key.trim() == trimmed).then_some(val))

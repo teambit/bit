@@ -171,15 +171,12 @@ fn all_intersect(this: &[Comparator], that: &[Comparator]) -> io::Result<bool> {
 
 /// Whether some version satisfies every comparator (`isSatisfiable`).
 pub(crate) fn is_satisfiable(comparators: &[Comparator]) -> io::Result<bool> {
-    let mut remaining = comparators.to_vec();
-    let Some(mut test) = remaining.pop() else { return Ok(true) };
-    while !remaining.is_empty() {
-        for other in &remaining {
+    for (index, test) in comparators.iter().enumerate().rev() {
+        for other in &comparators[..index] {
             if !test.intersects(other)? {
                 return Ok(false);
             }
         }
-        test = remaining.pop().unwrap_or_else(|| test.clone());
     }
     Ok(true)
 }

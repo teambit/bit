@@ -48,11 +48,10 @@ impl SemVer {
 
     /// `semver.version`: `M.m.p[-pre]`, without build metadata.
     pub(crate) fn format(&self) -> String {
-        let main = format!("{}.{}.{}", self.major, self.minor, self.patch);
         if self.prerelease.is_empty() {
-            return main;
+            return format!("{}.{}.{}", self.major, self.minor, self.patch);
         }
-        format!("{main}-{}", self.prerelease.join("."))
+        format!("{}.{}.{}-{}", self.major, self.minor, self.patch, self.prerelease.join("."))
     }
 
     pub(crate) fn compare_main(&self, other: &Self) -> Ordering {

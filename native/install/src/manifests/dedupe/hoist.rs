@@ -132,22 +132,31 @@ fn most_common_version<'a>(versions: impl Iterator<Item = &'a str>) -> io::Resul
 
 /// `arrayCombinations`: by size, then the whole array last.
 fn combinations<'a>(values: &[&'a str]) -> Vec<Vec<&'a str>> {
-    fn collect<'a>(size: usize, rest: &[&'a str], chosen: &[&'a str], all: &mut Vec<Vec<&'a str>>) {
+    fn collect<'a>(
+        size: usize,
+        rest: &[&'a str],
+        chosen: &mut Vec<&'a str>,
+        all: &mut Vec<Vec<&'a str>>,
+    ) {
         if size == 0 {
             if !chosen.is_empty() {
-                all.push(chosen.to_vec());
+                all.push(chosen.clone());
             }
             return;
         }
-        for (index, value) in rest.iter().enumerate() {
-            let mut next = chosen.to_vec();
-            next.push(value);
-            collect(size - 1, &rest[index + 1..], &next, all);
+        if rest.len() < size {
+            return;
+        }
+        for (index, &value) in rest.iter().enumerate() {
+            chosen.push(value);
+            collect(size - 1, &rest[index + 1..], chosen, all);
+            chosen.pop();
         }
     }
     let mut all = Vec::new();
-    for size in 0..values.len() {
-        collect(size, values, &[], &mut all);
+    let mut chosen = Vec::with_capacity(values.len());
+    for size in 1..values.len() {
+        collect(size, values, &mut chosen, &mut all);
     }
     all.push(values.to_vec());
     all

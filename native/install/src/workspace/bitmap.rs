@@ -123,20 +123,18 @@ impl Bitmap {
 
     /// Read a retained in-memory bitmap without publishing it to disk.
     pub fn projected(path: &Path, value: &Value, default_scope: Option<&str>) -> io::Result<Self> {
-        let Value::Object(mut json) = value.clone() else {
+        let Value::Object(json) = value else {
             return Err(invalid(path, "not an object"));
         };
         let schema = json
-            .remove(SCHEMA_FIELD)
-            .or_else(|| json.remove("version"))
+            .get(SCHEMA_FIELD)
+            .or_else(|| json.get("version"))
             .and_then(|schema| schema.as_str().map(str::to_owned));
-        let lane = json
-            .remove(LANE_KEY)
-            .as_ref()
-            .and_then(lane_info);
-        throw_for_duplicate_root_dirs(path, &json)?;
+        let lane = json.get(LANE_KEY).and_then(lane_info);
+        throw_for_duplicate_root_dirs(path, json)?;
         let entries = json
             .iter()
+            .filter(|(key, _)| !matches!(key.as_str(), SCHEMA_FIELD | "version" | LANE_KEY))
             .map(|(key, value)| entry(path, key, value, default_scope))
             .collect::<io::Result<Vec<_>>>()?;
         Ok(Self { path: Some(path.to_owned()), schema, lane, entries })
@@ -177,6 +175,9 @@ fn lane_info(lane: &Value) -> Option<LaneInfo> {
 fn throw_for_duplicate_root_dirs(path: &Path, json: &Map<String, Value>) -> io::Result<()> {
     let mut seen = HashSet::new();
     for (key, value) in json {
+        if matches!(key.as_str(), SCHEMA_FIELD | "version" | LANE_KEY) {
+            continue;
+        }
         let Some(root_dir) = value
             .get("rootDir")
             .and_then(Value::as_str)

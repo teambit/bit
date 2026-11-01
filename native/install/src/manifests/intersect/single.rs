@@ -113,14 +113,14 @@ impl Single {
                 other.clone()
             }));
         };
-        let lowers: Vec<_> = [lower_a.clone(), lower_b.clone()]
-            .into_iter()
-            .chain(versioned([upper_a, upper_b]))
-            .collect();
-        let uppers: Vec<_> = [upper_a.clone(), upper_b.clone()]
-            .into_iter()
-            .chain(versioned([lower_a, lower_b]))
-            .collect();
+        let mut lowers = Vec::with_capacity(4);
+        lowers.push(lower_a.clone());
+        lowers.push(lower_b.clone());
+        lowers.extend(versioned([upper_a, upper_b]));
+        let mut uppers = Vec::with_capacity(4);
+        uppers.push(upper_a.clone());
+        uppers.push(upper_b.clone());
+        uppers.extend(versioned([lower_a, lower_b]));
         let lower = bound(&lowers, End::Lower, false)?;
         let upper = bound(&uppers, End::Upper, false)?;
         if same_version_equals_like(&lower, &upper) {

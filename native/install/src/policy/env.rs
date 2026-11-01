@@ -129,16 +129,16 @@ pub fn merge_manifests(parent: &Value, child: &Value) -> Value {
     let mut policy = Map::new();
     for key in ["peers", "dev", "runtime"] {
         let children = policy_items(child, key);
-        let mut merged: Vec<Value> = policy_items(parent, key)
-            .into_iter()
-            .filter(|entry| {
-                let Some(name) = entry_name(entry) else { return true };
-                !children
-                    .iter()
-                    .any(|child| entry_name(child) == Some(name))
-            })
+        let child_names: std::collections::HashSet<&str> = children
+            .iter()
+            .filter_map(entry_name)
             .collect();
-        merged.extend(children);
+        let mut merged: Vec<Value> = policy_items(parent, key)
+            .iter()
+            .filter(|entry| entry_name(entry).is_none_or(|name| !child_names.contains(name)))
+            .cloned()
+            .collect();
+        merged.extend(children.iter().cloned());
         merged.retain(|entry| {
             non_empty_field(entry, "version") != Some("-")
                 && non_empty_field(entry, "supportedRange") != Some("-")
@@ -169,11 +169,10 @@ fn merge_patterns(parent: &Value, child: &Value) -> Value {
     Value::Object(patterns)
 }
 
-fn policy_items(manifest: &Value, key: &str) -> Vec<Value> {
+fn policy_items<'a>(manifest: &'a Value, key: &str) -> &'a [Value] {
     manifest
         .get("policy")
         .and_then(|policy| policy.get(key))
         .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default()
+        .map_or(&[], Vec::as_slice)
 }

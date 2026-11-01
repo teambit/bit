@@ -123,28 +123,27 @@ fn resolve_conflict(
     versions: &IndexMap<String, IndexSet<String>>,
     warnings: &mut Vec<String>,
 ) -> String {
-    let candidates: Vec<&String> = versions
+    let candidates: Vec<(&String, String)> = versions
         .keys()
-        .filter(|version| {
-            !bit_object_import::plus_version::is_plus(version) && coerce(version).is_some()
-        })
+        .filter(|version| !bit_object_import::plus_version::is_plus(version))
+        .filter_map(|version| Some((version, coerce(version)?)))
         .collect();
-    let Some(first) = candidates.first() else {
+    let Some((first_raw, first_coerced)) = candidates.first() else {
         return versions
             .keys()
             .next()
             .cloned()
             .unwrap_or_default();
     };
-    let (mut best, mut best_count) = ((*first).clone(), 0);
-    for candidate in candidates {
-        let Some(coerced) = coerce(candidate) else { continue };
-        let count = satisfied_envs(candidate, &coerced, versions);
-        let higher = coerce(&best).is_some_and(|best| gt(&coerced, &best).unwrap_or(false));
+    let (mut best, mut best_coerced, mut best_count) = (*first_raw, first_coerced.as_str(), 0);
+    for (candidate, coerced) in &candidates {
+        let count = satisfied_envs(candidate, coerced, versions);
+        let higher = gt(coerced, best_coerced).unwrap_or(false);
         if count > best_count || (count == best_count && higher) {
-            (best, best_count) = (candidate.clone(), count);
+            (best, best_coerced, best_count) = (*candidate, coerced.as_str(), count);
         }
     }
+    let best = best.clone();
     warnings.extend(conflict_warning(name, &best, versions));
     best
 }

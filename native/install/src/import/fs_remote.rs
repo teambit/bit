@@ -169,13 +169,11 @@ impl Collector {
 
     /// `flattenedDependencies` and `flattenedDevDependencies` of a version without a dependency graph.
     fn push_dependencies(&mut self, version: &Value) -> io::Result<()> {
-        let dependencies: Vec<Value> = ["flattenedDependencies", "flattenedDevDependencies"]
+        for dependency in ["flattenedDependencies", "flattenedDevDependencies"]
             .into_iter()
             .filter_map(|field| version[field].as_array())
             .flatten()
-            .cloned()
-            .collect();
-        for dependency in &dependencies {
+        {
             let Some(id) = dependency_id(dependency) else { continue };
             let Some(selected) = self.select(&id, false)? else { continue };
             let Some(version) = self.repo.read_json(&selected.hash)? else { continue };

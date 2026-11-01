@@ -91,28 +91,35 @@ pub fn check(history: &Value, reference: &str) -> Completeness {
 /// `getAllHashesFrom(start).missing` is not empty.
 fn missing_from(history: &Value, start: &str) -> bool {
     let start = start.trim();
-    let versions = versions(history);
-    let parents = |hash: &str| {
-        let hash = hash.trim();
-        versions
-            .iter()
-            .find(|version| version["hash"].as_str().map(str::trim) == Some(hash))
-            .map(|version| strings(&version["parents"]))
-    };
-    let Some(first) = parents(start) else { return true };
-    let mut seen: HashSet<String> = HashSet::from([start.to_string()]);
+    let by_hash = versions_by_hash(history);
+    let Some(&first) = by_hash.get(start) else { return true };
+    let mut seen: HashSet<&str> = HashSet::from([start]);
     let mut stack = vec![first];
     while let Some(current) = stack.pop() {
-        for parent in current {
-            if seen.contains(&parent) {
+        for parent in parent_hashes(&current["parents"]) {
+            if !seen.insert(parent) {
                 continue;
             }
-            let Some(grandparents) = parents(&parent) else { return true };
-            seen.insert(parent);
-            stack.push(grandparents);
+            let Some(&next) = by_hash.get(parent) else { return true };
+            stack.push(next);
         }
     }
     false
+}
+
+fn versions_by_hash(history: &Value) -> std::collections::HashMap<&str, &Value> {
+    let versions = versions(history);
+    let mut by_hash = std::collections::HashMap::with_capacity(versions.len());
+    for version in versions {
+        if let Some(hash) = version["hash"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+        {
+            by_hash.entry(hash).or_insert(version);
+        }
+    }
+    by_hash
 }
 
 /// Write the history again with `reference` appended to `graphCompleteRefs`,
@@ -173,7 +180,7 @@ fn versions(history: &Value) -> &[Value] {
         .map_or(&[], Vec::as_slice)
 }
 
-fn strings(value: &Value) -> Vec<String> {
+fn parent_hashes(value: &Value) -> impl Iterator<Item = &str> {
     value
         .as_array()
         .into_iter()
@@ -182,7 +189,5 @@ fn strings(value: &Value) -> Vec<String> {
             item.as_str()
                 .map(str::trim)
                 .filter(|hash| !hash.is_empty())
-                .map(str::to_string)
         })
-        .collect()
 }

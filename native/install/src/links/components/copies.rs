@@ -30,7 +30,7 @@ pub fn component_package_copies(
                 .collect()
         } else {
             let mut roots = root_component_modules_dirs(root_components)?;
-            roots.sort();
+            roots.sort_unstable();
             roots
                 .into_iter()
                 .map(|path| path.join(pkg_name))

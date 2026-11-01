@@ -363,14 +363,13 @@ impl Placeholders {
 
 /// `getMainFileWithoutExtension`.
 fn main_without_extension(main_file: &str) -> String {
-    let extension = Path::new(main_file)
-        .extension()
-        .map(|ext| format!(".{}", ext.to_string_lossy()));
-    match extension {
-        Some(extension) if !main_file.ends_with('/') => main_file
-            .strip_suffix(&extension)
-            .unwrap_or(main_file)
-            .to_owned(),
-        _ => main_file.to_owned(),
+    if !main_file.ends_with('/')
+        && let Some(ext) = Path::new(main_file).extension().and_then(|ext| ext.to_str())
+        && let Some(stem) = main_file
+            .strip_suffix(ext)
+            .and_then(|rest| rest.strip_suffix('.'))
+    {
+        return stem.to_owned();
     }
+    main_file.to_owned()
 }

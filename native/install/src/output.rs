@@ -151,11 +151,14 @@ impl Output {
             return text.to_string();
         }
         let (open, close) = style.codes();
-        // chalk re-opens the outer style after a nested style closes it.
-        let nested =
-            text.replace(&format!("\u{1b}[{close}m"), &format!("\u{1b}[{close}m\u{1b}[{open}m"));
         let open = format!("\u{1b}[{open}m");
         let close = format!("\u{1b}[{close}m");
+        // chalk re-opens the outer style after a nested style closes it.
+        let nested = if text.contains(&close) {
+            std::borrow::Cow::Owned(text.replace(&close, &format!("{close}{open}")))
+        } else {
+            std::borrow::Cow::Borrowed(text)
+        };
         let nested = encase_line_breaks(&nested, &close, &open);
         format!("{open}{nested}{close}")
     }
@@ -274,7 +277,8 @@ impl Output {
     }
 
     fn symbol(&self, symbol: char, style: Style) -> String {
-        self.paint(style, &symbol.to_string())
+        let mut buf = [0_u8; 4];
+        self.paint(style, symbol.encode_utf8(&mut buf))
     }
 }
 
@@ -305,9 +309,11 @@ fn render(spinner: &mut Spinner, generation: u64) -> bool {
     let frame = FRAMES[spinner.frame % FRAMES.len()];
     spinner.frame += 1;
     // ora's default spinner color.
-    let frame =
-        if spinner.color { format!("\u{1b}[36m{frame}\u{1b}[39m") } else { frame.to_string() };
-    sink(&format!("\r\u{1b}[2K{frame} {}", spinner.text));
+    if spinner.color {
+        sink(&format!("\r\u{1b}[2K\u{1b}[36m{frame}\u{1b}[39m {}", spinner.text));
+    } else {
+        sink(&format!("\r\u{1b}[2K{frame} {}", spinner.text));
+    }
     spinner.drawn = true;
     true
 }

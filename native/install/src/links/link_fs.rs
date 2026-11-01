@@ -270,13 +270,14 @@ pub(super) fn hard_link_directory(src: &Path, dest_dirs: &[PathBuf]) -> io::Resu
     };
     for entry in entries {
         let entry = entry?;
-        if entry.file_name() == "node_modules" {
+        let file_name = entry.file_name();
+        if file_name == "node_modules" {
             continue;
         }
         let file_type = entry.file_type()?;
         let targets: Vec<PathBuf> = dest_dirs
             .iter()
-            .map(|dir| dir.join(entry.file_name()))
+            .map(|dir| dir.join(&file_name))
             .collect();
         if file_type.is_dir() {
             hard_link_subdirectory(&entry.path(), &targets)?;

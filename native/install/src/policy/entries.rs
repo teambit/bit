@@ -76,7 +76,7 @@ pub fn from_workspace_config(config: &Value) -> Vec<PolicyEntry> {
             if name.is_empty() {
                 continue;
             }
-            let (version, preserve) = match &value {
+            let (version, preserve) = match value {
                 Value::Object(object) => {
                     (string(object.get("version")), object.get("preserve").and_then(Value::as_bool))
                 }
@@ -189,11 +189,11 @@ pub fn value_entry(name: &str, value: &Value, lifecycle: Lifecycle) -> Option<Po
 }
 
 /// `{ name: version }` pairs of a policy field in either the object or the array form.
-fn field_values(field: Option<&Value>) -> Vec<(String, Value)> {
+fn field_values(field: Option<&Value>) -> Vec<(&str, &Value)> {
     match field {
         Some(Value::Object(map)) => map
             .iter()
-            .map(|(name, value)| (name.clone(), value.clone()))
+            .map(|(name, value)| (name.as_str(), value))
             .collect(),
         Some(Value::Array(items)) => items
             .iter()
@@ -201,12 +201,10 @@ fn field_values(field: Option<&Value>) -> Vec<(String, Value)> {
                 let name = item
                     .get("name")
                     .or_else(|| item.get("packageName"))?
-                    .as_str()?
-                    .to_owned();
+                    .as_str()?;
                 let version = item
                     .get("version")
-                    .or_else(|| item.get("supportedRange"))?
-                    .clone();
+                    .or_else(|| item.get("supportedRange"))?;
                 Some((name, version))
             })
             .collect(),

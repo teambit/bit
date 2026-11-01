@@ -69,15 +69,11 @@ pub(super) fn dependency_list(deps: &ComponentDependencies) -> Vec<Dep<'_>> {
             is_extension: false,
             hidden: false,
         });
-    let mut seen = Vec::new();
+    let mut seen =
+        std::collections::HashSet::with_capacity(deps.components.len() + deps.packages.len());
     components
         .chain(packages)
-        .filter(|dep| {
-            let id = dep.id();
-            let new = !seen.contains(&id);
-            seen.push(id);
-            new
-        })
+        .filter(|dep| seen.insert(dep.id()))
         .collect()
 }
 

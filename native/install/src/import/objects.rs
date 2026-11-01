@@ -22,7 +22,8 @@ pub struct Parsed {
 
 impl Parsed {
     pub fn json(&self) -> io::Result<Value> {
-        bit_object_import::parse_jsonc(&self.content)
+        serde_json::from_slice(&self.content)
+            .or_else(|_| bit_object_import::parse_jsonc(&self.content))
             .map_err(|_| invalid(&format!("invalid {} object", self.kind)))
     }
 }
@@ -202,7 +203,8 @@ impl Repo {
     pub fn remote_refs(&self, scope: &str, lane: &str) -> io::Result<Vec<RemoteRef>> {
         match fs::read(self.remote_ref_path(scope, lane)?) {
             Ok(bytes) => {
-                let parsed = bit_object_import::parse_jsonc(&bytes)
+                let parsed: Value = serde_json::from_slice(&bytes)
+                    .or_else(|_| bit_object_import::parse_jsonc(&bytes))
                     .map_err(|_| invalid("invalid remote lane refs"))?;
                 let entries =
                     parsed.as_array().ok_or_else(|| invalid("invalid remote lane refs"))?;
@@ -295,7 +297,8 @@ pub enum IndexRow {
 fn read_index(path: &Path) -> io::Result<Value> {
     match fs::read(path) {
         Ok(bytes) => {
-            let value = bit_object_import::parse_jsonc(&bytes)
+            let value: Value = serde_json::from_slice(&bytes)
+                .or_else(|_| bit_object_import::parse_jsonc(&bytes))
                 .map_err(|_| invalid("invalid scope index.json"))?;
             Ok(match value {
                 Value::Array(components) => json!({ "components": components, "lanes": [] }),

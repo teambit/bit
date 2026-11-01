@@ -174,6 +174,7 @@ fn link_bridges(hoisted: &Path, links: &DependencyMap) -> io::Result<()> {
 /// `addSymlinkFromComponentDirNMToWorkspaceDirNM`: its computed nested links are never written;
 /// only the `node_modules/<pkg>` directory is created.
 fn ensure_nested_package_dirs(root: &Path, components: &[WorkspaceComponent]) -> io::Result<()> {
+    let root_nm = root.join("node_modules");
     for component in components
         .iter()
         .filter(|component| {
@@ -183,8 +184,11 @@ fn ensure_nested_package_dirs(root: &Path, components: &[WorkspaceComponent]) ->
             !root_dir.is_empty() && root_dir != "."
         })
     {
-        let package_dir = root.join("node_modules").join(component.package_name.trim());
-        if component.dir.join("node_modules").exists() && !is_symlink(&package_dir) {
+        if !component.dir.join("node_modules").exists() {
+            continue;
+        }
+        let package_dir = root_nm.join(component.package_name.trim());
+        if !is_symlink(&package_dir) {
             fs::create_dir_all(package_dir)?;
         }
     }
@@ -283,7 +287,11 @@ fn core_aspect_source_dir(info: &HostInfo, aspect: &CoreAspect, root: &Path) -> 
 /// `hasCompiledMain`: the package's `main` (default `index.js`) exists.
 fn has_compiled_main(package_dir: &Path) -> bool {
     let Ok(text) = fs::read_to_string(package_dir.join("package.json")) else { return false };
-    let Ok(manifest) = crate::jsonc::parse(&text) else { return false };
+    let Ok(manifest) =
+        serde_json::from_str::<serde_json::Value>(&text).or_else(|_| crate::jsonc::parse(&text))
+    else {
+        return false;
+    };
     let main = manifest
         .get("main")
         .and_then(serde_json::Value::as_str)

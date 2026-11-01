@@ -93,11 +93,11 @@ fn insert_component_deps(
 }
 
 /// `mergeWithRootDeps`: the workspace policy always lands in the root.
-fn merge_with_root(root: &DepsObject, deduped: &mut Deduped) {
+fn merge_with_root(mut root: DepsObject, deduped: &mut Deduped) {
     for field in Field::ALL {
-        for (name, range) in root.get(field) {
-            if !deduped.root.has_direct(name) {
-                deduped.root.get_mut(field).insert(name.clone(), range.clone());
+        for (name, range) in std::mem::take(root.get_mut(field)) {
+            if !deduped.root.has_direct(&name) {
+                deduped.root.get_mut(field).insert(name, range);
             }
         }
     }
@@ -111,7 +111,7 @@ pub(super) fn dedupe(
 ) -> std::io::Result<Deduped> {
     let index = index_by_dep_id(policy, components);
     let mut deduped = hoist::hoist(&index, dedupe_peers)?;
-    merge_with_root(&policy_manifest(policy), &mut deduped);
+    merge_with_root(policy_manifest(policy), &mut deduped);
     Ok(deduped)
 }
 

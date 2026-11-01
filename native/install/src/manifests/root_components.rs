@@ -237,7 +237,7 @@ pub(super) fn has_missing_local_components(
     input: &ManifestInput<'_>,
     manifests: &IndexMap<PathBuf, Manifest>,
 ) -> bool {
-    let missing: Vec<&str> = input.components
+    let missing: std::collections::HashSet<&str> = input.components
         .iter()
         .filter_map(|component| input.dependencies.get(&component.id.to_string_without_version()))
         .flat_map(|deps| deps.missing_packages.runtime.iter().chain(&deps.missing_packages.dev))
@@ -245,6 +245,9 @@ pub(super) fn has_missing_local_components(
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .collect();
+    if missing.is_empty() {
+        return false;
+    }
     manifests
         .values()
         .filter_map(|manifest| {
@@ -254,5 +257,5 @@ pub(super) fn has_missing_local_components(
                 .map(str::trim)
         })
         .filter(|name| !name.is_empty())
-        .any(|name| missing.contains(&name))
+        .any(|name| missing.contains(name))
 }

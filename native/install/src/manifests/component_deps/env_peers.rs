@@ -52,7 +52,9 @@ pub(super) fn legacy_env_peers(
         {
             continue;
         }
-        let resolved = found_version(deps, name).map(|version| snap_to_semver(&version));
+        let resolved = bit_object_import::plus_version::is_plus(&entry.version)
+            .then(|| found_version(deps, name).map(|version| snap_to_semver(&version)))
+            .flatten();
         let version =
             bit_object_import::plus_version::resolve(&entry.version, resolved.as_deref(), "*");
         peers.insert(name.to_owned(), version);

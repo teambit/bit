@@ -36,7 +36,7 @@ impl Multi {
         if other.0.is_empty() {
             return Ok(self);
         }
-        let mut singles = Vec::new();
+        let mut singles = Vec::with_capacity(self.0.len() * other.0.len());
         for a in &self.0 {
             for b in &other.0 {
                 if let Some(single) = a.intersect(b)? {
@@ -53,7 +53,7 @@ impl Multi {
     }
 
     fn format(&self) -> String {
-        let mut parts: Vec<String> = Vec::new();
+        let mut parts: Vec<String> = Vec::with_capacity(self.0.len());
         for single in &self.0 {
             let text = single.to_string();
             if !parts.contains(&text) {
