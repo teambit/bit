@@ -96,7 +96,10 @@ describe('revealInGaps', () => {
     const revealed = new Set([...gap.hidden.slice(0, 5), ...gap.hidden.slice(-3)]);
 
     // a comment lands in the middle of that gap and splits it
-    const after = revealInGaps(buildSections(items, 2, (item) => item.newLn === 20), revealed);
+    const after = revealInGaps(
+      buildSections(items, 2, (item) => item.newLn === 20),
+      revealed
+    );
     for (const item of revealed) expect(visibleLines(after)).toContain(item.newLn);
   });
 

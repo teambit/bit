@@ -125,7 +125,7 @@ bit ripple retry <job-id>            # retry a failed Ripple CI job
 
 > **Never run `bit build`** unless absolutely necessary. Always use `bit validate` instead — it's faster and sufficient.
 >
-> **Always use `bit install`** to install packages. Never use `npm install`, `yarn`, or `pnpm` directly — unless the workspace is configured with `externalPackageManager` mode in `workspace.jsonc`, in which case use your configured package manager.
+> **Always use `bit install`** to install packages. Never use `npm install` or `pnpm` directly — unless the workspace is configured with `externalPackageManager` mode in `workspace.jsonc`, in which case use your configured package manager.
 >
 > **Use Bit for type checking and testing.** Never use `tsc` or `npx tsc` directly. Use `bit validate` for a full check, or scope to specific components:
 >
@@ -528,7 +528,7 @@ The backend schema and the query the frontend sends have drifted apart. Compare 
 | Pushing a branch that fails `bit validate`                                      | Fix it first — CI's build fails for the same reason                                                                       |
 | Guessing a component ID                                                         | Check `package.json` under `componentId` or use `bit list`                                                                |
 | Creating a component that already exists                                        | Always run `bit list` and check the Bit Cloud MCP (`orientation` / `search_components`) first                             |
-| Using `npm install`, `yarn`, or `pnpm`                                          | Use `bit install` — unless the workspace uses `externalPackageManager` mode                                               |
+| Using `npm install` or `pnpm`                                                   | Use `bit install` — unless the workspace uses `externalPackageManager` mode                                               |
 | Using `tsc` or `npx tsc` to check types                                         | Use `bit validate`, `bit check-types`, or `bit test`                                                                      |
 | Trying to create a scope from the CLI                                           | Scopes only exist on Bit Cloud — use the `create_scope` MCP tool                                                          |
 | Creating a scope for a domain that already has one                              | Run `read_scope` / `list_components` first — reuse the existing scope                                                     |
