@@ -60,7 +60,10 @@ impl Settings {
     fn apply(&mut self, args: &[OsString]) -> io::Result<()> {
         let mut arguments = args.iter().skip(1);
         while let Some(argument) = arguments.next() {
-            let token = argument.to_str().ok_or_else(|| invalid("tester argument"))?;
+            let token = argument
+                .to_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("tester argument"))?;
             if token == "--" {
                 break;
             }

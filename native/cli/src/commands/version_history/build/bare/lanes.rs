@@ -54,8 +54,10 @@ pub(super) fn lane_head(lane: &Value, scope: &str, name: &str) -> Option<Option<
 
 fn lane_component_id(id: &Value) -> Option<(&str, &str)> {
     let (raw_scope, raw_name) = if let Some(raw) = id.as_str() {
-        raw.rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
+        let trimmed = raw.trim();
+        trimmed
+            .rsplit_once('@')
+            .map_or(trimmed, |(bare, _)| bare)
             .split_once('/')?
     } else {
         (id["scope"].as_str()?, id["name"].as_str()?)

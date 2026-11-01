@@ -161,8 +161,8 @@ fn apply_bitmap_entry_updates(
             .iter()
             .find(|ent| {
                 ent.owns_its_dir()
-                    && (ent.id.to_string_without_version() == comp_name
-                        || ent.id.name == comp_name)
+                    && (ent.id.to_string_without_version().trim() == comp_name
+                        || ent.id.name.trim() == comp_name)
             })
         else {
             continue;

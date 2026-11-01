@@ -129,14 +129,9 @@ fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     }
     Ok(targets
         .iter()
-        .filter(|target| {
-            target["identity"]
-                .as_str()
-                .or_else(|| target["id"].as_str())
-                .map(str::trim)
-                .is_some_and(|id| selected.contains(&id))
-        })
-        .cloned()
+        .zip(&identities)
+        .filter(|(_, id)| selected.contains(id))
+        .map(|(target, _)| target.clone())
         .collect())
 }
 

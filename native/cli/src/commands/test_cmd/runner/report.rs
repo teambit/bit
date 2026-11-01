@@ -77,14 +77,12 @@ fn test(row: &Value) -> Value {
     let message = row["formattedError"]
         .as_str()
         .filter(|message| !message.is_empty())
-        .map(str::to_owned)
         .or_else(|| {
             row["failureMessages"]
                 .as_array()?
                 .iter()
-                .find_map(Value::as_str)
-                .filter(|message| !message.is_empty())
-                .map(str::to_owned)
+                .filter_map(Value::as_str)
+                .find(|message| !message.is_empty())
         });
     if let Some(message) = message {
         let failed = row["status"].as_str().map(str::trim) == Some("failed");

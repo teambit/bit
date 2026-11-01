@@ -49,9 +49,9 @@ fn prefixed_ranges(entry: &Value, dependencies: &[Value]) -> io::Result<Vec<Valu
     for dependency in dependencies
         .iter()
         .filter(|dependency| {
-            dependency["name"].as_str().map(str::trim) == Some(target_name)
-                || dependency["id"].as_str().map(str::trim) == Some(target_name)
-                || dependency["packageName"].as_str().map(str::trim) == Some(target_name)
+            ["name", "id", "packageName"]
+                .into_iter()
+                .any(|key| dependency[key].as_str().map(str::trim) == Some(target_name))
         })
     {
         for value in array(dependency.get("versions"), "checkout policy versions")? {

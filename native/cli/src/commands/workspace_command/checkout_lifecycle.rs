@@ -119,10 +119,7 @@ pub(in crate::commands) fn failure(
     let callback = error
         .get_ref()
         .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>());
-    if let Some(callback) = callback {
-        print!("{}", callback.startup);
-        let _ = io::stdout().flush();
-    }
+    emit_callback_startup(callback);
     let failed_output =
         callback.map_or_else(String::new, |callback| callback.output.clone());
     let progress = super::progress::Progress::parse(startup.build_progress.as_ref())?;
@@ -146,4 +143,13 @@ pub(in crate::commands) fn failure(
         }
         Err(error)
     })
+}
+
+fn emit_callback_startup(callback: Option<&crate::host::callback_error::CallbackError>) {
+    if let Some(callback) = callback
+        && !callback.startup.is_empty()
+    {
+        print!("{}", callback.startup);
+        let _ = io::stdout().flush();
+    }
 }

@@ -5,7 +5,7 @@ pub(super) fn valid_rows(rows: &[Value]) -> Option<bool> {
     if rows.len() > 128 {
         return None;
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(rows.len());
     for row in rows {
         let hash = canonical(row)?;
         if !seen.insert(hash) {

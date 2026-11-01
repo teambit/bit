@@ -195,10 +195,15 @@ pub(super) fn report_summary(
     Ok(output)
 }
 fn belongs(root: &Path, component: &Component, row: &Value) -> bool {
-    row["testFilePath"]
-        .as_str()
-        .map(str::trim)
-        .filter(|name| !name.is_empty())
+    let non_empty = |key: &str| {
+        row[key]
+            .as_str()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+    };
+    non_empty("testFilePath")
+        .or_else(|| non_empty("name"))
+        .or_else(|| non_empty("file"))
         .is_some_and(|name| {
             super::paths::normalized(Path::new(name))
                 .starts_with(super::paths::normalized(&root.join(component.directory.trim())))

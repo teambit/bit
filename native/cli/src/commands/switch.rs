@@ -96,7 +96,7 @@ fn outside_workspace_switch(
     options: &options::Options,
     lane_import: bool,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if super::scope_rename::ci_active() {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     }
     let msg = if lane_import && options.force_ours && options.force_theirs {
@@ -114,7 +114,7 @@ fn preflight_switch_error(
     options: &options::Options,
     lane_import: bool,
 ) -> Option<io::Result<Outcome>> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) || Installer::needs_canonical(root) {
+    if super::scope_rename::ci_active() || Installer::needs_canonical(root) {
         return None;
     }
     let msg = options.preflight_error(lane_import)?;

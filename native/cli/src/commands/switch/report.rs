@@ -31,8 +31,7 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
         .as_str()
         .map(str::trim)
         .filter(|warning| !warning.is_empty())
-        .map(|warning| chalk.yellow(&format!("Warning: {warning}")))
-        .unwrap_or_default();
+        .map_or_else(String::new, |warning| chalk.yellow(&format!("Warning: {warning}")));
     let skipped_minimal = !results.skipped.is_empty() && !options.verbose;
     let data = build(&results, options, &formatter, &branch_warning, skipped_minimal);
     let details =

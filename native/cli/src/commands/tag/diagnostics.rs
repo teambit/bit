@@ -70,6 +70,12 @@ fn main_file_removed(root: &Path, chalk: Chalk) -> io::Result<Option<io::Error>>
     Ok(None)
 }
 
+fn non_empty(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn entry_missing_main(root: &Path, bitmap: &Value, key: &str, value: &Value) -> io::Result<bool> {
     if key.starts_with('$')
         || matches!(key, "_bit_lane" | "version")
@@ -80,11 +86,7 @@ fn entry_missing_main(root: &Path, bitmap: &Value, key: &str, value: &Value) -> 
     {
         return Ok(false);
     }
-    let Some(root_dir) = value["rootDir"]
-        .as_str()
-        .map(str::trim)
-        .filter(|dir| !dir.is_empty())
-    else {
+    let Some(root_dir) = non_empty(&value["rootDir"]) else {
         return Ok(false);
     };
     let main_file = value["mainFile"].as_str().map_or("", str::trim);
@@ -105,24 +107,23 @@ fn format_main_removed(
     default_scope: Option<&str>,
     chalk: Chalk,
 ) -> io::Error {
-    let main_file = value["mainFile"].as_str().unwrap_or_default();
+    let main_file = value["mainFile"].as_str().map_or("", str::trim);
     let name = crate::commands::update_cmd::bitmap_row_name(key, value);
-    let scope = value["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty());
-    let row_default_scope = value["defaultScope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty());
-    let identity = match scope.or(row_default_scope).or(default_scope) {
+    let scope = non_empty(&value["scope"]);
+    let identity = match scope
+        .or_else(|| non_empty(&value["defaultScope"]))
+        .or_else(|| {
+            default_scope
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        }) {
         Some(scope) => format!("{scope}/{name}"),
         None => name.to_owned(),
     };
-    let version = value["version"]
-        .as_str()
-        .filter(|version| !version.is_empty())
+    let version = non_empty(&value["version"])
         .or_else(|| {
             key.rsplit_once('@')
-                .map(|(_, ver)| ver)
+                .map(|(_, ver)| ver.trim())
                 .filter(|ver| !ver.is_empty())
         });
     let id = match (scope.is_some(), version) {
@@ -156,15 +157,8 @@ fn target_existing_version_error(
     models: &[Value],
     options: &Options,
 ) -> Option<io::Error> {
-    let identity = target["identity"]
-        .as_str()
-        .map(str::trim)
-        .filter(|id| !id.is_empty())?;
-    let name = target["name"]
-        .as_str()
-        .map(str::trim)
-        .filter(|n| !n.is_empty())
-        .unwrap_or(identity);
+    let identity = non_empty(&target["identity"])?;
+    let name = non_empty(&target["name"]).unwrap_or(identity);
     if !matches_patterns(identity, name, &options.selection.patterns) {
         return None;
     }

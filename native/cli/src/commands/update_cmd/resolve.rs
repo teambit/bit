@@ -174,9 +174,15 @@ fn query_npm_versions(pkg_name: &str) -> Vec<String> {
     match parsed {
         Value::Array(arr) => arr
             .into_iter()
-            .filter_map(|item| item.as_str().map(str::to_owned))
+            .filter_map(|item| {
+                let ver = item.as_str()?.trim();
+                (!ver.is_empty()).then(|| ver.to_owned())
+            })
             .collect(),
-        Value::String(single) => vec![single],
+        Value::String(single) => {
+            let trimmed = single.trim();
+            if trimmed.is_empty() { Vec::new() } else { vec![trimmed.to_owned()] }
+        }
         _ => Vec::new(),
     }
 }

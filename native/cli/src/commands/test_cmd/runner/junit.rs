@@ -55,22 +55,22 @@ fn suite(output: &mut String, component: &Value, raw: &Value) -> io::Result<()> 
             .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
         write!(output, r#" timestamp="{start}""#).unwrap();
     }
+    let failures = cases
+        .iter()
+        .filter(|case| case.failure.is_some())
+        .count();
+    let errors = cases
+        .iter()
+        .filter(|case| case.error.is_some())
+        .count();
+    let skipped = cases
+        .iter()
+        .filter(|case| case.skipped)
+        .count();
     writeln!(
         output,
-        r#" tests="{}" failures="{}" errors="{}" skipped="{}">"#,
+        r#" tests="{}" failures="{failures}" errors="{errors}" skipped="{skipped}">"#,
         cases.len(),
-        cases
-            .iter()
-            .filter(|case| case.failure.is_some())
-            .count(),
-        cases
-            .iter()
-            .filter(|case| case.error.is_some())
-            .count(),
-        cases
-            .iter()
-            .filter(|case| case.skipped)
-            .count(),
     )
     .unwrap();
     for case in cases {

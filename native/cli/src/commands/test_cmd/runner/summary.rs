@@ -69,11 +69,7 @@ fn non_empty_str(val: &Value) -> Option<&str> {
 
 fn component_identity(id: &Value) -> Option<String> {
     if let Some(raw) = non_empty_str(id) {
-        let bare = raw
-            .split('@')
-            .next()
-            .unwrap_or_default()
-            .trim();
+        let bare = bit_install::config::aspect_id_without_version(raw).trim();
         return (!bare.is_empty()).then(|| bare.to_owned());
     }
     let scope = non_empty_str(&id["_legacy"]["scope"])

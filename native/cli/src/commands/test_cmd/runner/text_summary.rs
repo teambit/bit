@@ -169,8 +169,8 @@ fn result_sections(value: &Value, chalk: Chalk, sections: &mut Vec<String>) {
         let mut tested = tested.iter().collect::<Vec<_>>();
         tested.sort_by(|left, right| {
             crate::commands::status::collate::compare(
-                left["id"].as_str().unwrap_or_default(),
-                right["id"].as_str().unwrap_or_default(),
+                left["id"].as_str().map_or("", str::trim),
+                right["id"].as_str().map_or("", str::trim),
             )
         });
         let lines = tested

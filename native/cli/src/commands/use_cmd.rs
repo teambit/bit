@@ -38,13 +38,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     match prepare(&root, &target, chalk) {
         Ok(report) => workspace_command::execute_then(&root, args, "use", |_output| Ok(report)),
         Err(Failure::User(message)) => {
-            if env::var_os("CI")
-                .is_some_and(|value| {
-                    let trimmed = value.to_string_lossy();
-                    let trimmed = trimmed.trim();
-                    !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
-                })
-            {
+            if super::scope_rename::ci_active() {
                 return Ok(Outcome::Declined("CI use error stack".to_owned()));
             }
             workspace_command::execute_then(&root, args, "use", |_output| {

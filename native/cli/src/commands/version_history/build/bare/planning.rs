@@ -225,7 +225,9 @@ pub(super) fn merge(
     let head_exists = rows
         .iter()
         .any(|row| row["hash"].as_str().map(str::trim) == Some(head_hash));
-    let count = ancestors.len() - usize::from(head_exists);
+    let count = ancestors
+        .len()
+        .saturating_sub(usize::from(head_exists));
     refresh_rows(&mut rows, ancestors);
     Some((rows, count))
 }

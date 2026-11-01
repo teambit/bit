@@ -8,13 +8,9 @@ pub(super) fn qualify_parents(
     object: &Path,
     proofs: &[(PathBuf, Vec<u8>)],
 ) -> Option<()> {
-    if !super::safe_parent(root, object) {
-        return None;
-    }
-    if has_etc_group_proof(proofs) && !safe_parents(root, object)? {
-        return None;
-    }
-    Some(())
+    (super::safe_parent(root, object)
+        && (!has_etc_group_proof(proofs) || safe_parents(root, object)?))
+    .then_some(())
 }
 
 fn has_etc_group_proof(proofs: &[(PathBuf, Vec<u8>)]) -> bool {

@@ -2,10 +2,7 @@
 use std::path::{Path, PathBuf};
 
 pub(super) fn normalized(path: &Path) -> PathBuf {
-    let path = match path.to_str() {
-        Some(text) => Path::new(text.trim()),
-        None => path,
-    };
+    let path = path.to_str().map_or(path, |text| Path::new(text.trim()));
     if path.as_os_str().is_empty() {
         return PathBuf::new();
     }

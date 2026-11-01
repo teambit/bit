@@ -141,13 +141,19 @@ fn check_line_type_mismatch(line: &str) -> Option<&'static str> {
     }
     let eq_idx = find_assign_eq(line)?;
     let lhs = line[..eq_idx].trim();
-    let rhs = line[eq_idx + 1..]
-        .split("//")
-        .next()
-        .unwrap_or_default()
-        .trim()
-        .trim_end_matches(';')
-        .trim();
+    let raw_rhs = line[eq_idx + 1..].trim();
+    let unquoted_rhs = raw_rhs.trim_end_matches(';').trim();
+    let rhs = if is_string_literal(unquoted_rhs) {
+        unquoted_rhs
+    } else {
+        raw_rhs
+            .split("//")
+            .next()
+            .unwrap_or_default()
+            .trim()
+            .trim_end_matches(';')
+            .trim()
+    };
     let (_, raw_type) = lhs.rsplit_once(':')?;
     match raw_type.trim() {
         "number" if is_string_literal(rhs) || is_bool_literal(rhs) => {

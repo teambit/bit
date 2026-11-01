@@ -19,12 +19,8 @@ const FILES: [(&str, &str); 7] = [
 ];
 impl Assets {
     pub(super) fn prepare(package: &Path) -> io::Result<Self> {
-        if package.as_os_str().is_empty()
-            || package
-                .to_string_lossy()
-                .trim()
-                .is_empty()
-        {
+        let package_text = package.to_string_lossy();
+        if package.as_os_str().is_empty() || package_text.trim().is_empty() {
             return Err(io::Error::other("tester package path is empty"));
         }
         let payloads = build_payloads(package)?;

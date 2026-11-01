@@ -215,19 +215,17 @@ fn apply_extra_parent_field(
 }
 
 fn valid_lane_id(lane_id: &Value) -> bool {
-    lane_id
+    if let Some((scope, name)) = lane_id
         .as_str()
-        .is_some_and(|raw| {
-            raw.trim()
-                .split_once('/')
-                .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
-        })
-        || (lane_id["name"]
-            .as_str()
-            .is_some_and(|name| !name.trim().is_empty())
-            && lane_id["scope"]
-                .as_str()
-                .is_some_and(|scope| !scope.trim().is_empty()))
+        .and_then(|raw| raw.trim().split_once('/'))
+    {
+        return !scope.trim().is_empty() && !name.trim().is_empty();
+    }
+    let non_empty = |val: &Value| {
+        val.as_str()
+            .is_some_and(|text| !text.trim().is_empty())
+    };
+    non_empty(&lane_id["name"]) && non_empty(&lane_id["scope"])
 }
 
 fn object_path(root: &Path, hash: &str) -> Option<PathBuf> {

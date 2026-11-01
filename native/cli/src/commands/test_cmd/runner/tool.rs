@@ -76,16 +76,11 @@ impl Quiet {
         let Target::Entry(cli) = discovery::find()? else {
             return Err(invalid("tester tool installation"));
         };
-        if cli.entry.as_os_str().is_empty()
-            || cli.entry
-                .to_string_lossy()
-                .trim()
-                .is_empty()
-        {
+        if is_blank_path(&cli.entry) {
             return Err(invalid("tester tool entry"));
         }
         let package = cli.bit_dir
-            .filter(|dir| !dir.as_os_str().is_empty() && !dir.to_string_lossy().trim().is_empty())
+            .filter(|dir| !is_blank_path(dir))
             .ok_or_else(|| invalid("tester package root"))?
             .join("package.json");
         let assets = Assets::prepare(&package)?;
@@ -147,4 +142,11 @@ impl Drop for Quiet {
         let _ = self.child.kill();
         let _ = self.child.wait();
     }
+}
+
+pub(super) fn is_blank_path(path: &std::path::Path) -> bool {
+    path.as_os_str().is_empty()
+        || path
+            .to_str()
+            .is_some_and(|text| text.trim().is_empty())
 }

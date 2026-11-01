@@ -124,7 +124,7 @@ fn render(value: &Value, chalk: Chalk) -> io::Result<String> {
     } else {
         formatter.success_summary("completed building version history")
     };
-    let mut lines = Vec::new();
+    let mut lines = Vec::with_capacity(results.len());
     for (id, result) in results {
         let message = if !result["err"].is_null() {
             let err_msg = [result["err"]["message"].as_str(), result["err"].as_str()]
@@ -139,7 +139,7 @@ fn render(value: &Value, chalk: Chalk) -> io::Result<String> {
         } else {
             "no changes".to_owned()
         };
-        lines.push(format!("{}: {message}", chalk.bold(id)));
+        lines.push(format!("{}: {message}", chalk.bold(id.trim())));
     }
     Ok(format!("{summary}\n{}", lines.join("\n")))
 }

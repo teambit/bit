@@ -96,7 +96,9 @@ fn patterns(root: &Path, selected: &Component) -> io::Result<Patterns> {
         .active()
         .find(|(entry, _)| entry.root_dir.trim() == selected.directory.trim())
         .ok_or_else(|| invalid("tester component patterns"))?;
-    let configured = DevPatternConfig::from_aspects(&|id| raw.get(id).cloned());
+    let configured = DevPatternConfig::from_aspects(&|id| {
+        crate::commands::update_cmd::aspect_entry(&raw, id).map(|(_, val)| val.clone())
+    });
     let mut patterns = dev_patterns(component, &configured, &EnvDevPatterns::default());
     let dev_files = dev_files(component, &patterns);
     Ok(Patterns {

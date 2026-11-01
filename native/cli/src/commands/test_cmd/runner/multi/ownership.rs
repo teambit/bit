@@ -81,8 +81,5 @@ fn has_glob_metacharacters(directory: &Path) -> bool {
 }
 
 fn overlaps(left: &Path, right: &Path) -> bool {
-    if left.starts_with(right) {
-        return true;
-    }
-    right.starts_with(left)
+    left.starts_with(right) || right.starts_with(left)
 }

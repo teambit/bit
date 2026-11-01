@@ -48,9 +48,7 @@ pub(super) fn collect_candidates(root: &Path, patterns: &[String]) -> Result<Col
     let ws_val = parse_jsonc(&ws_bytes).map_err(|err| err.to_string())?;
     let bitmap_val = parse_jsonc(&bitmap_bytes).map_err(|err| err.to_string())?;
     let default_scope = workspace_default_scope(&ws_val).ok();
-    let save_prefix = super::aspect_entry(&ws_val, DEP_RESOLVER_ID)
-        .and_then(|(_, resolver)| resolver["savePrefix"].as_str())
-        .map(str::to_owned);
+    let save_prefix = extract_save_prefix(&ws_val);
     let bitmap = Bitmap::load(root, default_scope.as_deref()).map_err(|err| err.to_string())?;
     let local_pkgs = build_local_package_set(&bitmap, default_scope.as_deref());
     let mut candidates = Vec::new();
@@ -67,6 +65,14 @@ pub(super) fn collect_candidates(root: &Path, patterns: &[String]) -> Result<Col
     );
     filter_by_patterns(&mut candidates, patterns);
     Ok(Collected { candidates, save_prefix })
+}
+
+fn extract_save_prefix(ws_val: &Value) -> Option<String> {
+    super::aspect_entry(ws_val, DEP_RESOLVER_ID)
+        .and_then(|(_, resolver)| resolver["savePrefix"].as_str())
+        .map(str::trim)
+        .filter(|pref| !pref.is_empty())
+        .map(str::to_owned)
 }
 
 fn build_local_package_set(bitmap: &Bitmap, default_scope: Option<&str>) -> HashSet<String> {

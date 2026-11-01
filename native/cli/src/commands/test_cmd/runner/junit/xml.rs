@@ -1,17 +1,20 @@
 use std::sync::LazyLock;
 
 pub(super) fn attribute(value: &str) -> String {
-    value
-        .chars()
-        .filter(|character| is_allowed_xml_char(*character))
-        .collect::<String>()
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\t', "&#x9;")
-        .replace('\n', "&#xA;")
-        .replace('\r', "&#xD;")
+    let mut out = String::with_capacity(value.len());
+    for character in value.chars().filter(|character| is_allowed_xml_char(*character)) {
+        match character {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\t' => out.push_str("&#x9;"),
+            '\n' => out.push_str("&#xA;"),
+            '\r' => out.push_str("&#xD;"),
+            other => out.push(other),
+        }
+    }
+    out
 }
 pub(super) fn strip_ansi(value: &str) -> String {
     if !value.contains(['\x1b', '\u{9b}']) {

@@ -68,16 +68,11 @@ impl Stream {
         let Target::Entry(cli) = discovery::find()? else {
             return Err(invalid("tester tool installation"));
         };
-        if cli.entry.as_os_str().is_empty()
-            || cli.entry
-                .to_string_lossy()
-                .trim()
-                .is_empty()
-        {
+        if super::is_blank_path(&cli.entry) {
             return Err(invalid("tester tool entry"));
         }
         let package = cli.bit_dir
-            .filter(|dir| !dir.as_os_str().is_empty() && !dir.to_string_lossy().trim().is_empty())
+            .filter(|dir| !super::is_blank_path(dir))
             .ok_or_else(|| invalid("tester package root"))?
             .join("package.json");
         let assets = Assets::prepare(&package)?;

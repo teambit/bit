@@ -157,7 +157,10 @@ impl Plan {
                 &report.data,
                 identity,
                 &self.loaded.progress.environment,
-                result["errorMessage"].as_str(),
+                result["errorMessage"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|msg| !msg.is_empty()),
             )?;
         }
         Ok(report)

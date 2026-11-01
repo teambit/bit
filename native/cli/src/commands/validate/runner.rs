@@ -53,7 +53,10 @@ fn load_eligible_workspace(root: &Path) -> Option<Workspace> {
         .as_object()
         .is_some_and(|obj| {
             obj.keys()
-                .any(|key| !key.starts_with('$') && !key.starts_with("teambit."))
+                .any(|key| {
+                    let trimmed = key.trim();
+                    !trimmed.starts_with('$') && !trimmed.starts_with("teambit.")
+                })
         });
     if has_custom_root {
         return None;
@@ -66,7 +69,7 @@ fn load_eligible_workspace(root: &Path) -> Option<Workspace> {
     let ws = Workspace::load(root, &ws_config, &core_ids).ok()?;
     if !ws
         .active()
-        .all(|(_, comp)| CORE_ENVS.contains(&aspect_id_without_version(&comp.env_id)))
+        .all(|(_, comp)| CORE_ENVS.contains(&aspect_id_without_version(comp.env_id.trim()).trim()))
     {
         return None;
     }

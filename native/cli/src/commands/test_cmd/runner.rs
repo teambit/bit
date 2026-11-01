@@ -73,14 +73,15 @@ fn format_execution(
     started: Instant,
 ) -> io::Result<workspace_command::results::Report> {
     let mut report = execution.report;
+    let empty_data = report.data.trim().is_empty();
     if options.json {
-        if execution.empty || report.data.trim().is_empty() {
+        if execution.empty || empty_data {
             "[]".clone_into(&mut report.data);
         }
     } else if execution.empty {
         report.data = empty_test_message(args);
     } else if !execution.terminated {
-        if report.data.trim().is_empty() {
+        if empty_data {
             return Err(invalid("empty tester report data"));
         }
         let value = serde_json::from_str(&report.data)?;

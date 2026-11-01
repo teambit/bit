@@ -11,7 +11,12 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
     let bucket = source
         .parent()?
         .file_name()
-        .filter(|name| !name.is_empty() && !name.to_string_lossy().trim().is_empty())?;
+        .filter(|name| {
+            !name.is_empty()
+                && name
+                    .to_str()
+                    .is_none_or(|text| !text.trim().is_empty())
+        })?;
     let trash = root.join("trash");
     let parent = trash.join(bucket);
     let source_meta = fs::symlink_metadata(source).ok()?;

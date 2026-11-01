@@ -96,19 +96,15 @@ fn resolve_user(cli_token: Option<&str>) -> io::Result<Option<String>> {
     let global_val = bit_workspace_config::read_global_config(&global_config_dir())?;
     let mut global: bit_install::model::GlobalConfig =
         serde_json::from_value(global_val).unwrap_or_default();
-    if let Some(tok) = cli_token
+    let token = cli_token
+        .or_else(|| global.get("user.token").and_then(serde_json::Value::as_str))
         .map(str::trim)
         .filter(|tok| !tok.is_empty())
-    {
-        global.insert("user.token".to_owned(), serde_json::Value::String(tok.to_owned()));
-    }
-    if global
-        .get("user.token")
-        .and_then(serde_json::Value::as_str)
-        .is_none_or(|tok| tok.trim().is_empty())
-    {
+        .map(str::to_owned);
+    let Some(token) = token else {
         return Ok(None);
-    }
+    };
+    global.insert("user.token".to_owned(), serde_json::Value::String(token));
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     Ok(runtime.block_on(bit_install::engine::cloud_username(&global, Duration::from_secs(5))))
 }

@@ -23,13 +23,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native ui-build grammar".into()));
     }
-    if env::var_os("CI")
-        .is_some_and(|val| {
-            let trimmed = val.to_string_lossy();
-            let trimmed = trimmed.trim();
-            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
-        })
-    {
+    if super::scope_rename::ci_active() {
         return Ok(Outcome::Declined("CI ui-build delegated".into()));
     }
     let cwd = env::current_dir()?;

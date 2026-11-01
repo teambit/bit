@@ -139,16 +139,7 @@ impl Coverage {
         }
         match read(root, &self.directory, &self.main) {
             Ok(coverage) => result["coverage"] = coverage,
-            Err(error) => {
-                result["errorMessage"] = json!(
-                    crate::commands::workspace_command::filesystem_error::description(&error)
-                );
-                result["error"] =
-                    crate::commands::workspace_command::filesystem_error::json(&error);
-                if let Some(map) = result.as_object_mut() {
-                    map.remove("results");
-                }
-            }
+            Err(error) => record_coverage_error(result, &error),
         }
     }
     pub(super) fn collect_many(components: &[Self], root: &Path, result: &mut Value) {
@@ -157,17 +148,17 @@ impl Coverage {
         }
         match read_many(root, components) {
             Ok(coverage) => result["componentCoverage"] = json!(coverage),
-            Err(error) => {
-                result["errorMessage"] = json!(
-                    crate::commands::workspace_command::filesystem_error::description(&error)
-                );
-                result["error"] =
-                    crate::commands::workspace_command::filesystem_error::json(&error);
-                if let Some(map) = result.as_object_mut() {
-                    map.remove("results");
-                }
-            }
+            Err(error) => record_coverage_error(result, &error),
         }
+    }
+}
+
+fn record_coverage_error(result: &mut Value, error: &io::Error) {
+    use crate::commands::workspace_command::filesystem_error;
+    result["errorMessage"] = json!(filesystem_error::description(error));
+    result["error"] = filesystem_error::json(error);
+    if let Some(map) = result.as_object_mut() {
+        map.remove("results");
     }
 }
 

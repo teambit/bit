@@ -151,12 +151,7 @@ fn candidate_row(scope: &std::path::Path, row: &Value) -> Option<Option<(String,
 
 pub(in crate::commands) fn row_scope_and_name(row: &Value) -> Option<(&str, &str)> {
     if let Some(raw) = row["id"].as_str() {
-        let bare = raw
-            .trim()
-            .split('@')
-            .next()
-            .unwrap_or_default()
-            .trim();
+        let bare = bit_install::config::aspect_id_without_version(raw.trim()).trim();
         let (scope, name) = bare.split_once('/')?;
         let (scope, name) = (scope.trim(), name.trim());
         return (!scope.is_empty() && !name.is_empty()).then_some((scope, name));

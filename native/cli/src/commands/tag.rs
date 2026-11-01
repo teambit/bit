@@ -68,14 +68,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn is_ci() -> bool {
-    env::var_os("CI")
-        .is_some_and(|val| {
-            let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty()
-                && !trimmed.eq_ignore_ascii_case("0")
-                && !trimmed.eq_ignore_ascii_case("false")
-        })
+    super::scope_rename::ci_active()
 }
 
 fn fallback_parse_error(

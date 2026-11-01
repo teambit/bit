@@ -38,7 +38,7 @@ fn list(engine: &mut Engine, root: &Path, scope: &str) -> io::Result<Vec<Value>>
         "globalConfigDir": cache_root().join("config"),
         "nodeExecutable": cli.node,
         "bitDir": cli.bit_dir,
-        "bitVersion": cli.version,
+        "bitVersion": cli.version.trim(),
         "patterns": [format!("{}/**", scope.trim())],
         "laneOnly": false,
     }))?;

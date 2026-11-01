@@ -271,7 +271,7 @@ fn option_value(argument: &str, next: Option<&str>) -> Option<(Value, bool)> {
 }
 
 fn alias(argument: &str) -> &str {
-    match argument {
+    match argument.trim() {
         "-m" => "--message",
         "-u" => "--unmodified",
         "-v" => "--ver",
@@ -283,6 +283,7 @@ fn alias(argument: &str) -> &str {
 
 /// A bounded workspace pattern, including state predicates.
 fn pattern(text: &str) -> Option<&str> {
+    let text = text.trim();
     let valid = !text.is_empty() && text.len() <= 4096 && !text.contains('\0');
     valid.then_some(text)
 }

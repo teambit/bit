@@ -43,7 +43,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native templates grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if super::scope_rename::ci_active() {
         return Ok(Outcome::Declined("CI templates delegated".into()));
     }
     let cwd = env::current_dir()?;

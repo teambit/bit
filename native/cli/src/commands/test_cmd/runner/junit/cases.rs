@@ -108,29 +108,26 @@ fn test_case(file_name: &str, test: &Value) -> io::Result<Case> {
         skipped: matches!(test["status"].as_str().map(str::trim), Some("pending" | "skipped")),
     })
 }
+fn non_empty(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn source_rows<'a>(component: &Value, raw: &'a Value) -> &'a Value {
     let id = &component["componentId"];
     let owned = if id.is_string() {
         None
     } else {
-        let scope = id["_legacy"]["scope"]
-            .as_str()
-            .or_else(|| id["_scope"].as_str())
-            .or_else(|| id["scope"].as_str())
-            .map(str::trim)
-            .filter(|scope| !scope.is_empty());
-        let name = id["_legacy"]["name"]
-            .as_str()
-            .or_else(|| id["name"].as_str())
-            .map(str::trim)
-            .filter(|name| !name.is_empty());
+        let scope = non_empty(&id["_legacy"]["scope"])
+            .or_else(|| non_empty(&id["_scope"]))
+            .or_else(|| non_empty(&id["scope"]));
+        let name = non_empty(&id["_legacy"]["name"]).or_else(|| non_empty(&id["name"]));
         scope
             .zip(name)
             .map(|(scope, name)| format!("{scope}/{name}"))
     };
-    id.as_str()
-        .map(str::trim)
-        .filter(|id| !id.is_empty())
+    non_empty(id)
         .or(owned.as_deref())
         .and_then(|identity| raw["componentRows"].get(identity))
         .unwrap_or_else(|| &raw["results"]["testResults"])

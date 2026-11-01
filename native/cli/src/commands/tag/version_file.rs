@@ -75,6 +75,8 @@ pub(super) fn entered_versions(data: &Value) -> Vec<String> {
         .flatten()
         .filter_map(|entry| entry["version"].as_str())
         .chain(data["default"].as_str())
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
         .map(str::to_owned)
         .collect()
 }

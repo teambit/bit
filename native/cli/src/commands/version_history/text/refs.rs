@@ -36,25 +36,21 @@ fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
 
 fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>> {
     let rows: Value = bit_object_import::parse_jsonc(&fs::read(path).ok()?).ok()?;
-    let row = rows
+    let target = (scope.trim(), component.trim());
+    let Some(row) = rows
         .as_array()?
         .iter()
         .find(|row| {
-            crate::commands::version_history::build::row_scope_and_name(row)
-                == Some((scope.trim(), component.trim()))
-        });
-    match row {
-        Some(row) => Some(Some(
-            row["head"]
-                .as_str()
-                .map(str::trim)
-                .filter(|head| {
-                    head.len() == 40 && head.bytes().all(|byte| byte.is_ascii_hexdigit())
-                })?
-                .to_owned(),
-        )),
-        None => Some(None),
-    }
+            crate::commands::version_history::build::row_scope_and_name(row) == Some(target)
+        })
+    else {
+        return Some(None);
+    };
+    let head = row["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| head.len() == 40 && head.bytes().all(|byte| byte.is_ascii_hexdigit()))?;
+    Some(Some(head.to_owned()))
 }
 
 fn lane_paths(root: &Path) -> Option<Vec<(String, PathBuf)>> {

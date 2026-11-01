@@ -8,7 +8,7 @@ use super::{
     Chalk, Outcome, ScopeRoot, Value, diagnose_component_lookup_error, emit_failure, emit_text,
     resolve_component_entry, scope_dir_for, sha1_hex,
 };
-use std::{env, ffi::OsString, io};
+use std::{ffi::OsString, io};
 
 pub(super) fn run(
     root: &ScopeRoot,
@@ -21,12 +21,7 @@ pub(super) fn run(
     let Some(report) = prepare(root, id, short, chalk) else {
         let scope_dir = scope_dir_for(root);
         let bare = id.rsplit_once('@').map_or(id, |(name, _)| name.trim());
-        let is_ci = env::var_os("CI")
-            .is_some_and(|val| {
-                let trimmed = val.to_string_lossy();
-                let trimmed = trimmed.trim();
-                !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
-            });
+        let is_ci = crate::commands::scope_rename::ci_active();
         if bare.contains('/')
             && resolve_component_entry(&scope_dir, bare).is_none()
             && !is_ci

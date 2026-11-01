@@ -101,8 +101,13 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
         return Ok(Err("the Node.js CLI is only reachable as a wrapper".to_string()));
     };
     if cli.bit_dir
-        .as_ref()
-        .is_none_or(|dir| dir.as_os_str().is_empty() || dir.to_string_lossy().trim().is_empty())
+        .as_deref()
+        .is_none_or(|dir| {
+            dir.as_os_str().is_empty()
+                || dir
+                    .to_str()
+                    .is_some_and(|text| text.trim().is_empty())
+        })
     {
         return Ok(Err("the entry is not inside an @teambit/bit package".to_string()));
     }

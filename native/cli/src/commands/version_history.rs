@@ -185,12 +185,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn is_ci_active() -> bool {
-    env::var_os("CI")
-        .is_some_and(|val| {
-            let trimmed = val.to_string_lossy();
-            let trimmed = trimmed.trim();
-            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
-        })
+    super::scope_rename::ci_active()
 }
 
 fn run_without_scope(args: &[OsString], subcommand: &Subcommand) -> io::Result<Outcome> {

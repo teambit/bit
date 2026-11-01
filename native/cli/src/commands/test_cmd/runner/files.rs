@@ -30,7 +30,8 @@ pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Select
     let default_scope = bit_install::config::WorkspaceConfig::load(root)
         .ok()
         .and_then(|cfg| cfg.workspace.default_scope)
-        .filter(|scope| !scope.trim().is_empty());
+        .map(|scope| scope.trim().to_owned())
+        .filter(|scope| !scope.is_empty());
     let bitmap = Bitmap::load(root, default_scope.as_deref())?;
     let mut identities = Vec::new();
     for path in &paths {

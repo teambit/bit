@@ -121,7 +121,7 @@ impl Graph {
 
     pub fn order(&self) -> Option<Vec<usize>> {
         let mut states = vec![0u8; self.nodes.len()];
-        let mut output = Vec::new();
+        let mut output = Vec::with_capacity(self.nodes.len());
         for index in (0..self.nodes.len()).rev() {
             self.visit(index, &mut states, &mut output)?;
         }
