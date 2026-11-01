@@ -1,4 +1,4 @@
-//! `e2e/flows/out-of-sync-componets.e2e.ts`.
+//! Port of `e2e/flows/out-of-sync-componets.e2e.ts` for out-of-sync workspace and scope state.
 
 use crate::helper::Helper;
 

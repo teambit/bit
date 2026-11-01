@@ -1,4 +1,5 @@
-//! Upstream 3b52056c6 removes duplicate pending-import errors after released 2.2.146.
+//! Upstream `3b52056c6` removes duplicate pending-import errors after released `2.2.146`.
+
 use crate::helper::{Helper, parse};
 use serde_json::json;
 use std::ffi::OsStr;

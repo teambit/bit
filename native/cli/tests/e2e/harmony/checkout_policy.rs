@@ -1,4 +1,4 @@
-//! Checkout's workspace policy updates follow the published Node CLI.
+//! `bit checkout` workspace policy updates follow the published Node.js CLI.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

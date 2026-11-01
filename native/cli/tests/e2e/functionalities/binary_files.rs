@@ -1,4 +1,4 @@
-//! `e2e/functionalities/binary-files.e2e.ts`.
+//! Port of `e2e/functionalities/binary-files.e2e.ts` for binary file tracking and export.
 
 use crate::helper::{Helper, remote};
 use std::{fs, path::Path};

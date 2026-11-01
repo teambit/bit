@@ -1,4 +1,4 @@
-//! `e2e/functionalities/dynamic-namespaces.e2e.ts`.
+//! Port of `e2e/functionalities/dynamic-namespaces.e2e.ts` for multi-level component namespaces.
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 

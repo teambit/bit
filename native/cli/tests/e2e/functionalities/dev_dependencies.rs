@@ -1,4 +1,4 @@
-//! `e2e/functionalities/dev-dependencies.e2e.ts`.
+//! Port of `e2e/functionalities/dev-dependencies.e2e.ts` for dev-dependency resolution and tagging.
 
 use crate::helper::{Helper, parse};
 

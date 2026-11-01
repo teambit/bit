@@ -1,3 +1,5 @@
+//! Harmony workspace-root component and tracking tests for `bit add`.
+
 #[path = "add_harmony/extra.rs"]
 mod extra;
 

@@ -1,4 +1,4 @@
-//! `e2e/flows/id-with-wildcard.e2e.ts`.
+//! Port of `e2e/flows/id-with-wildcard.e2e.ts` for wildcard component ID matching.
 
 use crate::helper::{Helper, config, parse, remote};
 use std::ffi::OsStr;

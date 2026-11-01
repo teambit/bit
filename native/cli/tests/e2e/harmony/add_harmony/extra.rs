@@ -1,3 +1,5 @@
+//! Extended workspace-root component and lane cloning tests for `bit add`.
+
 use crate::helper::{Helper, config};
 use serde_json::Value;
 use std::path::Path;

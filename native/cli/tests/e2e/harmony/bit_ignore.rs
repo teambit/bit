@@ -1,4 +1,4 @@
-//! `e2e/harmony/bit-ignore.e2e.ts`.
+//! Port of `e2e/harmony/bit-ignore.e2e.ts` for `.bitignore` and `.gitignore` tracking rules.
 
 use crate::helper::{Helper, config, parse};
 use serde_json::json;

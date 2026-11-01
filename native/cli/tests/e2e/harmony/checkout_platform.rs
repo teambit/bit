@@ -1,4 +1,5 @@
 //! Real repository checkout preserves platform bytes and removes obsolete component sources.
+
 mod license;
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs, path::PathBuf};

@@ -1,4 +1,5 @@
 //! Compiled extension hydration stays an adapter around Rust checkout selection and files.
+
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 

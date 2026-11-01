@@ -1,4 +1,5 @@
-//! Detailed reports retain each component's files, errors and coverage.
+//! Detailed reports retain each component's files, errors, and coverage.
+
 use super::{move_paths::support, tester::timings};
 use serde_json::Value;
 

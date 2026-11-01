@@ -1,4 +1,5 @@
 //! Text summary behavior against the released tester.
+
 use super::move_paths::support;
 
 pub(super) fn without_duration(output: &str) -> String {

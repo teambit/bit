@@ -1,4 +1,4 @@
-//! `e2e/flows/same-name-different-scopes.e2e.ts`.
+//! Port of `e2e/flows/same-name-different-scopes.e2e.ts` for same-name components across scopes.
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use serde_json::{Value, json};

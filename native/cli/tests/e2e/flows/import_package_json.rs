@@ -1,4 +1,4 @@
-//! `e2e/flows/import-package-json.e2e.ts`.
+//! Port of `e2e/flows/import-package-json.e2e.ts` for `package.json` exclusion during tracking.
 
 use crate::helper::{Helper, parse};
 

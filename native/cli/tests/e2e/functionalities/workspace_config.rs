@@ -1,4 +1,4 @@
-//! `e2e/functionalities/workspace-config.e2e.ts`.
+//! Port of `e2e/functionalities/workspace-config.e2e.ts` for workspace dependency policy and variants.
 
 use crate::helper::{Helper, parse, strip_ansi};
 

@@ -1,4 +1,4 @@
-//! `e2e/flows/`.
+//! End-to-end multi-command workflow suites (`e2e/flows/`).
 
 mod big_file;
 mod bitmap_deleted;

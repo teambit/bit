@@ -1,4 +1,4 @@
-//! `e2e/functionalities/peer-dependency-component.e2e.ts`.
+//! Port of `e2e/functionalities/peer-dependency-component.e2e.ts` for component peer dependencies.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

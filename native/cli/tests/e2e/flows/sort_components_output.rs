@@ -1,4 +1,4 @@
-//! `e2e/flows/sort-components-output.e2e.ts`.
+//! Port of `e2e/flows/sort-components-output.e2e.ts` for alphabetical component output ordering.
 
 use crate::helper::Helper;
 use std::fs;

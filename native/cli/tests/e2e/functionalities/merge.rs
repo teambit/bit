@@ -1,4 +1,4 @@
-//! `e2e/functionalities/merge.e2e.ts`.
+//! Port of `e2e/functionalities/merge.e2e.ts` for component version merge behavior.
 
 use crate::helper::{Helper, config, parse, remote};
 use std::fs;

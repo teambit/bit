@@ -1,4 +1,5 @@
 //! Ordinary tester output preserves Jest's separate stdout and stderr.
+
 use super::{move_paths::support, tester_text_summary::without_duration};
 
 fn jest_times(output: &str) -> String {

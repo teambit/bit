@@ -1,4 +1,4 @@
-//! `e2e/flows/remote-commands-outside-workspace.e2e.ts`.
+//! Port of `e2e/flows/remote-commands-outside-workspace.e2e.ts` for outside-workspace remote commands.
 
 use crate::helper::{FOO_FIXTURE, Helper, Run, parse, setup};
 use std::{

@@ -1,4 +1,4 @@
-//! Additional tests for `e2e/harmony/checkout-harmony.e2e.ts`.
+//! Additional tests for `e2e/harmony/checkout-harmony.e2e.ts` parity.
 
 use crate::helper::Helper;
 

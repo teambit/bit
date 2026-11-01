@@ -1,4 +1,4 @@
-//! Ported from `e2e/harmony/checkout-harmony.e2e.ts`.
+//! Port of `e2e/harmony/checkout-harmony.e2e.ts` for native `bit checkout` parity.
 
 #[path = "checkout_harmony/extra.rs"]
 mod extra;

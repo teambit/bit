@@ -1,4 +1,4 @@
-//! `e2e/functionalities/auto-tagging.e2e.ts`.
+//! Port of `e2e/functionalities/auto-tagging.e2e.ts` for dependent auto-tagging parity.
 
 use crate::helper::{Helper, parse};
 

@@ -1,4 +1,4 @@
-//! `e2e/functionalities/peer-dependencies.e2e.ts`.
+//! Port of `e2e/functionalities/peer-dependencies.e2e.ts` for package peer dependency tracking.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

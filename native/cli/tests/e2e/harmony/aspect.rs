@@ -1,4 +1,4 @@
-//! `e2e/harmony/aspect.e2e.ts`.
+//! Port of `e2e/harmony/aspect.e2e.ts` for native `bit aspect` parity.
 
 use crate::helper::{Helper, config, parse};
 use serde_json::json;

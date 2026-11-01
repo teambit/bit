@@ -1,4 +1,4 @@
-//! Local checkout and revert of versions stored without a remote mapping.
+//! Local `bit checkout` and `bit revert` of versions stored without a remote mapping.
 
 use crate::helper::{FOO_FIXTURE, Helper};
 use std::{ffi::OsStr, fs, path::PathBuf};

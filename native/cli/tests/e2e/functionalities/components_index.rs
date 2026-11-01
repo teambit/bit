@@ -1,4 +1,4 @@
-//! `e2e/functionalities/components-index.e2e.ts`.
+//! Port of `e2e/functionalities/components-index.e2e.ts` for `.bit/index.json` maintenance.
 
 use crate::helper::{Helper, config, parse, remote};
 use serde_json::json;

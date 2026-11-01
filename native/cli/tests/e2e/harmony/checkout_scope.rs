@@ -1,4 +1,5 @@
-//! Discover and materialize new default-scope components during checkout head.
+//! Discover and materialize new default-scope components during `bit checkout head`.
+
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 

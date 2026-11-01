@@ -1,4 +1,4 @@
-//! `e2e/functionalities/`.
+//! End-to-end core functionality suites (`e2e/functionalities/`).
 
 mod auto_tagging;
 mod binary_files;

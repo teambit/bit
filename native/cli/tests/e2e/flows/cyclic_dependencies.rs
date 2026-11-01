@@ -1,4 +1,4 @@
-//! `e2e/flows/cyclic-dependencies.e2e.ts`.
+//! Port of `e2e/flows/cyclic-dependencies.e2e.ts` for circular dependency analysis and tagging.
 
 use crate::helper::{Helper, parse};
 use std::ffi::OsStr;

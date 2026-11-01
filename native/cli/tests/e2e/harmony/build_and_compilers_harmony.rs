@@ -1,4 +1,4 @@
-//! Cases from `e2e/harmony/build-cmd.e2e.ts`, `babel.e2e.ts`, and `multiple-compilers.e2e.ts`.
+//! Ported cases from `e2e/harmony/build-cmd.e2e.ts`, `babel.e2e.ts`, and `multiple-compilers.e2e.ts`.
 
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};

@@ -1,4 +1,5 @@
-//! `ScopeMeta` license text is generated metadata, independently of Version source files.
+//! `ScopeMeta` license text is generated metadata, independently of `Version` source files.
+
 use super::{compare, versions};
 use crate::helper::{Helper, config};
 use flate2::{Compression, write::ZlibEncoder};

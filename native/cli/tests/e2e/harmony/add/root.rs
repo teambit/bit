@@ -1,3 +1,5 @@
+//! Workspace-root component tracking and nested ownership tests for `bit add --root`.
+
 use crate::{
     commands::add::support::{compare, workspace},
     helper::config,

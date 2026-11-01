@@ -1,4 +1,4 @@
-//! `e2e/flows/big-file.e2e.ts`.
+//! Port of `e2e/flows/big-file.e2e.ts` for large file tracking and tagging parity.
 
 use crate::helper::{FOO_FIXTURE, Helper};
 use std::{fs, path::Path};

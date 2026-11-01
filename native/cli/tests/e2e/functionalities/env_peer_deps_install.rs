@@ -1,4 +1,4 @@
-//! `e2e/functionalities/env-peer-deps-install.e2e.ts`.
+//! Port of `e2e/functionalities/env-peer-deps-install.e2e.ts` for environment peer dependency installation.
 
 use crate::helper::Helper;
 

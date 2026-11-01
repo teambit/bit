@@ -1,3 +1,5 @@
+//! Environment and variant policy tests for Harmony `bit add`.
+
 use crate::{
     commands::add::support::{compare, workspace},
     helper::config,

@@ -1,4 +1,5 @@
 //! Multi-component `JUnit` comparisons preserve suite contents and write effects.
+
 use super::{
     add::support, move_paths, tester_multi::summary_order, tester_multi_detail::detail_order,
 };

@@ -1,4 +1,5 @@
 //! Released `JUnit` files preserve test details and observable writes.
+
 use super::{add::support, move_paths, tester::timings};
 use crate::helper::{Helper, Run};
 use std::collections::BTreeMap;

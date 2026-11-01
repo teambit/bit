@@ -1,4 +1,4 @@
-//! `e2e/functionalities/repository-hooks-aspects.e2e.ts`.
+//! Port of `e2e/functionalities/repository-hooks-aspects.e2e.ts` for aspect repository hooks.
 
 use crate::helper::Helper;
 

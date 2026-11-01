@@ -1,4 +1,4 @@
-//! Status sections derived from durable bitmap state.
+//! Status sections derived from durable `.bitmap` state.
 
 mod pending_import;
 
