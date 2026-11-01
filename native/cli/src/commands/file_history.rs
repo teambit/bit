@@ -57,14 +57,7 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
     let bitmap = bitmap::read(root)?;
     let Some((entry, relative, _)) = bitmap.entries
         .iter()
-        .filter_map(|entry| {
-            let dir = entry.root_dir.trim_start_matches("./").trim_end_matches('/');
-            requested
-                .strip_prefix(dir)
-                .and_then(|relative| relative.strip_prefix('/'))
-                .filter(|relative| !relative.is_empty())
-                .map(|relative| (entry, relative, dir.len()))
-        })
+        .filter_map(|entry| match_entry_file(entry, requested))
         .max_by_key(|(_, _, dir_len)| *dir_len)
     else {
         return Ok(Target::Unowned);
@@ -81,6 +74,24 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
         file: relative.to_string(),
         lane: bitmap.lane,
     })
+}
+
+fn match_entry_file<'a>(
+    entry: &'a bitmap::Entry,
+    requested: &'a str,
+) -> Option<(&'a bitmap::Entry, &'a str, usize)> {
+    let dir = entry.root_dir
+        .trim()
+        .trim_start_matches("./")
+        .trim_end_matches('/');
+    if dir.is_empty() {
+        return None;
+    }
+    requested
+        .strip_prefix(dir)
+        .and_then(|relative| relative.strip_prefix('/'))
+        .filter(|relative| !relative.is_empty())
+        .map(|relative| (entry, relative, dir.len()))
 }
 
 fn is_valid_relative_file_path(requested: &str) -> bool {

@@ -72,6 +72,9 @@ pub(super) fn publish(inputs: &[Value], outputs: &[Value]) -> io::Result<Option<
             continue;
         };
         let path = path(input)?;
+        if !fs::symlink_metadata(path).is_ok_and(|meta| meta.is_file()) {
+            return Err(invalid("formatter source changed"));
+        }
         if let Err(error) = fs::write(path, content) {
             return filesystem::error(error, path, "open").map(Some);
         }

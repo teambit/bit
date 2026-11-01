@@ -81,24 +81,23 @@ fn remove_object(scope: &Path, hash: &str) -> io::Result<()> {
     Ok(())
 }
 fn remove_empty_bucket(parent: &Path) -> io::Result<()> {
-    let entries = match fs::read_dir(parent) {
+    let mut entries = match fs::read_dir(parent) {
         Ok(entries) => entries,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(failure(error, "scandir", parent)),
     };
-    if entries
-        .collect::<io::Result<Vec<_>>>()
-        .map_err(|error| failure(error, "scandir", parent))?
-        .is_empty()
-    {
-        match fs::remove_dir(parent) {
-            Err(error)
-                if matches!(
-                    error.kind(),
-                    io::ErrorKind::NotFound | io::ErrorKind::DirectoryNotEmpty,
-                ) => {}
-            result => result.map_err(|error| failure(error, "rmdir", parent))?,
-        }
+    match entries.next() {
+        Some(Ok(_)) => return Ok(()),
+        Some(Err(error)) => return Err(failure(error, "scandir", parent)),
+        None => {}
+    }
+    match fs::remove_dir(parent) {
+        Err(error)
+            if matches!(
+                error.kind(),
+                io::ErrorKind::NotFound | io::ErrorKind::DirectoryNotEmpty,
+            ) => {}
+        result => result.map_err(|error| failure(error, "rmdir", parent))?,
     }
     Ok(())
 }

@@ -62,15 +62,19 @@ impl GcGraph {
     pub fn keep_ancestry_of(&mut self, start_hashes: &[String], stop_at_remote: bool) {
         let mut seen = HashSet::new();
         let mut stack = start_hashes.to_vec();
-        while let Some(hash) = stack.pop() {
-            if !seen.insert(hash.clone()) || !self.version_map.contains_key(&hash) {
+        while let Some(raw_hash) = stack.pop() {
+            let hash = raw_hash.trim();
+            if hash.is_empty()
+                || !seen.insert(hash.to_owned())
+                || !self.version_map.contains_key(hash)
+            {
                 continue;
             }
-            self.add_root(&hash);
-            if stop_at_remote && self.remote_refs.contains(&hash) {
+            self.add_root(hash);
+            if stop_at_remote && self.remote_refs.contains(hash) {
                 continue;
             }
-            if let Some(ver_val) = self.version_map.get(&hash) {
+            if let Some(ver_val) = self.version_map.get(hash) {
                 stack.extend(version_parents(ver_val));
             }
         }

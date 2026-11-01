@@ -35,7 +35,7 @@ fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<Stri
     let files = row["results"].as_array().ok_or_else(|| invalid("formatter file results"))?;
     let issues: Vec<_> = files
         .iter()
-        .filter(|file| file["hasIssues"] == true)
+        .filter(|file| file_has_issues(file))
         .collect();
     if issues.is_empty() {
         lines.push(formatter.success_summary("no issues found"));

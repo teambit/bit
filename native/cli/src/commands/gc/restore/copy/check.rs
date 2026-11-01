@@ -30,16 +30,25 @@ pub(super) fn parents(source: &Path, target: &Path, metadata: &fs::Metadata) -> 
         {
             break;
         }
-        match fs::metadata(parent) {
-            Ok(existing) if identical(metadata, &existing) => {
-                return Err(subdirectory(source, target));
-            }
-            Ok(_) => {}
-            Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
-            Err(error) => return Err(failure(error, "stat", parent)),
-        }
+        check_parent_entry(source, target, parent, metadata)?;
     }
     Ok(())
+}
+fn check_parent_entry(
+    source: &Path,
+    target: &Path,
+    parent: &Path,
+    metadata: &fs::Metadata,
+) -> io::Result<()> {
+    if parent == source {
+        return Err(subdirectory(source, target));
+    }
+    match fs::metadata(parent) {
+        Ok(existing) if identical(metadata, &existing) => Err(subdirectory(source, target)),
+        Ok(_) => Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(failure(error, "stat", parent)),
+    }
 }
 fn subdirectory(source: &Path, target: &Path) -> io::Error {
     io::Error::other(format!(

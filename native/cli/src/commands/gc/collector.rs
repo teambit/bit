@@ -191,7 +191,11 @@ fn seed_workspace_roots(
     let mut checked_out_heads = Vec::new();
     let mut ws_keys = HashSet::new();
     for spec in workspace_ids {
-        if let Some(ver) = spec.version.as_deref() {
+        if let Some(ver) = spec.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+        {
             graph.add_root(ver);
         }
         let Some(comp) = graph.find_comp(spec.scope.as_deref(), &spec.name).cloned() else {

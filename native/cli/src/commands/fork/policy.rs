@@ -114,7 +114,7 @@ fn write(root: &Path, config: &Value, reason: &str) -> io::Result<()> {
         document.set(&[&resolver_key, key], value);
     }
     let text = format!("{document}\n");
-    let text = if cfg!(windows) { text.replace('\n', "\r\n") } else { text };
+    let text = if cfg!(windows) { text.replace("\r\n", "\n").replace('\n', "\r\n") } else { text };
     if fs::read(&path)? != before {
         return Err(io::Error::other("fork workspace configuration changed"));
     }

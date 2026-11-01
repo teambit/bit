@@ -93,7 +93,13 @@ impl Engine {
         let response: Response = serde_json::from_slice(&bytes)?;
         let failed = response.failed
             .as_ref()
-            .is_some_and(|failed| !failed.is_null() && *failed != false);
+            .is_some_and(|failed| {
+                !failed.is_null()
+                    && *failed != false
+                    && failed
+                        .as_str()
+                        .is_none_or(|text| !text.trim().is_empty())
+            });
         let skipped = response.skipped
             .as_ref()
             .is_some_and(|skipped| !skipped.is_empty());
@@ -108,6 +114,8 @@ fn response_error(input: &Value, response: &Response) -> io::Error {
     if response.canonical_error == Some(true)
         && let Some(message) = response.error
             .as_deref()
+            .or_else(|| response.data.get("error").and_then(Value::as_str))
+            .or_else(|| response.failed.as_ref().and_then(Value::as_str))
             .map(str::trim)
             .filter(|msg| !msg.is_empty())
             .map(str::to_owned)

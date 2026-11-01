@@ -221,31 +221,14 @@ fn remove_env_from_map_with_fallback(
     map: &mut Map<String, Value>,
     fallback_env: Option<&str>,
 ) -> bool {
-    let envs_entry = map
-        .iter()
-        .find(|(key, _)| {
-            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
-        });
-    let curr_env = match envs_entry.map(|(_, val)| val) {
-        Some(val) if val.as_str() == Some("-") => None,
-        Some(val) => val["env"]
-            .as_str()
-            .or(fallback_env)
-            .map(str::trim)
-            .filter(|text| !text.is_empty() && *text != "-")
-            .map(str::to_owned),
-        None => fallback_env
-            .map(str::trim)
-            .filter(|text| !text.is_empty() && *text != "-")
-            .map(str::to_owned),
-    };
-    let Some(curr_env) = curr_env else {
+    let Some(curr_env) = resolve_curr_env(map, fallback_env) else {
         return false;
     };
     let bare_env = curr_env
         .split('@')
         .next()
-        .unwrap_or(&curr_env);
+        .unwrap_or(&curr_env)
+        .trim();
     let mut any_removed = map.remove(&curr_env).is_some() | map.remove(bare_env).is_some();
     let prefix = format!("{bare_env}@");
     let versioned_keys = map
@@ -261,6 +244,27 @@ fn remove_env_from_map_with_fallback(
         any_removed |= map.remove(&key).is_some();
     }
     any_removed
+}
+
+fn resolve_curr_env(map: &Map<String, Value>, fallback_env: Option<&str>) -> Option<String> {
+    let envs_entry = map
+        .iter()
+        .find(|(key, _)| {
+            key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
+        });
+    match envs_entry.map(|(_, val)| val) {
+        Some(val) if val.as_str() == Some("-") => None,
+        Some(val) => val["env"]
+            .as_str()
+            .or(fallback_env)
+            .map(str::trim)
+            .filter(|text| !text.is_empty() && *text != "-")
+            .map(str::to_owned),
+        None => fallback_env
+            .map(str::trim)
+            .filter(|text| !text.is_empty() && *text != "-")
+            .map(str::to_owned),
+    }
 }
 
 fn find_model_env(root: &Path, entry: &BitmapEntry) -> Result<Option<String>, Failure> {

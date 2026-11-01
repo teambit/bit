@@ -68,8 +68,10 @@ pub(super) fn write(scope: &Path, bytes: Option<&[u8]>) -> io::Result<()> {
 
 pub(super) fn existing(scope: &Path) -> io::Result<bool> {
     let path = scope.join("index.json");
-    if path.exists() && !path.is_file() {
-        return Err(super::repository::unsupported("scope index is not a file"));
+    match fs::symlink_metadata(&path) {
+        Ok(meta) if meta.is_file() => Ok(true),
+        Ok(_) => Err(super::repository::unsupported("scope index is not a file")),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(error),
     }
-    Ok(path.is_file())
 }

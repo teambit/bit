@@ -33,7 +33,8 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
         lifecycle: LifecycleFlags::default(),
     };
     let mut args = args.iter().copied();
-    while let Some(arg) = args.next() {
+    while let Some(raw_arg) = args.next() {
+        let arg = raw_arg.trim();
         if arg == "--" {
             for rest in args {
                 push_export_id(&mut options, rest)?;

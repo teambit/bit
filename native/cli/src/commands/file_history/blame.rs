@@ -60,7 +60,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("blame arguments are not UTF-8".into()));
     };
-    let Some((path, include_message)) = parse_args(&argv[1..]) else {
+    let Some((path, include_message)) = argv.get(1..).and_then(parse_args) else {
         return Ok(Outcome::Declined("outside native blame grammar".into()));
     };
     let cwd = env::current_dir()?;

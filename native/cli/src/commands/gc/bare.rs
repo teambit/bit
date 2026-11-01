@@ -155,11 +155,10 @@ impl Plan {
         }
         if !options.dry_run {
             files::move_batch(scope, &self.deleted)?;
-            match fs::remove_file(scope.join("index.json")) {
+            let index_path = scope.join("index.json");
+            match fs::remove_file(&index_path) {
                 Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-                result => result.map_err(|error| {
-                    io_error::failure(error, "unlink", &scope.join("index.json"))
-                })?,
+                result => result.map_err(|error| io_error::failure(error, "unlink", &index_path))?,
             }
             output.console(&chalk.green(&format!(
                 "[*] {} refs deleted successfully",

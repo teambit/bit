@@ -175,13 +175,17 @@ impl CompGraph {
 
 pub(super) fn write_svg_file(graph: &CompGraph) -> Result<PathBuf, Failure> {
     let mut rand_bytes = [0u8; 4];
-    let _ = getrandom::fill(&mut rand_bytes);
+    getrandom::fill(&mut rand_bytes).map_err(|err| Failure::Declined(err.to_string()))?;
     let mut rand_hex = String::with_capacity(8);
     for byte in &rand_bytes {
         let _ = write!(rand_hex, "{byte:02x}");
     }
     let svg_path = env::temp_dir().join(format!("{rand_hex}.svg"));
-    let height = (40 + graph.nodes.len() * 24).max(400);
+    let height = graph.nodes
+        .len()
+        .saturating_mul(24)
+        .saturating_add(40)
+        .max(400);
     let mut body = format!(
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"{height}\">\n",
     );

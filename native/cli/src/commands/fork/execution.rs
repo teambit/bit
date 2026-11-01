@@ -97,8 +97,20 @@ fn local(
         .find(|row| {
             row["identity"]
                 .as_str()
-                .or_else(|| row["id"].as_str())
-                .is_some_and(|candidate| candidate.trim() == id)
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .or_else(|| {
+                    row["id"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|val| !val.is_empty())
+                })
+                .is_some_and(|candidate| {
+                    candidate == id
+                        || candidate
+                            .rsplit_once('@')
+                            .is_some_and(|(bare, _)| bare.trim() == id)
+                })
         })
         .ok_or_else(|| io::Error::other("fork captured source missing"))?;
     apply_inventory_fields(root, id, &mut source)?;

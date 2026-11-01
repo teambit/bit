@@ -3,7 +3,7 @@ use crate::commands::{
     add::ProjectedLinker, color::Chalk, fork::options::Options, workspace_command,
 };
 use bit_object_import::component_fork::RemoteCapture;
-use serde_json::json;
+use serde_json::{Value, json};
 use std::{io, path::Path};
 pub(super) fn run(
     root: &Path,
@@ -94,35 +94,47 @@ fn bare_id(id: &str) -> &str {
 fn row_bare_id(row: &serde_json::Value) -> Option<&str> {
     row["identity"]
         .as_str()
-        .or_else(|| row["id"].as_str())
         .map(bare_id)
         .filter(|id| !id.is_empty())
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(bare_id)
+                .filter(|id| !id.is_empty())
+        })
 }
 
 fn loaded_source_ids(captured: &RemoteCapture) -> Vec<String> {
     captured
         .sources()
         .iter()
-        .filter_map(|row| {
-            let identity = row_bare_id(row)?;
-            let version = row["version"]
+        .filter_map(format_source_row_id)
+        .collect()
+}
+
+fn format_source_row_id(row: &Value) -> Option<String> {
+    let identity = row_bare_id(row)?;
+    let version = row["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .or_else(|| inline_row_version(row))
+        .unwrap_or("");
+    Some(if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") })
+}
+
+fn inline_row_version(row: &Value) -> Option<&str> {
+    let raw = row["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|raw| !raw.is_empty())
+        .or_else(|| {
+            row["id"]
                 .as_str()
                 .map(str::trim)
-                .filter(|ver| !ver.is_empty())
-                .or_else(|| {
-                    row["identity"]
-                        .as_str()
-                        .or_else(|| row["id"].as_str())
-                        .and_then(|raw| raw.trim().rsplit_once('@'))
-                        .map(|(_, ver)| ver.trim())
-                        .filter(|ver| !ver.is_empty())
-                })
-                .unwrap_or("");
-            Some(if version.is_empty() {
-                identity.to_owned()
-            } else {
-                format!("{identity}@{version}")
-            })
-        })
-        .collect()
+                .filter(|raw| !raw.is_empty())
+        })?;
+    raw.rsplit_once('@')
+        .map(|(_, ver)| ver.trim())
+        .filter(|ver| !ver.is_empty())
 }

@@ -166,6 +166,7 @@ fn parse_stash_file(file_path: &Path) -> Result<Vec<String>, String> {
         let Some(hash) = comp_data
             .get("hash")
             .and_then(Value::as_str)
+            .map(str::trim)
             .filter(|str_val| !str_val.is_empty())
         else {
             return Err(unusable(&format!(

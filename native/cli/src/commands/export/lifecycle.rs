@@ -171,6 +171,7 @@ fn external_resolver(root: &Path) -> io::Result<bool> {
     let config: Value = bit_object_import::parse_jsonc(&bytes)?;
     Ok(config["resolverPath"]
         .as_str()
+        .or_else(|| config["config"]["resolverPath"].as_str())
         .is_some_and(|path| !path.trim().is_empty()))
 }
 

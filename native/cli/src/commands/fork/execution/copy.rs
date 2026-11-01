@@ -50,8 +50,14 @@ fn prepare(
     let kernel = component_fork::Options {
         source: source["identity"]
             .as_str()
-            .or_else(|| source["id"].as_str())
             .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .or_else(|| {
+                source["id"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
+            })
             .unwrap_or_default()
             .to_owned(),
         target: clean_opt(options.target.as_deref()),

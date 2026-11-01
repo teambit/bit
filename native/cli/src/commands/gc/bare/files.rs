@@ -37,6 +37,9 @@ pub(super) fn move_object(scope: &Path, hash: &str) -> io::Result<()> {
         .join(bucket)
         .join(leaf);
     let metadata = fs::symlink_metadata(&source).map_err(|error| failure(error, "lstat", &source))?;
+    if metadata.is_dir() {
+        return Err(super::repository::unsupported("directory object source"));
+    }
     let existing = metadata_if_present(&target, false)?;
     check_target(&source, &target, &metadata, existing.as_ref())?;
     check_parents(&source, &target)?;

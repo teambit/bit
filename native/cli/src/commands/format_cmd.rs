@@ -29,7 +29,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("format arguments are not UTF-8".into()));
     };
-    let Some(options) = parse_options(&argv[1..]) else {
+    let Some(options) = argv.get(1..).and_then(parse_options) else {
         return Ok(Outcome::Declined("outside native format grammar".into()));
     };
     let ci_active = is_ci_active();

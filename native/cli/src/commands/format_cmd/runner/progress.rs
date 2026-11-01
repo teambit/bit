@@ -31,10 +31,11 @@ impl Progress {
         else {
             return;
         };
-        output.status(&format!(
-            "formatting components ({}/{}) {identity}",
-            index + 1,
-            self.identities.len(),
-        ));
+        let total = self.identities
+            .iter()
+            .filter(|id| !id.trim().is_empty())
+            .count()
+            .max(index + 1);
+        output.status(&format!("formatting components ({}/{total}) {identity}", index + 1));
     }
 }

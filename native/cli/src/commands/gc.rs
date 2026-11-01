@@ -151,10 +151,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut opts = Options::default();
     let mut idx = 0;
     while idx < args.len() {
-        if args[idx] == "--" {
+        let arg = args[idx].trim();
+        if arg == "--" {
             return (idx + 1 == args.len()).then_some(opts);
         }
-        idx += apply_gc_arg(&mut opts, args[idx], args.get(idx + 1).copied())?;
+        idx += apply_gc_arg(&mut opts, arg, args.get(idx + 1).copied())?;
     }
     Some(opts)
 }

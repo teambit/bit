@@ -112,16 +112,19 @@ fn component_matches_old_env(
 }
 
 fn resolve_old_env_bare(bitmap: &Bitmap, old_env: &str) -> String {
+    let old_env = old_env.trim();
     let bare = old_env
         .split('@')
         .next()
-        .unwrap_or(old_env);
-    let normalized = bare.trim_start_matches("./");
+        .unwrap_or(old_env)
+        .trim();
+    let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     if let Some(entry) = bitmap.entries
         .iter()
         .find(|entry| {
+            let entry_dir = entry.root_dir.trim().trim_end_matches('/');
             entry.owns_its_dir()
-                && ((!entry.root_dir.is_empty() && entry.root_dir == normalized)
+                && ((!entry_dir.is_empty() && entry_dir == normalized)
                     || entry.id.to_string_without_version() == bare
                     || entry.id.name == bare)
         })

@@ -51,8 +51,10 @@ fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
             .map(str::trim)
             .filter(|candidate| is_concrete_version(candidate))
             .or_else(|| {
-                row["id"]
+                row["identity"]
                     .as_str()
+                    .filter(|val| !val.trim().is_empty())
+                    .or_else(|| row["id"].as_str())
                     .and_then(|raw| raw.trim().rsplit_once('@'))
                     .map(|(_, ver)| ver.trim())
                     .filter(|candidate| is_concrete_version(candidate))

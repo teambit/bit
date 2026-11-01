@@ -23,12 +23,14 @@ struct Plan {
 
 pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
     let plans = plans(staged)?;
-    let root_components_dir: Option<PathBuf> = serde_json::from_value(
-        staged
-            .get("rootComponentsDir")
-            .cloned()
-            .unwrap_or(Value::Null),
-    )?;
+    let root_components_dir = match staged.get("rootComponentsDir") {
+        None | Some(Value::Null) => None,
+        Some(Value::String(dir)) => {
+            let trimmed = dir.trim();
+            (!trimmed.is_empty()).then(|| PathBuf::from(trimmed))
+        }
+        Some(_) => return Err(io::Error::other("invalid rootComponentsDir")),
+    };
     let cloud_domain = staged["cloudDomain"]
         .as_str()
         .map(str::trim)

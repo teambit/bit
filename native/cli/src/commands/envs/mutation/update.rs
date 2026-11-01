@@ -182,8 +182,10 @@ fn resolve_single_target_env(
         return Ok(TargetEnv {
             bare,
             target_ver: entry.id.version
-                .clone()
-                .filter(|ver| !ver.is_empty()),
+                .as_deref()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+                .map(str::to_owned),
             display_id,
             in_ws: true,
         });

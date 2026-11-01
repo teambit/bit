@@ -165,10 +165,12 @@ fn update_ids_valid(value: &Value) -> io::Result<()> {
     let components: HashSet<_> = array(value.get("componentsIds"), "components")?
         .iter()
         .filter_map(Value::as_str)
+        .map(str::trim)
         .collect();
     if array(value.get("laneUpdateIds"), "lane updates")?
         .iter()
         .filter_map(Value::as_str)
+        .map(str::trim)
         .any(|id| !components.contains(id))
     {
         return Err(decline("native outbound update identity"));

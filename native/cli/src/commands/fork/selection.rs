@@ -36,15 +36,8 @@ pub(super) fn select(root: &Path, options: &Options, state: &Value) -> io::Resul
     Ok(selected)
 }
 fn single(options: &Options, state: &Value, scope: String) -> Selected {
-    let local = inventory::selected(state, &options.source)
-        .and_then(|row| {
-            row["identity"]
-                .as_str()
-                .or_else(|| row["id"].as_str())
-                .map(str::trim)
-                .filter(|id| !id.is_empty())
-                .map(str::to_owned)
-        });
+    let local =
+        inventory::selected(state, &options.source).and_then(row_bare_id).map(str::to_owned);
     Selected {
         local: local.iter().cloned().collect(),
         remote: if local.is_none() { vec![options.source.trim().to_owned()] } else { vec![] },

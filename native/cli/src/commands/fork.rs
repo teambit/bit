@@ -19,7 +19,11 @@ fn run_mode(args: &[OsString], scope_fork: bool) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("fork arguments are not UTF-8".into()));
     };
-    let Some(options) = options::parse(&argv[if scope_fork { 2 } else { 1 }..], scope_fork) else {
+    let offset = if scope_fork { 2 } else { 1 };
+    let Some(options) = argv
+        .get(offset..)
+        .and_then(|rest| options::parse(rest, scope_fork))
+    else {
         return Ok(Outcome::Declined("outside native fork grammar".into()));
     };
     let cwd = env::current_dir()?;

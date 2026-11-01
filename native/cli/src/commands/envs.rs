@@ -47,7 +47,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("envs arguments are not UTF-8".into()));
     };
-    let Some(subcommand) = parse_subcommand(&argv[1..]) else {
+    let Some(subcommand) = argv.get(1..).and_then(parse_subcommand) else {
         return Ok(Outcome::Declined("outside native envs grammar".into()));
     };
     let cwd = env::current_dir()?;

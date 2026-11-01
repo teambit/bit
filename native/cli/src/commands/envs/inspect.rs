@@ -302,40 +302,48 @@ fn load_bare_scope_index(scope_dir: &Path) -> Option<Vec<Value>> {
 }
 
 fn bare_row_full_id(scope_dir: &Path, row: &Value) -> Option<String> {
-    if let Some(id_str) = row["id"]
+    let raw_id = row["id"]
         .as_str()
-        .map(|raw| raw.split('@').next().unwrap_or(raw))
-        .filter(|val| val.contains('/'))
-    {
+        .map(|raw| {
+            raw.trim()
+                .split('@')
+                .next()
+                .unwrap_or(raw)
+                .trim()
+        });
+    if let Some(id_str) = raw_id.filter(|val| val.contains('/')) {
         return Some(id_str.to_owned());
     }
     let name = row["id"]["name"]
         .as_str()
-        .or_else(|| {
-            row["id"]
-                .as_str()
-                .map(|raw| raw.split('@').next().unwrap_or(raw))
-        })?;
+        .map(str::trim)
+        .or(raw_id)
+        .filter(|val| !val.is_empty())?;
     let scope = row["id"]["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .map(str::to_owned)
         .or_else(|| {
             let scope_json =
                 bit_object_import::parse_jsonc(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
-            scope_json["name"].as_str().map(str::to_owned)
+            scope_json["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .map(str::to_owned)
         })?;
     Some(format!("{scope}/{name}"))
 }
 
 fn bare_row_full_id_with_ver(scope_dir: &Path, row: &Value) -> Option<String> {
     let base = bare_row_full_id(scope_dir, row)?;
-    let hash = row["hash"].as_str()?;
+    let hash = row["hash"].as_str()?.trim();
     let (kind, comp_obj) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
     if kind != "Component" || comp_obj["deprecated"] == true || comp_obj["deleted"] == true {
         return None;
     }
-    let head = comp_obj["head"].as_str()?;
+    let head = comp_obj["head"].as_str()?.trim();
     let ver = crate::commands::show_cmd::remote_show::find_tag_for_hash(&comp_obj, head)
         .unwrap_or_else(|| head.to_owned());
     Some(format!("{base}@{ver}"))

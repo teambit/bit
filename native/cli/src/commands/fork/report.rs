@@ -47,13 +47,13 @@ fn target_scope<'a>(options: &'a Options, ids: &'a [String]) -> &'a str {
         .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .or_else(|| {
-            ids.first()
-                .and_then(|id| {
+            ids.iter()
+                .find_map(|id| {
                     id.trim()
                         .split_once('/')
                         .map(|(scope, _)| scope.trim())
+                        .filter(|scope| !scope.is_empty())
                 })
-                .filter(|scope| !scope.is_empty())
         })
         .unwrap_or_default()
 }

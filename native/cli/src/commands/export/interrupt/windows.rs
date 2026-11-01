@@ -8,7 +8,7 @@ unsafe extern "system" fn interrupt(kind: u32) -> i32 {
     }
     let bytes = super::message();
     if !bytes.is_empty() {
-        let mut stdout = io::stdout();
+        let mut stdout = io::stdout().lock();
         let _ = stdout.write_all(bytes);
         let _ = stdout.flush();
     }

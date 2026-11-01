@@ -51,7 +51,8 @@ fn description(hash: &str, object: &Object) -> io::Result<String> {
             "{}:LaneHistory",
             text(&value["laneHash"])
                 .or_else(|_| text(&value["id"]))
-                .or_else(|_| text(&value["name"]))?,
+                .or_else(|_| text(&value["name"]))
+                .or_else(|_| text(&value["id"]["name"]))?,
         ),
         _ => return Err(unsupported("verbose object identity")),
     };

@@ -16,9 +16,10 @@ pub(super) fn source(
     plan: &mut Plan,
     linker: &mut ProjectedLinker,
 ) -> io::Result<()> {
-    let source = non_empty_str(&row["identity"])
+    let raw_source = non_empty_str(&row["identity"])
         .or_else(|| non_empty_str(&row["id"]))
         .ok_or_else(|| io::Error::other("fork source identity"))?;
+    let source = raw_source.rsplit_once('@').map_or(raw_source, |(bare, _)| bare.trim());
     let target = plan.target_identity().to_owned();
     let inputs = plan.ast_inputs();
     let source_short = source

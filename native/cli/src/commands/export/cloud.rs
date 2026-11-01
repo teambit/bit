@@ -26,7 +26,10 @@ pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Re
         .and_then(|lane| exported_lane(lane).or_else(|| lane.is_object().then(|| lane.clone())))
     {
         last["lane"] = lane;
-    } else if let Some(lane) = exported_lane(&receipt["exportedLanes"][0]) {
+    } else if let Some(lane) = receipt["exportedLanes"]
+        .as_array()
+        .and_then(|lanes| lanes.iter().find_map(exported_lane))
+    {
         last["lane"] = lane;
     }
     last["exportedComponents"] = metadata["lastExport"]

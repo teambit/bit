@@ -138,10 +138,18 @@ fn normalized(path: &Path) -> io::Result<std::path::PathBuf> {
 #[cfg(windows)]
 fn copy_restore_link(source: &Path, target: &Path) -> io::Result<()> {
     use std::os::windows::fs::{FileTypeExt, symlink_dir, symlink_file};
-    let link = fs::read_link(source)?;
-    if fs::symlink_metadata(source)?.file_type().is_symlink_dir() {
-        symlink_dir(link, target)
+    let link = fs::read_link(source).map_err(|error| failure(error, "readlink", source))?;
+    if let Ok(meta) = fs::symlink_metadata(target) {
+        if meta.file_type().is_symlink_dir() || meta.is_dir() {
+            let _ = fs::remove_dir(target);
+        } else {
+            let _ = fs::remove_file(target);
+        }
+    }
+    let meta = fs::symlink_metadata(source).map_err(|error| failure(error, "lstat", source))?;
+    if meta.file_type().is_symlink_dir() {
+        symlink_dir(&link, target).map_err(|error| paired_failure(error, "symlink", &link, target))
     } else {
-        symlink_file(link, target)
+        symlink_file(&link, target).map_err(|error| paired_failure(error, "symlink", &link, target))
     }
 }

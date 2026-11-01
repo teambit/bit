@@ -69,16 +69,16 @@ pub(super) fn format_bytes(bytes: u64) -> String {
         }
     }
     let (mut divisor, mut unit) = units[chosen_index];
-    let mut tenths = bytes
-        .saturating_mul(10)
-        .saturating_add(divisor / 2)
-        / divisor;
+    let calc_tenths = |div: u64| {
+        bytes
+            .saturating_mul(10)
+            .saturating_add(div / 2)
+            / div
+    };
+    let mut tenths = calc_tenths(divisor);
     if tenths >= 1024 * 10 && chosen_index + 1 < units.len() {
         (divisor, unit) = units[chosen_index + 1];
-        tenths = bytes
-            .saturating_mul(10)
-            .saturating_add(divisor / 2)
-            / divisor;
+        tenths = calc_tenths(divisor);
     }
     format!("{}.{} {unit}", tenths / 10, tenths % 10)
 }

@@ -48,12 +48,10 @@ pub(super) fn execute_workspace_graph(
     }
     graph.sort_deterministic();
     if options.json {
-        let payload = json!({
-            "nodes": graph.nodes,
-            "edges": graph.edges,
-        });
-        return serde_json::to_string_pretty(&payload)
-            .map_err(|err| Failure::Declined(err.to_string()));
+        return serde_json::to_string_pretty(
+            &json!({ "nodes": graph.nodes, "edges": graph.edges }),
+        )
+        .map_err(|err| Failure::Declined(err.to_string()));
     }
     let svg_path = write_svg_file(&graph)?;
     Ok(formatter.success_summary(&format!("image created at {}", svg_path.display())))
@@ -303,18 +301,17 @@ fn load_transitive_dep_edges(scope_dir: &Path, dep_id: &str, graph: &mut CompGra
 }
 
 fn read_version_by_dep_id(scope_dir: &Path, dep_id: &str) -> Option<Value> {
+    let dep_id = dep_id.trim();
     let (bare, ver) = dep_id
         .rsplit_once('@')
-        .map_or((dep_id, "latest"), |(id, ver)| (id, ver));
+        .map_or((dep_id, "latest"), |(id, ver)| (id.trim(), ver.trim()));
     let (_, _, comp_hash) = resolve_component_entry(scope_dir, bare)
-        .or_else(|| {
-            let (_, name) = bare.split_once('/')?;
-            resolve_component_entry(scope_dir, name)
-        })?;
+        .or_else(|| resolve_component_entry(scope_dir, bare.split_once('/')?.1))?;
     read_comp_version_by_hash(scope_dir, &comp_hash, ver)
 }
 
 fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<String> {
+    let (self_name, raw_spec) = (self_name.trim(), raw_spec.trim());
     for (entry, other) in ws.active() {
         if other.id.name == self_name {
             continue;
@@ -322,12 +319,9 @@ fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<Strin
         let scope = other.id.effective_scope().unwrap_or_default();
         let pkg_slash = format!("@{scope}/{}", other.id.name);
         let pkg_dot = format!("@{scope}/{}", other.id.name.replace('/', "."));
-        if raw_spec == other.package_name
-            || raw_spec == pkg_slash
-            || raw_spec == pkg_dot
-            || raw_spec.starts_with(&format!("{}/", other.package_name))
-            || raw_spec.starts_with(&format!("{pkg_slash}/"))
-            || raw_spec.starts_with(&format!("{pkg_dot}/"))
+        if [&other.package_name, &pkg_slash, &pkg_dot]
+            .into_iter()
+            .any(|pkg| raw_spec == pkg || raw_spec.starts_with(&format!("{pkg}/")))
         {
             return Some(selection::entry_full_id(entry));
         }

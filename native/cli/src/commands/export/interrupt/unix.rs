@@ -18,11 +18,11 @@ pub(super) fn install() -> io::Result<Previous> {
     action.sa_sigaction = interrupt as *const () as usize;
     action.sa_flags = libc::SA_RESTART;
     // SAFETY: both pointers reference valid sigaction storage; the handler has static lifetime.
-    let result = unsafe {
-        libc::sigemptyset(&raw mut action.sa_mask);
-        libc::sigaction(libc::SIGINT, &raw const action, previous.as_mut_ptr())
+    let failed = unsafe {
+        libc::sigemptyset(&raw mut action.sa_mask) != 0
+            || libc::sigaction(libc::SIGINT, &raw const action, previous.as_mut_ptr()) != 0
     };
-    if result != 0 {
+    if failed {
         return Err(io::Error::last_os_error());
     }
     // SAFETY: successful sigaction initialized the previous-action output.

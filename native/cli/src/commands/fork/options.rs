@@ -30,8 +30,9 @@ pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
     };
     let mut positions = Vec::new();
     let mut arguments = argv.iter();
-    while let Some(argument) = arguments.next() {
-        if *argument == "--" {
+    while let Some(raw_arg) = arguments.next() {
+        let argument = raw_arg.trim();
+        if argument == "--" {
             consume_trailing_positions(arguments, &mut positions)?;
             break;
         }

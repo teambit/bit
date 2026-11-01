@@ -31,6 +31,9 @@ fn copy_link(source: &Path, target: &Path) -> io::Result<()> {
     if link.as_os_str().is_empty() {
         return Err(failure(io::Error::from(io::ErrorKind::InvalidInput), "readlink", source));
     }
+    if fs::symlink_metadata(target).is_ok() {
+        fs::remove_file(target).map_err(|error| failure(error, "unlink", target))?;
+    }
     create_symlink(&link, target).map_err(|error| paired_failure(error, "symlink", &link, target))
 }
 

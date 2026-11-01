@@ -323,6 +323,12 @@ fn apply_git_merge_driver(cwd: &Path, global: bool) -> io::Result<()> {
 
 fn resolve_attributes_path(cwd: &Path, scope_flag: &str, global: bool) -> PathBuf {
     if let Some(configured) = git_config_get(cwd, scope_flag, "core.attributesFile") {
+        if let Some(rest) = configured
+            .strip_prefix("~/")
+            .or_else(|| configured.strip_prefix(r"~\"))
+        {
+            return workspace_command::home().join(rest);
+        }
         return PathBuf::from(configured);
     }
     if !global {

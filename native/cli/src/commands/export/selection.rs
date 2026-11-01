@@ -41,7 +41,11 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
     Ok(ids
         .into_iter()
         .filter(|id| {
-            let bare = id.split('@').next().unwrap_or(id);
+            let bare = id
+                .split('@')
+                .next()
+                .unwrap_or(id)
+                .trim();
             patterns
                 .iter()
                 .any(|pattern| pattern.find(id).is_some() || pattern.find(bare).is_some())
@@ -58,7 +62,7 @@ fn is_non_main_lane(lane: Option<&Value>) -> bool {
         .or_else(|| lane["id"]["name"].as_str())
         .unwrap_or_default()
         .trim();
-    !name.is_empty() && name.rsplit('/').next() != Some("main")
+    !name.is_empty() && name.rsplit('/').next().map(str::trim) != Some("main")
 }
 
 fn candidate_ids(candidates: &Value) -> io::Result<Vec<String>> {

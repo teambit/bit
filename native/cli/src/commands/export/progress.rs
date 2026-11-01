@@ -54,9 +54,10 @@ impl Exported {
     fn replay_direct(&self, output: &Output) {
         for (scope, objects) in &self.transfers {
             let scope = scope.trim();
-            if self.output.attempted_scopes
-                .iter()
-                .any(|item| item.trim() == scope)
+            if !scope.is_empty()
+                && self.output.attempted_scopes
+                    .iter()
+                    .any(|item| item.trim() == scope)
             {
                 output.status(&format!(
                     r#"transferring {objects} objects to the remote "{scope}"..."#,
@@ -71,7 +72,10 @@ impl Exported {
             self.fork_progress(output);
         }
         for scope in &self.persisted {
-            output.restart(&format!(r#"persisting data on the remote "{}"..."#, scope.trim()));
+            let scope = scope.trim();
+            if !scope.is_empty() {
+                output.restart(&format!(r#"persisting data on the remote "{scope}"..."#));
+            }
         }
     }
 

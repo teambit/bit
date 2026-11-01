@@ -63,8 +63,14 @@ pub(super) fn cloud(receipt: &Value, chalk: Chalk) -> String {
     } else {
         "Visit the link below"
     };
-    let urls = urls
-        .iter()
+    let mut unique = Vec::with_capacity(urls.len());
+    for url in urls {
+        if !unique.contains(&url) {
+            unique.push(url);
+        }
+    }
+    let urls = unique
+        .into_iter()
         .map(|url| chalk.bold(&chalk.underline(url)))
         .collect::<Vec<_>>()
         .join("\n");

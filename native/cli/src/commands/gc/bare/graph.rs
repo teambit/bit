@@ -236,15 +236,23 @@ fn lane_entries(lane: &Value) -> io::Result<Vec<(String, String)>> {
         lane["components"].as_array().ok_or_else(|| unsupported("lane component list"))?
     {
         if let Some(raw) = component.as_str() {
-            let (id, head) =
-                raw.rsplit_once('@').ok_or_else(|| unsupported("lane string identity"))?;
+            let (id, head) = raw
+                .trim()
+                .rsplit_once('@')
+                .map(|(id, head)| (id.trim(), head.trim()))
+                .filter(|(id, head)| !id.is_empty() && !head.is_empty())
+                .ok_or_else(|| unsupported("lane string identity"))?;
             result.push((id.to_owned(), head.to_owned()));
         } else {
             result.push((identity(&component["id"])?, text(&component["head"])?.to_owned()));
         }
     }
     for id in strings(&lane["updateDependents"])? {
-        let (id, head) = id.rsplit_once('@').ok_or_else(|| unsupported("hidden lane identity"))?;
+        let (id, head) = id
+            .rsplit_once('@')
+            .map(|(id, head)| (id.trim(), head.trim()))
+            .filter(|(id, head)| !id.is_empty() && !head.is_empty())
+            .ok_or_else(|| unsupported("hidden lane identity"))?;
         result.push((id.to_owned(), head.to_owned()));
     }
     Ok(result)

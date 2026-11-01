@@ -89,6 +89,7 @@ fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
         return true;
     }
     let mut seen = std::collections::HashSet::new();
+    let mut seen_canonical = std::collections::HashSet::new();
     changed
         .into_iter()
         .all(|(input, _)| {
@@ -99,6 +100,8 @@ fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
                 .is_some_and(|path| {
                     seen.insert(path)
                         && std::fs::symlink_metadata(path).is_ok_and(|meta| meta.is_file())
+                        && std::fs::canonicalize(path)
+                            .is_ok_and(|canon| seen_canonical.insert(canon))
                         && std::fs::OpenOptions::new()
                             .write(true)
                             .open(path)

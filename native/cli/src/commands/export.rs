@@ -38,7 +38,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(arguments) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("the arguments are not UTF-8".to_string()));
     };
-    let Some(options) = parse(&arguments[1..]) else {
+    let Some(options) = arguments.get(1..).and_then(parse) else {
         return Ok(Outcome::Declined("ids or flags outside the native export".to_string()));
     };
     let cwd = env::current_dir()?;

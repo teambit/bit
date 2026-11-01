@@ -67,7 +67,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("log-file arguments are not UTF-8".into()));
     };
-    let Some((path, one_line)) = parse_args(&argv[1..]) else {
+    let Some((path, one_line)) = argv.get(1..).and_then(parse_args) else {
         return Ok(Outcome::Declined("outside native log-file grammar".into()));
     };
     let cwd = env::current_dir()?;
