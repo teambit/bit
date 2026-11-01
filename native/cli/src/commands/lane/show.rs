@@ -211,7 +211,7 @@ fn matches_http_lane(row: &Value, scope: &str, target: &str) -> bool {
                 .map(|raw| raw.split_once('/').map_or(raw, |(_, nm)| nm))
         })
         .map_or("", str::trim);
-    row_name == target || format!("{scope}/{row_name}") == target
+    row_name == target || target.split_once('/') == Some((scope, row_name))
 }
 
 fn remote_scope(local: &[LaneData], target: &str) -> io::Result<String> {
@@ -287,7 +287,7 @@ pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneDa
             let scope = lane.id["scope"].as_str().map_or("", str::trim);
             let lane_name = lane.id["name"].as_str().map_or("", str::trim);
             lane_name == target
-                || format!("{scope}/{lane_name}") == target
+                || target.split_once('/') == Some((scope, lane_name))
                 || lane.label() == target
                 || (!lane.is_main() && lane.alias.as_deref().map(str::trim) == Some(target))
         })
@@ -298,7 +298,7 @@ pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneDa
 fn emit_json(root: &Path, bare: bool, args: &[OsString], lane: &Value) -> io::Result<Outcome> {
     let history = (!bare).then(|| History::start(root, args));
     let mut stdout = io::stdout().lock();
-    stdout.write_all(serde_json::to_string_pretty(lane)?.as_bytes())?;
+    serde_json::to_writer_pretty(&mut stdout, lane)?;
     stdout.flush()?;
     if let Some(history) = history {
         history.end(true);

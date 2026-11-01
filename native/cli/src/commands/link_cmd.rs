@@ -38,15 +38,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&cwd) else {
         if env::var_os("CI")
             .is_some_and(|val| {
-                !matches!(
-                    val.to_string_lossy()
-                        .trim()
-                        .trim_matches(['"', '\''])
-                        .trim()
-                        .to_ascii_lowercase()
-                        .as_str(),
-                    "" | "0" | "false" | "no" | "off",
-                )
+                let text = val.to_string_lossy();
+                let trimmed = text
+                    .trim()
+                    .trim_matches(['"', '\''])
+                    .trim();
+                !trimmed.is_empty()
+                    && !["0", "false", "no", "off"]
+                        .iter()
+                        .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
             })
         {
             return Ok(Outcome::Declined("CI link delegated".into()));
@@ -119,8 +119,8 @@ fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
         let val = val.trim();
         (options.target.is_none() && !val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.target = Some(val.to_owned());
-    } else if !arg.trim().starts_with('-') && !arg.trim().is_empty() {
-        options.ids.push(arg.trim().to_owned());
+    } else if !arg.starts_with('-') && !arg.is_empty() {
+        options.ids.push(arg.to_owned());
     } else {
         return None;
     }

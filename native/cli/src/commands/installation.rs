@@ -25,19 +25,13 @@ const YARN: &str = "teambit.dependencies/yarn";
 /// newly added lane components, without duplicates.
 pub(super) fn component_ids(result: &Value) -> io::Result<Vec<String>> {
     let mut ids = changed_component_ids(result)?;
-    ids.extend(
-        array(result.get("addedComponents"), "added components")?
-            .iter()
-            .map(|id| text(Some(id)).map(|val| val.trim().to_string()))
-            .collect::<io::Result<Vec<_>>>()?,
-    );
+    for id in array(result.get("addedComponents"), "added components")? {
+        ids.push(text(Some(id))?.trim().to_string());
+    }
     if result.get("newFromLaneAdded") == Some(&Value::Bool(true)) {
-        ids.extend(
-            array(result.get("newFromLane"), "new lane components")?
-                .iter()
-                .map(|id| text(Some(id)).map(|val| val.trim().to_string()))
-                .collect::<io::Result<Vec<_>>>()?,
-        );
+        for id in array(result.get("newFromLane"), "new lane components")? {
+            ids.push(text(Some(id))?.trim().to_string());
+        }
     }
     ids.sort();
     ids.dedup();

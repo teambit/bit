@@ -286,10 +286,10 @@ fn sort_outdated_desc(outdated: &mut [OutdatedVersion]) -> Option<()> {
         .into_iter()
         .zip(
             outdated
-                .iter()
+                .iter_mut()
                 .map(|item| OutdatedVersion {
-                    version: item.version.clone(),
-                    dependents: item.dependents.clone(),
+                    version: std::mem::take(&mut item.version),
+                    dependents: std::mem::take(&mut item.dependents),
                 }),
         )
         .collect();

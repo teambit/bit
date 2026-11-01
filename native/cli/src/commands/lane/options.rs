@@ -212,18 +212,12 @@ impl Read {
     }
 
     fn trailing_positionals(&mut self, trailing: &[&str]) -> Option<()> {
-        trailing
-            .iter()
-            .all(|item| {
-                let trimmed = item.trim();
-                !trimmed.is_empty() && !trimmed.starts_with('-')
-            })
-            .then_some(())?;
-        self.positionals.extend(
-            trailing
-                .iter()
-                .map(|item| item.trim().to_string()),
-        );
+        self.positionals.reserve(trailing.len());
+        for item in trailing {
+            let trimmed = item.trim();
+            (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+            self.positionals.push(trimmed.to_string());
+        }
         Some(())
     }
 }

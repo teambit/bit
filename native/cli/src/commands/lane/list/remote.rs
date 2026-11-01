@@ -64,10 +64,11 @@ fn text_report(
     details: bool,
     args: &[OsString],
 ) -> String {
+    let chalk = Chalk::detect(args);
     match (merged, raw) {
-        (Some(merged), Some(raw)) => report_http_merged(raw, merged, Chalk::detect(args)),
-        (Some(merged), None) => super::merged::report(lanes, merged, Chalk::detect(args)),
-        (None, _) => report(lanes, current, Chalk::detect(args), details),
+        (Some(merged), Some(raw)) => report_http_merged(raw, merged, chalk),
+        (Some(merged), None) => super::merged::report(lanes, merged, chalk),
+        (None, _) => report(lanes, current, chalk, details),
     }
 }
 
@@ -165,7 +166,7 @@ fn emit_http_json(
     let history = (!bare).then(|| History::start(root, args));
     let data = json!({"lanes":lanes,"currentLane":current});
     let mut stdout = io::stdout().lock();
-    stdout.write_all(serde_json::to_string_pretty(&data)?.as_bytes())?;
+    serde_json::to_writer_pretty(&mut stdout, &data)?;
     stdout.flush()?;
     if let Some(history) = history {
         history.end(true);

@@ -16,7 +16,7 @@ pub(super) fn json_report(rows: &[Row], ids: bool) -> Value {
     Value::Array(
         rows.iter()
             .map(|row| {
-                let mut data = Map::new();
+                let mut data = Map::with_capacity(7);
                 data.insert("id".into(), json!(row.identity.trim()));
                 data.insert("localVersion".into(), json!(local_version(row)));
                 if let Some(deprecated) = row.deprecated {
@@ -144,16 +144,17 @@ fn formatted_id(row: &Row, chalk: Chalk) -> String {
     if row.removed == Some(true) {
         id = chalk.red(&format!("{id} [Deleted]"));
     }
-    let lanes: Vec<_> = row.lane_readme_of
+    let mut has_lane = false;
+    for lane in row.lane_readme_of
         .iter()
         .map(|lane| lane.trim())
         .filter(|lane| !lane.is_empty())
-        .collect();
-    if !lanes.is_empty() {
-        id.push('\n');
-        for lane in lanes {
-            id.push_str(&chalk.yellow(&format!("[Lane Readme]: {lane}\n")));
+    {
+        if !has_lane {
+            id.push('\n');
+            has_lane = true;
         }
+        id.push_str(&chalk.yellow(&format!("[Lane Readme]: {lane}\n")));
     }
     id
 }

@@ -56,13 +56,18 @@ fn empty(path: &Path) -> io::Result<()> {
     if path.as_os_str().is_empty() {
         return Ok(());
     }
-    if fs::symlink_metadata(path).is_ok_and(|meta| !meta.is_dir() || meta.file_type().is_symlink())
-    {
-        remove_leaf(path)?;
+    match fs::symlink_metadata(path) {
+        Ok(meta) if !meta.is_dir() || meta.file_type().is_symlink() => {
+            remove_leaf(path)?;
+            fs::create_dir_all(path)
+        }
+        Ok(_) => {
+            for entry in fs::read_dir(path)? {
+                remove(&entry?.path())?;
+            }
+            Ok(())
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => fs::create_dir_all(path),
+        Err(error) => Err(error),
     }
-    fs::create_dir_all(path)?;
-    for entry in fs::read_dir(path)? {
-        remove(&entry?.path())?;
-    }
-    Ok(())
 }

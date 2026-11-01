@@ -69,7 +69,7 @@ fn updates_in_scope(
         );
     }
     if let Some(name) = lane_name
-        && let Some(err) = unscoped_lane_error(&scope_dir_for(root), name)
+        && let Some(err) = unscoped_lane_error(root, name)
     {
         return emit_failure(root, args, "updates", true, json, err);
     }
@@ -150,7 +150,7 @@ fn history_diff_in_scope(
         );
     }
     if let Some(name) = lane_name
-        && let Some(err) = unscoped_lane_error(&scope_dir_for(root), name)
+        && let Some(err) = unscoped_lane_error(root, name)
     {
         return emit_failure(root, args, "history-diff", true, json, err);
     }
@@ -161,7 +161,8 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
     let mut lane_name = None;
     let mut json = false;
     let mut iter = lane_args.iter().copied();
-    while let Some(arg) = iter.next() {
+    while let Some(raw_arg) = iter.next() {
+        let arg = raw_arg.trim();
         match arg {
             "--" => {
                 for rest in iter {
@@ -186,7 +187,7 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
             _ if let Some(val) = arg.strip_prefix("--pattern=") => {
                 non_flag(val)?;
             }
-            val if !val.trim().starts_with('-') => {
+            val if !val.starts_with('-') => {
                 non_flag(val)?;
             }
             _ => return None,
@@ -200,17 +201,20 @@ fn non_flag(val: &str) -> Option<&str> {
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(trimmed)
 }
 
-fn unscoped_lane_error(scope_dir: &Path, name: &str) -> Option<String> {
+fn unscoped_lane_error(root: &scope_root::ScopeRoot, name: &str) -> Option<String> {
     let name = name.trim();
     if name.is_empty()
         || name.contains('/')
         || name == "main"
         || env::var_os("CI").is_some_and(|val| !val.is_empty())
-        || resolve_lane_entry(scope_dir, name).is_some()
     {
         return None;
     }
-    let err = diagnose_lane_lookup_error(scope_dir, name, false)?;
+    let scope_dir = scope_dir_for(root);
+    if resolve_lane_entry(&scope_dir, name).is_some() {
+        return None;
+    }
+    let err = diagnose_lane_lookup_error(&scope_dir, name, false)?;
     (!err.ends_with("was not found!")).then_some(err)
 }
 

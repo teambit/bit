@@ -117,9 +117,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
         Ok(root) => root,
         Err(outcome) => return Ok(outcome),
     };
-    let scope =
-        if let Some(scope) = options.scope { scope.to_string() } else { default_scope(&root)? };
-    let Some(scope) = (!scope.is_empty()).then_some(scope) else {
+    let Some(scope) = resolve_scope(&root, options.scope)? else {
         return Ok(Outcome::Declined("lane create needs a default scope".into()));
     };
     let user = workspace_command::User::load(&root)?;
@@ -162,9 +160,7 @@ pub(super) fn merge_move(args: &[OsString], lane_args: &[&str]) -> io::Result<Ou
             Err(io::Error::other(err_msg))
         });
     }
-    let scope =
-        if let Some(scope) = options.scope { scope.to_string() } else { default_scope(&root)? };
-    let Some(scope) = (!scope.is_empty()).then_some(scope) else {
+    let Some(scope) = resolve_scope(&root, options.scope)? else {
         return Ok(Outcome::Declined("lane merge-move needs a default scope".into()));
     };
     let user = workspace_command::User::load(&root)?;
@@ -291,6 +287,11 @@ fn report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
         code: 0,
         details: None,
     }
+}
+
+fn resolve_scope(root: &Path, explicit: Option<&str>) -> io::Result<Option<String>> {
+    let scope = if let Some(scope) = explicit { scope.to_owned() } else { default_scope(root)? };
+    Ok((!scope.is_empty()).then_some(scope))
 }
 
 fn default_scope(root: &Path) -> io::Result<String> {

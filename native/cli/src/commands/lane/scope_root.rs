@@ -79,15 +79,15 @@ pub(in crate::commands) fn diagnose_component_lookup_error(
     if raw_id.starts_with('@') || bare_id.is_empty() {
         return None;
     }
-    let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let comps = index["components"].as_array().or_else(|| index.as_array())?;
-    let object_exists = bit_object_import::read_scope_object(scope_dir, &sha1_hex(bare_id))
+    if bit_object_import::read_scope_object(scope_dir, &sha1_hex(bare_id))
         .ok()
         .flatten()
-        .is_some();
-    if object_exists {
+        .is_some()
+    {
         return None;
     }
+    let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let comps = index["components"].as_array().or_else(|| index.as_array())?;
     if let Some((scope, name)) = bare_id.split_once('/') {
         let scope = scope.trim();
         let name = name.trim();

@@ -57,15 +57,12 @@ impl Session {
     ) -> io::Result<Report> {
         let phases = self.phases()?;
         let mut result = None;
-        for (index, phase) in phases.iter().enumerate() {
+        for phase in &phases {
             let current = self.phase(root, phase, &mut startup, output)?;
-            if index == 0 {
-                result = Some(current);
+            if let Some(existing) = &mut result {
+                report::merge(existing, &current)?;
             } else {
-                report::merge(
-                    result.as_mut().ok_or_else(|| io::Error::other("lane history first result"))?,
-                    &current,
-                )?;
+                result = Some(current);
             }
             startup = Startup { committed: true, ..Startup::default() };
         }

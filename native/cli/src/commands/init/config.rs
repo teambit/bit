@@ -77,7 +77,10 @@ pub(super) fn workspace_files(bytes: Vec<u8>, options: &Options) -> io::Result<V
 
 // WorkspaceConfig.toVinyl is persisted through AbstractVinyl's platform EOL conversion.
 fn render(document: &Document) -> Vec<u8> {
-    let text = format!("{document}\n").replace("\r\n", "\n").replace('\r', "\n");
+    let mut text = format!("{document}\n");
+    if text.contains('\r') {
+        text = text.replace("\r\n", "\n").replace('\r', "\n");
+    }
     if cfg!(windows) { text.replace('\n', "\r\n").into_bytes() } else { text.into_bytes() }
 }
 

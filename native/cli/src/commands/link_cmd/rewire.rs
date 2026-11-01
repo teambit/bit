@@ -94,20 +94,20 @@ fn rewire_file_content(
     let specifiers = extract_specifiers(content, is_style);
     let mut current = content.to_owned();
     for specifier in specifiers {
-        current = rewire_specifier(&current, &specifier, file_path, component, all_components);
+        rewire_specifier(&mut current, &specifier, file_path, component, all_components);
     }
     current
 }
 
 fn rewire_specifier(
-    current: &str,
+    current: &mut String,
     specifier: &str,
     file_path: &Path,
     component: &WorkspaceComponent,
     all_components: &[&WorkspaceComponent],
-) -> String {
+) {
     if !(specifier.starts_with('.') || specifier.starts_with('/')) {
-        return current.to_owned();
+        return;
     }
     let ext = file_extension(file_path);
     let is_style = STYLE_EXTENSIONS.contains(&ext.as_str());
@@ -115,18 +115,18 @@ fn rewire_specifier(
     let base_dir = file_path.parent().unwrap_or(&component.dir);
     let candidate = normalize_path(&base_dir.join(specifier));
     let Some(resolved) = find_resolved_file(&candidate, is_ts) else {
-        return current.to_owned();
+        return;
     };
     let Some(owner) = find_owner(&resolved, all_components) else {
-        return current.to_owned();
+        return;
     };
     if owner.id == component.id {
-        return current.to_owned();
+        return;
     }
     let old_name = name_without_internal_path(specifier, owner, &resolved);
     let pkg = owner.package_name.trim();
     let new_name = if is_style { format!("~{pkg}") } else { pkg.to_owned() };
-    replace_package_name(current, &old_name, &new_name)
+    *current = replace_package_name(current, &old_name, &new_name);
 }
 
 fn find_owner<'a>(

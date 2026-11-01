@@ -123,15 +123,15 @@ fn fallback_lane_merge_error(args: &[OsString], grammar: &[&str]) -> io::Result<
 fn emit_lane_merge_error(args: &[OsString], err_msg: &'static str) -> io::Result<Outcome> {
     if std::env::var_os("CI")
         .is_some_and(|val| {
-            !matches!(
-                val.to_string_lossy()
-                    .trim()
-                    .trim_matches(['"', '\''])
-                    .trim()
-                    .to_ascii_lowercase()
-                    .as_str(),
-                "" | "0" | "false" | "no" | "off",
-            )
+            let text = val.to_string_lossy();
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
     {
         return Ok(Outcome::Declined("CI lane merge validation".into()));

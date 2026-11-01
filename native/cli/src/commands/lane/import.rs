@@ -105,7 +105,7 @@ fn active(
     let report = report(lane, &current_id, Chalk::detect(args));
     workspace_command::execute_then(root, args, "import", |output| {
         apply(&mut engine, &prepared)?;
-        for row in &rows {
+        for row in rows {
             progress(output, row);
         }
         Ok(Report { data: report, code: 0, details: None })
@@ -140,7 +140,7 @@ fn decline_or_fail(
     }
 }
 
-fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {
+fn validate<'a>(prepared: &'a Value, lane: &str) -> Option<&'a [Value]> {
     if prepared["laneImport"] != true
         || prepared["laneFetch"] != true
         || prepared["token"]
@@ -152,7 +152,10 @@ fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {
     let rows = prepared["progress"].as_array()?;
     if rows.is_empty()
         || rows.len() > 4096
-        || rows[0]["reason"] != format!("for fetching lane {lane}")
+        || rows[0]["reason"]
+            .as_str()
+            .and_then(|reason| reason.strip_prefix("for fetching lane "))
+            != Some(lane)
     {
         return None;
     }
@@ -165,7 +168,7 @@ fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {
             return None;
         }
     }
-    Some(rows.clone())
+    Some(rows)
 }
 
 fn apply(engine: &mut Engine, prepared: &Value) -> io::Result<()> {

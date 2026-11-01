@@ -172,7 +172,8 @@ pub(super) fn backup_bytes(
             });
             if cleared { Vec::new() } else { fs::read(&metadata_path).unwrap_or_default() }
         });
-    bytes.extend(format!("{id} \n").as_bytes());
+    bytes.extend_from_slice(id.as_bytes());
+    bytes.extend_from_slice(b" \n");
     plan.actions.push(Action::File(metadata_path, bytes));
 }
 

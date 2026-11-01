@@ -27,7 +27,7 @@ pub(super) struct LinkSummary {
 }
 
 pub(super) fn render_json(summary: &LinkSummary) -> Value {
-    let mut map = serde_json::Map::new();
+    let mut map = serde_json::Map::with_capacity(3);
     if !summary.target_links.is_empty() {
         map.insert(
             "linkToDirResults".into(),
@@ -161,17 +161,11 @@ fn format_verbose_component_link(chalk: Chalk, item: &ComponentLinkItem) -> Stri
         return String::new();
     }
     let title = chalk.bold(&chalk.cyan(item.id.trim()));
+    let from_label = chalk.bold("from");
+    let to_label = chalk.bold("to");
     let links: Vec<String> = item.bound
         .iter()
-        .map(|link| {
-            format!(
-                "{}: {}\n{}: {}\n",
-                chalk.bold("from"),
-                link.from.trim(),
-                chalk.bold("to"),
-                link.to.trim(),
-            )
-        })
+        .map(|link| format!("{from_label}: {}\n{to_label}: {}\n", link.from.trim(), link.to.trim()))
         .collect();
     format!("{title}\n{}\n", links.join("\n"))
 }

@@ -174,7 +174,13 @@ pub(super) fn strip_local_env_version(
         .into_iter()
         .filter(|(_, val)| val.as_str() != Some("-"))
         .map(|(key, val)| match local_env.as_deref() {
-            Some(bare) if key.starts_with(&format!("{bare}@")) => (bare.to_owned(), val),
+            Some(bare)
+                if key
+                    .strip_prefix(bare)
+                    .is_some_and(|rest| rest.starts_with('@')) =>
+            {
+                (bare.to_owned(), val)
+            }
             _ => (key, val),
         })
         .collect()

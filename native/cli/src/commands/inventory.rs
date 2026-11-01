@@ -20,8 +20,18 @@ const ALWAYS_IGNORE: &[&str] = &[
     "**/component.json",
     "**/node_modules/**",
 ];
-/// `BIT_GENERATED_IGNORE_LIST`; `IGNORE_LIST` is both lists.
-const BIT_GENERATED_IGNORE: &[&str] = &["package.json", "**/package-lock.json", "**/yarn.lock"];
+/// [`ALWAYS_IGNORE`] plus `BIT_GENERATED_IGNORE_LIST` (`IGNORE_LIST`).
+const IGNORE_ALL: &[&str] = &[
+    "**/.DS_Store",
+    "**/.env",
+    "**/.env.local",
+    "**/.env.**.local",
+    "**/component.json",
+    "**/node_modules/**",
+    "package.json",
+    "**/package-lock.json",
+    "**/yarn.lock",
+];
 /// `IGNORE_ROOT_ONLY_LIST`.
 const IGNORE_ROOT_ONLY: &[&str] = &[
     "tsconfig.json",
@@ -46,7 +56,7 @@ pub struct Options {
 pub struct Inventory {
     root: Ignore,
     /// `ALWAYS_IGNORE_LIST`, or `IGNORE_LIST` without `trackAllFiles`.
-    hard: Vec<&'static str>,
+    hard: &'static [&'static str],
     ignored_root: &'static [&'static str],
 }
 
@@ -66,15 +76,7 @@ struct Nested {
 impl Inventory {
     /// `ignore().add([...patterns, ...IGNORE_LIST, ...ignoredFiles])`.
     pub fn new(options: &Options) -> io::Result<Self> {
-        let hard: Vec<&'static str> = if options.track_all_files {
-            ALWAYS_IGNORE.to_vec()
-        } else {
-            ALWAYS_IGNORE
-                .iter()
-                .chain(BIT_GENERATED_IGNORE)
-                .copied()
-                .collect()
-        };
+        let hard = if options.track_all_files { ALWAYS_IGNORE } else { IGNORE_ALL };
         let ignored_root: &[&str] = if options.track_all_files { &[] } else { IGNORE_ROOT_ONLY };
         let patterns = options.patterns
             .iter()
@@ -129,7 +131,7 @@ impl Inventory {
             .collect();
         // Compiled in this order: the regex cache is shared.
         let combined = compile(Some(&self.root), &nested)?;
-        let hard = compile(None, &self.hard)?;
+        let hard = compile(None, self.hard)?;
         let own = compile(None, &scan.own)?;
         engine.request(&json!({
             "kind": finish_kind,

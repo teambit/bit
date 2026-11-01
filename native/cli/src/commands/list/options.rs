@@ -16,7 +16,7 @@ pub(super) struct Options {
 /// `args` starts after the command name; `None` for anything else.
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    let mut seen: Vec<&str> = Vec::new();
+    let mut seen: Vec<&str> = Vec::with_capacity(args.len());
     let mut index = 0;
     while index < args.len() {
         if args[index].trim() == "--" {
@@ -109,8 +109,7 @@ impl Options {
     fn inline_flag(&mut self, raw: &str, flag: &str, inline: &str) -> Option<usize> {
         let trimmed = inline
             .trim()
-            .trim_matches('"')
-            .trim_matches('\'')
+            .trim_matches(['"', '\''])
             .trim();
         if matches!(flag, "--scope" | "--namespace") {
             (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;

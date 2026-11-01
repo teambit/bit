@@ -34,8 +34,8 @@ fn configured_root_aspects(root: &Path) -> io::Result<bool> {
     let require = &raw["require"];
     Ok(!require.is_null()
         && *require != false
-        && *require != json!([])
-        && *require != json!({})
+        && !require.as_array().is_some_and(Vec::is_empty)
+        && !require.as_object().is_some_and(serde_json::Map::is_empty)
         && require
             .as_str()
             .is_none_or(|text| !text.trim().is_empty()))
@@ -103,22 +103,22 @@ pub(in crate::commands) fn confirm(question: &str) -> io::Result<bool> {
     use std::io::Write;
     let question = question.trim();
     let stdin = io::stdin();
+    let mut line = String::new();
     loop {
         print!("{question} ");
         io::stdout().flush()?;
-        let mut line = String::new();
+        line.clear();
         if stdin.read_line(&mut line)? == 0 {
             return Ok(false);
         }
-        match line
-            .trim()
-            .to_ascii_lowercase()
-            .as_str()
-        {
-            "y" | "yes" => return Ok(true),
-            "n" | "no" => return Ok(false),
-            _ => println!("\nInvalid Response.\nAnswer either yes : (y, yes) \nOr no: (n, no) \n"),
+        let trimmed = line.trim();
+        if trimmed.eq_ignore_ascii_case("y") || trimmed.eq_ignore_ascii_case("yes") {
+            return Ok(true);
         }
+        if trimmed.eq_ignore_ascii_case("n") || trimmed.eq_ignore_ascii_case("no") {
+            return Ok(false);
+        }
+        println!("\nInvalid Response.\nAnswer either yes : (y, yes) \nOr no: (n, no) \n");
     }
 }
 

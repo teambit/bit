@@ -274,18 +274,14 @@ impl bit_install::Host for JsHost {
     }
 
     async fn initial_installation_components(&self, aspect_ids: &[String]) -> io::Result<bool> {
-        let arguments = std::env::args()
-            .skip(1)
-            .filter(|arg| !arg.starts_with('-'))
-            .take(2)
-            .collect::<Vec<_>>();
-        if arguments
-            .first()
-            .is_none_or(|command| command != "lane")
-            || arguments
-                .get(1)
-                .is_none_or(|command| !matches!(command.as_str(), "checkout" | "revert"))
-        {
+        let is_lane_history = {
+            let mut arguments = std::env::args()
+                .skip(1)
+                .filter(|arg| !arg.starts_with('-'));
+            arguments.next().as_deref() == Some("lane")
+                && matches!(arguments.next().as_deref(), Some("checkout" | "revert"))
+        };
+        if !is_lane_history {
             if lane_installation() {
                 self.prepare_install(aspect_ids).await?;
             }

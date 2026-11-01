@@ -293,13 +293,13 @@ fn find_cycles(graph: &CompGraph, seeders: &[String], include_deps: bool) -> Vec
         }
     }
     tarjan.components
-        .into_iter()
+        .iter()
         .filter_map(|component| cycle_ids(component, &edges, graph, seeders, include_deps))
         .collect()
 }
 
 fn cycle_ids(
-    mut component: Vec<usize>,
+    component: &[usize],
     edges: &[Vec<usize>],
     graph: &CompGraph,
     seeders: &[String],
@@ -315,11 +315,10 @@ fn cycle_ids(
     {
         return None;
     }
-    component.reverse();
-    let mut ids: Vec<String> = component
-        .into_iter()
-        .map(|index| graph.nodes[index].clone())
-        .collect();
+    let mut ids = Vec::with_capacity(component.len() + 1);
+    for &index in component.iter().rev() {
+        ids.push(graph.nodes[index].clone());
+    }
     ids.push(ids[0].clone());
     Some(ids)
 }

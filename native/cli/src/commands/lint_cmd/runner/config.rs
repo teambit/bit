@@ -57,7 +57,7 @@ impl Config {
 }
 
 fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<Value>> {
-    let mut expanded = Vec::new();
+    let mut expanded = Vec::with_capacity(patterns.len() * directories.len());
     for pattern in patterns {
         let value = pattern
             .as_str()
@@ -65,12 +65,21 @@ fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<V
             .filter(|val| !val.is_empty())
             .ok_or_else(|| invalid("linter pattern"))?;
         for directory in directories {
-            let normalized = directory.trim().replace('\\', "/");
-            let directory = normalized.trim_matches('/');
-            if !directory.is_empty() && directory != "." {
-                expanded.push(json!(format!("../../{directory}/{value}")));
-            }
+            push_expanded_pattern(&mut expanded, directory, value);
         }
     }
     Ok(expanded)
+}
+
+fn push_expanded_pattern(expanded: &mut Vec<Value>, directory: &str, value: &str) {
+    let trimmed = directory.trim();
+    let normalized = if trimmed.contains('\\') {
+        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(trimmed)
+    };
+    let directory = normalized.trim_matches('/');
+    if !directory.is_empty() && directory != "." {
+        expanded.push(json!(format!("../../{directory}/{value}")));
+    }
 }

@@ -93,6 +93,9 @@ fn is_ci_active() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
 }

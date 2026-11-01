@@ -30,10 +30,9 @@ pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::R
     {
         return Ok(());
     }
-    plan.actions.push(Action::File(
-        scope.join("index.json"),
-        format!("{}\n", serde_json::to_string_pretty(&index)?).into_bytes(),
-    ));
+    let mut bytes = serde_json::to_vec_pretty(&index)?;
+    bytes.push(b'\n');
+    plan.actions.push(Action::File(scope.join("index.json"), bytes));
     Ok(())
 }
 

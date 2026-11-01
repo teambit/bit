@@ -15,8 +15,9 @@ pub fn pattern(pattern: &str, dir: &str) -> String {
         return String::new();
     }
     let anchored = body
-        .char_indices()
-        .any(|(index, character)| character == '/' && index + 1 < body.len());
+        .strip_suffix('/')
+        .unwrap_or(body)
+        .contains('/');
     // A trailing slash means "directories only"; the join drops it, so it is put back.
     let dir_only = if body.ends_with('/') { "/" } else { "" };
     let base = if anchored {
@@ -24,8 +25,8 @@ pub fn pattern(pattern: &str, dir: &str) -> String {
     } else {
         join_linux(&[dir, "**", body])
     };
-    let rebased = format!("{base}{dir_only}");
-    if negated { format!("!{rebased}") } else { rebased }
+    let prefix = if negated { "!" } else { "" };
+    format!("{prefix}{base}{dir_only}")
 }
 
 /// `pathJoinLinux`: `path.join`, then `normalize-path`, which uses forward

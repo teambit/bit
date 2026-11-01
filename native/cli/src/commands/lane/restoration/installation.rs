@@ -59,19 +59,18 @@ fn compile(
     }
     let compiled = compiled?;
     if let Some(error) = compiler_error(&compiled["error"])? {
-        let trimmed = error.trim();
-        output.failure(&format!("compilation failed with the following error: {trimmed}"));
-        result["compilationError"] = json!(trimmed);
+        output.failure(&format!("compilation failed with the following error: {error}"));
+        result["compilationError"] = json!(error);
     }
     Ok(())
 }
 
-fn compiler_error(value: &Value) -> io::Result<Option<String>> {
+fn compiler_error(value: &Value) -> io::Result<Option<&str>> {
     match value {
         Value::Null => Ok(None),
         Value::String(error) => {
             let trimmed = error.trim();
-            Ok((!trimmed.is_empty()).then(|| trimmed.to_owned()))
+            Ok((!trimmed.is_empty()).then_some(trimmed))
         }
         Value::Object(map) if map.is_empty() => Ok(None),
         Value::Object(map) => map
@@ -80,7 +79,7 @@ fn compiler_error(value: &Value) -> io::Result<Option<String>> {
             .and_then(Value::as_str)
             .map(str::trim)
             .filter(|msg| !msg.is_empty())
-            .map(|msg| Some(msg.to_owned()))
+            .map(Some)
             .ok_or_else(|| io::Error::other("lane history compiler receipt")),
         _ => Err(io::Error::other("lane history compiler receipt")),
     }

@@ -44,8 +44,8 @@ pub(super) fn valid_name(name: &str) -> io::Result<String> {
     let mut dot = false;
     let name = name
         .trim()
-        .to_lowercase()
         .chars()
+        .map(|character| character.to_ascii_lowercase())
         .filter(|character| {
             if *character == '.' {
                 if dot {

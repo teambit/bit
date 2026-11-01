@@ -35,7 +35,10 @@ fn ci_enabled() -> bool {
                 .trim()
                 .trim_matches(['"', '\''])
                 .trim();
-            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
         })
 }
 
@@ -184,7 +187,7 @@ fn json_output(
     {
         writeln!(stdout, "{}", Chalk::detect(args).red(warning))?;
     }
-    stdout.write_all(serde_json::to_string_pretty(&json_report(rows, ids))?.as_bytes())?;
+    serde_json::to_writer_pretty(&mut stdout, &json_report(rows, ids))?;
     stdout.flush()?;
     if let Some(history) = history {
         history.end(true);

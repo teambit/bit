@@ -213,11 +213,10 @@ fn report_current(
     );
     let readme = current_lane.map_or_else(String::new, |lane| readme_report(lane, chalk));
     let current_output = format!("current lane - {}{readme}", chalk.green(&current_label));
-    if !details || current_lane.is_none() {
+    let Some(lane) = current_lane.filter(|_| details) else {
         return current_output;
-    }
-    let components = current_lane.map(|lane| components_report(lane, format)).unwrap_or_default();
-    format!("{current_output}\n{components}")
+    };
+    format!("{current_output}\n{}", components_report(lane, format))
 }
 
 pub(super) fn report_others(

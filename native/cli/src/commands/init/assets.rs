@@ -40,13 +40,12 @@ fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
 }
 fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)>> {
     let raw_agent = options.agent.as_deref().map(str::trim);
-    let name = match raw_agent.map(str::to_ascii_lowercase).as_deref() {
+    let name = match raw_agent {
         None | Some("") => "AGENTS.md",
-        Some("claude") => "CLAUDE.md",
-        Some("cursor") => ".cursor/rules/bit.mdc",
-        Some("copilot") => ".github/copilot-instructions.md",
-        Some(_) => {
-            let value = raw_agent.unwrap_or_default();
+        Some(val) if val.eq_ignore_ascii_case("claude") => "CLAUDE.md",
+        Some(val) if val.eq_ignore_ascii_case("cursor") => ".cursor/rules/bit.mdc",
+        Some(val) if val.eq_ignore_ascii_case("copilot") => ".github/copilot-instructions.md",
+        Some(value) => {
             return Err(io::Error::other(format!(
                 r#"unknown --agent value "{value}". supported values: claude, cursor, copilot"#,
             )));
@@ -68,12 +67,15 @@ fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)
     let Ok(bytes) = fs::read(plan.modules.join("host-initializer/dist/agents-template.md")) else {
         return Ok(None);
     };
-    let mut content = if name.ends_with(".mdc") {
-        b"---\ndescription: Bit workspace instructions\nalwaysApply: true\n---\n\n".to_vec()
+    let content = if name.ends_with(".mdc") {
+        let header = b"---\ndescription: Bit workspace instructions\nalwaysApply: true\n---\n\n";
+        let mut buf = Vec::with_capacity(header.len() + bytes.len());
+        buf.extend_from_slice(header);
+        buf.extend_from_slice(&bytes);
+        buf
     } else {
-        Vec::new()
+        bytes
     };
-    content.extend(bytes);
     Ok(Some((PathBuf::from(name), content)))
 }
 fn mcp(root: &Path) -> io::Result<(PathBuf, Vec<u8>)> {

@@ -160,9 +160,8 @@ fn set_inline_string(key: &str, val: &str, options: &mut Options) {
 fn optional<'a>(
     args: &mut std::iter::Peekable<impl Iterator<Item = Option<&'a str>>>,
 ) -> Option<String> {
-    if args
-        .peek()
-        .is_some_and(|arg| arg.is_some_and(|arg| !arg.trim().starts_with('-')))
+    if let Some(Some(arg)) = args.peek()
+        && !arg.trim().starts_with('-')
     {
         return Some(args.next()??.trim().to_owned());
     }

@@ -93,7 +93,9 @@ fn summary(result: &Value, count: usize, elapsed: u64) -> String {
     let seconds = if fraction == 0 {
         seconds.to_string()
     } else {
-        format!("{seconds}.{fraction:03}").trim_end_matches('0').to_owned()
+        let mut formatted = format!("{seconds}.{fraction:03}");
+        formatted.truncate(formatted.trim_end_matches('0').len());
+        formatted
     };
     let totals: Vec<_> = results::COUNTS
         .iter()

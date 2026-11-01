@@ -183,7 +183,13 @@ fn collect_matching_components<'a>(
 
 fn matches_component(entry: &BitmapEntry, comp: &WorkspaceComponent, selector: &str) -> bool {
     let selector = selector.trim();
-    if matches_exact_identity(entry, comp, selector) {
+    let bare_id = entry.id.to_string_without_version();
+    if bare_id == selector
+        || format_component_id(&entry.id) == selector
+        || entry.id.name.trim() == selector
+        || entry.key.trim() == selector
+        || comp.package_name.trim() == selector
+    {
         return true;
     }
     let normalized = inventory::normalize(selector);
@@ -195,17 +201,8 @@ fn matches_component(entry: &BitmapEntry, comp: &WorkspaceComponent, selector: &
     if !root_dir.is_empty() && root_dir == dir {
         return true;
     }
-    let bare_id = entry.id.to_string_without_version();
     let patterns = [selector.to_owned()];
     match_patterns(&bare_id, &patterns) || match_patterns(entry.id.name.trim(), &patterns)
-}
-
-fn matches_exact_identity(entry: &BitmapEntry, comp: &WorkspaceComponent, selector: &str) -> bool {
-    entry.id.to_string_without_version() == selector
-        || format_component_id(&entry.id) == selector
-        || entry.id.name.trim() == selector
-        || entry.key.trim() == selector
-        || comp.package_name.trim() == selector
 }
 
 fn link_workspace_components(

@@ -18,12 +18,14 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
             return Ok(Outcome::Declined(format!("linter preparation: {}", reason.trim())));
         }
     };
+    let fix = options.fix;
+    let json = options.json;
     let work = |output: &bit_install::output::Output| {
-        let result = plan.run(root, output, options.fix)?;
+        let result = plan.run(root, output, fix)?;
         let elapsed = elapsed_millis(&started);
-        report::create(&result, &plan.loaded.progress, args, options.json, elapsed)
+        report::create(&result, &plan.loaded.progress, args, json, elapsed)
     };
-    if options.json {
+    if json {
         workspace_command::execute_json(root, args, "lint", work)
     } else {
         workspace_command::execute_then(root, args, "lint", work)
@@ -34,7 +36,7 @@ fn elapsed_millis(started: &Instant) -> u64 {
     u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX)
 }
 
-fn invalid(message: &str) -> io::Error {
+fn invalid(message: &'static str) -> io::Error {
     let trimmed = message.trim();
     io::Error::other(if trimmed.is_empty() { "linter failure" } else { trimmed })
 }

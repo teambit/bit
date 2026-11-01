@@ -32,13 +32,11 @@ impl Plan {
             .collect::<Vec<_>>();
         let config =
             if directories.is_empty() { None } else { Some(Config::prepare(root, &directories)?) };
-        let mut tools = Vec::new();
+        let mut tools = Vec::with_capacity(components.len());
         if let Some(config) = &config {
+            let colors = Chalk::detect(args).enabled();
             for component in &components {
-                tools.push(Session::prepare(
-                    &request(component, config, options)?,
-                    Chalk::detect(args).enabled(),
-                )?);
+                tools.push(Session::prepare(&request(component, config, options)?, colors)?);
             }
         }
         validate_sources(&loaded.files)?;
@@ -79,7 +77,7 @@ impl Plan {
         fix: bool,
     ) -> io::Result<Value> {
         let total = self.components.len();
-        let mut rows = Vec::new();
+        let mut rows = Vec::with_capacity(total);
         for (index, ((component, tool), precomputed)) in self.components
             .iter()
             .zip(&mut self.tools)

@@ -126,11 +126,12 @@ pub(super) fn canonical_workspace(root: &Path, react_service: bool) -> io::Resul
         return Ok(true);
     }
     let raw = bit_install::jsonc::parse(&std::fs::read_to_string(&config.path)?)?;
-    if !raw["require"].is_null()
-        && raw["require"] != false
-        && raw["require"] != json!([])
-        && raw["require"] != json!({})
-        && !raw["require"]
+    let require = &raw["require"];
+    if !require.is_null()
+        && *require != false
+        && !require.as_array().is_some_and(Vec::is_empty)
+        && !require.as_object().is_some_and(serde_json::Map::is_empty)
+        && !require
             .as_str()
             .is_some_and(|req| req.trim().is_empty())
     {
@@ -179,14 +180,12 @@ pub(super) fn deps_graph_enabled(root: &Path) -> io::Result<bool> {
     Ok(features.is_some_and(|features| {
         features
             .trim()
-            .trim_matches('"')
-            .trim_matches('\'')
+            .trim_matches(['"', '\''])
             .split(',')
             .any(|feature| {
                 feature
                     .trim()
-                    .trim_matches('"')
-                    .trim_matches('\'')
+                    .trim_matches(['"', '\''])
                     .trim()
                     == "deps-graph"
             })

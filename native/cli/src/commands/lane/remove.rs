@@ -201,5 +201,5 @@ fn matches_lane(lane: &list::LaneData, target: &str) -> bool {
         .unwrap_or_default();
     lane_name == target
         || lane.alias.as_deref().map(str::trim) == Some(target)
-        || format!("{scope}/{lane_name}") == target
+        || target.split_once('/') == Some((scope, lane_name))
 }

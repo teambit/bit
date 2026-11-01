@@ -172,20 +172,20 @@ fn validation_error(options: &options::Options) -> Option<String> {
         .as_deref()
         .map(str::trim)
         .filter(|name| !name.is_empty())?;
-    let parts: Vec<_> = name.split('.').collect();
-    let valid = parts.len() <= 2
-        && parts
-            .iter()
-            .all(|part| {
-                !part.is_empty()
-                    && part
-                        .bytes()
-                        .all(|byte| {
-                            byte.is_ascii_lowercase()
-                                || byte.is_ascii_digit()
-                                || b"$_-!".contains(&byte)
-                        })
-            })
-        && (parts.len() == 2 || name.len() >= 2);
+    let valid = match name.split_once('.') {
+        Some((owner, scope)) => {
+            !scope.contains('.') && valid_scope_part(owner) && valid_scope_part(scope)
+        }
+        None => name.len() >= 2 && valid_scope_part(name),
+    };
     (!valid).then(|| format!(r#"error: "{name}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]"#))
+}
+
+fn valid_scope_part(part: &str) -> bool {
+    !part.is_empty()
+        && part
+            .bytes()
+            .all(|byte| {
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"$_-!".contains(&byte)
+            })
 }

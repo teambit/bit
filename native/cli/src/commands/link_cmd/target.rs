@@ -33,14 +33,16 @@ pub(super) fn link_to_target(
     selected: &[&WorkspaceComponent],
     include_peers: bool,
 ) -> io::Result<Vec<LinkToDirResult>> {
-    let mut results = Vec::new();
+    let root_nm = root.join("node_modules");
+    let target_nm = target_dir.join("node_modules");
+    let mut results = Vec::with_capacity(selected.len());
     for &component in selected {
         let pkg_name = component.package_name.trim();
         if component.root_dir == "." || pkg_name.is_empty() {
             continue;
         }
-        let from = root.join("node_modules").join(pkg_name);
-        let to = target_dir.join("node_modules").join(pkg_name);
+        let from = root_nm.join(pkg_name);
+        let to = target_nm.join(pkg_name);
         create_dir_symlink(&from, &to)?;
         results.push(LinkToDirResult {
             component_id: format_component_id(&component.id),
@@ -52,10 +54,9 @@ pub(super) fn link_to_target(
         });
     }
     if include_peers {
-        let peers = collect_peers(root, ws_config, selected);
-        for peer_name in peers {
-            let from = root.join("node_modules").join(&peer_name);
-            let to = target_dir.join("node_modules").join(&peer_name);
+        for peer_name in collect_peers(root, ws_config, selected) {
+            let from = root_nm.join(&peer_name);
+            let to = target_nm.join(&peer_name);
             create_dir_symlink(&from, &to)?;
             results.push(LinkToDirResult {
                 component_id: peer_name.clone(),
@@ -189,16 +190,19 @@ pub(super) fn link_core_aspects(
         .map(|(_, comp)| comp.id.to_string_without_version())
         .collect();
     let names = collect_core_package_names(core_ids, &authored);
+    let root_teambit = root.join("node_modules/@teambit");
     let hoisted = root.join("node_modules/.pnpm");
-    let has_hoisted = hoisted.is_dir();
+    let hoisted_teambit = hoisted
+        .is_dir()
+        .then(|| hoisted.join("node_modules/@teambit"));
     for name in &names {
         let src = teambit_dir.join(name);
         if !src.exists() {
             continue;
         }
-        link_aspect_if_allowed(&src, &root.join("node_modules/@teambit").join(name))?;
-        if has_hoisted {
-            link_aspect_if_allowed(&src, &hoisted.join("node_modules/@teambit").join(name))?;
+        link_aspect_if_allowed(&src, &root_teambit.join(name))?;
+        if let Some(hoisted_dir) = &hoisted_teambit {
+            link_aspect_if_allowed(&src, &hoisted_dir.join(name))?;
         }
     }
     Ok(())

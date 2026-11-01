@@ -56,12 +56,12 @@ impl Options {
                 self.skip_install = true;
                 self.json = true;
             }
-            id if !id.trim().starts_with('-')
-                && !id.trim().is_empty()
-                && id.trim().len() <= 256
+            id if !id.starts_with('-')
+                && !id.is_empty()
+                && id.len() <= 256
                 && self.id.is_empty() =>
             {
-                self.id = id.trim().into();
+                self.id = id.into();
             }
             _ => return None,
         }

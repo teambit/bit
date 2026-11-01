@@ -63,7 +63,7 @@ fn write_current(stdout: &mut impl Write, id: &Value, alias: &str, json: bool) -
     let full = if is_main { "main".to_string() } else { format!("{scope}/{name}") };
     if json {
         let data = current_json(name, scope, &full, alias, is_main);
-        stdout.write_all(serde_json::to_string_pretty(&data)?.as_bytes())?;
+        serde_json::to_writer_pretty(&mut *stdout, &data)?;
     } else if is_main || alias == name {
         writeln!(stdout, "{full}")?;
     } else {

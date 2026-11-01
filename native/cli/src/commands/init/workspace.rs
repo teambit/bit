@@ -142,7 +142,11 @@ fn reset_component_row(key: &str, row: &Value) -> Value {
         .unwrap_or_else(|| {
             scope
                 .as_deref()
-                .and_then(|scope_str| key_id.strip_prefix(&format!("{scope_str}/")))
+                .and_then(|scope_str| {
+                    key_id
+                        .strip_prefix(scope_str)
+                        .and_then(|rest| rest.strip_prefix('/'))
+                })
                 .map_or(key_id, str::trim)
         })
         .to_owned();
@@ -160,18 +164,17 @@ fn package(plan: &mut Plan, options: &Options) -> io::Result<()> {
         .as_deref()
         .map(bit_object_import::parse_jsonc)
         .transpose()?;
+    let has_existing = existing.is_some();
     if options.flags.no_package_json
-        && existing.is_none()
+        && !has_existing
         && !options.resets.repair
         && !options.resets.hard
     {
         return Ok(());
     }
-    let mut value = existing
-        .clone()
-        .unwrap_or_else(|| json!({"type":"module"}));
-    configure_package(&mut value, options, existing.is_some(), &mut plan.warning)?;
-    if (!options.flags.no_package_json || existing.is_some())
+    let mut value = existing.unwrap_or_else(|| json!({"type":"module"}));
+    configure_package(&mut value, options, has_existing, &mut plan.warning)?;
+    if (!options.flags.no_package_json || has_existing)
         && value
             .as_object()
             .is_some_and(|value| !value.is_empty())

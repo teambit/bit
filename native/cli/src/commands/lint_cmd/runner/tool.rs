@@ -26,7 +26,7 @@ impl Session {
         let mut session = Self::spawn(colors)?;
         session.input.write_all(&bytes)?;
         session.input.flush()?;
-        if session.read()?["ready"].as_bool() != Some(true) || !session.stderr()?.is_empty() {
+        if session.read()?["ready"].as_bool() != Some(true) || session.has_stderr()? {
             return Err(invalid("linter external tool preparation"));
         }
         Ok(session)
@@ -62,7 +62,7 @@ impl Session {
         self.input.write_all(b"true\n")?;
         self.input.flush()?;
         let value = self.read()?;
-        if !self.child.wait()?.success() || !self.stderr()?.is_empty() {
+        if !self.child.wait()?.success() || self.has_stderr()? {
             return Err(invalid("linter external tool failed"));
         }
         Ok(value)
@@ -80,14 +80,14 @@ impl Session {
         serde_json::from_slice(&bytes).map_err(|_| invalid("linter tool response json"))
     }
 
-    fn stderr(&mut self) -> io::Result<Vec<u8>> {
+    fn has_stderr(&mut self) -> io::Result<bool> {
+        if self.errors.seek(SeekFrom::End(0))? == 0 {
+            return Ok(false);
+        }
         self.errors.seek(SeekFrom::Start(0))?;
         let mut bytes = Vec::new();
         Read::by_ref(&mut self.errors).take(LIMIT).read_to_end(&mut bytes)?;
-        if bytes.iter().all(u8::is_ascii_whitespace) {
-            bytes.clear();
-        }
-        Ok(bytes)
+        Ok(!bytes.iter().all(u8::is_ascii_whitespace))
     }
 }
 

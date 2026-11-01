@@ -148,19 +148,23 @@ fn finish(
         Err(error) => return Ok(Outcome::Declined(format!("lane history: {error}"))),
     };
     let json_output =
-        options.json.then(|| json_rows(&selected, options.id.is_some())).transpose()?;
-    let report =
-        if options.json { None } else { Some(text_rows(&selected, options.id.is_some())?) };
+        if options.json { Some(json_rows(&selected, options.id.is_some())?) } else { None };
+    let text_output = if let Some(json) = &json_output {
+        let _ = json;
+        String::new()
+    } else {
+        text_rows(&selected, options.id.is_some())?
+    };
     apply_refresh(engine, prepared)?;
     if let Some(session) = session {
         io::stdout()
             .lock()
             .write_all(session.output().as_bytes())?;
     }
-    if options.json {
-        return emit_json(root, bare, args, json_output.as_ref().ok_or_else(invalid)?);
+    if let Some(json) = &json_output {
+        return emit_json(root, bare, args, json);
     }
-    let report = Report { data: report.ok_or_else(invalid)?, code: 0, details: None };
+    let report = Report { data: text_output, code: 0, details: None };
     if bare {
         workspace_command::execute_with_scope(root, args, "history", &report)
     } else {

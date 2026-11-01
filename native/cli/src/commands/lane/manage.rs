@@ -173,7 +173,8 @@ pub(super) fn remove_comp(args: &[OsString], lane_args: &[&str]) -> io::Result<O
 fn valid_remove_comp_args(args: &[&str]) -> bool {
     let mut pattern_count = 0usize;
     let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
+    while let Some(raw_arg) = iter.next() {
+        let arg = raw_arg.trim();
         match arg {
             "--" => return count_trailing_patterns(iter, &mut pattern_count) && pattern_count == 1,
             "--no-color"
@@ -194,6 +195,7 @@ fn valid_remove_comp_args(args: &[&str]) -> bool {
 
 fn count_trailing_patterns<'a>(iter: impl Iterator<Item = &'a str>, count: &mut usize) -> bool {
     for rest in iter {
+        let rest = rest.trim();
         if rest.is_empty() || rest.starts_with('-') {
             return false;
         }
@@ -275,7 +277,8 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
     let mut all = false;
     let mut lane_id = None;
     let mut iter = lane_args.iter().copied();
-    while let Some(arg) = iter.next() {
+    while let Some(raw_arg) = iter.next() {
+        let arg = raw_arg.trim();
         match arg {
             "--" => {
                 for val in iter {
@@ -288,8 +291,8 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-a" | "--all" | "--all=true" => all = true,
             "--all=false" => all = false,
-            val if !val.trim().starts_with('-') && !val.trim().is_empty() && lane_id.is_none() => {
-                lane_id = Some(val.trim());
+            val if !val.starts_with('-') && !val.is_empty() && lane_id.is_none() => {
+                lane_id = Some(val);
             }
             _ => return None,
         }

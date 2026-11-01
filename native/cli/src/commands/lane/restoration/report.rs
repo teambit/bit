@@ -73,7 +73,7 @@ const RESULT_FIELDS: [&str; 14] = [
 ];
 
 fn project(result: &Value, id: &str, chalk: Chalk) -> io::Result<Value> {
-    let mut projected = serde_json::Map::new();
+    let mut projected = serde_json::Map::with_capacity(RESULT_FIELDS.len() + 3);
     for name in RESULT_FIELDS {
         if let Some(value) = result.get(name) {
             projected.insert(name.into(), value.clone());
@@ -124,18 +124,13 @@ pub(super) fn merge(first: &mut Value, second: &Value) -> io::Result<()> {
     let obj =
         first.as_object_mut().ok_or_else(|| io::Error::other("lane history checkout result"))?;
     for key in ["components", "addedComponents"] {
-        let mut rows = obj
-            .get(key)
-            .and_then(Value::as_array)
-            .cloned()
-            .unwrap_or_default();
-        rows.extend(
-            second
-                .get(key)
-                .and_then(Value::as_array)
-                .cloned()
-                .unwrap_or_default(),
-        );
+        let mut rows = match obj.remove(key) {
+            Some(Value::Array(rows)) => rows,
+            _ => Vec::new(),
+        };
+        if let Some(extra) = second.get(key).and_then(Value::as_array) {
+            rows.extend_from_slice(extra);
+        }
         obj.insert(key.into(), Value::Array(rows));
     }
     Ok(())

@@ -4,16 +4,15 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 
 pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
     let format = Formatter::new(chalk);
-    let selected = lanes
+    let items = lanes
         .iter()
-        .filter(|lane| {
+        .filter_map(|lane| {
             let name = lane_name(&lane.id);
-            !name.is_empty()
+            let matches = !name.is_empty()
                 && name != "main"
-                && (lane.is_merged == Some(merged) || !merged && lane.is_merged.is_none())
-        });
-    let items = selected
-        .map(|lane| format.item(lane_name(&lane.id)))
+                && (lane.is_merged == Some(merged) || !merged && lane.is_merged.is_none());
+            matches.then(|| format.item(name))
+        })
         .collect::<Vec<_>>();
     if items.is_empty() {
         return format.hint(if merged {

@@ -213,7 +213,7 @@ fn emit_json(
     });
     // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
     let mut stdout = io::stdout().lock();
-    stdout.write_all(serde_json::to_string_pretty(&data)?.as_bytes())?;
+    serde_json::to_writer_pretty(&mut stdout, &data)?;
     stdout.flush()?;
     if let Some(history) = history {
         history.end(true);
@@ -374,7 +374,7 @@ fn main_components(
 ) -> io::Result<Vec<Value>> {
     let listed: Value = engine.request(&json!({"kind": "scopeList", "root": root}))?;
     let models = array(listed.get("components"), "models")?;
-    let mut components = Vec::new();
+    let mut components = Vec::with_capacity(entries.len());
     for entry in entries {
         let identity = entry.identity.trim();
         if entry.version.is_none() {

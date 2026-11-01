@@ -9,7 +9,7 @@ pub(super) fn hash(value: &Value) -> io::Result<String> {
     if !value.is_object() {
         return Err(super::invalid("linter configuration root"));
     }
-    let mut bytes = String::new();
+    let mut bytes = String::with_capacity(1024);
     encode(value, &mut bytes, true)?;
     Ok(format!("{:x}", Sha1::digest(bytes.as_bytes())))
 }
@@ -56,12 +56,11 @@ fn object(
         output.push_str(FUNCTION);
         output.push_str("object:0:,");
     } else {
-        string("[CIRCULAR:1]", output);
+        output.push_str("string:12:[CIRCULAR:1]");
     }
     output.push_str(",string:11:constructor:");
     output.push_str(FUNCTION);
-    string("[CIRCULAR:2]", output);
-    output.push(',');
+    output.push_str("string:12:[CIRCULAR:2],");
     let mut entries: Vec<_> = values.iter().collect();
     entries.sort_by(|(left, _), (right, _)| left.encode_utf16().cmp(right.encode_utf16()));
     for (key, val) in entries {

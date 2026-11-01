@@ -229,15 +229,12 @@ fn format_failures(failures: &[(String, String)], chalk: Chalk) -> String {
 }
 
 fn find_model<'a>(models: &'a [Value], identity: &str) -> Option<&'a Value> {
-    let identity = identity.trim();
+    let (scope, name) = identity.trim().split_once('/')?;
     models
         .iter()
         .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().map_or("", str::trim),
-                model["name"].as_str().map_or("", str::trim),
-            ) == identity
+            model["scope"].as_str().map(str::trim) == Some(scope)
+                && model["name"].as_str().map(str::trim) == Some(name)
         })
 }
 
