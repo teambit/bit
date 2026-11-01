@@ -2,6 +2,7 @@ use super::{Material, Retained, invalid};
 use serde_json::{Value, json};
 use std::{cmp::Ordering, io};
 
+#[inline]
 pub(in super::super) fn report(
     retained: &Retained,
     semver: &Value,

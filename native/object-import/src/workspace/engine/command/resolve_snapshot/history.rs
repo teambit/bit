@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::{io, path::Path};
 
 /// Populate pre-tag heads in existing `VersionHistory` objects during staging.
-/// The newly published semantic tag is absent from the canonical history here.
+/// The newly published semantic tag is absent from the canonical history at this stage.
 #[inline]
 pub(super) fn tag_histories(
     root: &Path,

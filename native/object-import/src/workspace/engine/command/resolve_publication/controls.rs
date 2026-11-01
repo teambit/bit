@@ -1,6 +1,7 @@
 //! Pending merge and configuration cleanup after native Version publication.
 use super::{HashSet, Path, PathBuf, Value, fs, io, proof};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Prepared {
     pending: PathBuf,
     bytes: Option<Vec<u8>>,

@@ -10,6 +10,7 @@ pub(super) struct Lane {
     _directory: scratch::Directory,
     pub(super) id: String,
 }
+#[inline]
 pub(super) fn prepare(
     root: &Path,
     current: &Value,

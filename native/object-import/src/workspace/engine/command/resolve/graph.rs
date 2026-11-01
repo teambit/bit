@@ -19,6 +19,7 @@ pub(super) fn rebuild(materials: &mut [Material], repository: &mut Repository) -
     project_with_saved(materials, repository, false)
 }
 
+#[inline]
 fn project_with_saved(
     materials: &mut [Material],
     repository: &mut Repository,

@@ -36,6 +36,7 @@ struct Mutations {
     permissions: Vec<(PathBuf, std::fs::Permissions)>,
     staged_bytes: Vec<Option<Vec<u8>>>,
 }
+#[inline]
 pub(super) fn prepare(
     root: &Path,
     operation: Operation,

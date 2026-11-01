@@ -70,6 +70,7 @@ fn validate_projection(material: &Material, ordinary_snapshot: bool) -> io::Resu
     if ordinary_snapshot { Ok(()) } else { snapshot::validate_application_files(&material.files) }
 }
 
+#[inline]
 fn validate_graph(root: &Path, material: &Material) -> io::Result<()> {
     if material.version.get("flattenedEdges").is_some() {
         return Ok(());

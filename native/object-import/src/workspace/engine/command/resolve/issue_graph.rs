@@ -47,6 +47,7 @@ pub(super) fn capture(
     external(seeds, &workspace, &saved, repository)
 }
 
+#[inline]
 fn dependencies(components: &[Component]) -> io::Result<Vec<String>> {
     let mut output = Vec::new();
     for component in components {

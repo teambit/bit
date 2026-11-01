@@ -28,6 +28,7 @@ pub(super) fn lane_objects(
     Ok(())
 }
 
+#[inline]
 fn apply_allocations(value: &mut Value, materials: &[Material], receipt: &Value) -> io::Result<()> {
     let allocations =
         receipt["versions"].as_array().ok_or_else(|| invalid("resolve lane versions"))?;

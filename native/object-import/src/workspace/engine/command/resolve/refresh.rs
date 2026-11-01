@@ -69,6 +69,7 @@ fn pending(retained: &Retained, token: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(super) fn apply(
     input: Refresh,
     snapshots: &mut snapshots::State,

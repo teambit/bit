@@ -23,13 +23,13 @@ pub(in crate::workspace::engine) struct Prepare {
     #[serde(default)]
     dependency_grammar: Value,
 }
-#[derive(Clone, Copy, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 enum Operation {
     ComponentAbort,
     LaneAbort,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Options {
     #[serde(default)]

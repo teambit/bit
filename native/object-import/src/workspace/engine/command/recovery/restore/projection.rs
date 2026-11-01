@@ -1,6 +1,7 @@
 use super::{Prepared, invalid, proof};
 use std::{collections::BTreeMap, io, path::PathBuf};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(in super::super) struct Controls {
     expected: BTreeMap<PathBuf, Option<Vec<u8>>>,
     backup: PathBuf,

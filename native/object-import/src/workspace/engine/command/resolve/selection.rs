@@ -37,6 +37,7 @@ pub(super) fn select(
     Ok(selected)
 }
 
+#[inline]
 fn pending_identities(pending: &[Value]) -> io::Result<Vec<String>> {
     let mut unresolved = Vec::with_capacity(pending.len());
     let mut seen = HashSet::with_capacity(pending.len());

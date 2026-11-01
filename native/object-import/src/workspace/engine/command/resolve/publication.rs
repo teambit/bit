@@ -60,6 +60,7 @@ pub(super) fn finalize(
     Ok(output)
 }
 
+#[inline]
 fn finalize_soft(retained: &mut Retained, receipt: &Value) -> io::Result<Value> {
     let versions = retained.materials
         .iter()

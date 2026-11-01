@@ -1,6 +1,7 @@
 use super::{invalid, proof};
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn capture(
     root: &Path,
     destination: &Path,

@@ -11,6 +11,7 @@ use super::super::{invalid, resolve_snapshot::Material};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
+#[inline]
 pub(super) fn plan(
     materials: &mut [Material],
     params: &Value,

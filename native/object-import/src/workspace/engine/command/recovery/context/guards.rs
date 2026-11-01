@@ -1,4 +1,5 @@
 use super::{Value, invalid, io};
+#[inline]
 pub(super) fn extensions(context: &Value) -> io::Result<()> {
     for version in context["versions"].as_array().ok_or_else(|| invalid("recovery versions"))? {
         let Some(rows) = version[1]["extensions"].as_array() else { continue };

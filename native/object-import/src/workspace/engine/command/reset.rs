@@ -71,6 +71,7 @@ pub(super) fn validate_after_restore(record: &Record, prepared: &PreparedPlan) -
     validate_inputs(record, prepared)
 }
 
+#[inline]
 fn validate_inputs(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     if prepared.plan.merge.is_some()
         || prepared.snap_bitmap.is_some()

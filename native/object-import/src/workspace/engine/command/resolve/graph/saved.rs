@@ -4,6 +4,7 @@ use std::{collections::HashMap, io};
 
 pub(super) type Graph = HashMap<String, Vec<Value>>;
 
+#[inline]
 pub(super) fn capture(materials: &[Material], repository: &mut Repository) -> io::Result<Graph> {
     let mut graph = Graph::new();
     for material in materials

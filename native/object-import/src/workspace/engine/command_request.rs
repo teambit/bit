@@ -4,6 +4,7 @@ use crate::workspace::snapshots;
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(super) fn dispatch(
     request: Request,
     snapshots: &mut snapshots::State,

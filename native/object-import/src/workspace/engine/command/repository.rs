@@ -114,7 +114,7 @@ impl Repository {
         self.short_refs.insert(prefix, refs);
         Ok(resolved)
     }
-
+    #[inline]
     fn matching_short(&self, prefix: &str) -> io::Result<Vec<String>> {
         let overlay = self.imported
             .as_ref()

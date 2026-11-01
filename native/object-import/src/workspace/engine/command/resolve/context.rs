@@ -10,7 +10,7 @@ use crate::{
 };
 use serde_json::{Value, json};
 use std::io;
-
+#[inline]
 pub(super) fn prepare(
     request: &Prepare,
     state: &mut State,

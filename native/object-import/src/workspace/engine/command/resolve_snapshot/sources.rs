@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
+#[inline]
 pub(super) fn sources(
     version: &mut Value,
     material: &Material,

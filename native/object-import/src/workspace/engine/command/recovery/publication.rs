@@ -59,6 +59,7 @@ fn accept_restored_objects(retained: &mut super::Retained) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn restore_models(
     record: &mut super::super::Record,
     objects: &[(String, Vec<u8>)],

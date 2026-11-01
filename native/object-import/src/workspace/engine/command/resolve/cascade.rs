@@ -46,6 +46,7 @@ pub(super) fn reports(
         .collect()
 }
 
+#[inline]
 fn build_rows(
     ordered: &[&Value],
     components: &[super::projection::Component],

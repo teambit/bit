@@ -3,6 +3,7 @@ use super::{Record, invalid};
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};
 
+#[inline]
 pub(super) fn document(
     record: &Record,
     target: &Value,

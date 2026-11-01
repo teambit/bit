@@ -49,6 +49,7 @@ pub(super) fn resolve(
     explicit(selection, to, repository)
 }
 
+#[inline]
 fn target_version(options: &Options, selection: &Selection<'_>) -> io::Result<Option<String>> {
     let identity = selection.target["identity"]
         .as_str()
@@ -68,6 +69,7 @@ fn target_version(options: &Options, selection: &Selection<'_>) -> io::Result<Op
         .map(str::to_owned))
 }
 
+#[inline]
 fn explicit(
     selection: &Selection<'_>,
     to: &str,

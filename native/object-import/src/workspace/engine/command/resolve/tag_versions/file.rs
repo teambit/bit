@@ -33,6 +33,7 @@ pub(super) fn tag_data(file: Option<&Value>, identity: &str) -> io::Result<Value
     Ok(json!({"versionToTag":version,"prereleaseId":prerelease}))
 }
 
+#[inline]
 pub(super) fn semver(file: Option<&Value>, base: &Value) -> io::Result<Value> {
     let base = base.as_object().ok_or_else(|| invalid("tag semantic grammar"))?;
     let values = file.and_then(|file| file["semver"].as_object());

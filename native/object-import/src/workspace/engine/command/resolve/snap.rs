@@ -62,6 +62,7 @@ pub(super) fn candidates(
     Ok(candidates)
 }
 
+#[inline]
 fn append_pending(
     retained: &Retained,
     captured: &[capture::Captured],

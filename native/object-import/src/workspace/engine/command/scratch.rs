@@ -4,6 +4,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
+#[derive(Debug, PartialEq, Eq)]
 pub(super) struct Directory(pub(super) PathBuf);
 impl Directory {
     pub(super) fn create() -> io::Result<Self> {

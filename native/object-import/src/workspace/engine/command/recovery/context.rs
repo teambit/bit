@@ -74,6 +74,7 @@ fn capture_targets(
     Ok((targets, pending))
 }
 
+#[inline]
 fn validate(request: &Prepare) -> io::Result<()> {
     for path in [&request.root, &request.home, &request.global_remotes_file] {
         crate::workspace::engine::path(path)?;

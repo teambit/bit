@@ -6,6 +6,7 @@ use std::{
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
+#[inline]
 pub(super) fn validate(path: &Path) -> io::Result<()> {
     let meta = fs::symlink_metadata(path)?;
     if meta.file_type().is_symlink() || !meta.is_file() || has_non_selinux_xattr(path)? {

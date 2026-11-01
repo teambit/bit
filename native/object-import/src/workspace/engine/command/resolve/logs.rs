@@ -54,6 +54,7 @@ fn row_identity(row: &Value) -> Option<&str> {
         .filter(|base| !base.is_empty())
 }
 
+#[inline]
 fn editor<'a>(receipt: &'a Value, identity: &str) -> &'a Value {
     receipt["messages"]
         .as_array()

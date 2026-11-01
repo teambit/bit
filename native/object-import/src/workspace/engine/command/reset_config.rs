@@ -16,6 +16,7 @@ pub(super) struct Prepared {
     writes: Vec<(PathBuf, Vec<u8>)>,
 }
 
+#[inline]
 pub(super) fn validate_target(target: &Value) -> io::Result<()> {
     if let Some(bitmap) = target.get("bitmapConfig") {
         let rows = bitmap.as_object().ok_or_else(|| invalid("reset bitmap configuration"))?;

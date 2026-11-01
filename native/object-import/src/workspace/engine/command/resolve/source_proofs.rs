@@ -55,6 +55,7 @@ fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof
     Ok(proof::content(path, bytes))
 }
 
+#[inline]
 pub(super) fn owned_paths(
     root: &Path,
     current: &[Value],

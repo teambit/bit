@@ -13,6 +13,7 @@ pub(super) struct Context<'a> {
     pub ordinary_snapshot: bool,
 }
 
+#[inline]
 pub(super) fn prepare(
     context: &Context<'_>,
     material: &Material,

@@ -49,6 +49,7 @@ pub(super) fn append(
     Ok(reports)
 }
 
+#[inline]
 fn candidates(
     retained: &mut Retained,
     entries: Vec<crate::command_import::lane::Entry>,

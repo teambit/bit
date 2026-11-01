@@ -8,7 +8,6 @@ use super::{
 use crate::workspace::{engine::status_models::versions, snapshots};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
-
 pub(super) fn prepare(
     retained: &mut Retained,
     input: Plan,
@@ -104,6 +103,7 @@ fn report(
     super::root::report(retained, materials, &mut result);
     Ok(result)
 }
+#[inline]
 fn retain_proofs(retained: &mut Retained, proofs: Vec<super::proof::Proof>) -> io::Result<()> {
     retained.record.proofs.extend(proofs);
     retained.record.repository.validate()?;
@@ -264,7 +264,6 @@ pub(super) fn validate_current(
     }
     Ok(())
 }
-
 pub(super) fn material(
     retained: &mut Retained,
     identity: &str,
@@ -305,7 +304,6 @@ pub(super) fn material(
         participation,
     })
 }
-
 fn ensure_attached_or_unrelated(
     retained: &Retained,
     identity: &str,

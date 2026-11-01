@@ -7,6 +7,7 @@ use super::{super::invalid, input::Options, repository::Repository};
 use serde_json::{Value, json};
 use std::io;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Selection<'a> {
     pub(super) target: &'a Value,
     pub(super) model: Option<&'a Value>,

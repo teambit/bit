@@ -64,12 +64,13 @@ pub(super) fn pinned_dependencies(version: &Value) -> HashSet<String> {
 }
 
 /// The previous object ref and the semantic alias planned for its successor.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct VersionState {
     pub current_head: String,
     pub tagged_version: Option<String>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Participation {
     pub selected: bool,
     pub automatic: bool,

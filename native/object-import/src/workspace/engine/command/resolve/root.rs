@@ -68,6 +68,7 @@ fn target(context: &Value) -> Option<&Value> {
         })
 }
 
+#[inline]
 pub(super) fn provenance(retained: &Retained, materials: &mut [Material]) -> io::Result<()> {
     let root = target(&retained.record.context);
     let identity = root

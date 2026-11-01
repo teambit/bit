@@ -22,6 +22,7 @@ pub(super) fn rewrite_batch_refs(
     Ok(())
 }
 
+#[inline]
 fn update_object(
     fields: &mut Map<String, Value>,
     hashes: &HashMap<&str, &str>,

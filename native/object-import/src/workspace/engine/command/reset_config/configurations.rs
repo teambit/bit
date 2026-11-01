@@ -57,6 +57,7 @@ fn validate_single(
     Ok(())
 }
 
+#[inline]
 fn validate_policy(value: &Value) -> io::Result<()> {
     let policy = value.as_object().ok_or_else(|| invalid("reset dependency policy"))?;
     for (lifecycle, dependencies) in policy {

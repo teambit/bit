@@ -8,6 +8,7 @@ use std::io;
 /// Issue callbacks inspect optional model/current-lane heads even when ordinary
 /// snap metadata only needs the checked-out Version. Missing objects are a
 /// proven absence, not permission to omit an existing issue-bearing Version.
+#[inline]
 pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Result<Value> {
     let models = context["models"].as_array().ok_or_else(|| invalid("resolve issue models"))?;
     let mut output = Vec::with_capacity(models.len());

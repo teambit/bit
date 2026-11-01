@@ -43,7 +43,7 @@ pub(in crate::workspace::engine) struct Prepare {
     #[serde(default)]
     dependency_grammar: Value,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Options {
     #[serde(default)]
@@ -62,7 +62,7 @@ struct Options {
     policy: Policy,
 }
 
-#[derive(Default, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Policy {
     #[serde(rename = "ignoreIssues")]

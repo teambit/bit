@@ -13,6 +13,7 @@ pub(super) fn matching(
     matching_for_separator(directory, prefix, overlay, std::path::MAIN_SEPARATOR)
 }
 
+#[inline]
 fn matching_for_separator(
     directory: &Path,
     prefix: &str,

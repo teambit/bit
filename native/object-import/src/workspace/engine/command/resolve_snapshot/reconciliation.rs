@@ -60,6 +60,7 @@ fn unrelated(
     Ok(())
 }
 
+#[inline]
 fn squash(
     version: &mut Value,
     pending: &Value,
