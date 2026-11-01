@@ -8,6 +8,7 @@ use std::collections::HashSet;
 const IMPORTER_DEP_TYPES: [&str; 3] = ["dependencies", "devDependencies", "optionalDependencies"];
 const SNAPSHOT_DEP_TYPES: [&str; 2] = ["dependencies", "optionalDependencies"];
 
+#[inline]
 fn object_mut<'a>(
     lockfile: &'a mut Map<String, Value>,
     key: &str,
@@ -15,6 +16,7 @@ fn object_mut<'a>(
     lockfile.get_mut(key).and_then(Value::as_object_mut)
 }
 
+#[inline]
 fn entries(value: Option<&Value>) -> impl Iterator<Item = (&String, &Value)> {
     value
         .and_then(Value::as_object)
@@ -23,6 +25,7 @@ fn entries(value: Option<&Value>) -> impl Iterator<Item = (&String, &Value)> {
 }
 
 /// An importer dependency's version: `{ version }`, or a bare string.
+#[inline]
 fn importer_version(dep: &Value) -> Option<&str> {
     dep.as_str()
         .or_else(|| dep.get("version").and_then(Value::as_str))
@@ -30,12 +33,14 @@ fn importer_version(dep: &Value) -> Option<&str> {
         .filter(|version| !version.is_empty())
 }
 
+#[inline]
 fn is_local(version: &str) -> bool {
     let trimmed = version.trim();
     trimmed.starts_with("link:") || trimmed.starts_with("file:")
 }
 
 /// `name@version` of every non-local dependency in `deps`.
+#[inline]
 fn dep_paths(
     deps: Option<&Value>,
     version_of: fn(&Value) -> Option<&str>,
@@ -106,6 +111,7 @@ pub(super) fn drop_unreachable(lockfile: &mut Map<String, Value>, strip: fn(&str
 }
 
 /// Whether `name@version` is an instance of one of `pkg_ids`.
+#[inline]
 fn refers_to(pkg_ids: &HashSet<String>, name: &str, version: Option<&str>) -> bool {
     let name = name.trim();
     !name.is_empty()
@@ -137,6 +143,7 @@ pub(super) fn scrub(lockfile: &mut Map<String, Value>, pkg_ids: &HashSet<String>
 }
 
 /// Drop the importer's references to `pkg_ids`; linked and injected entries stay.
+#[inline]
 fn scrub_importer(importer: &mut Value, pkg_ids: &HashSet<String>) {
     for dep_type in IMPORTER_DEP_TYPES {
         if let Some(Value::Object(deps)) = importer.get_mut(dep_type) {
@@ -146,6 +153,7 @@ fn scrub_importer(importer: &mut Value, pkg_ids: &HashSet<String>) {
 }
 
 /// Drop the snapshot's references to `pkg_ids`, and dependency groups left empty.
+#[inline]
 fn scrub_snapshot(snapshot: &mut Map<String, Value>, pkg_ids: &HashSet<String>) {
     for dep_type in SNAPSHOT_DEP_TYPES {
         let Some(Value::Object(deps)) = snapshot.get_mut(dep_type) else { continue };
@@ -271,6 +279,7 @@ fn merge_bit(existing: Option<&Value>, graph: Option<&Value>) -> Option<Value> {
 }
 
 /// Everything before the first `(` (`removePeerSuffix` in `pnpm.package-manager.ts`).
+#[inline]
 fn remove_peer_suffix(dep_path: &str) -> &str {
     let trimmed = dep_path.trim();
     trimmed.split_once('(').map_or(trimmed, |(prefix, _)| prefix)

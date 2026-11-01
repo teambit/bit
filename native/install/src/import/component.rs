@@ -48,6 +48,7 @@ pub fn merge_component(
 }
 
 /// `ModelComponent.getLocalVersions()`: tags marked `local` in `state.versions`.
+#[inline]
 fn local_versions(component: &Value) -> Vec<String> {
     component["state"]["versions"]
         .as_object()
@@ -60,6 +61,7 @@ fn local_versions(component: &Value) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn tags(versions: &Value) -> Vec<[String; 2]> {
     versions
         .as_object()
@@ -73,6 +75,7 @@ fn tags(versions: &Value) -> Vec<[String; 2]> {
         .collect()
 }
 
+#[inline]
 fn detached(component: &Value, key: &str) -> Vec<String> {
     component["detachedHeads"][key]
         .as_array()
@@ -175,6 +178,7 @@ impl Fields {
         Value::Object(object)
     }
 
+    #[inline]
     fn copy(&self, object: &mut Map<String, Value>, key: &str) {
         if let Some(value) = self.rest
             .get(key)
@@ -185,6 +189,7 @@ impl Fields {
     }
 
     /// `local` when true and a non-empty `state`.
+    #[inline]
     fn insert_local_state(&self, object: &mut Map<String, Value>) {
         if self.rest
             .get("local")
@@ -277,6 +282,7 @@ fn merged_heads(existing: &Value, incoming: &Value, plan: &Value) -> Value {
 }
 
 /// `Version.lastModified()`.
+#[inline]
 fn last_modified(version: &Value) -> Option<&str> {
     version["modified"]
         .as_array()
@@ -294,6 +300,7 @@ fn last_modified(version: &Value) -> Option<&str> {
 
 /// `mergeVersionObject`: keep the existing Version when it was modified later.
 #[must_use]
+#[inline]
 pub fn keep_existing_version(existing: &Value, incoming: &Value) -> bool {
     matches!((last_modified(existing), last_modified(incoming)), (Some(old), Some(new)) if old > new)
 }

@@ -16,12 +16,12 @@ use std::{collections::HashSet, io};
 
 /// The variable is set to anything but the empty string (`process.env` truthiness).
 #[must_use]
+#[inline]
 pub fn refetch_requested() -> bool {
     std::env::var_os("BIT_FETCH_INCOMPLETE_VERSION_HISTORY")
         .is_some_and(|value| {
-            let text = value.to_string_lossy();
-            let trimmed = text.trim();
-            !matches!(trimmed, "" | "0") && !trimmed.eq_ignore_ascii_case("false")
+            let trimmed = value.as_encoded_bytes().trim_ascii();
+            !matches!(trimmed, b"" | b"0") && !trimmed.eq_ignore_ascii_case(b"false")
         })
 }
 
@@ -74,6 +74,7 @@ pub enum Completeness {
 
 /// `VersionHistory.isGraphCompleteSince`: `getAllHashesFrom(ref)` finds no missing parent.
 #[must_use]
+#[inline]
 pub fn check(history: &Value, reference: &str) -> Completeness {
     let reference = reference.trim();
     let recorded = history["graphCompleteRefs"]
@@ -174,12 +175,14 @@ fn to_object(version: &Value) -> Value {
     Value::Object(object)
 }
 
+#[inline]
 fn versions(history: &Value) -> &[Value] {
     history["versions"]
         .as_array()
         .map_or(&[], Vec::as_slice)
 }
 
+#[inline]
 fn parent_hashes(value: &Value) -> impl Iterator<Item = &str> {
     value
         .as_array()

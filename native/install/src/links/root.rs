@@ -196,6 +196,7 @@ fn ensure_nested_package_dirs(root: &Path, components: &[WorkspaceComponent]) ->
 }
 
 /// Component ids without versions, as `linkCoreAspectsAndLegacy` compares them.
+#[inline]
 fn workspace_ids(components: &[WorkspaceComponent]) -> Vec<String> {
     components
         .iter()
@@ -219,6 +220,7 @@ fn is_authored(aspect: &CoreAspect, ids: &[String]) -> bool {
 }
 
 /// `getCoreAspectName`: `teambit.harmony/envs/core-aspect-env` → `envs.core-aspect-env`.
+#[inline]
 fn core_aspect_name(id: &str) -> String {
     crate::policy::split_version(id.trim()).0
         .split_once('/')
@@ -226,10 +228,12 @@ fn core_aspect_name(id: &str) -> String {
 }
 
 /// `isBitRepoWorkspace`: the running bit lives inside the workspace (a plain string prefix).
+#[inline]
 fn is_bit_repo_workspace(root: &Path, info: &HostInfo) -> bool {
     info.bit_dir
-        .to_string_lossy()
-        .starts_with(&*root.to_string_lossy())
+        .as_os_str()
+        .as_encoded_bytes()
+        .starts_with(root.as_os_str().as_encoded_bytes())
 }
 
 /// `linkBitAspectIfNotExist`.
@@ -265,11 +269,13 @@ fn core_aspect_link(
     may_link_target(&target, has_local_installation).then(|| aspect.dir.clone())
 }
 
+#[inline]
 pub(super) fn bvm_or(info: &HostInfo, package: &CoreAspect) -> PathBuf {
     bvm_package(info, &package.package_name).unwrap_or_else(|| package.dir.clone())
 }
 
 /// `<bvm bit dir>/node_modules/<package>`.
+#[inline]
 fn bvm_package(info: &HostInfo, package: &str) -> Option<PathBuf> {
     info.bvm_dir
         .as_ref()
@@ -303,6 +309,7 @@ fn has_compiled_main(package_dir: &Path) -> bool {
 }
 
 /// Real path of `target` is strictly inside the real path of `dir`; `false` when either is missing.
+#[inline]
 fn is_inside(target: &Path, dir: &Path) -> bool {
     match (fs::canonicalize(target), fs::canonicalize(dir)) {
         (Ok(target), Ok(dir)) => target != dir && target.starts_with(dir),
@@ -312,6 +319,7 @@ fn is_inside(target: &Path, dir: &Path) -> bool {
 
 /// `removeCoreAspectBootstrapLink`: remove a bridge symlink resolving outside the workspace, or a
 /// dangling one.
+#[inline]
 fn remove_bootstrap_link(link_path: &Path, root: &Path) -> io::Result<()> {
     if !is_symlink(link_path) || is_inside(link_path, root) {
         return Ok(());
@@ -319,14 +327,17 @@ fn remove_bootstrap_link(link_path: &Path, root: &Path) -> io::Result<()> {
     remove_path(link_path)
 }
 
+#[inline]
 fn hoisted_store(root: &Path) -> PathBuf {
     root.join("node_modules").join(".pnpm")
 }
 
+#[inline]
 pub(super) fn link_value(path: &Path) -> String {
     format!("{LINK_PREFIX}{}", path.display())
 }
 
+#[inline]
 fn link_source(link: &str) -> io::Result<PathBuf> {
     link.trim()
         .strip_prefix(LINK_PREFIX)

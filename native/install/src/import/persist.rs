@@ -38,12 +38,12 @@ pub struct Progress<'a> {
 impl<'a> Progress<'a> {
     /// `None` when `CI` is set, as `showProgress` prints nothing there.
     #[must_use]
+    #[inline]
     pub fn new(output: &'a Output, message: &str) -> Option<Self> {
         if std::env::var_os("CI")
             .is_some_and(|value| {
-                let text = value.to_string_lossy();
-                let trimmed = text.trim();
-                !matches!(trimmed, "" | "0") && !trimmed.eq_ignore_ascii_case("false")
+                let trimmed = value.as_encoded_bytes().trim_ascii();
+                !matches!(trimmed, b"" | b"0") && !trimmed.eq_ignore_ascii_case(b"false")
             })
         {
             return None;
@@ -51,6 +51,7 @@ impl<'a> Progress<'a> {
         Some(Self { output, message: message.to_string(), added: Cell::new(0) })
     }
 
+    #[inline]
     fn added(&self) {
         let added = self.added.get() + 1;
         self.added.set(added);
@@ -194,6 +195,7 @@ fn merge_received(
     Ok((merged.unwrap_or_else(|| first.clone()), None))
 }
 
+#[inline]
 fn component_field<'a>(value: &'a Value, field: &str) -> &'a str {
     value[field]
         .as_str()

@@ -30,6 +30,7 @@ pub struct RemoteLane {
 impl RemoteLane {
     /// Visible lane components at their lane heads.
     #[must_use]
+    #[inline]
     pub fn components(&self) -> Vec<Id> {
         self.object["components"]
             .as_array()
@@ -49,6 +50,7 @@ impl RemoteLane {
 
     /// `toComponentIdsIncludeUpdateDependents()`.
     #[must_use]
+    #[inline]
     pub fn ids_with_update_dependents(&self) -> Vec<Id> {
         let mut ids = self.components();
         for dep in self.object["updateDependents"]
@@ -72,6 +74,7 @@ impl RemoteLane {
 
     /// Whether the lane lists the component (`groupByLanes`).
     #[must_use]
+    #[inline]
     pub fn contains(&self, id: &Id) -> bool {
         let (scope, name) = (id.scope.trim(), id.name.trim());
         ["components", "updateDependents"]
@@ -132,6 +135,7 @@ pub async fn fetch_remote_lane(
 }
 
 /// `RemoteLanes.syncWithLaneObject`: record the lane heads under `refs/remotes`.
+#[inline]
 pub fn sync_remote_refs(repo: &Repo, lane: &RemoteLane) -> io::Result<()> {
     let refs: Vec<RemoteRef> = lane
         .ids_with_update_dependents()

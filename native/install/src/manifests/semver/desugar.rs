@@ -7,6 +7,7 @@ use super::{
     re::{Token, replace_first, split_whitespace},
 };
 
+#[inline]
 fn is_x(id: Option<&str>) -> bool {
     id.is_none_or(|id| {
         let trimmed = id.trim();
@@ -15,6 +16,7 @@ fn is_x(id: Option<&str>) -> bool {
 }
 
 /// `+id + 1` for a numeric identifier.
+#[inline]
 fn next(id: Option<&str>) -> u64 {
     id.and_then(|id| id.trim().parse::<u64>().ok())
         .unwrap_or(0)
@@ -30,6 +32,7 @@ struct Parts<'a> {
 }
 
 impl<'a> Parts<'a> {
+    #[inline]
     fn new(groups: &[Option<&'a str>], offset: usize) -> Self {
         let group = |index: usize| {
             groups
@@ -46,6 +49,7 @@ impl<'a> Parts<'a> {
         }
     }
 
+    #[inline]
     fn lower(&self) -> String {
         let (major, minor, patch) =
             (self.major, self.minor.unwrap_or("0"), self.patch.unwrap_or("0"));

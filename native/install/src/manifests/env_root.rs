@@ -67,6 +67,7 @@ fn collect(input: &ManifestInput<'_>) -> IndexMap<String, PeerVersions> {
 }
 
 /// Envs whose required `version` the candidate satisfies.
+#[inline]
 fn satisfied_envs(
     candidate: &str,
     coerced: &str,
@@ -148,6 +149,7 @@ fn resolve_conflict(
     best
 }
 
+#[inline]
 fn hint(package: &str) -> String {
     format!(
         "\n💡 To resolve workspace peer version conflicts, pin a version in workspace.jsonc under \"teambit.dependencies/dependency-resolver\" > \"overrides\", e.g. \"overrides\": {{ \"{package}\": \"<version>\" }}\n",
@@ -155,6 +157,7 @@ fn hint(package: &str) -> String {
 }
 
 impl EnvRoot {
+    #[inline]
     fn add_root(&mut self, name: &str, version: &str, overrides: bool) {
         let (name, version) = (name.trim(), version.trim());
         if name.is_empty() || version.is_empty() {
@@ -166,6 +169,7 @@ impl EnvRoot {
         }
     }
 
+    #[inline]
     fn per_component(&mut self, name: &str, versions: &IndexMap<String, IndexSet<String>>) {
         let name = name.trim();
         if name.is_empty() {

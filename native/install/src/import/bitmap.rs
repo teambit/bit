@@ -17,12 +17,14 @@ pub struct Id {
 
 impl Id {
     #[must_use]
+    #[inline]
     pub fn without_version(&self) -> String {
         format!("{}/{}", self.scope.trim(), self.name.trim())
     }
 
     /// `scope/name@version`, as the fetch protocol expects.
     #[must_use]
+    #[inline]
     pub fn to_request(&self) -> String {
         match self.version
             .as_deref()
@@ -35,6 +37,7 @@ impl Id {
     }
 
     #[must_use]
+    #[inline]
     pub fn with_version(&self, version: Option<String>) -> Self {
         let version = version
             .map(|ver| ver.trim().to_string())
@@ -76,6 +79,7 @@ pub struct LaneId {
 
 impl LaneId {
     #[must_use]
+    #[inline]
     pub fn to_request(&self) -> String {
         format!("{}/{}", self.scope.trim(), self.name.trim())
     }

@@ -16,6 +16,7 @@ use crate::{
 use serde_json::Value;
 
 /// The `version` of a non-hidden dependency named `name` (`findByPkgNameOrCompId`).
+#[inline]
 fn found_version(deps: &ComponentDependencies, name: &str) -> Option<String> {
     let name = name.trim();
     dependency_list(deps)
@@ -87,6 +88,7 @@ pub(super) fn used_env_peers(
 
 /// `getComponentExplicitPackages`: the names in the component's configured policy,
 /// without removals (`-` or `{ version: "-" }`).
+#[inline]
 fn explicit_packages(component: &WorkspaceComponent) -> Vec<String> {
     let Some(policy) = component.config
         .get(DEPENDENCY_RESOLVER_ASPECT)
@@ -100,6 +102,7 @@ fn explicit_packages(component: &WorkspaceComponent) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn section_packages(section: Option<&Value>) -> Vec<String> {
     match section {
         Some(Value::Object(entries)) => entries
@@ -124,6 +127,7 @@ fn section_packages(section: Option<&Value>) -> Vec<String> {
     }
 }
 
+#[inline]
 fn is_removal(spec: &Value) -> bool {
     [
         spec.as_str(),

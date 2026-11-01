@@ -93,6 +93,7 @@ impl Fetcher<'_> {
     }
 }
 
+#[inline]
 fn failed_scopes(failed: &[(&String, io::Error)]) -> io::Error {
     let names: Vec<&str> = failed
         .iter()

@@ -74,8 +74,7 @@ pub struct LinkResult {
 }
 
 /// Link every component except the workspace-root one (`rootDir: "."`) into `node_modules`.
-/// Components are linked one at a time; the host is asked for package.json props once per
-/// component whose manifest Bit generates.
+#[inline]
 pub async fn link_components(
     root: &Path,
     components: &[WorkspaceComponent],
@@ -86,6 +85,7 @@ pub async fn link_components(
 }
 
 /// Track newly added components without inventing a legacy `latest` version.
+#[inline]
 pub async fn link_tracking_components(
     root: &Path,
     components: &[WorkspaceComponent],
@@ -216,7 +216,7 @@ fn plan_file_links(
     package_dir: &Path,
 ) -> (Vec<FileLink>, Vec<FileLink>) {
     let component_dir = root.join(&component.root_dir);
-    let (mut new_links, mut existing) = (Vec::new(), Vec::new());
+    let (mut new_links, mut existing) = (Vec::with_capacity(component.files.len()), Vec::new());
     for file in &component.files {
         let from = component_dir.join(file);
         let to = package_dir.join(file);
@@ -296,6 +296,7 @@ fn merge_props(env: Option<&Value>, component: &WorkspaceComponent) -> Value {
 }
 
 /// An env id matches with or without the version of the component's env.
+#[inline]
 fn env_matches(env: &str, component_env: &str) -> bool {
     let (env, component_env) = (env.trim(), component_env.trim());
     component_env == env
@@ -304,8 +305,7 @@ fn env_matches(env: &str, component_env: &str) -> bool {
             .is_some_and(|(id, _)| id.trim() == env)
 }
 
-/// `getInjectedDirs`: each injected copy of the package gets its `package.json` hard linked
-/// to the generated one.
+/// `getInjectedDirs`: each injected copy of the package gets its `package.json` hard linked.
 fn link_injected_package_json(
     root: &Path,
     component: &WorkspaceComponent,
@@ -329,6 +329,7 @@ fn link_injected_package_json(
     Ok(())
 }
 
+#[inline]
 fn read_injected_deps(root: &Path) -> io::Result<InjectedDeps> {
     let modules_dir = root.join("node_modules");
     let manifest =
@@ -337,8 +338,7 @@ fn read_injected_deps(root: &Path) -> io::Result<InjectedDeps> {
     Ok(manifest.and_then(|manifest| manifest.injected_deps).unwrap_or_default())
 }
 
-/// `linkPkgsToRootComponents`: hard link each package into `<root dir>/node_modules/<pkg>` of
-/// every root components dir, leaving the engine's symlinks alone.
+/// `linkPkgsToRootComponents`: hard link each package into `<root dir>/node_modules/<pkg>`.
 fn link_packages_to_root_components(
     root_components_dir: &Path,
     root: &Path,
@@ -373,6 +373,7 @@ fn root_component_modules_dirs(root_components_dir: &Path) -> io::Result<Vec<Pat
     Ok(dirs)
 }
 
+#[inline]
 fn valid_root_dir(root_dir: &str) -> bool {
     let trimmed = root_dir
         .trim()

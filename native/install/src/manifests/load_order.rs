@@ -33,6 +33,7 @@ pub(super) fn load_order(components: &[WorkspaceComponent]) -> Vec<&WorkspaceCom
 }
 
 /// The workspace envs of workspace components, in their layers.
+#[inline]
 fn env_components<'c>(
     components: &'c [WorkspaceComponent],
     envs: &[&str],
@@ -46,13 +47,15 @@ fn env_components<'c>(
 }
 
 /// Each component at its first place.
+#[inline]
 fn first_places(mut order: Vec<&WorkspaceComponent>) -> Vec<&WorkspaceComponent> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(order.len());
     order.retain(|component| seen.insert(full_id(component)));
     order
 }
 
 /// The env ids of `components`, versioned when the env is.
+#[inline]
 fn envs_of(components: &[WorkspaceComponent]) -> HashSet<&str> {
     components
         .iter()
@@ -111,6 +114,7 @@ fn extension_ids(components: &[&WorkspaceComponent]) -> Vec<String> {
     ids
 }
 
+#[inline]
 fn by_id<'c>(components: &'c [WorkspaceComponent], id: &str) -> Option<&'c WorkspaceComponent> {
     let id = id.trim();
     components
@@ -119,6 +123,7 @@ fn by_id<'c>(components: &'c [WorkspaceComponent], id: &str) -> Option<&'c Works
 }
 
 /// `id.toString()`: the id with its version, when it has one.
+#[inline]
 fn full_id(component: &WorkspaceComponent) -> String {
     let id = component.id.to_string_without_version();
     match component.id.version.as_deref().map(str::trim) {

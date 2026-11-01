@@ -1,5 +1,4 @@
-//! The `file://` remote: what a bare scope's `fetch` (`scope-api/lib/fetch.ts` with
-//! `ObjectsReadableGenerator`) returns, computed directly from its objects.
+//! The `file://` remote (`scope-api/lib/fetch.ts` with `ObjectsReadableGenerator`).
 
 use super::{
     bitmap::Id,
@@ -64,6 +63,7 @@ struct Selected {
 }
 
 impl Collector {
+    #[inline]
     fn push_raw(&mut self, hash: &str) -> io::Result<()> {
         if self.pushed.contains(hash) {
             return Ok(());
@@ -77,6 +77,7 @@ impl Collector {
     }
 
     /// `Repository.getScopeMetaObject()`.
+    #[inline]
     fn push_scope_meta(&mut self, name: &str) -> io::Result<()> {
         let hash = sha1_hex(name);
         let compressed = compress_json("ScopeMeta", &hash, &json!({ "name": name }))?;
@@ -201,6 +202,7 @@ impl Collector {
 
 /// `ModelComponent.getRef(version)`: a tag (also orphaned) or a snap hash.
 #[must_use]
+#[inline]
 pub fn resolve_version(component: &Value, version: &str) -> Option<String> {
     let version = version.trim();
     if matches!(version, "latest" | "head") {
@@ -264,6 +266,7 @@ fn version_refs(version: &Value) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn is_built(version: &Value) -> bool {
     matches!(version["buildStatus"].as_str(), Some("succeed" | "skipped"))
 }
@@ -348,6 +351,7 @@ fn matches_id_scope_name(id: &Value, expected_scope: Option<&str>, expected_name
         && id["name"].as_str().map(str::trim) == Some(expected_name)
 }
 
+#[inline]
 fn find_lane(repo: &Repo, lane: &str) -> io::Result<Option<Value>> {
     match lane_hash(repo, lane)? {
         Some(hash) => repo.read_json(&hash),
@@ -371,8 +375,8 @@ fn lane_head(lane: &Value, id: &Id) -> Option<Id> {
         .map(|head| id.with_version(Some(head.to_string())))
 }
 
-/// The id to serve for one requested id, and the version a `component-delta`
-/// fetch stops at (`returnNothingIfGivenVersionExists`).
+/// The id to serve and the version a `component-delta` fetch stops at (`returnNothingIfGivenVersionExists`).
+#[inline]
 fn requested_id(id: &Id, lane: Option<&Value>, options: &FetchOptions) -> (Id, Option<String>) {
     let delta = options.selection.return_nothing_if_given_version_exists;
     let stop_at = if delta { id.version.clone() } else { None };
@@ -382,6 +386,7 @@ fn requested_id(id: &Id, lane: Option<&Value>, options: &FetchOptions) -> (Id, O
 }
 
 /// The client already has the selected head.
+#[inline]
 fn reached_head(selected: &Selected, stop: &str) -> bool {
     resolve_version(&selected.component, stop).as_deref() == Some(selected.hash.as_str())
 }

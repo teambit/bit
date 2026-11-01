@@ -17,6 +17,7 @@ pub struct LaneComponent {
 }
 
 impl LaneComponent {
+    #[inline]
     fn same_id(&self, scope: &str, name: &str) -> bool {
         self.scope.trim() == scope.trim() && self.name.trim() == name.trim()
     }
@@ -132,10 +133,12 @@ impl LaneObject {
 
     /// `Lane.id()`: `scope/name`.
     #[must_use]
+    #[inline]
     pub fn id(&self) -> String {
         format!("{}/{}", self.scope.trim(), self.name.trim())
     }
 
+    #[inline]
     pub fn change_id(&mut self, scope: &str, name: &str) {
         let (scope, name) = (scope.trim(), name.trim());
         if self.scope != scope || self.name != name {
@@ -147,6 +150,7 @@ impl LaneObject {
 
     /// `Lane.getComponent`.
     #[must_use]
+    #[inline]
     pub fn component(&self, scope: &str, name: &str) -> Option<&LaneComponent> {
         self.components
             .iter()
@@ -217,12 +221,14 @@ impl LaneObject {
 
     /// `Lane.includeDeletedData()`: `schema >= 1.0.0`.
     #[must_use]
+    #[inline]
     pub fn includes_deleted_data(&self) -> bool {
         self.schema != OLD_LANE_SCHEMA
     }
 
     /// `Lane.toComponentIds()`: visible ids at their heads.
     #[must_use]
+    #[inline]
     pub fn component_ids(&self) -> Vec<Id> {
         self.components
             .iter()
@@ -259,6 +265,7 @@ impl LaneObject {
     }
 }
 
+#[inline]
 fn components(value: &Value) -> Vec<LaneComponent> {
     value
         .as_array()
@@ -320,11 +327,13 @@ fn parse_lane_component_str(raw: &str) -> Option<LaneComponent> {
     })
 }
 
+#[inline]
 fn present(value: &Value) -> Option<Value> {
     truthy(value).then(|| value.clone())
 }
 
 /// `pickBy(obj, (val) => !!val)`.
+#[inline]
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null | Value::Bool(false) => false,

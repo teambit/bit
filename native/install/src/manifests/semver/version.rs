@@ -47,6 +47,7 @@ impl SemVer {
     }
 
     /// `semver.version`: `M.m.p[-pre]`, without build metadata.
+    #[inline]
     pub(crate) fn format(&self) -> String {
         if self.prerelease.is_empty() {
             return format!("{}.{}.{}", self.major, self.minor, self.patch);
@@ -54,6 +55,7 @@ impl SemVer {
         format!("{}.{}.{}-{}", self.major, self.minor, self.patch, self.prerelease.join("."))
     }
 
+    #[inline]
     pub(crate) fn compare_main(&self, other: &Self) -> Ordering {
         (self.major, self.minor, self.patch).cmp(&(other.major, other.minor, other.patch))
     }
@@ -77,17 +79,20 @@ impl SemVer {
     }
 
     /// `semver.compare(a, b)`.
+    #[inline]
     pub(crate) fn compare(&self, other: &Self) -> Ordering {
         self.compare_main(other)
             .then_with(|| self.compare_pre(other))
     }
 }
 
+#[inline]
 fn is_numeric(id: &str) -> bool {
     !id.is_empty() && id.bytes().all(|byte| byte.is_ascii_digit())
 }
 
 /// `compareIdentifiers`: numeric identifiers sort before alphanumeric ones.
+#[inline]
 fn compare_identifiers(left: &str, right: &str) -> Ordering {
     match (is_numeric(left), is_numeric(right)) {
         (true, true) => {
@@ -102,16 +107,19 @@ fn compare_identifiers(left: &str, right: &str) -> Ordering {
     }
 }
 
+#[inline]
 pub(crate) fn invalid_version(version: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, format!("Invalid Version: {version}"))
 }
 
 /// `semver.gt(a, b)`: throws on an invalid version.
+#[inline]
 pub(crate) fn gt(left: &str, right: &str) -> io::Result<bool> {
     Ok(SemVer::parse(left.trim())?.compare(&SemVer::parse(right.trim())?) == Ordering::Greater)
 }
 
 /// `semver.coerce(version)?.version` (semver 7, left-to-right, no prereleases).
+#[inline]
 pub(crate) fn coerce(version: &str) -> Option<String> {
     let trimmed = version.trim();
     let found = re(Token::Coerce).find(trimmed)?;

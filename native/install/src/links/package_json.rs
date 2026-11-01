@@ -24,8 +24,8 @@ pub(super) struct PackageJsonContext<'a> {
     pub is_aspect: bool,
 }
 
-/// The manifest after `createFromComponent` and the dependency-resolver and pkg transformers,
-/// before an env's `modifyPackageJson`.
+/// The manifest after `createFromComponent` and the dependency-resolver and pkg transformers.
+#[inline]
 pub(super) fn transformed(
     component: &WorkspaceComponent,
     context: &PackageJsonContext<'_>,
@@ -39,6 +39,7 @@ pub(super) fn transformed(
 }
 
 /// `NodeModuleLinker.createPackageJson` after the transformers.
+#[inline]
 pub(super) fn finish(
     mut manifest: Manifest,
     component: &WorkspaceComponent,
@@ -122,6 +123,7 @@ fn serialized_id(component: &WorkspaceComponent) -> Value {
 }
 
 /// The legacy `packageDependencies` / `devPackageDependencies` / `peerPackageDependencies`.
+#[inline]
 fn packages_of(dependencies: Option<&ComponentDependencies>, lifecycle: Lifecycle) -> Value {
     let entries = dependencies.into_iter().flat_map(|deps| &deps.packages);
     let map: Map<String, Value> = entries
@@ -131,8 +133,7 @@ fn packages_of(dependencies: Option<&ComponentDependencies>, lifecycle: Lifecycl
     Value::Object(map)
 }
 
-/// The dependency-resolver transformer: `optionalDependencies`, `peerDependenciesMeta` and the
-/// `bit.peer` marker of components configured as peers.
+/// The dependency-resolver transformer: `optionalDependencies`, `peerDependenciesMeta`, and `bit.peer`.
 fn apply_dependency_resolver(
     manifest: &mut Manifest,
     component: &WorkspaceComponent,
@@ -217,6 +218,7 @@ fn replace_recursive(value: &mut Value, values: &Placeholders) {
 }
 
 /// `latest` becomes `0.0.1-new`, a snap becomes `0.0.0-<hash>`; an unset version is dropped.
+#[inline]
 fn normalize_version(manifest: &mut Manifest) {
     match manifest.get_mut("version") {
         Some(Value::String(version)) if version == "latest" => *version = "0.0.1-new".into(),
@@ -258,6 +260,7 @@ fn add_exports_types(manifest: &mut Manifest) {
 }
 
 /// `snapToSemver`: a hash version becomes `0.0.0-<hash>`.
+#[inline]
 pub(super) fn snap_to_semver(version: &str) -> String {
     let trimmed = version.trim();
     let is_hash =
@@ -266,6 +269,7 @@ pub(super) fn snap_to_semver(version: &str) -> String {
 }
 
 /// JavaScript truthiness of an optional JSON value.
+#[inline]
 fn truthy(value: Option<&Value>) -> bool {
     match value {
         None | Some(Value::Null) => false,
@@ -324,6 +328,7 @@ impl Placeholders {
     }
 
     /// Format the `{`/`}` at the start of `rest` and return what follows it.
+    #[inline]
     fn format_at<'a>(&self, rest: &'a str, output: &mut String) -> &'a str {
         let brace = &rest[..1];
         if rest[1..].starts_with(brace) {
@@ -338,8 +343,7 @@ impl Placeholders {
         &rest[1..]
     }
 
-    /// `string-format`'s lookup on `[values]`: `key!transformer` ignores the (unregistered)
-    /// transformer, an implicit or `0` key stringifies the values object, unknown keys are empty.
+    /// `string-format`'s lookup on `[values]`: `key!transformer` ignores the transformer.
     fn lookup(&self, field: &str) -> String {
         let key = match field.split_once('!') {
             Some((key, transformer)) if !transformer.is_empty() => key,
@@ -362,6 +366,7 @@ impl Placeholders {
 }
 
 /// `getMainFileWithoutExtension`.
+#[inline]
 fn main_without_extension(main_file: &str) -> String {
     if !main_file.ends_with('/')
         && let Some(ext) = Path::new(main_file).extension().and_then(|ext| ext.to_str())

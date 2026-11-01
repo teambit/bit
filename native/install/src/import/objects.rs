@@ -21,6 +21,7 @@ pub struct Parsed {
 }
 
 impl Parsed {
+    #[inline]
     pub fn json(&self) -> io::Result<Value> {
         serde_json::from_slice(&self.content)
             .or_else(|_| bit_object_import::parse_jsonc(&self.content))
@@ -55,11 +56,13 @@ pub fn compress(kind: &str, hash: &str, content: &[u8]) -> io::Result<Vec<u8>> {
 }
 
 /// Serialize a JSON object like `JSON.stringify` (compact) and compress it.
+#[inline]
 pub fn compress_json(kind: &str, hash: &str, value: &Value) -> io::Result<Vec<u8>> {
     compress(kind, hash, &serde_json::to_vec(value)?)
 }
 
 #[must_use]
+#[inline]
 pub fn sha1_hex(text: &str) -> String {
     Sha1::digest(text.as_bytes())
         .iter()
@@ -72,17 +75,20 @@ pub fn sha1_hex(text: &str) -> String {
 
 /// `sha1("scope/name")`, the Component object of a component id.
 #[must_use]
+#[inline]
 pub fn component_hash(scope: &str, name: &str) -> String {
     sha1_hex(&format!("{}/{}", scope.trim(), name.trim()))
 }
 
 /// `sha1("scope/name:VersionHistory")`.
 #[must_use]
+#[inline]
 pub fn version_history_hash(scope: &str, name: &str) -> String {
     sha1_hex(&format!("{}/{}:VersionHistory", scope.trim(), name.trim()))
 }
 
 #[must_use]
+#[inline]
 pub fn is_hash(text: &str) -> bool {
     let trimmed = text.trim();
     trimmed.len() == 40
@@ -99,15 +105,18 @@ pub struct Repo {
 
 impl Repo {
     #[must_use]
+    #[inline]
     pub fn new(root: &Path) -> Self {
         Self { root: root.to_path_buf() }
     }
 
     #[must_use]
+    #[inline]
     pub fn root(&self) -> &Path {
         &self.root
     }
 
+    #[inline]
     fn object_path(&self, hash: &str) -> io::Result<PathBuf> {
         let trimmed = hash.trim();
         if !is_hash(trimmed) {
@@ -120,6 +129,7 @@ impl Repo {
     }
 
     #[must_use]
+    #[inline]
     pub fn exists(&self, hash: &str) -> bool {
         self.object_path(hash).is_ok_and(|path| path.is_file())
     }
@@ -147,6 +157,7 @@ impl Repo {
     }
 
     /// Write compressed bytes atomically.
+    #[inline]
     pub fn write_raw(&self, hash: &str, compressed: &[u8]) -> io::Result<()> {
         write_atomic(&self.object_path(hash)?, compressed)
     }
@@ -260,6 +271,7 @@ impl RemoteRef {
         Some(Self { scope: scope.to_string(), name: name.to_string(), head: head.to_string() })
     }
 
+    #[inline]
     fn to_json(&self) -> Value {
         json!({ "id": { "scope": self.scope, "name": self.name }, "head": self.head })
     }
@@ -359,6 +371,7 @@ pub fn write_atomic(path: &Path, contents: &[u8]) -> io::Result<()> {
     result
 }
 
+#[inline]
 pub fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

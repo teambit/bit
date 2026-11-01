@@ -1,9 +1,11 @@
 //! Package manifest serialization and command-owned atomic publication errors.
 use super::{Manifest, is_symlink};
 use std::{fs, io, path::Path};
+#[inline]
 pub(super) fn package(path: &Path, manifest: &Manifest) -> io::Result<bool> {
     write(path, manifest, false)
 }
+#[inline]
 pub(super) fn tracking(path: &Path, manifest: &Manifest) -> io::Result<bool> {
     write(path, manifest, true)
 }
@@ -44,6 +46,7 @@ fn write(path: &Path, manifest: &Manifest, tracking: bool) -> io::Result<bool> {
     }
     Ok(changed)
 }
+#[inline]
 fn rename_error(from: &Path, to: &Path, error: io::Error) -> io::Error {
     // Node 22.22.0 libuv win/fs.c forwards MoveFileExW's error unchanged;
     // win/error.c translates ERROR_ACCESS_DENIED (5) to UV_EPERM.
@@ -65,6 +68,7 @@ fn rename_error(from: &Path, to: &Path, error: io::Error) -> io::Error {
         error
     }
 }
+#[inline]
 fn compact_json(text: &str) -> Option<String> {
     let trimmed = text.trim();
     (!trimmed.is_empty())

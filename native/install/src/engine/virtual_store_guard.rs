@@ -44,6 +44,7 @@ pub(super) fn assert_safe_transition(
 
 /// `parseRecordedVirtualStoreDir`: JSON `.modules.yaml`, or the block-YAML an
 /// older pnpm wrote.
+#[inline]
 pub(super) fn recorded_virtual_store_dir(modules_manifest: &str) -> Option<String> {
     if modules_manifest.trim_start().starts_with('{')
         && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(modules_manifest)
@@ -89,11 +90,13 @@ fn yaml_virtual_store_dir(line: &str) -> Option<String> {
     (!value.is_empty() && !value.contains(['"', '\''])).then(|| value.to_string())
 }
 
+#[inline]
 fn realpath(path: &Path) -> PathBuf {
     fs::canonicalize(path).unwrap_or_else(|_| super::hooks::normalize(path))
 }
 
 /// `SelfHostedVirtualStoreTransition`.
+#[inline]
 fn transition_message(workspace: &Path, enabling: bool) -> String {
     let direction = if enabling {
         "from the project-local virtual store to the global virtual store"

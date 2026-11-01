@@ -56,6 +56,7 @@ impl Session {
     }
 
     /// `Install::new` over this session.
+    #[inline]
     pub(super) fn install(
         &self,
         groups: Vec<DependencyGroup>,
@@ -73,6 +74,7 @@ impl Session {
 }
 
 /// The manifest of the project at `root`.
+#[inline]
 fn root_manifest(projects: &[Project], root: &Path) -> io::Result<PackageManifest> {
     if projects.is_empty() {
         return Err(io::Error::other(format!(
@@ -94,6 +96,7 @@ fn root_manifest(projects: &[Project], root: &Path) -> io::Result<PackageManifes
 }
 
 /// An engine importer of a project with its (transformed) manifest.
+#[inline]
 pub(super) fn engine_project(dir: &Path, manifest: Map<String, Value>) -> pnpm_workspace::Project {
     let normalized_dir = normalize(dir);
     pnpm_workspace::Project {

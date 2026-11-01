@@ -6,6 +6,7 @@ use regress::Regex;
 use std::{io, sync::OnceLock};
 
 /// `isHash` of `@teambit/component-version`: 3 to 40 lowercase hex characters.
+#[inline]
 pub(super) fn is_hash(version: &str) -> bool {
     let trimmed = version.trim();
     (3..=40).contains(&trimmed.len())
@@ -15,11 +16,13 @@ pub(super) fn is_hash(version: &str) -> bool {
 }
 
 /// `snapToSemver`: a snap hash becomes `0.0.0-<hash>`.
+#[inline]
 pub(super) fn snap_to_semver(version: &str) -> String {
     let trimmed = version.trim();
     if is_hash(trimmed) { format!("0.0.0-{trimmed}") } else { trimmed.to_string() }
 }
 
+#[inline]
 fn trailing_version() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -64,6 +67,7 @@ pub(super) fn is_range(version: &str, origin: &str) -> io::Result<bool> {
 }
 
 /// `policy.getDepVersion(name, lifecycle)`: the first entry for the name and lifecycle.
+#[inline]
 pub(super) fn policy_version<'a>(
     entries: &'a [PolicyEntry],
     name: &str,
@@ -77,6 +81,7 @@ pub(super) fn policy_version<'a>(
 }
 
 /// `id@version` → `id`.
+#[inline]
 pub(super) fn without_version(id: &str) -> &str {
     let trimmed = id.trim();
     match trimmed.rfind('@') {
@@ -88,6 +93,7 @@ pub(super) fn without_version(id: &str) -> &str {
 }
 
 /// `id@version` → `version`.
+#[inline]
 pub(super) fn version_of(id: &str) -> Option<&str> {
     let trimmed = id.trim();
     trimmed

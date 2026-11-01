@@ -28,6 +28,7 @@ pub(crate) enum Flavor {
 
 impl Flavor {
     /// The suffix of a desugared exclusive upper bound (`<2.0.0` vs `<2.0.0-0`).
+    #[inline]
     const fn upper_suffix(self) -> &'static str {
         match self {
             Self::V6 => "",
@@ -37,6 +38,7 @@ impl Flavor {
 }
 
 /// `semver.validRange(range)` of semver 7.
+#[inline]
 pub(crate) fn valid_range(range: &str) -> Option<String> {
     let range = Range::parse(range.trim(), Flavor::V7).ok()?;
     let mut formatted = range.format();
@@ -47,6 +49,7 @@ pub(crate) fn valid_range(range: &str) -> Option<String> {
 }
 
 /// `semver.satisfies(version, range)` of semver 7.
+#[inline]
 pub(crate) fn satisfies(version: &str, range: &str) -> bool {
     SemVer::parse(version.trim())
         .is_ok_and(|semver| {
@@ -55,6 +58,7 @@ pub(crate) fn satisfies(version: &str, range: &str) -> bool {
 }
 
 /// `semver.satisfies(version, range, { includePrerelease: true })` of semver 7.
+#[inline]
 pub(crate) fn satisfies_including_prerelease(version: &str, range: &str) -> bool {
     SemVer::parse(version.trim())
         .is_ok_and(|semver| {

@@ -7,6 +7,7 @@ use std::{
 
 /// `ComponentCompiler.distDirs`: primary package, then injected packages or root projects.
 /// Root projects participate even when component root linking is disabled.
+#[inline]
 pub fn component_package_copies(
     root: &Path,
     component: &WorkspaceComponent,
@@ -44,6 +45,7 @@ pub fn component_package_copies(
     Ok(directories)
 }
 
+#[inline]
 fn injected_copy_paths<'a>(
     injected: &'a std::collections::BTreeMap<String, Vec<String>>,
     key: &str,

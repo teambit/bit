@@ -21,12 +21,14 @@ pub(super) enum LinkKind {
 }
 
 /// `lstat` says the path is a symlink.
+#[inline]
 pub(super) fn is_symlink(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink())
 }
 
 /// `removeSymlinkTarget`: a target may be linked unless something other than a symlink is
 /// already there (and the workspace has no local bit installation).
+#[inline]
 pub(super) fn may_link_target(target: &Path, has_local_installation: bool) -> bool {
     match fs::symlink_metadata(target) {
         Ok(meta) if !has_local_installation => meta.file_type().is_symlink(),
@@ -48,6 +50,7 @@ pub(super) fn remove_path(path: &Path) -> io::Result<()> {
 }
 
 /// A directory symlink or junction on Windows is removed with `remove_dir`.
+#[inline]
 fn remove_dir_link(path: &Path, error: io::Error) -> io::Result<()> {
     if cfg!(windows) { fs::remove_dir(path) } else { Err(error) }
 }
@@ -97,6 +100,7 @@ fn link_retrying_on_exists(src: &Path, dest: &Path, kind: LinkKind) -> io::Resul
 }
 
 /// The removal between attempts: a path still locked by another process is retried next time.
+#[inline]
 fn remove_locked(dest: &Path) -> io::Result<()> {
     match remove_path(dest) {
         Err(error) if locked(&error) => Ok(()),
@@ -104,10 +108,12 @@ fn remove_locked(dest: &Path) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn locked(error: &io::Error) -> bool {
     matches!(error.kind(), io::ErrorKind::PermissionDenied | io::ErrorKind::ResourceBusy)
 }
 
+#[inline]
 fn write_link(src: &Path, dest: &Path, kind: LinkKind) -> io::Result<()> {
     match kind {
         LinkKind::Symlink => symlink_or_link(src, dest),
@@ -129,6 +135,7 @@ fn link_failure(src: &Path, dest: &Path, error: &io::Error) -> io::Result<()> {
 }
 
 /// `dest` exists and resolves to `src`, or its link text is `src`.
+#[inline]
 fn points_to(dest: &Path, src: &Path) -> bool {
     if !dest.exists() {
         return false;
@@ -138,6 +145,7 @@ fn points_to(dest: &Path, src: &Path) -> bool {
 
 /// `fs.realpathSync(dest) === src`.
 #[cfg(unix)]
+#[inline]
 fn real_path_is(dest: &Path, src: &Path) -> bool {
     fs::canonicalize(dest).is_ok_and(|real| real == src)
 }
@@ -145,17 +153,20 @@ fn real_path_is(dest: &Path, src: &Path) -> bool {
 /// Rust's `canonicalize` returns a verbatim (`\\?\`) path with long names, where Node's
 /// `realpathSync` returns a plain one, so both sides are canonicalized.
 #[cfg(windows)]
+#[inline]
 fn real_path_is(dest: &Path, src: &Path) -> bool {
     matches!((fs::canonicalize(src), fs::canonicalize(dest)), (Ok(src), Ok(dest)) if src == dest)
 }
 
 /// `isDestLinkedCorrectly`: the same file (a hard link, or a link resolving to it), or a link
 /// whose text is `src`.
+#[inline]
 fn linked_correctly(src: &Path, dest: &Path) -> bool {
     same_file(src, dest) || fs::read_link(dest).is_ok_and(|target| target == src)
 }
 
 #[cfg(unix)]
+#[inline]
 fn same_file(src: &Path, dest: &Path) -> bool {
     use std::os::unix::fs::MetadataExt;
     match (fs::metadata(src), fs::metadata(dest)) {
@@ -168,12 +179,14 @@ fn same_file(src: &Path, dest: &Path) -> bool {
 /// which `same-file` compares through open handles. Like `stat`, the handles follow symlinks
 /// and junctions, so a hard link of `src` and a link resolving to it are both recognized.
 #[cfg(windows)]
+#[inline]
 fn same_file(src: &Path, dest: &Path) -> bool {
     same_file::is_same_file(src, dest).unwrap_or(false)
 }
 
 /// `symlink()` with `avoidHardLink`: `symlink-dir` on unix; on Windows a true symlink
 /// (`noJunction`), falling back to [`link`] when the user may not create symlinks.
+#[inline]
 fn symlink_or_link(src: &Path, dest: &Path) -> io::Result<()> {
     let result = true_symlink(src, dest);
     if cfg!(windows) { result.or_else(|_| link(src, dest)) } else { result }
@@ -192,6 +205,7 @@ fn link(src: &Path, dest: &Path) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn junction_fallback(error: &io::Error) -> bool {
     matches!(error.kind(), io::ErrorKind::PermissionDenied | io::ErrorKind::CrossesDevices)
 }
@@ -224,12 +238,14 @@ pub(super) fn symlink_dir(src: &Path, dest: &Path) -> io::Result<()> {
 }
 
 #[cfg(unix)]
+#[inline]
 fn true_symlink(target: &Path, link: &Path) -> io::Result<()> {
     std::os::unix::fs::symlink(target, link)
 }
 
 /// `fs.symlinkSync` without a type: Node picks a directory symlink when the target is a directory.
 #[cfg(windows)]
+#[inline]
 fn true_symlink(target: &Path, link: &Path) -> io::Result<()> {
     let resolved = link
         .parent()
@@ -243,12 +259,14 @@ fn true_symlink(target: &Path, link: &Path) -> io::Result<()> {
 }
 
 #[cfg(unix)]
+#[inline]
 fn junction(target: &Path, link: &Path) -> io::Result<()> {
     true_symlink(target, link)
 }
 
 /// `fs.symlinkSync(target, link, 'junction')`: Node resolves the target to an absolute path.
 #[cfg(windows)]
+#[inline]
 fn junction(target: &Path, link: &Path) -> io::Result<()> {
     let absolute = link
         .parent()
@@ -328,6 +346,7 @@ fn symlink_each(source: &Path, targets: &[PathBuf]) -> io::Result<()> {
 }
 
 /// `resolve-link-target`: the absolute target of one symlink level.
+#[inline]
 fn resolve_link_target(link: &Path) -> io::Result<PathBuf> {
     let target = fs::read_link(link)?;
     let parent = link

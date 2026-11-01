@@ -106,6 +106,7 @@ async fn restore(
     save(settings, lockfile)
 }
 
+#[inline]
 fn has_resolution(package: &Value) -> bool {
     package
         .get("resolution")
@@ -188,6 +189,7 @@ async fn resolve_all(
 
 /// `ERR_PNPM_NO_MATCHING_VERSION`. The resolver chain erases its errors to
 /// their messages, so the message is what identifies it.
+#[inline]
 fn is_no_matching_version(message: &str) -> bool {
     message.contains("ERR_PNPM_NO_MATCHING_VERSION")
         || message.contains("SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER")
@@ -241,6 +243,7 @@ fn packages_to_resolve(
     result
 }
 
+#[inline]
 fn is_unresolved_package(package: &Value) -> bool {
     let resolution = package.get("resolution");
     resolution.is_none_or(Value::is_null)
@@ -251,6 +254,7 @@ fn is_unresolved_package(package: &Value) -> bool {
             == Some("directory")
 }
 
+#[inline]
 fn resolver(settings: &EngineSettings) -> io::Result<DefaultResolver> {
     let config = query_config(settings, &Query::Resolve);
     let client = http_client(config)?;
@@ -263,6 +267,7 @@ fn resolver(settings: &EngineSettings) -> io::Result<DefaultResolver> {
     .map_err(|error| diagnostic(&error))
 }
 
+#[inline]
 fn validate(lockfile: &Map<String, Value>) -> io::Result<()> {
     for (dep_path, package) in lockfile
         .get("packages")
@@ -279,6 +284,7 @@ fn validate(lockfile: &Map<String, Value>) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn read_existing(settings: &EngineSettings) -> io::Result<Option<Map<String, Value>>> {
     let path = settings.root.join(Lockfile::FILE_NAME);
     let Some(existing) = Lockfile::load_from_path(&path).map_err(|error| diagnostic(&error))?

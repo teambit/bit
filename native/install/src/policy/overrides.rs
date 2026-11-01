@@ -15,6 +15,7 @@ pub const ADD: &str = "+";
 
 /// Index of a lifecycle in [`FieldMaps`].
 #[must_use]
+#[inline]
 pub const fn field_index(lifecycle: Lifecycle) -> usize {
     match lifecycle {
         Lifecycle::Runtime => 0,
@@ -25,6 +26,7 @@ pub const fn field_index(lifecycle: Lifecycle) -> usize {
 
 /// Non-forced entries: rules applied to auto-detected dependencies only.
 #[must_use]
+#[inline]
 pub fn auto_detect(policy: &[PolicyEntry]) -> FieldMaps {
     let mut result = FieldMaps::default();
     for entry in policy.iter().filter(|entry| !entry.force) {
@@ -43,6 +45,7 @@ pub fn auto_detect(policy: &[PolicyEntry]) -> FieldMaps {
 /// Forced entries: dependencies added manually. A name is taken once across
 /// fields unless the value is `-`.
 #[must_use]
+#[inline]
 pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {
     let mut result = FieldMaps::default();
     let mut used = std::collections::HashSet::new();
@@ -64,6 +67,7 @@ pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {
 
 /// `ComponentOverrides.getIgnoredPackages(field)`: names set to `-`.
 #[must_use]
+#[inline]
 pub fn ignored(overrides: &FieldMaps, lifecycle: Lifecycle) -> Vec<String> {
     overrides[field_index(lifecycle)]
         .iter()

@@ -37,6 +37,7 @@ impl Comparator {
         Ok(Self::new(operator, semver))
     }
 
+    #[inline]
     pub(crate) fn new(operator: &str, semver: Option<SemVer>) -> Self {
         let operator = if semver.is_some() { operator.trim() } else { "" };
         let value = semver
@@ -52,6 +53,7 @@ impl Comparator {
     }
 
     /// `comparator.test(version)`.
+    #[inline]
     pub(crate) fn test(&self, version: &SemVer) -> bool {
         let Some(semver) = &self.semver else { return true };
         let order = version.compare(semver);
@@ -64,14 +66,17 @@ impl Comparator {
         }
     }
 
+    #[inline]
     fn increasing(&self) -> bool {
         matches!(self.operator.trim(), ">=" | ">")
     }
 
+    #[inline]
     fn decreasing(&self) -> bool {
         matches!(self.operator.trim(), "<=" | "<")
     }
 
+    #[inline]
     fn inclusive(&self) -> bool {
         matches!(self.operator.trim(), ">=" | "<=")
     }
@@ -99,6 +104,7 @@ impl Comparator {
         Ok(self.directions_intersect(other))
     }
 
+    #[inline]
     fn directions_intersect(&self, other: &Self) -> bool {
         let (Some(this), Some(that)) = (&self.semver, &other.semver) else { return true };
         let same_increasing = self.increasing() && other.increasing();

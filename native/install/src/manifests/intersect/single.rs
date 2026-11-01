@@ -29,6 +29,7 @@ impl fmt::Display for Single {
 }
 
 /// `new SingleRange(lower, upper)`, which throws when the bounds do not intersect.
+#[inline]
 fn new_range(lower: Comparator, upper: Comparator) -> io::Result<Single> {
     if !lower.intersects(&upper)? {
         return Err(io::Error::new(
@@ -42,6 +43,7 @@ fn new_range(lower: Comparator, upper: Comparator) -> io::Result<Single> {
     Ok(Single::Range(lower, upper))
 }
 
+#[inline]
 fn bounds(single: &Single) -> Option<(&Comparator, &Comparator)> {
     match single {
         Single::Ver(_) => None,
@@ -71,6 +73,7 @@ fn merge_bound(left: &Comparator, right: &Comparator, end: End) -> Option<Compar
 }
 
 /// A prerelease bound only merges with a bound of the same `M.m.p` or one it widens.
+#[inline]
 fn merge_blocked(left: &SemVer, right: &SemVer, end: End) -> bool {
     let main = left.compare_main(right);
     let (right_side, left_side) = match end {
@@ -80,6 +83,7 @@ fn merge_blocked(left: &SemVer, right: &SemVer, end: End) -> bool {
     (right_side && is_pre(right)) || (left_side && is_pre(left))
 }
 
+#[inline]
 fn versioned(items: [&Comparator; 2]) -> impl Iterator<Item = Comparator> + '_ {
     items
         .into_iter()
@@ -87,10 +91,12 @@ fn versioned(items: [&Comparator; 2]) -> impl Iterator<Item = Comparator> + '_ {
         .cloned()
 }
 
+#[inline]
 fn is_pre(semver: &SemVer) -> bool {
     !semver.prerelease.is_empty()
 }
 
+#[inline]
 fn merge_with_any(left: &Comparator, right: &Comparator) -> Option<Comparator> {
     let (any, other) = if left.semver.is_none() { (left, right) } else { (right, left) };
     if other.semver.as_ref().is_some_and(is_pre) {
@@ -151,6 +157,7 @@ impl Single {
     }
 }
 
+#[inline]
 fn equals_value(comp: &Comparator) -> &str {
     comp.value
         .trim()

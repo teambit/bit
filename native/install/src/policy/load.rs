@@ -34,12 +34,14 @@ const MAX_EXTENDS: usize = 16;
 
 /// Whether `id` (with or without a version) is a core env.
 #[must_use]
+#[inline]
 pub fn is_core_env(id: &str) -> bool {
     CORE_ENVS.contains(&split_version(id).0)
 }
 
 /// `scope/name@version` → (`scope/name`, `version`).
 #[must_use]
+#[inline]
 pub fn split_version(id: &str) -> (&str, Option<&str>) {
     let id = id.trim();
     match id.rfind('@') {
@@ -108,6 +110,7 @@ pub struct EnvJsoncReader<'a> {
 
 impl EnvJsoncReader<'_> {
     /// The `env.jsonc` of `env_id` with its `extends` chain merged in.
+    #[inline]
     pub fn resolved(&self, env_id: &str) -> io::Result<Option<Value>> {
         self.resolve(env_id, None, 0)
     }
@@ -193,6 +196,7 @@ fn dependency_version(dependent: Option<&Value>, id: &str) -> Option<String> {
         })
 }
 
+#[inline]
 fn read_dir(dir: &Path) -> io::Result<Option<Value>> {
     for name in ["env.jsonc", "env.json"] {
         match fs::read(dir.join(name)) {
@@ -204,6 +208,7 @@ fn read_dir(dir: &Path) -> io::Result<Option<Value>> {
     Ok(None)
 }
 
+#[inline]
 fn parse(bytes: &[u8], location: impl std::fmt::Display) -> io::Result<Value> {
     bit_object_import::parse_jsonc(bytes).map_err(|error| {
         io::Error::new(

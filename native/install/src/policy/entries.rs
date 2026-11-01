@@ -21,6 +21,7 @@ pub struct VariantOptions {
 
 /// A policy entry with every flag off.
 #[must_use]
+#[inline]
 pub fn entry(name: &str, version: &str, lifecycle: Lifecycle) -> PolicyEntry {
     PolicyEntry {
         name: name.trim().to_owned(),
@@ -40,6 +41,7 @@ pub fn entry(name: &str, version: &str, lifecycle: Lifecycle) -> PolicyEntry {
 /// `mergePolices`: concatenate, reverse, keep the first entry per `(name, lifecycle)`,
 /// so the last policy wins and the merged order is reversed.
 #[must_use]
+#[inline]
 pub fn merge(policies: Vec<Vec<PolicyEntry>>) -> Vec<PolicyEntry> {
     let mut all: Vec<PolicyEntry> = policies.into_iter().flatten().collect();
     all.reverse();
@@ -214,6 +216,7 @@ fn field_values(field: Option<&Value>) -> Vec<(&str, &Value)> {
 
 /// JavaScript truthiness of a JSON value.
 #[must_use]
+#[inline]
 pub fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
@@ -226,6 +229,7 @@ pub fn truthy(value: &Value) -> bool {
     }
 }
 
+#[inline]
 fn string(value: Option<&Value>) -> Option<String> {
     value
         .and_then(Value::as_str)
@@ -234,6 +238,7 @@ fn string(value: Option<&Value>) -> Option<String> {
         .map(str::to_owned)
 }
 
+#[inline]
 fn object(value: Option<&Value>) -> Map<String, Value> {
     value
         .and_then(Value::as_object)

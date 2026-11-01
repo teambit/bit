@@ -11,6 +11,7 @@ use indexmap::IndexMap;
 use serde_json::{Value, json};
 use std::path::PathBuf;
 
+#[inline]
 fn in_workspace(input: &ManifestInput<'_>, id_without_version: &str) -> bool {
     input.components
         .iter()
@@ -18,6 +19,7 @@ fn in_workspace(input: &ManifestInput<'_>, id_without_version: &str) -> bool {
 }
 
 /// `getRootComponentDirByRootId`: workspace ids drop their version, `/` becomes `_`.
+#[inline]
 fn root_dir(input: &ManifestInput<'_>, id: &str) -> PathBuf {
     let bare = without_version(id);
     let name = if in_workspace(input, bare) { bare } else { id };
@@ -74,6 +76,7 @@ fn env_package(input: &ManifestInput<'_>, env_id: &str) -> DependencyMap {
     }
 }
 
+#[inline]
 fn hoisting_limits() -> Value {
     json!({ "hoistingLimits": "workspaces" })
 }
@@ -103,6 +106,7 @@ fn env_manifests(
 
 /// `_getAppWorkspaceDeps`: workspace packages the app reaches through its
 /// non-hidden component dependencies.
+#[inline]
 fn app_workspace_deps(
     input: &ManifestInput<'_>,
     app: &WorkspaceComponent,
@@ -123,6 +127,7 @@ struct AppWalk<'a> {
 }
 
 impl AppWalk<'_> {
+    #[inline]
     fn found(&mut self, package_name: &str) {
         let trimmed = package_name.trim();
         if let Some(spec) = self.workspace_deps

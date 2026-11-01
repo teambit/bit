@@ -23,6 +23,7 @@ use std::{
 const HISTORY_MESSAGE: &str = "import (merge from remote)";
 
 /// Merge the remote lane into the local scope and save it when it changed.
+#[inline]
 pub fn merge_and_save(repo: &Repo, remote: &RemoteLane, identity: &Identity) -> io::Result<()> {
     let incoming = LaneObject::parse(&remote.object, &remote.hash);
     let merged = merge(repo, &incoming)?;
@@ -127,6 +128,7 @@ fn merge_component(
 }
 
 /// `addToBucket`: a hidden entry replaces a visible one and vice versa.
+#[inline]
 fn add_to_bucket(existing: &mut LaneObject, component: &LaneComponent, hidden: bool) {
     if hidden {
         existing.remove_component(&component.scope, &component.name);
@@ -219,6 +221,7 @@ fn diverge(repo: &Repo, component: &LaneComponent, source: &str) -> io::Result<D
 
 /// `getAllVersionHashes` from `head` must be traversable: the head's Version
 /// object exists locally (its history was fetched with it).
+#[inline]
 fn require_version(repo: &Repo, component: &LaneComponent, head: &str) -> io::Result<()> {
     if repo.exists(head) {
         return Ok(());
@@ -229,6 +232,7 @@ fn require_version(repo: &Repo, component: &LaneComponent, head: &str) -> io::Re
     )))
 }
 
+#[inline]
 fn id_of(component: &LaneComponent) -> String {
     format!("{}/{}", component.scope, component.name)
 }
@@ -280,12 +284,14 @@ impl<'a> Parents<'a> {
         Some(seen)
     }
 
+    #[inline]
     fn parents_of_version(&self, hash: &str) -> Option<Vec<String>> {
         let version = self.repo.read_json(hash).ok()??;
         Some(hashes(&version["parents"]))
     }
 }
 
+#[inline]
 fn hashes(value: &Value) -> Vec<String> {
     value
         .as_array()

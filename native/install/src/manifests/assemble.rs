@@ -20,6 +20,7 @@ use std::{
 };
 
 /// The component's manifest version: its snap as semver, `0.0.1-new` when new.
+#[inline]
 fn component_version(version: Option<&str>) -> String {
     version.map_or_else(|| "0.0.1-new".to_string(), snap_to_semver)
 }
@@ -30,7 +31,7 @@ pub(super) fn component_manifests(
     deduped: &Deduped,
     env_root: &EnvRoot,
 ) -> IndexMap<PathBuf, Manifest> {
-    let mut by_package: IndexMap<&str, Manifest> = IndexMap::new();
+    let mut by_package: IndexMap<&str, Manifest> = IndexMap::with_capacity(input.components.len());
     for component in input.components {
         let mut deps = deduped.components
             .get(&component.package_name)
@@ -118,6 +119,7 @@ fn direct_dependency_names(
 }
 
 /// `installComponents`' `linkedDependencies` merge into the root manifest.
+#[inline]
 pub(super) fn merge_linked(
     manifests: &mut IndexMap<PathBuf, Manifest>,
     input: &ManifestInput<'_>,
@@ -166,6 +168,7 @@ pub(super) fn merge_linked_root(
 }
 
 /// `harmonyVersionInRootPolicy`: `@teambit/harmony` in the `workspace.jsonc` policy.
+#[inline]
 pub(super) fn forced_harmony_version(input: &ManifestInput<'_>) -> Option<String> {
     ["dependencies", "peerDependencies"]
         .into_iter()

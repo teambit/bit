@@ -107,6 +107,7 @@ fn env_dir(
     root.join("node_modules").join(package)
 }
 
+#[inline]
 fn component_id(id: &str) -> ComponentId {
     let trimmed = id.trim();
     let (scope, name) = trimmed
@@ -123,6 +124,7 @@ fn component_id(id: &str) -> ComponentId {
 /// `resolveModuleDirFromFile(resolveFrom.silent(fromDir, name), name)`: Node's
 /// `node_modules` lookup from the real path of `from_dir`, returning the real
 /// package directory.
+#[inline]
 fn resolve_module_dir(from_dir: &Path, name: &str) -> Option<PathBuf> {
     let real = fs::canonicalize(from_dir).ok()?;
     real.ancestors()
@@ -133,6 +135,7 @@ fn resolve_module_dir(from_dir: &Path, name: &str) -> Option<PathBuf> {
 }
 
 /// A package directory Node resolves: a `package.json` or an `index.js`.
+#[inline]
 fn is_resolvable(dir: &Path) -> bool {
     dir.join("package.json").is_file() || dir.join("index.js").is_file()
 }

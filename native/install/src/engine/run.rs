@@ -17,6 +17,7 @@ use tokio::sync::Mutex;
 
 /// Serializes every engine call of the process: the reporter and stats slots
 /// are process-global, and Bit serializes installs per workspace anyway.
+#[inline]
 pub(super) fn engine_call_lock() -> &'static Mutex<()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
     LOCK.get_or_init(|| Mutex::new(()))
@@ -64,6 +65,7 @@ pub async fn install(
     })
 }
 
+#[inline]
 fn normalize_deps_requiring_build(mut deps: Vec<String>) -> Vec<String> {
     deps.retain(|dep| !dep.trim().is_empty());
     deps.sort_unstable();

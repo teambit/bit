@@ -55,6 +55,7 @@ pub(super) fn persist(
     Ok(changed)
 }
 
+#[inline]
 pub(super) fn version(
     manifest: &mut Manifest,
     component: &WorkspaceComponent,
@@ -74,6 +75,7 @@ pub(super) fn version(
     }
 }
 
+#[inline]
 fn strip_component_id_version(manifest: &mut Manifest) {
     let Some(component_id) = manifest.get_mut("componentId") else { return };
     if let Some(id) = component_id.as_object_mut() {

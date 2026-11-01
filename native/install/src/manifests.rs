@@ -121,6 +121,7 @@ pub struct ManifestOptions {
 impl ManifestOptions {
     /// The options `bit install` uses for `config`.
     #[must_use]
+    #[inline]
     pub fn new(
         config: &DependencyResolverConfig,
         dedupe: bool,
@@ -146,6 +147,7 @@ impl ManifestOptions {
     /// `{ dedupe: true, includeAllEnvPeers: false }` only, so the root copies no peers,
     /// gets no env peers, and no `nodeLinker` turns on `referenceLocalPackages`.
     #[must_use]
+    #[inline]
     pub fn for_package_json(
         config: &DependencyResolverConfig,
         root_components_dir: PathBuf,
@@ -162,6 +164,7 @@ impl ManifestOptions {
     /// `copyPeerToRuntimeOnRoot` (default `true`) and `copyPeerToRuntimeOnComponents`
     /// (default `false`) of `InstallMain.install`'s options.
     #[must_use]
+    #[inline]
     pub fn with_copy_peer_to_runtime(mut self, options: &InstallOptions) -> Self {
         self.copy_peer_to_runtime_on_root = options.copy_peer_to_runtime_on_root.unwrap_or(true);
         self.copy_peer_to_runtime_on_components = options.copy_peer_to_runtime_on_components;
@@ -169,6 +172,7 @@ impl ManifestOptions {
     }
 
     /// `referenceLocalPackages`: root components with the isolated linker.
+    #[inline]
     fn reference_local_packages(&self) -> bool {
         self.has_root_components && self.node_linker.trim() == "isolated"
     }
@@ -254,6 +258,7 @@ fn projects(mut manifests: IndexMap<PathBuf, Manifest>, root: &Path) -> Vec<Proj
 }
 
 /// The deduped dependencies of the components and the root.
+#[inline]
 fn deduped_for(input: &ManifestInput<'_>, policy: &[PolicyEntry]) -> io::Result<dedupe::Deduped> {
     let dependencies = if input.options.has_root_components {
         dedupe::policy_manifest(policy).get(Field::Dependencies).clone()
@@ -264,6 +269,7 @@ fn deduped_for(input: &ManifestInput<'_>, policy: &[PolicyEntry]) -> io::Result<
 }
 
 /// Component manifests and the root manifest, keyed by dir.
+#[inline]
 fn workspace_manifests(
     input: &ManifestInput<'_>,
     env_root: &env_root::EnvRoot,
@@ -279,6 +285,7 @@ fn workspace_manifests(
 
 /// Adds the `.bit_roots` projects; returns their dirs and whether a workspace
 /// component is still missing from some component.
+#[inline]
 fn add_root_components(
     input: &ManifestInput<'_>,
     manifests: &mut IndexMap<PathBuf, Manifest>,

@@ -108,6 +108,7 @@ impl InstallOptions {
     /// `InstallMain.install` called with `addMissingPeers` alone adds them as runtime
     /// dependencies.
     #[must_use]
+    #[inline]
     pub fn lifecycle(&self) -> &str {
         self.lifecycle_type
             .as_deref()
@@ -163,6 +164,7 @@ pub fn parse(argv: &[String]) -> io::Result<Parsed> {
 }
 
 /// `lifecycleType: options.addMissingPeers ? 'peer' : options.type`.
+#[inline]
 fn cli_lifecycle(options: &InstallOptions) -> Option<String> {
     if options.add_missing_peers {
         Some("peer".to_string())
@@ -230,6 +232,7 @@ const FLAGS: [(&str, Option<&str>, Arity); 22] = [
     ("no-color", None, Arity::Switch),
 ];
 
+#[inline]
 fn flag(name: &str) -> io::Result<Flag> {
     let name = name.trim();
     let dashed = dash_case(name);
@@ -306,6 +309,7 @@ impl Scripts {
     }
 }
 
+#[inline]
 fn split_flag(arg: &str) -> (&str, Option<String>) {
     let name = arg.trim_start_matches('-');
     match name.split_once('=') {
@@ -315,6 +319,7 @@ fn split_flag(arg: &str) -> (&str, Option<String>) {
 }
 
 /// yargs camel-case expansion: `--skipCompile` is `--skip-compile`.
+#[inline]
 fn dash_case(name: &str) -> String {
     let mut dashed = String::with_capacity(name.len() + 4);
     for character in name.chars() {
@@ -328,11 +333,13 @@ fn dash_case(name: &str) -> String {
     dashed
 }
 
+#[inline]
 fn is_truthy(value: &str) -> bool {
     let trimmed = value.trim();
     !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }

@@ -62,11 +62,13 @@ pub struct HostInfo {
 
 impl HostInfo {
     #[must_use]
+    #[inline]
     pub fn should_write_to_console(&self) -> bool {
         self.write_to_console.unwrap_or(self.loader)
     }
 
     #[must_use]
+    #[inline]
     pub fn bearer_token(&self) -> Option<&str> {
         let mut token = self.token.as_deref()?.trim();
         while let Some((_, rest)) = token

@@ -23,6 +23,7 @@ impl Field {
         Field::PeerDependencies,
     ];
 
+    #[inline]
     pub(super) const fn key(self) -> &'static str {
         match self {
             Field::Dependencies => "dependencies",
@@ -32,6 +33,7 @@ impl Field {
         }
     }
 
+    #[inline]
     pub(super) const fn of(lifecycle: Lifecycle) -> Self {
         match lifecycle {
             Lifecycle::Runtime => Field::Dependencies,
@@ -40,6 +42,7 @@ impl Field {
         }
     }
 
+    #[inline]
     const fn index(self) -> usize {
         self as usize
     }
@@ -53,19 +56,23 @@ pub(super) struct DepsObject {
 }
 
 impl DepsObject {
+    #[inline]
     pub(super) fn get(&self, field: Field) -> &DependencyMap {
         &self.fields[field.index()]
     }
 
+    #[inline]
     pub(super) fn get_mut(&mut self, field: Field) -> &mut DependencyMap {
         &mut self.fields[field.index()]
     }
 
+    #[inline]
     pub(super) fn set(&mut self, field: Field, map: DependencyMap) {
         self.fields[field.index()] = map;
     }
 
     /// `deps[name] || devDeps[name] || peerDeps[name]` (JavaScript truthiness).
+    #[inline]
     pub(super) fn has_direct(&self, name: &str) -> bool {
         [Field::Dependencies, Field::DevDependencies, Field::PeerDependencies]
             .into_iter()
@@ -105,6 +112,7 @@ impl DepsObject {
 }
 
 /// `map[name]` is set and not an empty string.
+#[inline]
 pub(super) fn truthy(map: &DependencyMap, name: &str) -> bool {
     let trimmed = name.trim();
     map.get(name)
@@ -123,6 +131,7 @@ pub(super) fn truthy(map: &DependencyMap, name: &str) -> bool {
 }
 
 /// `{ ...a, ...b, ... }`: later maps win, keys keep their first position.
+#[inline]
 pub(super) fn spread(maps: &[&DependencyMap]) -> DependencyMap {
     let mut result = DependencyMap::new();
     for map in maps {
@@ -137,6 +146,7 @@ pub(super) fn spread(maps: &[&DependencyMap]) -> DependencyMap {
     result
 }
 
+#[inline]
 pub(super) fn map_value(map: &DependencyMap) -> Value {
     Value::Object(
         map.iter()
@@ -151,6 +161,7 @@ pub(super) fn map_value(map: &DependencyMap) -> Value {
 }
 
 /// The string entries of a manifest's dependency field.
+#[inline]
 pub(super) fn manifest_field(manifest: &Manifest, key: &str) -> DependencyMap {
     manifest
         .get(key)

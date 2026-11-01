@@ -31,6 +31,7 @@ pub struct ScriptPolicy {
 }
 
 /// The trusted package names.
+#[inline]
 pub(super) fn trusted_package_names() -> &'static [String] {
     static NAMES: OnceLock<Vec<String>> = OnceLock::new();
     NAMES.get_or_init(|| serde_json::from_str(TRUSTED_DEPS_JSON).unwrap_or_default())
@@ -104,6 +105,7 @@ pub(super) fn resolve(
     ScriptPolicy { allow_builds, ..ScriptPolicy::default() }
 }
 
+#[inline]
 fn configured_script<'a>(
     allow_scripts: Option<&'a IndexMap<String, Value>>,
     name: &str,
@@ -121,7 +123,7 @@ fn configured_script<'a>(
 /// `dangerouslyAllowAllScripts`: everything builds, except the never-built
 /// dependencies, whose scripts are also removed from their manifests.
 fn allow_all_but(never_built: &[String]) -> ScriptPolicy {
-    let mut cleaned = Vec::new();
+    let mut cleaned = Vec::with_capacity(never_built.len());
     for name in never_built
         .iter()
         .map(|name| name.trim())
@@ -152,6 +154,7 @@ fn allow_all_but(never_built: &[String]) -> ScriptPolicy {
 
 /// The boolean `allowScripts` entries. String values (e.g. `warn`) are
 /// placeholders that pnpm warns about.
+#[inline]
 fn configured_builds(allow_scripts: Option<&IndexMap<String, Value>>) -> BTreeMap<String, bool> {
     allow_scripts
         .into_iter()

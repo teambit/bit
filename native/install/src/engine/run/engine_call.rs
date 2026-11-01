@@ -34,6 +34,7 @@ pub(super) struct EngineCall {
 }
 
 impl EngineCall {
+    #[inline]
     pub(super) fn new(
         plan: &InstallPlan,
         settings: &EngineSettings,
@@ -130,10 +131,12 @@ impl EngineCall {
     }
 
     /// With root components, every non-root project name.
+    #[inline]
     fn external_dependencies(&self) -> &[String] {
         if self.settings.layout.root_components { &self.plan.external_dependencies } else { &[] }
     }
 
+    #[inline]
     fn renderer(&self) -> Option<Renderer> {
         let mut settings = self.settings.reporter.clone()?;
         settings.hide_added_pkgs_progress = self.options.lockfile_only;
@@ -164,6 +167,7 @@ impl EngineCall {
         install.run::<BitReporter>().await.map_err(|error| diagnostic(&error))
     }
 
+    #[inline]
     fn dependency_groups(&self) -> Vec<DependencyGroup> {
         let mut groups = vec![DependencyGroup::Prod, DependencyGroup::Dev];
         if self.options.include_optional_deps {
@@ -238,6 +242,7 @@ fn dependency_project(project: Project, hooks: &BitHooks) -> pnpm_workspace::Pro
 }
 
 /// The project's manifest after Bit's hooks, with the project as `workspaceDir`.
+#[inline]
 fn hooked(
     hooks: &BitHooks,
     dir: &std::path::Path,
@@ -249,6 +254,7 @@ fn hooked(
     }
 }
 
+#[inline]
 fn take_deps_requiring_build(sink: &DepsRequiringBuildSink) -> Option<Vec<String>> {
     sink.lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)

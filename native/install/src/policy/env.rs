@@ -76,6 +76,7 @@ fn legacy_peers(config: &Value) -> Vec<PolicyEntry> {
         .collect()
 }
 
+#[inline]
 fn from_key(config: &Value, key: &str, options: &KeyOptions) -> io::Result<Vec<PolicyEntry>> {
     let Some(items) = config.get(key).and_then(Value::as_array) else {
         return Ok(Vec::new());
@@ -113,6 +114,7 @@ fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<Policy
     })
 }
 
+#[inline]
 fn non_empty_field<'a>(item: &'a Value, field: &str) -> Option<&'a str> {
     item.get(field)
         .and_then(Value::as_str)
@@ -152,11 +154,13 @@ pub fn merge_manifests(parent: &Value, child: &Value) -> Value {
     result
 }
 
+#[inline]
 fn entry_name(entry: &Value) -> Option<&str> {
     non_empty_field(entry, "name").or_else(|| non_empty_field(entry, "packageName"))
 }
 
 /// The dev-files customizer: `{ ...parent.patterns, ...child.patterns }`.
+#[inline]
 fn merge_patterns(parent: &Value, child: &Value) -> Value {
     let mut patterns = parent
         .get("patterns")
@@ -169,6 +173,7 @@ fn merge_patterns(parent: &Value, child: &Value) -> Value {
     Value::Object(patterns)
 }
 
+#[inline]
 fn policy_items<'a>(manifest: &'a Value, key: &str) -> &'a [Value] {
     manifest
         .get("policy")

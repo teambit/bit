@@ -3,6 +3,7 @@
 use super::super::semver::{Comparator, SemVer};
 use std::{cmp::Ordering, io};
 
+#[inline]
 fn version_text(comparator: &Comparator) -> String {
     comparator.semver
         .as_ref()
@@ -10,6 +11,7 @@ fn version_text(comparator: &Comparator) -> String {
         .unwrap_or_default()
 }
 
+#[inline]
 fn is_prerelease(comparator: &Comparator) -> bool {
     comparator.semver
         .as_ref()
@@ -17,6 +19,7 @@ fn is_prerelease(comparator: &Comparator) -> bool {
 }
 
 /// `stripSemVerPrerelease`: `M.m.p` of the comparator's version.
+#[inline]
 fn strip_prerelease(comparator: &Comparator) -> String {
     comparator.semver
         .as_ref()
@@ -25,6 +28,7 @@ fn strip_prerelease(comparator: &Comparator) -> String {
 }
 
 /// `isSameVersionEqualsLikeComparator`.
+#[inline]
 pub(super) fn same_version_equals_like(left: &Comparator, right: &Comparator) -> bool {
     let equals_like = |comparator: &Comparator| {
         let operator = comparator.operator.trim();
@@ -38,11 +42,13 @@ pub(super) fn same_version_equals_like(left: &Comparator, right: &Comparator) ->
 }
 
 /// `isEqualsComparator`.
+#[inline]
 pub(super) fn is_equals(comparator: &Comparator) -> bool {
     comparator.semver.is_some() && matches!(comparator.operator.trim(), "" | "=")
 }
 
 /// `stripComparatorOperator`.
+#[inline]
 pub(super) fn strip_operator(comparator: &Comparator) -> io::Result<Comparator> {
     if comparator.operator.trim().is_empty() {
         return Ok(comparator.clone());
@@ -58,6 +64,7 @@ pub(super) enum End {
 }
 
 impl End {
+    #[inline]
     const fn operators(self) -> [&'static str; 2] {
         match self {
             Self::Lower => [">", ">="],
@@ -66,6 +73,7 @@ impl End {
     }
 
     /// `>=` for a lower bound, `<=` for an upper one.
+    #[inline]
     pub(super) const fn inclusive(self) -> &'static str {
         match self {
             Self::Lower => ">=",
@@ -74,6 +82,7 @@ impl End {
     }
 
     /// `>` for a lower bound, `<` for an upper one: the tighter operator.
+    #[inline]
     const fn exclusive(self) -> &'static str {
         match self {
             Self::Lower => ">",
@@ -82,6 +91,7 @@ impl End {
     }
 
     /// The comparison result that makes the left bound the tighter one.
+    #[inline]
     const fn tighter(self) -> Ordering {
         match self {
             Self::Lower => Ordering::Greater,
@@ -92,6 +102,7 @@ impl End {
 
 /// The opposite-end operator whose versions keep a prerelease bound as is
 /// (`<=` versions for a lower bound, `>=` versions for an upper one).
+#[inline]
 fn opposite_inclusive(end: End) -> &'static str {
     match end {
         End::Lower => "<=",
@@ -161,6 +172,7 @@ impl Reducer<'_> {
         Ok(if order == self.end.tighter() { left.clone() } else { right.clone() })
     }
 
+    #[inline]
     fn reduce(&self, left: &Comparator, right: &Comparator) -> io::Result<Comparator> {
         match (&left.semver, &right.semver) {
             (None, _) => self.against_any(right),

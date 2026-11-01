@@ -30,6 +30,7 @@ pub(super) struct Dep<'a> {
 
 impl Dep<'_> {
     /// `dependency.id`: the package name, or `scope/name@version`.
+    #[inline]
     fn id(&self) -> String {
         match self.component {
             Some(id) => match id.version
@@ -100,6 +101,7 @@ pub(super) fn to_deps_object(list: &[Dep<'_>]) -> DepsObject {
     object
 }
 
+#[inline]
 fn same_id(left: &ComponentId, right: &ComponentId) -> bool {
     left.to_string_without_version() == right.to_string_without_version()
 }
@@ -230,6 +232,7 @@ fn missing(deps: &ComponentDependencies) -> (Vec<String>, Vec<String>) {
 }
 
 /// Root policy runtime dependencies a component misses on the file system.
+#[inline]
 fn missing_root(
     root_dependencies: &DependencyMap,
     missing: &[String],
@@ -260,6 +263,7 @@ fn installed(
 }
 
 /// Root policy dependencies missing from the runtime and dev files.
+#[inline]
 fn missing_roots(
     deps: &ComponentDependencies,
     before: &DepsObject,
@@ -315,6 +319,7 @@ pub(super) struct RootPolicy<'a> {
 }
 
 /// `buildComponentDependenciesMap`, keyed by component package name.
+#[inline]
 pub(super) fn build(
     input: &ManifestInput<'_>,
     root: &RootPolicy<'_>,

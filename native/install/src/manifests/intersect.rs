@@ -15,6 +15,7 @@ use std::io;
 struct Multi(Vec<Single>);
 
 impl Multi {
+    #[inline]
     fn from_range(range: &Range) -> io::Result<Self> {
         let singles = range.set
             .iter()
@@ -52,6 +53,7 @@ impl Multi {
         ))
     }
 
+    #[inline]
     fn format(&self) -> String {
         let mut parts: Vec<String> = Vec::with_capacity(self.0.len());
         for single in &self.0 {
@@ -66,10 +68,12 @@ impl Multi {
 }
 
 /// `semver.intersects(a, b)` of semver 6 on two range strings.
+#[inline]
 pub(crate) fn ranges_intersect(left: &str, right: &str) -> io::Result<bool> {
     Range::parse(left.trim(), Flavor::V6)?.intersects(&Range::parse(right.trim(), Flavor::V6)?)
 }
 
+#[inline]
 fn all_pairs_intersect(ranges: &[Range]) -> io::Result<bool> {
     for (index, a) in ranges.iter().enumerate() {
         for b in &ranges[index + 1..] {

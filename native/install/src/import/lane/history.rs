@@ -14,6 +14,7 @@ use std::{
 
 /// `BitObject.hash()` of a `LaneHistory`: `sha1("<laneHash>:LaneHistory")`.
 #[must_use]
+#[inline]
 pub fn history_hash(lane_hash: &str) -> String {
     sha1_hex(&format!("{}:LaneHistory", lane_hash.trim()))
 }
@@ -28,6 +29,7 @@ pub struct Identity {
 
 impl Identity {
     #[must_use]
+    #[inline]
     pub fn from_config(global: &GlobalConfig) -> Self {
         let text = |dotted: &str, underscored: &str, nested: &str| {
             global
@@ -110,6 +112,7 @@ fn entry(lane: &LaneObject, message: &str, identity: &Identity) -> Value {
     item
 }
 
+#[inline]
 fn now_millis() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -118,6 +121,7 @@ fn now_millis() -> u128 {
 }
 
 /// `newLaneHistoryKey()`: a random UUID v4.
+#[inline]
 fn new_history_key() -> String {
     let mut bytes = [0u8; 16];
     getrandom::fill(&mut bytes)

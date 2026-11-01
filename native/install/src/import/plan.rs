@@ -193,6 +193,7 @@ impl Importer<'_> {
             .unwrap_or(false))
     }
 
+    #[inline]
     fn flattened_exist(&self, version: &Value) -> bool {
         flattened(version)
             .iter()
@@ -221,6 +222,7 @@ impl Importer<'_> {
     }
 
     /// A remote dependency not yet queued whose local Version is missing or unbuilt.
+    #[inline]
     fn needs_dependency(&self, dependency: &Id, queued: &[Id]) -> io::Result<bool> {
         if dependency.scope == self.local_scope || queued.contains(dependency) {
             return Ok(false);
@@ -229,6 +231,7 @@ impl Importer<'_> {
     }
 
     /// Whether the local Version of `id` was built; `None` when it is missing.
+    #[inline]
     fn local_build(&self, id: &Id) -> io::Result<Option<bool>> {
         let version = self.local_version(id)?;
         Ok(version.map(|version| {
@@ -236,6 +239,7 @@ impl Importer<'_> {
         }))
     }
 
+    #[inline]
     async fn fetch(&self, ids: &[Id], options: &FetchOptions, reason: &str) -> io::Result<Written> {
         self.fetch_grouped(ids, self.group(ids), options, reason).await
     }
@@ -270,6 +274,7 @@ impl Importer<'_> {
         Ok(written)
     }
 
+    #[inline]
     fn status(&self, text: &str) {
         if let Some(output) = self.output {
             output.status(text);
@@ -292,6 +297,7 @@ impl Importer<'_> {
         grouped
     }
 
+    #[inline]
     fn lane_id(&self) -> Option<String> {
         self.lane.map(|lane| lane.id.to_request())
     }
@@ -329,6 +335,7 @@ enum Local {
     Missing,
 }
 
+#[inline]
 fn flattened(version: &Value) -> Vec<Id> {
     ["flattenedDependencies", "flattenedDevDependencies"]
         .into_iter()
@@ -338,6 +345,7 @@ fn flattened(version: &Value) -> Vec<Id> {
         .collect()
 }
 
+#[inline]
 fn add(total: &mut Written, more: Written) {
     total.objects += more.objects;
     total.components.extend(more.components);

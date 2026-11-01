@@ -40,6 +40,7 @@ fn comparator_strings(range: &str, flavor: Flavor) -> Vec<String> {
     }
 }
 
+#[inline]
 fn replace_gte0(comp: &str) -> String {
     re(Token::Gte0).replace(comp, "")
 }
@@ -117,6 +118,7 @@ impl Range {
     }
 
     /// `range.range` of semver 7.
+    #[inline]
     pub(crate) fn format(&self) -> String {
         self.set
             .iter()
@@ -132,17 +134,20 @@ impl Range {
     }
 
     /// `range.test(version)`.
+    #[inline]
     pub(crate) fn test(&self, version: &SemVer) -> bool {
         self.set.iter().any(|comps| test_set(comps, version, false))
     }
 
     /// `range.test(version)` with `includePrerelease`: a prerelease
     /// satisfies any comparator set it fits, not only one naming its tuple.
+    #[inline]
     pub(crate) fn test_including_prerelease(&self, version: &SemVer) -> bool {
         self.set.iter().any(|comps| test_set(comps, version, true))
     }
 
     /// `range.intersects(other)` of semver 6.
+    #[inline]
     pub(crate) fn intersects(&self, other: &Self) -> io::Result<bool> {
         for this in &self.set {
             if !is_satisfiable(this)? {

@@ -24,6 +24,7 @@ pub const DEPENDENCY_RESOLVER: &str = "teambit.dependencies/dependency-resolver"
 /// The workspace policy (`getWorkspacePolicy`): `workspace.jsonc`, overridden by the
 /// root `package.json`, overridden by the merge-config file's policy.
 #[must_use]
+#[inline]
 pub fn workspace_policy(
     config: &DependencyResolverConfig,
     root_package_json: Option<&Manifest>,
@@ -41,6 +42,7 @@ pub fn workspace_policy(
 /// it configures (`registerDependenciesPolicies`), then the component's own
 /// `dependency-resolver` config policy.
 #[must_use]
+#[inline]
 pub fn component_policy(
     component: &WorkspaceComponent,
     env_policy: &EnvPolicy,
@@ -64,6 +66,7 @@ pub fn component_policy(
 /// `toManifest()` of a workspace policy: `[dependencies, peerDependencies]` with
 /// snap versions converted to semver.
 #[must_use]
+#[inline]
 pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String, String>; 2] {
     let mut manifest: [indexmap::IndexMap<String, String>; 2] = Default::default();
     for entry in policy {
@@ -78,6 +81,7 @@ pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String,
     manifest
 }
 
+#[inline]
 fn component_resolver_config(component: &WorkspaceComponent) -> Option<&Value> {
     if component.config.is_empty() {
         return None;

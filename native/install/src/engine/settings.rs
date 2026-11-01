@@ -26,6 +26,7 @@ pub struct EnvVars {
 impl EnvVars {
     /// Read them from the process environment.
     #[must_use]
+    #[inline]
     pub fn from_process() -> Self {
         EnvVars {
             enable_global_virtual_store: std::env::var("BIT_ENABLE_GLOBAL_VIRTUAL_STORE").ok(),
@@ -35,6 +36,7 @@ impl EnvVars {
 }
 
 /// Resolve the engine settings of the workspace at `root`.
+#[inline]
 pub fn settings(
     root: &Path,
     config: &DependencyResolverConfig,
@@ -187,6 +189,7 @@ fn enable_global_virtual_store(
 
 /// `resolveHoistPattern`: Bit's `hoistPatterns`, unless they are the default
 /// `['*']` and the pnpm config sets a non-default pattern.
+#[inline]
 pub(super) fn hoist_pattern(
     from_bit: Option<&[String]>,
     from_pnpm: Option<&[String]>,
@@ -201,6 +204,7 @@ pub(super) fn hoist_pattern(
     }
 }
 
+#[inline]
 fn public_hoist_pattern(shamefully_hoist: bool) -> Vec<String> {
     let patterns: &[&str] = if shamefully_hoist {
         &["*"]
@@ -251,6 +255,7 @@ fn package_extensions(
 
 /// Peer-dependency warnings are suppressed by default; the workspace's own
 /// rules override.
+#[inline]
 fn peer_dependency_rules(from_config: Option<&Value>) -> Value {
     let mut rules = json!({ "allowAny": ["*"], "ignoreMissing": ["*"] });
     if let (Some(rules), Some(Value::Object(configured))) = (rules.as_object_mut(), from_config) {

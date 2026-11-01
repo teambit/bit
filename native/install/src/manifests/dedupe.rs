@@ -33,6 +33,7 @@ pub(super) struct Deduped {
 }
 
 /// `rootPolicy.toManifest()`: `dependencies` and `peerDependencies`, snaps as semver.
+#[inline]
 pub(super) fn policy_manifest(policy: &[PolicyEntry]) -> DepsObject {
     let mut object = DepsObject::default();
     for entry in policy {
@@ -71,6 +72,7 @@ fn index_by_dep_id(
     index
 }
 
+#[inline]
 fn insert_component_deps(
     index: &mut IndexMap<String, IndexEntry>,
     origin: &str,
@@ -93,6 +95,7 @@ fn insert_component_deps(
 }
 
 /// `mergeWithRootDeps`: the workspace policy always lands in the root.
+#[inline]
 fn merge_with_root(mut root: DepsObject, deduped: &mut Deduped) {
     for field in Field::ALL {
         for (name, range) in std::mem::take(root.get_mut(field)) {
@@ -104,6 +107,7 @@ fn merge_with_root(mut root: DepsObject, deduped: &mut Deduped) {
 }
 
 /// `dedupeDependencies(rootPolicy, componentDependenciesMap, { dedupePeerDependencies })`.
+#[inline]
 pub(super) fn dedupe(
     policy: &[PolicyEntry],
     components: &IndexMap<String, DepsObject>,
@@ -116,6 +120,7 @@ pub(super) fn dedupe(
 }
 
 /// `excludeWorkspaceDependencies`: drop `file:` and `workspace:` specs.
+#[inline]
 pub(super) fn exclude_workspace(map: &DependencyMap) -> DependencyMap {
     map.iter()
         .filter(|(_, spec)| {

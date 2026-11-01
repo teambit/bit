@@ -30,6 +30,7 @@ pub enum Style {
 }
 
 impl Style {
+    #[inline]
     const fn codes(self) -> (u8, u8) {
         match self {
             Self::Green => (32, 39),
@@ -89,6 +90,7 @@ struct Spinner {
 
 impl Output {
     #[must_use]
+    #[inline]
     pub fn new(color: bool, tty: bool, loader: bool, sink: Sink) -> Self {
         Self {
             color,
@@ -100,9 +102,9 @@ impl Output {
         }
     }
 
-    /// `logger.shouldWriteToConsole`: whether console lines print while the
-    /// loader is off. `CommandRunner` turns it off together with the loader.
+    /// `logger.shouldWriteToConsole`: whether console lines print while the loader is off.
     #[must_use]
+    #[inline]
     pub fn with_console(mut self, write_to_console: bool) -> Self {
         self.write_to_console = write_to_console;
         self
@@ -110,6 +112,7 @@ impl Output {
 
     /// Running on CI (`process.env.CI` set): status lines are not shown.
     #[must_use]
+    #[inline]
     pub fn with_ci(mut self, ci: bool) -> Self {
         self.ci = ci;
         self
@@ -121,21 +124,19 @@ impl Output {
         SWITCHED.store(SWITCHED_ON, Ordering::SeqCst);
     }
 
-    /// `logger.off()` before the package manager writes its own output: the loader
-    /// stops, and status and success lines are dropped until `loader_on`, for every
-    /// `Output`. A failed installation leaves it off.
+    /// `logger.off()` before the package manager writes its own output.
     pub fn loader_off(&self) {
         self.stop();
         SWITCHED.store(SWITCHED_OFF, Ordering::SeqCst);
     }
 
-    /// Mirror a retained published package manager's `logger.off()` after it
-    /// failed: the Rust parent still renders the following graceful result.
+    /// Mirror a retained published package manager's `logger.off()` after it failed.
     pub fn external_loader_off() {
         lock().stop();
         SWITCHED.store(SWITCHED_OFF, Ordering::SeqCst);
     }
 
+    #[inline]
     fn loader(&self) -> bool {
         match SWITCHED.load(Ordering::SeqCst) {
             SWITCHED_ON => true,
@@ -242,6 +243,7 @@ impl Output {
     }
 
     /// Stop the spinner and clear its line (`loader.stop()`).
+    #[inline]
     pub fn stop(&self) {
         lock().stop();
     }
@@ -254,16 +256,19 @@ impl Output {
 
     /// Where raw output goes, for the package manager's reporter.
     #[must_use]
+    #[inline]
     pub fn sink(&self) -> Sink {
         Arc::clone(&self.sink)
     }
 
     /// Write raw package manager output.
+    #[inline]
     pub fn raw(&self, text: &str) {
         self.stop();
         (self.sink)(text);
     }
 
+    #[inline]
     fn line(&self, text: &str) {
         (self.sink)(&format!("{text}\n"));
     }
@@ -276,6 +281,7 @@ impl Output {
         self.line(&format!("{symbol} {text}"));
     }
 
+    #[inline]
     fn symbol(&self, symbol: char, style: Style) -> String {
         let mut buf = [0_u8; 4];
         self.paint(style, symbol.encode_utf8(&mut buf))
@@ -318,6 +324,7 @@ fn render(spinner: &mut Spinner, generation: u64) -> bool {
     true
 }
 
+#[inline]
 fn lock() -> std::sync::MutexGuard<'static, Spinner> {
     LOADER.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }

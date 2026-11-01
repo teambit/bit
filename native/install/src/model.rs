@@ -25,6 +25,7 @@ pub struct ComponentId {
 impl ComponentId {
     /// The scope the component is or will be exported to.
     #[must_use]
+    #[inline]
     pub fn effective_scope(&self) -> Option<&str> {
         [self.scope.as_deref(), self.default_scope.as_deref()]
             .into_iter()
@@ -35,6 +36,7 @@ impl ComponentId {
 
     /// `scope/name`, without the version.
     #[must_use]
+    #[inline]
     pub fn to_string_without_version(&self) -> String {
         let name = self.name.trim().trim_matches('/');
         if name.is_empty() {
@@ -65,6 +67,7 @@ pub enum Lifecycle {
 impl Lifecycle {
     /// The `package.json` field this lifecycle maps to.
     #[must_use]
+    #[inline]
     pub const fn manifest_key(self) -> &'static str {
         match self {
             Self::Runtime => "dependencies",

@@ -29,32 +29,39 @@ const NON_NUMERIC: &str = r"\d*[a-zA-Z-][a-zA-Z0-9-]*";
 const BUILD_IDENTIFIER: &str = "[a-zA-Z0-9-]+";
 const GTLT: &str = "((?:<|>)?=?)";
 
+#[inline]
 fn main_version(numeric: &str) -> String {
     format!(r"({numeric})\.({numeric})\.({numeric})")
 }
 
+#[inline]
 fn prerelease() -> String {
     let id = format!("(?:{NUMERIC}|{NON_NUMERIC})");
     format!(r"(?:-({id}(?:\.{id})*))")
 }
 
+#[inline]
 fn prerelease_loose() -> String {
     let id = format!("(?:{NUMERIC_LOOSE}|{NON_NUMERIC})");
     format!(r"(?:-?({id}(?:\.{id})*))")
 }
 
+#[inline]
 fn build() -> String {
     format!(r"(?:\+({BUILD_IDENTIFIER}(?:\.{BUILD_IDENTIFIER})*))")
 }
 
+#[inline]
 fn full_plain() -> String {
     format!("v?{}{}?{}?", main_version(NUMERIC), prerelease(), build())
 }
 
+#[inline]
 fn loose_plain() -> String {
     format!(r"[v=\s]*{}{}?{}?", main_version(NUMERIC_LOOSE), prerelease_loose(), build())
 }
 
+#[inline]
 fn xrange_plain() -> String {
     let id = format!(r"{NUMERIC}|x|X|\*");
     format!(r"[v=\s]*({id})(?:\.({id})(?:\.({id})(?:{})?{}?)?)?", prerelease(), build())
@@ -99,6 +106,7 @@ const TOKENS: [Token; 12] = [
 ];
 
 /// The compiled expression of `token`.
+#[inline]
 pub(super) fn re(token: Token) -> &'static Regex {
     static COMPILED: OnceLock<[Regex; 12]> = OnceLock::new();
     let compiled = COMPILED.get_or_init(|| {
@@ -108,6 +116,7 @@ pub(super) fn re(token: Token) -> &'static Regex {
 }
 
 /// The capture groups of a match, `None` where JavaScript yields `undefined`.
+#[inline]
 pub(super) fn groups<'t>(found: &Match, text: &'t str) -> Vec<Option<&'t str>> {
     found
         .groups()
@@ -116,6 +125,7 @@ pub(super) fn groups<'t>(found: &Match, text: &'t str) -> Vec<Option<&'t str>> {
 }
 
 /// `text.replace(re, fn)` for a non-global expression: replace the first match.
+#[inline]
 pub(super) fn replace_first(
     token: Token,
     text: &str,
@@ -125,6 +135,7 @@ pub(super) fn replace_first(
 }
 
 /// `text.replace(re, '$1…')` for a global expression.
+#[inline]
 pub(super) fn replace_all(token: Token, text: &str, replacement: &str) -> String {
     re(token).replace_all(text, replacement)
 }
@@ -152,6 +163,7 @@ pub(super) fn split_whitespace(text: &str) -> Vec<&str> {
 }
 
 /// `text.trim().split(/\s+/).join(' ')`.
+#[inline]
 pub(super) fn collapse_whitespace(text: &str) -> String {
     let is_space = |ch: char| ch.is_whitespace() || ch == '\u{feff}';
     let trimmed = text.trim_matches(is_space);

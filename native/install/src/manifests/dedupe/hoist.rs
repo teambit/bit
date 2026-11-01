@@ -11,6 +11,7 @@ use crate::manifests::{
 use std::io;
 
 /// Add the items `hoisted` rejects to their components (`addToComponentDependenciesMapInDeduped`).
+#[inline]
 fn keep_in_components(
     deduped: &mut Deduped,
     name: &str,
@@ -26,6 +27,7 @@ fn keep_in_components(
     }
 }
 
+#[inline]
 fn set_root(deduped: &mut Deduped, field: Field, name: &str, version: &str) {
     deduped.root.get_mut(field).insert(name.to_string(), version.to_string());
 }
@@ -89,6 +91,7 @@ fn handle_peers_only(deduped: &mut Deduped, name: &str, items: &[Item]) -> io::R
 }
 
 /// `getLifecycleType`: runtime when any component needs it at runtime, else dev.
+#[inline]
 fn lifecycle_field(items: &[Item]) -> Field {
     if items
         .iter()
@@ -205,6 +208,7 @@ fn best_range<'a>(ranges: &[&'a str]) -> io::Result<BestRange<'a>> {
     Ok(BestRange { ranges: Vec::new(), intersected: "0.0.0".to_string(), count: 0 })
 }
 
+#[inline]
 fn handle_exact_versions_only(deduped: &mut Deduped, name: &str, items: &[Item]) -> io::Result<()> {
     let (version, _) = most_common_version(items.iter().map(|item| item.range.as_str()))?;
     set_root(deduped, lifecycle_field(items), name, &version);
@@ -212,6 +216,7 @@ fn handle_exact_versions_only(deduped: &mut Deduped, name: &str, items: &[Item])
     Ok(())
 }
 
+#[inline]
 fn handle_ranges_only(deduped: &mut Deduped, name: &str, items: &[Item]) -> io::Result<()> {
     let ranges: Vec<&str> = items
         .iter()
@@ -279,6 +284,7 @@ fn hoist_one(
 }
 
 /// `hoistDependencies(index, { dedupePeerDependencies })`.
+#[inline]
 pub(super) fn hoist(
     index: &indexmap::IndexMap<String, IndexEntry>,
     dedupe_peers: bool,

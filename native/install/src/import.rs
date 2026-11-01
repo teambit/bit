@@ -115,6 +115,7 @@ async fn import(
 
 /// The remotes the workspace scope knows (with its custom resolver) and the
 /// HTTP client that reaches them.
+#[inline]
 fn connect(
     scope_json: &Value,
     local_scope: &str,
@@ -159,6 +160,7 @@ fn ids_to_import(bitmap: &Bitmap, lane: Option<&RemoteLane>) -> Vec<Id> {
     ids
 }
 
+#[inline]
 fn read_scope_json(scope_dir: &Path) -> io::Result<Value> {
     match fs::read(scope_dir.join("scope.json")) {
         Ok(bytes) => serde_json::from_slice(&bytes)

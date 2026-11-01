@@ -9,6 +9,7 @@ use std::{io, path::Path};
 
 /// Render default package metadata with the ordinary native package transformers.
 #[must_use]
+#[inline]
 pub fn prepared_package_manifest(
     component: &WorkspaceComponent,
     dependencies: &crate::model::ComponentDependencies,
@@ -59,6 +60,7 @@ pub fn link_prepared_component(
     Ok(ComponentLinks { id: component.id.to_string_without_version(), links })
 }
 
+#[inline]
 fn source_links(
     root: &Path,
     component: &WorkspaceComponent,
@@ -79,6 +81,7 @@ fn source_links(
     Ok(())
 }
 
+#[inline]
 fn is_workspace_root_dir(root_dir: &str) -> bool {
     let trimmed = root_dir
         .trim()
