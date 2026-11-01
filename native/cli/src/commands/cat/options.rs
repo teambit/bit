@@ -105,7 +105,11 @@ fn apply_cat_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
 
 fn set_cat_file<'a>(options: &mut Options<'a>, val: &'a str, consumed: usize) -> Option<usize> {
     let trimmed = val.trim();
-    if options.file.is_some() || trimmed.is_empty() || trimmed.starts_with('-') {
+    if options.file.is_some()
+        || trimmed.is_empty()
+        || trimmed.starts_with('-')
+        || trimmed.chars().any(char::is_control)
+    {
         return None;
     }
     options.file = Some(trimmed);

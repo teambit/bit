@@ -52,6 +52,9 @@ pub(super) fn outputs(compiled: &[Compiled]) -> io::Result<()> {
                     .to_string_lossy()
                     .trim()
                     .is_empty()
+                || file.path
+                    .components()
+                    .any(|part| matches!(part, std::path::Component::ParentDir))
                 || !paths.insert(&file.path)
             {
                 return Err(io::Error::other("compiler colliding outputs"));

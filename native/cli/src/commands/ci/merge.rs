@@ -151,7 +151,7 @@ fn execute_merge(root: &Path, opts: &MergeOptions) -> io::Result<Report> {
     let explicit_branch = opts.branch
         .as_deref()
         .map(str::trim)
-        .filter(|branch| !branch.is_empty());
+        .filter(|branch| !branch.is_empty() && !branch.starts_with('-'));
     if let Some(branch) = explicit_branch {
         let _ = run_git(root, &["checkout", "-B", branch]);
     }

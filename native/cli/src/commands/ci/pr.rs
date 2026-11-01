@@ -226,13 +226,16 @@ fn resolve_lane_name(
 }
 
 fn sanitize_lane_name(raw: &str) -> String {
-    raw.chars()
+    raw.trim()
+        .chars()
         .map(
             |ch| {
                 if ch.is_ascii_alphanumeric() || ch == '-' { ch.to_ascii_lowercase() } else { '-' }
             },
         )
-        .collect()
+        .collect::<String>()
+        .trim_matches('-')
+        .to_string()
 }
 
 fn current_bitmap_lane(root: &Path) -> Option<String> {

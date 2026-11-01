@@ -149,8 +149,7 @@ impl Options {
                 .is_some_and(|key| {
                     let trimmed = key.trim();
                     trimmed.is_empty()
-                        || (matches!(self.command.as_str(), "set" | "del")
-                            && matches!(trimmed, "__proto__" | "constructor" | "prototype"))
+                        || matches!(trimmed, "__proto__" | "constructor" | "prototype")
                 })
         {
             return false;

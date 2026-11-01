@@ -61,7 +61,12 @@ fn parse_repository(repo: &str, host: String) -> Option<Repository> {
     let (owner, name) = repo
         .split_once('/')
         .map(|(owner, name)| (owner.trim(), name.trim()))
-        .filter(|(owner, name)| !owner.is_empty() && !name.is_empty())?;
+        .filter(|(owner, name)| {
+            !owner.is_empty()
+                && !name.is_empty()
+                && !matches!(*owner, "." | "..")
+                && !matches!(*name, "." | "..")
+        })?;
     Some(Repository { owner: owner.into(), name: name.into(), host })
 }
 pub(super) fn local(remote: &str) -> bool {

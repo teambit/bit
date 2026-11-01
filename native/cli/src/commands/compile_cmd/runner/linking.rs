@@ -91,9 +91,9 @@ fn matches_component_identity(identity: &str, component: &WorkspaceComponent) ->
     let trimmed = identity.trim();
     let bare = trimmed
         .rsplit_once('@')
-        .filter(|(base, _)| !base.trim().is_empty())
+        .filter(|(base, ver)| !base.trim().is_empty() && !ver.trim().is_empty())
         .map_or(trimmed, |(base, _)| base.trim());
-    if bare.is_empty() {
+    if bare.is_empty() || bare.contains('@') {
         return false;
     }
     bare == target.trim() || (!bare.contains('/') && bare == component.id.name.trim())

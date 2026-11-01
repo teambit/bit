@@ -85,7 +85,8 @@ impl Plan {
     }
     fn target(&self) -> report::Target {
         let origin = git::origin(&self.cwd);
-        let (branch, guessed) = git::default_branch(&self.cwd);
+        let (raw_branch, guessed) = git::default_branch(&self.cwd);
+        let branch = if trim(&raw_branch).is_empty() { "main".into() } else { raw_branch };
         let relative = git::relative(&self.cwd, self.scaffold_root());
         let repo_root = if relative.as_os_str().is_empty() {
             ".".into()

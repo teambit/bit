@@ -92,6 +92,9 @@ pub(super) fn staging(
     let mut ignored = Vec::new();
     for path in handled {
         let arg = path.to_string_lossy();
+        if super::trim(&arg).is_empty() {
+            continue;
+        }
         if run(root, &["check-ignore", "--", &arg]).is_some_and(|value| !value.is_empty()) {
             ignored.push(display(cwd, path));
         } else if commits

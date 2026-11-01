@@ -153,10 +153,19 @@ fn exists_in_bitmap_or_index(bare: &str, bitmap: &Bitmap, index_rows: &[Value]) 
                 && (super::scope_set::selection::row_has_name(row, bare)
                     || row["id"]
                         .as_str()
-                        .map(|raw| raw.split('@').next().unwrap_or(raw))
+                        .map(|raw| {
+                            raw.trim()
+                                .split('@')
+                                .next()
+                                .unwrap_or(raw)
+                                .trim()
+                        })
                         == Some(bare)
-                    || match (row["id"]["scope"].as_str(), row["id"]["name"].as_str()) {
-                        (Some(scope), Some(name)) if !scope.is_empty() => {
+                    || match (
+                        row["id"]["scope"].as_str().map(str::trim),
+                        row["id"]["name"].as_str().map(str::trim),
+                    ) {
+                        (Some(scope), Some(name)) if !scope.is_empty() && !name.is_empty() => {
                             format!("{scope}/{name}") == bare
                         }
                         _ => false,

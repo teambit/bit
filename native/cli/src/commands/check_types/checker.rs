@@ -121,7 +121,7 @@ fn collect_diagnostics(
             if !is_ts_source(rel_file) {
                 continue;
             }
-            let full_path = component.dir.join(rel_file);
+            let full_path = component.dir.join(rel_file.trim());
             let Ok(content) = fs::read_to_string(&full_path) else {
                 continue;
             };
@@ -136,7 +136,13 @@ fn collect_diagnostics(
 
 fn is_ts_source(rel_file: &str) -> bool {
     let rel_file = rel_file.trim();
-    !rel_file.ends_with(".d.ts") && (rel_file.ends_with(".ts") || rel_file.ends_with(".tsx"))
+    let rel_path = Path::new(rel_file);
+    !rel_path.is_absolute()
+        && !rel_path
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+        && !rel_file.ends_with(".d.ts")
+        && (rel_file.ends_with(".ts") || rel_file.ends_with(".tsx"))
 }
 
 pub(super) fn check_ts_content(content: &str) -> Vec<String> {

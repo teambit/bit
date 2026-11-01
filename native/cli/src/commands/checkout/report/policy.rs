@@ -46,6 +46,9 @@ fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
         .filter(|(name, _)| !name.trim().is_empty())
         .map(|(name, entry)| {
             let name = name.trim();
+            if name.chars().any(char::is_control) {
+                return Err(decline("checkout workspace dependency name"));
+            }
             let (before, after) = update_pair(entry)?;
             Ok(format!("  {name}: {before} => {after}"))
         })

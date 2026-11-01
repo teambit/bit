@@ -333,25 +333,31 @@ impl Context {
             return Err(io::Error::other("custom remote resolver or hooks"));
         }
         validate_remote_hosts(&scope["remotes"])?;
-        match fs::read(config_dir.join("global-remotes.json")) {
-            Ok(bytes) => {
-                if bytes.len() > 1024 * 1024 {
-                    return Err(io::Error::other("global remotes budget"));
-                }
-                validate_remote_hosts(&bit_workspace_config::parse_jsonc(&bytes)?)?;
-            }
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error),
-        }
+        validate_global_remotes(config_dir)?;
         let cli = workspace_command::NodeCli::find()?;
         let remotes = Remotes::load(&scope, config_dir, &global)?;
         let effective = bit_client_transfer::config::effective(global, &scope, &Value::Null);
-        let hub_url =
-            format!("{}/exporter", bit_client_transfer::remotes::symphony_url(&effective));
+        let hub_url = format!(
+            "{}/exporter",
+            bit_client_transfer::remotes::symphony_url(&effective).trim().trim_end_matches('/'),
+        );
         let network =
             Arc::new(Network::new(&effective, &cli.version, scope["name"].as_str(), None)?);
         let hub_network = Arc::new(Network::new(&effective, &cli.version, None, None)?);
         Ok(Self { root, remotes, network, hub_network, hub_url })
+    }
+}
+
+fn validate_global_remotes(config_dir: &Path) -> io::Result<()> {
+    match fs::read(config_dir.join("global-remotes.json")) {
+        Ok(bytes) => {
+            if bytes.len() > 1024 * 1024 {
+                return Err(io::Error::other("global remotes budget"));
+            }
+            validate_remote_hosts(&bit_workspace_config::parse_jsonc(&bytes)?)
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error),
     }
 }
 

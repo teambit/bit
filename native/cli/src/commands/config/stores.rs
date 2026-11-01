@@ -77,28 +77,24 @@ impl Stores {
 
     pub(super) fn prepare(&mut self, options: &Options) -> io::Result<()> {
         let value = match options.command.as_str() {
-            "set" => Some(Some(Value::String(options.values[1].clone()))),
+            "set" => {
+                let raw = options.values
+                    .get(1)
+                    .ok_or_else(|| io::Error::other("missing configuration value"))?;
+                Some(Some(Value::String(raw.clone())))
+            }
             "del" => Some(None),
             _ => None,
         };
         let Some(value) = value else { return Ok(()) };
-        let key = options.values[0].trim();
-        let origin = options.origin
-            .as_deref()
-            .map(str::trim)
-            .filter(|origin| !origin.is_empty())
-            .map(str::to_owned)
-            .or_else(|| {
-                if value.is_some() {
-                    Some("global".to_owned())
-                } else {
-                    self.entries
-                        .iter()
-                        .find(|store| store.values.contains_key(key))
-                        .map(|store| store.origin.to_owned())
-                }
-            });
-        let Some(origin) = origin else { return Ok(()) };
+        let key = options.values
+            .first()
+            .map(|raw| raw.trim())
+            .filter(|raw| !raw.is_empty())
+            .ok_or_else(|| io::Error::other("missing configuration key"))?;
+        let Some(origin) = self.resolve_origin(options, key, value.is_some()) else {
+            return Ok(());
+        };
         let store = self.entries
             .iter_mut()
             .find(|store| store.origin.eq_ignore_ascii_case(&origin))
@@ -108,8 +104,25 @@ impl Stores {
                     r#"unable to {verb} config, "{origin}" origin is missing"#,
                 ))
             })?;
-        store.prepare_change(key, value)?;
-        Ok(())
+        store.prepare_change(key, value)
+    }
+
+    fn resolve_origin(&self, options: &Options, key: &str, is_set: bool) -> Option<String> {
+        options.origin
+            .as_deref()
+            .map(str::trim)
+            .filter(|origin| !origin.is_empty())
+            .map(str::to_owned)
+            .or_else(|| {
+                if is_set {
+                    Some("global".to_owned())
+                } else {
+                    self.entries
+                        .iter()
+                        .find(|store| store.values.contains_key(key))
+                        .map(|store| store.origin.to_owned())
+                }
+            })
     }
 
     pub(super) fn write(&self) -> io::Result<()> {

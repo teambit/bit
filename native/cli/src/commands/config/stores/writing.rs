@@ -70,7 +70,11 @@ fn workspace(store: &Store) -> io::Result<()> {
         .filter(|path| !path.as_os_str().is_empty() && !path.to_string_lossy().trim().is_empty())
         .ok_or_else(|| io::Error::other("workspace config root"))?;
     let identity = aspect(&store.source).to_owned();
-    let Some((key, value)) = &store.change else { return Ok(()) };
+    let Some((raw_key, value)) = &store.change else { return Ok(()) };
+    let key = raw_key.trim();
+    if key.is_empty() {
+        return Err(io::Error::other("empty workspace config key"));
+    }
     let mut document = Document::parse(&fs::read_to_string(&store.path)?)?;
     if let Some(value) = value {
         document.set(&[&identity, key], value);

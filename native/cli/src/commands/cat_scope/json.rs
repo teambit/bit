@@ -5,15 +5,19 @@ use serde_json::{Map, Value, json};
 pub(super) fn build_component_json_obj(
     raw: &Value,
     scope: &str,
-    name: String,
+    name: &str,
     hash: &str,
     json_extra: bool,
 ) -> Option<Value> {
+    let (scope, name, hash) = (scope.trim(), name.trim(), hash.trim());
+    if scope.is_empty() || name.is_empty() || hash.is_empty() {
+        return None;
+    }
     let mut map = Map::new();
     map.insert("validateBeforePersist".into(), Value::Bool(true));
     map.insert("laneDataIsPopulated".into(), Value::Bool(false));
     map.insert("scope".into(), Value::String(scope.to_owned()));
-    map.insert("name".into(), Value::String(name));
+    map.insert("name".into(), Value::String(name.to_owned()));
     map.insert("versions".into(), map_ref_dict(raw.get("versions"))?);
     map.insert("orphanedVersions".into(), map_ref_dict(raw.get("orphanedVersions"))?);
     let lang = non_empty_str(&raw["lang"]).unwrap_or("javascript");
@@ -42,11 +46,15 @@ pub(super) fn build_component_json_obj(
         .unwrap_or_else(|| if head.is_some() { "1.0.0" } else { "0.0.0" });
     map.insert("schema".into(), Value::String(schema.to_owned()));
     map.insert("detachedHeads".into(), build_detached_heads(raw.get("detachedHeads"))?);
+    insert_extra(&mut map, hash, json_extra);
+    Some(Value::Object(map))
+}
+
+fn insert_extra(map: &mut Map<String, Value>, hash: &str, json_extra: bool) {
     if json_extra {
         map.insert("hash".into(), Value::String(hash.to_owned()));
         map.insert("type".into(), Value::String("ModelComponent".into()));
     }
-    Some(Value::Object(map))
 }
 
 fn default_binding_prefix(scope: &str) -> String {

@@ -109,8 +109,9 @@ fn read_checkout<'a>(
             continue;
         }
         if !raw.starts_with('-') {
-            (!raw.is_empty()).then_some(())?;
-            positionals.push(raw);
+            let trimmed = raw.trim();
+            (!trimmed.is_empty()).then_some(())?;
+            positionals.push(trimmed);
             continue;
         }
         index += apply_checkout_flag(&mut flags, raw, args.get(index).copied(), allow_interactive)?;

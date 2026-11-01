@@ -149,12 +149,14 @@ pub(super) fn validate_outside_workspace(
     if let Some(dir_err) = check_empty_dir(&workspace_path)? {
         return Ok(Some(dir_err));
     }
-    if let Some(lane) = &options.lane
+    if let Some(raw_lane) = &options.lane
         && options.remote.is_none()
-        && lane
+        && raw_lane
+            .trim()
             .split_once('/')
             .is_none_or(|(scope, name)| scope.trim().is_empty() || name.trim().is_empty())
     {
+        let lane = raw_lane.trim();
         return Ok(Some(format!(
             r#"unable to clone from lane "{lane}", the lane must be given with its scope, e.g. "my-org.my-scope/{lane}""#,
         )));

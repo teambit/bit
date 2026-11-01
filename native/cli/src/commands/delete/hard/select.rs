@@ -56,7 +56,13 @@ fn literal(pattern: &str) -> io::Result<Vec<String>> {
     let (scope, name) =
         pattern.split_once('/').ok_or_else(|| invalid("component must have a scope"))?;
     let (scope, name) = (scope.trim(), name.trim());
-    if scope.is_empty() || name.is_empty() || scope.contains("..") || name.contains("..") {
+    if scope.is_empty()
+        || name.is_empty()
+        || name.starts_with('/')
+        || name.ends_with('/')
+        || scope.contains("..")
+        || name.contains("..")
+    {
         return Err(invalid("remote component id"));
     }
     Ok(vec![format!("{scope}/{name}")])

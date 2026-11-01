@@ -34,7 +34,11 @@ pub(super) fn try_run(
     args: &[OsString],
     options: &Options,
 ) -> io::Result<Option<Outcome>> {
-    if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() || !root.is_dir() {
+    if args.is_empty()
+        || root.as_os_str().is_empty()
+        || root.to_string_lossy().trim().is_empty()
+        || !root.is_dir()
+    {
         return Ok(None);
     }
     let mut plan = match plan::Plan::prepare(root, options) {

@@ -55,7 +55,10 @@ pub(super) fn write(
 
 fn fill_repo(content: &str, repo: &str) -> String {
     let trimmed_repo = super::trim(repo);
-    if trimmed_repo.is_empty() || trimmed_repo == UNKNOWN {
+    if trimmed_repo.is_empty()
+        || trimmed_repo == UNKNOWN
+        || trimmed_repo.chars().any(char::is_control)
+    {
         return content.to_owned();
     }
     let Some(start) = content.find(START) else {

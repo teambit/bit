@@ -260,19 +260,28 @@ fn collect_component_sources(comp_dir: &Path) -> String {
     };
     let mut combined = String::new();
     for entry in entries.filter_map(Result::ok) {
-        let path = entry.path();
-        let name = entry.file_name();
-        if name == "node_modules" || name == ".git" {
-            continue;
-        }
-        if path.is_dir() {
-            combined.push_str(&collect_component_sources(&path));
-        } else if let Ok(content) = fs::read_to_string(&path) {
-            combined.push_str(&content);
-            combined.push('\n');
-        }
+        append_entry_sources(&entry, &mut combined);
     }
     combined
+}
+
+fn append_entry_sources(entry: &fs::DirEntry, combined: &mut String) {
+    let Ok(file_type) = entry.file_type() else {
+        return;
+    };
+    let name = entry.file_name();
+    if file_type.is_symlink() || name == "node_modules" || name == ".git" {
+        return;
+    }
+    let path = entry.path();
+    if file_type.is_dir() {
+        combined.push_str(&collect_component_sources(&path));
+    } else if file_type.is_file()
+        && let Ok(content) = fs::read_to_string(&path)
+    {
+        combined.push_str(&content);
+        combined.push('\n');
+    }
 }
 
 fn select_isolated_indices(

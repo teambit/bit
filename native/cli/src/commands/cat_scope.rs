@@ -93,8 +93,11 @@ fn apply_cat_scope_arg(opts: &mut Options, arg: &str) -> Option<()> {
         }
         "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
         | "--color=false" | "--color=always" => {}
-        val if !val.starts_with('-') && !val.is_empty() && opts.scope_path.is_none() => {
-            opts.scope_path = Some(val.to_owned());
+        val if !val.starts_with('-')
+            && !val.trim().is_empty()
+            && opts.scope_path.is_none() =>
+        {
+            opts.scope_path = Some(val.trim().to_owned());
         }
         _ => return None,
     }
@@ -268,7 +271,7 @@ fn build_component_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
     let id = format!("{scope}/{name}");
     let hash = sha1_hex(&id);
     let json_obj = if opts.json {
-        Some(json::build_component_json_obj(raw, scope, name, &hash, opts.json_extra)?)
+        Some(json::build_component_json_obj(raw, scope, &name, &hash, opts.json_extra)?)
     } else {
         None
     };

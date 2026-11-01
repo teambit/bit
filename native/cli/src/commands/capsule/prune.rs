@@ -145,6 +145,7 @@ fn build(cwd: &Path, root: Option<&ScopeRoot>, opts: &PruneArgs) -> io::Result<P
     let dated = configured_dated
         .as_deref()
         .or_else(|| config.get("capsules_scopes_aspects_dated_dir").and_then(Value::as_str))
+        .map(str::trim)
         .filter(|value| !value.is_empty())
         .unwrap_or("dated-capsules");
     let roots = list_stats::collect(cwd, opts.with_sizes)?;

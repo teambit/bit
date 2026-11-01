@@ -287,11 +287,12 @@ fn resolve_delete_dir(
 
 fn delete_and_report(target_dir: &str, chalk: Chalk) -> io::Result<Report> {
     let target_dir = target_dir.trim();
-    if target_dir.is_empty() {
+    let target_path = Path::new(target_dir);
+    if target_dir.is_empty() || !target_path.is_absolute() || target_path.parent().is_none() {
         return Err(io::Error::other("capsule delete target directory is empty"));
     }
-    if Path::new(target_dir).exists() {
-        fs::remove_dir_all(target_dir)?;
+    if target_path.exists() {
+        fs::remove_dir_all(target_path)?;
     }
     let formatter = Formatter::new(chalk);
     let data = formatter.success_summary(&format!(

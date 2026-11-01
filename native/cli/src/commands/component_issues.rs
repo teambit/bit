@@ -181,7 +181,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
-    let Some(json) = parse(&argv[1..]) else {
+    let Some(json) = argv.get(1..).and_then(parse) else {
         return Ok(Outcome::Declined("outside the native component-issues grammar".to_string()));
     };
     let root = env::current_dir().ok().and_then(|cwd| workspace::root(&cwd));

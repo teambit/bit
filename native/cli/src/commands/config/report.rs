@@ -9,7 +9,7 @@ pub(super) fn render(stores: &Stores, options: &Options, chalk: Chalk) -> io::Re
     match options.command.as_str() {
         "set" => Ok(chalk.green("added configuration successfully")),
         "del" => Ok(chalk.green("deleted successfully")),
-        "get" => Ok(get(stores, &options.values[0])),
+        "get" => Ok(options.values.first().map_or_else(String::new, |key| get(stores, key))),
         _ => list(stores, options, chalk),
     }
 }

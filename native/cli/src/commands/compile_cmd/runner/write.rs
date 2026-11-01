@@ -89,5 +89,8 @@ fn open_file(file: &Emitted) -> io::Result<fs::File> {
     if !parent.as_os_str().is_empty() {
         fs::create_dir_all(parent).map_err(|error| failure(error, "mkdir", parent))?;
     }
+    if fs::symlink_metadata(&file.path).is_ok_and(|metadata| metadata.is_symlink()) {
+        fs::remove_file(&file.path).map_err(|error| failure(error, "unlink", &file.path))?;
+    }
     fs::File::create(&file.path).map_err(|error| failure(error, "open", &file.path))
 }

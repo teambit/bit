@@ -52,6 +52,10 @@ fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<Str
     ]
 }
 fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
+    let scope = match input.target.scope.trim() {
+        "" => "<scope>",
+        trimmed => trimmed,
+    };
     report::step(
         3,
         "Make Bit -> Git instant",
@@ -61,21 +65,22 @@ fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> Stri
                 "Install {} on {}/{}.",
                 chalk.cyan("https://github.com/apps/bit-git-sync"),
                 repository.owner.trim(),
-                repository.name.trim()
+                repository.name.trim(),
             ),
             format!(
                 "Copy the repository's webhook URL from {}",
-                chalk.cyan("https://webhook-relay-gggmal.r2.composed.app/setup")
+                chalk.cyan("https://webhook-relay-gggmal.r2.composed.app/setup"),
             ),
-            format!(
-                r#"and add it to {} on bit.cloud as an "Export succeeded" webhook."#,
-                input.target.scope.trim()
-            ),
+            format!(r#"and add it to {scope} on bit.cloud as an "Export succeeded" webhook."#),
         ],
         chalk,
     )
 }
 fn enterprise_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
+    let scope = match input.target.scope.trim() {
+        "" => "<scope>",
+        trimmed => trimmed,
+    };
     let api = remote::api(repository.host.trim());
     let base = api
         .as_deref()
@@ -86,10 +91,7 @@ fn enterprise_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> 
     let url =
         format!("{base}/repos/{}/{}/dispatches", repository.owner.trim(), repository.name.trim());
     let mut lines = vec![
-        format!(
-            r#"On bit.cloud, add an "Export succeeded" webhook to {}:"#,
-            input.target.scope.trim()
-        ),
+        format!(r#"On bit.cloud, add an "Export succeeded" webhook to {scope}:"#),
         format!("  URL      {}", chalk.cyan(&url)),
     ];
     if let Err(error) = api {

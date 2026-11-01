@@ -37,7 +37,9 @@ pub(in crate::commands) fn format_title(
         options,
         format: Formatter::new(chalk),
         policy: policy::format(result.get("workspaceConfigUpdateResult"), chalk)?,
-        title,
+        title: title
+            .map(str::trim)
+            .filter(|title| !title.is_empty()),
     };
     let skipped = !results.skipped.is_empty()
         && options.report_all()

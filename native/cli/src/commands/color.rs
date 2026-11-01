@@ -165,7 +165,7 @@ fn forced(args: &[OsString]) -> Option<u32> {
     }
     if let Some(value) = env::var_os("FORCE_COLOR") {
         let value = value.to_string_lossy();
-        forced = Some(match value.as_ref() {
+        forced = Some(match value.trim() {
             "true" => 1,
             "false" => 0,
             "" => 1,

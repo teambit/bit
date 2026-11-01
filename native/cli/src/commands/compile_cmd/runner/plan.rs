@@ -26,6 +26,9 @@ impl Plan {
         let directories = links.dist_directories(root, &loaded.progress.identities)?;
         let compiled =
             emission::prepare(root, &components, &loaded.progress.identities, &directories)?;
+        if compiled.len() != directories.len() {
+            return Err(io::Error::other("compiler output directory count"));
+        }
         validate_order(root, &compiled, options)?;
         limits::outputs(&compiled)?;
         write::validate_sources(&loaded.files)?;

@@ -113,7 +113,7 @@ fn run_sync(root: &Path, args: &[OsString], options: &SyncOptions) -> io::Result
 
 fn run_bare(cwd: &Path, root_opt: Option<&Path>, args: &[OsString]) -> io::Result<Outcome> {
     let report = Report { data: "[ci] not implemented".into(), code: 1, details: None };
-    if let Some(root) = root_opt {
+    if let Some(root) = root_opt.filter(|root| !root.as_os_str().is_empty()) {
         workspace_command::execute_then(root, args, "ci", |_| Ok(report))
     } else {
         workspace_command::execute_with_scope(cwd, args, "ci", &report)

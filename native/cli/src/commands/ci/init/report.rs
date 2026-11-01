@@ -175,8 +175,8 @@ pub(super) fn step(
 ) -> String {
     let mut lines = vec![format!(
         "{} {}",
-        chalk.bold_white(&format!("{number}. {title}")),
-        chalk.dim(&format!("({who})"))
+        chalk.bold_white(&format!("{number}. {}", title.trim())),
+        chalk.dim(&format!("({})", who.trim())),
     )];
     lines.extend(
         body.into_iter()

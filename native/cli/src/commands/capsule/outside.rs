@@ -184,7 +184,10 @@ fn run_delete_all_outside_scope(
     args: &[OsString],
     chalk: Chalk,
 ) -> io::Result<Outcome> {
-    let Ok(target_dir) = resolve_capsules_dir(cwd) else {
+    let Some(target_dir) = resolve_capsules_dir(cwd)
+        .ok()
+        .filter(|dir| !dir.trim().is_empty() && Path::new(dir.trim()).is_absolute())
+    else {
         return Ok(Outcome::Declined("capsule delete --all cache root delegated".into()));
     };
     let report = delete_and_report(&target_dir, chalk)?;

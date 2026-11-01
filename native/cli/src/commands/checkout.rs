@@ -46,7 +46,9 @@ fn fallback_checkout_error(args: &[OsString], raw_args: &[&str]) -> io::Result<O
     if ci_enabled() {
         return Ok(Outcome::Declined("CI checkout option validation".to_string()));
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
+    let Some(root) = workspace::root(&env::current_dir()?)
+        .filter(|root| root.is_absolute() && !root.as_os_str().is_empty())
+    else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
     workspace_command::execute_then(&root, args, "checkout", |_| Err(io::Error::other(err_msg)))

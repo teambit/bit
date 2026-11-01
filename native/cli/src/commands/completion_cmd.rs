@@ -68,7 +68,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("completion arguments are not UTF-8".into()));
     };
-    if !valid_options(&argv[1..]) {
+    if !argv.get(1..).is_some_and(valid_options) {
         return Ok(Outcome::Declined("outside native completion grammar".into()));
     }
     let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));

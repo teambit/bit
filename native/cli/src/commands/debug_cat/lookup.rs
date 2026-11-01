@@ -116,21 +116,30 @@ fn match_lane_entry_head(
     full_id: &str,
 ) -> Option<String> {
     if let Some(raw) = row.as_str() {
-        let (id, hash) = raw.rsplit_once('@')?;
-        return (id == full_id || id == comp_name).then(|| hash.to_owned());
+        let (id, hash) = raw.trim().rsplit_once('@')?;
+        let (id, hash) = (id.trim(), hash.trim());
+        return (!hash.is_empty() && (id == full_id || id == comp_name)).then(|| hash.to_owned());
     }
     let head = row["head"]
         .as_str()
-        .or_else(|| row["version"].as_str())?;
+        .or_else(|| row["version"].as_str())
+        .map(str::trim)
+        .filter(|val| !val.is_empty())?;
     let id_node = row.get("id").unwrap_or(row);
     if let Some(raw) = id_node.as_str() {
-        let base = raw.split('@').next().unwrap_or(raw);
+        let base = raw
+            .trim()
+            .split('@')
+            .next()
+            .unwrap_or(raw)
+            .trim();
         return (base == full_id || base == comp_name).then(|| head.to_owned());
     }
     let row_scope = id_node["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|val| !val.is_empty());
-    (id_node["name"].as_str() == Some(comp_name)
+    (id_node["name"].as_str().map(str::trim) == Some(comp_name)
         && (row_scope.is_none() || row_scope == comp_scope))
         .then(|| head.to_owned())
 }

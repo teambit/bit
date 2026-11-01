@@ -59,6 +59,9 @@ pub(super) fn select(files: &[Value], requested: &str) -> io::Result<Value> {
         .trim_start_matches("./")
         .trim_start_matches('/')
         .to_owned();
+    if normalized.is_empty() {
+        return Err(decline("cat requested file absent"));
+    }
     files
         .iter()
         .find(|file| {

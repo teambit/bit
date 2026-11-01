@@ -32,6 +32,7 @@ fn component(receipt: &Value, format: &Formatter) -> String {
 fn dependents(receipt: &Value, format: &Formatter) -> String {
     let Some(rows) = receipt["dependentBits"].as_object() else { return String::new() };
     rows.iter()
+        .filter(|(_, dependencies)| !list(dependencies).is_empty())
         .map(|(id, dependencies)| dependent_row(id, dependencies, format))
         .collect::<Vec<_>>()
         .join("\n\n")

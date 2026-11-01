@@ -74,15 +74,13 @@ fn emit_file_with_config_error(cwd: &Path, args: &[OsString], json: bool) -> io:
     if ci_enabled() {
         return Ok(Outcome::Declined("published cat option error".into()));
     }
-    if let Some(root) = workspace::root(cwd) {
-        if json {
-            return workspace_command::execute_json(&root, args, "cat", |_| {
-                Err(io::Error::other(FILE_WITH_CONFIG_ERR))
-            });
-        }
-        return workspace_command::execute_then(&root, args, "cat", |_| {
-            Err(io::Error::other(FILE_WITH_CONFIG_ERR))
-        });
+    if let Some(root) = workspace::root(cwd).filter(|root| !root.as_os_str().is_empty()) {
+        let fail = |_: &bit_install::output::Output| Err(io::Error::other(FILE_WITH_CONFIG_ERR));
+        return if json {
+            workspace_command::execute_json(&root, args, "cat", fail)
+        } else {
+            workspace_command::execute_then(&root, args, "cat", fail)
+        };
     }
     workspace_command::execute_failure_scope(
         cwd,

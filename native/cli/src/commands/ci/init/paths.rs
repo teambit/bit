@@ -31,8 +31,12 @@ fn resolve_link(path: &Path) -> io::Result<Option<PathBuf>> {
         if fs::symlink_metadata(&current)?.file_type().is_symlink() {
             // Node checks the target before reading the link, including broken links and cycles.
             fs::metadata(&current)?;
+            let link = fs::read_link(&current)?;
+            if link.as_os_str().is_empty() {
+                return Err(io::Error::other("empty symbolic link target"));
+            }
             let parent = current.parent().unwrap_or_else(|| Path::new(""));
-            let target = parent.join(fs::read_link(&current)?);
+            let target = parent.join(link);
             return Ok(Some(normalize(&target.join(parts.as_path()))));
         }
     }

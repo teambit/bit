@@ -230,16 +230,16 @@ async fn drain(mut set: tokio::task::JoinSet<Receipt>, count: usize) -> io::Resu
     let mut first_error = None;
     while let Some(result) = set.join_next().await {
         match result {
-            Ok(Ok((ordinal, receipt))) => receipts[ordinal] = receipt,
-            Ok(Err(error)) => {
-                if first_error.is_none() {
-                    first_error = Some(error);
+            Ok(Ok((ordinal, receipt))) => {
+                if let Some(slot) = receipts.get_mut(ordinal) {
+                    *slot = receipt;
                 }
             }
+            Ok(Err(error)) => {
+                let _ = first_error.get_or_insert(error);
+            }
             Err(error) => {
-                if first_error.is_none() {
-                    first_error = Some(io::Error::other(error));
-                }
+                let _ = first_error.get_or_insert_with(|| io::Error::other(error));
             }
         }
     }

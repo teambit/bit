@@ -82,6 +82,14 @@ struct IdJsonOptions {
 }
 
 fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
+    parse_id_options(args, true)
+}
+
+fn parse_single_id(args: &[&str]) -> Option<String> {
+    parse_id_options(args, false).map(|opts| opts.id)
+}
+
+fn parse_id_options(args: &[&str], allow_json: bool) -> Option<IdJsonOptions> {
     let mut opts = IdJsonOptions::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
@@ -90,8 +98,8 @@ fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
                 super::eject::consume_trailing_eject(iter, &mut opts.id)?;
                 break;
             }
-            "-j" | "--json" | "--json=true" => opts.json = true,
-            "--json=false" => opts.json = false,
+            "-j" | "--json" | "--json=true" if allow_json => opts.json = true,
+            "--json=false" if allow_json => opts.json = false,
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
             val if !val.starts_with('-') && !val.trim().is_empty() && opts.id.is_empty() => {
                 val.trim().clone_into(&mut opts.id);
@@ -102,30 +110,14 @@ fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
     (!opts.id.is_empty()).then_some(opts)
 }
 
-fn parse_single_id(args: &[&str]) -> Option<String> {
-    let mut id = String::new();
-    let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
-        match arg {
-            "--" => {
-                super::eject::consume_trailing_eject(iter, &mut id)?;
-                break;
-            }
-            "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            val if !val.starts_with('-') && !val.trim().is_empty() && id.is_empty() => {
-                val.trim().clone_into(&mut id);
-            }
-            _ => return None,
-        }
-    }
-    (!id.is_empty()).then_some(id)
-}
-
 fn run_object(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("cat-object arguments are not UTF-8".into()));
     };
-    let Some(opts) = parse_object_options(&argv[1..]) else {
+    let Some(opts) = argv
+        .get(1..)
+        .and_then(parse_object_options)
+    else {
         return Ok(Outcome::Declined("outside native cat-object grammar".into()));
     };
     let Ok(Some(root)) = scope_root::discover() else {
@@ -137,14 +129,8 @@ fn run_object(args: &[OsString]) -> io::Result<Outcome> {
             && !ci_enabled()
             && matches!(bit_object_import::read_raw_scope_object(&scope_dir, &opts.hash), Ok(None))
         {
-            return emit_failure(
-                &root,
-                args,
-                "cat-object",
-                false,
-                false,
-                "object not found".into(),
-            );
+            let msg = "object not found".into();
+            return emit_failure(&root, args, "cat-object", false, false, msg);
         }
         return Ok(Outcome::Declined("cat-object delegated".into()));
     };
@@ -154,13 +140,11 @@ fn run_object(args: &[OsString]) -> io::Result<Outcome> {
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
-            !matches!(
-                val.to_string_lossy()
-                    .trim()
-                    .to_ascii_lowercase()
-                    .as_str(),
-                "" | "0" | "false",
-            )
+            let lower = val
+                .to_string_lossy()
+                .trim()
+                .to_ascii_lowercase();
+            !matches!(lower.as_str(), "" | "0" | "false")
         })
 }
 

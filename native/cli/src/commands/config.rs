@@ -18,6 +18,9 @@ use std::{
 pub const COMMAND: Command = Command { name: "config", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
+    if args.is_empty() {
+        return Ok(Outcome::Declined("missing configuration command".to_owned()));
+    }
     let Some(options) = Options::parse(args) else {
         return Ok(Outcome::Declined("unsupported configuration arguments".to_owned()));
     };

@@ -132,6 +132,9 @@ pub(super) fn read(path: &Path) -> io::Result<String> {
             "EISDIR: illegal operation on a directory, read",
         ));
     }
+    if fs::metadata(path).is_ok_and(|meta| meta.len() > 8 * 1024 * 1024) {
+        return Err(io::Error::other("onboarding file exceeds size budget"));
+    }
     fs::read(path)
         .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
         .map_err(|error| {

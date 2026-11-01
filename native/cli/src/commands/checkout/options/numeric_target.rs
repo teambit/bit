@@ -97,8 +97,13 @@ fn valid_tag(to: &str) -> bool {
     let identifier = |text: &str| {
         !text.is_empty()
             && text
-                .chars()
-                .all(|character| character.is_ascii_alphanumeric() || ".-".contains(character))
+                .split('.')
+                .all(|segment| {
+                    !segment.is_empty()
+                        && segment
+                            .chars()
+                            .all(|character| character.is_ascii_alphanumeric() || character == '-')
+                })
     };
     let (main, build) = match to.split_once('+') {
         Some((main, build)) => (main, Some(build)),

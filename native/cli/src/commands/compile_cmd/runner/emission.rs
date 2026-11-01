@@ -84,7 +84,13 @@ fn source_path(source: &Value) -> io::Result<PathBuf> {
     let relative = source["relativePath"]
         .as_str()
         .map(str::trim)
-        .filter(|value| !value.is_empty())
+        .filter(|value| {
+            !value.is_empty()
+                && !Path::new(value).is_absolute()
+                && !Path::new(value)
+                    .components()
+                    .any(|part| matches!(part, std::path::Component::ParentDir))
+        })
         .ok_or_else(|| io::Error::other("compiler source path"))?;
     Ok(Path::new(directory).join(relative))
 }

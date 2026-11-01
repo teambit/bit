@@ -76,6 +76,9 @@ fn run_remote(cwd: &Path, args: &[OsString], remote: &str) -> io::Result<Outcome
 }
 
 fn parse_args(args: &[OsString]) -> Option<Option<String>> {
+    if args.is_empty() {
+        return None;
+    }
     let tokens = args
         .iter()
         .skip(1)
@@ -95,8 +98,10 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
 
 fn apply_token(tokens: &[&str], index: &mut usize, remote: &mut Option<String>) -> Option<()> {
     match tokens[*index] {
-        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
-        | "--color=false" | "--color=always" => Some(()),
+        "--no-color" | "--no-colors" | "--no-color=true" | "--no-color=false" | "--color"
+        | "--colors" | "--color=true" | "--color=false" | "--color=always" | "--color=never" => {
+            Some(())
+        }
         "-r" | "--remote" if remote.is_none() => {
             *index += 1;
             let value = tokens.get(*index)?.trim();

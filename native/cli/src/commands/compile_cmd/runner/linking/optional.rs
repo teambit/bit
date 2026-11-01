@@ -105,13 +105,15 @@ fn split_component_identity(entry: &Value) -> io::Result<(&str, &str)> {
         .ok_or_else(|| io::Error::other("compiler dependency identity"))?;
     match raw
         .rsplit_once('@')
-        .filter(|(base, ver)| !base.trim().is_empty() && !ver.trim().is_empty())
-    {
-        Some((base, ver)) => Ok((base, ver)),
+        .filter(|(base, ver)| {
+            !base.trim().is_empty() && !base.contains('@') && !ver.trim().is_empty()
+        }) {
+        Some((base, ver)) => Ok((base.trim(), ver.trim())),
         None => Ok((
-            raw.trim_end_matches('@'),
+            raw.trim_end_matches('@').trim(),
             entry["version"]
                 .as_str()
+                .map(str::trim)
                 .ok_or_else(|| io::Error::other("compiler dependency version"))?,
         )),
     }
