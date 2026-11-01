@@ -90,9 +90,14 @@ fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
         .find(|model| {
             let scope = model["scope"].as_str().map_or("", str::trim);
             let name = model["name"].as_str().map_or("", str::trim);
-            let identity =
-                if scope.is_empty() { name.to_string() } else { format!("{scope}/{name}") };
-            identity == target
+            if scope.is_empty() {
+                name == target
+            } else {
+                target
+                    .strip_prefix(scope)
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    .is_some_and(|rest| rest == name)
+            }
         })
         .ok_or_else(|| invalid("component log model absent"))?;
     Ok(model)

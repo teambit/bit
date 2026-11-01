@@ -234,7 +234,7 @@ fn ordinary_merge_state(root: &Path) -> io::Result<()> {
 
 fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Result<Vec<Value>> {
     let mut proofs = Vec::new();
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(models.len());
     let remotes_dir = crate::scope_path(root).join("refs/remotes");
     for model in models {
         if let Some(scope) = model["scope"]
@@ -243,29 +243,31 @@ fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Resu
             .filter(|scope| !scope.is_empty())
             && seen.insert(scope)
         {
-            super::super::dependency_graph::proof::read(
-                &remotes_dir.join(scope).join("main"),
-                &mut proofs,
-            )?;
+            read_remote_ref(&remotes_dir, scope, "main", &mut proofs)?;
         }
     }
     if let Some(lane) = lane {
-        super::super::dependency_graph::proof::read(
-            &remotes_dir.join(&lane.scope).join(&lane.name),
-            &mut proofs,
-        )?;
+        read_remote_ref(&remotes_dir, &lane.scope, &lane.name, &mut proofs)?;
         if let Some((scope, name)) = lane.forked_from
             .as_deref()
             .and_then(|id| id.split_once('/'))
         {
-            super::super::dependency_graph::proof::read(
-                &remotes_dir.join(scope).join(name),
-                &mut proofs,
-            )?;
+            read_remote_ref(&remotes_dir, scope, name, &mut proofs)?;
         }
     }
     proofs
         .into_iter()
         .map(|proof| serde_json::to_value(proof).map_err(io::Error::other))
         .collect()
+}
+
+fn read_remote_ref(
+    remotes_dir: &Path,
+    scope: &str,
+    name: &str,
+    proofs: &mut Vec<super::super::dependency_graph::proof::Proof>,
+) -> io::Result<()> {
+    let path = remotes_dir.join(scope).join(name);
+    super::super::dependency_graph::proof::read(&path, proofs)?;
+    Ok(())
 }

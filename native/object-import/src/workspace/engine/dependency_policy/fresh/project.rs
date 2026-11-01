@@ -161,7 +161,8 @@ impl Projection<'_> {
         };
         let id = detection.core_aspect_ids
             .get(index)
-            .map(|id| id.trim())
+            .map(String::as_str)
+            .map(str::trim)
             .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("fresh core aspect identity mapping"))?;
         self.metadata.file_core_aspects[usize::from(component)].push(id.to_owned());
@@ -272,6 +273,10 @@ impl Projection<'_> {
         field: usize,
         mut packages: Map<String, Value>,
     ) -> io::Result<()> {
+        let is_ts = Path::new(origin)
+            .extension()
+            .and_then(|value| value.to_str())
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("ts") || ext.eq_ignore_ascii_case("tsx"));
         for (name, version) in &mut packages {
             let trimmed = name.trim();
             if !self.request.detection.workspace_policy[0].contains_key(trimmed)
@@ -281,11 +286,7 @@ impl Projection<'_> {
             {
                 *version = model.clone();
             }
-            if Path::new(origin)
-                .extension()
-                .and_then(|value| value.to_str())
-                .is_some_and(|ext| matches!(ext.to_ascii_lowercase().as_str(), "ts" | "tsx"))
-            {
+            if is_ts {
                 self.types(trimmed)?;
             }
         }

@@ -41,7 +41,10 @@ fn read_view(
     overlay: Option<&SourceOverlay>,
 ) -> io::Result<(usize, Value)> {
     validate(request)?;
-    let budget = overlay.map_or_else(|| Ok(Budget::new()), Budget::overlay)?;
+    let budget = match overlay {
+        Some(view) => Budget::overlay(view)?,
+        None => Budget::new(),
+    };
     let dependent = OnceLock::new();
     let rows = pool.install(|| {
         request.names

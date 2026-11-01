@@ -49,16 +49,18 @@ pub fn cache_stale(
     pool: &rayon::ThreadPool,
 ) -> io::Result<bool> {
     path(root)?;
-    if files.len() > 65536
-        || !timestamp.is_finite()
-        || timestamp < 0.0
-        || timestamp.fract() != 0.0
-        || timestamp > 9_007_199_254_740_991.0
-    {
+    if files.len() > 65536 || !valid_timestamp(timestamp) {
         return Err(invalid("dependency cache freshness limits"));
     }
     for file in files {
         path(file)?;
     }
     freshness::stale(root, files, timestamp, pool)
+}
+
+fn valid_timestamp(timestamp: f64) -> bool {
+    timestamp.is_finite()
+        && timestamp >= 0.0
+        && timestamp.fract() == 0.0
+        && timestamp <= 9_007_199_254_740_991.0
 }

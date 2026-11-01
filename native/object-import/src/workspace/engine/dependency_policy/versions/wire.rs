@@ -57,14 +57,15 @@ pub(super) fn version(value: &str) -> &str {
         .unwrap_or("latest")
 }
 pub(super) fn identity(base: &str, version: &str) -> String {
+    let base = unversioned(base);
     let version = version.trim();
     if version.is_empty()
         || version.eq_ignore_ascii_case("latest")
         || version.eq_ignore_ascii_case("head")
     {
-        unversioned(base).to_owned()
+        base.to_owned()
     } else {
-        format!("{}@{version}", unversioned(base))
+        format!("{base}@{version}")
     }
 }
 pub(super) fn snap(value: &str) -> bool {

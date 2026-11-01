@@ -94,7 +94,6 @@ impl Reader {
         package: &Package,
         resolved: &str,
     ) -> io::Result<Option<String>> {
-        let resolved = resolved.replace(std::path::MAIN_SEPARATOR, "/");
         let Some(main) = package.manifest["main"]
             .as_str()
             .map(str::trim)
@@ -102,16 +101,17 @@ impl Reader {
         else {
             return Ok(None);
         };
-        if resolved.ends_with(&main.replacen("./", "", 1))
-            || resolved
-                .split("node_modules/")
-                .nth(1)
-                .unwrap_or(&resolved)
-                .contains("eslintrc")
-        {
+        if !source_extension(resolved) {
             return Ok(None);
         }
-        if !source_extension(&resolved) {
+        let resolved = resolved.replace(std::path::MAIN_SEPARATOR, "/");
+        let after_nm = resolved
+            .split("node_modules/")
+            .nth(1)
+            .unwrap_or(&resolved);
+        if resolved.ends_with(main.strip_prefix("./").unwrap_or(main))
+            || after_nm.contains("eslintrc")
+        {
             return Ok(None);
         }
         let dist = package.directory.join("dist");
@@ -120,13 +120,7 @@ impl Reader {
             None => proof::probe(&dist, &mut self.proofs)?,
         };
         if exists {
-            return Ok(Some(
-                resolved
-                    .split("node_modules/")
-                    .nth(1)
-                    .unwrap_or(&resolved)
-                    .to_owned(),
-            ));
+            return Ok(Some(after_nm.to_owned()));
         }
         Ok(None)
     }
@@ -135,7 +129,11 @@ fn source_extension(resolved: &str) -> bool {
     Path::new(resolved)
         .extension()
         .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| matches!(ext.to_ascii_lowercase().as_str(), "ts" | "tsx" | "js" | "jsx"))
+        .is_some_and(|ext| {
+            ["ts", "tsx", "js", "jsx"]
+                .iter()
+                .any(|candidate| ext.eq_ignore_ascii_case(candidate))
+        })
 }
 fn directory(resolved: &str) -> io::Result<PathBuf> {
     let resolved = resolved.replace(std::path::MAIN_SEPARATOR, "/");

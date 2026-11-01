@@ -24,7 +24,8 @@ pub(super) fn nested(
         directories
             .par_iter()
             .map(|(directory, name)| {
-                let patterns = read(&root.join(directory).join(name), name == ".gitignore")?;
+                let file = root.join(directory).join(name);
+                let patterns = read(&file, name == ".gitignore")?;
                 Ok(Nested { directory: directory.clone(), patterns })
             })
             .collect::<io::Result<Vec<_>>>()
@@ -83,7 +84,7 @@ fn read(path: &Path, missing: bool) -> io::Result<Vec<String>> {
     if !metadata.is_file() || metadata.len() > 65536 {
         return Err(invalid("inventory ignore file limit"));
     }
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
     input.take(65537).read_to_end(&mut bytes)?;
     if bytes.len() > 65536 || bytes.len() as u64 != metadata.len() || bytes.contains(&0) {
         return Err(invalid("inventory ignore file limit"));

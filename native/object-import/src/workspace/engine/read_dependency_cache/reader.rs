@@ -13,7 +13,7 @@ const LIMIT: usize = 8 * 1024 * 1024;
 
 pub(super) fn read(cache: &Path, key: &str) -> io::Result<Option<Value>> {
     let hashed = format!("{:x}", Sha256::digest(key.as_bytes()));
-    let bucket = segmented(&cache.join("index-v5"), &hashed);
+    let bucket = segmented(cache.join("index-v5"), &hashed);
     let Some(bytes) = bounded(&bucket)? else { return Ok(None) };
     let text = std::str::from_utf8(&bytes).map_err(|_| invalid("dependency cache index UTF-8"))?;
     let Some(entry) = latest(text, key)? else { return Ok(None) };
@@ -57,7 +57,7 @@ fn content(cache: &Path, integrity: &str) -> io::Result<Option<String>> {
             let _ = write!(text, "{byte:02x}");
             text
         });
-    let Some(body) = bounded(&segmented(&cache.join("content-v2/sha512"), &hex))? else {
+    let Some(body) = bounded(&segmented(cache.join("content-v2/sha512"), &hex))? else {
         return Ok(None);
     };
     if Sha512::digest(&body).as_slice() != digest.as_slice() {
@@ -66,16 +66,16 @@ fn content(cache: &Path, integrity: &str) -> io::Result<Option<String>> {
     String::from_utf8(body).map(Some).map_err(|_| invalid("dependency cache body UTF-8"))
 }
 
-fn segmented(root: &Path, hash: &str) -> PathBuf {
-    root.join(&hash[..2])
-        .join(&hash[2..4])
-        .join(&hash[4..])
+fn segmented(mut path: PathBuf, hash: &str) -> PathBuf {
+    path.push(&hash[..2]);
+    path.push(&hash[2..4]);
+    path.push(&hash[4..]);
+    path
 }
 fn falsy(value: &Value) -> bool {
-    value.is_null()
-        || value == &Value::Bool(false)
+    matches!(value, Value::Null | Value::Bool(false))
+        || value.as_str() == Some("")
         || value == &json!(0)
-        || value == &Value::String(String::new())
 }
 fn latest(text: &str, key: &str) -> io::Result<Option<Value>> {
     let mut result = None;
@@ -112,7 +112,7 @@ fn bounded(path: &Path) -> io::Result<Option<Vec<u8>>> {
     if !metadata.is_file() || metadata.len() > LIMIT as u64 {
         return Err(invalid("dependency cache file limit"));
     }
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
     match fs::File::open(path) {
         Ok(file) => file
             .take(LIMIT as u64 + 1)

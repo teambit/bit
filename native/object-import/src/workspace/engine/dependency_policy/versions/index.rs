@@ -14,7 +14,7 @@ pub(super) struct Index<'a> {
 }
 impl<'a> Index<'a> {
     pub(super) fn new(request: &'a Request) -> Self {
-        let mut bitmap = HashMap::new();
+        let mut bitmap = HashMap::with_capacity(request.sources.bitmap.len());
         for id in &request.sources.bitmap {
             let base = unversioned(id);
             if base.is_empty() {
@@ -24,12 +24,7 @@ impl<'a> Index<'a> {
             bitmap
                 .entry(base)
                 .and_modify(|value| *value = None)
-                .or_insert_with(|| {
-                    (!ver.is_empty()
-                        && !ver.eq_ignore_ascii_case("latest")
-                        && !ver.eq_ignore_ascii_case("head"))
-                    .then_some(ver)
-                });
+                .or_insert_with(|| pinned_version(ver).then_some(ver));
         }
         Self {
             request,
@@ -38,24 +33,24 @@ impl<'a> Index<'a> {
             model: first(&request.sources.model),
             env: request.policy.env_own
                 .iter()
-                .map(|name| name.trim())
+                .map(String::as_str)
+                .map(str::trim)
                 .filter(|name| !name.is_empty())
                 .collect(),
         }
     }
 }
 fn first(ids: &[String]) -> HashMap<&str, &str> {
-    let mut index = HashMap::new();
+    let mut index = HashMap::with_capacity(ids.len());
     for id in ids {
         let base = unversioned(id);
         let ver = version(id).trim();
-        if !base.is_empty()
-            && !ver.is_empty()
-            && !ver.eq_ignore_ascii_case("latest")
-            && !ver.eq_ignore_ascii_case("head")
-        {
+        if !base.is_empty() && pinned_version(ver) {
             index.entry(base).or_insert(ver);
         }
     }
     index
+}
+fn pinned_version(ver: &str) -> bool {
+    !ver.is_empty() && !ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head")
 }

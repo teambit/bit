@@ -14,8 +14,8 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
         + request.grammar.len()
         + request.policy.env_own.len()
         + sources
-            .iter()
-            .map(|ids| ids.len())
+            .into_iter()
+            .map(Vec::len)
             .sum::<usize>()
         + request.components
             .iter()
@@ -37,12 +37,12 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     {
         return Err(invalid("dependency version row limit"));
     }
-    identities(request)
+    identities(request, &sources)
 }
-fn identities(request: &Request) -> io::Result<()> {
-    let sources = [&request.sources.bitmap, &request.sources.lane, &request.sources.model];
+fn identities(request: &Request, sources: &[&Vec<String>; 3]) -> io::Result<()> {
     if sources
-        .into_iter()
+        .iter()
+        .copied()
         .flatten()
         .chain(&request.extensions)
         .any(|id| !identity(id))

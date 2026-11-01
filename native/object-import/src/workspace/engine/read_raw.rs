@@ -61,7 +61,7 @@ fn prepare(
         binary_bytes: bytes,
         data: Data { files: &files },
     };
-    let mut output = Output(Vec::new());
+    let mut output = Output(Vec::with_capacity(256));
     serde_json::to_writer(&mut output, &response)?;
     output.write_all(b"\n")?;
     if output.0
@@ -73,7 +73,7 @@ fn prepare(
     }
     output.0.try_reserve_exact(bytes).map_err(|_| invalid("workspace allocation limit"))?;
     for file in files {
-        output.write_all(&file.body)?;
+        output.0.extend_from_slice(&file.body);
     }
     Ok(output)
 }

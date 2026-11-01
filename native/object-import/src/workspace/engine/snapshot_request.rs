@@ -1,6 +1,5 @@
 //! Route native snapshot callback phases before general command execution.
-use super::{Request, command, owned_command};
-use crate::workspace::snapshots;
+use super::{super::snapshots, Request, command, owned_command};
 use serde_json::Value;
 use std::io;
 

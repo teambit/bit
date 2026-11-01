@@ -52,22 +52,15 @@ impl Matcher {
         let batches: Vec<_> = pool.install(|| {
             paths
                 .par_chunks(64)
-                .map(|chunk| {
-                    let mut matcher = Self {
-                        rules: Arc::clone(&self.rules),
-                        cache: self.cache.clone(),
-                        changes: Vec::new(),
-                    };
-                    let kept: Vec<_> = chunk
-                        .iter()
-                        .filter(|path| matcher.keep(path))
-                        .cloned()
-                        .collect();
-                    (kept, matcher.changes)
-                })
+                .map(|chunk| self.filter_chunk(chunk))
                 .collect()
         });
-        let mut kept = Vec::new();
+        let mut kept = Vec::with_capacity(
+            batches
+                .iter()
+                .map(|(files, _)| files.len())
+                .sum(),
+        );
         for (files, changes) in batches {
             kept.extend(files);
             for (path, keep) in changes {
@@ -81,6 +74,16 @@ impl Matcher {
             }
         }
         kept
+    }
+    fn filter_chunk(&self, chunk: &[String]) -> (Vec<String>, Vec<(String, bool)>) {
+        let mut matcher =
+            Self { rules: Arc::clone(&self.rules), cache: self.cache.clone(), changes: Vec::new() };
+        let kept: Vec<_> = chunk
+            .iter()
+            .filter(|path| matcher.keep(path))
+            .cloned()
+            .collect();
+        (kept, matcher.changes)
     }
     pub(super) fn keep(&mut self, path: &str) -> bool {
         if path.is_empty() {

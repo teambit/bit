@@ -121,7 +121,6 @@ impl Budget {
             }
             return Ok(bytes);
         }
-        let mut bytes = Vec::new();
         let source = match fs::File::open(file) {
             Ok(source) => source,
             Err(error)
@@ -138,6 +137,7 @@ impl Budget {
         if !metadata.is_file() || metadata.len() > 1024 * 1024 {
             return Err(invalid("dependency source read limit"));
         }
+        let mut bytes = Vec::with_capacity(metadata.len() as usize);
         source
             .take(1024 * 1024 + 1)
             .read_to_end(&mut bytes)?;
@@ -371,10 +371,7 @@ fn local_source(package: Option<&Value>) -> io::Result<Option<&str>> {
     Ok(Some(source))
 }
 fn package_main(package: Option<&Value>) -> io::Result<Option<String>> {
-    let Some(main) = package
-        .as_ref()
-        .and_then(|package| package.get("main"))
-    else {
+    let Some(main) = package.and_then(|package| package.get("main")) else {
         return Ok(None);
     };
     if let Some(main) = main.as_str().map(str::trim) {

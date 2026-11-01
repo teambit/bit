@@ -32,6 +32,7 @@ mod validation;
 
 use crate::protocol;
 use owned::owned_command;
+use response::Output;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
@@ -202,7 +203,6 @@ struct Response {
     #[serde(rename = "canonicalError", skip_serializing_if = "Option::is_none")]
     canonical_error: Option<bool>,
 }
-use response::Output;
 
 /// Read-only workspace operations return no partial results on unsupported data.
 pub(crate) fn serve(
@@ -241,7 +241,7 @@ pub(crate) fn serve(
             ..failure(id)
         },
     };
-    let mut output = Output(Vec::new());
+    let mut output = Output(Vec::with_capacity(256));
     if serde_json::to_writer(&mut output, &response).is_err() || output.0.len() > MAX_OUTPUT {
         return protocol::respond(writer, &failure(id));
     }

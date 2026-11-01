@@ -102,17 +102,18 @@ impl Directories {
             return Ok(());
         }
         let kind = entry.file_type()?;
-        let is_dir = kind.is_dir()
-            || kind.is_symlink()
-                && match fs::metadata(entry.path()) {
-                    Ok(metadata) => metadata.is_dir(),
-                    Err(error) if error.kind() == io::ErrorKind::NotFound => false,
-                    Err(error) => return Err(error),
-                };
-        if !is_dir {
+        if !kind.is_dir() && !kind.is_symlink() {
             return Ok(());
         }
         let path = entry.path();
+        if kind.is_symlink() {
+            match fs::metadata(&path) {
+                Ok(metadata) if metadata.is_dir() => {}
+                Ok(_) => return Ok(()),
+                Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+                Err(error) => return Err(error),
+            }
+        }
         self.bytes = self.bytes
             .checked_add(path.as_os_str().len())
             .filter(|bytes| *bytes <= 8 * 1024 * 1024)

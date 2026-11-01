@@ -48,8 +48,9 @@ impl SourceOverlay {
     }
     fn has_active_descendant(&self, path: &Path) -> bool {
         self.data.entries
-            .iter()
-            .any(|(name, entry)| name.starts_with(path) && !matches!(entry, Entry::Removed))
+            .range::<Path, _>((std::ops::Bound::Included(path), std::ops::Bound::Unbounded))
+            .take_while(|(name, _)| name.starts_with(path))
+            .any(|(_, entry)| !matches!(entry, Entry::Removed))
     }
     fn alias(&self, path: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<Option<PathBuf>> {
         for ancestor in path.ancestors() {

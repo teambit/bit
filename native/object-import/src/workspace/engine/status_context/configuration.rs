@@ -48,14 +48,12 @@ pub(crate) fn effective_value(workspace: Value, home: &Path) -> io::Result<Value
     }
     let mut global = config::document(&path)?;
     let resolver = merge(aspect_value(&global, RESOLVER), aspect_value(&workspace, RESOLVER))?;
+    let Value::Object(workspace_map) = workspace else {
+        return Err(super::invalid("workspace aspect configuration"));
+    };
     let combined =
         global.as_object_mut().ok_or_else(|| super::invalid("global aspect configuration"))?;
-    combined.extend(
-        workspace
-            .as_object()
-            .ok_or_else(|| super::invalid("workspace aspect configuration"))?
-            .clone(),
-    );
+    combined.extend(workspace_map);
     combined.insert(RESOLVER.to_owned(), resolver);
     Ok(global)
 }

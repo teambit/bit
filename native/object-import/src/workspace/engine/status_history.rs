@@ -22,8 +22,10 @@ struct Plan {
     read_set: Vec<proof::Proof>,
 }
 pub(super) fn identity(component: &str) -> String {
-    let component = component.trim();
-    crate::validate::hexadecimal(&Sha1::digest(format!("{component}:VersionHistory").as_bytes()))
+    let mut hasher = Sha1::new();
+    hasher.update(component.trim().as_bytes());
+    hasher.update(b":VersionHistory");
+    crate::validate::hexadecimal(&hasher.finalize())
 }
 pub(super) fn validate(request: &Request) -> io::Result<(usize, Value)> {
     prepare(request)?;
@@ -48,7 +50,7 @@ fn prepare(request: &Request) -> io::Result<Vec<(String, Vec<u8>)>> {
         .flat_map(|plan| plan.read_set.iter().cloned())
         .collect();
     proof::verify(&proofs)?;
-    let mut objects = Vec::new();
+    let mut objects = Vec::with_capacity(request.plans.len());
     let mut bytes: usize = 0;
     for plan in &request.plans {
         let (hash, serialized) = serialize(plan)?;

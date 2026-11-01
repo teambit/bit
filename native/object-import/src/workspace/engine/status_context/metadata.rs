@@ -84,7 +84,12 @@ fn component_id_matches(component: &Value, target_identity: &str) -> bool {
                 .filter(|val| !val.is_empty())
         })
         .unwrap_or_default();
-    !scope.is_empty() && !name.is_empty() && format!("{scope}/{name}") == target_identity
+    !scope.is_empty()
+        && !name.is_empty()
+        && target_identity
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .is_some_and(|rest| rest == name)
 }
 
 fn configuration(config: &Value, recovery: bool) -> io::Result<()> {
@@ -176,9 +181,9 @@ fn valid_issue_name(entry: &Value) -> bool {
         .is_some_and(|name| !name.is_empty() && !name.chars().any(char::is_control))
 }
 
-fn empty_core(name: &str, value: &Value) -> bool {
+fn empty_core(bare: &str, value: &Value) -> bool {
     matches!(
-        bare_aspect_id(name),
+        bare,
         "teambit.envs/envs"
             | "teambit.component/dev-files"
             | "teambit.semantics/schema"

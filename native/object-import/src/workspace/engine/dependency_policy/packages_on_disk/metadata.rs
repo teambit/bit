@@ -22,14 +22,7 @@ pub(super) fn resolved(
         .ok_or_else(|| invalid("dependency package name"))?;
     let mut concrete = optional_string(package.get("version"))?;
     let identity = if let Some(id) = package.get("componentId").filter(|value| truthy(value)) {
-        let identity = identity(id)?;
-        let version = match id.as_str() {
-            Some(raw) => raw
-                .trim()
-                .rsplit_once('@')
-                .map(|(_, ver)| ver.trim()),
-            None => optional_string(id.get("version"))?,
-        };
+        let (identity, version) = identity(id)?;
         if concrete.is_some_and(|version| !version.is_empty())
             && version.is_some_and(concrete_version)
         {
@@ -41,8 +34,8 @@ pub(super) fn resolved(
     };
     Ok(Some(json!({"name":name,"componentIdentity":identity,"concreteVersion":concrete})))
 }
-fn identity(value: &Value) -> io::Result<String> {
-    if let Some(raw) = value.as_str().map(str::trim) {
+fn identity(value: &Value) -> io::Result<(String, Option<&str>)> {
+    let (scope, name, version) = if let Some(raw) = value.as_str().map(str::trim) {
         let (bare, version) = raw
             .rsplit_once('@')
             .map_or((raw, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
@@ -51,26 +44,25 @@ fn identity(value: &Value) -> io::Result<String> {
             .map(|(scope, name)| (scope.trim(), name.trim()))
             .filter(|(scope, name)| !scope.is_empty() && !scope.contains('/') && !name.is_empty())
             .ok_or_else(|| invalid("package component scope"))?;
-        return Ok(match version.filter(|ver| concrete_version(ver)) {
-            Some(ver) => format!("{scope}/{name}@{ver}"),
-            None => format!("{scope}/{name}"),
-        });
-    }
-    let name = value["name"]
-        .as_str()
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .ok_or_else(|| invalid("package component name"))?;
-    let scope = value["scope"]
-        .as_str()
-        .map(str::trim)
-        .filter(|value| !value.is_empty() && !value.contains('/'))
-        .ok_or_else(|| invalid("package component scope"))?;
-    let version = optional_string(value.get("version"))?;
-    Ok(match version.filter(|version| concrete_version(version)) {
-        Some(version) => format!("{scope}/{name}@{version}"),
+        (scope, name, version)
+    } else {
+        let name = value["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| invalid("package component name"))?;
+        let scope = value["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|value| !value.is_empty() && !value.contains('/'))
+            .ok_or_else(|| invalid("package component scope"))?;
+        (scope, name, optional_string(value.get("version"))?)
+    };
+    let formatted = match version.filter(|ver| concrete_version(ver)) {
+        Some(ver) => format!("{scope}/{name}@{ver}"),
         None => format!("{scope}/{name}"),
-    })
+    };
+    Ok((formatted, version))
 }
 fn concrete_version(version: &str) -> bool {
     let version = version.trim();

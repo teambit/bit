@@ -151,7 +151,7 @@ pub(super) fn finish(
         std::mem::take(&mut plan.root_filtered)
     };
     keep_bitmap(&plan, &mut paths);
-    let prefix = format!("{}/", plan.directory);
+    let prefix = if plan.workspace_root { String::new() } else { format!("{}/", plan.directory) };
     let mut paths = paths
         .into_iter()
         .map(|path| {
@@ -181,12 +181,16 @@ fn is_ignored_root(ignored_root: &[String], path: &str) -> bool {
     ignored_root
         .iter()
         .any(|ignored| {
-            ignored
-                .trim()
-                .replace('\\', "/")
-                .trim_start_matches("./")
-                .trim_start_matches('/')
-                == path
+            let trimmed = ignored.trim();
+            if trimmed.contains('\\') {
+                trimmed
+                    .replace('\\', "/")
+                    .trim_start_matches("./")
+                    .trim_start_matches('/')
+                    == path
+            } else {
+                trimmed.trim_start_matches("./").trim_start_matches('/') == path
+            }
         })
 }
 fn keep_bitmap(plan: &Plan, paths: &mut Vec<String>) {

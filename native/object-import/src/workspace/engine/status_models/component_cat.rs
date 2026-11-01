@@ -20,7 +20,8 @@ pub(in crate::workspace::engine) fn read(
     pool: &ThreadPool,
 ) -> io::Result<(usize, Value)> {
     super::super::path(&request.root)?;
-    if request.stored_identity.trim().is_empty() {
+    let stored_identity = request.stored_identity.trim();
+    if stored_identity.is_empty() {
         return Err(invalid("cat component model absent"));
     }
     let directory = crate::scope_path(&request.root).join("objects");
@@ -33,7 +34,7 @@ pub(in crate::workspace::engine) fn read(
     let models = indexed_models(&reader, &request.root, pool)?;
     let model = models
         .iter()
-        .find(|model| super::comparison::model_matches_identity(model, &request.stored_identity))
+        .find(|model| super::comparison::model_matches_identity(model, stored_identity))
         .ok_or_else(|| invalid("cat component model absent"))?;
     let reference = reference(model, &request.version)?;
     let mut versions = read_version::Reader::query(&directory)?;

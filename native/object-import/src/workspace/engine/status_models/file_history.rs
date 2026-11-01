@@ -56,8 +56,8 @@ fn rows(root: &Path, file: &str, logs: &[Value]) -> io::Result<Vec<Value>> {
     let directory = crate::scope_path(root).join("objects");
     let mut reader = read_version::Reader::query(&directory)?;
     let mut cache = Cache {
-        versions: HashMap::new(),
-        sources: HashMap::new(),
+        versions: HashMap::with_capacity(logs.len()),
+        sources: HashMap::with_capacity(logs.len()),
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };

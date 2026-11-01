@@ -43,10 +43,7 @@ fn detect_view(
     let object = graph.as_object_mut().ok_or_else(|| invalid("fresh dependency graph grammar"))?;
     for (key, value) in [
         ("root", json!(request.component_root)),
-        (
-            "files",
-            if request.component_root == request.root { json!([]) } else { json!(request.files) },
-        ),
+        ("files", if request.is_workspace_root() { json!([]) } else { json!(request.files) }),
         ("includeNpm", json!(true)),
         ("visited", json!({})),
     ] {
@@ -54,7 +51,7 @@ fn detect_view(
             return Err(invalid("fresh graph ownership"));
         }
     }
-    if request.component_root == request.root {
+    if request.is_workspace_root() {
         object.insert("custom".to_owned(), Value::Null);
     }
     let graph = serde_json::from_value(graph).map_err(io::Error::other)?;
@@ -102,7 +99,7 @@ fn apply_view(
                 .iter()
                 .any(|issue| issue["type"].as_str().map(str::trim) != Some("ImportFromDirectory"))
         });
-    output["cacheable"] = json!(request.root != request.component_root && !blocking_issue);
+    output["cacheable"] = json!(!request.is_workspace_root() && !blocking_issue);
     Ok((1, output))
 }
 fn validate(request: &Detect) -> io::Result<()> {
@@ -150,7 +147,7 @@ fn validate_dev_files(files: &[String]) -> io::Result<()> {
 }
 
 fn controls(request: &Detect) -> io::Result<Vec<proof::Proof>> {
-    let mut proofs = Vec::new();
+    let mut proofs = Vec::with_capacity(5);
     for file in [
         request.root.join(".bitmap"),
         request.root.join("workspace.jsonc"),

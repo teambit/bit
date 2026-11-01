@@ -38,9 +38,13 @@ fn collect_sources(request: &Request) -> io::Result<(Vec<PathBuf>, HashSet<PathB
     if request.targets.len() > 4096 {
         return Err(invalid("status comparison target count"));
     }
-    let mut paths = Vec::new();
+    let total_files = request.targets
+        .iter()
+        .map(|target| target.files.len())
+        .sum();
+    let mut paths = Vec::with_capacity(total_files);
     let mut bitmaps = HashSet::new();
-    let mut identities = HashSet::new();
+    let mut identities = HashSet::with_capacity(request.targets.len());
     for target in &request.targets {
         validate(target)?;
         if target.identity.trim().is_empty() || !identities.insert(target.identity.trim()) {
@@ -94,7 +98,7 @@ pub(in crate::workspace::engine) fn validate(target: &Target) -> io::Result<()> 
     if target.directory != "." {
         relative(&target.directory)?;
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(target.files.len());
     for file in &target.files {
         relative(file)?;
         if !seen.insert(file) {

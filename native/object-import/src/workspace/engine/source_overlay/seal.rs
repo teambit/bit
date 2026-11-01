@@ -41,7 +41,7 @@ fn capture_one(
     if fs::symlink_metadata(destination).is_ok_and(|value| !value.is_file()) {
         return Err(invalid("overlay file replaces directory"));
     }
-    let mut proofs = Vec::new();
+    let mut proofs = Vec::with_capacity(8);
     reserve(lookup::capture(destination, &data.root, &mut proofs)?, bytes)?;
     if let Entry::Source(source) = entry {
         let body = source.read()?;

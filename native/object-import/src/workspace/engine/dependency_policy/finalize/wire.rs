@@ -47,8 +47,12 @@ pub(super) struct Output {
 }
 impl Output {
     pub(super) fn new(request: &Request) -> Self {
-        let mut env_own = Vec::new();
-        for key in request.environment.policy.keys().map(|key| key.trim()) {
+        let mut env_own = Vec::with_capacity(request.environment.policy.len());
+        for key in request.environment.policy
+            .keys()
+            .map(String::as_str)
+            .map(str::trim)
+        {
             if !key.is_empty()
                 && !env_own
                     .iter()
@@ -67,13 +71,15 @@ impl Output {
     }
     pub(super) fn added(&mut self, field: usize, value: String) {
         let trimmed = value.trim();
-        if trimmed.is_empty() {
+        if trimmed.is_empty()
+            || self.added[field]
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
             return;
         }
         let value = if trimmed.len() == value.len() { value } else { trimmed.to_owned() };
-        if !self.added[field].contains(&value) {
-            self.added[field].push(value);
-        }
+        self.added[field].push(value);
     }
 }
 pub(super) fn unversioned(value: &str) -> &str {

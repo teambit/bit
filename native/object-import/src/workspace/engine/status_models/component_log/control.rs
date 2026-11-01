@@ -45,10 +45,14 @@ impl Control {
         }
     }
     pub(super) fn apply(&self, rows: &mut [Value]) {
+        let parsed_deprecated = self.deprecated
+            .as_ref()
+            .and_then(Value::as_str)
+            .and_then(|range| Range::parse(range.trim()).ok());
         for row in rows {
             row["deleted"] = json!(self.removed(row));
             if let (Some(tag), Some(range)) = (row["tag"].as_str(), &self.deprecated) {
-                row["deprecated"] = deprecation(range, tag);
+                row["deprecated"] = deprecation(range, parsed_deprecated.as_ref(), tag);
             }
         }
     }
@@ -92,7 +96,7 @@ pub(super) fn staged(rows: &mut [Value], config: &Value) {
     }
 }
 
-fn deprecation(range: &Value, tag: &str) -> Value {
+fn deprecation(range: &Value, parsed: Option<&Range>, tag: &str) -> Value {
     if range.is_null()
         || range.as_bool() == Some(false)
         || range
@@ -103,9 +107,7 @@ fn deprecation(range: &Value, tag: &str) -> Value {
         return range.clone();
     }
     json!(
-        range
-            .as_str()
-            .and_then(|range| Range::parse(range.trim()).ok())
+        parsed
             .zip(Version::parse(tag.trim()).ok())
             .is_some_and(|(range, tag)| range.satisfies(&tag))
     )

@@ -71,17 +71,15 @@ fn owned_status_command(
 }
 
 fn validate_read_set(proofs: &[dependency_graph::proof::Proof]) -> io::Result<(usize, Value)> {
-    if proofs
-        .iter()
-        .any(|proof| proof.path.as_os_str().is_empty())
-    {
-        return Err(super::invalid("read set proof path"));
+    let mut bytes = 0_usize;
+    for proof in proofs {
+        let len = proof.path.as_os_str().len();
+        if len == 0 {
+            return Err(super::invalid("read set proof path"));
+        }
+        bytes =
+            bytes.checked_add(len).ok_or_else(|| super::invalid("read set proof count limit"))?;
     }
-    let bytes = proofs
-        .iter()
-        .map(|proof| proof.path.as_os_str().len())
-        .try_fold(0_usize, usize::checked_add)
-        .ok_or_else(|| super::invalid("read set proof count limit"))?;
     if proofs.len() > 16384 || bytes > super::MAX_RAW {
         return Err(super::invalid("read set proof count limit"));
     }

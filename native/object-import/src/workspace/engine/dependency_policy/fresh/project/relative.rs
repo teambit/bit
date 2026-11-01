@@ -155,12 +155,15 @@ fn matching_identity<'a>(
         .as_str()
         .map(str::trim)
         .unwrap_or_default();
+    let scope_prefix = (!row_scope.is_empty()).then(|| format!("{row_scope}/"));
     let mut ids = request.detection.workspace_components
         .iter()
         .filter(|id| {
             let trimmed = id.trim();
             unversioned(trimmed).ends_with(&suffix)
-                && (row_scope.is_empty() || trimmed.starts_with(&format!("{row_scope}/")))
+                && scope_prefix
+                    .as_deref()
+                    .is_none_or(|prefix| trimmed.starts_with(prefix))
         });
     let Some(identity) = ids.next().map(|id| id.trim()) else { return Ok(None) };
     if ids.next().is_some() {

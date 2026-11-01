@@ -31,13 +31,7 @@ fn untracked(value: &Value) -> io::Result<()> {
     if files.len() > 4096
         || files
             .iter()
-            .any(|file| {
-                file["relativePath"]
-                    .as_str()
-                    .map(str::trim)
-                    .is_none_or(str::is_empty)
-                    || !file["existing"].is_boolean()
-            })
+            .any(|file| !non_empty_str(&file["relativePath"]) || !file["existing"].is_boolean())
     {
         return Err(invalid("untracked issue file record"));
     }
@@ -50,30 +44,23 @@ fn authored(value: &Value) -> io::Result<()> {
         return Err(invalid("relative authored issue budget"));
     }
     for record in records {
-        let valid_id = record["componentId"]
-            .as_str()
-            .is_some_and(|raw| !raw.trim().is_empty())
-            || record["componentId"]
-                .get("_legacy")
-                .unwrap_or_else(|| &record["componentId"])["name"]
-                .as_str()
-                .is_some_and(|name| !name.trim().is_empty());
-        if record["importSource"]
-            .as_str()
-            .map(str::trim)
-            .is_none_or(str::is_empty)
+        let component_id = &record["componentId"];
+        let valid_id = non_empty_str(component_id)
+            || non_empty_str(&component_id.get("_legacy").unwrap_or(component_id)["name"]);
+        let relative_path = &record["relativePath"];
+        if !non_empty_str(&record["importSource"])
             || !valid_id
-            || record["relativePath"]["sourceRelativePath"]
-                .as_str()
-                .map(str::trim)
-                .is_none_or(str::is_empty)
-            || record["relativePath"]["destinationRelativePath"]
-                .as_str()
-                .map(str::trim)
-                .is_none_or(str::is_empty)
+            || !non_empty_str(&relative_path["sourceRelativePath"])
+            || !non_empty_str(&relative_path["destinationRelativePath"])
         {
             return Err(invalid("relative authored issue record"));
         }
     }
     Ok(())
+}
+
+fn non_empty_str(value: &Value) -> bool {
+    value
+        .as_str()
+        .is_some_and(|text| !text.trim().is_empty())
 }

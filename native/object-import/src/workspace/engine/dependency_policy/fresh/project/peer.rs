@@ -25,13 +25,13 @@ pub(super) fn range(package: &Package) -> Option<Value> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .unwrap_or("undefined");
-    let version = if node_semver::Version::parse(concrete).is_ok() || concrete.starts_with("0.0.0-")
-    {
-        concrete.to_owned()
-    } else {
-        format!("0.0.0-{concrete}")
-    };
-    Some(json!(format!("{prefix}{version}")))
+    let formatted =
+        if node_semver::Version::parse(concrete).is_ok() || concrete.starts_with("0.0.0-") {
+            format!("{prefix}{concrete}")
+        } else {
+            format!("{prefix}0.0.0-{concrete}")
+        };
+    Some(Value::String(formatted))
 }
 
 fn truthy(value: &Value) -> bool {

@@ -89,11 +89,7 @@ impl Drop for Process {
 }
 
 pub(super) fn diff(files: &[InputFile], git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
-    count(files.len())?;
-    let git = git.trim();
-    if git.is_empty() || git.len() > 32768 || git.contains('\0') {
-        return Err(invalid("workspace invalid Git executable"));
-    }
+    let git = validate_git(git, files.len())?;
     let prepared = preflight(files)?;
     if prepared.is_empty() {
         return Ok(Vec::new());
@@ -102,20 +98,11 @@ pub(super) fn diff(files: &[InputFile], git: &str, color: bool) -> io::Result<Ve
 }
 pub(crate) type Frozen = (String, Option<Vec<u8>>, Option<Vec<u8>>);
 pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
-    count(files.len())?;
-    let git = git.trim();
-    if git.is_empty() || git.len() > 32768 || git.contains('\0') {
-        return Err(invalid("workspace invalid Git executable"));
-    }
+    let git = validate_git(git, files.len())?;
     let mut total = 0_usize;
     let mut prepared = Vec::with_capacity(files.len());
     for (relative_path, left, right) in files {
-        if relative_path.trim().is_empty()
-            || relative_path.len() > 32768
-            || relative_path.contains('\0')
-        {
-            return Err(invalid("workspace invalid relative path"));
-        }
+        validate_relative_path(&relative_path)?;
         let left = left.unwrap_or_default();
         let right = right.unwrap_or_default();
         total = total.saturating_add(left.len()).saturating_add(right.len());
@@ -129,6 +116,23 @@ pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<V
         return Ok(Vec::new());
     }
     execute(&prepared, git, color)
+}
+fn validate_git(git: &str, file_count: usize) -> io::Result<&str> {
+    count(file_count)?;
+    let git = git.trim();
+    if git.is_empty() || git.len() > 32768 || git.contains('\0') {
+        return Err(invalid("workspace invalid Git executable"));
+    }
+    Ok(git)
+}
+fn validate_relative_path(relative_path: &str) -> io::Result<()> {
+    if relative_path.trim().is_empty()
+        || relative_path.len() > 32768
+        || relative_path.contains('\0')
+    {
+        return Err(invalid("workspace invalid relative path"));
+    }
+    Ok(())
 }
 fn execute(prepared: &[Prepared], git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
     let directory = prepared
@@ -175,12 +179,7 @@ fn preflight(files: &[InputFile]) -> io::Result<Vec<Prepared>> {
     let mut compressed = 0;
     let mut prepared = Vec::with_capacity(files.len());
     for file in files {
-        if file.relative_path.trim().is_empty()
-            || file.relative_path.len() > 32768
-            || file.relative_path.contains('\0')
-        {
-            return Err(invalid("workspace invalid relative path"));
-        }
+        validate_relative_path(&file.relative_path)?;
         let left = input(file.left.as_ref(), &mut total, &mut compressed)?;
         let right = input(file.right.as_ref(), &mut total, &mut compressed)?;
         let same = equivalent(

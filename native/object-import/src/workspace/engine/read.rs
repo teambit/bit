@@ -85,11 +85,15 @@ fn parallel<Record: Send>(
 // Reserve the complete raw allocation before reading. Large files can use the
 // shared budget without being constrained to a fraction of a 64-file batch.
 fn reserved(file: &Path, remaining: &Budget) -> io::Result<Vec<u8>> {
+    validate_regular_file(file)?;
+    remaining.read(File::open(file)?)
+}
+fn validate_regular_file(file: &Path) -> io::Result<()> {
     path(file)?;
     if !fs::symlink_metadata(file)?.is_file() {
         return Err(invalid("workspace unsupported file type"));
     }
-    remaining.read(File::open(file)?)
+    Ok(())
 }
 fn record(file: &Path, raw: Vec<u8>) -> FileRecord {
     let (metadata, contents) = canonical(file, raw);
@@ -97,22 +101,22 @@ fn record(file: &Path, raw: Vec<u8>) -> FileRecord {
 }
 pub(super) fn canonical(file: &Path, raw: Vec<u8>) -> (Metadata, Vec<u8>) {
     let raw_bytes = raw.len();
-    let hash = hash(&raw);
+    let raw_hash = hash(&raw);
     let has_bom = raw.starts_with(b"\xef\xbb\xbf");
     let contents = strip_bom(raw);
-    let snapshot_hash = if has_bom { super::hash(&contents) } else { hash.clone() };
+    let snapshot_hash = if has_bom { hash(&contents) } else { raw_hash.clone() };
     let linux_hash = if contents.contains(&b'\r') {
-        super::hash(&crate::checkout::eol::normalize(contents.clone(), false))
+        hash(&crate::checkout::eol::normalize(contents.clone(), false))
     } else {
         snapshot_hash.clone()
     };
-    (Metadata { path: file.to_owned(), hash, linux_hash, snapshot_hash, raw_bytes }, contents)
+    (
+        Metadata { path: file.to_owned(), hash: raw_hash, linux_hash, snapshot_hash, raw_bytes },
+        contents,
+    )
 }
 pub(super) fn raw(file: &Path, maximum: usize) -> io::Result<Vec<u8>> {
-    path(file)?;
-    if !fs::symlink_metadata(file)?.is_file() {
-        return Err(invalid("workspace unsupported file type"));
-    }
+    validate_regular_file(file)?;
     let input = File::open(file)?;
     let metadata = input.metadata()?;
     if !metadata.is_file() || metadata.len() > maximum as u64 {

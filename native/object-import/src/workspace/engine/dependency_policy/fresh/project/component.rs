@@ -16,7 +16,8 @@ impl Projection<'_> {
     ) -> io::Result<()> {
         let id = package.component.as_ref().ok_or_else(|| invalid("fresh component metadata"))?;
         let pkg_name = package.name.trim();
-        if identity(id)? == unversioned(&self.request.identity) {
+        let base = identity(id)?;
+        if base == unversioned(&self.request.identity) {
             self.metadata.issues.self_reference.insert(origin.to_owned(), json!(pkg_name));
             return Ok(());
         }
@@ -33,7 +34,6 @@ impl Projection<'_> {
                 paths.push(json!(path));
             }
         }
-        let base = identity(id)?;
         let already = |entries: &[Value]| {
             entries
                 .iter()

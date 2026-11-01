@@ -18,9 +18,7 @@ impl std::fmt::Display for CanonicalError {
 impl std::error::Error for CanonicalError {}
 
 pub(super) fn canonical(mut message: String) -> io::Error {
-    while message.ends_with(char::is_whitespace) {
-        message.pop();
-    }
+    message.truncate(message.trim_end().len());
     let start = message.len() - message.trim_start().len();
     if start > 0 {
         message.drain(..start);

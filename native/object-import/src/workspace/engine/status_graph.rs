@@ -32,7 +32,7 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
         return Err(invalid("status issue graph node budget"));
     }
     let mut repository = Repository::new(&request.root, None);
-    let mut graph = Graph::new();
+    let mut graph = Graph::with_capacity(request.versions.len());
     for (_, version) in &request.versions {
         append_version(&mut graph, version, &mut repository)?;
     }
@@ -98,8 +98,8 @@ fn metadata(request: &Request, repository: &mut Repository) -> io::Result<ModelM
         })
         .filter(|name| !name.is_empty() && seen.insert(*name))
         .collect::<Vec<_>>();
-    let mut models = Vec::new();
-    let mut versions = Vec::new();
+    let mut models = Vec::with_capacity(names.len());
+    let mut versions = Vec::with_capacity(names.len());
     for name in names {
         let Some(model) = read_model(&request.root, repository, name)? else {
             continue;
@@ -117,7 +117,7 @@ fn read_model(
     repository: &mut Repository,
     name: &str,
 ) -> io::Result<Option<Value>> {
-    let mut candidates = Vec::new();
+    let mut candidates = Vec::with_capacity(3);
     if let Some(indexed) = indexed_model_hash(root, name) {
         candidates.push(indexed);
     }

@@ -27,8 +27,7 @@ pub(super) fn lookup(
         return Err(invalid("TypeScript dependency spelling"));
     }
     let candidate = normalize(&parent.join(dependency));
-    let directory_only =
-        dependency.ends_with('/') || matches!(dependency.rsplit('/').next(), Some("." | ".."));
+    let directory_only = is_directory_only(dependency);
     for typed in [true, false] {
         if let Some(found) = node_candidate(&candidate, directory_only, typed, true, budget)? {
             return Ok(Some(found));
@@ -71,11 +70,14 @@ fn load_package(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<
     if !target.starts_with(file) {
         return Err(invalid("TypeScript package entry spelling"));
     }
-    let directory_only = main.ends_with('/') || matches!(main.rsplit('/').next(), Some("." | ".."));
+    let directory_only = is_directory_only(main);
     if !directory_only && let Some(found) = package_file(&target, typed, budget)? {
         return Ok(Some(found));
     }
     node_candidate(&target, directory_only, typed, false, budget)
+}
+fn is_directory_only(specifier: &str) -> bool {
+    specifier.ends_with('/') || matches!(specifier.rsplit('/').next(), Some("." | ".."))
 }
 fn entry(package: &Value, typed: bool) -> Option<&str> {
     let fields: &[&str] = if typed { &["typings", "types", "main"] } else { &["main"] };

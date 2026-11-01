@@ -36,7 +36,7 @@ fn worker_batch(
     output: &AtomicUsize,
     next: &AtomicUsize,
 ) -> io::Result<Vec<(usize, FileDiff)>> {
-    let mut results = Vec::new();
+    let mut results = Vec::with_capacity(files.len().div_ceil(4));
     loop {
         let index = next.fetch_add(1, Ordering::Relaxed);
         let Some(file) = files.get(index) else {
@@ -56,7 +56,7 @@ fn assemble_ordered(
     count: usize,
     batches: Vec<io::Result<Vec<(usize, FileDiff)>>>,
 ) -> io::Result<Vec<FileDiff>> {
-    let mut ordered: Vec<Option<FileDiff>> = (0..count).map(|_| None).collect();
+    let mut ordered: Vec<Option<FileDiff>> = std::iter::repeat_with(|| None).take(count).collect();
     for batch in batches {
         for (index, file) in batch? {
             let slot = ordered

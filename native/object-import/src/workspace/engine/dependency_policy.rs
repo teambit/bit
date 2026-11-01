@@ -50,20 +50,22 @@ fn ignored(request: &Request, plan: &mut Plan) {
             !trimmed.is_empty() && !request.ignore(field, trimmed, &mut plan.removed)
         });
     }
-    let regular: Vec<_> = plan.packages[0]
-        .keys()
-        .map(|name| name.trim().to_owned())
-        .collect();
-    plan.packages[1].retain(|name, _| {
-        !regular
-            .iter()
-            .any(|existing| existing == name.trim())
+    deduplicate_dev(request, plan);
+}
+
+fn deduplicate_dev(request: &Request, plan: &mut Plan) {
+    let [regular_packages, dev_packages, _] = &mut plan.packages;
+    dev_packages.retain(|name, _| {
+        let trimmed = name.trim();
+        !regular_packages
+            .keys()
+            .any(|existing| existing.trim() == trimmed)
     });
-    let identities: Vec<_> = plan.components[0]
-        .iter()
-        .map(|index| request.entries[*index].identity.trim())
-        .collect();
-    plan.components[1].retain(|index| {
-        !identities.contains(&request.entries[*index].identity.trim())
+    let [regular_components, dev_components, _] = &mut plan.components;
+    dev_components.retain(|index| {
+        let identity = request.entries[*index].identity.trim();
+        !regular_components
+            .iter()
+            .any(|regular| request.entries[*regular].identity.trim() == identity)
     });
 }

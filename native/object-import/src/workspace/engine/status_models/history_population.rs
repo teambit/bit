@@ -12,9 +12,7 @@ pub(super) fn prepare(
 ) -> io::Result<(Value, Option<Value>)> {
     let hash = status_history::identity(identity);
     let mut proofs = Vec::new();
-    let file = reader.directory
-        .join(&hash[..2])
-        .join(&hash[2..]);
+    let file = object_path(reader.directory, &hash);
     let present = proof::read(&file, &mut proofs)?.is_some();
     let mut history = load_or_init_history(reader, model, identity, &hash, present, stage)?;
     let original = history.clone();
@@ -137,12 +135,7 @@ fn observe(
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
     let hash = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
-    proof::read(
-        &reader.directory
-            .join(&hash[..2])
-            .join(&hash[2..]),
-        proofs,
-    )?;
+    proof::read(&object_path(reader.directory, &hash), proofs)?;
     if reader.read(&hash, "Version")? != *expected {
         return Err(invalid("status history ancestor changed"));
     }
@@ -167,19 +160,19 @@ fn observe_model(
                     .map(str::trim)
                     .filter(|name| !name.is_empty())
                     .unwrap_or(identity)
-                    .to_owned()
             },
-            |_| identity.to_owned(),
+            |_| identity,
         );
     let hash = crate::validate::hexadecimal(&Sha1::digest(stored_id.as_bytes()));
-    proof::read(
-        &reader.directory
-            .join(&hash[..2])
-            .join(&hash[2..]),
-        proofs,
-    )?;
+    proof::read(&object_path(reader.directory, &hash), proofs)?;
     if reader.read(&hash, "Component")? != *expected {
         return Err(invalid("status history model changed"));
     }
     Ok(())
+}
+
+fn object_path(directory: &std::path::Path, hash: &str) -> std::path::PathBuf {
+    directory
+        .join(&hash[..2])
+        .join(&hash[2..])
 }

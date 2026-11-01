@@ -37,15 +37,13 @@ pub(in crate::workspace::engine) fn read(
             .map(|target|json!({"identity":target["identity"],"version":target["version"]})).collect::<Vec<_>>(),
     })).map_err(io::Error::other)?;
     let (_, models) = status_models::read(&models, pool)?;
+    let Value::Object(model_fields) = models else {
+        return Err(invalid("tracking models"));
+    };
     output
         .as_object_mut()
         .ok_or_else(|| invalid("tracking context"))?
-        .extend(
-            models
-                .as_object()
-                .ok_or_else(|| invalid("tracking models"))?
-                .clone(),
-        );
+        .extend(model_fields);
     super::attach_controls(&mut output, &super::controls(&base)?)?;
     Ok((output["targets"].as_array().map_or(0, Vec::len), output))
 }

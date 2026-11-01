@@ -98,33 +98,29 @@ fn package_names(finish: &Value) -> io::Result<Vec<String>> {
     let environment = finish["environment"]["policy"]
         .as_object()
         .ok_or_else(|| invalid("dependency pipeline environment policy"))?;
+    let env_names = environment
+        .iter()
+        .filter(|(_, version)| {
+            version
+                .as_str()
+                .map(str::trim)
+                .is_some_and(crate::plus_version::is_plus)
+        })
+        .map(|(name, _)| name.as_str());
+    let auto_names = automatic_placeholder_names(finish)?;
+    let manual_names = manual_package_names(finish)?;
     let mut seen = HashSet::new();
     let mut names = Vec::new();
-    let mut add = |name: &str| {
+    for name in env_names.chain(auto_names).chain(manual_names) {
         let trimmed = name.trim();
-        if !trimmed.is_empty() && seen.insert(trimmed.to_owned()) {
+        if !trimmed.is_empty() && seen.insert(trimmed) {
             names.push(trimmed.to_owned());
         }
-    };
-    for (name, version) in environment {
-        if version
-            .as_str()
-            .map(str::trim)
-            .is_some_and(crate::plus_version::is_plus)
-        {
-            add(name);
-        }
-    }
-    for name in automatic_placeholder_names(finish)? {
-        add(&name);
-    }
-    for name in manual_package_names(finish)? {
-        add(&name);
     }
     Ok(names)
 }
 
-fn manual_package_names(finish: &Value) -> io::Result<Vec<String>> {
+fn manual_package_names(finish: &Value) -> io::Result<Vec<&str>> {
     let mut names = Vec::new();
     for field in
         finish["manual"].as_array().ok_or_else(|| invalid("dependency pipeline manual policy"))?
@@ -138,7 +134,7 @@ fn manual_package_names(finish: &Value) -> io::Result<Vec<String>> {
                     .map(str::trim)
                     .is_none_or(|text| !text.is_empty() && text != "-")
             {
-                names.push(trimmed.to_owned());
+                names.push(trimmed);
             }
         }
     }
@@ -157,7 +153,7 @@ fn version_request(request: &Request, output: &Value) -> io::Result<versions::Re
     .map_err(io::Error::other)
 }
 
-fn automatic_placeholder_names(finish: &Value) -> io::Result<Vec<String>> {
+fn automatic_placeholder_names(finish: &Value) -> io::Result<Vec<&str>> {
     let fields = finish["state"]["packages"]
         .as_array()
         .ok_or_else(|| invalid("dependency pipeline packages"))?;
@@ -173,8 +169,7 @@ fn automatic_placeholder_names(finish: &Value) -> io::Result<Vec<String>> {
                         .is_some_and(crate::plus_version::is_plus)
                 })
                 .map(|(name, _)| name.trim())
-                .filter(|name| !name.is_empty())
-                .map(str::to_owned),
+                .filter(|name| !name.is_empty()),
         );
     }
     Ok(names)

@@ -117,6 +117,7 @@ fn apply_versions(detected: &mut Value, request: &Complete) -> io::Result<()> {
     if request.capture.component_versions.len() > 4096 {
         return Err(invalid("fresh component version receipt"));
     }
+    let grammar = &request.resolution["grammar"];
     for version in &request.capture.component_versions {
         let field = ["dependencies", "devDependencies", "peerDependencies"]
             .get(version.field)
@@ -126,12 +127,10 @@ fn apply_versions(detected: &mut Value, request: &Complete) -> io::Result<()> {
             .and_then(|dependency| dependency.get_mut("id"))
             .and_then(Value::as_object_mut)
             .ok_or_else(|| invalid("fresh component version receipt"))?;
-        let chosen = match select(version.concrete.as_deref(), &request.resolution["grammar"])? {
-            Some(value) => Some(value),
-            None => select(version.dependent.as_deref(), &request.resolution["grammar"])?,
-        };
-        if let Some(version) = chosen {
-            super::component_id::set_version(id, version);
+        if let Some(chosen) = select(version.concrete.as_deref(), grammar)? {
+            super::component_id::set_version(id, chosen);
+        } else if let Some(chosen) = select(version.dependent.as_deref(), grammar)? {
+            super::component_id::set_version(id, chosen);
         }
     }
     Ok(())

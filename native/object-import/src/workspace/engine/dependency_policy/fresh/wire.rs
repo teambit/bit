@@ -56,3 +56,13 @@ pub(super) struct ComponentVersion {
     pub(super) concrete: Option<String>,
     pub(super) dependent: Option<String>,
 }
+impl Detect {
+    pub(super) fn is_workspace_root(&self) -> bool {
+        self.component_root == self.root
+    }
+}
+impl Complete {
+    pub(super) fn is_workspace_root(&self) -> bool {
+        self.component_root == self.root
+    }
+}

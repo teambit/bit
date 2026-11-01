@@ -169,8 +169,13 @@ pub(super) fn name(value: &str) -> bool {
         )
 }
 pub(in crate::workspace::engine) fn version(map: &Packages, name: &str) -> Option<String> {
+    let trimmed = name.trim();
     map.get(name)
-        .or_else(|| map.get(name.trim()))
+        .or_else(|| {
+            (trimmed.len() != name.len())
+                .then(|| map.get(trimmed))
+                .flatten()
+        })
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|value| !value.is_empty())

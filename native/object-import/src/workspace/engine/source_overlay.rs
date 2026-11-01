@@ -105,11 +105,12 @@ impl SourceOverlay {
         if self.data.sealed || self.data.entries.len() >= 8192 {
             return Err(invalid("overlay entry budget"));
         }
-        let data = Arc::make_mut(&mut self.data);
-        if data.entries.contains_key(destination) {
+        let std::collections::btree_map::Entry::Vacant(slot) =
+            Arc::make_mut(&mut self.data).entries.entry(destination.to_path_buf())
+        else {
             return Err(invalid("overlay duplicate destination"));
-        }
-        data.entries.insert(destination.to_path_buf(), entry);
+        };
+        slot.insert(entry);
         Ok(())
     }
     pub(super) fn seal(mut self) -> io::Result<Self> {

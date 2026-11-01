@@ -15,7 +15,7 @@ fn model_peers(request: &Request, plan: &mut Plan) {
     if request.policies.model_peers.is_empty() {
         return;
     }
-    let mut peers = Map::new();
+    let mut peers = Map::with_capacity(request.policies.model_peers.len());
     for (name, value) in &request.policies.model_peers {
         let name = name.trim();
         if name.is_empty() || request.ignore(2, name, &mut plan.removed) {
@@ -53,8 +53,9 @@ fn apply_package_policy(policy: &Policy, plan: &mut Plan, field: usize, name: &s
 }
 fn components(request: &Request, plan: &mut Plan) {
     for field in 0..2 {
-        let mut retained = Vec::new();
-        for index in std::mem::take(&mut plan.components[field]) {
+        let indices = std::mem::take(&mut plan.components[field]);
+        let mut retained = Vec::with_capacity(indices.len());
+        for index in indices {
             if apply_component_policy(request, plan, index) {
                 retained.push(index);
             }
@@ -94,7 +95,6 @@ fn legacy(plan: &mut Plan) {
         plan.packages[1].shift_remove(name);
     }
     if let Some(value) = regular.or(dev) {
-        let value = value.trim();
         // Canonical Number.isNaN(version[0]) is false for every string character.
         plan.packages[2].insert(name.to_owned(), Value::String(format!("^{value}")));
     }

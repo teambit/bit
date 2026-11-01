@@ -88,28 +88,33 @@ fn defaults(output: &mut Value) {
 }
 
 fn identity(value: &Value) -> io::Result<Value> {
-    let scope = value["scope"]
-        .as_str()
-        .map(str::trim)
-        .filter(|text| !text.is_empty())
-        .ok_or_else(|| invalid("Harmony dependency scope"))?;
-    let name = value["name"]
-        .as_str()
-        .map(str::trim)
-        .filter(|text| !text.is_empty())
-        .ok_or_else(|| invalid("Harmony dependency name"))?;
+    let scope = value["scope"].as_str().ok_or_else(|| invalid("Harmony dependency scope"))?;
+    let name = value["name"].as_str().ok_or_else(|| invalid("Harmony dependency name"))?;
+    let version = match value.get("version") {
+        Some(ver) => Some(ver.as_str().ok_or_else(|| invalid("Harmony dependency version"))?),
+        None => None,
+    };
+    build_identity(scope, name, version)
+}
+
+fn build_identity(scope: &str, name: &str, version: Option<&str>) -> io::Result<Value> {
+    let scope = scope.trim();
+    let name = name.trim();
+    if scope.is_empty() {
+        return Err(invalid("Harmony dependency scope"));
+    }
+    if name.is_empty() {
+        return Err(invalid("Harmony dependency name"));
+    }
     if scope.contains(['/', '@']) || name.contains('@') {
         return Err(invalid("Harmony dependency identity"));
     }
     let mut output = json!({"scope":scope,"name":name});
-    if let Some(version) = value.get("version") {
-        let version = version
-            .as_str()
-            .map(str::trim)
-            .ok_or_else(|| invalid("Harmony dependency version"))?;
-        if !version.is_empty() && !matches!(version, "latest" | "head") {
-            output["version"] = json!(version);
-        }
+    if let Some(version) = version
+        .map(str::trim)
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
+    {
+        output["version"] = json!(version);
     }
     Ok(output)
 }
@@ -123,9 +128,5 @@ fn flattened_identity(value: &Value) -> io::Result<Value> {
         .map_or((text, None), |(name, version)| (name.trim(), Some(version.trim())));
     let (scope, name) =
         name.split_once('/').ok_or_else(|| invalid("Harmony unscoped flattened dependency"))?;
-    let mut value = json!({"scope":scope,"name":name});
-    if let Some(version) = version {
-        value["version"] = json!(version);
-    }
-    identity(&value)
+    build_identity(scope, name, version)
 }

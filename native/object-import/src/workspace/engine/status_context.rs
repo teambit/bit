@@ -28,11 +28,7 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
     super::path(&request.home)?;
     let proofs = controls(request)?;
     let mut output = metadata(request, pool)?;
-    let settings = config::configuration_value(
-        &request.root,
-        &configuration::effective(&request.root, &request.home)?,
-        true,
-    )?;
+    let settings = config::configuration_value(&request.root, &output["workspace"], true)?;
     let inactive = config::inactive_targets(&request.root, &settings)?;
     exclude_inactive(&mut output, &inactive)?;
     let targets = output["targets"].as_array().ok_or_else(|| invalid("status targets"))?;
@@ -44,15 +40,13 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
         .map_err(io::Error::other)?;
     let (_, models) = status_models::read(&model_request, pool)?;
     let unavailable = unavailable_on_main(&output, &models, &inactive)?;
+    let Value::Object(model_fields) = models else {
+        return Err(invalid("status models"));
+    };
     output
         .as_object_mut()
         .ok_or_else(|| invalid("status context"))?
-        .extend(
-            models
-                .as_object()
-                .ok_or_else(|| invalid("status models"))?
-                .clone(),
-        );
+        .extend(model_fields);
     output["unavailableOnMain"] = json!(unavailable);
     attach_controls(&mut output, &proofs)?;
     Ok((output["targets"].as_array().map_or(0, Vec::len), output))
@@ -171,7 +165,7 @@ fn metadata_projected(
 }
 
 fn component_controls(root: &std::path::Path, targets: &[Value]) -> io::Result<Vec<proof::Proof>> {
-    let mut proofs = Vec::new();
+    let mut proofs = Vec::with_capacity(targets.len().saturating_mul(2));
     for target in targets {
         let directory = target["directory"]
             .as_str()
@@ -184,8 +178,9 @@ fn component_controls(root: &std::path::Path, targets: &[Value]) -> io::Result<V
                         .any(|part| part == "..")
             })
             .ok_or_else(|| invalid("status control directory"))?;
+        let component_dir = root.join(directory);
         for name in ["component.json", "package.json"] {
-            proof::read(&root.join(directory).join(name), &mut proofs)?;
+            proof::read(&component_dir.join(name), &mut proofs)?;
         }
     }
     Ok(proofs)
@@ -266,7 +261,7 @@ fn default_history() -> bool {
 }
 
 fn controls(request: &Request) -> io::Result<Vec<proof::Proof>> {
-    let mut proofs = Vec::new();
+    let mut proofs = Vec::with_capacity(8);
     for name in [
         ".bitmap",
         "workspace.jsonc",
@@ -298,19 +293,13 @@ fn attach_controls(output: &mut Value, proofs: &[proof::Proof]) -> io::Result<()
             .iter()
             .cloned(),
     );
-    let controls = Value::Array(all.clone());
+    let snapshot = all.clone();
     if let Some(plans) = output["pendingHistory"].as_array_mut() {
         for plan in plans {
             plan["readSet"]
                 .as_array_mut()
                 .ok_or_else(|| invalid("status history proof"))?
-                .extend(
-                    controls
-                        .as_array()
-                        .ok_or_else(|| invalid("status control proof"))?
-                        .iter()
-                        .cloned(),
-                );
+                .extend(snapshot.iter().cloned());
         }
     }
     Ok(())

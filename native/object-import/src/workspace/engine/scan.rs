@@ -81,13 +81,13 @@ impl Scan<'_> {
         if !kind.is_file() {
             return Err(invalid("workspace scan unsupported file type"));
         }
-        self.file(&file, name)
+        self.file(file, name)
     }
     fn excluded(&self, file: &Path, name: &str) -> bool {
-        self.excluded
-            .iter()
-            .any(|directory| file.starts_with(directory))
-            || matches!(name, ".git" | ".bit.map.json")
+        matches!(name, ".git" | ".bit.map.json")
+            || self.excluded
+                .iter()
+                .any(|directory| file.starts_with(directory))
     }
     fn directory(&mut self, file: PathBuf, name: &str) -> io::Result<()> {
         if matches!(name, "node_modules" | ".bit" | ".bitTmp") {
@@ -104,15 +104,15 @@ impl Scan<'_> {
         self.directories.push(file);
         Ok(())
     }
-    fn file(&mut self, file: &Path, name: &str) -> io::Result<()> {
-        if ignore_bitmap(file, self.root, name, self.workspace_root) {
+    fn file(&mut self, file: PathBuf, name: &str) -> io::Result<()> {
+        if ignore_bitmap(&file, self.root, name, self.workspace_root) {
             return Ok(());
         }
-        path(file)?;
+        path(&file)?;
         let name = file
-            .to_str()
-            .ok_or_else(|| invalid("workspace non-UTF8 path"))?
-            .to_owned();
+            .into_os_string()
+            .into_string()
+            .map_err(|_| invalid("workspace non-UTF8 path"))?;
         self.bytes = self.bytes
             .checked_add(name.len())
             .filter(|bytes| *bytes <= MAX_RAW)

@@ -23,7 +23,8 @@ pub(super) fn select(
         .flatten();
     if let Some(value) = request.sources.component_config
         .get(base)
-        .map(|value| value.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         return Ok(Some((value.to_owned(), None, true)));
@@ -32,7 +33,8 @@ pub(super) fn select(
         && !(index.env.contains(name) && bitmap.is_some())
         && let Some(spec) = request.policy.manual[field]
             .get(name)
-            .map(|value| value.trim())
+            .map(String::as_str)
+            .map(str::trim)
             .filter(|value| !value.is_empty())
         && let Some((version, range)) = valid(request, spec)?
     {
@@ -53,20 +55,17 @@ fn default_version(index: &super::index::Index<'_>, identity: &str, base: &str) 
     index.model
         .get(base)
         .copied()
-        .or_else(|| {
-            (!ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head")).then_some(
-                ver,
-            )
-        })
+        .or_else(|| concrete_version(ver).then_some(ver))
         .map(|value| (value.to_owned(), None, false))
 }
 fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<Choice> {
     let ver = version(identity);
-    if !ver.eq_ignore_ascii_case("latest")
-        && !ver.eq_ignore_ascii_case("head")
+    let pinned = concrete_version(ver);
+    if pinned
         && let Some(spec) = request.policy.workspace
             .get(name)
-            .map(|spec| spec.trim())
+            .map(String::as_str)
+            .map(str::trim)
             .filter(|spec| !spec.is_empty())
     {
         let range =
@@ -76,14 +75,14 @@ fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<C
     if let Some(spec) = request.policy.merge
         .iter()
         .filter_map(|map| map.get(name))
-        .map(|spec| spec.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .rfind(|spec| !spec.is_empty())
         && let Some((version, _)) = valid(request, spec)?
     {
         return Ok(Some((version, None)));
     }
-    if !ver.eq_ignore_ascii_case("latest")
-        && !ver.eq_ignore_ascii_case("head")
+    if pinned
         && request.policy.automatic
             .iter()
             .any(|map| {
@@ -97,6 +96,9 @@ fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<C
         return Ok(Some((ver.to_owned(), None)));
     }
     Ok(None)
+}
+fn concrete_version(ver: &str) -> bool {
+    !ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head")
 }
 fn valid(request: &Request, spec: &str) -> io::Result<Choice> {
     let spec = spec.trim();

@@ -167,19 +167,26 @@ fn code_modified(current: &Value, model: &Value) -> io::Result<bool> {
     if model.is_empty() {
         return Ok(false);
     }
-    let unique_model = model
+    if model.len() != current.len() {
+        return Ok(true);
+    }
+    let model_files = model
         .iter()
-        .filter_map(|stored| stored["relativePath"].as_str().map(str::trim))
-        .filter(|path| !path.is_empty())
-        .collect::<std::collections::HashSet<_>>();
-    Ok(model.len() != current.len()
-        || unique_model.len() != model.len()
+        .filter_map(|stored| {
+            let path = stored["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())?;
+            Some((path, stored["file"].as_str().map(str::trim)))
+        })
+        .collect::<HashMap<_, _>>();
+    Ok(model_files.len() != model.len()
         || current
             .iter()
-            .any(|file| !file_matches_model(file, model)))
+            .any(|file| !file_matches_model(file, &model_files)))
 }
 
-fn file_matches_model(file: &Value, model: &[Value]) -> bool {
+fn file_matches_model(file: &Value, model_files: &HashMap<&str, Option<&str>>) -> bool {
     let Some(path) = file["relativePath"]
         .as_str()
         .map(str::trim)
@@ -188,14 +195,10 @@ fn file_matches_model(file: &Value, model: &[Value]) -> bool {
         return false;
     };
     let current_hash = file["file"].as_str().map(str::trim);
-    model
-        .iter()
-        .find(|stored| stored["relativePath"].as_str().map(str::trim) == Some(path))
-        .and_then(|stored| {
-            stored["file"]
-                .as_str()
-                .map(str::trim)
-                .zip(current_hash)
-        })
+    model_files
+        .get(path)
+        .copied()
+        .flatten()
+        .zip(current_hash)
         .is_some_and(|(left, right)| left.eq_ignore_ascii_case(right))
 }

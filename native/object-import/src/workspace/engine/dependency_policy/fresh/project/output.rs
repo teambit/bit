@@ -5,7 +5,7 @@ use std::io;
 impl Projection<'_> {
     pub(super) fn finish(self) -> io::Result<Value> {
         let issues = self.collect_issues()?;
-        let mut grammar = Vec::new();
+        let mut grammar = Vec::with_capacity(self.grammar.len());
         for item in self.grammar {
             let trimmed = item.trim();
             if !trimmed.is_empty()
@@ -23,7 +23,7 @@ impl Projection<'_> {
     }
 
     fn collect_issues(&self) -> io::Result<Vec<Value>> {
-        let mut issues = Vec::new();
+        let mut issues = Vec::with_capacity(8);
         for (kind, data) in [
             ("SelfReference", &self.metadata.issues.self_reference),
             ("ImportNonMainFiles", &self.metadata.issues.non_main),
