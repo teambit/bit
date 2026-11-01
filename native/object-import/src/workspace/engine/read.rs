@@ -7,14 +7,14 @@ use std::{
     io::{self, Read},
     path::{Path, PathBuf},
 };
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct FileRecord {
     #[serde(flatten)]
     metadata: Metadata,
     contents: String,
 }
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Metadata {
     pub(super) path: PathBuf,

@@ -9,7 +9,6 @@ pub fn read_global_config(directory: &Path) -> io::Result<Value> {
 }
 
 /// Preserve a caller's established parse-error report while sharing file and missing-file semantics.
-#[inline]
 pub fn read_global_config_with(
     directory: &Path,
     parse_error: impl FnOnce(&Path, serde_json::Error) -> io::Error,

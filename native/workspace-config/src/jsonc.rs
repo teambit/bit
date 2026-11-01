@@ -59,6 +59,7 @@ impl Document {
 
     /// The value at `path` (object keys), as plain JSON.
     #[must_use]
+    #[inline]
     pub fn get(&self, path: &[&str]) -> Option<Value> {
         let mut node = &self.root;
         for key in path {

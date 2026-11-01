@@ -3,6 +3,7 @@ use crate::workspace::engine::read;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct File {
     pub(super) metadata: Value,
     pub(super) contents: Vec<u8>,

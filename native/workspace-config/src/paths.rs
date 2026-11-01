@@ -1,4 +1,4 @@
-//! Cache locations from the published legacy.constants module.
+//! Cache locations from the published `legacy.constants` module.
 use std::{env, path::PathBuf};
 
 /// `GLOBAL_CONFIG` contains config.json below `CACHE_ROOT`.

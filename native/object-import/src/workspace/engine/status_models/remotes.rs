@@ -1,3 +1,4 @@
+//! Read and validate remote main refs for status models.
 use super::invalid;
 use crate::read_budget::Budget;
 use serde_json::Value;

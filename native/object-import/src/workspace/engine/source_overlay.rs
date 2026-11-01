@@ -26,12 +26,12 @@ struct Data {
     proofs: Vec<proof::Proof>,
     sealed: bool,
 }
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum Entry {
     Source(source::Spool),
     Removed,
 }
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Metadata {
     length: u64,
     kind: u8,

@@ -4,7 +4,7 @@ mod tests;
 use super::{MAX_OUTPUT, invalid};
 use std::io::{self, Write};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct CanonicalError {
     message: String,
     progress: Option<serde_json::Value>,

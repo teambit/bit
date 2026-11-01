@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Spool {
     pub(super) path: PathBuf,
     pub(super) offset: u64,

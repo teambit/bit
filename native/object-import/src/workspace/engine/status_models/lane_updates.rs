@@ -11,7 +11,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
     pub(in crate::workspace::engine) root: PathBuf,
@@ -23,7 +23,7 @@ pub(in crate::workspace::engine) struct Request {
     during_merge: Vec<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Target {
     identity: String,

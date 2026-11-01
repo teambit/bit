@@ -93,6 +93,7 @@ fn entry(package: &Value, typed: bool) -> Option<&str> {
                 .filter(|value| !value.is_empty())
         })
 }
+#[inline]
 fn package_file(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<PathBuf>> {
     let text = file.to_str().ok_or_else(|| invalid("TypeScript dependency path"))?;
     if typed

@@ -19,13 +19,14 @@ const MAX_FILES: u32 = 64;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_PATH: usize = 32_768;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct File {
     path: PathBuf,
     overwrite: bool,
     contents: Vec<u8>,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,
     id: u32,

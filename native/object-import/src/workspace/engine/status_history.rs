@@ -8,13 +8,13 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::PathBuf};
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Request {
     root: PathBuf,
     plans: Vec<Plan>,
 }
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Plan {
     identity: String,

@@ -149,6 +149,7 @@ fn repeat(alternatives: &[Vec<char>], rest: &[char], text: &[char]) -> bool {
     })
 }
 
+#[inline]
 fn split_alternatives(body: &[char]) -> Vec<Vec<char>> {
     let mut alternatives = vec![Vec::new()];
     let mut depth = 0_usize;

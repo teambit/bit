@@ -6,13 +6,13 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::PathBuf};
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Request {
     root: PathBuf,
     targets: Vec<Target>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Target {
     pub(in crate::workspace::engine) identity: String,

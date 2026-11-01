@@ -21,7 +21,7 @@ const EXTENSIONS: [&str; 15] = [
     ".scss", ".sass", ".styl", ".less",
 ];
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {
     mode: String,

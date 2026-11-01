@@ -3,6 +3,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Scan<'a> {
     root: &'a Path,
     excluded: &'a [PathBuf],

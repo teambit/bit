@@ -18,7 +18,7 @@ struct ItemMatch {
     excluded: bool,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct MatchedVariant<'a> {
     pattern: &'a str,
     specificity: f64,

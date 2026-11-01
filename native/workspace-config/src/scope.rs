@@ -1,4 +1,4 @@
-//! `ScopeJson.toJson` uses four spaces and leaves the final newline absent.
+//! `ScopeJson.toJson` uses four spaces and omits a trailing newline.
 use serde::Serialize;
 use serde_json::Value;
 use std::io;

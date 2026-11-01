@@ -1,5 +1,5 @@
 //! The minimatch subset variant namespaces use: `*`, `**` segments, `?`,
-//! `[...]` classes and `{a,b}` alternatives, without matching leading dots.
+//! `[...]` classes, and `{a,b}` alternatives, without matching leading dots.
 
 /// Whether `name` matches the minimatch `pattern`.
 #[must_use]

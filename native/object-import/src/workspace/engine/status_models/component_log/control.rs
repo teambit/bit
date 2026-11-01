@@ -78,6 +78,7 @@ impl Control {
     }
 }
 
+#[inline]
 pub(super) fn staged(rows: &mut [Value], config: &Value) {
     let range = (config["deprecate"] != Value::Bool(false))
         .then(|| config["range"].as_str())

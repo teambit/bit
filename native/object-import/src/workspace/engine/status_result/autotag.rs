@@ -1,3 +1,4 @@
+//! Compute pending auto-tag candidates for modified workspace components.
 use super::{Request, Target, invalid};
 use serde_json::{Value, json};
 use std::io;

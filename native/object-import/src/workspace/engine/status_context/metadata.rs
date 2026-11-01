@@ -6,6 +6,7 @@ use crate::read_budget::Budget;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn optional(path: &Path, budget: &Budget) -> io::Result<Value> {
     let metadata = match fs::symlink_metadata(path) {
         Ok(metadata) => metadata,

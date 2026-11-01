@@ -23,7 +23,7 @@ pub(crate) struct State {
     records: HashMap<u64, Observation>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Observation {
     pub(crate) path: PathBuf,
     pub(crate) raw_hash: String,

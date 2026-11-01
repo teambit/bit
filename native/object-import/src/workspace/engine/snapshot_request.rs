@@ -3,6 +3,7 @@ use super::{super::snapshots, Request, command, owned_command};
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(super) fn dispatch(
     request: Request,
     snapshots: &mut snapshots::State,

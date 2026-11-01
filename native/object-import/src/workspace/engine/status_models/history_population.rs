@@ -1,3 +1,4 @@
+//! Populate and verify `VersionHistory` records for status queries.
 use super::{Reader, invalid};
 use crate::workspace::engine::{dependency_graph::proof, status_history};
 use serde_json::{Value, json};

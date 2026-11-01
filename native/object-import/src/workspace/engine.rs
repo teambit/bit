@@ -188,7 +188,7 @@ enum Request {
     },
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,
     id: u32,

@@ -88,6 +88,7 @@ fn falsy(value: &Value) -> bool {
     }
 }
 
+#[inline]
 fn extension(row: &Value) -> io::Result<Value> {
     let mut value = json!({"rawConfig":row.get("config").cloned().unwrap_or_else(|| json!({}))});
     if row

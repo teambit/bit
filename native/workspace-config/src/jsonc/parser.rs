@@ -15,6 +15,7 @@ pub(super) struct Parsed {
     pub(super) after_all: Vec<Comment>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 struct Parser {
     tokens: Vec<Token>,
     index: usize,

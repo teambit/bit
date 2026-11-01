@@ -27,7 +27,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {
     root: PathBuf,
@@ -43,13 +43,13 @@ pub(super) struct Request {
     #[serde(default)]
     current_lane_id: Option<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Target {
     identity: String,
     version: String,
 }
-#[derive(Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Snapshot {
     #[serde(skip_serializing_if = "Option::is_none")]

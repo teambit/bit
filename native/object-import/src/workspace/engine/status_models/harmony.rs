@@ -1,3 +1,5 @@
+//! Harmony 1 and Harmony 2 `Version` validation and consumer projection.
+
 #[cfg(test)]
 mod tests;
 

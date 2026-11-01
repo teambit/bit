@@ -1,4 +1,4 @@
-//! Callback source spools are private regular files within a Rust-owned temporary root.
+//! Callback source spools are private regular files inside a Rust-owned temporary root.
 
 #[cfg(test)]
 mod tests;

@@ -110,6 +110,7 @@ pub(super) fn node(value: &Node, gap: &str) -> String {
 }
 
 /// The `inside` of an object or array, closed by its trailing comments.
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Members<'a> {
     comments: &'a Comments,
     deeper_gap: String,

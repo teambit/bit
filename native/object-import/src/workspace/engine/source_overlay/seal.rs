@@ -1,3 +1,4 @@
+//! Capture and verify source-overlay file and spool proofs when sealing.
 use super::{Data, Entry, invalid, lookup, proof};
 use rayon::prelude::*;
 use std::{

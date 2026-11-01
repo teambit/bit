@@ -71,6 +71,7 @@ fn append_target_sources(
     }
     Ok(())
 }
+#[inline]
 fn build_target_files(
     target: &Target,
     captured: &mut impl Iterator<Item = read::Metadata>,

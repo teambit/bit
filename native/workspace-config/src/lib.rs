@@ -1,6 +1,6 @@
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
-//! Published `ConfigGetter` layering shared by native commands, installation and transport.
+//! Published `ConfigGetter` layering shared by native commands, installation, and transport.
 pub mod glob;
 pub mod jsonc;
 pub mod package_json;

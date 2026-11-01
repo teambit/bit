@@ -8,7 +8,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {
     current_lane_id: String,
@@ -23,7 +23,7 @@ pub(super) struct Request {
     #[serde(default)]
     during_merge: Vec<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Target {
     identity: String,
@@ -36,7 +36,7 @@ struct Target {
     #[serde(default)]
     invalid: Option<Value>,
 }
-#[derive(Default, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct BitmapState {
     #[serde(default)]

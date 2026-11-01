@@ -8,6 +8,7 @@ use std::{
     path::Path,
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Lane {
     pub(super) scope: String,
     pub(super) name: String,

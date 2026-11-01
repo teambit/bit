@@ -5,14 +5,14 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, fs::File, io, path::Path};
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Item {
     id: Id,
     is_symlink: bool,
     hash: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Id {
     scope: Option<String>,

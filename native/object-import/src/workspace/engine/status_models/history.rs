@@ -1,3 +1,4 @@
+//! Compute status and merge version-history distances across main and lanes.
 use super::{Reader, Request, history_population, invalid, lane::Lane, remotes, versions};
 use rayon::prelude::*;
 use serde_json::{Value, json};

@@ -1,3 +1,5 @@
+//! Read and diff model and workspace file contents for `workspaceDiff`.
+
 #[cfg(test)]
 mod tests;
 
