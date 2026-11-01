@@ -1,4 +1,4 @@
-//! Unit tests for pnpm configuration overlay options and queries in
+//! Unit tests for pnpm configuration overlay options ([`CallOverlay`], [`install_config`]) and queries ([`Query`], [`query_config`]) in
 //! `bit-install`.
 
 use super::{CallOverlay, Query, install_config, query_config};

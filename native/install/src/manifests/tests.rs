@@ -1,4 +1,4 @@
-//! End-to-end cases of [`plan`], with expectations traced through the
+//! End-to-end cases of [`plan`] and [`manifests_hash`], with expectations traced through the
 //! `TypeScript` sources.
 
 use super::{

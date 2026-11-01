@@ -1,4 +1,4 @@
-//! Unit tests for dependency detection, resolution, and dev-file classification
+//! Unit tests for dependency detection ([`detect`]), resolution ([`Resolver`]), and computation ([`compute`])
 //! in `bit-install`.
 
 use super::{

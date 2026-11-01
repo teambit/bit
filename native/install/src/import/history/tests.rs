@@ -1,4 +1,4 @@
-//! Unit tests for `VersionHistory` completeness checks and `graphCompleteRefs`
+//! Unit tests for `VersionHistory` [`Completeness`] checks ([`check`], [`incomplete`]) and `graphCompleteRefs`
 //! updates in `bit-install`.
 
 use super::{Completeness, check, incomplete};

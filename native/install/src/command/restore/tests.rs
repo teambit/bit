@@ -1,5 +1,5 @@
-//! Unit tests for lockfile-only dependency graph restoration and peer suffix
-//! parsing in `bit-install`.
+//! Unit tests for lockfile-only dependency graph restoration ([`explicit`], [`merge`]) and peer suffix
+//! parsing ([`split_peer_ids`], [`without_peer_suffix`]) in `bit-install`.
 
 use super::{
     explicit,

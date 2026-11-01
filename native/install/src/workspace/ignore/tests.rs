@@ -1,5 +1,5 @@
-//! Unit tests for `node-ignore` 3.3.10 regex generation and path filtering
-//! against golden cases in `bit-install`.
+//! Unit tests for `node-ignore` 3.3.10 regex generation ([`parts`], [`source`]) and path filtering ([`Ignore`])
+//! against [`golden`] cases in `bit-install`.
 
 mod golden;
 

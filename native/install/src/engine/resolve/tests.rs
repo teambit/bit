@@ -1,4 +1,4 @@
-//! Unit tests for npm package name and version specifier splitting in
+//! Unit tests for npm package name and version specifier splitting ([`parse_package_name`]) in
 //! `bit-install`.
 
 use super::parse_package_name;

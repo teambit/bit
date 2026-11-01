@@ -1,4 +1,4 @@
-//! Unit tests for progress reporter throttle interval parsing in `bit-install`.
+//! Unit tests for progress reporter throttle interval parsing ([`throttle`]) in `bit-install`.
 
 use super::throttle;
 use serde_json::json;

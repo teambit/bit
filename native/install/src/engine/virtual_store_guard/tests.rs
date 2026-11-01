@@ -1,4 +1,4 @@
-//! Unit tests for `.modules.yaml` virtual store directory transition guards in
+//! Unit tests for `.modules.yaml` virtual store directory transition guards ([`assert_safe_transition`], [`recorded_virtual_store_dir`]) in
 //! `bit-install`.
 
 use super::{assert_safe_transition, recorded_virtual_store_dir};

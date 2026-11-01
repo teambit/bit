@@ -1,4 +1,4 @@
-//! Unit tests for [`EngineError`] formatting and engine constants in
+//! Unit tests for [`EngineError`] formatting and engine constants ([`READ_PACKAGE_HOOKS_CHECKSUM`], [`VIRTUAL_STORE_DIR_MAX_LENGTH`]) in
 //! `bit-install`.
 
 use super::{EngineError, READ_PACKAGE_HOOKS_CHECKSUM, VIRTUAL_STORE_DIR_MAX_LENGTH};

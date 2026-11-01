@@ -1,4 +1,4 @@
-//! Unit tests for [`BitHooks`] `readPackage` manifest transformations in
+//! Unit tests for [`BitHooks`] `readPackage` manifest transformations ([`normalize`]) in
 //! `bit-install`.
 
 use super::{BitHooks, normalize};

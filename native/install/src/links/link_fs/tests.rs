@@ -1,4 +1,4 @@
-//! Unit tests for cross-platform file and directory linking primitives in
+//! Unit tests for cross-platform file and directory linking primitives ([`LinkKind`], [`create_link_or_symlink`], [`linked_correctly`]) in
 //! `bit-install`.
 
 #[cfg(unix)]

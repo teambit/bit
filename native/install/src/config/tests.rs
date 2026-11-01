@@ -1,4 +1,4 @@
-//! Unit tests for `workspace.jsonc`, `scope.json`, and global configuration
+//! Unit tests for `workspace.jsonc` ([`WorkspaceConfig`]), `scope.json` ([`ScopeJson`]), and global configuration ([`load_global_config`])
 //! loading in `bit-install`.
 
 use super::{

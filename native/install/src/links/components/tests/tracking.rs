@@ -1,4 +1,4 @@
-//! Ordered tracking publication barriers independent of filesystem completion
+//! Unit tests for ordered tracking publication barriers ([`link_tracking_components`]) independent of filesystem completion
 //! races in the CLI.
 
 use super::{ComponentLinkOptions, FakeHost, component, write_sources};

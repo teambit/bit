@@ -1,4 +1,4 @@
-//! Unit tests for pruning unreferenced virtual-store packages under
+//! Unit tests for pruning unreferenced virtual-store packages ([`prune_modules`]) under
 //! `node_modules/.pnpm` in `bit-install`.
 
 use super::prune_modules;

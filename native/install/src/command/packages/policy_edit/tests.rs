@@ -1,4 +1,4 @@
-//! Unit tests for `workspace.jsonc` dependency policy editing and sorting in
+//! Unit tests for `workspace.jsonc` dependency policy editing ([`update_config_policy`]) and sorting ([`to_config_object`]) in
 //! `bit-install`.
 
 use super::{admits, config_entries, to_config_object, update_config_policy};

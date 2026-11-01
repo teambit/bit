@@ -1,4 +1,4 @@
-//! Unit tests for comment-preserving `workspace.jsonc` edits and backup
+//! Unit tests for comment-preserving `workspace.jsonc` edits ([`edit`]) and backup
 //! history in `bit-install`.
 
 use super::edit;

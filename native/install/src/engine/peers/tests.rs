@@ -1,4 +1,4 @@
-//! Unit tests for missing peer dependency range intersections in `bit-install`.
+//! Unit tests for missing peer dependency range intersections ([`intersections`], [`safe_intersect`]) in `bit-install`.
 
 use super::{intersections, safe_intersect};
 use pnpm_resolving_deps_resolver::{MissingPeer, PeerDependencyIssues};

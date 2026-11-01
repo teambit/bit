@@ -1,4 +1,4 @@
-//! Unit tests for component load group ordering (`buildLoadGroups`) in
+//! Unit tests for component load group ordering ([`load_order`], `buildLoadGroups`) in
 //! `bit-install`.
 
 use super::load_order;

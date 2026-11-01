@@ -1,4 +1,4 @@
-//! Unit tests for install summary formatting and elapsed duration rendering in
+//! Unit tests for install summary formatting ([`format`]) and elapsed duration rendering ([`seconds`]) in
 //! `bit-install`.
 
 use super::{format, seconds};

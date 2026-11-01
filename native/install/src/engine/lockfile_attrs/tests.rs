@@ -1,4 +1,4 @@
-//! Unit tests for the `bit:` custom attribute block in `pnpm-lock.yaml` in
+//! Unit tests for the `bit:` custom attribute block ([`read`], [`write`], [`merge`]) in `pnpm-lock.yaml` in
 //! `bit-install`.
 
 use super::{merge, read, remove_for_update, restore_after_failure, write};

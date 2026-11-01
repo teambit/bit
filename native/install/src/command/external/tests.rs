@@ -1,4 +1,4 @@
-//! Unit tests for external package manager `package.json` and `workspace.jsonc`
+//! Unit tests for external package manager `package.json` ([`write_package_json_dependencies`], [`remove_postinstall_script`]) and `workspace.jsonc` ([`disable_in_config`])
 //! updates in `bit-install`.
 
 use super::{disable_in_config, remove_postinstall_script, write_package_json_dependencies};

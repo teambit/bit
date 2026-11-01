@@ -1,4 +1,4 @@
-//! Unit tests for lockfile snapshot deduplication against root policy versions
+//! Unit tests for lockfile snapshot deduplication ([`dedupe`]) against root policy versions
 //! in `bit-install`.
 
 use super::dedupe;

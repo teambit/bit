@@ -1,4 +1,4 @@
-//! Unit tests for aspect-registered dependency policy slots
+//! Unit tests for aspect-registered dependency policy slots ([`component_slots`], [`candidates`], [`registry`])
 //! (`registerDependenciesPolicies`) in `bit-install`.
 
 use super::{Registration, candidates, component_slots, registry};

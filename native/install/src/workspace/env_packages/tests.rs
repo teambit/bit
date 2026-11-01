@@ -1,5 +1,5 @@
-//! Unit tests for resolving external environment package names from scope
-//! objects in `bit-install`.
+//! Unit tests for resolving external environment package names ([`external_env_packages`]) from [`ScopeObjects`]
+//! in `bit-install`.
 
 use super::external_env_packages;
 use crate::{

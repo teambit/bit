@@ -1,4 +1,4 @@
-//! Unit tests for registry URL and authentication header resolution in
+//! Unit tests for [`Registries`] URL and authentication header resolution ([`resolve`], [`bit_cloud_registry`]) in
 //! `bit-install`.
 
 use super::{Registries, Registry, bit_cloud_registry, resolve};

@@ -1,4 +1,4 @@
-//! Unit tests for lockfile restoration context and `pnpmfileChecksum` overrides
+//! Unit tests for lockfile restoration context ([`graph`], [`merge`]) and `pnpmfileChecksum` overrides
 //! in `bit-install`.
 
 use super::{graph, merge};
