@@ -282,7 +282,13 @@ fn from_dependency_resolver(config: &DependencyResolverConfig) -> NetworkSetting
 pub(super) fn read_ca_file(path: &Path) -> io::Result<Option<Vec<String>>> {
     const DELIMITER: &str = "-----END CERTIFICATE-----";
     let contents = match fs::read_to_string(path) {
-        Ok(contents) => contents.replace("\r\n", "\n"),
+        Ok(contents) => {
+            if contents.contains("\r\n") {
+                contents.replace("\r\n", "\n")
+            } else {
+                contents
+            }
+        }
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
     };

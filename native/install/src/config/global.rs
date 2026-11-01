@@ -189,7 +189,7 @@ impl EffectiveConfig {
             .map(|(key, value)| (key.clone(), Value::String(value.clone())))
             .collect();
         for key in keys::ALL {
-            if let Some(value) = self.get(key) {
+            if let Some(value) = bit_workspace_config::environment_value(key) {
                 merged.insert(key.to_owned(), Value::String(value));
             }
         }

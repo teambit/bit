@@ -41,10 +41,15 @@ impl CanonicalInstall {
         build_scripts_path: String,
         output: Option<OutputSink>,
     ) -> io::Result<EngineResult> {
-        let build_scripts_path = build_scripts_path.trim().to_owned();
-        if build_scripts_path.is_empty() || build_scripts_path.contains(['\0', '\n', '\r']) {
+        let trimmed_path = build_scripts_path.trim();
+        if trimmed_path.is_empty() || trimmed_path.contains(['\0', '\n', '\r']) {
             return Err(io::Error::other("retained build scripts PATH is empty"));
         }
+        let build_scripts_path = if trimmed_path.len() == build_scripts_path.len() {
+            build_scripts_path
+        } else {
+            trimmed_path.to_owned()
+        };
         let environment = self.payload["environment"]
             .as_object_mut()
             .ok_or_else(|| io::Error::other("retained Host environment unavailable"))?;

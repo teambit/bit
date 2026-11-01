@@ -28,7 +28,7 @@ pub(super) fn ordered(imports: &mut [Import]) -> Vec<String> {
             .cmp(&right.component)
             .then_with(|| left.path.encode_utf16().cmp(right.path.encode_utf16()))
     });
-    let mut ids = Vec::new();
+    let mut ids = Vec::with_capacity(imports.len());
     for import in imports {
         let trimmed = import.id.trim();
         if !trimmed.is_empty()

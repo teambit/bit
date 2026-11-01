@@ -169,9 +169,7 @@ impl Renderer {
                 self.frame_buf.push('\r');
                 self.diff.update_into(&frame, &mut self.frame_buf);
                 self.frame_buf.push_str("\x1b[K\x1b[0J");
-                let chunk = std::mem::take(&mut self.frame_buf);
-                self.emit(&chunk);
-                self.frame_buf = chunk;
+                self.emit(&self.frame_buf);
             }
         }
         true

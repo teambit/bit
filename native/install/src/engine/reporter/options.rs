@@ -6,24 +6,27 @@ use std::{io, time::Duration};
 
 pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
     let Some(value) = value else { return Ok(None) };
-    if value.is_null() {
-        return Ok(Some(Duration::from_millis(200)));
-    }
-    let milliseconds = if let Some(integer) = value
-        .as_u64()
-        .map(|num| num as u32)
-        .or_else(|| value.as_i64().map(|num| num as u32))
-    {
-        integer
-    } else {
-        let number = value.as_f64().ok_or_else(|| invalid_type(value))?;
-        // napi_get_value_uint32 applies ECMAScript ToUint32, not Rust's saturating cast.
-        if number.is_finite() {
-            const TWO_POW_32: f64 = 4_294_967_296.0;
-            number.trunc().rem_euclid(TWO_POW_32) as u32
-        } else {
-            0
+    let milliseconds = match value {
+        Value::Null => return Ok(Some(Duration::from_millis(200))),
+        Value::Number(number) => {
+            if let Some(integer) = number
+                .as_u64()
+                .map(|num| num as u32)
+                .or_else(|| number.as_i64().map(|num| num as u32))
+            {
+                integer
+            } else {
+                let float = number.as_f64().unwrap_or(f64::NAN);
+                // napi_get_value_uint32 applies ECMAScript ToUint32, not Rust's saturating cast.
+                if float.is_finite() {
+                    const TWO_POW_32: f64 = 4_294_967_296.0;
+                    float.trunc().rem_euclid(TWO_POW_32) as u32
+                } else {
+                    0
+                }
+            }
         }
+        _ => return Err(invalid_type(value)),
     };
     Ok(Some(Duration::from_millis(u64::from(milliseconds))))
 }

@@ -160,9 +160,18 @@ fn manifest_field(manifest: &Value, field: &str) -> String {
 pub(super) fn parse_package_name(input: &str) -> Option<(String, String)> {
     const SCOPED: &str = r"^(@[^/]+\/[^/@]+)(?:\/([^@]+))?(?:@([\s\S]+))?";
     const NORMAL: &str = r"^([^/@]+)(?:\/([^@]+))?(?:@([\s\S]+))?";
+    static SCOPED_RE: std::sync::OnceLock<Option<regress::Regex>> = std::sync::OnceLock::new();
+    static NORMAL_RE: std::sync::OnceLock<Option<regress::Regex>> = std::sync::OnceLock::new();
     let input = input.trim();
-    let pattern = if input.starts_with('@') { SCOPED } else { NORMAL };
-    let regex = regress::Regex::new(pattern).ok()?;
+    let regex = if input.starts_with('@') {
+        SCOPED_RE
+            .get_or_init(|| regress::Regex::new(SCOPED).ok())
+            .as_ref()?
+    } else {
+        NORMAL_RE
+            .get_or_init(|| regress::Regex::new(NORMAL).ok())
+            .as_ref()?
+    };
     let found = regex.find(input)?;
     let group = |index| {
         found

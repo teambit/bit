@@ -34,8 +34,9 @@ impl ComponentModel {
     /// `getAllPackageDependencies()`: runtime then dev packages.
     #[must_use]
     pub fn all_packages(&self) -> IndexMap<String, String> {
-        let [mut all, dev, _] = self.packages();
-        all.extend(dev);
+        let Some(version) = &self.version else { return IndexMap::new() };
+        let mut all = string_map(&version["packageDependencies"]);
+        all.extend(string_map(&version["devPackageDependencies"]));
         all
     }
 

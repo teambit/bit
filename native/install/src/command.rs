@@ -75,11 +75,9 @@ pub async fn run_with_options(
 ) -> io::Result<Outcome> {
     let ci_enabled = std::env::var_os("CI")
         .is_some_and(|ci| {
-            let normalized = ci
-                .to_string_lossy()
-                .trim()
-                .to_ascii_lowercase();
-            !matches!(normalized.as_str(), "" | "0" | "false")
+            let text = ci.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
         });
     let session = Session {
         root: session::find_root(cwd)?,
@@ -242,10 +240,11 @@ async fn add_missing_peers(session: &Session<'_>, loaded: Loaded) -> io::Result<
 
 /// `publishIpcEvent('onPostInstall')`: watchers (`bit start`, `bit watch`) reload on it.
 fn publish_post_install_event(scope_path: &Path) -> io::Result<()> {
-    if scope_path
-        .to_string_lossy()
-        .trim()
-        .is_empty()
+    if scope_path.as_os_str().is_empty()
+        || scope_path
+            .to_string_lossy()
+            .trim()
+            .is_empty()
     {
         return Ok(());
     }

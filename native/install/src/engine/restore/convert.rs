@@ -261,10 +261,11 @@ fn deps_requiring_build(graph: &Graph) -> Vec<String> {
     let mut deps: Vec<String> = graph.packages
         .iter()
         .filter(|(_, package)| package.get("requiresBuild") == Some(&Value::Bool(true)))
-        .map(|(id, _)| id.trim().to_owned())
+        .map(|(id, _)| id.trim())
         .filter(|id| !id.is_empty())
+        .map(str::to_owned)
         .collect();
-    deps.sort();
+    deps.sort_unstable();
     deps.dedup();
     deps
 }
@@ -326,7 +327,6 @@ fn importer_deps(root_edge: &Value, project: &Project, dep_type: &str) -> Map<St
 fn direct_dependency_ref(root_edge: &Value, name: &str, specifier: &str) -> Option<String> {
     let name = name.trim();
     let specifier = specifier.trim();
-    let wanted_id = format!("{name}@{specifier}");
     let found = neighbours(root_edge)
         .iter()
         .find(|dep| {
@@ -339,7 +339,10 @@ fn direct_dependency_ref(root_edge: &Value, name: &str, specifier: &str) -> Opti
                     .and_then(Value::as_str)
                     .map(str::trim)
                     == Some(specifier)
-                    || remove_suffix(neighbour_id(dep)) == wanted_id)
+                    || remove_suffix(neighbour_id(dep))
+                        .strip_prefix(name)
+                        .and_then(|rest| rest.strip_prefix('@'))
+                        == Some(specifier))
         })?;
     Some(parse(neighbour_id(found)).to_ref())
 }

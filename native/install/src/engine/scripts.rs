@@ -61,8 +61,15 @@ pub(super) fn allowed_scripts(
     merged.extend(
         from_env
             .into_iter()
-            .map(|(name, value)| (name.trim().to_string(), value))
-            .filter(|(name, _)| !name.is_empty()),
+            .filter_map(|(name, value)| {
+                let trimmed = name.trim();
+                if trimmed.is_empty() {
+                    None
+                } else {
+                    let key = if trimmed.len() == name.len() { name } else { trimmed.to_owned() };
+                    Some((key, value))
+                }
+            }),
     );
     Ok(Some(merged))
 }

@@ -53,6 +53,9 @@ pub fn needs_invalidation(root: &Path, cache: &Path) -> io::Result<bool> {
             last_modified = last_modified.max(mtime);
         }
     }
+    if last_modified == f64::NEG_INFINITY {
+        return Ok(false);
+    }
     let first_entered = entry_times(cache)?.into_iter().fold(f64::INFINITY, js_min);
     Ok(last_modified > first_entered)
 }

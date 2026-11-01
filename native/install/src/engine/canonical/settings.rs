@@ -288,10 +288,10 @@ fn install_plan(request: &Request<'_>) -> Option<InstallPlan> {
                     .as_str()
                     .map(str::trim)
                     .filter(|name| !name.is_empty())
-                    .map(str::to_string)
             })
             .collect::<indexmap::IndexSet<_>>()
             .into_iter()
+            .map(str::to_owned)
             .collect()
     } else {
         Vec::new()

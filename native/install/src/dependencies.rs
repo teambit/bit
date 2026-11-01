@@ -179,7 +179,7 @@ pub async fn compute(
     let mut resolver = Resolver::new(root, components, &options.core_aspects);
     let mut env_patterns = EnvPatterns::new(&reader, host, &options.dev_patterns);
     let mut detectors = Detectors::new(host, &options.core_aspects, &options.workspace_aspects);
-    let mut result = IndexMap::new();
+    let mut result = IndexMap::with_capacity(components.len());
     for component in components {
         let mut subject =
             subject(component, scope.as_ref(), &reader, &mut env_patterns, options, host).await?;
@@ -332,9 +332,9 @@ fn one(
         })
         .unwrap_or_default();
     let deps = overrides::deps(&policy);
-    let auto_detect =
-        overrides::auto_detect(&policy::merge(vec![policy.clone(), merge_config.clone()]));
-    let merge_config = overrides::auto_detect(&merge_config);
+    let merge_auto = overrides::auto_detect(&merge_config);
+    let auto_detect = overrides::auto_detect(&policy::merge(vec![policy.clone(), merge_config]));
+    let merge_config = merge_auto;
     let mut detected = detected(context, subject, resolver)?;
     let origin = apply::early(workspace, &subject.model, &deps, &mut detected);
     apply_late::auto_detect(&auto_detect, &deps, &origin, &mut detected);

@@ -126,7 +126,7 @@ fn populate(
         None => true,
     });
     add_missing_files(subject, detected, file, &tree.missing_files);
-    packages(workspace, subject, detected, file, &tree, is_dev);
+    packages(workspace, subject, detected, file, &tree, &model_packages, is_dev);
     if !tree.missing.is_empty() {
         add_missing(detected, file, &tree.missing, is_dev);
     }
@@ -232,9 +232,9 @@ fn packages(
     detected: &mut Detected,
     file: &str,
     tree: &FileTree,
+    model_packages: &indexmap::IndexMap<String, String>,
     is_dev: bool,
 ) {
-    let model_packages = subject.model.all_packages();
     let mut found = tree.packages.clone();
     for (name, version) in &mut found {
         if !workspace.manifest[0].contains_key(name)
@@ -243,10 +243,14 @@ fn packages(
             version.clone_from(model);
         }
     }
-    let lower = file.to_ascii_lowercase();
-    let typescript = [".ts", ".tsx", ".mts", ".cts"]
-        .iter()
-        .any(|ext| lower.ends_with(ext));
+    let typescript = Path::new(file)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| {
+            ["ts", "tsx", "mts", "cts"]
+                .iter()
+                .any(|ts_ext| ext.eq_ignore_ascii_case(ts_ext))
+        });
     if typescript {
         let types = found
             .keys()

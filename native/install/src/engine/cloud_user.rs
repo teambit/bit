@@ -22,8 +22,7 @@ pub const LOOKUP_TIMEOUT: Duration = Duration::from_secs(5);
 /// the cloud answers within `timeout`.
 pub async fn cloud_username(global: &GlobalConfig, timeout: Duration) -> Option<String> {
     let token = global_string(global, "user.token")?;
-    let token = token.trim();
-    if token.is_empty() || token.contains(['\r', '\n', '\0']) {
+    if token.contains(['\r', '\n', '\0']) {
         return None;
     }
     let base_url = symphony_url(global);

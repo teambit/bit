@@ -49,11 +49,13 @@ fn component_package_name(argument: &str, loaded: &Loaded) -> Option<String> {
     loaded.workspace.components
         .iter()
         .find(|component| {
-            component.id.to_string_without_version() == id
-                || component.id.name == id
+            component.id.name == id
                 || component.id.scope
                     .as_deref()
-                    .is_some_and(|scope| format!("{scope}/{}", component.id.name) == id)
+                    .and_then(|scope| id.strip_prefix(scope))
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(component.id.name.as_str())
+                || component.id.to_string_without_version() == id
         })
         .map(|component| component.package_name.trim())
         .filter(|name| !name.is_empty())

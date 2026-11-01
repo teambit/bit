@@ -58,7 +58,9 @@ impl Resolver<'_> {
             return Ok(cached.clone());
         }
         let manifest = match fs::read(path) {
-            Ok(bytes) => bit_object_import::parse_jsonc(&bytes).ok(),
+            Ok(bytes) => serde_json::from_slice::<Value>(&bytes)
+                .ok()
+                .or_else(|| bit_object_import::parse_jsonc(&bytes).ok()),
             Err(error)
                 if matches!(
                     error.kind(),
@@ -177,7 +179,9 @@ fn peer_range(manifest: &Value, concrete: Option<&str>) -> Option<String> {
 
 pub(super) fn package_main(directory: &Path) -> Option<String> {
     let bytes = fs::read(directory.join("package.json")).ok()?;
-    let manifest = bit_object_import::parse_jsonc(&bytes).ok()?;
+    let manifest = serde_json::from_slice::<Value>(&bytes)
+        .ok()
+        .or_else(|| bit_object_import::parse_jsonc(&bytes).ok())?;
     manifest["main"]
         .as_str()
         .map(str::trim)

@@ -56,7 +56,7 @@ pub fn serialize(detected: &Detected) -> Value {
 /// `Dependency.serialize()`. The relative paths of a relative cross-component import
 /// are not tracked natively; the cache reader ignores them.
 fn dependency(dependency: &LegacyDependency) -> Value {
-    let mut value = Map::new();
+    let mut value = Map::with_capacity(4);
     value.insert("id".to_owned(), dependency_id(dependency));
     value.insert("relativePaths".to_owned(), Value::Array(Vec::new()));
     if let Some(name) = dependency.package_name
@@ -77,7 +77,7 @@ fn dependency(dependency: &LegacyDependency) -> Value {
 }
 
 fn dependency_id(dependency: &LegacyDependency) -> Value {
-    let mut id = Map::new();
+    let mut id = Map::with_capacity(3);
     if let Some(scope) = dependency.id.scope
         .as_deref()
         .map(str::trim)

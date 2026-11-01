@@ -61,12 +61,14 @@ fn find(detected: &Detected, field: usize, name: &str) -> Option<LegacyDependenc
 }
 
 fn apply_one(detected: &mut Detected, field: usize, name: &str, version: &str) {
-    let in_runtime = find(detected, RUNTIME, name);
-    let in_dev = find(detected, DEV, name);
-    let has_peer = find(detected, PEER, name).is_some();
     if field == PEER && peer_override(detected, name) {
         return;
     }
+    let in_runtime = find(detected, RUNTIME, name);
+    let in_dev = find(detected, DEV, name);
+    let has_peer = detected.components[PEER]
+        .iter()
+        .any(|dependency| dependency.package_name.as_deref() == Some(name));
     for packages in &mut detected.packages {
         packages.shift_remove(name);
     }

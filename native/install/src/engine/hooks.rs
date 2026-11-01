@@ -49,10 +49,7 @@ impl BitHooks {
         let Value::Object(mut manifest) = manifest else { return manifest };
         if self.root_components
             && let Some(dir) = workspace_dir
-            && !dir
-                .to_string_lossy()
-                .replace('\\', "/")
-                .contains(BIT_ROOTS_DIR)
+            && !dir.to_string_lossy().contains(BIT_ROOTS_DIR)
         {
             read_workspace_package(&mut manifest);
         }

@@ -82,8 +82,12 @@ fn wins(name: &str, reference: &Value, root: Option<&Value>, peer: bool) -> bool
     else {
         return false;
     };
+    let root_version = node_semver::Version::parse(root).ok();
+    if !peer && root_version.is_none() {
+        return false;
+    }
     let Some(locked) = dep_path::parse(&format!("{name}@{reference}")).version else {
         return false;
     };
-    node_semver::Version::parse(root).map_or(peer, |version| locked != version.to_string())
+    root_version.is_none_or(|version| locked != version.to_string())
 }

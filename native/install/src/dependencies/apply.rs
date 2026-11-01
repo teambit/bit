@@ -35,16 +35,15 @@ pub fn early(
 }
 
 fn remove_ignored_components(deps: &FieldMaps, detected: &mut Detected) {
-    for lifecycle in [Lifecycle::Runtime, Lifecycle::Dev] {
-        let ignore = ignored(deps, lifecycle);
+    let runtime = ignored(deps, Lifecycle::Runtime);
+    let dev = ignored(deps, Lifecycle::Dev);
+    for (lifecycle, ignore) in [(Lifecycle::Runtime, &runtime), (Lifecycle::Dev, &dev)] {
         detected.components[field_index(lifecycle)].retain(|dependency| {
             dependency.package_name
                 .as_deref()
-                .is_none_or(|name| !is_ignored_name(&ignore, name))
+                .is_none_or(|name| !is_ignored_name(ignore, name))
         });
     }
-    let runtime = ignored(deps, Lifecycle::Runtime);
-    let dev = ignored(deps, Lifecycle::Dev);
     for entry in &mut detected.missing {
         let ignore = if entry.is_dev { &dev } else { &runtime };
         entry.packages.retain(|name| !is_ignored_name(ignore, name));
@@ -80,7 +79,7 @@ fn remove_dev_if_regular(detected: &mut Detected) {
 
 /// `applyPeersFromComponentModel`: peers recorded in the model that the code uses.
 fn apply_model_peers(model: &ComponentModel, deps: &FieldMaps, detected: &mut Detected) {
-    let model_peers = model.packages()[PEER].clone();
+    let [_, _, model_peers] = model.packages();
     if model_peers.is_empty() {
         return;
     }

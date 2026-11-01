@@ -27,7 +27,7 @@ pub fn edit(
     edit(&mut document);
     // A failed backup never fails the command (`backupConfigFile`).
     let _ = backup(&path, scope_path, file_id, reason);
-    fs::write(&path, platform_eol(&format!("{document}\n")))
+    fs::write(&path, platform_eol(format!("{document}\n")))
 }
 
 fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Result<()> {
@@ -59,7 +59,10 @@ fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Re
 }
 
 // JsonVinyl persists through AbstractVinyl's eol.auto, after backing up the original bytes.
-fn platform_eol(text: &str) -> String {
+fn platform_eol(text: String) -> String {
+    if !cfg!(windows) && !text.contains('\r') {
+        return text;
+    }
     let eol = if cfg!(windows) { "\r\n" } else { "\n" };
     text.replace("\r\n", "\n")
         .replace('\r', "\n")

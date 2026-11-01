@@ -60,13 +60,10 @@ pub(super) fn write(root: &Path, attrs: Map<String, Value>) -> io::Result<()> {
     else {
         return Ok(());
     };
-    let current = lockfile.extra
-        .get(BIT_KEY)
-        .and_then(Value::as_object)
-        .cloned();
-    let mut merged = current.clone().unwrap_or_default();
+    let current = lockfile.extra.get(BIT_KEY).and_then(Value::as_object);
+    let mut merged = current.cloned().unwrap_or_default();
     merged.extend(attrs);
-    if current.as_ref() == Some(&merged) {
+    if current == Some(&merged) {
         return Ok(());
     }
     lockfile.extra.insert(BIT_KEY.to_string(), Value::Object(merged));

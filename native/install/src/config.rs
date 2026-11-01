@@ -112,13 +112,17 @@ impl DependencyResolverConfig {
         {
             return linker;
         }
-        let is_yarn = self.package_manager
+        if self.package_manager
             .as_deref()
             .map(aspect_id_without_version)
             .is_some_and(|pm| {
                 matches!(pm, "yarn" | "@teambit/dependencies.yarn") || pm.ends_with("/yarn")
-            });
-        if is_yarn { "hoisted" } else { "isolated" }
+            })
+        {
+            "hoisted"
+        } else {
+            "isolated"
+        }
     }
 
     /// `linkCoreAspects`, default `true`.

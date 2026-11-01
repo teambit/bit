@@ -60,8 +60,11 @@ impl EngineCall {
         let hooks = self.hooks(&raw_projects);
         // Importers are transformed up front, each with its own dir as `workspaceDir`.
         let projects: Vec<Project> = raw_projects
-            .iter()
-            .map(|project| Project { dir: project.dir.clone(), manifest: hooked(&hooks, project) })
+            .into_iter()
+            .map(|project| {
+                let manifest = hooked(&hooks, &project.dir, project.manifest);
+                Project { dir: project.dir, manifest }
+            })
             .collect();
         let config = install_config(
             &self.settings,
@@ -235,10 +238,14 @@ fn dependency_project(project: Project, hooks: &BitHooks) -> pnpm_workspace::Pro
 }
 
 /// The project's manifest after Bit's hooks, with the project as `workspaceDir`.
-fn hooked(hooks: &BitHooks, project: &Project) -> Map<String, Value> {
-    match hooks.apply(Value::Object(project.manifest.clone()), Some(&project.dir)) {
-        Value::Object(manifest) => manifest,
-        _ => project.manifest.clone(),
+fn hooked(
+    hooks: &BitHooks,
+    dir: &std::path::Path,
+    manifest: Map<String, Value>,
+) -> Map<String, Value> {
+    match hooks.apply(Value::Object(manifest), Some(dir)) {
+        Value::Object(hooked_manifest) => hooked_manifest,
+        _ => Map::new(),
     }
 }
 

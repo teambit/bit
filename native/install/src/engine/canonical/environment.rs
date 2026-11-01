@@ -126,9 +126,10 @@ impl EnvVarOs for CapturedHost {
 impl GetHomeDir for CapturedHost {
     fn home_dir() -> Option<PathBuf> {
         let key = if cfg!(unix) { "HOME" } else { "USERPROFILE" };
-        Self::var(key)
-            .and_then(|value| {
-                let trimmed = value.trim();
+        CAPTURED
+            .with(|slot| {
+                let guard = slot.borrow();
+                let trimmed = guard.as_ref()?.get(key)?.trim();
                 (!trimmed.is_empty()).then(|| PathBuf::from(trimmed))
             })
             .or_else(Host::home_dir)

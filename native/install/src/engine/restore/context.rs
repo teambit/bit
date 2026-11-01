@@ -15,19 +15,17 @@ pub(super) fn graph(serialized: &Value) -> Map<String, Value> {
         ("lockfileSettings", "settings"),
         ("overrides", "overrides"),
     ] {
-        if let Some(value) = serialized
-            .get(source)
-            .filter(|value| {
-                !value.is_null()
-                    && !value
-                        .as_str()
-                        .is_some_and(|str_val| str_val.trim().is_empty())
-            })
-        {
-            let normalized = value
-                .as_str()
-                .map_or_else(|| value.clone(), |text| Value::String(text.trim().to_owned()));
-            context.insert(target.to_owned(), normalized);
+        match serialized.get(source) {
+            None | Some(Value::Null) => {}
+            Some(Value::String(text)) => {
+                let trimmed = text.trim();
+                if !trimmed.is_empty() {
+                    context.insert(target.to_owned(), Value::String(trimmed.to_owned()));
+                }
+            }
+            Some(value) => {
+                context.insert(target.to_owned(), value.clone());
+            }
         }
     }
     if context.get("pnpmfileChecksum").and_then(Value::as_str) == Some("bit-1")

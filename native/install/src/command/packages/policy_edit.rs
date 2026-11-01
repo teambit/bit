@@ -24,8 +24,8 @@ fn resolver_key(document: &Document) -> String {
         .and_then(|map| {
             map.keys()
                 .find(|key| {
-                    key.as_str() == DEPENDENCY_RESOLVER_ASPECT
-                        || key.starts_with(&format!("{DEPENDENCY_RESOLVER_ASPECT}@"))
+                    key.strip_prefix(DEPENDENCY_RESOLVER_ASPECT)
+                        .is_some_and(|rest| rest.is_empty() || rest.starts_with('@'))
                 })
         })
         .cloned()

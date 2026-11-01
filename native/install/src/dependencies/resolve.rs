@@ -274,7 +274,9 @@ fn is_typescript_origin(path: &Path) -> bool {
     path.extension()
         .and_then(|extension| extension.to_str())
         .is_some_and(|extension| {
-            TYPESCRIPT_ORIGINS.contains(&extension.to_ascii_lowercase().as_str())
+            TYPESCRIPT_ORIGINS
+                .iter()
+                .any(|ts| extension.eq_ignore_ascii_case(ts))
         })
 }
 
@@ -349,12 +351,10 @@ fn with_extensions(base: &Path, extensions: &[&str]) -> Option<PathBuf> {
 
 /// `./file.js` may name `./file.ts` (TypeScript's extension substitution).
 fn strip_script_extension(target: &Path) -> Option<PathBuf> {
-    let extension = target
-        .extension()?
-        .to_str()?
-        .to_ascii_lowercase();
+    let extension = target.extension()?.to_str()?;
     ["js", "jsx", "mjs", "cjs"]
-        .contains(&extension.as_str())
+        .iter()
+        .any(|ext| extension.eq_ignore_ascii_case(ext))
         .then(|| target.with_extension(""))
 }
 

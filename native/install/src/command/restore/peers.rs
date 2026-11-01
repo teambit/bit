@@ -14,9 +14,10 @@ type Versions = HashMap<String, Vec<String>>;
 /// Rewrite peer provider ids to the best version the merged graph has.
 pub fn normalize_peer_provider_versions(graph: &mut Value) {
     let versions = collect_versions(graph);
-    let rewriter = Rewriter { versions: &versions, packages: packages(graph).clone() };
-    let mut by_id: IndexMap<String, Value> = IndexMap::new();
-    for edge in edges(graph) {
+    let edges_slice = edges(graph);
+    let rewriter = Rewriter { versions: &versions, packages: packages(graph) };
+    let mut by_id: IndexMap<String, Value> = IndexMap::with_capacity(edges_slice.len());
+    for edge in edges_slice {
         let rewritten = rewriter.edge(edge);
         let key = id(&rewritten).to_owned();
         match by_id.get_mut(&key) {
@@ -31,7 +32,7 @@ pub fn normalize_peer_provider_versions(graph: &mut Value) {
 
 struct Rewriter<'a> {
     versions: &'a Versions,
-    packages: Map<String, Value>,
+    packages: &'a Map<String, Value>,
 }
 
 impl Rewriter<'_> {

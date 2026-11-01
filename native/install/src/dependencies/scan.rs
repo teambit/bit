@@ -17,11 +17,14 @@ pub fn specifiers(path: &Path) -> io::Result<Vec<String>> {
     let extension = path
         .extension()
         .and_then(|extension| extension.to_str())
-        .unwrap_or_default()
-        .to_ascii_lowercase();
-    let is_script = SCRIPT.contains(&extension.as_str());
-    let is_style = STYLE.contains(&extension.as_str());
-    let is_markdown = extension == "mdx";
+        .unwrap_or_default();
+    let is_script = SCRIPT
+        .iter()
+        .any(|ext| extension.eq_ignore_ascii_case(ext));
+    let is_style = STYLE
+        .iter()
+        .any(|ext| extension.eq_ignore_ascii_case(ext));
+    let is_markdown = extension.eq_ignore_ascii_case("mdx");
     if !is_script && !is_style && !is_markdown {
         return Ok(Vec::new());
     }
@@ -119,10 +122,13 @@ fn style_specifier(target: &str) -> Option<String> {
     if trimmed.is_empty() {
         return None;
     }
-    let lowered = trimmed.to_ascii_lowercase();
     if ["http:", "https:", "sass:", "data:", "file:"]
         .iter()
-        .any(|prefix| lowered.starts_with(prefix))
+        .any(|prefix| {
+            trimmed
+                .get(..prefix.len())
+                .is_some_and(|head| head.eq_ignore_ascii_case(prefix))
+        })
     {
         return None;
     }

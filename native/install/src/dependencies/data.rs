@@ -219,9 +219,9 @@ fn issue_data(issues: &Value, kind: &str) -> Value {
         return Value::Null;
     };
     match &issue["data"] {
-        Value::String(text) => {
-            bit_object_import::parse_jsonc(text.as_bytes()).unwrap_or(Value::Null)
-        }
+        Value::String(text) => serde_json::from_str(text)
+            .or_else(|_| bit_object_import::parse_jsonc(text.as_bytes()))
+            .unwrap_or(Value::Null),
         other => other.clone(),
     }
 }

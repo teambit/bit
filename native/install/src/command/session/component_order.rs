@@ -11,30 +11,31 @@ pub(super) fn apply(workspace: &mut Workspace, order: &[String]) -> io::Result<(
     {
         return Err(io::Error::other("installation component order count"));
     }
-    let mut rows = std::mem::take(&mut workspace.entries)
-        .into_iter()
-        .zip(std::mem::take(&mut workspace.components))
-        .map(|(entry, component)| (component.id.to_string_without_version(), (entry, component)))
-        .collect::<HashMap<_, _>>();
+    let mut rows = HashMap::with_capacity(order.len());
+    for (entry, component) in workspace.entries
+        .drain(..)
+        .zip(workspace.components.drain(..))
+    {
+        rows.insert(component.id.to_string_without_version(), (entry, component));
+    }
     if rows.len() != order.len() {
         return Err(io::Error::other("installation component order duplicate identity"));
     }
-    let ordered = order
-        .iter()
-        .map(|identity| {
-            let key = normalize_order_identity(identity);
-            if key.is_empty() {
-                return Err(io::Error::other("installation component order identity"));
-            }
-            rows.remove(key)
-                .or_else(|| rows.remove(identity.trim()))
-                .ok_or_else(|| io::Error::other("installation component order identity"))
-        })
-        .collect::<io::Result<Vec<_>>>()?;
+    for identity in order {
+        let key = normalize_order_identity(identity);
+        if key.is_empty() {
+            return Err(io::Error::other("installation component order identity"));
+        }
+        let (entry, component) = rows
+            .remove(key)
+            .or_else(|| rows.remove(identity.trim()))
+            .ok_or_else(|| io::Error::other("installation component order identity"))?;
+        workspace.entries.push(entry);
+        workspace.components.push(component);
+    }
     if !rows.is_empty() {
         return Err(io::Error::other("installation component order incomplete"));
     }
-    (workspace.entries, workspace.components) = ordered.into_iter().unzip();
     Ok(())
 }
 

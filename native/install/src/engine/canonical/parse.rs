@@ -29,30 +29,26 @@ pub(super) struct Network<'a> {
 
 impl<'a> Request<'a> {
     pub(super) fn new(payload: &'a Value) -> Option<Self> {
-        let root = absolute(payload.get("rootDir")?)?;
-        let manifests = payload.get("manifestsByPaths")?.as_object()?;
-        let projects = projects(manifests, &root)?;
         let options = payload.get("options")?.as_object()?;
         if !supported_options(options) {
             return None;
         }
-        Some(Self {
-            paths: Paths {
-                root,
-                store: absolute(payload.get("storeDir")?)?,
-                cache: absolute(payload.get("cacheDir")?)?,
-                bit: absolute(payload.get("bitDir")?)?,
-            },
-            projects,
-            network: Network {
-                registry_map: payload.get("registryMap")?.as_object()?,
-                auth_headers: payload.get("authHeaderByUri")?.as_object()?,
-                proxy: payload.get("proxyConfig")?.as_object()?,
-                settings: payload.get("networkConfig")?.as_object()?,
-            },
-            options,
-            environment: Captured::parse(payload)?,
-        })
+        let paths = Paths {
+            root: absolute(payload.get("rootDir")?)?,
+            store: absolute(payload.get("storeDir")?)?,
+            cache: absolute(payload.get("cacheDir")?)?,
+            bit: absolute(payload.get("bitDir")?)?,
+        };
+        let network = Network {
+            registry_map: payload.get("registryMap")?.as_object()?,
+            auth_headers: payload.get("authHeaderByUri")?.as_object()?,
+            proxy: payload.get("proxyConfig")?.as_object()?,
+            settings: payload.get("networkConfig")?.as_object()?,
+        };
+        let environment = Captured::parse(payload)?;
+        let manifests = payload.get("manifestsByPaths")?.as_object()?;
+        let projects = projects(manifests, &paths.root)?;
+        Some(Self { paths, projects, network, options, environment })
     }
 }
 

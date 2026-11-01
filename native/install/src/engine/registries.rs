@@ -36,7 +36,8 @@ impl Registries {
     pub fn to_map(&self) -> IndexMap<String, String> {
         let default_uri = self.default.uri.trim();
         let default = if default_uri.is_empty() { NPM_REGISTRY } else { default_uri };
-        let mut map = IndexMap::from([("default".to_string(), default.to_string())]);
+        let mut map = IndexMap::with_capacity(self.scopes.len() + 1);
+        map.insert("default".to_string(), default.to_string());
         for (name, registry) in &self.scopes {
             let (name, uri) = (
                 name.trim()
@@ -123,7 +124,11 @@ fn from_pnpm_config(config: &pnpm_config::Config, cloud_registry: &str) -> Regis
         if name == "default" {
             registries.default = registry;
         } else {
-            registries.scopes.insert(name.replacen('@', "", 1), registry);
+            let scope = match name.strip_prefix('@') {
+                Some(rest) => rest.to_owned(),
+                None => name,
+            };
+            registries.scopes.insert(scope, registry);
         }
     }
     registries.scopes

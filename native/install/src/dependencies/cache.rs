@@ -38,10 +38,12 @@ pub fn read(
         return Ok(None);
     };
     let Some(timestamp) = entry["timestamp"].as_f64() else { return Ok(None) };
-    let mut files: Vec<PathBuf> = component.files
-        .iter()
-        .map(|file| component.dir.join(file))
-        .collect();
+    let mut files = Vec::with_capacity(component.files.len() + 1);
+    files.extend(
+        component.files
+            .iter()
+            .map(|file| component.dir.join(file)),
+    );
     files.push(component.dir.join("component.json"));
     if bit_object_import::dependency_cache_stale(&component.dir, &files, timestamp, pool)? {
         return Ok(None);
@@ -51,7 +53,9 @@ pub fn read(
         .map(str::trim)
         .filter(|text| !text.is_empty())
     {
-        Some(text) => bit_object_import::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?,
+        Some(text) => serde_json::from_str(text)
+            .or_else(|_| bit_object_import::parse_jsonc(text.as_bytes()))
+            .map_err(io::Error::other)?,
         None => return Ok(None),
     };
     Ok(Some(Detected::from_cache(&data)))

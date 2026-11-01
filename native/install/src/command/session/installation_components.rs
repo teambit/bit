@@ -93,12 +93,16 @@ fn ordered_row(
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(invalid)?;
+    let expected_rel = trim_rel(&component.root_dir);
+    if !Path::new(directory).is_absolute() && trim_rel(directory) == expected_rel {
+        return Ok(component);
+    }
     let actual = if Path::new(directory).is_absolute() {
         Path::new(directory.trim_end_matches(['/', '\\'])).to_path_buf()
     } else {
         root.join(trim_rel(directory))
     };
-    let expected = root.join(trim_rel(&component.root_dir));
+    let expected = root.join(expected_rel);
     if actual != expected {
         return Err(invalid());
     }

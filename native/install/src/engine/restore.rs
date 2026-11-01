@@ -171,8 +171,16 @@ async fn resolve_all(
             Ok(resolved.resolution
                 .integrity()
                 .map(ToString::to_string)
-                .map(|integrity| integrity.trim().to_string())
-                .filter(|integrity| !integrity.is_empty()))
+                .and_then(|integrity| {
+                    let trimmed = integrity.trim();
+                    if trimmed.is_empty() {
+                        None
+                    } else if trimmed.len() == integrity.len() {
+                        Some(integrity)
+                    } else {
+                        Some(trimmed.to_owned())
+                    }
+                }))
         }
     };
     Ok(futures_util::future::join_all(packages.iter().map(resolve)).await)

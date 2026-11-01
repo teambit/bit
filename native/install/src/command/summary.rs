@@ -71,5 +71,7 @@ fn seconds(elapsed: Duration) -> String {
     if fraction == 0 {
         return (millis / 1000).to_string();
     }
-    format!("{}.{fraction:03}", millis / 1000).trim_end_matches('0').to_string()
+    let mut formatted = format!("{}.{fraction:03}", millis / 1000);
+    formatted.truncate(formatted.trim_end_matches('0').len());
+    formatted
 }

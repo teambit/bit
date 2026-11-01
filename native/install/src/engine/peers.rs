@@ -119,7 +119,7 @@ fn configure<'a>(
 /// ranges do not intersect is a conflict and has no entry.
 pub(super) fn intersections(issues: &PeerDependencyIssues) -> MissingPeers {
     let mut names: Vec<_> = issues.missing.keys().collect();
-    names.sort();
+    names.sort_unstable();
     let mut result = MissingPeers::new();
     for name in names {
         let trimmed = name.trim();

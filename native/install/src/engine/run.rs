@@ -48,8 +48,7 @@ pub async fn install(
             return Err(error);
         }
     };
-    let deps_requiring_build =
-        outcome.deps_requiring_build.as_deref().map(normalize_deps_requiring_build);
+    let deps_requiring_build = outcome.deps_requiring_build.map(normalize_deps_requiring_build);
     if let Some(attrs) = lockfile_attrs::merge(pre_install_attrs, deps_requiring_build.as_deref()) {
         lockfile_attrs::write(root, attrs)?;
     }
@@ -65,15 +64,9 @@ pub async fn install(
     })
 }
 
-fn normalize_deps_requiring_build(deps: &[String]) -> Vec<String> {
-    let mut sorted: Vec<String> = deps
-        .iter()
-        .map(String::as_str)
-        .map(str::trim)
-        .filter(|dep| !dep.is_empty())
-        .map(str::to_owned)
-        .collect();
-    sorted.sort();
-    sorted.dedup();
-    sorted
+fn normalize_deps_requiring_build(mut deps: Vec<String>) -> Vec<String> {
+    deps.retain(|dep| !dep.trim().is_empty());
+    deps.sort_unstable();
+    deps.dedup();
+    deps
 }

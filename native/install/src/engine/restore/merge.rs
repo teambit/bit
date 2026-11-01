@@ -193,17 +193,15 @@ fn merge_importers(
         .cloned()
         .unwrap_or_default();
     for (id, graph_importer) in entries(graph.get("importers")) {
-        let Some(Value::Object(existing_importer)) = importers.get(id).cloned() else {
+        let Some(Value::Object(mut merged)) = importers.get(id).cloned() else {
             importers.insert(id.clone(), graph_importer.clone());
             continue;
         };
-        let mut merged = existing_importer.clone();
         for dep_type in IMPORTER_DEP_TYPES {
-            let mut deps = existing_importer
-                .get(dep_type)
-                .and_then(Value::as_object)
-                .cloned()
-                .unwrap_or_default();
+            let mut deps = match merged.remove(dep_type) {
+                Some(Value::Object(map)) => map,
+                _ => Map::new(),
+            };
             deps.extend(
                 entries(graph_importer.get(dep_type))
                     .map(|(name, dep)| (name.clone(), dep.clone())),
@@ -257,7 +255,7 @@ fn merge_bit(existing: Option<&Value>, graph: Option<&Value>) -> Option<Value> {
         .collect::<HashSet<_>>()
         .into_iter()
         .collect();
-    union.sort();
+    union.sort_unstable();
     let mut bit = existing
         .and_then(Value::as_object)
         .cloned()

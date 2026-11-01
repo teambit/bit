@@ -154,6 +154,9 @@ pub fn valid_component_version(version: &str) -> Option<String> {
     {
         return Some(hash.to_owned());
     }
+    if is_snap(trimmed) {
+        return Some(trimmed.to_owned());
+    }
     if node_semver::Version::parse(normalized).is_ok() {
         return Some(normalized.to_owned());
     }
@@ -162,7 +165,7 @@ pub fn valid_component_version(version: &str) -> Option<String> {
     {
         return Some(coerced);
     }
-    is_snap(trimmed).then(|| trimmed.to_owned())
+    None
 }
 
 fn is_snap(version: &str) -> bool {

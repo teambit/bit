@@ -44,11 +44,13 @@ impl MergeConfig {
     /// `parseConflict`: drop divider and `#` lines, then split by `[*]`.
     #[must_use]
     pub fn parse(text: &str) -> Self {
-        let divider = "-".repeat(80);
         let kept: Vec<&str> = text
             .split('\n')
             .map(|line| line.strip_suffix('\r').unwrap_or(line))
-            .filter(|line| *line != divider && !line.starts_with('#'))
+            .filter(|line| {
+                !(line.starts_with('#')
+                    || line.len() == 80 && line.bytes().all(|byte| byte == b'-'))
+            })
             .collect();
         let joined = kept.join("\n");
         let conflicts = joined
@@ -103,8 +105,8 @@ impl MergeConfig {
         self.conflicts
             .get(id.trim())
             .is_some_and(|content| {
-                crate::jsonc::parse(content).is_err()
-                    && (content.contains("<<<<<<<") || content.contains(">>>>>>>"))
+                (content.contains("<<<<<<<") || content.contains(">>>>>>>"))
+                    && crate::jsonc::parse(content).is_err()
             })
     }
 

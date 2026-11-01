@@ -64,10 +64,10 @@ fn read_package_dirs(virtual_store_dir: &Path) -> io::Result<Vec<String>> {
     };
     let mut dirs = Vec::new();
     for entry in entries {
-        let name = entry?
-            .file_name()
-            .to_string_lossy()
-            .into_owned();
+        let name = match entry?.file_name().into_string() {
+            Ok(name) => name,
+            Err(os) => os.to_string_lossy().into_owned(),
+        };
         if !matches!(name.as_str(), Lockfile::CURRENT_FILE_NAME | "node_modules") {
             dirs.push(name);
         }

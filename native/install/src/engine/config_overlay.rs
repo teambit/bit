@@ -298,7 +298,7 @@ fn finish(config: &mut Config, settings: &EngineSettings) {
 /// Key the unkeyed (`""`) default-registry header at the default registry;
 /// a header already keyed at that URI wins (as `@pnpm/napi` pins it).
 fn pin_unkeyed_header(settings: &EngineSettings) -> HashMap<String, String> {
-    let mut by_uri = HashMap::new();
+    let mut by_uri = HashMap::with_capacity(settings.registry.auth_header_by_uri.len());
     let mut unkeyed = None;
     for (uri, header) in &settings.registry.auth_header_by_uri {
         if uri.is_empty() {
@@ -308,8 +308,10 @@ fn pin_unkeyed_header(settings: &EngineSettings) -> HashMap<String, String> {
         }
     }
     if let Some(header) = unkeyed {
-        let default_uri =
-            normalize_auth_key(nerf_dart(&settings.registry.registries.to_map()["default"]));
+        let raw_default = settings.registry.registries.default.uri.trim();
+        let default =
+            if raw_default.is_empty() { super::registries::NPM_REGISTRY } else { raw_default };
+        let default_uri = normalize_auth_key(nerf_dart(default));
         if !default_uri.is_empty() {
             by_uri.entry(default_uri).or_insert_with(|| header.clone());
         }

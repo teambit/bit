@@ -53,6 +53,9 @@ const BUILTINS: [&str; 45] = [
 #[must_use]
 pub fn is_builtin(specifier: &str) -> bool {
     let trimmed = specifier.trim();
+    if trimmed.is_empty() || trimmed.starts_with(['.', '@']) {
+        return false;
+    }
     if let Some(rest) = trimmed.strip_prefix("node:") {
         return !rest
             .trim()

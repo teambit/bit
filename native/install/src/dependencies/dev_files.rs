@@ -49,11 +49,8 @@ impl DevPatternConfig {
     #[must_use]
     pub fn from_aspects(aspect: &dyn Fn(&str) -> Option<Value>) -> Self {
         let defaults = Self::default();
-        let configured = |id: &str, key: &str| {
-            aspect(id)
-                .and_then(|config| config.get(key).cloned())
-                .map(|value| strings(&value))
-        };
+        let configured =
+            |id: &str, key: &str| aspect(id).and_then(|config| config.get(key).map(strings));
         Self {
             tests: configured(TESTER, "patterns").unwrap_or(defaults.tests),
             docs: configured(DOCS, "patterns").unwrap_or(defaults.docs),

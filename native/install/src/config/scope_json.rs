@@ -63,11 +63,7 @@ impl ScopeJson {
         let path = scope.join("scope.json");
         match fs::read_to_string(&path) {
             Ok(text) if text.trim().is_empty() => Ok(Self::default()),
-            Ok(text) => crate::jsonc::parse(&text)
-                .and_then(|val| {
-                    serde_json::from_value(val)
-                        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
-                })
+            Ok(text) => parse_scope_json(&text)
                 .map_err(|error| {
                     io::Error::new(
                         io::ErrorKind::InvalidData,
@@ -90,4 +86,12 @@ impl ScopeJson {
             .iter()
             .find(|lane| lane.local_lane.trim() == local_lane)
     }
+}
+
+fn parse_scope_json(text: &str) -> io::Result<ScopeJson> {
+    if let Ok(parsed) = serde_json::from_str(text) {
+        return Ok(parsed);
+    }
+    let val = crate::jsonc::parse(text)?;
+    serde_json::from_value(val).map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
 }

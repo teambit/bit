@@ -72,9 +72,9 @@ fn merge_direct(root: &mut Value, direct: &Value) {
     if is_wildcard(&existing["specifier"]) && !is_wildcard(&direct["specifier"]) {
         existing["specifier"] = direct["specifier"].clone();
     }
-    let (left, right) = (id(existing).to_owned(), id(direct).to_owned());
-    if left != right && node_id_less_than(&left, &right) {
-        existing["id"] = Value::String(right);
+    let (left, right) = (id(existing), id(direct));
+    if left != right && node_id_less_than(left, right) {
+        existing["id"] = Value::String(right.to_owned());
     }
 }
 
@@ -164,9 +164,10 @@ fn reachable(root: &Value, by_id: &HashMap<String, Value>) -> (HashSet<String>, 
     let (mut edges, mut packages, mut visited) = (HashSet::new(), HashSet::new(), HashSet::new());
     let mut stack: Vec<String> = neighbour_ids(root);
     while let Some(node) = stack.pop() {
-        if !visited.insert(node.clone()) {
+        if visited.contains(&node) {
             continue;
         }
+        visited.insert(node.clone());
         packages.insert(without_peer_suffix(&node).to_owned());
         stack.extend(
             split_peer_ids(&node)

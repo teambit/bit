@@ -21,6 +21,9 @@ impl DependencyPath {
             .as_deref()
             .or(self.non_semver_version.as_deref())
             .unwrap_or_default();
+        if self.patch_hash.is_none() && self.peer_dep_graph_hash.is_none() {
+            return base_version.to_owned();
+        }
         format!(
             "{base_version}{}{}",
             self.patch_hash.as_deref().unwrap_or_default(),

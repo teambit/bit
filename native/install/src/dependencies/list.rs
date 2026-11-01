@@ -25,7 +25,19 @@ pub fn build(
     detected: &Detected,
     policy: Vec<PolicyEntry>,
 ) -> ComponentDependencies {
-    let mut list = ComponentDependencies::default();
+    let comp_cap: usize = detected.components
+        .iter()
+        .map(Vec::len)
+        .sum();
+    let pkg_cap: usize = detected.packages
+        .iter()
+        .map(indexmap::IndexMap::len)
+        .sum();
+    let mut list = ComponentDependencies {
+        components: Vec::with_capacity(comp_cap),
+        packages: Vec::with_capacity(pkg_cap),
+        ..ComponentDependencies::default()
+    };
     for (lifecycle, dependencies) in LIFECYCLES.into_iter().zip(&detected.components) {
         for dependency in dependencies {
             let package_name = dependency.package_name

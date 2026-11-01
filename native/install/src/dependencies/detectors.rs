@@ -134,21 +134,14 @@ fn parse(entry: &Value) -> CustomDetection {
         .flatten()
         .filter_map(|(specifier, path)| {
             let key = specifier.trim();
-            if key.is_empty() {
-                return None;
-            }
-            let resolved = path
-                .as_str()
-                .map(str::trim)
-                .filter(|path| !path.is_empty())
-                .map(PathBuf::from);
-            Some((key.to_owned(), resolved))
+            (!key.is_empty()).then(|| (key.to_owned(), non_empty_str(path).map(PathBuf::from)))
         })
         .collect();
-    let typescript = entry["typescript"]
+    let ts_field = &entry["typescript"];
+    let typescript = ts_field
         .as_bool()
         .unwrap_or_else(|| {
-            entry["typescript"]
+            ts_field
                 .as_str()
                 .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"))
         });

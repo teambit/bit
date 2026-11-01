@@ -19,11 +19,24 @@ impl EngineError {
         let non_empty = |text: Box<dyn fmt::Display + '_>| {
             let rendered = text.to_string();
             let trimmed = rendered.trim();
-            (!trimmed.is_empty()).then(|| trimmed.to_owned())
+            if trimmed.is_empty() {
+                None
+            } else if trimmed.len() == rendered.len() {
+                Some(rendered)
+            } else {
+                Some(trimmed.to_owned())
+            }
+        };
+        let raw_message = error.to_string();
+        let trimmed_msg = raw_message.trim();
+        let message = if trimmed_msg.len() == raw_message.len() {
+            raw_message
+        } else {
+            trimmed_msg.to_owned()
         };
         Self {
             code: error.code().and_then(non_empty),
-            message: error.to_string().trim().to_owned(),
+            message,
             hint: error.help().and_then(non_empty),
         }
     }
