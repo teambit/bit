@@ -9,6 +9,7 @@ import {
   mjsRule,
   swcRule,
   sourceMapRule,
+  sourceMapIgnoreWarnings,
   fontRule,
   styleRules,
   processFallback,
@@ -64,6 +65,8 @@ export default function createRspackSsrConfig(
       alias: resolveAlias({ profile: isEnvProductionProfile }),
       fallback: resolveFallback,
     },
+
+    ignoreWarnings: sourceMapIgnoreWarnings,
 
     module: {
       parser: cssParser,

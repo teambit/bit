@@ -16,6 +16,7 @@ import {
   mjsRule,
   swcRule,
   sourceMapRule,
+  sourceMapIgnoreWarnings,
   fontRule,
   styleRules,
   processFallback,
@@ -153,6 +154,8 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       ignored: ['**/.bit/**', '**/.git/**', '**/node_modules/.cache/**'],
       poll: false, // native FS watching for the UI server
     },
+
+    ignoreWarnings: sourceMapIgnoreWarnings,
 
     module: {
       parser: cssParser,

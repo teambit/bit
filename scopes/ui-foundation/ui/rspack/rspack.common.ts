@@ -120,6 +120,11 @@ export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSet
   };
 }
 
+// Bit-compiled dists ship `.js.map` files whose `sources` are relative to the capsule they were built in,
+// so from `node_modules/<pkg>/dist` they point at files that don't exist on any machine. `sourceMapRule`
+// still picks up the maps that do resolve; the unresolvable ones would otherwise emit one warning each.
+export const sourceMapIgnoreWarnings = [/Failed to parse source map/];
+
 export function sourceMapRule(): RuleSetRule {
   return {
     test: /\.js$/,
