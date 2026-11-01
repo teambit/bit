@@ -161,7 +161,11 @@ fn ref_row_matches(row: &Value, scope: &str, name: &str) -> bool {
     let (scope, name) = (scope.trim(), name.trim());
     if let Some(raw) = row["id"].as_str().map(str::trim) {
         let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
-        return bare == name || bare == format!("{scope}/{name}");
+        return bare == name
+            || bare
+                .strip_prefix(scope)
+                .and_then(|rest| rest.strip_prefix('/'))
+                == Some(name);
     }
     let row_scope = row["id"]["scope"].as_str().map_or("", str::trim);
     row["id"]["name"].as_str().map(str::trim) == Some(name)

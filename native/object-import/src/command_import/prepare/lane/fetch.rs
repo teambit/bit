@@ -53,8 +53,9 @@ impl PreparedImport {
         delta: bool,
     ) -> io::Result<Record> {
         id.validate()?;
+        let lane_scope = id.scope.trim();
         let remotes = self.environment.remotes.clone();
-        let directory = remote(self, &remotes, id.scope.trim())?;
+        let directory = remote(self, &remotes, lane_scope)?;
         let hash = lane_hash(self, &directory, id, supplied_hash)?;
         let value = self.capture
             .object(&directory, &hash, "Lane")?
@@ -63,12 +64,13 @@ impl PreparedImport {
             .ok_or_else(|| invalid("remote Lane body"))?;
         validate_value(id, &value)?;
         self.progress.push(Progress {
-            reason: Some(format!("for fetching lane {}/{}", id.scope.trim(), id.name.trim())),
-            objects: HashSet::from([super::super::object_hash(id.scope.trim())]),
+            reason: Some(format!("for fetching lane {lane_scope}/{}", id.name.trim())),
+            objects: HashSet::from([super::super::object_hash(lane_scope)]),
             ..Default::default()
         });
-        let mut visited = HashSet::new();
-        for entry in entries(&value)? {
+        let lane_entries = entries(&value)?;
+        let mut visited = HashSet::with_capacity(lane_entries.len());
+        for entry in lane_entries {
             if delta && locally_at_remote_head(self, id, &entry)? {
                 continue;
             }
@@ -80,9 +82,9 @@ impl PreparedImport {
                 version: entry.head.trim().into(),
             };
             if prefer_graph {
-                receive_prefer_graph(self, &directory, id.scope.trim(), &target, &mut visited)?;
+                receive_prefer_graph(self, &directory, lane_scope, &target, &mut visited)?;
             } else {
-                receive_closure(self, &directory, id.scope.trim(), &target, &mut visited)?;
+                receive_closure(self, &directory, lane_scope, &target, &mut visited)?;
             }
         }
         Ok(Record { hash, value, is_new: false })

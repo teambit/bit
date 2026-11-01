@@ -240,6 +240,7 @@ impl PreparedImport {
             path.join("scope.json"),
             serde_json::to_vec(&serde_json::json!({"name":scope})).map_err(io::Error::other)?,
         )?;
+        let objects_dir = path.join("objects");
         let mut inflated_total = 0usize;
         for (hash, compressed) in objects {
             let hash = hash.trim();
@@ -249,7 +250,7 @@ impl PreparedImport {
                 return Err(invalid("virtual import inflated byte limit"));
             }
             self.capture.virtual_file(
-                path.join("objects")
+                objects_dir
                     .join(&hash[..2])
                     .join(&hash[2..]),
                 compressed.clone(),

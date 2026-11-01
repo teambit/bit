@@ -57,6 +57,7 @@ impl PreparedImport {
             return Ok(());
         }
         self.cache.fetch_all_dependencies = true;
+        self.cache.unbuilt.reserve(scoped.len());
         for target in &scoped {
             self.cache.unbuilt.insert(format!(
                 "{}@{}",
@@ -109,7 +110,8 @@ pub(crate) fn prepare_recovery_with_virtual(
     let mut plan = super::prepare_lane(root, global_remotes_file)?;
     let scoped = scoped_targets(targets);
     let (local, remote) = super::recovery::retain(&mut plan, &scoped)?;
-    let mut available = local.clone();
+    let mut available = Vec::with_capacity(scoped.len());
+    available.extend_from_slice(&local);
     let requested = remote
         .iter()
         .map(|target| (*target).clone())

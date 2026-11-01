@@ -39,12 +39,13 @@ fn collect_forced_dependencies(
             dependency.version = dependency.version.trim().into();
             let id = identity(&dependency)?;
             let key = format!("{id}@{}", dependency.version);
-            if !seen.insert(key.clone()) {
+            if seen.contains(&key) {
                 continue;
             }
             if received.contains(&id) {
                 plan.cache.unbuilt.remove(&key);
             }
+            seen.insert(key);
             dependencies.push(dependency);
         }
     }

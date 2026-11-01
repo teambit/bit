@@ -50,7 +50,7 @@ pub(crate) fn read_source_record(
 ) -> io::Result<SourceRecord> {
     let compressed = packed(directory, hash, compressed_total)?;
     let object = inflate(&compressed, maximum.saturating_add(256))?;
-    source_contents(compressed, &object, hash, maximum)
+    source_contents(compressed, object, hash, maximum)
 }
 
 /// Independent worker reads share complete request budgets, not fixed file-size shares.
@@ -63,23 +63,28 @@ pub(crate) fn read_source_shared(
     let file = File::open(object_path(directory, hash))?;
     let compressed = packed.read(file)?;
     let object = inflate_with(&compressed, MAX_BYTES + 256, Some(raw))?;
-    source_contents(compressed, &object, hash, MAX_BYTES)
+    source_contents(compressed, object, hash, MAX_BYTES)
 }
 
 fn source_contents(
     compressed: Vec<u8>,
-    object: &[u8],
+    mut object: Vec<u8>,
     hash: [u8; 20],
     maximum: usize,
 ) -> io::Result<SourceRecord> {
-    let (header, body) = split(object, hash, "Source")?;
-    if header.parse::<usize>().is_err()
-        || body.len() > maximum
-        || <[u8; 20]>::from(Sha1::digest(body)) != hash
-    {
-        return Err(invalid("checkout Source identity or size is invalid"));
-    }
-    Ok(SourceRecord { body: body.to_vec(), compressed, inflated_size: object.len() })
+    let inflated_size = object.len();
+    let header_len = {
+        let (header, body) = split(&object, hash, "Source")?;
+        if header.parse::<usize>().is_err()
+            || body.len() > maximum
+            || <[u8; 20]>::from(Sha1::digest(body)) != hash
+        {
+            return Err(invalid("checkout Source identity or size is invalid"));
+        }
+        inflated_size - body.len()
+    };
+    object.drain(..header_len);
+    Ok(SourceRecord { body: object, compressed, inflated_size })
 }
 pub(crate) fn read(
     directory: &Path,

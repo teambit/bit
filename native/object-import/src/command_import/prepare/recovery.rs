@@ -89,6 +89,9 @@ pub(super) fn retain_cached_versions(
     plan: &mut PreparedImport,
     targets: &[Target],
 ) -> io::Result<()> {
+    if targets.is_empty() {
+        return Ok(());
+    }
     if targets.len() > 4096 {
         return Err(invalid("recovery cached target limit"));
     }
@@ -131,10 +134,8 @@ pub(super) fn retain_histories(plan: &mut PreparedImport, targets: &[&Target]) -
         let (hash, history, changed) =
             super::history::populate(&mut plan.capture, &directory, &model, head)?;
         if changed {
-            plan.overlay.objects.insert(
-                hash.clone(),
-                super::super::publish::object(&hash, "VersionHistory", history)?,
-            );
+            let object = super::super::publish::object(&hash, "VersionHistory", history)?;
+            plan.overlay.objects.insert(hash, object);
         }
     }
     Ok(())

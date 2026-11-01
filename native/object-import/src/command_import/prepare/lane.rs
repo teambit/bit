@@ -144,12 +144,13 @@ pub(super) fn receive_closure(
 ) -> io::Result<()> {
     let identity = super::identity(target)?;
     let key = format!("{identity}@{}", target.version);
-    if !visited.insert(key.clone()) {
+    if visited.contains(&key) {
         return Ok(());
     }
-    if visited.len() > 4096 {
+    if visited.len() >= 4096 {
         return Err(invalid("lane import closure budget"));
     }
+    visited.insert(key.clone());
     let hash = receive_counted(plan, directory, source, target, key)?;
     let version =
         super::read_version(plan, &hash)?.ok_or_else(|| invalid("lane fetched Version absent"))?;
@@ -264,7 +265,7 @@ fn referenced_sources(version: &serde_json::Value) -> io::Result<Vec<String>> {
 
 fn missing_objects(plan: &mut PreparedImport, hashes: &[String]) -> io::Result<Vec<String>> {
     let mut missing = Vec::new();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(hashes.len());
     for hash in hashes {
         let hash = hash.trim();
         crate::merge_history::hash(hash)?;

@@ -35,8 +35,13 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
 }
 
 fn normalize_rel(path: &str) -> String {
-    let replaced = path.trim().replace('\\', "/");
-    let mut rest = replaced.as_str().trim_start_matches('/');
+    let trimmed = path.trim();
+    let replaced = if trimmed.contains('\\') {
+        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(trimmed)
+    };
+    let mut rest = replaced.trim_start_matches('/');
     while let Some(stripped) = rest.strip_prefix("./") {
         rest = stripped.trim_start_matches('/');
     }

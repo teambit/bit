@@ -23,14 +23,15 @@ pub(super) fn merge(
         merged.value["name"] = incoming.value["name"].clone();
         changed = true;
     }
-    for entry in entries(&incoming.value)? {
-        let replace = should_replace(plan, &merged.value, &entry)?;
+    let incoming_entries = entries(&incoming.value)?;
+    for entry in &incoming_entries {
+        let replace = should_replace(plan, &merged.value, entry)?;
         if replace {
-            replace_entry(&mut merged.value, &incoming.value, &entry)?;
+            replace_entry(&mut merged.value, &incoming.value, entry)?;
             changed = true;
         }
     }
-    changed |= prune_hidden(&mut merged.value, &incoming.value)?;
+    changed |= prune_hidden(&mut merged.value, &incoming_entries);
     if let Some(object) = merged.value.as_object_mut()
         && object.remove("overrideUpdateDependents").is_some()
     {
@@ -134,21 +135,21 @@ fn replace_hidden(value: &mut Value, entry: &Entry) {
     }
     set_hidden(value, hidden);
 }
-fn prune_hidden(value: &mut Value, incoming: &Value) -> io::Result<bool> {
+fn prune_hidden(value: &mut Value, incoming_entries: &[Entry]) -> bool {
     let default_scope = value["scope"].as_str().map(str::trim);
-    let incoming: std::collections::HashSet<String> = entries(incoming)?
-        .into_iter()
-        .filter(|row| row.hidden)
-        .map(|row| row.identity)
-        .collect();
     let Some(rows) = value.get("updateDependents").and_then(Value::as_array) else {
-        return Ok(false);
+        return false;
     };
+    let incoming: std::collections::HashSet<&str> = incoming_entries
+        .iter()
+        .filter(|row| row.hidden)
+        .map(|row| row.identity.as_str())
+        .collect();
     let retained = rows
         .iter()
         .filter(|row| {
             super::hidden_entry(row, default_scope)
-                .is_ok_and(|parsed| incoming.contains(&parsed.identity))
+                .is_ok_and(|parsed| incoming.contains(parsed.identity.as_str()))
         })
         .cloned()
         .collect::<Vec<_>>();
@@ -156,7 +157,7 @@ fn prune_hidden(value: &mut Value, incoming: &Value) -> io::Result<bool> {
     if changed {
         set_hidden(value, retained);
     }
-    Ok(changed)
+    changed
 }
 fn set_hidden(value: &mut Value, rows: Vec<Value>) {
     if rows.is_empty() {

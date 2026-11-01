@@ -14,10 +14,8 @@ pub(super) fn model_from(
     origin: bool,
 ) -> io::Result<Value> {
     let incoming = parsed_model(incoming)?;
-    let incoming = &incoming;
     let Some(existing) = existing else { return canonical(incoming) };
-    let existing = parsed_model(existing)?;
-    let existing = &existing;
+    let mut existing = parsed_model(existing)?;
     if existing["name"] != incoming["name"] || existing["scope"] != incoming["scope"] {
         return Err(invalid("import model identity mismatch"));
     }
@@ -27,12 +25,11 @@ pub(super) fn model_from(
     {
         return canonical(incoming);
     }
-    let MergePlan { plan, tags, heads, deleted, local } = plan(existing, incoming, origin)?;
-    let mut result = existing.clone();
-    if result.get("orphanedVersions").is_none() {
-        result["orphanedVersions"] = json!({});
+    let MergePlan { plan, tags, heads, deleted, local } = plan(&existing, &incoming, origin)?;
+    if existing.get("orphanedVersions").is_none() {
+        existing["orphanedVersions"] = json!({});
     }
-    apply_tags(&mut result, &tags, &plan)?;
+    apply_tags(&mut existing, &tags, &plan)?;
     if origin
         && local.is_empty()
         && let Some(head) = incoming["head"]
@@ -40,16 +37,16 @@ pub(super) fn model_from(
             .map(str::trim)
             .filter(|head| !head.is_empty())
     {
-        result["head"] = json!(head);
+        existing["head"] = json!(head);
     }
-    apply_detached(&mut result, &heads, &deleted, &plan)?;
-    if result["orphanedVersions"].as_object().is_some_and(serde_json::Map::is_empty) {
-        result
+    apply_detached(&mut existing, &heads, &deleted, &plan)?;
+    if existing["orphanedVersions"].as_object().is_some_and(serde_json::Map::is_empty) {
+        existing
             .as_object_mut()
             .ok_or_else(|| invalid("import model"))?
             .shift_remove("orphanedVersions");
     }
-    canonical(&result)
+    canonical(existing)
 }
 struct MergePlan {
     plan: Value,
@@ -142,8 +139,9 @@ fn apply_detached(
     }
     Ok(())
 }
-fn canonical(value: &Value) -> io::Result<Value> {
-    let mut result = json!({});
+fn canonical(mut value: Value) -> io::Result<Value> {
+    let source = value.as_object_mut().ok_or_else(|| invalid("import model"))?;
+    let mut result = serde_json::Map::with_capacity(13);
     for key in [
         "name",
         "scope",
@@ -159,11 +157,11 @@ fn canonical(value: &Value) -> io::Result<Value> {
         "orphanedVersions",
         "head",
     ] {
-        if let Some(field) = value.get(key) {
-            result[key] = field.clone();
+        if let Some(field) = source.shift_remove(key) {
+            result.insert(key.to_owned(), field);
         }
     }
-    Ok(result)
+    Ok(Value::Object(result))
 }
 fn parsed_model(value: &Value) -> io::Result<Value> {
     let mut result = value.clone();

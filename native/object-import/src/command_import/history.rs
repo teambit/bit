@@ -10,8 +10,10 @@ use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
 pub(super) fn identity(component: &str) -> String {
-    let component = component.trim();
-    crate::validate::hexadecimal(&Sha1::digest(format!("{component}:VersionHistory").as_bytes()))
+    let mut hasher = Sha1::new();
+    hasher.update(component.trim().as_bytes());
+    hasher.update(b":VersionHistory");
+    crate::validate::hexadecimal(&hasher.finalize())
 }
 pub(super) fn populate(
     capture: &mut Capture,

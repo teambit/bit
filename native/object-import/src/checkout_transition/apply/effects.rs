@@ -9,6 +9,9 @@ pub(super) fn apply(
     files: &mut Vec<File>,
     status: &mut Map<String, Value>,
 ) -> io::Result<Option<String>> {
+    if plan.merge_rows.is_empty() {
+        return Ok(None);
+    }
     for kind in [
         "modifiedFiles",
         "addFiles",
@@ -25,7 +28,7 @@ pub(super) fn apply(
             .filter(|row| row["kind"].as_str().map(str::trim) == Some(wanted))
         {
             let path = path(plan, row)?;
-            if let Some(error) = effect(kind, plan, row, &path, files, status)? {
+            if let Some(error) = effect(kind, plan, row, path, files, status)? {
                 return Ok(Some(error));
             }
         }
@@ -71,10 +74,9 @@ fn modified(
     files: &mut [File],
     status: &mut Map<String, Value>,
 ) -> io::Result<Option<String>> {
-    let trimmed_path = path.trim();
     let Some(file) = files
         .iter_mut()
-        .find(|file| file.path.trim() == trimmed_path)
+        .find(|file| file.path.trim() == path)
     else {
         return Ok(Some(format!("file {} not found", error_path(path))));
     };
@@ -114,10 +116,9 @@ fn add(
     {
         return Ok(());
     }
-    let trimmed_path = path.trim();
     if files
         .iter()
-        .any(|file| file.path.trim() == trimmed_path)
+        .any(|file| file.path.trim() == path)
     {
         return Ok(());
     }
@@ -127,11 +128,11 @@ fn add(
             kind,
             index,
             plan_index,
-            path: trimmed_path.into(),
+            path: path.into(),
             alias_kind: if kind == "current" { "current" } else { "other" },
             alias_index: index,
         });
-        status.insert(trimmed_path.into(), json!("added"));
+        status.insert(path.into(), json!("added"));
     }
     Ok(())
 }
@@ -142,10 +143,9 @@ fn update(
     files: &mut [File],
     status: &mut Map<String, Value>,
 ) -> io::Result<Option<String>> {
-    let trimmed_path = path.trim();
     let Some(file) = files
         .iter_mut()
-        .find(|file| file.path.trim() == trimmed_path)
+        .find(|file| file.path.trim() == path)
     else {
         return Ok(Some(format!("file {} not found", error_path(path))));
     };
@@ -157,7 +157,7 @@ fn update(
     file.alias_index = row[file.alias_kind]
         .as_u64()
         .ok_or_else(|| invalid("checkout update alias missing"))? as usize;
-    status.insert(trimmed_path.into(), json!(if override_file { "overridden" } else { "updated" }));
+    status.insert(path.into(), json!(if override_file { "overridden" } else { "updated" }));
     Ok(None)
 }
 

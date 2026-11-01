@@ -54,9 +54,6 @@ pub(super) fn rows(
 fn retain(row: &mut Value, bodies: &mut Vec<plan::Body>, offset: usize) -> io::Result<()> {
     for (field, output) in [("output", "outputPlanIndex"), ("conflict", "conflictPlanIndex")] {
         retain_field(row, bodies, field, output, offset)?;
-        row.as_object_mut()
-            .ok_or_else(|| invalid("checkout merge row"))?
-            .shift_remove(field);
     }
     Ok(())
 }
@@ -67,20 +64,16 @@ fn retain_field(
     output: &str,
     offset: usize,
 ) -> io::Result<()> {
-    let text = row
-        .get(field)
-        .and_then(Value::as_str)
-        .map(str::to_owned);
-    if let Some(text) = text {
+    let removed = row
+        .as_object_mut()
+        .ok_or_else(|| invalid("checkout merge row"))?
+        .shift_remove(field);
+    if let Some(Value::String(text)) = removed {
         if field == "conflict" && text.is_empty() {
-            row.as_object_mut()
-                .ok_or_else(|| invalid("checkout merge row"))?
-                .shift_remove(field);
             return Ok(());
         }
-        let bytes = text.into_bytes();
         let index = offset.saturating_add(bodies.len());
-        bodies.push(plan::Body::new(bytes));
+        bodies.push(plan::Body::new(text.into_bytes()));
         row[output] = json!(index);
     }
     Ok(())

@@ -88,20 +88,17 @@ pub(crate) fn normalize(bytes: Vec<u8>, windows: bool) -> Vec<u8> {
 }
 
 fn replace_newlines(text: &str, windows: bool) -> String {
-    let mut characters = text.chars().peekable();
+    let newline = if windows { "\r\n" } else { "\n" };
     let mut output = String::with_capacity(text.len());
-    while let Some(character) = characters.next() {
-        if character != '\r' && character != '\n' {
-            output.push(character);
-            continue;
-        }
-        if character == '\r' && characters.peek() == Some(&'\n') {
-            characters.next();
-        }
-        if windows {
-            output.push('\r');
-        }
-        output.push('\n');
+    let mut rest = text;
+    while let Some(pos) = rest.find(['\r', '\n']) {
+        output.push_str(&rest[..pos]);
+        output.push_str(newline);
+        let tail = &rest[pos..];
+        rest = tail
+            .strip_prefix("\r\n")
+            .unwrap_or_else(|| &tail[1..]);
     }
+    output.push_str(rest);
     output
 }

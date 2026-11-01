@@ -20,17 +20,9 @@ pub fn resolve(
     objects: &ScopeObjects,
     core_aspect_ids: &[String],
 ) -> io::Result<()> {
-    let envs: Vec<(String, bool)> = components
+    let envs: std::collections::HashMap<String, bool> = components
         .iter()
-        .map(|component| {
-            (
-                component.id
-                    .to_string_without_version()
-                    .trim()
-                    .to_owned(),
-                component.is_env,
-            )
-        })
+        .map(|component| (component.id.to_string_without_version(), component.is_env))
         .collect();
     for component in components.iter_mut() {
         if component.env_id.trim() != DEFAULT_ENV || has_configured_env(component) {
@@ -46,7 +38,7 @@ pub fn resolve(
 /// The first configured aspect that is an env; core aspects never are.
 fn first_env(
     component: &WorkspaceComponent,
-    envs: &[(String, bool)],
+    envs: &std::collections::HashMap<String, bool>,
     objects: &ScopeObjects,
     core_aspect_ids: &[String],
 ) -> io::Result<Option<String>> {
@@ -83,14 +75,15 @@ fn has_configured_env(component: &WorkspaceComponent) -> bool {
             .is_some_and(|env| !env.trim().is_empty())
 }
 
-fn is_env_component(id: &str, envs: &[(String, bool)], objects: &ScopeObjects) -> io::Result<bool> {
+fn is_env_component(
+    id: &str,
+    envs: &std::collections::HashMap<String, bool>,
+    objects: &ScopeObjects,
+) -> io::Result<bool> {
     let id = id.trim();
     let without = aspect_id_without_version(id);
-    if let Some((_, is_env)) = envs
-        .iter()
-        .find(|(component, _)| component == without)
-    {
-        return Ok(*is_env);
+    if let Some(&is_env) = envs.get(without) {
+        return Ok(is_env);
     }
     Ok(objects
         .aspect(id)?

@@ -287,9 +287,8 @@ fn resolve(component: &Value, requested: &str) -> io::Result<String> {
 }
 
 fn manifest(version: &Value) -> io::Result<Vec<ManifestFile>> {
-    let values = version
-        .get("files")
-        .and_then(Value::as_array)
+    let values = version["files"]
+        .as_array()
         .ok_or_else(|| invalid("checkout plan Version files missing"))?;
     if values.len() > MAX_FILES {
         return Err(invalid("checkout plan Version file count out of bounds"));
@@ -305,15 +304,22 @@ fn manifest(version: &Value) -> io::Result<Vec<ManifestFile>> {
         {
             return Err(invalid("checkout plan unsupported Version file fields"));
         }
-        let mut projected = object.clone();
-        let hash = projected
-            .remove("file")
-            .ok_or_else(|| invalid("checkout plan Version Source missing"))?;
-        projected.insert("hash".into(), hash);
-        files.push(
-            serde_json::from_value(Value::Object(projected))
-                .map_err(|_| invalid("checkout plan invalid Version manifest"))?,
-        );
+        let hash = object
+            .get("file")
+            .ok_or_else(|| invalid("checkout plan Version Source missing"))?
+            .as_str()
+            .ok_or_else(|| invalid("checkout plan invalid Version manifest"))?
+            .to_owned();
+        let relative_path = value["relativePath"]
+            .as_str()
+            .ok_or_else(|| invalid("checkout plan invalid Version manifest"))?
+            .to_owned();
+        files.push(ManifestFile {
+            hash,
+            relative_path,
+            name: value["name"].as_str().map(str::to_owned),
+            test: value["test"].as_bool(),
+        });
     }
     validate_files(&files)?;
     Ok(files)

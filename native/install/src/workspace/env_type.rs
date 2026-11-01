@@ -43,7 +43,7 @@ pub fn aspect_env_ids(
 }
 
 fn seed_core_ids(core: &[&str]) -> Vec<String> {
-    let mut ids = Vec::new();
+    let mut ids = Vec::with_capacity(core.len());
     for trimmed in core
         .iter()
         .copied()

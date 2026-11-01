@@ -60,7 +60,7 @@ pub fn component_package_name(
         return fill_placeholders(template, clean_name, scope_name, scope, owner);
     }
     let name = clean_name.replace('/', ".");
-    let mut without_prefix = format!("{}.{name}", scope.unwrap_or("undefined"));
+    let without_prefix = format!("{}.{name}", scope.unwrap_or("undefined"));
     let prefix = binding_prefix
         .map(str::trim)
         .filter(|prefix| !prefix.is_empty())
@@ -69,11 +69,13 @@ pub fn component_package_name(
             str::to_owned,
         );
     let owner_prefix = format!("{prefix}.").replacen('@', "", 1);
-    if prefix != "@bit"
+    let without_prefix = if prefix != "@bit"
         && let Some(rest) = without_prefix.strip_prefix(&owner_prefix)
     {
-        without_prefix = rest.to_owned();
-    }
+        rest
+    } else {
+        &without_prefix
+    };
     format!("{prefix}/{without_prefix}")
 }
 

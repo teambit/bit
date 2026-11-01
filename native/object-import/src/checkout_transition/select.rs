@@ -59,15 +59,15 @@ impl State {
             current: CurrentState::default(),
         };
         let directive = record.initial(has_model, main_missing);
-        if self.records.len() >= 4096
-            || self.bytes.saturating_add(record.bytes()) > 32 * 1024 * 1024
+        let record_bytes = record.bytes();
+        if self.records.len() >= 4096 || self.bytes.saturating_add(record_bytes) > 32 * 1024 * 1024
         {
             return Err(invalid("checkout active select limit"));
         }
         let output = json!({"token":token,"revision":0,"directive":directive});
         self.sequence = sequence;
         if !matches!(record.stage, Stage::Terminal) {
-            self.bytes = self.bytes.saturating_add(record.bytes());
+            self.bytes = self.bytes.saturating_add(record_bytes);
             self.records.insert(token, record);
         }
         Ok(output)
@@ -75,15 +75,14 @@ impl State {
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
         let token = request.token.trim();
-        let mut record = self.records
-            .get(token)
-            .cloned()
-            .ok_or_else(|| invalid("stale checkout select token"))?;
-        if record.revision != request.revision
-            || record.stage.name() != request.observation.trim()
+        let current =
+            self.records.get(token).ok_or_else(|| invalid("stale checkout select token"))?;
+        if current.revision != request.revision
+            || current.stage.name() != request.observation.trim()
         {
             return Err(invalid("stale checkout select receipt"));
         }
+        let mut record = current.clone();
         let previous_bytes = record.bytes();
         let directive = record.advance(request.value)?;
         let updated_bytes =
@@ -100,7 +99,9 @@ impl State {
             self.bytes = self.bytes.saturating_sub(previous_bytes);
         } else {
             self.bytes = updated_bytes;
-            self.records.insert(token.to_owned(), record);
+            if let Some(slot) = self.records.get_mut(token) {
+                *slot = record;
+            }
         }
         Ok(output)
     }

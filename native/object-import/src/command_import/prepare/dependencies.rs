@@ -84,10 +84,12 @@ fn load(
 ) -> io::Result<(Option<Value>, Value)> {
     let local = plan.environment.local_directory.clone();
     let mut model = read_model(plan, &local, target)?;
-    let mut version = model
+    let resolved_hash = model
         .as_ref()
-        .and_then(|model| version_ref(model, &target.version).ok())
-        .map(|hash| read_version(plan, &hash))
+        .and_then(|model| version_ref(model, &target.version).ok());
+    let mut version = resolved_hash
+        .as_deref()
+        .map(|hash| read_version(plan, hash))
         .transpose()?
         .flatten();
     let local_scope = target.scope.as_deref().map(str::trim) == Some(scope.trim());
@@ -96,9 +98,8 @@ fn load(
         .is_some_and(|version| {
             matches!(version["buildStatus"].as_str().map(str::trim), Some("succeed" | "skipped"))
         });
-    let staged_version = model
-        .as_ref()
-        .and_then(|model| version_ref(model, &target.version).ok())
+    let staged_version = resolved_hash
+        .as_deref()
         .is_some_and(|hash| {
             staged
                 .lines()
@@ -119,14 +120,15 @@ fn load(
     Ok((model, version))
 }
 fn fetch(plan: &mut PreparedImport, target: &Target, remotes: &Value) -> io::Result<String> {
+    let target_id = identity(target)?;
     let source = plan.cache.lane_sources
-        .get(&identity(target)?)
+        .get(&target_id)
         .cloned()
         .or_else(|| target.scope.clone())
         .ok_or_else(|| invalid("import dependency scope"))?;
     let directory = remote(plan, remotes, &source)?;
     let row = plan.progress.last_mut().ok_or_else(|| invalid("import progress phase"))?;
-    row.ids.push(format!("{}@{}", identity(target)?, target.version));
+    row.ids.push(format!("{target_id}@{}", target.version));
     row.objects.insert(object_hash(&source));
     let incoming = read_model(plan, &directory, target)?
         .ok_or_else(|| invalid("import missing remote model"))?;

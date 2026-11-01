@@ -88,11 +88,11 @@ fn insert_statuses(
     }
     Ok(())
 }
-pub(super) fn path(plan: &plan::Plan, row: &Value) -> io::Result<String> {
+pub(super) fn path<'a>(plan: &'a plan::Plan, row: &Value) -> io::Result<&'a str> {
     if let Some(index) = row["current"].as_u64() {
         return plan.current
             .get(index as usize)
-            .map(|file| file.relative_path.clone())
+            .map(|file| file.relative_path.as_str())
             .ok_or_else(|| invalid("checkout current merge index"));
     }
     let index =
@@ -101,7 +101,7 @@ pub(super) fn path(plan: &plan::Plan, row: &Value) -> io::Result<String> {
         .as_ref()
         .unwrap_or(&plan.target)
         .get(index as usize)
-        .map(|file| file.relative_path.clone())
+        .map(|file| file.relative_path.as_str())
         .ok_or_else(|| invalid("checkout other merge index"))
 }
 pub(super) fn error_path(path: &str) -> String {

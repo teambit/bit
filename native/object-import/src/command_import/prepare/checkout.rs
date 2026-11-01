@@ -86,7 +86,7 @@ impl PreparedImport {
         lane: &[Target],
         remotes: &serde_json::Value,
     ) -> io::Result<()> {
-        let outside = targets
+        for target in targets
             .iter()
             .filter(|target| {
                 !lane
@@ -97,11 +97,7 @@ impl PreparedImport {
                             && row.name.trim() == target.name.trim()
                     })
             })
-            .collect::<Vec<_>>();
-        if outside.is_empty() {
-            return Ok(());
-        }
-        for target in outside {
+        {
             let scope = target.scope
                 .as_deref()
                 .map(str::trim)
@@ -146,7 +142,8 @@ fn lane_targets(value: &serde_json::Value) -> io::Result<Vec<Target>> {
 }
 
 fn seeds(remote: &[Target], bitmap: &[Target]) -> Vec<Target> {
-    let mut targets = remote.to_vec();
+    let mut targets = Vec::with_capacity(remote.len() + bitmap.len());
+    targets.extend_from_slice(remote);
     for target in bitmap
         .iter()
         .filter(|target| {

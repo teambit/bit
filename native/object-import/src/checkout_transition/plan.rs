@@ -109,7 +109,7 @@ impl State {
             .ok_or_else(|| invalid("checkout plan sequence overflow"))?;
         let mut digest = Sha1::new();
         digest.update(sequence.to_be_bytes());
-        digest.update(serde_json::to_vec(input).map_err(io::Error::other)?);
+        serde_json::to_writer(&mut digest, input).map_err(io::Error::other)?;
         let token = crate::validate::hexadecimal(&digest.finalize());
         let directory: PathBuf = directory.components().collect();
         for (index, body) in plan.bodies.iter_mut().enumerate() {
@@ -119,7 +119,7 @@ impl State {
             super::spool::assign(&mut plan.bodies, &directory, &token, 0);
         }
         let output = plan.manifest(&token);
-        if serde_json::to_vec(&output).map_err(io::Error::other)?.len() > 4 * 1024 * 1024 {
+        if serialized_len(&output)? > 4 * 1024 * 1024 {
             return Err(invalid("checkout manifest output limit"));
         }
         super::spool::write(&plan.bodies)?;
@@ -127,4 +127,20 @@ impl State {
         self.plans.insert(token, plan);
         Ok(output)
     }
+}
+
+fn serialized_len(value: &Value) -> io::Result<usize> {
+    struct ByteCount(usize);
+    impl std::io::Write for ByteCount {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            self.0 = self.0.saturating_add(buf.len());
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut counter = ByteCount(0);
+    serde_json::to_writer(&mut counter, value).map_err(io::Error::other)?;
+    Ok(counter.0)
 }

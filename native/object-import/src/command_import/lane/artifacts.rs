@@ -6,12 +6,14 @@ impl PreparedImport {
     /// Called after status/pattern/squash preparation, before any publication.
     /// Canonical artifact import covers every status ID, including exclusions.
     pub(crate) fn prepare_lane_artifacts(&mut self, versions: &[String]) -> io::Result<()> {
-        if self.cache.fetched_lane.is_none() {
+        let Some(lane) = &self.cache.fetched_lane else {
             return Ok(());
-        }
+        };
         if versions.len() > 4096 {
             return Err(invalid("lane artifact component budget"));
         }
+        let scope = lane_field(&lane.value, "scope", "lane artifact scope")?;
+        let name = lane_field(&lane.value, "name", "lane artifact name")?;
         let mut references = Vec::new();
         for version in versions {
             let value = self.lane_version(version)?;
@@ -20,9 +22,6 @@ impl PreparedImport {
                 return Err(invalid("lane artifact Source budget"));
             }
         }
-        let Some(lane) = &self.cache.fetched_lane else { return Ok(()) };
-        let scope = lane_field(&lane.value, "scope", "lane artifact scope")?;
-        let name = lane_field(&lane.value, "name", "lane artifact name")?;
         self.prepare_lane_objects(
             &scope,
             &references,

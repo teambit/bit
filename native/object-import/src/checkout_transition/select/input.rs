@@ -107,6 +107,5 @@ fn invalid_version(version: Option<&str>) -> bool {
 }
 
 fn invalid_id(value: &str) -> bool {
-    let trimmed = value.trim();
-    trimmed.is_empty() || value.len() > 32768 || value.chars().any(char::is_control)
+    value.len() > 32768 || value.trim().is_empty() || value.chars().any(char::is_control)
 }

@@ -60,7 +60,7 @@ fn manifest(plan: &plan::Plan, token: &str, known: Option<usize>) -> Value {
 }
 
 fn retained_indices(plan: &plan::Plan) -> HashMap<&str, usize> {
-    let mut indices = HashMap::new();
+    let mut indices = HashMap::with_capacity(plan.bodies.len());
     for (index, body) in plan.bodies.iter().enumerate() {
         indices.entry(body.hash.as_str()).or_insert(index);
     }
@@ -73,7 +73,7 @@ fn additions(
     token: &str,
 ) -> (Vec<usize>, Vec<plan::Body>) {
     let retained = retained_indices(plan);
-    let mut indices = Vec::new();
+    let mut indices = Vec::with_capacity(contents.len());
     let mut added = Vec::new();
     for body in contents {
         let mut body = plan::Body::new(body);
@@ -150,7 +150,7 @@ fn check_budget(body_count: usize, retained: usize, added: &[plan::Body]) -> io:
     Ok(())
 }
 fn statuses(plan: &plan::Plan, target: &[wire::Manifest]) -> Vec<Value> {
-    let mut current = HashMap::new();
+    let mut current = HashMap::with_capacity(plan.current.len());
     for file in &plan.current {
         current.entry(file.relative_path.trim()).or_insert(file);
     }

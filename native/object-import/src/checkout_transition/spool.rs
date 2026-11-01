@@ -5,6 +5,9 @@ use std::{
     path::Path,
 };
 pub(super) fn assign(bodies: &mut [Body], directory: &Path, token: &str, first: usize) {
+    if bodies.is_empty() {
+        return;
+    }
     let token = token.trim();
     let path = directory
         .components()

@@ -49,9 +49,10 @@ impl PreparedImport {
             );
         }
         for (directory, hash, value) in &self.writes.remote_objects {
-            if self.environment.remote_overrides
-                .values()
-                .any(|path| directory == &path.join("objects"))
+            if directory.file_name() == Some(std::ffi::OsStr::new("objects"))
+                && self.environment.remote_overrides
+                    .values()
+                    .any(|path| directory.parent() == Some(path.as_path()))
             {
                 continue;
             }

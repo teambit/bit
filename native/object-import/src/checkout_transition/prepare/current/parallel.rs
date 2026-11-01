@@ -20,8 +20,10 @@ pub(super) fn load(files: &[wire::Current], total: &mut usize) -> io::Result<Vec
         .or_else(|_| serial(files, *total))?;
     Ok(loaded
         .into_iter()
-        .inspect(|(_, bytes)| *total = total.saturating_add(*bytes))
-        .map(|(file, _)| file)
+        .map(|(file, bytes)| {
+            *total = total.saturating_add(bytes);
+            file
+        })
         .collect())
 }
 

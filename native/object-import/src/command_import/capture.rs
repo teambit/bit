@@ -108,7 +108,7 @@ impl Capture {
         let identity = crate::merge_history::hash(hash)?;
         let path = object_path(directory, hash);
         let Some(bytes) = self.read(&path)? else { return Ok(None) };
-        let raw = if self.virtual_files.contains_key(&path) {
+        let mut raw = if self.virtual_files.contains_key(&path) {
             repository::inflate(&bytes, 32 * 1024 * 1024)?
         } else {
             let mut total = 0;
@@ -121,27 +121,24 @@ impl Capture {
         {
             return Err(invalid("import object changed during capture"));
         }
-        self.raw_bytes += raw.len();
+        let inflated_size = raw.len();
+        self.raw_bytes += inflated_size;
         if self.raw_bytes > MAX_BYTES {
             return Err(invalid("import inflated byte limit"));
         }
         let (_, body) = repository::split(&raw, identity, kind)?;
-        let value = if kind == "Source" {
+        let (value, source) = if kind == "Source" {
             use sha1::Sha1;
             if crate::validate::hexadecimal(&Sha1::digest(body)) != hash {
                 return Err(invalid("import Source identity"));
             }
-            None
+            let header_len = inflated_size - body.len();
+            raw.drain(..header_len);
+            (None, Some(raw))
         } else {
-            Some(crate::parse_jsonc(body).map_err(io::Error::other)?)
+            (Some(crate::parse_jsonc(body).map_err(io::Error::other)?), None)
         };
-        Ok(Some(Object {
-            kind: kind.to_owned(),
-            bytes,
-            value,
-            source: (kind == "Source").then(|| body.to_vec()),
-            inflated_size: raw.len(),
-        }))
+        Ok(Some(Object { kind: kind.to_owned(), bytes, value, source, inflated_size }))
     }
     pub(super) fn sources(
         &mut self,

@@ -57,8 +57,9 @@ fn receive_from(
     include_history: bool,
     origin: bool,
 ) -> io::Result<()> {
+    let target_id = identity(target)?;
     let row = plan.progress.last_mut().ok_or_else(|| invalid("import progress phase"))?;
-    row.components.insert(identity(target)?);
+    row.components.insert(target_id.clone());
     row.objects.insert(hash.to_owned());
     let record = plan.capture
         .object(directory, hash, "Version")?
@@ -66,7 +67,7 @@ fn receive_from(
     let version = record.value.as_ref().ok_or_else(|| invalid("import Version metadata"))?;
     crate::history_query::validate_version(version)?;
     let scope = plan.cache.lane_sources
-        .get(&identity(target)?)
+        .get(&target_id)
         .cloned()
         .or_else(|| target.scope.clone());
     receive_sources(plan, directory, version)
@@ -106,11 +107,9 @@ pub(super) fn merge_model(
     let old = read_model(plan, &local, target)?;
     let value = merge::model_from(old.as_ref(), incoming, origin)?;
     let hash = object_hash(&identity(target)?);
-    plan.overlay.objects.insert(
-        hash.clone(),
-        super::super::publish::object(&hash, "Component", value)?,
-    );
+    let object = super::super::publish::object(&hash, "Component", value)?;
     update_index(plan, target, &hash)?;
+    plan.overlay.objects.insert(hash, object);
     Ok(())
 }
 fn receive_history(
@@ -163,8 +162,9 @@ pub(super) fn retain_sources(
     version: &Value,
     transferred: bool,
 ) -> io::Result<()> {
-    let mut sources = Vec::new();
-    for file in version["files"].as_array().ok_or_else(|| invalid("import files"))? {
+    let files = version["files"].as_array().ok_or_else(|| invalid("import files"))?;
+    let mut sources = Vec::with_capacity(files.len() + 3);
+    for file in files {
         sources.push(
             file["file"]
                 .as_str()

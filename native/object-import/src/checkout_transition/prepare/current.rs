@@ -22,7 +22,7 @@ pub(super) fn load_with_overlay(
     snapshots: Option<&crate::workspace::snapshots::State>,
     overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<Loaded>> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(files.len());
     if files.len() >= 32
         && files
             .iter()

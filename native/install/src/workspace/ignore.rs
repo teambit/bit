@@ -242,13 +242,16 @@ fn compile(pattern: &str, negative: bool) -> io::Result<Regex> {
 fn source(pattern: &str, negative: bool) -> String {
     let mut source = pattern.to_owned();
     for replacer in replacers(negative) {
-        let text = source.clone();
-        let replace = |found: &Match| (replacer.replace)(found, &text, pattern);
-        source = if replacer.global {
-            replacer.regex.replace_all_with(&text, replace)
-        } else {
-            replacer.regex.replace_with(&text, replace)
+        let next = {
+            let text = source.as_str();
+            let replace = |found: &Match| (replacer.replace)(found, text, pattern);
+            if replacer.global {
+                replacer.regex.replace_all_with(text, replace)
+            } else {
+                replacer.regex.replace_with(text, replace)
+            }
         };
+        source = next;
     }
     source
 }

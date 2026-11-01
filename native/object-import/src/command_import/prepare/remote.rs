@@ -28,6 +28,9 @@ pub(in crate::command_import) fn settings_for_lane(
 }
 
 fn is_non_main_lane(current: &Value) -> bool {
+    if current.is_null() {
+        return false;
+    }
     let lane = [current, &current["name"], &current["id"], &current["id"]["name"]]
         .into_iter()
         .find_map(|value| {

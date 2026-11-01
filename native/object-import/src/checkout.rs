@@ -77,7 +77,7 @@ pub(crate) fn serve(
         response.completed = contents.len();
         return protocol::respond(writer, &response);
     }
-    let mut directories = HashSet::new();
+    let mut directories = HashSet::with_capacity(request.files.len());
     for (file, contents) in request.files.iter().zip(&contents) {
         if materialize(&file.destination, contents, &mut directories).is_err() {
             response.failed = true;
@@ -122,10 +122,13 @@ pub(crate) fn path(reader: &mut impl Read) -> io::Result<PathBuf> {
     }
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
+    if bytes.contains(&0) {
+        return Err(invalid("checkout path must be absolute and contain no NUL"));
+    }
     let raw = String::from_utf8(bytes).map_err(|_| invalid("checkout path is not UTF-8"))?;
     let name = raw.trim();
-    let path = PathBuf::from(name);
-    if !path.is_absolute() || raw.contains('\0') {
+    let path = if name.len() == raw.len() { PathBuf::from(raw) } else { PathBuf::from(name) };
+    if !path.is_absolute() {
         return Err(invalid("checkout path must be absolute and contain no NUL"));
     }
     Ok(path)

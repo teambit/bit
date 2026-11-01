@@ -104,10 +104,8 @@ fn retain_inputs(
     current: &[current::Loaded],
     merged_bodies: Vec<plan::Body>,
 ) -> (Vec<plan::Body>, Vec<usize>, Vec<plan::Current>) {
-    let mut bodies = target
-        .into_iter()
-        .map(plan::Body::new)
-        .collect::<Vec<_>>();
+    let mut bodies = Vec::with_capacity(target.len() + current.len() + merged_bodies.len());
+    bodies.extend(target.into_iter().map(plan::Body::new));
     let target_indices = (0..bodies.len()).collect::<Vec<_>>();
     let mut current_files = Vec::with_capacity(current.len());
     for (current_wire, file) in request.current.iter().zip(current) {
@@ -130,7 +128,7 @@ fn statuses(
     target: &[Vec<u8>],
     current: &[current::Loaded],
 ) -> Vec<Value> {
-    let mut positions = HashMap::new();
+    let mut positions = HashMap::with_capacity(request.current.len());
     for (index, file) in request.current.iter().enumerate() {
         positions.entry(file.relative_path.trim()).or_insert(index);
     }

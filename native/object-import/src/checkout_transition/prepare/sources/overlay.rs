@@ -14,22 +14,25 @@ pub(super) fn verify(
     let version_hash = version.hash.trim();
     crate::merge_history::hash(version_hash)?;
     let proof = version.proof_files.as_deref().unwrap_or(&version.files);
-    if version.proof_files.is_some()
-        && version.files
+    if version.proof_files.is_some() {
+        let by_path: std::collections::HashMap<&str, _> = proof
+            .iter()
+            .map(|source| (source.relative_path.trim(), source))
+            .collect();
+        if version.files
             .iter()
             .any(|file| {
-                let (path, hash) = (file.relative_path.trim(), file.hash.trim());
-                !proof
-                    .iter()
-                    .any(|source| {
-                        source.relative_path.trim() == path
-                            && source.hash.trim() == hash
-                            && source.name == file.name
-                            && source.test == file.test
+                by_path
+                    .get(file.relative_path.trim())
+                    .is_none_or(|source| {
+                        source.hash.trim() != file.hash.trim()
+                            || source.name != file.name
+                            || source.test != file.test
                     })
             })
-    {
-        return Err(invalid("checkout selected manifest differs from proof"));
+        {
+            return Err(invalid("checkout selected manifest differs from proof"));
+        }
     }
     let expected = serde_json::to_value(proof).map_err(io::Error::other)?;
     if let Some(overlay) = overlay

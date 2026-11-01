@@ -303,7 +303,10 @@ impl Scan<'_> {
         if SKIPPED_DIRS.contains(&name)
             || self.excluded
                 .iter()
-                .any(|dir| format!("{path}/").starts_with(dir))
+                .any(|dir| {
+                    dir.strip_suffix('/')
+                        .is_some_and(|prefix| path == prefix || path.starts_with(dir.as_str()))
+                })
         {
             return Ok(());
         }
@@ -328,7 +331,11 @@ impl Scan<'_> {
         match name {
             ".bit.map.json" => true,
             super::bitmap::BITMAP if self.workspace_root => path.contains('/'),
-            super::bitmap::BITMAP => path == format!("{}/{}", self.start, name),
+            super::bitmap::BITMAP => {
+                path.strip_prefix(&self.start)
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(name)
+            }
             _ => false,
         }
     }

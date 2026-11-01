@@ -86,26 +86,25 @@ pub(crate) fn order(
         return Err(invalid("stale merge order plan"));
     }
     let plan = state.plans.plans.get_mut(token).ok_or_else(|| invalid("stale merge order plan"))?;
+    let mut seen = std::collections::HashSet::with_capacity(order.len());
     if order.len() != plan.merge_rows.len()
-        || order
+        || !order
             .iter()
             .copied()
-            .collect::<std::collections::HashSet<_>>()
-            .len()
-            != order.len()
+            .all(|index| seen.insert(index))
     {
         return Err(invalid("merge plan permutation"));
     }
-    let rows = order
+    if order
         .iter()
-        .map(|index| {
-            plan.merge_rows
-                .get(*index)
-                .cloned()
-                .ok_or_else(|| invalid("merge plan row range"))
-        })
-        .collect::<io::Result<Vec<_>>>()?;
-    plan.merge_rows = rows;
+        .any(|&index| index >= plan.merge_rows.len())
+    {
+        return Err(invalid("merge plan row range"));
+    }
+    plan.merge_rows = order
+        .iter()
+        .map(|&index| std::mem::take(&mut plan.merge_rows[index]))
+        .collect();
     if indexed { Ok(json!({"rowIndices":order})) } else { Ok(json!({"mergeRows":plan.merge_rows})) }
 }
 

@@ -14,6 +14,9 @@ impl PreparedImport {
         Ok(())
     }
     pub(crate) fn missing_graph_versions(&mut self, targets: &[Target]) -> io::Result<Vec<Target>> {
+        if targets.is_empty() {
+            return Ok(Vec::new());
+        }
         if targets.len() > 4096 {
             return Err(super::invalid("import graph target limit"));
         }
@@ -58,6 +61,7 @@ impl PreparedImport {
                     .is_some_and(|scope| !scope.trim().is_empty())
             })
             .collect::<Vec<_>>();
+        self.cache.unbuilt.reserve(scoped.len());
         for target in &scoped {
             self.cache.unbuilt.insert(format!(
                 "{}@{}",

@@ -107,7 +107,10 @@ impl PreparedImport {
             if self.environment.remote_overrides.contains_key(scope)
                 && ids
                     .iter()
-                    .any(|id| id.starts_with(&format!("{scope}/")))
+                    .any(|id| {
+                        id.strip_prefix(scope)
+                            .is_some_and(|rest| rest.starts_with('/'))
+                    })
                 && let std::collections::hash_map::Entry::Vacant(entry) = self
                     .overlay
                     .objects
@@ -156,8 +159,9 @@ impl PreparedImport {
         if target.scope.is_none() {
             return Ok(());
         }
+        let target_id = identity(target)?;
         let remote_scope = self.cache.lane_sources
-            .get(&identity(target)?)
+            .get(&target_id)
             .cloned()
             .or_else(|| target.scope.clone());
         if remote_scope.as_deref() == Some(self.environment.local_scope.as_str()) {
@@ -176,7 +180,7 @@ impl PreparedImport {
             remote_scope.as_deref().ok_or_else(|| invalid("import selected scope"))?,
         )?;
         let row = self.progress.last_mut().ok_or_else(|| invalid("import selected progress"))?;
-        row.ids.push(format!("{}@{}", identity(target)?, target.version.trim()));
+        row.ids.push(format!("{target_id}@{}", target.version.trim()));
         row.objects.insert(object_hash(
             remote_scope
                 .as_deref()

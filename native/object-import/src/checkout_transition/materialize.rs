@@ -14,7 +14,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let contents = prepare(&request, plan)?;
     let mut completed = 0_usize;
     let mut skipped = Vec::new();
-    let mut directories = HashSet::new();
+    let mut directories = HashSet::with_capacity(request.files.len());
     for (index, (file, body)) in request.files
         .iter()
         .zip(&contents)
@@ -35,7 +35,7 @@ fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec
     }
     let mut contents = Vec::with_capacity(request.files.len());
     let mut total = 0_usize;
-    let mut paths = HashSet::new();
+    let mut paths = HashSet::with_capacity(request.files.len());
     for file in &request.files {
         let canonical_path: PathBuf = file.path.components().collect();
         if !file.path.is_absolute()

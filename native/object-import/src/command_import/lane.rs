@@ -320,7 +320,7 @@ pub(crate) fn entries(value: &Value) -> io::Result<Vec<Entry>> {
             Ok(Entry { identity, head, hidden: false })
         })
         .collect::<io::Result<Vec<_>>>()?;
-    let mut identities = std::collections::HashSet::new();
+    let mut identities = std::collections::HashSet::with_capacity(result.len());
     if result
         .iter()
         .any(|entry| !identities.insert(entry.identity.clone()))
@@ -328,7 +328,10 @@ pub(crate) fn entries(value: &Value) -> io::Result<Vec<Entry>> {
         return Err(invalid("command duplicate visible lane component"));
     }
     if let Some(hidden) = value.get("updateDependents") {
-        for row in hidden.as_array().ok_or_else(|| invalid("command hidden lane components"))? {
+        let hidden = hidden.as_array().ok_or_else(|| invalid("command hidden lane components"))?;
+        identities.reserve(hidden.len());
+        result.reserve(hidden.len());
+        for row in hidden {
             let entry = hidden_entry(row, default_scope)?;
             if !identities.insert(entry.identity.clone()) {
                 return Err(invalid("command duplicate visible or hidden lane component"));

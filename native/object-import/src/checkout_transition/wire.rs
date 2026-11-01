@@ -82,7 +82,7 @@ pub(super) struct Token {
     pub(super) token: String,
 }
 
-fn is_token_trim_char(ch: char) -> bool {
+const fn is_token_trim_char(ch: char) -> bool {
     ch.is_whitespace() || ch == '\0'
 }
 
@@ -91,5 +91,6 @@ where
     Deser: serde::Deserializer<'de>,
 {
     let token = String::deserialize(deserializer)?;
-    Ok(token.trim_matches(is_token_trim_char).to_owned())
+    let trimmed = token.trim_matches(is_token_trim_char);
+    if trimmed.len() == token.len() { Ok(token) } else { Ok(trimmed.to_owned()) }
 }

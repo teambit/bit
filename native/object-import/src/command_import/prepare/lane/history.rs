@@ -66,7 +66,11 @@ impl PreparedImport {
     }
 }
 
-fn merge_history(existing: Option<Value>, incoming: Value, lane_hash: &str) -> io::Result<Value> {
+fn merge_history(
+    existing: Option<Value>,
+    mut incoming: Value,
+    lane_hash: &str,
+) -> io::Result<Value> {
     let lane_hash = lane_hash.trim();
     if incoming["laneHash"].as_str().map(str::trim) != Some(lane_hash) {
         return Err(invalid("remote LaneHistory identity"));
@@ -86,10 +90,12 @@ fn merge_history(existing: Option<Value>, incoming: Value, lane_hash: &str) -> i
     if existing["laneHash"].as_str().map(str::trim) != Some(lane_hash) {
         return Err(invalid("local LaneHistory identity"));
     }
+    let incoming_rows =
+        incoming["history"].as_object_mut().ok_or_else(|| invalid("remote LaneHistory entries"))?;
     let rows =
         existing["history"].as_object_mut().ok_or_else(|| invalid("local LaneHistory entries"))?;
-    for (key, value) in incoming_rows {
-        rows.insert(key.trim().to_owned(), value.clone());
+    for (key, value) in std::mem::take(incoming_rows) {
+        rows.insert(key.trim().to_owned(), value);
         if rows.len() > 4096 {
             return Err(invalid("merged LaneHistory entry budget"));
         }

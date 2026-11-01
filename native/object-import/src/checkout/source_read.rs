@@ -105,7 +105,8 @@ fn prepare(request: &Request, state: &mut cache::State, pool: &ThreadPool) -> io
     }
     let records = load_records(request, state, pool)?;
     let metadata = response(request, &records);
-    let mut output = serde_json::to_vec(&metadata)?;
+    let mut output = Vec::with_capacity(64 + records.len() * 32);
+    serde_json::to_writer(&mut output, &metadata)?;
     output.push(b'\n');
     if output.len() > 65536 || metadata.binary_bytes > MAX_BYTES {
         return Err(invalid("Source read response exceeds bounds"));

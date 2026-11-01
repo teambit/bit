@@ -11,13 +11,14 @@ impl PreparedImport {
         if !root.is_absolute() || objects.len() > 4096 {
             return Err(invalid("import recovery object bounds"));
         }
+        let objects_dir = crate::scope_path(root).join("objects");
         for (hash, bytes) in objects {
             if bytes.is_empty() || bytes.len() > 32 * 1024 * 1024 {
                 return Err(invalid("import recovery object size"));
             }
             let trimmed = hash.trim();
             let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(trimmed)?);
-            let path = LooseObject::path(&crate::scope_path(root), &canonical);
+            let path = LooseObject::path(&objects_dir, &canonical);
             let metadata = fs::symlink_metadata(&path)?;
             if !metadata.is_file()
                 || metadata.file_type().is_symlink()
@@ -37,9 +38,8 @@ impl PreparedImport {
 
 struct LooseObject;
 impl LooseObject {
-    fn path(scope: &Path, canonical_hash: &str) -> std::path::PathBuf {
-        scope
-            .join("objects")
+    fn path(objects_dir: &Path, canonical_hash: &str) -> std::path::PathBuf {
+        objects_dir
             .join(&canonical_hash[..2])
             .join(&canonical_hash[2..])
     }

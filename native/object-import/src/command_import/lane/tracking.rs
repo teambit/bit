@@ -155,8 +155,11 @@ pub(super) fn hidden_entry(row: &Value, default_scope: Option<&str>) -> io::Resu
             .rsplit_once('@')
             .ok_or_else(|| invalid("command hidden lane identity"))?;
         let head = head.trim();
-        let identity =
-            component_identity_with_scope(&Value::String(identity.trim().into()), default_scope)?;
+        let default_scope = default_scope
+            .map(str::trim)
+            .filter(|val| !val.is_empty());
+        let (scope, name) = split_raw_component(identity, default_scope)?;
+        let identity = validate_component_identity(scope, name)?;
         crate::merge_history::hash(head)?;
         return Ok(Entry { identity, head: head.to_owned(), hidden: true });
     }
@@ -176,6 +179,10 @@ pub(super) fn component_identity_with_scope(
     default_scope: Option<&str>,
 ) -> io::Result<String> {
     let (scope, name) = split_component_scope_and_name(value, default_scope)?;
+    validate_component_identity(scope, name)
+}
+
+fn validate_component_identity(scope: &str, name: &str) -> io::Result<String> {
     if scope.is_empty()
         || scope.len() > 1024
         || matches!(scope, "." | "..")
@@ -193,6 +200,22 @@ pub(super) fn component_identity_with_scope(
     Ok(format!("{scope}/{name}"))
 }
 
+fn split_raw_component<'a>(
+    raw: &'a str,
+    default_scope: Option<&'a str>,
+) -> io::Result<(&'a str, &'a str)> {
+    let raw = raw.trim();
+    let base = raw
+        .split('@')
+        .next()
+        .unwrap_or(raw)
+        .trim();
+    match base.split_once('/') {
+        Some((scope, name)) => Ok((scope.trim(), name.trim())),
+        None => Ok((default_scope.ok_or_else(|| invalid("command lane component scope"))?, base)),
+    }
+}
+
 fn split_component_scope_and_name<'a>(
     value: &'a Value,
     default_scope: Option<&'a str>,
@@ -201,18 +224,7 @@ fn split_component_scope_and_name<'a>(
         .map(str::trim)
         .filter(|val| !val.is_empty());
     if let Some(raw) = value.as_str() {
-        let raw = raw.trim();
-        let base = raw
-            .split('@')
-            .next()
-            .unwrap_or(raw)
-            .trim();
-        return match base.split_once('/') {
-            Some((scope, name)) => Ok((scope.trim(), name.trim())),
-            None => {
-                Ok((default_scope.ok_or_else(|| invalid("command lane component scope"))?, base))
-            }
-        };
+        return split_raw_component(raw, default_scope);
     }
     let scope = value["scope"]
         .as_str()

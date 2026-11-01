@@ -43,9 +43,14 @@ fn parallel(
             .get(&request.directory, input.hash)
             .is_none()
             .then(|| body.clone());
-        let contents = if input.normalize { eol::auto(body) } else { body };
-        raw.reserve(contents.len().saturating_sub(length))
-            .map_err(|_| invalid("checkout materialized bytes out of bounds"))?;
+        let contents = if input.normalize {
+            let normalized = eol::auto(body);
+            raw.reserve(normalized.len().saturating_sub(length))
+                .map_err(|_| invalid("checkout materialized bytes out of bounds"))?;
+            normalized
+        } else {
+            body
+        };
         if let Some(raw_body) = uncached {
             state.insert(&request.directory, input.hash, raw_body);
         }

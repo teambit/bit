@@ -20,7 +20,7 @@ pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Re
         return Err(invalid("checkout plan manifest file count out of bounds"));
     }
     let expected: Vec<ManifestFile> =
-        serde_json::from_value(expected.clone()).map_err(io::Error::other)?;
+        serde::Deserialize::deserialize(expected).map_err(io::Error::other)?;
     validate_files(&expected)?;
     let stored = manifest(version)?;
     if !same_manifest(&stored, &expected) {

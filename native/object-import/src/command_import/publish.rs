@@ -55,7 +55,9 @@ fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     let kind = kind.trim();
     crate::merge_history::hash(hash)?;
     let text = serde_json::to_string(value).map_err(io::Error::other)?;
-    let mut bytes = format!("{kind} {hash} {}\0", text.encode_utf16().count()).into_bytes();
+    let utf16_len = if text.is_ascii() { text.len() } else { text.encode_utf16().count() };
+    let mut bytes = Vec::with_capacity(kind.len() + hash.len() + 24 + text.len());
+    write!(&mut bytes, "{kind} {hash} {utf16_len}\0")?;
     bytes.extend_from_slice(text.as_bytes());
     Ok(bytes)
 }

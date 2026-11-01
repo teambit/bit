@@ -87,7 +87,7 @@ fn prepare_with_virtual_options(
     if !root.is_absolute() || !global_remotes_file.is_absolute() || targets.len() > 4096 {
         return Err(invalid("import command bounds"));
     }
-    let (mut plan, scope) = empty(root, false)?;
+    let (mut plan, mut scope) = empty(root, false)?;
     plan.cache.fetch_all_dependencies = mode.fetch_dependencies;
     for remote in virtual_remotes {
         plan.virtual_remote(&remote.scope, remote.path.clone(), &remote.objects)?;
@@ -110,8 +110,8 @@ fn prepare_with_virtual_options(
     }
     let mut remotes = global.unwrap_or_else(|| json!({}));
     let remotes_map = remotes.as_object_mut().ok_or_else(|| invalid("import global remotes"))?;
-    if let Some(local) = scope["remotes"].as_object() {
-        remotes_map.extend(local.clone());
+    if let Some(local) = scope["remotes"].as_object_mut() {
+        remotes_map.extend(std::mem::take(local));
     }
     plan.environment.remotes = remotes.clone();
     let available =
@@ -245,7 +245,7 @@ fn configure_cached_at(
     directory: &Path,
     global_remotes_file: &Path,
 ) -> io::Result<()> {
-    let scope = plan.capture
+    let mut scope = plan.capture
         .json(&directory.join("scope.json"))?
         .ok_or_else(|| invalid("import local scope"))?;
     let global = plan.capture.json(global_remotes_file)?;
@@ -254,8 +254,8 @@ fn configure_cached_at(
     }
     let mut remotes = global.unwrap_or_else(|| json!({}));
     let map = remotes.as_object_mut().ok_or_else(|| invalid("import global remotes"))?;
-    if let Some(local) = scope["remotes"].as_object() {
-        map.extend(local.clone());
+    if let Some(local) = scope["remotes"].as_object_mut() {
+        map.extend(std::mem::take(local));
     }
     plan.environment.remotes = remotes;
     let staged = plan.capture

@@ -229,12 +229,8 @@ impl ScopeObjects {
             .split_once('@')
             .map_or((id, None), |(bare, version)| (bare, Some(version)));
         let Some((scope, name)) = bare.split_once('/') else { return Ok(None) };
-        self.component_or_head(&ComponentId {
-            scope: Some(scope.to_owned()),
-            default_scope: None,
-            name: name.to_owned(),
-            version: version.map(str::to_owned),
-        })
+        let model = self.read_model(scope, name)?;
+        self.model_data(model.as_ref(), version)
     }
 
     fn model_data(

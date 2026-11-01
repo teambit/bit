@@ -126,6 +126,9 @@ pub(super) fn selected(
     if needed.len() != version.files.len() {
         return Err(invalid("checkout selected Source count"));
     }
+    if !needed.iter().any(|&flag| flag) {
+        return Ok(vec![None; needed.len()]);
+    }
     let manifests: Vec<_> = version.files
         .iter()
         .zip(needed)

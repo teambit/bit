@@ -26,6 +26,9 @@ fn canonical_dir(directory: &Path) -> PathBuf {
 
 impl State {
     pub(crate) fn get(&self, directory: &Path, hash: [u8; 20]) -> Option<&Vec<u8>> {
+        if self.sources.is_empty() {
+            return None;
+        }
         self.sources.get(&(canonical_dir(directory), hash))
     }
     pub(crate) fn insert(&mut self, directory: &Path, hash: [u8; 20], body: Vec<u8>) {

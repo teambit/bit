@@ -28,10 +28,10 @@ fn collect_target(
     let mut pending = vec![head.to_owned()];
     let mut seen = HashSet::new();
     while let Some(hash) = pending.pop() {
-        if !seen.insert(hash.clone()) {
+        if seen.contains(&hash) {
             continue;
         }
-        if seen.len() > 16384 {
+        if seen.len() >= 16384 {
             return Err(invalid("import history closure limit"));
         }
         let version = plan.capture
@@ -40,6 +40,7 @@ fn collect_target(
             .ok_or_else(|| invalid("import history Version absent"))?;
         append_parents(&version, &mut pending)?;
         receive(plan, directory, target, &model, &hash, false)?;
+        seen.insert(hash);
     }
     Ok(())
 }
