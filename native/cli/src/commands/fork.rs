@@ -9,9 +9,11 @@ use super::{Command, add::ProjectedLinker, color::Chalk, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
 pub const COMMAND: Command = Command { name: "fork", aliases: &[], run };
+#[inline]
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_mode(args, false)
 }
+#[inline]
 pub(in crate::commands) fn run_scope(args: &[OsString]) -> io::Result<Outcome> {
     run_mode(args, true)
 }
@@ -47,9 +49,8 @@ fn handle_outside_workspace(
 ) -> io::Result<Outcome> {
     if env::var_os("CI")
         .is_some_and(|val| {
-            let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            let trimmed = val.as_encoded_bytes().trim_ascii();
+            !trimmed.is_empty() && trimmed != b"0" && !trimmed.eq_ignore_ascii_case(b"false")
         })
     {
         return Ok(Outcome::Declined("fork requires a workspace".into()));
@@ -93,6 +94,7 @@ fn execute(
         workspace_command::execute_then(root, args, "fork", work)
     }
 }
+#[inline]
 fn unsupported(
     root: &std::path::Path,
     options: &options::Options,

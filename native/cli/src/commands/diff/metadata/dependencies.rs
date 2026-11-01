@@ -18,6 +18,7 @@ struct Change {
 }
 
 /// `getDepDiffType`: only its failure matters to the plain-text output.
+#[inline]
 fn check_change(left: Option<&str>, right: Option<&str>) -> io::Result<()> {
     let present = |value: Option<&str>| {
         value
@@ -64,6 +65,7 @@ pub(super) fn package_dependencies(
     Ok(plain_text(&changes, field, labels, chalk))
 }
 
+#[inline]
 fn pkg_version(map: &Map<String, Value>, name: &str) -> io::Result<Option<String>> {
     let trimmed = name.trim();
     if trimmed.is_empty() {
@@ -91,7 +93,7 @@ pub(super) fn component_dependencies(
     if left.is_empty() && right.is_empty() {
         return Ok(None);
     }
-    let mut changes = Vec::new();
+    let mut changes = Vec::with_capacity(left.len() + right.len());
     for ours in left {
         let theirs = right
             .iter()

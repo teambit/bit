@@ -50,6 +50,7 @@ pub(super) fn is_hub_component_modified(
     are_version_files_modified(&scope_dir, &root.join(root_dir), &ver_val)
 }
 
+#[inline]
 fn are_version_files_modified(scope_dir: &Path, comp_dir: &Path, ver_val: &Value) -> Option<bool> {
     for file_item in ver_val["files"].as_array()? {
         let rel = file_item["relativePath"]
@@ -195,6 +196,7 @@ pub(super) fn materialize_ejected_package(
     fs::write(pkg_dir.join("package.json"), serde_json::to_vec_pretty(&pkg_json)?)
 }
 
+#[inline]
 fn copy_dir_files(src: &Path, dst: &Path) -> io::Result<()> {
     fs::create_dir_all(dst)?;
     for entry in fs::read_dir(src)? {
@@ -210,6 +212,7 @@ fn copy_dir_files(src: &Path, dst: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(super) fn pkg_name_for(scope: &str, name: &str) -> String {
     let comp_id = ComponentId {
         scope: Some(scope.to_owned()),
@@ -220,6 +223,7 @@ pub(super) fn pkg_name_for(scope: &str, name: &str) -> String {
     component_package_name(&comp_id, None, &Map::new())
 }
 
+#[inline]
 pub(super) fn remove_nm_pkg(root: &Path, pkg_name: &str) {
     let pkg_path = root.join("node_modules").join(pkg_name);
     if let Ok(meta) = fs::symlink_metadata(&pkg_path) {

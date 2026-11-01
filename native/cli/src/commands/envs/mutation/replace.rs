@@ -50,6 +50,7 @@ pub(super) fn prepare_replace(
     Ok(Prepared::Replace { env_display_id, batch })
 }
 
+#[inline]
 fn record_available_env(available_envs: &mut Vec<String>, env_id: &str) {
     let env_id = env_id.trim();
     if !env_id.is_empty()
@@ -61,6 +62,7 @@ fn record_available_env(available_envs: &mut Vec<String>, env_id: &str) {
     }
 }
 
+#[inline]
 fn apply_replace_to_entry(
     batch: &mut EnvBatch,
     entry: &BitmapEntry,
@@ -76,6 +78,7 @@ fn apply_replace_to_entry(
     Ok(())
 }
 
+#[inline]
 fn ensure_replaced_components(
     ids: &[String],
     old_env: &str,
@@ -90,12 +93,14 @@ fn ensure_replaced_components(
     Ok(())
 }
 
+#[inline]
 fn comp_json_file(root: &Path, entry: &BitmapEntry) -> Option<std::path::PathBuf> {
     (!entry.root_dir.is_empty())
         .then(|| root.join(&entry.root_dir).join("component.json"))
         .filter(|path| path.is_file())
 }
 
+#[inline]
 fn component_matches_old_env(
     root: &Path,
     bitmap_val: &Value,

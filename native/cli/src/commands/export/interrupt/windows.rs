@@ -14,6 +14,7 @@ unsafe extern "system" fn interrupt(kind: u32) -> i32 {
     }
     1
 }
+#[inline]
 pub(super) fn install() -> io::Result<Previous> {
     // SAFETY: the console control callback has static lifetime and the documented ABI.
     if unsafe { SetConsoleCtrlHandler(Some(interrupt), 1) } == 0 {
@@ -22,6 +23,7 @@ pub(super) fn install() -> io::Result<Previous> {
         Ok(())
     }
 }
+#[inline]
 pub(super) fn restore(_previous: &Previous) {
     // SAFETY: this removes the exact static callback registered by install.
     unsafe {

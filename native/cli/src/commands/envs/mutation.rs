@@ -47,6 +47,7 @@ pub(super) struct BitmapContext {
 }
 
 impl BitmapContext {
+    #[inline]
     fn load(root: &Path, chalk: Chalk) -> Result<Self, Failure> {
         let workspace_bytes = fs::read(root.join("workspace.jsonc"))?;
         let bitmap_before = fs::read(root.join(".bitmap"))?;
@@ -213,6 +214,7 @@ fn unset_env_in_bitmap_row(
     Ok(false)
 }
 
+#[inline]
 pub(super) fn remove_env_from_map(map: &mut Map<String, Value>) -> bool {
     remove_env_from_map_with_fallback(map, None)
 }
@@ -294,6 +296,7 @@ fn find_model_env(root: &Path, entry: &BitmapEntry) -> Result<Option<String>, Fa
 }
 
 impl EnvBatch {
+    #[inline]
     fn persist(&self, reason: &str) -> io::Result<()> {
         for edit in &self.comp_json_edits {
             fs::write(&edit.path, &edit.bytes)?;
@@ -340,6 +343,7 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn commit_unset(
     batch: &EnvBatch,
     formatter: &Formatter,
@@ -360,6 +364,7 @@ fn commit_unset(
     ]))
 }
 
+#[inline]
 fn render_items(formatter: &Formatter, ids: &[String]) -> String {
     ids.iter()
         .map(|id| formatter.item(id))

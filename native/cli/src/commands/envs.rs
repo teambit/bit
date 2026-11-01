@@ -170,6 +170,7 @@ fn finish_outcome(
 }
 
 impl Subcommand {
+    #[inline]
     const fn loader_label(&self) -> &'static str {
         match self {
             Self::List { .. } => "envs",
@@ -211,6 +212,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     }
 }
 
+#[inline]
 fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [pattern, env] = tokens.as_slice() else { return None };
@@ -221,6 +223,7 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     })
 }
 
+#[inline]
 fn parse_unset(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [pattern] = tokens.as_slice() else { return None };
@@ -228,6 +231,7 @@ fn parse_unset(rest: &[&str]) -> Option<Subcommand> {
     is_supported_pattern(pattern).then(|| Subcommand::Unset { pattern: pattern.to_owned() })
 }
 
+#[inline]
 fn parse_replace(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [old_env, new_env] = tokens.as_slice() else { return None };
@@ -260,6 +264,7 @@ fn parse_update(rest: &[&str]) -> Option<Subcommand> {
     }
 }
 
+#[inline]
 fn is_valid_update_env_id(env_id: &str) -> bool {
     let env_id = env_id.trim();
     let bare = env_id
@@ -316,10 +321,12 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
     Some(Subcommand::Get { component: component?, services })
 }
 
+#[inline]
 fn consume_trailing_env_comp(rest: &[&str], component: &mut Option<String>) -> Option<()> {
     super::lint_cmd::consume_trailing_internalize(rest.iter().copied(), component)
 }
 
+#[inline]
 fn parse_services_val(val: &str) -> Option<Vec<String>> {
     if val.is_empty() || val.starts_with('-') {
         return None;

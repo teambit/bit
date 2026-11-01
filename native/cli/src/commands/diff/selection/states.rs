@@ -48,6 +48,7 @@ pub(in crate::commands) fn select_capture(
 }
 
 /// Apply one workspace criterion after its caller has performed the canonical load phase.
+#[inline]
 pub(in crate::commands) fn criterion(
     context: &Value,
     targets: Vec<Value>,
@@ -191,6 +192,7 @@ impl State<'_> {
         })
     }
 
+    #[inline]
     fn comparison(&self, id: &str, field: &str) -> bool {
         let id = id.trim();
         self.compared["comparisons"]
@@ -263,6 +265,7 @@ impl State<'_> {
             .map_or(Value::Null, |row| row["config"].clone())
     }
 
+    #[inline]
     fn internal(&self, target: &Value) -> bool {
         let aspect = "teambit.component/internalize";
         crate::commands::update_cmd::aspect_entry(&target["componentConfig"], aspect)
@@ -326,6 +329,7 @@ impl State<'_> {
     }
 }
 
+#[inline]
 fn legacy_pattern(target: &Value, pattern: &str) -> io::Result<bool> {
     let identity = text(target.get("identity"))?;
     let legacy = if target["scoped"] == true {
@@ -336,6 +340,7 @@ fn legacy_pattern(target: &Value, pattern: &str) -> io::Result<bool> {
     Ok(!patterns::extended::matching(&[legacy, identity], &[pattern.to_string()])?.is_empty())
 }
 
+#[inline]
 fn requires_loading(criterion: &str) -> bool {
     matches!(criterion, "$modified" | "$deprecated" | "$deleted") || criterion.starts_with("$env:")
 }

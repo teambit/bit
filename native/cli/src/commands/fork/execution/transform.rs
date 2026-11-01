@@ -45,6 +45,7 @@ pub(super) fn source(
     }
     Ok(())
 }
+#[inline]
 pub(super) fn local(
     root: &Path,
     _options: &Options,
@@ -63,6 +64,7 @@ pub(super) fn local(
     let rows = load(root, linker, output)?;
     Refactor::prepare(root, &rows, &[(old.into(), new.into())], true, false)?.apply()
 }
+#[inline]
 pub(super) fn multiple(
     root: &Path,
     options: &Options,
@@ -77,6 +79,7 @@ pub(super) fn multiple(
     }
     Ok(())
 }
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -84,6 +87,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+#[inline]
 fn replacements(root: &Path, results: &Results) -> io::Result<Vec<(String, String)>> {
     let state = inventory::read(root)?;
     let mut pairs = Vec::with_capacity(results.ids.len() * 2);
@@ -99,6 +103,7 @@ fn replacements(root: &Path, results: &Results) -> io::Result<Vec<(String, Strin
     }
     Ok(pairs)
 }
+#[inline]
 fn source_identity(source: &Value) -> io::Result<String> {
     if let Some(raw) = non_empty_str(source)
         .or_else(|| non_empty_str(&source["identity"]))

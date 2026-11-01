@@ -53,6 +53,7 @@ pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
 }
 
 /// Check all captured configuration and manifest inputs before communication starts.
+#[inline]
 pub(super) fn validate(prepared: &Value) -> io::Result<()> {
     let cloud_domain = cloud_domain(prepared);
     for plan in plans(prepared)? {
@@ -67,6 +68,7 @@ pub(super) fn validate(prepared: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn cloud_domain(value: &Value) -> &str {
     value["cloudDomain"]
         .as_str()
@@ -104,6 +106,7 @@ fn plans(receipt: &Value) -> io::Result<Vec<Plan>> {
     Ok(plans)
 }
 
+#[inline]
 fn has_custom_pkg_name(config: &serde_json::Map<String, Value>) -> bool {
     config
         .iter()

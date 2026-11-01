@@ -24,6 +24,7 @@ pub(super) enum Target {
     Unowned,
 }
 
+#[inline]
 pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, String, Vec<Value>)> {
     let Target::Versioned { identity, file, lane } = classify_target(root, input)? else {
         return Err(decline("file history component absent"));
@@ -80,6 +81,7 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
     })
 }
 
+#[inline]
 fn match_entry_file<'a>(
     entry: &'a bitmap::Entry,
     requested: &'a str,
@@ -98,6 +100,7 @@ fn match_entry_file<'a>(
         .map(|relative| (entry, relative, dir.len()))
 }
 
+#[inline]
 fn is_valid_relative_file_path(requested: &str) -> bool {
     !requested.is_empty()
         && !requested.contains('\\')

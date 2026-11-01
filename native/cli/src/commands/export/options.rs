@@ -46,6 +46,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     valid_combination(&options).then_some(options)
 }
 
+#[inline]
 fn push_export_id(options: &mut Options, item: &str) -> Option<()> {
     let item = item.trim();
     if !(is_pattern(item) || valid_id(item)) || options.ids.len() >= 4096 {
@@ -83,6 +84,7 @@ fn apply_export_arg<'a>(
     }
 }
 
+#[inline]
 fn set_resume_id(options: &mut Options, client_id: &str) -> Option<()> {
     let client_id = client_id.trim();
     if options.resume.is_some() || !valid_client_id(client_id) {
@@ -92,6 +94,7 @@ fn set_resume_id(options: &mut Options, client_id: &str) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn valid_combination(options: &Options) -> bool {
     options.json
         || !options.head_only
@@ -156,6 +159,7 @@ fn set_combined_short(options: &mut Options, arg: &str) -> bool {
     true
 }
 
+#[inline]
 pub(super) fn is_pattern(pattern: &str) -> bool {
     !pattern.is_empty()
         && pattern.len() <= 4096
@@ -164,6 +168,7 @@ pub(super) fn is_pattern(pattern: &str) -> bool {
         && !pattern.contains('\0')
 }
 
+#[inline]
 fn valid_client_id(id: &str) -> bool {
     !id.is_empty()
         && id.len() <= 128
@@ -172,6 +177,7 @@ fn valid_client_id(id: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
 }
 
+#[inline]
 fn valid_id(id: &str) -> bool {
     if id.is_empty()
         || id.len() > 4096
@@ -193,11 +199,13 @@ fn valid_id(id: &str) -> bool {
 
 impl std::ops::Deref for Options {
     type Target = Flags;
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.flags
     }
 }
 impl std::ops::DerefMut for Options {
+    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.flags
     }

@@ -38,6 +38,7 @@ impl Options {
         Some(options)
     }
 
+    #[inline]
     fn consume_trailing_name(&mut self, rest: &[&str]) -> Option<()> {
         for &arg in rest {
             let trimmed = arg.trim();
@@ -49,6 +50,7 @@ impl Options {
         Some(())
     }
 
+    #[inline]
     fn apply_arg(&mut self, args: &[&str], cursor: &mut usize, arg: &str) -> bool {
         if self.apply_boolean(arg) || self.apply_inline_valued(arg) {
             return true;
@@ -110,6 +112,7 @@ impl Options {
         true
     }
 
+    #[inline]
     fn apply_combined_short(&mut self, arg: &str) -> bool {
         let Some(flags) = arg.strip_prefix('-') else {
             return false;
@@ -183,6 +186,7 @@ impl Options {
         }
         Ok(())
     }
+    #[inline]
     fn remote_flags(&self) -> Vec<&str> {
         [
             (self.archive, "--archive"),
@@ -195,6 +199,7 @@ impl Options {
         .collect()
     }
 }
+#[inline]
 fn optional_path(args: &[&str], cursor: &mut usize) -> PathBuf {
     if let Some(path) = args
         .get(*cursor + 1)

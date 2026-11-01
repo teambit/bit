@@ -42,6 +42,7 @@ pub(super) fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
     Some((path?, include_message))
 }
 
+#[inline]
 fn consume_trailing_path<'a>(
     iter: impl Iterator<Item = &'a str>,
     path: &mut Option<&'a str>,
@@ -131,6 +132,7 @@ fn published_file_matches(root: &Path, input: &str, file: &str) -> io::Result<bo
     Ok(published_source_key(&raw_dir, &absolute) == file)
 }
 
+#[inline]
 fn published_source_key(raw_dir: &str, normalized_absolute: &str) -> String {
     normalized_absolute.replacen(&format!("{raw_dir}/"), "", 1)
 }
@@ -236,6 +238,7 @@ fn cells(
         .collect()
 }
 
+#[inline]
 fn effective_parent<'a>(row: &'a Value, hidden: &HashMap<&str, &'a Value>) -> &'a Value {
     let mut current = row;
     for _ in 0..=hidden.len() {
@@ -254,6 +257,7 @@ fn effective_parent<'a>(row: &'a Value, hidden: &HashMap<&str, &'a Value>) -> &'
     &current["parentFileHash"]
 }
 
+#[inline]
 fn assign_changed(owners: &mut [Option<usize>], index: usize, parent: &str, current: &str) {
     let mut line = 0;
     for change in diff::lines(parent, current) {

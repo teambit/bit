@@ -29,6 +29,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn valid_args(args: &[OsString]) -> bool {
     if args.is_empty() {
         return false;
@@ -67,6 +68,7 @@ fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {
     Ok(format!("{header}\n\n{content}\n\n{hint}"))
 }
 
+#[inline]
 fn format_header(meta: &Value, formatter: &Formatter, chalk: Chalk) -> String {
     let timestamp = meta["timestamp"]
         .as_str()

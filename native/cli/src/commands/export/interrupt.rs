@@ -23,6 +23,7 @@ const COLORED: &str = "\u{1b}[33m⚠\u{1b}[39m \u{1b}[33munable to cancel the ex
 
 pub(super) struct Guard(platform::Previous);
 impl Guard {
+    #[inline]
     pub(super) fn new(quiet: bool) -> io::Result<Self> {
         if ACTIVE.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return Err(io::Error::other("export interrupt owner already active"));
@@ -58,6 +59,7 @@ impl Drop for Guard {
         ACTIVE.store(false, Ordering::Release);
     }
 }
+#[inline]
 fn message() -> &'static [u8] {
     if !ENABLED.load(Ordering::Acquire) {
         return b"";

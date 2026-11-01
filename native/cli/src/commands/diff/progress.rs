@@ -29,6 +29,7 @@ pub(super) fn render_progress(
 
 /// Whether the versions to compare are fetched first (`importWithoutDeps`), which
 /// fetches nothing for a component that is not exported.
+#[inline]
 fn imports(root: &Path, options: &options::Options, result: &Value) -> bool {
     let versions = &options.versions;
     let fetches =
@@ -38,6 +39,7 @@ fn imports(root: &Path, options: &options::Options, result: &Value) -> bool {
 
 /// `scope.isExported`: some compared component's `.bitmap` entry has its own scope
 /// (`getNotExportedIds` lists the entries without one).
+#[inline]
 fn exported_target(root: &Path, result: &Value) -> bool {
     let exported = exported_ids(root);
     result

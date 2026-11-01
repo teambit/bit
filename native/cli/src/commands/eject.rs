@@ -23,7 +23,7 @@ use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "eject", aliases: &["E"], run };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: String,
     pub force: bool,
@@ -32,6 +32,7 @@ pub(super) struct Options {
     pub keep_files: bool,
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -80,13 +81,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut options = Options {
-        pattern: String::new(),
-        force: false,
-        skip_dependency_installation: false,
-        json: false,
-        keep_files: false,
-    };
+    let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
@@ -117,6 +112,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     (!options.pattern.is_empty()).then_some(options)
 }
 
+#[inline]
 pub(super) fn consume_trailing_eject<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut String,
@@ -129,6 +125,7 @@ pub(super) fn consume_trailing_eject<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_short_eject_flags(arg: &str, options: &mut Options) -> Option<()> {
     let flags = arg.strip_prefix('-')?;
     if flags.is_empty() || flags.starts_with('-') {
@@ -236,6 +233,7 @@ fn eject_one_component(
     Ok(())
 }
 
+#[inline]
 fn bitmap_row_version<'a>(key: &'a str, row: &'a Value) -> &'a str {
     row["version"]
         .as_str()
@@ -282,6 +280,7 @@ fn eject_hub_package_and_untrack(
     Ok(())
 }
 
+#[inline]
 fn check_modified_or_staged(
     root: &Path,
     row: &Value,
@@ -302,6 +301,7 @@ fn check_modified_or_staged(
     false
 }
 
+#[inline]
 fn find_bitmap_row(bitmap: &Value, id: &str) -> Option<(String, Value)> {
     let bare = id.split('@').next().unwrap_or(id);
     bitmap
@@ -311,6 +311,7 @@ fn find_bitmap_row(bitmap: &Value, id: &str) -> Option<(String, Value)> {
         .map(|(key, row)| (key.clone(), row.clone()))
 }
 
+#[inline]
 fn bitmap_row_matches(key: &str, row: &Value, bare: &str) -> bool {
     if key.starts_with('$')
         || key == "version"

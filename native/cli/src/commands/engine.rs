@@ -33,12 +33,14 @@ struct Response {
 }
 
 impl Engine {
+    #[inline]
     pub fn new() -> io::Result<Self> {
         let threads = thread::available_parallelism().map_or(1, usize::from).min(4);
         Ok(Self { session: WorkspaceSession::new(threads)?, next_id: 0 })
     }
 
     /// One request; a failed or skipped request is an error.
+    #[inline]
     pub fn request<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
         let started = std::time::Instant::now();
         let result = self.request_owned(input);
@@ -147,6 +149,7 @@ impl std::fmt::Display for CanonicalError {
 }
 impl std::error::Error for CanonicalError {}
 
+#[inline]
 pub(super) fn is_canonical(error: &io::Error) -> bool {
     let mut cause = error
         .get_ref()
@@ -161,11 +164,13 @@ pub(super) fn is_canonical(error: &io::Error) -> bool {
 }
 
 /// Preserve a published command error without delegating the invocation again.
+#[inline]
 pub(super) fn canonical_error(message: String) -> io::Error {
     io::Error::other(CanonicalError { message, progress: None })
 }
 
 /// Actual completed native phases preceding an owned command error.
+#[inline]
 pub(super) fn canonical_progress(error: &io::Error) -> Option<&Value> {
     let mut cause = error
         .get_ref()

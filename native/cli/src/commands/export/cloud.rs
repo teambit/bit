@@ -2,6 +2,7 @@
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Result<()> {
     let jobs: Vec<Value> = receipt["rippleJobs"]
         .as_array()
@@ -43,6 +44,7 @@ pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Re
     )
 }
 
+#[inline]
 fn exported_lane(entry: &Value) -> Option<Value> {
     if let Some((scope, name)) = entry
         .as_str()

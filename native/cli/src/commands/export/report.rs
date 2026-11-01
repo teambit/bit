@@ -161,6 +161,7 @@ pub(super) fn published(value: &Value, token: &str) -> io::Result<Value> {
     Ok(value.clone())
 }
 
+#[inline]
 fn update_ids_valid(value: &Value) -> io::Result<()> {
     let components: HashSet<_> = array(value.get("componentsIds"), "components")?
         .iter()
@@ -179,6 +180,7 @@ fn update_ids_valid(value: &Value) -> io::Result<()> {
 }
 
 /// A receipt field of at most 4096 ids, each with a scope.
+#[inline]
 fn scoped_ids(value: &Value, field: &str) -> io::Result<()> {
     let ids = array(value.get(field), field)?;
     if ids.len() > 4096 {
@@ -194,6 +196,7 @@ fn scoped_ids(value: &Value, field: &str) -> io::Result<()> {
 
 /// The exported components, unique and without versions, and each remote id
 /// a version of one of them.
+#[inline]
 fn remote_ids(value: &Value) -> io::Result<()> {
     let comp_ids = array(value.get("componentsIds"), "components")?;
     let mut components = HashSet::with_capacity(comp_ids.len());
@@ -291,6 +294,7 @@ fn export_sections(
         .join("\n")
 }
 
+#[inline]
 fn lane_update_ids(receipt: &Value) -> HashSet<&str> {
     receipt["laneUpdateIds"]
         .as_array()
@@ -302,6 +306,7 @@ fn lane_update_ids(receipt: &Value) -> HashSet<&str> {
         .collect()
 }
 
+#[inline]
 fn render_item(
     receipt: &Value,
     id: &str,

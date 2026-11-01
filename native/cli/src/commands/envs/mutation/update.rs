@@ -47,18 +47,13 @@ impl EnvUpdatePlan {
         for edit in self.comp_json_edits {
             fs::write(edit.path, edit.bytes)?;
         }
-        if let Some(bitmap_val) = &self.bitmap_val {
-            write_bitmap_if_changed(
-                &self.root,
-                &self.bitmap_before,
-                bitmap_val,
-                true,
-                "env-update",
-            )?;
+        if let Some(val) = &self.bitmap_val {
+            write_bitmap_if_changed(&self.root, &self.bitmap_before, val, true, "env-update")?;
         }
         if !self.updated.is_empty() {
-            let mut sections =
-                vec![formatter.success_summary("the following component(s) env has been updated")];
+            let mut sections = Vec::with_capacity(2 + self.updated.len());
+            let title = "the following component(s) env has been updated";
+            sections.push(formatter.success_summary(title));
             for (env_id, comp_ids) in &self.updated {
                 let items = comp_ids
                     .iter()
@@ -195,6 +190,7 @@ fn resolve_single_target_env(
     Ok(TargetEnv { display_id: format!("{bare}@{ver}"), bare, target_ver: Some(ver), in_ws: false })
 }
 
+#[inline]
 fn workspace_env_has_version(bitmap: &Bitmap, bare: &str) -> bool {
     bitmap.entries
         .iter()
@@ -207,10 +203,12 @@ fn workspace_env_has_version(bitmap: &Bitmap, bare: &str) -> bool {
         })
 }
 
+#[inline]
 fn entry_has_versioned_env_in_scope(root: &Path, entry: &BitmapEntry, bare: &str) -> bool {
     find_component_aspect(root, &Value::Null, entry, bare).is_some_and(|(ver, _)| ver.is_some())
 }
 
+#[inline]
 fn select_update_entries<'a>(
     root: &Path,
     bitmap: &'a Bitmap,
@@ -294,6 +292,7 @@ fn map_has_versioned_config(map: &serde_json::Map<String, Value>, bare: &str) ->
         .is_some_and(|env| env.trim().starts_with(&prefix))
 }
 
+#[inline]
 fn write_updated_env(
     root: &Path,
     bitmap_val: &mut Value,
@@ -315,6 +314,7 @@ fn write_updated_env(
     }
 }
 
+#[inline]
 fn record_updated(updated: &mut Vec<(String, Vec<String>)>, env_id: &str, comp_id: String) {
     if let Some((_, list)) = updated
         .iter_mut()

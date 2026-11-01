@@ -43,6 +43,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
 }
 
 /// Mutually exclusive output flag error reported by `DiffCmd.parseOutputOpts`.
+#[inline]
 pub(super) fn output_error(options: &Options) -> Option<&'static str> {
     if options.output.files_only && options.output.configs_only {
         return Some("--files-only and --configs-only are mutually exclusive");
@@ -90,6 +91,7 @@ fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize)
     push_positional(options, arg)
 }
 
+#[inline]
 fn push_positional(options: &mut Options, arg: &str) -> Option<()> {
     let trimmed = arg.trim();
     if trimmed.is_empty() || trimmed.starts_with('-') {
@@ -107,6 +109,7 @@ fn push_positional(options: &mut Options, arg: &str) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn file_list(value: &str) -> Option<Vec<String>> {
     let trimmed = value.trim();
     let files: Vec<String> = trimmed
@@ -144,6 +147,7 @@ fn set_boolean(options: &mut Options, flag: &str) -> bool {
     true
 }
 
+#[inline]
 fn set_combined_short(options: &mut Options, flag: &str) -> bool {
     let Some(rest) = flag.strip_prefix('-') else {
         return false;

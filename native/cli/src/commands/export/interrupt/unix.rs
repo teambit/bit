@@ -10,6 +10,7 @@ extern "C" fn interrupt(_signal: libc::c_int) {
         }
     }
 }
+#[inline]
 pub(super) fn install() -> io::Result<Previous> {
     let mut previous = MaybeUninit::<libc::sigaction>::uninit();
     // SAFETY: a zeroed sigaction is initialized before registration; sigemptyset fills its mask.
@@ -27,6 +28,7 @@ pub(super) fn install() -> io::Result<Previous> {
     // SAFETY: successful sigaction initialized the previous-action output.
     Ok(unsafe { previous.assume_init() })
 }
+#[inline]
 pub(super) fn restore(previous: &Previous) {
     // SAFETY: previous is the initialized disposition captured by install; no output is requested.
     unsafe {

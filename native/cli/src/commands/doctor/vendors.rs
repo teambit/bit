@@ -2,6 +2,7 @@
 use super::catalog::Diagnosis;
 use serde_json::{Value, json};
 use std::process::Command;
+#[inline]
 pub(super) fn version(command: &str, argument: &str, clean_stderr: bool) -> Option<String> {
     let output = Command::new(executable(command))
         .arg(argument)
@@ -15,6 +16,7 @@ pub(super) fn version(command: &str, argument: &str, clean_stderr: bool) -> Opti
     let trimmed = raw.trim();
     (!trimmed.is_empty()).then(|| trimmed.to_owned())
 }
+#[inline]
 fn strip_final_newline(mut bytes: &[u8]) -> &[u8] {
     while let Some(stripped) = bytes
         .strip_suffix(b"\n")
@@ -59,6 +61,7 @@ pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
 }
 
 #[cfg(not(windows))]
+#[inline]
 fn executable(command: &str) -> std::path::PathBuf {
     command
         .trim()
@@ -67,6 +70,7 @@ fn executable(command: &str) -> std::path::PathBuf {
         .into()
 }
 #[cfg(windows)]
+#[inline]
 fn executable(command: &str) -> std::path::PathBuf {
     let command = command
         .trim()

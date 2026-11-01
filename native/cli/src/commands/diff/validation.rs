@@ -11,6 +11,7 @@ use std::{ffi::OsString, io, path::Path, process::Command};
 const OWNED_ERROR_PREFIX: &str = "owned_diff_error:";
 
 /// Execute a command-owned `bit diff` failure with the canonical loader and exit code 1.
+#[inline]
 pub(super) fn diff_failure(
     root: &Path,
     args: &[OsString],
@@ -86,6 +87,7 @@ fn missing_component_error(root: &Path, options: &options::Options) -> Option<St
 }
 
 /// Check whether the configured git executable fails with `NotFound`.
+#[inline]
 fn git_missing(root: &Path) -> bool {
     let Ok(executable) = git::executable(root) else {
         return false;
@@ -146,6 +148,7 @@ fn validate_target_versions(
 }
 
 /// Check whether `version` is a 40-char hash or a known tag in `versions` / `orphanedVersions`.
+#[inline]
 fn has_model_version(component_model: &Value, version: &str) -> bool {
     let version = version.trim();
     let has_head = component_model["head"]
@@ -164,6 +167,7 @@ fn has_model_version(component_model: &Value, version: &str) -> bool {
 }
 
 /// Look up the scope model for `target` in `context["models"]`.
+#[inline]
 pub(super) fn model<'c>(context: &'c Value, target: &Value) -> Option<&'c Value> {
     let identity = target.get("identity")?.as_str()?.trim();
     context
@@ -174,6 +178,7 @@ pub(super) fn model<'c>(context: &'c Value, target: &Value) -> Option<&'c Value>
 }
 
 /// Compare `"<scope>/<name>"` for a model JSON object against `identity` without heap allocation.
+#[inline]
 fn matches_model_identity(entry: &Value, identity: &str) -> bool {
     let scope = entry
         .get("scope")

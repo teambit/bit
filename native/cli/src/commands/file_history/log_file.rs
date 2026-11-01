@@ -49,6 +49,7 @@ fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
     Some((path?, one_line))
 }
 
+#[inline]
 fn consume_trailing_path<'a>(
     iter: impl Iterator<Item = &'a str>,
     path: &mut Option<&'a str>,
@@ -124,6 +125,7 @@ fn run_in_workspace(
     published_loader(root, args, path, &identity, &versions, &report)
 }
 
+#[inline]
 fn prepare(
     root: &Path,
     path: &str,
@@ -182,6 +184,7 @@ fn historical_versions(rows: &[Value]) -> io::Result<Vec<String>> {
         .collect()
 }
 
+#[inline]
 fn compact(rows: &[Value]) -> io::Result<String> {
     let selected = selected(rows)?;
     let cells: Vec<Vec<&str>> = selected
@@ -220,6 +223,7 @@ fn report(rows: &[Value], file: &str, chalk: Chalk) -> io::Result<String> {
         .map(|reports| reports.join("\n"))
 }
 
+#[inline]
 fn one(row: &Value, file: &str, chalk: Chalk, previous: &Previous<'_>) -> io::Result<String> {
     let mut output = heading(&row["normalized"], chalk)?;
     let body = patch(row, file, chalk, previous)?;
@@ -277,6 +281,7 @@ fn patch(row: &Value, file: &str, chalk: Chalk, previous: &Previous<'_>) -> io::
     ))
 }
 
+#[inline]
 fn selected(rows: &[Value]) -> io::Result<Vec<&Value>> {
     let mut output = Vec::with_capacity(rows.len());
     let mut last_hash: Option<&str> = None;

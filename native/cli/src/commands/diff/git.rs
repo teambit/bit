@@ -25,6 +25,7 @@ pub(in crate::commands) fn executable(root: &Path) -> io::Result<String> {
     Ok(normalize_git_executable(configured))
 }
 
+#[inline]
 fn normalize_git_executable(configured: Option<String>) -> String {
     let sanitize = |raw: Option<String>| {
         raw.map(|path| path.trim().to_string())

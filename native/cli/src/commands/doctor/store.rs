@@ -10,10 +10,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[inline]
 pub(super) fn object(scope: &Path, hash: &str) -> io::Result<Option<(String, Value)>> {
     bit_object_import::read_scope_object(scope, hash)
 }
 
+#[inline]
 fn path(scope: &Path, hash: &str) -> PathBuf {
     scope
         .join("objects")
@@ -69,6 +71,7 @@ fn missing_head_symptoms(missing: &[Value]) -> String {
             .join("\n"),
     )
 }
+#[inline]
 fn read_index(scope: &Path) -> io::Result<Value> {
     match fs::read(scope.join("index.json")) {
         Ok(bytes) => bit_object_import::parse_jsonc(&bytes),
@@ -76,6 +79,7 @@ fn read_index(scope: &Path) -> io::Result<Value> {
         Err(error) => Err(error),
     }
 }
+#[inline]
 fn row_scope_and_name(row: &Value) -> (&str, &str) {
     if let Some(id_str) = row["id"].as_str() {
         let bare = id_str
@@ -93,6 +97,7 @@ fn row_scope_and_name(row: &Value) -> (&str, &str) {
         row["id"]["name"].as_str().map_or("", str::trim),
     )
 }
+#[inline]
 fn text(value: &Value) -> io::Result<&str> {
     value
         .as_str()
@@ -100,6 +105,7 @@ fn text(value: &Value) -> io::Result<&str> {
         .filter(|text| !text.is_empty())
         .ok_or_else(|| io::Error::other("invalid scope index"))
 }
+#[inline]
 fn identity(model: &Value) -> String {
     let name = model["name"]
         .as_str()

@@ -48,9 +48,11 @@ pub(super) const DIAGNOSES: &[Diagnosis] = &[
     },
 ];
 impl Diagnosis {
+    #[inline]
     pub fn listing(&self) -> Value {
         json!({"name":self.name,"description":self.description,"category":self.category})
     }
+    #[inline]
     pub fn result(&self, bare: Value, symptoms: &str, treatment: &str) -> Value {
         let valid = is_valid(&bare);
         let mut res = json!({
@@ -67,6 +69,7 @@ impl Diagnosis {
     }
 }
 
+#[inline]
 fn is_valid(bare: &Value) -> bool {
     ["valid", "pass", "passed"]
         .into_iter()

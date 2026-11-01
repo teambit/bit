@@ -50,6 +50,7 @@ pub(super) fn save(
     builder.finish()?;
     Ok(Some(filename.to_string_lossy().into_owned()))
 }
+#[inline]
 fn append_results(
     builder: &mut tar::Builder<fs::File>,
     results: &[Value],
@@ -63,6 +64,7 @@ fn append_results(
     )?;
     Ok(())
 }
+#[inline]
 fn append(builder: &mut tar::Builder<fs::File>, name: &str, bytes: &[u8]) -> io::Result<()> {
     let mut header = tar::Header::new_gnu();
     header.set_size(bytes.len() as u64);
@@ -130,6 +132,7 @@ fn excluded(path: &Path, options: &Options) -> bool {
             .iter()
             .any(|part| matches!(*part, "objects" | "cache" | "tmp"))
 }
+#[inline]
 fn previous_archive(name: &str) -> bool {
     let lowered = name.trim().to_ascii_lowercase();
     lowered
@@ -152,6 +155,7 @@ pub(super) fn filename(path: &Path, timestamp: i64) -> PathBuf {
     trimmed.with_extension("tar")
 }
 
+#[inline]
 fn debug_log(builder: &mut tar::Builder<fs::File>) -> io::Result<()> {
     let path = crate::commands::status::cache::cache_root().join("logs/debug.log");
     match fs::read_to_string(path) {
@@ -161,6 +165,7 @@ fn debug_log(builder: &mut tar::Builder<fs::File>) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn excluded_entry(path: &Path, relative: &Path, output: &Path, options: &Options) -> bool {
     path == output
         || excluded(relative, options)

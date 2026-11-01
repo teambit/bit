@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use std::io;
 
 /// `filesDiff`: every file whose formatted diff is not empty.
+#[inline]
 pub(super) fn files_diff(
     row: &Value,
     left_version: &str,
@@ -63,6 +64,7 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
 }
 
 /// The comparisons to report: without a pattern, new components, then modified ones.
+#[inline]
 pub(super) fn rows(result: &Value, all: bool) -> io::Result<Vec<&Value>> {
     let rows = array(result.get("comparisons"), "comparisons")?;
     if all {

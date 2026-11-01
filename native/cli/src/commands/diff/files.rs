@@ -35,6 +35,7 @@ pub fn format(diff: &str, label_a: &str, label_b: &str, name: &str) -> String {
     replace_first(&body, header_b, &format!("+++ {name} ({label_b})\n"))
 }
 
+#[inline]
 fn headers() -> &'static (Regex, Regex) {
     static HEADERS: OnceLock<(Regex, Regex)> = OnceLock::new();
     HEADERS.get_or_init(|| {
@@ -49,7 +50,8 @@ fn replace_first(text: &str, regex: &Regex, replacement: &str) -> String {
     let Some(found) = regex.find(text) else { return text.to_string() };
     let range = found.range();
     let (before, matched, after) = (&text[..range.start], &text[range.clone()], &text[range.end..]);
-    let mut expanded = String::with_capacity(replacement.len());
+    let mut expanded = String::with_capacity(text.len() + replacement.len());
+    expanded.push_str(before);
     let mut chars = replacement.chars().peekable();
     while let Some(ch) = chars.next() {
         if ch != '$' {
@@ -68,7 +70,8 @@ fn replace_first(text: &str, regex: &Regex, replacement: &str) -> String {
         }
         chars.next();
     }
-    format!("{before}{expanded}{after}")
+    expanded.push_str(after);
+    expanded
 }
 
 /// `diffFiles(a, b, true)` of two texts, written to temporary `.js` files as

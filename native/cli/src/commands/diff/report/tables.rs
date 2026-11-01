@@ -51,6 +51,7 @@ fn render(name: &str, diff: &str, colors: bool, chalk: Chalk) -> io::Result<Stri
     Ok(format!("\n{title}\n{}", table::render(&["name", "diff", left, right], &rows, colors)))
 }
 
+#[inline]
 fn label<'a>(line: Option<&'a str>, prefix: &str, suffix: &str) -> io::Result<&'a str> {
     let label = line
         .and_then(|line| line.strip_prefix(prefix))
@@ -88,6 +89,7 @@ fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {
     Ok(rows)
 }
 
+#[inline]
 fn version<'a>(line: Option<&'a str>, prefix: &str, name: &str) -> Option<&'a str> {
     let rest = line?
         .trim()
@@ -99,6 +101,7 @@ fn version<'a>(line: Option<&'a str>, prefix: &str, name: &str) -> Option<&'a st
         .filter(|value| !value.is_empty())
 }
 
+#[inline]
 fn change_type(left: Option<&str>, right: Option<&str>) -> io::Result<&'static str> {
     match (left, right) {
         (Some(_), None) => Ok("removed"),

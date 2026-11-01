@@ -112,6 +112,7 @@ struct Prepared {
 }
 
 impl Prepared {
+    #[inline]
     fn commit(&mut self, root: &Path) -> io::Result<()> {
         capture::commit(&mut self.engine, root, &self.context, &self.capture)?;
         if let Some(token) = import_token(&self.capture) {
@@ -122,6 +123,7 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn import_token(capture: &Capture) -> Option<&Value> {
     capture.captured
         .iter()
@@ -194,6 +196,7 @@ fn current(
     )
 }
 
+#[inline]
 fn attach(
     capture: &mut Capture,
     selected: &[Value],
@@ -213,6 +216,7 @@ fn attach(
     }
 }
 
+#[inline]
 fn remotely_removed(target: &Value) -> bool {
     target["current"]["extensions"]
         .as_array()

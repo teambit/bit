@@ -69,6 +69,7 @@ fn literal(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     Ok(selected)
 }
 
+#[inline]
 fn field<'v>(target: &'v Value, key: &str) -> &'v str {
     target
         .get(key)
@@ -77,6 +78,7 @@ fn field<'v>(target: &'v Value, key: &str) -> &'v str {
         .unwrap_or_default()
 }
 
+#[inline]
 fn matching(targets: &[Value], keep: impl Fn(&Value) -> bool) -> Vec<Value> {
     targets
         .iter()
@@ -102,6 +104,7 @@ fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
         .collect())
 }
 
+#[inline]
 pub(in crate::commands) fn stateful(pattern: &str) -> bool {
     patterns::split(pattern)
         .iter()

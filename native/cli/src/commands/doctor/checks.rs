@@ -14,6 +14,7 @@ pub(super) fn examine(diagnosis: &Diagnosis, context: &Context) -> io::Result<Va
         _ => workspace(diagnosis, context),
     }
 }
+#[inline]
 fn workspace_scope(context: &Context) -> io::Result<&Path> {
     if !context.root.join(".bitmap").exists() {
         return Err(io::Error::other(
@@ -22,6 +23,7 @@ fn workspace_scope(context: &Context) -> io::Result<&Path> {
     }
     context.scope.as_deref().ok_or_else(|| io::Error::other("workspace scope not found"))
 }
+#[inline]
 fn workspace(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     workspace_scope(context)?;
     let valid = super::context::optional_json(&context.root.join("workspace.jsonc")).is_ok();
@@ -77,6 +79,7 @@ fn latest_fact(context: &Context) -> io::Result<Value> {
     }
     serde_json::from_slice(&output.stdout).map_err(io::Error::other)
 }
+#[inline]
 fn compare(current: &str, latest: &str) -> bool {
     match (
         clean_version(current).parse::<node_semver::Version>(),
@@ -86,6 +89,7 @@ fn compare(current: &str, latest: &str) -> bool {
         _ => false,
     }
 }
+#[inline]
 fn clean_version(ver: &str) -> &str {
     ver.trim()
         .trim_matches(['"', '\''])

@@ -4,6 +4,7 @@ use crate::commands::engine::Engine;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+#[inline]
 fn compile_pattern(pattern: &str) -> io::Result<regress::Regex> {
     let trimmed = pattern.trim();
     let mut expr = String::with_capacity(trimmed.len() + 2);
@@ -57,6 +58,7 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
         .collect())
 }
 
+#[inline]
 fn is_non_main_lane(lane: Option<&Value>) -> bool {
     let Some(lane) = lane else { return false };
     let name = lane
@@ -69,6 +71,7 @@ fn is_non_main_lane(lane: Option<&Value>) -> bool {
     !name.is_empty() && name.rsplit('/').next().map(str::trim) != Some("main")
 }
 
+#[inline]
 fn candidate_ids(candidates: &Value) -> io::Result<Vec<String>> {
     let rows = candidates["ids"]
         .as_array()

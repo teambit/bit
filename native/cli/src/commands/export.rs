@@ -46,13 +46,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
             return Ok(Outcome::Declined("not inside a workspace".to_string()));
         }
+        let err = io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR);
         return workspace_command::execute_failure_scope(
             &cwd,
             args,
             "export",
             options.json,
             "",
-            io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR),
+            err,
         );
     };
     match bootstrap(&root, &options) {
@@ -71,13 +72,8 @@ fn startup_failure(root: &Path, args: &[OsString], error: io::Error) -> io::Resu
                 >,
             )
     {
-        workspace_command::checkout_lifecycle::failure(
-            root,
-            args,
-            "export",
-            &crate::commands::status::autosync::Startup::default(),
-            error,
-        )
+        let startup = crate::commands::status::autosync::Startup::default();
+        workspace_command::checkout_lifecycle::failure(root, args, "export", &startup, error)
     } else {
         Ok(Outcome::Declined(format!("export: {error}")))
     }
@@ -136,6 +132,7 @@ struct CallbackOutput {
 }
 
 /// Prepare before providers, then retain ownership through transfer and publication.
+#[inline]
 fn bootstrap(root: &Path, options: &Options) -> io::Result<(Engine, Lifecycle)> {
     let mut engine = Engine::new()?;
     prepare(&mut engine, root, options, true, false)?;
@@ -342,6 +339,7 @@ fn prepare(
     report::prepared(&prepared)
 }
 
+#[inline]
 fn canonical_prepare_error(error: io::Error) -> io::Error {
     if let Some(message) =
         error.to_string().strip_prefix("the engine declined commandOutboundPrepare: ")
@@ -355,6 +353,7 @@ fn canonical_prepare_error(error: io::Error) -> io::Error {
 /// `the engine declined commandOutboundApply: outbound persist failed:
 /// <scope>: <message>`: the failed scope's index and the `PersistFailed`
 /// message with the export's scopes (`addScopesInvolvedToError`).
+#[inline]
 fn persist_failure(error: &str, scopes: &[String]) -> Option<(usize, String)> {
     let (_, rest) = error.split_once("outbound persist failed: ")?;
     let (scope, message) = rest.split_once(": ")?;
@@ -371,6 +370,7 @@ fn persist_failure(error: &str, scopes: &[String]) -> Option<(usize, String)> {
     ))
 }
 
+#[inline]
 fn validation_failure(error: &str, scopes: &[String]) -> Option<String> {
     let (_, message) = error.split_once("outbound validate failed: ")?;
     Some(format!(
@@ -380,6 +380,7 @@ fn validation_failure(error: &str, scopes: &[String]) -> Option<String> {
 }
 
 /// `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`.
+#[inline]
 fn client_id() -> io::Result<String> {
     let mut bytes = [0_u8; 8];
     getrandom::fill(&mut bytes).map_err(|error| io::Error::other(error.to_string()))?;
@@ -391,6 +392,7 @@ fn client_id() -> io::Result<String> {
     Ok(id)
 }
 
+#[inline]
 fn now_ms() -> u128 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis())
 }

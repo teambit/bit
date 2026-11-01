@@ -13,6 +13,7 @@ struct Results {
     captures: Vec<RemoteCapture>,
 }
 impl Results {
+    #[inline]
     fn with_capacity(local: usize, remote: usize) -> Self {
         Self {
             ids: Vec::with_capacity(local + remote),
@@ -69,6 +70,7 @@ pub(super) fn run(
     output.stop();
     Ok(report::render(options, &results.ids, chalk))
 }
+#[inline]
 fn apply_inventory_fields(root: &Path, id: &str, source: &mut Value) -> io::Result<()> {
     let state = inventory::read(root)?;
     let inventory = inventory::selected(&state, id)
@@ -131,6 +133,7 @@ fn local(
     results.ids.push(target);
     Ok(())
 }
+#[inline]
 fn source_facts(
     root: &Path,
     linker: &mut ProjectedLinker,
@@ -155,6 +158,7 @@ fn source_facts(
     }
     Ok(facts)
 }
+#[inline]
 fn bitmap(root: &Path) -> io::Result<Value> {
     bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)
 }

@@ -64,6 +64,7 @@ struct Labels {
 
 impl Labels {
     /// `labelLeft`/`labelRight`: `<version> original`/`modified` when the versions are the same.
+    #[inline]
     fn new(left: &str, right: &str) -> Self {
         let (left, right) = (left.trim(), right.trim());
         if left == right {
@@ -103,6 +104,7 @@ fn fields(left: &Side, right: &Side, labels: &Labels, chalk: Chalk) -> io::Resul
 }
 
 /// `comparator(a, b)`: arrays by membership (`array-difference`), the rest strictly.
+#[inline]
 fn same_field(left: &Value, right: &Value) -> bool {
     match (left, right) {
         (Value::Array(ours), Value::Array(theirs)) => {
@@ -118,6 +120,7 @@ fn same_field(left: &Value, right: &Value) -> bool {
 }
 
 /// `printFieldValue`.
+#[inline]
 fn print_value(value: &Value) -> io::Result<String> {
     match value {
         Value::String(text) => Ok(text.clone()),
@@ -133,6 +136,7 @@ fn print_value(value: &Value) -> io::Result<String> {
 }
 
 /// `prettifyFieldName`: `mainFile` becomes `Main File`.
+#[inline]
 fn prettify(field: &str) -> String {
     let trimmed = field.trim();
     let mut chars = trimmed.chars();
@@ -199,6 +203,7 @@ fn extension_configs(
 }
 
 /// `JSON.stringify(value)` or `JSON.stringify(value, undefined, 2)`.
+#[inline]
 fn stringify(value: &Value, pretty: bool) -> io::Result<String> {
     bit_object_import::stringify_json(value, pretty)
 }

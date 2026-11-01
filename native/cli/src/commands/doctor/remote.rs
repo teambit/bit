@@ -77,6 +77,7 @@ fn build_remotes_and_network(
     Ok((remotes, network))
 }
 
+#[inline]
 fn global(context: &Context) -> GlobalConfig {
     let global: GlobalConfig = context.config
         .as_object()
@@ -86,6 +87,7 @@ fn global(context: &Context) -> GlobalConfig {
         .collect();
     bit_client_transfer::config::effective(global, &Value::Null, &Value::Null)
 }
+#[inline]
 fn requested_name(options: &Options) -> Option<&str> {
     options.name
         .as_deref()
@@ -93,6 +95,7 @@ fn requested_name(options: &Options) -> Option<&str> {
         .filter(|name| !name.is_empty())
 }
 
+#[inline]
 fn preflight(context: &Context, options: &Options, path: &Path) -> io::Result<()> {
     let probe = Context {
         root: context.root.clone(),
@@ -107,6 +110,7 @@ fn preflight(context: &Context, options: &Options, path: &Path) -> io::Result<()
     Ok(())
 }
 
+#[inline]
 fn take_examine_results(response: &mut Value) -> io::Result<Vec<Value>> {
     if let Some(arr) = response["examineResults"].as_array_mut() {
         Ok(std::mem::take(arr))

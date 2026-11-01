@@ -101,6 +101,7 @@ fn enumerate(
 /// `globby`'s order: directories breadth first, each directory's entries in
 /// byte order, as libuv's `scandir` sorts them. A file's position is its
 /// directory's depth, then its directory's path, then its name.
+#[inline]
 pub(super) fn walk_order(left: &str, right: &str) -> std::cmp::Ordering {
     let (left_dirs, left_name) = split_walk_segments(left);
     let (right_dirs, right_name) = split_walk_segments(right);
@@ -111,6 +112,7 @@ pub(super) fn walk_order(left: &str, right: &str) -> std::cmp::Ordering {
         .then_with(|| left_name.cmp(right_name))
 }
 
+#[inline]
 fn split_walk_segments(path: &str) -> (Vec<&str>, &str) {
     let mut parts: Vec<&str> = path
         .trim()

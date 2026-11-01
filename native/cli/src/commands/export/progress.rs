@@ -5,6 +5,7 @@ use bit_object_import::export_progress::Event;
 use std::env;
 
 impl Exported {
+    #[inline]
     pub(super) fn progress_before(&self, output: &Output) {
         if self.selected_ids {
             output.status("exporting component");
@@ -106,6 +107,7 @@ impl Exported {
         self.output.last_hub_message = Some(resolved);
     }
 
+    #[inline]
     fn hub_initial(&self) -> String {
         if is_ci_enabled(env::var_os("CI").as_deref()) {
             r#"running command "export"..."#.to_owned()
@@ -116,6 +118,7 @@ impl Exported {
         }
     }
 
+    #[inline]
     fn exporting(&self) -> String {
         let count =
             self.fork_history.as_ref().map_or(self.count, |history| history.candidate_count);
@@ -123,6 +126,7 @@ impl Exported {
     }
 }
 
+#[inline]
 fn is_ci_enabled(value: Option<&std::ffi::OsStr>) -> bool {
     let Some(text) = value.and_then(std::ffi::OsStr::to_str) else {
         return false;

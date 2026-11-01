@@ -98,6 +98,7 @@ fn parse_options(args: &[&str]) -> Option<Options> {
     is_supported_pattern(&opts.pattern).then_some(opts)
 }
 
+#[inline]
 fn apply_short_flags(arg: &str, opts: &mut Options) -> Option<()> {
     for ch in arg
         .strip_prefix('-')
@@ -114,6 +115,7 @@ fn apply_short_flags(arg: &str, opts: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn consume_bool_flag(args: &[&str], idx: &mut usize) -> bool {
     if args[*idx].contains('=') {
         return true;
@@ -196,6 +198,7 @@ fn prepare(root: &Path, opts: &Options, chalk: Chalk) -> Result<Prepared, Failur
     Ok(Prepared { root: root.to_path_buf(), files, bitmap_before, bitmap_val, bitmap_changed })
 }
 
+#[inline]
 fn prepare_selected(
     ctx: &PrepareCtx<'_>,
     bitmap_val: &mut Value,
@@ -355,6 +358,7 @@ impl Prepared {
         Ok(())
     }
 
+    #[inline]
     fn write_and_json(self) -> io::Result<Value> {
         self.write_files()?;
         Ok(Value::Array(
@@ -365,10 +369,12 @@ impl Prepared {
         ))
     }
 
+    #[inline]
     fn commit(self, chalk: Chalk) -> io::Result<Report> {
         self.write_files()?;
         let formatter = Formatter::new(chalk);
-        let mut lines = vec![formatter.success_summary("ejected config to the following path(s)")];
+        let mut lines = Vec::with_capacity(1 + self.files.len());
+        lines.push(formatter.success_summary("ejected config to the following path(s)"));
         lines.extend(
             self.files
                 .iter()

@@ -46,6 +46,7 @@ pub(super) fn run_report(
     })
 }
 
+#[inline]
 fn target_version(target: &Value) -> Option<&str> {
     ["version", "head"]
         .into_iter()
@@ -104,6 +105,7 @@ pub(super) fn one(
     Ok(output)
 }
 
+#[inline]
 fn find_captured_target<'a>(capture: &'a Capture, identity: &str) -> Option<&'a Value> {
     let identity = identity.trim();
     let bare = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
@@ -120,6 +122,7 @@ fn find_captured_target<'a>(capture: &'a Capture, identity: &str) -> Option<&'a 
         })
 }
 
+#[inline]
 fn resolve_versions<'a>(
     version: Option<&'a str>,
     from_version: Option<&'a str>,

@@ -35,6 +35,7 @@ pub(super) fn run(
     }
     Ok(())
 }
+#[inline]
 fn connection(
     root: &Path,
 ) -> io::Result<(bit_client_transfer::remotes::Remotes, bit_client_transfer::http::Network)> {
@@ -83,6 +84,7 @@ fn copy_sources(
     Ok(())
 }
 
+#[inline]
 fn bare_id(id: &str) -> &str {
     let trimmed = id.trim();
     match trimmed.rsplit_once('@') {
@@ -91,6 +93,7 @@ fn bare_id(id: &str) -> &str {
     }
 }
 
+#[inline]
 fn raw_row_id(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -104,12 +107,14 @@ fn raw_row_id(row: &Value) -> Option<&str> {
         })
 }
 
+#[inline]
 fn row_bare_id(row: &serde_json::Value) -> Option<&str> {
     raw_row_id(row)
         .map(bare_id)
         .filter(|id| !id.is_empty())
 }
 
+#[inline]
 fn loaded_source_ids(captured: &RemoteCapture) -> Vec<String> {
     captured
         .sources()
@@ -118,6 +123,7 @@ fn loaded_source_ids(captured: &RemoteCapture) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn format_source_row_id(row: &Value) -> Option<String> {
     let identity = row_bare_id(row)?;
     let version = row["version"]
@@ -129,6 +135,7 @@ fn format_source_row_id(row: &Value) -> Option<String> {
     Some(if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") })
 }
 
+#[inline]
 fn inline_row_version(row: &Value) -> Option<&str> {
     raw_row_id(row)?
         .rsplit_once('@')

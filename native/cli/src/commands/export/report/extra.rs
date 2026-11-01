@@ -2,6 +2,7 @@
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 
+#[inline]
 pub(super) fn ids<'a>(receipt: &'a Value, field: &str) -> Vec<&'a str> {
     receipt[field.trim()]
         .as_array()
@@ -11,6 +12,7 @@ pub(super) fn ids<'a>(receipt: &'a Value, field: &str) -> Vec<&'a str> {
         .collect()
 }
 
+#[inline]
 fn entry_text(entry: &Value) -> Option<&str> {
     entry
         .as_str()
@@ -22,6 +24,7 @@ fn entry_text(entry: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+#[inline]
 pub(super) fn missing(receipt: &Value, format: &Formatter) -> String {
     let missing = ids(receipt, "missingScope");
     if missing.is_empty() {
@@ -38,6 +41,7 @@ pub(super) fn missing(receipt: &Value, format: &Formatter) -> String {
     format!("{section}\n{hint}")
 }
 
+#[inline]
 pub(super) fn untracked(receipt: &Value, format: &Formatter) -> String {
     let ids = ids(receipt, "nonExistOnBitMap");
     if ids.is_empty() {

@@ -6,9 +6,10 @@ use super::catalog::DIAGNOSES;
 use crate::commands::color::Chalk;
 use serde_json::Value;
 use unicode_width::UnicodeWidthStr;
+#[inline]
 pub(super) fn list(chalk: Chalk) -> String {
-    let mut rows =
-        vec![vec![chalk.bold("category"), chalk.bold("name"), chalk.bold("description")]];
+    let mut rows = Vec::with_capacity(1 + DIAGNOSES.len());
+    rows.push(vec![chalk.bold("category"), chalk.bold("name"), chalk.bold("description")]);
     rows.extend(
         DIAGNOSES
             .iter()
@@ -24,12 +25,13 @@ pub(super) fn results(
     saved: Option<&str>,
     chalk: Chalk,
 ) -> String {
-    let mut rows = vec![vec![
+    let mut rows = Vec::with_capacity(1 + results.len());
+    rows.push(vec![
         chalk.bold("category"),
         chalk.bold("name"),
         chalk.bold("description"),
         chalk.bold("status"),
-    ]];
+    ]);
     rows.extend(
         results
             .iter()
@@ -50,10 +52,12 @@ pub(super) fn results(
         .map_or_else(String::new, |path| format!("File written to {path}"));
     format!("{}\n\n{}\n{full}\n{written}", metadata(meta), table(&rows))
 }
+#[inline]
 fn is_passed(row: &Value) -> bool {
     let bare = &row["bareResult"];
     bare["valid"] == true || bare["pass"] == true || bare["passed"] == true
 }
+#[inline]
 fn text(value: &Value) -> &str {
     value
         .as_str()
@@ -122,9 +126,11 @@ fn table(rows: &[Vec<String>]) -> String {
     output.push_str(&border(&widths, ['╚', '╧', '╝', '═']));
     output
 }
+#[inline]
 fn width(text: &str) -> usize {
     UnicodeWidthStr::width(strip(text).as_str())
 }
+#[inline]
 fn border(widths: &[usize], chars: [char; 4]) -> String {
     format!(
         "{}{}{}\n",
@@ -137,6 +143,7 @@ fn border(widths: &[usize], chars: [char; 4]) -> String {
         chars[2],
     )
 }
+#[inline]
 fn line(row: &[String], widths: &[usize]) -> String {
     format!(
         "║{}║\n",

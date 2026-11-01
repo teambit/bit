@@ -63,6 +63,7 @@ impl Context {
             "userDetails": format!("{}<{}>", self.setting("user.name", ""), self.setting("user.email", "")),
         }))
     }
+    #[inline]
     pub fn setting<'a>(&'a self, key: &str, default: &'a str) -> &'a str {
         self.config[key.trim()]
             .as_str()
@@ -71,6 +72,7 @@ impl Context {
             .unwrap_or(default)
     }
 }
+#[inline]
 fn scope(root: &Path) -> Option<PathBuf> {
     let scope = bit_workspace_config::scope_path(root);
     if scope.join("scope.json").is_file() {
@@ -81,6 +83,7 @@ fn scope(root: &Path) -> Option<PathBuf> {
             .map(Path::to_path_buf)
     }
 }
+#[inline]
 pub(super) fn optional_json(path: &Path) -> io::Result<Value> {
     match fs::read(path) {
         Ok(bytes) => bit_workspace_config::parse_jsonc(&bytes),

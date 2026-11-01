@@ -12,6 +12,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::io;
 
+#[inline]
 pub(super) fn filtered(result: &Value, options: &Options) -> io::Result<Value> {
     let rows = array(Some(result), "diff results")?;
     rows.iter()
@@ -75,6 +76,7 @@ fn project_file(mut file: Value, options: &Options) -> io::Result<Value> {
     Ok(file)
 }
 
+#[inline]
 fn matches_file(path: &str, filter: &str) -> bool {
     let path = path.trim().replace('\\', "/");
     let path = path.strip_prefix("./").unwrap_or(&path);
@@ -87,6 +89,7 @@ fn matches_file(path: &str, filter: &str) -> bool {
                 .is_some_and(|prefix| prefix.ends_with('/')))
 }
 
+#[inline]
 fn counts(diff: &str) -> (usize, usize) {
     let mut additions = 0;
     let mut deletions = 0;
@@ -103,10 +106,11 @@ fn counts(diff: &str) -> (usize, usize) {
     (additions, deletions)
 }
 
+#[inline]
 pub(super) fn json(result: &mut Value) -> io::Result<()> {
     for row in result.as_array_mut().ok_or_else(|| decline("diff results"))? {
         let previous = row.as_object().ok_or_else(|| decline("diff row"))?;
-        let mut ordered = serde_json::Map::new();
+        let mut ordered = serde_json::Map::with_capacity(4);
         for key in ["id", "hasDiff", "filesDiff", "fieldsDiff"] {
             if let Some(value) = previous.get(key) {
                 ordered.insert(key.to_string(), value.clone());

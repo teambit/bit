@@ -123,6 +123,7 @@ fn one_parent(
     one(context, capture, &row, chalk, Some("no parent"), Some(version))
 }
 
+#[inline]
 fn compare(
     engine: &mut Engine,
     root: &Path,

@@ -80,10 +80,12 @@ impl Lifecycle {
             })
     }
 
+    #[inline]
     pub(super) fn take_stdout(&self) -> String {
         self.host.as_ref().map_or_else(String::new, |host| host.take_stdout())
     }
 
+    #[inline]
     pub(super) fn native_packages(&self) -> bool {
         self.host.is_none()
     }
@@ -124,6 +126,7 @@ pub(super) struct Protection<'a> {
     host: Option<&'a Host>,
 }
 impl Protection<'_> {
+    #[inline]
     pub(super) fn finish(mut self) -> io::Result<()> {
         self.guard.take();
         if let Some(host) = self.host.take() {
@@ -161,6 +164,7 @@ fn root_aspects(context: &Value) -> io::Result<bool> {
         }))
 }
 
+#[inline]
 fn external_resolver(root: &Path) -> io::Result<bool> {
     let bytes = match std::fs::read(bit_object_import::scope_path(root).join("scope.json")) {
         Ok(bytes) => bytes,
@@ -174,6 +178,7 @@ fn external_resolver(root: &Path) -> io::Result<bool> {
         .is_some_and(|path| !path.trim().is_empty()))
 }
 
+#[inline]
 fn file_action_response(response: &Value) -> io::Result<Value> {
     let is_ok = response["ok"] == true
         || response["ok"]

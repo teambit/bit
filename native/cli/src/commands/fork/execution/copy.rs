@@ -34,6 +34,7 @@ pub(super) fn run(
     print!("{}", linker.take_stdout());
     Ok(target)
 }
+#[inline]
 fn prepare(
     options: &Options,
     scope: &str,
@@ -61,12 +62,14 @@ fn prepare(
     };
     (source, kernel)
 }
+#[inline]
 fn clean_opt(value: Option<&str>) -> Option<String> {
     value
         .map(str::trim)
         .filter(|text| !text.is_empty())
         .map(str::to_owned)
 }
+#[inline]
 fn environment(
     root: &Path,
     options: &Options,

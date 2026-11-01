@@ -24,6 +24,7 @@ pub struct Side {
 }
 
 impl Side {
+    #[inline]
     pub fn with_version(mut self, version: &str) -> Self {
         self.version = version.trim().to_string();
         self
@@ -81,7 +82,7 @@ impl Component<'_> {
         extensions: &[Value],
         current: bool,
     ) -> io::Result<Map<String, Value>> {
-        let mut printable = Map::new();
+        let mut printable = Map::with_capacity(11);
         printable.insert("packageName".into(), json!(self.package_name(extensions)?));
         printable.insert("language".into(), self.language(current));
         printable.insert("bindingPrefix".into(), self.binding_prefix()?);
@@ -144,12 +145,14 @@ impl Component<'_> {
     }
 
     /// A truthy field of the stored model.
+    #[inline]
     fn stored(&self, key: &str) -> Option<&Value> {
         self.model
             .and_then(|model| model.get(key))
             .filter(|value| truthy(Some(value)))
     }
 
+    #[inline]
     fn language(&self, current: bool) -> Value {
         match self.stored("lang") {
             Some(language) if !current => language.clone(),
@@ -194,6 +197,7 @@ fn file_list(files: &[Value], tests: bool) -> io::Result<Value> {
 }
 
 /// `ComponentIdList` of stored rows (`{ id: {...} }`) or id strings.
+#[inline]
 fn ids_of(rows: Option<&Value>) -> io::Result<Vec<Id>> {
     ids_from_slice(array(rows, "dependency ids")?)
 }
@@ -273,6 +277,7 @@ fn configs(extensions: &[Value], sorted: bool) -> io::Result<Map<String, Value>>
     Ok(result)
 }
 
+#[inline]
 fn name(extension: &Value) -> &str {
     extension
         .get("name")
@@ -281,6 +286,7 @@ fn name(extension: &Value) -> &str {
 }
 
 /// JavaScript's default string order: UTF-16 code units.
+#[inline]
 fn utf16_cmp(left: &str, right: &str) -> Ordering {
     left.encode_utf16().cmp(right.encode_utf16())
 }
@@ -340,6 +346,7 @@ fn extension_ids(extensions: &[Value]) -> io::Result<Vec<Id>> {
         .collect()
 }
 
+#[inline]
 fn extension_id(value: &Value) -> io::Result<Id> {
     let id = match value {
         Value::String(id) => Id::parse(id)?,

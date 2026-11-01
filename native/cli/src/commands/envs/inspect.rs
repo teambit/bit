@@ -51,6 +51,7 @@ pub(super) fn run_list(
     .map_err(|err| Failure::Declined(err.to_string()))
 }
 
+#[inline]
 fn collect_component_envs(ws: &Workspace) -> Vec<(String, String)> {
     ws.active()
         .map(|(entry, comp)| (selection::entry_full_id(entry), comp.env_id.clone()))
@@ -87,6 +88,7 @@ pub(super) fn format_envs_list(
     format!("{header}\n\n{rendered_table}")
 }
 
+#[inline]
 pub(super) fn run_get(
     root: &Path,
     args: &[OsString],
@@ -171,6 +173,7 @@ fn find_target_component<'a>(
     Err(Failure::Declined("missing scoped component env get delegated".into()))
 }
 
+#[inline]
 fn is_in_scope_index(root: &Path, bare: &str) -> bool {
     let scope_dir = crate::workspace::scope_path(root);
     load_bare_scope_index(&scope_dir)
@@ -217,6 +220,7 @@ fn render_scripts_service(
     Some(format!("{service_title}\n\n{header}\n{lines}"))
 }
 
+#[inline]
 pub(super) fn run_bare_scope_list(
     scope_dir: &Path,
     args: &[OsString],
@@ -254,28 +258,25 @@ pub(super) fn run_bare_scope_get(
         if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
             return Ok(Outcome::Declined("CI bare-scope envs get error delegated".into()));
         }
-        let msg = if bare.contains('/') {
+        let err = io::Error::other(if bare.contains('/') {
             format!("component for env {component} was not found")
         } else {
             format!(
                 r#"Failed parsing the string "{component}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
             )
-        };
-        return workspace_command::execute_failure_scope(
-            scope_dir,
-            args,
-            "get",
-            false,
-            "",
-            io::Error::other(msg),
-        );
+        });
+        return workspace_command::execute_failure_scope(scope_dir, args, "get", false, "", err);
     };
     let Some(env_id) = bare_row_core_env(scope_dir, row, req_ver) else {
         return Ok(Outcome::Declined("bare-scope component has non-core env".into()));
     };
     let data = Formatter::new(chalk).title(&format!("Environment: {env_id}"));
-    let report = Report { data, code: 0, details: None };
-    workspace_command::execute_with_scope(scope_dir, args, "get", &report)
+    workspace_command::execute_with_scope(
+        scope_dir,
+        args,
+        "get",
+        &Report { data, code: 0, details: None },
+    )
 }
 
 fn collect_bare_scope_envs(scope_dir: &Path) -> Option<Vec<(String, String)>> {
@@ -293,6 +294,7 @@ fn collect_bare_scope_envs(scope_dir: &Path) -> Option<Vec<(String, String)>> {
     Some(pairs)
 }
 
+#[inline]
 fn load_bare_scope_index(scope_dir: &Path) -> Option<Vec<Value>> {
     let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     index["components"]
@@ -349,6 +351,7 @@ fn bare_row_full_id_with_ver(scope_dir: &Path, row: &Value) -> Option<String> {
     Some(format!("{base}@{ver}"))
 }
 
+#[inline]
 fn extract_version_env_id(ver_obj: &Value) -> &str {
     ver_obj["extensions"]
         .as_array()

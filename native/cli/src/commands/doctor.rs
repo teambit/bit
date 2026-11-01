@@ -75,6 +75,7 @@ where
         workspace_command::execute_then_scope(cwd, args, "doctor", work)
     }
 }
+#[inline]
 fn prepare_context(options: &Options) -> io::Result<Option<Context>> {
     if options.list || options.validate().is_err() {
         return Ok(None);
@@ -83,6 +84,7 @@ fn prepare_context(options: &Options) -> io::Result<Option<Context>> {
     store::preflight(&context, options.name.as_deref())?;
     Ok(Some(context))
 }
+#[inline]
 fn prepare_remote(
     context: Option<&Context>,
     options: &Options,
@@ -92,6 +94,7 @@ fn prepare_remote(
     }
     remote::prepare(context.ok_or_else(|| io::Error::other("missing doctor context"))?, options)
 }
+#[inline]
 fn colored_unknown(options: &Options, chalk: Chalk) -> bool {
     !options.list
         && options.remote.is_none()
@@ -186,6 +189,7 @@ fn examine_all(context: &Context) -> Vec<io::Result<Value>> {
             .collect()
     })
 }
+#[inline]
 fn json_results(options: &Options, results: &[Value], saved: Option<&str>) -> io::Result<String> {
     let mut value = json!({});
     if let Some(saved) = saved
@@ -204,6 +208,7 @@ fn json_results(options: &Options, results: &[Value], saved: Option<&str>) -> io
     }
     pretty(&value)
 }
+#[inline]
 fn pretty(value: &Value) -> io::Result<String> {
     serde_json::to_string_pretty(value).map_err(io::Error::other)
 }

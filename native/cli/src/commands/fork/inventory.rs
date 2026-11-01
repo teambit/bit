@@ -23,6 +23,7 @@ pub(super) fn read(root: &Path) -> io::Result<Value> {
     )?;
     Ok(json!({"bitmap":bitmap,"components":components,"workspace":context["workspace"]}))
 }
+#[inline]
 pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Value> {
     let source = source.trim();
     let (bare, explicit_ver) = source
@@ -34,6 +35,7 @@ pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Val
         .find(|row| matches_source_row(row, bare, explicit_ver))
 }
 
+#[inline]
 fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bool {
     let bare = bare.trim();
     if bare.is_empty() {
@@ -63,6 +65,7 @@ fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bo
     });
     id_matches && ver_matches
 }
+#[inline]
 pub(super) fn default_scope(inventory: &Value) -> io::Result<String> {
     crate::commands::update_cmd::aspect_entry(
         &inventory["workspace"],

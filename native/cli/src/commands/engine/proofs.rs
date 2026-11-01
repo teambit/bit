@@ -10,6 +10,7 @@ use std::{collections::HashSet, io, ops::Range};
 const MAX_PROOFS: usize = 16384;
 
 impl Engine {
+    #[inline]
     pub(in crate::commands) fn validate_read_set(
         &mut self,
         proofs: &[Value],
@@ -51,6 +52,7 @@ impl Engine {
     }
 }
 
+#[inline]
 fn frames(proofs: &[&Value]) -> io::Result<Vec<Range<usize>>> {
     const OVERHEAD: usize = r#"{"kind":"dependencyFreshValidate","readSet":[]}"#.len();
     let mut output = Vec::new();
