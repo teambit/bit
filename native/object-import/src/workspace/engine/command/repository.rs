@@ -37,25 +37,28 @@ impl Repository {
         }
     }
     pub(super) fn prepare_checkout_license(&mut self, scope: &str) -> io::Result<()> {
-        let scope = scope.trim();
+        let scope = scope.trim().trim_matches('/');
         let metadata = match self.read(&super::super::hash(scope.as_bytes()), "ScopeMeta") {
             Ok(metadata) => metadata,
             Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
             Err(error) => return Err(error),
         };
         match metadata.get("license") {
-            None | Some(Value::Null) => {}
+            None | Some(Value::Null) => Ok(()),
             Some(Value::String(text)) => {
-                if !text.trim().is_empty() {
+                if !scope.is_empty() && !text.trim().is_empty() {
                     self.checkout_license.insert(scope.to_owned(), text.clone());
                 }
+                Ok(())
             }
-            _ => return Err(super::super::invalid("command scope license shape")),
+            _ => Err(super::super::invalid("command scope license shape")),
         }
-        Ok(())
     }
     pub(super) fn checkout_license(&self, identity: &str) -> Option<&str> {
-        let (scope, _) = identity.trim().split_once('/')?;
+        let (scope, _) = identity
+            .trim()
+            .trim_start_matches('/')
+            .split_once('/')?;
         self.checkout_license.get(scope.trim()).map(String::as_str)
     }
     pub(in crate::workspace::engine) fn read(

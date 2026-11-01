@@ -102,6 +102,7 @@ fn persist(retained: &mut super::Retained) -> io::Result<Vec<proof::Proof>> {
             .any(|after| before.path == after.path)
     });
     retained.record.proofs.extend(controls.iter().cloned());
+    proof::verify(&retained.record.proofs)?;
     prepared.objects_persisted = true;
     prepared.notifications = super::super::super::apply_command::notify(root);
     Ok(controls)

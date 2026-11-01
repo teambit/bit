@@ -56,10 +56,16 @@ fn dependencies(components: &[Component]) -> io::Result<Vec<String>> {
 }
 
 fn component_dependencies(state: &Value, output: &mut Vec<String>) -> io::Result<()> {
-    for indices in
-        state["components"].as_array().ok_or_else(|| invalid("issue component indices"))?
-    {
-        for index in indices.as_array().ok_or_else(|| invalid("issue lifecycle indices"))? {
+    let rows = state["components"].as_array().ok_or_else(|| invalid("issue component indices"))?;
+    if rows.len() > 3 {
+        return Err(invalid("issue component lifecycle count"));
+    }
+    for indices in rows {
+        let indices = indices.as_array().ok_or_else(|| invalid("issue lifecycle indices"))?;
+        if output.len().saturating_add(indices.len()) > 16384 {
+            return Err(invalid("issue dependency seed budget"));
+        }
+        for index in indices {
             output.push(dependency_id(state, index)?);
         }
     }

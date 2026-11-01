@@ -327,7 +327,11 @@ pub(super) fn new_material(
 mod tests;
 
 pub(super) fn local_only(retained: &Retained, identity: &str) -> bool {
+    let identity = identity.trim();
     retained.record.targets
         .iter()
-        .any(|target| target["identity"] == identity && target["localOnly"] == true)
+        .any(|target| {
+            target["identity"].as_str().map(str::trim) == Some(identity)
+                && target["localOnly"] == true
+        })
 }

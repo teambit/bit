@@ -199,7 +199,9 @@ fn directory<'a>(context: &'a Value, material: &resolve_snapshot::Material) -> i
         .as_array()
         .and_then(|list| {
             list.iter()
-                .find(|row| row["identity"] == material.identity)
+                .find(|row| {
+                    row["identity"].as_str().map(str::trim) == Some(material.identity.trim())
+                })
         })
         .and_then(|row| row["directory"].as_str())
         .map(str::trim)
@@ -245,8 +247,7 @@ pub(super) fn prepare(
     let finalization = prepare_resolve_finalization(root, materials, &batch, &lane_new, options)?;
     let mut proofs = Vec::new();
     let controls = controls::prepare(root, pending, &batch.identities, &mut proofs)?;
-    let is_tag =
-        materials.iter().any(|material| material.version_state.tagged_version.is_some());
+    let is_tag = materials.iter().any(|mat| mat.version_state.tagged_version.is_some());
     let output = Prepared {
         bitmap,
         finalization,
@@ -274,7 +275,7 @@ fn prepare_resolve_bitmap(
     let update_ids = || {
         batch.updates
             .iter()
-            .map(|update| update.identity.clone())
+            .map(|row| row.identity.clone())
             .collect::<Vec<_>>()
     };
     if materials.iter().any(|material| material.version_state.tagged_version.is_some()) {
@@ -303,13 +304,11 @@ fn prepare_resolve_finalization(
     finalization.mark_lane_new(root, lane_new)?;
     finalization.resolve_licenses(root, &batch.inputs, &batch.removed)?;
     finalization.imported_index(root, options.imported_index)?;
-    finalization.snapshot_index(
-        root,
-        materials
-            .iter()
-            .filter(|material| material.version_state.current_head.is_empty())
-            .map(|material| material.identity.as_str()),
-    )?;
+    let new_ids = materials
+        .iter()
+        .filter(|mat| mat.version_state.current_head.is_empty())
+        .map(|mat| mat.identity.as_str());
+    finalization.snapshot_index(root, new_ids)?;
     Ok(finalization)
 }
 
@@ -325,23 +324,21 @@ impl Prepared {
         self.proofs.extend(proofs.iter().cloned());
         Ok(proofs)
     }
-
     pub(super) fn accept_published(&mut self, files: &HashMap<PathBuf, Vec<u8>>) -> io::Result<()> {
         proof::accept_published(&mut self.proofs, files);
         self.finalization.accept_published(files)?;
         self.validate()
     }
-
     pub(super) fn stage_index(&mut self, root: &Path) -> io::Result<(PathBuf, Vec<u8>)> {
         self.finalization.stage_index(root)
     }
-
     pub(super) fn package_manifest_plans(&self, versions: &[Value]) -> io::Result<Vec<Value>> {
         let mut plans = self.finalization.package_manifest_plans()?;
         for plan in &mut plans {
+            let id = plan["identity"].as_str().map(str::trim);
             let version = versions
                 .iter()
-                .find(|version| version["identity"] == plan["identity"])
+                .find(|version| version["identity"].as_str().map(str::trim) == id)
                 .ok_or_else(|| invalid("snapshot package version absent"))?;
             plan["versionData"] = version["version"].clone();
         }
@@ -359,14 +356,19 @@ impl Prepared {
                     .as_array()
                     .is_some_and(|extensions| {
                         extensions.iter().any(|extension| {
-                            crate::workspace::engine::client_status::config::is_extension_aspect(
-                                extension,
-                                "teambit.envs/envs",
-                            ) && extension["data"]["type"] == "aspect"
-                        })
+                        crate::workspace::engine::client_status::config::is_extension_aspect(
+                            extension,
+                            "teambit.envs/envs",
+                        ) && extension["data"]["type"] == "aspect"
+                    })
                     })
             })
-            .filter_map(|version| version["identity"].as_str().map(str::to_owned))
+            .filter_map(|version| {
+                version["identity"]
+                    .as_str()
+                    .map(str::trim)
+                    .map(str::to_owned)
+            })
             .collect();
         self.finalization.package_manifests_with_aspects(manifests, &aspects)
     }

@@ -52,7 +52,11 @@ fn tag_history(
         return Err(invalid("tag history identity mismatch"));
     }
     let head = material.version_state.current_head.trim();
-    if head.is_empty() || !super::super::history::populate(root, &mut history, head, repository)? {
+    if head.is_empty() {
+        return Ok(None);
+    }
+    crate::merge_history::hash(head)?;
+    if !super::super::history::populate(root, &mut history, head, repository)? {
         return Ok(None);
     }
     Ok(Some(history))

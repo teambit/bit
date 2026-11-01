@@ -230,10 +230,13 @@ fn allocations<'a>(
     let mut hashes = HashMap::new();
     let mut unique_hashes = HashSet::new();
     for (material, row) in materials.iter().zip(rows) {
-        if row["identity"] != material.identity {
+        if row["identity"].as_str().map(str::trim) != Some(material.identity.trim()) {
             return Err(invalid("resolve allocation identity"));
         }
-        let hash = row["hash"].as_str().ok_or_else(|| invalid("resolve allocation hash"))?;
+        let hash = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("resolve allocation hash"))?;
         crate::merge_history::hash(hash)?;
         if !unique_hashes.insert(hash) {
             return Err(invalid("resolve duplicate hash allocation"));

@@ -96,6 +96,9 @@ fn validate_index(
         .as_array()
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("main recovery index shape"))?;
+    if entries.len() > 4096 {
+        return Err(invalid("main recovery index entry limit"));
+    }
     if objects
         .iter()
         .any(|(hash, _)| {

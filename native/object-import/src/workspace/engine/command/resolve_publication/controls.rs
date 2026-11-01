@@ -121,7 +121,7 @@ fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Ve
 }
 
 fn matches_selected(identity: &str, identities: &HashSet<&str>) -> bool {
-    let identity = identity.trim();
+    let identity = identity.trim().trim_start_matches('/');
     if identity.is_empty() {
         return false;
     }

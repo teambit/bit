@@ -38,24 +38,7 @@ pub(super) fn append(graph: &mut Graph, edges: &Value) -> io::Result<()> {
         return Err(invalid("resolve saved graph edge budget"));
     }
     for edge in edges {
-        let source = key(&edge["source"])?;
-        let target = key(&edge["target"])?;
-        if !matches!(edge["type"].as_str().map(str::trim), Some("prod" | "dev" | "ext")) {
-            return Err(invalid("resolve saved graph lifecycle"));
-        }
-        graph.entry(target.clone()).or_default();
-        let outgoing = graph.entry(source).or_default();
-        if let Some(previous) = outgoing
-            .iter_mut()
-            .find(|row| key(&row["target"]).ok().as_deref() == Some(target.as_str()))
-        {
-            *previous = edge.clone();
-        } else {
-            outgoing.push(edge.clone());
-        }
-        if graph.len() > 4096 {
-            return Err(invalid("resolve saved graph node budget"));
-        }
+        insert_edge(graph, edge)?;
     }
     if graph
         .values()
@@ -64,6 +47,31 @@ pub(super) fn append(graph: &mut Graph, edges: &Value) -> io::Result<()> {
         > 16384
     {
         return Err(invalid("resolve saved graph total edge budget"));
+    }
+    Ok(())
+}
+
+fn insert_edge(graph: &mut Graph, edge: &Value) -> io::Result<()> {
+    let source = key(&edge["source"])?;
+    let target = key(&edge["target"])?;
+    if source == target {
+        return Err(invalid("resolve saved graph self-edge"));
+    }
+    if !matches!(edge["type"].as_str().map(str::trim), Some("prod" | "dev" | "ext")) {
+        return Err(invalid("resolve saved graph lifecycle"));
+    }
+    graph.entry(target.clone()).or_default();
+    let outgoing = graph.entry(source).or_default();
+    if let Some(previous) = outgoing
+        .iter_mut()
+        .find(|row| key(&row["target"]).ok().as_deref() == Some(target.as_str()))
+    {
+        *previous = edge.clone();
+    } else {
+        outgoing.push(edge.clone());
+    }
+    if graph.len() > 4096 {
+        return Err(invalid("resolve saved graph node budget"));
     }
     Ok(())
 }

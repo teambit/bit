@@ -29,15 +29,20 @@ pub(in crate::workspace::engine) fn apply(
 
 fn update(retained: &mut Retained, input: &Overrides) -> io::Result<HashMap<String, String>> {
     let mut replacements = HashMap::new();
+    let mut seen = std::collections::HashSet::new();
     for (identity, version) in &input.versions {
         let identity = identity.trim();
         let version = version.trim();
-        if identity.is_empty() || version.is_empty() || input.semver[version]["version"].is_null() {
+        if identity.is_empty()
+            || version.is_empty()
+            || !seen.insert(identity)
+            || input.semver[version]["version"].is_null()
+        {
             return Err(invalid("tag registry version grammar"));
         }
         let material = retained.materials
             .iter_mut()
-            .find(|material| material.identity == identity)
+            .find(|material| material.identity.trim() == identity)
             .ok_or_else(|| invalid("tag registry component outside batch"))?;
         if material.model["versions"].get(version).is_some()
             || material.model["orphanedVersions"].get(version).is_some()

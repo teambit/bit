@@ -49,7 +49,7 @@ fn pending_identities(pending: &[Value]) -> io::Result<Vec<String>> {
 
 pub(super) fn identity(value: &Value) -> io::Result<String> {
     let (scope, name) = if let Some(raw) = value.as_str() {
-        let raw = raw.trim();
+        let raw = raw.trim().trim_start_matches('/');
         let base = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
         base.split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))

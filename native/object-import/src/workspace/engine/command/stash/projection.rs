@@ -22,7 +22,9 @@ pub(super) fn version(
             .map(str::trim)
             .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("stash dependency identity"))?;
-        if !identity.contains('@') {
+        if identity.contains('@') {
+            entry["identity"] = Value::String(identity.to_owned());
+        } else {
             entry["identity"] = Value::String(format!("{identity}@"));
         }
     }

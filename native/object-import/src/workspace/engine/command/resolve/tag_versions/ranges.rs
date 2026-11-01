@@ -8,20 +8,19 @@ use std::{
 // Workspace-level range policy is guarded by context eligibility. This retained
 // projection carries the canonical stored/current resolver prefix.
 pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
-    let versions = materials
-        .iter()
-        .map(|material| {
-            Ok((
-                material.identity.trim().to_owned(),
-                material.version_state.tagged_version
-                    .as_deref()
-                    .map(str::trim)
-                    .filter(|ver| !ver.is_empty())
-                    .map(str::to_owned)
-                    .ok_or_else(|| invalid("tag missing semantic version"))?,
-            ))
-        })
-        .collect::<io::Result<HashMap<_, _>>>()?;
+    let mut versions = HashMap::new();
+    for material in materials.iter() {
+        let identity = material.identity.trim().to_owned();
+        let version = material.version_state.tagged_version
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+            .map(str::to_owned)
+            .ok_or_else(|| invalid("tag missing semantic version"))?;
+        if versions.insert(identity, version).is_some() {
+            return Err(invalid("tag duplicate material identity"));
+        }
+    }
     for material in materials {
         let prefix = prefix(&material.version)?;
         let Some(prefix) = prefix else { continue };

@@ -153,12 +153,22 @@ fn replace_owned_proofs(
         {
             return Err(invalid("snapshot callback source ownership"));
         }
-        proof::verify(std::slice::from_ref(&change.after))?;
-        for proof in &mut *proofs {
-            if *proof == change.before {
-                *proof = change.after.clone();
-            }
-        }
+        replace_one_proof(proofs, change)?;
     }
     proof::verify(proofs)
+}
+
+fn replace_one_proof(proofs: &mut [proof::Proof], change: &SourceChange) -> io::Result<()> {
+    proof::verify(std::slice::from_ref(&change.after))?;
+    let mut matched = false;
+    for proof in proofs {
+        if *proof == change.before {
+            *proof = change.after.clone();
+            matched = true;
+        }
+    }
+    if !matched {
+        return Err(invalid("snapshot callback source ownership"));
+    }
+    Ok(())
 }

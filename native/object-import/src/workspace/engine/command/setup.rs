@@ -104,7 +104,11 @@ fn preparation_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
 }
 
 fn validate_license(scope: &str, repository: &mut repository::Repository) -> io::Result<()> {
-    match repository.read(&super::super::hash(scope.trim().as_bytes()), "ScopeMeta") {
+    let scope = scope.trim().trim_matches('/');
+    if scope.is_empty() {
+        return Err(invalid("command scope name"));
+    }
+    match repository.read(&super::super::hash(scope.as_bytes()), "ScopeMeta") {
         Ok(metadata)
             if metadata
                 .get("license")

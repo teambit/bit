@@ -69,6 +69,8 @@ fn components(
                         .into_iter()
                         .flat_map(serde_json::Map::keys),
                 )
+                .map(|tag| tag.trim())
+                .filter(|tag| !tag.is_empty())
                 .collect();
             let pending = next
                 .get(identity)

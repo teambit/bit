@@ -315,16 +315,14 @@ fn pending_configuration(context: &mut Value, pending: &[Value], snapshot: bool)
 
 fn validate_snapshot_config(config: &Value) -> io::Result<()> {
     let rows = config.as_object().ok_or_else(|| invalid("snapshot merged configuration"))?;
-    if rows
-        .iter()
-        .any(|(name, value)| {
-            name.trim()
-                .split_once('/')
-                .is_none_or(|(scope, part)| scope.trim().is_empty() || part.trim().is_empty())
-                || (!value.is_object() && value != "-")
-        })
-    {
-        return Err(invalid("snapshot merged aspect configuration"));
+    for (name, value) in rows {
+        let valid_name = name
+            .trim()
+            .split_once('/')
+            .is_some_and(|(scope, part)| !scope.trim().is_empty() && !part.trim().is_empty());
+        if !valid_name || (!value.is_object() && value != "-") {
+            return Err(invalid("snapshot merged aspect configuration"));
+        }
     }
     Ok(())
 }
@@ -332,21 +330,23 @@ fn validate_snapshot_config(config: &Value) -> io::Result<()> {
 fn validate_pending_config(config: &Value) -> io::Result<()> {
     let rows = config.as_object().ok_or_else(|| invalid("resolve merged configuration"))?;
     for (name, value) in rows {
-        let name = name.trim();
-        let bare = name
-            .split('@')
-            .next()
-            .unwrap_or(name)
-            .trim();
-        let dependency_policy = bare == "teambit.dependencies/dependency-resolver"
+        let trimmed_name = name.trim();
+        let (bare, ver) = trimmed_name
+            .rsplit_once('@')
+            .unwrap_or((trimmed_name, "latest"));
+        if ver.trim().is_empty() {
+            return Err(invalid("resolve custom merged configuration"));
+        }
+        let bare = bare.trim();
+        let is_policy = bare == "teambit.dependencies/dependency-resolver"
             && value
                 .as_object()
                 .is_some_and(|row| row.keys().all(|key| key == "policy"));
-        let removal = bare == "teambit.component/remove"
+        let is_remove = bare == "teambit.component/remove"
             && value
                 .as_object()
-                .is_some_and(|row| row.len() == 1 && row.get("removed") == Some(&json!(true)));
-        if !dependency_policy && !removal {
+                .is_some_and(|row| row.len() == 1 && row["removed"] == true);
+        if !is_policy && !is_remove {
             return Err(invalid("resolve custom merged configuration"));
         }
     }

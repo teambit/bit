@@ -85,10 +85,10 @@ fn is_harmony_node_env(value: &Value) -> bool {
     value
         .as_str()
         .is_some_and(|env| {
-            env.trim()
-                .split('@')
-                .next()
-                .map(str::trim)
-                == Some("teambit.harmony/node")
+            let env = env.trim();
+            let (base, version) = env
+                .rsplit_once('@')
+                .unwrap_or((env, "latest"));
+            base.trim() == "teambit.harmony/node" && !version.trim().is_empty()
         })
 }

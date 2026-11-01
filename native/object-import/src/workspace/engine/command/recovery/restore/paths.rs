@@ -28,14 +28,7 @@ pub(super) fn removals(
         .map(|row| {
             let directory = row
                 .as_str()
-                .map(|dir| {
-                    let trimmed = dir.trim();
-                    trimmed
-                        .strip_prefix("./")
-                        .unwrap_or(trimmed)
-                        .trim_end_matches('/')
-                })
-                .filter(|dir| !dir.is_empty())
+                .and_then(normalize_directory)
                 .or_else(|| row_directory(row))
                 .ok_or_else(|| invalid("recovery removal directory"))?;
             validate(root, directory, &previous)?;
@@ -49,14 +42,16 @@ fn row_directory(row: &Value) -> Option<&str> {
     row["rootDir"]
         .as_str()
         .or_else(|| row["directory"].as_str())
-        .map(|dir| {
-            let trimmed = dir.trim();
-            trimmed
-                .strip_prefix("./")
-                .unwrap_or(trimmed)
-                .trim_end_matches('/')
-        })
-        .filter(|dir| !dir.is_empty())
+        .and_then(normalize_directory)
+}
+fn normalize_directory(dir: &str) -> Option<&str> {
+    let trimmed = dir.trim();
+    let stripped = trimmed
+        .strip_prefix("./")
+        .or_else(|| trimmed.strip_prefix(r".\"))
+        .unwrap_or(trimmed)
+        .trim_end_matches(['/', '\\']);
+    (!stripped.is_empty()).then_some(stripped)
 }
 fn validate(root: &Path, directory: &str, previous: &Value) -> io::Result<()> {
     if Path::new(directory)

@@ -13,7 +13,7 @@ impl Repository {
         }
         for (hash, bytes) in objects {
             let hash = hash.trim().to_ascii_lowercase();
-            if hash.len() < 3 || !hash.is_char_boundary(2) {
+            if crate::merge_history::hash(&hash).is_err() {
                 continue;
             }
             let path = self.directory

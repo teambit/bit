@@ -74,10 +74,11 @@ fn ordered<'a>(
         .filter(|row| !selected_set.contains(row["identity"].as_str().map_or("", str::trim)))
         .collect::<Vec<_>>();
     for identity in selected {
+        let identity = identity.trim();
         ordered.push(
             current
                 .iter()
-                .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.as_str()))
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
                 .ok_or_else(|| invalid("resolve changed capture absent"))?,
         );
     }

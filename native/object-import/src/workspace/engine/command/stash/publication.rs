@@ -53,12 +53,17 @@ fn batch(
     let mut rows = Vec::new();
     let mut versions = Vec::new();
     let mut hashes = HashSet::new();
+    let mut identities = HashSet::new();
     let bit_version = input.bit_version.trim();
     for (component, allocation) in retained.components.iter().zip(&input.versions) {
         let hash =
             crate::validate::hexadecimal(&crate::merge_history::hash(allocation.hash.trim())?);
         let identity = component.identity.trim();
-        if allocation.identity.trim() != identity || !hashes.insert(hash.clone()) {
+        if identity.is_empty()
+            || allocation.identity.trim() != identity
+            || !identities.insert(identity)
+            || !hashes.insert(hash.clone())
+        {
             return Err(invalid("stash allocation identity"));
         }
         let version =

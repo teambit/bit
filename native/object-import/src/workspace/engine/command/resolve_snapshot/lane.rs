@@ -21,24 +21,31 @@ pub(super) fn lane_objects(
     {
         return Err(invalid("resolve lane readme lifecycle"));
     }
+    apply_allocations(&mut value, materials, receipt)?;
+    let history = history(&value, hash, receipt, repository)?;
+    objects.push(snapshot::object("Lane", Some(hash), value)?);
+    objects.push(snapshot::object("LaneHistory", None, history)?);
+    Ok(())
+}
+
+fn apply_allocations(value: &mut Value, materials: &[Material], receipt: &Value) -> io::Result<()> {
     let allocations =
         receipt["versions"].as_array().ok_or_else(|| invalid("resolve lane versions"))?;
+    if allocations.len() != materials.len() {
+        return Err(invalid("resolve lane version count"));
+    }
     for (material, allocation) in materials.iter().zip(allocations) {
+        if allocation["identity"].as_str().map(str::trim) != Some(material.identity.trim()) {
+            return Err(invalid("resolve lane allocation identity"));
+        }
         let next = allocation["hash"]
             .as_str()
             .map(str::trim)
             .ok_or_else(|| invalid("resolve lane allocation hash"))?;
-        update(
-            &mut value,
-            &material.identity,
-            next,
-            material.hidden,
-            super::is_removed(&material.version),
-        )?;
+        crate::merge_history::hash(next)?;
+        let removed = super::is_removed(&material.version);
+        update(value, &material.identity, next, material.hidden, removed)?;
     }
-    let history = history(&value, hash, receipt, repository)?;
-    objects.push(snapshot::object("Lane", Some(hash), value)?);
-    objects.push(snapshot::object("LaneHistory", None, history)?);
     Ok(())
 }
 

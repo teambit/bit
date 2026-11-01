@@ -62,11 +62,17 @@ pub(super) fn owned_paths(
                 .is_some_and(|identity| {
                     materials
                         .iter()
-                        .any(|material| material.identity == identity)
+                        .any(|material| material.identity.trim() == identity)
                 })
         })
         .flat_map(|row| {
-            let directory = root.join(row["directory"].as_str().map_or("", str::trim));
+            let dir = row["directory"].as_str().map_or("", str::trim);
+            let dir = dir
+                .strip_prefix("./")
+                .or_else(|| dir.strip_prefix(r".\"))
+                .unwrap_or(dir)
+                .trim_end_matches(['/', '\\']);
+            let directory = root.join(dir);
             row["files"]
                 .as_array()
                 .into_iter()

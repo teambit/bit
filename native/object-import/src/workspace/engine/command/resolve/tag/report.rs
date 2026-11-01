@@ -27,9 +27,10 @@ pub(in super::super) fn report(
 
 fn versioned(id: &str, materials: &[Material]) -> io::Result<String> {
     let id = id.trim();
+    let id = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
     let material = materials
         .iter()
-        .find(|material| material.identity == id)
+        .find(|material| material.identity.trim() == id)
         .ok_or_else(|| invalid("tag report material"))?;
     let version = material.version_state.tagged_version
         .as_deref()

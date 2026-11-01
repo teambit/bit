@@ -8,6 +8,10 @@ pub(super) struct Directory(pub(super) PathBuf);
 impl Directory {
     pub(super) fn create() -> io::Result<Self> {
         let parent = fs::canonicalize(std::env::temp_dir())?;
+        let meta = fs::symlink_metadata(&parent)?;
+        if !meta.is_dir() || meta.file_type().is_symlink() {
+            return Err(io::Error::other("command scratch parent directory"));
+        }
         for _ in 0..64 {
             let path = parent.join(format!(
                 "bit-native-command-{}-{}",

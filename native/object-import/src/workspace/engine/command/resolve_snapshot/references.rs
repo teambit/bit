@@ -87,6 +87,7 @@ fn resolve_string_target<'a>(
         .get(key)?
         .as_str()?
         .trim()
+        .trim_start_matches('/')
         .rsplit_once('@')
         .map(|(identity, ver)| (identity.trim(), ver.trim()))?;
     if !ver.starts_with("__bit_pending_snapshot__:") && pinned.contains(identity) {

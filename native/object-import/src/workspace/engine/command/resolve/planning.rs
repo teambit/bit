@@ -166,11 +166,13 @@ fn auto_seeds(
     }
     selected
         .iter()
-        .filter(|identity| {
-            let is_existing = |row: &capture::Captured| {
-                row.target.identity == **identity && !row.target.version.is_empty()
-            };
-            captured.iter().any(is_existing)
+        .filter(|id| {
+            captured
+                .iter()
+                .any(|row| {
+                    row.target.identity.trim() == id.trim()
+                        && !row.target.version.trim().is_empty()
+                })
         })
         .cloned()
         .collect()
@@ -185,10 +187,13 @@ pub(super) fn bind_new(
     if retained.snap.is_some() {
         let new_ids = captured
             .iter()
-            .filter(|current| {
-                current.target.version.is_empty() && selected.contains(&current.target.identity)
+            .filter(|row| {
+                row.target.version.trim().is_empty()
+                    && selected
+                        .iter()
+                        .any(|id| id.trim() == row.target.identity.trim())
             })
-            .map(|current| current.target.identity.clone())
+            .map(|row| row.target.identity.trim().to_owned())
             .collect();
         projection::bind_new_dependencies(components, &new_ids)?;
     }

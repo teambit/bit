@@ -29,7 +29,7 @@ fn matching_for_separator(
     }
     let mut refs = overlay
         .map(|hash| hash.trim().to_ascii_lowercase())
-        .filter(|hash| hash.starts_with(&prefix))
+        .filter(|hash| hash.starts_with(&prefix) && crate::merge_history::hash(hash).is_ok())
         .collect::<BTreeSet<_>>();
     let entries = match fs::read_dir(directory.join(&prefix[..2])) {
         Ok(entries) => entries,

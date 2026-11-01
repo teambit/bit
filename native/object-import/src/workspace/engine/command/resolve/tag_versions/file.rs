@@ -11,6 +11,9 @@ pub(super) fn tag_data(file: Option<&Value>, identity: &str) -> io::Result<Value
     let Some(file) = file.filter(|file| !file.is_null()) else { return Ok(Value::Null) };
     let identity = identity.trim();
     let entries = file["entries"].as_array().ok_or_else(|| invalid("tag versions file entries"))?;
+    if entries.len() > 4096 {
+        return Err(invalid("tag versions file entry limit"));
+    }
     let version = entries
         .iter()
         .find(|entry| entry["identity"].as_str().map(str::trim) == Some(identity))
@@ -36,6 +39,9 @@ pub(super) fn semver(file: Option<&Value>, base: &Value) -> io::Result<Value> {
         .ok_or_else(|| invalid("tag semantic grammar"))?
         .clone();
     if let Some(values) = file.and_then(|file| file["semver"].as_object()) {
+        if values.len() > 4096 {
+            return Err(invalid("tag versions file semver limit"));
+        }
         output.extend(values.clone());
     }
     Ok(Value::Object(output))

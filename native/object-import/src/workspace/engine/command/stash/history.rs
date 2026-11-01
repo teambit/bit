@@ -30,6 +30,9 @@ fn plans(
                 .map(Vec::as_slice)
                 .ok_or_else(|| invalid("stash history plans"))
         })?;
+    if plans.len() > 4096 {
+        return Err(invalid("stash history plan limit"));
+    }
     Ok(plans.to_vec())
 }
 

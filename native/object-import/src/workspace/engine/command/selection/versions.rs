@@ -310,11 +310,18 @@ fn auxiliary(version: &Value, row: &mut Value, pending: &mut Vec<String>) {
         }
         row[field] = value.clone();
         match value {
-            Value::String(reference) => pending.push(reference.clone()),
+            Value::String(reference) => {
+                let trimmed = reference.trim();
+                if !trimmed.is_empty() {
+                    pending.push(trimmed.to_owned());
+                }
+            }
             Value::Array(references) => pending.extend(
                 references
                     .iter()
                     .filter_map(Value::as_str)
+                    .map(str::trim)
+                    .filter(|reference| !reference.is_empty())
                     .map(str::to_owned),
             ),
             _ => {}

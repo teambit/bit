@@ -65,6 +65,9 @@ fn rebuild(
     let Phase::Prepared(previous) = &retained.finalized else {
         return Err(invalid("snapshot builder phase"));
     };
+    if previous.objects_persisted {
+        return Err(invalid("snapshot builder objects already persisted"));
+    }
     let staged =
         previous.staged_snaps.as_deref().ok_or_else(|| invalid("snapshot build was not staged"))?;
     let receipt = build_receipt(&previous.receipt, &input)?;

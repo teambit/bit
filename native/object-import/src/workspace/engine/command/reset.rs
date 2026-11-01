@@ -69,7 +69,11 @@ pub(super) fn validate_after_restore(record: &Record, prepared: &PreparedPlan) -
 }
 
 fn validate_inputs(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
-    if prepared.plan.merge.is_some() || prepared.snap_bitmap.is_some() {
+    if prepared.plan.merge.is_some()
+        || prepared.snap_bitmap.is_some()
+        || prepared.checkout_policy.is_some()
+        || prepared.switch_completion.is_some()
+    {
         return Err(invalid("recovery reset cannot publish merge state"));
     }
     record.repository.validate()?;

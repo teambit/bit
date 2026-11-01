@@ -48,7 +48,9 @@ fn read(
         4 * 1024 * 1024,
         &mut compressed,
     )?;
-    crate::parse_jsonc(&body).map_err(io::Error::other)
+    let rows = crate::parse_jsonc(&body).map_err(io::Error::other)?;
+    proof::verify(&proofs[proofs.len() - 1..])?;
+    Ok(rows)
 }
 
 fn rekey(rows: &mut Value, identity: &str, hash: &str) -> io::Result<()> {

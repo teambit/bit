@@ -121,7 +121,10 @@ fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
         }
     }
     for extension in array_or_empty(version, "extensions", "stash extensions")? {
-        if let Some(id) = extension.get("extensionId") {
+        if let Some(id) = extension
+            .get("extensionId")
+            .filter(|val| !val.is_null())
+        {
             insert(
                 &mut rows,
                 json!({"source":canonical_id(source),"target":canonical_id(id),"type":"ext"}),

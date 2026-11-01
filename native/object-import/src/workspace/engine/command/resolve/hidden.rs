@@ -42,7 +42,7 @@ pub(super) fn append(
     for report in &reports {
         let (entry, version) = candidates
             .iter()
-            .find(|(entry, _)| report["id"] == entry.identity)
+            .find(|(entry, _)| report["id"].as_str().map(str::trim) == Some(entry.identity.trim()))
             .ok_or_else(|| invalid("hidden cascade candidate"))?;
         materials.push(material(retained, entry, version, snapshots)?);
     }

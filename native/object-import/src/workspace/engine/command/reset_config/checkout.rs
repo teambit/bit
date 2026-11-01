@@ -149,13 +149,15 @@ fn strip_local_env(extensions: &mut Map<String, Value>, record: &Record) {
                 .find_map(|(key, value)| key.starts_with("teambit.envs/envs@").then_some(value))
         })
         .and_then(|value| value["env"].as_str())
+        .map(str::trim)
+        .filter(|env| !env.is_empty())
     else {
         return;
     };
     let env = env.to_owned();
     if !record.targets
         .iter()
-        .any(|target| target["identity"] == env)
+        .any(|target| target["identity"].as_str().map(str::trim) == Some(env.as_str()))
     {
         return;
     }
@@ -163,7 +165,7 @@ fn strip_local_env(extensions: &mut Map<String, Value>, record: &Record) {
         .keys()
         .find(|key| {
             key.rsplit_once('@')
-                .is_some_and(|(base, _)| base == env)
+                .is_some_and(|(base, _)| base.trim() == env)
         })
         .cloned();
     if let Some(key) = key

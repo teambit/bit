@@ -17,10 +17,7 @@ pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Resul
             .map(str::trim)
             .filter(|hash| !hash.is_empty())
         {
-            if heads
-                .iter()
-                .any(|head: &Value| head["hash"] == hash)
-            {
+            if has_head(&heads, hash) {
                 continue;
             }
             let version = match repository.read(hash, "Version") {
@@ -33,6 +30,16 @@ pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Resul
         output.push(json!({"identity":identity,"heads":heads}));
     }
     Ok(json!(output))
+}
+
+fn has_head(heads: &[Value], hash: &str) -> bool {
+    heads
+        .iter()
+        .any(|head: &Value| {
+            head["hash"]
+                .as_str()
+                .is_some_and(|existing| existing.eq_ignore_ascii_case(hash))
+        })
 }
 
 fn model_identity(context: &Value, model: &Value) -> io::Result<String> {

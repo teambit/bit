@@ -208,7 +208,10 @@ pub(super) fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
         .into_iter()
         .flatten()
     {
-        if let Some(id) = extension.get("extensionId") {
+        if let Some(id) = extension
+            .get("extensionId")
+            .filter(|val| !val.is_null())
+        {
             add_edge(&mut edges, source, id, "ext")?;
         }
     }

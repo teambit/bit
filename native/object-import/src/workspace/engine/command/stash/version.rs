@@ -44,13 +44,7 @@ pub(super) fn prepare(
     validate_log(&version["log"])?;
     version["bitVersion"] = json!(bit_version.trim());
     version["modified"] = json!([]);
-    version["parents"] = json!(
-        component.previous
-            .iter()
-            .map(|parent| parent.trim())
-            .filter(|parent| !parent.is_empty())
-            .collect::<Vec<_>>()
-    );
+    version["parents"] = json!(validated_parents(component.previous.as_deref())?);
     // StashMain ignores the returned graph Sources; only the Version references them.
     let graph =
         component.version.get("flattenedEdges").ok_or_else(|| invalid("stash graph absent"))?;
@@ -73,6 +67,19 @@ pub(super) fn prepare(
     objects.extend(sources);
     Ok(version)
 }
+fn validated_parents(previous: Option<&str>) -> io::Result<Vec<&str>> {
+    let mut parents = Vec::new();
+    for parent in previous
+        .into_iter()
+        .map(str::trim)
+        .filter(|parent| !parent.is_empty())
+    {
+        crate::merge_history::hash(parent)?;
+        parents.push(parent);
+    }
+    Ok(parents)
+}
+
 fn capture_files(
     version: &mut Value,
     component: &Component,

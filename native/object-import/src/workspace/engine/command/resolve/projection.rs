@@ -226,6 +226,7 @@ pub(super) fn bind_new_dependencies(
         for entry in entries {
             let Some(identity) = entry["identity"]
                 .as_str()
+                .map(str::trim)
                 .filter(|identity| identities.contains(*identity))
             else {
                 continue;

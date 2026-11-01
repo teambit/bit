@@ -200,12 +200,20 @@ fn find_entry(bitmap: &Value, identity: &str, directory: &str) -> io::Result<Val
                 .unwrap_or_default();
             let (_, name) = crate::reset_lane::bitmap::row_identity(key, entry);
             let name = name.trim();
-            entry["rootDir"].as_str().map(str::trim) == Some(directory)
+            entry["rootDir"].as_str().map(norm_root_dir) == Some(directory)
                 && (format!("{scope}/{name}") == identity
                     || (scope.is_empty() && identity.ends_with(&format!("/{name}"))))
         })
         .map(|(_, entry)| entry.clone())
         .ok_or_else(|| invalid("stash bitmap entry"))
+}
+
+fn norm_root_dir(raw: &str) -> &str {
+    let raw = raw.trim();
+    raw.strip_prefix("./")
+        .or_else(|| raw.strip_prefix(r".\"))
+        .unwrap_or(raw)
+        .trim_end_matches(['/', '\\'])
 }
 
 fn response(retained: &Retained) -> Value {

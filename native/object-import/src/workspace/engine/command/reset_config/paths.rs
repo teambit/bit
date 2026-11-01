@@ -6,7 +6,16 @@ pub(super) fn capture(
     destination: &Path,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
-    if !destination.starts_with(root) || destination == root || destination.file_name().is_none() {
+    if !destination.starts_with(root)
+        || destination == root
+        || destination.file_name().is_none()
+        || destination
+            .strip_prefix(root)
+            .is_ok_and(|rel| {
+                rel.components()
+                    .any(|part| !matches!(part, std::path::Component::Normal(_)))
+            })
+    {
         return Err(invalid("reset config outside workspace"));
     }
     for (depth, parent) in destination

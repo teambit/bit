@@ -100,8 +100,11 @@ pub(super) fn merge(record: &Record, rows: &[super::policy::Row]) -> io::Result<
         }
         paths::capture(&record.request.root, &path, &mut prepared.proofs)?;
         validate_destination(&path)?;
-        let version_name =
-            target["version"].as_str().ok_or_else(|| invalid("merge config version"))?;
+        let version_name = target["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
+            .ok_or_else(|| invalid("merge config version"))?;
         let output =
             checkout::document(record, target, &row.baseline.current, version_name, &original)?;
         let mut bytes = serde_json::to_vec_pretty(&output).map_err(io::Error::other)?;

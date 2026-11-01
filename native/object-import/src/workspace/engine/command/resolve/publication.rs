@@ -105,6 +105,20 @@ fn lane_current(context: &Value) -> Option<Value> {
         })
 }
 
+fn version_id_and_hash(version: &Value, error: &'static str) -> io::Result<String> {
+    let id = version["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid(error))?;
+    let hash = version["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid(error))?;
+    Ok(format!("{id}@{hash}"))
+}
+
 fn allocate_snap_report(result: &mut Value, versions: &[Value]) -> io::Result<()> {
     if let Some(root) = result["autoAddedWorkspaceRoot"].as_str() {
         let version = versions
@@ -120,12 +134,8 @@ fn allocate_snap_report(result: &mut Value, versions: &[Value]) -> io::Result<()
         versions
             .iter()
             .filter(|row| row["selected"] == true)
-            .map(|row| format!(
-                "{}@{}",
-                row["identity"].as_str().unwrap_or_default(),
-                row["hash"].as_str().unwrap_or_default()
-            ))
-            .collect::<Vec<_>>()
+            .map(|row| version_id_and_hash(row, "snap component hash"))
+            .collect::<io::Result<Vec<_>>>()?
     );
     for row in result["autoSnappedResults"]
         .as_array_mut()
@@ -135,11 +145,7 @@ fn allocate_snap_report(result: &mut Value, versions: &[Value]) -> io::Result<()
             .iter()
             .find(|version| version["identity"] == row["id"])
             .ok_or_else(|| invalid("snap automatic allocation"))?;
-        row["id"] = json!(format!(
-            "{}@{}",
-            version["identity"].as_str().unwrap_or_default(),
-            version["hash"].as_str().unwrap_or_default()
-        ));
+        row["id"] = json!(version_id_and_hash(version, "snap automatic allocation hash")?);
     }
     Ok(())
 }

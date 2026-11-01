@@ -139,6 +139,8 @@ fn origin(version: &mut Value, material: &Material, lane: Option<&Value>) -> io:
 }
 
 pub(super) fn local_model(material: &Material, hash: &str) -> io::Result<Value> {
+    let hash = hash.trim();
+    crate::merge_history::hash(hash)?;
     let Some(tag) = &material.version_state.tagged_version else {
         return snapshot::local_model(&material.model, hash);
     };
@@ -149,7 +151,10 @@ pub(super) fn local_model(material: &Material, hash: &str) -> io::Result<Value> 
         return Err(invalid("tag version already exists"));
     }
     tags.insert(tag.to_owned(), json!(hash));
-    if let Some(orphaned) = model.get_mut("orphanedVersions") {
+    if let Some(orphaned) = model
+        .get_mut("orphanedVersions")
+        .filter(|val| !val.is_null())
+    {
         orphaned
             .as_object_mut()
             .ok_or_else(|| invalid("tag orphaned versions"))?

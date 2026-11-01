@@ -104,6 +104,9 @@ pub(in crate::workspace::engine) fn prepare(
     {
         return Err(invalid("stash owner already active"));
     }
+    for path in [&request.root, &request.home, &request.global_remotes_file] {
+        crate::workspace::engine::path(path)?;
+    }
     let (_, context) = status_context::read(
         &status_context::Request { root: request.root.clone(), home: request.home, history: false },
         pool,

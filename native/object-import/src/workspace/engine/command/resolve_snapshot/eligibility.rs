@@ -16,7 +16,8 @@ pub(in crate::workspace::engine::command) fn preflight(
     let mut seen = HashSet::new();
     let mut bytes = 0usize;
     for material in materials {
-        if !seen.insert(material.identity.as_str()) {
+        let identity = material.identity.trim();
+        if identity.is_empty() || !seen.insert(identity) {
             return Err(invalid("resolve duplicate material"));
         }
         validate_identity(material)?;

@@ -25,7 +25,7 @@ pub(super) fn apply(retained: &Retained, receipt: &mut Value) -> io::Result<()> 
                 &mut log,
                 common["message"]
                     .as_str()
-                    .is_some_and(|message| !message.is_empty()),
+                    .is_some_and(|message| !message.trim().is_empty()),
             );
         }
         logs.insert(material.identity.clone(), log);

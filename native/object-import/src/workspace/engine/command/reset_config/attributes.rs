@@ -12,6 +12,9 @@ pub(super) fn validate(path: &Path) -> io::Result<()> {
         return Err(invalid("reset config extended attributes"));
     }
     let parent = path.parent().ok_or_else(|| invalid("reset config parent"))?;
+    if parent.is_symlink() || !parent.is_dir() {
+        return Err(invalid("reset config parent"));
+    }
     let temporary = parent.join(format!(
         ".bit-reset-config-probe-{}-{}",
         std::process::id(),

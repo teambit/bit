@@ -27,12 +27,15 @@ pub(super) fn include(
         .map(str::trim)
         .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("workspace-root identity"))?;
-    if selected.iter().any(|id| id == identity) {
+    if selected
+        .iter()
+        .any(|id| id.trim() == identity)
+    {
         return Ok(false);
     }
     let current = captured
         .iter()
-        .find(|current| current.target.identity == identity)
+        .find(|current| current.target.identity.trim() == identity)
         .ok_or_else(|| invalid("workspace-root capture absent"))?;
     let mut options =
         retained.snap.clone().ok_or_else(|| invalid("workspace-root snapshot options"))?;

@@ -85,7 +85,8 @@ impl Selection {
     fn unique(identities: Vec<String>) -> Self {
         let mut unique = Vec::with_capacity(identities.len());
         for id in identities {
-            let trimmed = id.trim();
+            let trimmed = id.trim().trim_start_matches('/');
+            let trimmed = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
             if !trimmed.is_empty()
                 && !unique
                     .iter()

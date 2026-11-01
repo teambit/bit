@@ -177,11 +177,15 @@ fn filter_patterns(
         input.tag_selections.as_ref().ok_or_else(|| invalid("tag pattern receipt absent"))?;
     let known = captured
         .iter()
-        .map(|current| current.target.identity.as_str())
+        .map(|current| current.target.identity.trim())
         .collect::<HashSet<_>>();
     for row in rows {
-        if !known.contains(row["identity"].as_str().ok_or_else(|| invalid("tag pattern identity"))?)
-        {
+        let id = row["identity"]
+            .as_str()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .ok_or_else(|| invalid("tag pattern identity"))?;
+        if !known.contains(id) {
             return Err(invalid("tag unknown selection"));
         }
     }

@@ -88,7 +88,7 @@ fn observation<'a>(
     let observed = snapshots
         .get(token, Path::new(path), raw)
         .ok_or_else(|| invalid("resolve lost capture"))?;
-    if observed.snapshot_hash != file["snapshotHash"] {
+    if observed.snapshot_hash != file["snapshotHash"].as_str().map_or("", str::trim) {
         return Err(invalid("resolve capture content"));
     }
     Ok(observed)

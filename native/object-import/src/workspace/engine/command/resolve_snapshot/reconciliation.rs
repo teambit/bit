@@ -38,14 +38,24 @@ fn unrelated(
             Some(material.version_state.current_head.trim()).filter(|head| !head.is_empty())
         })
         .ok_or_else(|| invalid("resolve unrelated prior version"))?;
+    crate::merge_history::hash(previous)?;
     if pending["unrelated"] == true {
         version["unrelated"] = json!({"head":previous,"laneId":pending["laneId"]});
         version["parents"] = json!([remote]);
     } else {
         let relation = &pending["unrelated"];
-        version["unrelated"] =
-            json!({"head":relation["unrelatedHead"],"laneId":relation["unrelatedLaneId"]});
-        version["parents"] = json!([relation["headOnCurrentLane"]]);
+        let unrelated_head = relation["unrelatedHead"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("resolve unrelated head"))?;
+        let head_on_lane = relation["headOnCurrentLane"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("resolve unrelated lane head"))?;
+        crate::merge_history::hash(unrelated_head)?;
+        crate::merge_history::hash(head_on_lane)?;
+        version["unrelated"] = json!({"head":unrelated_head,"laneId":relation["unrelatedLaneId"]});
+        version["parents"] = json!([head_on_lane]);
     }
     Ok(())
 }

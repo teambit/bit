@@ -67,11 +67,7 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
         .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("command checkout identity"))?;
     let version = selection.target["version"].as_str().map_or("", str::trim);
-    let ancestor = lower
-        .strip_prefix("head~")
-        .map(str::parse::<usize>)
-        .transpose()
-        .map_err(io::Error::other)?;
+    let ancestor = parse_ancestor(&lower)?;
     let load_stash = super::checkout_stash::loading(options);
     let historical = super::lane_history::phase(options).is_some();
     let exact = !historical
@@ -86,6 +82,18 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
             "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":options.revert,"loadStash":load_stash,
             "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":(historical || load_stash || selection.target.get("switchVersion").is_some()).then(||json!({}))},
     }))
+}
+
+fn parse_ancestor(lower: &str) -> io::Result<Option<usize>> {
+    let ancestor = lower
+        .strip_prefix("head~")
+        .map(|suffix| suffix.trim().parse::<usize>())
+        .transpose()
+        .map_err(io::Error::other)?;
+    if ancestor.is_some_and(|count| count == 0 || count > 4096) {
+        return Err(invalid("command checkout ancestor count"));
+    }
+    Ok(ancestor)
 }
 
 fn version_arg(directive: &Value) -> io::Result<&str> {

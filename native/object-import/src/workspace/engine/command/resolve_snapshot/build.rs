@@ -27,6 +27,9 @@ pub(super) fn metadata(version: &mut Value, allocation: &Value) -> io::Result<()
     version["buildStatus"] = json!(status);
     let updates =
         data["extensions"].as_array().ok_or_else(|| invalid("snapshot build extensions"))?;
+    if updates.len() > 256 {
+        return Err(invalid("snapshot build extension limit"));
+    }
     let entries =
         version["extensions"].as_array_mut().ok_or_else(|| invalid("snapshot extensions"))?;
     for update in updates {
