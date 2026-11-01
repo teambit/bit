@@ -1,4 +1,4 @@
-//! Pin a deleted lane dependency through the shared Rust workspace policy editor.
+//! Pin a deleted lane dependency through the shared Rust [`Document`] workspace policy editor ([`edit_workspace_config`]).
 
 use crate::commands::workspace_command::format::Formatter;
 use bit_install::{

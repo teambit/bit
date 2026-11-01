@@ -1,4 +1,4 @@
-//! `DeleteCmd --hard`: select remotes before an irreversible single-attempt delete.
+//! `DeleteCmd --hard` ([`Context`]): select remotes before an irreversible single-attempt delete.
 
 mod remote;
 mod report;

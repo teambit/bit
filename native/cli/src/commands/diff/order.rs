@@ -1,4 +1,4 @@
-//! `globby` breadth-first traversal, retaining Windows filesystem enumeration order.
+//! `globby` breadth-first traversal ([`files`]), retaining Windows filesystem enumeration order.
 
 use crate::commands::status::js::decline;
 use std::{

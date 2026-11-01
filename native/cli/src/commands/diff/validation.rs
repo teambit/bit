@@ -1,4 +1,4 @@
-//! Input validation and user-facing error classification for `bit diff`.
+//! Input validation and user-facing [`Outcome`] error classification for `bit diff`.
 
 use super::{git, options, selection};
 use crate::{

@@ -1,4 +1,4 @@
-//! Diagnostic environment facts and effective configuration.
+//! Diagnostic [`Context`] environment facts ([`NodeCli`], [`Target`]) and effective configuration.
 use super::vendors;
 use crate::discovery::{self, NodeCli, Target};
 use serde_json::{Value, json};

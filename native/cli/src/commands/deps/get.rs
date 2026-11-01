@@ -1,4 +1,4 @@
-//! `bit deps get <component-name>` implementation (`dependencies-cmd.ts`).
+//! `bit deps get <component-name>` ([`WorkspaceDepsContext`], [`ResolvedDep`], [`render_archy`]) implementation (`dependencies-cmd.ts`).
 
 use super::{
     resolve::{ResolvedDep, WorkspaceDepsContext},

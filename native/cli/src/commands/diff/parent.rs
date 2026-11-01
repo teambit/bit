@@ -1,4 +1,4 @@
-//! Compare stored Versions against the nearest meaningful first-parent ancestor.
+//! Compare stored Versions against the nearest meaningful first-parent ancestor via [`Capture`] and [`Engine`].
 
 use super::{Capture, Chalk, Engine, array, comparison, decline, one, rows, text};
 use serde_json::{Value, json};

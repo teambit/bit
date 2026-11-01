@@ -1,4 +1,4 @@
-//! Authoritative soft-delete preconditions and best-effort lane policy planning.
+//! Authoritative [`Prepared`] soft-delete [`Batch`] preconditions and best-effort lane [`policy`] planning.
 use super::{options::Options, policy};
 use crate::commands::remove::preparation as selection;
 use bit_object_import::component_delete::{Batch, DependencyComponent, Scope};

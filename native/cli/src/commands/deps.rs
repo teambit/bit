@@ -1,4 +1,4 @@
-//! Native `bit deps <set|remove|unset|reset|eject|get|usage|diagnose|blame|write|circular>` (`bit dependencies`)
+//! Native `bit deps <set|remove|unset|reset|eject|get|usage|diagnose|blame|write|circular|debug>` (`bit dependencies`)
 //! (`scopes/dependencies/dependencies/dependencies-cmd.ts`).
 
 pub(super) use self::{

@@ -1,4 +1,4 @@
-//! Scope and workspace dependency graph construction and traversal for `bit dependents`.
+//! Scope and workspace [`DepGraph`] construction and [`render_dependents_report`] traversal for `bit dependents`.
 
 use super::{
     Options, find_existing_bitmap_entry,

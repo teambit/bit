@@ -1,4 +1,4 @@
-//! Native rendering of Doctor's `table` tables and detailed result sections.
+//! Native rendering of Doctor's `table` tables ([`DIAGNOSES`], [`Chalk`]) and detailed result sections.
 #[cfg(test)]
 mod tests;
 

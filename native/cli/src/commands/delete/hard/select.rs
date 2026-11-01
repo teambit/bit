@@ -1,4 +1,4 @@
-//! `getRemoteBitIdsToRemove`: literal IDs or a remote wildcard inventory.
+//! `getRemoteBitIdsToRemove` ([`Context`]): literal IDs or a remote wildcard inventory.
 
 #[cfg(test)]
 mod tests;

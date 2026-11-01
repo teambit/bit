@@ -1,4 +1,4 @@
-//! Format raw file comparison rows for the public diff result.
+//! Format raw [`files`] comparison rows for the public diff result.
 
 use super::files;
 use crate::commands::status::js::{array, text, truthy};

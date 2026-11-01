@@ -1,4 +1,4 @@
-//! Published `removeTemplate` for remote hard-delete receipts.
+//! Published `removeTemplate` ([`Formatter`], [`Chalk`]) for remote hard-delete receipts.
 
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;

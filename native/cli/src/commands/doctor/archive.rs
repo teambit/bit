@@ -1,4 +1,4 @@
-//! Native diagnostic TAR writing; `.tar.gz` is intentionally not compressed.
+//! Native diagnostic TAR writing ([`Context`], [`Options`]); `.tar.gz` is intentionally not compressed.
 #[cfg(test)]
 mod tests;
 

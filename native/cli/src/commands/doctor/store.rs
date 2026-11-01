@@ -1,4 +1,4 @@
-//! Read-only native diagnoses of indexed models and legacy symlinks.
+//! Read-only native [`Diagnosis`] checks of indexed models and legacy symlinks.
 #[cfg(test)]
 mod tests;
 

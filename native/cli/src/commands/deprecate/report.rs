@@ -1,3 +1,5 @@
+//! [`render`] output formatting for [`Plan`] and [`Options`] in `bit deprecate` and `bit undeprecate`.
+
 use super::{Formatter, Plan, options::Options};
 pub(super) fn render(plan: &Plan, options: &Options<'_>, undo: bool, format: &Formatter) -> String {
     let changed = plan.changed();

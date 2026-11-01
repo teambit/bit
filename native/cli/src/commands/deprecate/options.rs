@@ -1,3 +1,5 @@
+//! [`Options`] and [`parse`] option parsing for `bit deprecate` and `bit undeprecate`.
+
 pub(super) struct Options<'a> {
     pub pattern: &'a str,
     pub replacement: Option<&'a str>,

@@ -1,4 +1,4 @@
-//! Native `bit dependents <component-name>` (`scopes/dependencies/dependencies/dependents-cmd.ts`).
+//! Native `bit dependents <component-name>` (`scopes/dependencies/dependencies/dependents-cmd.ts`, [`render_honeywell_table`]).
 
 pub(super) use render::render_honeywell_table;
 

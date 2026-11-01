@@ -1,4 +1,4 @@
-//! Graph model and table rendering for `bit dependents` (`scopes/dependencies/dependencies/template.ts`).
+//! [`DepGraph`] model and [`render_honeywell_table`] rendering for `bit dependents` (`scopes/dependencies/dependencies/template.ts`).
 
 use crate::commands::{color::Chalk, list::table::strip_sgr};
 use serde::Serialize;

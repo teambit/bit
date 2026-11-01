@@ -1,4 +1,4 @@
-//! Progress messages emitted by the source CLI while preparing a diff.
+//! Progress messages ([`options`]) emitted by the source CLI while preparing a diff.
 
 use super::options;
 use serde_json::Value;

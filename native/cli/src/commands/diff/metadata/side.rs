@@ -1,4 +1,4 @@
-//! One side of the metadata comparison: the fields `diffMetadata` compares.
+//! One [`Side`] and [`Component`] of the metadata comparison: the fields `diffMetadata` compares.
 
 use crate::commands::{
     ids::Id,

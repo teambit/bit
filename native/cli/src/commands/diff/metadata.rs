@@ -1,4 +1,4 @@
-//! `fieldsDiff` of `bit diff`: each side's metadata and
+//! `fieldsDiff` of `bit diff`: each [`Side`]'s [`Component`] metadata and
 //! `diffMetadata` of `@teambit/legacy.component-diff` with
 //! `formatDepsAsTable: false`.
 

@@ -1,4 +1,4 @@
-//! Core diagnoses in `DoctorRegistrarBuilder` registration order.
+//! Core [`Diagnosis`] entries ([`DIAGNOSES`]) in `DoctorRegistrarBuilder` registration order.
 use serde_json::{Value, json};
 pub(super) struct Diagnosis {
     pub name: &'static str,

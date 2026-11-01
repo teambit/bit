@@ -1,4 +1,4 @@
-//! `ScopeMain.filterIdsFromPoolIdsByPattern` and workspace state filters.
+//! `ScopeMain.filterIdsFromPoolIdsByPattern` and workspace state filters via [`Engine`] and [`patterns`].
 
 use crate::commands::{
     engine::Engine,

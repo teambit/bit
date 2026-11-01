@@ -1,4 +1,4 @@
-//! CLI presentation after native diff preflight.
+//! CLI presentation ([`Prepared`], [`Capture`]) after native diff preflight.
 
 use super::{
     Capture, Prepared, array, capture, decline, metadata, model, options, progress, result_files,

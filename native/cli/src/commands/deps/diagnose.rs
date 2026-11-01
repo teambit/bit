@@ -1,4 +1,4 @@
-//! Installed-package drill-down for `bit deps diagnose --package`.
+//! Installed-package drill-down and [`report`] generation for `bit deps diagnose [--package]`.
 
 pub(super) mod report;
 #[cfg(test)]

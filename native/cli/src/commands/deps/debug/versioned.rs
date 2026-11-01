@@ -1,4 +1,4 @@
-//! Plain built-in environment versions are rendered from verified model dependencies.
+//! Plain built-in environment versions ([`Deps`], [`ManualPolicy`]) rendered from verified [`WorkspaceDepsContext`] model dependencies.
 
 use super::{
     Deps, Failure, ManualPolicy, NODE_DEV, REACT_DEV, REACT_PEER, REACT_RUNTIME,

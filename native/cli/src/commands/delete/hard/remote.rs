@@ -1,4 +1,4 @@
-//! Group all scopes, choose the direct or hub route, and drain every launched delete.
+//! Group all [`ScopeGuard`] scopes, choose the direct or hub [`Remote`] route, and drain every launched [`Plan`] delete.
 
 use super::Context;
 use bit_client_transfer::{http::Network, remotes::Remote};

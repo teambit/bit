@@ -1,4 +1,4 @@
-//! `bit deps remove` and `bit deps unset` implementation (`dependencies.main.runtime.ts`).
+//! `bit deps remove` and `bit deps unset` ([`BitmapMutation`], [`WorkspaceDepsContext`]) implementation (`dependencies.main.runtime.ts`).
 
 use super::{
     mutation::{BitmapMutation, apply_dep_resolver_config},

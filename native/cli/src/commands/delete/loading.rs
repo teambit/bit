@@ -1,4 +1,4 @@
-//! Delete requires valid classes; remove deliberately tolerates invalid component loads.
+//! Delete ([`validate`]) requires valid classes; remove deliberately tolerates invalid component loads.
 use crate::commands::{color::Chalk, remove::preparation as selection};
 use serde_json::Value;
 use std::{io, path::Path};

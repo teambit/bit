@@ -1,4 +1,4 @@
-//! Model, variant, `component.json`, and `.bitmap` policy application for `bit deps`.
+//! Model, variant, `component.json`, and `.bitmap` policy application ([`WorkspaceDepsContext`], [`ResolvedDep`]) for `bit deps`.
 
 use super::resolve::{
     Identity, ResolvedDep, WorkspaceDepsContext, package_dep, upsert_dep, workspace_comp_dep,
