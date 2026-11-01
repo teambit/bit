@@ -1,4 +1,6 @@
 //! Active-lane import retains configured provider startup and exact workspace state.
+//!
+//! Verifies that `bit lane import` invokes configured aspect providers exactly once.
 
 use crate::commands::move_paths::support;
 use std::fs;

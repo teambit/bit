@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/merge-lanes-squash.e2e.ts` for `--squash` lane merge parity.
+//! Verifies single-snap no-op squash and multi-snap squashed metadata recording.
 
 use crate::helper::{Helper, parse};
 

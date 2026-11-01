@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts` for unrelated component histories during lane merge.
+//! Covers `--resolve-unrelated` strategies across single and multiple scopes.
 
 use crate::helper::{Helper, parse};
 

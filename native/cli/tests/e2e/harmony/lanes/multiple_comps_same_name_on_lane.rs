@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/multiple-comps-same-name-on-lane.e2e.ts` for same-name components across scopes on a lane.
+//! Verifies distinct workspace directories and `.bitmap` entries for identically named components.
 
 use crate::helper::{Helper, config, parse};
 use serde_json::json;

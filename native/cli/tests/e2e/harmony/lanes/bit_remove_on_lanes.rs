@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts` for `bit remove` and `bit delete` on lanes.
+//!
+//! Validates `--lane` soft removals, `--update-main`, forked lane merges, and `bit recover`.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 

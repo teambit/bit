@@ -1,4 +1,6 @@
 //! Only the local `LaneHistory` is stale; component `Version`s and `VersionHistory` stay consistent.
+//!
+//! Ensures `bit lane checkout` refreshes stale local `LaneHistory` objects from the remote scope.
 
 use super::fixture;
 use crate::{

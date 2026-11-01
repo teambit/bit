@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-merge.e2e.ts` for `bit lane merge` parity.
+//!
+//! Covers switching between `main` and `dev`, fast-forward and diverged merges, and older checkouts.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse, remote};
 use std::path::PathBuf;

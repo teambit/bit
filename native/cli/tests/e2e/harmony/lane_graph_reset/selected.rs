@@ -1,4 +1,6 @@
 //! Selected component pattern reset tests for `bit reset` on a lane.
+//!
+//! Covers partial lane resets, `--head` on introduced members, and snapped deletion restoration.
 
 use super::fixture;
 use crate::{commands::move_paths::support, helper::remote};

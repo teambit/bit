@@ -1,4 +1,6 @@
 //! Valid model wire encodings must not bypass released mutable-object canonicalization.
+//!
+//! Verifies that `switch main` re-encodes level-0 `zlib` component streams to default compression.
 
 use crate::{
     commands::move_paths::support,

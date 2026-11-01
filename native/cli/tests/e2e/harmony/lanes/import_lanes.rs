@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/import-lanes.e2e.ts` for `bit lane import` and `bit fetch --lanes`.
+//!
+//! Verifies object-only lane fetches, `bit switch` to remote lanes, and `--alias` local naming.
 
 use crate::helper::{Helper, config, parse};
 

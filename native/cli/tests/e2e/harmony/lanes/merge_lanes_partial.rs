@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/merge-lanes-partial.e2e.ts` for partial lane merge (`--exclude-non-lane-comps`, `--pattern`).
+//! Verifies selective component inclusion and exclusion during lane merge.
 
 use crate::helper::{Helper, parse, remote};
 

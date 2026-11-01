@@ -1,4 +1,6 @@
 //! Shared workspace and scope object helpers for lane `bit reset` tests.
+//!
+//! Provides workspace creation, snap/head inspection, sentinel file checks, and colored error parity.
 
 use crate::{
     commands::{add::support::history_oracle, move_paths::support},

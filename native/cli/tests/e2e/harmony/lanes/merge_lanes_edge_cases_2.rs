@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-edge-cases-2.e2e.ts` for lane merge edge cases.
+//! Port of `e2e/harmony/lanes/merge-lanes-edge-cases-2.e2e.ts` for lane merge naming and conflict edge cases.
 
 use crate::helper::{Helper, parse};
 

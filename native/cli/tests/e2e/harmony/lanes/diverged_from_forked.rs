@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/diverged-from-forked.e2e.ts` for forked lane divergence parity.
+//!
+//! Verifies `updatesFromForked` in `status --lanes` and two-parent merge commits across forked lanes.
 
 use crate::helper::{Helper, parse};
 

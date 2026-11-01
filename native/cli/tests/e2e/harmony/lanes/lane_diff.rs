@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-diff.e2e.ts` for `bit lane diff` parity.
+//!
+//! Validates diffing the active lane against `main` or another lane in workspaces and bare scopes.
 
 use crate::helper::{Helper, strip_ansi};
 

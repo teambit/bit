@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-snapping.e2e.ts` for `bit snap` and `bit tag` on lanes.
+//!
+//! Covers snapping on lanes, blocking `bit tag` on lanes, auto-snapping dependents, and `bit reset`.
 
 use crate::helper::{FOO_FIXTURE, Helper, len, parse};
 

@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-export.e2e.ts` for `bit export` on lanes.
+//!
+//! Covers cross-scope lane exports, deleted dependencies, interrupted exports, and resets.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use std::fs;

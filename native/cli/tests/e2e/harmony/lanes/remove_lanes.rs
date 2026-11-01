@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/remove-lanes.e2e.ts` for `bit lane remove` parity.
+//! Covers local and remote lane removal guards, `--force`, and merged lane cleanup.
 
 use crate::helper::{Helper, len, parse, remote};
 

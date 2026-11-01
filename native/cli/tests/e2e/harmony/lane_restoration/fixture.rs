@@ -1,4 +1,6 @@
 //! Shared lane history restoration fixture and oracle comparison helpers.
+//!
+//! Provides [`Fixture`] construction, deleted-component state, and history JSON parsing.
 
 use crate::{
     commands::{add::support::history_oracle, move_paths::support},

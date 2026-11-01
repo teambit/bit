@@ -1,4 +1,6 @@
 //! Pattern selection and `--workspace-only` tests for `bit switch` and `bit lane import`.
+//!
+//! Covers skipped main components, removed lane components, and bracket pattern selection.
 
 mod compression;
 use super::{empty, exported, lane};

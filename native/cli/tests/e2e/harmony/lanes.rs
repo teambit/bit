@@ -1,4 +1,5 @@
 //! End-to-end Harmony lane test suites (`e2e/harmony/lanes/`).
+//! Covers lane creation, diffing, export, import, merge, and removal parity.
 
 mod abort_merge_lane;
 mod bit_checkout_on_lanes;

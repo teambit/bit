@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts` for remote lane divergence parity.
+//!
+//! Validates `mergePendingComponents` detection when snapping before or after `import --objects`.
 
 use crate::helper::{Helper, parse};
 use std::{thread, time::Duration};

@@ -1,4 +1,6 @@
 //! Configured provider callback tests for `bit lane checkout` and `bit lane revert`.
+//!
+//! Verifies single-session installation/compilation phase ordering and `onLoad` failure handling.
 
 use super::fixture;
 use crate::{

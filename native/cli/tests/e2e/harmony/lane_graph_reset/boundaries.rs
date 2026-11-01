@@ -1,4 +1,6 @@
 //! Boundary and main-base preservation tests for `bit reset` on a lane.
+//!
+//! Covers exported main bases, forked lanes, unknown inherited boundaries, and foreign lane snaps.
 
 use super::fixture;
 use crate::{commands::move_paths::support, helper::remote};

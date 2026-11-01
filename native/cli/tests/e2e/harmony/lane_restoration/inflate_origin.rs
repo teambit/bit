@@ -1,4 +1,6 @@
 //! Qualify the released stream's two exact corruption errors against the fixture scope.
+//!
+//! Runs the `ObjectFetcher` stream conformance probe to obtain expected corruption diagnostics.
 
 use crate::helper::{Helper, setup};
 use std::{env, path::PathBuf, process::Command};

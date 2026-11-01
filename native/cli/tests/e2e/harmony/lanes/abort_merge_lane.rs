@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/abort-merge-lane.e2e.ts` for `bit lane merge-abort` parity.
+//!
+//! Validates reverting `.bitmap`, lane objects, newly introduced directories, and main heads.
 
 use crate::helper::{Helper, config, parse, remote};
 use std::fs;

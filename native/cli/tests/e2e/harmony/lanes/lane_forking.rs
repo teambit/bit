@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-forking.e2e.ts` for cross-scope lane forking.
+//!
+//! Covers `--fork-lane-new-scope`, squashing the original lane to `main`, and shared remote snaps.
 
 use crate::helper::Helper;
 

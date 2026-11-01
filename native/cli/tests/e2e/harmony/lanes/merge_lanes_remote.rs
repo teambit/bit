@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/merge-lanes-remote.e2e.ts` for remote lane merge parity.
+//! Covers merging remote lanes into `main` or another lane and re-exporting.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::path::PathBuf;

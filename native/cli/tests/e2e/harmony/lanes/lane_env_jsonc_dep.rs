@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-env-jsonc-dep.e2e.ts` for `env.jsonc` peer dependencies on lanes.
+//!
+//! Covers workspace component peer dependencies in `env.jsonc` and `+^` ranges on lanes.
 
 use crate::helper::Helper;
 

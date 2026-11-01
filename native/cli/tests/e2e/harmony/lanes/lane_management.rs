@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-management.e2e.ts` for `bit lane rename`, `alias`, and `remove`.
+//!
+//! Covers renaming exported aliased lanes and validating `lane change-scope` on new vs exported lanes.
 
 use crate::helper::{Helper, config, parse, remote};
 

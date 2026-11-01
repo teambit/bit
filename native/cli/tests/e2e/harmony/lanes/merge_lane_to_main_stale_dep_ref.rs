@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/merge-lane-to-main-stale-dep-ref.e2e.ts` for cross-scope dependency refs on lane merge.
+//! Verifies that stale cross-scope dependency refs are refreshed when merging to `main`.
 
 use crate::helper::Helper;
 

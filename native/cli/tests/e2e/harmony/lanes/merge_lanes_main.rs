@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/merge-lanes-main.e2e.ts` for merging `main` into lanes and lanes into `main`.
+//! Covers dependency policy preservation, deleted components, and head updates.
 
 use crate::helper::{Helper, parse};
 

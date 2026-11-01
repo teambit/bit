@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-export-skip-main-history-http.e2e.ts` for HTTP lane export.
+//!
+//! Verifies that a separate lane scope holds only lane and merge snaps while `log` reaches `main`.
 
 use crate::helper::{Helper, parse};
 

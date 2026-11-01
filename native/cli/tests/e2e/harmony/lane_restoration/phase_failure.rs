@@ -1,4 +1,6 @@
 //! A later partition never rolls back the successful existing-component revert.
+//!
+//! Verifies partial persistence when phase-two source inflation or `onLoad` fails during revert.
 
 use super::fixture;
 use crate::{

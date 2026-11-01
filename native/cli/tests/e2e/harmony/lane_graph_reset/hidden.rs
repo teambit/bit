@@ -1,4 +1,6 @@
 //! Hidden members are seeded through the released bare-scope snap API.
+//!
+//! Verifies that `bit reset` rewinds `updateDependents` hidden cascades without altering `.bitmap`.
 
 use super::fixture;
 use crate::{

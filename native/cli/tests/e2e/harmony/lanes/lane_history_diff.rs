@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-history-diff.e2e.ts` for `bit lane history` and `bit lane history-diff`.
+//!
+//! Verifies that `bit reset` prunes the reset snap's `LaneHistory` entry and `history-diff` succeeds.
 
 use crate::helper::{Helper, parse};
 

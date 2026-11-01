@@ -1,4 +1,6 @@
 //! Actual install subscriber objects remain mutable across the package-manager call.
+//!
+//! Verifies subscriber mutation of installer arguments, linked packages, and install failure recovery.
 
 use super::callbacks::{assert_phases, assert_throttle_receipts, installation_fixture};
 use crate::{commands::add::support::history_oracle, helper::config};

@@ -1,4 +1,6 @@
 //! Historical lane checkout and revert retain released bytes, versions, and publication prefixes.
+//!
+//! Covers `bit lane checkout` and `bit lane revert` with deleted component restoration and `--json`.
 
 mod callbacks;
 mod errors;

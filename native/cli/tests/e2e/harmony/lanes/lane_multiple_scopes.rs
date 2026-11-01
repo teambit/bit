@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-multiple-scopes.e2e.ts` for multi-scope lane export and import.
+//!
+//! Validates exporting and importing lanes whose components reside in multiple remote scopes.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use serde_json::json;

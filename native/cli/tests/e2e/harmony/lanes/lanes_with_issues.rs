@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lanes-with-issues.e2e.ts` for lane operations with component issues.
+//!
+//! Verifies graceful failure diagnostics in `bit lane diff` when the `main` head object is missing.
 
 use crate::helper::{Helper, parse, remote};
 use std::fs;

@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-import-git-branch.e2e.ts` for `--branch` during `bit lane import`.
+//!
+//! Validates automatic Git branch creation, existing branch warnings, and switching back to `main`.
 
 use crate::helper::{Helper, parse};
 use std::process::Command;

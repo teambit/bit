@@ -1,4 +1,6 @@
 //! Missing history ID and validation error tests for `bit lane checkout` and `bit lane revert`.
+//!
+//! Covers missing history IDs, running on `main`, unsupported `--json`, and CI stack parity.
 
 use super::fixture;
 use crate::commands::move_paths::support;

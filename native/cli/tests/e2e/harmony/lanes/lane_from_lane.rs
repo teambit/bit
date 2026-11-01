@@ -1,9 +1,11 @@
 //! Port of `e2e/harmony/lanes/lane-from-lane.e2e.ts` for branching a lane from another lane.
+//!
+//! Covers `main` -> `lane-a` -> `lane-b` branching, foreign-lane snap guards, and detached heads.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse, strip_ansi};
 use serde_json::json;
 
-/// bit lane command › main => lane-a => lane-b, so laneB branched from laneA
+/// bit lane command › main => lane-a => lane-b, so `laneB` branched from `laneA`
 #[test]
 fn main_to_lane_a_to_lane_b_branching_and_switching() {
     let helper = Helper::new();

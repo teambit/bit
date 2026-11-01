@@ -1,4 +1,6 @@
 //! Candidate discovery must not validate replacement heads of unselected members.
+//!
+//! Ensures resetting a selected local member succeeds even when an unselected member lacks a base.
 
 use super::fixture;
 use crate::{
