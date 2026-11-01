@@ -4,6 +4,7 @@ use std::{io, path::Path};
 
 /// A cold command owns these reads outright: no public model or Source aliases
 /// exist yet, so only the comparison result needs to cross the runtime boundary.
+#[inline]
 pub(crate) fn modified(
     root: &Path,
     paths: &[String],

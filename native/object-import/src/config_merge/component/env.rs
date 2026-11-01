@@ -45,6 +45,7 @@ fn one(engine: &mut Engine<'_>, side: &str) -> io::Result<Value> {
     Ok(env)
 }
 
+#[inline]
 fn is_envs_extension(entry: &Value) -> bool {
     entry["name"]
         .as_str()
@@ -123,6 +124,7 @@ fn monotonic(engine: &mut Engine<'_>) -> io::Result<bool> {
     }
     Ok(true)
 }
+#[inline]
 fn env_string(env: &Value) -> String {
     let id = env["id"].as_str().map_or("", str::trim);
     env["version"]
@@ -131,6 +133,7 @@ fn env_string(env: &Value) -> String {
         .filter(|version| !version.is_empty())
         .map_or_else(|| id.into(), |version| format!("{id}@{version}"))
 }
+#[inline]
 fn selector(env: &Value) -> Value {
     json!({"value":{"env":env_string(env)}})
 }

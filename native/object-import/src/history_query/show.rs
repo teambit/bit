@@ -3,13 +3,13 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     versions: Vec<Version>,
     short_hash: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Version {
     hash: String,
@@ -17,10 +17,12 @@ struct Version {
     unrelated: Option<String>,
     squashed: Option<Vec<String>>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Node {
     id: String,
     index: usize,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Edge {
     source: String,
     target: String,
@@ -79,6 +81,7 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
     }
     Ok(hashes)
 }
+#[inline]
 fn identifier(hash: &str, short: bool) -> String {
     let trimmed = hash.trim();
     let slice = if short { trimmed.get(..9).unwrap_or(trimmed) } else { trimmed };
@@ -181,13 +184,13 @@ fn visit(
     Ok(())
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Toposort {
     nodes: Vec<String>,
     edges: Vec<Link>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Link {
     source: String,

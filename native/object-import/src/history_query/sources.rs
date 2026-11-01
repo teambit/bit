@@ -9,7 +9,7 @@ use std::{
 };
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Cache {
     records: HashMap<String, crate::checkout::repository::SourceRecord>,
     pub(super) bytes: usize,
@@ -47,6 +47,7 @@ impl Cache {
         Ok((self.records.entry(canonical.to_owned()).or_insert(record), true))
     }
 }
+#[derive(Debug, PartialEq, Eq)]
 pub(super) struct Sources<'a> {
     directory: PathBuf,
     cache: &'a mut Cache,
@@ -57,6 +58,7 @@ pub(super) struct Sources<'a> {
     descriptors: Vec<Value>,
     loads: Vec<usize>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Stored {
     body: Vec<u8>,
     index: usize,
@@ -111,6 +113,7 @@ impl Sources<'_> {
         self.values.insert(canonical, Stored { body: body.clone(), index, fresh });
         Ok(body)
     }
+    #[inline]
     pub(super) fn text(&mut self, hash: &str) -> io::Result<String> {
         Ok(String::from_utf8_lossy(&self.read(hash)?).into_owned())
     }

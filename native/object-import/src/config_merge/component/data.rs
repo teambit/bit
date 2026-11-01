@@ -40,6 +40,7 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn non_empty_str<'a>(value: &'a serde_json::Value, message: &str) -> io::Result<&'a str> {
     value
         .as_str()
@@ -47,6 +48,7 @@ fn non_empty_str<'a>(value: &'a serde_json::Value, message: &str) -> io::Result<
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid(message))
 }
+#[inline]
 fn entry_version(entry: Option<&serde_json::Value>) -> &str {
     entry
         .and_then(|entry| entry["componentId"]["version"].as_str())
@@ -90,12 +92,14 @@ fn reason(
     Ok(Some("conflicted in data since base-version".into()))
 }
 
+#[inline]
 fn equal(left: &serde_json::Value, right: &serde_json::Value) -> bool {
     left["data"] == right["data"]
         && (left["dataUndefinedKeys"] == right["dataUndefinedKeys"]
             || undefined_keys(left) == undefined_keys(right))
 }
 
+#[inline]
 fn undefined_keys(entry: &serde_json::Value) -> std::collections::BTreeSet<&str> {
     entry["dataUndefinedKeys"]
         .as_array()

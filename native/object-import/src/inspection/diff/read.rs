@@ -40,6 +40,7 @@ pub(super) fn load(
     }
     Ok(output)
 }
+#[inline]
 fn parallel(
     directory: &Path,
     files: &[wire::Model],
@@ -61,6 +62,7 @@ fn parallel(
         })
         .collect()
 }
+#[inline]
 fn serial(
     directory: &Path,
     files: &[wire::Model],

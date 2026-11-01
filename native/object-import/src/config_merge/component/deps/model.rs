@@ -8,6 +8,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) struct State<'a, 'b> {
     pub engine: &'a mut Engine<'b>,
     pub configs: Vec<Option<Value>>,
@@ -44,6 +45,7 @@ impl<'a, 'b> State<'a, 'b> {
             .collect::<io::Result<Vec<_>>>()?;
         Ok(Self { engine, configs, policies, data, merged: json!({}), conflicted: json!({}) })
     }
+    #[inline]
     pub(super) fn same(&self, left: usize, right: usize) -> bool {
         self.configs[left]
             .as_ref()
@@ -189,6 +191,7 @@ impl<'a, 'b> State<'a, 'b> {
         self.engine.rows.push(row);
     }
 }
+#[inline]
 pub(super) fn version(dep: &Value) -> &str {
     dep["policy"]
         .as_str()
@@ -197,6 +200,7 @@ pub(super) fn version(dep: &Value) -> &str {
         .or_else(|| dep["version"].as_str().map(str::trim))
         .unwrap_or("")
 }
+#[inline]
 fn hash(text: &str) -> bool {
     let text = text.trim();
     (3..=40).contains(&text.len()) && text.bytes().all(|byte| byte.is_ascii_hexdigit())

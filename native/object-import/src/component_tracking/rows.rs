@@ -3,6 +3,7 @@ use super::unsupported;
 use serde_json::{Map, Value};
 use std::io;
 
+#[inline]
 pub(super) fn scope(row: &Value) -> Option<&str> {
     row["scope"]
         .as_str()
@@ -15,6 +16,7 @@ pub(super) fn scope(row: &Value) -> Option<&str> {
                 .filter(|scope| !scope.is_empty())
         })
 }
+#[inline]
 pub(super) fn row_name<'a>(key: &'a str, row: &'a Value) -> Option<&'a str> {
     let key = key.trim();
     if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {
@@ -54,6 +56,7 @@ pub(super) fn find<'a>(
     }
     Ok(found)
 }
+#[inline]
 fn matches(row: &Value, key: &str, name: &str, selected_scope: Option<&str>) -> bool {
     let name = name.trim();
     let Some(actual_name) = row_name(key, row) else {

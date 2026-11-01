@@ -4,7 +4,7 @@ mod tests;
 
 use std::collections::HashMap;
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct TagIndex(HashMap<String, (String, bool)>);
 impl TagIndex {
     pub(crate) fn model(model: &serde_json::Value) -> Self {

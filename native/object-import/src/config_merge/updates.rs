@@ -2,7 +2,7 @@ use super::{array, invalid, semver, text};
 use serde_json::{Value, json};
 use std::{cmp::Ordering, io};
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Plan {
     updates: Vec<Value>,
     conflicts: serde_json::Map<String, Value>,
@@ -179,9 +179,11 @@ fn component_range_version(
     Ok(())
 }
 impl Plan {
+    #[inline]
     fn skip(&mut self, name: &str, reason: impl std::fmt::Display) {
         self.logs.push(format!("{name} - not updating. {reason}"));
     }
+    #[inline]
     fn update(&mut self, name: &str, workspace: &str, component: &str) {
         self.logs.push(format!("{name} - updating from {workspace} to {component}"));
         self.updates.push(json!([name, workspace, component]));

@@ -34,6 +34,7 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
         None => format!("{scope}/{name}"),
     })
 }
+#[inline]
 fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
     row[field]
         .as_str()
@@ -58,6 +59,7 @@ pub(super) fn key(bitmap: &Value, id: &str) -> io::Result<Option<String>> {
     }
     Ok(matches.first().map(|(key, _)| (*key).clone()))
 }
+#[inline]
 pub(super) fn bare(id: &str) -> &str {
     let id = id.trim();
     id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim())
@@ -95,6 +97,7 @@ fn bitmap_pool(batch: &mut Batch) -> io::Result<Vec<String>> {
     }
     Ok(result)
 }
+#[inline]
 fn removed_bitmap_rows(rows: &serde_json::Map<String, Value>, result: &mut Vec<String>) {
     for (key, row) in rows {
         if row["isAvailableOnCurrentLane"] == false {
@@ -171,6 +174,7 @@ fn lane_component(batch: &mut Batch, pattern: &str) -> io::Result<Option<String>
         .ok_or_else(|| invalid("recovery lane head"))?;
     Ok(Some(format!("{bare}@{version}")))
 }
+#[inline]
 fn removed_head(batch: &mut Batch, id: &str) -> io::Result<bool> {
     let Some(model) = repository::model(batch, bare(id))? else { return Ok(false) };
     let Some(head) = repository::head(batch, bare(id), &model)? else { return Ok(false) };
@@ -207,6 +211,7 @@ fn staged_main(batch: &mut Batch, result: &mut Vec<String>) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn append(result: &mut Vec<String>, id: String) {
     if !result
         .iter()

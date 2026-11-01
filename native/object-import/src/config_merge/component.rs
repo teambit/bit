@@ -88,6 +88,7 @@ fn other(engine: &mut Engine<'_>) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn other_id(engine: &Engine<'_>, entry: &Value, id: &str) -> io::Result<Option<String>> {
     if entry["componentId"]["version"]
         .as_str()

@@ -38,6 +38,7 @@ fn publish_files(batch: &Batch) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn write_verified_file(root: &Path, path: &Path, bytes: &[u8]) -> io::Result<()> {
     destination(root, path)?;
     if let Some(parent) = path.parent() {
@@ -67,6 +68,7 @@ pub(super) fn destination(root: &Path, target: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 pub(super) fn existing_ancestors(batch: &mut Batch, target: &Path) -> io::Result<()> {
     destination(&batch.root, target)?;
     let parent = target

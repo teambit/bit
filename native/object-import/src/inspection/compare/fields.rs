@@ -40,9 +40,11 @@ pub(super) fn set(value: &mut Js, key: &str, new: Js) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 pub(super) fn text(value: &Js) -> io::Result<Vec<u16>> {
     text_slice(value).map(<[u16]>::to_vec)
 }
+#[inline]
 pub(super) fn text_slice(value: &Js) -> io::Result<&[u16]> {
     if let Js::String(text) = value {
         if text.len() > 32768 {
@@ -53,6 +55,7 @@ pub(super) fn text_slice(value: &Js) -> io::Result<&[u16]> {
         Err(invalid("inspection expected string"))
     }
 }
+#[inline]
 pub(super) fn array(value: &Js) -> io::Result<&[Js]> {
     if let Js::Array(rows) = value { Ok(rows) } else { Err(invalid("inspection expected array")) }
 }

@@ -4,19 +4,20 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io, path::PathBuf};
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     plans: HashMap<String, Plan>,
     sequence: u64,
     bytes: usize,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Plan {
     value: Value,
     directory: PathBuf,
     bytes: usize,
     sources: Cache,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Token {
     token: String,
@@ -99,6 +100,7 @@ impl State {
     }
 }
 
+#[inline]
 fn directory(input: &Value) -> io::Result<PathBuf> {
     let path = PathBuf::from(
         input

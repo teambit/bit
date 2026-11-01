@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::PathBuf};
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {
     pub(super) token: String,
@@ -60,6 +60,7 @@ pub(super) fn diff(mut request: Request, cache: &mut Cache) -> io::Result<Value>
     sources.response(&mut result);
     Ok(result)
 }
+#[inline]
 fn linux_hash(bytes: &[u8]) -> String {
     let digest = if bytes.contains(&b'\r') {
         Sha1::digest(crate::checkout::eol::normalize(bytes.to_vec(), false))
@@ -98,6 +99,7 @@ fn finish(request: Request, left: Option<Vec<u8>>, right: Option<Vec<u8>>) -> io
     Ok(response)
 }
 
+#[inline]
 fn normalized_git_executable(git: Option<&str>) -> Option<String> {
     git.map(str::trim)
         .filter(|value| !value.is_empty())

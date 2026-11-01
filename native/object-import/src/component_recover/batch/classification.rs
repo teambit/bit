@@ -73,6 +73,7 @@ fn tracked_head(batch: &mut Batch, id: &str, model: Option<&Value>) -> io::Resul
         },
     )
 }
+#[inline]
 pub(super) fn has_remove_info(config: &Value) -> bool {
     config["removed"] == true
         || config["removeOnMain"] == true

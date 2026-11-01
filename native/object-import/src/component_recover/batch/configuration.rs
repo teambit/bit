@@ -55,6 +55,7 @@ fn projection(mut parsed: Value) -> io::Result<Value> {
     Ok(value)
 }
 
+#[inline]
 fn has_scoped_component_id(parsed: &Value) -> bool {
     let str_scoped = parsed["componentId"]
         .as_str()

@@ -55,6 +55,7 @@ fn fields(input: &[Value]) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn validate_entry(entry: &Value) -> io::Result<()> {
     validate::fields(entry, &["name", "version", "force"])?;
     if text(entry, "name")?.trim().is_empty() || text(entry, "version")?.trim().is_empty() {

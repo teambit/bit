@@ -22,6 +22,7 @@ pub(crate) fn normalize(bytes: &[u8]) -> io::Result<Vec<u8>> {
     }
     render(&value)
 }
+#[inline]
 pub(crate) fn render(value: &Value) -> io::Result<Vec<u8>> {
     let mut output = PREFIX.as_bytes().to_vec();
     output.extend(js_json::stringify_indented(&ast(value)?, 4)?);
@@ -63,6 +64,7 @@ fn scope(entry: &mut Map<String, Value>) {
         entry.insert("scope".into(), scope);
     }
 }
+#[inline]
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
@@ -154,12 +156,14 @@ pub(crate) fn component_row(entry: &Value) -> io::Result<Value> {
     }
     Ok(Value::Object(result))
 }
+#[inline]
 fn included(entry: &Value, key: &str, value: &Value) -> bool {
     if matches!(key, "onLanesOnly" | "localOnly") && value == false {
         return false;
     }
     !(key == "isAvailableOnCurrentLane" && value == true && entry["onLanesOnly"] != true)
 }
+#[inline]
 fn clean_value(key: &str, value: &Value) -> io::Result<Value> {
     let mut value = value.clone();
     if key == "config" {

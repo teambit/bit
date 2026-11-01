@@ -33,15 +33,18 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         _ => Err(invalid("unsupported history reset operation")),
     }
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+#[inline]
 fn bound(count: usize) -> io::Result<()> {
     if count > 4096 {
         return Err(invalid("history reset record limit"));
     }
     Ok(())
 }
+#[inline]
 fn text(value: &str) -> io::Result<()> {
     let has_control = if value.is_ascii() {
         value.bytes().any(|byte| byte.is_ascii_control())

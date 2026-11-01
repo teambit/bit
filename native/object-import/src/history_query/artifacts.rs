@@ -78,6 +78,7 @@ fn validate_file(file: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn find_builder_extension(entries: &[Value]) -> Option<&Value> {
     entries
         .iter()

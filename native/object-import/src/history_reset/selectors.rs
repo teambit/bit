@@ -3,29 +3,30 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, io};
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Candidates {
     components: Vec<String>,
     removed: Vec<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Pattern {
     components: Vec<String>,
     matches: Vec<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Soft {
     versions: Vec<Option<String>>,
     aliases: Option<Vec<usize>>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Never {
     full_names: Vec<String>,
 }
+#[inline]
 fn validate(values: &[String]) -> io::Result<()> {
     bound(values.len())?;
     for value in values {

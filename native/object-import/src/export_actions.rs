@@ -12,11 +12,13 @@ type Callback = dyn Fn(&Path, &str, &Value) -> io::Result<Value> + Send + Sync;
 pub struct Handler(Arc<Callback>);
 impl Handler {
     #[must_use]
+    #[inline]
     pub fn new(
         callback: impl Fn(&Path, &str, &Value) -> io::Result<Value> + Send + Sync + 'static,
     ) -> Self {
         Self(Arc::new(callback))
     }
+    #[inline]
     pub(crate) fn call(&self, path: &Path, name: &str, options: &Value) -> io::Result<Value> {
         let path = path.to_str().map_or(path, |text| Path::new(text.trim()));
         let name = name.trim();
@@ -47,17 +49,20 @@ impl Drop for Binding {
 
 /// Capture the adapter when dispatching an operation onto its worker pool.
 #[must_use]
+#[inline]
 pub fn current() -> Option<Handler> {
     CURRENT.with_borrow(Clone::clone)
 }
 
 /// Bind an adapter to this operation and restore the prior binding on return or unwind.
+#[inline]
 pub fn scope<Output>(handler: Option<Handler>, work: impl FnOnce() -> Output) -> Output {
     let _binding = bind(handler);
     work()
 }
 
 /// Bind an adapter on the dispatch thread until the returned guard is dropped.
+#[inline]
 pub fn bind(handler: Option<Handler>) -> Binding {
     Binding(CURRENT.with_borrow_mut(|current| std::mem::replace(current, handler)))
 }

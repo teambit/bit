@@ -4,7 +4,7 @@ use std::io;
 
 const FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
 type Groups = Vec<(String, Vec<(String, String)>)>;
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Plan {
     changes: Vec<Value>,
     updates: Vec<Value>,
@@ -171,10 +171,12 @@ fn parse_conflict_versions(raw: &str) -> io::Result<(&str, String)> {
         };
     Ok((current, other_valid))
 }
+#[inline]
 fn same(uses: &[(String, String)]) -> bool {
     uses.iter()
         .all(|(_, version)| *version == uses[0].1)
 }
+#[inline]
 fn components(uses: &[(String, String)]) -> String {
     uses.iter()
         .map(|(component, _)| component.as_str())
@@ -216,6 +218,7 @@ fn report(uses: &[(String, String)]) -> String {
         .join(", ");
     format!("multiple versions found. {details}")
 }
+#[inline]
 fn put(entries: &mut Vec<Value>, name: &str, value: &str) {
     if let Some(entry) = entries
         .iter_mut()
@@ -226,6 +229,7 @@ fn put(entries: &mut Vec<Value>, name: &str, value: &str) {
         entries.push(json!([name, value]));
     }
 }
+#[inline]
 fn put_update(entries: &mut Vec<Value>, name: &str, current: &str, value: &str) {
     if let Some(entry) = entries
         .iter_mut()

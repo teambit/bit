@@ -8,7 +8,7 @@ use std::{
     io,
     path::PathBuf,
 };
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     token: String,

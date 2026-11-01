@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {
     pub(super) token: String,
@@ -68,6 +68,7 @@ fn result(log: Value, index: usize, rows: &[Value], relative: &str) -> io::Resul
     row["parentHashes"] = json!(parents);
     Ok(Some(row))
 }
+#[inline]
 fn version<'a>(rows: &'a [Value], hash: &str) -> io::Result<&'a Value> {
     let target = hash.trim();
     rows.iter()
@@ -79,6 +80,7 @@ fn version<'a>(rows: &'a [Value], hash: &str) -> io::Result<&'a Value> {
         })
         .ok_or_else(|| invalid("history file missing Version"))
 }
+#[inline]
 fn clean_path(path: &str) -> std::borrow::Cow<'_, str> {
     let mut trimmed = path.trim();
     while let Some(rest) = trimmed

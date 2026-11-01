@@ -11,7 +11,7 @@ use serde::Serialize;
 use std::io;
 
 /// Accessor-free JavaScript data, preserving undefined, UTF-16 and binary64 bits.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", content = "value", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Value {
     Undefined,
@@ -24,6 +24,7 @@ pub enum Value {
 }
 
 impl Value {
+    #[inline]
     #[must_use]
     pub fn text(text: &str) -> Self {
         let units = if text.is_ascii() {
@@ -35,6 +36,7 @@ impl Value {
     }
 
     #[cfg(test)]
+    #[inline]
     #[must_use]
     pub fn number(value: f64) -> Self {
         Self::Number(format!("{:016x}", value.to_bits()))
@@ -80,6 +82,7 @@ impl Value {
     }
 }
 
+#[inline]
 pub fn stringify(value: &Value, pretty: bool) -> io::Result<Option<Vec<u8>>> {
     if matches!(value, Value::Undefined) {
         return Ok(None);
@@ -100,6 +103,7 @@ pub fn stringify_indented(value: &Value, spaces: usize) -> io::Result<Vec<u8>> {
     Ok(writer.finish())
 }
 
+#[inline]
 fn number(bits: &str) -> io::Result<f64> {
     let bits = bits.trim();
     if bits.len() != 16 || bits.starts_with('+') {
@@ -110,6 +114,7 @@ fn number(bits: &str) -> io::Result<f64> {
     Ok(f64::from_bits(parsed))
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

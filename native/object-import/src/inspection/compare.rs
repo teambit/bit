@@ -9,7 +9,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     left: Js,

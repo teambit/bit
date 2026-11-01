@@ -36,6 +36,7 @@ pub(super) fn all(value: &mut Js) -> io::Result<Value> {
         json!({"fileOrder":files,"dependencyOrder":dependencies,"devDependencyOrder":dev,"extensionOrder":extensions,"packageKeys":package_keys,"overrideKeys":override_keys}),
     )
 }
+#[inline]
 fn extension_id(row: &Js) -> io::Result<Vec<u16>> {
     let id = fields::get(row, "extensionId");
     if id.truthy()? {

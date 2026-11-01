@@ -24,6 +24,7 @@ pub(super) fn capture(
 }
 
 // Skewed file sizes retry serially before any spool or public plan is published.
+#[inline]
 fn smaller(
     files: &[wire::Input],
     request: &wire::Begin,

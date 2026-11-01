@@ -40,6 +40,7 @@ pub(super) fn merge(
     state.finish();
     Ok(())
 }
+#[inline]
 fn append(policy: &mut Value, field: &str, row: Value) {
     let Some(map) = policy.as_object_mut() else {
         return;
@@ -50,6 +51,7 @@ fn append(policy: &mut Value, field: &str, row: Value) {
         map.insert(field.to_owned(), Value::Array(vec![row]));
     }
 }
+#[inline]
 fn field(lifecycle: &str) -> io::Result<&'static str> {
     match lifecycle.trim() {
         "runtime" => Ok("dependencies"),

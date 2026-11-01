@@ -9,7 +9,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub old: String,
     pub new: String,
@@ -19,6 +19,7 @@ pub struct Options {
     pub deprecate: bool,
     pub skip_install: bool,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Selection {
     root: PathBuf,
     before: Vec<u8>,
@@ -84,6 +85,7 @@ impl Selection {
         }
         Ok(())
     }
+    #[inline]
     pub fn publish_default(&self, file_id: &str) -> io::Result<()> {
         self.validate()?;
         if let Some(scope) = &self.default_scope {
@@ -93,6 +95,7 @@ impl Selection {
     }
 }
 
+#[inline]
 fn workspace_aspect_key(workspace: &Value) -> &str {
     workspace
         .as_object()

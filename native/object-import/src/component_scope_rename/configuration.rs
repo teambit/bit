@@ -32,6 +32,7 @@ pub(super) fn publish(
         crate::checkout::eol::normalize(format!("{document}\n").into_bytes(), cfg!(windows));
     fs::write(path, bytes)
 }
+#[inline]
 fn backup(root: &Path, before: &[u8], scope: &str, file_id: &str) -> io::Result<()> {
     let directory = crate::scope_path(root).join("workspace-config-history");
     let files_dir = directory.join("files");

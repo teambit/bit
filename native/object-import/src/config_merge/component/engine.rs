@@ -2,6 +2,7 @@ use super::super::{array, invalid, text};
 use serde_json::{Value, json};
 use std::io;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Engine<'a> {
     pub input: &'a Value,
     pub rows: Vec<Value>,
@@ -38,17 +39,20 @@ impl<'a> Engine<'a> {
         self.log("debug", format!("otherLabel: {}", text(self.input, "otherLabel")?));
         Ok(())
     }
+    #[inline]
     pub(super) fn log(&mut self, level: &str, message: String) {
         let mut entry = json!({"level":level});
         entry["message"] = Value::String(message);
         self.logs.push(entry);
     }
+    #[inline]
     pub(super) fn meta(&mut self, level: &str, message: &str, value: Option<&Value>) {
         self.logs.push(match value {
             Some(value) => json!({"level":level,"message":message,"meta":[value]}),
             None => json!({"level":level,"message":message,"metaUndefined":true}),
         });
     }
+    #[inline]
     pub(super) fn strategy(&self) -> &str {
         self.input["strategy"]
             .as_str()
@@ -77,6 +81,7 @@ impl<'a> Engine<'a> {
                 }
             }))
     }
+    #[inline]
     pub(super) fn source(side: &str, index: usize) -> Value {
         json!({"source":{"side":side,"index":index}})
     }

@@ -60,6 +60,7 @@ fn existing_root(candidate: &Candidate, existing: Option<&Value>) -> io::Result<
     Ok(())
 }
 
+#[inline]
 fn warning(warnings: &mut Value, name: &str, row: &Value, file: &str) {
     let scope = rows::scope(row).unwrap_or_default();
     let key = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
@@ -71,6 +72,7 @@ fn warning(warnings: &mut Value, name: &str, row: &Value, file: &str) {
     }
 }
 
+#[inline]
 fn is_owned_by_other(
     (candidate_scope, candidate_name): (&str, &str),
     name: &str,

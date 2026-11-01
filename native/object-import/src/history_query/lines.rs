@@ -2,20 +2,22 @@
 use super::invalid;
 use std::{collections::HashMap, io};
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Run {
     kind: u8,
     count: usize,
 }
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Path {
     old: isize,
     runs: Vec<Run>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Part {
     pub(super) kind: u8,
     pub(super) value: String,
 }
+#[inline]
 fn tokens(text: &str) -> Vec<&str> {
     text.split_inclusive('\n')
         .filter(|text| !text.is_empty())
@@ -93,9 +95,11 @@ fn choose(remove: Option<Path>, add: Option<&Path>, can_remove: bool, can_add: b
         _ => Path { old: 0, runs: Vec::new() },
     }
 }
+#[inline]
 fn terminal(path: &Path, diagonal: isize, old: usize, new: usize) -> bool {
     path.old + 1 >= old as isize && path.old - diagonal + 1 >= new as isize
 }
+#[inline]
 fn push(path: &mut Path, kind: u8, count: usize) {
     if count == 0 {
         return;

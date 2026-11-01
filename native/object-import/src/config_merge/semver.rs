@@ -107,6 +107,7 @@ fn matches_comparator(candidate: &Value, comparator: &Value) -> io::Result<bool>
         _ => Err(invalid("semver operator")),
     }
 }
+#[inline]
 pub(super) fn greater(input: &Value, left: &str, right: &str) -> io::Result<bool> {
     let (left, right) = (left.trim(), right.trim());
     if left == right {
@@ -115,6 +116,7 @@ pub(super) fn greater(input: &Value, left: &str, right: &str) -> io::Result<bool
     Ok(compare(&input[left]["version"], &input[right]["version"])? == Ordering::Greater)
 }
 
+#[inline]
 fn numeric(value: &Value) -> Option<f64> {
     if let Some(number) = value.as_u64() {
         return Some(number as f64);

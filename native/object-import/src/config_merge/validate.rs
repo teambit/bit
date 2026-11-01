@@ -2,6 +2,7 @@ use super::{array, invalid, text};
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(super) fn fields(input: &Value, fields: &[&str]) -> io::Result<()> {
     let object = input.as_object().ok_or_else(|| invalid("config request object"))?;
     if object
@@ -12,6 +13,7 @@ pub(super) fn fields(input: &Value, fields: &[&str]) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 pub(super) fn semver(input: &Value) -> io::Result<()> {
     let entries = input
         .as_object()
@@ -102,6 +104,7 @@ fn semver_version(input: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(super) fn component(input: &Value) -> io::Result<()> {
     for side in ["current", "base", "other"] {
         for entry in array(input, side)? {

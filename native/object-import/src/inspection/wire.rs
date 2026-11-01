@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use std::path::PathBuf;
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Begin {
     pub(super) files: Vec<Input>,
@@ -12,7 +12,7 @@ pub(super) struct Begin {
     #[serde(default)]
     pub(super) snapshot_directory: PathBuf,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Input {
     pub(super) relative_path: String,
@@ -21,18 +21,18 @@ pub(super) struct Input {
     pub(super) read_token: Option<u64>,
     pub(super) snapshot_hash: Option<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Token {
     pub(super) token: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Files {
     pub(super) token: String,
     pub(super) model_files: Vec<Model>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Model {
     pub(super) relative_path: String,

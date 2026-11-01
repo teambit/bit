@@ -5,7 +5,7 @@ use std::{
     collections::{HashMap, HashSet},
     io,
 };
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Request {
     rows: Vec<Row>,
@@ -13,7 +13,7 @@ struct Request {
     #[serde(default)]
     exclude: Vec<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Row {
     id: String,

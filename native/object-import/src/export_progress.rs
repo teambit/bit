@@ -23,15 +23,18 @@ impl Drop for Restore {
 }
 
 /// Observe this operation, restoring the previous owner when the operation returns or unwinds.
+#[inline]
 pub fn scope<Output>(sender: &SyncSender<Event>, work: impl FnOnce() -> Output) -> Output {
     with_sender(Some(sender.clone()), work)
 }
 
 #[must_use]
+#[inline]
 pub(crate) fn current() -> Option<SyncSender<Event>> {
     CURRENT.with_borrow(Clone::clone)
 }
 
+#[inline]
 pub(crate) fn with_sender<Output>(
     sender: Option<SyncSender<Event>>,
     work: impl FnOnce() -> Output,
@@ -66,6 +69,7 @@ pub fn emit(event: Event) -> bool {
     })
 }
 
+#[inline]
 fn non_empty_trimmed(text: String) -> Option<String> {
     let trimmed = text.trim();
     if trimmed.is_empty() {

@@ -50,9 +50,11 @@ pub(crate) fn apply(kind: &str, input: &Value) -> io::Result<Value> {
         }
     }
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+#[inline]
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
@@ -64,6 +66,7 @@ fn truthy(value: &Value) -> bool {
         _ => true,
     }
 }
+#[inline]
 pub(crate) fn conflict_plan(input: &Value) -> io::Result<(Value, Conflict)> {
     validate::fields(input, &["path", "fallbackPath", "conflicts"])?;
     validate::fields(
@@ -72,10 +75,12 @@ pub(crate) fn conflict_plan(input: &Value) -> io::Result<(Value, Conflict)> {
     )?;
     conflict::plan(input)
 }
+#[inline]
 pub(crate) fn conflict_commit(input: &Value, state: &mut Option<Conflict>) -> io::Result<Value> {
     validate::fields(input, &["token", "path"])?;
     conflict::commit(input, state)
 }
+#[inline]
 pub(crate) fn render_workspace_conflict(contents: &str, conflicts: &Value) -> io::Result<String> {
     if contents.len() > 32 * 1024 * 1024 || contents.as_bytes().contains(&0) {
         return Err(invalid("conflict workspace contents"));
@@ -83,12 +88,14 @@ pub(crate) fn render_workspace_conflict(contents: &str, conflicts: &Value) -> io
     validate::fields(conflicts, &["dependencies", "devDependencies", "peerDependencies"])?;
     conflict::render(contents, conflicts)
 }
+#[inline]
 fn text<'a>(input: &'a Value, field: &str) -> io::Result<&'a str> {
     input[field]
         .as_str()
         .filter(|value| value.len() <= 4096 && !value.as_bytes().contains(&0))
         .ok_or_else(|| invalid("config text"))
 }
+#[inline]
 fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
     input[field]
         .as_array()
@@ -97,6 +104,7 @@ fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
         .ok_or_else(|| invalid("config array"))
 }
 
+#[inline]
 pub(crate) fn compare_versions(left: &Value, right: &Value) -> io::Result<std::cmp::Ordering> {
     semver::compare(left, right)
 }

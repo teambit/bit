@@ -67,6 +67,7 @@ fn root_owner(
     Ok(())
 }
 
+#[inline]
 fn contains_root_main_file(row: &Value, directory: &str) -> bool {
     let dir = directory
         .trim()

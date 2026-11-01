@@ -7,7 +7,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Fields {
     objects_directory: PathBuf,
@@ -20,7 +20,7 @@ struct Fields {
     #[serde(default)]
     overlays: Vec<Value>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Labels {
     #[serde(default)]
@@ -29,12 +29,13 @@ struct Labels {
     orphaned: Vec<Tag>,
     last_found_tag: Option<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Tag {
     label: String,
     hash: String,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Request {
     fields: Fields,
     labels: Labels,
@@ -42,6 +43,7 @@ struct Request {
     stops: HashSet<String>,
     index: crate::tag_index::TagIndex,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Walk {
     rows: Vec<Value>,
     queue: VecDeque<(String, String)>,
@@ -136,6 +138,7 @@ fn validate(request: &Request) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn validate_tag_label(raw: &str) -> io::Result<()> {
     let label = raw.trim();
     if label.is_empty() || label.len() > 32768 || raw.contains('\0') {
@@ -192,6 +195,7 @@ fn load(
     }
     append(walk, row)
 }
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct ByteCount(usize);
 impl io::Write for ByteCount {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
@@ -333,6 +337,7 @@ fn parse(mut input: Value) -> io::Result<Request> {
     Ok(Request { fields, labels, overlays, stops, index })
 }
 
+#[inline]
 fn metadata(row: &mut Value, reader: &crate::read_version::Reader<'_>) {
     if let Some((body, size, compressed)) = reader.metadata() {
         row["versionJSON"] = json!(body);

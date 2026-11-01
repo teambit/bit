@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     existing: Vec<String>,
@@ -154,6 +154,7 @@ fn populate(request: &Request, plan: &Value) -> io::Result<Value> {
     }
     Ok(output)
 }
+#[derive(Debug, PartialEq, Eq)]
 struct Trace<'a> {
     active: HashSet<String>,
     stack: Vec<(String, Value, bool)>,
@@ -254,7 +255,7 @@ impl Trace<'_> {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Fields {
     objects_directory: PathBuf,
@@ -266,7 +267,7 @@ struct Fields {
     #[serde(default)]
     overlays: Vec<Value>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Labels {
     #[serde(default)]

@@ -10,7 +10,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {
     pub(super) token: String,
@@ -57,6 +57,7 @@ pub(super) fn blame(request: Request, cache: &mut Cache) -> io::Result<Value> {
     sources.response(&mut response);
     Ok(response)
 }
+#[inline]
 fn initial_rows(text: &str) -> Vec<Value> {
     text.split('\n')
         .enumerate()
@@ -66,6 +67,7 @@ fn initial_rows(text: &str) -> Vec<Value> {
         })
         .collect()
 }
+#[inline]
 fn assign_remaining(
     rows: &mut [Value],
     pending: HashSet<usize>,
@@ -77,6 +79,7 @@ fn assign_remaining(
         rows[index]["logIndex"] = json!(last_idx);
     }
 }
+#[inline]
 fn reference<'a>(log: &'a Value, field: &str) -> io::Result<&'a str> {
     log.get(field)
         .and_then(Value::as_str)
@@ -146,6 +149,7 @@ fn previous_lines(rows: &mut [Value], added: Vec<usize>, removed: &HashMap<usize
         }
     }
 }
+#[derive(Debug, PartialEq, Eq)]
 struct Patch<'a> {
     rows: &'a mut [Value],
     pending: &'a mut HashSet<usize>,

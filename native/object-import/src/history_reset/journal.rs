@@ -3,12 +3,12 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     records: HashMap<String, Record>,
     sequence: u64,
 }
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
     phases: Vec<&'static str>,
     cursor: usize,
@@ -18,7 +18,7 @@ struct Record {
     forked: bool,
     remaining: usize,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Begin {
     mode: String,
@@ -26,7 +26,7 @@ struct Begin {
     head: bool,
     force: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Receipt {
     token: String,
@@ -34,19 +34,20 @@ struct Receipt {
     phase: String,
     next_count: Option<usize>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Fork {
     token: String,
     revision: u32,
     count: usize,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Token {
     token: String,
 }
 impl Record {
+    #[inline]
     fn output(&self, token: &str) -> Value {
         json!({"token":token,"revision":self.revision,"directive":{"phase":self.phases.get(self.cursor).copied().unwrap_or("done"),"count":self.count}})
     }

@@ -10,11 +10,13 @@ use std::{
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Conflict {
     token: String,
     path: PathBuf,
     contents: String,
 }
+#[derive(Debug, PartialEq, Eq)]
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> io::Result<Self> {
@@ -158,6 +160,7 @@ fn replace(contents: &mut String, entry: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn absolute(path: &Path) -> io::Result<()> {
     let bytes = path.as_os_str().as_encoded_bytes();
     if !path.is_absolute() || bytes.len() > 32768 || bytes.contains(&0) {
@@ -167,6 +170,7 @@ fn absolute(path: &Path) -> io::Result<()> {
 }
 
 #[cfg(not(windows))]
+#[inline]
 fn candidate(path: &Path, contents: &str) -> io::Result<()> {
     crate::merge_state::write::commit(path, contents)
 }

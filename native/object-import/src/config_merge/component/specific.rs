@@ -43,6 +43,7 @@ fn incoming<'a>(input: &'a Value, row: &Value) -> io::Result<Option<&'a Value>> 
         }))
 }
 
+#[inline]
 fn is_envs_aspect_id(id: &str) -> bool {
     let trimmed = id.trim();
     let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());

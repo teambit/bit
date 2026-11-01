@@ -29,6 +29,7 @@ pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn row_matches_identity(row: &Value, identity: &str) -> bool {
     row["identity"]
         .as_str()
@@ -43,6 +44,7 @@ fn row_matches_identity(row: &Value, identity: &str) -> bool {
         .is_some_and(|raw| selection::bare(raw) == identity)
 }
 
+#[inline]
 fn remove_extension_config(extensions: &[Value]) -> Option<&Value> {
     extensions
         .iter()

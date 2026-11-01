@@ -1,5 +1,6 @@
 use super::{Batch, REMOVE, Value, invalid, required, unsupported};
 use std::{collections::HashSet, io};
+#[inline]
 pub(super) fn index(batch: &mut Batch) -> io::Result<Value> {
     let path = crate::scope_path(&batch.root).join("index.json");
     batch.proofs
@@ -58,6 +59,7 @@ pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> 
     fallback_model(batch, bare, local_name)
 }
 
+#[inline]
 pub(crate) fn row_id_parts(id: &Value) -> (&str, &str) {
     if let Some(raw) = id.as_str() {
         let raw = raw.trim();
@@ -163,6 +165,7 @@ pub(super) fn version(batch: &mut Batch, id: &str, model: &Value) -> io::Result<
         .transpose()
         .map(Option::flatten)
 }
+#[inline]
 pub(in crate::component_recover) fn removal(version: &Value) -> Value {
     version["extensions"]
         .as_array()
@@ -236,6 +239,7 @@ pub(super) fn sources(
         .collect()
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Source {
     path: std::path::PathBuf,
     proof: Vec<u8>,

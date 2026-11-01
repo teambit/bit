@@ -13,6 +13,7 @@ use std::{
     path::PathBuf,
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct File {
     pub(super) relative_path: String,
     pub(super) contents: Vec<u8>,
@@ -22,6 +23,7 @@ pub(super) struct File {
     pub(super) snapshot_path: PathBuf,
 }
 impl File {
+    #[inline]
     pub(super) fn summary(&self) -> Value {
         json!({"relativePath":self.relative_path,"rawHash":self.raw_hash,"linuxHash":self.linux_hash,"snapshotHash":self.snapshot_hash,"snapshotPath":self.snapshot_path,"bytes":self.contents.len()})
     }
@@ -79,6 +81,7 @@ fn validate_snapshot_directory(directory: &PathBuf) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn capture_file(
     file: &wire::Input,
     request: &wire::Begin,
@@ -88,6 +91,7 @@ fn capture_file(
     capture_loaded(file, request, retained::load(file, maximum, snapshots)?, maximum)
 }
 
+#[inline]
 fn capture_shared(
     file: &wire::Input,
     request: &wire::Begin,
@@ -136,6 +140,7 @@ fn capture_loaded(
     ))
 }
 
+#[inline]
 fn linux_hash(contents: &[u8], snapshot_hash: &str) -> String {
     if !contents.contains(&b'\r') || crate::checkout::eol::binary(contents) {
         snapshot_hash.to_string()
@@ -177,12 +182,14 @@ fn raw_shared(path: &PathBuf, budget: &Budget) -> io::Result<Vec<u8>> {
     }
     budget.read(input)
 }
+#[inline]
 fn strip_bom(mut bytes: Vec<u8>) -> Vec<u8> {
     if bytes.starts_with(b"\xef\xbb\xbf") {
         bytes.drain(..3);
     }
     bytes
 }
+#[inline]
 pub(super) fn relative(path: &str) -> io::Result<()> {
     if path == "__proto__"
         || path.is_empty()
@@ -198,6 +205,7 @@ pub(super) fn relative(path: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn verify_expected(expected: Option<&str>, actual: &str) -> io::Result<()> {
     if let Some(expected) = expected
         .map(str::trim)

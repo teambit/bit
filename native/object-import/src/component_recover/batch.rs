@@ -24,12 +24,14 @@ pub enum Action {
     ProbeRemote,
     None,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Batch {
     root: PathBuf,
     bitmap: Value,
     items: Vec<Item>,
     proofs: Observed,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Item {
     id: String,
     key: Option<String>,
@@ -37,10 +39,12 @@ struct Item {
     files: Vec<File>,
     configuration: Option<Configuration>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Configuration {
     path: PathBuf,
     bytes: Vec<u8>,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct File {
     path: PathBuf,
     bytes: Vec<u8>,
@@ -69,6 +73,7 @@ impl Batch {
         Ok(batch)
     }
     #[must_use]
+    #[inline]
     pub fn bitmap(&self) -> &Value {
         &self.bitmap
     }
@@ -94,10 +99,12 @@ impl Batch {
         Ok(ids)
     }
     #[must_use]
+    #[inline]
     pub fn probe_ids(&self) -> Vec<String> {
         self.ids(Action::ProbeRemote)
     }
     #[must_use]
+    #[inline]
     pub fn import_ids(&self) -> Vec<String> {
         self.items
             .iter()
@@ -106,6 +113,7 @@ impl Batch {
             .collect()
     }
     #[must_use]
+    #[inline]
     pub fn hydration_ids(&self) -> Vec<String> {
         self.items
             .iter()
@@ -115,10 +123,12 @@ impl Batch {
             .map(|item| selection::bare(&item.id).to_owned())
             .collect()
     }
+    #[inline]
     pub fn refresh_loaded(&mut self, rows: &[Value]) -> io::Result<()> {
         loaded::refresh(self, rows)
     }
     #[must_use]
+    #[inline]
     pub fn recovered_ids(&self) -> Vec<String> {
         self.items
             .iter()
@@ -147,15 +157,19 @@ impl Batch {
     }
     /// Continue only from the bitmap actually published by the retained native import.
     /// The caller validates the batch before invoking that separate publication owner.
+    #[inline]
     pub fn after_import(&mut self, published: &Value) -> io::Result<()> {
         publication::after_import(self, published)
     }
+    #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.proofs.validate()
     }
+    #[inline]
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         publication::commit(self, file_id)
     }
+    #[inline]
     fn ids(&self, action: Action) -> Vec<String> {
         self.items
             .iter()
@@ -164,6 +178,7 @@ impl Batch {
             .collect()
     }
 }
+#[inline]
 fn required(proofs: &mut Observed, path: &Path) -> io::Result<Vec<u8>> {
     proofs
         .read(path)?
@@ -174,9 +189,11 @@ fn required(proofs: &mut Observed, path: &Path) -> io::Result<Vec<u8>> {
             )
         })
 }
+#[inline]
 pub(super) fn invalid(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message.into())
 }
+#[inline]
 pub(super) fn unsupported(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::Unsupported, message.into())
 }

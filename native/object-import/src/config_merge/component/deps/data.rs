@@ -26,6 +26,7 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn dep_id(dep: &Value) -> Option<&str> {
     dep["id"]
         .as_str()
@@ -174,6 +175,7 @@ fn compatible(state: &State<'_, '_>, current: &Value, other: &Value) -> io::Resu
         || super::super::super::semver::satisfies(semver, other_version, current_policy)?)
 }
 
+#[inline]
 fn is_local(state: &State<'_, '_>, id: &str, current: &Value, other: &Value) -> io::Result<bool> {
     Ok(current["__type"] == "component" && state.engine.local(id, other["version"].as_str())?)
 }

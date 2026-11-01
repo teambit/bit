@@ -159,6 +159,7 @@ pub(crate) fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Opt
     }
     Ok((objects, model))
 }
+#[inline]
 fn matching_model(body: &[u8], id: &str) -> io::Result<Option<Value>> {
     let value: Value = crate::parse_jsonc(body)?;
     let id = id.trim();
@@ -233,6 +234,7 @@ fn removed(model: &Value, version: &Value, hash: &str) -> bool {
         .and_then(|range| node_semver::Range::parse(range.trim()).ok())
         .is_some_and(|range| range.satisfies(&tag_ver))
 }
+#[inline]
 fn missing(id: &str) -> io::Error {
     io::Error::new(io::ErrorKind::NotFound, format!("component {id} was not found"))
 }

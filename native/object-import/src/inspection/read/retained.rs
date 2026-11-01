@@ -58,6 +58,7 @@ fn observed<'a>(
         .ok_or_else(|| invalid("inspection retained workspace observation"))
 }
 
+#[inline]
 fn verified_hash<'a>(value: Option<&'a str>, message: &'static str) -> io::Result<&'a str> {
     let trimmed = value
         .map(str::trim)

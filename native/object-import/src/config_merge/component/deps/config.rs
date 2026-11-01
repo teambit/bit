@@ -131,6 +131,7 @@ fn resolve(
     }
     Ok(())
 }
+#[inline]
 fn local(state: &State<'_, '_>, name: &str, version: Option<&str>) -> io::Result<bool> {
     let component = state.component_for_package(name);
     if let Some(component) = component {

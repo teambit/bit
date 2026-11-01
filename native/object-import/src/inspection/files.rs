@@ -30,6 +30,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     Ok(json!({"modified":!request.model_files.is_empty() && any_changed,"statuses":statuses}))
 }
 
+#[inline]
 pub(super) fn validated_models(
     files: &[wire::Model],
 ) -> io::Result<HashMap<&String, &wire::Model>> {

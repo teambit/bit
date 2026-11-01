@@ -1,5 +1,6 @@
 use super::{Options, Value};
 use std::io;
+#[inline]
 pub(super) fn scope(scope: &str, options: &Options) -> Option<String> {
     let (scope, old, new) = (scope.trim(), options.old.trim(), options.new.trim());
     if scope.is_empty() || old.is_empty() || new.is_empty() {
@@ -48,6 +49,7 @@ pub(super) fn entries_with_default(
     Ok(entries)
 }
 
+#[inline]
 fn is_skipped_row(trimmed_key: &str, row: &Value) -> bool {
     trimmed_key.is_empty()
         || trimmed_key.starts_with('$')
@@ -89,6 +91,7 @@ fn row_scope_and_name<'a>(key: &'a str, row: &'a Value) -> (&'a str, &'a str) {
     (current, name)
 }
 
+#[inline]
 fn validate_entry_name(name: &str) -> io::Result<()> {
     if name.trim().is_empty() {
         return Err(io::Error::other("scope rename component name is empty"));

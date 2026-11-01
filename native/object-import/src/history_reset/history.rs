@@ -3,7 +3,7 @@ use crate::js_json;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Request {
     fields: js_json::Value,
@@ -32,6 +32,7 @@ fn history_entries(fields: &js_json::Value) -> io::Result<Vec<(Vec<u16>, js_json
     }
     Ok(entries)
 }
+#[inline]
 fn invalid_key(key: &[u16]) -> bool {
     if key.is_empty() || key.len() > 32768 {
         return true;

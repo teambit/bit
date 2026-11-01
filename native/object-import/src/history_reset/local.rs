@@ -2,7 +2,7 @@ use super::{bound, invalid, text};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Append {
     source_only: Vec<String>,
@@ -28,7 +28,7 @@ pub(super) fn append(input: Value) -> io::Result<Value> {
     bound(combined.len())?;
     Ok(json!({"sourceAppend":source_append,"combined":combined}))
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Select {
     source_only: Vec<String>,
@@ -40,7 +40,7 @@ struct Select {
     last_found_tag: Option<String>,
     reverse: Option<bool>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Metadata {
     hash: String,
@@ -53,7 +53,7 @@ struct Metadata {
     #[serde(default)]
     unrelated: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Tag {
     label: String,
@@ -108,7 +108,7 @@ fn labels(
     }
     Ok(labels)
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Read {
     source_only: Vec<String>,
@@ -146,6 +146,7 @@ fn eligible(request: &Select, hash: &str) -> io::Result<bool> {
         .ok_or_else(|| invalid("history reset lane metadata missing"))?;
     Ok(!row.missing && (row.origin_lane || row.squashed || row.unrelated))
 }
+#[inline]
 fn label(index: &crate::tag_index::TagIndex, hash: &str, cached: &mut Option<String>) -> String {
     let hash = hash.trim();
     let Some((label, normal)) = index.get(hash) else {
@@ -157,6 +158,7 @@ fn label(index: &crate::tag_index::TagIndex, hash: &str, cached: &mut Option<Str
     label.to_owned()
 }
 
+#[inline]
 fn refs(values: &[String]) -> io::Result<()> {
     bound(values.len())?;
     for hash in values {
