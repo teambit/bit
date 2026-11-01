@@ -68,6 +68,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     object_extension_identity(id)
 }
 
+#[inline]
 fn strip_head_or_latest(id: &str) -> &str {
     match id.rsplit_once('@') {
         Some((base, ver))
@@ -144,6 +145,7 @@ pub(super) fn apply(
     Ok(Value::Array(output))
 }
 
+#[inline]
 fn same_base(entry: &Value, id: &str) -> bool {
     let id = id.trim();
     identity(entry)

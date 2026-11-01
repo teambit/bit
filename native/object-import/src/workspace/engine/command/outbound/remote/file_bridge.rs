@@ -107,6 +107,7 @@ impl FileBridge {
         }
     }
 
+    #[inline]
     fn read_reply(&mut self) -> io::Result<Value> {
         let mut line = Vec::with_capacity(256);
         loop {

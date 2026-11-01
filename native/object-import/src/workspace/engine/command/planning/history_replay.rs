@@ -36,6 +36,7 @@ pub(super) fn replay(
     Ok(())
 }
 
+#[inline]
 fn stage_heads<'a>(
     stage: Option<&str>,
     to: &str,
@@ -64,6 +65,7 @@ fn stage_heads<'a>(
     }
 }
 
+#[inline]
 fn resolves_heads(to: &str, model: &Value, head: Option<&str>, remote: Option<&str>) -> bool {
     let latest_without_tags = to.eq_ignore_ascii_case("latest")
         && model["versions"].as_object().is_none_or(serde_json::Map::is_empty)

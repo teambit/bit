@@ -164,6 +164,7 @@ fn tracked_head(record: &Record, captured: &capture::Captured) -> Option<Value> 
     Some(json!({"kind":"target","version":head,"merge":false}))
 }
 
+#[inline]
 fn remote_head(record: &mut Record, identity: &str) -> io::Result<Option<String>> {
     if super::super::lane_history::phase(&record.request.options).is_some() {
         super::super::lane_history::heads::remote(record, identity)
@@ -174,6 +175,7 @@ fn remote_head(record: &mut Record, identity: &str) -> io::Result<Option<String>
     }
 }
 
+#[inline]
 fn replay_selected(
     record: &mut Record,
     identity: &str,

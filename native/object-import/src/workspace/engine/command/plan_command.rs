@@ -216,6 +216,7 @@ pub(super) fn validate_versions(record: &mut Record) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn prepare_bitmap(record: &Record, planned: &planning::Planned) -> io::Result<bitmap::Prepared> {
     prepare_bitmap_bytes(record, planned, std::fs::read(record.request.root.join(".bitmap"))?)
 }

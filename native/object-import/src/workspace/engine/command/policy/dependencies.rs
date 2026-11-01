@@ -204,6 +204,7 @@ fn validate_application_files(rows: &[super::Row]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn snapshot_identities(rows: &[super::Row]) -> HashSet<String> {
     rows.iter()
         .filter(|row| !row.fast_forward)
@@ -304,8 +305,9 @@ fn project(
 ) -> io::Result<()> {
     for (field, name) in ["dependencies", "devDependencies", "peerDependencies"].iter().enumerate()
     {
-        let mut dependencies = Vec::new();
-        for index in projection::array(&state["components"][field])? {
+        let indices = projection::array(&state["components"][field])?;
+        let mut dependencies = Vec::with_capacity(indices.len());
+        for index in indices {
             let entry = &state["entries"]
                 [index.as_u64().ok_or_else(|| invalid("command dependency index"))? as usize];
             let dependency = component(entry, changed)?;

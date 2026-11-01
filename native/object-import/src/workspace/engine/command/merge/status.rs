@@ -53,6 +53,7 @@ pub(super) fn select(
     Err(invalid("command merge status limit"))
 }
 
+#[inline]
 fn target_ids(target: &Value) -> io::Result<(&str, String)> {
     let identity = target["identity"]
         .as_str()
@@ -71,6 +72,7 @@ fn target_ids(target: &Value) -> io::Result<(&str, String)> {
     Ok((identity, full_id))
 }
 
+#[inline]
 fn lane_target<'a>(input: &'a Input<'_>, target_id: Option<&str>) -> Option<&'a Value> {
     input.lane
         .and_then(|lane| lane["targets"].as_array())
@@ -162,6 +164,7 @@ fn removed(version: &Value) -> io::Result<bool> {
         }))
 }
 
+#[inline]
 fn remove_on_main(version: &Value) -> bool {
     version["extensions"]
         .as_array()

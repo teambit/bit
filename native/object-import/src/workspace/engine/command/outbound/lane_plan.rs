@@ -40,6 +40,7 @@ pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
     })
 }
 
+#[inline]
 fn parse_resume_id(id: &str) -> io::Result<(String, String, String)> {
     let (identity, version) = id
         .trim()

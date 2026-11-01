@@ -65,6 +65,7 @@ struct Component {
 }
 
 impl Prepared {
+    #[inline]
     pub(super) fn new() -> Self {
         Self {
             rows: Vec::new(),
@@ -89,6 +90,7 @@ impl Prepared {
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn commit_configs(&self) -> io::Result<()> {
         if let Some(file) = &self.conflicts {
             file.commit()?;
@@ -379,6 +381,7 @@ fn prepare_components(
 }
 
 impl Baseline {
+    #[inline]
     fn loaded_extensions(&self, component: &Component) -> io::Result<Value> {
         projection::extensions(
             &self.versions[1]["extensions"],

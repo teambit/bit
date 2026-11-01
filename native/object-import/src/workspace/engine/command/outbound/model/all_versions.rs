@@ -45,6 +45,7 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
     Ok(Staged { head: head.to_owned(), hashes, labels })
 }
 
+#[inline]
 fn resolve_version_labels(
     hashes: &[String],
     tags: &serde_json::Map<String, Value>,

@@ -91,6 +91,7 @@ fn checkout_captured(
     Ok(plan)
 }
 
+#[inline]
 fn is_keyword_target(to: &str) -> bool {
     ["head", "latest", "reset", "main"]
         .iter()
@@ -100,6 +101,7 @@ fn is_keyword_target(to: &str) -> bool {
             .is_some_and(|prefix| prefix.eq_ignore_ascii_case("head~"))
 }
 
+#[inline]
 pub(super) fn validate_current(record: &Record, current: &[Value]) -> io::Result<()> {
     validate_current_inner(record, current, false)
 }
@@ -259,8 +261,7 @@ pub(super) fn validate_sources(plan: &Planned) -> io::Result<()> {
                 .as_array()
                 .into_iter()
                 .flatten()
-        })
-        .collect::<Vec<_>>();
+        });
     let mut total = 0;
     for file in files {
         let path = std::path::Path::new(

@@ -47,7 +47,6 @@ fn unexported_lane_row<'a>(
     scope: &str,
     name: &str,
 ) -> Option<&'a mut Value> {
-    let full = format!("{scope}/{name}");
     rows.iter_mut()
         .find(|(key, row)| {
             let key = key.trim();
@@ -57,7 +56,11 @@ fn unexported_lane_row<'a>(
             let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
             let default_scope = row["defaultScope"].as_str().map_or("", str::trim);
             let row_name = row["name"].as_str().map(str::trim);
-            (key_id == name || key_id == full || row_name == Some(name))
+            let scoped_match = key_id
+                .strip_prefix(scope)
+                .and_then(|rest| rest.strip_prefix('/'))
+                == Some(name);
+            (key_id == name || scoped_match || row_name == Some(name))
                 && row
                     .get("scope")
                     .is_none_or(|val| {

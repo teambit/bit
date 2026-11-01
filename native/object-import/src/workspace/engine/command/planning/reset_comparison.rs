@@ -7,12 +7,14 @@ use super::super::invalid;
 use serde_json::Value;
 use std::{collections::BTreeMap, io};
 
+#[inline]
 pub(super) fn incomplete(current: &Value) -> bool {
     current
         .as_object()
         .is_some_and(|fields| fields.len() == 1 && fields.contains_key("mainFile"))
 }
 
+#[inline]
 pub(super) fn prove_changed(current: &Value, version: &Value) -> io::Result<()> {
     if files(current, false)? == files(&version["files"], true)? {
         return Err(invalid("reset unchanged Sources require complete metadata"));

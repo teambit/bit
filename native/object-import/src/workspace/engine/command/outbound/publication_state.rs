@@ -8,6 +8,7 @@ pub(super) enum Publication {
 }
 
 impl Publication {
+    #[inline]
     pub(super) fn lane_name(&self) -> Option<&str> {
         match self {
             Self::Main(_) => None,
@@ -15,6 +16,7 @@ impl Publication {
         }
     }
 
+    #[inline]
     pub(super) fn non_existing_ids(&self) -> &[String] {
         match self {
             Self::Main(prepared) => prepared.non_existing_ids(),
@@ -67,6 +69,7 @@ pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) ->
     result
 }
 
+#[inline]
 fn strip_exported_version(id: &str) -> String {
     let trimmed = id.trim();
     let bare = match trimmed.rsplit_once('@') {

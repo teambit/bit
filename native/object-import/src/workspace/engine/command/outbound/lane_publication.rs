@@ -126,6 +126,7 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
 }
 
 impl Prepared {
+    #[inline]
     pub(super) fn non_existing_ids(&self) -> &[String] {
         &self.published.non_existing_ids
     }
@@ -138,10 +139,12 @@ impl Prepared {
         Ok(())
     }
 
+    #[inline]
     pub(super) fn update_ids(&self) -> &[String] {
         &self.report.updates
     }
 
+    #[inline]
     pub(super) fn removed_ids(&self) -> &[String] {
         &self.report.removed
     }
@@ -320,19 +323,18 @@ impl Prepared {
 
 impl Acknowledgement {
     fn validate(&self, exported_ids: &[String]) -> io::Result<()> {
-        let acknowledged = exported_ids
-            .iter()
-            .map(|id| id.trim())
-            .filter(|id| !id.is_empty())
-            .map(str::to_owned)
-            .collect::<HashSet<_>>();
-        if acknowledged.len() != exported_ids.len() || !acknowledged.is_subset(&self.expected) {
-            return Err(invalid("outbound lane remote acknowledgement"));
+        let mut acknowledged = HashSet::with_capacity(exported_ids.len());
+        for raw in exported_ids {
+            let id = raw.trim();
+            if id.is_empty() || !acknowledged.insert(id) || !self.expected.contains(id) {
+                return Err(invalid("outbound lane remote acknowledgement"));
+            }
         }
         Ok(())
     }
 }
 
+#[inline]
 fn safe_segment(segment: &str) -> io::Result<()> {
     let segment = segment.trim();
     if segment.is_empty()
@@ -347,6 +349,7 @@ fn safe_segment(segment: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn refs_path(root: &Path, scope: &str, name: &str) -> PathBuf {
     crate::scope_path(root)
         .join("refs/remotes")
@@ -367,6 +370,7 @@ fn object_bytes(root: &Path, hash: &str) -> io::Result<Vec<u8>> {
     )
 }
 
+#[inline]
 fn read_optional(path: &Path) -> io::Result<Option<Vec<u8>>> {
     match fs::read(path) {
         Ok(bytes) => Ok(Some(bytes)),

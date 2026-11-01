@@ -12,12 +12,14 @@ pub(super) struct File {
 }
 
 impl File {
+    #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         if self.path.try_exists()? || self.path.is_symlink() {
             return Err(invalid("command configuration conflict document changed"));
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn commit(&self) -> io::Result<()> {
         self.validate()?;
         crate::merge_state::write::commit(&self.path, &self.text)
@@ -107,6 +109,7 @@ fn aspect_identity(row: &Value) -> io::Result<String> {
     Err(invalid("command config conflict identity"))
 }
 
+#[inline]
 fn trimmed_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -165,6 +168,7 @@ fn basic(input: &Value, id: &str, conflict: &Value) -> io::Result<String> {
     ))
 }
 
+#[inline]
 fn label<'a>(input: &'a Value, field: &str) -> io::Result<&'a str> {
     trimmed_str(&input[field]).ok_or_else(|| invalid("command config conflict label"))
 }

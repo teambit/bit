@@ -170,10 +170,12 @@ fn upsert(entries: &mut Vec<Value>, name: &str, data: &Value) -> io::Result<()> 
     Ok(())
 }
 
+#[inline]
 pub(super) fn entries(extensions: &Value) -> io::Result<Value> {
     super::scope::entries(extensions)
 }
 
+#[inline]
 pub(super) fn configuration_cores() -> Vec<&'static str> {
     CORES
         .iter()
@@ -304,6 +306,7 @@ fn order_dependencies(rows: &mut [Value]) {
     }
 }
 
+#[inline]
 pub(super) fn array(value: &Value) -> io::Result<&Vec<Value>> {
     value
         .as_array()

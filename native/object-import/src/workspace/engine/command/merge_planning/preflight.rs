@@ -69,7 +69,7 @@ fn reject_dependents(version: &Value, identities: &HashSet<&str>) -> io::Result<
             version[field].as_array().ok_or_else(|| invalid("command merge dependencies"))?
         {
             let identity = dependency_identity(&dependency["id"]);
-            if identities.contains(identity.as_str()) {
+            if identities.contains(identity.as_ref()) {
                 return Err(invalid("command merge dependent snap cascade"));
             }
         }
@@ -77,17 +77,21 @@ fn reject_dependents(version: &Value, identities: &HashSet<&str>) -> io::Result<
     Ok(())
 }
 
-fn dependency_identity(id: &Value) -> String {
+#[inline]
+fn dependency_identity(id: &Value) -> std::borrow::Cow<'_, str> {
     if let Some(raw) = id.as_str().map(str::trim) {
-        return raw
-            .rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare.trim())
-            .to_owned();
+        return std::borrow::Cow::Borrowed(
+            raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim()),
+        );
     }
     let raw_name = id["name"].as_str().map_or("", str::trim);
     let name = raw_name.rsplit_once('@').map_or(raw_name, |(bare, _)| bare.trim());
     let scope = id["scope"].as_str().map_or("", str::trim);
-    if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
+    if scope.is_empty() {
+        std::borrow::Cow::Borrowed(name)
+    } else {
+        std::borrow::Cow::Owned(format!("{scope}/{name}"))
+    }
 }
 
 fn validate_finalization(
@@ -129,6 +133,7 @@ fn validate_finalization(
     Ok(())
 }
 
+#[inline]
 fn validate_target(version: &Value) -> io::Result<()> {
     let files = version["files"].as_array().ok_or_else(|| invalid("command target files"))?;
     merge::snapshot::validate_application_files(files)

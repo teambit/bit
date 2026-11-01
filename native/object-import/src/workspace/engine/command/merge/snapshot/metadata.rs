@@ -182,6 +182,7 @@ pub(super) fn squash_lane(model: &Value, lane: &Value) -> io::Result<Value> {
     Ok(lane_object(other))
 }
 
+#[inline]
 fn lane_object(value: &Value) -> Value {
     value
         .as_str()
@@ -191,11 +192,13 @@ fn lane_object(value: &Value) -> Value {
         .map_or_else(|| value.clone(), |(sc, nm)| json!({"scope":sc,"name":nm}))
 }
 
+#[inline]
 pub(super) fn current_schema(value: &Value) -> io::Result<Value> {
     let mut version = crate::workspace::engine::status_models::harmony::project(value)?;
     version["schema"] = json!("2.0.0");
     Ok(version)
 }
+#[inline]
 pub(super) fn snapshot_model(input: &Input<'_>, head: &str) -> io::Result<Value> {
     if input.lane.is_some_and(|lane| !lane["current"].is_null()) {
         Ok(input.model.clone())
@@ -287,7 +290,7 @@ pub(super) fn independent(input: &Input<'_>, batch: &[Input<'_>]) -> io::Result<
             let identity = row_identity(row);
             if batch
                 .iter()
-                .any(|target| target.identity.trim() == identity)
+                .any(|target| target.identity.trim() == identity.as_ref())
             {
                 return Err(invalid("snap dependency version cascade requires canonical pipeline"));
             }
@@ -296,16 +299,16 @@ pub(super) fn independent(input: &Input<'_>, batch: &[Input<'_>]) -> io::Result<
     Ok(())
 }
 
-fn row_identity(row: &Value) -> String {
+#[inline]
+fn row_identity(row: &Value) -> std::borrow::Cow<'_, str> {
     if let Some(raw) = row
         .as_str()
         .or_else(|| row["id"].as_str())
         .map(str::trim)
     {
-        return raw
-            .rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare.trim())
-            .to_owned();
+        return std::borrow::Cow::Borrowed(
+            raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim()),
+        );
     }
     let id = row
         .get("id")
@@ -320,7 +323,7 @@ fn row_identity(row: &Value) -> String {
         .or_else(|| row["name"].as_str())
         .map_or("", str::trim);
     let name = raw_name.rsplit_once('@').map_or(raw_name, |(bare, _)| bare.trim());
-    format!("{scope}/{name}")
+    std::borrow::Cow::Owned(format!("{scope}/{name}"))
 }
 
 fn receipt_scalars(value: &Value) -> io::Result<()> {

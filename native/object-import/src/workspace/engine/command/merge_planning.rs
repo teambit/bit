@@ -107,8 +107,7 @@ fn select(
 ) -> io::Result<Selected> {
     let captured = &planned.captured[index];
     let mut selected = loading::load_selected(record, captured)?;
-    let distance = select_distance(record, &mut planned.history, captured, &selected)?;
-    selected.distance = distance.clone();
+    selected.distance = select_distance(record, &mut planned.history, captured, &selected)?;
     let captured_id = captured.target.identity.trim();
     let mut target = record.targets.iter().find(|target| target["identity"].as_str().map(str::trim) == Some(captured_id)).cloned().unwrap_or_else(|| json!({"identity":captured_id,"version":captured.target.version.trim(),"hidden":captured.hidden}));
     target["currentVersion"] = json!(captured.target.version.trim());
@@ -122,10 +121,10 @@ fn select(
         incoming: &selected.versions[2],
         current: &selected.versions[1],
         options: loading::options(record, captured, &selected)?,
-        distance: &distance,
+        distance: &selected.distance,
         lane: record.context.get("lane"),
     })?;
-    apply_selection(&mut selected, &outcome, &distance, captured_id, &mut planned.result)?;
+    apply_selection(&mut selected, &outcome, captured_id, &mut planned.result)?;
     selected.distance["importGap"] = json!(selected.action != Action::Unchanged);
     Ok(selected)
 }
@@ -149,7 +148,6 @@ fn select_distance(
 fn apply_selection(
     selected: &mut Selected,
     outcome: &Value,
-    distance: &Value,
     identity: &str,
     result: &mut Value,
 ) -> io::Result<()> {
@@ -174,7 +172,7 @@ fn apply_selection(
     if selected.action != Action::Target {
         selected.distance["shouldBeRemoved"] = json!(false);
     }
-    if let Some(common) = distance["common"]
+    if let Some(common) = selected.distance["common"]
         .as_str()
         .map(str::trim)
         .filter(|common| !common.is_empty())
@@ -186,6 +184,7 @@ fn apply_selection(
     Ok(())
 }
 
+#[inline]
 fn body<'a>(
     record: &'a Record,
     selected: &'a Selected,
@@ -355,6 +354,7 @@ fn add_material(
     prepared.materials.push(material);
     Ok(())
 }
+#[inline]
 fn retain_snapshot(
     record: &Record,
     prepared: &mut Prepared,

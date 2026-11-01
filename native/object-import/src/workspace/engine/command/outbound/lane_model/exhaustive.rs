@@ -131,6 +131,7 @@ fn workspace_entry_id<'a>(key: &'a str, entry: &'a Value) -> Option<(&'a str, &'
     (!name.is_empty()).then_some((scope, name))
 }
 
+#[inline]
 fn non_empty_field<'a>(entry: &'a Value, field: &str) -> Option<&'a str> {
     entry[field]
         .as_str()
@@ -173,6 +174,7 @@ pub(super) fn all_lane_versions(
     Ok(output)
 }
 
+#[inline]
 fn append_main_head(
     dir: &Path,
     main_head: Option<&str>,

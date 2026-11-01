@@ -49,6 +49,7 @@ pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
 }
 
 impl Prepared {
+    #[inline]
     fn capture(&mut self, path: PathBuf) -> io::Result<()> {
         let before = read(&path)?;
         self.preimages.insert(path, before);
@@ -100,6 +101,7 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn read(path: &Path) -> io::Result<Option<Vec<u8>>> {
     match fs::read(path) {
         Ok(bytes) => Ok(Some(bytes)),

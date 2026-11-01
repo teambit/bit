@@ -132,6 +132,7 @@ fn acknowledge(retained: &mut Retained, data: &Value) -> io::Result<Vec<String>>
     Ok(ids)
 }
 
+#[inline]
 fn job_url(domain: &str, lane: Option<&str>, job: &str) -> String {
     let domain = domain.trim().trim_end_matches('/');
     let job = job.trim().trim_start_matches('/');
@@ -149,8 +150,12 @@ fn job_url(domain: &str, lane: Option<&str>, job: &str) -> String {
 }
 
 fn scoped_objects(pending: &[Pending]) -> Vec<tar::ObjectItem> {
-    let mut seen = HashSet::new();
-    let mut objects = Vec::new();
+    let total = pending
+        .iter()
+        .map(|batch| batch.objects.len())
+        .sum::<usize>();
+    let mut seen = HashSet::with_capacity(total);
+    let mut objects = Vec::with_capacity(total);
     for batch in pending {
         let scope = batch.scope.trim();
         for object in &batch.objects {

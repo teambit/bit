@@ -173,6 +173,7 @@ fn requested(
     Ok(chosen)
 }
 
+#[inline]
 fn same_hash(left: &Value, right: &Value) -> bool {
     left["hash"].as_str().map(str::trim) == right["hash"].as_str().map(str::trim)
 }
@@ -370,8 +371,12 @@ pub(super) fn collect(
         .collect::<io::Result<Vec<_>>>()?;
     let mode = collection::Mode::Export { strict_local_artifacts: !ignore_missing_artifacts };
     let descriptors = collection::select(dir, &versions, None, 0, &mode)?;
-    let mut objects =
-        vec![ObjectItem { hash: model_hash.to_owned(), compressed: model.to_vec(), scope: None }];
+    let mut objects = Vec::with_capacity(descriptors.len() + 1);
+    objects.push(ObjectItem {
+        hash: model_hash.to_owned(),
+        compressed: model.to_vec(),
+        scope: None,
+    });
     let mut budget = model.len();
     for descriptor in descriptors {
         if matches!(descriptor.body, Body::Metadata(_)) {
@@ -389,6 +394,7 @@ pub(super) fn collect(
     Ok(objects)
 }
 
+#[inline]
 pub(super) fn candidates(root: &Path, all: bool) -> io::Result<Value> {
     candidates::read(root, all)
 }

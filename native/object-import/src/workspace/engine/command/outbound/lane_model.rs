@@ -308,6 +308,7 @@ impl<'a> ComponentId<'a> {
         }
         Ok(Self { scope, name, head, id: format!("{scope}/{name}") })
     }
+    #[inline]
     fn matches(&self, row: &Value) -> bool {
         row_lane_matches(row, self.scope, self.name)
     }
@@ -362,9 +363,9 @@ fn record_selected_component(
     selected: &mut Selection,
 ) -> io::Result<()> {
     let history = model::prepare_history(&context.loaded.dir, id.scope, id.name, id.head)?;
-    let mut expected = HashSet::new();
+    let mut expected = HashSet::with_capacity(versions.len() + history.hashes.len());
     for version in versions.iter().chain(&history.hashes) {
-        if expected.insert(version.clone()) {
+        if expected.insert(version.as_str()) {
             selected.expected_ids.push(format!("{}@{version}", id.id));
         }
     }
@@ -392,6 +393,7 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
     }
 }
 
+#[inline]
 fn read_compressed(dir: &Path, hash: &str) -> io::Result<Vec<u8>> {
     transfer::object::repository(dir, crate::merge_history::hash(hash)?, MAX_BYTES)
 }

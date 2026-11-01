@@ -142,12 +142,14 @@ fn key(id: &Value) -> io::Result<String> {
     Ok(format!("{scope}/{name}@{version}"))
 }
 
+#[inline]
 pub(super) fn same_id(left: &Value, right: &Value) -> bool {
     ["scope", "name", "version"]
         .into_iter()
         .all(|field| left[field].as_str().map(str::trim) == right[field].as_str().map(str::trim))
 }
 
+#[inline]
 pub(super) fn validate_previous(
     rows: &[super::Row],
     repository: &mut Repository,
@@ -158,6 +160,7 @@ pub(super) fn validate_previous(
     Ok(())
 }
 
+#[inline]
 fn pending_root(identity: &str) -> io::Result<Value> {
     let (scope, name) = identity
         .trim()
@@ -170,6 +173,7 @@ fn pending_root(identity: &str) -> io::Result<Value> {
     )
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn validate_saved(
     version: &Value,
     repository: &mut Repository,

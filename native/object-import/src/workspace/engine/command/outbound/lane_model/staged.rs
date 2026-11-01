@@ -66,6 +66,7 @@ fn selected_parents(
         .map(Some)
 }
 
+#[inline]
 fn origin_lane_flags(origin: &Value, scope: &str, name: &str) -> (bool, bool) {
     let (scope, name) = (scope.trim(), name.trim());
     let (orig_scope, orig_name) = origin
@@ -104,6 +105,7 @@ pub(super) fn selected_versions(
 }
 
 /// The released importer fetches raw refs to filter Versions already on a file remote.
+#[inline]
 pub(super) fn missing_remote_head(host: &str, head: &str) -> io::Result<bool> {
     let bit_client_transfer::remotes::Remote::File(root) =
         bit_client_transfer::remotes::Remote::from_host(host)?

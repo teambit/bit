@@ -118,6 +118,7 @@ fn remove_rows(rows: &mut [Value], removed: &[Value]) {
     }
 }
 
+#[inline]
 fn is_removed_entry(entry: &Value, removed: &[Value]) -> bool {
     entry["name"]
         .as_str()

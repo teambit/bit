@@ -85,6 +85,7 @@ fn refs(value: &Value) -> io::Result<Value> {
     Ok(Value::Array(list))
 }
 
+#[inline]
 fn ref_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -93,6 +94,7 @@ fn ref_str(value: &Value) -> Option<&str> {
         .map(str::trim)
 }
 
+#[inline]
 pub(super) fn parents(dir: &Path, hash: &str) -> io::Result<Value> {
     let version = read_object(dir, hash, "Version")?;
     refs(&version["parents"])

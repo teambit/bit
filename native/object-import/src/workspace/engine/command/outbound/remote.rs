@@ -17,6 +17,7 @@ pub(super) struct Actions {
 }
 
 impl Actions {
+    #[inline]
     pub(super) fn new(_retained: &Retained) -> io::Result<Self> {
         Ok(Self { file: None })
     }
@@ -62,6 +63,7 @@ pub(super) fn host(input: &Prepare, scope: &str) -> io::Result<String> {
     Ok(host)
 }
 
+#[inline]
 pub(super) fn configured_host(input: &Prepare, scope: &str) -> io::Result<String> {
     Ok(super::hub::resolve(input, scope)?.host)
 }
@@ -89,6 +91,7 @@ pub(super) fn push(retained: &Retained, pending: &Pending) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn check_client_id(client: &str) -> io::Result<()> {
     let client = client.trim();
     if client.len() > 128
@@ -232,6 +235,7 @@ pub(super) fn network(retained: &Retained) -> io::Result<Network> {
 }
 
 /// The ids an `ExportPersist` action answered with.
+#[inline]
 fn persisted_ids(value: Value) -> io::Result<Vec<String>> {
     let Value::Array(ids) = value else { return Err(invalid("outbound persisted identities")) };
     ids.into_iter()

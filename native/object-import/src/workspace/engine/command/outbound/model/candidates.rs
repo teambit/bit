@@ -46,6 +46,7 @@ pub(super) fn histories(root: &Path) -> io::Result<Vec<super::HistoryBytes>> {
     Ok(histories)
 }
 
+#[inline]
 fn candidate_scope_and_name(row: &Value) -> io::Result<(&str, &str)> {
     let (scope_opt, name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)

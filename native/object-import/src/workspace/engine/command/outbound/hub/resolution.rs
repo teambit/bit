@@ -31,9 +31,11 @@ pub(in super::super) struct Resolution {
 }
 
 impl Resolution {
+    #[inline]
     pub(in super::super) fn preflight(&self) -> bool {
         self.preflight_only
     }
+    #[inline]
     pub(in super::super) fn globals_path(&self) -> &Path {
         &self.global_remotes_file
     }
@@ -65,6 +67,7 @@ impl Resolution {
             .filter(|host| !host.is_empty())
             .map(str::to_owned))
     }
+    #[inline]
     fn cache(&self) -> io::Result<std::sync::MutexGuard<'_, HashMap<String, Resolved>>> {
         self.resolved_hosts.lock().map_err(|_| invalid("outbound remote cache"))
     }
@@ -124,6 +127,7 @@ fn resolve_hub(input: &Prepare, local: &Value, scope: &str) -> io::Result<String
     }
 }
 
+#[inline]
 pub(in super::super) fn global(input: &Prepare) -> io::Result<GlobalConfig> {
     let scope: Value =
         crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;

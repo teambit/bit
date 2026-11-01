@@ -2,6 +2,7 @@
 use super::{Pending, lane_model::ForkHistory};
 use serde_json::{Value, json};
 
+#[inline]
 pub(super) fn prepare(
     token: &str,
     count: usize,

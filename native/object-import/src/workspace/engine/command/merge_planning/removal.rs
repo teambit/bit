@@ -7,6 +7,7 @@ pub(super) struct Removed {
     pub(super) directory: String,
 }
 
+#[inline]
 pub(super) fn validate(root: &Path, removed: &[Removed]) -> io::Result<()> {
     for row in removed {
         validate_one(root, row.directory.trim())?;
@@ -14,6 +15,7 @@ pub(super) fn validate(root: &Path, removed: &[Removed]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn validate_one(root: &Path, directory: &str) -> io::Result<()> {
     crate::checkout::plan::relative_path(directory)?;
     if directory == "."

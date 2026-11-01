@@ -77,6 +77,7 @@ fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
     Ok((format!("{scope}/{name}"), version))
 }
 
+#[inline]
 pub(super) fn prepare_if_enabled(
     record: &mut Record,
     plan: &mut Planned,

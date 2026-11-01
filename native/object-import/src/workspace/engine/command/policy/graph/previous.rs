@@ -43,6 +43,7 @@ pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Resu
     Ok(())
 }
 
+#[inline]
 fn saved_edges(version: &Value, repository: &mut Repository) -> io::Result<Value> {
     if let Some(value) = version
         .get("flattenedEdgesRef")

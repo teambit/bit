@@ -24,6 +24,7 @@ pub(in crate::workspace::engine::command) fn extensions(value: &Value) -> io::Re
     Ok(value.clone())
 }
 
+#[inline]
 fn identity(row: &Value) -> io::Result<String> {
     if row
         .get("name")
@@ -57,6 +58,7 @@ fn identity(row: &Value) -> io::Result<String> {
     object_identity(row)
 }
 
+#[inline]
 fn object_identity(row: &Value) -> io::Result<String> {
     let id = row["extensionId"]
         .as_object()

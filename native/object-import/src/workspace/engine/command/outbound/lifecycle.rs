@@ -103,6 +103,7 @@ fn push_and_validate(retained: &mut Retained, actions: &mut remote::Actions) -> 
     Err(io::Error::new(error.kind(), format!("outbound validate failed: {error}")))
 }
 
+#[inline]
 fn cleanup(retained: &Retained, actions: &mut remote::Actions, batches: &[Pending]) {
     for batch in batches {
         let _ = actions.cleanup(retained, batch);
@@ -112,7 +113,7 @@ fn cleanup(retained: &Retained, actions: &mut remote::Actions, batches: &[Pendin
 /// Preserve each remote acknowledgement in the published remote batch order.
 fn persist(retained: &mut Retained, actions: &mut remote::Actions) -> io::Result<Vec<String>> {
     retained.transfer.progress.phase = "persist";
-    let mut exported_ids = Vec::new();
+    let mut exported_ids = Vec::with_capacity(retained.pending.len());
     for batch in &retained.pending {
         retained.transfer.progress.observed |=
             export_progress::emit(Event::Persist { scope: batch.scope.clone() });

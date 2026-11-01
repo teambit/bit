@@ -100,6 +100,7 @@ fn controls(input: &Prepare) -> io::Result<Vec<proof::Proof>> {
     Ok(proofs)
 }
 
+#[inline]
 fn eligible(target: &Value) -> bool {
     target["scoped"] == false
         && target["locallyRemoved"] != true
@@ -228,6 +229,7 @@ fn projection(
     )
 }
 
+#[inline]
 fn data<'a>(version: &'a Value, identity: &str) -> Option<&'a Value> {
     version["extensions"]
         .as_array()?
@@ -303,6 +305,7 @@ fn package_dependencies(version: &Value, dependencies: &[Value]) -> io::Result<V
 }
 
 impl Prepared {
+    #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         proof::verify(&self.proofs)
     }

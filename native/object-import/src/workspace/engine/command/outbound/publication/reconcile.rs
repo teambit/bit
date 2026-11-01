@@ -167,16 +167,23 @@ impl Prepared {
     }
 }
 
+#[inline]
+fn is_scoped_key(key_id: &str, scope: &str, name: &str) -> bool {
+    key_id
+        .strip_prefix(scope)
+        .and_then(|rest| rest.strip_prefix('/'))
+        == Some(name)
+}
+
 pub(in super::super) fn present(bitmap: &Value, scope: &str, name: &str) -> bool {
-    let full = format!("{scope}/{name}");
     bitmap
         .as_object()
         .is_some_and(|rows| {
-            rows.iter().any(|(key, row)| row_matches_present(key, row, scope, name, &full))
+            rows.iter().any(|(key, row)| row_matches_present(key, row, scope, name))
         })
 }
 
-fn row_matches_present(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
+fn row_matches_present(key: &str, row: &Value, scope: &str, name: &str) -> bool {
     let key = key.trim();
     if key.starts_with('$')
         || matches!(key, "_bit_lane" | "version")
@@ -192,34 +199,35 @@ fn row_matches_present(key: &str, row: &Value, scope: &str, name: &str, full: &s
         .map(str::trim)
         .unwrap_or_default();
     let default_scope = row["defaultScope"].as_str().map(str::trim);
+    let scoped_key = is_scoped_key(key_id, scope, name);
     let name_matches =
-        row["name"].as_str().map(str::trim) == Some(name) || key_id == name || key_id == full;
+        row["name"].as_str().map(str::trim) == Some(name) || key_id == name || scoped_key;
     let scope_matches = row_scope == scope
-        || (row_scope.is_empty() && (default_scope == Some(scope) || key_id == full));
+        || (row_scope.is_empty() && (default_scope == Some(scope) || scoped_key));
     name_matches && scope_matches
 }
 
-fn row_is_promoted(key: &str, row: &Value, scope: &str, name: &str, full: &str) -> bool {
+fn row_is_promoted(key: &str, row: &Value, scope: &str, name: &str) -> bool {
     let key = key.trim();
     let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());
-    row_matches_present(key, row, scope, name, full)
+    row_matches_present(key, row, scope, name)
         && row["scope"]
             .as_str()
             .map(str::trim)
             .unwrap_or_default()
             .is_empty()
-        && (row["defaultScope"].as_str().map(str::trim) == Some(scope) || key_id == full)
+        && (row["defaultScope"].as_str().map(str::trim) == Some(scope)
+            || is_scoped_key(key_id, scope, name))
 }
 
 fn updates(bitmap: &Value, promotions: &[(String, String)]) -> Vec<String> {
     promotions
         .iter()
         .filter(|(scope, name)| {
-            let full = format!("{scope}/{name}");
             bitmap
                 .as_object()
                 .is_some_and(|rows| {
-                    rows.iter().any(|(key, row)| row_is_promoted(key, row, scope, name, &full))
+                    rows.iter().any(|(key, row)| row_is_promoted(key, row, scope, name))
                 })
         })
         .map(|(scope, name)| format!("{scope}/{name}"))

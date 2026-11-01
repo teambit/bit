@@ -275,17 +275,12 @@ impl Prepared {
     }
 
     fn validate_acknowledgement(&self, exported_ids: &[String]) -> io::Result<()> {
-        let ids = exported_ids
-            .iter()
-            .map(String::as_str)
-            .map(str::trim)
-            .collect::<HashSet<_>>();
-        if ids.len() != exported_ids.len()
-            || ids
-                .iter()
-                .any(|id| !self.known_ids.contains(*id))
-        {
-            return Err(invalid("outbound remote acknowledgement"));
+        let mut ids = HashSet::with_capacity(exported_ids.len());
+        for raw in exported_ids {
+            let id = raw.trim();
+            if !ids.insert(id) || !self.known_ids.contains(id) {
+                return Err(invalid("outbound remote acknowledgement"));
+            }
         }
         Ok(())
     }

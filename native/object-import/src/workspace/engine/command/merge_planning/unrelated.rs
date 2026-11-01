@@ -41,6 +41,7 @@ pub(super) fn distance(
     Ok(())
 }
 
+#[inline]
 pub(super) fn prepare(
     record: &Record,
     planned: &mut super::planning::Planned,
@@ -99,6 +100,7 @@ fn one(
     Ok(())
 }
 
+#[inline]
 fn relation(selected: &Selected, lane: &Value, choice: &Value) -> io::Result<Value> {
     let reference = |field: &str| -> io::Result<&str> {
         let head = match choice[field].as_str().map(str::trim) {

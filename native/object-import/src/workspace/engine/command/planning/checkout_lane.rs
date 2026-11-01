@@ -69,6 +69,7 @@ fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
     Ok((format!("{scope}/{name}"), head))
 }
 
+#[inline]
 fn row_identity(row: &Value) -> Option<String> {
     if let Some(raw) = row["identity"]
         .as_str()

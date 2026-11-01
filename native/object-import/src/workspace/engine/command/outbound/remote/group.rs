@@ -20,6 +20,7 @@ pub(super) fn id(config: &Value) -> io::Result<Option<u32>> {
     }
 }
 
+#[inline]
 fn name(config: &Value) -> io::Result<Option<&str>> {
     if !config.is_object() {
         return Err(io::Error::other("unsupported file remote group configuration"));

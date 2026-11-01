@@ -36,6 +36,7 @@ pub(super) fn report_if_applicable(
     Ok(())
 }
 
+#[inline]
 fn target_paths(target: &Value) -> io::Result<(&str, &str)> {
     let directory = target["directory"]
         .as_str()
@@ -89,6 +90,7 @@ fn report_one(plan: &mut Planned, identity: &str, target: &Value) -> io::Result<
     Ok(())
 }
 
+#[inline]
 fn missing(path: &Path) -> io::Result<bool> {
     match path.symlink_metadata() {
         Ok(_) => Ok(false),

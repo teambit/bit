@@ -36,9 +36,11 @@ impl State {
         }
         Ok(Self { native, journal })
     }
+    #[inline]
     pub(super) fn owner(&self) -> &Value {
         &self.journal["token"]
     }
+    #[inline]
     pub(super) fn select(&mut self, input: &status::Input<'_>) -> io::Result<Value> {
         let output = status::select(input, &self.journal["token"], &mut self.native)?;
         self.advance(None)?;
@@ -74,6 +76,7 @@ impl State {
         self.advance(None)?;
         Ok(output)
     }
+    #[inline]
     pub(super) fn apply(
         &mut self,
         mut input: Value,
@@ -96,6 +99,7 @@ impl State {
         }
         Ok(())
     }
+    #[inline]
     fn advance(&mut self, next: Option<usize>) -> io::Result<()> {
         self.journal = crate::merge_transaction::apply(
             "mergeTransactionReceipt",

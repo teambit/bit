@@ -43,30 +43,30 @@ fn selected_update_ids(
         Some(Value::Array(updates)) => updates.as_slice(),
         Some(_) => return Err(invalid("outbound lane update-dependents")),
     };
-    updates
-        .iter()
-        .map(|value| {
-            let id = value
-                .as_str()
-                .map(str::trim)
-                .ok_or_else(|| invalid("outbound lane update-dependent"))?;
-            let (identity, _) =
-                id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
-            let (scope, name) = identity
-                .trim()
-                .split_once('/')
-                .map(|(scope, name)| (scope.trim(), name.trim()))
-                .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
-                .ok_or_else(|| invalid("outbound lane update-dependent id"))?;
-            let normalized = format!("{scope}/{name}");
-            Ok(selected_ids.contains(normalized.as_str()).then_some(normalized))
-        })
-        .collect::<io::Result<Vec<_>>>()
-        .map(|rows| rows.into_iter().flatten().collect())
+    let mut result = Vec::with_capacity(updates.len());
+    for value in updates {
+        let id = value
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("outbound lane update-dependent"))?;
+        let (identity, _) =
+            id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+        let (scope, name) = identity
+            .trim()
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+        let normalized = format!("{scope}/{name}");
+        if selected_ids.contains(normalized.as_str()) {
+            result.push(normalized);
+        }
+    }
+    Ok(result)
 }
 
 pub(super) fn missing(report: &Reported, bitmap: &Value, exported_ids: &[String]) -> Vec<String> {
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(exported_ids.len());
     exported_ids
         .iter()
         .filter_map(|id| {

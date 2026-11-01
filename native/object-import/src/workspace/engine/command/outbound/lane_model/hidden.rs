@@ -122,7 +122,7 @@ fn merge(
     histories: &[model::HistoryBytes],
     objects: &Path,
 ) -> io::Result<Vec<String>> {
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(remote.len());
     for entry in remote {
         let (id, head) = identity(entry)?;
         if visible(lane, id) {
@@ -222,11 +222,13 @@ fn reachable(rows: &[Value], local: &str, remote: &str) -> bool {
     }
     false
 }
+#[inline]
 fn sorted(rows: &[String]) -> Vec<String> {
     let mut rows = rows.to_vec();
     rows.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     rows
 }
+#[inline]
 fn set_entries(lane: &mut Value, entries: &[String]) -> io::Result<()> {
     let object = lane.as_object_mut().ok_or_else(|| invalid("outbound lane object"))?;
     if entries.is_empty() {
@@ -236,6 +238,7 @@ fn set_entries(lane: &mut Value, entries: &[String]) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn set_override(lane: &mut Value, enabled: bool) -> io::Result<()> {
     let object = lane.as_object_mut().ok_or_else(|| invalid("outbound lane object"))?;
     if enabled {

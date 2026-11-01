@@ -34,6 +34,7 @@ pub(in crate::workspace::engine) struct Candidates {
     all: bool,
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn candidates(input: &Candidates) -> io::Result<Value> {
     model::candidates(&input.root, input.all)
 }
@@ -304,8 +305,12 @@ fn network(input: &Prepare) -> io::Result<NetworkConfig> {
 }
 
 fn objects(selected: &[model::Selected]) -> io::Result<Vec<ObjectItem>> {
-    let mut objects = Vec::new();
-    let mut seen = HashMap::<String, Vec<u8>>::new();
+    let cap: usize = selected
+        .iter()
+        .map(|component| component.objects.len())
+        .sum();
+    let mut objects = Vec::with_capacity(cap);
+    let mut seen = HashMap::<String, Vec<u8>>::with_capacity(cap);
     let mut bytes = 0usize;
     for component in selected {
         for object in &component.objects {
@@ -374,6 +379,7 @@ fn validate(input: &Prepare) -> io::Result<()> {
 }
 
 /// Populate the same immutable ancestry used by export and clean removal status.
+#[inline]
 pub(crate) fn prepare_version_history(
     directory: &std::path::Path,
     scope: &str,

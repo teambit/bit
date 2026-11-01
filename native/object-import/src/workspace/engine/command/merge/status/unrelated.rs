@@ -50,7 +50,8 @@ pub(super) fn error(input: &Input<'_>) -> io::Result<String> {
     ))
 }
 
-fn target_identity(target: &Value) -> Option<String> {
+#[inline]
+fn target_identity(target: &Value) -> Option<std::borrow::Cow<'_, str>> {
     if let Some(bare) = ["identity", "id"]
         .into_iter()
         .find_map(|field| {
@@ -61,7 +62,7 @@ fn target_identity(target: &Value) -> Option<String> {
                 .filter(|bare| !bare.is_empty())
         })
     {
-        return Some(bare.to_owned());
+        return Some(std::borrow::Cow::Borrowed(bare));
     }
     let object = target["id"].as_object()?;
     let name = object
@@ -75,7 +76,7 @@ fn target_identity(target: &Value) -> Option<String> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        Some(scope) => Some(format!("{scope}/{name}")),
-        None => Some(name.to_owned()),
+        Some(scope) => Some(std::borrow::Cow::Owned(format!("{scope}/{name}"))),
+        None => Some(std::borrow::Cow::Borrowed(name)),
     }
 }

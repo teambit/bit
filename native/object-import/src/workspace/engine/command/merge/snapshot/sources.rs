@@ -99,6 +99,7 @@ pub(super) fn dependencies_graph(
     );
     Ok(())
 }
+#[inline]
 fn digest(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }
@@ -118,19 +119,7 @@ fn source(version: &Value, file: &Value, budget: &Budget) -> io::Result<(Value, 
         .map(str::trim)
         .filter(|rel| !rel.is_empty())
         .ok_or_else(|| invalid("command snap relative path"))?;
-    let bytes = budget.read(fs::File::open(path)?)?;
-    if source["spoolHash"]
-        .as_str()
-        .is_none_or(|expected| {
-            !expected
-                .trim()
-                .eq_ignore_ascii_case(&digest(&bytes))
-        })
-    {
-        return Err(invalid("command snap source proof"));
-    }
-    let bytes = if bytes.starts_with(&[239, 187, 191]) { bytes[3..].to_vec() } else { bytes };
-    let normalized = crate::checkout::eol::normalize(bytes, false);
+    let normalized = read_source_bytes(source, path, budget)?;
     let identity = digest(&normalized);
     let test = version["files"]
         .as_array()
@@ -144,6 +133,25 @@ fn source(version: &Value, file: &Value, budget: &Budget) -> io::Result<(Value, 
     let row = json!({"file":identity,"relativePath":relative_path,"name":relative_path.rsplit('/').next(),"test":test});
     let object = json!({"type":"Source","hash":identity,"source":{"path":path,"hash":source["spoolHash"],"sourceHash":identity,"normalization":"workspace"}});
     Ok((row, object))
+}
+
+#[inline]
+fn read_source_bytes(source: &Value, path: &str, budget: &Budget) -> io::Result<Vec<u8>> {
+    let mut bytes = budget.read(fs::File::open(path)?)?;
+    if source["spoolHash"]
+        .as_str()
+        .is_none_or(|expected| {
+            !expected
+                .trim()
+                .eq_ignore_ascii_case(&digest(&bytes))
+        })
+    {
+        return Err(invalid("command snap source proof"));
+    }
+    if bytes.starts_with(&[239, 187, 191]) {
+        bytes.drain(..3);
+    }
+    Ok(crate::checkout::eol::normalize(bytes, false))
 }
 
 fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> io::Result<Value> {

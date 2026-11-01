@@ -31,9 +31,7 @@ pub(super) fn capture(
         if issue["type"].as_str().map(str::trim) != Some("MissingManuallyConfiguredPackages") {
             return Err(invalid("command unsupported merged dependency issue"));
         }
-        if parse_issue_packages(&issue["data"])?.is_empty() {
-            return Err(invalid("command dependency issue packages"));
-        }
+        validate_issue_packages(&issue["data"])?;
     }
     if !row.fast_forward {
         output.push(json!({
@@ -44,36 +42,34 @@ pub(super) fn capture(
     Ok(())
 }
 
-fn parse_issue_packages(data: &Value) -> io::Result<Vec<String>> {
+fn validate_issue_packages(data: &Value) -> io::Result<()> {
     if let Some(items) = data.as_array() {
-        return items
-            .iter()
-            .map(|item| {
-                let text = item
-                    .as_str()
-                    .map(str::trim)
-                    .ok_or_else(|| invalid("command dependency issue data"))?;
-                if text.is_empty() {
-                    return Err(invalid("command dependency issue packages"));
-                }
-                Ok(text.to_owned())
-            })
-            .collect();
+        if items.is_empty() {
+            return Err(invalid("command dependency issue packages"));
+        }
+        for item in items {
+            let text = item
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("command dependency issue data"))?;
+            if text.is_empty() {
+                return Err(invalid("command dependency issue packages"));
+            }
+        }
+        return Ok(());
     }
     let parsed: Vec<String> = serde_json::from_str(
         data.as_str().ok_or_else(|| invalid("command dependency issue data"))?,
     )
     .map_err(io::Error::other)?;
-    parsed
-        .into_iter()
-        .map(|item| {
-            let trimmed = item.trim();
-            if trimmed.is_empty() {
-                return Err(invalid("command dependency issue packages"));
-            }
-            Ok(trimmed.to_owned())
-        })
-        .collect()
+    if parsed.is_empty()
+        || parsed
+            .iter()
+            .any(|item| item.trim().is_empty())
+    {
+        return Err(invalid("command dependency issue packages"));
+    }
+    Ok(())
 }
 
 pub(super) fn target(row: &Row, state: &Value, issues: &Value) -> io::Result<Value> {

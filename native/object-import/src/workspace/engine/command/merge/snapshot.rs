@@ -25,12 +25,14 @@ pub(in crate::workspace::engine::command) struct Snapshot {
     pub staged_objects: Vec<Value>,
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn validate_application_files(
     files: &[Value],
 ) -> io::Result<()> {
     metadata::no_application_files(files)
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn local_model(
     input: &Value,
     head: &str,
@@ -51,6 +53,7 @@ pub(in crate::workspace::engine::command) fn prepare_models(
 
 /// The snap's `DependenciesGraph` from its allocation, as a Source the
 /// Version refers to.
+#[inline]
 pub(in crate::workspace::engine::command) fn dependencies_graph(
     allocation: &Value,
     version: &mut Value,
@@ -59,6 +62,7 @@ pub(in crate::workspace::engine::command) fn dependencies_graph(
     sources::dependencies_graph(allocation, version, objects)
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn object(
     kind: &str,
     hash: Option<&str>,
@@ -117,7 +121,7 @@ pub(in crate::workspace::engine::command) fn prepare(
         objects.push(metadata::object("Component", None, metadata::snapshot_model(input, hash)?)?);
         versions.push(json!({"identity":input.identity.trim(),"hash":hash,"version":version}));
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(objects.len());
     objects.retain(|object| object["type"] != "Source" || seen.insert(object["hash"].clone()));
     let mut state = crate::snapshot_transaction::State::default();
     let result = crate::snapshot_transaction::apply(

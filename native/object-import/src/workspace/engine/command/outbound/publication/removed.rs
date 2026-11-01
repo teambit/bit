@@ -25,6 +25,7 @@ pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
     Ok(ids)
 }
 
+#[inline]
 fn parse_removed_id(row: &Value) -> io::Result<String> {
     if let Some(raw) = row["id"].as_str().map(str::trim) {
         let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());

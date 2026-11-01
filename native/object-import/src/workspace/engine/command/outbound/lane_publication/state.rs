@@ -106,6 +106,7 @@ fn promoted_identity(key: &str, row: &serde_json::Value) -> io::Result<String> {
     Ok(format!("{scope}/{name}"))
 }
 
+#[inline]
 fn sort_ids(ids: &mut [String]) {
     ids.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
 }

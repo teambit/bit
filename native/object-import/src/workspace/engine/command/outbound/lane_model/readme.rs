@@ -30,6 +30,7 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
     Err(invalid(&format!("outbound lane {name} unsnapped readme requires canonical stack")))
 }
 
+#[inline]
 fn entry_head(entry: &Value) -> Option<&str> {
     entry["head"]
         .as_str()
@@ -38,6 +39,7 @@ fn entry_head(entry: &Value) -> Option<&str> {
         .filter(|head| !head.is_empty())
 }
 
+#[inline]
 fn id_pair(entry: &Value) -> Option<(&str, &str)> {
     let value = entry
         .get("id")

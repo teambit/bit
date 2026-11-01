@@ -46,6 +46,7 @@ fn head_only(model: &Value) -> io::Result<Staged> {
     })
 }
 
+#[inline]
 fn validate_label(label: &str) -> io::Result<()> {
     let trimmed = label.trim();
     if trimmed.is_empty()
@@ -58,6 +59,7 @@ fn validate_label(label: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 pub(super) fn has_staged(model: &Value) -> bool {
     model["state"]["versions"]
         .as_object()
@@ -83,8 +85,8 @@ pub(super) fn staged(model: &Value) -> io::Result<Staged> {
         .ok_or_else(|| invalid("outbound non-head local Version"))?;
     crate::merge_history::hash(head)?;
     let mut has_head = false;
-    let mut hashes = Vec::new();
-    let mut labels = Vec::new();
+    let mut hashes = Vec::with_capacity(rows.len());
+    let mut labels = Vec::with_capacity(rows.len());
     for (key, _) in rows
         .iter()
         .filter(|(_, row)| row["local"] == true)

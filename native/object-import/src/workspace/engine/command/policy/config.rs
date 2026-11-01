@@ -108,6 +108,7 @@ fn scope_policy(merged: &mut Value, current: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn retained_policy_row(original: &Value, field: &Value, entry: &Value) -> io::Result<Value> {
     if let Some(index) = entry["original"].as_u64() {
         return original

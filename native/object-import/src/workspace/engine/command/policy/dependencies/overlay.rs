@@ -52,6 +52,7 @@ fn apply_row(
     Ok(())
 }
 
+#[inline]
 fn overlay_files<'a>(
     row: &super::super::Row,
     planned: &'a planning::Planned,
@@ -73,6 +74,7 @@ fn overlay_files<'a>(
         .ok_or_else(|| invalid("command merge overlay"))
 }
 
+#[inline]
 fn matches_material_identity(output: &Value, identity: &str) -> bool {
     let identity = identity.trim();
     if let Some(id) = output["id"]
