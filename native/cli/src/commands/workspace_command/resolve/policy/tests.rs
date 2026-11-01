@@ -16,4 +16,5 @@ fn policy_values_are_not_component_patterns() {
     assert_eq!(options["policy"]["noLockDeps"], true);
     assert!(parse(&["-i", "*", "--ignore-issues", "ParseErrors"], true).is_none());
     assert!(parse(&["-i", "--no-lock-deps"], true).is_none());
+    assert!(parse(&["--ignore-newest-version"], false).is_some());
 }

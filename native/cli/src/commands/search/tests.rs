@@ -44,3 +44,11 @@ fn matches_queries_case_insensitively_and_deduplicates() {
     assert_eq!(per_query[0]["localCount"], json!(1));
     assert_eq!(per_query[1]["localCount"], json!(1));
 }
+
+#[test]
+fn unmatched_search_query_reports_zero_local_count() {
+    let ids = vec!["my-scope/bar/foo".to_owned()];
+    let (all, per_query) = match_queries(&ids, &["nonexistent".to_owned()]);
+    assert!(all.is_empty());
+    assert_eq!(per_query[0]["localCount"], json!(0));
+}

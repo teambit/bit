@@ -93,3 +93,9 @@ fn environment_and_registered_policy_precedence_match_variant_policy() {
     );
     assert!(!policy.automatic[0].contains_key("legacy"));
 }
+
+#[test]
+fn empty_extension_config_reads_default_jest_types_in_manual_dev_dependencies() {
+    let policy = Policy::read(&json!({}), &json!({"identity":"scope/name"}), &[]).unwrap();
+    assert_eq!(policy.manual[1]["@types/jest"], "26.0.20");
+}

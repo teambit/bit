@@ -162,6 +162,7 @@ fn unrelated_history_entries_require_canonical_unique_rows() {
     use serde_json::json;
     let valid = json!({"hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","parents":[]});
     assert_eq!(super::existing::valid_rows(std::slice::from_ref(&valid)), Some(true));
+    assert_eq!(super::existing::valid_rows(&[]), Some(true));
     assert_eq!(super::existing::valid_rows(&[valid.clone(), valid.clone()]), None);
     let mut extra = valid;
     extra["unknown"] = json!(true);

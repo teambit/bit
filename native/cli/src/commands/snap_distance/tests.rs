@@ -60,3 +60,9 @@ fn bitmap_lane_helpers_accept_object_and_string_lane_ids() {
     assert_eq!(super::bitmap_lane_scope_and_name(&obj_bitmap), Some(("my.scope", "dev")));
     assert_eq!(super::bitmap_lane_scope_and_name(&str_bitmap), Some(("my.scope", "dev")));
 }
+
+#[test]
+fn rejects_empty_or_excessive_snap_distance_arguments() {
+    assert_eq!(parse_options(&[]), None);
+    assert_eq!(parse_options(&["a", "b", "c", "d"]), None);
+}

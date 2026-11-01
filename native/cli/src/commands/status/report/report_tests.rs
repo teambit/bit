@@ -171,3 +171,8 @@ fn declines_sections_left_to_node() {
     let fields = json!({"pendingUpdatesFromMain": ["remote/one"]});
     assert!(report(&result(&fields), &context(), &Flags::default(), Chalk::new(false)).is_err());
 }
+
+#[test]
+fn double_dash_without_positional_args_parses_status_flags() {
+    assert_eq!(parse(&["-w", "--"]), Some(Flags { warnings: true, ..Flags::default() }));
+}

@@ -79,3 +79,11 @@ fn fallback(cache: &Cache, calls: &AtomicUsize) -> User {
         })
         .unwrap()
 }
+
+#[test]
+fn user_log_embeds_email_when_present() {
+    let user = User { username: Some("alice".into()), email: Some("alice@example.test".into()) };
+    let log = user.log();
+    assert_eq!(log["username"], "alice");
+    assert_eq!(log["email"], "alice@example.test");
+}

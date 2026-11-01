@@ -11,3 +11,11 @@ fn parses_and_validates_server_port() {
     );
     assert_eq!(parse_options(&["--port=invalid"]), None);
 }
+
+#[test]
+fn parses_inline_port_and_compile_false_flag() {
+    assert_eq!(
+        parse_options(&["--port=4000", "--compile=false"]),
+        Some(Options { port: Some(4000), compile: false }),
+    );
+}

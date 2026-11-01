@@ -12,3 +12,9 @@ fn parses_ui_build_options_and_detects_missing_host() {
     let temp = tempfile::tempdir().unwrap();
     assert!(is_outside_workspace_and_scope(temp.path()));
 }
+
+#[test]
+fn declines_extra_positional_and_unknown_flags() {
+    assert_eq!(parse_options(&["root-a", "root-b"]), None);
+    assert_eq!(parse_options(&["--unknown"]), None);
+}

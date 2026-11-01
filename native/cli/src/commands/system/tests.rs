@@ -27,3 +27,8 @@ fn formats_unrecognized_system_subcommand() {
         r#""unknown" is not a subcommand of "system", please run "bit system --help" to list the subcommands"#,
     );
 }
+
+#[test]
+fn empty_slice_returns_none_for_system_command() {
+    assert_eq!(parse_args(&[]), None);
+}

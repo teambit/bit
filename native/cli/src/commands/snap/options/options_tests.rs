@@ -39,3 +39,9 @@ fn component_selector_grammar_is_retained_for_native_selection() {
         assert_eq!(options.pattern.as_deref(), Some(pattern));
     }
 }
+
+#[test]
+fn double_dash_accepts_single_snap_pattern() {
+    let options = parse(&["-m", "msg", "--", "remote/one"]).unwrap();
+    assert_eq!(options.pattern.as_deref(), Some("remote/one"));
+}

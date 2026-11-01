@@ -29,3 +29,9 @@ fn windows_directory_error_uses_node_directory_error_without_masking_permission_
     assert_eq!(result.kind(), std::io::ErrorKind::PermissionDenied);
     assert!(result.to_string().starts_with("error: you do not have permissions"));
 }
+
+#[test]
+fn empty_results_array_renders_empty_testsuites_element() {
+    let xml = render("[]", &json!({})).unwrap();
+    assert_eq!(xml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuites/>");
+}

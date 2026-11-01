@@ -65,3 +65,10 @@ fn persist_optional_build_argument_and_state_patterns() {
     );
     assert!(parse(&["$modified AND comp*"]).is_some());
 }
+
+#[test]
+fn empty_tag_args_parse_to_patch_release_level() {
+    let options = parse(&[]).unwrap();
+    assert_eq!(options.release.level, "patch");
+    assert!(options.selection.patterns.is_empty());
+}

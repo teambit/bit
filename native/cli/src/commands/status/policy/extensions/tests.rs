@@ -25,3 +25,8 @@ fn removal_configuration_rejects_unknown_fields_and_corrupt_values() {
         assert!(validate_removal_config(config.as_object().unwrap()).is_err());
     }
 }
+
+#[test]
+fn empty_removal_config_object_is_valid() {
+    assert!(validate_removal_config(json!({}).as_object().unwrap()).is_ok());
+}

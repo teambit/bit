@@ -6,6 +6,7 @@ use super::app_file;
 fn app_files() {
     assert!(app_file("src/my.bit-app.ts"));
     assert!(app_file("x.react-app.tsx"));
+    assert!(app_file("nested/app.node-app.js"));
     assert!(!app_file("x.react-app."));
     assert!(!app_file("x.bit-app./index.ts"));
     assert!(!app_file("index.ts"));

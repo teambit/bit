@@ -18,3 +18,8 @@ fn detection_issue_objects_match_released_node_classes() {
         assert_eq!(actual, fixture["expected"], "{}", fixture["type"]);
     }
 }
+
+#[test]
+fn unknown_issue_type_name_returns_error() {
+    assert!(Issue::parse("NonexistentIssueType").is_err());
+}

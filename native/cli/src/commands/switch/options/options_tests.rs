@@ -110,3 +110,8 @@ fn static_bracket_patterns_remain_native_without_enabling_state_expressions() {
         assert!(!parse(&["remote/dev", "-p", pattern]).unwrap().supported_pattern());
     }
 }
+
+#[test]
+fn empty_switch_args_return_none() {
+    assert!(parse(&[]).is_none());
+}

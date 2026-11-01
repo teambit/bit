@@ -36,4 +36,5 @@ fn detects_configured_extension() {
     assert!(is_extension_configured(&doc, "my-scope/my-aspect"));
     assert!(is_extension_configured(&doc, "other/versioned"));
     assert!(!is_extension_configured(&doc, "nonexistent"));
+    assert!(!is_extension_configured(&json!(null), "my-scope/my-aspect"));
 }

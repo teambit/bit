@@ -30,4 +30,5 @@ fn filesystem_error_strings_match_node_inspection() {
         .map(|value| super::quote(value))
         .collect();
     assert_eq!(actual, expected);
+    assert_eq!(super::quote(""), "''");
 }

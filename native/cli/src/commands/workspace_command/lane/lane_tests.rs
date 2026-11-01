@@ -38,6 +38,7 @@ fn squashing_without_snaps_is_left_to_node() {
 #[test]
 fn receipt_parts() {
     assert_eq!(squash_hashes(&json!({ "squashMessageHashes": [HASH] })).unwrap(), [HASH]);
+    assert_eq!(squash_hashes(&json!({ "squashMessageHashes": [] })).unwrap(), Vec::<String>::new());
     assert!(squash_hashes(&json!({ "squashMessageHashes": [HASH, HASH] })).is_err());
     assert!(squash_hashes(&json!({ "squashMessageHashes": ["nope"] })).is_err());
     assert_eq!(

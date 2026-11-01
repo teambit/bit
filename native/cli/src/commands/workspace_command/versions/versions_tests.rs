@@ -10,6 +10,7 @@ const TWO: &str = "s/b@1123456789abcdef0123456789abcdef01234567";
 #[test]
 fn nothing_to_snap() {
     assert_eq!(format(&json!(null), Chalk::new(false), &SNAP).unwrap().data, "nothing to snap");
+    assert_eq!(format(&json!(null), Chalk::new(false), &TAG).unwrap().data, "nothing to tag");
 }
 
 #[test]

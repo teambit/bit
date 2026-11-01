@@ -21,3 +21,11 @@ fn callbacks_replace_existing_types_and_precede_later_native_checks() {
     merge(&mut issues, &raw, &HashSet::from(["IgnoredPluginIssue"])).unwrap();
     assert_eq!(issues, vec![replacement, custom, later]);
 }
+
+#[test]
+fn empty_callback_array_leaves_existing_issues_unchanged() {
+    let mut issues = vec![json!({"type":"MissingDists","data":true})];
+    let before = issues.clone();
+    merge(&mut issues, &json!([]), &HashSet::new()).unwrap();
+    assert_eq!(issues, before);
+}

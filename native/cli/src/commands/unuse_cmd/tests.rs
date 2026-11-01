@@ -42,4 +42,5 @@ fn finds_extension_key() {
         Some("other/versioned@1.0.0".to_owned()),
     );
     assert_eq!(find_extension_key(&doc, "nonexistent"), None);
+    assert_eq!(find_extension_key(&json!(null), "my-scope/my-aspect"), None);
 }

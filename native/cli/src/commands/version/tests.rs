@@ -20,4 +20,8 @@ fn parses_version_json_flags() {
 fn renders_version_text_and_json() {
     assert_eq!(render_version("1.2.3", false).unwrap(), "1.2.3");
     assert_eq!(render_version("1.2.3", true).unwrap(), "{\n  \"bit\": \"1.2.3\"\n}");
+    assert_eq!(
+        parse_json_flag(&[OsString::from("version"), OsString::from("--json=true")]),
+        Some(true),
+    );
 }

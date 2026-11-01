@@ -32,6 +32,7 @@ fn planned_versions_come_from_tagged_and_auto_tagged_ids() {
     let identities = ["s/two".to_string(), "s/one".to_string()];
     assert_eq!(planned_versions(&result, &identities).unwrap(), ["0.0.2", "0.0.2"]);
     assert!(planned_versions(&result, &["s/three".to_string()]).is_err());
+    assert!(entered_versions(None).is_empty());
 }
 
 #[test]

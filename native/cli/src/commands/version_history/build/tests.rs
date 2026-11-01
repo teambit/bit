@@ -33,4 +33,5 @@ fn row_scope_and_name_parses_object_and_string_ids() {
     assert_eq!(super::row_scope_and_name(&str_row), Some(("my.scope", "ui/button")));
     assert_eq!(super::row_scope_and_name(&unscoped), None);
     assert_eq!(super::row_scope_and_name(&unscoped_str), None);
+    assert_eq!(super::row_scope_and_name(&json!({})), None);
 }

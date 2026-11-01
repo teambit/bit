@@ -108,3 +108,9 @@ fn sets_peer_in_component_json_when_present() {
         }),
     );
 }
+
+#[test]
+fn rejects_empty_set_or_unset_peer_arguments() {
+    assert_eq!(parse_set_args(&[]), None);
+    assert_eq!(parse_unset_args(&[]), None);
+}

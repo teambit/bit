@@ -29,6 +29,8 @@ fn versions_are_collected_from_nested_versions_and_identities() {
     let mut versions = Versions::default();
     versions.visit(&json!([{ "version": "1.0.0", "deps": [{ "identity": "s/a@2.0.0" }, { "version": "1.0.0" }] }]));
     assert_eq!(versions.list, ["1.0.0", "2.0.0"]);
+    versions.visit(&json!(null));
+    assert_eq!(versions.list, ["1.0.0", "2.0.0"]);
 }
 
 #[test]

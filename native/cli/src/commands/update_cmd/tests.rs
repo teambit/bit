@@ -37,4 +37,5 @@ fn parses_update_options_and_detects_empty_dependencies() {
     )
     .unwrap();
     assert!(!has_no_workspace_dependencies(temp.path()).unwrap());
+    assert_eq!(parse_options(&["--unknown"]), None);
 }

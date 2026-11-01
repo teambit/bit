@@ -34,3 +34,18 @@ fn accepted_control_waits_for_delayed_messages() {
     sender.join().unwrap();
     child.wait().unwrap();
 }
+
+#[test]
+fn mismatched_control_token_is_rejected_during_handshake() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let mut client = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+    client.write_all(b"{\"token\":\"wrong\"}\n").unwrap();
+    let mut child = Command::new(std::env::current_exe().unwrap())
+        .arg("--list")
+        .stdout(Stdio::null())
+        .spawn()
+        .unwrap();
+    assert!(accept(&listener, &mut child, "expected").is_err());
+    let _ = child.kill();
+    let _ = child.wait();
+}

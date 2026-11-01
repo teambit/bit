@@ -30,6 +30,7 @@ fn file_versions_become_component_versions() {
     );
     assert_eq!(replacer.replace("lodash@4.0.0"), "lodash@4.0.0");
     assert_eq!(replacer.component("@s/a.b"), Some(&("a.b".to_string(), "s".to_string())));
+    assert_eq!(replacer.component("lodash"), None);
 }
 
 #[test]

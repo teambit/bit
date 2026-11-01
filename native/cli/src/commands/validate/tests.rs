@@ -87,4 +87,5 @@ fn checks_ts_types_and_js_lint() {
     let valid_js = "const comp2 = require('../comp2');\nconsole.log(comp2);\n";
     assert!(lint_source_content(valid_js).is_empty());
     assert!(!lint_source_content("console.log(undefinedVariable);\n").is_empty());
+    assert_eq!(parse_options(&["--unknown"]), None);
 }

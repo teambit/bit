@@ -14,3 +14,9 @@ fn comments_defaults_duplicates_and_exact_component_names() {
         assert!(parse(content).is_err());
     }
 }
+
+#[test]
+fn comment_and_blank_only_version_file_parses_to_empty_entries() {
+    let parsed = parse("# comment only\n\n  \n").unwrap();
+    assert_eq!(parsed, json!({"entries": [], "default": null}));
+}

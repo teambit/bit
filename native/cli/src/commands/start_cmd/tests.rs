@@ -29,3 +29,10 @@ fn parses_start_options_and_detects_missing_workspace_or_scope() {
     let temp = tempfile::tempdir().unwrap();
     assert!(is_outside_workspace_and_scope(temp.path()));
 }
+
+#[test]
+fn empty_start_args_parse_with_no_pattern() {
+    let opts = parse_options(&[]).unwrap();
+    assert!(opts.pattern.is_none());
+    assert!(!opts.dev && !opts.rebuild);
+}

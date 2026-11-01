@@ -31,4 +31,5 @@ fn ambiguous_and_cyclic_graphs_decline() {
     let rendered = render(&chain, &duplicates, false, Chalk::new(false), &[]).unwrap();
     assert!(rendered.contains("(2.0.0)"));
     assert!(!rendered.contains("(3.0.0)"));
+    assert!(render(&json!({}), &model, false, Chalk::new(false), &[]).is_none());
 }

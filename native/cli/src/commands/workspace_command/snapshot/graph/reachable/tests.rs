@@ -59,6 +59,7 @@ fn reachable_filter_preserves_cycles_aliases_and_packages_without_snapshots() {
         ["alpha@1.0.0", "beta@1.0.0"],
     );
     assert!(filtered["importers"].get("root").is_none());
+    assert!(filtered["packages"].get("unrelated@1.0.0").is_none());
 }
 
 fn converted(source: &Value) -> Value {

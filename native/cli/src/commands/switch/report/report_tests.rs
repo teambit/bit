@@ -50,3 +50,25 @@ fn reports_fetched_head() {
     assert!(report.data.contains("to the head of lane s/dev"));
     assert!(!report.data.contains("local head"));
 }
+
+#[test]
+fn skip_fetch_reports_local_head_of_lane() {
+    let report = format(
+        &json!({
+            "components": [{"id":"s/alpha@abc","filesStatus":{"index.js":"updated"}}],
+            "failedComponents": [],
+        }),
+        &Options {
+            lane: "s/dev".into(),
+            skip_fetch: true,
+            verbose: false,
+            force_ours: false,
+            force_theirs: false,
+            skip_install: true,
+            adoption: crate::commands::switch::options::Adoption::default(),
+        },
+        Chalk::new(false),
+    )
+    .unwrap();
+    assert!(report.data.contains("local head"));
+}

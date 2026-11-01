@@ -169,3 +169,9 @@ fn executes_list_and_run_in_workspace() {
     assert!(run_out.contains(r#"Running script "test-script""#), "{run_out}");
     assert!(run_out.contains("hello from script"), "{run_out}");
 }
+
+#[test]
+fn rejects_multiple_script_names_or_unknown_flags() {
+    assert_eq!(parse_options(&["a", "b"]), None);
+    assert_eq!(parse_options(&["--unknown"]), None);
+}

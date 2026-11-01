@@ -62,3 +62,8 @@ fn versioned_identities() {
     assert!(!versioned("a@1.0.0"));
     assert!(!versioned("s/a@1@2"));
 }
+
+#[test]
+fn empty_version_suffix_is_not_a_versioned_identity() {
+    assert!(!versioned("s/a@"));
+}

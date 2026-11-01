@@ -42,6 +42,7 @@ fn filtered_snapshot_order_follows_pnpm_walker() {
         snapshot_order(&lockfile, &["component".to_string()]),
         ["a@1.0.0", "x@1.0.0", "y@1.0.0", "z@1.0.0", "b@1.0.0"],
     );
+    assert!(snapshot_order(&lockfile, &["missing".to_string()]).is_empty());
 }
 
 #[test]

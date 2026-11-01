@@ -21,3 +21,9 @@ fn ignores_empty_package_string() {
     let packages = parse_arguments(&args);
     assert!(packages.is_none());
 }
+
+#[test]
+fn declines_flag_like_trailing_package_after_double_dash() {
+    let args = [OsString::from("uninstall"), OsString::from("--"), OsString::from("-bad")];
+    assert!(parse_arguments(&args).is_none());
+}

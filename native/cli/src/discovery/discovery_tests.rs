@@ -185,4 +185,5 @@ fn path_wrapper_skips_this_executable() {
 fn nothing_found_is_an_error_that_names_bit_node_cli() {
     let error = find_in(&Environment::default()).unwrap_err();
     assert!(error.to_string().contains("BIT_NODE_CLI"), "{error}");
+    assert!(error.to_string().contains("bvm"), "{error}");
 }

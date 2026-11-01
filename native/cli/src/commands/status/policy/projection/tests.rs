@@ -46,3 +46,10 @@ fn variant_specificity_exclusions_and_propagation_share_installer_rules() {
     assert_eq!(rows[0]["name"], "teambit.pkg/pkg");
     assert_eq!(rows[1]["config"]["policy"]["dependencies"], json!({"directory":"2"}));
 }
+
+#[test]
+fn target_without_variant_or_stored_config_projects_empty_extensions() {
+    let target = target();
+    let context = json!({"targets":[&target],"workspace":{}});
+    assert!(super::extensions(&context, &target, None).unwrap().is_empty());
+}

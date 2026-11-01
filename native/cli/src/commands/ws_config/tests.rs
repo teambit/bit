@@ -154,4 +154,5 @@ fn supports_no_dedupe_writers_filter_and_skips_user_files() {
     assert_eq!(res.write_results.total_extending_config_files, 1);
     assert_eq!(res.write_results.skipped_paths.len(), 1);
     assert!(root.join("comp2/tsconfig.json").exists());
+    assert_eq!(parse_subcommand(&["--unknown"]), None);
 }

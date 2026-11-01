@@ -85,3 +85,11 @@ fn handles_empty_workspace_mixed_patterns_and_unowned_files() {
     };
     assert_eq!(err, r#"unable to find any component matching the "ui/*" pattern"#);
 }
+
+#[test]
+fn empty_test_args_parse_to_default_options() {
+    assert_eq!(
+        parse_options(&[]),
+        Some(Options { user_pattern: Vec::new(), all: false, scope: None, json: false }),
+    );
+}

@@ -36,3 +36,10 @@ fn root_issue_setting_ignores_only_missing_manually_configured_packages() {
     );
     assert!(ignored_issues.iter().all(Value::is_object));
 }
+
+#[test]
+fn collect_with_empty_components_slice_returns_empty_vec() {
+    let context = json!({"versions":[],"models":[],"targets":[],"workspace":{},"packageJson":{}});
+    let root = std::env::temp_dir().join("bit-empty-issue-test");
+    assert_eq!(collect(&root, &context, &[]).unwrap(), Some(Vec::new()));
+}

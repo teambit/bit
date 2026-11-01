@@ -48,6 +48,10 @@ fn node_from_path_leaves_path_alone() {
     let command = command(&Target::Entry(cli("node")), &[]);
     assert_eq!(command.get_program(), OsStr::new("node"));
     assert!(command.get_envs().next().is_none());
+    assert_eq!(
+        args(&command),
+        ["/bvm/links/bit/node_modules/@teambit/bit/bin/bit"].map(OsString::from),
+    );
 }
 
 #[test]

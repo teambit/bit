@@ -29,4 +29,7 @@ fn aliases_duplicates_optional_editor_and_command_specific_flags() {
     let (workflow, args) = parse(&["--disable-tag-pipeline"], Kind::Snap).unwrap();
     assert_eq!(args, ["--disable-tag-pipeline"]);
     assert_eq!(workflow.parameters(Kind::Snap)["disableTagAndSnapPipelines"], json!(false));
+    let (workflow_tag, args_tag) = parse(&["--disable-tag-pipeline"], Kind::Tag).unwrap();
+    assert!(args_tag.is_empty());
+    assert_eq!(workflow_tag.parameters(Kind::Tag)["disableTagAndSnapPipelines"], json!(true));
 }

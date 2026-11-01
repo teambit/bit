@@ -18,3 +18,8 @@ fn installation_uses_only_materialized_writers_even_when_report_lists_components
     assert!(writer_ids(&json!({"result": {"components": []}})).is_err());
     assert!(writer_ids(&json!({"switchWriterIds": [null]})).is_err());
 }
+
+#[test]
+fn non_array_switch_writer_ids_is_rejected() {
+    assert!(writer_ids(&json!({"switchWriterIds": "s/a@abc"})).is_err());
+}

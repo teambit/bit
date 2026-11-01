@@ -101,3 +101,9 @@ fn renders_legacy_harmony_and_text_for_workspace_component() {
     let text = text_report(&loaded);
     assert!(text.contains("is-positive@1.0.0 (optional)"), "{text}");
 }
+
+#[test]
+fn rejects_unknown_show_flags_or_multiple_ids() {
+    assert_eq!(parse_options(&["comp1", "comp2"]), None);
+    assert_eq!(parse_options(&["comp1", "--unknown"]), None);
+}

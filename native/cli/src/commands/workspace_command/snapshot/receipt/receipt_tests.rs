@@ -36,6 +36,7 @@ fn git_config_values_end_at_the_next_equals_sign_and_the_last_wins() {
     assert_eq!(config.get("user.name").map(String::as_str), Some("Local"));
     assert_eq!(config.get("user.email").map(String::as_str), Some("a@b.c"));
     assert!(!config.contains_key("core.x"));
+    assert!(super::parse_git_config("").is_empty());
 }
 
 #[test]

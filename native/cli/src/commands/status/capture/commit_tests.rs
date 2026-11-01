@@ -51,3 +51,9 @@ fn checkout_commit_keeps_the_entry_written_by_the_retained_loader_after_invalida
     fresh::commit(&mut engine, root, &[], checkout_reset(&capture(false)), true).unwrap();
     assert!(!cache.exists());
 }
+
+#[test]
+fn checkout_reset_respects_checkout_loader_cache_checked_flag() {
+    assert!(!checkout_reset(&capture(true)));
+    assert!(checkout_reset(&capture(false)));
+}

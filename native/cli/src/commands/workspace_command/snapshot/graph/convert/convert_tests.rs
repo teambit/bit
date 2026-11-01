@@ -17,6 +17,7 @@ fn references_resolve_like_ref_to_relative() {
         Some("a@1.0.0(react@18.0.0)"),
     );
     assert_eq!(ref_to_relative("file:comps/one", "a").as_deref(), Some("a@file:comps/one"));
+    assert_eq!(ref_to_relative("link:comps/one", "a"), None);
 }
 
 const HASH: &str = "0123456789abcdef0123456789abcdef01234567";
