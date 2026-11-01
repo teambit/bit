@@ -62,6 +62,7 @@ const KNOWN_GLOBALS: &[&str] = &[
     "window",
 ];
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct StepResult {
     pub code: i32,
     pub message: String,
@@ -106,6 +107,7 @@ fn check_component_types(
     }
 }
 
+#[inline]
 fn is_ts_source(rel_file: &str) -> bool {
     ![".d.ts", ".d.mts", ".d.cts"]
         .iter()
@@ -115,6 +117,8 @@ fn is_ts_source(rel_file: &str) -> bool {
             .any(|ext| rel_file.ends_with(ext))
 }
 
+#[must_use]
+#[inline]
 pub(super) fn check_ts_content(content: &str) -> Vec<String> {
     let mut errors = Vec::new();
     for (idx, line) in content.lines().enumerate() {
@@ -128,6 +132,7 @@ pub(super) fn check_ts_content(content: &str) -> Vec<String> {
     errors
 }
 
+#[inline]
 fn is_comment_or_empty(trimmed: &str) -> bool {
     trimmed.is_empty()
         || trimmed.starts_with("//")
@@ -169,6 +174,7 @@ fn check_line_type_mismatch(line: &str) -> Option<&'static str> {
     }
 }
 
+#[inline]
 fn is_type_or_interface_decl(line: &str) -> bool {
     line.starts_with("type ")
         || line.starts_with("export type ")
@@ -176,6 +182,7 @@ fn is_type_or_interface_decl(line: &str) -> bool {
         || line.starts_with("export interface ")
 }
 
+#[inline]
 fn find_assign_eq(line: &str) -> Option<usize> {
     let bytes = line.as_bytes();
     for (idx, &byte) in bytes.iter().enumerate() {
@@ -194,6 +201,7 @@ fn find_assign_eq(line: &str) -> Option<usize> {
     None
 }
 
+#[inline]
 fn is_string_literal(expr: &str) -> bool {
     expr.len() >= 2
         && ((expr.starts_with('\'') && expr.ends_with('\''))
@@ -201,10 +209,12 @@ fn is_string_literal(expr: &str) -> bool {
             || (expr.starts_with('`') && expr.ends_with('`')))
 }
 
+#[inline]
 fn is_bool_literal(expr: &str) -> bool {
     matches!(expr, "true" | "false")
 }
 
+#[inline]
 fn is_number_literal(expr: &str) -> bool {
     !expr.is_empty() && expr.parse::<f64>().is_ok()
 }
@@ -252,6 +262,7 @@ fn lint_component_files(comp: &WorkspaceComponent, total_errors: &mut usize) -> 
     comp_lines
 }
 
+#[inline]
 fn is_lintable_source(rel_file: &str) -> bool {
     ![".d.ts", ".d.mts", ".d.cts"]
         .iter()
@@ -261,6 +272,8 @@ fn is_lintable_source(rel_file: &str) -> bool {
             .any(|ext| rel_file.ends_with(ext))
 }
 
+#[must_use]
+#[inline]
 pub(super) fn lint_source_content(content: &str) -> Vec<String> {
     let declared = collect_declared_identifiers(content);
     let mut errors = Vec::new();
@@ -331,6 +344,7 @@ fn find_undeclared_call_args<'a>(line: &'a str, declared: &HashSet<&str>) -> Vec
     missing
 }
 
+#[inline]
 fn is_valid_ident(token: &str) -> bool {
     let mut chars = token.chars();
     let Some(first) = chars.next() else {
@@ -339,6 +353,7 @@ fn is_valid_ident(token: &str) -> bool {
     (first.is_ascii_alphabetic() || first == '_' || first == '$') && chars.all(is_ident_char)
 }
 
+#[inline]
 fn is_ident_char(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || ch == '_' || ch == '$'
 }

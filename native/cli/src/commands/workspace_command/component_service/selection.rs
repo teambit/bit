@@ -5,7 +5,7 @@ pub(super) fn exact(targets: &[Value], selectors: &[String]) -> io::Result<Vec<V
     if selectors.is_empty() {
         return Ok(targets.to_vec());
     }
-    let mut selected = Vec::new();
+    let mut selected = Vec::with_capacity(selectors.len());
     for selector in selectors {
         let row = targets
             .iter()
@@ -17,6 +17,8 @@ pub(super) fn exact(targets: &[Value], selectors: &[String]) -> io::Result<Vec<V
     }
     Ok(selected)
 }
+
+#[inline]
 fn matches(row: &Value, selector: &str) -> bool {
     let selector = selector.trim();
     let (name, version) = selector
@@ -39,6 +41,7 @@ fn matches(row: &Value, selector: &str) -> bool {
             .is_some_and(|dir| normalized_dir(dir) == directory)
 }
 
+#[inline]
 fn row_text<'r>(row: &'r Value, keys: [&str; 2]) -> Option<&'r str> {
     keys.into_iter()
         .filter_map(|key| row[key].as_str())
@@ -46,6 +49,7 @@ fn row_text<'r>(row: &'r Value, keys: [&str; 2]) -> Option<&'r str> {
         .find(|val| !val.is_empty())
 }
 
+#[inline]
 fn normalized_dir(value: &str) -> String {
     let normalized = value.replace('\\', "/");
     normalized

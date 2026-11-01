@@ -43,6 +43,7 @@ pub(super) fn before_snapshot(
     }
 }
 
+#[inline]
 pub(super) fn finish(
     session: &mut Session<'_>,
     plan: &mut Value,
@@ -108,6 +109,7 @@ fn load_events(
     Ok(())
 }
 
+#[inline]
 pub(super) fn callback_output(startup: &mut Startup, text: &str) {
     if let Some((_, output)) = startup.snapshot_events.last_mut() {
         output.push_str(text);
@@ -127,7 +129,7 @@ pub(super) fn packages(
     else {
         return Ok(());
     };
-    if !plans
+    let has_data = plans
         .iter()
         .any(|plan| {
             plan["identity"]
@@ -136,8 +138,8 @@ pub(super) fn packages(
                 .is_some_and(|id| {
                     !id.is_empty() && capture::snapshot_data(&session.capture, id).is_some()
                 })
-        })
-    {
+        });
+    if !has_data {
         return Ok(());
     }
     startup.committed = true;
@@ -158,6 +160,7 @@ pub(super) fn packages(
     check_token(&finalized, &session.token)
 }
 
+#[inline]
 pub(in crate::commands) fn render_events(
     output: &bit_install::output::Output,
     startup: &Startup,
@@ -257,6 +260,7 @@ fn validate_graph_targets(context: &Value, plan: &Value, params: &Value) -> io::
     Ok(())
 }
 
+#[inline]
 fn strings(value: &Value) -> io::Result<Vec<String>> {
     array(Some(value), "snapshot callback selection")?
         .iter()
@@ -327,6 +331,7 @@ pub(super) fn build(
 }
 
 /// Builder output follows native graph progress, including commands that fail in the builder.
+#[inline]
 pub(in crate::commands) fn render_build_output(
     output: &bit_install::output::Output,
     startup: &Startup,
@@ -350,6 +355,7 @@ pub(in crate::commands) fn render_build_output(
     io::stdout().flush()
 }
 
+#[inline]
 fn refresh_sources(session: &mut Session<'_>, result: &Value) -> io::Result<()> {
     let refreshed: Value = session.engine.request(&json!({
         "kind":"commandSnapshotRefresh", "token":session.token,
@@ -362,6 +368,7 @@ fn refresh_sources(session: &mut Session<'_>, result: &Value) -> io::Result<()> 
 }
 
 /// Carry environment-provided task descriptions into the native Version allocation.
+#[inline]
 pub(super) fn planned_tasks(receipt: &mut Value, capture: &capture::Capture) -> io::Result<()> {
     let Some(versions) = receipt
         .get_mut("versions")

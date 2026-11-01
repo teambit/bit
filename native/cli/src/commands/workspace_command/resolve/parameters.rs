@@ -15,6 +15,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+#[inline]
 pub(super) fn planned(
     root: &Path,
     request: &ResolveRequest<'_>,
@@ -103,6 +104,7 @@ fn tag(params: &mut Value, options: &Value) {
     params["skipPublishedVersions"] = json!(false);
 }
 
+#[inline]
 pub(super) fn session_environment(
     engine: &mut Engine,
     root: &Path,
@@ -124,6 +126,7 @@ pub(super) fn session_environment(
 
 /// `listTagPendingIds` populates missing lane history while checking staged snaps.
 /// Stage the same read-proven write before the soft bitmap publication.
+#[inline]
 pub(super) fn stage_soft_history(
     engine: &mut Engine,
     root: &Path,
@@ -140,6 +143,7 @@ pub(super) fn stage_soft_history(
     Ok(())
 }
 
+#[inline]
 pub(super) fn preparation(
     engine: &mut Engine,
     root: &Path,
@@ -167,15 +171,19 @@ pub(super) fn preparation(
 }
 
 impl Planned {
+    #[must_use]
+    #[inline]
     pub(in crate::commands) fn has_captured_components(&self) -> bool {
         !self.capture.components.is_empty()
     }
 
     /// Move configured callbacks across native merge materialization and resolution.
+    #[inline]
     pub(in crate::commands) fn take_environment(&mut self) -> Option<environments::Environments> {
         capture::take_callback_environment(&mut self.capture)
     }
 
+    #[inline]
     pub(in crate::commands) fn restore_host(&mut self, host: crate::host::Host) {
         capture::restore_callback_host(&mut self.capture, host);
     }

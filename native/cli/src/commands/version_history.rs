@@ -24,7 +24,7 @@ use std::{env, ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "version-history", aliases: &["vh"], run };
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum Subcommand {
     ShowJson(String),
     ShowText(String, bool),
@@ -77,6 +77,7 @@ fn parse_build(rest: &[&str]) -> Option<Subcommand> {
     Some(Subcommand::Build(id?, from, remote))
 }
 
+#[inline]
 fn apply_build_arg<'a>(
     argument: &'a str,
     arguments: &mut impl Iterator<Item = &'a str>,
@@ -98,6 +99,7 @@ fn apply_build_arg<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_build_inline_or_id(
     argument: &str,
     id: &mut Option<String>,
@@ -116,6 +118,7 @@ fn apply_build_inline_or_id(
     Some(())
 }
 
+#[inline]
 fn set_once(slot: &mut Option<String>, val: &str) -> Option<()> {
     let val = val.trim();
     (slot.is_none() && !val.is_empty() && !val.starts_with('-')).then_some(())?;
@@ -123,6 +126,7 @@ fn set_once(slot: &mut Option<String>, val: &str) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn next_non_flag<'a>(arguments: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
     let val = arguments.next()?.trim();
     (!val.is_empty() && !val.starts_with('-')).then_some(val)
@@ -184,6 +188,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     super::scope_rename::ci_active()
 }

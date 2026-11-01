@@ -18,10 +18,14 @@ pub(in crate::commands) struct Loaded {
     docs: Vec<crate::commands::add::docs::CatDocs>,
 }
 impl Loaded {
+    #[must_use]
+    #[inline]
     pub(in crate::commands) fn dependency_state(&self, identity: &str) -> Option<&Value> {
         self.capture.dependency_states.get(identity.trim())
     }
 
+    #[must_use]
+    #[inline]
     pub(in crate::commands) fn captured(&self) -> &[Value] {
         &self.capture.captured
     }
@@ -85,10 +89,10 @@ impl Loaded {
             engine,
             context,
             capture,
-            ids: Vec::new(),
+            ids: Vec::with_capacity(targets.len()),
             progress: super::Progress::new(name, environment, [load_count, targets.len()], options),
             files: Vec::new(),
-            counts: Vec::new(),
+            counts: Vec::with_capacity(targets.len()),
             docs,
         };
         loaded.add_selected(root, &workspace, &targets, options)?;
@@ -196,6 +200,7 @@ impl Loaded {
             .collect();
         Ok(json!({"results":results,"errors":[]}))
     }
+    #[inline]
     pub(in crate::commands) fn commit(&mut self, root: &Path) -> io::Result<()> {
         for plan in self.docs.drain(..) {
             plan.publish()?;
@@ -271,6 +276,7 @@ fn changed(
         .collect())
 }
 
+#[inline]
 fn serial_loading(root: &Path, targets: &[Value], options: &super::Selection) -> io::Result<()> {
     use bit_install::dependencies::cache::invalidation::{deps_dir, needs_invalidation};
     if options.allow_cached_many || (options.allow_cached_pair && targets.len() == 2) {
@@ -298,6 +304,7 @@ fn selected(root: &Path, context: &Value, options: &super::Selection) -> io::Res
     Ok(targets)
 }
 
+#[inline]
 fn order_sources(root: &Path, capture: &mut capture::Capture) -> io::Result<()> {
     for component in &mut capture.captured {
         let files: Vec<String> = serde_json::from_value(component["files"].clone())?;

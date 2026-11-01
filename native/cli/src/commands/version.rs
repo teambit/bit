@@ -41,6 +41,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     let mut json = false;
     let mut iter = args.iter().skip(1);
@@ -57,6 +58,7 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     Some(json)
 }
 
+#[inline]
 fn render_version(version: &str, json: bool) -> io::Result<std::borrow::Cow<'_, str>> {
     if json {
         serde_json::to_string_pretty(&json!({ "bit": version }))

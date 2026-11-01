@@ -6,6 +6,8 @@ use super::Failure;
 use crate::commands::color::Chalk;
 use std::fmt::Write;
 
+#[must_use]
+#[inline]
 pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
     let mut fields = Vec::with_capacity(5);
     if let Some(errno) = error.errno {
@@ -27,12 +29,15 @@ pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
     }
     format!("[Error: {}] {{\n  {}\n}}", error.description(), fields.join(",\n  "))
 }
+
+#[inline]
 fn needs_escaping(value: &str, delimiter: char) -> bool {
     value
         .chars()
         .any(|ch| ch == '\\' || ch == delimiter || ch.is_control())
 }
 
+#[inline]
 fn select_delimiter(value: &str) -> char {
     if !value.contains('\'') {
         '\''

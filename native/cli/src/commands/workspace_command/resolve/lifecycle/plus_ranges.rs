@@ -59,6 +59,7 @@ fn targets<'a>(session: &'a Session<'_>, plan: &'a Value) -> Vec<(String, &'a Va
     targets
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -66,6 +67,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+#[inline]
 fn plan_identity(value: &Value) -> Option<String> {
     if let Some(raw) = non_empty_str(value).or_else(|| non_empty_str(&value["id"])) {
         let bare = bit_install::config::aspect_id_without_version(raw).trim();
@@ -78,6 +80,7 @@ fn plan_identity(value: &Value) -> Option<String> {
     )
 }
 
+#[inline]
 fn row_identity(row: &Value) -> Option<&str> {
     non_empty_str(&row["identity"])
         .or_else(|| non_empty_str(&row["id"]))
@@ -146,12 +149,14 @@ fn environment(root: &Path, component: &Value) -> io::Result<Option<Value>> {
         .map_or_else(|| root.join(directory).join(file), std::path::PathBuf::from);
     Ok(bit_object_import::parse_jsonc(&fs::read(path)?).ok())
 }
+#[inline]
 fn has_plus_range_feature(features: &str) -> bool {
     features
         .split(',')
         .any(|feature| feature.trim() == "plus-range-versions")
 }
 
+#[inline]
 fn enabled() -> io::Result<bool> {
     for key in ["BIT_FEATURES", "BIT_CONFIG_FEATURES"] {
         if let Ok(val) = env::var(key) {

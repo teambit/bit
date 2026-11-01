@@ -10,14 +10,14 @@ use bit_install::config::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Workflow {
     pub build: bool,
     pub editor: Option<String>,
     pipeline: Pipeline,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Pipeline {
     skip_tests: bool,
     skip_tasks: Option<String>,
@@ -28,6 +28,8 @@ struct Pipeline {
 }
 
 /// Remove tooling flags before the command's version/selection grammar is parsed.
+#[must_use]
+#[inline]
 pub fn parse<'a>(args: &[&'a str], kind: Kind) -> Option<(Workflow, Vec<&'a str>)> {
     let mut workflow = Workflow::default();
     let mut remaining = Vec::with_capacity(args.len());
@@ -49,10 +51,12 @@ pub fn parse<'a>(args: &[&'a str], kind: Kind) -> Option<(Workflow, Vec<&'a str>
     Some((workflow, remaining))
 }
 
+#[inline]
 fn workflow_alias(raw: &str) -> &str {
     if raw == "-b" { "--build" } else { raw }
 }
 
+#[inline]
 fn tooling_flag(flag: &str, kind: Kind) -> bool {
     matches!(
         flag,
@@ -195,6 +199,8 @@ impl Workflow {
     }
 
     /// `VersionMaker.build` adapter parameters; all object/version state stays native.
+    #[must_use]
+    #[inline]
     pub fn parameters(&self, kind: Kind) -> Value {
         let mut params = json!({
             "build": self.build,

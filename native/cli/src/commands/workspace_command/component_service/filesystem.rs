@@ -2,6 +2,7 @@
 use super::{Value, invalid, json};
 use std::{io, path::Path};
 
+#[inline]
 pub(in crate::commands) fn error(
     error: io::Error,
     path: &Path,
@@ -22,12 +23,14 @@ pub(in crate::commands) fn error(
     Ok(json!({"errno":errno,"code":code,"syscall":syscall.trim(),"path":path}))
 }
 
+#[inline]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
 
+#[inline]
 fn code_description(code: &str) -> Option<&'static str> {
     match code {
         "EPERM" => Some("operation not permitted"),
@@ -42,6 +45,7 @@ fn code_description(code: &str) -> Option<&'static str> {
     }
 }
 
+#[inline]
 pub(in crate::commands) fn message(
     service: &str,
     environment: &str,

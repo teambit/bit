@@ -11,17 +11,21 @@ struct WithDetails {
     details: String,
 }
 impl fmt::Display for WithDetails {
+    #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.error.fmt(formatter)
     }
 }
 impl std::error::Error for WithDetails {
+    #[inline]
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         Some(&self.error)
     }
 }
 
 /// Attach the released error inspection without applying message styles to it.
+#[must_use]
+#[inline]
 pub fn with_error_details(error: io::Error, details: String) -> io::Error {
     io::Error::new(error.kind(), WithDetails { error, details })
 }
@@ -37,6 +41,7 @@ pub(in crate::commands) fn print(error: &io::Error, chalk: Chalk) {
     }
 }
 
+#[inline]
 fn downcast_details(error: &io::Error) -> Option<&str> {
     std::iter::successors(
         error

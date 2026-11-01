@@ -34,7 +34,7 @@ use std::{io, path::Path};
 
 /// `bit snap`, `bit tag` or `bit merge --resolve`: the engine's
 /// `commandSnap*`, `commandTag*` or `commandResolve*`.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Snap,
     Tag,
@@ -43,6 +43,7 @@ pub enum Kind {
 }
 
 impl Kind {
+    #[inline]
     fn request(self, step: &str) -> String {
         match self {
             Self::Snap => format!("commandSnap{step}"),
@@ -53,6 +54,7 @@ impl Kind {
 }
 
 /// Which components the command selects.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Selection<'r> {
     /// `bit snap [component-id]`, or the components during a merge.
     Snap { pattern: Option<&'r str>, unmerged: bool },
@@ -63,6 +65,7 @@ pub enum Selection<'r> {
 }
 
 /// What a resolve command asks for.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResolveRequest<'r> {
     pub kind: Kind,
     /// The command's `options`, as the engine reads them.
@@ -71,6 +74,7 @@ pub struct ResolveRequest<'r> {
 }
 
 /// Plan snapshot tooling around the native transaction and retain all publication state.
+#[inline]
 pub fn plan_snapshot(
     root: &Path,
     request: &ResolveRequest<'_>,
@@ -110,6 +114,7 @@ pub fn plan_snapshot(
 }
 
 /// Continue a materialized merge using its existing provider session.
+#[inline]
 pub(in crate::commands) fn plan_continuation(
     root: &Path,
     request: &ResolveRequest<'_>,
@@ -365,6 +370,7 @@ impl<'r> Session<'r> {
         Ok(result)
     }
 
+    #[inline]
     fn planned(self, plan: Value) -> Planned {
         let apply = match self.kind {
             Kind::Snap => "commandSnapApply",

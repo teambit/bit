@@ -22,6 +22,7 @@ use std::{
     path::Path,
 };
 
+#[inline]
 pub(super) fn check_token(receipt: &Value, token: &str) -> io::Result<()> {
     if receipt
         .get("token")
@@ -127,6 +128,7 @@ pub(super) fn semver_values(context: &Value, capture: &Capture) -> io::Result<Ve
 }
 
 /// A model's version and orphaned version names.
+#[inline]
 fn model_versions(model: &Value, versions: &mut Versions) -> io::Result<()> {
     for field in ["versions", "orphanedVersions"] {
         if let Some(map) = model
@@ -142,19 +144,18 @@ fn model_versions(model: &Value, versions: &mut Versions) -> io::Result<()> {
 }
 
 /// A `Set` of version texts, in insertion order.
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Versions {
     pub(super) list: Vec<String>,
     seen: HashSet<String>,
 }
 
 impl Versions {
+    #[inline]
     fn add(&mut self, version: &str) {
         let version = version.trim();
-        if !version.is_empty() && !self.seen.contains(version) {
-            let owned = version.to_owned();
-            self.seen.insert(owned.clone());
-            self.list.push(owned);
+        if !version.is_empty() && self.seen.insert(version.to_owned()) {
+            self.list.push(version.to_owned());
         }
     }
 
@@ -284,6 +285,7 @@ pub(super) fn identities(rows: &[Value]) -> io::Result<Vec<String>> {
 }
 
 /// The capture the snaps are checked and written against.
+#[derive(Clone)]
 pub(super) struct Resolved<'r> {
     pub(super) root: &'r Path,
     pub(super) context: &'r Value,
@@ -377,6 +379,7 @@ pub(super) fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()>
     Ok(())
 }
 
+#[inline]
 fn squash_lane_id(lane: &Value) -> io::Result<(&str, &str)> {
     if let Some(raw) = lane.as_str() {
         let bare = bit_install::config::aspect_id_without_version(raw.trim()).trim();

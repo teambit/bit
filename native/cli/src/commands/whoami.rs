@@ -49,6 +49,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     let mut token = None;
     let mut iter = args.iter().skip(1);
@@ -62,6 +63,7 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     Some(token)
 }
 
+#[inline]
 fn apply_whoami_arg<'a>(
     str_arg: &str,
     iter: &mut impl Iterator<Item = &'a OsString>,

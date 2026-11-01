@@ -199,6 +199,7 @@ fn tail(mut file: File, stderr: bool, done: Arc<AtomicBool>) -> JoinHandle<io::R
         }
     })
 }
+#[inline]
 fn write_output(stderr: bool, bytes: &[u8]) -> io::Result<()> {
     if stderr {
         let mut output = io::stderr().lock();
@@ -210,6 +211,7 @@ fn write_output(stderr: bool, bytes: &[u8]) -> io::Result<()> {
         output.flush()
     }
 }
+#[inline]
 fn join(handle: JoinHandle<io::Result<()>>) -> io::Result<()> {
     handle.join().map_err(|_| invalid("tester output thread"))?
 }

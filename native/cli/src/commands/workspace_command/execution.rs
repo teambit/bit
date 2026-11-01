@@ -18,6 +18,7 @@ use std::{
 
 /// The loader's `running command` line, `work`, then the report; a failure
 /// of `work` is the command's own, printed in red with exit code 1.
+#[inline]
 pub fn execute_with(
     root: &Path,
     args: &[OsString],
@@ -32,6 +33,7 @@ pub fn execute_with(
 }
 
 /// Report a lane inspection from a validated bare scope without workspace history.
+#[inline]
 pub fn execute_with_scope(
     scope: &Path,
     args: &[OsString],
@@ -44,6 +46,7 @@ pub fn execute_with_scope(
 }
 
 /// Run command-owned scope work after starting its loader, without workspace history.
+#[inline]
 pub fn execute_then_scope(
     scope: &Path,
     args: &[OsString],
@@ -54,6 +57,7 @@ pub fn execute_then_scope(
 }
 
 /// An owned lane callback error uses the bare scope's loader without workspace history.
+#[inline]
 pub fn execute_failure_scope(
     scope: &Path,
     args: &[OsString],
@@ -72,6 +76,7 @@ pub fn execute_failure_scope(
     })
 }
 
+#[inline]
 fn ci_active() -> bool {
     crate::commands::scope_rename::ci_active()
 }
@@ -99,6 +104,7 @@ pub fn workspace_or_fail(
 }
 
 /// [`execute_with`] for a command whose report depends on its work.
+#[inline]
 pub fn execute_then(
     root: &Path,
     args: &[OsString],
@@ -109,6 +115,7 @@ pub fn execute_then(
 }
 
 /// `CommandRunner.runJsonHandler`: no loader or console output before the JSON report.
+#[inline]
 pub fn execute_json(
     root: &Path,
     args: &[OsString],
@@ -119,6 +126,7 @@ pub fn execute_json(
 }
 
 /// A bare-scope JSON handler owns its effects without writing workspace command history.
+#[inline]
 pub fn execute_json_scope(
     scope: &Path,
     args: &[OsString],
@@ -129,6 +137,7 @@ pub fn execute_json_scope(
 }
 
 /// A text command whose registry has no loader; callback console output remains visible.
+#[inline]
 pub fn execute_without_loader(
     root: &Path,
     args: &[OsString],
@@ -139,6 +148,7 @@ pub fn execute_without_loader(
 }
 
 /// A bare-scope text command whose registry has no loader.
+#[inline]
 pub fn execute_without_loader_scope(
     scope: &Path,
     args: &[OsString],
@@ -148,6 +158,7 @@ pub fn execute_without_loader_scope(
     execute_mode_at(scope, args, command, true, true, work)
 }
 
+#[inline]
 fn execute_mode(
     root: &Path,
     args: &[OsString],
@@ -159,6 +170,7 @@ fn execute_mode(
     execute_mode_impl(root, None, args, command, quiet, newline, work)
 }
 
+#[inline]
 fn execute_mode_at(
     scope: &Path,
     args: &[OsString],
@@ -209,6 +221,7 @@ fn execute_mode_impl(
 
 /// Bit's loader on stdout: ora draws a spinner on an interactive terminal
 /// and prints plain lines elsewhere; `BIT_DISABLE_SPINNER` turns it off.
+#[must_use]
 pub(in crate::commands) fn loader_output(chalk: Chalk, quiet: bool) -> Output {
     let ci = ci_active();
     let interactive =
@@ -236,6 +249,7 @@ pub(in crate::commands) fn loader_output(chalk: Chalk, quiet: bool) -> Output {
 }
 
 /// `runReportHandler`: the report and a newline; details are kept for `bit details`.
+#[inline]
 fn print(report: &Report, command: &str, newline: bool) -> io::Result<()> {
     if let Some(details) = report.details
         .as_deref()
@@ -252,6 +266,7 @@ fn print(report: &Report, command: &str, newline: bool) -> io::Result<()> {
 }
 
 /// `persistDetails`: `<CACHE_ROOT>/last-command-details/{content,meta.json}`.
+#[inline]
 fn persist_details(details: &str, command: &str) -> io::Result<()> {
     let dir = cache::cache_root().join("last-command-details");
     fs::create_dir_all(&dir)?;

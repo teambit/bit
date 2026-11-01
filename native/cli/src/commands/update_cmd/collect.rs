@@ -28,7 +28,7 @@ pub(super) enum Target {
     ModelBitmap(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Candidate {
     pub name: String,
     pub current_range: String,
@@ -37,6 +37,7 @@ pub(super) struct Candidate {
     pub comp_bare_id: Option<String>,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Collected {
     pub candidates: Vec<Candidate>,
     pub save_prefix: Option<String>,
@@ -67,6 +68,7 @@ pub(super) fn collect_candidates(root: &Path, patterns: &[String]) -> Result<Col
     Ok(Collected { candidates, save_prefix })
 }
 
+#[inline]
 fn extract_save_prefix(ws_val: &Value) -> Option<String> {
     super::aspect_entry(ws_val, DEP_RESOLVER_ID)
         .and_then(|(_, resolver)| resolver["savePrefix"].as_str())
@@ -76,7 +78,7 @@ fn extract_save_prefix(ws_val: &Value) -> Option<String> {
 }
 
 fn build_local_package_set(bitmap: &Bitmap, default_scope: Option<&str>) -> HashSet<String> {
-    let mut set = HashSet::new();
+    let mut set = HashSet::with_capacity(bitmap.entries.len() * 3);
     for entry in bitmap.entries.iter().filter(|ent| ent.owns_its_dir()) {
         set.insert(default_package_name(&entry.id));
         if let Some(scope) = entry.id.effective_scope().or(default_scope) {
@@ -210,6 +212,7 @@ fn append_policy_candidates(
     }
 }
 
+#[inline]
 fn policy_entry_range(val: &Value) -> Option<&str> {
     val.as_str()
         .or_else(|| val.get("version").and_then(Value::as_str))
@@ -302,6 +305,7 @@ fn candidate_from_serialized(
     })
 }
 
+#[inline]
 fn serialized_field_and_target(
     dep: &Value,
     entry: &BitmapEntry,
@@ -325,6 +329,7 @@ fn serialized_field_and_target(
     Some((field, target))
 }
 
+#[inline]
 fn extract_serialized_comp_id(dep: &Value) -> Option<String> {
     for candidate in [&dep["componentId"], &dep["id"]] {
         if let Some(formatted) = crate::commands::graph_cmd::builder::format_dep_id(candidate) {
@@ -337,6 +342,7 @@ fn extract_serialized_comp_id(dep: &Value) -> Option<String> {
     None
 }
 
+#[inline]
 fn filter_by_patterns(candidates: &mut Vec<Candidate>, patterns: &[String]) {
     if patterns.is_empty() {
         return;

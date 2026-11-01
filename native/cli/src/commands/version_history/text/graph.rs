@@ -2,17 +2,20 @@
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Node {
     pub hash: String,
     pub edges: Vec<(usize, &'static str)>,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Graph {
     pub nodes: Vec<Node>,
     indices: HashMap<String, usize>,
 }
 
 impl Graph {
+    #[must_use]
     pub fn build(history: &Value, short: bool) -> Option<Self> {
         let rows = history["versions"].as_array()?;
         if rows.len() > 10000 {
@@ -63,11 +66,10 @@ impl Graph {
         {
             return false;
         }
-        let unique: HashSet<_> = self.nodes
+        let mut unique = HashSet::with_capacity(self.nodes.len());
+        self.nodes
             .iter()
-            .map(|node| &node.hash[..9])
-            .collect();
-        unique.len() == self.nodes.len()
+            .all(|node| unique.insert(&node.hash[..9]))
     }
 
     fn add_node(&mut self, hash: &str) -> Option<()> {
@@ -118,6 +120,7 @@ impl Graph {
         Some(())
     }
 
+    #[must_use]
     pub fn order(&self) -> Option<Vec<usize>> {
         let mut states = vec![0u8; self.nodes.len()];
         let mut output = Vec::with_capacity(self.nodes.len());
@@ -156,6 +159,7 @@ impl Graph {
     }
 }
 
+#[inline]
 fn refs<'a>(row: &'a Value, key: &str) -> Option<Vec<&'a str>> {
     match row.get(key) {
         None | Some(Value::Null) if matches!(key, "parents" | "squashed") => Some(Vec::new()),
@@ -171,6 +175,7 @@ fn refs<'a>(row: &'a Value, key: &str) -> Option<Vec<&'a str>> {
     }
 }
 
+#[inline]
 fn optional<'a>(row: &'a Value, key: &str) -> Option<Option<&'a str>> {
     match row.get(key) {
         None | Some(Value::Null) => Some(None),
@@ -187,6 +192,7 @@ fn optional<'a>(row: &'a Value, key: &str) -> Option<Option<&'a str>> {
     }
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()

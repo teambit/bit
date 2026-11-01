@@ -68,10 +68,13 @@ fn emit_watch_err(
     })
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     super::scope_rename::ci_active()
 }
 
+#[must_use]
+#[inline]
 pub(super) fn check_types_error(options: &Options) -> Option<String> {
     let val = options.check_types.as_deref()?.trim();
     if val.is_empty() || val == "file" || val == "project" {
@@ -81,6 +84,8 @@ pub(super) fn check_types_error(options: &Options) -> Option<String> {
     }
 }
 
+#[must_use]
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
@@ -94,6 +99,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
     let arg = args[*idx].trim();
     if apply_combined_short(arg, options) {
@@ -121,6 +127,7 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
     Some(())
 }
 
+#[inline]
 fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
     if !arg.starts_with('-')
         || arg.starts_with("--")
@@ -141,6 +148,7 @@ fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
     true
 }
 
+#[inline]
 fn take_optional_check_types(args: &[&str], idx: &mut usize) -> String {
     if let Some(&next) = args.get(*idx + 1)
         && !next.trim().is_empty()
@@ -153,6 +161,7 @@ fn take_optional_check_types(args: &[&str], idx: &mut usize) -> String {
     }
 }
 
+#[inline]
 fn take_required_trigger(args: &[&str], idx: &mut usize) -> Option<String> {
     let next = args.get(*idx + 1)?.trim();
     if next.is_empty() || next.starts_with('-') {
@@ -162,6 +171,7 @@ fn take_required_trigger(args: &[&str], idx: &mut usize) -> Option<String> {
     Some(next.to_owned())
 }
 
+#[inline]
 fn apply_inline(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg
         .strip_prefix("--check-types=")

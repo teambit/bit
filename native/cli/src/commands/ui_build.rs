@@ -35,6 +35,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("ui-build execution delegated".into()))
 }
 
+#[must_use]
+#[inline]
 pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
         && !cwd
@@ -47,6 +49,8 @@ pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
             })
 }
 
+#[must_use]
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut ui_root_name = None;
     let mut iter = args.iter().copied();
@@ -67,6 +71,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(Options { ui_root_name })
 }
 
+#[inline]
 fn consume_trailing_ui_type<'a>(
     iter: impl Iterator<Item = &'a str>,
     ui_root_name: &mut Option<String>,

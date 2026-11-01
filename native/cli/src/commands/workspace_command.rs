@@ -70,6 +70,7 @@ pub struct Planned {
 
 impl Planned {
     /// Reuse the retained command's pool for fresh post-write tooling reads.
+    #[inline]
     pub(in crate::commands) fn engine_mut(&mut self) -> &mut Engine {
         &mut self.engine
     }
@@ -122,6 +123,7 @@ pub struct Request<'r> {
 }
 
 /// Provider startup and component callbacks precede checkout's authoritative read set.
+#[inline]
 pub fn plan_with_startup(
     root: &Path,
     request: &Request<'_>,
@@ -150,6 +152,8 @@ pub(in crate::commands) fn plan_retained(
 
 impl Planned {
     /// Return the session containing the retained history selection after a checkout phase.
+    #[must_use]
+    #[inline]
     pub(in crate::commands) fn into_engine(self) -> Engine {
         self.engine
     }
@@ -181,6 +185,7 @@ pub(in crate::commands) fn plan_merge_with_environment(
 }
 
 /// Capture providers once, materialize the merge, then snap its retained pending identities.
+#[inline]
 pub fn plan_merge(
     root: &Path,
     request: &Request<'_>,
@@ -286,6 +291,7 @@ fn plan_captured(
     Ok(plan)
 }
 
+#[inline]
 fn defer_merge_snapshot(engine: &mut Engine, token: &str, plan: &mut Value) -> io::Result<()> {
     let deferred: Value =
         engine.request(&json!({"kind":"commandMergeDeferSnapshot","token":token}))?;
@@ -342,6 +348,7 @@ impl Steps<'_> {
 
 /// Run the planned command: the loader lines, the commit, then the report.
 /// From here on failures are the command's own.
+#[inline]
 pub fn execute(
     root: &Path,
     args: &[OsString],
@@ -357,6 +364,7 @@ pub fn execute(
 }
 
 /// `capture.commit()`, then `commandApply`.
+#[inline]
 pub(super) fn commit(planned: &mut Planned, root: &Path) -> io::Result<()> {
     commit_receipt(planned, root).map(|_| ())
 }

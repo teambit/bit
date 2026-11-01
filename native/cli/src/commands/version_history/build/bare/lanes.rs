@@ -52,6 +52,7 @@ pub(super) fn lane_head(lane: &Value, scope: &str, name: &str) -> Option<Option<
     Some(visible.or(hidden))
 }
 
+#[inline]
 fn lane_component_id(id: &Value) -> Option<(&str, &str)> {
     let (raw_scope, raw_name) = if let Some(raw) = id.as_str() {
         let trimmed = raw.trim();
@@ -65,6 +66,7 @@ fn lane_component_id(id: &Value) -> Option<(&str, &str)> {
     Some((identifier(raw_scope)?, identifier(raw_name)?))
 }
 
+#[inline]
 fn hidden_head(hidden: &Value, scope: &str, name: &str) -> Option<Option<String>> {
     if hidden.is_null() {
         return Some(None);
@@ -85,6 +87,7 @@ fn hidden_head(hidden: &Value, scope: &str, name: &str) -> Option<Option<String>
     Some(head)
 }
 
+#[inline]
 fn identifier(value: &str) -> Option<&str> {
     let value = value.trim();
     (!value.is_empty()

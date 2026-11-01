@@ -32,10 +32,12 @@ impl Progress {
     }
 
     /// A dependents graph phase already emitted the command's initial import statuses.
+    #[inline]
     pub(in crate::commands) fn render_inbound_continuation(&self, output: &Output, on_lane: bool) {
         self.render_inbound_rows(output, true, on_lane);
     }
 
+    #[inline]
     fn render_inbound_rows(&self, output: &Output, wildcard: bool, on_lane: bool) {
         // `importMany` is called with the ids the latest-heads import requested.
         render_rows(&self.imports, output, wildcard, on_lane);
@@ -43,6 +45,7 @@ impl Progress {
 
     /// Workspace lane fetch leaves the dependency result as its final loader
     /// status after the command-level success line.
+    #[inline]
     pub fn render_lane_fetch_tail(&self, output: &Output) {
         render_lane_tail(self.imports.last(), output);
     }
@@ -119,6 +122,7 @@ fn render_group(rows: &[Import], output: &Output, main: bool, started: Instant) 
     }
 }
 
+#[inline]
 fn lane_name(row: &Import) -> Option<&str> {
     let raw = row.reason
         .as_deref()?
@@ -130,10 +134,12 @@ fn lane_name(row: &Import) -> Option<&str> {
         .filter(|name| !name.is_empty())
 }
 
+#[inline]
 fn latest_request(row: &Import) -> bool {
     row.reason.as_deref().map(str::trim) == Some(REASONS[0]) || lane_name(row).is_some()
 }
 
+#[inline]
 fn dependency_request(row: &Import) -> bool {
     matches!(
         row.reason.as_deref().map(str::trim),

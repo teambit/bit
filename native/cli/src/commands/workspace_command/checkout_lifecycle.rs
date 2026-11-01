@@ -31,6 +31,7 @@ pub(super) fn bootstrap(
     Ok(Some(environments.for_checkout()))
 }
 
+#[inline]
 fn non_stateful_pattern<'a>(request: &'a super::Request<'_>) -> Option<&'a str> {
     request.options["pattern"]
         .as_str()
@@ -84,6 +85,7 @@ pub(in crate::commands) fn bootstrap_inherited(
     Ok(environment.for_checkout())
 }
 
+#[inline]
 pub(in crate::commands) fn retain(startup: Option<&mut Startup>, capture: &capture::Capture) {
     if let Some(startup) = startup {
         startup.stdout.push_str(&capture::callback_startup_stdout(capture));
@@ -92,6 +94,7 @@ pub(in crate::commands) fn retain(startup: Option<&mut Startup>, capture: &captu
 }
 
 /// Provider output precedes `CommandRunner`; component onLoad output follows its status line.
+#[inline]
 pub(in crate::commands) fn before(startup: &Startup) -> io::Result<()> {
     if startup.stdout.is_empty() {
         return Ok(());
@@ -101,6 +104,7 @@ pub(in crate::commands) fn before(startup: &Startup) -> io::Result<()> {
     stdout.flush()
 }
 
+#[inline]
 pub(in crate::commands) fn loaded(startup: &Startup) {
     if !startup.build_stdout.is_empty() {
         print!("{}", startup.build_stdout);
@@ -142,12 +146,14 @@ pub(in crate::commands) fn failure(
     })
 }
 
+#[inline]
 fn callback_error(error: &io::Error) -> Option<&crate::host::callback_error::CallbackError> {
     error
         .get_ref()
         .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>())
 }
 
+#[inline]
 fn emit_callback_startup(callback: Option<&crate::host::callback_error::CallbackError>) {
     if let Some(callback) = callback
         && !callback.startup.is_empty()

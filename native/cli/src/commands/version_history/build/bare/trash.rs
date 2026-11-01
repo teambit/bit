@@ -38,6 +38,7 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
 }
 
 #[cfg(unix)]
+#[inline]
 fn non_empty_os_name(name: Option<&std::ffi::OsStr>) -> Option<&std::ffi::OsStr> {
     name.filter(|name| {
         !name.is_empty()
@@ -48,6 +49,7 @@ fn non_empty_os_name(name: Option<&std::ffi::OsStr>) -> Option<&std::ffi::OsStr>
 }
 
 #[cfg(unix)]
+#[inline]
 fn valid_directory(path: &Path, device: u64) -> Option<()> {
     use std::os::unix::fs::MetadataExt;
     match fs::symlink_metadata(path) {
@@ -64,6 +66,7 @@ fn valid_directory(path: &Path, device: u64) -> Option<()> {
 }
 
 #[cfg(not(unix))]
+#[inline]
 pub(super) fn target(_root: &Path, _source: &Path) -> Option<PathBuf> {
     None
 }
@@ -96,6 +99,7 @@ pub(super) fn move_history(plan: &mut Plan, root: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn verify_proofs(plan: &Plan) -> io::Result<()> {
     for (path, bytes) in &plan.proofs {
         if fs::read(path)? != *bytes {

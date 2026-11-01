@@ -186,6 +186,7 @@ fn is_new_or_modified(
     Some(false)
 }
 
+#[inline]
 fn has_spec_files(components: &[(&BitmapEntry, &WorkspaceComponent)]) -> bool {
     components
         .iter()
@@ -202,6 +203,7 @@ fn has_spec_files(components: &[(&BitmapEntry, &WorkspaceComponent)]) -> bool {
         })
 }
 
+#[inline]
 fn parse_skip_tasks(raw: Option<&str>) -> (Vec<&str>, Vec<String>) {
     let Some(raw_str) = raw else {
         return (Vec::new(), Vec::new());
@@ -255,6 +257,7 @@ fn execute_validation(
     workspace_command::execute_without_loader(root, args, "validate", move |_| Ok(report))
 }
 
+#[inline]
 fn build_header_lines(options: &Options, formatter: &Formatter) -> Vec<String> {
     let mut lines = Vec::new();
     if options.all {
@@ -309,6 +312,7 @@ fn run_active_tasks(
     finalize_validation_report(lines, failed, formatter)
 }
 
+#[inline]
 fn finalize_validation_report(
     lines: &mut Vec<String>,
     failed: bool,
@@ -327,6 +331,7 @@ fn finalize_validation_report(
     Report { data: lines.join("\n"), code: 0, details: None }
 }
 
+#[inline]
 fn execute_single_task(
     task_id: &str,
     matched: &[(&BitmapEntry, &WorkspaceComponent)],

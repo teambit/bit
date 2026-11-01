@@ -19,6 +19,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[inline]
 pub(super) fn apply_updates(root: &Path, updates: &[ResolvedUpdate]) -> io::Result<()> {
     apply_workspace_jsonc_updates(root, updates)?;
     apply_comp_json_updates(updates)?;
@@ -52,6 +53,7 @@ fn apply_workspace_jsonc_updates(root: &Path, updates: &[ResolvedUpdate]) -> io:
     )
 }
 
+#[inline]
 fn apply_single_ws_update(doc: &mut Document, doc_val: &Value, upd: &ResolvedUpdate) {
     let field = upd.field.trim();
     let name = upd.name.trim();
@@ -79,12 +81,14 @@ fn apply_single_ws_update(doc: &mut Document, doc_val: &Value, upd: &ResolvedUpd
     }
 }
 
+#[inline]
 fn set_doc_policy_entry(doc: &mut Document, path: &[&str], latest_range: &str) {
     if doc
         .get(path)
         .is_some_and(|val| val.is_object() && val.get("version").is_some())
     {
-        let mut ver_path = path.to_vec();
+        let mut ver_path = Vec::with_capacity(path.len() + 1);
+        ver_path.extend_from_slice(path);
         ver_path.push("version");
         doc.set(&ver_path, &Value::String(latest_range.to_owned()));
     } else {
@@ -92,6 +96,7 @@ fn set_doc_policy_entry(doc: &mut Document, path: &[&str], latest_range: &str) {
     }
 }
 
+#[inline]
 fn apply_comp_json_updates(updates: &[ResolvedUpdate]) -> io::Result<()> {
     let mut grouped: BTreeMap<PathBuf, Vec<&ResolvedUpdate>> = BTreeMap::new();
     for upd in updates {

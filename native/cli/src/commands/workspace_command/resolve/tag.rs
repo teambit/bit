@@ -44,6 +44,7 @@ pub fn selections(context: &Value, patterns: &[String]) -> io::Result<Option<Val
     Ok(Some(Value::Array(rows)))
 }
 
+#[inline]
 fn matches<'i>(identities: &[&'i str], pattern: &str) -> io::Result<Vec<&'i str>> {
     if pattern.contains(['*', ',', '!']) {
         component_patterns::extended::matching(identities, &component_patterns::split(pattern))
@@ -81,6 +82,7 @@ pub fn selections_with_state(
     Ok((Some(Value::Array(rows)), loads))
 }
 
+#[inline]
 fn ordinary_selection(context: &Value, entered: &str, index: usize) -> io::Result<Vec<Value>> {
     let selected = selections(context, &[entered.to_string()])?
         .ok_or_else(|| decline("tag selection absent"))?;
@@ -95,6 +97,7 @@ fn ordinary_selection(context: &Value, entered: &str, index: usize) -> io::Resul
 }
 
 /// `pattern[@version]`, the version a semver version or a release type.
+#[inline]
 fn split(text: &str) -> io::Result<(&str, Option<&str>)> {
     let mut parts = text.trim().split('@');
     let pattern = parts
@@ -141,6 +144,8 @@ fn literal_match<'i>(identities: &[&'i str], pattern: &str) -> io::Result<&'i st
 }
 
 /// The versions entered per pattern, for the semver grammar.
+#[must_use]
+#[inline]
 pub fn entered_versions(selections: Option<&Value>) -> Vec<String> {
     selections
         .and_then(Value::as_array)
@@ -153,6 +158,8 @@ pub fn entered_versions(selections: Option<&Value>) -> Vec<String> {
 }
 
 /// Exact versions recorded by `tag --soft` enter the same semantic grammar as `--ver`.
+#[must_use]
+#[inline]
 pub fn pending_versions(context: &Value) -> Vec<String> {
     context["targets"]
         .as_array()
@@ -165,6 +172,7 @@ pub fn pending_versions(context: &Value) -> Vec<String> {
 }
 
 /// Each component's new version, from the plan's tagged and auto-tagged ids.
+#[inline]
 pub fn planned_versions(result: &Value, identities: &[String]) -> io::Result<Vec<String>> {
     let automatic = array(result.get("autoTaggedResults"), "auto-tagged components")?
         .iter()

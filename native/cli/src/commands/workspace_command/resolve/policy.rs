@@ -6,7 +6,7 @@ mod tests;
 use serde_json::{Value, json};
 use std::collections::HashSet;
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Policy {
     ignore_issues: Option<String>,
     ignore_newest_version: bool,
@@ -16,6 +16,8 @@ pub struct Policy {
 }
 
 /// Consume policy flags while retaining all command grammar arguments in order.
+#[must_use]
+#[inline]
 pub fn parse<'a>(args: &[&'a str], tag: bool) -> Option<(Policy, Vec<&'a str>)> {
     let mut policy = Policy::default();
     let mut remaining = Vec::with_capacity(args.len());
@@ -37,6 +39,7 @@ pub fn parse<'a>(args: &[&'a str], tag: bool) -> Option<(Policy, Vec<&'a str>)> 
     Some((policy, remaining))
 }
 
+#[inline]
 fn policy_alias(raw: &str) -> &str {
     match raw {
         "-i" => "--ignore-issues",
@@ -45,6 +48,7 @@ fn policy_alias(raw: &str) -> &str {
     }
 }
 
+#[inline]
 fn is_policy_flag(flag: &str, tag: bool) -> bool {
     matches!(flag, "--ignore-issues" | "--rebuild-deps-graph" | "--no-lock-deps")
         || (tag && matches!(flag, "--ignore-newest-version" | "--skip-published-versions"))
@@ -78,6 +82,8 @@ impl Policy {
         }
         self.flag(flag, next).map(Some)
     }
+
+    #[inline]
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
         match flag {
             "--ignore-issues" => {
@@ -93,6 +99,7 @@ impl Policy {
         Some(0)
     }
 
+    #[inline]
     fn inline_flag(&mut self, flag: &str, val: &str) -> Option<()> {
         if flag == "--ignore-issues" {
             self.ignore_issues = Some(valid_ignore_issues(val)?);
@@ -114,6 +121,7 @@ impl Policy {
     }
 
     /// The engine's policy group. Omit default values for existing callers.
+    #[inline]
     pub fn apply(&self, options: &mut Value) {
         if self != &Self::default() {
             options["policy"] = json!({
@@ -127,6 +135,7 @@ impl Policy {
     }
 }
 
+#[inline]
 fn valid_ignore_issues(val: &str) -> Option<String> {
     let val = val.trim();
     (!val.is_empty()

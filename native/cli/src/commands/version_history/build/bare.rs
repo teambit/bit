@@ -28,6 +28,7 @@ pub(super) struct Plan {
     mode: Option<u32>,
 }
 
+#[inline]
 pub(super) fn prepare(
     root: &ScopeRoot,
     id: &str,
@@ -105,6 +106,7 @@ fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(Pat
     Some(proofs)
 }
 
+#[inline]
 fn absent(path: &Path) -> bool {
     matches!(fs::symlink_metadata(path), Err(error) if error.kind() == io::ErrorKind::NotFound)
 }
@@ -133,14 +135,11 @@ fn ancestry(root: &Path, head: &str, proofs: &mut Vec<(PathBuf, Vec<u8>)>) -> Op
             seen.insert(current);
             continue;
         }
-        if active.contains(&current) {
+        if active.contains(&current) || seen.len() + active.len() >= 128 {
             return None;
         }
         if seen.contains(&current) {
             continue;
-        }
-        if seen.len() + active.len() >= 128 {
-            return None;
         }
         active.insert(current.clone());
         let (parents, row) = version_parents(root, &current, proofs)?;
@@ -229,6 +228,7 @@ fn valid_lane_id(lane_id: &Value) -> bool {
     non_empty(&lane_id["name"]) && non_empty(&lane_id["scope"])
 }
 
+#[inline]
 fn object_path(root: &Path, hash: &str) -> Option<PathBuf> {
     let hash = hash.trim();
     if hash.len() != 40 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
@@ -261,6 +261,7 @@ fn read(
     Some(value)
 }
 
+#[inline]
 fn encode(hash: &str, value: &Value) -> io::Result<Vec<u8>> {
     let body = serde_json::to_string(value)?;
     let length = body.encode_utf16().count();

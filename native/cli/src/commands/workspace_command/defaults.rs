@@ -32,6 +32,7 @@ const COMPOSITIONS_PATTERNS: [&str; 1] = ["**/*.composition?(s).*"];
 
 /// `VariantPolicy.mergePolices([EnvPolicy.fromConfigObject(getNodeDependencyPolicy()),
 /// VariantPolicy.fromConfigObject({}, { source: 'config' })]).serialize()`.
+#[inline]
 fn policy_entries() -> Value {
     let dev = |id: &str, version: &str| {
         json!({ "source": "env", "force": true, "hidden": false, "dependencyId": id,
@@ -88,11 +89,13 @@ pub fn receipt(target: &Value, policy: &Policy, files: &[String]) -> io::Result<
 }
 
 /// Unused Node defaults for the separately validated callback extension projection.
+#[inline]
 pub fn callback_receipt(policy: &Policy) -> io::Result<Value> {
     receipt(&json!({"identity":"native/callback"}), policy, &[])
 }
 
 /// The unconfigured core slots: schema, pkg, preview, compositions and docs.
+#[inline]
 fn slot_data() -> Value {
     json!([
         { "id": "teambit.semantics/schema", "data": { "disabled": false }, "undefinedKeys": [] },
@@ -120,6 +123,7 @@ fn slot_data() -> Value {
 }
 
 /// `/\.(?:bit-app|node-app|react-app)\.[^/]+$/`.
+#[inline]
 pub(super) fn app_file(file: &str) -> bool {
     let file = file.trim();
     let name = file
@@ -135,6 +139,8 @@ pub(super) fn app_file(file: &str) -> bool {
 }
 
 /// The user's home directory, as Node's `os.homedir()` reads it.
+#[must_use]
+#[inline]
 pub fn home() -> PathBuf {
     PathBuf::from(
         env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
@@ -180,6 +186,8 @@ pub(super) fn prepare(
 }
 
 /// The arguments as UTF-8, or `None`.
+#[must_use]
+#[inline]
 pub fn utf8_args(args: &[OsString]) -> Option<Vec<&str>> {
     args.iter()
         .map(|arg| arg.to_str())
@@ -224,6 +232,8 @@ fn append_model_field_versions(
 }
 
 /// `currentDateAndTimeToFileName()`: local time, unpadded.
+#[must_use]
+#[inline]
 pub fn file_id() -> String {
     use chrono::{Datelike, Timelike};
     let now = chrono::Local::now();

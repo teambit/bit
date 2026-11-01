@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 use std::io;
 
 impl Steps<'_> {
+    #[inline]
     pub(super) fn checkout_policy(&mut self, plan: &mut Value) -> io::Result<()> {
         let Some(receipt) = plan.get("checkoutPolicyPreparation") else { return Ok(()) };
         let semver = semver(receipt)?;
@@ -19,6 +20,7 @@ impl Steps<'_> {
     }
 }
 
+#[inline]
 pub(crate) fn semver(receipt: &Value) -> io::Result<Value> {
     let mut inputs = vec![receipt.clone()];
     let dependencies = array(receipt.get("componentDeps"), "checkout policy dependencies")?;

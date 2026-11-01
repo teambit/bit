@@ -1,6 +1,7 @@
 //! Preserve canonical entries outside the selected ancestry.
 use super::{HashSet, Value, json};
 
+#[inline]
 pub(super) fn valid_rows(rows: &[Value]) -> Option<bool> {
     if rows.len() > 128 {
         return None;
@@ -15,6 +16,7 @@ pub(super) fn valid_rows(rows: &[Value]) -> Option<bool> {
     Some(true)
 }
 
+#[inline]
 fn canonical(row: &Value) -> Option<&str> {
     row.as_object()?;
     let hash = valid_hash(row["hash"].as_str()?)?;
@@ -35,6 +37,7 @@ fn canonical(row: &Value) -> Option<&str> {
     (serde_json::to_vec(row).ok()? == serde_json::to_vec(&value).ok()?).then_some(hash)
 }
 
+#[inline]
 fn refs(value: &Value) -> Option<Vec<&str>> {
     let refs = value.as_array()?;
     if refs.len() > 128 {
@@ -56,6 +59,7 @@ fn refs(value: &Value) -> Option<Vec<&str>> {
         .collect()
 }
 
+#[inline]
 fn valid_hash(hash: &str) -> Option<&str> {
     let hash = hash.trim();
     (hash.len() == 40
@@ -65,6 +69,7 @@ fn valid_hash(hash: &str) -> Option<&str> {
     .then_some(hash)
 }
 
+#[inline]
 pub(super) fn complete_refs(value: &Value) -> Option<bool> {
     let values = refs(value)?;
     let mut unique = HashSet::with_capacity(values.len());

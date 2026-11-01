@@ -7,7 +7,7 @@ use std::{
     path::Path,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Failure {
     errno: Option<i32>,
     code: &'static str,
@@ -17,6 +17,7 @@ struct Failure {
     destination: Option<String>,
 }
 impl Failure {
+    #[inline]
     fn description(&self) -> String {
         let mut message =
             format!("{}: {}, {} '{}'", self.code, self.message, self.operation, self.path);
@@ -31,6 +32,7 @@ impl Failure {
     }
 }
 impl fmt::Display for Failure {
+    #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.code == "EACCES" {
             write!(
@@ -45,6 +47,8 @@ impl fmt::Display for Failure {
 }
 impl std::error::Error for Failure {}
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn report(error: &io::Error, chalk: Chalk) -> io::Error {
     let details = error
         .get_ref()
@@ -59,6 +63,8 @@ pub(in crate::commands) fn report(error: &io::Error, chalk: Chalk) -> io::Error 
     }
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn paired_failure(
     error: io::Error,
     operation: &str,
@@ -68,6 +74,8 @@ pub(in crate::commands) fn paired_failure(
     make(error, operation, source, Some(target))
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
     make(error, operation, path, None)
 }
@@ -98,6 +106,8 @@ fn make(error: io::Error, operation: &str, path: &Path, destination: Option<&Pat
 }
 
 /// Enumerable fields retained when an environment result serializes a filesystem error.
+#[must_use]
+#[inline]
 pub(in crate::commands) fn json(error: &io::Error) -> serde_json::Value {
     let Some(failure) = error.get_ref().and_then(|error| error.downcast_ref::<Failure>()) else {
         return serde_json::json!({});
@@ -121,6 +131,8 @@ pub(in crate::commands) fn json(error: &io::Error) -> serde_json::Value {
 }
 
 /// Original Node-style message retained by an environment's summary.
+#[must_use]
+#[inline]
 pub(in crate::commands) fn description(error: &io::Error) -> String {
     error
         .get_ref()

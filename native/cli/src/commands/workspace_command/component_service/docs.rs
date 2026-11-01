@@ -25,6 +25,7 @@ pub(super) fn prepare(root: &Path, components: &[Value]) -> io::Result<Vec<CatDo
         .collect()
 }
 
+#[inline]
 fn component_directory(component: &Value) -> Value {
     let (directory, root_dir) = (component.get("directory"), component.get("rootDir"));
     [directory.and_then(Value::as_str), root_dir.and_then(Value::as_str)]
@@ -44,6 +45,7 @@ fn component_directory(component: &Value) -> Value {
         )
 }
 
+#[inline]
 fn normalize_file(file: &Value) -> Value {
     let path = [
         file.as_str(),

@@ -3,6 +3,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[inline]
 pub(super) fn qualify_parents(
     root: &Path,
     object: &Path,
@@ -13,6 +14,7 @@ pub(super) fn qualify_parents(
     .then_some(())
 }
 
+#[inline]
 fn has_etc_group_proof(proofs: &[(PathBuf, Vec<u8>)]) -> bool {
     proofs
         .iter()
@@ -20,6 +22,7 @@ fn has_etc_group_proof(proofs: &[(PathBuf, Vec<u8>)]) -> bool {
 }
 
 #[cfg(unix)]
+#[inline]
 pub(super) fn resolve(name: &str) -> Option<(PathBuf, Vec<u8>)> {
     let path = PathBuf::from("/etc/group");
     let meta = fs::metadata(&path).ok()?;
@@ -41,11 +44,13 @@ pub(super) fn resolve(name: &str) -> Option<(PathBuf, Vec<u8>)> {
 }
 
 #[cfg(not(unix))]
+#[inline]
 pub(super) fn resolve(_name: &str) -> Option<(PathBuf, Vec<u8>)> {
     None
 }
 
 #[cfg(unix)]
+#[inline]
 pub(super) fn safe_parents(root: &Path, object: &Path) -> Option<bool> {
     use std::os::unix::fs::MetadataExt;
     // SAFETY: this identity query takes no arguments and has no side effects.
@@ -62,6 +67,7 @@ pub(super) fn safe_parents(root: &Path, object: &Path) -> Option<bool> {
 }
 
 #[cfg(unix)]
+#[inline]
 fn parse_group_gid(bytes: &[u8], name: &str) -> Option<u32> {
     let name = name.trim();
     if name.is_empty() || name.contains(':') {
@@ -81,6 +87,7 @@ fn parse_group_gid(bytes: &[u8], name: &str) -> Option<u32> {
 }
 
 #[cfg(not(unix))]
+#[inline]
 pub(super) fn safe_parents(_root: &Path, _object: &Path) -> Option<bool> {
     None
 }

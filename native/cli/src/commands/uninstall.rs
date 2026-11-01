@@ -63,6 +63,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn detect_terminal(args: &[OsString]) -> Terminal {
     let argv: Vec<String> = args
         .iter()
@@ -118,6 +119,7 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
     Ok(Ok(Prepared { packages: argv, cli, cwd, root }))
 }
 
+#[inline]
 fn parse_arguments(args: &[OsString]) -> Option<Vec<String>> {
     let mut packages = Vec::with_capacity(args.len().saturating_sub(1));
     let mut iter = args.iter().skip(1);
@@ -147,6 +149,7 @@ fn parse_arguments(args: &[OsString]) -> Option<Vec<String>> {
     Some(packages)
 }
 
+#[inline]
 fn consume_trailing_packages<'a>(
     iter: impl Iterator<Item = &'a OsString>,
     packages: &mut Vec<String>,
@@ -161,6 +164,7 @@ fn consume_trailing_packages<'a>(
     Some(())
 }
 
+#[inline]
 fn update_workspace_policy(root: &Path, packages: Vec<String>) -> io::Result<()> {
     if packages.is_empty() {
         return Ok(());

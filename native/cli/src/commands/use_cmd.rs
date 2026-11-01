@@ -22,6 +22,7 @@ enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error.to_string())
     }
@@ -49,6 +50,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn parse_target(args: &[OsString]) -> Option<String> {
     let tokens = args
         .iter()
@@ -116,6 +118,7 @@ fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<Strin
     Ok(entry.id.to_string_without_version())
 }
 
+#[inline]
 fn matches_bitmap_entry(
     entry: &bit_install::workspace::BitmapEntry,
     bare: &str,
@@ -132,6 +135,7 @@ fn matches_bitmap_entry(
     !root_dir.is_empty() && root_dir == normalized
 }
 
+#[inline]
 fn is_extension_configured(value: &Value, id: &str) -> bool {
     let Some(obj) = value.as_object() else {
         return false;

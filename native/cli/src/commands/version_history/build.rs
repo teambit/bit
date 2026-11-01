@@ -13,6 +13,8 @@ use std::{
     fs, io,
 };
 
+#[must_use]
+#[inline]
 pub(super) fn has_bool_flag(args: &[OsString], bare: &str, truthy: &str, falsy: &str) -> bool {
     args.iter()
         .take_while(|arg| arg.to_str().map(str::trim) != Some("--"))
@@ -68,6 +70,7 @@ pub(super) fn run(
     emit_text(root, args, "build", true, report)
 }
 
+#[inline]
 fn select(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<Vec<String>> {
     if id.contains('*') || id.contains(',') {
         return by_pattern(root, id, from);
@@ -115,7 +118,7 @@ fn index_candidates(scope: &std::path::Path) -> Option<Vec<(String, String)>> {
     if rows.len() > 128 {
         return None;
     }
-    let mut candidates = Vec::new();
+    let mut candidates = Vec::with_capacity(rows.len());
     for row in rows
         .iter()
         .filter(|row| row["isSymlink"] != true)
@@ -149,6 +152,8 @@ fn candidate_row(scope: &std::path::Path, row: &Value) -> Option<Option<(String,
     Some(Some((identity.clone(), format!("{identity}@{version}"))))
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn row_scope_and_name(row: &Value) -> Option<(&str, &str)> {
     if let Some(raw) = row["id"].as_str() {
         let bare = bit_install::config::aspect_id_without_version(raw.trim()).trim();
@@ -200,6 +205,8 @@ fn prepare(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<String> {
     Some(format!("{scope}/{name}"))
 }
 
+#[must_use]
+#[inline]
 pub(super) fn supported_startup(root: &ScopeRoot, scope: &std::path::Path) -> Option<bool> {
     let workspace = (!root.bare).then_some(root.path.as_path());
     let config = match workspace {
@@ -241,6 +248,7 @@ fn complete(history: &Value, head: &str) -> Option<bool> {
     Some(true)
 }
 
+#[inline]
 fn parent_index(rows: &[Value]) -> Option<HashMap<&str, &Vec<Value>>> {
     let mut by_hash = HashMap::with_capacity(rows.len());
     for row in rows {

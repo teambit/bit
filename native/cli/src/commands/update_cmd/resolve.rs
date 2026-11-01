@@ -14,7 +14,7 @@ use std::{
     process::Command,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ResolvedUpdate {
     pub name: String,
     pub field: String,
@@ -28,9 +28,9 @@ pub(super) fn resolve_updates(
     options: &Options,
     save_prefix: Option<&str>,
 ) -> Vec<ResolvedUpdate> {
-    let mut cache: HashMap<String, Vec<String>> = HashMap::new();
+    let mut cache: HashMap<String, Vec<String>> = HashMap::with_capacity(candidates.len());
     let remotes = read_local_remotes(root);
-    let mut updates = Vec::new();
+    let mut updates = Vec::with_capacity(candidates.len());
     for cand in candidates {
         let versions = available_versions(root, cand, &remotes, &mut cache);
         if let Some(upd) = evaluate_candidate(cand, &versions, options, save_prefix) {
@@ -217,6 +217,7 @@ fn evaluate_candidate(
     })
 }
 
+#[inline]
 fn wanted_range(current_range: &str, target: &Target, options: &Options) -> Option<String> {
     let current_range = current_range.trim();
     if !options.patch && !options.minor && !options.semver {
@@ -249,6 +250,7 @@ fn wanted_range(current_range: &str, target: &Target, options: &Options) -> Opti
     Some("latest".to_owned())
 }
 
+#[inline]
 fn pick_best_version(versions: &[String], wanted: &str) -> Option<node_semver::Version> {
     let wanted = wanted.trim();
     let parsed_vers: Vec<node_semver::Version> = versions
@@ -270,6 +272,7 @@ fn pick_best_version(versions: &[String], wanted: &str) -> Option<node_semver::V
         .max()
 }
 
+#[inline]
 fn compute_latest_range(cand: &Candidate, latest_ver: &str, save_prefix: Option<&str>) -> String {
     let uses_save_prefix =
         matches!(cand.target, Target::Bitmap(_) | Target::ModelRoot | Target::ModelBitmap(_));
@@ -283,6 +286,7 @@ fn compute_latest_range(cand: &Candidate, latest_ver: &str, save_prefix: Option<
     repeat_prefix(&cand.current_range, latest_ver)
 }
 
+#[inline]
 fn repeat_prefix(original_spec: &str, new_version: &str) -> String {
     match original_spec.trim().chars().next() {
         Some('~') => format!("~{new_version}"),
@@ -358,6 +362,7 @@ fn candidate_from_legacy_dep(
     })
 }
 
+#[inline]
 fn legacy_dep_version(dep: &Value, inner: &Value, inline_ver: &str) -> Option<String> {
     [
         inner["version"].as_str(),

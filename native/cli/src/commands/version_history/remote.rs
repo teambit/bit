@@ -46,6 +46,7 @@ pub(super) fn run(
     })
 }
 
+#[inline]
 fn payload(args: &[OsString], pattern: &str, from: Option<&str>) -> Value {
     let mut payload = json!({
         "pattern": pattern,
@@ -77,6 +78,7 @@ fn payload(args: &[OsString], pattern: &str, from: Option<&str>) -> Value {
     payload
 }
 
+#[inline]
 fn file_scope_supported(scope: &std::path::Path) -> bool {
     let root = ScopeRoot { path: scope.to_owned(), bare: true };
     clean_index(scope)
@@ -84,6 +86,7 @@ fn file_scope_supported(scope: &std::path::Path) -> bool {
         && build::supported_startup(&root, scope) == Some(true)
 }
 
+#[inline]
 fn clean_index(scope: &std::path::Path) -> bool {
     let bytes = match std::fs::read(scope.join("index.json")) {
         Ok(bytes) => bytes,
@@ -102,6 +105,7 @@ fn clean_index(scope: &std::path::Path) -> bool {
             })
 }
 
+#[inline]
 fn clean_unmerged(scope: &std::path::Path) -> bool {
     match std::fs::read(scope.join("unmerged.json")) {
         Ok(bytes) => bit_object_import::parse_jsonc(&bytes)

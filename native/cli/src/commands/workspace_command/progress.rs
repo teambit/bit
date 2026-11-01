@@ -19,6 +19,7 @@ const REASONS: [&str; 5] = [
 ];
 
 /// One import the engine ran: why, which ids, and how much it fetched.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Import {
     requested: Option<u64>,
     reason: Option<String>,
@@ -28,6 +29,7 @@ struct Import {
     objects: u64,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Progress {
     bitmap_count: u64,
     imports: Vec<Import>,
@@ -42,11 +44,13 @@ pub struct Progress {
 
 impl Progress {
     /// The validated receipt; `None` when the engine reported none.
+    #[inline]
     pub fn parse(value: Option<&Value>) -> io::Result<Option<Self>> {
         Self::parse_for(value, false)
     }
 
     /// The receipt of a snap: five load stages and graph imports allowed.
+    #[inline]
     pub fn parse_snap(value: Option<&Value>) -> io::Result<Option<Self>> {
         Self::parse_for(value, true)
     }
@@ -76,6 +80,7 @@ impl Progress {
     }
 
     /// Print the lines, as the loader does while merge runs.
+    #[inline]
     pub fn render_merge(&self, output: &Output) {
         for row in &self.imports {
             render_import(output, row);
@@ -130,6 +135,7 @@ impl Progress {
     }
 
     /// Soft tags load component state but do not import dependencies or create a graph.
+    #[inline]
     pub fn render_soft_tag(&self, output: &Output) {
         for row in &self.imports {
             render_import(output, row);
@@ -165,11 +171,9 @@ impl Progress {
     /// `checkout main` has already imported its target objects during the
     /// initial latest-on-main fetch; Harmony does not print the second import.
     pub fn render_checkout_with(&self, output: &Output, main: bool, revert: bool) {
-        output.status(if revert {
-            "reverting components..."
-        } else {
-            "switching component version..."
-        });
+        let status =
+            if revert { "reverting components..." } else { "switching component version..." };
+        output.status(status);
         output.status("importing components");
         let started = Instant::now();
         self.render_checkout_initial(output);
@@ -177,15 +181,13 @@ impl Progress {
         for count in &self.loads {
             output.status(&format!("loading {count} component(s)"));
         }
-
         for row in self.imports
             .iter()
             .filter(|row| {
                 !main
-                    && (row.reason.is_none()
-                        || row.reason
-                            .as_deref()
-                            .is_some_and(|reason| [REASONS[2], REASONS[4]].contains(&reason)))
+                    && row.reason
+                        .as_deref()
+                        .is_none_or(|reason| [REASONS[2], REASONS[4]].contains(&reason))
             })
         {
             render_import(output, row);
@@ -193,6 +195,7 @@ impl Progress {
     }
 
     /// `LanesMain` invokes `Checkout.checkout` directly, without `checkoutByCLIValues` statuses.
+    #[inline]
     pub(in crate::commands) fn render_lane_history(&self, output: &Output) {
         for row in &self.imports {
             render_import(output, row);
@@ -218,12 +221,12 @@ fn render_lane_tail(row: Option<&Import>, output: &Output) {
         && !row.ids.is_empty()
         && let Some(reason) = &row.reason
     {
-        let count = if row.components > 0 {
-            format!("{} components", row.components)
+        let (count, unit) = if row.components > 0 {
+            (row.components, "components")
         } else {
-            format!("{} objects", row.objects)
+            (row.objects, "objects")
         };
-        output.success(&format!("successfully imported {count} {reason}"), None);
+        output.success(&format!("successfully imported {count} {unit} {reason}"), None);
     }
 }
 
@@ -302,11 +305,13 @@ fn known_reason(reason: &str) -> bool {
             })
 }
 
+#[inline]
 fn no_space(text: &str) -> bool {
     !text.is_empty() && !text.chars().any(char::is_whitespace)
 }
 
 /// `[^/\s]+\/[^/\s]+`.
+#[inline]
 fn lane_name(text: &str) -> bool {
     text.trim()
         .split_once('/')
@@ -354,6 +359,7 @@ fn import_message(row: &Import) -> String {
 }
 
 /// `id.replace(/@[^@]+$/, '')`.
+#[inline]
 fn without_version(id: &str) -> &str {
     let id = id.trim();
     match id.rfind('@') {

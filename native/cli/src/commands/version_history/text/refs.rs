@@ -17,6 +17,7 @@ pub(super) fn lanes(root: &Path, scope: &str, component: &str) -> Option<Vec<(St
     Some(lanes)
 }
 
+#[inline]
 fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
     let mut remotes = std::collections::HashMap::with_capacity(lanes.len());
     for (name, head) in lanes {
@@ -34,6 +35,7 @@ fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>> {
     let rows: Value = bit_object_import::parse_jsonc(&fs::read(path).ok()?).ok()?;
     let target = (scope.trim(), component.trim());
@@ -84,6 +86,7 @@ fn remote_lanes(root: &Path, remote: &str, paths: &mut Vec<(String, PathBuf)>) -
     Some(())
 }
 
+#[inline]
 fn entries(path: &Path) -> Option<Vec<fs::DirEntry>> {
     match fs::read_dir(path) {
         Ok(entries) => {

@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 use std::io;
 
 impl Progress {
+    #[inline]
     pub(in crate::commands) fn render_history_pending(
         output: &Output,
         value: Option<&Value>,
@@ -41,6 +42,7 @@ impl Progress {
     }
 }
 
+#[inline]
 fn unexpected_history_fields(value: &Value) -> bool {
     !value["reason"].is_null()
         || (!value["objectRequest"].is_null() && value["objectRequest"] != Value::Bool(false))

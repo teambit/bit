@@ -2,41 +2,54 @@
 
 use crate::commands::color::Chalk;
 
+#[derive(Debug, Clone)]
 pub struct Formatter {
     pub chalk: Chalk,
 }
 
 impl Formatter {
+    #[must_use]
+    #[inline]
     pub const fn new(chalk: Chalk) -> Self {
         Self { chalk }
     }
 
     /// `successSymbol()`: `✓` on Windows.
+    #[inline]
     fn success_symbol(&self) -> String {
         self.chalk.green(if cfg!(windows) { "\u{2713}" } else { "\u{2714}" })
     }
 
     /// `warnSymbol`.
     /// `errorSymbol`.
+    #[must_use]
+    #[inline]
     pub fn error_symbol(&self) -> String {
         self.chalk.red("\u{2716}")
     }
 
+    #[must_use]
+    #[inline]
     pub fn warn_symbol(&self) -> String {
         self.chalk.yellow("\u{26A0}")
     }
 
     /// `formatItem(text)`: indented, with the dim bullet.
+    #[must_use]
+    #[inline]
     pub fn item(&self, text: &str) -> String {
         Self::item_with(text, &self.chalk.dim("\u{203A}"))
     }
 
     /// `formatItem(text, symbol)`.
+    #[must_use]
+    #[inline]
     pub fn item_with(text: &str, symbol: &str) -> String {
         format!("   {symbol} {text}")
     }
 
     /// `formatSection(title, description, items)`.
+    #[must_use]
     pub fn section(&self, title: &str, description: &str, items: &[String]) -> String {
         let non_empty: Vec<&str> = items
             .iter()
@@ -65,26 +78,36 @@ impl Formatter {
     }
 
     /// `formatTitle(text)`: bold white.
+    #[must_use]
+    #[inline]
     pub fn title(&self, text: &str) -> String {
         self.chalk.bold_white(text)
     }
 
     /// `formatHint(text)`: dim.
+    #[must_use]
+    #[inline]
     pub fn hint(&self, text: &str) -> String {
         self.chalk.dim(text)
     }
 
     /// `formatDetailsHint(subject)`.
+    #[must_use]
+    #[inline]
     pub fn details_hint(&self, subject: &str) -> String {
         self.hint(&format!(r#"(run "bit details" to see {})"#, subject.trim()))
     }
 
     /// `formatSuccessSummary(msg)`.
+    #[must_use]
+    #[inline]
     pub fn success_summary(&self, message: &str) -> String {
         format!("{} {}", self.success_symbol(), self.chalk.green(message))
     }
 
     /// `joinSections(sections)`: the non-empty ones, a blank line apart.
+    #[must_use]
+    #[inline]
     pub fn join(sections: &[String]) -> String {
         sections
             .iter()

@@ -4,6 +4,7 @@ use crate::commands::{engine::Engine, status::cache::cache_root};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+#[inline]
 pub(super) fn candidates(
     engine: &mut Engine,
     root: &Path,
@@ -22,6 +23,7 @@ pub(super) fn candidates(
     Ok(list(engine, root, scope).unwrap_or_default())
 }
 
+#[inline]
 fn default_workspace_scope(workspace: &Value) -> Option<&str> {
     crate::commands::update_cmd::aspect_entry(workspace, "teambit.workspace/workspace")
         .and_then(|(_, config)| config["defaultScope"].as_str())

@@ -17,6 +17,7 @@ use std::io;
 /// A lane merge with `--no-snap` that squashes: Node treats the components
 /// the lane is ahead on as diverged, then fails to squash them
 /// (`unable to squash, the componentFromModel is missing`).
+#[inline]
 pub fn validate(
     options: &Value,
     context: &Value,
@@ -159,6 +160,7 @@ fn lane_receipt(root: &std::path::Path, preparation: &Value, context: &Value) ->
 }
 
 /// `importHistoryCount`: at most 4096, none when absent.
+#[inline]
 fn history_count(preparation: &Value) -> io::Result<u64> {
     match preparation.get("importHistoryCount") {
         None | Some(Value::Null) => Ok(0),
@@ -170,6 +172,7 @@ fn history_count(preparation: &Value) -> io::Result<u64> {
 }
 
 /// One history key and log per imported lane history.
+#[inline]
 fn import_histories(user: &receipt::User, count: u64) -> io::Result<Value> {
     let histories = (0..count)
         .map(|_| Ok(json!({ "historyKey": receipt::uuid_v4()?, "log": user.log() })))
@@ -191,11 +194,11 @@ fn squash_hashes(preparation: &Value) -> io::Result<Vec<String>> {
                 hash.len() == 40
                     && hash
                         .bytes()
-                        .all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+                        .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
             })
             .map(str::to_string)
     };
-    let mut seen = Vec::new();
+    let mut seen = Vec::with_capacity(hashes.len());
     for value in hashes {
         let hash = hash(value).ok_or_else(|| decline("command lane squash message receipt"))?;
         if seen.contains(&hash) || seen.len() >= 4096 {
@@ -207,6 +210,7 @@ fn squash_hashes(preparation: &Value) -> io::Result<Vec<String>> {
 }
 
 /// `commandOtherLane(context)`: the merged lane's `scope/name`.
+#[inline]
 fn other_lane(context: &Value) -> io::Result<String> {
     let other = &context["lane"]["otherId"];
     if let Some((scope, name)) = other
@@ -224,6 +228,7 @@ fn other_lane(context: &Value) -> io::Result<String> {
     }
 }
 
+#[inline]
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)

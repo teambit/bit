@@ -114,6 +114,7 @@ fn emit_fast(
     }
 }
 
+#[inline]
 fn collect_deprecation_warnings(options: &Options, formatter: &Formatter) -> Vec<String> {
     let mut lines = Vec::new();
     if options.all {
@@ -128,6 +129,8 @@ fn collect_deprecation_warnings(options: &Options, formatter: &Formatter) -> Vec
     lines
 }
 
+#[must_use]
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
@@ -142,6 +145,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn apply_validate_token<'a>(
     arg: &'a str,
     iter: &mut impl Iterator<Item = &'a str>,
@@ -174,6 +178,7 @@ fn apply_validate_token<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_validate_combined_short(arg: &str, options: &mut Options) -> bool {
     if !arg.starts_with('-')
         || arg.starts_with("--")
@@ -194,6 +199,7 @@ fn apply_validate_combined_short(arg: &str, options: &mut Options) -> bool {
     true
 }
 
+#[inline]
 fn apply_validate_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--skip-tasks=") {
         let val = val.trim();
@@ -273,6 +279,7 @@ fn classify_skip_tasks(
     Ok(Some(FastOutcome::SkippedAll { count }))
 }
 
+#[inline]
 fn matched_validate_count(root: &Path, options: &Options, all_count: usize) -> Option<usize> {
     if let Some(pat) = &options.pattern {
         select_ids(root, pat).ok().map(|ids| ids.len())

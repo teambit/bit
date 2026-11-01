@@ -56,6 +56,7 @@ fn prepare(root: &ScopeRoot, id: &str, short: bool, chalk: Chalk) -> Option<Stri
     render(&history, &model, short, chalk, &lanes)
 }
 
+#[inline]
 fn render(
     history: &Value,
     model: &Value,
@@ -108,6 +109,7 @@ fn format_row(
     format!("{}{pointer} {edge}", chalk.bold(label))
 }
 
+#[inline]
 fn pointer_text(pointers: &[&str], chalk: Chalk) -> String {
     if pointers.is_empty() {
         String::new()
@@ -116,6 +118,8 @@ fn pointer_text(pointers: &[&str], chalk: Chalk) -> String {
     }
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a str> {
     let hash = hash.trim();
     for key in ["versions", "orphanedVersions"] {

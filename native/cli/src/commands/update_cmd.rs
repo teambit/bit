@@ -142,6 +142,7 @@ fn has_env_jsonc_policy(root: &Path) -> bool {
         })
 }
 
+#[inline]
 fn has_aspect_id_prefix(candidate: &str, bare_id: &str) -> bool {
     candidate == bare_id
         || candidate
@@ -149,6 +150,8 @@ fn has_aspect_id_prefix(candidate: &str, bare_id: &str) -> bool {
             .is_some_and(|rest| rest.starts_with('@'))
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
     let id = id.trim();
     if let Some(name) =
@@ -170,10 +173,14 @@ pub(in crate::commands) fn matches_aspect(entry: &Value, id: &str) -> bool {
             .is_some_and(|name| has_aspect_id_prefix(name, bare_name.trim()))
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn bitmap_row_name<'a>(key: &'a str, row: &'a Value) -> &'a str {
     bitmap_row_scope_and_name(key, row).1
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn bitmap_row_scope_and_name<'a>(
     key: &'a str,
     row: &'a Value,
@@ -210,6 +217,8 @@ pub(in crate::commands) fn bitmap_row_scope_and_name<'a>(
     (scope, name)
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn bitmap_entry_aspect<'a>(
     entry: &'a bit_install::workspace::BitmapEntry,
     bare_id: &str,
@@ -224,6 +233,8 @@ pub(in crate::commands) fn bitmap_entry_aspect<'a>(
         .map(|(_, val)| val)
 }
 
+#[must_use]
+#[inline]
 pub(in crate::commands) fn aspect_entry<'a>(
     map_val: &'a Value,
     bare_id: &str,
@@ -260,11 +271,14 @@ pub(super) fn has_no_workspace_dependencies(root: &Path) -> io::Result<bool> {
     Ok(active_component_count(&bitmap) == 0)
 }
 
+#[inline]
 fn non_empty_object(val: &Value) -> bool {
     val.as_object()
         .is_some_and(|obj| !obj.is_empty())
 }
 
+#[must_use]
+#[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
@@ -278,6 +292,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn apply_update_arg(arg: &str, options: &mut Options) -> Option<()> {
     match arg {
         "--no-color" | "--no-color=true" | "--no-color=false" => {}
@@ -299,6 +314,7 @@ fn apply_update_arg(arg: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn consume_trailing_patterns<'a>(
     iter: impl Iterator<Item = &'a str>,
     patterns: &mut Vec<String>,
@@ -312,6 +328,7 @@ fn consume_trailing_patterns<'a>(
     Some(())
 }
 
+#[inline]
 fn push_patterns(patterns: &mut Vec<String>, raw: &str) -> Option<()> {
     for part in raw.split(',') {
         let trimmed = part.trim();

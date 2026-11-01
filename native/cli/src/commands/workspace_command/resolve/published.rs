@@ -49,6 +49,7 @@ pub(super) fn resolve(
     Ok(())
 }
 
+#[inline]
 fn enabled(request: &ResolveRequest<'_>, plan: &Value) -> bool {
     let Selection::Tag { tag_options, .. } = &request.selection else { return false };
     plan["noop"] != true
@@ -58,6 +59,7 @@ fn enabled(request: &ResolveRequest<'_>, plan: &Value) -> bool {
         && tag_options["versionsFile"].is_null()
 }
 
+#[inline]
 fn candidates(session: &Session<'_>, plan: &Value) -> io::Result<Vec<Value>> {
     let selected = plan.get("tagPatternSelections");
     let ids = array(plan["result"].get("taggedComponents"), "registry tagged components")?
@@ -137,6 +139,7 @@ fn package_name(
     ))
 }
 
+#[inline]
 fn explicit(session: &Session<'_>, identity: &str, selections: Option<&Value>) -> bool {
     let entered = selections
         .and_then(Value::as_array)
@@ -155,6 +158,7 @@ fn explicit(session: &Session<'_>, identity: &str, selections: Option<&Value>) -
         .any(|version| node_semver::npm::valid(version.trim()).is_some())
 }
 
+#[inline]
 fn registry(config: &Value) -> Option<String> {
     if let Some(raw_args) = config["packageManagerPublishArgs"].as_array() {
         let args = raw_args

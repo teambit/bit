@@ -22,6 +22,7 @@ enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error.to_string())
     }
@@ -49,6 +50,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[inline]
 fn parse_target(args: &[OsString]) -> Option<String> {
     let tokens = args
         .iter()
@@ -171,6 +173,7 @@ fn lookup_bitmap_aspect_id(root: &Path, doc_val: &Value, bare: &str) -> Option<S
         .map(|entry| entry.id.to_string_without_version())
 }
 
+#[inline]
 fn is_in_generator_envs(doc_val: &Value, target: &str, resolved_id: &str) -> bool {
     super::update_cmd::aspect_entry(doc_val, "teambit.generator/generator")
         .and_then(|(_, cfg)| cfg["envs"].as_array())
@@ -183,12 +186,15 @@ fn is_in_generator_envs(doc_val: &Value, target: &str, resolved_id: &str) -> boo
         })
 }
 
+#[must_use]
+#[inline]
 pub(super) fn is_unscoped_unknown(root: &Path, bare: &str) -> bool {
     !bare.contains('/')
         && super::debug_cat::lookup::resolve_component_entry(&workspace::scope_path(root), bare)
             .is_none()
 }
 
+#[inline]
 fn find_extension_key(value: &Value, id: &str) -> Option<String> {
     let obj = value.as_object()?;
     let id = id.trim();

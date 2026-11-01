@@ -119,6 +119,7 @@ impl Steps<'_> {
         }
     }
 
+    #[inline]
     fn check_token(&self, receipt: &Value, what: &str) -> io::Result<()> {
         if receipt
             .get("token")
@@ -141,6 +142,7 @@ struct Input {
 }
 
 impl Input {
+    #[inline]
     fn new(context: &Value, target: &Value) -> io::Result<Self> {
         let policy = policy::projected_policy(context, target, target.get("projectedVersion"))?;
         let files = files(target)?;
@@ -172,7 +174,7 @@ fn targets(value: &Value, context: &Value) -> io::Result<Vec<Value>> {
         .as_array()
         .filter(|rows| !rows.is_empty() && rows.len() <= 4096);
     let rows = rows.ok_or_else(|| decline("command dependency target receipt"))?;
-    let mut seen = Vec::new();
+    let mut seen = Vec::with_capacity(rows.len());
     for row in rows {
         let identity = row
             .get("identity")
@@ -201,11 +203,13 @@ fn targets(value: &Value, context: &Value) -> io::Result<Vec<Value>> {
     Ok(rows.clone())
 }
 
+#[inline]
 fn non_empty_file(file: &Value) -> bool {
     file.as_str()
         .is_some_and(|path| !path.trim().is_empty())
 }
 
+#[inline]
 fn files(row: &Value) -> io::Result<Vec<String>> {
     array(row.get("files"), "target files")?
         .iter()
@@ -243,12 +247,14 @@ fn policy_component(row: &Value, original: &Value, capture: &Capture) -> io::Res
     Ok(component)
 }
 
+#[inline]
 fn is_added_target(original: &Value, identity: &str) -> bool {
     original["lane"]["addedTargets"]
         .as_array()
         .is_some_and(|added| added.iter().any(|target| has_identity(target, identity)))
 }
 
+#[inline]
 fn has_identity(target: &Value, identity: &str) -> bool {
     target
         .get("identity")
@@ -335,6 +341,7 @@ fn validate(completed: &Value, projected: &[Value], rows: &[Value]) -> io::Resul
 }
 
 /// Matches `` `${target.identity}@${target.version}` `` without allocating.
+#[inline]
 fn matches_versioned(actual: Option<&str>, target: &Value) -> bool {
     let Some((id, version)) = actual
         .map(str::trim)
@@ -345,6 +352,7 @@ fn matches_versioned(actual: Option<&str>, target: &Value) -> bool {
     id == versioned_field(&target["identity"]) && version == versioned_field(&target["version"])
 }
 
+#[inline]
 fn versioned_field(val: &Value) -> &str {
     val.as_str()
         .map(str::trim)

@@ -7,7 +7,7 @@ mod selection;
 use serde_json::{Value, json};
 use std::io;
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct Selection {
     pub pattern: Option<String>,
     pub changed: bool,
@@ -19,6 +19,7 @@ pub(in crate::commands) struct Selection {
     pub explicit_file_order: bool,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct Progress {
     pub environment: String,
     pub name: String,
@@ -26,21 +27,25 @@ pub(in crate::commands) struct Progress {
     pub loads: Vec<usize>,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct Component {
     pub id: Value,
     pub directory: String,
     pub files: Vec<Value>,
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
 }
 
+#[inline]
 fn trim_owned(val: String) -> String {
     if val.trim().len() == val.len() { val } else { val.trim().to_owned() }
 }
 
 impl Progress {
+    #[inline]
     fn new(name: String, environment: String, counts: [usize; 2], options: &Selection) -> Self {
         Self {
             name: trim_owned(name),
@@ -51,6 +56,7 @@ impl Progress {
     }
 }
 
+#[inline]
 fn initial_loads(counts: [usize; 2], options: &Selection) -> Vec<usize> {
     let has_pattern = options.pattern
         .as_deref()

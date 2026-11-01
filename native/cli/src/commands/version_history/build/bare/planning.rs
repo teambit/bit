@@ -44,6 +44,7 @@ pub(super) fn prepare(
     finish(root, &target, head, proofs, lane_heads, delete_existing)
 }
 
+#[inline]
 fn resolve_target(root: &Path, id: &str) -> Option<Target> {
     let id = id.trim();
     if id.is_empty() {
@@ -101,8 +102,8 @@ fn pattern_candidates(root: &Path) -> Option<(Vec<Candidate>, Proofs)> {
     if rows.len() > 128 {
         return None;
     }
-    let mut proofs = Vec::new();
-    let mut candidates = Vec::new();
+    let mut proofs = Vec::with_capacity(rows.len());
+    let mut candidates = Vec::with_capacity(rows.len());
     for row in rows
         .iter()
         .filter(|row| row["isSymlink"] != true)
@@ -185,6 +186,7 @@ fn finish(
     Some(plan)
 }
 
+#[inline]
 pub(super) fn content(
     root: &Path,
     hash: &str,
@@ -232,6 +234,7 @@ pub(super) fn merge(
     Some((rows, count))
 }
 
+#[inline]
 fn refresh_rows(rows: &mut Vec<Value>, ancestors: Vec<Value>) {
     for (index, row) in ancestors.into_iter().enumerate() {
         let row_hash = row["hash"].as_str().map(str::trim);

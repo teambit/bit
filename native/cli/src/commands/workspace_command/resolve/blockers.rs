@@ -59,6 +59,7 @@ pub(super) fn callbacks(
     Ok(())
 }
 
+#[inline]
 fn handled(
     result: &io::Result<()>,
     startup: Option<&mut crate::commands::status::autosync::Startup>,
@@ -154,6 +155,7 @@ pub(super) fn validate(rows: &[Value], selected: &[String], ignored: &Value) -> 
     )))
 }
 
+#[inline]
 fn component_blockers(row: &Value, ignored: &HashSet<&str>) -> io::Result<Vec<Value>> {
     Ok(array(row.get("issues"), "snapshot component issues")?
         .iter()
@@ -165,6 +167,7 @@ fn component_blockers(row: &Value, ignored: &HashSet<&str>) -> io::Result<Vec<Va
         .collect())
 }
 
+#[inline]
 fn non_empty_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
     value[key]
         .as_str()

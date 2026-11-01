@@ -22,6 +22,7 @@ pub(super) struct Prepared<'a> {
     pub startup: Option<&'a mut Startup>,
 }
 
+#[inline]
 pub(super) fn deferred(request: &Request<'_>) -> bool {
     matches!(request.operation, "checkout" | "merge")
         && request.options.get("lane").is_none()
@@ -82,6 +83,7 @@ pub(super) fn select(
     Ok((array(result.get("targets"), "checkout selected targets")?.to_vec(), loads, captured))
 }
 
+#[inline]
 fn selected_identities(selected: &[Value]) -> Vec<Value> {
     selected
         .iter()
@@ -100,6 +102,7 @@ fn selected_identities(selected: &[Value]) -> Vec<Value> {
         .collect()
 }
 
+#[inline]
 fn pool(targets: &[Value], to: Option<&str>, operation: &str) -> Vec<Value> {
     targets
         .iter()

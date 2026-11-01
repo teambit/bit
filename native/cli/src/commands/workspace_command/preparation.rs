@@ -17,6 +17,7 @@ pub(super) struct Prepared {
     pub docs: Option<crate::commands::add::PreparedDocs>,
 }
 
+#[inline]
 pub(super) fn capture(
     root: &Path,
     request: &Request<'_>,
@@ -35,6 +36,7 @@ pub(super) fn capture(
     capture_reader(root, request, startup, reader)
 }
 
+#[inline]
 pub(super) fn capture_retained(
     root: &Path,
     request: &Request<'_>,
@@ -130,6 +132,7 @@ fn load_docs(
     }
 }
 
+#[inline]
 pub(super) fn publish_on_failure(
     docs: Option<crate::commands::add::PreparedDocs>,
     startup: Option<&mut Startup>,
@@ -143,6 +146,7 @@ pub(super) fn publish_on_failure(
     Ok(())
 }
 
+#[inline]
 pub(super) fn publish_docs(
     docs: Option<crate::commands::add::PreparedDocs>,
     startup: Option<&mut Startup>,
@@ -156,6 +160,7 @@ pub(super) fn publish_docs(
     Ok(())
 }
 
+#[inline]
 pub(super) fn owned_result<Output>(
     result: io::Result<Output>,
     docs: &mut Option<crate::commands::add::PreparedDocs>,
@@ -180,6 +185,7 @@ struct Reader {
 }
 
 impl Reader {
+    #[inline]
     fn documentation(
         &mut self,
         root: &Path,
@@ -194,6 +200,7 @@ impl Reader {
         Ok(docs)
     }
 
+    #[inline]
     fn commit_dependencies(
         &mut self,
         root: &Path,
@@ -210,6 +217,7 @@ impl Reader {
         Ok(())
     }
 
+    #[inline]
     fn load(
         &mut self,
         root: &Path,
@@ -291,6 +299,7 @@ impl Reader {
         Ok(Self { engine, home, token, context, targets, environments })
     }
 
+    #[inline]
     fn finish(
         self,
         capture: capture::Capture,
@@ -309,6 +318,7 @@ impl Reader {
     }
 }
 
+#[inline]
 fn options(
     request: &Request<'_>,
     environments: Option<crate::commands::status::environments::Environments>,
@@ -322,6 +332,7 @@ fn options(
     }
 }
 
+#[inline]
 fn prepare_owned(
     engine: &mut Engine,
     root: &Path,

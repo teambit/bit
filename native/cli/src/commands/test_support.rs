@@ -1,6 +1,8 @@
 //! Expected output for platform-specific CLI report tests.
 
 /// Match the Node CLI's success symbol on this platform.
+#[must_use]
+#[inline]
 pub fn expected_success_symbols(expected: &str) -> String {
     let trimmed = expected.trim_end_matches('\0');
     let normalized =
