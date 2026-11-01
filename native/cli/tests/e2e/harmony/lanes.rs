@@ -1,4 +1,4 @@
-//! End-to-end Harmony lane test suites (`e2e/harmony/lanes/`).
+//! End-to-end Harmony lane test suites (`e2e/harmony/lanes/`: [`abort_merge_lane`], [`bit_checkout_on_lanes`], [`bit_import_on_lanes`], [`bit_remove_on_lanes`], [`lane_basic_operations`], [`lane_diff`], [`lane_export`], [`lane_import`], [`lane_merge`], [`lane_snapping`]).
 //! Covers lane creation, diffing, export, import, merge, and removal parity.
 
 mod abort_merge_lane;

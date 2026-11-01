@@ -1,4 +1,4 @@
-//! `bit export` retains configured providers across remote persistence, package linking, and hooks.
+//! `bit export` retains configured providers across remote persistence, package linking, and hooks ([`remote`], [`node`], [`workspace`]).
 //!
 //! Verifies package generation, post-export hooks, lane classes, and JSON output parity.
 

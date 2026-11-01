@@ -1,4 +1,4 @@
-//! End-to-end tests for HTTP transport across `export`, `log`, `import`, `remove`, and `lane list`.
+//! End-to-end tests for HTTP transport across `export`, `log`, `import`, `remove`, and `lane list` ([`http_export_log_import_remove_and_lane_list`]).
 //!
 //! Also covers nested namespace pattern imports, legacy extension merging, and defective aspects.
 

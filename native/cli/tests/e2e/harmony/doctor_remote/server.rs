@@ -1,4 +1,4 @@
-//! Capture the published `GraphQL` request body and semantic HTTP headers.
+//! Capture the published `GraphQL` [`Request`] body and semantic HTTP headers.
 //!
 //! Provides a local test [`Server`] and [`Request`] inspector for remote doctor tests.
 

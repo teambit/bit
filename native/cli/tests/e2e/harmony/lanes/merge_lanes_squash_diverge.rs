@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-squash-diverge.e2e.ts` for diverged lane squash merge.
+//! Port of `e2e/harmony/lanes/merge-lanes-squash-diverge.e2e.ts` for diverged lane squash merge ([`single_scope_two_diverged_lanes_squash_on_merge`]).
 //! Covers single-scope and multi-scope diverged squash merges and parent recording.
 
 use crate::helper::{Helper, parse};

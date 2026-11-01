@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-export.e2e.ts` for `bit export` on lanes.
+//! Port of `e2e/harmony/lanes/lane-export.e2e.ts` for `bit export` on lanes ([`exporting_the_lane_and_importing_component`]).
 //!
 //! Covers cross-scope lane exports, deleted dependencies, interrupted exports, and resets.
 

@@ -1,4 +1,4 @@
-//! Compare the shared direct-cascade path with the released CLI, including stored metadata.
+//! Compare the shared direct-cascade path with the released CLI, including stored metadata ([`direct_hidden_cascade_matches_released_output_and_object_metadata`]).
 //! Verifies stdout, stderr, and stored version metadata parity for direct hidden cascades.
 
 use super::fixture;

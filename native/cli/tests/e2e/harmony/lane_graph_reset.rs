@@ -1,4 +1,4 @@
-//! Graph reset changes history and heads while preserving the merged working tree.
+//! Graph reset changes history and heads while preserving the merged working tree ([`boundaries`], [`divergence`], [`fixture`], [`hidden`], [`merged`], [`selected`], [`selected_discovery`]).
 //!
 //! Groups lane boundary, divergence, hidden-member, merge, and selection reset suites.
 

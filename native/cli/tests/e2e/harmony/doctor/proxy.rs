@@ -1,4 +1,4 @@
-//! An offline `CONNECT` proxy serving the published BVM request over real HTTPS.
+//! An offline `CONNECT` proxy ([`Proxy`]) serving the published BVM request over real HTTPS.
 //!
 //! Provides deterministic catalog responses and request counting for [`Proxy`] fixtures.
 

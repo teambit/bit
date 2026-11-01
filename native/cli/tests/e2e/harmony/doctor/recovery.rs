@@ -1,4 +1,4 @@
-//! Canonical index repair is selected before native `bit doctor` output or writes.
+//! Canonical index repair ([`fixture`], [`compare_recovery`]) is selected before native `bit doctor` output or writes.
 //!
 //! Ensures stale or missing `.bit/index.json` state is reconciled identically to Node.
 

@@ -1,4 +1,4 @@
-//! Released `bit fork` contracts: strict command bytes and complete same-path state.
+//! Released `bit fork` contracts: strict command bytes and complete same-path state ([`installation`], [`callbacks`], [`corruption`], [`http`], [`options`], [`patterns`], [`remote`], [`support`]).
 //!
 //! Covers local and remote forking, `--no-link`, provenance tracking, and post-fork snapping.
 

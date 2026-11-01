@@ -1,4 +1,4 @@
-//! A coalescible progress event may redraw before the non-coalescible store banner.
+//! A coalescible progress event ([`project`]) may redraw before the non-coalescible store [`BANNER`].
 //! Remove only a qualified clock-controlled zero-add redraw: the banner either
 //! repeats its counters or advances resolution from one to two. Keep all other bytes.
 //!

@@ -1,4 +1,4 @@
-//! `bit export` operation grammar and local reconciliation match the pinned published CLI.
+//! `bit export` operation grammar and local reconciliation match the pinned published CLI ([`packages`], [`pending`], [`parity`], [`compare`]).
 //!
 //! Covers multi-version reconciliation, `--resume`, lane readmes, and package regeneration.
 

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-remote.e2e.ts` for remote lane merge parity.
+//! Port of `e2e/harmony/lanes/merge-lanes-remote.e2e.ts` for remote lane merge parity ([`setup_exported_dev_lane`], [`merging_remote_lane_into_main_and_exporting`]).
 //! Covers merging remote lanes into `main` or another lane and re-exporting.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};

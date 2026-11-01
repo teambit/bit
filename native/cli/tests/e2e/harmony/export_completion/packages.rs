@@ -1,4 +1,4 @@
-//! Generated package bytes and source-link shapes stay observable after `bit export`.
+//! Generated package bytes and source-link shapes ([`compare`], [`compare_tree`]) stay observable after `bit export`.
 //!
 //! Recursively compares generated `node_modules` package trees between native and Node runs.
 

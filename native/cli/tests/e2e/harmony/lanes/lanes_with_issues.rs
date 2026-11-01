@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lanes-with-issues.e2e.ts` for lane operations with component issues.
+//! Port of `e2e/harmony/lanes/lanes-with-issues.e2e.ts` for lane operations with component issues ([`populate_three`], [`issue_object_of_head_of_main_is_missing_from_the_filesystem_and_remote`]).
 //!
 //! Verifies graceful failure diagnostics in `bit lane diff` when the `main` head object is missing.
 

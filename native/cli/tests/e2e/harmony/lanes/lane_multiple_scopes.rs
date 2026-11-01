@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-multiple-scopes.e2e.ts` for multi-scope lane export and import.
+//! Port of `e2e/harmony/lanes/lane-multiple-scopes.e2e.ts` for multi-scope lane export and import ([`multiple_scopes_export_and_import_lane`]).
 //!
 //! Validates exporting and importing lanes whose components reside in multiple remote scopes.
 

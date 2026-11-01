@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/import-lanes.e2e.ts` for `bit lane import` and `bit fetch --lanes`.
+//! Port of `e2e/harmony/lanes/import-lanes.e2e.ts` for `bit lane import` and `bit fetch --lanes` ([`fetching_lanes_objects_without_writing_to_workspace`]).
 //!
 //! Verifies object-only lane fetches, `bit switch` to remote lanes, and `--alias` local naming.
 

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-import-git-branch.e2e.ts` for `--branch` during `bit lane import`.
+//! Port of `e2e/harmony/lanes/lane-import-git-branch.e2e.ts` for `--branch` during `bit lane import` ([`git`], [`init_new_git_repo`]).
 //!
 //! Validates automatic Git branch creation, existing branch warnings, and switching back to `main`.
 

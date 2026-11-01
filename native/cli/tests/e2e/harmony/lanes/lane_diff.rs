@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-diff.e2e.ts` for `bit lane diff` parity.
+//! Port of `e2e/harmony/lanes/lane-diff.e2e.ts` for `bit lane diff` parity ([`expect_main_to_dev_diff`], [`diffing_the_current_lane_against_main`]).
 //!
 //! Validates diffing the active lane against `main` or another lane in workspaces and bare scopes.
 

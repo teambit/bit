@@ -1,4 +1,4 @@
-//! Qualify the released stream's two exact corruption errors against the fixture scope.
+//! Qualify ([`qualified_errors`]) the released stream's two exact corruption errors against the fixture scope.
 //!
 //! Runs the `ObjectFetcher` stream conformance probe to obtain expected corruption diagnostics.
 

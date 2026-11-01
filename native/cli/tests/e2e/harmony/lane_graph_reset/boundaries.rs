@@ -1,4 +1,4 @@
-//! Boundary and main-base preservation tests for `bit reset` on a lane.
+//! Boundary and main-base preservation tests for `bit reset` on a lane ([`resetting_a_new_lane_preserves_its_exported_main_base`]).
 //!
 //! Covers exported main bases, forked lanes, unknown inherited boundaries, and foreign lane snaps.
 

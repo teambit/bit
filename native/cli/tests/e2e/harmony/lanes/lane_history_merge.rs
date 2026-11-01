@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-history-merge.e2e.ts` for lane history entries during merge.
+//! Port of `e2e/harmony/lanes/lane-history-merge.e2e.ts` for lane history entries during merge ([`lane_history_records_fast_forward_merge_entry`]).
 //!
 //! Verifies that fast-forward `bit lane merge` records a merge entry in `lane history --json`.
 

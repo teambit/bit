@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/switch-lanes.e2e.ts` for `bit switch` parity.
+//! Port of `e2e/harmony/lanes/switch-lanes.e2e.ts` for `bit switch` parity ([`switch_to_remote_lane_diff_snap_alias_and_local_lane`]).
 //! Covers switching to remote and local lanes, aliases, diffing, and snapping.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse, strip_ansi};

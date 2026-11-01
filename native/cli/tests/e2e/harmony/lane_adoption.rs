@@ -1,4 +1,4 @@
-//! Lane adoption compares the released command at the same absolute workspace path.
+//! Lane adoption compares the released command at the same absolute workspace path ([`callbacks`], [`output`], [`conflicts`], [`environment`], [`reporter`], [`selection`], [`subscribers`], [`exported`]).
 //!
 //! Covers `bit switch` and `bit lane import` with aliases, patterns, and default installation.
 

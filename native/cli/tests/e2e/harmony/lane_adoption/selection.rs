@@ -1,4 +1,4 @@
-//! Pattern selection and `--workspace-only` tests for `bit switch` and `bit lane import`.
+//! Pattern selection and `--workspace-only` tests for `bit switch` and `bit lane import` ([`compression`], [`workspace_only_switches_existing_component_without_adding_new_lane_rows`]).
 //!
 //! Covers skipped main components, removed lane components, and bracket pattern selection.
 

@@ -1,4 +1,4 @@
-//! Actual published `InstallMain` slots and mutable dependency-installer subscribers.
+//! Actual published `InstallMain` slots and mutable dependency-installer subscribers ([`main_snapshot`], [`configured`], [`minimal_merge_configured`]).
 
 mod main_snapshot;
 

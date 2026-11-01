@@ -1,4 +1,4 @@
-//! Candidate discovery must not validate replacement heads of unselected members.
+//! Candidate discovery must not validate replacement heads of unselected members ([`selected_local_member_resets_while_unselected_inherited_member_has_no_replacement`]).
 //!
 //! Ensures resetting a selected local member succeeds even when an unselected member lacks a base.
 

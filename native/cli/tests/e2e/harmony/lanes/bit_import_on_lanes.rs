@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/bit-import-on-lanes.e2e.ts` for `bit import` on lanes.
+//! Port of `e2e/harmony/lanes/bit-import-on-lanes.e2e.ts` for `bit import` on lanes ([`importing_component_when_checked_out_to_a_lane`]).
 //!
 //! Covers `--save-in-lane`, cross-scope imports, `fetch --lanes`, and `--lane-only` wildcards.
 

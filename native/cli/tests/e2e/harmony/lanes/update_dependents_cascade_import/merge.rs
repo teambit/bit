@@ -1,4 +1,4 @@
-//! Hidden lane entries need their origin's main objects before divergence planning.
+//! Hidden lane entries need their origin's main objects before divergence planning ([`merging_cross_scope_hidden_updates_into_main_fetches_origin_history`]).
 //! Verifies that cross-scope hidden updates fetch origin `main` history during merge.
 
 use crate::helper::{Helper, parse};

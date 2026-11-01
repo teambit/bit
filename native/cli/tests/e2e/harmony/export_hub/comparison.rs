@@ -1,4 +1,4 @@
-//! Scope object and control file comparison helpers for central-hub `bit export` tests.
+//! Scope object and control file comparison helpers ([`controls`], [`requests`]) for central-hub `bit export` tests.
 //!
 //! Normalizes only expected timestamps and concurrent remote index/history orderings.
 

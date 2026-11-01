@@ -1,4 +1,4 @@
-//! Valid model wire encodings must not bypass released mutable-object canonicalization.
+//! Valid model wire encodings must not bypass released mutable-object canonicalization ([`main_switch_canonicalizes_an_unchanged_main_only_component_zlib_stream`]).
 //!
 //! Verifies that `switch main` re-encodes level-0 `zlib` component streams to default compression.
 

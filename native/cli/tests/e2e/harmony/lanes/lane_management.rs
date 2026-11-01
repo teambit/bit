@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-management.e2e.ts` for `bit lane rename`, `alias`, and `remove`.
+//! Port of `e2e/harmony/lanes/lane-management.e2e.ts` for `bit lane rename`, `alias`, and `remove` ([`rename_exported_lane_with_alias`]).
 //!
 //! Covers renaming exported aliased lanes and validating `lane change-scope` on new vs exported lanes.
 

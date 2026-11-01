@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/abort-merge-lane.e2e.ts` for `bit lane merge-abort` parity.
+//! Port of `e2e/harmony/lanes/abort-merge-lane.e2e.ts` for `bit lane merge-abort` parity ([`populate`]).
 //!
 //! Validates reverting `.bitmap`, lane objects, newly introduced directories, and main heads.
 

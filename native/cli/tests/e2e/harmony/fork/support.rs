@@ -1,4 +1,4 @@
-//! Shared workspace and origin verification helpers for `bit fork` end-to-end tests.
+//! Shared workspace and origin verification helpers ([`FORK`], [`exported`], [`remote_workspace`], [`target`]) for `bit fork` end-to-end tests.
 //!
 //! Provides exported and remote workspace builders and batch barrier assertions.
 

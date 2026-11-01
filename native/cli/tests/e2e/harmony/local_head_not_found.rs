@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/local-head-not-found.e2e.ts` for missing local head recovery.
+//! Port of `e2e/harmony/local-head-not-found.e2e.ts` for missing local head recovery ([`object_rel_path`], [`sha1_hex`], [`local_head_version_object_missing_from_scope`]).
 //! Verifies actionable `LocalHeadNotFound` diagnostics and remote head object recovery.
 
 use crate::helper::{Helper, parse};

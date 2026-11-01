@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit install` and `install-and-compile`, ported from:
+//! End-to-end tests for `bit install` and `install-and-compile` ([`read_pkg_version`], [`read_ws_dep`]), ported from:
 //! - `e2e/harmony/install.e2e.ts`
 //! - `e2e/harmony/install-and-compile.e2e.ts`
 //!

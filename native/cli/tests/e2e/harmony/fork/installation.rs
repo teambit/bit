@@ -1,4 +1,4 @@
-//! Real installation; validated durations and one proven redundant clock redraw vary.
+//! Real installation; validated durations and one proven redundant clock redraw vary ([`startup_frame`], [`project_startup_frame`]).
 //!
 //! Verifies package installation and compilation output after remote `bit fork`.
 

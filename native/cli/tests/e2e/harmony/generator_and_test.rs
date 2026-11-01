@@ -1,4 +1,4 @@
-//! End-to-end cases from:
+//! End-to-end cases ([`create_command_options_and_validations`]) from:
 //! - `e2e/harmony/create.e2e.ts`
 //! - `e2e/harmony/new.e2e.ts`
 //! - `e2e/harmony/test-harmony.e2e.ts`

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/extensions-config.e2e.ts` for core and custom extension configuration.
+//! Port of `e2e/harmony/extensions-config.e2e.ts` for core and custom extension configuration ([`persist_core_extension_config_to_models`]).
 //!
 //! Validates persisting core and third-party extension configurations across tag, export, and import.
 

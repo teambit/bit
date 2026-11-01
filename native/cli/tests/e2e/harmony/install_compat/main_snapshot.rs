@@ -1,4 +1,4 @@
-//! Upstream [PR 10846](https://github.com/teambit/bit/pull/10846) adds one main-model backup to these otherwise unchanged installer fixtures.
+//! Upstream [PR 10846](https://github.com/teambit/bit/pull/10846) adds one main-model backup ([`expected`]) to these otherwise unchanged installer fixtures.
 //! The `2.2.146` reference lacks this addition; assert the Node-written pre-merge object verbatim.
 //!
 //! Builds the expected `last-merged/main-components` map for `install_compat` assertions.

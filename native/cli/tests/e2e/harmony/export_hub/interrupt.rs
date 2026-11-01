@@ -1,4 +1,4 @@
-//! A real terminal interrupt protects acknowledged export rather than abandoning publication.
+//! A real terminal interrupt ([`run`]) protects acknowledged export rather than abandoning publication.
 //!
 //! Verifies that `SIGINT` during central-hub export warns and completes publication once.
 

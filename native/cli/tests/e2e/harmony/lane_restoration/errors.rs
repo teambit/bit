@@ -1,4 +1,4 @@
-//! Missing history ID and validation error tests for `bit lane checkout` and `bit lane revert`.
+//! Missing history ID and validation error tests for `bit lane checkout` and `bit lane revert` ([`missing_history_id_reports_the_current_lane_and_preserves_every_control`]).
 //!
 //! Covers missing history IDs, running on `main`, unsupported `--json`, and CI stack parity.
 

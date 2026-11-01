@@ -1,4 +1,4 @@
-//! Active-lane import retains configured provider startup and exact workspace state.
+//! Active-lane import retains configured provider startup and exact workspace state ([`active_lane_import_with_configured_provider_matches_released_node`]).
 //!
 //! Verifies that `bit lane import` invokes configured aspect providers exactly once.
 

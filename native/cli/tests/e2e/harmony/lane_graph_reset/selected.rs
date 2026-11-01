@@ -1,4 +1,4 @@
-//! Selected component pattern reset tests for `bit reset` on a lane.
+//! Selected component pattern reset tests for `bit reset` on a lane ([`selected_introduced_member_leaves_the_other_lane_member_and_main_versions_intact`]).
 //!
 //! Covers partial lane resets, `--head` on introduced members, and snapped deletion restoration.
 

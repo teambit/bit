@@ -1,4 +1,4 @@
-//! Shared workspace and scope object helpers for lane `bit reset` tests.
+//! Shared [`workspace`] and [`snap`] scope object helpers for lane `bit reset` tests.
 //!
 //! Provides workspace creation, snap/head inspection, sentinel file checks, and colored error parity.
 

@@ -1,4 +1,4 @@
-//! Remote divergence and exported-head tests for `bit reset` on a lane.
+//! Remote divergence and exported-head tests ([`exported_ahead`]) for `bit reset` on a lane.
 //!
 //! Verifies diverged exported lanes, sparse fork history, and `import` before local `snap`.
 

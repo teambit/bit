@@ -1,4 +1,4 @@
-//! Option handling tests for `bit fork` (`--path`, `--scope`, `--preserve`, `--no-link`, `--refactor`).
+//! Option handling tests for `bit fork` (`--path`, `--scope`, `--preserve`, `--no-link`, `--refactor`: [`local_path_scope_and_preserve_copy_source_without_renaming_its_identifiers`]).
 //!
 //! Validates AST refactoring, `--skip-config`, `--env`, and occupied target path errors.
 

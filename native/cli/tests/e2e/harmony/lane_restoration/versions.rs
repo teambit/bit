@@ -1,4 +1,4 @@
-//! Version retention and historical file restoration tests for `bit lane revert`.
+//! Version retention and historical file restoration tests for `bit lane revert` ([`mixed_revert_keeps_the_existing_version_and_restores_historical_file_bytes`]).
 //!
 //! Covers mixed reverts with deleted components and local-only lane history checkouts.
 

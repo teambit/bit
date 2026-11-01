@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/import-non-main-files.e2e.ts` for internal non-main file import issues.
+//! Port of `e2e/harmony/import-non-main-files.e2e.ts` for internal non-main file import issues ([`importing_non_main_js_file_shows_issue_and_path`]).
 //!
 //! Verifies `ImportNonMainFiles` issue detection on `.js` imports and exemption on `.json` imports.
 

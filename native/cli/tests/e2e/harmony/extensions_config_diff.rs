@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/extensions-config-diff.e2e.ts` for extension configuration diff parity.
+//! Port of `e2e/harmony/extensions-config-diff.e2e.ts` for extension configuration diff parity ([`re_eject_and_check_status_before`], [`extensions_config_diff_add_remove_and_change`]).
 //!
 //! Verifies status and `bit diff` output when adding, removing, or modifying extension configs.
 

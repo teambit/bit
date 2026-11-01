@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-import.e2e.ts` for `bit lane import` and `bit switch` parity across lanes.
+//! Port of `e2e/harmony/lanes/lane-import.e2e.ts` for `bit lane import` and `bit switch` parity across lanes ([`update_components_from_remote_lane`]).
 
 use crate::helper::{Helper, len, parse};
 

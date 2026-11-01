@@ -1,4 +1,4 @@
-//! Real released file-backed HTTP scope; private `bit fork` capture must not import objects.
+//! Real released file-backed HTTP scope; private `bit fork` capture must not import objects ([`http_single_fork_preserves_private_capture_and_original_provenance`]).
 //!
 //! Ensures single and pattern HTTP forks materialize components without polluting `.bit/objects`.
 

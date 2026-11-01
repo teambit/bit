@@ -1,4 +1,4 @@
-//! Provider callback and configuration mutation tests for `bit lane import` and `bit switch`.
+//! Provider callback and configuration mutation tests for `bit lane import` and `bit switch` ([`active_lane_import_preserves_real_provider_startup_and_config_mutation`]).
 //!
 //! Verifies provider startup, `onLoad`/`preInstall`/`postInstall`/`compile` ordering, and throttling.
 

@@ -1,4 +1,4 @@
-//! A later partition never rolls back the successful existing-component revert.
+//! A later partition never rolls back the successful existing-component revert ([`corrupt_restored_source_fails_after_the_existing_component_revert_is_persisted`]).
 //!
 //! Verifies partial persistence when phase-two source inflation or `onLoad` fails during revert.
 

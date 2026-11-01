@@ -1,4 +1,4 @@
-//! Local selection precedes remote selection; the released handler does not deduplicate.
+//! Local selection precedes remote selection; the released handler does not deduplicate ([`local_pattern_forks_both_sources_in_the_selected_scope`], [`mixed_pattern_finishes_local_copies_before_remote_copies`]).
 //!
 //! Verifies pattern matching order and partial failure behavior across workspace and remote scopes.
 

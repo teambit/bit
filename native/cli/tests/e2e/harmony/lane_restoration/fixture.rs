@@ -1,4 +1,4 @@
-//! Shared lane history restoration fixture and oracle comparison helpers.
+//! Shared lane history restoration fixture ([`Fixture`], [`initial`]) and oracle comparison helpers.
 //!
 //! Provides [`Fixture`] construction, deleted-component state, and history JSON parsing.
 

@@ -1,4 +1,4 @@
-//! The original peer `+` assertion excludes resolver errors, not all installation failures.
+//! The original peer `+` assertion excludes resolver errors, not all installation failures ([`patterned_lane_import_resolves_peer_plus_before_graceful_unpublished_peer_failure`]).
 //!
 //! Verifies patterned `lane import` resolves `+` peer versions to `*` before installation.
 

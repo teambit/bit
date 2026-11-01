@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/env.e2e.ts` for native `bit env` parity.
+//! Port of `e2e/harmony/env.e2e.ts` for native `bit env` parity ([`create_bit_env_plugin_env`], [`env_set_and_tag_with_variants`]).
 //!
 //! Covers `env set`, `env unset`, `env replace`, `.bit-env` plugins, and `empty-env`.
 

@@ -1,4 +1,4 @@
-//! Complete central-export commands use the released parser and server publication path.
+//! Complete central-export commands use the released parser and [`Hub`] server publication path ([`comparison`]).
 //!
 //! Validates main and lane central-hub exports, retries, subset acknowledgments, and job URLs.
 

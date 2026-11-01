@@ -1,4 +1,4 @@
-//! Only validated duration tokens on named released completion lines vary.
+//! Only validated duration tokens ([`durations`], [`completion`], [`completion_duration`]) on named released completion lines vary.
 //!
 //! Provides duration token normalization for `bit switch` and `bit lane import` comparisons.
 

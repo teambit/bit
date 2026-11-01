@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/eject-harmony.e2e.ts` for native `bit eject` parity.
+//! Port of `e2e/harmony/eject-harmony.e2e.ts` for native `bit eject` parity ([`eject_components_with_dependencies_after_export`]).
 //!
 //! Validates ejecting exported components with default options and `--keep-files`.
 

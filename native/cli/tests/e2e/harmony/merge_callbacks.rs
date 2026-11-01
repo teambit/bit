@@ -1,4 +1,4 @@
-//! One retained published provider session spans native merge, pre-snap, and builder phases.
+//! One retained published provider session spans native merge, pre-snap, and builder phases ([`artifacts`], [`fixture`], [`original`], [`package`]).
 //! Covers component merge and lane merge callback retention and `--build` execution.
 
 mod artifacts;

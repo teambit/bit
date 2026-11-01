@@ -1,4 +1,4 @@
-//! Actual published remote `bit doctor` queries and result rendering match across transports.
+//! Actual published remote `bit doctor` queries and result rendering match across transports ([`server`], [`response`], [`http`]).
 //!
 //! Covers HTTP and file-remote doctor invocations, error handling, and request headers.
 

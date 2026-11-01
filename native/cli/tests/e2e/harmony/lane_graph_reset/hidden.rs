@@ -1,4 +1,4 @@
-//! Hidden members are seeded through the released bare-scope snap API.
+//! Hidden members ([`seeded`]) are seeded through the released bare-scope snap API.
 //!
 //! Verifies that `bit reset` rewinds `updateDependents` hidden cascades without altering `.bitmap`.
 

@@ -1,4 +1,4 @@
-//! Miscellaneous `bit init`, `bit import`, and performance end-to-end tests ported from:
+//! Miscellaneous `bit init`, `bit import`, and performance end-to-end tests ([`extract_metric`], [`invalid_bitmap_and_invalid_workspace_jsonc_status_errors`]) ported from:
 //! - `e2e/commands/import.e2e.ts`
 //! - `e2e/commands/init.e2e.ts`
 //! - `e2e/performance/filesystem-read.e2e.ts`

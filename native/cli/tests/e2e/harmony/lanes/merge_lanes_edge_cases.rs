@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-edge-cases.e2e.ts` for diverged lane merge edge cases.
+//! Port of `e2e/harmony/lanes/merge-lanes-edge-cases.e2e.ts` for diverged lane merge edge cases ([`merge_a_diverged_lane_into_main_with_tag`]).
 //! Covers `--tag` merges, failed auto-snap rollback, and empty lane merges.
 
 use crate::helper::{Helper, parse};

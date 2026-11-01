@@ -1,4 +1,4 @@
-//! `bit doctor` built-in diagnoses, table rendering, and diagnostic archives.
+//! `bit doctor` built-in diagnoses, table rendering, and diagnostic archives ([`proxy`], [`recovery`], [`compare`]).
 //!
 //! Validates diagnosis listing, git executable checks, scope integrity, and archive saving.
 

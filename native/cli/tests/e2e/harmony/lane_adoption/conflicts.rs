@@ -1,4 +1,4 @@
-//! Merge conflict and workspace state tests during `bit lane import` and `bit switch`.
+//! Merge conflict and workspace state tests ([`fixture`], [`automatic_conflict_preserves_local_bytes_and_current_lane`]) during `bit lane import` and `bit switch`.
 //!
 //! Validates automatic conflict rejection and explicit `--auto-merge-resolve` strategies.
 

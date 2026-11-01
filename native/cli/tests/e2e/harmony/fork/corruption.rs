@@ -1,4 +1,4 @@
-//! Broken remote `Source` objects must preserve the released failure and complete publication prefix.
+//! Broken remote `Source` objects ([`source_object`]) must preserve the released failure and complete publication prefix.
 //!
 //! Validates error reporting and clean workspace state when remote source blobs are missing or corrupt.
 

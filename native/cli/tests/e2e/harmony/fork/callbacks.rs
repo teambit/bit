@@ -1,4 +1,4 @@
-//! Configured provider callback tests for `bit fork`.
+//! Configured provider callback tests ([`configured`]) for `bit fork`.
 //!
 //! Verifies `onLoad` and `onAdd` hook ordering and error handling during component forking.
 

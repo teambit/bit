@@ -1,4 +1,4 @@
-//! Remote component `bit fork` and provenance retention tests.
+//! Remote component `bit fork` and provenance retention tests ([`remote_fork_defaults_the_target_name_and_retains_scoped_original_provenance`]).
 //!
 //! Covers single-ID, wildcard, and comma-separated remote forks and validation errors.
 

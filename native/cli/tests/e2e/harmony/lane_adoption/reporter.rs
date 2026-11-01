@@ -1,4 +1,4 @@
-//! A workspace-only subscriber stays unloaded during released empty-workspace adoption.
+//! A workspace-only subscriber ([`configure`]) stays unloaded during released empty-workspace adoption.
 //!
 //! Configures a linked workspace reporter aspect and verifies it is not invoked on empty switch.
 

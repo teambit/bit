@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/export-harmony.e2e.ts` for native `bit export` parity.
+//! Port of `e2e/harmony/export-harmony.e2e.ts` for native `bit export` parity ([`export_reinit_remote_scope_tag_and_export`], [`export_tag_and_export`]).
 //!
 //! Covers re-initialized remote scopes, multi-tag exports, and out-of-date version history.
 

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-from-lane.e2e.ts` for branching a lane from another lane.
+//! Port of `e2e/harmony/lanes/lane-from-lane.e2e.ts` for branching a lane from another lane ([`main_to_lane_a_to_lane_b_branching_and_switching`]).
 //!
 //! Covers `main` -> `lane-a` -> `lane-b` branching, foreign-lane snap guards, and detached heads.
 
