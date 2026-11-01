@@ -1,3 +1,5 @@
+//! Base source loading and three-way file merge execution for checkout preparation.
+
 use super::{
     super::{invalid, plan, wire},
     current, sources,

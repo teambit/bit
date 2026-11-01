@@ -1,4 +1,4 @@
-//! `ForkingMain.extractDeps` projects captured resolver dependencies without importing components.
+//! `ForkingMain.extractDeps` projection of captured resolver dependencies without importing components.
 use super::unsupported;
 use serde_json::{Value, json};
 use std::io;

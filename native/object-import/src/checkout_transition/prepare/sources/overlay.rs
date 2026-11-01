@@ -1,3 +1,5 @@
+//! Version manifest verification and `Source` resolution against in-memory import overlays.
+
 #[cfg(test)]
 mod tests;
 

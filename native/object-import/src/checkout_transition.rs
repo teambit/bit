@@ -1,3 +1,5 @@
+//! Stateful checkout transition state machine for preparing, applying, and materializing checkout plans.
+
 mod apply;
 mod materialize;
 mod plan;

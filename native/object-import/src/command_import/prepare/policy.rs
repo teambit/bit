@@ -1,4 +1,6 @@
 //! Read imported component policy metadata through the retained object proofs.
+//!
+//! Resolves `Version` objects for inbound policy inspection from the overlay or local scope.
 use super::{PreparedImport, Target, invalid, read_model, read_version, version_ref};
 use serde_json::Value;
 use std::io;

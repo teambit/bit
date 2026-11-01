@@ -1,4 +1,6 @@
 //! Retained public import traversal settings.
+//!
+//! Entrypoints for inbound, graph-inbound, recovery, and status import preparation with virtual remotes.
 use super::{PreparedImport, Target, VirtualRemote};
 use std::{io, path::Path};
 

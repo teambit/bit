@@ -1,4 +1,4 @@
-//! Retained source copies for `ForkingMain`; originals and model heads are never advanced.
+//! Retained source copies for `ForkingMain`; original files and model heads are never advanced.
 pub use policy::dependency_policy;
 pub use refactor::Refactor;
 pub use remote::RemoteCapture;

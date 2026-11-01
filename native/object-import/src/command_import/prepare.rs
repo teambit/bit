@@ -1,3 +1,5 @@
+//! Read-only import preparation across local scopes, `file://` remotes, and virtual HTTP remotes.
+
 pub(super) mod options;
 
 mod ancestors;

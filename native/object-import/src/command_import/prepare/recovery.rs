@@ -1,4 +1,6 @@
 //! Recovery's cache=true importer keeps locally staged components without an origin refresh.
+//!
+//! Partitions recovery targets into locally staged components and remote refresh candidates.
 use super::{PreparedImport, Target, invalid, object_hash, read_model, transfer, version_ref};
 use serde_json::Value;
 use std::{io, path::Path};

@@ -1,4 +1,4 @@
-//! Plan the local bitmap and file effects of `bit delete --silent` on main or an exported lane.
+//! Plan the local `.bitmap` and file effects of `bit delete --silent` on `main` or an exported lane.
 
 pub use batch::Batch;
 pub use policy::{DependencyComponent, Pin};

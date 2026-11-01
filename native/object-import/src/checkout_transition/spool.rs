@@ -1,3 +1,5 @@
+//! Packed checkout plan body spooling into temporary `.checkout-pack` files.
+
 use super::plan::Body;
 use std::{
     fs::OpenOptions,

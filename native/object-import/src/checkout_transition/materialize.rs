@@ -1,3 +1,5 @@
+//! Workspace file materialization from prepared checkout plan buffers.
+
 use super::{invalid, plan, wire};
 use serde_json::{Value, json};
 use std::{

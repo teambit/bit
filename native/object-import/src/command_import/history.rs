@@ -1,3 +1,5 @@
+//! `VersionHistory` object population and ancestor graph traversal during command import.
+
 #[cfg(test)]
 mod tests;
 

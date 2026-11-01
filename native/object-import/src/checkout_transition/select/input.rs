@@ -1,3 +1,5 @@
+//! Wire request types and validation for checkout selection transitions.
+
 use super::invalid;
 use serde::Deserialize;
 use serde_json::Value;

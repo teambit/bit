@@ -1,3 +1,5 @@
+//! Target `.bitmap` row and aspect configuration assembly for component forks.
+
 use super::{
     Options,
     identity::{Identity, source_id},

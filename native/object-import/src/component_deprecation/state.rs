@@ -1,3 +1,5 @@
+//! Local `.bitmap` and model metadata inspection for component deprecation state.
+
 use super::{ASPECT, Plan, Value, invalid, selection};
 use std::io;
 pub(super) fn metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {

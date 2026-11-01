@@ -1,3 +1,5 @@
+//! Untargeted tracked file removal calculation for checkout plans.
+
 use super::{invalid, plan};
 use serde::Deserialize;
 use serde_json::{Value, json};

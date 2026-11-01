@@ -1,3 +1,5 @@
+//! Transitive `flattenedDependencies` closure traversal and unbuilt version filtering for import.
+
 use super::{
     PreparedImport, Target, identity, invalid, object_hash, read_model, read_version, receive,
     remote, transfer::receive_dependency, version_ref,

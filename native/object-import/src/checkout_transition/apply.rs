@@ -1,3 +1,5 @@
+//! Checkout plan application and conflict resolution strategy evaluation.
+
 mod effects;
 #[cfg(test)]
 mod tests;

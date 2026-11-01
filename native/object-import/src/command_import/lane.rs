@@ -1,5 +1,7 @@
 //! Lane identity and object reads share the command import capture. None of
 //! these operations publishes an object or changes the workspace's active lane.
+//!
+//! Validates lane records, resolves remote lane heads, and stages imported lane updates.
 pub(in crate::command_import) mod merge;
 pub(crate) use tracking::{SwitchTracking, lane_index_id, parse_lane_id};
 

@@ -1,3 +1,5 @@
+//! Zlib-compressed loose object encoding and atomic scope publication for prepared imports.
+
 #[cfg(test)]
 mod tests;
 

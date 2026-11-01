@@ -1,3 +1,5 @@
+//! Remote file-scope and HTTP-tar object extraction for component fork source capture.
+
 use super::super::{required, unsupported};
 use crate::{component_recover::probe::objects as shared, component_tracking::observe::Observed};
 use bit_client_transfer::tar::ObjectItem;

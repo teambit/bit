@@ -1,5 +1,7 @@
 //! A retained, read-only checkout refresh plan. The command owner decides when
 //! an eligible command may publish it; planning never writes to either scope.
+//!
+//! Coordinates object capture, version-history population, lane merging, and atomic publication.
 pub(crate) mod lane;
 #[cfg(test)]
 pub(crate) mod tests;

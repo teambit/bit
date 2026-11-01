@@ -1,3 +1,5 @@
+//! Multi-step component version selection state machine for checkout transitions.
+
 mod input;
 #[cfg(test)]
 mod tests;

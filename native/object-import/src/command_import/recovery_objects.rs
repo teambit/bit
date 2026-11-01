@@ -1,4 +1,6 @@
 //! Accept only the exact component bytes already published by the recovery owner.
+//!
+//! Verifies on-disk loose object files and updates the import capture proofs after recovery writes.
 use super::{PreparedImport, invalid};
 use std::{fs, io, path::Path};
 

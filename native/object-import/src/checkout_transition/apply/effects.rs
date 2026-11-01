@@ -1,3 +1,5 @@
+//! Three-way merge row effect application onto checkout file lists and status maps.
+
 use super::{
     super::{invalid, plan},
     File, error_path, path,

@@ -1,3 +1,5 @@
+//! Scope settings validation and `file://` / virtual remote directory resolution for command import.
+
 use super::{PreparedImport, invalid, object_hash};
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};

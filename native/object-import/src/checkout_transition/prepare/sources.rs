@@ -1,3 +1,5 @@
+//! Target and base `Source` object loading with optional import overlay support.
+
 pub(super) use overlay::body;
 mod overlay;
 

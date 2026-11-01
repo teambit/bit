@@ -1,3 +1,4 @@
+//! Remote lane object preparation, missing-object staging, and component closure capture.
 mod fetch;
 mod history;
 

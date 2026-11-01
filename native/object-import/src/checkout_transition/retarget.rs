@@ -1,3 +1,5 @@
+//! Checkout plan retargeting to a new `Version` manifest and spool directory.
+
 #[cfg(test)]
 mod tests;
 

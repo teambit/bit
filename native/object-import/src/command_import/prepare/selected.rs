@@ -1,3 +1,5 @@
+//! Unexported component synchronization and explicit version import preparation.
+
 use super::{
     PreparedImport, Target, identity, invalid, object_hash, read_model, read_version, receive,
     remote, version_ref,

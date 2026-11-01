@@ -1,3 +1,5 @@
+//! Component, `Version`, `VersionHistory`, and `Source` object reception into the import overlay.
+
 use super::{
     PreparedImport, Target, history, identity, invalid, merge, object_hash, read_model,
     read_version,

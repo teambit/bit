@@ -1,3 +1,5 @@
+//! Component identity extraction and pattern selection for deprecation metadata edits.
+
 use super::{Value, invalid};
 use std::io;
 pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {

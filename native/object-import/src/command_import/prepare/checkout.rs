@@ -1,4 +1,6 @@
 //! Canonical remote-lane seed selection for checkout's initial object import.
+//!
+//! Prepares lane heads, off-lane `.bitmap` versions, and transitive dependencies for checkout/fetch.
 use super::{PreparedImport, Target, invalid, remote};
 use crate::command_import::lane::{Id, Record, entries};
 use std::{collections::HashSet, io, path::Path};

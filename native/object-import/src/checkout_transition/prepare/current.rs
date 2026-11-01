@@ -1,3 +1,5 @@
+//! Current workspace file loading, snapshot verification, and SHA-1 hashing for checkout plans.
+
 mod parallel;
 #[cfg(test)]
 mod tests;

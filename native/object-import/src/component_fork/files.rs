@@ -1,3 +1,5 @@
+//! Source file inventory validation and byte preparation for component forks.
+
 use super::{
     Options,
     identity::{Identity, leaf, source_id},

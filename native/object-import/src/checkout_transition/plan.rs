@@ -1,3 +1,5 @@
+//! Prepared checkout plan state, body spooling, and token lifecycle management.
+
 use super::{invalid, wire};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};

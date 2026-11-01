@@ -1,4 +1,4 @@
-//! One markRemoveComps bitmap publication for a selected component batch.
+//! One `markRemoveComps` `.bitmap` publication for a selected component batch.
 use super::{DependencyComponent, Plan, Scope, invalid};
 use crate::{component_remove::backup_bitmap, inspection};
 use serde_json::Value;

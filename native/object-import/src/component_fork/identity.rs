@@ -1,3 +1,5 @@
+//! Target component identity, scope, directory, and main-file resolution for component forks.
+
 use super::{Options, invalid, unsupported};
 use crate::component_tracking::observe::Observed;
 use serde_json::Value;

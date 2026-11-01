@@ -1,3 +1,5 @@
+//! Checkout plan preparation: target source loading, current file hashing, and three-way merge rows.
+
 pub(super) mod sources;
 
 mod current;

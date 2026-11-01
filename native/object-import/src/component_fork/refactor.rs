@@ -1,4 +1,4 @@
-//! Retained whole-component writes for fork dependency and bulk string replacements.
+//! Retained whole-component file writes for fork dependency and bulk string replacements.
 use super::{files, required, unsupported};
 use crate::{component_rename::copy_refactor, component_tracking::observe::Observed};
 use serde_json::Value;
