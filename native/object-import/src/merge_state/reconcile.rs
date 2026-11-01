@@ -76,15 +76,19 @@ fn previous(input: &Plan) -> io::Result<&str> {
     }
     Ok(previous)
 }
+fn trimmed_parents(input: &Plan) -> Vec<String> {
+    input.current_parents
+        .iter()
+        .map(|entry| entry.trim().to_owned())
+        .collect()
+}
+fn needs_merge_message(input: &Plan) -> bool {
+    input.current_message
+        .as_deref()
+        .is_none_or(|msg| msg.trim().is_empty())
+}
 fn parents(input: &Plan, parent: &str) -> Vec<String> {
-    if input.is_legacy {
-        input.current_parents
-            .iter()
-            .map(|entry| entry.trim().to_owned())
-            .collect()
-    } else {
-        vec![parent.into()]
-    }
+    if input.is_legacy { trimmed_parents(input) } else { vec![parent.into()] }
 }
 fn legacy_unrelated(input: &Plan, lane: &Value) -> io::Result<Value> {
     let previous = previous(input)?;
@@ -108,31 +112,19 @@ fn squashed(input: &Plan, lane: &Value) -> io::Result<Value> {
         .first()
         .map(|val| val.trim())
         .ok_or_else(|| invalid("squashed snapshot requires first parent"))?;
-    let parents: Vec<_> = input.current_parents
-        .iter()
-        .map(|entry| entry.trim().to_owned())
-        .collect();
-    let set_message = input.current_message
-        .as_ref()
-        .is_none_or(|msg| msg.trim().is_empty());
-    Ok(json!({"mode":"squashed","parents":parents,
+    Ok(json!({"mode":"squashed","parents":trimmed_parents(input),
         "squashed":{"previousParents":[parent,input.entry.head.trim()],"lane":lane},
-        "setMergeMessage":set_message}))
+        "setMergeMessage":needs_merge_message(input)}))
 }
 fn merged(input: &Plan) -> Value {
-    let mut parents: Vec<_> = input.current_parents
-        .iter()
-        .map(|entry| entry.trim().to_owned())
-        .collect();
+    let mut parents = trimmed_parents(input);
+    let head = input.entry.head.trim();
     if !input.is_legacy
         && !parents
             .iter()
-            .any(|parent| parent.eq_ignore_ascii_case(input.entry.head.trim()))
+            .any(|parent| parent.eq_ignore_ascii_case(head))
     {
-        parents.push(input.entry.head.trim().to_owned());
+        parents.push(head.to_owned());
     }
-    let set_message = input.current_message
-        .as_ref()
-        .is_none_or(|msg| msg.trim().is_empty());
-    json!({"mode":"merge","parents":parents,"setMergeMessage":set_message})
+    json!({"mode":"merge","parents":parents,"setMergeMessage":needs_merge_message(input)})
 }

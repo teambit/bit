@@ -21,7 +21,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let current =
         plans.get(request.token.trim()).ok_or_else(|| invalid("stale inspection token"))?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(request.model_files.len());
     validate_request(&request, &mut seen)?;
     let total = current
         .iter()
@@ -35,13 +35,13 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
         .iter()
         .map(|file| (&file.relative_path, file))
         .collect();
-    let mut files = Vec::new();
+    let mut files = Vec::with_capacity(request.model_files.len() + current.len());
     for (model, body) in request.model_files.into_iter().zip(bodies) {
         let right = by_path.get(&model.relative_path).map(|file| file.contents.clone());
         files.push((model.relative_path, Some(body), right));
     }
     for file in current.iter() {
-        if seen.insert(file.relative_path.clone()) {
+        if !seen.contains(&file.relative_path) {
             files.push((file.relative_path.clone(), None, Some(file.contents.clone())));
         }
     }

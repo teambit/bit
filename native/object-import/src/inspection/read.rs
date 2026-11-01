@@ -45,7 +45,7 @@ pub(super) fn capture(
     if !request.owned_memory {
         validate_snapshot_directory(&request.snapshot_directory)?;
     }
-    let mut paths = HashSet::new();
+    let mut paths = HashSet::with_capacity(request.files.len());
     for file in &request.files {
         relative(&file.relative_path)?;
         if !paths.insert(&file.relative_path) {

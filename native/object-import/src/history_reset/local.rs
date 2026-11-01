@@ -97,7 +97,7 @@ fn labels(
         + cached
             .as_ref()
             .map_or(0, |value| value.len() * 6);
-    let mut labels = Vec::new();
+    let mut labels = Vec::with_capacity(selected.len());
     for selected_index in selected {
         let value = label(index, &request.source_only[*selected_index], cached);
         total += value.len() * 6 + 3;
@@ -170,7 +170,7 @@ fn validate(request: &Select) -> io::Result<()> {
     }
     refs(&request.source_only)?;
     bound(request.metadata.len())?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(request.metadata.len());
     for row in &request.metadata {
         let trimmed = row.hash.trim();
         crate::merge_history::hash(trimmed)?;
@@ -188,7 +188,7 @@ fn validate(request: &Select) -> io::Result<()> {
 
 fn tags(rows: &[Tag]) -> io::Result<()> {
     bound(rows.len())?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(rows.len());
     for row in rows {
         text(&row.label)?;
         crate::merge_history::hash(&row.hash)?;

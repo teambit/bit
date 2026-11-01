@@ -10,7 +10,7 @@ pub(crate) fn distance(
     target: Option<&str>,
 ) -> io::Result<Value> {
     let versions: Vec<graph::Version> =
-        serde_json::from_value(records.clone()).map_err(|_| invalid("status history records"))?;
+        serde::Deserialize::deserialize(records).map_err(|_| invalid("status history records"))?;
     graph::validate(&versions)?;
     let source = source
         .map(str::trim)

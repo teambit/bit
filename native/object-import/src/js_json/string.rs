@@ -49,6 +49,9 @@ fn single(writer: &mut Writer, unit: u16) -> io::Result<()> {
         ];
         return writer.bytes(&hex);
     }
+    if unit < 0x80 {
+        return writer.bytes(&[unit as u8]);
+    }
     unicode(writer, u32::from(unit))
 }
 

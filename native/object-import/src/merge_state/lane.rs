@@ -34,10 +34,7 @@ struct Options {
 }
 
 pub(super) fn plan(input: &Plan) -> io::Result<Value> {
-    validate(input)?;
-    let has_visible_head = input.lane.existing_visible_head
-        .as_deref()
-        .is_some_and(|val| !val.trim().is_empty());
+    let has_visible_head = validate(input)?;
     let hidden =
         input.lane.explicit_hidden.unwrap_or(input.lane.existing_hidden && !has_visible_head);
     let mut output = json!({
@@ -57,7 +54,7 @@ pub(super) fn plan(input: &Plan) -> io::Result<Value> {
     }
     Ok(output)
 }
-fn validate(input: &Plan) -> io::Result<()> {
+fn validate(input: &Plan) -> io::Result<bool> {
     hash(input.version.trim())?;
     hash(input.version_hash.trim())?;
     for reference in [&input.parent, &input.lane.existing_visible_head, &input.lane.model_head]
@@ -83,5 +80,5 @@ fn validate(input: &Plan) -> io::Result<()> {
     if !has_parent && (has_visible_head || has_model_head) {
         return Err(invalid("lane snapshot requires previous version"));
     }
-    Ok(())
+    Ok(has_visible_head)
 }

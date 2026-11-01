@@ -30,16 +30,17 @@ pub(super) fn policy(input: &Policy) -> io::Result<Value> {
     let Some(parents) = &input.current_parents else {
         return Ok(json!({"action":"requireVersion"}));
     };
-    let has_common = input.common
+    let common = input.common
         .as_deref()
-        .is_some_and(|val| !val.trim().is_empty());
-    if input.target_only.len() == 1 && has_common && parents.len() == 1 {
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
+    if input.target_only.len() == 1 && common.is_some() && parents.len() == 1 {
         return Ok(json!({"action":"skip"}));
     }
-    if !has_common && !input.current_lane_default && !input.model.main_model_known {
+    if common.is_none() && !input.current_lane_default && !input.model.main_model_known {
         return Ok(json!({"action":"requireMainModel"}));
     }
-    rewrite(input, parents)
+    rewrite(input, parents, common)
 }
 fn eligible(input: &Policy) -> bool {
     if input.source_only.is_empty() {
@@ -48,12 +49,8 @@ fn eligible(input: &Policy) -> bool {
         !input.target_only.is_empty() && input.detach_head
     }
 }
-fn rewrite(input: &Policy, previous: &[String]) -> io::Result<Value> {
+fn rewrite(input: &Policy, previous: &[String], common: Option<&str>) -> io::Result<Value> {
     let legacy = input.model.is_legacy.ok_or_else(|| invalid("missing Version schema policy"))?;
-    let common = input.common
-        .as_deref()
-        .map(str::trim)
-        .filter(|val| !val.is_empty());
     let main_head = input.model.main_head
         .as_deref()
         .map(str::trim)

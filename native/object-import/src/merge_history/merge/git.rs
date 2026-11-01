@@ -130,15 +130,14 @@ fn workspace_merge_for_platform(
     Ok((crate::checkout::eol::normalize(output.as_bytes().to_vec(), windows), conflict.is_some()))
 }
 fn interpret(status: std::process::ExitStatus, stdout: &[u8], stderr: &[u8]) -> io::Result<Value> {
-    let stdout = String::from_utf8_lossy(stdout).into_owned();
     if status.success() {
-        Ok(json!({"output":stdout,"conflict":null}))
+        Ok(json!({"output":String::from_utf8_lossy(stdout).into_owned(),"conflict":null}))
     } else if status
         .code()
         .is_some_and(|code| code != 0)
         && !stdout.is_empty()
     {
-        Ok(json!({"output":null,"conflict":stdout}))
+        Ok(json!({"output":null,"conflict":String::from_utf8_lossy(stdout).into_owned()}))
     } else if status.code() == Some(255)
         && String::from_utf8_lossy(stderr).contains("Cannot merge binary files")
     {

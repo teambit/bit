@@ -63,11 +63,7 @@ fn apply_metadata(file: &fs::File, metadata: &fs::Metadata) -> io::Result<()> {
 /// starts publishing unrelated files. Opening here never truncates the file.
 pub(crate) fn validate_existing(path: &Path) -> io::Result<()> {
     validate_path(path)?;
-    let metadata = fs::symlink_metadata(path)?;
-    if metadata.file_type().is_symlink() || !metadata.is_file() {
-        return Err(invalid("unsupported merge state file"));
-    }
-    drop(existing_file(path, &metadata)?);
+    drop(open_existing(path, &fs::symlink_metadata(path)?)?);
     Ok(())
 }
 fn open(path: &Path, existing: Option<&fs::Metadata>) -> io::Result<fs::File> {
@@ -78,6 +74,9 @@ fn open(path: &Path, existing: Option<&fs::Metadata>) -> io::Result<fs::File> {
             .create_new(true)
             .open(path);
     };
+    open_existing(path, metadata)
+}
+fn open_existing(path: &Path, metadata: &fs::Metadata) -> io::Result<fs::File> {
     if metadata.file_type().is_symlink() || !metadata.is_file() {
         return Err(invalid("unsupported merge state file"));
     }

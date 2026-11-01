@@ -77,10 +77,10 @@ fn file_remote(root: &Path, global: &Path, scope: &str) -> io::Result<bool> {
 
 fn document(path: &Path) -> io::Result<Value> {
     let metadata = fs::symlink_metadata(path)?;
-    if metadata.file_type().is_symlink() || !metadata.is_file() {
+    if metadata.file_type().is_symlink() || !metadata.is_file() || metadata.len() > 1024 * 1024 {
         return Err(super::invalid());
     }
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
     fs::File::open(path)?
         .take(1024 * 1024 + 1)
         .read_to_end(&mut bytes)?;

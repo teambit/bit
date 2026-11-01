@@ -205,15 +205,13 @@ fn readme_row_matches(
         && (readme_scope.is_none() || row_scope.is_none() || row_scope == readme_scope)
 }
 
-pub(super) fn lane_row_identity(row: &Value) -> Option<(String, String)> {
+fn lane_row_parts(row: &Value) -> Option<(&str, &str)> {
     if let Some(raw) = row["id"].as_str().or_else(|| row.as_str()) {
         let raw = raw.trim();
         let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
         let (scope, name) = bare.split_once('/')?;
         let (scope, name) = (scope.trim(), name.trim());
-        return (!scope.is_empty() && !name.is_empty()).then(|| {
-            (name.to_owned(), scope.to_owned())
-        });
+        return (!scope.is_empty() && !name.is_empty()).then_some((name, scope));
     }
     let name = row["id"]["name"]
         .as_str()
@@ -223,12 +221,15 @@ pub(super) fn lane_row_identity(row: &Value) -> Option<(String, String)> {
         .as_str()
         .map(str::trim)
         .filter(|val| !val.is_empty())?;
-    Some((name.to_owned(), scope.to_owned()))
+    Some((name, scope))
+}
+
+pub(super) fn lane_row_identity(row: &Value) -> Option<(String, String)> {
+    lane_row_parts(row).map(|(name, scope)| (name.to_owned(), scope.to_owned()))
 }
 
 pub(super) fn matches_lane_row(row: &Value, name: &str, scope: &str) -> bool {
-    lane_row_identity(row)
-        .is_some_and(|(row_name, row_scope)| row_name == name && row_scope == scope)
+    lane_row_parts(row) == Some((name, scope))
 }
 
 pub(super) fn history_components(lane: &Value) -> io::Result<Vec<String>> {

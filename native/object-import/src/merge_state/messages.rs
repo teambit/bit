@@ -12,7 +12,7 @@ pub(super) fn read(directory: &Path, references: &[String]) -> io::Result<Value>
     let mut messages = Vec::with_capacity(references.len());
     for reference in references {
         let version = reader.read(reference.trim())?;
-        messages.push(json!(version_log_message(&version)));
+        messages.push(Value::String(version_log_message(&version).to_owned()));
     }
     Ok(json!({"messages":messages}))
 }

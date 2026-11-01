@@ -69,8 +69,10 @@ fn valid_history_entry(id: &str, entry: &Value) -> bool {
 }
 
 pub(crate) fn hash(lane_hash: &str) -> String {
-    let lane_hash = lane_hash.trim();
-    format!("{:x}", Sha1::digest(format!("{lane_hash}:LaneHistory").as_bytes()))
+    let mut sha1 = Sha1::new();
+    sha1.update(lane_hash.trim().as_bytes());
+    sha1.update(b":LaneHistory");
+    format!("{:x}", sha1.finalize())
 }
 
 fn invalid() -> io::Error {

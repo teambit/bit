@@ -79,9 +79,7 @@ pub fn stringify(value: &Value, pretty: bool) -> io::Result<Option<Vec<u8>>> {
     if matches!(value, Value::Undefined) {
         return Ok(None);
     }
-    let mut writer = writer::Writer::new(pretty);
-    writer.value(value, 0)?;
-    Ok(Some(writer.finish()))
+    stringify_indented(value, if pretty { 2 } else { 0 }).map(Some)
 }
 
 pub fn stringify_indented(value: &Value, spaces: usize) -> io::Result<Vec<u8>> {

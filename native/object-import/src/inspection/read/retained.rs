@@ -51,14 +51,15 @@ fn observed<'a>(
         .filter(|hash| !hash.is_empty())
         .ok_or_else(|| invalid("inspection retained raw hash"))?;
     crate::merge_history::hash(expected)?;
+    let state = snapshots.ok_or_else(|| invalid("inspection retained workspace observation"))?;
     let snapshot_hash = file.snapshot_hash
         .as_deref()
         .map(str::trim)
         .filter(|hash| !hash.is_empty())
         .ok_or_else(|| invalid("inspection retained workspace observation"))?;
     crate::merge_history::hash(snapshot_hash)?;
-    snapshots
-        .and_then(|state| state.get(token, &file.path, expected))
+    state
+        .get(token, &file.path, expected)
         .filter(|snapshot| {
             snapshot.raw_bytes.max(snapshot.contents.len()) <= maximum
                 && snapshot_hash.eq_ignore_ascii_case(snapshot.snapshot_hash.trim())

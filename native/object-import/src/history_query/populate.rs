@@ -236,7 +236,7 @@ impl Trace<'_> {
         if self.stack.len() + parents.len() > 65536 {
             return Err(invalid("history population stack limit"));
         }
-        self.stack.push((hash.to_owned(), row.clone(), true));
+        self.stack.push((hash.to_owned(), Value::Null, true));
         for parent in parents.iter().rev() {
             self.stack.push((
                 parent

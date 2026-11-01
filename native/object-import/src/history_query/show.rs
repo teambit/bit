@@ -68,8 +68,9 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
         {
             let hash = hash.trim();
             crate::merge_history::hash(hash)?;
-            if seen.insert(hash.to_ascii_lowercase()) {
-                hashes.push(hash.to_ascii_lowercase());
+            let lower = hash.to_ascii_lowercase();
+            if seen.insert(lower.clone()) {
+                hashes.push(lower);
             }
         }
     }
@@ -202,8 +203,8 @@ pub(super) fn toposort(input: Value) -> io::Result<Value> {
     if request.nodes.len() > 4096 || request.edges.len() > 65536 {
         return Err(invalid("history graph bounds"));
     }
-    let mut seen = HashSet::new();
-    let mut nodes = Vec::new();
+    let mut seen = HashSet::with_capacity(request.nodes.len());
+    let mut nodes = Vec::with_capacity(request.nodes.len());
     for (index, raw_id) in request.nodes.into_iter().enumerate() {
         let id = raw_id.trim().to_owned();
         if id.is_empty() || raw_id.len() > 32768 || !seen.insert(id.clone()) {

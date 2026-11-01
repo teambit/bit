@@ -35,7 +35,6 @@ pub(super) fn validate_mode(request: &wire::Begin, state: &State) -> io::Result<
         return Err(invalid("inspection memory-only capture conflicts with owned memory"));
     }
     if request.memory_only
-        && !request.owned_memory
         && request.files
             .iter()
             .any(|file| {

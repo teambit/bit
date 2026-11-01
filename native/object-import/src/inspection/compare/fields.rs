@@ -95,7 +95,7 @@ pub(super) fn align(left: &Js, right: &mut Js) -> io::Result<Value> {
     Ok(json!({"dependencyVersions":versions,"fileMetadata":metadata}))
 }
 fn file_positions(model: &[Js]) -> HashMap<Vec<u16>, usize> {
-    let mut positions = HashMap::new();
+    let mut positions = HashMap::with_capacity(model.len());
     for (index, row) in model.iter().enumerate() {
         if let Ok(path) = text(get(row, "relativePath")) {
             positions.entry(path).or_insert(index);
@@ -140,13 +140,15 @@ pub(super) fn filter_bitmap(value: &mut Js) -> io::Result<()> {
 }
 
 fn align_dependency(row: &mut Js, model: &[Js]) -> io::Result<Option<usize>> {
-    if get(get(row, "id"), "version").truthy()? {
+    let row_id = get(row, "id");
+    if get(row_id, "version").truthy()? {
         return Ok(None);
     }
-    let key = id(get(row, "id"), false)?;
+    let key = id(row_id, false)?;
     for (index, other) in model.iter().enumerate() {
-        if id(get(other, "id"), false)? == key {
-            set(row, "id", get(other, "id").clone())?;
+        let other_id = get(other, "id");
+        if id(other_id, false)? == key {
+            set(row, "id", other_id.clone())?;
             return Ok(Some(index));
         }
     }

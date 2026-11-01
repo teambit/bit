@@ -168,8 +168,8 @@ fn preflight(request: &Request) -> io::Result<Owned> {
     let mut compressed = 0;
     let base = load_models(&request.base, request, &mut total, &mut compressed)?;
     let other = load_models(&request.other, request, &mut total, &mut compressed)?;
-    let mut current = Vec::new();
-    let mut seen = std::collections::HashSet::new();
+    let mut current = Vec::with_capacity(request.current.len());
+    let mut seen = std::collections::HashSet::with_capacity(request.current.len());
     for file in &request.current {
         text(&file.path)?;
         if !seen.insert(&file.path) {
@@ -215,7 +215,9 @@ fn workspace_bytes(workspace: &Workspace, total: &mut usize) -> io::Result<Vec<u
         return Err(invalid("merge workspace snapshot changed"));
     }
     *total = total.saturating_add(raw.len());
-    let raw = if raw.starts_with(b"\xef\xbb\xbf") { raw[3..].to_vec() } else { raw };
+    if raw.starts_with(b"\xef\xbb\xbf") {
+        raw.drain(..3);
+    }
     let bytes = crate::checkout::eol::normalize(raw, false);
     if !digest(&bytes).eq_ignore_ascii_case(workspace.linux_hash.trim()) {
         return Err(invalid("merge Linux snapshot changed"));

@@ -23,7 +23,7 @@ pub(crate) fn read_graph(objects: &Path, heads: &[String]) -> io::Result<Value> 
         "objectsDirectory":objects,"heads":heads,"cached":[],"overlay":[],
     }))
     .map_err(io::Error::other)?;
-    graph::load(&request).map(|value| value["versions"].clone())
+    graph::load(&request).map(|mut value| value["versions"].take())
 }
 #[derive(Deserialize)]
 #[serde(

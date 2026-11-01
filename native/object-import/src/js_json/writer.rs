@@ -61,17 +61,23 @@ impl Writer {
         if values.len() > MAX_NODES {
             return Err(invalid("JSON nesting or node limit"));
         }
+        if values.is_empty() {
+            return self.bytes(b"[]");
+        }
         self.bytes(b"[")?;
         let next_depth = depth.saturating_add(1);
         for (index, value) in values.iter().enumerate() {
             self.separator(index, next_depth)?;
             self.value(value, next_depth)?;
         }
-        self.close(b"]", !values.is_empty(), depth)
+        self.close(b"]", true, depth)
     }
 
     fn object(&mut self, fields: &[(Vec<u16>, Value)], depth: usize) -> io::Result<()> {
         let entries = object::entries(fields)?;
+        if entries.is_empty() {
+            return self.bytes(b"{}");
+        }
         self.bytes(b"{")?;
         let next_depth = depth.saturating_add(1);
         for (index, (key, value)) in entries.iter().enumerate() {
@@ -80,7 +86,7 @@ impl Writer {
             self.bytes(if self.pretty { b": " } else { b":" })?;
             self.value(value, next_depth)?;
         }
-        self.close(b"}", !entries.is_empty(), depth)
+        self.close(b"}", true, depth)
     }
 
     fn separator(&mut self, index: usize, depth: usize) -> io::Result<()> {

@@ -46,15 +46,12 @@ fn convert_object(values: &serde_json::Map<String, serde_json::Value>) -> io::Re
     if values.len() > 262_144 {
         return Err(io::Error::other("JSON object limit"));
     }
-    Ok(Value::Object(
-        values
-            .iter()
-            .map(|(key, value)| {
-                if key.len() > 32768 {
-                    return Err(io::Error::other("JSON object key limit"));
-                }
-                Ok((key.encode_utf16().collect(), convert(value)?))
-            })
-            .collect::<io::Result<_>>()?,
-    ))
+    let mut entries = Vec::with_capacity(values.len());
+    for (key, value) in values {
+        if key.len() > 32768 {
+            return Err(io::Error::other("JSON object key limit"));
+        }
+        entries.push((key.encode_utf16().collect(), convert(value)?));
+    }
+    Ok(Value::Object(entries))
 }

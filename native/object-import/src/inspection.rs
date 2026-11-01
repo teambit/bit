@@ -74,7 +74,7 @@ pub(crate) fn begin(
         state.revision.checked_add(1).ok_or_else(|| invalid("inspection revision overflow"))?;
     let mut digest = Sha1::new();
     digest.update(revision.to_be_bytes());
-    digest.update(serde_json::to_vec(input).map_err(io::Error::other)?);
+    serde_json::to_writer(&mut digest, input).map_err(io::Error::other)?;
     let token = crate::validate::hexadecimal(&digest.finalize());
     for (index, file) in files.iter_mut().enumerate() {
         file.snapshot_path = file.snapshot_path.join(format!("{token}-{index}.snapshot"));

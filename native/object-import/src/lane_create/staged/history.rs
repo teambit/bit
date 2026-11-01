@@ -34,11 +34,11 @@ pub(super) fn prepare(
     {
         return Err(invalid());
     }
-    let original = history.clone();
+    let initial_len = history["versions"].as_array().map_or(0, Vec::len);
     for head in heads {
         populate(moved, directory, &mut history, head)?;
     }
-    if history != original {
+    if history["versions"].as_array().map_or(0, Vec::len) != initial_len {
         moved.objects.push((hash, "VersionHistory", history));
     }
     Ok(())

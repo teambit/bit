@@ -44,7 +44,7 @@ pub(crate) fn validate_version(value: &Value) -> io::Result<()> {
 }
 
 fn overlay_indices(overlays: &[Value]) -> std::collections::HashMap<String, usize> {
-    let mut indices = std::collections::HashMap::new();
+    let mut indices = std::collections::HashMap::with_capacity(overlays.len() * 2);
     for (index, value) in overlays.iter().enumerate() {
         if let Some(hash) = value
             .get("hash")
@@ -52,8 +52,11 @@ fn overlay_indices(overlays: &[Value]) -> std::collections::HashMap<String, usiz
             .map(str::trim)
             .filter(|hash| !hash.is_empty())
         {
-            indices.entry(hash.to_owned()).or_insert(index);
-            indices.entry(hash.to_ascii_lowercase()).or_insert(index);
+            let lower = hash.to_ascii_lowercase();
+            if lower != hash {
+                indices.entry(hash.to_owned()).or_insert(index);
+            }
+            indices.entry(lower).or_insert(index);
             if let Ok(digest) = crate::merge_history::hash(hash) {
                 indices
                     .entry(crate::validate::hexadecimal(&digest))

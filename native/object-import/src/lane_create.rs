@@ -60,7 +60,7 @@ impl Plan {
         } else {
             staged::Moved::default()
         };
-        origin.components.extend(moved.components.clone());
+        origin.components.extend(moved.components.iter().cloned());
         let objects = Objects::new(name, scope, log, lane_hash, history_key, &origin)?;
         documents.add(name, scope, options.alias, lane_hash)?;
         Ok(Self {

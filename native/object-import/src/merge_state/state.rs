@@ -129,7 +129,7 @@ impl State {
                 return Err(invalid("invalid unmerged name"));
             }
         }
-        let removed: Vec<_> = ids
+        let removed: std::collections::HashSet<_> = ids
             .iter()
             .filter_map(|id| {
                 self.entries

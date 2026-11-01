@@ -51,8 +51,9 @@ fn extension_id(row: &Js) -> io::Result<Vec<u16>> {
         return fields::id(id, true);
     }
     for name in ["name", "legacyId", "stringId"] {
-        if fields::get(row, name).truthy()? {
-            return fields::text(fields::get(row, name));
+        let candidate = fields::get(row, name);
+        if candidate.truthy()? {
+            return fields::text(candidate);
         }
     }
     Ok(Vec::new())

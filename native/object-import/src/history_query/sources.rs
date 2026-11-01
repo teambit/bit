@@ -19,12 +19,11 @@ impl Cache {
     fn read(
         &mut self,
         directory: &std::path::Path,
-        hash: &str,
+        digest: [u8; 20],
+        canonical: &str,
         compressed: &mut usize,
     ) -> io::Result<(crate::checkout::repository::SourceRecord, bool)> {
-        let digest = crate::merge_history::hash(hash.trim())?;
-        let canonical = crate::validate::hexadecimal(&digest);
-        if let Some(record) = self.records.get(&canonical) {
+        if let Some(record) = self.records.get(canonical) {
             return Ok((record.clone(), false));
         }
         if self.records.len() >= 4096 {
@@ -45,7 +44,7 @@ impl Cache {
             .filter(|bytes| *bytes <= self.limit)
             .ok_or_else(|| invalid("history Source owner limit"))?;
         self.bytes = next_bytes;
-        self.records.insert(canonical, record.clone());
+        self.records.insert(canonical.to_owned(), record.clone());
         Ok((record, true))
     }
 }
@@ -93,12 +92,14 @@ impl Sources<'_> {
         if self.loads.len() >= 16384 {
             return Err(invalid("history Source load limit"));
         }
-        let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
+        let digest = crate::merge_history::hash(hash.trim())?;
+        let canonical = crate::validate::hexadecimal(&digest);
         if let Some(value) = self.values.get(&canonical) {
             self.loads.push(value.index);
             return Ok(value.body.clone());
         }
-        let (record, fresh) = self.cache.read(&self.directory, &canonical, &mut self.compressed)?;
+        let (record, fresh) =
+            self.cache.read(&self.directory, digest, &canonical, &mut self.compressed)?;
         if fresh {
             self.raw = self.raw
                 .checked_add(record.body.len())

@@ -78,24 +78,18 @@ mod workspace;
 
 /// Serialize workspace component rows with the published bitmap header and property order.
 pub fn render_workspace_bitmap(value: &serde_json::Value) -> std::io::Result<Vec<u8>> {
+    let blank_string = |ver: &serde_json::Value| {
+        ver.as_str()
+            .is_none_or(|text| text.trim().is_empty())
+    };
     if value
         .as_object()
         .is_none_or(|rows| {
             rows.len() > 65_536
-                || rows
-                    .get("$schema-version")
-                    .is_some_and(|ver| {
-                        ver.as_str()
-                            .is_none_or(|text| text.trim().is_empty())
-                    })
+                || rows.get("$schema-version").is_some_and(blank_string)
                 || rows
                     .get("version")
-                    .is_some_and(|ver| {
-                        !ver.is_null()
-                            && ver
-                                .as_str()
-                                .is_none_or(|text| text.trim().is_empty())
-                    })
+                    .is_some_and(|ver| !ver.is_null() && blank_string(ver))
                 || rows
                     .get("_bit_lane")
                     .is_some_and(|lane| !lane.is_null() && !lane.is_object())

@@ -32,7 +32,7 @@ pub(super) fn plan(input: Value) -> io::Result<Value> {
 }
 
 pub(crate) fn modified(mut left: Js, mut right: Js, workspace_root: bool) -> io::Result<Value> {
-    let alignment = fields::align(&left, &mut right)?;
+    let mut alignment = fields::align(&left, &mut right)?;
     let mut left_mutations = sort::all(&mut left)?;
     let mut right_mutations = sort::all(&mut right)?;
     if !workspace_root {
@@ -44,8 +44,8 @@ pub(crate) fn modified(mut left: Js, mut right: Js, workspace_root: bool) -> io:
         assignments(left_semantic.config_assignments, &left_mutations)?;
     right_mutations["configAssignments"] =
         assignments(right_semantic.config_assignments, &right_mutations)?;
-    right_mutations["dependencyVersions"] = alignment["dependencyVersions"].clone();
-    right_mutations["fileMetadata"] = alignment["fileMetadata"].clone();
+    right_mutations["dependencyVersions"] = alignment["dependencyVersions"].take();
+    right_mutations["fileMetadata"] = alignment["fileMetadata"].take();
     Ok(
         json!({"modified":left_semantic.hash!=right_semantic.hash,"leftHash":left_semantic.hash,"rightHash":right_semantic.hash,"mutations":{"left":left_mutations,"right":right_mutations}}),
     )

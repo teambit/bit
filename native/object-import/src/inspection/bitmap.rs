@@ -113,8 +113,8 @@ fn normalize_entry(value: &mut Value) -> io::Result<bool> {
     }
     entry.shift_remove("isAvailableOnCurrentLane");
     entry.shift_remove("onLanesOnly");
-    if entry.contains_key("version") {
-        entry.insert("version".into(), Value::String(String::new()));
+    if let Some(version) = entry.get_mut("version") {
+        *version = Value::String(String::new());
     }
     scope(entry);
     entry.shift_remove("config");

@@ -220,19 +220,15 @@ impl Graph {
     fn successors(&self, from: &str) -> Vec<String> {
         let mut stack = vec![from.to_string()];
         let mut visited = HashSet::new();
-        let mut found = HashSet::new();
         let mut result = Vec::new();
         while let Some(current) = stack.pop() {
-            if found.insert(current.clone()) {
-                result.push(current.clone());
+            if !visited.insert(current.clone()) {
+                continue;
             }
-            if visited.insert(current.clone())
-                && let Some(parents) = self.edges.get(&current)
-            {
-                for parent in parents.iter().rev() {
-                    stack.push(parent.clone());
-                }
+            if let Some(parents) = self.edges.get(&current) {
+                stack.extend(parents.iter().rev().cloned());
             }
+            result.push(current);
         }
         result
     }

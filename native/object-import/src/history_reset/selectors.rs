@@ -99,15 +99,15 @@ pub(super) fn soft(input: Value) -> io::Result<Value> {
 pub(super) fn never(input: Value) -> io::Result<Value> {
     let request: Never = serde_json::from_value(input).map_err(io::Error::other)?;
     validate(&request.full_names)?;
-    let hashes: Vec<_> = request.full_names
-        .iter()
-        .map(|name| crate::validate::hexadecimal(&Sha1::digest(name.trim().as_bytes())))
-        .collect();
-    let mut seen = HashSet::new();
-    let unique: Vec<_> = hashes
-        .iter()
-        .enumerate()
-        .filter_map(|(index, hash)| seen.insert(hash).then_some(index))
-        .collect();
+    let mut hashes = Vec::with_capacity(request.full_names.len());
+    let mut seen = HashSet::with_capacity(request.full_names.len());
+    let mut unique = Vec::with_capacity(request.full_names.len());
+    for (index, name) in request.full_names.iter().enumerate() {
+        let hash = crate::validate::hexadecimal(&Sha1::digest(name.trim().as_bytes()));
+        if seen.insert(hash.clone()) {
+            unique.push(index);
+        }
+        hashes.push(hash);
+    }
     Ok(json!({"hashes":hashes,"unique":unique}))
 }

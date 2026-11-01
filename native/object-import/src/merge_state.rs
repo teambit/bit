@@ -149,22 +149,20 @@ pub(crate) fn serve(
     } else {
         MAX_JSON
     };
-    let response = match request.and_then(|req| execution::run(req, state, &bytes, pool)) {
-        Ok(data) => {
-            json!({"version":1,"id":id,"completed":1,"skipped":[],"failed":false,"data":data})
+    if let Ok(data) = request.and_then(|req| execution::run(req, state, &bytes, pool)) {
+        let mut output = Output(Vec::new(), output_limit);
+        let response =
+            json!({"version":1,"id":id,"completed":1,"skipped":[],"failed":false,"data":data});
+        if serde_json::to_writer(&mut output, &response).is_ok() {
+            writer.write_all(&output.0)?;
+            writer.write_all(b"\n")?;
+            return writer.flush();
         }
-        Err(_) => json!({"version":1,"id":id,"completed":0,"skipped":[],"failed":true}),
-    };
-    let mut output = Output(Vec::new(), output_limit);
-    if serde_json::to_writer(&mut output, &response).is_err() {
-        return protocol::respond(
-            writer,
-            &json!({"version":1,"id":id,"completed":0,"skipped":[],"failed":true}),
-        );
     }
-    writer.write_all(&output.0)?;
-    writer.write_all(b"\n")?;
-    writer.flush()
+    protocol::respond(
+        writer,
+        &json!({"version":1,"id":id,"completed":0,"skipped":[],"failed":true}),
+    )
 }
 struct Output(Vec<u8>, usize);
 impl Write for Output {

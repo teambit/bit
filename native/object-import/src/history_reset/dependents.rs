@@ -33,13 +33,12 @@ pub(super) fn index(input: Value) -> io::Result<Value> {
         .iter()
         .map(|id| id.trim())
         .collect();
-    let dependents: Vec<_> = request.queries
+    let dependents: Vec<&[&str]> = request.queries
         .iter()
         .map(|id| {
             incoming
                 .get(id.trim())
-                .cloned()
-                .unwrap_or_default()
+                .map_or(&[][..], Vec::as_slice)
         })
         .collect();
     let outside: Vec<Vec<_>> = dependents

@@ -14,6 +14,7 @@ pub(super) struct Moved {
     pub components: Vec<Value>,
     objects: Vec<(String, &'static str, Value)>,
     reads: Vec<(PathBuf, Option<Vec<u8>>)>,
+    bytes: usize,
 }
 
 impl Moved {
@@ -23,14 +24,11 @@ impl Moved {
             Err(error) if error.kind() == io::ErrorKind::NotFound => None,
             Err(error) => return Err(error),
         };
-        let total = self.reads
-            .iter()
-            .filter_map(|(_, bytes)| bytes.as_ref())
-            .map(Vec::len)
-            .fold(0_usize, usize::saturating_add);
-        if total.saturating_add(bytes.as_ref().map_or(0, Vec::len)) > 32 * 1024 * 1024 {
+        let next = self.bytes.saturating_add(bytes.as_ref().map_or(0, Vec::len));
+        if next > 32 * 1024 * 1024 {
             return Err(invalid());
         }
+        self.bytes = next;
         self.reads.push((path.to_owned(), bytes.clone()));
         Ok(bytes)
     }
@@ -107,11 +105,10 @@ fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
         .map(str::trim)
         .filter(|val| !val.is_empty())?;
     let scope = model["scope"].as_str().map_or("", str::trim);
-    let full = format!("{scope}/{name}");
     let (key, row) = bitmap
         .as_object()?
         .iter()
-        .find(|(key, row)| bitmap_row_matches(key, row, scope, name, &full))?;
+        .find(|(key, row)| bitmap_row_matches(key, row, scope, name))?;
     Some(
         row["version"]
             .as_str()
@@ -123,7 +120,7 @@ fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
     )
 }
 
-fn bitmap_row_matches(key: &str, row: &Value, scope: &str, name: &str, _full: &str) -> bool {
+fn bitmap_row_matches(key: &str, row: &Value, scope: &str, name: &str) -> bool {
     if key.starts_with('$')
         || matches!(key, "version" | "_bit_lane")
         || !row.is_object()

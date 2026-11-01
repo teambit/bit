@@ -135,7 +135,7 @@ impl State {
         let request: Fork = serde_json::from_value(input).map_err(io::Error::other)?;
         let token = request.token.trim().to_owned();
         let record = self.prepare_fork(&request, &token)?;
-        let mut children = Vec::new();
+        let mut children = Vec::with_capacity(request.count);
         for index in 0..request.count {
             let child = Record {
                 phases: vec![

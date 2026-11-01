@@ -45,15 +45,15 @@ fn index(key: &[u16]) -> Option<u32> {
     if key.is_empty() || key.len() > 10 || (key.len() > 1 && key[0] == u16::from(b'0')) {
         return None;
     }
-    let mut value = 0_u32;
+    let mut value = 0_u64;
     for &unit in key {
         let digit = unit.checked_sub(u16::from(b'0'))?;
         if digit > 9 {
             return None;
         }
-        value = value
-            .checked_mul(10)?
-            .checked_add(u32::from(digit))?;
+        value = value * 10 + u64::from(digit);
     }
-    (value != u32::MAX).then_some(value)
+    u32::try_from(value)
+        .ok()
+        .filter(|&val| val != u32::MAX)
 }

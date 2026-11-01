@@ -157,7 +157,11 @@ pub(super) fn read_merge_move_backup(
 fn matches_lane_row(row: &Value, parent_id: &Value, scope: &str, name: &str) -> bool {
     let row_scope = row["id"]["scope"].as_str().map_or("", str::trim);
     row["id"] == *parent_id
-        || row["id"].as_str().map(str::trim) == Some(&format!("{scope}/{name}"))
+        || row["id"]
+            .as_str()
+            .and_then(|raw| raw.trim().strip_prefix(scope))
+            .and_then(|rest| rest.strip_prefix('/'))
+            == Some(name)
         || (row["id"]["name"].as_str().map(str::trim) == Some(name)
             && (row_scope.is_empty() || row_scope == scope))
 }
@@ -230,12 +234,11 @@ fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
     if scope.is_empty() || name.is_empty() {
         return None;
     }
-    let full = format!("{scope}/{name}");
     bitmap
         .as_object()?
         .iter()
         .find_map(|(key, row)| {
-            if !snap_row_matches(key, row, scope, name, &full) {
+            if !snap_row_matches(key, row, scope, name) {
                 return None;
             }
             row["version"]
@@ -247,7 +250,7 @@ fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
         })
 }
 
-fn snap_row_matches(key: &str, row: &Value, scope: &str, name: &str, _full: &str) -> bool {
+fn snap_row_matches(key: &str, row: &Value, scope: &str, name: &str) -> bool {
     if key.starts_with('$')
         || matches!(key, "_bit_lane" | "version")
         || !row.is_object()

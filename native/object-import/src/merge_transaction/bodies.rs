@@ -91,7 +91,7 @@ impl State {
     ) -> io::Result<Value> {
         let (binding, token) = self.binding(input, owners)?;
         let scope = reads::Scope::begin();
-        let manifest = crate::checkout_transition::retarget_with_overlay(
+        let mut manifest = crate::checkout_transition::retarget_with_overlay(
             json!({"token":token,"target":input["target"],"objectsDirectory":binding.objects,"snapshotDirectory":binding.directory,"knownBodies":input["knownBodies"]}),
             &mut self.checkout,
             overlay,
@@ -102,12 +102,12 @@ impl State {
             &mut self.checkout,
         )?;
         response["reads"] = scope.finish().stats();
-        response["bodies"] = manifest["bodies"].clone();
-        if let Some(known) = manifest.get("knownBodies") {
-            response["knownBodies"] = known.clone();
-            response["bodyCount"] = manifest["bodyCount"].clone();
+        response["bodies"] = manifest["bodies"].take();
+        if let Some(known) = manifest.get_mut("knownBodies") {
+            response["knownBodies"] = known.take();
+            response["bodyCount"] = manifest["bodyCount"].take();
         } else {
-            response["targetFiles"] = manifest["targetFiles"].clone();
+            response["targetFiles"] = manifest["targetFiles"].take();
         }
         if let Some(files) = response["files"].as_array_mut() {
             for (index, file) in files.iter_mut().enumerate() {

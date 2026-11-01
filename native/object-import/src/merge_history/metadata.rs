@@ -84,22 +84,22 @@ fn extensions(value: &Value) -> io::Result<()> {
     Ok(())
 }
 fn is_builder_with_artifacts(extension: &Value) -> bool {
-    let is_builder = crate::workspace::engine::client_status::config::is_extension_aspect(
-        extension,
-        "teambit.pipelines/builder",
-    ) || extension["id"]
-        .as_str()
-        .map(str::trim)
-        .is_some_and(|id| {
-            id == "teambit.pipelines/builder" || id.starts_with("teambit.pipelines/builder@")
+    let has_artifacts = extension
+        .get("data")
+        .and_then(|data| data.get("artifacts"))
+        .is_some_and(|artifacts| {
+            truthy(artifacts) && !artifacts.as_array().is_some_and(Vec::is_empty)
         });
-    is_builder
-        && extension
-            .get("data")
-            .and_then(|data| data.get("artifacts"))
-            .is_some_and(|artifacts| {
-                truthy(artifacts) && !artifacts.as_array().is_some_and(Vec::is_empty)
-            })
+    has_artifacts
+        && (crate::workspace::engine::client_status::config::is_extension_aspect(
+            extension,
+            "teambit.pipelines/builder",
+        ) || extension["id"]
+            .as_str()
+            .map(str::trim)
+            .is_some_and(|id| {
+                id == "teambit.pipelines/builder" || id.starts_with("teambit.pipelines/builder@")
+            }))
 }
 fn lane(value: &Value, field: &str) -> io::Result<()> {
     let Some(item) = value.get(field).filter(|value| truthy(value)) else {

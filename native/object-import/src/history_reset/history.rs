@@ -46,8 +46,8 @@ pub(super) fn prune(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     bound(request.keys.len())?;
     let entries = history_entries(&request.fields)?;
-    let mut removed = HashSet::new();
-    let mut remove = Vec::new();
+    let mut removed = HashSet::with_capacity(request.keys.len());
+    let mut remove = Vec::with_capacity(request.keys.len());
     for key in &request.keys {
         text(key)?;
         let key = key.trim();

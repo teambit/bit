@@ -32,9 +32,9 @@ fn smaller(
 ) -> io::Result<Vec<File>> {
     let mut output = Vec::with_capacity(files.len());
     for file in files {
-        let captured = capture_file(file, request, remaining, snapshots)?;
-        remaining = remaining.saturating_sub(captured.1);
-        output.push(captured.0);
+        let (captured, bytes) = capture_file(file, request, remaining, snapshots)?;
+        remaining = remaining.saturating_sub(bytes);
+        output.push(captured);
     }
     Ok(output)
 }

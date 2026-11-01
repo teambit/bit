@@ -9,13 +9,13 @@ pub(super) fn classify_all(execution: &Execution<'_>) -> io::Result<Vec<Value>> 
             .iter()
             .enumerate()
             .map(|(index, file)| classify(index, file, execution))
-            .collect::<io::Result<Vec<_>>>()
+            .collect()
     } else {
         execution.request.current
             .par_iter()
             .enumerate()
             .map(|(index, file)| classify(index, file, execution))
-            .collect::<io::Result<Vec<_>>>()
+            .collect()
     }
 }
 

@@ -115,12 +115,7 @@ fn select_one(root: &Path, rows: &mut Vec<Value>, current: &Value, id: &str) -> 
         .iter()
         .position(|row| lane_matches(row, scope, name))
         .ok_or_else(|| invalid("lane is not indexed"))?;
-    if rows
-        .iter()
-        .filter(|row| lane_matches(row, scope, name))
-        .count()
-        != 1
-    {
+    if rows[position + 1..].iter().any(|row| lane_matches(row, scope, name)) {
         return Err(invalid("ambiguous lane index"));
     }
     let hash = rows[position]["hash"]

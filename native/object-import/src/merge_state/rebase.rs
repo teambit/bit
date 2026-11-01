@@ -14,12 +14,12 @@ pub(super) struct Version {
 pub(super) fn plan(existing: &[String], incoming: &[Version]) -> io::Result<Value> {
     references_valid(existing)?;
     validate_incoming(incoming)?;
+    let mut existing_by_hash = std::collections::HashMap::with_capacity(existing.len());
+    for (index, existing_hash) in existing.iter().enumerate() {
+        existing_by_hash.entry(existing_hash.trim()).or_insert(index);
+    }
     for (incoming_index, version) in incoming.iter().enumerate() {
-        let target = version.hash.trim();
-        if let Some(existing_index) = existing
-            .iter()
-            .position(|existing_hash| existing_hash.trim().eq_ignore_ascii_case(target))
-        {
+        if let Some(&existing_index) = existing_by_hash.get(version.hash.trim()) {
             return Ok(json!({"incomingIndex":incoming_index,"existingIndex":existing_index}));
         }
     }

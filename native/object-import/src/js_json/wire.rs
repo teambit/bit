@@ -41,10 +41,7 @@ impl<'de> Visitor<'de> for ValueVisitor {
         Ok(Value::Boolean(value))
     }
     fn visit_str<Error: serde::de::Error>(self, value: &str) -> Result<Value, Error> {
-        if value.len() > 32 * 1024 * 1024 {
-            return Err(serde::de::Error::custom("JavaScript string length limit"));
-        }
-        Ok(Value::String(value.encode_utf16().collect()))
+        encode_utf16_str(value).map(Value::String)
     }
     fn visit_seq<Sequence: SeqAccess<'de>>(
         self,
@@ -74,6 +71,7 @@ impl<'de> Deserialize<'de> for Value {
     }
 }
 
+#[repr(transparent)]
 struct Utf16(Vec<u16>);
 struct TextVisitor;
 impl<'de> Visitor<'de> for TextVisitor {
@@ -82,10 +80,7 @@ impl<'de> Visitor<'de> for TextVisitor {
         formatter.write_str("a Unicode string or UTF-16 code-unit array")
     }
     fn visit_str<Error: serde::de::Error>(self, value: &str) -> Result<Utf16, Error> {
-        if value.len() > 32 * 1024 * 1024 {
-            return Err(serde::de::Error::custom("JavaScript string length limit"));
-        }
-        Ok(Utf16(value.encode_utf16().collect()))
+        encode_utf16_str(value).map(Utf16)
     }
     fn visit_seq<Sequence: SeqAccess<'de>>(
         self,
@@ -110,6 +105,12 @@ impl<'de> Deserialize<'de> for Utf16 {
     fn deserialize<Input: Deserializer<'de>>(input: Input) -> Result<Self, Input::Error> {
         input.deserialize_any(TextVisitor)
     }
+}
+fn encode_utf16_str<Error: serde::de::Error>(value: &str) -> Result<Vec<u16>, Error> {
+    if value.len() > 32 * 1024 * 1024 {
+        return Err(serde::de::Error::custom("JavaScript string length limit"));
+    }
+    Ok(value.encode_utf16().collect())
 }
 pub(super) fn text<'de, Input: Deserializer<'de>>(input: Input) -> Result<Vec<u16>, Input::Error> {
     Ok(Utf16::deserialize(input)?.0)

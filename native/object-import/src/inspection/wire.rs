@@ -43,6 +43,7 @@ pub(super) struct Model {
     pub(super) _test: Option<bool>,
 }
 impl Model {
+    #[inline]
     pub(super) fn normalized_hash(&self) -> &str {
         self.hash.trim()
     }

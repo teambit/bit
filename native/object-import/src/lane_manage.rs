@@ -188,17 +188,19 @@ impl Documents {
     }
 
     fn indexed_lane_id(&self, name: &str) -> io::Result<(String, String)> {
-        let matches: Vec<(String, String)> = self.index["lanes"]
+        let mut matches = self.index["lanes"]
             .as_array()
             .ok_or_else(invalid)?
             .iter()
             .filter_map(lane_row_identity)
-            .filter(|(lane_name, _)| lane_name == name)
-            .collect();
-        let [(lane_name, scope)] = matches.as_slice() else {
+            .filter(|(lane_name, _)| lane_name == name);
+        let Some(first) = matches.next() else {
             return Err(invalid());
         };
-        Ok((lane_name.clone(), scope.clone()))
+        if matches.next().is_some() {
+            return Err(invalid());
+        }
+        Ok(first)
     }
 
     fn lane_hash(&self, original: &Original) -> io::Result<String> {
@@ -381,8 +383,7 @@ fn valid_name(value: &str) -> bool {
             })
 }
 fn valid_scope(value: &str) -> bool {
-    let parts: Vec<&str> = value.split('.').collect();
-    (parts.len() >= 2 || value.len() >= 2) && parts.into_iter().all(valid_name)
+    (value.len() >= 2 || value.contains('.')) && value.split('.').all(valid_name)
 }
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, "unsupported local lane metadata change")

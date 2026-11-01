@@ -12,7 +12,7 @@ pub(crate) fn verified(input: Value, prepared: &Prepared<'_>) -> io::Result<Valu
     if request.current.len() != prepared.current.len() {
         return Err(invalid("merge verified current count"));
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(request.current.len());
     for file in &request.current {
         text(&file.path)?;
         let normalized = normalize_path(&file.path);
@@ -41,7 +41,7 @@ fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()>
         if models.len() != bodies {
             return Err(invalid("merge verified model count"));
         }
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::with_capacity(models.len());
         for model in models {
             text(&model.path)?;
             hash(model.hash.trim())?;
