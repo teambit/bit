@@ -1,4 +1,5 @@
-//! Only the local `LaneHistory` is stale; component Versions and `VersionHistory` stay consistent.
+//! Only the local `LaneHistory` is stale; component `Version`s and `VersionHistory` stay consistent.
+
 use super::fixture;
 use crate::{
     commands::{add::support::history_oracle, move_paths::support},

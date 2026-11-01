@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-merge.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-merge.e2e.ts` for `bit lane merge` parity.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse, remote};
 use std::path::PathBuf;

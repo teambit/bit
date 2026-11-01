@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/bit-import-on-lanes.e2e.ts`.
+//! Port of `e2e/harmony/lanes/bit-import-on-lanes.e2e.ts` for `bit import` on lanes.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use serde_json::json;

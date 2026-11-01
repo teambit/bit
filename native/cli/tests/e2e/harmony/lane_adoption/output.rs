@@ -1,4 +1,5 @@
 //! Only validated duration tokens on named released completion lines vary.
+
 pub(crate) fn durations(text: &str) -> String {
     text.split_inclusive('\n')
         .map(completion)

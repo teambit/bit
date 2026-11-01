@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-export-skip-main-history.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-export-skip-main-history.e2e.ts` for lane export object pruning.
 
 use crate::helper::{Helper, parse};
 use std::{collections::HashSet, path::Path};

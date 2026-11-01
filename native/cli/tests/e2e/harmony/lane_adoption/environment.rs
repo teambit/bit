@@ -1,4 +1,5 @@
 //! The original peer `+` assertion excludes resolver errors, not all installation failures.
+
 use super::{empty, lane};
 use crate::{
     commands::move_paths::support,

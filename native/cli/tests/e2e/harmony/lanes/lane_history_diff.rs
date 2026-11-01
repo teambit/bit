@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-history-diff.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-history-diff.e2e.ts` for `bit lane history` and `bit lane history-diff`.
 
 use crate::helper::{Helper, parse};
 

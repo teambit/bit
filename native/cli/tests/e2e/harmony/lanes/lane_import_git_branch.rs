@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-import-git-branch.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-import-git-branch.e2e.ts` for `--branch` during `bit lane import`.
 
 use crate::helper::{Helper, parse};
 use std::process::Command;

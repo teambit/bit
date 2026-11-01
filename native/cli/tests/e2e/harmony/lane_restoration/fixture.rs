@@ -1,3 +1,5 @@
+//! Shared lane history restoration fixture and oracle comparison helpers.
+
 use crate::{
     commands::{add::support::history_oracle, move_paths::support},
     harmony::lane_adoption::output::durations,

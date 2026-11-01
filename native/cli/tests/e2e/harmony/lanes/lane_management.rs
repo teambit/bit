@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-management.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-management.e2e.ts` for `bit lane rename`, `alias`, and `remove`.
 
 use crate::helper::{Helper, config, parse, remote};
 

@@ -1,4 +1,5 @@
 //! Hidden members are seeded through the released bare-scope snap API.
+
 use super::fixture;
 use crate::{
     commands::move_paths::support,

@@ -1,4 +1,5 @@
-//! Historical lane checkout and revert retain released bytes, versions and publication prefixes.
+//! Historical lane checkout and revert retain released bytes, versions, and publication prefixes.
+
 mod callbacks;
 mod errors;
 mod fixture;

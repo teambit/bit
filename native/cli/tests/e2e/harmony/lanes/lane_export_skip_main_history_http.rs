@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-export-skip-main-history-http.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-export-skip-main-history-http.e2e.ts` for HTTP lane export.
 
 use crate::helper::{Helper, parse};
 

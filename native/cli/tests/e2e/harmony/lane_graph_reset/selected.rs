@@ -1,3 +1,5 @@
+//! Selected component pattern reset tests for `bit reset` on a lane.
+
 use super::fixture;
 use crate::{commands::move_paths::support, helper::remote};
 

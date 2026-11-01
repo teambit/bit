@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-multiple-scopes.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-multiple-scopes.e2e.ts` for multi-scope lane export and import.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use serde_json::json;

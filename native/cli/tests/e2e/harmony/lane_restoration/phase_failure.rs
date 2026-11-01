@@ -1,4 +1,5 @@
 //! A later partition never rolls back the successful existing-component revert.
+
 use super::fixture;
 use crate::{
     commands::{add::support::history_oracle, move_paths::support},

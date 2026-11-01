@@ -1,4 +1,5 @@
 //! Valid model wire encodings must not bypass released mutable-object canonicalization.
+
 use crate::{
     commands::move_paths::support,
     helper::{Helper, remote},

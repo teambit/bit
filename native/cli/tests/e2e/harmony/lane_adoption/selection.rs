@@ -1,3 +1,5 @@
+//! Pattern selection and `--workspace-only` tests for `bit switch` and `bit lane import`.
+
 mod compression;
 use super::{empty, exported, lane};
 use crate::{

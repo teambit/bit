@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lanes-with-issues.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lanes-with-issues.e2e.ts` for lane operations with component issues.
 
 use crate::helper::{Helper, parse, remote};
 use std::fs;

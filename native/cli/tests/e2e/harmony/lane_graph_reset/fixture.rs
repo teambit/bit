@@ -1,3 +1,5 @@
+//! Shared workspace and scope object helpers for lane `bit reset` tests.
+
 use crate::{
     commands::{add::support::history_oracle, move_paths::support},
     helper::{Helper, Run, config, remote},

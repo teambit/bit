@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-forking.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-forking.e2e.ts` for cross-scope lane forking.
 
 use crate::helper::Helper;
 

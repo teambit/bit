@@ -1,4 +1,4 @@
-//! E2E tests for `bit install` and `install-and-compile`, ported from:
+//! End-to-end tests for `bit install` and `install-and-compile`, ported from:
 //! - `e2e/harmony/install.e2e.ts`
 //! - `e2e/harmony/install-and-compile.e2e.ts`
 

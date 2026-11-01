@@ -1,3 +1,5 @@
+//! Merge conflict and workspace state tests during `bit lane import` and `bit switch`.
+
 use crate::{
     commands::move_paths::support,
     helper::{Helper, remote},

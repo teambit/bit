@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-import.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-import.e2e.ts` for `bit lane import` and `bit switch` parity.
 
 use crate::helper::{Helper, len, parse};
 

@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/diverged-from-forked.e2e.ts`.
+//! Port of `e2e/harmony/lanes/diverged-from-forked.e2e.ts` for forked lane divergence parity.
 
 use crate::helper::{Helper, parse};
 

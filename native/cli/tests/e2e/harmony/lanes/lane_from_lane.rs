@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-from-lane.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-from-lane.e2e.ts` for branching a lane from another lane.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse, strip_ansi};
 use serde_json::json;

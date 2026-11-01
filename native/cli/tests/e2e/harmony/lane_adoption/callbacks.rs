@@ -1,3 +1,5 @@
+//! Provider callback and configuration mutation tests for `bit lane import` and `bit switch`.
+
 use super::exported;
 use crate::{commands::move_paths::support, helper::config};
 use serde_json::json;

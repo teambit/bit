@@ -1,3 +1,5 @@
+//! Version retention and historical file restoration tests for `bit lane revert`.
+
 use super::fixture;
 use crate::{commands::move_paths::support, helper::remote};
 use std::fs;

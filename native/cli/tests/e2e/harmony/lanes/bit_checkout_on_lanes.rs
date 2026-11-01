@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts`.
+//! Port of `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts` for `bit checkout` on lanes.
 
 mod parity_bugs {
     use crate::helper::{FOO_FIXTURE, Helper, config, parse, remote};

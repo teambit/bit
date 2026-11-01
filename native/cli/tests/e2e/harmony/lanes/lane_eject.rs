@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-eject.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-eject.e2e.ts` for `bit eject` on a lane.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

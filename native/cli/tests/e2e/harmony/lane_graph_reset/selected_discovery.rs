@@ -1,4 +1,5 @@
 //! Candidate discovery must not validate replacement heads of unselected members.
+
 use super::fixture;
 use crate::{
     commands::{add::support::node, move_paths::support},

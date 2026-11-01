@@ -1,3 +1,5 @@
+//! Configured provider callback tests for `bit lane checkout` and `bit lane revert`.
+
 use super::fixture;
 use crate::{
     commands::move_paths::support,

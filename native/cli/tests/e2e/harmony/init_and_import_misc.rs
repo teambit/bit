@@ -1,4 +1,4 @@
-//! Miscellaneous init, import, and performance E2E tests ported from:
+//! Miscellaneous `bit init`, `bit import`, and performance end-to-end tests ported from:
 //! - `e2e/commands/import.e2e.ts`
 //! - `e2e/commands/init.e2e.ts`
 //! - `e2e/performance/filesystem-read.e2e.ts`

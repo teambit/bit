@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/merge-lanes-diverge.e2e.ts`.
+//! Port of `e2e/harmony/lanes/merge-lanes-diverge.e2e.ts` for diverged lane merge behavior.
 
 use crate::helper::{Helper, parse};
 use std::path::PathBuf;

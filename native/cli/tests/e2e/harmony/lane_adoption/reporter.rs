@@ -1,4 +1,5 @@
 //! A workspace-only subscriber stays unloaded during released empty-workspace adoption.
+
 use crate::{
     commands::move_paths::support,
     helper::{Helper, config},

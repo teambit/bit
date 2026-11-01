@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-history-merge.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-history-merge.e2e.ts` for lane history entries during merge.
 
 use crate::helper::{Helper, parse};
 

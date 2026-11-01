@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/merge-lanes-edge-cases-2.e2e.ts`.
+//! Port of `e2e/harmony/lanes/merge-lanes-edge-cases-2.e2e.ts` for lane merge edge cases.
 
 use crate::helper::{Helper, parse};
 

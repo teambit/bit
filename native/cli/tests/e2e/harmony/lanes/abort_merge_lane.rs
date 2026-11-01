@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/abort-merge-lane.e2e.ts`.
+//! Port of `e2e/harmony/lanes/abort-merge-lane.e2e.ts` for `bit lane merge-abort` parity.
 
 use crate::helper::{Helper, config, parse, remote};
 use std::fs;

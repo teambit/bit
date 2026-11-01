@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-basic-operations.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-basic-operations.e2e.ts` for basic `bit lane` subcommands.
 
 use crate::helper::{Helper, config, parse, remote, strip_ansi};
 

@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/lane-diff.e2e.ts`.
+//! Port of `e2e/harmony/lanes/lane-diff.e2e.ts` for `bit lane diff` parity.
 
 use crate::helper::{Helper, strip_ansi};
 

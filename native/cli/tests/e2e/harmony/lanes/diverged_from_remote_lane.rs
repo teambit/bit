@@ -1,4 +1,4 @@
-//! `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts`.
+//! Port of `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts` for remote lane divergence parity.
 
 use crate::helper::{Helper, parse};
 use std::{thread, time::Duration};

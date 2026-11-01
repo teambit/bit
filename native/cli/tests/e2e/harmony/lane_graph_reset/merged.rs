@@ -1,3 +1,5 @@
+//! Merged lane and diverged parent reset tests for `bit reset`.
+
 use super::fixture;
 use crate::{
     commands::{add::support::history_oracle, move_paths::support},
