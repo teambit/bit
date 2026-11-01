@@ -1,4 +1,6 @@
 //! Relocate native workspace sources, relink, then publish the projected bitmap.
+//!
+//! Executes [`Plan`] path moves, updates links via [`add`], and formats a [`Report`].
 use super::{
     Command, add,
     color::Chalk,

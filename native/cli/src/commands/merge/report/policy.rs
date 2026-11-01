@@ -1,4 +1,6 @@
 //! `getWorkspaceConfigUpdateOutput` for lane merges.
+//!
+//! [`format`] renders `workspace.jsonc` dependency policy updates with [`Formatter`] and [`Chalk`].
 use crate::commands::{
     color::Chalk,
     status::js::{array, object, text},

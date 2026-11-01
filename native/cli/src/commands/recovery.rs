@@ -1,5 +1,7 @@
 //! Native component and lane merge abort through the workspace recovery plan.
 //! All validation and file restoration stay in the Rust workspace engine.
+//!
+//! Coordinates `failure`, `interactive`, `report`, and [`ProjectedLinker`] during merge abort.
 mod failure;
 mod interactive;
 mod report;

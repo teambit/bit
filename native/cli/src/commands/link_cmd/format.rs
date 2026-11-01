@@ -1,4 +1,6 @@
 //! Output formatting (`report` and `--json`) for `bit link` (`link.cmd.ts`).
+//!
+//! Renders [`BoundLink`], [`CodemodResult`], and [`LinkToDirResult`] summaries with [`Formatter`].
 
 use super::{Options, rewire::CodemodResult, target::LinkToDirResult};
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};

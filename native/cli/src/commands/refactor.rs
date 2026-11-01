@@ -1,4 +1,4 @@
-//! Native `bit refactor` (`RefactorCmd` and `DependencyNameRefactorCmd` in `scopes/component/refactoring/refactor.cmd.ts`).
+//! Native `bit refactor` (`RefactorCmd` and `DependencyNameRefactorCmd` in `scopes/component/refactoring/refactor.cmd.ts`) via [`resolve_component_entry`].
 
 #[cfg(test)]
 mod tests;

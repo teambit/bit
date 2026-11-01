@@ -3,6 +3,8 @@
 //! does for the Node.js CLI's in-process route. Workspaces the engine does not
 //! own (configured extensions, global `.bitrc.jsonc`, more than 4096
 //! components) and every other flag decline to the Node.js CLI.
+//!
+//! Queries [`Engine`] with [`Inventory`] and [`Options`] to emit mini-status payloads.
 
 use super::{
     color::Chalk,

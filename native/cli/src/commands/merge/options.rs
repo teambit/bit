@@ -1,5 +1,7 @@
 //! The native merge grammar: the unambiguous subset of
 //! `bit merge [component-pattern]` that native planning accepts.
+//!
+//! Defines [`Options`] and serializes merge flags into engine request [`Value`] payloads.
 
 use serde_json::{Value, json};
 

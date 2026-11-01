@@ -3,6 +3,8 @@
 //! components, the version, the snapshot results and `verbose`, so the
 //! removed and conflict sections stay empty. `bit lane merge` gets the
 //! whole result (`MergeLaneCmd`).
+//!
+//! Formats workspace config updates via `policy` and renders output with [`Chalk`].
 
 mod policy;
 

@@ -1,4 +1,6 @@
-//! `ListCmd` JSON and table presentation using the published listTemplate field order.
+//! `ListCmd` JSON and table presentation using the published `listTemplate` field order.
+//!
+//! Formats [`Row`] and [`WorkspaceRow`] items via [`json_report`] and [`table`] with [`Chalk`].
 
 use super::{Options, Row, WorkspaceRow, table};
 use crate::commands::color::Chalk;

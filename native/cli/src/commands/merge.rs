@@ -1,6 +1,8 @@
 //! Native `bit merge [component-pattern] -x`, a workspace command
 //! (`workspace_command`) with the merge options and report, and
-//! `bit merge --resolve` (`resolve`), retaining one provider session through snapshots.
+//! `bit merge --resolve` ([`resolve`]), retaining one provider session through snapshots.
+//!
+//! Coordinates [`install`], [`lifecycle`], [`report`], and [`resolve`] submodules.
 
 pub(super) mod install;
 pub(super) mod lifecycle;

@@ -1,4 +1,6 @@
 //! Native `bit generate-preview` and `bit serve-preview` (`scopes/preview/preview/preview.cmd.tsx`).
+//!
+//! Validates workspace [`selection`] and [`active_component_count`] before preview execution.
 
 #[cfg(test)]
 mod tests;

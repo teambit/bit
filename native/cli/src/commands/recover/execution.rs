@@ -1,4 +1,6 @@
 //! Import all missing recoveries before publishing per-component remove configuration.
+//!
+//! Executes [`Batch`] recovery plans with [`recover_import`], [`recover_scope_import`], and [`ProjectedLinker`].
 use super::{Chalk, Formatter, OsString, Report, io, options::Options, workspace_command};
 use crate::commands::{
     add::ProjectedLinker,

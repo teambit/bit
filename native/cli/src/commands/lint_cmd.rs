@@ -1,4 +1,6 @@
 //! Native `bit lint [component-pattern]` (`scopes/defender/linter/lint.cmd.ts`).
+//!
+//! Parses CLI flags and dispatches workspace or bare-scope linting through [`runner`].
 
 mod runner;
 #[cfg(test)]

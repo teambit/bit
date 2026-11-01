@@ -1,4 +1,6 @@
 //! Restore removed components through one retained import and bitmap publication owner.
+//!
+//! Coordinates `options`, `execution`, and [`ProjectedLinker`] to produce a [`Report`].
 mod execution;
 mod options;
 

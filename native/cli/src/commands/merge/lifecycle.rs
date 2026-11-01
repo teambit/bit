@@ -1,4 +1,6 @@
 //! One authoritative merge capture, local publication, installation, then snapshot callbacks.
+//!
+//! Coordinates [`ProjectedLinker`], [`Installer`], [`Environments`], and [`report`] across merge phases.
 mod snapshot;
 use super::report;
 use crate::{

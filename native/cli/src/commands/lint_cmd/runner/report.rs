@@ -1,3 +1,6 @@
+//! Human-readable and `--json` report construction for `bit lint`.
+//!
+//! [`create`] formats [`results`] totals and file diagnostics into a [`Report`] with [`Formatter`].
 use super::{Value, invalid, json, results};
 use crate::commands::{
     color::Chalk,

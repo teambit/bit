@@ -1,5 +1,7 @@
 //! The ordering of `cleargraph.toposort()` for component Version parents
 //! and local workspace/scope component resolution for `bit log`.
+//!
+//! Validates component/scope names ([`validate_component_name`], [`validate_scope_name`]) and resolves version DAG order.
 
 use super::{Chalk, array, bitmap, decline, text};
 use crate::{

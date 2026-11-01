@@ -3,6 +3,8 @@
 //! Validates CLI arguments, workspace non-existence, target path existence,
 //! and `--load-from` preconditions natively before delegating starter template
 //! execution to the Node.js CLI when needed.
+//!
+//! Exposes [`COMMAND`] for top-level command dispatch.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,6 @@
 //! Native component tarball packer (`scopes/pkg/pkg/packer.ts`).
+//!
+//! Resolves component artifacts via [`resolve_component_entry`] and formats [`Report`] via [`format_pack_report`].
 
 use super::{Options, format_pack_report};
 use crate::{

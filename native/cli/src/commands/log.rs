@@ -1,6 +1,8 @@
 //! `bit log`: validated local Version history and HTTP remote history in Rust,
 //! with the Node CLI's report and JSON views. Missing objects and unusual
 //! graph or metadata forms delegate before output.
+//!
+//! Re-exports [`table`] and [`table_with_separator`] for log and blame formatting.
 
 pub(super) use table::{table, table_with_separator};
 

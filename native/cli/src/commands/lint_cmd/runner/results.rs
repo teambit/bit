@@ -1,4 +1,6 @@
 //! Component and command totals from `ESLint`'s unmodified diagnostic records.
+//!
+//! [`COUNTS`] defines the diagnostic counter keys aggregated across component lint results.
 use super::{Value, invalid, json};
 use std::io;
 

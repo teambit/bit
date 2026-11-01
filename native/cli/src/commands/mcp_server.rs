@@ -1,4 +1,6 @@
 //! Native `bit mcp-server <setup|rules> [editor]` (`scopes/mcp/cli-mcp-server/{setup-cmd.ts,rules-cmd.ts}`).
+//!
+//! Configures editor MCP server settings and writes agent instruction rules via [`execute_rules`].
 
 mod rules;
 #[cfg(test)]

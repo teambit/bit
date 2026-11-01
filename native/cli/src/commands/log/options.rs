@@ -1,4 +1,6 @@
 //! Option parsing for `bit log`.
+//!
+//! Defines [`Options`] and validates CLI flags before reading local or remote history.
 
 #[derive(Default)]
 pub(super) struct Options<'a> {

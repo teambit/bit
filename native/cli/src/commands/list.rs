@@ -1,9 +1,9 @@
 //! Native local and remote `bit list` (`ls`): `ListCmd` with
 //! `ListerMain.localList` and `ComponentsList.listAll`. The workspace engine's
-//! `scopeList` reads the scope's models; the bitmap gives the workspace ids.
+//! `scopeList` reads the scope's models; [`bitmap`] gives the workspace ids.
 //! On a lane, the components' heads are their lane heads.
 //! Rust reads scalar remote inventory and latest versions without importing
-//! objects; unsupported input and diagnostics delegate before effects.
+//! objects; unsupported input and diagnostics delegate before effects via [`table`].
 
 pub(in crate::commands) mod bitmap;
 pub(super) mod table;

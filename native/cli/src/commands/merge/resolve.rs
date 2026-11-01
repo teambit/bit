@@ -1,6 +1,8 @@
 //! Native `bit merge [component-pattern] --resolve`: the components in merge
 //! state are snapped by the engine's `commandResolve*` requests, and reported like `MergeCmd`'s resolved
 //! components.
+//!
+//! Resolves component [`Id`] targets with [`Startup`] autosync and formats output via [`Chalk`].
 
 use crate::{
     commands::{
