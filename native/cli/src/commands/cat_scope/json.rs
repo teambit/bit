@@ -13,7 +13,7 @@ pub(super) fn build_component_json_obj(
     if scope.is_empty() || name.is_empty() || hash.is_empty() {
         return None;
     }
-    let mut map = Map::new();
+    let mut map = Map::with_capacity(14);
     map.insert("validateBeforePersist".into(), Value::Bool(true));
     map.insert("laneDataIsPopulated".into(), Value::Bool(false));
     map.insert("scope".into(), Value::String(scope.to_owned()));
@@ -50,6 +50,7 @@ pub(super) fn build_component_json_obj(
     Some(Value::Object(map))
 }
 
+#[inline]
 fn insert_extra(map: &mut Map<String, Value>, hash: &str, json_extra: bool) {
     if json_extra {
         map.insert("hash".into(), Value::String(hash.to_owned()));
@@ -57,6 +58,7 @@ fn insert_extra(map: &mut Map<String, Value>, hash: &str, json_extra: bool) {
     }
 }
 
+#[inline]
 fn default_binding_prefix(scope: &str) -> String {
     let owner = scope
         .split('.')
@@ -67,6 +69,7 @@ fn default_binding_prefix(scope: &str) -> String {
     format!("@{owner}")
 }
 
+#[inline]
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
@@ -116,6 +119,7 @@ fn build_detached_heads(val: Option<&Value>) -> Option<Value> {
     Some(Value::Object(map))
 }
 
+#[inline]
 fn map_hash_list(val: Option<&Value>, key: &str) -> Option<Vec<Value>> {
     match val.and_then(|inner| inner[key].as_array()) {
         Some(arr) => arr
@@ -140,7 +144,7 @@ pub(super) fn build_lane_json_obj(
         return None;
     }
     let comps = build_lane_components_json(raw.get("components"))?;
-    let mut map = Map::new();
+    let mut map = Map::with_capacity(11);
     let (scope, name, hash) = (scope.trim(), name.trim(), hash.trim());
     map.insert("validateBeforePersist".into(), Value::Bool(true));
     map.insert("isNew".into(), Value::Bool(false));
@@ -171,7 +175,7 @@ fn build_lane_components_json(val: Option<&Value>) -> Option<Vec<Value>> {
     let mut out = Vec::with_capacity(arr.len());
     for item in arr {
         let (scope, name) = split_scope_name(&item["id"])?;
-        let mut comp = Map::new();
+        let mut comp = Map::with_capacity(3);
         comp.insert(
             "id".into(),
             json!({

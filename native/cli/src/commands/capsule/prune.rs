@@ -176,6 +176,7 @@ fn build(cwd: &Path, root: Option<&ScopeRoot>, opts: &PruneArgs) -> io::Result<P
     })
 }
 
+#[inline]
 fn prune_config(root: Option<&ScopeRoot>) -> io::Result<Map<String, Value>> {
     if let Some(root) = root {
         list_stats::read_combined_config(root)
@@ -184,6 +185,7 @@ fn prune_config(root: Option<&ScopeRoot>) -> io::Result<Map<String, Value>> {
     }
 }
 
+#[inline]
 fn parse_age(opts: &PruneArgs, config: &Map<String, Value>) -> f64 {
     let cli = opts.older_than
         .as_deref()
@@ -245,8 +247,8 @@ fn looks_like_aspects_root(path: &Path) -> bool {
             entry.file_type().is_ok_and(|kind| kind.is_dir())
                 && entry
                     .file_name()
-                    .to_string_lossy()
-                    .contains('@')
+                    .as_encoded_bytes()
+                    .contains(&b'@')
         })
 }
 
@@ -257,7 +259,7 @@ fn select_aspect_children(path: &Path, with_sizes: bool, cutoff: f64, removed: &
         .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
         .filter(|entry| {
             let name = entry.file_name();
-            name != "node_modules" && !name.to_string_lossy().starts_with('.')
+            name != "node_modules" && !name.as_encoded_bytes().starts_with(b".")
         })
         .map(|entry| entry.path())
         .collect::<Vec<_>>();
@@ -282,7 +284,7 @@ fn select_dated_children(path: &Path, with_sizes: bool, removed: &mut Vec<Remove
             }
             let name = entry.file_name();
             name != "node_modules"
-                && !name.to_string_lossy().starts_with('.')
+                && !name.as_encoded_bytes().starts_with(b".")
                 && name != today.as_str()
         })
         .map(|entry| entry.path())
@@ -318,6 +320,7 @@ fn remove_selected(cwd: &Path, report: &PruneReport) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn record(entry: &list_stats::RootEntry, reason: &str, removed: &mut Vec<Removed>) {
     let kind = if reason == "aspect-older-than-cutoff" { "scope-aspect" } else { &entry.kind };
     removed.push(Removed {
@@ -363,6 +366,7 @@ fn render(report: &PruneReport, with_sizes: bool, chalk: Chalk) -> String {
     lines.join("\n")
 }
 
+#[inline]
 fn render_item(item: &Removed, chalk: Chalk, formatter: &super::Formatter) -> String {
     let origin = item.origin_path
         .as_ref()

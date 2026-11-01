@@ -65,6 +65,7 @@ fn save_single_artifact_file(
     fs::write(&target_path, &bytes).map_err(|err| Failure::Declined(err.to_string()))
 }
 
+#[inline]
 fn is_safe_artifact_path(relative_path: &str) -> bool {
     !relative_path.trim().is_empty()
         && !relative_path.contains('\\')
@@ -74,6 +75,7 @@ fn is_safe_artifact_path(relative_path: &str) -> bool {
             .all(|part| matches!(part, std::path::Component::Normal(_)))
 }
 
+#[inline]
 fn sanitize_component_dir(identity: &str) -> String {
     let sanitized: String = identity
         .trim()

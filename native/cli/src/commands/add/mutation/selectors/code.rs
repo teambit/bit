@@ -24,7 +24,8 @@ pub(super) fn compare(
     ids: &[String],
 ) -> io::Result<(Value, Vec<Value>)> {
     let (_, projection) = load::projected(root, bitmap, ids)?;
-    let known: std::collections::HashSet<&str> = ids.iter().map(|id| id.trim()).collect();
+    let mut known = std::collections::HashSet::with_capacity(ids.len());
+    known.extend(ids.iter().map(|id| id.trim()));
     let targets = projection.workspace.components
         .iter()
         .filter(|component| known.contains(component.id.to_string_without_version().as_str()))
@@ -37,6 +38,7 @@ pub(super) fn compare(
     }
     Ok((result, before))
 }
+#[inline]
 fn target(
     context: &Value,
     component: &bit_install::model::WorkspaceComponent,
@@ -61,6 +63,7 @@ fn target(
         json!({"identity":id,"version":version,"directory":component.root_dir,"files":component.files,"current":current}),
     ))
 }
+#[inline]
 fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Value> {
     let id = id.trim();
     let version = version.trim();
@@ -103,6 +106,7 @@ fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Val
     Ok(stored)
 }
 
+#[inline]
 fn source_proofs(root: &Path, targets: &[Value]) -> io::Result<Vec<Value>> {
     targets
         .iter()

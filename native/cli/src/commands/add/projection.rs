@@ -12,6 +12,7 @@ pub(super) struct Projection {
 }
 
 impl Projection {
+    #[inline]
     pub(super) fn loading_components(&self) -> Vec<Value> {
         self.selected
             .iter()
@@ -118,6 +119,7 @@ fn controls(root: &Path, targets: &mut [Value], added: &[Value]) -> io::Result<O
     }
     Ok(error)
 }
+#[inline]
 fn malformed_selected(config: &Value, target: &Value, added: &[Value]) -> bool {
     let target_id = row_identity(target);
     !config.is_null()
@@ -154,6 +156,7 @@ fn components(workspace: &Workspace, added: &[Value]) -> Vec<Value> {
         row
     }).collect()
 }
+#[inline]
 fn tracking_version(row: &mut Value, added: &[Value]) {
     let Some(load_version) = row_identity(row)
         .and_then(|row_id| {
@@ -167,6 +170,7 @@ fn tracking_version(row: &mut Value, added: &[Value]) {
     };
     row["trackingVersion"] = load_version;
 }
+#[inline]
 fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -181,6 +185,7 @@ fn row_identity(row: &Value) -> Option<&str> {
         .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
         .filter(|id| !id.is_empty())
 }
+#[inline]
 fn optional_json(path: &Path) -> io::Result<Value> {
     match std::fs::read(path) {
         Ok(bytes) => bit_object_import::parse_jsonc(&bytes),
@@ -188,6 +193,7 @@ fn optional_json(path: &Path) -> io::Result<Value> {
         Err(error) => Err(error),
     }
 }
+#[inline]
 fn component_config(value: Value) -> Value {
     if value.is_null() {
         return value;

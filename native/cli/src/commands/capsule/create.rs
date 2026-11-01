@@ -100,6 +100,7 @@ fn emit_create_json(
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn format_create_report(capsules: &[CreatedCapsule], chalk: Chalk) -> String {
     let formatter = Formatter::new(chalk);
     let mut lines = Vec::with_capacity(capsules.len() + 1);
@@ -177,6 +178,7 @@ fn validate_custom_name(
     Ok(())
 }
 
+#[inline]
 fn load_workspace_bitmap(ws_root: &Path) -> io::Result<Bitmap> {
     let ws_bytes = fs::read(ws_root.join("workspace.jsonc"))?;
     let ws_val: Value = bit_object_import::parse_jsonc(&ws_bytes).map_err(io::Error::other)?;
@@ -233,6 +235,7 @@ fn build_dependency_edges(ws_root: &Path, active: &[&BitmapEntry]) -> Vec<Vec<us
         .collect()
 }
 
+#[inline]
 fn outgoing_edges(from_idx: usize, source_blob: &str, active: &[&BitmapEntry]) -> Vec<usize> {
     active
         .iter()
@@ -244,6 +247,7 @@ fn outgoing_edges(from_idx: usize, source_blob: &str, active: &[&BitmapEntry]) -
         .collect()
 }
 
+#[inline]
 fn references_component(source_blob: &str, comp_name: &str) -> bool {
     let bytes = source_blob.as_bytes();
     source_blob
@@ -301,6 +305,7 @@ fn select_isolated_indices(
     selected
 }
 
+#[inline]
 fn should_isolate_candidate(
     cand: usize,
     seeders: &[usize],
@@ -328,6 +333,7 @@ fn can_reach(edges: &[Vec<usize>], start: usize, target: usize) -> bool {
     false
 }
 
+#[inline]
 fn enqueue_unvisited(neighbors: &[usize], visited: &mut [bool], queue: &mut VecDeque<usize>) {
     for &next in neighbors {
         if !visited[next] {

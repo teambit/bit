@@ -50,6 +50,7 @@ pub(super) struct CapsuleRootDirs {
 }
 
 impl Subcommand {
+    #[inline]
     const fn loader_label(&self) -> &'static str {
         match self {
             Self::BareList => "capsule",
@@ -137,6 +138,7 @@ fn run_delete(
     }
 }
 
+#[inline]
 fn emit_report(
     root: &ScopeRoot,
     args: &[OsString],
@@ -272,6 +274,7 @@ fn build_list_json(cwd: &Path, root: &ScopeRoot, with_stats: bool) -> io::Result
     Ok(Value::Object(out))
 }
 
+#[inline]
 fn resolve_delete_dir(
     cwd: &Path,
     root: &ScopeRoot,
@@ -285,6 +288,7 @@ fn resolve_delete_dir(
     resolve_capsules_dir(cwd)
 }
 
+#[inline]
 fn delete_and_report(target_dir: &str, chalk: Chalk) -> io::Result<Report> {
     let target_dir = target_dir.trim();
     let target_path = Path::new(target_dir);

@@ -58,6 +58,7 @@ pub(super) fn write(
     Ok(("updated", note))
 }
 
+#[inline]
 fn fill_repo(content: &str, repo: &str) -> String {
     let trimmed_repo = super::trim(repo);
     if trimmed_repo.is_empty()
@@ -81,6 +82,7 @@ fn fill_repo(content: &str, repo: &str) -> String {
     )
 }
 
+#[inline]
 fn starts_block(line: &str) -> bool {
     static BLOCK_RE: OnceLock<Option<regress::Regex>> = OnceLock::new();
     BLOCK_RE
@@ -94,6 +96,7 @@ fn starts_block(line: &str) -> bool {
         .is_some_and(|regex| regex.find(line).is_some())
 }
 
+#[inline]
 fn insertion_point(lines: &[&str]) -> usize {
     let mut at = 0;
     if lines
@@ -161,6 +164,7 @@ fn insert(existing: &str, section: &str) -> String {
             .join("\n\n"),
     )
 }
+#[inline]
 fn skip_empty(lines: &[&str], next: &mut usize) {
     while lines
         .get(*next)

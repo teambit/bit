@@ -37,6 +37,7 @@ pub(crate) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<(String,
     Ok((logs, Formatter::join(&[updates, conflicts])))
 }
 
+#[inline]
 fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
     let Some(value) = value.filter(|value| !value.is_null()) else {
         return Ok(String::new());
@@ -63,6 +64,7 @@ fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
     ))
 }
 
+#[inline]
 fn update_pair(value: &Value) -> io::Result<(&str, &str)> {
     let (before, after) = if let Some(object) = value.as_object() {
         let before = text(

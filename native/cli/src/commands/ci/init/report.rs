@@ -118,9 +118,11 @@ fn header_warnings(
     }
     lines
 }
+#[inline]
 fn warning(message: &str, chalk: Chalk) -> String {
     format!("{} {}", chalk.yellow("⚠"), chalk.yellow(message))
 }
+#[inline]
 fn note(file: &File) -> &'static str {
     if let Some(note) = file.note {
         return note;
@@ -166,6 +168,7 @@ fn files(report: &Report, chalk: Chalk) -> String {
     lines.push(item(&report.changes.config, config));
     lines.join("\n")
 }
+#[inline]
 pub(super) fn step(
     number: usize,
     title: &str,
@@ -185,6 +188,7 @@ pub(super) fn step(
     );
     lines.join("\n")
 }
+#[inline]
 fn paths<'a>(values: impl IntoIterator<Item = &'a String>) -> String {
     values
         .into_iter()
@@ -192,6 +196,7 @@ fn paths<'a>(values: impl IntoIterator<Item = &'a String>) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
+#[inline]
 fn is_dot_repo_root(repo_root: &str) -> bool {
     let trimmed = repo_root.trim();
     trimmed.is_empty() || trimmed == "."

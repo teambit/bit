@@ -45,6 +45,7 @@ pub(super) fn warn(
     output.warning(&text);
 }
 
+#[inline]
 fn remote_id_str(value: &Value) -> Option<String> {
     if let Some(id) = non_empty_str(value)
         .or_else(|| non_empty_str(&value["id"]))
@@ -61,6 +62,7 @@ fn remote_id_str(value: &Value) -> Option<String> {
     )
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()

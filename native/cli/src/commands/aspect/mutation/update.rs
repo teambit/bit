@@ -191,6 +191,7 @@ fn candidate_scope_dirs(root: &Path, aspect_scope: &str) -> Vec<PathBuf> {
     dirs
 }
 
+#[inline]
 fn remote_file_scope_dir(local_scope: &Path, aspect_scope: &str) -> Option<PathBuf> {
     let bytes = fs::read(local_scope.join("scope.json")).ok()?;
     let scope_json = bit_object_import::parse_jsonc(&bytes).ok()?;
@@ -249,6 +250,7 @@ pub(in crate::commands) fn find_component_aspect(
         .or_else(|| find_aspect_in_scope_version(root, entry, bare_aspect))
 }
 
+#[inline]
 fn is_aspect_minus_in_bitmap(bitmap_val: &Value, entry: &BitmapEntry, bare_aspect: &str) -> bool {
     find_bitmap_row_ref(bitmap_val, entry)
         .ok()
@@ -273,6 +275,7 @@ fn is_aspect_minus_in_comp_json(root: &Path, entry: &BitmapEntry, bare_aspect: &
         == Some(true)
 }
 
+#[inline]
 fn find_aspect_in_bitmap(
     bitmap_val: &Value,
     entry: &BitmapEntry,
@@ -291,11 +294,9 @@ fn find_aspect_in_comp_json(
     if entry.root_dir.is_empty() {
         return None;
     }
-    let comp_json = root.join(&entry.root_dir).join("component.json");
-    let bytes = fs::read(comp_json).ok()?;
+    let bytes = fs::read(root.join(&entry.root_dir).join("component.json")).ok()?;
     let parsed = bit_object_import::parse_jsonc(&bytes).ok()?;
-    let ext_obj = parsed["extensions"].as_object()?;
-    extract_aspect_from_map(ext_obj, bare_aspect)
+    extract_aspect_from_map(parsed["extensions"].as_object()?, bare_aspect)
 }
 
 fn extract_aspect_from_map(
@@ -326,12 +327,11 @@ fn find_aspect_in_scope_version(
         .ok()??;
     for ext in ver_obj["extensions"].as_array()? {
         if extension_bare_id(ext).as_deref() == Some(bare_aspect) {
-            let ver = extension_version(ext);
             let cfg = ext
                 .get("config")
                 .cloned()
                 .unwrap_or_else(|| json!({}));
-            return Some((ver, cfg));
+            return Some((extension_version(ext), cfg));
         }
     }
     None

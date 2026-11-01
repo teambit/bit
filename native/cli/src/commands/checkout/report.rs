@@ -15,6 +15,7 @@ use serde_json::Value;
 use std::io;
 
 /// The checkout report of the engine's result.
+#[inline]
 pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
     format_title(result, options, chalk, None)
 }
@@ -52,12 +53,14 @@ pub(in crate::commands) fn format_title(
     Ok(Report { data, code: 0, details: Some(details) })
 }
 
+#[inline]
 fn non_empty_trimmed(version: Option<&str>) -> Option<&str> {
     version
         .map(str::trim)
         .filter(|ver| !ver.is_empty())
 }
 
+#[inline]
 fn deprecated_all(options: &Options, report: String) -> String {
     let target = options.to.trim();
     if options.all && matches!(target, "head" | "latest") {
@@ -79,6 +82,7 @@ struct Checkout<'r> {
 }
 
 impl Checkout<'_> {
+    #[inline]
     fn chalk(&self) -> Chalk {
         self.format.chalk
     }
@@ -185,6 +189,7 @@ impl Checkout<'_> {
         ])
     }
 
+    #[inline]
     fn to(&self, name: &str) -> bool {
         self.options.to.trim() == name.trim()
     }
@@ -223,6 +228,7 @@ impl Checkout<'_> {
         self.format.section(title, description, &items)
     }
 
+    #[inline]
     fn new_from_scope(&self) -> String {
         let items = self.results.lists.scope
             .iter()

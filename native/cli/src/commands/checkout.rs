@@ -30,6 +30,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_options(args, &argv, &options)
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -98,10 +99,12 @@ fn run_options(
     execute(&root, args, command, prepared, installation)
 }
 
+#[inline]
 fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
     if skip { Ok(None) } else { Installer::start(root, argv).map(Some) }
 }
 
+#[inline]
 fn installation_session(
     installer: Option<Installer>,
 ) -> io::Result<(Option<Environments>, Option<HostInfo>)> {
@@ -225,6 +228,7 @@ fn install_and_report(
     Ok(prepared.report)
 }
 
+#[inline]
 fn render_progress(output: &Output, progress: Option<&Progress>, main: bool, revert: bool) {
     if let Some(progress) = progress {
         progress.render_checkout_with(output, main, revert);

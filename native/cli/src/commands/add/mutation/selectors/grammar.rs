@@ -37,10 +37,12 @@ pub(super) fn validate(criterion: &str) -> io::Result<()> {
         STATES.join(", "),
     )))
 }
+#[inline]
 pub(super) fn loads(criterion: &str) -> bool {
     let criterion = criterion.trim();
     matches!(criterion, "$modified" | "$deprecated" | "$deleted") || criterion.starts_with("$env:")
 }
+#[inline]
 pub(super) fn identities(targets: &[Value]) -> Vec<String> {
     targets
         .iter()
@@ -82,6 +84,7 @@ pub(super) fn union(selected: &mut Vec<Value>, targets: Vec<Value>) {
     }
 }
 
+#[inline]
 fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
@@ -96,6 +99,7 @@ fn row_identity(row: &Value) -> Option<&str> {
         .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
         .filter(|id| !id.is_empty())
 }
+#[inline]
 pub(super) fn no_matches(pattern: &str) -> io::Error {
     io::Error::new(
         io::ErrorKind::InvalidInput,
@@ -103,6 +107,7 @@ pub(super) fn no_matches(pattern: &str) -> io::Error {
     )
 }
 
+#[inline]
 pub(super) fn applied(entered: &str) -> String {
     let entered = entered.trim();
     if let Some(env) = entered.strip_prefix("$env:") {

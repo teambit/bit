@@ -34,12 +34,14 @@ pub(super) fn workflows(
     }
     Ok(files)
 }
+#[inline]
 fn write_workflow(path: &Path, content: &str) -> io::Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|error| failure(error, "mkdir", parent))?;
     }
     fs::write(path, content).map_err(|error| failure(error, "open", path))
 }
+#[inline]
 fn render(raw: &str, marker: &str, branch: &str, workspace_dir: &str) -> String {
     let branch = super::trim(branch);
     let workspace_dir = super::trim(workspace_dir);
@@ -57,6 +59,7 @@ fn render(raw: &str, marker: &str, branch: &str, workspace_dir: &str) -> String 
     )
 }
 /// Versioned or malformed extension configs still require the original `setExtension` behavior.
+#[inline]
 pub(super) fn supported(document: &Document) -> bool {
     let value = document.value();
     let Some(entries) = value.as_object() else {
@@ -145,6 +148,7 @@ pub(super) fn read(path: &Path) -> io::Result<String> {
             }
         })
 }
+#[inline]
 pub(super) fn write(path: &Path, content: &str) -> io::Result<()> {
     fs::write(path, content).map_err(|error| failure(error, "open", path))
 }

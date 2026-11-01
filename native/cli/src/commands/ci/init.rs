@@ -107,6 +107,7 @@ impl Plan {
             repo_root,
         }
     }
+    #[inline]
     fn scaffold_root(&self) -> &Path {
         self.repository_root.as_deref().unwrap_or(&self.root)
     }
@@ -171,6 +172,7 @@ impl Plan {
     }
 }
 
+#[inline]
 fn shell_word(value: &str) -> String {
     if !value.is_empty()
         && value
@@ -184,11 +186,13 @@ fn shell_word(value: &str) -> String {
 }
 
 /// ECMAScript whitespace includes BOM and excludes NEXT LINE.
+#[inline]
 fn whitespace(character: char) -> bool {
     matches!(character, '\u{0009}'..='\u{000d}' | ' ' | '\u{00a0}' | '\u{1680}' |
         '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}' |
         '\u{205f}' | '\u{3000}' | '\u{feff}')
 }
+#[inline]
 fn trim(value: &str) -> &str {
     value.trim_matches(whitespace)
 }

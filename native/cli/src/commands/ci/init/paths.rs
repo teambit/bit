@@ -7,8 +7,16 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+#[inline]
 pub(super) fn real(path: &Path) -> io::Result<PathBuf> {
-    if path.as_os_str().is_empty() || path.to_string_lossy().trim().is_empty() || !path.exists() {
+    if path.as_os_str().is_empty()
+        || path
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
+        || !path.exists()
+    {
         return Ok(path.to_owned());
     }
     let mut resolved = normalize(&std::path::absolute(path)?);
@@ -20,6 +28,7 @@ pub(super) fn real(path: &Path) -> io::Result<PathBuf> {
     }
     Err(io::Error::other("too many symbolic link levels"))
 }
+#[inline]
 fn resolve_link(path: &Path) -> io::Result<Option<PathBuf>> {
     let mut current = PathBuf::new();
     let mut parts = path.components();
@@ -41,6 +50,7 @@ fn resolve_link(path: &Path) -> io::Result<Option<PathBuf>> {
     }
     Ok(None)
 }
+#[inline]
 fn normalize(path: &Path) -> PathBuf {
     let mut result = PathBuf::with_capacity(path.as_os_str().len());
     for part in path.components() {

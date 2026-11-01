@@ -125,6 +125,7 @@ fn validate_build_pattern(root: &Path, options: &Options, chalk: Chalk) -> Optio
     }
 }
 
+#[inline]
 pub(super) fn flag_error(capsules: &CapsuleFlags) -> Option<&'static str> {
     if capsules.rewrite && !capsules.reuse_capsules {
         Some(REWRITE_ERR)
@@ -135,11 +136,13 @@ pub(super) fn flag_error(capsules: &CapsuleFlags) -> Option<&'static str> {
     }
 }
 
+#[inline]
 pub(in crate::commands) fn is_bitmap_auto_sync(ws_config: &serde_json::Value) -> bool {
     super::update_cmd::aspect_entry(ws_config, "teambit.workspace/workspace")
         .is_some_and(|(_, ws)| ws["bitmapAutoSync"] == true)
 }
 
+#[inline]
 pub(super) fn is_empty_build_workspace(root: &Path, options: &Options) -> io::Result<bool> {
     if options.list_tasks.is_some() || options.pattern.is_some() {
         return Ok(false);
@@ -272,6 +275,7 @@ fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
     Some(())
 }
 
+#[inline]
 fn take_val(val: &str) -> Option<String> {
     let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())

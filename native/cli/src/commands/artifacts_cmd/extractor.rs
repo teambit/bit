@@ -171,6 +171,7 @@ fn find_bitmap_target(
     Some(target)
 }
 
+#[inline]
 fn target_from_bitmap_entry(entry: &BitmapEntry) -> TargetComponent {
     TargetComponent {
         identity_no_ver: entry.id.to_string_without_version(),
@@ -205,12 +206,10 @@ fn load_component_artifacts(
     let (resolved_ver, ver_hash) = resolve_target_version(&comp_val, req_ver)
         .ok_or_else(|| Failure::Declined("version hash not found".into()))?;
     let ver_val = read_version_with_remote_fallback(scope_dir, &comp_val, &ver_hash)?;
-    let artifacts = parse_builder_artifacts(&ver_val);
-    let display_id = format!("{}@{resolved_ver}", target.identity_no_ver);
     Ok(ComponentArtifacts {
         identity_no_ver: target.identity_no_ver.clone(),
-        display_id,
-        artifacts,
+        display_id: format!("{}@{resolved_ver}", target.identity_no_ver),
+        artifacts: parse_builder_artifacts(&ver_val),
     })
 }
 
@@ -240,6 +239,7 @@ fn resolve_target_version(comp_val: &Value, req_ver: &str) -> Option<(String, St
     None
 }
 
+#[inline]
 fn find_tag_for_hash(comp_val: &Value, target_hash: &str) -> Option<String> {
     crate::commands::show_cmd::remote_show::find_tag_for_hash(comp_val, target_hash)
 }
@@ -279,6 +279,7 @@ fn try_read_remote_version(
         .filter(|val| !parse_builder_artifacts(val).is_empty()))
 }
 
+#[inline]
 fn read_version_object(scope_dir: &Path, ver_hash: &str) -> Option<Value> {
     bit_object_import::read_scope_object(scope_dir, ver_hash)
         .ok()
@@ -355,8 +356,7 @@ fn parse_single_artifact(art: &Value, fallback_artifacts: Option<&[Value]>) -> A
 }
 
 fn extract_artifact_files(files_val: &Value) -> Vec<ArtifactFile> {
-    let arr_opt = files_val["refs"].as_array().or_else(|| files_val.as_array());
-    let Some(arr) = arr_opt else {
+    let Some(arr) = files_val["refs"].as_array().or_else(|| files_val.as_array()) else {
         return Vec::new();
     };
     arr.iter()

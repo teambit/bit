@@ -4,6 +4,7 @@ mod tests;
 
 use std::sync::OnceLock;
 
+#[inline]
 pub(super) fn normalize(raw: &str) -> String {
     let raw = raw.trim();
     number(raw)
@@ -49,6 +50,7 @@ fn number(raw: &str) -> Option<f64> {
     (integer.is_finite() && integer.abs() <= 9_007_199_254_740_991.0).then_some(number)
 }
 
+#[inline]
 pub(super) fn head_tilde_is_nan(after: &str) -> bool {
     let trimmed = after.trim_start();
     let rest = trimmed
@@ -69,6 +71,7 @@ pub(super) fn head_tilde_is_nan(after: &str) -> bool {
         .is_some_and(|byte| byte.is_ascii_digit())
 }
 
+#[inline]
 pub(super) fn valid_revert_version(to: &str) -> bool {
     let to = to.trim();
     if matches!(to, "head" | "latest" | "reset") || to.starts_with("head~") {
@@ -78,6 +81,7 @@ pub(super) fn valid_revert_version(to: &str) -> bool {
 }
 
 /// `head`, `latest`, `reset`, `main`, `head~N`, a snap hash or a semver tag.
+#[inline]
 pub(super) fn valid_to(to: &str) -> bool {
     let to = to.trim();
     if matches!(to, "head" | "latest" | "reset" | "main") {

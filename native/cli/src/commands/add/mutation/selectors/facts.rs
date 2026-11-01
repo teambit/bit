@@ -42,6 +42,7 @@ impl Facts {
             map.extend(facts.clone());
         }
     }
+    #[inline]
     pub(super) fn compare(
         &self,
         engine: &mut Engine,
@@ -66,7 +67,8 @@ pub(super) fn history(
     context: &Value,
     ids: &[String],
 ) -> io::Result<()> {
-    let known: std::collections::HashSet<&str> = ids.iter().map(|id| id.trim()).collect();
+    let mut known = std::collections::HashSet::with_capacity(ids.len());
+    known.extend(ids.iter().map(|id| id.trim()));
     let targets = context["targets"]
         .as_array()
         .into_iter()
@@ -88,6 +90,7 @@ pub(super) fn history(
     commit_history(engine, root, plans)
 }
 
+#[inline]
 fn commit_history(engine: &mut Engine, root: &Path, plans: &[Value]) -> io::Result<()> {
     if plans.is_empty() {
         return Ok(());

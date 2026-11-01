@@ -125,6 +125,7 @@ fn merge_debug_origins(
     (before_merge, after_merge)
 }
 
+#[inline]
 fn source_to_origin(source: &str) -> Origin {
     match source {
         "BitmapFile" => Origin::BitmapFile,
@@ -205,6 +206,7 @@ fn drop_origin_envs(mut entries: Vec<AspectEntry>, env: Option<&str>) -> Vec<Asp
     entries
 }
 
+#[inline]
 fn build_debug_json(report: &DebugReport) -> Value {
     let mut map = Map::with_capacity(report.before.len() + 2);
     for item in &report.before {

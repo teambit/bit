@@ -22,11 +22,11 @@ struct OriginMarker<'a> {
 
 pub(super) fn write_root_metadata(capsules_root: &Path, base_dir: &str) -> io::Result<()> {
     let base_dir = base_dir.trim();
-    if capsules_root.as_os_str().is_empty()
-        || capsules_root
-            .to_string_lossy()
-            .trim()
-            .is_empty()
+    if capsules_root
+        .as_os_str()
+        .as_encoded_bytes()
+        .iter()
+        .all(u8::is_ascii_whitespace)
         || base_dir.is_empty()
         || base_dir.chars().any(char::is_control)
     {
@@ -56,6 +56,7 @@ pub(super) fn write_root_metadata(capsules_root: &Path, base_dir: &str) -> io::R
     Ok(())
 }
 
+#[inline]
 fn has_valid_origin_marker(marker: &Path) -> bool {
     fs::read(marker)
         .ok()

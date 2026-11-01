@@ -14,11 +14,13 @@ use serde_json::{Value, json};
 use std::{io, path::Path};
 
 impl ProjectedLinker {
+    #[inline]
     pub(in crate::commands) fn state_pattern(pattern: &str) -> bool {
         let trimmed = pattern.trim();
         !trimmed.is_empty() && selection::stateful(trimmed)
     }
     /// Prove native context eligibility before any configured provider starts.
+    #[inline]
     pub(in crate::commands) fn preflight_selection(root: &Path, bitmap: &Value) -> io::Result<()> {
         let mut engine = Engine::new()?;
         let context: Value = engine.request(&json!({"kind":"trackingContext","root":root,
@@ -146,6 +148,7 @@ impl ProjectedLinker {
         }
     }
 
+    #[inline]
     pub(super) fn compare_status(
         &mut self,
         engine: &mut Engine,

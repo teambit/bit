@@ -73,8 +73,7 @@ pub(super) fn run_list(
 ) -> Result<Outcome, Failure> {
     let items = collect_list_results(root, opts.pattern.as_deref(), chalk)?;
     if opts.json {
-        let payload = build_list_json(items);
-        let data = serde_json::to_string_pretty(&payload)
+        let data = serde_json::to_string_pretty(&build_list_json(items))
             .map_err(|err| Failure::Declined(err.to_string()))?;
         return workspace_command::execute_json(root, args, "list", |_| {
             Ok(Report { data, code: 0, details: None })
@@ -112,8 +111,7 @@ pub(super) fn collect_list_results(
     let inspect_ctx = InspectCtx::new(root, &ws_config, &ws, &ctx.bitmap)?;
     let mut out = Vec::with_capacity(entries.len());
     for entry in entries {
-        let comp = find_ws_comp(&ws.components, entry);
-        let sources = sources_for_entry(&inspect_ctx, entry, comp)?;
+        let sources = sources_for_entry(&inspect_ctx, entry, find_ws_comp(&ws.components, entry))?;
         out.push((selection::entry_full_id(entry), sources));
     }
     Ok(out)
@@ -134,6 +132,7 @@ fn select_entries<'a>(
     }
 }
 
+#[inline]
 pub(super) fn find_ws_comp<'a>(
     components: &'a [WorkspaceComponent],
     entry: &BitmapEntry,
@@ -206,6 +205,7 @@ fn append_origin_sources(
 }
 
 impl RawOrigin {
+    #[inline]
     const fn simple(
         source: &'static str,
         level: &'static str,
@@ -252,13 +252,12 @@ fn append_merge_origin(
         .component(&entry.id.to_string_without_version())
         .map_err(|err| Failure::Declined(err.to_string()))?
     {
-        origins.push(RawOrigin {
-            source: "ConfigMerge",
-            level: "workspace",
-            prefer_ws: true,
-            entries: aspects::from_config_object(&merge.config, &ictx.core_ids),
-            extra_data: None,
-        });
+        origins.push(RawOrigin::simple(
+            "ConfigMerge",
+            "workspace",
+            true,
+            aspects::from_config_object(&merge.config, &ictx.core_ids),
+        ));
     }
     Ok(())
 }
@@ -375,8 +374,7 @@ pub(super) fn render_list_table(
     let full = table::render(&["", ""], &rows, colors);
     let lines = full.lines().collect::<Vec<_>>();
     if lines.len() >= 4 {
-        let mut kept = Vec::with_capacity(lines.len() - 2);
-        kept.push(lines[0]);
+        let mut kept = vec![lines[0]];
         kept.extend_from_slice(&lines[3..]);
         return kept.join("\n");
     }

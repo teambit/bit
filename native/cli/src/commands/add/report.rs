@@ -2,6 +2,7 @@
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::{Value, json};
 use std::io;
+#[inline]
 pub(super) fn json(components: &[Value], warnings: &Value) -> Value {
     json!({"addedComponents":components.iter().map(|row|json!({"id":row["id"],"files":row["files"]})).collect::<Vec<_>>(),"warnings":warnings})
 }
@@ -61,6 +62,7 @@ fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String
     Ok(lines.join("\n"))
 }
 
+#[inline]
 fn component_id(component: &Value) -> io::Result<String> {
     if let Some(id) = component["id"]
         .as_str()

@@ -52,6 +52,7 @@ fn parse_options(args: &[&str]) -> Option<Options> {
     Some(opts)
 }
 
+#[inline]
 fn consume_trailing_scope_path<'a>(
     iter: impl Iterator<Item = &'a str>,
     scope_path: &mut Option<String>,
@@ -141,6 +142,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     emit_text(&current_root, args, "cat-scope", false, rendered)
 }
 
+#[inline]
 fn render_text_entries(args: &[OsString], full: bool, entries: Vec<ScopeEntry>) -> String {
     if full {
         entries
@@ -278,6 +280,7 @@ fn build_component_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
     Some(ScopeEntry { id, hash, kind: "Component", json_obj })
 }
 
+#[inline]
 fn extract_boxed_name(raw: &Value) -> Option<String> {
     let base_name = raw["name"]
         .as_str()
@@ -303,7 +306,7 @@ fn build_symlink_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
         .filter(|text| !text.is_empty())?;
     let hash = sha1_hex(&id);
     let json_obj = opts.json.then(|| {
-        let mut map = Map::new();
+        let mut map = Map::with_capacity(6);
         map.insert("validateBeforePersist".into(), Value::Bool(true));
         if let Some(scope) = raw["scope"]
             .as_str()
@@ -354,7 +357,7 @@ fn build_scope_meta_entry(raw: &Value, hash: &str, opts: &Options) -> Option<Sco
         .filter(|text| !text.is_empty())?
         .to_owned();
     let json_obj = opts.json.then(|| {
-        let mut map = Map::new();
+        let mut map = Map::with_capacity(5);
         map.insert("validateBeforePersist".into(), Value::Bool(true));
         if let Some(lic) = raw
             .get("license")

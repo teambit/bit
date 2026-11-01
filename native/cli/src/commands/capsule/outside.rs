@@ -73,6 +73,7 @@ pub(super) fn run_create_in_bare_scope(
     run_outside_failure(chalk, "create", args.json, &error)
 }
 
+#[inline]
 fn safe_unscoped_id(id: &str) -> bool {
     let id = id.trim();
     !id.is_empty()
@@ -118,6 +119,7 @@ fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
     }
 }
 
+#[inline]
 fn supports_named_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
     match argv {
         ["capsule", "create", "--id" | "-i" | "--package-manager" | "-p", _]
@@ -146,6 +148,7 @@ fn supports_named_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
     }
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     std::env::var_os("CI")
         .is_some_and(|value| {

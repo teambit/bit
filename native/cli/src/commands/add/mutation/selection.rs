@@ -49,20 +49,16 @@ pub(super) fn components(
     projection: &Projection,
     identities: &[String],
 ) -> Vec<WorkspaceComponent> {
-    let by_id: std::collections::HashMap<String, &WorkspaceComponent> = projection
-        .workspace
-        .components
-        .iter()
-        .map(|component| {
-            (
-                component.id
-                    .to_string_without_version()
-                    .trim()
-                    .to_owned(),
-                component,
-            )
-        })
-        .collect();
+    let mut by_id = std::collections::HashMap::with_capacity(projection.workspace.components.len());
+    for component in &projection.workspace.components {
+        by_id.insert(
+            component.id
+                .to_string_without_version()
+                .trim()
+                .to_owned(),
+            component,
+        );
+    }
     identities
         .iter()
         .map(|identity| {
@@ -91,6 +87,7 @@ pub(super) fn seed_environments(
     Ok(())
 }
 
+#[inline]
 fn extract_registered_env(facts: &Value, env_id: &str) -> Option<String> {
     let entry = facts
         .get(env_id)

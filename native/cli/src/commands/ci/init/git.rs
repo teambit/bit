@@ -4,19 +4,23 @@ mod tests;
 
 use std::path::{Path, PathBuf};
 
+#[inline]
 fn run(root: &Path, args: &[&str]) -> Option<String> {
     super::super::run_git(root, args)
         .ok()
         .map(|text| super::trim(&text).to_owned())
 }
+#[inline]
 pub(super) fn origin(root: &Path) -> Option<String> {
     run(root, &["remote", "get-url", "origin"]).filter(|value| !value.is_empty())
 }
+#[inline]
 pub(super) fn repository_root(root: &Path) -> Option<PathBuf> {
     run(root, &["rev-parse", "--show-toplevel"])
         .filter(|value| !value.is_empty())
         .map(|value| Path::new(&value).components().collect())
 }
+#[inline]
 pub(super) fn commits(root: &Path) -> bool {
     run(root, &["rev-parse", "--verify", "--quiet", "HEAD"]).is_some_and(|value| !value.is_empty())
 }
@@ -63,6 +67,7 @@ fn detected_branch(root: &Path) -> Option<String> {
         })
         .map(str::to_owned)
 }
+#[inline]
 fn valid_branch(value: &str) -> bool {
     let value = super::trim(value);
     !value.is_empty()
@@ -126,6 +131,7 @@ pub(super) fn relative(from: &Path, to: &Path) -> PathBuf {
     }
     result
 }
+#[inline]
 pub(super) fn display(cwd: &Path, path: &Path) -> String {
     let result = relative(cwd, path);
     if result.as_os_str().is_empty() {
@@ -136,10 +142,12 @@ pub(super) fn display(cwd: &Path, path: &Path) -> String {
 }
 
 #[cfg(not(windows))]
+#[inline]
 fn same_component(first: std::path::Component<'_>, second: std::path::Component<'_>) -> bool {
     first == second
 }
 #[cfg(windows)]
+#[inline]
 fn same_component(first: std::path::Component<'_>, second: std::path::Component<'_>) -> bool {
     match (first.as_os_str().to_str(), second.as_os_str().to_str()) {
         (Some(first), Some(second)) => first.to_lowercase() == second.to_lowercase(),

@@ -75,6 +75,7 @@ fn react_like(
     insert(peer, "react-dom", "^17.0.0 || ^18.0.0 || ^19.0.0");
 }
 
+#[inline]
 fn insert(map: &mut Map<String, Value>, name: &str, version: &str) {
     map.insert(name.to_owned(), Value::String(version.to_owned()));
 }
@@ -109,6 +110,7 @@ pub(super) fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>)
     })
 }
 
+#[inline]
 pub(super) fn configured_entry_points(manifest: &ManifestConfig, stem: &str) -> EntryPointMetadata {
     let mut entry_points = entry_point_metadata(manifest.env, stem);
     if let Some(types) = manifest.overrides.entry_points.types
@@ -124,6 +126,7 @@ pub(super) fn configured_entry_points(manifest: &ManifestConfig, stem: &str) -> 
     entry_points
 }
 
+#[inline]
 fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
     let types = (!matches!(env, BuiltinEnv::Empty)).then(|| format!("{stem}.ts"));
     let exports = matches!(env, BuiltinEnv::Aspect).then(|| {
@@ -136,6 +139,7 @@ fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
     EntryPointMetadata { types, exports }
 }
 
+#[inline]
 pub(super) fn parse_builtin_env(env: Option<&str>) -> Option<BuiltinEnv> {
     let normalized = env
         .map(str::trim)

@@ -47,6 +47,7 @@ pub(super) fn prepare(
     Ok(Prepared { plan, projection, capture, engine })
 }
 
+#[inline]
 fn context(
     engine: &mut Engine,
     root: &Path,
@@ -81,6 +82,7 @@ fn environment_options(
     Ok(tracking)
 }
 
+#[inline]
 fn build_env_tracking_config(facts: &Value) -> io::Result<Value> {
     let configured = extract_env_id(facts, "configuredId")
         .filter(|id| !id.chars().any(char::is_control))
@@ -91,6 +93,7 @@ fn build_env_tracking_config(facts: &Value) -> io::Result<Value> {
     Ok(json!({(configured):{},"teambit.envs/envs":{"env":resolved}}))
 }
 
+#[inline]
 fn extract_env_id<'a>(facts: &'a Value, key: &str) -> Option<&'a str> {
     let value = facts.get(key)?;
     value

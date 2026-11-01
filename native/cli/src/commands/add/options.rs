@@ -89,6 +89,7 @@ fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>
     *slot = Some(inline.to_owned());
     Some(Some(true))
 }
+#[inline]
 fn string_option<'a>(options: &'a mut Options, arg: &str) -> Option<&'a mut Option<String>> {
     match arg {
         "-i" | "--id" => Some(&mut options.tracking.id),
@@ -99,12 +100,14 @@ fn string_option<'a>(options: &'a mut Options, arg: &str) -> Option<&'a mut Opti
         _ => None,
     }
 }
+#[inline]
 fn value(args: &mut std::slice::Iter<'_, &str>) -> Option<String> {
     args.next()
         .copied()
         .filter(|arg| is_valid_value(arg))
         .map(str::to_owned)
 }
+#[inline]
 fn is_valid_value(val: &str) -> bool {
     !val.trim().is_empty() && !val.starts_with('-')
 }

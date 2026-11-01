@@ -96,10 +96,15 @@ fn emit_empty_check_types(
     })
 }
 
+#[inline]
 pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
     if !root.is_absolute()
         || root.as_os_str().is_empty()
-        || root.to_string_lossy().trim().is_empty()
+        || root
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
     {
         return Ok(false);
     }
@@ -142,6 +147,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn consume_trailing_check_types_pattern<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut Option<String>,
@@ -156,6 +162,7 @@ fn consume_trailing_check_types_pattern<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_short_flags(arg: &str, options: &mut Options) -> Option<()> {
     let flags = arg.trim().strip_prefix('-')?;
     if flags.is_empty() || flags.starts_with('-') {

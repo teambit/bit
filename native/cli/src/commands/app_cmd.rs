@@ -223,6 +223,7 @@ pub(super) fn is_empty_app_workspace(root: &Path) -> io::Result<bool> {
     Ok(active_component_count(&bitmap) == 0)
 }
 
+#[inline]
 fn has_custom_root_aspects(ws_config: &serde_json::Value) -> bool {
     ws_config
         .as_object()
@@ -283,6 +284,7 @@ fn collect_component_apps(
     Some(())
 }
 
+#[inline]
 fn is_app_plugin_file(rel_file: &str) -> bool {
     rel_file.contains(".bit-app.")
         || rel_file.contains(".app-root.")
@@ -319,6 +321,7 @@ fn extract_name_from_line(line: &str) -> Option<String> {
     None
 }
 
+#[inline]
 fn parse_quoted_literal(input: &str) -> Option<String> {
     let quote = input.chars().next()?;
     if !matches!(quote, '\'' | '"' | '`') {
@@ -374,6 +377,7 @@ fn consume_trailing_app_list<'a>(
     Some(())
 }
 
+#[inline]
 fn inline_json_value(flag: &str) -> Option<&str> {
     flag.strip_prefix("--json=")
         .or_else(|| flag.strip_prefix("-j="))

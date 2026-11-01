@@ -75,6 +75,7 @@ fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
     true
 }
 
+#[inline]
 fn parse_bool_val(raw: &str) -> Option<bool> {
     let trimmed = raw.trim();
     if trimmed.eq_ignore_ascii_case("true") || trimmed == "1" {
@@ -86,6 +87,7 @@ fn parse_bool_val(raw: &str) -> Option<bool> {
     }
 }
 
+#[inline]
 fn apply_cat_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
     if !arg.starts_with('-')
         || arg.starts_with("--")
@@ -106,6 +108,7 @@ fn apply_cat_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
     true
 }
 
+#[inline]
 fn set_cat_file<'a>(options: &mut Options<'a>, val: &'a str, consumed: usize) -> Option<usize> {
     let trimmed = val.trim();
     if options.file.is_some()

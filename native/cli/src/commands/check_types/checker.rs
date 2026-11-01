@@ -73,6 +73,7 @@ fn emit_pattern_error(
     })
 }
 
+#[inline]
 fn load_workspace(root: &Path) -> Option<(Workspace, Bitmap)> {
     let ws_config = WorkspaceConfig::load(root).ok()?;
     if ws_config.workspace.bitmap_auto_sync == Some(true) {
@@ -132,6 +133,7 @@ fn collect_diagnostics(
     Ok(diags)
 }
 
+#[inline]
 fn is_ts_source(rel_file: &str) -> bool {
     let rel_file = rel_file.trim();
     let rel_path = Path::new(rel_file);
@@ -214,6 +216,7 @@ fn find_assign_eq(line: &str) -> Option<usize> {
     None
 }
 
+#[inline]
 fn is_string_literal(expr: &str) -> bool {
     expr.len() >= 2
         && ((expr.starts_with('\'') && expr.ends_with('\''))
@@ -221,10 +224,12 @@ fn is_string_literal(expr: &str) -> bool {
             || (expr.starts_with('`') && expr.ends_with('`')))
 }
 
+#[inline]
 fn is_bool_literal(expr: &str) -> bool {
     matches!(expr, "true" | "false")
 }
 
+#[inline]
 fn is_number_literal(expr: &str) -> bool {
     !expr.is_empty() && expr.parse::<f64>().is_ok_and(f64::is_finite)
 }

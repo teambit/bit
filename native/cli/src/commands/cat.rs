@@ -61,6 +61,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     present(&root, args, &options, prepared)
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -82,14 +83,8 @@ fn emit_file_with_config_error(cwd: &Path, args: &[OsString], json: bool) -> io:
             workspace_command::execute_then(&root, args, "cat", fail)
         };
     }
-    workspace_command::execute_failure_scope(
-        cwd,
-        args,
-        "cat",
-        json,
-        "",
-        io::Error::other(FILE_WITH_CONFIG_ERR),
-    )
+    let err = io::Error::other(FILE_WITH_CONFIG_ERR);
+    workspace_command::execute_failure_scope(cwd, args, "cat", json, "", err)
 }
 
 fn run_outside_workspace(cwd: &Path, args: &[OsString], json: bool) -> io::Result<Outcome> {
@@ -104,14 +99,8 @@ fn run_outside_workspace(cwd: &Path, args: &[OsString], json: bool) -> io::Resul
     {
         return Ok(Outcome::Declined("cat requires a supported workspace".into()));
     }
-    workspace_command::execute_failure_scope(
-        cwd,
-        args,
-        "cat",
-        json,
-        "",
-        io::Error::other(NO_HOST_ERR),
-    )
+    let err = io::Error::other(NO_HOST_ERR);
+    workspace_command::execute_failure_scope(cwd, args, "cat", json, "", err)
 }
 
 fn present(
@@ -174,6 +163,7 @@ enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error)
     }
@@ -282,6 +272,7 @@ fn parse_docs(root: &Path, plan: &mut docs::CatDocs) -> Result<Option<String>, F
     Ok(Some(host.take_stdout()))
 }
 
+#[inline]
 fn read_stored(
     root: &Path,
     entry: &bitmap::Entry,

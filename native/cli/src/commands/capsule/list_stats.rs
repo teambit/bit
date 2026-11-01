@@ -42,7 +42,7 @@ pub(super) fn collect(cwd: &Path, with_sizes: bool) -> io::Result<Vec<RootEntry>
             continue;
         }
         let name = entry.file_name();
-        if name != "node_modules" && !name.to_string_lossy().starts_with('.') {
+        if name != "node_modules" && !name.as_encoded_bytes().starts_with(b".") {
             paths.push(entry.path());
         }
     }
@@ -92,11 +92,13 @@ pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
     }
 }
 
+#[inline]
 pub(super) fn millis(time: SystemTime) -> u64 {
     time.duration_since(UNIX_EPOCH)
         .map_or(0, |duration| ((duration.as_nanos() + 500_000) / 1_000_000) as u64)
 }
 
+#[inline]
 pub(super) fn now_millis() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -120,6 +122,7 @@ pub(super) fn dir_size(path: &Path) -> u64 {
         .sum()
 }
 
+#[inline]
 pub(super) fn total_size(roots: &[RootEntry]) -> u64 {
     roots
         .iter()
@@ -177,11 +180,8 @@ fn stale_children(path: &Path, cutoff: f64) -> usize {
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
         .filter(|entry| {
-            entry.file_name() != "node_modules"
-                && !entry
-                    .file_name()
-                    .to_string_lossy()
-                    .starts_with('.')
+            let name = entry.file_name();
+            name != "node_modules" && !name.as_encoded_bytes().starts_with(b".")
         })
         .filter(|entry| {
             let marker = entry.path().join(ORIGIN_FILE);
@@ -207,6 +207,7 @@ pub(super) fn format_bytes(bytes: u64) -> String {
     }
 }
 
+#[inline]
 pub(in crate::commands::capsule) fn lookup_config_str(
     combined: &Map<String, Value>,
     key: &str,
@@ -248,6 +249,7 @@ pub(in crate::commands::capsule) fn read_combined_config(
     Ok(merge_layers(&global, &scope_layer, &ws_layer))
 }
 
+#[inline]
 pub(in crate::commands::capsule) fn object_hash_short(text: &str) -> String {
     let payload = format!("string:{}:{text}", text.encode_utf16().count());
     let digest = Sha1::digest(payload.as_bytes());

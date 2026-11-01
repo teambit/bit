@@ -28,6 +28,7 @@ pub(super) fn native_io(error: io::Error, chalk: Chalk) -> io::Error {
     }
     io::Error::new(error.kind(), Colored { message: chalk.red(&message), source: error })
 }
+#[inline]
 fn has_colored_or_callback(error: &io::Error) -> bool {
     std::iter::successors(
         error
@@ -38,6 +39,7 @@ fn has_colored_or_callback(error: &io::Error) -> bool {
     .take(32)
     .any(|inner| inner.is::<crate::host::callback_error::CallbackError>() || inner.is::<Colored>())
 }
+#[inline]
 fn filesystem_message(message: &str) -> bool {
     let trimmed = message.trim_start();
     trimmed.starts_with("ENOTDIR: not a directory, mkdir '")

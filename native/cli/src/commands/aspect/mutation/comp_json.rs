@@ -134,6 +134,7 @@ pub(super) fn unset_in_bitmap_row(
     Ok(())
 }
 
+#[inline]
 fn comp_json_extensions_mut(
     parsed: &mut Value,
 ) -> Result<&mut serde_json::Map<String, Value>, Failure> {
@@ -146,6 +147,7 @@ fn comp_json_extensions_mut(
         .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))
 }
 
+#[inline]
 fn bitmap_row_config_mut(row: &mut Value) -> Result<&mut serde_json::Map<String, Value>, Failure> {
     row.as_object_mut()
         .ok_or_else(|| Failure::Declined("bitmap row object".into()))?
@@ -179,6 +181,7 @@ fn remove_bitmap_config_key(row: &mut Value, bare_aspect: &str) -> Result<bool, 
     Ok(true)
 }
 
+#[inline]
 fn validate_aspect_target(target_aspect_id: &str) -> Result<(), Failure> {
     if target_aspect_id.trim().is_empty() {
         return Err(Failure::Declined("target aspect id is empty".into()));
@@ -186,6 +189,7 @@ fn validate_aspect_target(target_aspect_id: &str) -> Result<(), Failure> {
     Ok(())
 }
 
+#[inline]
 pub(in crate::commands) fn serialize_json_preserving_newline(
     original: &str,
     parsed: &Value,

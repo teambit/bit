@@ -44,6 +44,7 @@ pub(super) fn parse_merge(rest: &[&str]) -> Option<MergeOptions> {
     Some(opts)
 }
 
+#[inline]
 fn non_flag_val(val: &str) -> Option<String> {
     let trimmed = val.trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
@@ -125,6 +126,7 @@ fn apply_merge_equals_arg(arg: &str, idx: usize, opts: &mut MergeOptions) -> Opt
     Some(idx + 1)
 }
 
+#[inline]
 pub(super) fn run_merge(
     root: &Path,
     args: &[OsString],
@@ -171,6 +173,7 @@ fn execute_merge(root: &Path, opts: &MergeOptions) -> io::Result<Report> {
     Ok(Report { data: notes.join("\n"), code: 0, details: None })
 }
 
+#[inline]
 fn ensure_on_main_lane(root: &Path) -> io::Result<bool> {
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
     let on_lane = crate::commands::snap_distance::is_on_non_main_lane(&bitmap);
@@ -189,6 +192,7 @@ fn ensure_on_main_lane(root: &Path) -> io::Result<bool> {
     Ok(on_lane)
 }
 
+#[inline]
 fn build_tag_args(root: &Path, opts: &MergeOptions) -> Vec<String> {
     let msg = opts.message
         .as_deref()
@@ -202,6 +206,7 @@ fn build_tag_args(root: &Path, opts: &MergeOptions) -> Vec<String> {
     args
 }
 
+#[inline]
 fn append_bump_args(args: &mut Vec<String>, bump: &BumpOptions) {
     if let Some(inc) = &bump.increment {
         args.push("--increment".into());

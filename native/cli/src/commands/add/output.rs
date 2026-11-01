@@ -14,7 +14,12 @@ pub(super) fn failure(
     error: io::Error,
 ) -> io::Result<Outcome> {
     let error = colors::error(error, Chalk::detect(args));
-    if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
+    if root
+        .as_os_str()
+        .as_encoded_bytes()
+        .iter()
+        .all(u8::is_ascii_whitespace)
+    {
         return Err(error);
     }
     if !json {
@@ -35,6 +40,7 @@ pub(super) fn failure(
     })
 }
 
+#[inline]
 fn downcast_callback(error: &io::Error) -> Option<&crate::host::callback_error::CallbackError> {
     std::iter::successors(
         error
@@ -47,6 +53,7 @@ fn downcast_callback(error: &io::Error) -> Option<&crate::host::callback_error::
 }
 
 /// Released filesystem error formatting nests red within the command handler's red.
+#[inline]
 pub(super) fn link_error(error: io::Error, chalk: Chalk) -> io::Error {
     colors::native_io(error, chalk)
 }

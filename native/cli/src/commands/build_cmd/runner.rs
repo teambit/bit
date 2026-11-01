@@ -123,6 +123,7 @@ fn has_component_peers(root: &Path, entries: &[&BitmapEntry]) -> io::Result<bool
     Ok(false)
 }
 
+#[inline]
 fn is_delegated_pipeline(pipeline: &super::PipelineFlags) -> bool {
     pipeline.loose
         || pipeline.tasks.is_some()
@@ -131,6 +132,7 @@ fn is_delegated_pipeline(pipeline: &super::PipelineFlags) -> bool {
         || pipeline.include_tag
 }
 
+#[inline]
 fn has_patched_dependencies(ws_val: &Value) -> bool {
     crate::commands::update_cmd::aspect_entry(ws_val, "teambit.dependencies/dependency-resolver")
         .and_then(|(_, dep)| dep.get("patchedDependencies"))
@@ -138,6 +140,7 @@ fn has_patched_dependencies(ws_val: &Value) -> bool {
         .is_some_and(|map| !map.is_empty())
 }
 
+#[inline]
 fn has_test_files(comp_dir: &Path) -> bool {
     let Ok(entries) = fs::read_dir(comp_dir) else {
         return false;
@@ -215,6 +218,7 @@ fn materialize_entry_capsules(
     Ok(())
 }
 
+#[inline]
 fn variant_uses_babel(
     variants: Option<&serde_json::Map<String, Value>>,
     root_dir: &str,

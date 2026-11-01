@@ -187,11 +187,11 @@ fn additional_package_metadata(package_json: Option<&Value>) -> Option<PackageOv
     let entry_points = take_entry_point_overrides(&mut metadata)?;
     let optional_dependencies = take_string_map(&mut metadata, "optionalDependencies")?;
     let peer_dependencies_meta = take_peer_meta(&mut metadata)?;
-    let _runtime_dependencies = take_string_map(&mut metadata, "dependencies")?;
-    let _dev_dependencies = take_string_map(&mut metadata, "devDependencies")?;
-    let _peer_dependencies = take_string_map(&mut metadata, "peerDependencies")?;
+    for field in ["dependencies", "devDependencies", "peerDependencies"] {
+        take_string_map(&mut metadata, field)?;
+    }
     let component_id = take_component_id(&mut metadata)?;
-    let _version = take_nonempty_string(&mut metadata, "version")?;
+    take_nonempty_string(&mut metadata, "version")?;
     Some(PackageOverrides {
         name,
         main,
@@ -204,12 +204,15 @@ fn additional_package_metadata(package_json: Option<&Value>) -> Option<PackageOv
     })
 }
 
+#[inline]
 fn take_entry_point_overrides(metadata: &mut Map<String, Value>) -> Option<EntryPointOverrides> {
-    let types = take_nonempty_string(metadata, "types")?;
-    let exports = take_exports(metadata)?;
-    Some(EntryPointOverrides { types, exports })
+    Some(EntryPointOverrides {
+        types: take_nonempty_string(metadata, "types")?,
+        exports: take_exports(metadata)?,
+    })
 }
 
+#[inline]
 fn take_component_id(metadata: &mut Map<String, Value>) -> Option<Option<Value>> {
     match metadata.remove("componentId") {
         None => Some(None),
@@ -218,6 +221,7 @@ fn take_component_id(metadata: &mut Map<String, Value>) -> Option<Option<Value>>
     }
 }
 
+#[inline]
 fn take_peer_meta(metadata: &mut Map<String, Value>) -> Option<Option<Map<String, Value>>> {
     match metadata.remove("peerDependenciesMeta") {
         None => Some(None),
@@ -243,6 +247,7 @@ fn take_string_map(
         .map(Some)
 }
 
+#[inline]
 fn take_exports(metadata: &mut Map<String, Value>) -> Option<Option<Value>> {
     match metadata.remove("exports") {
         None => Some(None),
@@ -252,6 +257,7 @@ fn take_exports(metadata: &mut Map<String, Value>) -> Option<Option<Value>> {
     }
 }
 
+#[inline]
 fn take_nonempty_string(metadata: &mut Map<String, Value>, key: &str) -> Option<Option<String>> {
     match metadata.remove(key) {
         None => Some(None),
@@ -300,18 +306,18 @@ fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Strin
     Ok(model_env.or(bitmap_env).map(str::to_owned))
 }
 
+#[inline]
 pub(super) fn component_dependency(entry: &BitmapEntry) -> (String, String) {
     let scope = entry.id.effective_scope().unwrap_or("my-scope");
-    let name = format!("@{scope}/{}", entry.id.name.replace('/', "."));
     let version = entry.id.version
         .as_deref()
         .map(str::trim)
         .filter(|ver| !ver.is_empty())
-        .unwrap_or("latest")
-        .to_owned();
-    (name, version)
+        .unwrap_or("latest");
+    (format!("@{scope}/{}", entry.id.name.replace('/', ".")), version.to_owned())
 }
 
+#[inline]
 fn package_version(entry: &BitmapEntry) -> String {
     let (_, version) = component_dependency(entry);
     if version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()) {
@@ -327,7 +333,6 @@ pub(super) fn write_default_package_json(
     manifest: &ManifestConfig,
     dependencies: &BTreeMap<String, String>,
 ) -> io::Result<()> {
-    let pkg_json_path = capsule_dir.join("package.json");
     let pkg_name = manifest.overrides.name
         .clone()
         .unwrap_or_else(|| component_dependency(entry).0);
@@ -361,9 +366,10 @@ pub(super) fn write_default_package_json(
         entry_points: policy::configured_entry_points(manifest, &stem),
     };
     let pkg = ComponentPackage { generated, metadata: &manifest.overrides.metadata };
-    fs::write(&pkg_json_path, serde_json::to_string_pretty(&pkg)?)
+    fs::write(capsule_dir.join("package.json"), serde_json::to_string_pretty(&pkg)?)
 }
 
+#[inline]
 fn configured_component_id<'a>(
     manifest: &ManifestConfig,
     entry: &'a BitmapEntry,

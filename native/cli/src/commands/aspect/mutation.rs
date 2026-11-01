@@ -61,9 +61,9 @@ pub(super) enum Prepared {
 
 impl BitmapContext {
     pub(super) fn load(root: &Path, chalk: Chalk) -> Result<Self, Failure> {
-        let workspace_bytes = fs::read(root.join("workspace.jsonc"))?;
+        let workspace_val =
+            bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
         let bitmap_before = fs::read(root.join(".bitmap"))?;
-        let workspace_val = bit_object_import::parse_jsonc(&workspace_bytes)?;
         let bitmap_val = bit_object_import::parse_jsonc(&bitmap_before)?;
         let default_scope = workspace_default_scope(&workspace_val)?;
         let bitmap = Bitmap::load(root, Some(&default_scope))?;
@@ -116,6 +116,7 @@ pub(super) fn prepare(
     }
 }
 
+#[inline]
 fn comp_json_file(root: &Path, entry: &BitmapEntry) -> Option<PathBuf> {
     (!entry.root_dir.is_empty())
         .then(|| root.join(&entry.root_dir).join("component.json"))
@@ -249,6 +250,7 @@ pub(in crate::commands) fn resolve_aspect_identity(
     Err(Failure::User(missing_scope_error(raw)))
 }
 
+#[inline]
 pub(in crate::commands) fn find_matching_aspect_key(
     map: &Map<String, Value>,
     bare_aspect: &str,
@@ -382,6 +384,7 @@ pub(in crate::commands) fn write_bitmap_if_changed(
     Ok(())
 }
 
+#[inline]
 pub(super) fn render_updated(formatter: &Formatter, ids: &[String]) -> String {
     let items = ids
         .iter()

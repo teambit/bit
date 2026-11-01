@@ -2,6 +2,7 @@
 
 use super::is_json_flag;
 
+#[inline]
 pub(super) fn error(args: &[&str], list: bool) -> Option<String> {
     let mut unknown = Vec::with_capacity(3);
     for flag in args {
@@ -18,6 +19,7 @@ pub(super) fn error(args: &[&str], list: bool) -> Option<String> {
     }
 }
 
+#[inline]
 fn unknown_names(flag: &str, list: bool) -> Option<&'static [&'static str]> {
     let trimmed = flag.trim();
     if trimmed.is_empty() {

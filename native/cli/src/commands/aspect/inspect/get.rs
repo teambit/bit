@@ -95,6 +95,7 @@ pub(in crate::commands::aspect) fn resolve_component_for_get<'a>(
     }
 }
 
+#[inline]
 pub(in crate::commands::aspect) fn missing_scope_error(raw: &str) -> String {
     format!(
         r#"Failed parsing the string "{raw}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
@@ -207,6 +208,7 @@ pub(super) fn ensure_default_env_aspects(
     }
 }
 
+#[inline]
 pub(super) fn build_get_json(entries: &[AspectEntry], aspect_filter: Option<&str>) -> Value {
     if aspect_filter.is_some() {
         return entries

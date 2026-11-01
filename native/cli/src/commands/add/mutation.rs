@@ -41,11 +41,13 @@ impl ProjectedLinker {
         Ok(linker)
     }
 
+    #[inline]
     pub(in crate::commands) fn take_stdout(&mut self) -> String {
         std::mem::take(&mut self.stdout)
     }
 
     /// Match a consumer reload while retaining callback spool ownership.
+    #[inline]
     pub(in crate::commands) fn forget_loaded(&mut self) {
         self.retained.forget_loaded();
     }
@@ -67,16 +69,19 @@ impl ProjectedLinker {
     }
 
     /// Transfer immutable native capture proofs to a retained parent-operation plan.
+    #[inline]
     pub(in crate::commands) fn captured_read_set(&self) -> Vec<Value> {
         self.retained.read_receipts()
     }
 
     /// Revalidate retained native facts before a consumer publishes workspace mutations.
+    #[inline]
     pub(in crate::commands) fn validate_captures(&self) -> io::Result<()> {
         self.retained.validate()
     }
 
     /// Link the materialized projection before the caller publishes its retained bitmap.
+    #[inline]
     pub(in crate::commands) fn link(
         &mut self,
         root: &Path,
@@ -164,6 +169,7 @@ impl ProjectedLinker {
     }
 }
 
+#[inline]
 fn has_root_text(root: &Path) -> bool {
     root.to_str()
         .map_or(!root.as_os_str().is_empty(), |text| !text.trim().is_empty())

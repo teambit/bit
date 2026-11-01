@@ -8,21 +8,25 @@ pub(super) struct Repository {
     pub host: String,
 }
 impl Repository {
+    #[inline]
     pub(super) fn display(&self) -> String {
         let repo = format!("{}/{}", self.owner.trim(), self.name.trim());
         let host = self.host.trim();
         if host.eq_ignore_ascii_case("github.com") { repo } else { format!("{host}/{repo}") }
     }
 }
+#[inline]
 fn server() -> Option<Url> {
     env::var("GITHUB_SERVER_URL")
         .ok()
         .and_then(|value| Url::parse(super::trim(&value)).ok())
 }
+#[inline]
 fn capture(value: &str, pattern: &str, group: usize) -> Option<String> {
     let found = regress::Regex::with_flags(pattern, "i").ok()?.find(value)?;
     Some(value[found.group(group)?].to_owned())
 }
+#[inline]
 pub(super) fn host(remote: &str) -> Option<String> {
     capture(super::trim(remote), r"^(?:[a-z+]+://)?(?:[^@/]+@)?([^:/]+)", 1)
         .map(|value| value.to_lowercase())
@@ -57,6 +61,7 @@ pub(super) fn repository(remote: &str) -> Option<Repository> {
     let repo = capture(remote, &pattern, 1)?;
     parse_repository(&repo, host)
 }
+#[inline]
 fn parse_repository(repo: &str, host: String) -> Option<Repository> {
     let (owner, name) = repo
         .split_once('/')
@@ -119,6 +124,7 @@ pub(super) fn inert(value: &str) -> String {
             out
         })
 }
+#[inline]
 pub(super) fn suggested(remote: &str) -> String {
     if let Ok(url) = Url::parse(super::trim(remote))
         && matches!(url.scheme(), "http" | "https")
@@ -149,6 +155,7 @@ pub(super) fn api(host: &str) -> Result<String, String> {
     };
     api_override(&server, &raw)
 }
+#[inline]
 fn refuse(why: &str) -> String {
     format!(
         r#"{why} — refusing to send the token of the GITHUB_SERVER_URL instance "{}" to it"#,

@@ -4,6 +4,7 @@ mod json_color;
 
 use super::{Chalk, GLOBAL_HELP, inline_json_value, run_cmd};
 
+#[inline]
 fn command_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
     argv.first()
         .copied()
@@ -11,6 +12,7 @@ fn command_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
         .filter(|name| !name.is_empty())
 }
 
+#[inline]
 pub(super) fn app_run_help_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
     let name = command_name(argv)?;
     let ["run" | "c", rest @ ..] = &argv[1..] else {
@@ -19,6 +21,7 @@ pub(super) fn app_run_help_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
     run_cmd::is_help_form(rest).then_some(name)
 }
 
+#[inline]
 pub(super) fn app_help_output(argv: &[&str], chalk: Chalk) -> Option<String> {
     let name = command_name(argv)?;
     match &argv[1..] {
@@ -51,6 +54,7 @@ pub(super) fn unsupported_flag_help(argv: &[&str], chalk: Chalk) -> Option<Strin
     Some(format!("{help}\n{unknown}\n"))
 }
 
+#[inline]
 fn app_option_error(args: &[&str], list: bool) -> Option<String> {
     if let Some(error) = json_color::error(args, list) {
         return Some(error);
@@ -100,6 +104,7 @@ fn rejected_app_option(args: &[&str], list: bool) -> Option<&'static str> {
     }
 }
 
+#[inline]
 fn list_json_no_color(args: &[&str]) -> bool {
     match args {
         [json, "--no-color"] | ["--no-color", json] => is_json_flag(json),
@@ -111,6 +116,7 @@ fn list_json_no_color(args: &[&str]) -> bool {
     }
 }
 
+#[inline]
 fn list_leading_json_value_error(args: &[&str]) -> Option<&'static str> {
     match args {
         [value, json, "--no-color"] | [value, "--no-color", json]
@@ -126,6 +132,7 @@ fn list_leading_json_value_error(args: &[&str]) -> Option<&'static str> {
     }
 }
 
+#[inline]
 fn is_json_flag(flag: &str) -> bool {
     matches!(flag, "-j" | "--json") || inline_json_value(flag).is_some()
 }

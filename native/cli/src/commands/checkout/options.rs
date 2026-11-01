@@ -47,6 +47,7 @@ const BOOLEAN: [&str; 8] = [
 ];
 
 /// `args` starts after the command name.
+#[inline]
 pub fn parse(args: &[&str]) -> Option<Options> {
     let (flags, positionals) = read_checkout(args, false)?;
     build(&flags, &positionals)
@@ -119,6 +120,7 @@ fn read_checkout<'a>(
     Some((flags, positionals))
 }
 
+#[inline]
 fn extend_non_flag_positionals<'a>(positionals: &mut Vec<&'a str>, tail: &[&'a str]) -> Option<()> {
     for &item in tail {
         let item = item.trim();
@@ -204,6 +206,7 @@ fn apply_checkout_inline(
     None
 }
 
+#[inline]
 fn parse_bool_val(val: &str) -> Option<bool> {
     if val.eq_ignore_ascii_case("true") || val == "1" {
         Some(true)
@@ -214,6 +217,7 @@ fn parse_bool_val(val: &str) -> Option<bool> {
     }
 }
 
+#[inline]
 fn alias(arg: &str) -> &str {
     let arg = arg.trim();
     match arg {
@@ -315,6 +319,7 @@ fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> 
 }
 
 /// The merge strategy: `None` when invalid, `Some(None)` when not given.
+#[inline]
 fn strategy(flags: &Map<String, Value>) -> Option<Option<&str>> {
     let manual = flags.get("--manual") == Some(&Value::Bool(true));
     let resolve = flags.get("--auto-merge-resolve").and_then(Value::as_str);
@@ -325,6 +330,7 @@ fn strategy(flags: &Map<String, Value>) -> Option<Option<&str>> {
 }
 
 /// Component pattern syntax is evaluated against the authoritative workspace pool.
+#[inline]
 fn valid_pattern(pattern: &str) -> bool {
     !pattern.is_empty() && pattern.len() <= 4096 && !pattern.chars().any(char::is_control)
 }
@@ -354,6 +360,7 @@ impl Options {
 
     /// `checkoutProps.all` once `parseValues` ran: `head` and `latest`
     /// without a pattern check out every component.
+    #[inline]
     pub fn report_all(&self) -> bool {
         self.all || (self.pattern.is_none() && matches!(self.to.trim(), "head" | "latest"))
     }

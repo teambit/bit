@@ -6,6 +6,7 @@ use super::{
 };
 use crate::commands::color::Chalk;
 
+#[inline]
 pub(super) fn steps(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<String> {
     let mut commit = report::commit(input, chalk);
     commit.push(chalk.cyan("git push -u origin HEAD"));
@@ -26,6 +27,7 @@ pub(super) fn steps(input: &Report, repository: &Repository, chalk: Chalk) -> Ve
         webhook,
     ]
 }
+#[inline]
 fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<String> {
     let repo = shell_word(&repository.display());
     let host = repository.host.trim();
@@ -51,12 +53,14 @@ fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<Str
         chalk.dim("optional: a GitHub token, so the pushes the sync makes start your other workflows (CI checks)"),
     ]
 }
+#[inline]
 fn scope_or_placeholder(input: &Report) -> &str {
     match input.target.scope.trim() {
         "" => "<scope>",
         trimmed => trimmed,
     }
 }
+#[inline]
 fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
     let scope = scope_or_placeholder(input);
     report::step(

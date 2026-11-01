@@ -34,7 +34,7 @@ fn json_report(
     show_files: bool,
     show_config: bool,
 ) -> io::Result<String> {
-    let mut output = Map::new();
+    let mut output = Map::with_capacity(4);
     output.insert("id".into(), value["id"].clone());
     let version = if value["version"].is_null() { &value["head"] } else { &value["version"] };
     if !version.is_null() {
@@ -90,6 +90,7 @@ fn text_files(files: &[Value], single: bool) -> io::Result<String> {
         .map(|files| files.join("\n\n"))
 }
 
+#[inline]
 fn file_path(file: &Value) -> Option<&str> {
     file["path"]
         .as_str()
@@ -158,6 +159,7 @@ pub(super) fn source_files(directory: &Path, names: &[String]) -> io::Result<Vec
     Ok(current)
 }
 
+#[inline]
 pub(super) fn safe_relative(path: &str) -> bool {
     let path = path.trim();
     path == "."

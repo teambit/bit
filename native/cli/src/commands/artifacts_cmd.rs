@@ -113,8 +113,11 @@ fn finish_scope_artifacts(
 
 pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
     if !root.is_absolute()
-        || root.as_os_str().is_empty()
-        || root.to_string_lossy().trim().is_empty()
+        || root
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
     {
         return Ok(false);
     }
@@ -199,6 +202,7 @@ fn apply_inline_or_pattern(
     Some(())
 }
 
+#[inline]
 fn take_val(val: &str) -> Option<String> {
     let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())

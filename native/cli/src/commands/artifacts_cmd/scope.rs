@@ -143,6 +143,7 @@ fn load_bare_scope_candidates(
     Ok(candidates)
 }
 
+#[inline]
 fn parse_index_row_id(row: &Value) -> Option<(&str, &str)> {
     let (scope, name) = if let Some(id_str) = row["id"].as_str() {
         let bare = id_str
@@ -171,6 +172,7 @@ pub(super) fn filter_artifacts(
     Ok(())
 }
 
+#[inline]
 fn matches_aspect_and_task(art: &ArtifactItem, options: &Options) -> bool {
     let matches_aspect = options.aspect
         .as_deref()

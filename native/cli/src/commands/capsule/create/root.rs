@@ -74,6 +74,7 @@ fn apply_create_bool(arg: &str, create: &mut CreateArgs) -> bool {
     true
 }
 
+#[inline]
 fn parse_bool_flag(arg: &str) -> Option<(&str, bool)> {
     let Some((flag, raw)) = arg.split_once('=') else {
         return Some((arg.trim(), true));
@@ -129,6 +130,7 @@ fn apply_create_combined_short(arg: &str, create: &mut CreateArgs) -> bool {
     true
 }
 
+#[inline]
 fn next_option_value<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
     let value = args.next()?.trim();
     (!value.is_empty() && !value.starts_with('-')).then_some(value)
@@ -216,6 +218,7 @@ fn validate_root_base_dir(value: &str, cwd: &Path) -> io::Result<PathBuf> {
     Ok(normalize_lexical(&joined))
 }
 
+#[inline]
 fn normalize_lexical(path: &Path) -> PathBuf {
     let mut normalized = PathBuf::new();
     for component in path.components() {

@@ -154,6 +154,7 @@ fn finish_outcome(
 }
 
 impl Subcommand {
+    #[inline]
     const fn loader_label(&self) -> &'static str {
         match self {
             Self::List(_) => "list",
@@ -237,6 +238,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     }
 }
 
+#[inline]
 fn parse_unset(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [pattern, aspect_id] = tokens.as_slice() else { return None };
@@ -374,6 +376,7 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     })
 }
 
+#[inline]
 pub(in crate::commands) fn is_supported_pattern(pattern: &str) -> bool {
     let trimmed = pattern.trim();
     !trimmed.is_empty()
