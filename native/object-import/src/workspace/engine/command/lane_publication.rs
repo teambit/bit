@@ -116,20 +116,14 @@ impl Prepared {
         if let Some((scope, name)) = self.context["otherId"]
             .as_str()
             .and_then(|raw| raw.trim().split_once('/'))
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         {
-            return Ok((scope.trim(), name.trim()));
+            return Ok((scope, name));
         }
         Ok((
-            self.context["otherId"]["scope"]
-                .as_str()
-                .map(str::trim)
-                .filter(|scope| !scope.is_empty())
-                .ok_or_else(|| invalid("command other scope"))?,
-            self.context["otherId"]["name"]
-                .as_str()
-                .map(str::trim)
-                .filter(|name| !name.is_empty())
-                .ok_or_else(|| invalid("command other name"))?,
+            non_empty_str(&self.context["otherId"]["scope"], "command other scope")?,
+            non_empty_str(&self.context["otherId"]["name"], "command other name")?,
         ))
     }
     pub(super) fn rebased(&self) -> Vec<(String, String, Value)> {
@@ -202,8 +196,7 @@ impl Prepared {
             return Err(invalid("lane receipt required before snap"));
         }
         self.update_snap_entries(versions)?;
-        let hash =
-            self.context["current"]["hash"].as_str().ok_or_else(|| invalid("command lane hash"))?;
+        let hash = non_empty_str(&self.context["current"]["hash"], "command lane hash")?;
         let log = json!({"historyKey":receipt["batchId"],"log":receipt["laneLog"]});
         let message =
             if message.is_empty() { "snap".to_owned() } else { format!("snap ({message})") };
@@ -291,7 +284,7 @@ fn load_history(context: &Value, repository: &mut Repository) -> io::Result<Valu
     if context["current"].is_null() {
         return Ok(Value::Null);
     }
-    let hash = context["current"]["hash"].as_str().ok_or_else(|| invalid("command lane hash"))?;
+    let hash = non_empty_str(&context["current"]["hash"], "command lane hash")?;
     let reference = super::super::hash(format!("{hash}:LaneHistory").as_bytes());
     match repository.read(&reference, "LaneHistory") {
         Ok(value) => Ok(value),

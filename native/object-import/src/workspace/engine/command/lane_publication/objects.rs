@@ -15,7 +15,7 @@ pub(super) fn update(
     let (scope, name) = parse_scoped_identity(identity, "lane component identity")?;
     let normalized = format!("{scope}/{name}");
     if hidden {
-        if lane.get("updateDependents").is_none() {
+        if lane.get("updateDependents").is_none_or(Value::is_null) {
             lane["updateDependents"] = json!([]);
         }
         let entries = lane["updateDependents"]
@@ -54,6 +54,8 @@ fn parse_scoped_identity<'a>(
     identity: &'a str,
     err_msg: &'static str,
 ) -> io::Result<(&'a str, &'a str)> {
+    let identity = identity.trim();
+    let identity = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
     identity
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))

@@ -47,12 +47,15 @@ pub(super) fn write(
 fn package(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> {
     let mut value: Value = crate::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?;
     let object = value.as_object_mut().ok_or_else(|| invalid("inbound package object"))?;
+    if object.get("dependencies").is_none_or(Value::is_null) {
+        object.insert("dependencies".into(), Value::Object(Map::new()));
+    }
     let policy = object
-        .entry("dependencies")
-        .or_insert_with(|| Value::Object(Map::new()));
-    let policy = policy.as_object_mut().ok_or_else(|| invalid("inbound package dependencies"))?;
+        .get_mut("dependencies")
+        .and_then(Value::as_object_mut)
+        .ok_or_else(|| invalid("inbound package dependencies"))?;
     for (name, range) in dependencies {
-        policy.insert(name.clone(), range.clone());
+        policy.insert(name.trim().to_owned(), range.clone());
     }
     package_json::stringify_package(
         &value,

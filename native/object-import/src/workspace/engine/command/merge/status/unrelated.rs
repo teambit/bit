@@ -23,17 +23,19 @@ pub(super) fn observation(input: &Input<'_>) -> io::Result<Value> {
 pub(super) fn failure(input: &Input<'_>) -> io::Result<Value> {
     let identity =
         target_identity(input.target).ok_or_else(|| invalid("command unrelated identity"))?;
-    let version = input.target["currentVersion"]
-        .as_str()
-        .or_else(|| input.target["version"].as_str())
-        .or_else(|| input.target["head"].as_str())
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
+    let version = ["currentVersion", "version", "head"]
+        .into_iter()
+        .find_map(|field| {
+            input.target[field]
+                .as_str()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+        })
         .ok_or_else(|| invalid("command unrelated current version"))?;
     let head = input.model
         .and_then(|model| model["head"].as_str())
         .map(str::trim)
-        .filter(|head| !head.is_empty())
+        .filter(|head| !head.is_empty() && *head != "0")
         .ok_or_else(|| invalid("command unrelated main head"))?;
     Ok(
         json!({"message":format!("unable to traverse {identity}@{version} history. the main-head {head} doesn't appear in both lanes.\nit was probably created in each lane separately and it also exists on main. please merge main first to one of these lanes")}),
@@ -49,11 +51,14 @@ pub(super) fn error(input: &Input<'_>) -> io::Result<String> {
 }
 
 fn target_identity(target: &Value) -> Option<String> {
-    if let Some(identity) = target["identity"]
-        .as_str()
-        .or_else(|| target["id"].as_str())
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
+    if let Some(identity) = ["identity", "id"]
+        .into_iter()
+        .find_map(|field| {
+            target[field]
+                .as_str()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+        })
     {
         let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
         if !bare.is_empty() {

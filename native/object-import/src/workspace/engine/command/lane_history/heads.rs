@@ -21,6 +21,7 @@ pub(in crate::workspace::engine::command) fn remote(
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("history lane name"))?;
+    crate::command_import::lane::Id { scope: scope.into(), name: name.into() }.validate()?;
     let path = crate::scope_path(&record.request.root)
         .join("refs/remotes")
         .join(scope)
@@ -56,13 +57,13 @@ pub(in crate::workspace::engine::command) fn local<'a>(
             row["head"]
                 .as_str()
                 .map(str::trim)
-                .filter(|head| !head.is_empty())
+                .filter(|head| !head.is_empty() && *head != "0")
         })
         .or_else(|| {
             model["head"]
                 .as_str()
                 .map(str::trim)
-                .filter(|head| !head.is_empty())
+                .filter(|head| !head.is_empty() && *head != "0")
         })
 }
 
@@ -104,6 +105,6 @@ pub(in crate::workspace::engine::command) fn source<'a>(
         model["head"]
             .as_str()
             .map(str::trim)
-            .filter(|head| !head.is_empty())
+            .filter(|head| !head.is_empty() && *head != "0")
     }
 }

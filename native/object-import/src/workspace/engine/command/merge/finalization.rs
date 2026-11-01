@@ -148,12 +148,14 @@ impl Prepared {
         for input in inputs
             .iter()
             .filter(|input| {
-                !input.directory.is_empty()
-                    && input.directory != "."
+                let dir = input.directory.trim();
+                let identity = input.identity.trim();
+                !dir.is_empty()
+                    && dir != "."
                     && !packages::tracked_manifest(input.version)
                     && !skip_packages
                         .iter()
-                        .any(|id| id == input.identity)
+                        .any(|id| id.trim() == identity)
             })
         {
             let package = packages::package_name(input.version)?;
@@ -193,7 +195,8 @@ impl Prepared {
         let rows = rows.as_array_mut().ok_or_else(|| invalid("snapshot index components"))?;
         for identity in identities {
             let identity = identity.trim();
-            let (scope, name) = identity
+            let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
+            let (scope, name) = bare
                 .split_once('/')
                 .map(|(scope, name)| (scope.trim(), name.trim()))
                 .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())

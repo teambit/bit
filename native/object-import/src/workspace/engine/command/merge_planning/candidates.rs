@@ -28,12 +28,12 @@ pub(in crate::workspace::engine::command) fn select_targets(
         let local_head = model["head"]
             .as_str()
             .map(str::trim)
-            .filter(|head| !head.is_empty());
+            .filter(|head| !head.is_empty() && *head != "0");
         let remote = repository.remote_head(&identity)?;
         let remote_head = remote
             .as_deref()
             .map(str::trim)
-            .filter(|head| !head.is_empty());
+            .filter(|head| !head.is_empty() && *head != "0");
         let distance = history.distance(
             &request.root,
             &identity,
@@ -51,11 +51,14 @@ pub(in crate::workspace::engine::command) fn select_targets(
 }
 
 fn target_identity(target: &Value) -> Option<String> {
-    if let Some(identity) = target["identity"]
-        .as_str()
-        .or_else(|| target["id"].as_str())
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
+    if let Some(identity) = ["identity", "id"]
+        .into_iter()
+        .find_map(|field| {
+            target[field]
+                .as_str()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+        })
     {
         let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
         if !bare.is_empty() {

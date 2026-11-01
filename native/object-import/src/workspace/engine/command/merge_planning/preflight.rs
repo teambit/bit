@@ -86,7 +86,8 @@ fn dependency_identity(id: &Value) -> String {
     }
     let raw_name = id["name"].as_str().map_or("", str::trim);
     let name = raw_name.rsplit_once('@').map_or(raw_name, |(bare, _)| bare.trim());
-    format!("{}/{name}", id["scope"].as_str().map_or("", str::trim))
+    let scope = id["scope"].as_str().map_or("", str::trim);
+    if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 
 fn validate_finalization(
@@ -101,7 +102,7 @@ fn validate_finalization(
             identity: &input.identity,
             directory: if prepared.publication.removed
                 .iter()
-                .any(|row| row.identity == input.identity)
+                .any(|row| row.identity.trim() == input.identity.trim())
             {
                 ""
             } else {

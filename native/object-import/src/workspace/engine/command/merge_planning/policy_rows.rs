@@ -22,7 +22,7 @@ pub(super) fn fast_forward(
             .ok_or_else(|| invalid("command FF identity"))?;
         let current = planned.captured
             .iter()
-            .find(|row| row.target.identity == identity)
+            .find(|row| row.target.identity.trim() == identity)
             .ok_or_else(|| invalid("command FF current"))?;
         let prefix = binding_prefix(current, context)?;
         append_fast_forward(prepared, material, current, identity, &prefix)?;
@@ -39,7 +39,7 @@ fn binding_prefix(current: &capture::Captured, context: &Value) -> io::Result<St
             .map(str::to_owned)
             .ok_or_else(|| invalid("command FF prefix"));
     }
-    let model = super::super::repository::model(context, &current.target.identity)?
+    let model = super::super::repository::model(context, current.target.identity.trim())?
         .ok_or_else(|| invalid("command FF model"))?;
     Ok(model["bindingPrefix"]
         .as_str()
@@ -48,6 +48,7 @@ fn binding_prefix(current: &capture::Captured, context: &Value) -> io::Result<St
         .map_or_else(
             || {
                 let owner = current.target.identity
+                    .trim()
                     .split(['.', '/'])
                     .next()
                     .unwrap_or_default()

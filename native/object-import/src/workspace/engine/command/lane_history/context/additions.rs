@@ -32,11 +32,12 @@ pub(super) fn attach_missing(
             .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("lane addition name"))?;
         let id = format!("{scope}/{name}");
-        let version = &phase.versions
+        let version = phase.versions
             .iter()
-            .find(|(identity, _)| identity.trim() == id)
-            .ok_or_else(|| invalid("lane addition version entry"))?
-            .1;
+            .find(|(identity, _)| bare_id(identity) == id)
+            .map(|(_, version)| version.trim())
+            .filter(|version| !version.is_empty())
+            .ok_or_else(|| invalid("lane addition version entry"))?;
         row["version"] = json!(version);
     }
     context["scopeAddedTargets"] = json!(

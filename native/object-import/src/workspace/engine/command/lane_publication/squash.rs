@@ -75,7 +75,7 @@ impl Prepared {
             return Err(invalid("command squash date"));
         }
         let mut version = self.version.clone();
-        if version.get("modified").is_none() {
+        if version.get("modified").is_none_or(Value::is_null) {
             version["modified"] = json!([]);
         }
         version["modified"]
@@ -135,7 +135,9 @@ fn replacement_message(
 fn lane_scope(other_id: &Value) -> Option<&str> {
     other_id
         .as_str()
-        .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope.trim()))
+        .and_then(|raw| raw.trim().split_once('/'))
+        .filter(|(_, name)| !name.trim().is_empty())
+        .map(|(scope, _)| scope.trim())
         .filter(|scope| !scope.is_empty())
         .or_else(|| {
             other_id["scope"]

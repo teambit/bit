@@ -205,6 +205,8 @@ fn check_versions(context: &Value, row: &Value) -> io::Result<Vec<String>> {
         .map(|value| {
             value
                 .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
                 .map(str::to_owned)
                 .ok_or_else(|| invalid("lane filter history hash"))
         })
@@ -222,23 +224,18 @@ fn on_lane(
     let dep_name = text(dependency, "name")?;
     let identity = format!("{dep_scope}/{dep_name}");
     let model = repository.read_component(&identity)?;
-    let Some(main) = model["head"].as_str() else { return Ok(true) };
+    let Some(main) = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty() && *head != "0")
+    else {
+        return Ok(true);
+    };
     let version = text(dependency, "version")?;
     if main == version || crate::merge_history::hash(version).is_err() {
         return Ok(false);
     }
-    let lane = &context["lane"]["other"]["value"];
-    let Some(entry) = lane["components"]
-        .as_array()
-        .and_then(|rows| {
-            rows.iter()
-                .find(|row| {
-                    crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
-                        row, dep_scope, dep_name,
-                    )
-                })
-        })
-    else {
+    let Some(entry) = lane_entry(context, dep_scope, dep_name) else {
         return Ok(false);
     };
     let head = text(entry, "head")?;
@@ -256,6 +253,16 @@ fn on_lane(
             rows.iter()
                 .any(|row| row.as_str().map(str::trim) == Some(version))
         }))
+}
+fn lane_entry<'a>(context: &'a Value, scope: &str, name: &str) -> Option<&'a Value> {
+    context["lane"]["other"]["value"]["components"]
+        .as_array()?
+        .iter()
+        .find(|row| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, name,
+            )
+        })
 }
 fn text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
     value[key]

@@ -306,6 +306,8 @@ fn roots_path(root: &Path, snapshot: bool, output: &mut Prepared) -> io::Result<
         .and_then(|config| {
             crate::component_tracking::identity::workspace_aspect(config)["rootComponentsDirectory"]
                 .as_str()
+                .map(str::trim)
+                .filter(|base| !base.is_empty())
         })
         .unwrap_or("node_modules");
     crate::checkout::plan::relative_path(base)?;
@@ -320,7 +322,7 @@ fn windows_source_link(
     output: &mut Prepared,
 ) -> io::Result<()> {
     if snapshot && cfg!(windows) {
-        link(root, &root.join(input.directory), &directory.join("_src"), true, output)?;
+        link(root, &root.join(input.directory.trim()), &directory.join("_src"), true, output)?;
     }
     Ok(())
 }

@@ -175,23 +175,23 @@ fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> i
 
 fn rekey(rows: &mut [Value], identity: &str, hash: &str) {
     let identity = identity.trim();
+    let identity = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
+    let hash = hash.trim();
     let pending = rows
         .iter()
-        .any(|row| row["source"]["version"] == super::PENDING_GRAPH_VERSION);
+        .any(|row| {
+            row["source"]["version"].as_str().map(str::trim) == Some(super::PENDING_GRAPH_VERSION)
+        });
     for row in rows {
         let source = &mut row["source"];
-        if format!(
-            "{}/{}",
-            source["scope"]
-                .as_str()
-                .map(str::trim)
-                .unwrap_or_default(),
-            source["name"]
-                .as_str()
-                .map(str::trim)
-                .unwrap_or_default(),
-        ) == identity
-            && (!pending || source["version"] == super::PENDING_GRAPH_VERSION)
+        if source.is_object()
+            && format!(
+                "{}/{}",
+                source["scope"].as_str().map_or("", str::trim),
+                source["name"].as_str().map_or("", str::trim),
+            ) == identity
+            && (!pending
+                || source["version"].as_str().map(str::trim) == Some(super::PENDING_GRAPH_VERSION))
         {
             source["version"] = json!(hash);
         }

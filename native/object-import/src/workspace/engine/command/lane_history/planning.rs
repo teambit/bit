@@ -17,16 +17,11 @@ pub(in crate::workspace::engine::command) fn attach(
     for (identity, version) in &phase.versions {
         let identity = bare_id(identity);
         let version = version.trim();
-        if let Some(index) = captured
-            .iter()
-            .position(|row| {
-                row.as_ref()
-                    .is_some_and(|row| bare_id(&row.target.identity) == identity)
-            })
-        {
-            if let Some(entry) = captured[index].take() {
-                plan.captured.push(entry);
-            }
+        if identity.is_empty() || version.is_empty() {
+            return Err(invalid("history phase target"));
+        }
+        if let Some(entry) = take_captured(&mut captured, identity) {
+            plan.captured.push(entry);
             targets.push(
                 record.targets
                     .iter()
@@ -47,6 +42,19 @@ pub(in crate::workspace::engine::command) fn attach(
     Ok(())
 }
 
+fn take_captured(
+    captured: &mut [Option<capture::Captured>],
+    identity: &str,
+) -> Option<capture::Captured> {
+    let index = captured
+        .iter()
+        .position(|row| {
+            row.as_ref()
+                .is_some_and(|row| bare_id(&row.target.identity) == identity)
+        })?;
+    captured[index].take()
+}
+
 fn bare_id(raw: &str) -> &str {
     let raw = raw.trim();
     raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim())
@@ -55,8 +63,14 @@ fn bare_id(raw: &str) -> &str {
 fn row_bare_id(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
-        .or_else(|| row["id"].as_str())
         .map(bare_id)
+        .filter(|id| !id.is_empty())
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(bare_id)
+                .filter(|id| !id.is_empty())
+        })
 }
 pub(in crate::workspace::engine::command) fn added(
     target: &Value,
@@ -68,7 +82,7 @@ pub(in crate::workspace::engine::command) fn added(
 }
 
 fn destination<'a>(context: &'a Value, identity: &str) -> io::Result<&'a Value> {
-    let identity = identity.trim();
+    let identity = bare_id(identity);
     let destination = context["scopeAdditions"]
         .as_array()
         .ok_or_else(|| invalid("history addition destinations"))?

@@ -58,14 +58,15 @@ fn base_version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result
     }
     version["log"] = receipt["log"].clone();
     version["log"]["message"] = json!(message_text(input.model, input.lane, message)?);
+    let identity = input.identity.trim();
     let parent = input.lane
         .and_then(|lane| lane["targets"].as_array())
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["identity"] == input.identity)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
         })
         .map_or(&input.model["head"], |target| &target["currentHead"]);
-    version["parents"] = json!([parent, input.remote]);
+    version["parents"] = json!([parent, input.remote.trim()]);
     version["batchId"] = receipt["batchId"].clone();
     version["bitVersion"] = receipt["bitVersion"].clone();
     version["buildStatus"] = json!(build_status(&version));
@@ -296,7 +297,7 @@ pub(super) fn independent(input: &Input<'_>, batch: &[Input<'_>]) -> io::Result<
             let identity = row_identity(row);
             if batch
                 .iter()
-                .any(|target| target.identity == identity)
+                .any(|target| target.identity.trim() == identity)
             {
                 return Err(invalid("snap dependency version cascade requires canonical pipeline"));
             }
@@ -359,7 +360,7 @@ pub(super) fn no_application_files(files: &[Value]) -> io::Result<()> {
             .map(str::trim)
             .ok_or_else(|| invalid("snap filename"))?;
         let name = path
-            .rsplit('/')
+            .rsplit(['/', '\\'])
             .next()
             .unwrap_or(path)
             .to_ascii_lowercase();

@@ -151,6 +151,7 @@ pub(super) fn validate_additions(
             .map(str::trim)
             .filter(|dir| !dir.is_empty())
             .ok_or_else(|| invalid("lane addition directory"))?;
+        crate::checkout::plan::relative_path(relative)?;
         if is_added_directory(context, scope, stash, relative)
             && directory_metadata(&root.join(relative))?.is_some()
         {

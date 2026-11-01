@@ -198,19 +198,13 @@ impl Prepared {
             .iter()
             .zip(&snapshot.versions)
             .map(|(input, version)| {
+                let removed = self.publication.removed
+                    .iter()
+                    .any(|row| row.identity.trim() == input.identity.trim());
                 Ok(merge::finalization::Input {
                     identity: &input.identity,
-                    directory: if self.publication.removed
-                        .iter()
-                        .any(|row| row.identity == input.identity)
-                    {
-                        ""
-                    } else {
-                        &input.directory
-                    },
-                    hash: version["hash"]
-                        .as_str()
-                        .ok_or_else(|| invalid("command snap final reference"))?,
+                    directory: if removed { "" } else { &input.directory },
+                    hash: non_empty(&version["hash"], "command snap final reference")?,
                     semantic_version: None,
                     version: &version["version"],
                 })
@@ -252,25 +246,16 @@ impl Prepared {
                         })
             })
             .map(|version| {
-                let identity = version["identity"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|id| !id.is_empty())
-                    .ok_or_else(|| invalid("command snapped identity"))?
-                    .to_owned();
-                let hash = version["hash"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|hash| !hash.is_empty())
-                    .ok_or_else(|| invalid("command snapped hash"))?
-                    .to_owned();
-                let main_file = version["version"]["mainFile"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|file| !file.is_empty())
-                    .ok_or_else(|| invalid("command snapped main file"))?
-                    .to_owned();
-                Ok(bitmap::Update { identity, version: hash, main_file, keep_ours: true })
+                Ok(bitmap::Update {
+                    identity: non_empty(&version["identity"], "command snapped identity")?.into(),
+                    version: non_empty(&version["hash"], "command snapped hash")?.into(),
+                    main_file: non_empty(
+                        &version["version"]["mainFile"],
+                        "command snapped main file",
+                    )?
+                    .into(),
+                    keep_ours: true,
+                })
             })
             .collect()
     }
@@ -388,13 +373,20 @@ fn policy_material(
         .ok_or_else(|| invalid("command policy material absent"))
 }
 
+fn non_empty<'a>(value: &'a Value, error: &'static str) -> io::Result<&'a str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .ok_or_else(|| invalid(error))
+}
+
 fn snapped_results(versions: &[Value]) -> io::Result<Value> {
     let snapped = versions
         .iter()
         .map(|version| {
-            let identity =
-                version["identity"].as_str().ok_or_else(|| invalid("command snapped identity"))?;
-            let hash = version["hash"].as_str().ok_or_else(|| invalid("command snapped hash"))?;
+            let identity = non_empty(&version["identity"], "command snapped identity")?;
+            let hash = non_empty(&version["hash"], "command snapped hash")?;
             Ok(json!({"id":format!("{identity}@{hash}")}))
         })
         .collect::<io::Result<Vec<_>>>()?;

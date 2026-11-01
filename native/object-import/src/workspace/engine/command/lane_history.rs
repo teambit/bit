@@ -134,7 +134,7 @@ pub(super) fn applied(
     }
     selection::accept_bitmap(&mut retained.proofs, receipt)?;
     retained.next += 1;
-    if retained.next == retained.phases.len() {
+    if retained.next >= retained.phases.len() {
         state.histories.checkout = None;
     }
     Ok(())
@@ -142,7 +142,18 @@ pub(super) fn applied(
 
 impl Phase {
     fn receipt(&self, index: usize) -> Value {
-        json!({"phase":index,"ids":self.versions.iter().map(|(id,_)|id).collect::<Vec<_>>(),
-            "versionPerId":self.versions.iter().map(|(id,version)|format!("{id}@{version}")).collect::<Vec<_>>(),"revert":self.revert})
+        let ids = self.versions
+            .iter()
+            .map(|(id, _)| {
+                let id = id.trim();
+                id.rsplit_once('@').map_or(id, |(base, _)| base.trim())
+            })
+            .collect::<Vec<_>>();
+        let version_per_id = self.versions
+            .iter()
+            .zip(&ids)
+            .map(|((_, version), id)| format!("{id}@{}", version.trim()))
+            .collect::<Vec<_>>();
+        json!({"phase":index,"ids":ids,"versionPerId":version_per_id,"revert":self.revert})
     }
 }

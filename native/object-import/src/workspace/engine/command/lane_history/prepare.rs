@@ -15,7 +15,10 @@ pub(in crate::workspace::engine) fn run(
     if history_id.is_empty() || history_id.chars().any(char::is_control) {
         return Err(invalid("history id is empty"));
     }
-    if state.record.is_some() || state.histories.checkout.is_some() {
+    if state.record.is_some()
+        || state.histories.checkout.is_some()
+        || state.histories.inspection.is_some()
+    {
         return Err(invalid("history owner active"));
     }
     for path in [&input.root, &input.home, &input.global_remotes_file] {
@@ -78,7 +81,7 @@ fn select(
     Ok((count, output))
 }
 fn read(root: &std::path::Path, hash: &str) -> io::Result<Value> {
-    match crate::lane_history::read(root, hash) {
+    match crate::lane_history::read(root, hash.trim()) {
         Ok(history) => Ok(history),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(json!({"history":{}})),
         Err(error) => Err(error),

@@ -318,7 +318,8 @@ fn append_object(
     bytes: &mut usize,
     object: &ObjectItem,
 ) -> io::Result<()> {
-    match seen.get(&object.hash) {
+    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(&object.hash)?);
+    match seen.get(&hash) {
         Some(previous) if previous == &object.compressed => return Ok(()),
         Some(_) => return Err(invalid("outbound conflicting object bytes")),
         None => {}
@@ -329,8 +330,8 @@ fn append_object(
     if *bytes > 32 * 1024 * 1024 || objects.len() >= 4096 {
         return Err(invalid("outbound object budget"));
     }
-    seen.insert(object.hash.clone(), object.compressed.clone());
-    objects.push(object.clone());
+    seen.insert(hash.clone(), object.compressed.clone());
+    objects.push(ObjectItem { hash, ..object.clone() });
     Ok(())
 }
 

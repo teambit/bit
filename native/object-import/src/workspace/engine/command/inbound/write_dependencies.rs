@@ -22,7 +22,11 @@ pub(in crate::workspace::engine) fn complete(
     let retained =
         state.inbound.as_mut().ok_or_else(|| invalid("inbound dependencies owner absent"))?;
     let token = request.token.trim();
-    if token.is_empty() || retained.token != token || !retained.applied {
+    if token.is_empty()
+        || retained.token.trim() != token
+        || !retained.applied
+        || retained.receipt["requiresWriteDependencies"] != true
+    {
         return Err(invalid("inbound dependencies owner phase"));
     }
     let workspace =
@@ -35,14 +39,7 @@ pub(in crate::workspace::engine) fn complete(
         &dependencies,
         workspace.history_file_id(),
     )?;
-    let targets = retained.receipt["importedIds"]
-        .as_array()
-        .ok_or_else(|| invalid("inbound imported identifiers"))?
-        .iter()
-        .map(|id| {
-            requested_target(id.as_str().ok_or_else(|| invalid("inbound imported identifiers"))?)
-        })
-        .collect::<io::Result<Vec<_>>>()?;
+    let targets = imported_targets(&retained.receipt)?;
     workspace.refresh_policy(&targets, &mut retained.import)?;
     retained.receipt["requiresWriteDependencies"] = json!(false);
     if let Some(input) = workspace.policy_input() {
@@ -50,10 +47,20 @@ pub(in crate::workspace::engine) fn complete(
     } else {
         retained.receipt["completed"] = json!(true);
     }
-    let result = retained.receipt.clone();
-    let count = targets.len();
+    let (count, result) = (targets.len(), retained.receipt.clone());
     if result["completed"] == true {
         state.inbound = None;
     }
     Ok((count, result))
+}
+
+fn imported_targets(receipt: &Value) -> io::Result<Vec<super::Target>> {
+    receipt["importedIds"]
+        .as_array()
+        .ok_or_else(|| invalid("inbound imported identifiers"))?
+        .iter()
+        .map(|id| {
+            requested_target(id.as_str().ok_or_else(|| invalid("inbound imported identifiers"))?)
+        })
+        .collect()
 }

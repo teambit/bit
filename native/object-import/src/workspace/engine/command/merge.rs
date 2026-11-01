@@ -59,6 +59,9 @@ impl State {
         self.advance(Some(inputs.len()))?;
         let mut output = Vec::with_capacity(inputs.len());
         for mut input in inputs {
+            if !input.is_object() {
+                return Err(invalid("command merge transaction request"));
+            }
             input["token"] = self.owner().clone();
             output.push(crate::merge_transaction::prepare_with_overlay(
                 input,
@@ -76,10 +79,16 @@ impl State {
         mut input: Value,
         overlay: Option<&crate::command_import::Overlay>,
     ) -> io::Result<Value> {
+        if !input.is_object() {
+            return Err(invalid("command merge transaction request"));
+        }
         input["token"] = self.owner().clone();
         crate::merge_transaction::apply_with_overlay(&input, &mut self.native, overlay)
     }
     pub(super) fn materialize(&mut self, mut input: Value) -> io::Result<()> {
+        if !input.is_object() {
+            return Err(invalid("command merge transaction request"));
+        }
         input["token"] = self.owner().clone();
         let result = crate::merge_transaction::apply("mergeMaterialize", input, &mut self.native)?;
         if result["failed"] != false || !result["skipped"].as_array().is_some_and(Vec::is_empty) {

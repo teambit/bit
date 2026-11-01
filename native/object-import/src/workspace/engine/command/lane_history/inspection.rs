@@ -63,7 +63,9 @@ pub(in crate::workspace::engine) fn prepare(
     }
     let lane = import.load_lane(&id)?.ok_or_else(|| invalid("lane history local Lane absent"))?;
     if lane.is_new {
-        let history = local_history(request, &lane.hash)?;
+        let lane_hash = lane.hash.trim();
+        let history = local_history(request, lane_hash)?;
+        validate_history(&history, lane_hash)?;
         return Ok((0, json!({"history":history,"needsApply":false})));
     }
     let history = refresh(request, &mut import, &id, &lane)?;
@@ -128,6 +130,7 @@ fn selection(
 }
 
 fn local_history(request: &Prepare, hash: &str) -> io::Result<Value> {
+    let hash = hash.trim();
     let history = if request.bare_scope {
         lane_history::read_at(&request.root, hash)
     } else {
@@ -172,7 +175,7 @@ pub(in crate::workspace::engine) fn apply(
     let mut retained =
         state.histories.inspection.take().ok_or_else(|| invalid("lane history owner absent"))?;
     let token = request.token.trim();
-    if token.is_empty() || retained.token != token {
+    if token.is_empty() || retained.token.trim() != token {
         state.histories.inspection = Some(retained);
         return Err(invalid("lane history owner changed"));
     }

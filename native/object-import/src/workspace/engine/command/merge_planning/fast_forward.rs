@@ -24,11 +24,12 @@ pub(super) fn prepare(
         }
         validate_target(record, planned, prepared, selected, index)?;
         add_material(record, planned, selected, index, snapshots)?;
+        let remote = selected.remote.trim();
         if let Some(lane) = &mut prepared.publication.lane {
-            lane.update(&planned.captured[index].target.identity, &selected.remote, false)?;
+            lane.update(planned.captured[index].target.identity.trim(), remote, false)?;
         }
         if record.context["lane"]["current"].is_null() {
-            models.push(model(&selected.model, &selected.remote)?);
+            models.push(model(&selected.model, remote)?);
         }
     }
     persist_models(planned, prepared, models)
@@ -73,7 +74,8 @@ fn add_material(
     snapshots: &snapshots::State,
 ) -> io::Result<()> {
     let directory = scratch::Directory::create()?;
-    let label = selection::versions::label(&selected.model, &selected.remote);
+    let remote = selected.remote.trim();
+    let label = selection::versions::label(&selected.model, remote);
     let selection = json!({"version":label});
     let material = materialization::prepare(
         &materialization::Input {
@@ -81,7 +83,7 @@ fn add_material(
             directory: &directory.0,
             current: &planned.captured[index],
             version: &selected.versions[2],
-            reference: &selected.remote,
+            reference: remote,
             selection: &selection,
             base: None,
             options: &record.request.options,

@@ -59,7 +59,7 @@ impl Projection<'_> {
         let Some(hash) = model["head"]
             .as_str()
             .map(str::trim)
-            .filter(|hash| !hash.is_empty())
+            .filter(|hash| !hash.is_empty() && *hash != "0")
         else {
             return Ok(None);
         };
@@ -84,8 +84,11 @@ impl Projection<'_> {
             .find(|material| {
                 material.output["id"]
                     .as_str()
-                    .and_then(|id| id.trim().rsplit_once('@'))
-                    .is_some_and(|(id, _)| id.trim() == identity)
+                    .map(|id| {
+                        let id = id.trim();
+                        id.rsplit_once('@').map_or(id, |(base, _)| base.trim())
+                    })
+                    == Some(identity)
             })
             .map(|material| {
                 self.rebased

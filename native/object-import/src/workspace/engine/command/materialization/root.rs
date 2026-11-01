@@ -35,6 +35,7 @@ pub(super) fn nested_directories(root: &Path) -> io::Result<Vec<String>> {
         if key.is_empty()
             || key.starts_with('$')
             || matches!(key, "_bit_lane" | "version")
+            || !row.is_object()
             || row["isAvailableOnCurrentLane"] == false
             || config::is_config_removed(&row["config"])
         {
@@ -61,6 +62,7 @@ pub(super) fn filter(manifest: &mut Value, nested: &[String]) -> io::Result<()> 
         manifest["files"].as_array_mut().ok_or_else(|| invalid("command root manifest files"))?;
     files.retain(|file| {
         let Some(path) = file["relativePath"].as_str().map(str::trim) else { return true };
+        let path = path.trim_start_matches("./").trim_end_matches('/');
         path != ".bitmap"
             && !nested
                 .iter()

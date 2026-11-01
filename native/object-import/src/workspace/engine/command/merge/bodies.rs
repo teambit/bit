@@ -168,8 +168,9 @@ impl Prepared {
     ) -> io::Result<Self> {
         let files = output_files(applied)?;
         let statuses = file_statuses(removals)?;
+        let dir = input.root.join(input.current.target.directory.trim());
         let destinations = files.iter().map(|file| json!({"planIndex":file["planIndex"],
-            "path":input.root.join(&input.current.target.directory).join(file["relativePath"].as_str().unwrap_or_default()),"overwrite":true,"eol":"auto"})).collect::<Vec<_>>();
+            "path":dir.join(file["relativePath"].as_str().unwrap_or_default()),"overwrite":true,"eol":"auto"})).collect::<Vec<_>>();
         let removals = removals["removals"]
             .as_array()
             .ok_or_else(|| invalid("command merge removals"))?
@@ -177,17 +178,20 @@ impl Prepared {
             .map(|value| {
                 value
                     .as_str()
+                    .map(str::trim)
+                    .filter(|path| !path.is_empty())
                     .map(PathBuf::from)
                     .ok_or_else(|| invalid("command merge removal path"))
             })
             .collect::<io::Result<Vec<_>>>()?;
         let files = reload::files(input, plan, files, &removals)?;
+        let version_name = input.current.target.version.trim().to_owned();
         Ok(Self {
             conflict: Conflict::from_plan(input, plan),
             hidden: input.current.hidden,
-            output: json!({"id":format!("{}@{}",input.current.target.identity,input.current.target.version),"filesStatus":statuses}),
+            output: json!({"id":format!("{}@{version_name}",input.current.target.identity.trim()),"filesStatus":statuses}),
             version: current_version(input)?,
-            version_name: input.current.target.version.clone(),
+            version_name,
             files,
             conflict_paths: conflict_paths(input, plan)?,
             destinations: Destinations {

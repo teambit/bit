@@ -17,7 +17,7 @@ pub(super) fn files(
     if input.current.hidden {
         return Ok(files);
     }
-    retain(&input.root.join(&input.current.target.directory), plan, files, removals)
+    retain(&input.root.join(input.current.target.directory.trim()), plan, files, removals)
 }
 
 // A writer does not remove a file merely because it is absent from its output.
@@ -28,8 +28,10 @@ fn retain(
     mut files: Vec<Value>,
     removals: &[PathBuf],
 ) -> io::Result<Vec<Value>> {
-    for current in
-        plan["currentFiles"].as_array().ok_or_else(|| invalid("merge reload current files"))?
+    for current in plan["currentFiles"]
+        .as_array()
+        .filter(|rows| rows.len() <= 16384)
+        .ok_or_else(|| invalid("merge reload current files"))?
     {
         let path = current["relativePath"]
             .as_str()

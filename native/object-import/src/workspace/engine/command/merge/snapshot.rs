@@ -115,7 +115,7 @@ pub(in crate::workspace::engine::command) fn prepare(
         sources::dependencies_graph(allocation, &mut version, &mut objects)?;
         objects.push(metadata::object("Version", Some(hash), version.clone())?);
         objects.push(metadata::object("Component", None, metadata::snapshot_model(input, hash)?)?);
-        versions.push(json!({"identity":input.identity,"hash":hash,"version":version}));
+        versions.push(json!({"identity":input.identity.trim(),"hash":hash,"version":version}));
     }
     let mut seen = HashSet::new();
     objects.retain(|object| object["type"] != "Source" || seen.insert(object["hash"].clone()));
@@ -202,7 +202,7 @@ fn preflight_head<'a>(input: &'a Input<'_>) -> io::Result<&'a str> {
         .map_or(&input.model["head"], |target| &target["currentHead"])
         .as_str()
         .map(str::trim)
-        .filter(|head| !head.is_empty())
+        .filter(|head| !head.is_empty() && *head != "0")
         .ok_or_else(|| invalid("snap preflight head"))
 }
 

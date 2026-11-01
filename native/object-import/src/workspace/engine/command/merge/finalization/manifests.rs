@@ -43,6 +43,7 @@ impl Prepared {
             let id = row["identity"]
                 .as_str()
                 .map(str::trim)
+                .map(|id| id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim()))
                 .filter(|id| !id.is_empty())
                 .ok_or_else(|| invalid("snapshot package manifest identity"))?;
             if !identities.insert(id) {
@@ -55,7 +56,10 @@ impl Prepared {
             let mut manifest = normalize(row["manifest"].clone(), &original["manifest"])?;
             if aspects
                 .iter()
-                .any(|aspect| aspect.trim() == id)
+                .any(|aspect| {
+                    let aspect = aspect.trim();
+                    aspect.rsplit_once('@').map_or(aspect, |(bare, _)| bare.trim()) == id
+                })
             {
                 aspect_exports(&mut manifest)?;
             }

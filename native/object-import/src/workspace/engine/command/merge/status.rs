@@ -23,17 +23,7 @@ pub(super) fn select(
     owner: &Value,
     state: &mut crate::merge_transaction::State,
 ) -> io::Result<Value> {
-    let identity = input.target["identity"]
-        .as_str()
-        .map(str::trim)
-        .filter(|id| !id.is_empty())
-        .ok_or_else(|| invalid("command merge identity"))?;
-    let version = input.target["version"]
-        .as_str()
-        .map(str::trim)
-        .ok_or_else(|| invalid("command merge current version"))?;
-    let full_id =
-        if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") };
+    let (identity, full_id) = target_ids(input.target)?;
     let mut cursor = crate::merge_transaction::apply(
         "mergeStatusBegin",
         json!({
@@ -63,6 +53,24 @@ pub(super) fn select(
     Err(invalid("command merge status limit"))
 }
 
+fn target_ids(target: &Value) -> io::Result<(&str, String)> {
+    let identity = target["identity"]
+        .as_str()
+        .map(|raw| {
+            let raw = raw.trim();
+            raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim())
+        })
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("command merge identity"))?;
+    let version = target["version"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("command merge current version"))?;
+    let full_id =
+        if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") };
+    Ok((identity, full_id))
+}
+
 fn observation(input: &Input<'_>, observe: &str) -> io::Result<Value> {
     let target_id = input.target["identity"].as_str().map(str::trim);
     match observe {
@@ -77,7 +85,10 @@ fn observation(input: &Input<'_>, observe: &str) -> io::Result<Value> {
         "removeOnMain" => Ok(json!({"removeOnMain":remove_on_main(input.incoming)})),
         "mainHead" => Ok(json!({
             "present": input.model.is_some_and(|model| {
-                model["head"].as_str().is_some_and(|head| !head.trim().is_empty())
+                model["head"]
+                    .as_str()
+                    .map(str::trim)
+                    .is_some_and(|head| !head.is_empty() && head != "0")
             }),
         })),
         "locallyRemoved" => Ok(json!({

@@ -57,7 +57,9 @@ fn heads(record: &mut Record, identity: &str, model: &Value) -> io::Result<(Stri
     let current_head = lane_target
         .map_or(&model["head"], |target| &target["currentHead"])
         .as_str()
-        .map_or("", str::trim)
+        .map(str::trim)
+        .filter(|head| *head != "0")
+        .unwrap_or("")
         .to_owned();
     Ok((remote, current_head))
 }
@@ -112,7 +114,11 @@ pub(super) fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::
     Ok(())
 }
 pub(super) fn refresh_model(selected: &mut Selected, model: Value) -> io::Result<()> {
-    if selected.action == Action::Merge && model["head"] != selected.model["head"] {
+    let new_head = model["head"].as_str().map(str::trim);
+    let old_head = selected.model["head"].as_str().map(str::trim);
+    if selected.action == Action::Merge
+        && (new_head != old_head || (new_head.is_none() && model["head"] != selected.model["head"]))
+    {
         return Err(invalid("command merge local head changed during gap import"));
     }
     // Import can advance a fast-forward model, but never changes the cached target

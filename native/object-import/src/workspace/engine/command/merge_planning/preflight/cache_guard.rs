@@ -71,18 +71,19 @@ pub(super) fn metadata(current: &Value, files: &[String], target: &Value) -> io:
 }
 
 fn incoming_files(target: &Value) -> io::Result<BTreeSet<&str>> {
-    target["files"]
-        .as_array()
-        .ok_or_else(|| invalid("command fast-forward files"))?
-        .iter()
-        .map(|file| {
-            file["relativePath"]
-                .as_str()
-                .map(str::trim)
-                .filter(|name| !name.is_empty())
-                .ok_or_else(|| invalid("command fast-forward file name"))
-        })
-        .collect()
+    let mut set = BTreeSet::new();
+    for file in target["files"].as_array().ok_or_else(|| invalid("command fast-forward files"))? {
+        let name = file["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("command fast-forward file name"))?;
+        crate::checkout::plan::relative_path(name)?;
+        if !set.insert(name) {
+            return Err(invalid("command fast-forward duplicate file"));
+        }
+    }
+    Ok(set)
 }
 
 fn extensions(target: &Value) -> io::Result<Value> {

@@ -45,7 +45,7 @@ fn canonical_relative(path: &Path) -> io::Result<()> {
             name.to_str().ok_or_else(|| invalid("merge nonUTF8 path"))
         })
         .collect::<io::Result<Vec<_>>>()?;
-    if segments.is_empty() {
+    if segments.is_empty() || segments == [".bitmap"] || matches!(segments[0], ".bit" | ".git") {
         return Err(invalid("merge nonrelative destination"));
     }
     crate::checkout::plan::relative_path(&segments.join("/"))

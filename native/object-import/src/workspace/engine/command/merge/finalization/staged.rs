@@ -31,7 +31,7 @@ pub(super) fn prepare(
     output.writes.push((staged, hashes.join("\n").into_bytes()));
     if inputs
         .iter()
-        .any(|input| !input.directory.is_empty())
+        .any(|input| !input.directory.trim().is_empty())
     {
         config(root, inputs, snapshot, output)?;
     }
@@ -74,7 +74,7 @@ fn config(
         .unwrap_or_else(|| value!([]));
     for input in inputs
         .iter()
-        .filter(|input| !input.directory.is_empty())
+        .filter(|input| !input.directory.trim().is_empty())
     {
         update(&mut rows, &bitmap, input, snapshot)?;
     }
@@ -157,14 +157,22 @@ fn update(rows: &mut Value, bitmap: &Value, input: &Input<'_>, snapshot: bool) -
         merge_config(row, entry)?;
         return Ok(());
     }
+    rows.push(new_row(entry, scope, name, input));
+    Ok(())
+}
+
+fn new_row(entry: &Value, scope: &str, name: &str, input: &Input<'_>) -> Value {
     let component_map = component_map(entry);
-    let mut row = value!({"id":{"scope":scope,"name":name,"version":input.semantic_version.unwrap_or(input.hash)}});
+    let version = input.semantic_version
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .unwrap_or_else(|| input.hash.trim());
+    let mut row = value!({"id":{"scope":scope,"name":name,"version":version}});
     if let Some(config) = entry.get("config") {
         row["config"] = config.clone();
     }
     row["componentMapObject"] = Value::Object(component_map);
-    rows.push(row);
-    Ok(())
+    row
 }
 
 fn merge_config(row: &mut Value, entry: &Value) -> io::Result<()> {

@@ -9,6 +9,7 @@ pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) ->
         .map(str::trim)
         .filter(|file| !file.is_empty())
         .ok_or_else(|| invalid("tag package main file"))?;
+    crate::checkout::plan::relative_path(main_file)?;
     let (main, types) = if snapshot {
         package_paths(input.version, main_file).unwrap_or_else(|_| (main_file.to_owned(), None))
     } else {
@@ -51,9 +52,9 @@ fn package_versions<'a>(input: &'a Input<'_>) -> (String, &'a str) {
 }
 
 fn parse_package_identity(identity: &str) -> io::Result<(&str, &str)> {
-    identity
-        .trim()
-        .split_once('/')
+    let identity = identity.trim();
+    let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
+    bare.split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
         .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .ok_or_else(|| invalid("tag package identity"))

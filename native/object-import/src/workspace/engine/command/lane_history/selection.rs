@@ -69,11 +69,13 @@ pub(super) fn accept_bitmap(proofs: &mut [proof::Proof], receipt: &Value) -> io:
         .ok_or_else(|| invalid("history bitmap proof absent"))?;
     let before = serde_json::from_value::<Option<String>>(receipt["beforeHash"].clone())
         .map_err(io::Error::other)?
-        .map(|hash| hash.trim().to_owned());
+        .map(|hash| hash.trim().to_owned())
+        .filter(|hash| !hash.is_empty());
     let after = serde_json::from_value::<Option<String>>(receipt["afterHash"].clone())
         .map_err(io::Error::other)?
-        .map(|hash| hash.trim().to_owned());
-    if !retained.is_content() || retained.hash != before {
+        .map(|hash| hash.trim().to_owned())
+        .filter(|hash| !hash.is_empty());
+    if !retained.is_content() || retained.hash.as_deref().map(str::trim) != before.as_deref() {
         return Err(invalid("history bitmap preimage changed"));
     }
     let mut written = Vec::new();
@@ -82,7 +84,7 @@ pub(super) fn accept_bitmap(proofs: &mut [proof::Proof], receipt: &Value) -> io:
         .into_iter()
         .next()
         .ok_or_else(|| invalid("history bitmap proof missing"))?;
-    if first.hash != after {
+    if first.hash.as_deref().map(str::trim) != after.as_deref() {
         return Err(invalid("history bitmap publication changed"));
     }
     *retained = first;
@@ -105,7 +107,7 @@ fn target(row: &Value) -> io::Result<(String, String)> {
     crate::command_import::lane::component_identity(
         &serde_json::json!({"scope":scope.trim(),"name":name.trim()}),
     )?;
-    if version.is_empty() {
+    if version.is_empty() || version.chars().any(char::is_control) {
         return Err(invalid("history empty version"));
     }
     Ok((format!("{}/{}", scope.trim(), name.trim()), version.to_owned()))

@@ -71,8 +71,11 @@ fn update_failed(
     );
     let mut failed = Vec::new();
     for index in &filtered.indices {
-        let id =
-            format!("{}@{}", planned.captured[*index].target.identity, selected[*index].remote);
+        let id = format!(
+            "{}@{}",
+            planned.captured[*index].target.identity.trim(),
+            selected[*index].remote.trim(),
+        );
         if let Some(excluded) = filtered.excluded
             .iter()
             .find(|row| row["index"].as_u64() == Some(*index as u64))
@@ -81,7 +84,7 @@ fn update_failed(
             failed.push(json!({"id":id,"unchangedMessage":excluded["message"],"unchangedLegitimately":true}));
         } else if let Some(row) = previous
             .iter()
-            .find(|row| row["id"] == id)
+            .find(|row| row["id"].as_str().map(str::trim) == Some(&id))
         {
             failed.push(row.clone());
         }
@@ -240,10 +243,11 @@ pub(super) fn gap_targets(
         let other_scope = lane["otherId"]
             .as_str()
             .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope))
-            .or_else(|| lane["otherId"]["scope"].as_str());
+            .or_else(|| lane["otherId"]["scope"].as_str())
+            .map(str::trim);
         lane["shouldSquash"] != true
             && !lane["other"].is_null()
-            && other_scope != lane["current"]["value"]["scope"].as_str()
+            && other_scope != lane["current"]["value"]["scope"].as_str().map(str::trim)
     });
     let mut targets = Vec::new();
     for row in selected
@@ -295,8 +299,9 @@ fn gap_versions(row: &Selected, include_history: bool) -> io::Result<Vec<String>
 }
 
 pub(super) fn scope_only(record: &Record, current: &super::capture::Captured) -> bool {
+    let identity = current.target.identity.trim();
     current.hidden
         || !record.targets
             .iter()
-            .any(|target| target["identity"] == current.target.identity)
+            .any(|target| target["identity"].as_str().map(str::trim) == Some(identity))
 }

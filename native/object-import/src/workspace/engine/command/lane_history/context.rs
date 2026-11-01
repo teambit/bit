@@ -36,20 +36,29 @@ fn attach_versions(request: &super::super::input::Prepare, context: &mut Value) 
     for row in context["targets"].as_array_mut().ok_or_else(|| invalid("history targets"))? {
         let row_id = row["identity"]
             .as_str()
-            .or_else(|| row["id"].as_str())
-            .map(|raw| {
-                let raw = raw.trim();
-                raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim())
-            });
+            .map(str::trim)
+            .filter(|raw| !raw.is_empty())
+            .or_else(|| {
+                row["id"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|raw| !raw.is_empty())
+            })
+            .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
+            .filter(|id| !id.is_empty());
         let (_, version) = phase.versions
             .iter()
             .find(|(id, _)| {
                 let id = id.trim();
                 let id = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
-                row_id == Some(id)
+                !id.is_empty() && row_id == Some(id)
             })
             .ok_or_else(|| invalid("history target membership"))?;
-        row["historicalVersion"] = json!(version.trim());
+        let version = version.trim();
+        if version.is_empty() {
+            return Err(invalid("history target version"));
+        }
+        row["historicalVersion"] = json!(version);
     }
     Ok(())
 }

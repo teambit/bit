@@ -110,12 +110,28 @@ fn prepare_one(
     target: &Value,
 ) -> io::Result<Value> {
     let identity =
-        trimmed_str(&target["identity"]).ok_or_else(|| invalid("lane destination identity"))?;
+        bare_target_identity(target).ok_or_else(|| invalid("lane destination identity"))?;
     let (scope, name) = identity
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
         .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .ok_or_else(|| invalid("lane destination scope"))?;
+    let directory = resolve_directory(rows, settings, scope, name)?;
+    let head = trimmed_str(&target["head"]).ok_or_else(|| invalid("lane destination version"))?;
+    let version = imported.lane_version(head)?;
+    crate::workspace::engine::status_models::harmony::validate(&version)?;
+    let main =
+        trimmed_str(&version["mainFile"]).ok_or_else(|| invalid("lane destination main file"))?;
+    crate::checkout::plan::relative_path(main)?;
+    Ok(json!({"name":name,"scope":scope,"version":head,"mainFile":main,"rootDir":directory}))
+}
+
+fn resolve_directory(
+    rows: &serde_json::Map<String, Value>,
+    settings: &Value,
+    scope: &str,
+    name: &str,
+) -> io::Result<String> {
     let existing = rows
         .iter()
         .find(|(key, row)| {
@@ -126,19 +142,15 @@ fn prepare_one(
                 && (row_scope.map(str::trim), row_name.trim()) == (Some(scope), name)
         })
         .map(|(_, row)| row);
-    let directory = match existing {
-        Some(row) => trimmed_str(&row["rootDir"])
-            .ok_or_else(|| invalid("lane destination tracked root"))?
-            .to_owned(),
-        None => directory(settings, scope, name)?,
-    };
-    let head = trimmed_str(&target["head"]).ok_or_else(|| invalid("lane destination version"))?;
-    let version = imported.lane_version(head)?;
-    crate::workspace::engine::status_models::harmony::validate(&version)?;
-    let main =
-        trimmed_str(&version["mainFile"]).ok_or_else(|| invalid("lane destination main file"))?;
-    crate::checkout::plan::relative_path(main)?;
-    Ok(json!({"name":name,"scope":scope,"version":head,"mainFile":main,"rootDir":directory}))
+    match existing {
+        Some(row) => {
+            let dir = trimmed_str(&row["rootDir"])
+                .ok_or_else(|| invalid("lane destination tracked root"))?;
+            crate::checkout::plan::relative_path(dir)?;
+            Ok(dir.to_owned())
+        }
+        None => directory(settings, scope, name),
+    }
 }
 fn validate_overlap<'a>(addition: &Value, rows: impl Iterator<Item = &'a Value>) -> io::Result<()> {
     let directory =

@@ -109,10 +109,12 @@ fn select(
     let mut selected = loading::load_selected(record, captured)?;
     let distance = select_distance(record, &mut planned.history, captured, &selected)?;
     selected.distance = distance.clone();
-    let mut target = record.targets.iter().find(|target| target["identity"] == captured.target.identity).cloned().unwrap_or_else(|| json!({"identity":captured.target.identity,"version":captured.target.version,"hidden":captured.hidden}));
-    target["currentVersion"] = json!(captured.target.version);
-    target["version"] = json!(selected.remote);
-    target["bitmapPresent"] = json!(!captured.added && !captured.target.directory.is_empty());
+    let captured_id = captured.target.identity.trim();
+    let mut target = record.targets.iter().find(|target| target["identity"].as_str().map(str::trim) == Some(captured_id)).cloned().unwrap_or_else(|| json!({"identity":captured_id,"version":captured.target.version.trim(),"hidden":captured.hidden}));
+    target["currentVersion"] = json!(captured.target.version.trim());
+    target["version"] = json!(selected.remote.trim());
+    target["bitmapPresent"] =
+        json!(!captured.added && !captured.target.directory.trim().is_empty());
     let outcome = state.select(&merge::Input {
         index,
         target: &target,
@@ -123,13 +125,7 @@ fn select(
         distance: &distance,
         lane: record.context.get("lane"),
     })?;
-    apply_selection(
-        &mut selected,
-        &outcome,
-        &distance,
-        &captured.target.identity,
-        &mut planned.result,
-    )?;
+    apply_selection(&mut selected, &outcome, &distance, captured_id, &mut planned.result)?;
     selected.distance["importGap"] = json!(selected.action != Action::Unchanged);
     Ok(selected)
 }
@@ -159,7 +155,7 @@ fn apply_selection(
 ) -> io::Result<()> {
     if outcome["action"] == "unchanged" {
         if let Some(rows) = result["failedComponents"].as_array_mut() {
-            rows.push(json!({"id":format!("{identity}@{}",selected.remote),"unchangedMessage":outcome["message"],"unchangedLegitimately":outcome["legitimate"]}));
+            rows.push(json!({"id":format!("{}@{}",identity.trim(),selected.remote.trim()),"unchangedMessage":outcome["message"],"unchangedLegitimately":outcome["legitimate"]}));
         }
         return Ok(());
     }

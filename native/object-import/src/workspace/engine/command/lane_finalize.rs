@@ -5,9 +5,10 @@ use std::io;
 pub(super) fn run(input: &LaneFinalize, state: &mut State) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command lane owner absent"))?;
     let token = input.token.trim();
-    if token.is_empty() || record.token != token {
+    if token.is_empty() || record.token.trim() != token {
         return Err(invalid("command lane token"));
     }
+    proof::verify(&record.proofs)?;
     let mut prepared = record.planned.take().ok_or_else(|| invalid("command lane plan absent"))?;
     let merge = prepared.plan.merge.as_mut().ok_or_else(|| invalid("command lane merge absent"))?;
     let directory = scratch::Directory::create()?;

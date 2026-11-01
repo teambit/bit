@@ -31,7 +31,10 @@ fn package_name(dependency: &mut Value, resolver: &Value) {
         .as_array()
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["__type"] == "component" && row["componentId"] == dependency["id"])
+                .find(|row| {
+                    row["__type"].as_str().map(str::trim) == Some("component")
+                        && same_component_id(&row["componentId"], &dependency["id"])
+                })
         })
         .and_then(|row| row["packageName"].as_str())
         .map(str::trim)
@@ -39,6 +42,25 @@ fn package_name(dependency: &mut Value, resolver: &Value) {
     {
         dependency["packageName"] = json!(name);
     }
+}
+
+fn same_component_id(left: &Value, right: &Value) -> bool {
+    left == right
+        || (component_id_key(left).is_some() && component_id_key(left) == component_id_key(right))
+}
+
+fn component_id_key(value: &Value) -> Option<(String, String, String)> {
+    if let Some(raw) = value.as_str().map(str::trim) {
+        let (bare, version) = raw
+            .rsplit_once('@')
+            .map_or((raw, ""), |(b, v)| (b.trim(), v.trim()));
+        let (scope, name) = bare.split_once('/')?;
+        return Some((scope.trim().into(), name.trim().into(), version.into()));
+    }
+    let scope = value["scope"].as_str()?.trim();
+    let name = value["name"].as_str()?.trim();
+    let version = value["version"].as_str().map_or("", str::trim);
+    (!scope.is_empty() && !name.is_empty()).then(|| (scope.into(), name.into(), version.into()))
 }
 
 fn resolver_dependencies(output: &Value) -> Value {

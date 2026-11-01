@@ -99,6 +99,7 @@ fn dedupe(rows: &[Value]) -> io::Result<Map<String, Value>> {
         let incoming = row["range"]
             .as_str()
             .map(str::trim)
+            .filter(|range| !range.is_empty())
             .ok_or_else(|| invalid("inbound dependency range"))?;
         let replace = match selected.get(name) {
             None => true,
@@ -106,7 +107,10 @@ fn dedupe(rows: &[Value]) -> io::Result<Map<String, Value>> {
             Some(old) => overwrite(old, row)?,
         };
         if replace {
-            selected.insert(name.into(), row.clone());
+            selected.insert(
+                name.into(),
+                json!({"name": name, "range": incoming, "root": row["root"] == true}),
+            );
         }
     }
     let mut selected = selected.into_iter().collect::<Vec<_>>();

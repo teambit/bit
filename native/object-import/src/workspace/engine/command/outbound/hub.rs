@@ -136,18 +136,14 @@ fn job_url(domain: &str, lane: Option<&str>, job: &str) -> String {
     let domain = domain.trim().trim_end_matches('/');
     let job = job.trim().trim_start_matches('/');
     match lane
-        .map(str::trim)
-        .filter(|lane| !lane.is_empty())
+        .and_then(|raw| raw.trim().split_once('/'))
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
     {
-        Some(lane) => {
-            let (scope, name) = lane
-                .split_once('/')
-                .map_or((lane, ""), |(scope, name)| (scope.trim(), name.trim()));
-            format!(
-                "https://{domain}/{}/~lane/{name}/~ripple-ci/job/{job}",
-                scope.replacen('.', "/", 1),
-            )
-        }
+        Some((scope, name)) => format!(
+            "https://{domain}/{}/~lane/{name}/~ripple-ci/job/{job}",
+            scope.replacen('.', "/", 1),
+        ),
         None => format!("https://{domain}/ripple-ci/job/{job}"),
     }
 }
@@ -156,10 +152,13 @@ fn scoped_objects(pending: &[Pending]) -> Vec<tar::ObjectItem> {
     let mut seen = HashSet::new();
     let mut objects = Vec::new();
     for batch in pending {
+        let scope = batch.scope.trim();
         for object in &batch.objects {
-            if seen.insert((batch.scope.clone(), object.hash.clone())) {
+            let hash = object.hash.trim().to_ascii_lowercase();
+            if seen.insert((scope.to_owned(), hash.clone())) {
                 objects.push(tar::ObjectItem {
-                    scope: Some(batch.scope.clone()),
+                    scope: Some(scope.to_owned()),
+                    hash,
                     ..object.clone()
                 });
             }

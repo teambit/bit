@@ -25,6 +25,10 @@ pub(super) fn replace(path: &Path, bytes: &[u8]) -> io::Result<()> {
         file.set_permissions(metadata.permissions())?;
         file.sync_all()?;
         drop(file);
+        let current = fs::symlink_metadata(path)?;
+        if !current.is_file() || current.is_symlink() {
+            return Err(io::Error::other("generated package destination must be an ordinary file"));
+        }
         fs::rename(&temporary.0, path)
     })()
 }

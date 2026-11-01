@@ -127,6 +127,7 @@ impl Recovery {
         }
         fs::create_dir_all(&self.directory)?;
         for (name, bytes) in &self.files {
+            crate::checkout::plan::relative_path(name)?;
             let path = self.directory.join(name);
             if let Some(parent) = path.parent() {
                 fs::create_dir_all(parent)?;
@@ -134,6 +135,7 @@ impl Recovery {
             fs::write(path, bytes)?;
         }
         for (_, name, permissions) in &self.permissions {
+            crate::checkout::plan::relative_path(name)?;
             fs::set_permissions(self.directory.join(name), permissions.clone())?;
         }
         Ok(())
@@ -147,6 +149,8 @@ fn text(value: &Value) -> io::Result<&str> {
         .ok_or_else(|| invalid("lane recovery identity"))
 }
 fn encode_lane(hash: &str, value: &Value) -> io::Result<Vec<u8>> {
+    let hash = hash.trim();
+    crate::merge_history::hash(hash)?;
     let object = snapshot::object("Lane", Some(hash), value.clone())?;
     let fields = serde_json::from_value(object["fields"].clone()).map_err(io::Error::other)?;
     let body = crate::snapshot_projection::serialize("Lane", &fields, false)?;

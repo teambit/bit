@@ -235,6 +235,13 @@ fn statuses(applied: &Value) -> io::Result<serde_json::Map<String, Value>> {
 
 fn validate_path(path: &Path, root: &Path) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(io::Error::other)?;
+    if relative.as_os_str().is_empty()
+        || !relative
+            .components()
+            .all(|component| matches!(component, std::path::Component::Normal(_)))
+    {
+        return Err(invalid("command nonordinary destination"));
+    }
     let mut current = root.to_path_buf();
     for component in relative.components() {
         current.push(component);
@@ -251,7 +258,7 @@ fn validate_path(path: &Path, root: &Path) -> io::Result<()> {
 }
 
 fn transition_request(input: &Input<'_>) -> io::Result<Value> {
-    let workspace_root = input.current.target.directory == ".";
+    let workspace_root = input.current.target.directory.trim() == ".";
     let nested = if workspace_root { root::nested_directories(input.root)? } else { Vec::new() };
     let mut target = manifest(input.reference, input.version)?;
     if workspace_root {

@@ -19,7 +19,7 @@ pub(super) fn distance(
     let main = selected.model["head"]
         .as_str()
         .map(str::trim)
-        .filter(|head| !head.is_empty());
+        .filter(|head| !head.is_empty() && *head != "0");
     let mut facts = json!({"hasMain":main.is_some()});
     if let Some(main) = main {
         for (key, reference) in [
@@ -116,8 +116,10 @@ fn relation(selected: &Selected, lane: &Value, choice: &Value) -> io::Result<Val
             if let Some((scope, name)) = lane["otherId"]
                 .as_str()
                 .and_then(|raw| raw.trim().split_once('/'))
+                .map(|(scope, name)| (scope.trim(), name.trim()))
+                .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
             {
-                json!({"scope": scope.trim(), "name": name.trim()})
+                json!({"scope": scope, "name": name})
             } else {
                 lane["otherId"].clone()
             }

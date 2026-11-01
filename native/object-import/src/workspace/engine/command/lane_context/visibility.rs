@@ -283,12 +283,15 @@ pub(super) fn main_identities(
 ) -> io::Result<Vec<(String, bool)>> {
     let mut ids = current
         .iter()
-        .map(|entry| (entry.identity.clone(), entry.hidden))
+        .map(|entry| (entry.identity.trim().to_owned(), entry.hidden))
         .collect::<Vec<_>>();
     if !exclude_non_lane {
         for row in visible {
-            let identity =
-                row["identity"].as_str().ok_or_else(|| invalid("command visible identity"))?;
+            let identity = row["identity"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .ok_or_else(|| invalid("command visible identity"))?;
             if !ids.iter().any(|(id, _)| id == identity) {
                 ids.push((identity.into(), false));
             }
@@ -298,12 +301,14 @@ pub(super) fn main_identities(
     Ok(ids)
 }
 fn unexported(bitmap: &Value, visible: &[Value], identity: &str) -> bool {
+    let identity = identity.trim();
     let Some(target) = visible
         .iter()
-        .find(|row| row["identity"] == identity)
+        .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
     else {
         return false;
     };
+    let target_dir = target["directory"].as_str().map(str::trim);
     bitmap
         .as_object()
         .is_some_and(|rows| {
@@ -312,9 +317,10 @@ fn unexported(bitmap: &Value, visible: &[Value], identity: &str) -> bool {
                     row.is_object()
                         && row["scope"]
                             .as_str()
-                            .unwrap_or_default()
+                            .map_or("", str::trim)
                             .is_empty()
-                        && row["rootDir"] == target["directory"]
+                        && target_dir.is_some()
+                        && row["rootDir"].as_str().map(str::trim) == target_dir
                 })
         })
 }

@@ -19,6 +19,9 @@ pub(super) fn run(
     lane_hash: &str,
     phases: Vec<Phase>,
 ) -> io::Result<(usize, Value)> {
+    if phases.is_empty() {
+        return Err(invalid("history phases empty"));
+    }
     let lane_hash = lane_hash.trim().to_owned();
     let proofs = proofs(&input, &lane_hash)?;
     state.sequence =
@@ -39,11 +42,11 @@ pub(super) fn run(
 }
 fn proofs(input: &Prepare, lane_hash: &str) -> io::Result<Vec<proof::Proof>> {
     let lane_hash = lane_hash.trim();
-    crate::merge_history::hash(lane_hash)?;
     let mut proofs = Vec::new();
     proof::read(&input.root.join(".bitmap"), &mut proofs)?;
+    let directory = crate::scope_path(&input.root).join("objects");
     for hash in [lane_hash, &crate::lane_history::hash(lane_hash)] {
-        let directory = crate::scope_path(&input.root).join("objects");
+        crate::merge_history::hash(hash)?;
         proof::read(
             &directory
                 .join(&hash[..2])

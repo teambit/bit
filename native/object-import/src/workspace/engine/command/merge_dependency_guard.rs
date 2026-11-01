@@ -37,7 +37,7 @@ pub(super) fn verify(
     let comparison = Comparison {
         root,
         home,
-        directory: &current.target.directory,
+        directory: current.target.directory.trim(),
         topology_changed: files.before.keys().ne(files.after.keys()),
         builtins: &grammar.builtins,
         detectors: &grammar.detectors,
@@ -330,7 +330,8 @@ fn strings(value: &Value) -> io::Result<HashSet<&str>> {
         .map(|value| {
             value
                 .as_str()
-                .filter(|value| value.len() <= 4096)
+                .map(str::trim)
+                .filter(|value| !value.is_empty() && value.len() <= 4096)
                 .ok_or_else(|| invalid("merge dependency grammar string"))
         })
         .collect()
