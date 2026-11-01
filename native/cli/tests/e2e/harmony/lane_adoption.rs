@@ -1,4 +1,6 @@
 //! Lane adoption compares the released command at the same absolute workspace path.
+//!
+//! Covers `bit switch` and `bit lane import` with aliases, patterns, and default installation.
 
 pub(crate) mod callbacks;
 pub(crate) mod output;

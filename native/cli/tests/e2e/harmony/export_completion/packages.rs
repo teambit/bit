@@ -1,4 +1,6 @@
 //! Generated package bytes and source-link shapes stay observable after `bit export`.
+//!
+//! Recursively compares generated `node_modules` package trees between native and Node runs.
 
 use crate::helper::config;
 use std::{fs, path::Path};

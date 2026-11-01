@@ -1,4 +1,6 @@
 //! `bit doctor` built-in diagnoses, table rendering, and diagnostic archives.
+//!
+//! Validates diagnosis listing, git executable checks, scope integrity, and archive saving.
 
 mod proxy;
 mod recovery;

@@ -1,4 +1,6 @@
 //! `bit export` operation grammar and local reconciliation match the pinned published CLI.
+//!
+//! Covers multi-version reconciliation, `--resume`, lane readmes, and package regeneration.
 
 mod packages;
 use crate::helper::{Helper, config};

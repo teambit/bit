@@ -1,4 +1,6 @@
 //! Capsule fixtures do not need remote verification of built-in environment identities.
+//!
+//! Covers custom aspect assignment and no-network guard script generation.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

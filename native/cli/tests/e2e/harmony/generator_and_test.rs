@@ -5,6 +5,8 @@
 //! - `e2e/typescript/typescript.e2e.ts`
 //! - `e2e/harmony/multiple-envs.e2e.ts`
 //! - `e2e/harmony/custom-aspects.e2e.ts`
+//!
+//! Validates `bit create`, `bit new`, `bit test`, `TypeScript` parsing, and multiple-env detection.
 
 use crate::{
     helper::{Helper, config, parse},

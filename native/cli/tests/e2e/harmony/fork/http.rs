@@ -1,4 +1,6 @@
 //! Real released file-backed HTTP scope; private `bit fork` capture must not import objects.
+//!
+//! Ensures single and pattern HTTP forks materialize components without polluting `.bit/objects`.
 
 use super::support;
 use crate::commands::{diff_completion::http as server, move_paths::support::successful};

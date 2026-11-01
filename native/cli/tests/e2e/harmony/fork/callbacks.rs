@@ -1,4 +1,6 @@
 //! Configured provider callback tests for `bit fork`.
+//!
+//! Verifies `onLoad` and `onAdd` hook ordering and error handling during component forking.
 
 use super::support;
 use crate::{

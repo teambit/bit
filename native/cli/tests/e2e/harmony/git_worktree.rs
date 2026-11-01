@@ -1,5 +1,7 @@
 //! Ported cases from `e2e/harmony/git-worktree.e2e.ts`, `e2e/harmony/internalize.e2e.ts`,
 //! and `e2e/harmony/relative-paths.e2e.ts`.
+//!
+//! Covers standalone `.bit` scopes in Git worktrees, `bit internalize`, and `link --rewire`.
 
 use crate::{
     helper::{Helper, parse},

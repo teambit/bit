@@ -1,4 +1,6 @@
 //! Option handling tests for `bit fork` (`--path`, `--scope`, `--preserve`, `--no-link`, `--refactor`).
+//!
+//! Validates AST refactoring, `--skip-config`, `--env`, and occupied target path errors.
 
 use super::support;
 use crate::{

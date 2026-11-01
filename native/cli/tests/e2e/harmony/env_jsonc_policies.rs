@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts` for `env.jsonc` dependency policies.
+//!
+//! Validates peer, dev, and runtime dependency policy resolution from `env.jsonc`.
 
 use crate::{
     helper::{Helper, parse},

@@ -1,4 +1,6 @@
 //! Only validated duration tokens on named released completion lines vary.
+//!
+//! Provides duration token normalization for `bit switch` and `bit lane import` comparisons.
 
 pub(crate) fn durations(text: &str) -> String {
     text.split_inclusive('\n')

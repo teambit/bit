@@ -1,4 +1,6 @@
 //! Real installation; validated durations and one proven redundant clock redraw vary.
+//!
+//! Verifies package installation and compilation output after remote `bit fork`.
 
 mod startup_frame;
 pub(in crate::harmony) fn project_startup_frame(text: &str) -> String {

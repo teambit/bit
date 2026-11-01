@@ -1,4 +1,6 @@
 //! Shared workspace and origin verification helpers for `bit fork` end-to-end tests.
+//!
+//! Provides exported and remote workspace builders and batch barrier assertions.
 
 use crate::{
     commands::move_paths::support,
@@ -92,7 +94,7 @@ fn copy_environment(helper: &Helper) {
     helper.output_file("fork-batch-required", "actual target env onAdd barrier required\n");
 }
 
-/// Prove that scope subcommands loaded the real env and reached its onAdd slot.
+/// Prove that scope subcommands loaded the real env and reached its `onAdd` slot.
 pub(super) fn assert_copy_barrier(helper: &Helper) {
     if helper.scopes.local_path.join("fork-batch-required").exists() {
         let observed = fs::read_to_string(helper.scopes.local_path.join("fork-batch-observed"))

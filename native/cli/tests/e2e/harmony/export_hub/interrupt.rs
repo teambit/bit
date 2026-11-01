@@ -1,4 +1,6 @@
 //! A real terminal interrupt protects acknowledged export rather than abandoning publication.
+//!
+//! Verifies that `SIGINT` during central-hub export warns and completes publication once.
 
 use super::{Hub, comparison, pending};
 use crate::helper::setup;

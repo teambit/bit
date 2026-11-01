@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/env.e2e.ts` for native `bit env` parity.
+//!
+//! Covers `env set`, `env unset`, `env replace`, `.bit-env` plugins, and `empty-env`.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

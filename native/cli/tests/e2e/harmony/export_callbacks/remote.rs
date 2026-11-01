@@ -1,5 +1,7 @@
 //! Callback qualification uses the released HTTP publisher, whose `ObjectList`
 //! reaches `saveObjects` directly instead of the pinned broken file-pending glob.
+//!
+//! Spawns a local HTTP [`Remote`] server backed by the bare remote scope.
 
 use crate::helper::Helper;
 use std::process::Child;

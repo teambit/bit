@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/component-config.e2e.ts` for `component.json` and `eject-conf` parity.
+//!
+//! Covers `eject-conf` on new and tagged components, `--propagate`, `--override`, and config precedence across `component.json` and variants.
 
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};

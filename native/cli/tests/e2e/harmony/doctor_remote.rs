@@ -1,4 +1,6 @@
 //! Actual published remote `bit doctor` queries and result rendering match across transports.
+//!
+//! Covers HTTP and file-remote doctor invocations, error handling, and request headers.
 
 mod server;
 use crate::helper::{Helper, config};

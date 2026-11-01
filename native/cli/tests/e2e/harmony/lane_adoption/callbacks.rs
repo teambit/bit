@@ -1,4 +1,6 @@
 //! Provider callback and configuration mutation tests for `bit lane import` and `bit switch`.
+//!
+//! Verifies provider startup, `onLoad`/`preInstall`/`postInstall`/`compile` ordering, and throttling.
 
 use super::exported;
 use crate::{commands::move_paths::support, helper::config};

@@ -1,4 +1,6 @@
 //! Canonical index repair is selected before native `bit doctor` output or writes.
+//!
+//! Ensures stale or missing `.bit/index.json` state is reconciled identically to Node.
 
 use crate::helper::Helper;
 use serde_json::Value;

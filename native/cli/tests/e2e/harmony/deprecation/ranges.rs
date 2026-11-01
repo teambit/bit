@@ -1,4 +1,6 @@
 //! Version range deprecation and `bit log` presentation tests for `bit deprecate --range`.
+//!
+//! Verifies range-scoped deprecation across `log --json`, `show`, `list`, `import`, and major version bumps.
 
 use super::{DEPRECATION, listed};
 use crate::{

@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit ci sync — state model v2`.
+//! End-to-end tests for `bit ci sync — state model v2` (developer branch snaps, cold runners, single-branch clones, and untracked files).
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-state.e2e.ts`

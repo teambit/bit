@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/export-harmony.e2e.ts` for native `bit export` parity.
+//!
+//! Covers re-initialized remote scopes, multi-tag exports, and out-of-date version history.
 
 use crate::helper::{Helper, remote};
 

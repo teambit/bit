@@ -2,6 +2,8 @@
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-scopes.e2e.ts`
+//!
+//! Covers cross-scope lanes, foreign-only lanes, default-branch lane mapping guards, and foreign-hosted lanes.
 
 use super::support::{
     branch_paths_matching, branch_side_commit, branch_tip_message, branch_tip_sha, comp1_src,

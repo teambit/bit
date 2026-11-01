@@ -1,4 +1,6 @@
 //! Local selection precedes remote selection; the released handler does not deduplicate.
+//!
+//! Verifies pattern matching order and partial failure behavior across workspace and remote scopes.
 
 use super::support;
 use crate::commands::move_paths::support::{self as paired, bitmap, setup, successful};

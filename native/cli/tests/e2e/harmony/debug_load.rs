@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/debug-load.e2e.ts` for native `bit debug-load` parity.
+//!
+//! Verifies human-readable and `--json` trace output, extension source attribution, and unknown component error handling.
 
 use crate::helper::Helper;
 use serde_json::{Value, json};

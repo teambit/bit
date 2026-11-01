@@ -1,4 +1,6 @@
 //! Unit tests for pnpm startup-frame redraw normalization in `bit fork` installation.
+//!
+//! Covers single-package, two-package, and malformed progress banner sequences.
 
 use super::{BANNER, COUNTERS, REDRAW, START, project};
 fn banner() -> String {

@@ -1,4 +1,6 @@
 //! Complete central-export commands use the released parser and server publication path.
+//!
+//! Validates main and lane central-hub exports, retries, subset acknowledgments, and job URLs.
 
 pub(super) mod comparison;
 #[cfg(unix)]

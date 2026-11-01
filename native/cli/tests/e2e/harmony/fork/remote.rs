@@ -1,4 +1,6 @@
 //! Remote component `bit fork` and provenance retention tests.
+//!
+//! Covers single-ID, wildcard, and comma-separated remote forks and validation errors.
 
 use super::support;
 use crate::commands::move_paths::support::{compare, json, successful};

@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/extensions-config-diff.e2e.ts` for extension configuration diff parity.
+//!
+//! Verifies status and `bit diff` output when adding, removing, or modifying extension configs.
 
 use crate::helper::{Helper, parse, strip_ansi};
 use serde_json::json;

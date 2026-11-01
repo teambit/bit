@@ -1,4 +1,6 @@
 //! The original peer `+` assertion excludes resolver errors, not all installation failures.
+//!
+//! Verifies patterned `lane import` resolves `+` peer versions to `*` before installation.
 
 use super::{empty, lane};
 use crate::{

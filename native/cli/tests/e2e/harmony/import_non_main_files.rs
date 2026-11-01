@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/import-non-main-files.e2e.ts` for internal non-main file import issues.
+//!
+//! Verifies `ImportNonMainFiles` issue detection on `.js` imports and exemption on `.json` imports.
 
 use crate::helper::{Helper, issue_types, parse};
 

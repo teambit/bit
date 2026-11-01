@@ -1,4 +1,6 @@
 //! Complete `ConfigCmd` sequences retain store bytes, origin precedence, and rendering.
+//!
+//! Verifies `config get`, `config set`, `config del`, and `config list` across global, scope, workspace, and env origins.
 
 use crate::helper::{Helper, setup};
 use std::{ffi::OsStr, fs, path::Path};

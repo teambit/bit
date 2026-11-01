@@ -1,4 +1,6 @@
 //! Exported deprecation lifecycle and remote reporting tests for `bit deprecate` and `bit undeprecate`.
+//!
+//! Verifies `.bitmap` config cleanup after export, `--include-deprecated` on wildcard import, and `DeprecatedDependencies` status issues.
 
 use super::DEPRECATION;
 use crate::{

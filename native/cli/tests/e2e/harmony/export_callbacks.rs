@@ -1,4 +1,6 @@
 //! `bit export` retains configured providers across remote persistence, package linking, and hooks.
+//!
+//! Verifies package generation, post-export hooks, lane classes, and JSON output parity.
 
 mod remote;
 use crate::helper::{Helper, config};

@@ -1,4 +1,6 @@
 //! End-to-end tests for HTTP transport across `export`, `log`, `import`, `remove`, and `lane list`.
+//!
+//! Also covers nested namespace pattern imports, legacy extension merging, and defective aspects.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

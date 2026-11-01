@@ -1,4 +1,6 @@
 //! Merge conflict and workspace state tests during `bit lane import` and `bit switch`.
+//!
+//! Validates automatic conflict rejection and explicit `--auto-merge-resolve` strategies.
 
 use crate::{
     commands::move_paths::support,

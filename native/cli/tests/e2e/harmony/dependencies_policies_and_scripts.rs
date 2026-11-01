@@ -9,6 +9,8 @@
 //! - `e2e/harmony/dependencies/optional-dependencies.e2e.ts`
 //! - `e2e/harmony/dependencies/policies-order.e2e.ts`
 //! - `e2e/harmony/pkg-manager-config.e2e.ts`
+//!
+//! Verifies `allowScripts`, `neverBuiltDependencies`, forked env `+` markers, hoisted node linker, deduplication, and `--optional` dependencies.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

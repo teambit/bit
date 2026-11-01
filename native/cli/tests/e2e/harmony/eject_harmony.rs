@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/eject-harmony.e2e.ts` for native `bit eject` parity.
+//!
+//! Validates ejecting exported components with default options and `--keep-files`.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

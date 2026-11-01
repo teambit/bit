@@ -1,5 +1,5 @@
 //! Ported cases from `e2e/harmony/dependencies-cmd.e2e.ts`, `e2e/harmony/deps-write.e2e.ts`,
-//! and `e2e/harmony/diff-component-peer.e2e.ts`.
+//! and `e2e/harmony/diff-component-peer.e2e.ts` for `bit deps` subcommands.
 
 use crate::{
     helper::{Helper, config, parse},

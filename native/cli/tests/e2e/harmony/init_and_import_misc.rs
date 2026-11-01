@@ -2,6 +2,8 @@
 //! - `e2e/commands/import.e2e.ts`
 //! - `e2e/commands/init.e2e.ts`
 //! - `e2e/performance/filesystem-read.e2e.ts`
+//!
+//! Covers corrupt config errors, `--reset-hard`, external package manager mode, and read budgets.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use serde_json::json;

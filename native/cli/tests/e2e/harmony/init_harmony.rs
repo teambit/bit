@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/init-harmony.e2e.ts` for Harmony `bit init` parity.
+//!
+//! Validates `init --reset-new`, missing `.git/bit/objects` recovery, and invalid `default-scope`.
 
 use crate::helper::{Helper, config, remote};
 use std::fs;

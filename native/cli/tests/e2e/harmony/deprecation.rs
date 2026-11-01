@@ -1,4 +1,6 @@
 //! Local deprecation, persisted ranges, and the published downstream readers.
+//!
+//! Covers `bit deprecate` and `bit undeprecate` on single and wildcard targets, `--new-id` replacement metadata, and `checkout reset`.
 
 mod lifecycle;
 mod ranges;

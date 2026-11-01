@@ -1,4 +1,6 @@
 //! Scope object and control file comparison helpers for central-hub `bit export` tests.
+//!
+//! Normalizes only expected timestamps and concurrent remote index/history orderings.
 
 use crate::helper::config;
 use serde_json::Value;
@@ -177,7 +179,7 @@ fn model_dates(value: &mut Value) {
     }
 }
 
-/// Published CI additionally emits its JavaScript implementation stack; primary error stays exact.
+/// Published CI additionally emits its `JavaScript` implementation stack; primary error stays exact.
 pub(in crate::harmony) fn ci_failure(actual: &crate::helper::Run, expected: &crate::helper::Run) {
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), expected.status.code());
